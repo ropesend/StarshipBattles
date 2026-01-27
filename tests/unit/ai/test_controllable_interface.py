@@ -523,14 +523,18 @@ class TestShipControllableAdapterCombat:
 
 
 # =============================================================================
-# Test: Backward Compatibility - Direct Ship Access
+# Test: Ship Access (PROJ-24 - Delegation Removed)
 # =============================================================================
 
-class TestBackwardCompatibility:
-    """Tests that adapter provides backward-compatible access to ship."""
+class TestShipAccess:
+    """Tests that adapter provides access to underlying ship.
+
+    Note: PROJ-24 removed the __getattr__/__setattr__ delegation methods.
+    Direct attribute access is no longer supported. Use interface methods instead.
+    """
 
     def test_adapter_exposes_underlying_ship(self, mock_ship):
-        """Adapter provides access to underlying ship."""
+        """Adapter provides access to underlying ship via .ship property."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -539,60 +543,54 @@ class TestBackwardCompatibility:
         assert adapter.ship == mock_ship
         assert adapter._ship == mock_ship
 
-    def test_adapter_exposes_ship_attributes_via_getattr(self, mock_ship):
-        """Adapter allows attribute access to ship via __getattr__."""
+    def test_adapter_uses_interface_methods_not_direct_access(self, mock_ship):
+        """Adapter requires interface methods for attribute access."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
-        mock_ship.some_attribute = "test_value"
+        # Setup mock with expected attributes
+        mock_ship.turn_throttle = 0.5
+        mock_ship.engine_throttle = 0.8
+        mock_ship.comp_trigger_pulled = True
+        mock_ship.current_target = "some_target"
 
         adapter = ShipControllableAdapter(mock_ship)
 
-        # __getattr__ delegates to ship
-        assert adapter.some_attribute == "test_value"
-
-    def test_adapter_setattr_delegates_to_underlying_ship(self, mock_ship):
-        """Attribute assignment via adapter goes to underlying ship."""
-        from game.ai.interfaces.controllable import ShipControllableAdapter
-
-        adapter = ShipControllableAdapter(mock_ship)
-
-        # Set attribute via adapter - should go to ship
-        adapter.turn_throttle = 0.5
-        adapter.engine_throttle = 0.8
-        adapter.comp_trigger_pulled = True
-        adapter.current_target = "some_target"
+        # Use interface methods for setting
+        adapter.set_turn_throttle(0.7)
+        adapter.set_throttle(0.9)
+        adapter.set_trigger_pulled(False)
+        adapter.set_current_target(None)
 
         # Verify attributes were set on the ship
-        assert mock_ship.turn_throttle == 0.5
-        assert mock_ship.engine_throttle == 0.8
-        assert mock_ship.comp_trigger_pulled is True
-        assert mock_ship.current_target == "some_target"
+        assert mock_ship.turn_throttle == 0.7
+        assert mock_ship.engine_throttle == 0.9
+        assert mock_ship.comp_trigger_pulled is False
+        assert mock_ship.current_target is None
 
-    def test_adapter_setattr_allows_internal_ship_attribute(self, mock_ship):
-        """Setting _ship attribute on adapter works for initialization."""
+    def test_direct_attribute_access_raises_error(self, mock_ship):
+        """Direct attribute access (bypassing interface) raises AttributeError."""
+        from game.ai.interfaces.controllable import ShipControllableAdapter
+
+        mock_ship.some_custom_attribute = "test_value"
+
+        adapter = ShipControllableAdapter(mock_ship)
+
+        # Direct attribute access should fail (no __getattr__ delegation)
+        with pytest.raises(AttributeError):
+            _ = adapter.some_custom_attribute
+
+    def test_direct_attribute_assignment_does_not_delegate(self, mock_ship):
+        """Direct attribute assignment sets on adapter, not underlying ship."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
 
-        # The internal _ship attribute should be on the adapter itself
-        assert adapter._ship == mock_ship
+        # Without __setattr__ delegation, assignment goes to adapter, not ship
+        adapter.some_custom_attribute = "test_value"
 
-        # Changing _ship should work
-        new_ship = MagicMock()
-        adapter._ship = new_ship
-        assert adapter._ship == new_ship
-
-    def test_adapter_setattr_roundtrip_with_getattr(self, mock_ship):
-        """Setting and getting same attribute works correctly."""
-        from game.ai.interfaces.controllable import ShipControllableAdapter
-
-        adapter = ShipControllableAdapter(mock_ship)
-
-        # Set via adapter
-        adapter.custom_attribute = "test_value"
-
-        # Get via adapter should return from ship
-        assert adapter.custom_attribute == mock_ship.custom_attribute
+        # Attribute is on adapter itself (in __dict__), not delegated to ship
+        assert adapter.some_custom_attribute == "test_value"
+        assert 'some_custom_attribute' in adapter.__dict__
 
 
 # =============================================================================

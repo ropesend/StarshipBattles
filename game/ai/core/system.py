@@ -327,7 +327,7 @@ class AIController:
 
     def find_target(self):
         """Find target based on strategy's targeting priority."""
-        candidates = self.grid.query_radius(self.ship.position, 200000)
+        candidates = self.grid.query_radius(self.ship.get_position(), 200000)
         enemies = [obj for obj in candidates 
                    if obj.is_alive and hasattr(obj, 'team_id') 
                    and obj.team_id == self.enemy_team_id]
@@ -340,10 +340,10 @@ class AIController:
         check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
         
         if check_missiles:
-             missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
+             missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), 1500)
                          if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
-                         and obj.is_alive 
-                         and getattr(obj, 'team_id', -1) != self.ship.team_id]
+                         and obj.is_alive
+                         and getattr(obj, 'team_id', -1) != self.ship.get_team_id()]
              enemies.extend(missiles)
         
         if not enemies:
@@ -367,9 +367,9 @@ class AIController:
             return []
             
         count_needed = max_targets - 1
-        current = self.ship.current_target
-        
-        candidates = self.grid.query_radius(self.ship.position, 200000)
+        current = self.ship.get_current_target()
+
+        candidates = self.grid.query_radius(self.ship.get_position(), 200000)
         enemies = [obj for obj in candidates 
                    if obj.is_alive and hasattr(obj, 'team_id') 
                    and obj.team_id == self.enemy_team_id
@@ -383,10 +383,10 @@ class AIController:
         check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
         
         if check_missiles:
-            missiles = [obj for obj in self.grid.query_radius(self.ship.position, 1500) 
+            missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), 1500)
                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
-                        and obj.is_alive 
-                        and getattr(obj, 'team_id', -1) != self.ship.team_id
+                        and obj.is_alive
+                        and getattr(obj, 'team_id', -1) != self.ship.get_team_id()
                         and obj != current]
             enemies.extend(missiles)
         
@@ -451,57 +451,57 @@ class AIController:
 
     def update(self):
 
-        if not self.ship.is_alive: return
+        if not self.ship.is_alive(): return
 
         # Throttle Reset
-        self.ship.turn_throttle = 1.0
-        self.ship.engine_throttle = 0.9 if self.ship.formation_members else 1.0 
-        
+        self.ship.set_turn_throttle(1.0)
+        self.ship.set_throttle(0.9 if self.ship.get_formation_members() else 1.0)
+
         # Formation Logic (Inline for now, could be moved to Behavior)
-        if self.ship.formation_members:
+        if self.ship.get_formation_members():
              self._handle_formation_master()
 
         # Formation Dropout Check
-        if self.ship.in_formation and self.ship.formation_master:
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
              self._check_formation_integrity()
 
         resolved = self.get_resolved_strategy()
         movement_policy = resolved['movement']
         
         # Formation Targeting Sync
-        if self.ship.in_formation and self.ship.formation_master:
-             master_target = self.ship.formation_master.current_target
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
+             master_target = self.ship.get_formation_master().current_target
              if master_target and master_target.is_alive:
-                 self.ship.current_target = master_target
+                 self.ship.set_current_target(master_target)
 
         # Target Acquisition
-        target = self.ship.current_target
+        target = self.ship.get_current_target()
         if target and not target.is_alive:
             target = None
-            self.ship.current_target = None
+            self.ship.set_current_target(None)
 
-        if not target and not (self.ship.in_formation and self.ship.formation_master):
+        if not target and not (self.ship.is_in_formation() and self.ship.get_formation_master()):
             target = self.find_target()
-            self.ship.current_target = target
+            self.ship.set_current_target(target)
         
         # Secondary target acquisition for ships with multiplex tracking
-        if getattr(self.ship, 'max_targets', 1) > 1:
-            self.ship.secondary_targets = self.find_secondary_targets()
+        if self.ship.get_max_targets() > 1:
+            self.ship.set_secondary_targets(self.find_secondary_targets())
         else:
-            self.ship.secondary_targets = []
-            
-        if not target and not self.ship.in_formation:
-             self.ship.comp_trigger_pulled = False
+            self.ship.set_secondary_targets([])
+
+        if not target and not self.ship.is_in_formation():
+             self.ship.set_trigger_pulled(False)
              return
 
-        self.ship.comp_trigger_pulled = True
+        self.ship.set_trigger_pulled(True)
         
         # Satellite Exception
         if getattr(self.ship, 'vehicle_type', 'Ship') == 'Satellite':
              return
 
         # Determine Behavior
-        if self.ship.in_formation and self.ship.formation_master:
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
             behavior_key = 'formation'
         else:
             # Policy-driven behavior selection
@@ -530,91 +530,105 @@ class AIController:
 
     def _handle_formation_master(self):
         # (Same logic as original, just encapsulated)
-        diam = self.ship.radius * 2
+        diam = self.ship.get_radius() * 2
         max_radius = 0
-        for member in self.ship.formation_members:
+        for member in self.ship.get_formation_members():
             if member.formation_offset:
                 r = member.formation_offset.length()
                 if r > max_radius: max_radius = r
-        
+
         if max_radius > 0:
-            max_speed = getattr(self.ship, 'max_speed', 10) 
+            max_speed = self.ship.get_max_speed()
             max_w_rad = max_speed / max_radius
             max_w_deg = math.degrees(max_w_rad)
-            base_turn = self.ship.turn_speed / 100.0
+            base_turn = self.ship.get_turn_speed() / 100.0
             if base_turn > 0:
                 turn_limit = max_w_deg / base_turn
-                self.ship.turn_throttle = min(self.ship.turn_throttle, turn_limit)
+                # Read current turn_throttle, calculate new limit, set it
+                current_turn_throttle = getattr(self.ship, '_ship', self.ship).turn_throttle if hasattr(self.ship, '_ship') else 1.0
+                self.ship.set_turn_throttle(min(current_turn_throttle, turn_limit))
 
         slow_down = False
-        for member in self.ship.formation_members:
+        ship_pos = self.ship.get_position()
+        ship_angle = self.ship.get_rotation()
+        for member in self.ship.get_formation_members():
             if not member.is_alive or not member.in_formation: continue
-            rotated_offset = member.formation_offset.rotate(self.ship.angle)
-            target_pos = self.ship.position + rotated_offset
+            rotated_offset = member.formation_offset.rotate(ship_angle)
+            target_pos = ship_pos + rotated_offset
             d = member.position.distance_to(target_pos)
             if d > 0.5 * diam:
                 slow_down = True
                 break
-        
+
         if slow_down:
-            self.ship.engine_throttle = 0.75
-            self.ship.turn_throttle = min(self.ship.turn_throttle, 0.75)
+            self.ship.set_throttle(0.75)
+            # For turn_throttle, we need to read current value and set min
+            current_turn_throttle = getattr(self.ship, '_ship', self.ship).turn_throttle if hasattr(self.ship, '_ship') else 1.0
+            self.ship.set_turn_throttle(min(current_turn_throttle, 0.75))
 
     def _check_formation_integrity(self):
         # Phase 4: Use ability-based checks instead of isinstance(Engine, Thruster)
         dmg = False
-        for layer in self.ship.layers.values():
+        for layer in self.ship.get_layers().values():
             for comp in layer.get('components', []):
                 if comp.has_ability('CombatPropulsion') or comp.has_ability('ManeuveringThruster'):
                     if getattr(comp, 'current_hp', 1) < getattr(comp, 'max_hp', 1):
                         dmg = True; break
             if dmg: break
-        
+
         if dmg:
-            self.ship.in_formation = False
-            try: self.ship.formation_master.formation_members.remove(self.ship)
-            except: pass
-            self.ship.formation_master = None
-            self.ship.turn_throttle = 1.0
-            self.ship.engine_throttle = 1.0
+            self.ship.set_in_formation(False)
+            # formation_master returns raw Ship, so we access its attributes directly
+            master = self.ship.get_formation_master()
+            if master:
+                try: master.formation_members.remove(getattr(self.ship, '_ship', self.ship))
+                except: pass
+            self.ship.set_formation_master(None)
+            self.ship.set_turn_throttle(1.0)
+            self.ship.set_throttle(1.0)
 
     def check_avoidance(self):
         """Check for nearby collisions."""
-        nearby = self.grid.query_radius(self.ship.position, 1000)
+        ship_pos = self.ship.get_position()
+        nearby = self.grid.query_radius(ship_pos, 1000)
         closest = None
         min_d = float('inf')
-        
+
+        # Get underlying ship for identity comparison
+        raw_ship = getattr(self.ship, '_ship', self.ship)
+
         for obj in nearby:
-            if obj == self.ship: continue
+            if obj == raw_ship: continue
             if not obj.is_alive: continue
             if not hasattr(obj, 'team_id'): continue
-            
-            d = self.ship.position.distance_to(obj.position)
-            thresh = self.ship.radius + getattr(obj, 'radius', 40) + 100
-            
+
+            d = ship_pos.distance_to(obj.position)
+            thresh = self.ship.get_radius() + getattr(obj, 'radius', 40) + 100
+
             if d < thresh:
                 if d < min_d:
                     min_d = d
                     closest = obj
-        
+
         if closest:
-            vec = self.ship.position - closest.position
+            vec = ship_pos - closest.position
             if vec.length() == 0: vec = Vector2(1,0)
-            return self.ship.position + vec.normalize() * 500
+            return ship_pos + vec.normalize() * 500
         return None
 
     def navigate_to(self, target_pos, stop_dist=0, precise=False):
-        distance = self.ship.position.distance_to(target_pos)
-        dx = target_pos.x - self.ship.position.x
-        dy = target_pos.y - self.ship.position.y
+        ship_pos = self.ship.get_position()
+        distance = ship_pos.distance_to(target_pos)
+        dx = target_pos.x - ship_pos.x
+        dy = target_pos.y - ship_pos.y
         target_angle = math.degrees(math.atan2(dy, dx)) % 360
-        current_angle = self.ship.angle % 360
+        current_angle = self.ship.get_rotation() % 360
         angle_diff = (target_angle - current_angle + 180) % 360 - 180
-        
+
         if abs(angle_diff) > 5:
             direction = 1 if angle_diff > 0 else -1
             self.ship.rotate(direction)
-        
+
         eff_stop_dist = stop_dist
         if abs(angle_diff) < 30 and distance > eff_stop_dist:
              self.ship.thrust_forward()

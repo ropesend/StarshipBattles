@@ -254,38 +254,19 @@ class ShipControllableAdapter(IControllable):
         return self._ship
 
     # =========================================================================
-    # Transparent Delegation (DEPRECATED - Pending Removal)
+    # PROJ-24 Migration Complete
     # =========================================================================
-    # PROJ-24: The AIController and behaviors have been migrated to use
-    # interface methods exclusively. These delegation methods are kept
-    # temporarily with deprecation warnings to catch any remaining direct
-    # attribute access. They will be removed once all tests pass without
-    # triggering the warnings.
-
-    def __getattr__(self, name: str) -> Any:
-        """Delegate attribute access to underlying ship (DEPRECATED)."""
-        import warnings
-        warnings.warn(
-            f"Direct attribute access '{name}' on ShipControllableAdapter is deprecated. "
-            f"Use interface methods instead (e.g., get_{name}() or is_{name}()).",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        return getattr(self._ship, name)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Delegate attribute assignment to underlying ship (DEPRECATED)."""
-        if name == '_ship':
-            object.__setattr__(self, name, value)
-        else:
-            import warnings
-            warnings.warn(
-                f"Direct attribute assignment '{name}' on ShipControllableAdapter is deprecated. "
-                f"Use interface methods instead (e.g., set_{name}()).",
-                DeprecationWarning,
-                stacklevel=2
-            )
-            setattr(self._ship, name, value)
+    # All AIController and behavior classes now use interface methods exclusively.
+    # The __getattr__/__setattr__ delegation methods have been removed.
+    # Direct ship attribute access is no longer supported via the adapter.
+    #
+    # Note: The adapter still exposes the underlying ship via:
+    #   - adapter._ship (internal access)
+    #   - adapter.ship (property, read-only)
+    #
+    # Formation methods (get_formation_master, get_formation_members) return
+    # raw Ship objects, not adapters. This is intentional - the AI code needs
+    # to access formation master's attributes directly.
 
     # =========================================================================
     # Position and Movement (Read)

@@ -2884,7 +2884,8 @@ class TestLabScene:
             self.ui_manager.process_events(event)
 
             # Handle pygame_gui button presses
-            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            # Note: Check hasattr because USEREVENT+1 == UI_BUTTON_PRESSED (both 32866)
+            if event.type == pygame_gui.UI_BUTTON_PRESSED and hasattr(event, 'ui_element'):
                 callback = self._button_callbacks.get(event.ui_element)
                 if callback:
                     callback()

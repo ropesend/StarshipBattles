@@ -1,0 +1,165 @@
+{
+  "version": "1.0",
+  "battle_id": "51c2095b-21e0-4c8a-a778-afe3b58ab15a",
+  "seed": 373399426,
+  "tick_count": 0,
+  "max_ticks": 500,
+  "ships": {
+    "2cacf9b7-a618-4251-ba91-0c763e528f4e": {
+      "ship_id": "2cacf9b7-a618-4251-ba91-0c763e528f4e",
+      "name": "Test Attacker Proj360",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0,
+      "current_hp": 150,
+      "max_hp": 150,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_weapon_proj_omni",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Target Linear Fast"
+    },
+    "f610a44d-42ef-479a-afdc-2ec08e58e3cd": {
+      "ship_id": "f610a44d-42ef-479a-afdc-2ec08e58e3cd",
+      "name": "Test Target Linear Fast",
+      "ship_class": "TestM_2L",
+      "theme_id": "Federation",
+      "team_id": 1,
+      "color": [
+        0,
+        0,
+        255
+      ],
+      "ai_strategy": "test_straight_line",
+      "position": [
+        400.0,
+        100.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 90,
+      "current_hp": 850,
+      "max_hp": 850,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_m",
+            "current_hp": 500,
+            "max_hp": 500,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_armor_std",
+            "current_hp": 200,
+            "max_hp": 200,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": null
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-27T10:44:46.720591",
+  "mode": "test"
+}

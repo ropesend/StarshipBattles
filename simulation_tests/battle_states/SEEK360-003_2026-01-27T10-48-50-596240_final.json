@@ -1,0 +1,167 @@
+{
+  "version": "1.0",
+  "battle_id": "0dc2f166-19ad-4d9d-ad50-3ebd84ed8025",
+  "seed": 2057716893,
+  "tick_count": 800,
+  "max_ticks": 800,
+  "ships": {
+    "b18c3bb0-396d-4953-b2d9-aca0cd0575f9": {
+      "ship_id": "b18c3bb0-396d-4953-b2d9-aca0cd0575f9",
+      "name": "Test Attacker Seeker360",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 120,
+      "max_hp": 120,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_seeker_no_resource",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Target Stationary"
+    },
+    "b6fc7230-b409-4478-85be-6ab1a91f9feb": {
+      "ship_id": "b6fc7230-b409-4478-85be-6ab1a91f9feb",
+      "name": "Test Target Stationary",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 1,
+      "color": [
+        0,
+        0,
+        255
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        5000.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 1000000000.0,
+      "max_hp": 1000000100,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_armor_extreme_hp",
+            "current_hp": 999999900.0,
+            "max_hp": 1000000000,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Attacker Seeker360"
+    }
+  },
+  "projectiles": [
+    {
+      "projectile_id": "d5fcff68-5400-4a66-9208-337a812ccedc",
+      "owner_ship_id": "b18c3bb0-396d-4953-b2d9-aca0cd0575f9",
+      "team_id": 0,
+      "position": [
+        2990.0,
+        0.0
+      ],
+      "velocity": [
+        10.0,
+        0.0
+      ],
+      "damage": 100.0,
+      "max_range": 5000.0,
+      "endurance": 2.0100000000000637,
+      "max_endurance": 5.0,
+      "projectile_type": "missile",
+      "turn_rate": 90.0,
+      "max_speed": 10.0,
+      "target_ship_id": "b6fc7230-b409-4478-85be-6ab1a91f9feb",
+      "hp": 1,
+      "max_hp": 1,
+      "distance_traveled": 2990.0,
+      "is_alive": true
+    }
+  ],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-27T10:48:50.639160",
+  "mode": "test"
+}
