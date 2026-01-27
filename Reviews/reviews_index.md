@@ -13,8 +13,15 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-01-26 | Consistency Review | naming-inconsistencies | In Progress | [2026-01-26_consistency_naming-inconsistencies](results/2026-01-26_consistency_naming-inconsistencies/) |
 | 2026-01-24 | General Review | maintainability-extensibility-health | In Progress | [2026-01-24_general_maintainability-extensibility-health](results/2026-01-24_general_maintainability-extensibility-health/) |
 | 2026-01-23 | Test Coverage Review | full-codebase-coverage-gaps | In Progress | [2026-01-23_test-coverage_full-codebase-coverage-gaps](results/2026-01-23_test-coverage_full-codebase-coverage-gaps/) |
+
+---
+
+## Update Reviews
+| Update Date | Original Review | Original Date | Progress | Link |
+|-------------|-----------------|---------------|----------|------|
 
 ---
 
@@ -47,6 +54,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | Performance | [06_performance_review.md](protocols/06_performance_review.md) | Performance analysis |
 | Technical Debt | [07_technical_debt_review.md](protocols/07_technical_debt_review.md) | Debt assessment |
 | Consistency | [08_consistency_review.md](protocols/08_consistency_review.md) | Pattern consistency |
+| Update | [09_update_review.md](protocols/09_update_review.md) | Validate progress on previous review |
 
 ---
 
@@ -60,9 +68,11 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 
 | Script | Purpose |
 |--------|---------|
-| `create_review.py` | Create new review folder |
+| `create_review.py` | Create new review folder (use `--original` for update reviews) |
 | `calculate_agents.py` | Recommend agent count for scope |
 | `compile_findings.py` | Generate report from agent findings |
+| `compile_update_findings.py` | Generate progress report for update reviews |
+| `validate_findings.py` | Extract findings from original review for validation |
 | `review_to_project.py` | Create project from findings (or handoff with `--no-create-project`) |
 
 ---

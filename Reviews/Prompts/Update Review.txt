@@ -1,0 +1,25 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\09_update_review.md
+
+I want to conduct an Update Review - validate progress on a previous review's findings and discover new issues.
+
+1. LOAD the core protocol `Reviews/protocols/00_review_core.md`
+2. LOAD the specific protocol `Reviews/protocols/09_update_review.md`
+3. ADOPT the 'Code Review Coordinator' persona
+4. EXECUTE all phases:
+   - Phase A: Scope Definition (select original review, confirm validation scope)
+   - Phase B: Agent Planning (confirm validation agent configuration)
+   - Phase C: Review Swarm Launch (deploy validation and discovery agents)
+   - Phase D: Findings Compilation (generate progress report)
+   - Phase E: User Summary (present progress dashboard, discuss next steps)
+
+<update_scope>
+
+[IDENTIFY THE REVIEW TO UPDATE]
+
+- Which previous review do you want to update/validate?
+- Validation scope: all findings, Critical/Major only, or specific IDs?
+- Any specific findings you know were addressed?
+- Any areas where significant work was done since the original review?
+- Any areas of recent work that might have caused regressions?
+
+</update_scope>

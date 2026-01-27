@@ -18,6 +18,7 @@ VALID_REVIEW_TYPES = [
     "performance",
     "tech-debt",
     "consistency",
+    "update",
 ]
 
 # Review type display names
@@ -30,6 +31,7 @@ REVIEW_TYPE_NAMES = {
     "performance": "Performance Review",
     "tech-debt": "Technical Debt Review",
     "consistency": "Consistency Review",
+    "update": "Update Review",
 }
 
 # Valid review statuses
@@ -42,6 +44,16 @@ VALID_STATUSES = [
 
 # Severity levels
 SEVERITY_LEVELS = ["Critical", "Major", "Minor", "Info"]
+
+# Validation statuses for update reviews
+VALIDATION_STATUSES = [
+    "FIXED",
+    "PARTIALLY_FIXED",
+    "STILL_PRESENT",
+    "WORSE",
+    "OBSOLETE",
+    "CANNOT_VERIFY",
+]
 
 # Agent count recommendations by scope size
 AGENT_SCALING = {
