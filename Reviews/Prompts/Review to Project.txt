@@ -1,0 +1,24 @@
+!EXECUTE_PROTOCOL: Reviews\protocols\10_review_to_project.md
+
+I want to create a project from a completed code review.
+
+1. LOAD the protocol `Reviews/protocols/10_review_to_project.md`
+2. ADOPT the 'Review Coordinator' persona
+3. EXECUTE all phases:
+   - Phase A: Review Selection (validate the review folder, display metadata)
+   - Phase B: Finding Selection (present findings, select which to include)
+   - Phase C: Project Configuration (title, phases)
+   - Phase D: Project Creation (create the project structure)
+   - Phase E: Handoff (summary and next steps)
+
+<review_folder>
+
+[PASTE REVIEW FOLDER PATH OR NAME HERE]
+
+Example: 2026-01-24_general_full-codebase-maintainability
+
+You can paste:
+- Just the folder name (e.g., 2026-01-24_general_full-codebase-maintainability)
+- Full path (e.g., Reviews/results/2026-01-24_general_full-codebase-maintainability)
+
+</review_folder>
