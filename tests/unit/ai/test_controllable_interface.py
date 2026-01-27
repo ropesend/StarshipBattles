@@ -193,6 +193,12 @@ class TestIControllableExtendedMethods:
 
         assert hasattr(IControllable, 'get_layers')
 
+    def test_icontrollable_has_get_turn_throttle_method(self):
+        """IControllable defines get_turn_throttle method (PROJ-24 Phase 6)."""
+        from game.ai.interfaces.controllable import IControllable
+
+        assert hasattr(IControllable, 'get_turn_throttle')
+
 
 # =============================================================================
 # Test: Formation Support Methods
@@ -768,3 +774,15 @@ class TestIControllableNewMethods:
         result = adapter.get_layers()
 
         assert result == layers
+
+    def test_adapter_get_turn_throttle_returns_ship_turn_throttle(self, mock_ship):
+        """get_turn_throttle returns the ship's turn_throttle (PROJ-24 Phase 6)."""
+        from game.ai.interfaces.controllable import ShipControllableAdapter
+
+        mock_ship.turn_throttle = 0.75
+
+        adapter = ShipControllableAdapter(mock_ship)
+
+        result = adapter.get_turn_throttle()
+
+        assert result == 0.75
