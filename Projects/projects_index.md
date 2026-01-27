@@ -4,14 +4,15 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-21 | Legacy Cleanup Phase 8: Tests and Patterns | Planning | 2026-01-26 | 2026-01-26 |
 | PROJ-20 | Standardize Data Formats | Planning | 2026-01-26 | 2026-01-26 |
 | PROJ-19 | Standardize Data Formats | Planning | 2026-01-26 | 2026-01-26 |
-| PROJ-18 | Standardize Registry Access | Planning | 2026-01-25 | 2026-01-25 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-18 | Standardize Registry Access | Archived | 2026-01-25 | 2026-01-26 |
 | PROJ-17 | Enforce Layer Boundaries | Archived | 2026-01-25 | 2026-01-26 |
 | PROJ-16 | Consolidate Re-exports (Phase 3) | Archived | 2026-01-25 | 2026-01-26 |
 | PROJ-15 | Phase 2 - Remove Shims and Aliases | Archived | 2026-01-25 | 2026-01-25 |
@@ -105,4 +106,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-21
+## Next Project ID: PROJ-22

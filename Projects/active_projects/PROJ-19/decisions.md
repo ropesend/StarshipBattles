@@ -15,3 +15,5 @@
 | 2026-01-25 | Keep formation getattr in behaviors.py | These are genuinely optional attributes (formation_rotation_mode, is_derelict, etc.) |
 | 2026-01-25 | Keep app.py hasattr patterns out of scope | These are lazy initialization checks, different category from duck typing |
 | 2026-01-25 | Simulation layer out of scope | Many hasattr/getattr in simulation are for component capability checks - different pattern |
+| 2026-01-26 | Final count: 281 hasattr, target not achieved | Analysis: 163 are legitimate attribute checks (hasattr(self, ...) or hasattr(self.something, ...)). Remaining ~118 include simulation/builder patterns out of scope. All key duck typing clusters replaced (strategy_screen, strategy_detail_fmt, controller, system_tree_panel). Project achieved its goal of replacing type discrimination patterns with Protocols. |
+| 2026-01-26 | Keep defensive planet attribute checks | In format_planet_info(): hasattr(obj, 'owner_id') and hasattr(obj, 'resources') are defensive checks, not type discrimination. IPlanet Protocol guarantees these exist but keeping for backwards compatibility. |

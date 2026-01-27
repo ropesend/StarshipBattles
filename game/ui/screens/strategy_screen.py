@@ -3,6 +3,10 @@ import pygame
 import pygame_gui
 from game.core.logger import log_debug
 from game.core.config import UIConfig
+from game.core.protocols import (
+    is_star_system, is_star, is_planet, is_fleet,
+    is_warp_point, is_sector_environment
+)
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
@@ -443,7 +447,7 @@ class StrategyInterface:
             
         text = ""
         
-        if hasattr(obj, 'stars'): # StarSystem
+        if is_star_system(obj):
             # Show Primary Star Info
             primary = obj.primary_star
             if primary:
@@ -453,7 +457,7 @@ class StrategyInterface:
                 text += f"<b>Mass:</b> {primary.mass:.2f} Sol<br>"
                 text += f"<b>Temp:</b> {int(primary.temperature)} K<br>"
                 text += f"<b>Stars:</b> {len(obj.stars)}<br>"
-                
+
                 # Graph
                 self.graph_image.show()
                 self.btn_raw_data.show()
@@ -464,7 +468,7 @@ class StrategyInterface:
             else:
                  text = f"<b>System:</b> {obj.name}<br>(Empty System)"
 
-        elif hasattr(obj, 'color') and hasattr(obj, 'mass'): # Star
+        elif is_star(obj):
             text = f"<b>Star:</b> {obj.name}<br>"
             text += f"<b>Type:</b> {obj.star_type.name}<br>"
             text += f"<b>Mass:</b> {obj.mass:.2f} Sol<br>"
@@ -477,8 +481,8 @@ class StrategyInterface:
             surface = pygame.transform.rotate(surface, -90)
             self.graph_image.set_image(surface)
             self.current_raw_data = self._format_spectrum(obj)
-        
-        elif hasattr(obj, 'planet_type'): # Planet
+
+        elif is_planet(obj):
             text = self.format_planet_info(obj)
              
             self.graph_image.show()
@@ -487,8 +491,8 @@ class StrategyInterface:
             surface = pygame.transform.rotate(surface, -90)
             self.graph_image.set_image(surface)
             self.current_raw_data = self._format_atmosphere_raw(obj)
-            
-        elif hasattr(obj, 'calculate_radiation'): # SectorEnvironment
+
+        elif is_sector_environment(obj):
             # Calculate dynamic radiation
             spec = obj.calculate_radiation()
             # Mock a star-like object so _format_spectrum works
@@ -508,7 +512,7 @@ class StrategyInterface:
             self.graph_image.set_image(surface)
             self.current_raw_data = self._format_spectrum(MockStar)
 
-        elif hasattr(obj, 'ships'): # Fleet
+        elif is_fleet(obj):
             text = f"<b>Fleet:</b> {obj.id}<br>"
             text += f"<b>Owner:</b> {obj.owner_id}<br>"
             text += f"<b>Ships:</b> {len(obj.ships)}<br>"
@@ -541,7 +545,7 @@ class StrategyInterface:
                      if res.is_valid:
                          self.btn_colonize.show()
 
-        elif hasattr(obj, 'destination_id'): # Warp Point
+        elif is_warp_point(obj):
              text = f"<b>Warp Point</b><br>"
              text += f"<b>To:</b> {obj.destination_id}<br>"
              text += f"<b>Local Loc:</b> {obj.location}<br>"
@@ -683,7 +687,7 @@ class StrategyInterface:
             elif event.ui_element == self.btn_colonize:
                 # Logic: Issues order mostly from Fleet
                 obj = self.current_selection
-                if obj and hasattr(obj, 'ships'): # Is Fleet
+                if obj and is_fleet(obj):
                      # Find Uncolonized Planets at Fleet Location
                      from game.strategy.data.hex_math import hex_distance # Import if needed or check equality
                      
@@ -725,12 +729,12 @@ class StrategyInterface:
             
             elif event.ui_element == self.btn_orders:
                  obj = self.current_selection
-                 if obj and hasattr(obj, 'ships'):
+                 if obj and is_fleet(obj):
                       self.open_orders_window(obj)
 
             elif event.ui_element == self.btn_fleet_report:
                  obj = self.current_selection
-                 if obj and hasattr(obj, 'ships'):
+                 if obj and is_fleet(obj):
                       self.open_fleet_report_window(obj)
 
             elif event.type == pygame_gui.UI_WINDOW_CLOSE:

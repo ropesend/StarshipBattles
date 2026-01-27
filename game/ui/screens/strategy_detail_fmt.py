@@ -5,6 +5,10 @@ Functions for formatting HTML reports for planets, stars, fleets,
 and other objects displayed in the detail panel.
 """
 from game.strategy.data.fleet import OrderType
+from game.core.protocols import (
+    is_star_system, is_star, is_planet, is_fleet,
+    is_warp_point, is_sector_environment
+)
 
 
 def format_spectrum_html(star) -> str:
@@ -229,16 +233,16 @@ def get_label_for_object(obj) -> str:
     Returns:
         Human-readable label string
     """
-    if hasattr(obj, 'stars'):
+    if is_star_system(obj):
         return f"System: {obj.name}"
-    elif hasattr(obj, 'color') and hasattr(obj, 'mass'):
+    elif is_star(obj):
         return f"Star: {obj.name}"
-    elif hasattr(obj, 'planet_type'):
+    elif is_planet(obj):
         return f"Planet: {obj.name}"
-    elif hasattr(obj, 'destination_id'):
+    elif is_warp_point(obj):
         return f"Warp Point -> {obj.destination_id}"
-    elif hasattr(obj, 'ships'):
+    elif is_fleet(obj):
         return f"Fleet {obj.id} ({len(obj.ships)})"
-    elif hasattr(obj, 'calculate_radiation'):
+    elif is_sector_environment(obj):
         return "Local Radiation Analysis"
     return "Unknown Object"
