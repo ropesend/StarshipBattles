@@ -1,0 +1,14 @@
+{
+    "version": "2.0.0",
+    "timestamp": "2026-01-27T13:04:21.993585",
+    "player_name": "Terran Command",
+    "empire_count": 2,
+    "empire_names": [
+        "Empire 0",
+        "Empire 1"
+    ],
+    "latest_turn_number": 1,
+    "turn_number": 1,
+    "galaxy_radius": 4000,
+    "system_count": 1
+}

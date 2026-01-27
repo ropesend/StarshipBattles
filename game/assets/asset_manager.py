@@ -3,6 +3,7 @@ import pygame
 import threading
 from game.core.json_utils import load_json
 from game.core.logger import log_error, log_info, log_warning
+from game.core.paths import Paths
 
 
 class AssetManager:
@@ -28,7 +29,7 @@ class AssetManager:
             raise Exception("AssetManager is a singleton. Use AssetManager.instance()")
         self.assets = {}  # Cache: {key: Surface} or {key: [Surfaces]}
         self.manifest = {}
-        self.manifest_path = "assets/asset_manifest.json"
+        self.manifest_path = Paths.ASSET_MANIFEST_FILE
         self.missing_texture = None
 
     @classmethod

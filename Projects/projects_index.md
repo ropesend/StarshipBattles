@@ -16,12 +16,13 @@
 | PROJ-29 | Simulation: Ship Decoupling | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-28 | Physics Engine: Constants Consolidation | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-27 | Core Foundation: Registry Singleton Refactoring | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-26 | Naming Consistency Cleanup | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-39 | Path Centralization | Archived | 2026-01-27 | 2026-01-27 |
+| PROJ-26 | Naming Consistency Cleanup | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-25 | Consolidate Dual AI Implementations | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-24 | ShipControllableAdapter Interface Migration | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-23 | ShipStatsService Modifier Application Bug | Archived | 2026-01-27 | 2026-01-27 |
@@ -123,4 +124,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-39
+## Next Project ID: PROJ-40

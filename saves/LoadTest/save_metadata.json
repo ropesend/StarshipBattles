@@ -1,0 +1,13 @@
+{
+    "version": "2.0.0",
+    "timestamp": "2026-01-27T13:36:42.851577",
+    "player_name": "Saved Empire",
+    "empire_count": 1,
+    "empire_names": [
+        "Saved Empire"
+    ],
+    "latest_turn_number": 3,
+    "turn_number": 3,
+    "galaxy_radius": 4000,
+    "system_count": 5
+}

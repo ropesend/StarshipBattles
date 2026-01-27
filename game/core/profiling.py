@@ -8,6 +8,7 @@ from contextlib import contextmanager
 
 from game.core.json_utils import load_json, save_json
 from game.core.logger import log_error, log_info
+from game.core.paths import Paths
 
 
 class Profiler:
@@ -106,8 +107,10 @@ class Profiler:
         }
         self.records.append(entry)
 
-    def save_history(self, filename: str = "profiling_history.json"):
+    def save_history(self, filename: str = None):
         """Save current session to history file."""
+        if filename is None:
+            filename = Paths.PROFILING_HISTORY
         if not self.records:
             log_info("No records to save.")
             return

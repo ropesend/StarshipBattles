@@ -8,22 +8,32 @@
         "save_name": "",
         "players": [
             {
-                "name": "Terran Command",
+                "name": "E1",
                 "theme": "Federation",
                 "color": [
+                    255,
                     0,
-                    100,
-                    255
+                    0
                 ],
                 "is_human": true
             },
             {
-                "name": "Xeno Hive",
+                "name": "E2",
                 "theme": "Atlantians",
                 "color": [
                     0,
-                    200,
-                    150
+                    255,
+                    0
+                ],
+                "is_human": true
+            },
+            {
+                "name": "E3",
+                "theme": "Romulans",
+                "color": [
+                    0,
+                    0,
+                    255
                 ],
                 "is_human": true
             }
@@ -37,7 +47,7 @@
     "empires": [
         {
             "id": 0,
-            "name": "Alpha Empire",
+            "name": "Empire 0",
             "color": [
                 0,
                 0,
@@ -49,7 +59,19 @@
         },
         {
             "id": 1,
-            "name": "Beta Empire",
+            "name": "Empire 1",
+            "color": [
+                0,
+                0,
+                255
+            ],
+            "colony_ids": [],
+            "fleets": [],
+            "built_ship_designs": []
+        },
+        {
+            "id": 2,
+            "name": "Empire 2",
             "color": [
                 0,
                 0,

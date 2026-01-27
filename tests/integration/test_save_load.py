@@ -18,6 +18,7 @@ from unittest.mock import patch, MagicMock
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
+from game.core import paths as paths_module
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
@@ -99,7 +100,7 @@ class TestSaveGameCreation:
 
     def test_save_creates_folder_structure(self, minimal_game_session, temp_save_folder):
         """Save creates proper folder structure."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             success, message, save_path = SaveGameService.save_game(
                 minimal_game_session,
                 save_name="test_save"
@@ -116,7 +117,7 @@ class TestSaveGameCreation:
 
     def test_save_creates_turn_file(self, minimal_game_session, temp_save_folder):
         """Save creates turn state file."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             success, message, save_path = SaveGameService.save_game(
                 minimal_game_session,
                 save_name="test_save"
@@ -139,7 +140,7 @@ class TestSaveGameCreation:
 
     def test_save_creates_metadata(self, minimal_game_session, temp_save_folder):
         """Save creates metadata file with correct info."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             success, message, save_path = SaveGameService.save_game(
                 minimal_game_session,
                 save_name="test_save"
@@ -162,7 +163,7 @@ class TestSaveGameCreation:
         """Save updates game session's save_path."""
         assert minimal_game_session.save_path is None
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             success, message, save_path = SaveGameService.save_game(
                 minimal_game_session,
                 save_name="test_save"
@@ -173,7 +174,7 @@ class TestSaveGameCreation:
 
     def test_save_creates_per_empire_design_folders(self, minimal_game_session, temp_save_folder):
         """Save creates design folder for each empire."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             success, message, save_path = SaveGameService.save_game(
                 minimal_game_session,
                 save_name="test_save"
@@ -188,7 +189,7 @@ class TestSaveGameCreation:
 
     def test_save_subsequent_turns(self, minimal_game_session, temp_save_folder):
         """Saving after multiple turns creates multiple turn files."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             # Save turn 1
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
@@ -218,7 +219,7 @@ class TestLoadGameRestoration:
 
     def test_load_returns_valid_session(self, minimal_game_session, temp_save_folder):
         """Load returns a valid GameSession object."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
 
@@ -235,7 +236,7 @@ class TestLoadGameRestoration:
         minimal_game_session.process_turn()
         original_turn = minimal_game_session.turn_number
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
 
@@ -248,7 +249,7 @@ class TestLoadGameRestoration:
         original_empire_count = len(game_session_with_state.empires)
         original_empire_names = [e.name for e in game_session_with_state.empires]
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(game_session_with_state, save_name="test_save")
             save_path = game_session_with_state.save_path
 
@@ -262,7 +263,7 @@ class TestLoadGameRestoration:
         """Load restores galaxy structure."""
         original_system_count = len(minimal_game_session.systems)
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
 
@@ -272,7 +273,7 @@ class TestLoadGameRestoration:
 
     def test_load_specific_turn(self, minimal_game_session, temp_save_folder):
         """Load can restore a specific turn from history."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             # Save turn 1
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
@@ -292,7 +293,7 @@ class TestLoadGameRestoration:
 
     def test_load_restores_save_path(self, minimal_game_session, temp_save_folder):
         """Loaded session has correct save_path set."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             original_save_path = minimal_game_session.save_path
 
@@ -314,7 +315,7 @@ class TestStateRoundTrip:
         original_radius = minimal_game_session.config.galaxy_radius
         original_players = len(minimal_game_session.config.players)
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(minimal_game_session.save_path)
 
@@ -325,7 +326,7 @@ class TestStateRoundTrip:
         """Empire IDs are preserved through round-trip."""
         original_ids = [e.id for e in game_session_with_state.empires]
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(game_session_with_state, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(game_session_with_state.save_path)
 
@@ -336,7 +337,7 @@ class TestStateRoundTrip:
         """Fleet counts are preserved through round-trip."""
         original_fleet_counts = [len(e.fleets) for e in game_session_with_state.empires]
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(game_session_with_state, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(game_session_with_state.save_path)
 
@@ -347,7 +348,7 @@ class TestStateRoundTrip:
         """Colony counts are preserved through round-trip."""
         original_colony_counts = [len(e.colonies) for e in game_session_with_state.empires]
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(game_session_with_state, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(game_session_with_state.save_path)
 
@@ -361,7 +362,7 @@ class TestStateRoundTrip:
             for planet in system.planets:
                 original_planet_ids.add(planet.id)
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(game_session_with_state, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(game_session_with_state.save_path)
 
@@ -376,7 +377,7 @@ class TestStateRoundTrip:
         """Human player IDs are preserved through round-trip."""
         original_human_ids = minimal_game_session.human_player_ids.copy()
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(minimal_game_session.save_path)
 
@@ -399,7 +400,7 @@ class TestCorruptedSaves:
 
         # No metadata file
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             loaded_session, message = SaveGameService.load_game(save_path)
 
         assert loaded_session is None
@@ -416,7 +417,7 @@ class TestCorruptedSaves:
         with open(os.path.join(save_path, "save_metadata.json"), 'w') as f:
             json.dump(metadata, f)
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             loaded_session, message = SaveGameService.load_game(save_path)
 
         assert loaded_session is None
@@ -424,7 +425,7 @@ class TestCorruptedSaves:
 
     def test_load_invalid_json_turn_file(self, minimal_game_session, temp_save_folder):
         """Load fails gracefully with corrupted turn JSON."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
 
@@ -433,7 +434,7 @@ class TestCorruptedSaves:
         with open(turn_file, 'w') as f:
             f.write("{ invalid json }")
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             loaded_session, message = SaveGameService.load_game(save_path)
 
         assert loaded_session is None
@@ -441,7 +442,7 @@ class TestCorruptedSaves:
 
     def test_load_missing_required_fields(self, minimal_game_session, temp_save_folder):
         """Load fails gracefully when required fields are missing."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             save_path = minimal_game_session.save_path
 
@@ -453,7 +454,7 @@ class TestCorruptedSaves:
         with open(turn_file, 'w') as f:
             json.dump(data, f)
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             loaded_session, message = SaveGameService.load_game(save_path)
 
         assert loaded_session is None
@@ -461,7 +462,7 @@ class TestCorruptedSaves:
 
     def test_load_nonexistent_save(self, temp_save_folder):
         """Load fails gracefully for nonexistent save."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             loaded_session, message = SaveGameService.load_game("nonexistent_save")
 
         assert loaded_session is None
@@ -478,7 +479,7 @@ class TestVersionCompatibility:
 
     def test_current_version_loads(self, minimal_game_session, temp_save_folder):
         """Current version saves load correctly."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             loaded_session, message = SaveGameService.load_game(minimal_game_session.save_path)
 
@@ -510,7 +511,7 @@ class TestVersionCompatibility:
         with open(os.path.join(save_path, "turns", "turn_1.json"), 'w') as f:
             json.dump(turn_data, f)
 
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             loaded_session, message = SaveGameService.load_game(save_path)
 
         assert loaded_session is None
@@ -536,7 +537,7 @@ class TestSaveManagement:
 
     def test_list_saves(self, minimal_game_session, temp_save_folder):
         """List saves returns saved games."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             # Create multiple saves
             SaveGameService.save_game(minimal_game_session, save_name="save_1")
             minimal_game_session.save_path = None  # Reset for new save
@@ -551,7 +552,7 @@ class TestSaveManagement:
 
     def test_list_turns(self, minimal_game_session, temp_save_folder):
         """List turns returns available turn history."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             # Save multiple turns
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
 
@@ -571,7 +572,7 @@ class TestSaveManagement:
 
     def test_delete_save(self, minimal_game_session, temp_save_folder):
         """Delete save removes save folder."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="to_delete")
             save_path = minimal_game_session.save_path
 
@@ -584,7 +585,7 @@ class TestSaveManagement:
 
     def test_delete_nonexistent_save(self, temp_save_folder):
         """Delete nonexistent save fails gracefully."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             success, message = SaveGameService.delete_save("nonexistent")
 
         assert success is False
@@ -592,7 +593,7 @@ class TestSaveManagement:
 
     def test_get_save_info(self, minimal_game_session, temp_save_folder):
         """Get save info returns metadata."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="info_test")
 
             info = SaveGameService.get_save_info(minimal_game_session.save_path)
@@ -613,7 +614,7 @@ class TestGameContinuity:
 
     def test_can_process_turn_after_load(self, minimal_game_session, temp_save_folder):
         """Loaded game can process turns."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(minimal_game_session.save_path)
 
@@ -626,7 +627,7 @@ class TestGameContinuity:
 
     def test_can_save_after_load(self, minimal_game_session, temp_save_folder):
         """Loaded game can be saved again."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             SaveGameService.save_game(minimal_game_session, save_name="test_save")
             loaded_session, _ = SaveGameService.load_game(minimal_game_session.save_path)
 
@@ -639,7 +640,7 @@ class TestGameContinuity:
 
     def test_multiple_save_load_cycles(self, minimal_game_session, temp_save_folder):
         """Multiple save/load cycles preserve state."""
-        with patch.object(SaveGameService, 'DEFAULT_SAVES_FOLDER', temp_save_folder):
+        with patch.object(paths_module.Paths, 'SAVES_DIR', temp_save_folder):
             # Cycle 1
             SaveGameService.save_game(minimal_game_session, save_name="cycle_test")
             session, _ = SaveGameService.load_game(minimal_game_session.save_path)

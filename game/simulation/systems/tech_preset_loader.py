@@ -13,10 +13,11 @@ import os
 import glob
 from typing import List, Dict
 from game.core.json_utils import load_json_required
+from game.core.paths import Paths
 
 
 # Path to tech presets directory
-TECH_PRESETS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "tech_presets")
+TECH_PRESETS_DIR = Paths.TECH_PRESETS_DIR
 
 
 class TechPresetLoader:

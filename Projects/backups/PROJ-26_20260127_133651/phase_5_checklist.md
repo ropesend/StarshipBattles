@@ -1,7 +1,7 @@
 # Phase 5: Test Integration
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-39 5`
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-26 5`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
@@ -92,4 +92,4 @@ When all tasks above are done:
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
 - [ ] Update plan.md Current State to "Project Complete"
-- [ ] Move project to `Projects/completed_projects/PROJ-39/`
+- [ ] Move project to `Projects/completed_projects/PROJ-26/`

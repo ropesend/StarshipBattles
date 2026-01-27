@@ -11,6 +11,7 @@ import uuid
 from typing import List, Optional, Tuple
 
 from game.core.logger import log_info, log_debug, log_error, log_warning
+from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 
 
@@ -54,9 +55,7 @@ class RaceLibrary:
         """
         if races_folder is None:
             # Default to races/ in project root
-            base_path = os.path.dirname(os.path.dirname(os.path.dirname(
-                os.path.dirname(os.path.abspath(__file__)))))
-            self.races_folder = os.path.join(base_path, "races")
+            self.races_folder = Paths.RACES_DIR
         else:
             self.races_folder = races_folder
 

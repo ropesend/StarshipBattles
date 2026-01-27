@@ -6,6 +6,7 @@ import os
 
 from game.core.logger import log_debug, log_info, log_error
 from game.core.config import DisplayConfig
+from game.core.paths import Paths
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Starship Battles")
@@ -104,18 +105,17 @@ class Game:
         self.state = MENU
 
         # Load game data
-        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        load_components(os.path.join(base_path, "data", "components.json"))
-        load_modifiers(os.path.join(base_path, "data", "modifiers.json"))
-        load_resources(os.path.join(base_path, "data", "resources.json"))
+        load_components(Paths.COMPONENTS_FILE)
+        load_modifiers(Paths.MODIFIERS_FILE)
+        load_resources(Paths.RESOURCES_FILE)
 
         # Initialize ship data
         from game.simulation.entities.ship_loader import initialize_ship_data
-        initialize_ship_data(base_path)
+        initialize_ship_data(Paths.ROOT_DIR)
 
         # Load sprites
         sprite_mgr = SpriteManager.instance()
-        sprite_mgr.load_sprites(base_path)
+        sprite_mgr.load_sprites(Paths.ROOT_DIR)
 
         # Menu UI
         self.update_menu_buttons()
@@ -744,7 +744,7 @@ def main():
         error_msg = traceback.format_exc()
         log_error("CRITICAL CRASH CAUGHT:")
         log_error(error_msg)
-        with open("crash_log.txt", "w") as f:
+        with open(Paths.CRASH_LOG, "w") as f:
             f.write(error_msg)
         raise e
 

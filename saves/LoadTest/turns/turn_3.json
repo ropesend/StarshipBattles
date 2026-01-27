@@ -1,0 +1,2703 @@
+{
+    "turn_number": 3,
+    "save_path": "C:\\Dev\\Starship Battles\\saves\\LoadTest",
+    "config": {
+        "asset_base_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes",
+        "galaxy_radius": 4000,
+        "system_count": 5,
+        "save_name": "LoadTest",
+        "players": [
+            {
+                "name": "Saved Empire",
+                "theme": "Federation",
+                "color": [
+                    255,
+                    0,
+                    0
+                ],
+                "is_human": true
+            }
+        ]
+    },
+    "galaxy": {
+        "radius": 4000,
+        "systems": [
+            {
+                "coord": {
+                    "q": 2503,
+                    "r": -579
+                },
+                "system": {
+                    "name": "Unknown-1",
+                    "global_location": {
+                        "q": 2503,
+                        "r": -579
+                    },
+                    "stars": [
+                        {
+                            "name": "Unknown-1 A",
+                            "mass": 1.138535314346028,
+                            "diameter_hexes": 2.0,
+                            "temperature": 6145.286398040466,
+                            "luminosity": 1.574754182080911,
+                            "spectrum": {
+                                "gamma_ray": 4.618832496974799e-29,
+                                "xray": 3.0391295807701283e-07,
+                                "ultraviolet": 0.2026547350253039,
+                                "blue": 0.43531238585896764,
+                                "green": 0.46484855326716573,
+                                "red": 0.41815869156127067,
+                                "infrared": 0.015000575830140167,
+                                "microwave": 2.4035016072017473e-17,
+                                "radio": 1.0189136185739877e-47
+                            },
+                            "star_type": "MAIN_SEQUENCE",
+                            "color": [
+                                255,
+                                248,
+                                240
+                            ],
+                            "age": 7862950063.744156,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            }
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Unknown-1",
+                            "location": {
+                                "q": -7,
+                                "r": 21
+                            }
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 1,
+                            "name": "Unknown-1 I",
+                            "location": {
+                                "q": -5,
+                                "r": -3
+                            },
+                            "orbit_distance": 8,
+                            "mass": 1.408945403734151e+24,
+                            "radius": 5044200.911082576,
+                            "surface_area": 319738266836928.3,
+                            "density": 2620.7670905910345,
+                            "surface_gravity": 3.695856801264586,
+                            "surface_pressure": 10228752.792279145,
+                            "surface_temperature": 141.09567116516243,
+                            "surface_water": 0.20150421345337907,
+                            "tectonic_activity": 0.17519520762613316,
+                            "magnetic_field": 1.8368807691665656,
+                            "atmosphere": {
+                                "H2": 93503.21386896045,
+                                "He": 200405.66098505413,
+                                "CH4": 71329.37532836194,
+                                "NH3": 231195.34499702926,
+                                "H2O": 902313.6247566745,
+                                "N2": 3319025.1753433305,
+                                "O2": 2290.5193266872034,
+                                "Ar": 61330.750839987966,
+                                "CO2": 5294142.854737849,
+                                "SO2": 53216.27209520919
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": 0,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 486754,
+                                    "quality": 60.98460733156501
+                                },
+                                "Organics": {
+                                    "quantity": 482221,
+                                    "quality": 56.06354085982582
+                                },
+                                "Vapors": {
+                                    "quantity": 466991,
+                                    "quality": 56.36321875408083
+                                },
+                                "Radioactives": {
+                                    "quantity": 398087,
+                                    "quality": 34.08337965460455
+                                },
+                                "Exotics": {
+                                    "quantity": 473760,
+                                    "quality": 44.147605342757664
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 2,
+                            "name": "Unknown-1 II",
+                            "location": {
+                                "q": 8,
+                                "r": -7
+                            },
+                            "orbit_distance": 8,
+                            "mass": 1.6996713420274074e+23,
+                            "radius": 2308571.1875218493,
+                            "surface_area": 66972483849010.1,
+                            "density": 3297.9686982844614,
+                            "surface_gravity": 2.128551358120703,
+                            "surface_pressure": 51.59216276912007,
+                            "surface_temperature": 24.214242352327464,
+                            "surface_water": 0.5039626383449572,
+                            "tectonic_activity": 0.016459014598792666,
+                            "magnetic_field": 0.17405668651574435,
+                            "atmosphere": {
+                                "He": 0.27665380625226094,
+                                "CH4": 0.45780057777588085,
+                                "NH3": 0.5045594327909485,
+                                "H2O": 4.957475891047751,
+                                "N2": 17.099513110153037,
+                                "O2": 0.030851015517031333,
+                                "Ar": 0.12920390386787198,
+                                "CO2": 28.079433693088067,
+                                "SO2": 0.0566713386272281
+                            },
+                            "planet_type": "BARREN",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 307578,
+                                    "quality": 45.010176067111054
+                                },
+                                "Organics": {
+                                    "quantity": 315197,
+                                    "quality": 53.285960334475334
+                                },
+                                "Vapors": {
+                                    "quantity": 506965,
+                                    "quality": 68.21000827265705
+                                },
+                                "Radioactives": {
+                                    "quantity": 426786,
+                                    "quality": 51.37573336636798
+                                },
+                                "Exotics": {
+                                    "quantity": 513031,
+                                    "quality": 59.80468243016552
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 3,
+                            "name": "Unknown-1 III",
+                            "location": {
+                                "q": -3,
+                                "r": -9
+                            },
+                            "orbit_distance": 12,
+                            "mass": 2.1068658678074956e+25,
+                            "radius": 10732564.467996031,
+                            "surface_area": 1447494345094665.8,
+                            "density": 4068.532228117924,
+                            "surface_gravity": 12.207749226369227,
+                            "surface_pressure": 1488166944.5931463,
+                            "surface_temperature": 99.51597538987615,
+                            "surface_water": 0.7837186303047212,
+                            "tectonic_activity": 0.6447270549343266,
+                            "magnetic_field": 1.1475532954082257,
+                            "atmosphere": {
+                                "H2": 1076960736.3618972,
+                                "He": 344627435.63580704,
+                                "CH4": 7950326.275977688,
+                                "NH3": 11839605.121286737,
+                                "H2O": 5739890.56244124,
+                                "N2": 14352548.888173196,
+                                "O2": 7315517.779782945,
+                                "Ar": 12270169.106278121,
+                                "CO2": 342549.14680392935,
+                                "SO2": 6768165.714698222
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 675757,
+                                    "quality": 34.44807916889169
+                                },
+                                "Organics": {
+                                    "quantity": 586742,
+                                    "quality": 47.042497709410355
+                                },
+                                "Vapors": {
+                                    "quantity": 473157,
+                                    "quality": 52.06551377361637
+                                },
+                                "Radioactives": {
+                                    "quantity": 511755,
+                                    "quality": 34.44656669059922
+                                },
+                                "Exotics": {
+                                    "quantity": 622977,
+                                    "quality": 49.36897987613032
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 4,
+                            "name": "Unknown-1 IV",
+                            "location": {
+                                "q": -14,
+                                "r": 0
+                            },
+                            "orbit_distance": 14,
+                            "mass": 6.422102264091915e+23,
+                            "radius": 4012696.0836304687,
+                            "surface_area": 202340304947817.25,
+                            "density": 2372.9020052615097,
+                            "surface_gravity": 2.6620144242277037,
+                            "surface_pressure": 244629.61253776724,
+                            "surface_temperature": 80.48839701321684,
+                            "surface_water": 0.24700799109479066,
+                            "tectonic_activity": 0.3576565405970996,
+                            "magnetic_field": 1.4195526339397722,
+                            "atmosphere": {
+                                "H2": 3446.701978085859,
+                                "He": 1595.5156278178154,
+                                "CH4": 1996.757000333239,
+                                "NH3": 1710.8770797807144,
+                                "H2O": 17782.670672590502,
+                                "N2": 54046.90767157953,
+                                "O2": 120.06998257725043,
+                                "Ar": 297.5190836558037,
+                                "CO2": 161638.56244202374,
+                                "SO2": 1994.0309993227677
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 460797,
+                                    "quality": 41.99450539834627
+                                },
+                                "Organics": {
+                                    "quantity": 601988,
+                                    "quality": 66.6176360194231
+                                },
+                                "Vapors": {
+                                    "quantity": 622017,
+                                    "quality": 62.11783221042542
+                                },
+                                "Radioactives": {
+                                    "quantity": 631297,
+                                    "quality": 63.027866352225104
+                                },
+                                "Exotics": {
+                                    "quantity": 628913,
+                                    "quality": 53.57088994146396
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 5,
+                            "name": "Unknown-1 V",
+                            "location": {
+                                "q": -8,
+                                "r": 18
+                            },
+                            "orbit_distance": 18,
+                            "mass": 6.116425844219451e+25,
+                            "radius": 13654627.719818283,
+                            "surface_area": 2342985452348472.0,
+                            "density": 5735.476614546672,
+                            "surface_gravity": 21.89493752519878,
+                            "surface_pressure": 70726697361.86194,
+                            "surface_temperature": 166.43178727209363,
+                            "surface_water": 0.5860268590699007,
+                            "tectonic_activity": 0.6913265260164083,
+                            "magnetic_field": 1.7095748401036233,
+                            "atmosphere": {
+                                "H2": 52124201066.56396,
+                                "He": 16679744341.300467,
+                                "CH4": 8549020.284069061,
+                                "NH3": 371366060.2312696,
+                                "H2O": 53863061.47569833,
+                                "N2": 282260319.9354352,
+                                "O2": 680619882.0993947,
+                                "Ar": 123661310.5576111,
+                                "CO2": 148681653.29804257,
+                                "SO2": 253750646.11598942
+                            },
+                            "planet_type": "ICE_GIANT",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 762363,
+                                    "quality": 36.18466198027743
+                                },
+                                "Organics": {
+                                    "quantity": 682777,
+                                    "quality": 27.509910056614732
+                                },
+                                "Vapors": {
+                                    "quantity": 697870,
+                                    "quality": 45.70656896615379
+                                },
+                                "Radioactives": {
+                                    "quantity": 729176,
+                                    "quality": 28.46129931549769
+                                },
+                                "Exotics": {
+                                    "quantity": 713730,
+                                    "quality": 24.685289721274142
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 6,
+                            "name": "Unknown-1 Va",
+                            "location": {
+                                "q": -8,
+                                "r": 18
+                            },
+                            "orbit_distance": 18,
+                            "mass": 5.608807862760619e+24,
+                            "radius": 6711833.509868999,
+                            "surface_area": 566098773799183.6,
+                            "density": 4428.518144278613,
+                            "surface_gravity": 8.309864388138964,
+                            "surface_pressure": 640505622.3224818,
+                            "surface_temperature": 202.2379404937442,
+                            "surface_water": 0.3674328854598413,
+                            "tectonic_activity": 0.5141573813281027,
+                            "magnetic_field": 1.1122610856818052,
+                            "atmosphere": {
+                                "H2": 22054196.186231505,
+                                "He": 8484787.676951548,
+                                "CH4": 31224046.141163614,
+                                "NH3": 7487560.252248338,
+                                "H2O": 9853328.966292057,
+                                "N2": 426873526.95016336,
+                                "O2": 231341.69730816115,
+                                "Ar": 12641560.235893626,
+                                "CO2": 110913344.49337205,
+                                "SO2": 10741929.72285748
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 530284,
+                                    "quality": 46.52400719686634
+                                },
+                                "Organics": {
+                                    "quantity": 598501,
+                                    "quality": 56.56313808247357
+                                },
+                                "Vapors": {
+                                    "quantity": 542844,
+                                    "quality": 35.80056860692081
+                                },
+                                "Radioactives": {
+                                    "quantity": 554062,
+                                    "quality": 31.439645195421008
+                                },
+                                "Exotics": {
+                                    "quantity": 556166,
+                                    "quality": 40.46251115624678
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 7,
+                            "name": "Unknown-1 VI",
+                            "location": {
+                                "q": 5,
+                                "r": 13
+                            },
+                            "orbit_distance": 18,
+                            "mass": 1.3198818199402633e+22,
+                            "radius": 896296.4502827285,
+                            "surface_area": 10095160240490.559,
+                            "density": 4376.142025083067,
+                            "surface_gravity": 1.0965726700098257,
+                            "surface_pressure": 5.297116275531515,
+                            "surface_temperature": 15.818855640802823,
+                            "surface_water": 0.29138477643569055,
+                            "tectonic_activity": 0.08174959438871801,
+                            "magnetic_field": 0.17123990182980486,
+                            "atmosphere": {
+                                "CH4": 0.3141957963666102,
+                                "NH3": 0.1129910062748981,
+                                "H2O": 0.1919906339077246,
+                                "N2": 2.7878193063637857,
+                                "O2": 0.00760285297670752,
+                                "Ar": 0.1544605977323488,
+                                "CO2": 1.4898198697951943,
+                                "SO2": 0.23823621211424495
+                            },
+                            "planet_type": "BARREN",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 248038,
+                                    "quality": 69.32520302639354
+                                },
+                                "Organics": {
+                                    "quantity": 197191,
+                                    "quality": 62.555235291066325
+                                },
+                                "Vapors": {
+                                    "quantity": 469922,
+                                    "quality": 70.84316630094942
+                                },
+                                "Radioactives": {
+                                    "quantity": 329567,
+                                    "quality": 57.605710921894
+                                },
+                                "Exotics": {
+                                    "quantity": 434041,
+                                    "quality": 73.98392472645358
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 8,
+                            "name": "Unknown-1 VII",
+                            "location": {
+                                "q": 1,
+                                "r": -20
+                            },
+                            "orbit_distance": 20,
+                            "mass": 1.9720647919326167e+24,
+                            "radius": 5047224.818210002,
+                            "surface_area": 320121736349038.7,
+                            "density": 3661.63137293047,
+                            "surface_gravity": 5.166799434289068,
+                            "surface_pressure": 61468278.23693739,
+                            "surface_temperature": 151.6387260218175,
+                            "surface_water": 0.3176249775982828,
+                            "tectonic_activity": 0.4950252524086455,
+                            "magnetic_field": 1.6809119856839665,
+                            "atmosphere": {
+                                "H2": 1347183.6749777778,
+                                "He": 341568.5350731247,
+                                "CH4": 1479304.4243895635,
+                                "NH3": 265111.0522058013,
+                                "H2O": 1422587.142120485,
+                                "N2": 30887187.202176873,
+                                "O2": 21778.25749661967,
+                                "Ar": 1234069.1238516134,
+                                "CO2": 24105975.82055811,
+                                "SO2": 363513.0040874208
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 541476,
+                                    "quality": 47.264502178859836
+                                },
+                                "Organics": {
+                                    "quantity": 506207,
+                                    "quality": 56.16969883218983
+                                },
+                                "Vapors": {
+                                    "quantity": 587149,
+                                    "quality": 61.25948118471038
+                                },
+                                "Radioactives": {
+                                    "quantity": 451819,
+                                    "quality": 36.713664026621515
+                                },
+                                "Exotics": {
+                                    "quantity": 645236,
+                                    "quality": 61.98003987095642
+                                }
+                            },
+                            "facilities": []
+                        }
+                    ]
+                }
+            },
+            {
+                "coord": {
+                    "q": -3725,
+                    "r": 977
+                },
+                "system": {
+                    "name": "Unknown-1",
+                    "global_location": {
+                        "q": -3725,
+                        "r": 977
+                    },
+                    "stars": [
+                        {
+                            "name": "Unknown-1 A",
+                            "mass": 0.7694744711864258,
+                            "diameter_hexes": 2.0,
+                            "temperature": 5101.757246631143,
+                            "luminosity": 0.3996499430744135,
+                            "spectrum": {
+                                "gamma_ray": 2.2282270386060993e-30,
+                                "xray": 3.353391425935386e-08,
+                                "ultraviolet": 0.03460901822494941,
+                                "blue": 0.11080456079190036,
+                                "green": 0.13042077633769913,
+                                "red": 0.12985756513078733,
+                                "infrared": 0.005114488295697387,
+                                "microwave": 2.6379977141375704e-17,
+                                "radio": 3.221938545312266e-47
+                            },
+                            "star_type": "MAIN_SEQUENCE",
+                            "color": [
+                                255,
+                                230,
+                                209
+                            ],
+                            "age": 3930731791.0995584,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            }
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Unknown-1",
+                            "location": {
+                                "q": 19,
+                                "r": -16
+                            }
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 9,
+                            "name": "Unknown-1 I",
+                            "location": {
+                                "q": 9,
+                                "r": -1
+                            },
+                            "orbit_distance": 9,
+                            "mass": 7.653333170568832e+22,
+                            "radius": 1636894.2599903296,
+                            "surface_area": 33670620168450.598,
+                            "density": 4165.816474191215,
+                            "surface_gravity": 1.906404664084865,
+                            "surface_pressure": 0.5191459928467062,
+                            "surface_temperature": 16.369260790721096,
+                            "surface_water": 0.5254559434778386,
+                            "tectonic_activity": 0.0024047140972664584,
+                            "magnetic_field": 0.44314908676364745,
+                            "atmosphere": {
+                                "He": 0.010035307529380049,
+                                "CH4": 0.009971608395555895,
+                                "NH3": 0.0029115944713316287,
+                                "H2O": 0.05610394206421165,
+                                "N2": 0.17283448899355686,
+                                "O2": 0.0007849496297373922,
+                                "Ar": 0.006751775461147755,
+                                "CO2": 0.24741221659676063,
+                                "SO2": 0.012340109705024232
+                            },
+                            "planet_type": "BARREN",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 261584,
+                                    "quality": 69.72945639557351
+                                },
+                                "Organics": {
+                                    "quantity": 512644,
+                                    "quality": 48.02312675190847
+                                },
+                                "Vapors": {
+                                    "quantity": 369577,
+                                    "quality": 69.38679459317108
+                                },
+                                "Radioactives": {
+                                    "quantity": 359151,
+                                    "quality": 74.02550899367817
+                                },
+                                "Exotics": {
+                                    "quantity": 457367,
+                                    "quality": 51.1857583908252
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 10,
+                            "name": "Unknown-1 II",
+                            "location": {
+                                "q": -16,
+                                "r": 16
+                            },
+                            "orbit_distance": 16,
+                            "mass": 2.9950860049789118e+25,
+                            "radius": 10900424.268907843,
+                            "surface_area": 1493126722097338.8,
+                            "density": 5520.653408147508,
+                            "surface_gravity": 16.82395962819454,
+                            "surface_pressure": 46634759842.356224,
+                            "surface_temperature": 177.72731913251394,
+                            "surface_water": 0.899181078508265,
+                            "tectonic_activity": 0.7735225076030956,
+                            "magnetic_field": 0.9556919245320261,
+                            "atmosphere": {
+                                "H2": 34007110707.80089,
+                                "He": 10882275426.496284,
+                                "CH4": 265253190.49924776,
+                                "NH3": 258631838.6339742,
+                                "H2O": 139430731.9176602,
+                                "N2": 414738107.2549053,
+                                "O2": 77965558.81522672,
+                                "Ar": 876337.7408631023,
+                                "CO2": 451238054.19756806,
+                                "SO2": 137239888.99959716
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 729630,
+                                    "quality": 43.75122421414621
+                                },
+                                "Organics": {
+                                    "quantity": 719239,
+                                    "quality": 33.973828026611805
+                                },
+                                "Vapors": {
+                                    "quantity": 503296,
+                                    "quality": 23.02793597771621
+                                },
+                                "Radioactives": {
+                                    "quantity": 638031,
+                                    "quality": 31.77762854008807
+                                },
+                                "Exotics": {
+                                    "quantity": 580971,
+                                    "quality": 40.569792280252905
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 11,
+                            "name": "Unknown-1 IIa",
+                            "location": {
+                                "q": -16,
+                                "r": 16
+                            },
+                            "orbit_distance": 16,
+                            "mass": 2.3888743144501114e+24,
+                            "radius": 5866922.989718973,
+                            "surface_area": 432544345762715.06,
+                            "density": 2824.057458671604,
+                            "surface_gravity": 4.632103441801359,
+                            "surface_pressure": 63121917.73859107,
+                            "surface_temperature": 202.160170557483,
+                            "surface_water": 0.42051747169210074,
+                            "tectonic_activity": 0.6450037398063811,
+                            "magnetic_field": 1.9160736174776356,
+                            "atmosphere": {
+                                "H2": 180089.65885956946,
+                                "He": 196617.60509860565,
+                                "CH4": 292361.45365911734,
+                                "NH3": 924533.6296115976,
+                                "H2O": 4654789.476356223,
+                                "N2": 13039350.520708608,
+                                "O2": 51692.45038932234,
+                                "Ar": 711246.1794153093,
+                                "CO2": 42857129.256932214,
+                                "SO2": 214107.50756050352
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 590129,
+                                    "quality": 52.155520237231755
+                                },
+                                "Organics": {
+                                    "quantity": 641106,
+                                    "quality": 32.83474545075707
+                                },
+                                "Vapors": {
+                                    "quantity": 614203,
+                                    "quality": 58.67856180249272
+                                },
+                                "Radioactives": {
+                                    "quantity": 514221,
+                                    "quality": 49.67178372055401
+                                },
+                                "Exotics": {
+                                    "quantity": 655218,
+                                    "quality": 52.309302160793656
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 12,
+                            "name": "Unknown-1 III",
+                            "location": {
+                                "q": 9,
+                                "r": -17
+                            },
+                            "orbit_distance": 17,
+                            "mass": 1.8817581339968785e+24,
+                            "radius": 4789658.7902812185,
+                            "surface_area": 288282988660581.06,
+                            "density": 4088.476115801565,
+                            "surface_gravity": 5.474700604585109,
+                            "surface_pressure": 6634887.145453174,
+                            "surface_temperature": 117.78051632886122,
+                            "surface_water": 0.3802049992227987,
+                            "tectonic_activity": 0.6927704624295825,
+                            "magnetic_field": 1.064747539554743,
+                            "atmosphere": {
+                                "H2": 76123.182688572,
+                                "He": 6503.510465510745,
+                                "CH4": 25856.760026886735,
+                                "NH3": 122092.6295438445,
+                                "H2O": 401338.24298857944,
+                                "N2": 1979549.8846285145,
+                                "O2": 4973.677902241527,
+                                "Ar": 168842.87606312108,
+                                "CO2": 3839008.639580365,
+                                "SO2": 10597.741565539185
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 503235,
+                                    "quality": 61.905297681892634
+                                },
+                                "Organics": {
+                                    "quantity": 377050,
+                                    "quality": 43.210451458474694
+                                },
+                                "Vapors": {
+                                    "quantity": 634447,
+                                    "quality": 48.456732839617686
+                                },
+                                "Radioactives": {
+                                    "quantity": 666797,
+                                    "quality": 42.160557543696285
+                                },
+                                "Exotics": {
+                                    "quantity": 482566,
+                                    "quality": 56.85335520246666
+                                }
+                            },
+                            "facilities": []
+                        }
+                    ]
+                }
+            },
+            {
+                "coord": {
+                    "q": 1736,
+                    "r": -3982
+                },
+                "system": {
+                    "name": "Unknown-1",
+                    "global_location": {
+                        "q": 1736,
+                        "r": -3982
+                    },
+                    "stars": [
+                        {
+                            "name": "Unknown-1 A",
+                            "mass": 0.33224137468941467,
+                            "diameter_hexes": 1.0,
+                            "temperature": 3423.482026677408,
+                            "luminosity": 0.02113917347260621,
+                            "spectrum": {
+                                "gamma_ray": 2.0666006937879696e-33,
+                                "xray": 2.427643249526583e-10,
+                                "ultraviolet": 0.0013006711846971929,
+                                "blue": 0.005934309315805268,
+                                "green": 0.006367961838475108,
+                                "red": 0.006484465435237017,
+                                "infrared": 0.0007237349616768975,
+                                "microwave": 2.8432514262510916e-17,
+                                "radio": 2.509441945990036e-46
+                            },
+                            "star_type": "RED_DWARF",
+                            "color": [
+                                255,
+                                100,
+                                100
+                            ],
+                            "age": 7132271706.706187,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            }
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Unknown-1",
+                            "location": {
+                                "q": -14,
+                                "r": 16
+                            }
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 13,
+                            "name": "Unknown-1 I",
+                            "location": {
+                                "q": 6,
+                                "r": -7
+                            },
+                            "orbit_distance": 7,
+                            "mass": 3.987575088624953e+22,
+                            "radius": 1294154.6045036532,
+                            "surface_area": 21046611658061.594,
+                            "density": 4391.994416290504,
+                            "surface_gravity": 1.5890672390387126,
+                            "surface_pressure": 65.54602259963895,
+                            "surface_temperature": 8.861241771957161,
+                            "surface_water": 0.8986070824411594,
+                            "tectonic_activity": 0.05123311339260002,
+                            "magnetic_field": 0.18940239120176117,
+                            "atmosphere": {
+                                "He": 0.5823499503880977,
+                                "CH4": 1.0146981028577837,
+                                "NH3": 0.7393445759033497,
+                                "H2O": 5.07677612695909,
+                                "N2": 24.447494552209157,
+                                "O2": 0.07146468722972343,
+                                "Ar": 1.1644251387547524,
+                                "CO2": 31.846144310135337,
+                                "SO2": 0.6033251552016488
+                            },
+                            "planet_type": "BARREN",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 504725,
+                                    "quality": 67.61489841092359
+                                },
+                                "Organics": {
+                                    "quantity": 487112,
+                                    "quality": 59.790209772377914
+                                },
+                                "Vapors": {
+                                    "quantity": 523566,
+                                    "quality": 63.891484903336405
+                                },
+                                "Radioactives": {
+                                    "quantity": 286081,
+                                    "quality": 60.173401363094236
+                                },
+                                "Exotics": {
+                                    "quantity": 413962,
+                                    "quality": 74.76296855759661
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 14,
+                            "name": "Unknown-1 II",
+                            "location": {
+                                "q": 9,
+                                "r": -3
+                            },
+                            "orbit_distance": 9,
+                            "mass": 1.1632653141696965e+25,
+                            "radius": 8627068.722029487,
+                            "surface_area": 935268654416169.4,
+                            "density": 4325.142260117007,
+                            "surface_gravity": 10.431769615419881,
+                            "surface_pressure": 590464323.1390175,
+                            "surface_temperature": 358.11005815236166,
+                            "surface_water": 0,
+                            "tectonic_activity": 0.12659620230933208,
+                            "magnetic_field": 1.4496437098883324,
+                            "atmosphere": {
+                                "H2": 19568083.65987597,
+                                "He": 515658.611263139,
+                                "CH4": 34552369.7977675,
+                                "NH3": 23718270.377516147,
+                                "H2O": 190292329.31994018,
+                                "N2": 237230575.38241628,
+                                "O2": 685047.4438960288,
+                                "Ar": 10470355.127099896,
+                                "CO2": 59065445.948709525,
+                                "SO2": 14366187.470532823
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 736576,
+                                    "quality": 28.52064273538432
+                                },
+                                "Organics": {
+                                    "quantity": 552081,
+                                    "quality": 45.43070912433838
+                                },
+                                "Vapors": {
+                                    "quantity": 499458,
+                                    "quality": 48.766769390329856
+                                },
+                                "Radioactives": {
+                                    "quantity": 480988,
+                                    "quality": 42.19413137400174
+                                },
+                                "Exotics": {
+                                    "quantity": 570153,
+                                    "quality": 43.50106985891588
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 15,
+                            "name": "Unknown-1 III",
+                            "location": {
+                                "q": -20,
+                                "r": 16
+                            },
+                            "orbit_distance": 20,
+                            "mass": 8.673776199300178e+23,
+                            "radius": 4397439.094395344,
+                            "surface_area": 243001822164595.6,
+                            "density": 2435.118520330675,
+                            "surface_gravity": 2.9937413076232513,
+                            "surface_pressure": 1176683.342889145,
+                            "surface_temperature": 95.76020740584568,
+                            "surface_water": 0.8016259680653426,
+                            "tectonic_activity": 0.4603981167259974,
+                            "magnetic_field": 1.4679315437045852,
+                            "atmosphere": {
+                                "H2": 31968.42662695777,
+                                "He": 18626.474747191005,
+                                "CH4": 23138.594699924375,
+                                "NH3": 42178.01998401671,
+                                "H2O": 157739.35294120898,
+                                "N2": 207630.83394182136,
+                                "O2": 4352.737219847492,
+                                "Ar": 29476.352654066857,
+                                "CO2": 639921.7573605261,
+                                "SO2": 21650.79271358424
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 447079,
+                                    "quality": 51.75683982862607
+                                },
+                                "Organics": {
+                                    "quantity": 537597,
+                                    "quality": 51.520450812022986
+                                },
+                                "Vapors": {
+                                    "quantity": 523937,
+                                    "quality": 64.17017250501216
+                                },
+                                "Radioactives": {
+                                    "quantity": 590738,
+                                    "quality": 64.70419971192243
+                                },
+                                "Exotics": {
+                                    "quantity": 474652,
+                                    "quality": 39.545457942949284
+                                }
+                            },
+                            "facilities": []
+                        }
+                    ]
+                }
+            },
+            {
+                "coord": {
+                    "q": 410,
+                    "r": -2426
+                },
+                "system": {
+                    "name": "Unknown-1",
+                    "global_location": {
+                        "q": 410,
+                        "r": -2426
+                    },
+                    "stars": [
+                        {
+                            "name": "Unknown-1 A",
+                            "mass": 0.5707104061194411,
+                            "diameter_hexes": 1.0,
+                            "temperature": 4426.648504227282,
+                            "luminosity": 0.14042850418028047,
+                            "spectrum": {
+                                "gamma_ray": 1.6783945245590305e-31,
+                                "xray": 5.725470487309288e-09,
+                                "ultraviolet": 0.011397004033555497,
+                                "blue": 0.04176554869202612,
+                                "green": 0.03928234379053538,
+                                "red": 0.04071456320226736,
+                                "infrared": 0.002658881791050463,
+                                "microwave": 2.7986168240633406e-17,
+                                "radio": 6.08512177695918e-47
+                            },
+                            "star_type": "MAIN_SEQUENCE",
+                            "color": [
+                                255,
+                                215,
+                                184
+                            ],
+                            "age": 5099062081.14827,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            }
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Unknown-1",
+                            "location": {
+                                "q": 15,
+                                "r": -18
+                            }
+                        },
+                        {
+                            "destination_id": "Unknown-1",
+                            "location": {
+                                "q": -16,
+                                "r": 13
+                            }
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 16,
+                            "name": "Unknown-1 I",
+                            "location": {
+                                "q": -4,
+                                "r": 2
+                            },
+                            "orbit_distance": 4,
+                            "mass": 9.881812953774544e+23,
+                            "radius": 3766431.330789292,
+                            "surface_area": 178266595984521.38,
+                            "density": 4415.276017926089,
+                            "surface_gravity": 4.649242992579046,
+                            "surface_pressure": 1528825.3313782415,
+                            "surface_temperature": 112.5456572303037,
+                            "surface_water": 0.2395326074145616,
+                            "tectonic_activity": 0.46807435701358935,
+                            "magnetic_field": 0.729273452311082,
+                            "atmosphere": {
+                                "H2": 22866.99097673659,
+                                "He": 21454.30443525704,
+                                "CH4": 14075.097351041743,
+                                "NH3": 9112.583955015469,
+                                "H2O": 194732.68056557424,
+                                "N2": 351178.0924442694,
+                                "O2": 2534.5626203744955,
+                                "Ar": 13404.870258159788,
+                                "CO2": 896592.7243484993,
+                                "SO2": 2873.4244233134746
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 414369,
+                                    "quality": 56.37916420333403
+                                },
+                                "Organics": {
+                                    "quantity": 531213,
+                                    "quality": 35.04785447849889
+                                },
+                                "Vapors": {
+                                    "quantity": 367501,
+                                    "quality": 60.881170161837204
+                                },
+                                "Radioactives": {
+                                    "quantity": 628419,
+                                    "quality": 50.759385024556735
+                                },
+                                "Exotics": {
+                                    "quantity": 602701,
+                                    "quality": 40.91042262208526
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 17,
+                            "name": "Unknown-1 II",
+                            "location": {
+                                "q": -3,
+                                "r": 6
+                            },
+                            "orbit_distance": 6,
+                            "mass": 2.433244990617815e+25,
+                            "radius": 10109769.292122088,
+                            "surface_area": 1284376509511497.0,
+                            "density": 5621.775438120788,
+                            "surface_gravity": 15.889457570915077,
+                            "surface_pressure": 769054431.989406,
+                            "surface_temperature": 78.44217498504356,
+                            "surface_water": 0.8211968707262617,
+                            "tectonic_activity": 0.5066758403860321,
+                            "magnetic_field": 1.647699859093628,
+                            "atmosphere": {
+                                "H2": 565546241.0036944,
+                                "He": 180974797.12118217,
+                                "CH4": 1165418.486563808,
+                                "NH3": 5137020.631759941,
+                                "H2O": 314262.28097643965,
+                                "N2": 2630540.5386729217,
+                                "O2": 2134469.435301793,
+                                "Ar": 4823238.018464627,
+                                "CO2": 2238252.683462111,
+                                "SO2": 4090191.789327827
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 558629,
+                                    "quality": 38.311688216044594
+                                },
+                                "Organics": {
+                                    "quantity": 548872,
+                                    "quality": 28.2007308229828
+                                },
+                                "Vapors": {
+                                    "quantity": 703989,
+                                    "quality": 37.223639275801744
+                                },
+                                "Radioactives": {
+                                    "quantity": 488491,
+                                    "quality": 31.92047236619847
+                                },
+                                "Exotics": {
+                                    "quantity": 477718,
+                                    "quality": 44.437063562575
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 18,
+                            "name": "Unknown-1 III",
+                            "location": {
+                                "q": 0,
+                                "r": -7
+                            },
+                            "orbit_distance": 7,
+                            "mass": 3.51571147817563e+24,
+                            "radius": 5856202.731994073,
+                            "surface_area": 430965068026985.56,
+                            "density": 4179.03789204735,
+                            "surface_gravity": 6.842057896580146,
+                            "surface_pressure": 23866690.09340759,
+                            "surface_temperature": 142.32421069786872,
+                            "surface_water": 0.22912396258542644,
+                            "tectonic_activity": 0.5411632369383017,
+                            "magnetic_field": 1.8239314144689547,
+                            "atmosphere": {
+                                "H2": 242640.6070086016,
+                                "He": 583460.3565435342,
+                                "CH4": 481589.6593023652,
+                                "NH3": 19313.448082323797,
+                                "H2O": 1092845.1586992599,
+                                "N2": 9354140.132370146,
+                                "O2": 18806.244730131424,
+                                "Ar": 451842.7835147813,
+                                "CO2": 11152351.038581293,
+                                "SO2": 469700.664575153
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 631412,
+                                    "quality": 52.69672913089609
+                                },
+                                "Organics": {
+                                    "quantity": 647679,
+                                    "quality": 39.434867697317536
+                                },
+                                "Vapors": {
+                                    "quantity": 686387,
+                                    "quality": 53.365220149775915
+                                },
+                                "Radioactives": {
+                                    "quantity": 609661,
+                                    "quality": 59.787693840576736
+                                },
+                                "Exotics": {
+                                    "quantity": 598339,
+                                    "quality": 46.734690577023
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 19,
+                            "name": "Unknown-1 IV",
+                            "location": {
+                                "q": 0,
+                                "r": 11
+                            },
+                            "orbit_distance": 11,
+                            "mass": 1.2386083795367603e+25,
+                            "radius": 9041395.625038935,
+                            "surface_area": 1027261023256725.9,
+                            "density": 4000.727626237277,
+                            "surface_gravity": 10.112738826971967,
+                            "surface_pressure": 387145965.4611866,
+                            "surface_temperature": 75.61357286070174,
+                            "surface_water": 0.5242211808791077,
+                            "tectonic_activity": 0.2879928409816251,
+                            "magnetic_field": 1.7924642989860688,
+                            "atmosphere": {
+                                "H2": 279042029.69389033,
+                                "He": 89293449.50204492,
+                                "CH4": 1872457.7701654865,
+                                "NH3": 2145855.5078044836,
+                                "H2O": 3491909.134001333,
+                                "N2": 2637403.9103705506,
+                                "O2": 1741990.724238278,
+                                "Ar": 3612821.3589667366,
+                                "CO2": 2086072.5848839113,
+                                "SO2": 1221975.274820564
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 480356,
+                                    "quality": 40.43974915067437
+                                },
+                                "Organics": {
+                                    "quantity": 473979,
+                                    "quality": 37.06335856126823
+                                },
+                                "Vapors": {
+                                    "quantity": 591272,
+                                    "quality": 51.82413776672803
+                                },
+                                "Radioactives": {
+                                    "quantity": 450481,
+                                    "quality": 40.36979494937445
+                                },
+                                "Exotics": {
+                                    "quantity": 654002,
+                                    "quality": 36.0666020929709
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 20,
+                            "name": "Unknown-1 V",
+                            "location": {
+                                "q": 0,
+                                "r": 13
+                            },
+                            "orbit_distance": 13,
+                            "mass": 1.169128277837579e+23,
+                            "radius": 1978277.6416365907,
+                            "surface_area": 49179527212542.14,
+                            "density": 3605.0544425470375,
+                            "surface_gravity": 1.9938542267926387,
+                            "surface_pressure": 15882.547585441478,
+                            "surface_temperature": 48.20060323356158,
+                            "surface_water": 0.8163315745753227,
+                            "tectonic_activity": 0.013577046088877866,
+                            "magnetic_field": 0.39702217046145855,
+                            "atmosphere": {
+                                "H2": 233.02456845675516,
+                                "He": 43.70476795206128,
+                                "CH4": 93.7030313504488,
+                                "NH3": 135.83713978015328,
+                                "H2O": 361.0800677558134,
+                                "N2": 1566.6262204035586,
+                                "O2": 8.552924467609103,
+                                "Ar": 270.2139006443928,
+                                "CO2": 13103.865231598524,
+                                "SO2": 65.9397330321618
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 518123,
+                                    "quality": 62.56946700832234
+                                },
+                                "Organics": {
+                                    "quantity": 308591,
+                                    "quality": 73.09237362112586
+                                },
+                                "Vapors": {
+                                    "quantity": 350838,
+                                    "quality": 53.90908688344969
+                                },
+                                "Radioactives": {
+                                    "quantity": 438114,
+                                    "quality": 48.75631290602072
+                                },
+                                "Exotics": {
+                                    "quantity": 502917,
+                                    "quality": 49.24553562705819
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 21,
+                            "name": "Unknown-1 VI",
+                            "location": {
+                                "q": 14,
+                                "r": -8
+                            },
+                            "orbit_distance": 14,
+                            "mass": 5.816646567790578e+22,
+                            "radius": 1620623.6238535552,
+                            "surface_area": 33004578798105.516,
+                            "density": 3262.4027206477617,
+                            "surface_gravity": 1.4781348922833646,
+                            "surface_pressure": 5.71124789069747,
+                            "surface_temperature": 9.842818241449484,
+                            "surface_water": 0.7732982538675521,
+                            "tectonic_activity": 0.11920006014998506,
+                            "magnetic_field": 0.4196456514217511,
+                            "atmosphere": {
+                                "He": 0.10543479122477102,
+                                "CH4": 0.06674335988104006,
+                                "NH3": 0.0161915372887958,
+                                "H2O": 0.42167717170539365,
+                                "N2": 1.9228562502663433,
+                                "O2": 0.013049518597793188,
+                                "Ar": 0.05936907412503515,
+                                "CO2": 2.9985618422962355,
+                                "SO2": 0.10736434531206246
+                            },
+                            "planet_type": "BARREN",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 350818,
+                                    "quality": 62.066713443379875
+                                },
+                                "Organics": {
+                                    "quantity": 426809,
+                                    "quality": 60.87378313088264
+                                },
+                                "Vapors": {
+                                    "quantity": 541898,
+                                    "quality": 49.12937088978312
+                                },
+                                "Radioactives": {
+                                    "quantity": 259679,
+                                    "quality": 74.5204036835992
+                                },
+                                "Exotics": {
+                                    "quantity": 269595,
+                                    "quality": 74.30048555395797
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 22,
+                            "name": "Unknown-1 IX",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.7752394394428924e+26,
+                            "radius": 30087045.663426254,
+                            "surface_area": 1.1375459651673158e+16,
+                            "density": 1556.0720176190734,
+                            "surface_gravity": 13.088912701435069,
+                            "surface_pressure": 536335763741.46063,
+                            "surface_temperature": 244.84777229972934,
+                            "surface_water": 0.3371356893533271,
+                            "tectonic_activity": 0.31883464454922067,
+                            "magnetic_field": 1.6004831672180582,
+                            "atmosphere": {
+                                "H2": 396616697217.6647,
+                                "He": 126917343109.65271,
+                                "CH4": 848300226.7732351,
+                                "NH3": 1725233629.969403,
+                                "H2O": 312283166.04874986,
+                                "N2": 3335503664.608616,
+                                "O2": 539910439.2215207,
+                                "Ar": 151170559.06292155,
+                                "CO2": 2162377176.1402793,
+                                "SO2": 3726944552.3183665
+                            },
+                            "planet_type": "GAS_GIANT",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 838056,
+                                    "quality": 27.444169746130548
+                                },
+                                "Organics": {
+                                    "quantity": 836780,
+                                    "quality": 16.724212144683957
+                                },
+                                "Vapors": {
+                                    "quantity": 547141,
+                                    "quality": 24.879837200347048
+                                },
+                                "Radioactives": {
+                                    "quantity": 629548,
+                                    "quality": 15.782885321011161
+                                },
+                                "Exotics": {
+                                    "quantity": 672706,
+                                    "quality": 26.267846546201927
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 23,
+                            "name": "Unknown-1 VII",
+                            "location": {
+                                "q": -8,
+                                "r": -8
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.0914980203628453e+26,
+                            "radius": 28595283.860134322,
+                            "surface_area": 1.0275398842868838e+16,
+                            "density": 1114.4256691710516,
+                            "surface_gravity": 8.909223458092574,
+                            "surface_pressure": 10914344322.355455,
+                            "surface_temperature": 142.49282549823448,
+                            "surface_water": 0.7237982484202578,
+                            "tectonic_activity": 0.6684044923541163,
+                            "magnetic_field": 1.5509723244632014,
+                            "atmosphere": {
+                                "H2": 7816522740.016335,
+                                "He": 2501287276.805227,
+                                "CH4": 102840875.11737579,
+                                "NH3": 93857308.28508718,
+                                "H2O": 57154154.33762302,
+                                "N2": 102302909.18886583,
+                                "O2": 41539328.977247424,
+                                "Ar": 83329719.16896333,
+                                "CO2": 55798764.56626279,
+                                "SO2": 59711245.89246977
+                            },
+                            "planet_type": "GAS_GIANT",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 767240,
+                                    "quality": 43.351289704603644
+                                },
+                                "Organics": {
+                                    "quantity": 621833,
+                                    "quality": 38.844076192087314
+                                },
+                                "Vapors": {
+                                    "quantity": 748796,
+                                    "quality": 37.91623958794453
+                                },
+                                "Radioactives": {
+                                    "quantity": 585135,
+                                    "quality": 38.109699437967606
+                                },
+                                "Exotics": {
+                                    "quantity": 537744,
+                                    "quality": 37.423964589023605
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 24,
+                            "name": "Unknown-1 IXa",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 2.178689281978764e+25,
+                            "radius": 10774645.82387102,
+                            "surface_area": 1458867571116904.0,
+                            "density": 4158.126311956564,
+                            "surface_gravity": 12.525498348614882,
+                            "surface_pressure": 1457516870.0244758,
+                            "surface_temperature": 93.8428494256079,
+                            "surface_water": 0.34374508276189564,
+                            "tectonic_activity": 0.34713563314298557,
+                            "magnetic_field": 0.7984571019241782,
+                            "atmosphere": {
+                                "H2": 1060325227.0965061,
+                                "He": 339304072.6708819,
+                                "CH4": 9288149.096297923,
+                                "NH3": 10508033.141846908,
+                                "H2O": 8456390.966791242,
+                                "N2": 844904.1421221265,
+                                "O2": 7825364.792978191,
+                                "Ar": 2953249.974654958,
+                                "CO2": 8869973.131854538,
+                                "SO2": 9141505.01054176
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 502633,
+                                    "quality": 51.97268213249958
+                                },
+                                "Organics": {
+                                    "quantity": 742979,
+                                    "quality": 47.310509448495466
+                                },
+                                "Vapors": {
+                                    "quantity": 541102,
+                                    "quality": 49.03259038869414
+                                },
+                                "Radioactives": {
+                                    "quantity": 690080,
+                                    "quality": 26.872790104144208
+                                },
+                                "Exotics": {
+                                    "quantity": 697163,
+                                    "quality": 40.62495991798387
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 25,
+                            "name": "Unknown-1 IXb",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.9141607126502565e+25,
+                            "radius": 9140345.334651468,
+                            "surface_area": 1049868904020729.4,
+                            "density": 5984.143179682181,
+                            "surface_gravity": 15.291810707024588,
+                            "surface_pressure": 33794559113.54358,
+                            "surface_temperature": 172.5459821626577,
+                            "surface_water": 0.29978708663912484,
+                            "tectonic_activity": 0.7485340404886436,
+                            "magnetic_field": 1.8941342449569722,
+                            "atmosphere": {
+                                "H2": 24385677226.460655,
+                                "He": 7803416712.46741,
+                                "CH4": 295837602.9427003,
+                                "NH3": 307594836.4539121,
+                                "H2O": 122534022.05431783,
+                                "N2": 20399838.1173424,
+                                "O2": 133134088.59511459,
+                                "Ar": 244740426.4039006,
+                                "CO2": 194876526.16436538,
+                                "SO2": 286347833.883863
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 523179,
+                                    "quality": 37.88522629300987
+                                },
+                                "Organics": {
+                                    "quantity": 732206,
+                                    "quality": 44.79907776525894
+                                },
+                                "Vapors": {
+                                    "quantity": 537934,
+                                    "quality": 45.07784143681202
+                                },
+                                "Radioactives": {
+                                    "quantity": 720916,
+                                    "quality": 43.75840732427992
+                                },
+                                "Exotics": {
+                                    "quantity": 572163,
+                                    "quality": 46.10907489795123
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 26,
+                            "name": "Unknown-1 IXc",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.8051905409729658e+25,
+                            "radius": 9787789.743032357,
+                            "surface_area": 1203868710486666.2,
+                            "density": 4596.005561194457,
+                            "surface_gravity": 12.57649174060221,
+                            "surface_pressure": 69066274.34422648,
+                            "surface_temperature": 59.03000518047567,
+                            "surface_water": 0.7658468036467614,
+                            "tectonic_activity": 0.49938044172546536,
+                            "magnetic_field": 0.9422151784740158,
+                            "atmosphere": {
+                                "H2": 50074660.658470914,
+                                "He": 16023891.41071069,
+                                "CH4": 619746.9994947321,
+                                "NH3": 399400.9802311071,
+                                "H2O": 629218.0418467458,
+                                "N2": 368115.50315588905,
+                                "O2": 10578.711011717332,
+                                "Ar": 89020.96652236879,
+                                "CO2": 505513.6978359556,
+                                "SO2": 346127.3749463557
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 642527,
+                                    "quality": 46.99242980400127
+                                },
+                                "Organics": {
+                                    "quantity": 687130,
+                                    "quality": 33.11407419418846
+                                },
+                                "Vapors": {
+                                    "quantity": 756619,
+                                    "quality": 41.06067834837463
+                                },
+                                "Radioactives": {
+                                    "quantity": 746760,
+                                    "quality": 28.53606597584988
+                                },
+                                "Exotics": {
+                                    "quantity": 722242,
+                                    "quality": 24.566259783184133
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 27,
+                            "name": "Unknown-1 IXd",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.7440426838183763e+25,
+                            "radius": 9321947.523994252,
+                            "surface_area": 1092001340981632.5,
+                            "density": 5139.827443082641,
+                            "surface_gravity": 13.395209973342991,
+                            "surface_pressure": 658980080.1551679,
+                            "surface_temperature": 76.00756656623004,
+                            "surface_water": 0.7511854576671751,
+                            "tectonic_activity": 0.6961761380962794,
+                            "magnetic_field": 0.9432850482862705,
+                            "atmosphere": {
+                                "H2": 479968587.0928,
+                                "He": 153589947.869696,
+                                "CH4": 2663873.283081282,
+                                "NH3": 4386437.050063543,
+                                "H2O": 2928942.1739085936,
+                                "N2": 5777682.100487897,
+                                "O2": 4040495.374680899,
+                                "Ar": 3477984.1403449555,
+                                "CO2": 1169042.2656626953,
+                                "SO2": 977088.8044420528
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 631306,
+                                    "quality": 52.20282470595787
+                                },
+                                "Organics": {
+                                    "quantity": 506854,
+                                    "quality": 32.02884815322647
+                                },
+                                "Vapors": {
+                                    "quantity": 719491,
+                                    "quality": 33.166320833716426
+                                },
+                                "Radioactives": {
+                                    "quantity": 642034,
+                                    "quality": 28.391536587623516
+                                },
+                                "Exotics": {
+                                    "quantity": 679566,
+                                    "quality": 39.95332735318946
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 28,
+                            "name": "Unknown-1 IXe",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.7285092042477243e+25,
+                            "radius": 9520914.328951426,
+                            "surface_area": 1139113971557803.8,
+                            "density": 4781.312343094238,
+                            "surface_gravity": 12.72682597106258,
+                            "surface_pressure": 2491568268.6345344,
+                            "surface_temperature": 103.25524483548635,
+                            "surface_water": 0.4234300704038575,
+                            "tectonic_activity": 0.6807728660481168,
+                            "magnetic_field": 1.7797894788060318,
+                            "atmosphere": {
+                                "H2": 1829478963.197505,
+                                "He": 585433268.2232016,
+                                "CH4": 13937942.94270803,
+                                "NH3": 14414418.948045311,
+                                "H2O": 22489305.054712873,
+                                "N2": 4525640.021564824,
+                                "O2": 4971941.910635597,
+                                "Ar": 796233.9663750179,
+                                "CO2": 7663212.946858396,
+                                "SO2": 7857341.422927757
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 751170,
+                                    "quality": 48.84993810069027
+                                },
+                                "Organics": {
+                                    "quantity": 559259,
+                                    "quality": 43.41703711380275
+                                },
+                                "Vapors": {
+                                    "quantity": 710412,
+                                    "quality": 36.62285554526122
+                                },
+                                "Radioactives": {
+                                    "quantity": 524450,
+                                    "quality": 53.65918457388341
+                                },
+                                "Exotics": {
+                                    "quantity": 522238,
+                                    "quality": 46.36407868417605
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 29,
+                            "name": "Unknown-1 IXf",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.7055145928013793e+25,
+                            "radius": 9883866.29400717,
+                            "surface_area": 1227618960743239.8,
+                            "density": 4216.831477372381,
+                            "surface_gravity": 11.652186840036903,
+                            "surface_pressure": 979093266.1599526,
+                            "surface_temperature": 88.4181430301295,
+                            "surface_water": 0.19672010719141683,
+                            "tectonic_activity": 0.6656349860324303,
+                            "magnetic_field": 1.661718185702227,
+                            "atmosphere": {
+                                "H2": 706288659.4332833,
+                                "He": 226012371.01865068,
+                                "CH4": 7613712.879182479,
+                                "NH3": 8669602.18495829,
+                                "H2O": 3600571.3809769535,
+                                "N2": 6528179.851954168,
+                                "O2": 8337724.33011312,
+                                "Ar": 4109546.0465037655,
+                                "CO2": 6532045.873879615,
+                                "SO2": 1400853.1604502546
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 720905,
+                                    "quality": 46.63338826463354
+                                },
+                                "Organics": {
+                                    "quantity": 554586,
+                                    "quality": 43.60383447357658
+                                },
+                                "Vapors": {
+                                    "quantity": 751283,
+                                    "quality": 45.21806877895056
+                                },
+                                "Radioactives": {
+                                    "quantity": 725946,
+                                    "quality": 51.82308257713974
+                                },
+                                "Exotics": {
+                                    "quantity": 568720,
+                                    "quality": 47.87163235291531
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 30,
+                            "name": "Unknown-1 IXg",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.63192753385451e+25,
+                            "radius": 9108895.776639635,
+                            "surface_area": 1042656679808879.5,
+                            "density": 5154.8384798661355,
+                            "surface_gravity": 13.12729145581099,
+                            "surface_pressure": 1171776607.8553762,
+                            "surface_temperature": 81.43719623895973,
+                            "surface_water": 0.8579727963201438,
+                            "tectonic_activity": 0.32272695347685554,
+                            "magnetic_field": 1.8585929441272269,
+                            "atmosphere": {
+                                "H2": 852054518.3812233,
+                                "He": 272657445.88199145,
+                                "CH4": 127215.15228456091,
+                                "NH3": 3078581.7626390615,
+                                "H2O": 7181688.774534211,
+                                "N2": 4244648.768707307,
+                                "O2": 10436679.822258852,
+                                "Ar": 8424803.787638701,
+                                "CO2": 11351658.163482998,
+                                "SO2": 2219367.3606157918
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 617806,
+                                    "quality": 53.124434210991744
+                                },
+                                "Organics": {
+                                    "quantity": 501831,
+                                    "quality": 45.03345909832062
+                                },
+                                "Vapors": {
+                                    "quantity": 467396,
+                                    "quality": 33.971009005718905
+                                },
+                                "Radioactives": {
+                                    "quantity": 624581,
+                                    "quality": 41.17711537261778
+                                },
+                                "Exotics": {
+                                    "quantity": 660704,
+                                    "quality": 41.61202836742559
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 31,
+                            "name": "Unknown-1 IXh",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.6252898978303983e+25,
+                            "radius": 9222871.436947351,
+                            "surface_area": 1068912543839059.5,
+                            "density": 4945.882132442544,
+                            "surface_gravity": 12.752761863311074,
+                            "surface_pressure": 1701652109.9050767,
+                            "surface_temperature": 97.33740640171403,
+                            "surface_water": 0.4254199719785642,
+                            "tectonic_activity": 0.7771286184352613,
+                            "magnetic_field": 0.9159071701745393,
+                            "atmosphere": {
+                                "H2": 1236458434.4021852,
+                                "He": 395666699.00869924,
+                                "CH4": 12676544.355798922,
+                                "NH3": 14523360.892422056,
+                                "H2O": 9416177.908504609,
+                                "N2": 5477910.240366019,
+                                "O2": 6653712.422500241,
+                                "Ar": 3390153.9435711703,
+                                "CO2": 6147446.386192468,
+                                "SO2": 11241670.344836736
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 566618,
+                                    "quality": 28.941629316777455
+                                },
+                                "Organics": {
+                                    "quantity": 731173,
+                                    "quality": 28.0865674570973
+                                },
+                                "Vapors": {
+                                    "quantity": 570973,
+                                    "quality": 49.99466926515529
+                                },
+                                "Radioactives": {
+                                    "quantity": 659149,
+                                    "quality": 46.00818196486777
+                                },
+                                "Exotics": {
+                                    "quantity": 486019,
+                                    "quality": 27.664140634875995
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 32,
+                            "name": "Unknown-1 IXi",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.582696440460679e+25,
+                            "radius": 9201958.584133904,
+                            "surface_area": 1064070523216160.4,
+                            "density": 4849.178751718131,
+                            "surface_gravity": 12.47506452828584,
+                            "surface_pressure": 2940817502.4149075,
+                            "surface_temperature": 101.01884618552096,
+                            "surface_water": 0.3811968093069863,
+                            "tectonic_activity": 0.4602546213762876,
+                            "magnetic_field": 1.6931236106264198,
+                            "atmosphere": {
+                                "H2": 2127625380.2540617,
+                                "He": 680840121.6812997,
+                                "CH4": 13207002.53718655,
+                                "NH3": 11470986.1581446,
+                                "H2O": 9849592.20197608,
+                                "N2": 24753898.18472691,
+                                "O2": 17943706.42503654,
+                                "Ar": 18455646.680962455,
+                                "CO2": 17919071.2135631,
+                                "SO2": 18752097.077949718
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 541032,
+                                    "quality": 49.345707471622475
+                                },
+                                "Organics": {
+                                    "quantity": 526877,
+                                    "quality": 51.86824441070558
+                                },
+                                "Vapors": {
+                                    "quantity": 584717,
+                                    "quality": 40.84915076604138
+                                },
+                                "Radioactives": {
+                                    "quantity": 523886,
+                                    "quality": 48.50741379390532
+                                },
+                                "Exotics": {
+                                    "quantity": 574551,
+                                    "quality": 53.021628634374075
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 33,
+                            "name": "Unknown-1 IXj",
+                            "location": {
+                                "q": 16,
+                                "r": -1
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.3823745052115374e+25,
+                            "radius": 8860193.766200675,
+                            "surface_area": 986498214250172.6,
+                            "density": 4744.685680939392,
+                            "surface_gravity": 11.752898888121562,
+                            "surface_pressure": 1758930095.4851892,
+                            "surface_temperature": 95.43166208511296,
+                            "surface_water": 0.5588806503504541,
+                            "tectonic_activity": 0.14091715674131325,
+                            "magnetic_field": 1.4106668870059165,
+                            "atmosphere": {
+                                "H2": 1287293755.3233688,
+                                "He": 411934001.70347804,
+                                "CH4": 11343458.160822196,
+                                "NH3": 1810343.485245571,
+                                "H2O": 4344701.862419238,
+                                "N2": 7337833.611072645,
+                                "O2": 848029.7152899222,
+                                "Ar": 11172104.003707895,
+                                "CO2": 13490194.313276654,
+                                "SO2": 9355673.306508262
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 467566,
+                                    "quality": 25.24841937732363
+                                },
+                                "Organics": {
+                                    "quantity": 553735,
+                                    "quality": 54.33514547439409
+                                },
+                                "Vapors": {
+                                    "quantity": 728946,
+                                    "quality": 25.3757219455387
+                                },
+                                "Radioactives": {
+                                    "quantity": 547889,
+                                    "quality": 47.63495416289886
+                                },
+                                "Exotics": {
+                                    "quantity": 642643,
+                                    "quality": 32.198377375002245
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 34,
+                            "name": "Unknown-1 VIII",
+                            "location": {
+                                "q": -14,
+                                "r": -2
+                            },
+                            "orbit_distance": 16,
+                            "mass": 1.7946270033571573e+24,
+                            "radius": 5072895.99877683,
+                            "surface_area": 323386422243223.9,
+                            "density": 3281.842331445455,
+                            "surface_gravity": 4.654446088080983,
+                            "surface_pressure": 4693021.170653543,
+                            "surface_temperature": 115.15297204342443,
+                            "surface_water": 0.8330262284693294,
+                            "tectonic_activity": 0.30459160401796115,
+                            "magnetic_field": 1.6397369862937448,
+                            "atmosphere": {
+                                "H2": 43230.620506330386,
+                                "He": 54080.575552678674,
+                                "CH4": 57064.62601432629,
+                                "NH3": 52367.27838884813,
+                                "H2O": 192834.32899674727,
+                                "N2": 1203547.3100658543,
+                                "O2": 3781.9902518342565,
+                                "Ar": 50983.77379418476,
+                                "CO2": 3009373.3115357007,
+                                "SO2": 25757.35554703887
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 656246,
+                                    "quality": 36.43114838570241
+                                },
+                                "Organics": {
+                                    "quantity": 432674,
+                                    "quality": 45.398263279029074
+                                },
+                                "Vapors": {
+                                    "quantity": 586431,
+                                    "quality": 37.40198271271283
+                                },
+                                "Radioactives": {
+                                    "quantity": 609665,
+                                    "quality": 42.37971687079528
+                                },
+                                "Exotics": {
+                                    "quantity": 390626,
+                                    "quality": 45.88197681570732
+                                }
+                            },
+                            "facilities": []
+                        }
+                    ]
+                }
+            },
+            {
+                "coord": {
+                    "q": 1696,
+                    "r": 1871
+                },
+                "system": {
+                    "name": "Unknown-1",
+                    "global_location": {
+                        "q": 1696,
+                        "r": 1871
+                    },
+                    "stars": [
+                        {
+                            "name": "Unknown-1 A",
+                            "mass": 0.7524281539417542,
+                            "diameter_hexes": 1.0,
+                            "temperature": 5047.756890070096,
+                            "luminosity": 0.36951122065516834,
+                            "spectrum": {
+                                "gamma_ray": 1.559458274373104e-30,
+                                "xray": 2.5529727314322753e-08,
+                                "ultraviolet": 0.034062066015718095,
+                                "blue": 0.11099528966239129,
+                                "green": 0.11796814720804623,
+                                "red": 0.1034022417703137,
+                                "infrared": 0.004654426170062518,
+                                "microwave": 2.4850929390396958e-17,
+                                "radio": 3.445577926623396e-47
+                            },
+                            "star_type": "MAIN_SEQUENCE",
+                            "color": [
+                                255,
+                                228,
+                                207
+                            ],
+                            "age": 9111928545.338112,
+                            "location": {
+                                "q": 0,
+                                "r": 0
+                            }
+                        }
+                    ],
+                    "warp_points": [
+                        {
+                            "destination_id": "Unknown-1",
+                            "location": {
+                                "q": 5,
+                                "r": -16
+                            }
+                        }
+                    ],
+                    "planets": [
+                        {
+                            "id": 35,
+                            "name": "Unknown-1 I",
+                            "location": {
+                                "q": 8,
+                                "r": -4
+                            },
+                            "orbit_distance": 8,
+                            "mass": 3.4596135783807163e+22,
+                            "radius": 1431116.718534571,
+                            "surface_area": 25737121603399.996,
+                            "density": 2817.823702448745,
+                            "surface_gravity": 1.127413435724924,
+                            "surface_pressure": 69.95422766621608,
+                            "surface_temperature": 16.976273378533648,
+                            "surface_water": 0.29256796002766805,
+                            "tectonic_activity": 0.15671419999374092,
+                            "magnetic_field": 0.04521336860914377,
+                            "atmosphere": {
+                                "CH4": 0.7400125099983876,
+                                "NH3": 0.6063801928789463,
+                                "H2O": 6.191382505592043,
+                                "N2": 7.136384688790808,
+                                "O2": 0.12315782243320854,
+                                "Ar": 1.2788470611718292,
+                                "CO2": 53.53095628501844,
+                                "SO2": 0.3471066003324227
+                            },
+                            "planet_type": "BARREN",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 465765,
+                                    "quality": 77.0130209200133
+                                },
+                                "Organics": {
+                                    "quantity": 369696,
+                                    "quality": 50.20431824157239
+                                },
+                                "Vapors": {
+                                    "quantity": 292375,
+                                    "quality": 57.83801253654938
+                                },
+                                "Radioactives": {
+                                    "quantity": 442275,
+                                    "quality": 68.83641305844074
+                                },
+                                "Exotics": {
+                                    "quantity": 304496,
+                                    "quality": 70.47859913650927
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 36,
+                            "name": "Unknown-1 II",
+                            "location": {
+                                "q": 5,
+                                "r": -13
+                            },
+                            "orbit_distance": 13,
+                            "mass": 2.743284366726537e+26,
+                            "radius": 38916671.79745432,
+                            "surface_area": 1.903186058024358e+16,
+                            "density": 1111.1562769169836,
+                            "surface_gravity": 12.089411731087857,
+                            "surface_pressure": 58835930720.70803,
+                            "surface_temperature": 179.97775574626738,
+                            "surface_water": 0.6801201131040778,
+                            "tectonic_activity": 0.29256473019027224,
+                            "magnetic_field": 1.2329320518001514,
+                            "atmosphere": {
+                                "H2": 43035092481.42432,
+                                "He": 13771229594.05578,
+                                "CH4": 361494123.7400343,
+                                "NH3": 218590373.26172405,
+                                "H2O": 107598926.0003912,
+                                "N2": 541623102.6571395,
+                                "O2": 239788858.56188115,
+                                "Ar": 60445074.767999105,
+                                "CO2": 18390671.0094264,
+                                "SO2": 481677515.229338
+                            },
+                            "planet_type": "GAS_GIANT",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 804272,
+                                    "quality": 27.799441784002372
+                                },
+                                "Organics": {
+                                    "quantity": 802315,
+                                    "quality": 27.721790777078837
+                                },
+                                "Vapors": {
+                                    "quantity": 813405,
+                                    "quality": 33.3468557626432
+                                },
+                                "Radioactives": {
+                                    "quantity": 644832,
+                                    "quality": 24.119396121797738
+                                },
+                                "Exotics": {
+                                    "quantity": 742784,
+                                    "quality": 32.94883076781068
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 37,
+                            "name": "Unknown-1 IIa",
+                            "location": {
+                                "q": 5,
+                                "r": -13
+                            },
+                            "orbit_distance": 13,
+                            "mass": 2.612651731014757e+25,
+                            "radius": 10880993.8960005,
+                            "surface_area": 1487808369186985.8,
+                            "density": 4841.5811156282925,
+                            "surface_gravity": 14.728214889134346,
+                            "surface_pressure": 6070040980.280559,
+                            "surface_temperature": 123.7370156325139,
+                            "surface_water": 0.7453214176376538,
+                            "tectonic_activity": 0.36371783811422753,
+                            "magnetic_field": 1.643092859747459,
+                            "atmosphere": {
+                                "H2": 4373955693.000497,
+                                "He": 1399665821.760159,
+                                "CH4": 34177156.05334263,
+                                "NH3": 57841512.90574157,
+                                "H2O": 45614636.45861941,
+                                "N2": 38089403.20408025,
+                                "O2": 10741551.387249677,
+                                "Ar": 53295520.3662986,
+                                "CO2": 11197903.68225825,
+                                "SO2": 45461781.46231207
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 657710,
+                                    "quality": 48.10513414145735
+                                },
+                                "Organics": {
+                                    "quantity": 696918,
+                                    "quality": 27.809947295838512
+                                },
+                                "Vapors": {
+                                    "quantity": 522611,
+                                    "quality": 23.674547877329857
+                                },
+                                "Radioactives": {
+                                    "quantity": 582067,
+                                    "quality": 36.619008729113425
+                                },
+                                "Exotics": {
+                                    "quantity": 505672,
+                                    "quality": 39.68479121816009
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 38,
+                            "name": "Unknown-1 IIb",
+                            "location": {
+                                "q": 5,
+                                "r": -13
+                            },
+                            "orbit_distance": 13,
+                            "mass": 2.5345571015526955e+25,
+                            "radius": 10672339.582882194,
+                            "surface_area": 1431294937620497.5,
+                            "density": 4977.766996027886,
+                            "surface_gravity": 14.852122835899594,
+                            "surface_pressure": 6554543883.832508,
+                            "surface_temperature": 122.30389064063033,
+                            "surface_water": 0.49817568576729876,
+                            "tectonic_activity": 0.4925223110281647,
+                            "magnetic_field": 0.6113982423091759,
+                            "atmosphere": {
+                                "H2": 4753851649.270947,
+                                "He": 1521232527.7667031,
+                                "CH4": 38139773.10261227,
+                                "NH3": 33884513.666930325,
+                                "H2O": 26078067.340830967,
+                                "N2": 37287344.830389865,
+                                "O2": 51206164.168019,
+                                "Ar": 58283166.81206042,
+                                "CO2": 7298313.242956203,
+                                "SO2": 27282363.631058957
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 713901,
+                                    "quality": 29.76902920333988
+                                },
+                                "Organics": {
+                                    "quantity": 650569,
+                                    "quality": 47.75720724625091
+                                },
+                                "Vapors": {
+                                    "quantity": 722706,
+                                    "quality": 50.55897234982281
+                                },
+                                "Radioactives": {
+                                    "quantity": 590979,
+                                    "quality": 50.33664657429971
+                                },
+                                "Exotics": {
+                                    "quantity": 738436,
+                                    "quality": 50.795153165755
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 39,
+                            "name": "Unknown-1 IIc",
+                            "location": {
+                                "q": 5,
+                                "r": -13
+                            },
+                            "orbit_distance": 13,
+                            "mass": 1.799806909936106e+25,
+                            "radius": 9015680.029683243,
+                            "surface_area": 1021425848529217.4,
+                            "density": 5863.296216542651,
+                            "surface_gravity": 14.778646411260516,
+                            "surface_pressure": 360375208.9931236,
+                            "surface_temperature": 75.32033869110951,
+                            "surface_water": 0.8682735994540891,
+                            "tectonic_activity": 0.20984171520457745,
+                            "magnetic_field": 0.7714162913881333,
+                            "atmosphere": {
+                                "H2": 260082819.5365243,
+                                "He": 83226502.25168778,
+                                "CH4": 1923245.144718166,
+                                "NH3": 1313180.9996182406,
+                                "H2O": 1349733.100583283,
+                                "N2": 1000562.0141730326,
+                                "O2": 2419251.616929482,
+                                "Ar": 2847148.0080125392,
+                                "CO2": 2929366.9651145265,
+                                "SO2": 3283399.355762206
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 694419,
+                                    "quality": 34.234228164367536
+                                },
+                                "Organics": {
+                                    "quantity": 698520,
+                                    "quality": 52.106642802484146
+                                },
+                                "Vapors": {
+                                    "quantity": 538319,
+                                    "quality": 52.46815551806431
+                                },
+                                "Radioactives": {
+                                    "quantity": 509732,
+                                    "quality": 29.844671623384123
+                                },
+                                "Exotics": {
+                                    "quantity": 717648,
+                                    "quality": 39.12712111378689
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 40,
+                            "name": "Unknown-1 III",
+                            "location": {
+                                "q": 19,
+                                "r": -2
+                            },
+                            "orbit_distance": 19,
+                            "mass": 1.0634045273911668e+25,
+                            "radius": 7864571.0426421445,
+                            "surface_area": 777248591632527.4,
+                            "density": 5218.9697068731275,
+                            "surface_gravity": 11.475038435363116,
+                            "surface_pressure": 65195823.297695994,
+                            "surface_temperature": 198.72894643214912,
+                            "surface_water": 0.692816051200511,
+                            "tectonic_activity": 0.582708158546991,
+                            "magnetic_field": 0.6223515482255273,
+                            "atmosphere": {
+                                "H2": 870212.2027414106,
+                                "He": 17779.941819536023,
+                                "CH4": 629910.2070143924,
+                                "NH3": 538500.8688167096,
+                                "H2O": 4051927.4741970384,
+                                "N2": 14989338.48368677,
+                                "O2": 70575.53429656253,
+                                "Ar": 386901.65677684266,
+                                "CO2": 42941440.428285114,
+                                "SO2": 699236.5000616352
+                            },
+                            "planet_type": "ICE_WORLD",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 680637,
+                                    "quality": 49.37546005725631
+                                },
+                                "Organics": {
+                                    "quantity": 596193,
+                                    "quality": 38.88562646019704
+                                },
+                                "Vapors": {
+                                    "quantity": 588712,
+                                    "quality": 26.083037242047446
+                                },
+                                "Radioactives": {
+                                    "quantity": 523740,
+                                    "quality": 37.59320170710296
+                                },
+                                "Exotics": {
+                                    "quantity": 701891,
+                                    "quality": 52.061693573191356
+                                }
+                            },
+                            "facilities": []
+                        },
+                        {
+                            "id": 41,
+                            "name": "Unknown-1 IV",
+                            "location": {
+                                "q": -20,
+                                "r": 12
+                            },
+                            "orbit_distance": 20,
+                            "mass": 8.109722179123218e+24,
+                            "radius": 7322962.178098314,
+                            "surface_area": 673881363909572.4,
+                            "density": 4930.114366567901,
+                            "surface_gravity": 10.093414720381352,
+                            "surface_pressure": 180888107.7008951,
+                            "surface_temperature": 250.069113528276,
+                            "surface_water": 0.6399798214257671,
+                            "tectonic_activity": 0.1122911880195802,
+                            "magnetic_field": 1.0942620399058913,
+                            "atmosphere": {
+                                "H2": 504165.3171825486,
+                                "He": 1618545.7220780028,
+                                "CH4": 1661174.64153128,
+                                "NH3": 716638.0671397729,
+                                "H2O": 6443014.15789112,
+                                "N2": 26903603.991283584,
+                                "O2": 276741.1086175342,
+                                "Ar": 3296223.846438474,
+                                "CO2": 136515287.5558792,
+                                "SO2": 2952713.2928535775
+                            },
+                            "planet_type": "TERRESTRIAL",
+                            "orbit_parent_name": null,
+                            "owner_id": null,
+                            "construction_queue": [],
+                            "resources": {
+                                "Metals": {
+                                    "quantity": 522730,
+                                    "quality": 51.13757910170593
+                                },
+                                "Organics": {
+                                    "quantity": 629095,
+                                    "quality": 37.12442106882439
+                                },
+                                "Vapors": {
+                                    "quantity": 596385,
+                                    "quality": 31.93393783170132
+                                },
+                                "Radioactives": {
+                                    "quantity": 576920,
+                                    "quality": 27.278028143820134
+                                },
+                                "Exotics": {
+                                    "quantity": 699206,
+                                    "quality": 49.340967713375484
+                                }
+                            },
+                            "facilities": []
+                        }
+                    ]
+                }
+            }
+        ],
+        "_next_planet_id": 42
+    },
+    "empires": [
+        {
+            "id": 0,
+            "name": "Saved Empire",
+            "color": [
+                255,
+                0,
+                0
+            ],
+            "theme_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes\\Federation",
+            "empire_theme_id": "Federation",
+            "colony_ids": [
+                1
+            ],
+            "fleets": [],
+            "built_ship_designs": [],
+            "_next_fleet_id": 10000,
+            "_design_serial_counters": {}
+        }
+    ],
+    "human_player_ids": [
+        0
+    ]
+}

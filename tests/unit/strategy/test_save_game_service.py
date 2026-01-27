@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
 from game.core.json_utils import load_json, save_json
+from game.core import paths as paths_module
 
 
 class MockGameSession:
@@ -47,12 +48,12 @@ class TestSaveGameServiceFolderStructure:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
         shutil.rmtree(tmpdir)
 
     def test_save_creates_turns_folder(self):
@@ -137,12 +138,12 @@ class TestSaveGameServiceVersion:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
         shutil.rmtree(tmpdir)
 
     def test_save_version_is_2_0_0(self, setup_tmpdir):
@@ -197,12 +198,12 @@ class TestSaveGameServiceLoad:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
         shutil.rmtree(tmpdir)
 
     def test_load_defaults_to_latest_turn(self):
@@ -273,12 +274,12 @@ class TestSaveGameServiceMetadata:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
         shutil.rmtree(tmpdir)
 
     def test_metadata_includes_empire_count(self):
@@ -319,10 +320,10 @@ class TestSaveGameServiceNoDesignMigration:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
 
         # Create temp designs folder with some designs (simulating previous game sessions)
         temp_designs = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs", "empire_0")
@@ -338,9 +339,9 @@ class TestSaveGameServiceNoDesignMigration:
         }
         save_json(os.path.join(temp_designs, "old_design.json"), test_design)
 
-        yield tmpdir, temp_designs
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir, temp_designs
 
-        os.chdir(original_cwd)
         shutil.rmtree(tmpdir)
         # Clean up temp design we created
         temp_design_file = os.path.join(temp_designs, "old_design.json")
@@ -369,12 +370,12 @@ class TestSaveGameServiceErrorLogging:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
         shutil.rmtree(tmpdir)
 
     def test_save_error_logs_with_traceback(self, caplog):
@@ -436,12 +437,12 @@ class TestSaveGameServiceUserFriendlyErrors:
 
     @pytest.fixture(autouse=True)
     def setup_tmpdir(self):
-        """Create temporary directory for tests."""
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
         tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
         shutil.rmtree(tmpdir)
 
     def test_load_error_message_is_user_friendly(self, setup_tmpdir):

@@ -9,6 +9,7 @@ from game.core.logger import log_info, log_warning
 from game.core.json_utils import load_json, load_json_required
 from game.core.registry import get_vehicle_classes, get_validator, set_validator
 from game.simulation.ship_validator import ShipDesignValidator
+from game.core.paths import Paths
 
 
 def get_or_create_validator():
@@ -20,11 +21,13 @@ def get_or_create_validator():
     return val
 
 
-def load_vehicle_classes(filepath: str = "data/vehicleclasses.json", layers_filepath: Optional[str] = None) -> None:
+def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = None) -> None:
     """
     Load vehicle class definitions from JSON.
     This should be called explicitly during game initialization.
     """
+    if filepath is None:
+        filepath = Paths.VEHICLE_CLASSES_FILE
 
     # Check if we need to resolve path relative to this file
     if not os.path.exists(filepath):
