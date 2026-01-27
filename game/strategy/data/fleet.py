@@ -61,7 +61,7 @@ class Fleet:
         self.path: List[HexCoord] = []  # Current movement path for the ACTIVE Move order
 
     def add_ship(self, ship: 'ShipInstance'):
-        """Add a ship to the fleet (string name or ShipInstance)."""
+        """Add a ShipInstance to the fleet."""
         self.ships.append(ship)
         self._trigger_speed_recalculation()
 
@@ -489,23 +489,17 @@ class Fleet:
         Args:
             surviving_ships: Ships that survived the battle
         """
-        from game.strategy.data.ship_instance import ShipInstance
-
         # Build lookup for surviving ships by name
         survivors_by_name = {s.name: s for s in surviving_ships}
 
-        # Update each ShipInstance
+        # Update each ShipInstance - ships not in survivors were destroyed
         new_ships = []
         for s in self.ships:
-            if isinstance(s, ShipInstance):
-                if s.name in survivors_by_name:
-                    # Update state from battle
-                    s.update_from_ship(survivors_by_name[s.name])
-                    new_ships.append(s)
-                # else: ship was destroyed, don't include
-            else:
-                # Legacy string - keep as is
+            if s.name in survivors_by_name:
+                # Update state from battle
+                s.update_from_ship(survivors_by_name[s.name])
                 new_ships.append(s)
+            # else: ship was destroyed, don't include
 
         self.ships = new_ships
 

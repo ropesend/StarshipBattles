@@ -12,6 +12,7 @@ from game.strategy.engine.turn_engine import TurnEngine, ValidationResult
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.empire import Empire
+from game.strategy.data.ship_instance import ShipInstance
 
 
 # =============================================================================
@@ -45,7 +46,11 @@ def mock_fleet():
     fleet.speed = 10.0
     fleet.orders = []
     fleet.path = []
-    fleet.ships = ["Colony Ship"]
+    # Use mock ShipInstance instead of string
+    mock_ship = MagicMock(spec=ShipInstance)
+    mock_ship.name = "Colony Ship"
+    mock_ship.is_combat_capable = MagicMock(return_value=True)
+    fleet.ships = [mock_ship]
     fleet.get_current_order = MagicMock(return_value=None)
     fleet.pop_order = MagicMock()
     fleet.has_resources_for_movement = MagicMock(return_value=True)
@@ -53,7 +58,6 @@ def mock_fleet():
     fleet.consume_movement_resources = MagicMock()
     fleet.consume_warp_resources = MagicMock()
     fleet.clear_orders = MagicMock()
-    fleet.get_ship_instances = MagicMock(return_value=[])
     return fleet
 
 
