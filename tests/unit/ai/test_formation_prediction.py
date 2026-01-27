@@ -51,6 +51,35 @@ def mock_ship():
     ship.formation_offset = pygame.math.Vector2(50, 50)
     ship.formation_rotation_mode = 'relative'
     ship.formation_master = None
+
+    # Interface method mocks - use lambdas to dynamically return current values
+    ship.get_position.side_effect = lambda: ship.position
+    ship.get_rotation.side_effect = lambda: ship.angle
+    ship.get_radius.return_value = ship.radius
+    ship.get_max_speed.side_effect = lambda: ship.max_speed
+    ship.get_turn_speed.side_effect = lambda: ship.turn_speed
+    ship.get_acceleration_rate.return_value = ship.acceleration_rate
+    ship.get_formation_offset.side_effect = lambda: ship.formation_offset
+    ship.get_formation_master.side_effect = lambda: ship.formation_master
+
+    # Interface method setters should update attributes for assertion checking
+    def set_in_formation(value):
+        ship.in_formation = value
+    ship.set_in_formation.side_effect = set_in_formation
+
+    def set_throttle(value):
+        ship.engine_throttle = value
+    ship.set_throttle.side_effect = set_throttle
+
+    def set_rotation(value):
+        ship.angle = value
+        ship.get_rotation.side_effect = lambda: ship.angle
+    ship.set_rotation.side_effect = set_rotation
+
+    def adjust_position(delta):
+        ship.position = ship.position + delta
+    ship.adjust_position.side_effect = adjust_position
+
     return ship
 
 
@@ -76,6 +105,7 @@ def formation_behavior(mock_controller, mock_ship, mock_master):
     from game.ai.behaviors import FormationBehavior
 
     mock_ship.formation_master = mock_master
+    mock_ship.get_formation_master.return_value = mock_master
     mock_controller.ship = mock_ship
 
     behavior = FormationBehavior(mock_controller)
@@ -92,6 +122,7 @@ class TestFormationBasic:
     def test_no_master_exits_formation(self, formation_behavior, mock_ship):
         """Ship should exit formation if master is None."""
         mock_ship.formation_master = None
+        mock_ship.get_formation_master.return_value = None
 
         formation_behavior.update(None, {})
 
@@ -510,6 +541,10 @@ class TestOtherBehaviors:
         mock_ship.comp_trigger_pulled = True
         mock_controller.ship = mock_ship
 
+        # Interface methods
+        mock_ship.get_position.return_value = mock_ship.position
+        mock_ship.set_trigger_pulled.side_effect = lambda v: setattr(mock_ship, 'comp_trigger_pulled', v)
+
         target = MagicMock()
         target.position = pygame.math.Vector2(100, 0)
 
@@ -554,6 +589,10 @@ class TestOtherBehaviors:
         mock_ship.max_weapon_range = 1000
         mock_controller.ship = mock_ship
 
+        # Interface methods
+        mock_ship.get_position.return_value = mock_ship.position
+        mock_ship.get_weapon_range.return_value = mock_ship.max_weapon_range
+
         target = MagicMock()
         target.position = pygame.math.Vector2(2000, 0)  # Far away
 
@@ -595,6 +634,9 @@ class TestSpecialBehaviors:
         mock_ship = MagicMock()
         mock_ship.comp_trigger_pulled = True
         mock_controller.ship = mock_ship
+
+        # Interface method
+        mock_ship.set_trigger_pulled.side_effect = lambda v: setattr(mock_ship, 'comp_trigger_pulled', v)
 
         behavior = DoNothingBehavior(mock_controller)
         behavior.update(None, {})

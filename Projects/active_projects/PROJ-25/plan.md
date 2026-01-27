@@ -1,0 +1,88 @@
+# PROJ-25: Consolidate Dual AI Implementations
+
+> **WORKING ON THIS PROJECT:**
+> - Run `python Projects/scripts/current_task.py PROJ-25` to see what to do next
+> - Open the phase checklist file for your current phase
+> - Check off tasks as you complete them
+> - Update Current State before stopping work
+
+> **STOPPING WORK:**
+> - Run `python Projects/scripts/validate_phase.py PROJ-25 [phase]` before stopping
+> - Update Current State with specific handoff context
+
+## Quick Status
+| Phase | Status | Checklist |
+|-------|--------|-----------|
+| 1. Preparation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate UI Consumers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate Test Files | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Delete Legacy Code | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+
+## Current State
+**Last Updated:** 2026-01-27 09:53
+**Active Phase:** Blocked - Waiting for PROJ-24
+**Last Action:** Project plan created with detailed analysis
+**Next Action:** Wait for PROJ-24 completion, then begin Phase 1
+**Blockers:** PROJ-24 must complete first (ShipControllableAdapter interface migration)
+
+## Overview
+After PROJ-24 completes the IControllable interface migration, consolidate the two parallel AI implementations into a single canonical version (`game/ai/controller.py`), eliminating code duplication in `game/ai/core/`. This is a code cleanup project - no behavior changes, only import path migrations.
+
+## Goals
+- Eliminate duplicate AI implementation in `game/ai/core/`
+- Migrate all consumers to use the modern, refactored simulation layer
+- Move root-level test files into proper test directory structure
+- Reduce maintenance burden by having single source of truth for AI code
+
+## Scope
+**In:**
+- Migrate 4 UI files to use `StrategyManager.instance().strategies`
+- Update ~7 test file imports
+- Move `test_formation_*.py` files to `tests/integration/`
+- Delete `game/ai/core/` directory
+
+**Out:**
+- Changing AI behavior or logic (100% feature parity confirmed)
+- Modifying the simulation layer implementation
+- Any work until PROJ-24 is complete
+
+## Key Files
+| Component | File Path | Action |
+|-----------|-----------|--------|
+| Canonical AI | `game/ai/controller.py` | Keep (target) |
+| Canonical Behaviors | `game/ai/behaviors.py` | Keep (target) |
+| Strategy Manager | `game/ai/strategy_manager.py` | Keep (import source) |
+| Legacy AI | `game/ai/core/system.py` | **DELETE** |
+| Legacy Behaviors | `game/ai/core/behaviors.py` | **DELETE** |
+| UI - Battle | `game/ui/screens/battle.py` | Remove unused import |
+| UI - Setup | `game/ui/screens/setup.py` | Update import |
+| UI - Panels | `game/ui/hud/panels.py` | Update import |
+| UI - Builder | `game/ui/screens/builder/right_panel.py` | Update import |
+
+## Decisions
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-01-27 | Use simulation layer as canonical | Modern, refactored, modular, documented, uses ShipControllableAdapter |
+| 2026-01-27 | Delete `game/ai/core/` entirely | No compatibility shim needed; direct migration is cleaner |
+| 2026-01-27 | Use `StrategyManager.instance().strategies` | No magic proxy; explicit access pattern |
+| 2026-01-27 | Move root test files to tests/integration/ | Consistent test organization |
+
+## Related Documents
+- [design.md](design.md) - Architecture analysis and swarm findings
+- [decisions.md](decisions.md) - Full decisions log
+
+## Verification
+- [ ] All phase checklists complete
+- [ ] All UI dropdowns show correct strategy names (manual test)
+- [ ] Battle AI functions correctly (run a battle manually)
+- [ ] All tests pass: `pytest tests/`
+- [ ] No imports from `game.ai.core` exist: `grep -r "game.ai.core" --include="*.py"`
+- [ ] `game/ai/core/` directory deleted
+- [ ] Root-level test files moved to `tests/integration/`
+
+## Estimated Effort
+- Phase 1: ~15 min (verification only)
+- Phase 2: ~30 min (4 UI files)
+- Phase 3: ~30 min (5+ test files + relocate 2)
+- Phase 4: ~15 min (delete + verify)
+- **Total: ~1.5 hours**

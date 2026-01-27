@@ -12,10 +12,14 @@ def kite_setup():
     target = MagicMock()
     controller.ship = ship
 
-    # Default mock values
+    # Default mock values - both direct attributes and interface methods
     ship.position = pygame.math.Vector2(0, 0)
     ship.max_weapon_range = 1000
     target.position = pygame.math.Vector2(2000, 0)  # Far away initially
+
+    # Interface method mocks
+    ship.get_position.return_value = ship.position
+    ship.get_weapon_range.return_value = ship.max_weapon_range
 
     behavior = KiteBehavior(controller)
     strategy = {'avoid_collisions': True}
@@ -148,8 +152,37 @@ def formation_setup():
     ship.turn_speed = 10
     ship.turn_throttle = 1.0
     ship.max_speed = 100
+    ship.engine_throttle = 1.0
     ship.formation_offset = pygame.math.Vector2(50, 0)
     ship.formation_rotation_mode = 'relative'
+
+    # Interface method mocks
+    ship.get_position.return_value = ship.position
+    ship.get_rotation.return_value = ship.angle
+    ship.get_radius.return_value = ship.radius
+    ship.get_acceleration_rate.return_value = ship.acceleration_rate
+    ship.get_turn_speed.return_value = ship.turn_speed
+    ship.get_max_speed.return_value = ship.max_speed
+    ship.get_formation_offset.return_value = ship.formation_offset
+    ship.get_formation_master.return_value = master
+
+    # Interface setters that update mock attributes
+    def set_in_formation(value):
+        ship.in_formation = value
+    ship.set_in_formation.side_effect = set_in_formation
+
+    def set_throttle(value):
+        ship.engine_throttle = value
+    ship.set_throttle.side_effect = set_throttle
+
+    def set_rotation(value):
+        ship.angle = value
+    ship.set_rotation.side_effect = set_rotation
+
+    def adjust_position(delta):
+        ship.position = ship.position + delta
+        ship.get_position.return_value = ship.position
+    ship.adjust_position.side_effect = adjust_position
 
     master.is_alive = True
     master.is_derelict = False
@@ -183,6 +216,7 @@ class TestFormationBehavior:
         """Verify target position calculation for fixed rotation."""
         formation_setup['ship'].formation_rotation_mode = 'fixed'
         formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 50)
+        formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 50)
         formation_setup['master'].position = pygame.math.Vector2(100, 100)
         formation_setup['master'].angle = 90  # Should ignore this for offset
 
@@ -191,6 +225,7 @@ class TestFormationBehavior:
         # Actually logic splits: if far -> navigate. if close -> drift.
         # Let's put ship far away.
         formation_setup['ship'].position = pygame.math.Vector2(5000, 5000)
+        formation_setup['ship'].get_position.return_value = pygame.math.Vector2(5000, 5000)
 
         formation_setup['behavior'].update(None, formation_setup['strategy'])
 
@@ -207,6 +242,7 @@ class TestFormationBehavior:
         formation_setup['ship'].formation_rotation_mode = 'relative'
         # Offset is (50, 0) relative to master.
         formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 0)
+        formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 0)
         formation_setup['master'].position = pygame.math.Vector2(100, 100)
         formation_setup['master'].angle = 90  # Facing down
 
@@ -214,6 +250,7 @@ class TestFormationBehavior:
         # Target should be (100, 100) + (0, 50) = (100, 150).
 
         formation_setup['ship'].position = pygame.math.Vector2(5000, 5000)  # Force navigate logic
+        formation_setup['ship'].get_position.return_value = pygame.math.Vector2(5000, 5000)
 
         formation_setup['behavior'].update(None, formation_setup['strategy'])
 
@@ -228,8 +265,10 @@ class TestFormationBehavior:
         formation_setup['master'].position = pygame.math.Vector2(0, 0)
         formation_setup['master'].angle = 0
         formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 0)
+        formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 0)
         # Target is (50,0). Ship is at (55, 0). Error 5.
         formation_setup['ship'].position = pygame.math.Vector2(55, 0)
+        formation_setup['ship'].get_position.return_value = pygame.math.Vector2(55, 0)
 
         # Drift threshold check:
         # diameter = radius(10)*2 = 20.
@@ -241,11 +280,12 @@ class TestFormationBehavior:
         # Verify navigate_to NOT called
         formation_setup['controller'].navigate_to.assert_not_called()
 
-        # Verify position updated (spring correction)
+        # Verify position updated (spring correction via adjust_position)
         # Future master pos = 0,0. Future offset = 50,0. Future target = 50,0.
         # Vec to spot = (50,0) - (55,0) = (-5, 0).
         # Correction = (-5, 0) * 0.2 = (-1, 0).
         # New pos should be (55,0) + (-1,0) = (54,0).
+        formation_setup['ship'].adjust_position.assert_called()
         assert formation_setup['ship'].position.x < 55  # Moved left
         assert formation_setup['ship'].position.y == 0
 
@@ -254,7 +294,9 @@ class TestFormationBehavior:
         # Setup drift scenario
         formation_setup['master'].position = pygame.math.Vector2(0, 0)
         formation_setup['ship'].position = pygame.math.Vector2(50, 0)  # Target spot
+        formation_setup['ship'].get_position.return_value = pygame.math.Vector2(50, 0)
         formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 0)
+        formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 0)
 
         # Master is moving
         formation_setup['master'].is_thrusting = True
@@ -263,6 +305,7 @@ class TestFormationBehavior:
         # Master current target speed = 100.
 
         formation_setup['ship'].max_speed = 100
+        formation_setup['ship'].get_max_speed.return_value = 100
 
         formation_setup['behavior'].update(None, formation_setup['strategy'])
 
