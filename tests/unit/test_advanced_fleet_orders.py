@@ -107,8 +107,8 @@ class TestAdvancedFleetOrders:
         # OR mock calculate_intercept_point in TurnEngine to verify it's utilized.
         pass
 
-    @patch('game.strategy.data.pathfinding.calculate_intercept_point')
-    @patch('game.strategy.data.pathfinding.find_hybrid_path')
+    @patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point')
+    @patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path')
     def test_intercept_integration(self, mock_find_path, mock_calc_intercept, turn_engine, test_empire, galaxy_mock):
         """Verify TurnEngine calls calculate_intercept_point."""
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)

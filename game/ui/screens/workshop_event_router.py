@@ -154,7 +154,7 @@ class WorkshopEventRouter:
                 gui.left_panel.deselect_all()
             
             # data is group_key - collect all components matching the group
-            from ui.builder.grouping_strategies import get_component_group_key
+            from game.ui.screens.builder.grouping_strategies import get_component_group_key
             comps = [c for c in gui.ship.get_all_components()
                      if get_component_group_key(c) == data]
             
@@ -194,7 +194,7 @@ class WorkshopEventRouter:
             data: Tuple of (group_key, layer_type) for targeted deletion
         """
         gui = self.gui
-        from ui.builder.grouping_strategies import get_component_group_key
+        from game.ui.screens.builder.grouping_strategies import get_component_group_key
 
         # Unpack data - now includes layer type for targeted deletion
         if isinstance(data, tuple) and len(data) == 2 and not isinstance(data[0], str):
@@ -265,7 +265,7 @@ class WorkshopEventRouter:
             target_comp = data
         else:
             # Find first component of group using ship helper
-            from ui.builder.grouping_strategies import get_component_group_key
+            from game.ui.screens.builder.grouping_strategies import get_component_group_key
             for c in gui.ship.get_all_components():
                 if get_component_group_key(c) == data:
                     target_comp = c

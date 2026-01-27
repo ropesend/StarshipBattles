@@ -463,7 +463,7 @@ class LayerPanel(DropTarget):
         subset = self.items[low : high + 1]
         result_components = []
         
-        from ui.builder.grouping_strategies import get_component_group_key
+        from game.ui.screens.builder.grouping_strategies import get_component_group_key
         
         for item in subset:
             if isinstance(item, IndividualComponentItem):
