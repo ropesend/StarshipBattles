@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Preparation | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate UI Consumers | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate Test Files | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Delete Legacy Code | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 1. Preparation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate UI Consumers | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate Test Files | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Delete Legacy Code | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-27 09:53
-**Active Phase:** Blocked - Waiting for PROJ-24
-**Last Action:** Project plan created with detailed analysis
-**Next Action:** Wait for PROJ-24 completion, then begin Phase 1
-**Blockers:** PROJ-24 must complete first (ShipControllableAdapter interface migration)
+**Last Updated:** 2026-01-27
+**Active Phase:** PROJECT COMPLETE
+**Last Action:** Phase 4 complete - game/ai/core/ directory deleted, all 4594 tests passing
+**Next Action:** Manual verification by user (launch game, verify AI strategy dropdowns, run battle)
+**Blockers:** None - awaiting user verification
 
 ## Overview
 After PROJ-24 completes the IControllable interface migration, consolidate the two parallel AI implementations into a single canonical version (`game/ai/controller.py`), eliminating code duplication in `game/ai/core/`. This is a code cleanup project - no behavior changes, only import path migrations.
@@ -72,13 +72,13 @@ After PROJ-24 completes the IControllable interface migration, consolidate the t
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All UI dropdowns show correct strategy names (manual test)
-- [ ] Battle AI functions correctly (run a battle manually)
-- [ ] All tests pass: `pytest tests/`
-- [ ] No imports from `game.ai.core` exist: `grep -r "game.ai.core" --include="*.py"`
-- [ ] `game/ai/core/` directory deleted
-- [ ] Root-level test files moved to `tests/integration/`
+- [x] All phase checklists complete
+- [ ] All UI dropdowns show correct strategy names (manual test) - **pending user**
+- [ ] Battle AI functions correctly (run a battle manually) - **pending user**
+- [x] All tests pass: `pytest tests/` (4594 passed, 1 skipped)
+- [x] No imports from `game.ai.core` exist: `grep -r "game.ai.core" --include="*.py"`
+- [x] `game/ai/core/` directory deleted
+- [x] Root-level test files moved to `tests/integration/`
 
 ## Estimated Effort
 - Phase 1: ~15 min (verification only)

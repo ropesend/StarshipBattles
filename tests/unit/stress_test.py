@@ -47,7 +47,7 @@ def run_stress_test():
     # duplicating the logic we WANT to test (collision/update).
     
     from game.simulation.entities.ship import Ship
-    from game.ai.core.system import AIController
+    from game.ai.controller import AIController
     
     all_ships = []
     for i in range(50):

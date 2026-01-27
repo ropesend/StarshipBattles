@@ -4,7 +4,7 @@ from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMen
 from pygame_gui.core import UIElement
 
 from game.simulation.entities.ship import VEHICLE_CLASSES
-from game.ai.core.system import STRATEGY_MANAGER
+from game.ai.strategy_manager import StrategyManager
 
 class StatRow:
     """Helper class to manage a single statistic row (Label | Value | Unit) with caching."""
@@ -151,7 +151,7 @@ class BuilderRightPanel:
         # AI
         UILabel(pygame.Rect(10, y, 60, 25), "AI:", manager=self.manager, container=self.panel)
         
-        strategies = STRATEGY_MANAGER.strategies if STRATEGY_MANAGER else {}
+        strategies = StrategyManager.instance().strategies
         ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
         
         # Ensure we have at least one option
@@ -240,7 +240,7 @@ class BuilderRightPanel:
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
         
         # 5. Recreate AI
-        strategies = STRATEGY_MANAGER.strategies if STRATEGY_MANAGER else {}
+        strategies = StrategyManager.instance().strategies
         ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
         
         # Ensure we have at least one option
