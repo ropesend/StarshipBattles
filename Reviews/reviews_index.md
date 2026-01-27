@@ -44,7 +44,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | 2026-01-24_general_full-codebase-maintainability | PROJ-11 | Architecture Layer Separation (13+ findings) |
 | 2026-01-24_general_full-codebase-maintainability | PROJ-12 | God Class Decomposition (Ship, TurnEngine, RaceSetupScreen) |
 | 2026-01-24_general_full-codebase-maintainability | PROJ-13 | Code Quality & Documentation (remaining findings) |
-| 2026-01-27_general_path-centralization | PROJ-26 | Path Centralization (47+ hardcoded paths → single source of truth) |
+| 2026-01-27_general_path-centralization | PROJ-39 | Path Centralization (47+ hardcoded paths → single source of truth) |
 
 ---
 
