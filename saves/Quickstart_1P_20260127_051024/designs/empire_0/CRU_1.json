@@ -1,0 +1,459 @@
+{
+    "name": "CRU 1",
+    "ship_class": "Cruiser",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "ai_strategy": "standard_ranged",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 3.5000000000000004
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.4000000000000004
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "INNER": [
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 5.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "shield_generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.1
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.1
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.1
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.1
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "warp_drive_capital",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "laser_cannon",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "range_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "precision_mount",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 180.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "capital_missile",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "facing",
+                        "value": 0.0
+                    },
+                    {
+                        "id": "turret_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "rapid_fire",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "seeker_endurance",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "seeker_damage",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "seeker_armored",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "seeker_stealth",
+                        "value": 0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "ordnance_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": []
+    },
+    "resources": {
+        "fuel": 250000.0,
+        "energy": 2000.0,
+        "ammo": 5000.0
+    },
+    "expected_stats": {
+        "max_hp": 4386,
+        "max_fuel": 250000.0,
+        "max_energy": 2000.0,
+        "max_ammo": 5000.0,
+        "max_speed": 8.795182287788831,
+        "acceleration_rate": 0.4688195846996023,
+        "turn_speed": 0.0,
+        "total_thrust": 660.0,
+        "strategic_movement": 440.00000000000006,
+        "mass": 1876.0270634650158,
+        "armor_hp_pool": 0,
+        "warp_max_tonnage": 50000.0,
+        "warp_energy_cost": 0.0,
+        "strategic_fuel_per_hex": 440.00000000000006
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 2,
+        "created_date": "2026-01-27T05:29:01.078417",
+        "last_modified": "2026-01-27T05:29:01.078417"
+    }
+}

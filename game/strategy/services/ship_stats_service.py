@@ -15,8 +15,9 @@ Key design decisions:
 """
 
 from typing import Dict, Any, Optional, List, Tuple
-from game.core.registry import get_component_registry
+from game.core.registry import get_component_registry, get_vehicle_classes
 from game.core.logger import log_warning
+from game.simulation.formula_system import evaluate_math_formula
 
 
 # Default damage threshold - components become useless below this HP percentage
@@ -80,6 +81,15 @@ class ShipStatsService:
         total_strategic_movement = 0.0
         warp_max_tonnage = 0
 
+        # Build formula evaluation context from ship class
+        formula_context = {'ship_class_mass': 1000}  # Default fallback
+        ship_class = design_data.get('ship_class', '')
+        if ship_class:
+            vehicle_classes = get_vehicle_classes()
+            class_data = vehicle_classes.get(ship_class, {})
+            if isinstance(class_data, dict):
+                formula_context['ship_class_mass'] = class_data.get('max_mass', 1000)
+
         # Iterate through all components in design
         components_found = ShipStatsService._iterate_design_components(design_data)
 
@@ -138,7 +148,7 @@ class ShipStatsService:
             # Check if component is toggled off
             if not component_toggles.get(comp_id, True):
                 # Still count mass, skip abilities
-                comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0)
+                comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0, formula_context)
                 total_mass += comp_mass
                 continue
 
@@ -148,11 +158,11 @@ class ShipStatsService:
             )
 
             # Mass never degrades - add full mass regardless of damage
-            comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0)
+            comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0, formula_context)
             total_mass += comp_mass
 
             # HP degrades with damage
-            comp_hp = ShipStatsService._get_numeric_value(comp_def, 'max_hp', 0)
+            comp_hp = ShipStatsService._get_numeric_value(comp_def, 'max_hp', 0, formula_context)
             total_hp += comp_hp * effectiveness
 
             # Get abilities from component definition
@@ -161,7 +171,9 @@ class ShipStatsService:
             # Resource Storage - degrades with damage (generic handling)
             for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceStorage'):
                 resource_type = ability_data.get('resource', '')
-                max_amount = ability_data.get('max_amount') or ability_data.get('amount', 0)
+                max_amount = ShipStatsService._evaluate_value(
+                    ability_data.get('max_amount') or ability_data.get('amount', 0), 0, formula_context
+                )
                 if resource_type:
                     resource_storage[resource_type] = (
                         resource_storage.get(resource_type, 0) + max_amount * effectiveness
@@ -169,24 +181,24 @@ class ShipStatsService:
 
             # Also check shortcut abilities (FuelStorage, EnergyStorage, AmmoStorage)
             if 'FuelStorage' in abilities:
-                val = ShipStatsService._get_ability_value(abilities, 'FuelStorage')
+                val = ShipStatsService._get_ability_value(abilities, 'FuelStorage', formula_context)
                 resource_storage['fuel'] = resource_storage.get('fuel', 0) + val * effectiveness
             if 'EnergyStorage' in abilities:
-                val = ShipStatsService._get_ability_value(abilities, 'EnergyStorage')
+                val = ShipStatsService._get_ability_value(abilities, 'EnergyStorage', formula_context)
                 resource_storage['energy'] = resource_storage.get('energy', 0) + val * effectiveness
             if 'AmmoStorage' in abilities:
-                val = ShipStatsService._get_ability_value(abilities, 'AmmoStorage')
+                val = ShipStatsService._get_ability_value(abilities, 'AmmoStorage', formula_context)
                 resource_storage['ammo'] = resource_storage.get('ammo', 0) + val * effectiveness
 
             # Strategic Movement - degrades with damage
             if 'StrategicMovement' in abilities:
-                movement = ShipStatsService._get_ability_value(abilities, 'StrategicMovement')
+                movement = ShipStatsService._get_ability_value(abilities, 'StrategicMovement', formula_context)
                 total_strategic_movement += movement * effectiveness
 
             # Resource Consumption - generic handling by trigger type
             for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
                 resource_type = ability_data.get('resource', '')
-                amount = ability_data.get('amount', 0)
+                amount = ShipStatsService._evaluate_value(ability_data.get('amount', 0), 0, formula_context)
                 trigger = ability_data.get('trigger', 'constant')
 
                 if trigger == 'strategic_per_hex':
@@ -210,18 +222,18 @@ class ShipStatsService:
                 if warp_effectiveness > 0:
                     warp_data = abilities.get('WarpJump', {})
                     if isinstance(warp_data, dict):
-                        tonnage = warp_data.get('max_tonnage', 0)
+                        tonnage = ShipStatsService._evaluate_value(warp_data.get('max_tonnage', 0), 0, formula_context)
                         # Legacy: support energy_cost/fuel_cost in WarpJump ability
-                        legacy_energy = warp_data.get('energy_cost', 0)
-                        legacy_fuel = warp_data.get('fuel_cost', 0)
+                        legacy_energy = ShipStatsService._evaluate_value(warp_data.get('energy_cost', 0), 0, formula_context)
+                        legacy_fuel = ShipStatsService._evaluate_value(warp_data.get('fuel_cost', 0), 0, formula_context)
                     else:
-                        tonnage = warp_data if isinstance(warp_data, (int, float)) else 0
+                        tonnage = ShipStatsService._evaluate_value(warp_data, 0, formula_context) if not isinstance(warp_data, str) or warp_data.startswith("=") else 0
                         legacy_energy = 0
                         legacy_fuel = 0
 
                     # Use largest warp drive tonnage
                     if tonnage > warp_max_tonnage:
-                        warp_max_tonnage = tonnage
+                        warp_max_tonnage = int(tonnage)
 
                     # Add legacy costs to warp_resource_costs
                     if legacy_energy > 0:
@@ -396,25 +408,36 @@ class ShipStatsService:
         return max_hp
 
     @staticmethod
-    def _get_numeric_value(obj: Any, attr: str, default: float) -> float:
+    def _get_numeric_value(obj: Any, attr: str, default: float, context: Optional[Dict[str, Any]] = None) -> float:
         """Get a numeric attribute from an object, handling formulas."""
         val = getattr(obj, attr, default)
-        if isinstance(val, str):
-            # It's a formula - can't evaluate without context
-            return default
-        return float(val) if val is not None else default
+        return ShipStatsService._evaluate_value(val, default, context)
 
     @staticmethod
-    def _get_ability_value(abilities: Dict[str, Any], ability_name: str) -> float:
+    def _evaluate_value(val: Any, default: float, context: Optional[Dict[str, Any]] = None) -> float:
+        """Evaluate a value that may be a formula string."""
+        if val is None:
+            return default
+        if isinstance(val, str):
+            if val.startswith("=") and context:
+                result = evaluate_math_formula(val[1:], context)
+                return float(result) if result is not None else default
+            return default  # Formula but no context
+        return float(val)
+
+    @staticmethod
+    def _get_ability_value(abilities: Dict[str, Any], ability_name: str, context: Optional[Dict[str, Any]] = None) -> float:
         """Get the primary value from an ability definition."""
         val = abilities.get(ability_name, 0)
+        if isinstance(val, str):
+            return ShipStatsService._evaluate_value(val, 0.0, context)
         if isinstance(val, (int, float)):
             return float(val)
         elif isinstance(val, dict):
             # Try common keys for primary value
             for key in ['value', 'amount', 'max_amount', 'thrust_force', 'movement_points']:
                 if key in val:
-                    return float(val[key])
+                    return ShipStatsService._evaluate_value(val[key], 0.0, context)
             return 0.0
         return 0.0
 

@@ -89,7 +89,12 @@ class TestComponentDefinitions:
             costs = comp['resource_cost']
             assert isinstance(costs, dict), "resource_cost must be a dictionary"
             for res, amount in costs.items():
-                assert amount >= 0, f"Resource cost {res} for {comp['id']} must be non-negative"
+                # Allow formula strings (starting with "=") or non-negative integers
+                is_formula = isinstance(amount, str) and amount.startswith("=")
+                is_valid_int = isinstance(amount, (int, float)) and amount >= 0
+                assert is_formula or is_valid_int, (
+                    f"Resource cost {res} for {comp['id']} must be non-negative number or formula"
+                )
                 assert res in PLANET_RESOURCES, f"Unknown resource: {res}"
 
     @pytest.mark.parametrize("comp", COMPONENTS, ids=lambda c: c.get('id', 'unknown'))

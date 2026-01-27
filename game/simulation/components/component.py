@@ -354,10 +354,21 @@ class Component:
 
     def get_resource_cost(self):
         """Returns the current resource costs, including modifier multipliers."""
-        base_costs = self.data.get("resource_cost", {})
+        base_costs = getattr(self, 'evaluated_resource_cost', None) or self.data.get("resource_cost", {})
         multiplier = self.stats.get('cost_mult', 1.0)
-        
-        return {res: int(amount * multiplier) for res, amount in base_costs.items()}
+
+        # Build context for formula evaluation (use ship mass if available, else default)
+        context = {'ship_class_mass': 1000}
+        if self.ship:
+            context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+
+        result = {}
+        for res, amount in base_costs.items():
+            if isinstance(amount, str) and amount.startswith("="):
+                # Evaluate formula on-demand
+                amount = evaluate_math_formula(amount[1:], context)
+            result[res] = int(amount * multiplier)
+        return result
 
     def add_modifier(self, mod_id, value=None):
         mods = get_modifier_registry()
@@ -506,16 +517,31 @@ class Component:
                          setattr(self, attr, val)
         
         # Evaluate formulas in abilities
+        def evaluate_formulas_recursive(obj, context):
+            """Recursively evaluate formulas in nested structures (dicts and lists)."""
+            if isinstance(obj, str) and obj.startswith("="):
+                return evaluate_math_formula(obj[1:], context)
+            elif isinstance(obj, dict):
+                for key, sub_val in obj.items():
+                    obj[key] = evaluate_formulas_recursive(sub_val, context)
+                return obj
+            elif isinstance(obj, list):
+                for i, item in enumerate(obj):
+                    obj[i] = evaluate_formulas_recursive(item, context)
+                return obj
+            return obj
+
         for ability_name, val in self.abilities.items():
-            if isinstance(val, str) and val.startswith("="):
-                new_val = evaluate_math_formula(val[1:], context)
-                self.abilities[ability_name] = new_val
-            elif isinstance(val, dict):
-                 # Recursively evaluate formulas in nested ability dictionaries
-                 for key, sub_val in val.items():
-                     if isinstance(sub_val, str) and sub_val.startswith("="):
-                         new_val = evaluate_math_formula(sub_val[1:], context)
-                         val[key] = new_val
+            self.abilities[ability_name] = evaluate_formulas_recursive(val, context)
+
+        # Evaluate formulas in resource_cost
+        raw_costs = self.data.get("resource_cost", {})
+        self.evaluated_resource_cost = {}
+        for res, amount in raw_costs.items():
+            if isinstance(amount, str) and amount.startswith("="):
+                self.evaluated_resource_cost[res] = evaluate_math_formula(amount[1:], context)
+            else:
+                self.evaluated_resource_cost[res] = amount
 
     def _calculate_modifier_stats(self):
         from game.simulation.components.modifiers import apply_modifier_effects

@@ -32,13 +32,16 @@ class TestComponentResourceCosts:
             for res_name in costs.keys():
                 assert res_name in PLANET_RESOURCES, f"Invalid resource '{res_name}' in component {comp.get('id')}"
 
-    def test_resource_values_integer(self, component_list):
-        """Phase 1.1: Resource costs should be positive integers."""
+    def test_resource_values_integer_or_formula(self, component_list):
+        """Phase 1.1: Resource costs should be positive integers or formula strings."""
         for comp in component_list:
             costs = comp.get("resource_cost", {})
             for res_name, amount in costs.items():
-                assert isinstance(amount, int), f"Cost for {res_name} in {comp.get('id')} must be int"
-                assert amount >= 0, f"Cost for {res_name} in {comp.get('id')} cannot be negative"
+                is_formula = isinstance(amount, str) and amount.startswith("=")
+                is_valid_int = isinstance(amount, int) and amount >= 0
+                assert is_formula or is_valid_int, (
+                    f"Cost for {res_name} in {comp.get('id')} must be a non-negative int or formula string"
+                )
 
 class TestComponentModifierCosts:
     """
