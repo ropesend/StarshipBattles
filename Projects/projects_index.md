@@ -4,12 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-21 | Legacy Cleanup Phase 8: Tests and Patterns | Planning | 2026-01-26 | 2026-01-26 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-21 | Legacy Cleanup Phase 8: Tests and Patterns | Archived | 2026-01-26 | 2026-01-27 |
 | PROJ-20 | Standardize Data Formats | Archived | 2026-01-26 | 2026-01-27 |
 | PROJ-19 | Standardize Data Formats | Archived | 2026-01-26 | 2026-01-26 |
 | PROJ-18 | Standardize Registry Access | Archived | 2026-01-25 | 2026-01-26 |
