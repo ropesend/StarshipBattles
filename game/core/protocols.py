@@ -38,6 +38,42 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
+# Registry Provider Protocol (PROJ-27)
+# =============================================================================
+
+@runtime_checkable
+class IRegistryProvider(Protocol):
+    """
+    Protocol for registry access abstraction.
+
+    PROJ-27: Enables dependency injection for registry access, allowing
+    services to be tested in isolation without relying on the global singleton.
+
+    Implementations:
+        - DefaultRegistryProvider: Delegates to RegistryManager singleton (production)
+        - TestRegistryProvider: Provides isolated registry data (testing)
+
+    Usage:
+        def calculate_stats(design: dict, registry: IRegistryProvider = None):
+            if registry is None:
+                registry = get_default_registry_provider()
+            components = registry.get_components()
+            ...
+    """
+    def get_components(self) -> Dict[str, Any]:
+        """Get the component registry dictionary."""
+        ...
+
+    def get_modifiers(self) -> Dict[str, Any]:
+        """Get the modifier registry dictionary."""
+        ...
+
+    def get_vehicle_classes(self) -> Dict[str, Any]:
+        """Get the vehicle classes dictionary."""
+        ...
+
+
+# =============================================================================
 # Base Protocols (Composable)
 # =============================================================================
 

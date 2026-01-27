@@ -9,6 +9,7 @@ import pygame_gui.windows
 from typing import Optional, Callable
 from game.strategy.data.planet import Planet
 from game.strategy.systems.design_library import DesignLibrary
+from game.simulation.services.design_loader import SimulationDesignLoader
 from game.core.logger import log_info, log_warning, log_error, log_debug
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
@@ -626,11 +627,24 @@ class BuildQueueScreen:
             design_id: Design ID to load and display
         """
         try:
-            # Load design using DesignLibrary
-            ship, message = self.design_library.load_design(design_id, width=1920, height=1080)
+            # Load design data using DesignLibrary (strategy layer)
+            design_data = self.design_library.load_design_data(design_id)
+
+            if design_data is None:
+                log_warning(f"Could not load design {design_id}: Design not found")
+                self.design_report.show_placeholder()
+                return
+
+            # Create Ship using SimulationDesignLoader (simulation layer)
+            loader = SimulationDesignLoader()
+            ship = loader.load_ship_from_design_data(
+                design_data,
+                center_x=1920 // 2,
+                center_y=1080 // 2
+            )
 
             if ship is None:
-                log_warning(f"Could not load design {design_id}: {message}")
+                log_warning(f"Could not create ship from design {design_id}")
                 self.design_report.show_placeholder()
                 return
 

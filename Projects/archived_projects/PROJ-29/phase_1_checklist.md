@@ -46,5 +46,5 @@ The `component.ship` back-reference was used primarily for:
 When all tasks above are done:
 - [x] All task checkboxes above are checked
 - [x] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

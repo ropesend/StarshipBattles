@@ -36,6 +36,7 @@ from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.strategy.systems.design_library import DesignLibrary
+from game.simulation.services.design_loader import SimulationDesignLoader
 from game.ui.screens.design_selector_window import DesignSelectorWindow
 
 # Initialize Tkinter root and hide it (for simpledialog)
@@ -765,13 +766,23 @@ class DesignWorkshopGUI:
 
             def on_design_selected(design_id: str):
                 log_info(f"Workshop: User selected design_id='{design_id}'")
-                ship, msg = library.load_design(design_id, self.width, self.height)
-                if ship:
-                    log_info(f"Workshop: Successfully loaded design '{ship.name}'")
-                    self._apply_loaded_ship(ship, msg)
+                design_data = library.load_design_data(design_id)
+                if design_data:
+                    loader = SimulationDesignLoader()
+                    ship = loader.load_ship_from_design_data(
+                        design_data,
+                        center_x=self.width // 2,
+                        center_y=self.height // 2
+                    )
+                    if ship:
+                        log_info(f"Workshop: Successfully loaded design '{ship.name}'")
+                        self._apply_loaded_ship(ship, f"Loaded design: {ship.name}")
+                    else:
+                        log_error(f"Workshop: Failed to create ship from design '{design_id}'")
+                        self.show_error("Failed to create ship from design data")
                 else:
-                    log_error(f"Workshop: Failed to load design '{design_id}': {msg}")
-                    self.show_error(msg)
+                    log_error(f"Workshop: Failed to load design '{design_id}'")
+                    self.show_error(f"Design not found: {design_id}")
 
             # Open design selector window
             window_rect = pygame.Rect(
@@ -886,12 +897,21 @@ class DesignWorkshopGUI:
             )
 
             def on_target_selected(design_id: str):
-                ship, msg = library.load_design(design_id, self.width, self.height)
-                if ship:
-                    self.weapons_report_panel.set_target(ship)
-                    log_info(f"Selected target: {ship.name}")
+                design_data = library.load_design_data(design_id)
+                if design_data:
+                    loader = SimulationDesignLoader()
+                    ship = loader.load_ship_from_design_data(
+                        design_data,
+                        center_x=self.width // 2,
+                        center_y=self.height // 2
+                    )
+                    if ship:
+                        self.weapons_report_panel.set_target(ship)
+                        log_info(f"Selected target: {ship.name}")
+                    else:
+                        self.show_error("Failed to create ship from design data")
                 else:
-                    self.show_error(msg)
+                    self.show_error(f"Design not found: {design_id}")
 
             # Open design selector window
             window_rect = pygame.Rect(

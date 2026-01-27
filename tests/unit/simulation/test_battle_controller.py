@@ -24,6 +24,7 @@ from game.simulation.battle_controller import (
     create_strategy_battle,
     create_hypothetical_battle,
 )
+from game.simulation.managers.retreat_manager import RetreatMethod
 from game.simulation.services.battle_service import BattleResult
 from game.simulation.systems.battle_end_conditions import BattleEndMode
 
@@ -656,7 +657,7 @@ class TestBattleControllerRetreat:
 
         assert result.success is True
         assert ship_id in controller._retreating_ships
-        assert controller._retreating_ships[ship_id].method == "edge"
+        assert controller._retreating_ships[ship_id].method == RetreatMethod.EDGE
 
     def test_request_retreat_warp_creates_retreat_state(self, controller, mock_service, mock_ship):
         """request_retreat with warp method creates proper state."""
@@ -672,7 +673,7 @@ class TestBattleControllerRetreat:
         assert result.success is True
         assert ship_id in controller._retreating_ships
         state = controller._retreating_ships[ship_id]
-        assert state.method == "warp"
+        assert state.method == RetreatMethod.WARP
         assert state.charge_ticks == 0
         assert state.required_ticks == 500
 
@@ -908,7 +909,8 @@ class TestBattleControllerStateSaveLoad:
         mock_engine.tick_counter = 100
         mock_service.get_engine.return_value = mock_engine
 
-        with patch('game.simulation.battle_controller.BattleState') as MockState:
+        # Patch BattleState in the manager module where it's actually called
+        with patch('game.simulation.managers.battle_state_manager.BattleState') as MockState:
             mock_state = Mock()
             MockState.capture_from_engine.return_value = mock_state
 
@@ -1229,7 +1231,8 @@ class TestBattleControllerGetResults:
         # Add escaped ship
         controller._escaped_ships = ['escaped-ship-id']
 
-        with patch('game.simulation.battle_controller.BattleState') as MockState:
+        # Patch BattleState in the manager module where it's actually called
+        with patch('game.simulation.managers.battle_state_manager.BattleState') as MockState:
             mock_escaped_state = Mock()
             mock_escaped_state.is_alive = True  # Escaped ships can be "alive" but out of battle
 
