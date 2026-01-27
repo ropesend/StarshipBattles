@@ -1,0 +1,149 @@
+{
+  "version": "1.0",
+  "battle_id": "c1a82d39-06a4-416f-bb6d-fd172e2dd3df",
+  "seed": 854001193,
+  "tick_count": 100,
+  "max_ticks": 100,
+  "ships": {
+    "0720e162-9dec-49ea-86ca-001814594009": {
+      "ship_id": "0720e162-9dec-49ea-86ca-001814594009",
+      "name": "Limited Energy Attacker (No Gen)",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 125,
+      "max_hp": 125,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_beam_med_acc",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_storage_energy_small",
+            "current_hp": 5,
+            "max_hp": 5,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 5.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 25.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Target Stationary"
+    },
+    "9ef49a04-81a3-48a5-8ccc-2326bca3e22c": {
+      "ship_id": "9ef49a04-81a3-48a5-8ccc-2326bca3e22c",
+      "name": "Test Target Stationary",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 1,
+      "color": [
+        0,
+        0,
+        255
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        100.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 1000000090.0,
+      "max_hp": 1000000100,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_armor_extreme_hp",
+            "current_hp": 999999990.0,
+            "max_hp": 1000000000,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Limited Energy Attacker (No Gen)"
+    }
+  },
+  "projectiles": [],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-27T10:48:30.405943",
+  "mode": "test"
+}

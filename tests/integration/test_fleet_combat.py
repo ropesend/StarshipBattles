@@ -592,8 +592,8 @@ class TestAIAdapterIntegration:
             pos = adapter.get_position()
             assert pos is not None
 
-    def test_adapter_provides_backward_compatibility(self, two_ship_teams):
-        """Test that adapter provides backward-compatible ship access."""
+    def test_adapter_provides_ship_access(self, two_ship_teams):
+        """Test that adapter provides access to underlying ship."""
         from game.simulation.entities.ship import Ship
 
         team1, team2 = two_ship_teams
@@ -606,9 +606,9 @@ class TestAIAdapterIntegration:
             assert hasattr(adapter, 'ship')
             assert isinstance(adapter.ship, Ship)
 
-            # Test fallback attribute access via __getattr__
-            assert hasattr(adapter, 'name')  # Forwarded from ship
-            assert adapter.name == adapter.ship.name
+            # Test interface methods work (PROJ-24 migration - no __getattr__ fallback)
+            assert adapter.get_position() is not None
+            assert adapter.get_team_id() == adapter.ship.team_id
 
 
 # === Edge Case Tests ===

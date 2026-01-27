@@ -1,0 +1,183 @@
+{
+  "version": "1.0",
+  "battle_id": "01045d02-ec80-445a-9059-a129a45e57c9",
+  "seed": 1678228456,
+  "tick_count": 800,
+  "max_ticks": 800,
+  "ships": {
+    "45affbfb-06e5-4536-b868-6ad75a271486": {
+      "ship_id": "45affbfb-06e5-4536-b868-6ad75a271486",
+      "name": "Test Attacker Seeker360",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 0,
+      "color": [
+        255,
+        0,
+        0
+      ],
+      "ai_strategy": "test_do_nothing",
+      "position": [
+        0.0,
+        0.0
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 0.0,
+      "current_hp": 120,
+      "max_hp": 120,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_seeker_no_resource",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Target Erratic Small"
+    },
+    "b02cd81e-f626-4b01-9202-69988500ca74": {
+      "ship_id": "b02cd81e-f626-4b01-9202-69988500ca74",
+      "name": "Test Target Erratic Small",
+      "ship_class": "TestS_2L",
+      "theme_id": "Federation",
+      "team_id": 1,
+      "color": [
+        0,
+        0,
+        255
+      ],
+      "ai_strategy": "test_erratic_maneuver",
+      "position": [
+        4523.02146376682,
+        -2079.075945143388
+      ],
+      "velocity": [
+        0.0,
+        0.0
+      ],
+      "angle": 264.6875,
+      "current_hp": 1000000170,
+      "max_hp": 1000000170,
+      "current_shields": 0.0,
+      "max_shields": 0,
+      "components": {
+        "HULL": [
+          {
+            "component_id": "hull_test_s",
+            "current_hp": 100,
+            "max_hp": 100,
+            "is_active": true,
+            "layer": "HULL",
+            "modifiers": []
+          }
+        ],
+        "CORE": [
+          {
+            "component_id": "test_armor_small_extreme_hp",
+            "current_hp": 1000000000,
+            "max_hp": 1000000000,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_engine_no_fuel",
+            "current_hp": 50,
+            "max_hp": 50,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          },
+          {
+            "component_id": "test_thruster_std",
+            "current_hp": 20,
+            "max_hp": 20,
+            "is_active": true,
+            "layer": "CORE",
+            "modifiers": []
+          }
+        ],
+        "ARMOR": []
+      },
+      "resource_levels": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "resource_max": {
+        "fuel": 0.0,
+        "energy": 0.0,
+        "ammo": 0.0
+      },
+      "is_alive": true,
+      "is_derelict": false,
+      "retreat_status": null,
+      "current_target_id": "Test Attacker Seeker360"
+    }
+  },
+  "projectiles": [
+    {
+      "projectile_id": "42aa3a22-68a8-4d0a-906f-15cfa12771e0",
+      "owner_ship_id": "45affbfb-06e5-4536-b868-6ad75a271486",
+      "team_id": 0,
+      "position": [
+        2715.164130023572,
+        -1251.316257578669
+      ],
+      "velocity": [
+        9.092250724507768,
+        -4.163048974332152
+      ],
+      "damage": 100.0,
+      "max_range": 5000.0,
+      "endurance": 2.0100000000000637,
+      "max_endurance": 5.0,
+      "projectile_type": "missile",
+      "turn_rate": 90.0,
+      "max_speed": 10.0,
+      "target_ship_id": "b02cd81e-f626-4b01-9202-69988500ca74",
+      "hp": 1,
+      "max_hp": 1,
+      "distance_traveled": 2990.0,
+      "is_alive": true
+    }
+  ],
+  "end_mode": "TIME_BASED",
+  "allow_retreat": false,
+  "allow_reinforcements": false,
+  "created_at": "2026-01-27T10:48:51.456566",
+  "mode": "test"
+}

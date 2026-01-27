@@ -5,14 +5,8 @@ Traceback (most recent call last):
     self._handle_normal_events(events)
   File "C:\Dev\Starship Battles\game\app.py", line 521, in _handle_normal_events
     self._forward_event_to_scene(event)
-  File "C:\Dev\Starship Battles\game\app.py", line 548, in _forward_event_to_scene
-    self.builder_scene.handle_event(event)
-  File "C:\Dev\Starship Battles\game\ui\screens\workshop_screen.py", line 393, in handle_event
-    return self.event_router.handle_event(event)
-  File "C:\Dev\Starship Battles\game\ui\screens\workshop_event_router.py", line 59, in handle_event
-    return self._handle_panel_action(action)
-  File "C:\Dev\Starship Battles\game\ui\screens\workshop_event_router.py", line 112, in _handle_panel_action
-    self._handle_add_component(act_type, data)
-  File "C:\Dev\Starship Battles\game\ui\screens\workshop_event_router.py", line 268, in _handle_add_component
-    from ui.builder.grouping_strategies import get_component_group_key
-ModuleNotFoundError: No module named 'ui.builder.grouping_strategies'
+  File "C:\Dev\Starship Battles\game\app.py", line 556, in _forward_event_to_scene
+    self.test_lab_scene.handle_input([event])
+  File "C:\Dev\Starship Battles\ui\test_lab_scene.py", line 2888, in handle_input
+    callback = self._button_callbacks.get(event.ui_element)
+AttributeError: 'pygame.event.Event' object has no attribute 'ui_element'

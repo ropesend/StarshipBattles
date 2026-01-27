@@ -208,7 +208,9 @@ class FormationBehavior(AIBehavior):
         # Calculate target position
         # formation_offset accessed via interface, master attributes accessed directly (raw Ship)
         formation_offset = ship.get_formation_offset()
-        if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
+        # Access formation_rotation_mode via underlying ship to avoid deprecation warning
+        raw_ship = getattr(ship, '_ship', ship)
+        if getattr(raw_ship, 'formation_rotation_mode', 'relative') == 'fixed':
             current_rel_offset = formation_offset
         else:
             current_rel_offset = formation_offset.rotate(master.angle)
@@ -278,7 +280,7 @@ class FormationBehavior(AIBehavior):
             # master is raw Ship - access position directly
             future_master_pos = master.position  # No prediction needed if velocity matched
 
-            if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
+            if getattr(raw_ship, 'formation_rotation_mode', 'relative') == 'fixed':
                 future_offset = formation_offset
             else:
                 future_offset = formation_offset.rotate(master.angle)

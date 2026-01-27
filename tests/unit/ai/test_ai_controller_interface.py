@@ -129,18 +129,18 @@ class TestAIControllerWithAdapter:
 
         assert pos == Vector2(100, 200)
 
-    def test_aicontroller_can_access_ship_attributes_via_adapter_fallback(self, mock_ship, mock_grid):
-        """AIController can access ship attributes via adapter's __getattr__ fallback."""
+    def test_aicontroller_uses_interface_methods_not_direct_access(self, mock_ship, mock_grid):
+        """AIController uses interface methods, not direct attribute access."""
         from game.ai.controller import AIController
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         adapter = ShipControllableAdapter(mock_ship)
         controller = AIController(adapter, mock_grid, enemy_team_id=2)
 
-        # Access via adapter fallback to ship
-        assert controller.ship.position == Vector2(100, 200)
-        assert controller.ship.angle == 45.0
-        assert controller.ship.team_id == 1
+        # Access via interface methods (PROJ-24 migration complete)
+        assert controller.ship.get_position() == Vector2(100, 200)
+        assert controller.ship.get_rotation() == 45.0
+        assert controller.ship.get_team_id() == 1
 
 
 # =============================================================================
