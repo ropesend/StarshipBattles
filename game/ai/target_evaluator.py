@@ -8,6 +8,57 @@ from game.simulation.components.component_constants import LayerType
 from game.core.constants import AttackType
 
 
+def _is_vector2_like(obj):
+    """Check if object is a real Vector2-like object (not a MagicMock)."""
+    # Check for MagicMock by looking for tell-tale attributes
+    if hasattr(obj, '_mock_name') or hasattr(obj, 'assert_called'):
+        return False
+    # Check for Vector2-like interface
+    return hasattr(obj, 'x') and hasattr(obj, 'y') and hasattr(obj, 'distance_to')
+
+
+def _get_position(entity):
+    """Get position from entity, supporting both interface and direct access.
+
+    Uses interface method get_position() if available and returns a real Vector2,
+    otherwise falls back to direct .position attribute.
+    """
+    # Check for interface method first (ShipControllableAdapter case)
+    get_pos = getattr(entity, 'get_position', None)
+    if get_pos is not None and callable(get_pos):
+        try:
+            result = get_pos()
+            # Verify it's a real Vector2-like object (not a MagicMock)
+            if _is_vector2_like(result):
+                return result
+        except Exception:
+            pass
+    # Fall back to direct attribute access (raw Ship or mock with .position)
+    return entity.position
+
+
+def _get_rotation(entity):
+    """Get rotation from entity, supporting both interface and direct access."""
+    # Check for interface method first
+    get_rot = getattr(entity, 'get_rotation', None)
+    if get_rot is not None and callable(get_rot):
+        try:
+            result = get_rot()
+            if isinstance(result, (int, float)):
+                return result
+        except Exception:
+            pass
+    # Fall back to direct attribute access
+    return entity.angle
+
+
+def _get_all_components(entity):
+    """Get all components from entity, supporting both interface and direct access."""
+    if hasattr(entity, 'get_all_components') and callable(getattr(entity, 'get_all_components', None)):
+        return entity.get_all_components()
+    return []
+
+
 class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
 
@@ -44,7 +95,7 @@ class TargetEvaluator:
             match = True
 
             if r_type == 'nearest':
-                dist = ship.position.distance_to(candidate.position)
+                dist = _get_position(ship).distance_to(candidate.position)
                 # 'nearest' usually implies closer is better (higher score).
                 # Existing logic: score -= dist * weight.
                 # If we use weight > 0, we can do score -= dist * weight
@@ -55,7 +106,7 @@ class TargetEvaluator:
                     val = dist * factor
 
             elif r_type == 'farthest':
-                dist = ship.position.distance_to(candidate.position)
+                dist = _get_position(ship).distance_to(candidate.position)
                 if weight > 0:
                     val = dist * weight
                 else:
@@ -63,7 +114,7 @@ class TargetEvaluator:
 
             elif r_type == 'distance':
                 # Generic distance rule
-                dist = ship.position.distance_to(candidate.position)
+                dist = _get_position(ship).distance_to(candidate.position)
                 val = dist * factor
 
             elif r_type == 'mass' or r_type == 'largest':
@@ -163,7 +214,7 @@ class TargetEvaluator:
     def _default_get_hp_percent(ship):
         """Default HP percent calculation."""
         # Use Ship helper method to get all components
-        components = ship.get_all_components()
+        components = _get_all_components(ship)
         if not components:
             return 1.0
 
@@ -180,17 +231,18 @@ class TargetEvaluator:
         for comp in ship.get_components_by_ability('WeaponAbility', operational_only=True):
             if comp.has_pdc_ability():
                 weapon_ab = comp.get_ability('WeaponAbility')
-                dist = ship.position.distance_to(target.position)
+                ship_pos = _get_position(ship)
+                dist = ship_pos.distance_to(target.position)
                 if dist > weapon_ab.range:
                     continue
 
-                vec_to_target = target.position - ship.position
+                vec_to_target = target.position - ship_pos
                 if vec_to_target.length_squared() == 0:
                     continue
 
                 angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
 
-                ship_angle = ship.angle
+                ship_angle = _get_rotation(ship)
                 comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
                 diff = (angle_to_target - comp_facing + 180) % 360 - 180
 

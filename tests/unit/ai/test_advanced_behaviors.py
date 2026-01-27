@@ -13,9 +13,15 @@ def advanced_setup():
         pygame.init()
 
     mock_controller = MagicMock()
-    mock_controller.ship.position = pygame.math.Vector2(0, 0)
-    mock_controller.ship.max_weapon_range = 1000
-    mock_controller.ship.radius = 50
+    ship = mock_controller.ship
+    ship.position = pygame.math.Vector2(0, 0)
+    ship.max_weapon_range = 1000
+    ship.radius = 50
+
+    # Interface method mocks
+    ship.get_position.return_value = ship.position
+    ship.get_weapon_range.return_value = ship.max_weapon_range
+    ship.get_radius.return_value = ship.radius
 
     target = MagicMock()
     target.position = pygame.math.Vector2(2000, 0)  # Far away
@@ -115,7 +121,9 @@ class TestAdvancedBehaviors:
         orbit = OrbitBehavior(advanced_setup['mock_controller'])
         strategy = {'orbit_distance': 500}
 
-        advanced_setup['mock_controller'].ship.position = pygame.math.Vector2(600, 0)
+        ship_pos = pygame.math.Vector2(600, 0)
+        advanced_setup['mock_controller'].ship.position = ship_pos
+        advanced_setup['mock_controller'].ship.get_position.return_value = ship_pos
         advanced_setup['target'].position = pygame.math.Vector2(0, 0)
         # Dist 600 (Too far)
 

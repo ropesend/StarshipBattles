@@ -11,7 +11,7 @@ This enables:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from game.core.constants import CombatConstants
 
@@ -62,6 +62,21 @@ class IControllable(ABC):
         """Get the current speed of the entity."""
         pass
 
+    @abstractmethod
+    def get_turn_speed(self) -> float:
+        """Get the turn speed (degrees per second)."""
+        pass
+
+    @abstractmethod
+    def get_acceleration_rate(self) -> float:
+        """Get the acceleration rate."""
+        pass
+
+    @abstractmethod
+    def get_is_thrusting(self) -> bool:
+        """Check if the entity is currently thrusting."""
+        pass
+
     # =========================================================================
     # Movement Controls (Write)
     # =========================================================================
@@ -89,6 +104,16 @@ class IControllable(ABC):
     @abstractmethod
     def thrust_forward(self) -> None:
         """Activate forward thrust."""
+        pass
+
+    @abstractmethod
+    def set_rotation(self, angle: float) -> None:
+        """Set the rotation angle directly (for formation snapping)."""
+        pass
+
+    @abstractmethod
+    def adjust_position(self, delta: 'Vector2') -> None:
+        """Adjust position by a delta vector (for formation correction)."""
         pass
 
     # =========================================================================
@@ -134,6 +159,41 @@ class IControllable(ABC):
         """Get the maximum number of simultaneous targets."""
         pass
 
+    @abstractmethod
+    def get_secondary_targets(self) -> List[Any]:
+        """Get the list of secondary targets."""
+        pass
+
+    @abstractmethod
+    def set_secondary_targets(self, targets: List[Any]) -> None:
+        """Set the list of secondary targets."""
+        pass
+
+    @abstractmethod
+    def get_components_by_ability(self, name: str, operational_only: bool = True) -> List[Any]:
+        """Get components with a specific ability."""
+        pass
+
+    @abstractmethod
+    def get_layers(self) -> Dict[str, Any]:
+        """Get the component layers dictionary."""
+        pass
+
+    @abstractmethod
+    def get_ai_strategy(self) -> str:
+        """Get the AI strategy identifier for this ship."""
+        pass
+
+    @abstractmethod
+    def get_vehicle_type(self) -> str:
+        """Get the vehicle type (Ship, Satellite, etc.)."""
+        pass
+
+    @abstractmethod
+    def get_all_components(self) -> List[Any]:
+        """Get all components across all layers."""
+        pass
+
     # =========================================================================
     # Formation
     # =========================================================================
@@ -156,6 +216,16 @@ class IControllable(ABC):
     @abstractmethod
     def get_formation_offset(self) -> Optional['Vector2']:
         """Get the formation offset relative to master."""
+        pass
+
+    @abstractmethod
+    def set_in_formation(self, value: bool) -> None:
+        """Set whether the entity is in a formation."""
+        pass
+
+    @abstractmethod
+    def set_formation_master(self, master: Optional[Any]) -> None:
+        """Set the formation master."""
         pass
 
 
@@ -184,22 +254,37 @@ class ShipControllableAdapter(IControllable):
         return self._ship
 
     # =========================================================================
-    # Transparent Delegation (Required for Production Code)
+    # Transparent Delegation (DEPRECATED - Pending Removal)
     # =========================================================================
-    # NOTE: The AIController in controller.py directly accesses ship attributes
-    # like self.ship.position, self.ship.turn_throttle, etc. rather than using
-    # interface methods. Until controller.py is refactored to use interface
-    # methods exclusively, these delegation methods must remain.
+    # PROJ-24: The AIController and behaviors have been migrated to use
+    # interface methods exclusively. These delegation methods are kept
+    # temporarily with deprecation warnings to catch any remaining direct
+    # attribute access. They will be removed once all tests pass without
+    # triggering the warnings.
 
     def __getattr__(self, name: str) -> Any:
-        """Delegate attribute access to underlying ship."""
+        """Delegate attribute access to underlying ship (DEPRECATED)."""
+        import warnings
+        warnings.warn(
+            f"Direct attribute access '{name}' on ShipControllableAdapter is deprecated. "
+            f"Use interface methods instead (e.g., get_{name}() or is_{name}()).",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return getattr(self._ship, name)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        """Delegate attribute assignment to underlying ship."""
+        """Delegate attribute assignment to underlying ship (DEPRECATED)."""
         if name == '_ship':
             object.__setattr__(self, name, value)
         else:
+            import warnings
+            warnings.warn(
+                f"Direct attribute assignment '{name}' on ShipControllableAdapter is deprecated. "
+                f"Use interface methods instead (e.g., set_{name}()).",
+                DeprecationWarning,
+                stacklevel=2
+            )
             setattr(self._ship, name, value)
 
     # =========================================================================
@@ -230,6 +315,18 @@ class ShipControllableAdapter(IControllable):
         """Get the current speed of the ship."""
         return self._ship.current_speed
 
+    def get_turn_speed(self) -> float:
+        """Get the turn speed (degrees per second)."""
+        return self._ship.turn_speed
+
+    def get_acceleration_rate(self) -> float:
+        """Get the acceleration rate."""
+        return self._ship.acceleration_rate
+
+    def get_is_thrusting(self) -> bool:
+        """Check if the ship is currently thrusting."""
+        return self._ship.is_thrusting
+
     # =========================================================================
     # Movement Controls (Write)
     # =========================================================================
@@ -249,6 +346,14 @@ class ShipControllableAdapter(IControllable):
     def thrust_forward(self) -> None:
         """Activate forward thrust."""
         self._ship.thrust_forward()
+
+    def set_rotation(self, angle: float) -> None:
+        """Set the rotation angle directly (for formation snapping)."""
+        self._ship.angle = angle
+
+    def adjust_position(self, delta: 'Vector2') -> None:
+        """Adjust position by a delta vector (for formation correction)."""
+        self._ship.position += delta
 
     # =========================================================================
     # Identity and State
@@ -286,6 +391,34 @@ class ShipControllableAdapter(IControllable):
         """Get the maximum number of simultaneous targets."""
         return getattr(self._ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
 
+    def get_secondary_targets(self) -> List[Any]:
+        """Get the list of secondary targets."""
+        return self._ship.secondary_targets or []
+
+    def set_secondary_targets(self, targets: List[Any]) -> None:
+        """Set the list of secondary targets."""
+        self._ship.secondary_targets = targets
+
+    def get_components_by_ability(self, name: str, operational_only: bool = True) -> List[Any]:
+        """Get components with a specific ability."""
+        return self._ship.get_components_by_ability(name, operational_only)
+
+    def get_layers(self) -> Dict[str, Any]:
+        """Get the component layers dictionary."""
+        return self._ship.layers
+
+    def get_ai_strategy(self) -> str:
+        """Get the AI strategy identifier for this ship."""
+        return getattr(self._ship, 'ai_strategy', 'standard_ranged')
+
+    def get_vehicle_type(self) -> str:
+        """Get the vehicle type (Ship, Satellite, etc.)."""
+        return getattr(self._ship, 'vehicle_type', 'Ship')
+
+    def get_all_components(self) -> List[Any]:
+        """Get all components across all layers."""
+        return self._ship.get_all_components()
+
     # =========================================================================
     # Formation
     # =========================================================================
@@ -305,3 +438,11 @@ class ShipControllableAdapter(IControllable):
     def get_formation_offset(self) -> Optional['Vector2']:
         """Get the formation offset relative to master."""
         return self._ship.formation_offset
+
+    def set_in_formation(self, value: bool) -> None:
+        """Set whether the ship is in a formation."""
+        self._ship.in_formation = value
+
+    def set_formation_master(self, master: Optional[Any]) -> None:
+        """Set the formation master."""
+        self._ship.formation_master = master

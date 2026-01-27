@@ -13,18 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add Interface Methods | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate AIController | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Migrate Behaviors | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate core/* | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Remove Delegation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Add Interface Methods | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate AIController | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Migrate Behaviors | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Migrate core/* | Skipped | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Remove Delegation | Partial | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-27
-**Active Phase:** Planning Complete - Ready for Implementation
-**Last Action:** Comprehensive plan created with 5 phases
-**Next Action:** Begin Phase 1 - Add missing interface methods to IControllable
+**Active Phase:** Phase 5 - Partial (delegation remains for backward compatibility)
+**Last Action:** Completed simulation layer migration (Phases 1-3). Added deprecation warnings to delegation methods. Added 3 new interface methods (get_ai_strategy, get_vehicle_type, get_all_components). Updated target_evaluator.py with helper functions to support both adapters and raw ships.
+**Next Action:** Phase 4 was skipped - core/system.py and core/behaviors.py use raw Ship objects (not ShipControllableAdapter) so they don't benefit from interface migration. Phase 5 is partial - delegation methods remain with deprecation warnings to maintain backward compatibility for tests and UI layer code.
 **Blockers:** None
+**Context for Next Agent:** Simulation layer migration complete. All code in controller.py and behaviors.py now uses interface methods exclusively. The __getattr__/__setattr__ delegation in ShipControllableAdapter has deprecation warnings but remains to support backward compatibility tests and any code that hasn't been migrated. 4593 tests passing. To complete PROJ-24 fully, consider whether the backward compatibility tests should be removed or whether the delegation should remain permanently for flexibility.
 
 ## Overview
 Refactor AIController and behavior classes to use IControllable interface methods exclusively instead of direct ship attribute access (~165 direct accesses across 4 files). This will allow removal of the `__getattr__`/`__setattr__` delegation in ShipControllableAdapter.

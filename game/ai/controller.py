@@ -78,7 +78,7 @@ class AIController:
         self.attack_timer = 0
 
     def get_resolved_strategy(self):
-        strategy_id = getattr(self.ship, 'ai_strategy', 'standard_ranged')
+        strategy_id = self.ship.get_ai_strategy()
         return StrategyManager.instance().resolve_strategy(strategy_id)
 
     def get_engage_distance_multiplier(self, policy):
@@ -102,17 +102,17 @@ class AIController:
         Returns:
             List of enemy entities (ships and optionally missiles)
         """
-        candidates = self.grid.query_radius(self.ship.position, BattleConfig.TARGET_QUERY_RADIUS)
+        candidates = self.grid.query_radius(self.ship.get_position(), BattleConfig.TARGET_QUERY_RADIUS)
         enemies = [obj for obj in candidates
                    if obj.is_alive and is_combatant(obj)
                    and obj.team_id == self.enemy_team_id
                    and obj != exclude]
 
         if check_missiles:
-            missiles = [obj for obj in self.grid.query_radius(self.ship.position, BattleConfig.MISSILE_QUERY_RADIUS)
+            missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), BattleConfig.MISSILE_QUERY_RADIUS)
                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
                         and obj.is_alive
-                        and getattr(obj, 'team_id', -1) != self.ship.team_id
+                        and getattr(obj, 'team_id', -1) != self.ship.get_team_id()
                         and obj != exclude]
             enemies.extend(missiles)
 
@@ -155,12 +155,12 @@ class AIController:
 
     def find_secondary_targets(self):
         """Find additional targets if ship has multiplex tracking."""
-        max_targets = getattr(self.ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS)
+        max_targets = self.ship.get_max_targets()
         if max_targets <= CombatConstants.DEFAULT_MAX_TARGETS:
             return []
 
         count_needed = max_targets - 1
-        current = self.ship.current_target
+        current = self.ship.get_current_target()
 
         resolved = self.get_resolved_strategy()
         targeting_policy = resolved['targeting']
@@ -194,58 +194,58 @@ class AIController:
 
     def update(self):
 
-        if not self.ship.is_alive:
+        if not self.ship.is_alive():
             return
 
         # Throttle Reset
-        self.ship.turn_throttle = 1.0
-        self.ship.engine_throttle = AIConfig.FORMATION_ENGINE_THROTTLE if self.ship.formation_members else 1.0
+        self.ship.set_turn_throttle(1.0)
+        self.ship.set_throttle(AIConfig.FORMATION_ENGINE_THROTTLE if self.ship.get_formation_members() else 1.0)
 
         # Formation Logic (Inline for now, could be moved to Behavior)
-        if self.ship.formation_members:
+        if self.ship.get_formation_members():
             self._handle_formation_master()
 
         # Formation Dropout Check
-        if self.ship.in_formation and self.ship.formation_master:
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
             self._check_formation_integrity()
 
         resolved = self.get_resolved_strategy()
         movement_policy = resolved['movement']
 
         # Formation Targeting Sync
-        if self.ship.in_formation and self.ship.formation_master:
-            master_target = self.ship.formation_master.current_target
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
+            master_target = self.ship.get_formation_master().current_target
             if master_target and master_target.is_alive:
-                self.ship.current_target = master_target
+                self.ship.set_current_target(master_target)
 
         # Target Acquisition
-        target = self.ship.current_target
+        target = self.ship.get_current_target()
         if target and not target.is_alive:
             target = None
-            self.ship.current_target = None
+            self.ship.set_current_target(None)
 
-        if not target and not (self.ship.in_formation and self.ship.formation_master):
+        if not target and not (self.ship.is_in_formation() and self.ship.get_formation_master()):
             target = self.find_target()
-            self.ship.current_target = target
+            self.ship.set_current_target(target)
 
         # Secondary target acquisition for ships with multiplex tracking
-        if getattr(self.ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS) > CombatConstants.DEFAULT_MAX_TARGETS:
-            self.ship.secondary_targets = self.find_secondary_targets()
+        if self.ship.get_max_targets() > CombatConstants.DEFAULT_MAX_TARGETS:
+            self.ship.set_secondary_targets(self.find_secondary_targets())
         else:
-            self.ship.secondary_targets = []
+            self.ship.set_secondary_targets([])
 
-        if not target and not self.ship.in_formation:
-            self.ship.comp_trigger_pulled = False
+        if not target and not self.ship.is_in_formation():
+            self.ship.set_trigger_pulled(False)
             return
 
-        self.ship.comp_trigger_pulled = True
+        self.ship.set_trigger_pulled(True)
 
         # Satellite Exception
-        if getattr(self.ship, 'vehicle_type', 'Ship') == 'Satellite':
+        if self.ship.get_vehicle_type() == 'Satellite':
             return
 
         # Determine Behavior
-        if self.ship.in_formation and self.ship.formation_master:
+        if self.ship.is_in_formation() and self.ship.get_formation_master():
             behavior_key = 'formation'
         else:
             # Policy-driven behavior selection
@@ -273,37 +273,41 @@ class AIController:
 
     def _handle_formation_master(self):
         # (Same logic as original, just encapsulated)
-        diam = self.ship.radius * 2
+        diam = self.ship.get_radius() * 2
         max_radius = 0
-        for member in self.ship.formation_members:
+        # formation_members contains raw Ships, not adapters
+        for member in self.ship.get_formation_members():
             if member.formation_offset:
                 r = member.formation_offset.length()
                 if r > max_radius:
                     max_radius = r
 
         if max_radius > 0:
-            max_speed = getattr(self.ship, 'max_speed', 10)
+            max_speed = self.ship.get_max_speed()
             max_w_rad = max_speed / max_radius
             max_w_deg = math.degrees(max_w_rad)
-            base_turn = self.ship.turn_speed / 100.0
+            base_turn = self.ship.get_turn_speed() / 100.0
             if base_turn > 0:
                 turn_limit = max_w_deg / base_turn
-                self.ship.turn_throttle = min(self.ship.turn_throttle, turn_limit)
+                # Turn throttle was just set to 1.0 at start of update()
+                self.ship.set_turn_throttle(min(1.0, turn_limit))
 
         slow_down = False
-        for member in self.ship.formation_members:
+        # formation_members contains raw Ships, not adapters
+        for member in self.ship.get_formation_members():
             if not member.is_alive or not member.in_formation:
                 continue
-            rotated_offset = member.formation_offset.rotate(self.ship.angle)
-            target_pos = self.ship.position + rotated_offset
+            rotated_offset = member.formation_offset.rotate(self.ship.get_rotation())
+            target_pos = self.ship.get_position() + rotated_offset
             d = member.position.distance_to(target_pos)
             if d > 0.5 * diam:
                 slow_down = True
                 break
 
         if slow_down:
-            self.ship.engine_throttle = AIConfig.FORMATION_SLOWDOWN_THROTTLE
-            self.ship.turn_throttle = min(self.ship.turn_throttle, AIConfig.FORMATION_SLOWDOWN_THROTTLE)
+            self.ship.set_throttle(AIConfig.FORMATION_SLOWDOWN_THROTTLE)
+            # Turn throttle may have been limited by turn_limit above
+            self.ship.set_turn_throttle(AIConfig.FORMATION_SLOWDOWN_THROTTLE)
 
     def _check_formation_integrity(self):
         # Check if propulsion components are damaged
@@ -318,7 +322,7 @@ class AIController:
                 break
 
         if dmg:
-            self.ship.in_formation = False
+            self.ship.set_in_formation(False)
             try:
                 # Unwrap adapter if present: formation_members contains raw Ships,
                 # but self.ship may be a ShipControllableAdapter
@@ -326,13 +330,13 @@ class AIController:
                 own_ship.formation_master.formation_members.remove(own_ship)
             except (AttributeError, ValueError):
                 pass
-            self.ship.formation_master = None
-            self.ship.turn_throttle = 1.0
-            self.ship.engine_throttle = 1.0
+            self.ship.set_formation_master(None)
+            self.ship.set_turn_throttle(1.0)
+            self.ship.set_throttle(1.0)
 
     def check_avoidance(self):
         """Check for nearby collisions."""
-        nearby = self.grid.query_radius(self.ship.position, BattleConfig.AVOIDANCE_RADIUS)
+        nearby = self.grid.query_radius(self.ship.get_position(), BattleConfig.AVOIDANCE_RADIUS)
         closest = None
         min_d = float('inf')
 
@@ -347,8 +351,8 @@ class AIController:
             if not is_combatant(obj):
                 continue
 
-            d = self.ship.position.distance_to(obj.position)
-            thresh = self.ship.radius + getattr(obj, 'radius', 40) + BattleConfig.COLLISION_BUFFER
+            d = self.ship.get_position().distance_to(obj.position)
+            thresh = self.ship.get_radius() + getattr(obj, 'radius', 40) + BattleConfig.COLLISION_BUFFER
 
             if d < thresh:
                 if d < min_d:
@@ -356,18 +360,19 @@ class AIController:
                     closest = obj
 
         if closest:
-            vec = self.ship.position - closest.position
+            vec = self.ship.get_position() - closest.position
             if vec.length() == 0:
                 vec = Vector2(1, 0)
-            return self.ship.position + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
+            return self.ship.get_position() + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
         return None
 
     def navigate_to(self, target_pos, stop_dist=0, precise=False):
-        distance = self.ship.position.distance_to(target_pos)
-        dx = target_pos.x - self.ship.position.x
-        dy = target_pos.y - self.ship.position.y
+        ship_pos = self.ship.get_position()
+        distance = ship_pos.distance_to(target_pos)
+        dx = target_pos.x - ship_pos.x
+        dy = target_pos.y - ship_pos.y
         target_angle = math.degrees(math.atan2(dy, dx)) % 360
-        current_angle = self.ship.angle % 360
+        current_angle = self.ship.get_rotation() % 360
         angle_diff = (target_angle - current_angle + 180) % 360 - 180
 
         if abs(angle_diff) > 5:
