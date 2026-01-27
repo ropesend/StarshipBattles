@@ -4,13 +4,14 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-24 | ShipControllableAdapter Interface Migration | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-23 | ShipStatsService Modifier Application Bug | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-22 | Legacy Cleanup Phase 2 | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-22 | Legacy Cleanup Phase 2 | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-21 | Legacy Cleanup Phase 8: Tests and Patterns | Archived | 2026-01-26 | 2026-01-27 |
 | PROJ-20 | Standardize Data Formats | Archived | 2026-01-26 | 2026-01-27 |
 | PROJ-19 | Standardize Data Formats | Archived | 2026-01-26 | 2026-01-26 |
@@ -108,4 +109,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-24
+## Next Project ID: PROJ-25

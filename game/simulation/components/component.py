@@ -544,38 +544,18 @@ class Component:
                 self.evaluated_resource_cost[res] = amount
 
     def _calculate_modifier_stats(self):
-        from game.simulation.components.modifiers import apply_modifier_effects
-        stats = {
-            'mass_mult': 1.0,
-            'hp_mult': 1.0,
-            'damage_mult': 1.0,
-            'range_mult': 1.0,
-            'cost_mult': 1.0,
-            'thrust_mult': 1.0,
-            'turn_mult': 1.0,
-            'strategic_mult': 1.0,  # Strategic movement multiplier (scales same as thrust)
-            'energy_gen_mult': 1.0,
-            'capacity_mult': 1.0,
-            'crew_capacity_mult': 1.0,
-            'life_support_capacity_mult': 1.0,
-            'consumption_mult': 1.0,
-            'mass_add': 0.0,
-            'arc_add': 0.0,
-            'accuracy_add': 0.0,
-            'arc_set': None,
-            'properties': {},
-            # New Modifier Support
-            'reload_mult': 1.0,
-            'endurance_mult': 1.0,
-            'projectile_hp_mult': 1.0,
-            'projectile_damage_mult': 1.0,
-            'projectile_stealth_level': 0.0,
-            'crew_req_mult': 1.0
-        }
-        
+        from game.simulation.components.modifiers import (
+            apply_modifier_effects,
+            get_default_stat_multipliers
+        )
+
+        # Use shared function for canonical default stats
+        stats = get_default_stat_multipliers()
+
+        # Apply modifiers with component reference for targeted effects
         for m in self.modifiers:
             apply_modifier_effects(m.definition, m.value, stats, component=self)
-            
+
         return stats
 
     def _apply_base_stats(self, stats, old_max_hp):

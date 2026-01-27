@@ -15,9 +15,10 @@ Key design decisions:
 """
 
 from typing import Dict, Any, Optional, List, Tuple
-from game.core.registry import get_component_registry, get_vehicle_classes
+from game.core.registry import get_component_registry, get_vehicle_classes, get_modifier_registry
 from game.core.logger import log_warning
 from game.simulation.formula_system import evaluate_math_formula
+from game.simulation.components.modifiers import calculate_stat_multipliers
 
 
 # Default damage threshold - components become useless below this HP percentage
@@ -89,6 +90,9 @@ class ShipStatsService:
             if isinstance(class_data, dict):
                 formula_context['ship_class_mass'] = class_data.get('max_mass', 1000)
 
+        # Get modifier registry once for all components
+        modifier_registry = get_modifier_registry()
+
         # Iterate through all components in design
         components_found = ShipStatsService._iterate_design_components(design_data)
 
@@ -113,10 +117,15 @@ class ShipStatsService:
 
             comp_id = comp_entry.get('id', '')
 
+            # Calculate modifier multipliers from design's component entry
+            modifier_entries = comp_entry.get('modifiers', [])
+            multipliers = calculate_stat_multipliers(modifier_entries, modifier_registry)
+
             # Check if component is toggled off
             if not component_toggles.get(comp_id, True):
-                # Still count mass, skip abilities
+                # Still count mass (with modifiers), skip abilities
                 comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0, formula_context)
+                comp_mass = (comp_mass + multipliers.get('mass_add', 0.0)) * multipliers.get('mass_mult', 1.0)
                 total_mass += comp_mass
                 continue
 
@@ -125,16 +134,21 @@ class ShipStatsService:
                 comp_id, comp_def, component_damage
             )
 
-            # Mass never degrades - add full mass regardless of damage
+            # Mass never degrades - add full mass regardless of damage (with modifiers)
             comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0, formula_context)
+            comp_mass = (comp_mass + multipliers.get('mass_add', 0.0)) * multipliers.get('mass_mult', 1.0)
             total_mass += comp_mass
 
-            # HP degrades with damage
+            # HP degrades with damage (with modifiers)
             comp_hp = ShipStatsService._get_numeric_value(comp_def, 'max_hp', 0, formula_context)
+            comp_hp *= multipliers.get('hp_mult', 1.0)
             total_hp += comp_hp * effectiveness
 
             # Get abilities from component definition
             abilities = getattr(comp_def, 'abilities', {}) or {}
+
+            # Get capacity multiplier for storage abilities
+            capacity_mult = multipliers.get('capacity_mult', 1.0)
 
             # Resource Storage - degrades with damage (generic handling)
             for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceStorage'):
@@ -142,6 +156,8 @@ class ShipStatsService:
                 max_amount = ShipStatsService._evaluate_value(
                     ability_data.get('max_amount') or ability_data.get('amount', 0), 0, formula_context
                 )
+                # Apply capacity multiplier from design modifiers
+                max_amount *= capacity_mult
                 if resource_type:
                     resource_storage[resource_type] = (
                         resource_storage.get(resource_type, 0) + max_amount * effectiveness
@@ -150,23 +166,32 @@ class ShipStatsService:
             # Also check shortcut abilities (FuelStorage, EnergyStorage, AmmoStorage)
             if 'FuelStorage' in abilities:
                 val = ShipStatsService._get_ability_value(abilities, 'FuelStorage', formula_context)
+                val *= capacity_mult
                 resource_storage['fuel'] = resource_storage.get('fuel', 0) + val * effectiveness
             if 'EnergyStorage' in abilities:
                 val = ShipStatsService._get_ability_value(abilities, 'EnergyStorage', formula_context)
+                val *= capacity_mult
                 resource_storage['energy'] = resource_storage.get('energy', 0) + val * effectiveness
             if 'AmmoStorage' in abilities:
                 val = ShipStatsService._get_ability_value(abilities, 'AmmoStorage', formula_context)
+                val *= capacity_mult
                 resource_storage['ammo'] = resource_storage.get('ammo', 0) + val * effectiveness
 
-            # Strategic Movement - degrades with damage
+            # Strategic Movement - degrades with damage (with modifiers)
             if 'StrategicMovement' in abilities:
                 movement = ShipStatsService._get_ability_value(abilities, 'StrategicMovement', formula_context)
+                movement *= multipliers.get('strategic_mult', 1.0)
                 total_strategic_movement += movement * effectiveness
+
+            # Get consumption multiplier for resource consumption abilities
+            consumption_mult = multipliers.get('consumption_mult', 1.0)
 
             # Resource Consumption - generic handling by trigger type
             for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
                 resource_type = ability_data.get('resource', '')
                 amount = ShipStatsService._evaluate_value(ability_data.get('amount', 0), 0, formula_context)
+                # Apply consumption multiplier from design modifiers
+                amount *= consumption_mult
                 trigger = ability_data.get('trigger', 'constant')
 
                 if trigger == 'strategic_per_hex':

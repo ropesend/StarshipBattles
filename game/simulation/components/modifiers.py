@@ -115,3 +115,70 @@ def apply_modifier_effects(modifier_def, value, stats, component=None):
         else:
             # Unknown operation - log warning and ignore
             logger.warning(f"Unknown operation '{operation}' for stat '{stat_key}', effect ignored")
+
+
+def get_default_stat_multipliers():
+    """
+    Return default stat multipliers dictionary.
+
+    This is the canonical list of all supported modifier stats.
+    Used by both Component and ShipStatsService for consistency.
+
+    Returns:
+        Dict with all stat keys initialized to neutral values
+        (1.0 for multipliers, 0.0 for additive, None for set operations)
+    """
+    return {
+        'mass_mult': 1.0,
+        'hp_mult': 1.0,
+        'damage_mult': 1.0,
+        'range_mult': 1.0,
+        'cost_mult': 1.0,
+        'thrust_mult': 1.0,
+        'turn_mult': 1.0,
+        'strategic_mult': 1.0,
+        'energy_gen_mult': 1.0,
+        'capacity_mult': 1.0,
+        'crew_capacity_mult': 1.0,
+        'life_support_capacity_mult': 1.0,
+        'consumption_mult': 1.0,
+        'mass_add': 0.0,
+        'arc_add': 0.0,
+        'accuracy_add': 0.0,
+        'arc_set': None,
+        'properties': {},
+        'reload_mult': 1.0,
+        'endurance_mult': 1.0,
+        'projectile_hp_mult': 1.0,
+        'projectile_damage_mult': 1.0,
+        'projectile_stealth_level': 0.0,
+        'crew_req_mult': 1.0,
+    }
+
+
+def calculate_stat_multipliers(modifier_entries, modifier_registry):
+    """
+    Calculate stat multipliers from a list of modifier entries.
+
+    Pure function - no side effects, no object state needed.
+    Used by both Component and ShipStatsService for consistent modifier handling.
+
+    Args:
+        modifier_entries: List of dicts with 'id' and 'value' keys
+                         e.g., [{'id': 'simple_size_mount', 'value': 20.0}]
+        modifier_registry: Dict mapping modifier IDs to Modifier definitions
+
+    Returns:
+        Dict of stat_key -> value (multipliers, additive values, etc.)
+    """
+    stats = get_default_stat_multipliers()
+
+    for mod_entry in modifier_entries:
+        mod_id = mod_entry.get('id')
+        mod_value = mod_entry.get('value')
+
+        mod_def = modifier_registry.get(mod_id)
+        if mod_def:
+            apply_modifier_effects(mod_def, mod_value, stats)
+
+    return stats

@@ -1504,3 +1504,253 @@ class TestHasWarpCapability:
 
         result = ShipStatsService.has_warp_capability(ship)
         assert result is False  # No warp capability without warp_max_tonnage
+
+
+class TestModifierApplication:
+    """Tests for PROJ-23: modifier application in ShipStatsService."""
+
+    def test_scaled_battery_energy_capacity(self):
+        """Battery with size modifier should have scaled energy capacity.
+
+        PROJ-23 regression test: Ensures modifiers from design are applied.
+        """
+        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.simulation.components.component_constants import Modifier
+
+        # Create mock battery component
+        battery = MockComponent(
+            'battery',
+            mass=30,
+            max_hp=50,
+            abilities={'EnergyStorage': 2000}
+        )
+
+        # Create size modifier that scales capacity
+        size_modifier = Modifier({
+            'id': 'simple_size_mount',
+            'name': 'Size Mount',
+            'effects': [
+                {'stat': 'capacity_mult', 'formula': 'param'},
+                {'stat': 'mass_mult', 'formula': 'param'},
+                {'stat': 'hp_mult', 'formula': 'param'}
+            ]
+        })
+
+        # Design with size 20 modifier
+        design_data = {
+            'ship_class': 'Cruiser',
+            'layers': {
+                'OUTER': [{
+                    'id': 'battery',
+                    'modifiers': [{'id': 'simple_size_mount', 'value': 20.0}]
+                }]
+            }
+        }
+
+        with patch('game.strategy.services.ship_stats_service.get_component_registry') as mock_comp_reg, \
+             patch('game.strategy.services.ship_stats_service.get_modifier_registry') as mock_mod_reg:
+            mock_comp_reg.return_value = {'battery': battery}
+            mock_mod_reg.return_value = {'simple_size_mount': size_modifier}
+
+            stats = ShipStatsService.calculate_stats(design_data, {})
+
+        # Base battery: 2000 energy, size 20 = 40000 energy
+        assert stats['resource_storage'].get('energy', 0) == 40000.0
+
+    def test_multiple_small_vs_one_large_battery(self):
+        """10 size-1 batteries should equal 1 size-10 battery.
+
+        This validates that modifier scaling is applied consistently.
+        """
+        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.simulation.components.component_constants import Modifier
+
+        battery = MockComponent(
+            'battery',
+            mass=30,
+            max_hp=50,
+            abilities={'EnergyStorage': 2000}
+        )
+
+        size_modifier = Modifier({
+            'id': 'simple_size_mount',
+            'name': 'Size Mount',
+            'effects': [
+                {'stat': 'capacity_mult', 'formula': 'param'},
+                {'stat': 'mass_mult', 'formula': 'param'}
+            ]
+        })
+
+        # Design with 10 size-1 batteries
+        design_small = {
+            'ship_class': 'Cruiser',
+            'layers': {
+                'OUTER': [
+                    {'id': 'battery', 'modifiers': [{'id': 'simple_size_mount', 'value': 1.0}]}
+                    for _ in range(10)
+                ]
+            }
+        }
+
+        # Design with 1 size-10 battery
+        design_large = {
+            'ship_class': 'Cruiser',
+            'layers': {
+                'OUTER': [{
+                    'id': 'battery',
+                    'modifiers': [{'id': 'simple_size_mount', 'value': 10.0}]
+                }]
+            }
+        }
+
+        with patch('game.strategy.services.ship_stats_service.get_component_registry') as mock_comp_reg, \
+             patch('game.strategy.services.ship_stats_service.get_modifier_registry') as mock_mod_reg:
+            mock_comp_reg.return_value = {'battery': battery}
+            mock_mod_reg.return_value = {'simple_size_mount': size_modifier}
+
+            stats_small = ShipStatsService.calculate_stats(design_small, {})
+            stats_large = ShipStatsService.calculate_stats(design_large, {})
+
+        # 10 × 2000 × 1 = 20000
+        # 1 × 2000 × 10 = 20000
+        assert stats_small['resource_storage']['energy'] == stats_large['resource_storage']['energy']
+        assert stats_small['resource_storage']['energy'] == 20000.0
+
+    def test_warp_capability_with_scaled_battery(self):
+        """Ship with scaled battery should have warp capability.
+
+        PROJ-23 regression test: CRU_1 design with 1 large battery should work.
+        """
+        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.simulation.components.component_constants import Modifier
+
+        battery = MockComponent(
+            'battery',
+            mass=30,
+            max_hp=50,
+            abilities={'EnergyStorage': 2000}
+        )
+
+        warp_drive = MockComponent(
+            'warp_drive',
+            mass=250,
+            max_hp=250,
+            abilities={
+                'WarpJump': {'max_tonnage': 16000},
+                'ResourceConsumption': [
+                    {'resource': 'energy', 'amount': 3175, 'trigger': 'warp_jump'}
+                ]
+            }
+        )
+
+        size_modifier = Modifier({
+            'id': 'simple_size_mount',
+            'name': 'Size Mount',
+            'effects': [
+                {'stat': 'capacity_mult', 'formula': 'param'},
+                {'stat': 'mass_mult', 'formula': 'param'}
+            ]
+        })
+
+        design_data = {
+            'ship_class': 'Cruiser',
+            'layers': {
+                'OUTER': [
+                    {
+                        'id': 'battery',
+                        'modifiers': [{'id': 'simple_size_mount', 'value': 20.0}]
+                    },
+                    {
+                        'id': 'warp_drive',
+                        'modifiers': [{'id': 'simple_size_mount', 'value': 1.0}]
+                    }
+                ]
+            }
+        }
+
+        with patch('game.strategy.services.ship_stats_service.get_component_registry') as mock_comp_reg, \
+             patch('game.strategy.services.ship_stats_service.get_modifier_registry') as mock_mod_reg:
+            mock_comp_reg.return_value = {'battery': battery, 'warp_drive': warp_drive}
+            mock_mod_reg.return_value = {'simple_size_mount': size_modifier}
+
+            stats = ShipStatsService.calculate_stats(design_data, {})
+
+        # Warp energy cost: 3175
+        # Scaled battery: 2000 * 20 = 40000 energy
+        # Should have warp capability
+        energy_capacity = stats['resource_storage'].get('energy', 0)
+        warp_cost = stats['warp_resource_costs'].get('energy', 0)
+
+        assert energy_capacity >= warp_cost, (
+            f"Energy capacity {energy_capacity} should be >= warp cost {warp_cost}"
+        )
+        assert energy_capacity == 40000.0
+        assert warp_cost == 3175
+
+    def test_no_modifiers_uses_base_values(self):
+        """Component without modifiers should use base ability values."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+
+        battery = MockComponent(
+            'battery',
+            mass=30,
+            max_hp=50,
+            abilities={'EnergyStorage': 2000}
+        )
+
+        design_data = {
+            'ship_class': 'Cruiser',
+            'layers': {
+                'OUTER': [{'id': 'battery'}]  # No modifiers
+            }
+        }
+
+        with patch('game.strategy.services.ship_stats_service.get_component_registry') as mock_comp_reg, \
+             patch('game.strategy.services.ship_stats_service.get_modifier_registry') as mock_mod_reg:
+            mock_comp_reg.return_value = {'battery': battery}
+            mock_mod_reg.return_value = {}
+
+            stats = ShipStatsService.calculate_stats(design_data, {})
+
+        # Base battery: 2000 energy, no modifiers
+        assert stats['resource_storage'].get('energy', 0) == 2000.0
+        assert stats['mass'] == 30.0
+
+    def test_mass_modifier_applied(self):
+        """Mass modifier should be applied to component mass."""
+        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.simulation.components.component_constants import Modifier
+
+        component = MockComponent(
+            'test_comp',
+            mass=100,
+            max_hp=50,
+            abilities={}
+        )
+
+        size_modifier = Modifier({
+            'id': 'simple_size_mount',
+            'name': 'Size Mount',
+            'effects': [
+                {'stat': 'mass_mult', 'formula': 'param'}
+            ]
+        })
+
+        design_data = {
+            'layers': {
+                'OUTER': [{
+                    'id': 'test_comp',
+                    'modifiers': [{'id': 'simple_size_mount', 'value': 5.0}]
+                }]
+            }
+        }
+
+        with patch('game.strategy.services.ship_stats_service.get_component_registry') as mock_comp_reg, \
+             patch('game.strategy.services.ship_stats_service.get_modifier_registry') as mock_mod_reg:
+            mock_comp_reg.return_value = {'test_comp': component}
+            mock_mod_reg.return_value = {'simple_size_mount': size_modifier}
+
+            stats = ShipStatsService.calculate_stats(design_data, {})
+
+        # Base mass: 100, size 5 = 500 mass
+        assert stats['mass'] == 500.0
