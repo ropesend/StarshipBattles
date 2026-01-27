@@ -12,12 +12,12 @@
 | PROJ-28 | Physics Engine: Constants Consolidation | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-27 | Core Foundation: Registry Singleton Refactoring | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-26 | Naming Consistency Cleanup | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-25 | Consolidate Dual AI Implementations | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-25 | Consolidate Dual AI Implementations | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-24 | ShipControllableAdapter Interface Migration | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-23 | ShipStatsService Modifier Application Bug | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-22 | Legacy Cleanup Phase 2 | Archived | 2026-01-27 | 2026-01-27 |
