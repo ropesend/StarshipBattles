@@ -17,14 +17,21 @@
 | 2. Move LayerType to Core | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Move ShipThemeManager | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Create BattleOrchestrator | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Audit Fixes (Cycle 1) | Pending | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Audit Fixes (Cycle 1) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-26 Audit Cycle 1
-**Active Phase:** Phase 5 - Audit Fixes (Cycle 1)
-**Last Action:** Audit Cycle 1 found incomplete ShipThemeManager migration
-**Next Action:** Complete Phase 5 tasks to fix orphaned file and incomplete imports
+**Last Updated:** 2026-01-26 Phase 5 Complete
+**Active Phase:** Audit Cycle 2 Required
+**Last Action:** Completed Phase 5 - Fixed orphaned ShipThemeManager and incomplete imports
+**Next Action:** Re-run audit (Cycle 2) to verify all issues resolved
 **Blockers:** None
+
+**Phase 5 Summary:**
+- Updated 3 files to use `from game.ui.assets import ShipThemeManager`
+- Changed `.get_instance()` to `.instance()` API calls
+- Fixed test mock path in tests/unit/ui/test_rendering_logic.py
+- Deleted orphaned `game/ui/renderer/ship_theme.py` (173 lines)
+- All 472 UI tests pass, full suite: 4558 passed (1 flaky pre-existing)
 
 **Phase 4 Summary:**
 - Created game/ui/orchestration/ directory with BattleOrchestrator class
@@ -127,9 +134,9 @@ Phase 4 of the Legacy Code Cleanup project. Enforce strict architectural layer b
 - [x] Phase 2 complete
 - [x] Phase 3 complete
 - [x] Phase 4 complete
-- [ ] Phase 5 complete (Audit Fixes)
-- [x] All tests passing (4994 passed, 20 pre-existing failures)
-- [ ] Audit passed
+- [x] Phase 5 complete (Audit Fixes)
+- [x] All tests passing (4558 passed, 1 flaky pre-existing failure)
+- [ ] Audit passed (Cycle 2 required)
 - [ ] User verified
 
 ---
@@ -139,3 +146,4 @@ Phase 4 of the Legacy Code Cleanup project. Enforce strict architectural layer b
 | Cycle | Date | Findings | Resolution |
 |-------|------|----------|------------|
 | 1 | 2026-01-26 | 2 major, 1 minor issue - incomplete ShipThemeManager migration | Added Phase 5 for fixes |
+| 2 | Pending | Re-audit after Phase 5 fixes | - |

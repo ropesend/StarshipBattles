@@ -22,7 +22,7 @@ from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.planet_list_presets import PresetManager
 from game.simulation.systems.persistence import ShipIO
 from game.ui.screens.builder.legacy_components import ModifierEditorPanel
-from game.ui.renderer.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 from .left_panel import BuilderLeftPanel
 from .right_panel import BuilderRightPanel
 from .weapons_panel import WeaponsReportPanel
@@ -85,7 +85,7 @@ class BuilderSceneGUI:
         base_path = os.path.dirname(os.path.abspath(__file__))
         with profile_block("Builder: Init Managers"):
             self.preset_manager = PresetManager()
-            self.theme_manager = ShipThemeManager.get_instance()
+            self.theme_manager = ShipThemeManager.instance()
             self.theme_manager.initialize(base_path)
         
         # Layout

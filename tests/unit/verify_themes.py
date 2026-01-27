@@ -1,13 +1,13 @@
 import unittest
 import pygame
 import os
-from game.ui.renderer.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 class TestNewThemes(unittest.TestCase):
     def setUp(self):
         pygame.init()
         # Initialize manager with base path (cwd)
-        self.manager = ShipThemeManager.get_instance()
+        self.manager = ShipThemeManager.instance()
         # Create dummy display for image loading
         pygame.display.set_mode((1, 1), pygame.HIDDEN)
         

@@ -37,8 +37,8 @@ def draw_ship(surface, ship, camera):
     scaled_radius = scale(base_radius)
     
     # Draw Theme Image if available
-    from game.ui.renderer.ship_theme import ShipThemeManager
-    theme_mgr = ShipThemeManager.get_instance()
+    from game.ui.assets import ShipThemeManager
+    theme_mgr = ShipThemeManager.instance()
     theme_id = getattr(ship, 'theme_id', 'Federation')
     ship_img = theme_mgr.get_image(theme_id, ship.ship_class)
     
