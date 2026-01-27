@@ -131,7 +131,7 @@ class TestWarpJumpIntegration:
     """Integration tests for WarpJump ability with component data."""
 
     def test_warp_drive_components_exist(self):
-        """Verify warp drive components exist in components.json."""
+        """Verify warp drive component exists in components.json."""
         components_path = os.path.join(
             os.path.dirname(__file__), '..', '..', 'data', 'components.json'
         )
@@ -142,17 +142,17 @@ class TestWarpJumpIntegration:
         components = data.get('components', [])
         warp_drives = [c for c in components if 'WarpJump' in c.get('abilities', {})]
 
-        assert len(warp_drives) >= 2, "Should have at least 2 warp drive tiers"
+        assert len(warp_drives) >= 1, "Should have at least 1 warp drive component"
 
         # Verify warp drives have expected properties
         for wd in warp_drives:
             assert wd['allowed_vehicle_types'] == ['Ship'], \
                 f"Warp drive {wd['id']} should only be for Ships"
-            assert isinstance(wd['abilities']['WarpJump'], (int, float, dict)), \
-                f"WarpJump ability should have max_tonnage value"
+            assert isinstance(wd['abilities']['WarpJump'], dict), \
+                f"WarpJump ability should be a dict with max_tonnage"
 
     def test_warp_drive_tiered_tonnage(self):
-        """Verify warp drives have increasing tonnage limits."""
+        """Verify warp drive uses formula-based tonnage scaling."""
         components_path = os.path.join(
             os.path.dirname(__file__), '..', '..', 'data', 'components.json'
         )
@@ -163,19 +163,14 @@ class TestWarpJumpIntegration:
         components = data.get('components', [])
         warp_drives = [c for c in components if 'WarpJump' in c.get('abilities', {})]
 
-        # Sort by tonnage to verify tiering
-        def get_tonnage(c):
-            wj = c['abilities']['WarpJump']
-            if isinstance(wj, dict):
-                return wj.get('max_tonnage', 0)
-            return wj
-
-        tonnages = sorted([get_tonnage(wd) for wd in warp_drives])
-
-        # Verify increasing tonnage limits
-        for i in range(1, len(tonnages)):
-            assert tonnages[i] > tonnages[i-1], \
-                f"Warp drives should have increasing tonnage: {tonnages}"
+        # Verify warp drive uses formula for max_tonnage
+        for wd in warp_drives:
+            wj = wd['abilities']['WarpJump']
+            assert isinstance(wj, dict), "WarpJump should be a dict"
+            max_tonnage = wj.get('max_tonnage')
+            # max_tonnage should be a formula string that scales with ship_class_mass
+            assert isinstance(max_tonnage, str) and max_tonnage.startswith("="), \
+                f"Warp drive {wd['id']} should use formula for max_tonnage"
 
     def test_warp_jump_ability_from_component_data(self):
         """Test creating WarpJump ability from component data."""

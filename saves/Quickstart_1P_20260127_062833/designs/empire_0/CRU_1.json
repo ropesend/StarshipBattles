@@ -1,0 +1,286 @@
+{
+    "name": "CRU 1",
+    "ship_class": "Cruiser",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "ai_strategy": "standard_ranged",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "INNER": [
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 14.999999999999995
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "generator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "warp_drive",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 20.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 5.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 5.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 5.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 5.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "thruster",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": [
+            {
+                "id": "armor_plate",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "scattering_armor",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "crystalline_armor",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "emissive_armor",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ]
+    },
+    "resources": {
+        "fuel": 840000.0,
+        "energy": 44000.0,
+        "ammo": 0.0
+    },
+    "expected_stats": {
+        "max_hp": 9206,
+        "max_fuel": 749999.9999999998,
+        "max_energy": 40000.0,
+        "max_ammo": 0.0,
+        "max_speed": 10.627141556463434,
+        "acceleration_rate": 0.15058151688148275,
+        "turn_speed": 1.2650103144585443,
+        "total_thrust": 3000.0,
+        "strategic_movement": 2000.0,
+        "mass": 7057.401051968199,
+        "armor_hp_pool": 800,
+        "warp_max_tonnage": 16000.0,
+        "warp_energy_cost": 0.0,
+        "strategic_fuel_per_hex": 2000.0
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 1,
+        "created_date": "2026-01-27T06:35:51.739153",
+        "last_modified": "2026-01-27T06:36:35.663014"
+    }
+}
