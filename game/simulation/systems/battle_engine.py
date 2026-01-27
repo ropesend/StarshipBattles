@@ -53,12 +53,10 @@ Example:
 import math
 import random
 import time
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2
 from game.core.logger import log_warning, log_info
-from game.ai.controller import AIController
-from game.ai.interfaces import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig, BattleConfig
@@ -68,6 +66,9 @@ from game.simulation.systems.battle_end_conditions import BattleEndCondition, Ba
 
 from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
+
+if TYPE_CHECKING:
+    from game.ai.controller import AIController
 
 class BattleLogger:
     """Toggleable logger that writes battle events to file."""
@@ -148,7 +149,7 @@ class BattleEngine:
 
     def __init__(self, logger: Optional[BattleLogger] = None):
         self.ships: List['Ship'] = []
-        self.ai_controllers: List[AIController] = []
+        self.ai_controllers: List['AIController'] = []
 
         self.projectile_manager = ProjectileManager()
         self.collision_system = CollisionSystem()
@@ -173,7 +174,8 @@ class BattleEngine:
         team1_ships: List['Ship'],
         team2_ships: List['Ship'],
         seed: Optional[int] = None,
-        end_condition: Optional[BattleEndCondition] = None
+        end_condition: Optional[BattleEndCondition] = None,
+        ai_controllers: Optional[List['AIController']] = None
     ) -> None:
         """
         Initialize battle state with configurable end condition.
@@ -183,6 +185,9 @@ class BattleEngine:
             team2_ships: List of ships for team 1
             seed: Random seed for deterministic battles
             end_condition: Battle end condition (default: HP_BASED)
+            ai_controllers: Pre-created AI controllers from BattleOrchestrator.
+                If provided, uses these instead of creating controllers internally.
+                This supports proper layer boundaries (PROJ-17).
         """
         if seed is not None:
             random.seed(seed)
@@ -199,27 +204,41 @@ class BattleEngine:
             self.end_condition = end_condition
         else:
             self.end_condition = BattleEndCondition(mode=BattleEndMode.HP_BASED)
-        
+
         # Handle single ship args (though type hint implies lists)
         if not isinstance(team1_ships, list): team1_ships = [team1_ships]
         if not isinstance(team2_ships, list): team2_ships = [team2_ships]
-        
-        # Setup Team 1
-        for s in team1_ships:
-            s.team_id = 0
-            self.ships.append(s)
-            self.ai_controllers.append(AIController(ShipControllableAdapter(s), self.grid, 1))
 
-        # Setup Team 2
-        for s in team2_ships:
-            s.team_id = 1
-            self.ships.append(s)
-            self.ai_controllers.append(AIController(ShipControllableAdapter(s), self.grid, 0))
-            
+        if ai_controllers is not None:
+            # PROJ-17: Use pre-created controllers from BattleOrchestrator (proper layer usage)
+            self.ai_controllers = list(ai_controllers)
+            for s in team1_ships:
+                s.team_id = 0
+                self.ships.append(s)
+            for s in team2_ships:
+                s.team_id = 1
+                self.ships.append(s)
+        else:
+            # Legacy path: create controllers internally (backward compatibility)
+            from game.ai.controller import AIController
+            from game.ai.interfaces import ShipControllableAdapter
+
+            # Setup Team 1
+            for s in team1_ships:
+                s.team_id = 0
+                self.ships.append(s)
+                self.ai_controllers.append(AIController(ShipControllableAdapter(s), self.grid, 1))
+
+            # Setup Team 2
+            for s in team2_ships:
+                s.team_id = 1
+                self.ships.append(s)
+                self.ai_controllers.append(AIController(ShipControllableAdapter(s), self.grid, 0))
+
         # Logging
         self.logger.start_session()
         self.logger.log(f"Battle started: {len(team1_ships)} vs {len(team2_ships)} ships")
-        
+
         self._log_initial_status()
 
     def _log_initial_status(self) -> None:
@@ -234,21 +253,35 @@ class BattleEngine:
             if s.turn_speed <= 0.01:
                 self.logger.log(f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})!")
 
-    def add_ship_mid_battle(self, ship: 'Ship', team_id: int) -> None:
+    def add_ship_mid_battle(
+        self,
+        ship: 'Ship',
+        team_id: int,
+        ai_controller: Optional['AIController'] = None
+    ) -> None:
         """
         Add a ship to the battle mid-combat (for reinforcements).
 
         Args:
             ship: Ship to add
             team_id: Team identifier (0 or 1)
+            ai_controller: Pre-created AI controller from BattleOrchestrator.
+                If provided, uses this instead of creating one internally.
+                This supports proper layer boundaries (PROJ-17).
         """
         ship.team_id = team_id
         self.ships.append(ship)
 
-        # Create AI controller for the new ship
-        enemy_team = 1 if team_id == 0 else 0
-        ai = AIController(ShipControllableAdapter(ship), self.grid, enemy_team)
-        self.ai_controllers.append(ai)
+        if ai_controller is not None:
+            # PROJ-17: Use pre-created controller from BattleOrchestrator
+            self.ai_controllers.append(ai_controller)
+        else:
+            # Legacy path: create controller internally
+            from game.ai.controller import AIController
+            from game.ai.interfaces import ShipControllableAdapter
+            enemy_team = 1 if team_id == 0 else 0
+            ai = AIController(ShipControllableAdapter(ship), self.grid, enemy_team)
+            self.ai_controllers.append(ai)
 
         self.logger.log(f"Reinforcement arrived: {ship.name} (Team {team_id})")
         log_info(f"Reinforcement arrived: {ship.name} (Team {team_id})")
@@ -397,6 +430,9 @@ class BattleEngine:
                 # Using 1-source.team_id as enemy team logic from start()
                 # Should be dynamic based on teams?
                 # Assuming 2 teams: 0 and 1. Enemy is 1 - team_id.
+                # Note: This is an internal operation during battle, uses legacy import path
+                from game.ai.controller import AIController
+                from game.ai.interfaces import ShipControllableAdapter
                 enemy_team = 1 - new_ship.team_id
                 self.ai_controllers.append(AIController(ShipControllableAdapter(new_ship), self.grid, enemy_team))
                 

@@ -173,3 +173,104 @@ class TestBattleEngineCore:
         # Verify remaining AI controller is for ship2
         remaining_ai = engine.ai_controllers[0]
         assert remaining_ai.ship.ship == ship2
+
+
+class TestBattleEngineAIControllerInjection:
+    """Tests for PROJ-17: ai_controllers parameter in start() and add_ship_mid_battle()."""
+
+    def test_start_with_precreated_ai_controllers(self):
+        """Verify start() accepts and uses pre-created AI controllers."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+        from game.ui.orchestration import BattleOrchestrator
+        from game.engine.spatial import SpatialGrid
+
+        # Create engine with mock logger
+        mock_logger = MagicMock()
+        engine = BattleEngine(logger=mock_logger)
+
+        # Create test ships
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+
+        # Use orchestrator to create AI controllers (proper layer usage)
+        orchestrator = BattleOrchestrator(engine.grid)
+        ai_controllers = orchestrator.create_ai_controllers([ship1], [ship2])
+
+        # Start battle with pre-created controllers
+        engine.start([ship1], [ship2], ai_controllers=ai_controllers)
+
+        # Verify controllers were used
+        assert len(engine.ai_controllers) == 2
+        assert engine.ai_controllers == ai_controllers
+
+    def test_start_without_ai_controllers_uses_legacy_path(self):
+        """Verify start() creates AI controllers internally when not provided (backward compat)."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+
+        mock_logger = MagicMock()
+        engine = BattleEngine(logger=mock_logger)
+
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+
+        # Start without ai_controllers parameter
+        engine.start([ship1], [ship2])
+
+        # Verify controllers were created internally
+        assert len(engine.ai_controllers) == 2
+        # Verify team IDs are assigned
+        assert ship1.team_id == 0
+        assert ship2.team_id == 1
+
+    def test_add_ship_mid_battle_with_precreated_controller(self):
+        """Verify add_ship_mid_battle() accepts pre-created AI controller."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+        from game.ui.orchestration import BattleOrchestrator
+
+        mock_logger = MagicMock()
+        engine = BattleEngine(logger=mock_logger)
+
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        engine.start([ship1], [ship2])
+
+        initial_count = len(engine.ai_controllers)
+
+        # Create reinforcement with pre-created controller
+        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0))
+        orchestrator = BattleOrchestrator(engine.grid)
+        ai_controller = orchestrator.create_ai_for_ship(reinforcement, enemy_team_id=1)
+
+        engine.add_ship_mid_battle(reinforcement, team_id=0, ai_controller=ai_controller)
+
+        # Verify controller was added
+        assert len(engine.ai_controllers) == initial_count + 1
+        assert ai_controller in engine.ai_controllers
+        assert reinforcement in engine.ships
+        assert reinforcement.team_id == 0
+
+    def test_add_ship_mid_battle_without_controller_uses_legacy_path(self):
+        """Verify add_ship_mid_battle() creates controller internally when not provided."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+
+        mock_logger = MagicMock()
+        engine = BattleEngine(logger=mock_logger)
+
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        engine.start([ship1], [ship2])
+
+        initial_count = len(engine.ai_controllers)
+
+        # Add reinforcement without pre-created controller
+        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0))
+        engine.add_ship_mid_battle(reinforcement, team_id=0)
+
+        # Verify controller was created internally
+        assert len(engine.ai_controllers) == initial_count + 1
+        assert reinforcement in engine.ships
+        assert reinforcement.team_id == 0
