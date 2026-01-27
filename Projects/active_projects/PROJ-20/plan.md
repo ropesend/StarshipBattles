@@ -13,18 +13,26 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Production Queue Standardization | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Fleet Ship Format Standardization | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Production Queue Standardization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Fleet Ship Format Standardization | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Design Metadata & Tech Tree | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Legacy Stats & Test Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-26 21:10
-**Active Phase:** Planning Complete - Ready for Approval
-**Last Action:** Completed exploration, risk analysis, and detailed planning
-**Next Action:** User approval of plan, then begin Phase 1
+**Last Updated:** 2026-01-26
+**Active Phase:** Phase 2 - Fleet Ship Format Standardization
+**Last Action:** Completed Phase 1 (Production Queue Standardization), prepared to start Phase 2
+**Next Action:** Begin Task 2.1 - Update fleet.py type annotations (change `Union[str, ShipInstance]` to `ShipInstance`)
 **Blockers:** None
-**Context:** Baseline tests: 4542 passed, 1 flaky (test_quickstart_designs intermittent)
+**Context:**
+- Phase 1 complete: Removed legacy list format from production queues
+- All 4564 tests passing (1 skipped)
+- Files modified in Phase 1: production_engine.py, planet.py, build_queue_screen.py
+- Tests updated in Phase 1: test_production_engine.py, test_turn_engine.py, test_production.py
+- Phase 2 has 8 tasks - more complex due to 12 caller files
+- Key files for Phase 2: fleet.py (main), fleet_mobility_service.py, fleet_report_window.py, turn_engine.py
+- test_fleet.py has many tests using `fleet.add_ship("string")` that need updating to use ShipInstance mocks
+- Start Task 2.1 by reading fleet.py lines 1-130 and updating type annotations
 
 ## Overview
 Implements Phase 7 of the Legacy Code Cleanup project. Removes dual-format support for various data structures (production queues, fleet ships, design metadata, tech tree, ship stats) and standardizes on the new formats throughout the codebase. No save game migration is required.
@@ -72,8 +80,8 @@ Implements Phase 7 of the Legacy Code Cleanup project. Removes dual-format suppo
 
 ## Verification
 - [ ] All phase checklists complete
-- [ ] All tests passing: `pytest tests/ -v`
-- [ ] No isinstance(item, list) in production_engine.py
+- [x] All tests passing: `pytest tests/ -v` (4564 passed, 1 skipped)
+- [x] No isinstance(item, list) in production_engine.py
 - [ ] No Union[str, ShipInstance] in fleet.py
 - [ ] No get_ship_instances() calls remaining
 - [ ] No legacy field re-exports in ship_stats_service.py

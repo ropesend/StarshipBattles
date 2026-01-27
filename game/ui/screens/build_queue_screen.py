@@ -473,16 +473,10 @@ class BuildQueueScreen:
         y_offset = 0
         icon_size = 50  # Portrait icon size for queue items
         for idx, item in enumerate(self.planet.construction_queue):
-            # Handle both dict and legacy list format
-            if isinstance(item, dict):
-                design_id = item.get("design_id", "Unknown")
-                turns = item.get("turns_remaining", 0)
-                item_type = item.get("type", "unknown")
-            else:
-                # Legacy format: ["Ship Name", 5]
-                design_id = item[0]
-                turns = item[1]
-                item_type = "ship"
+            # Dict format: {"design_id": ..., "type": ..., "turns_remaining": N}
+            design_id = item.get("design_id", "Unknown")
+            turns = item.get("turns_remaining", 0)
+            item_type = item.get("type", "ship")
 
             # Queue item panel - highlight if selected
             is_selected = (idx == self.selected_queue_index)
@@ -699,7 +693,7 @@ class BuildQueueScreen:
             elif event.ui_element == self.btn_remove_from_queue:
                 if self.selected_queue_index is not None and self.selected_queue_index < len(self.planet.construction_queue):
                     removed_item = self.planet.construction_queue.pop(self.selected_queue_index)
-                    design_id = removed_item.get('design_id') if isinstance(removed_item, dict) else removed_item[0]
+                    design_id = removed_item.get('design_id', 'Unknown')
                     log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
                     self.selected_queue_index = None
                     self._refresh_queue_display()
@@ -757,8 +751,8 @@ class BuildQueueScreen:
                     idx = self._pending_queue_index
                     if idx < len(self.planet.construction_queue):
                         item = self.planet.construction_queue.pop(idx)
-                        design_id = item.get('design_id') if isinstance(item, dict) else item[0]
-                        item_type = item.get('type') if isinstance(item, dict) else 'ship'
+                        design_id = item.get('design_id', 'Unknown')
+                        item_type = item.get('type', 'ship')
 
                         # Load portrait icon for drag preview
                         portrait = self._load_queue_item_portrait(design_id, item_type, 48)
@@ -767,7 +761,7 @@ class BuildQueueScreen:
                             'design_id': design_id,
                             'name': design_id,
                             'category': item_type,
-                            'turns': item.get('turns_remaining') if isinstance(item, dict) else item[1],
+                            'turns': item.get('turns_remaining', 0),
                             'source': 'queue',
                             'portrait': portrait
                         }

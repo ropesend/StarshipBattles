@@ -24,20 +24,18 @@ from tests.unit.quickstart.conftest import (
 QUICKSTART_DESIGNS = load_all_quickstart_designs()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def quickstart_ship_data():
     """
-    Initialize ship data for quickstart design tests.
+    Fixture that ensures ship data is loaded for quickstart design tests.
 
-    Loads vehicle classes, components, and modifiers from production data.
+    The actual data loading is handled by the root conftest's reset_game_state
+    fixture which uses the session cache. This fixture just provides a dependency
+    marker to ensure tests that need ship data declare it explicitly.
     """
-    initialize_ship_data(str(get_project_root()))
-    data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
-    load_modifiers(str(data_dir / "modifiers.json"))
-    load_vehicle_classes(str(data_dir / "vehicleclasses.json"))
+    # Data is loaded by reset_game_state in root conftest.py
+    # This fixture is just a marker for tests that need ship data
     yield
-    RegistryManager.instance().clear()
 
 
 class TestQuickstartDesignFixturesExist:

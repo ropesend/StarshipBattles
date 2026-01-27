@@ -129,24 +129,20 @@ class Planet:
                                 return True
         return False
 
-    def add_production(self, item_name, turns=None, vehicle_type=None):
+    def add_production(self, design_id: str, turns: int, vehicle_type: str = "ship"):
         """Add item to construction queue.
 
-        Supports two formats:
-        - Legacy: add_production("Colony Ship", 5) -> ["Colony Ship", 5]
-        - New: add_production("design_id", turns=5, vehicle_type="complex") -> dict
+        Args:
+            design_id: The design identifier
+            turns: Number of turns to complete
+            vehicle_type: "ship", "fighter", "satellite", or "complex" (default: "ship")
         """
-        if vehicle_type is not None:
-            # New dict format
-            queue_item = {
-                "design_id": item_name,
-                "type": vehicle_type,
-                "turns_remaining": turns
-            }
-            self.construction_queue.append(queue_item)
-        else:
-            # Legacy list format
-            self.construction_queue.append([item_name, turns])
+        queue_item = {
+            "design_id": design_id,
+            "type": vehicle_type,
+            "turns_remaining": turns
+        }
+        self.construction_queue.append(queue_item)
 
     def to_dict(self) -> dict:
         """

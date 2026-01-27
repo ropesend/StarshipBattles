@@ -92,9 +92,10 @@ class TestProduction:
         # Item: "Colony Ship", Turns: 1
         planet.add_production("Colony Ship", 1)
         assert len(planet.construction_queue) == 1
-        item, turns = planet.construction_queue[0]
-        assert item == "Colony Ship"
-        assert turns == 1
+        item = planet.construction_queue[0]
+        assert item["design_id"] == "Colony Ship"
+        assert item["type"] == "ship"
+        assert item["turns_remaining"] == 1
 
     def test_production_progress(self, production_setup):
         """Verify turns decrement and items complete."""
@@ -168,42 +169,6 @@ class TestProduction:
         assert item["design_id"] == "mining_complex_mk1"
         assert item["type"] == "complex"
         assert item["turns_remaining"] == 5
-
-    def test_backwards_compat_list_format(self, production_setup):
-        """Verify old ['Ship', 5] format still works in processing."""
-        planet = production_setup['planet']
-        engine = production_setup['engine']
-        empires = production_setup['empires']
-        temp_dir = production_setup['temp_dir']
-
-        # Add shipyard first (required for ships)
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
-                }
-            },
-            is_operational=True
-        )
-        planet.facilities.append(shipyard)
-
-        # Add old format to queue
-        planet.construction_queue.append(["test_ship", 2])
-
-        # Process one turn
-        engine.process_production(empires, save_path=temp_dir)
-
-        # Should decrement turns
-        assert len(planet.construction_queue) == 1
-        item = planet.construction_queue[0]
-        assert item[1] == 1  # Turns decremented from 2 to 1
 
     def test_build_complex_adds_to_facilities(self, production_setup):
         """Verify complex completes and appears in planet.facilities."""

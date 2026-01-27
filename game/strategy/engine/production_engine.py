@@ -2,16 +2,16 @@
 ProductionEngine - Handles construction queue processing and spawning.
 
 PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
+PROJ-20: Standardized on dict format only.
 
 Responsibilities:
 - Process construction queues for all colonies
 - Spawn completed ships as new fleets
 - Spawn completed complexes as planetary facilities
-- Handle both legacy list format and new dict format
 """
 
 import uuid
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
 from game.core.logger import log_info, log_warning
 from game.strategy.data.fleet import Fleet
@@ -31,7 +31,11 @@ class ProductionEngine:
     - Construction queue processing
     - Ship spawning
     - Complex spawning
-    - Format migration (list vs dict)
+
+    Queue items must be dicts with keys:
+    - design_id: str - The design identifier
+    - type: str - "ship", "fighter", "satellite", or "complex" (defaults to "ship")
+    - turns_remaining: int - Turns until completion
     """
 
     def __init__(self):
@@ -52,17 +56,9 @@ class ProductionEngine:
                 if not colony.construction_queue:
                     continue
 
-                item = colony.construction_queue[0]
-
-                # Support both old format (list) and new format (dict)
-                if isinstance(item, list):
-                    # Old format: ["Colony Ship", 5] - modify in place
-                    vehicle_type = "ship"
-                    design_id = item[0]
-                else:
-                    # New format: dict
-                    vehicle_type = item.get("type", "ship")
-                    design_id = item["design_id"]
+                item: Dict[str, Any] = colony.construction_queue[0]
+                vehicle_type = item.get("type", "ship")
+                design_id = item["design_id"]
 
                 # Check if item requires shipyard
                 if vehicle_type in ["ship", "fighter", "satellite"]:
@@ -71,12 +67,8 @@ class ProductionEngine:
                         continue  # Skip this colony, don't decrement turns
 
                 # Decrement turns now that validation passed
-                if isinstance(item, list):
-                    item[1] -= 1
-                    turns_remaining = item[1]
-                else:
-                    item["turns_remaining"] -= 1
-                    turns_remaining = item["turns_remaining"]
+                item["turns_remaining"] -= 1
+                turns_remaining = item["turns_remaining"]
 
                 if turns_remaining <= 0:
                     colony.construction_queue.pop(0)

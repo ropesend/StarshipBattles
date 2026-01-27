@@ -89,30 +89,43 @@ class SessionRegistryCache:
         pass
 
     def get_components(self) -> Dict[str, Any]:
-        """Returns shallow copy of components data.
+        """Returns deep copy of components data.
 
-        Performance optimization: Uses shallow dict copy instead of deepcopy.
-        The underlying component definitions are treated as read-only during tests.
-        The RegistryManager.hydrate() method receives this data and the registry
-        is cleared/reset between tests, so mutations don't persist.
+        Deep copy is required because Component objects are mutable and tests
+        may modify their abilities dict during recalculate_stats(). Without
+        deep copy, these mutations would pollute the session cache and cause
+        test isolation failures.
         """
         with self._lock:
-            return dict(self.components_data)
+            return copy.deepcopy(self.components_data)
 
     def get_modifiers(self) -> Dict[str, Any]:
-        """Returns shallow copy of modifiers data."""
+        """Returns deep copy of modifiers data.
+
+        Deep copy is required to prevent test mutations from polluting
+        the session cache.
+        """
         with self._lock:
-            return dict(self.modifiers_data)
+            return copy.deepcopy(self.modifiers_data)
 
     def get_vehicle_classes(self) -> Dict[str, Any]:
-        """Returns shallow copy of vehicle classes data."""
+        """Returns deep copy of vehicle classes data.
+
+        Deep copy is required because tests may mutate vehicle class
+        definitions (e.g., test_planetary_complex.py modifies max_mass).
+        Without deep copy, these mutations would pollute the session cache.
+        """
         with self._lock:
-            return dict(self.vehicle_classes_data)
+            return copy.deepcopy(self.vehicle_classes_data)
 
     def get_strategies(self) -> Dict[str, Any]:
-        """Returns shallow copy of combat strategies data."""
+        """Returns deep copy of combat strategies data.
+
+        Deep copy is required to prevent test mutations from polluting
+        the session cache.
+        """
         with self._lock:
-            return dict(self.strategies_data)
+            return copy.deepcopy(self.strategies_data)
 
     @classmethod
     def reset(cls):

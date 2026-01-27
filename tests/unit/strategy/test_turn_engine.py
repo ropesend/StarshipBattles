@@ -478,18 +478,6 @@ class TestProductionProcessing:
 
             mock_spawn.assert_called()
 
-    def test_legacy_list_format_supported(self, turn_engine, mock_empire, mock_planet, mock_galaxy):
-        """Old list format [name, turns] is supported."""
-        mock_planet.construction_queue = [["Colony Ship", 2]]
-        mock_planet.has_space_shipyard = True
-        mock_empire.colonies = [mock_planet]
-
-        turn_engine.process_production([mock_empire])
-
-        # Turns should decrement
-        assert mock_planet.construction_queue[0][1] == 1
-
-
 # =============================================================================
 # Test: End-Turn Order Processing
 # =============================================================================
