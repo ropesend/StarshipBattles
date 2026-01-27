@@ -9,8 +9,32 @@ from game.ai.core.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, Att
                           RotateOnlyBehavior, ErraticBehavior, OrbitBehavior)
 from game.core.constants import AttackType
 
-# Global Managers
-STRATEGY_MANAGER = None
+# Global Managers - lazily initialized
+_STRATEGY_MANAGER = None
+
+
+def _get_strategy_manager():
+    """Lazily initialize and return the strategy manager singleton."""
+    global _STRATEGY_MANAGER
+    if _STRATEGY_MANAGER is None:
+        _STRATEGY_MANAGER = StrategyManager()
+        _STRATEGY_MANAGER.load_data("data")
+    return _STRATEGY_MANAGER
+
+
+class _StrategyManagerProxy:
+    """Lazy proxy for backward compatibility with STRATEGY_MANAGER."""
+
+    def __getattr__(self, name):
+        return getattr(_get_strategy_manager(), name)
+
+    def __bool__(self):
+        return True  # Always truthy once initialized
+
+
+# Public interface - maintains backward compatibility
+STRATEGY_MANAGER = _StrategyManagerProxy()
+
 
 class StrategyManager:
     def __init__(self):
@@ -70,20 +94,24 @@ class StrategyManager:
         }
 
 def load_combat_strategies(filepath=None):
-    """Entry point for loading. Filepath arg is legacy/optional override for base path."""
-    global STRATEGY_MANAGER
-    STRATEGY_MANAGER = StrategyManager()
-    
+    """Entry point for explicit reload. Filepath arg is legacy/optional override for base path.
+
+    Note: STRATEGY_MANAGER is now lazily initialized on first access,
+    so this function is only needed to force a reload with custom path.
+    """
+    global _STRATEGY_MANAGER
+    _STRATEGY_MANAGER = StrategyManager()
+
     # Determine base path from filepath or default
     if filepath:
         base_dir = os.path.dirname(filepath)
     else:
         base_dir = "data"
-        
-    STRATEGY_MANAGER.load_data(base_dir)
 
-# Initialize on import
-load_combat_strategies()
+    _STRATEGY_MANAGER.load_data(base_dir)
+
+
+# Lazy initialization: No module-level call. STRATEGY_MANAGER proxy handles this.
 
 def get_strategy_names():
     """Return list of available strategy IDs for UI."""
@@ -91,9 +119,43 @@ def get_strategy_names():
          return list(STRATEGY_MANAGER.strategies.keys())
     return []
 
+class _CombatStrategiesProxy(dict):
+    """Lazy proxy dict for backward compatibility with COMBAT_STRATEGIES.
+
+    Proxies access to STRATEGY_MANAGER.strategies, lazily initializing on first access.
+    """
+
+    def _get_strategies(self):
+        return _get_strategy_manager().strategies
+
+    def __getitem__(self, key):
+        return self._get_strategies()[key]
+
+    def __iter__(self):
+        return iter(self._get_strategies())
+
+    def __len__(self):
+        return len(self._get_strategies())
+
+    def __contains__(self, key):
+        return key in self._get_strategies()
+
+    def keys(self):
+        return self._get_strategies().keys()
+
+    def values(self):
+        return self._get_strategies().values()
+
+    def items(self):
+        return self._get_strategies().items()
+
+    def get(self, key, default=None):
+        return self._get_strategies().get(key, default)
+
+
 # Legacy support for tests/other modules accessing strategies directly
-# We expose a proxy or just the internal dict if needed, but better to use Manager
-COMBAT_STRATEGIES = STRATEGY_MANAGER.strategies if STRATEGY_MANAGER else {}
+# We expose a proxy dict for backward compatibility with COMBAT_STRATEGIES
+COMBAT_STRATEGIES = _CombatStrategiesProxy()
 
 
 class TargetEvaluator:

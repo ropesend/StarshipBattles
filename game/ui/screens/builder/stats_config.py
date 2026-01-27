@@ -55,26 +55,41 @@ def fmt_decimal(val):
 def fmt_score(val):
     return f"+{val:.1f}" if val >= 0 else f"{val:.1f}"
 
+# --- Helpers ---
+def _get_legacy_crew_requirement(ship):
+    """Get crew requirement from negative CrewCapacity values (legacy pattern).
+
+    Some older components use negative CrewCapacity to indicate crew requirements
+    instead of the newer CrewRequired ability. This helper extracts that value.
+
+    Returns 0 if CrewCapacity is non-negative.
+    """
+    crew_capacity = ship.get_ability_total('CrewCapacity')
+    if crew_capacity < 0:
+        return abs(crew_capacity)
+    return 0
+
+
+def _get_total_crew_requirement(ship):
+    """Get total crew requirement from both CrewRequired and legacy patterns."""
+    return ship.get_ability_total('CrewRequired') + _get_legacy_crew_requirement(ship)
+
+
 # --- Validators ---
 def mass_validator(ship, val):
     return (ship.mass_limits_ok, "✓" if ship.mass_limits_ok else "✗")
 
 def crew_validator(ship, val):
     # val is crew_housed (capacity)
-    req = ship.get_ability_total('CrewRequired')
-    # Legacy fallback logic from right_panel.py
-    legacy_req = abs(min(0, ship.get_ability_total('CrewCapacity')))
-    req += legacy_req
-    
+    req = _get_total_crew_requirement(ship)
+
     if val >= req:
         return (True, "✓")
     return (False, f"✗ Miss {req - val}")
 
 def life_support_validator(ship, val):
-    req = ship.get_ability_total('CrewRequired')
-    legacy_req = abs(min(0, ship.get_ability_total('CrewCapacity')))
-    req += legacy_req
-    
+    req = _get_total_crew_requirement(ship)
+
     if val >= req:
         return (True, "✓")
     return (False, f"✗ -{req - val}")
@@ -84,9 +99,7 @@ def get_mass_display(ship):
     return ship.mass
 
 def get_crew_required(ship):
-    req = ship.get_ability_total('CrewRequired')
-    legacy_req = abs(min(0, ship.get_ability_total('CrewCapacity')))
-    return req + legacy_req
+    return _get_total_crew_requirement(ship)
 
 def get_crew_capacity(ship):
     return max(0, ship.get_ability_total('CrewCapacity'))

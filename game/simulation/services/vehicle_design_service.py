@@ -15,7 +15,7 @@ from game.core.registry import get_component_registry, get_vehicle_classes
 from game.core.logger import log_error, log_warning, log_info
 
 if TYPE_CHECKING:
-    from game.simulation.ship_validator import ValidationResult
+    from game.core.validation import ValidationResult
 
 
 @dataclass

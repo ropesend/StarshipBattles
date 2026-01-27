@@ -44,7 +44,8 @@ Example:
     result = session.handle_command(cmd)
 """
 import os
-from game.core.logger import log_info, log_debug
+import warnings
+from game.core.logger import log_info, log_debug, log_warning
 from game.core.validation import validation_result
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
@@ -62,10 +63,24 @@ class GameSession:
         if config is None:
             config = GameConfig()
 
-        # Allow legacy parameters to override config for backward compatibility
+        # Deprecation warning for legacy parameters (PROJ-22)
+        # These parameters override config values, which violates config immutability.
+        # Use GameConfig(galaxy_radius=X, system_count=Y) instead.
         if galaxy_radius is not None:
+            warnings.warn(
+                "galaxy_radius parameter is deprecated. "
+                "Use GameConfig(galaxy_radius=...) instead.",
+                DeprecationWarning,
+                stacklevel=2
+            )
             config.galaxy_radius = galaxy_radius
         if system_count is not None:
+            warnings.warn(
+                "system_count parameter is deprecated. "
+                "Use GameConfig(system_count=...) instead.",
+                DeprecationWarning,
+                stacklevel=2
+            )
             config.system_count = system_count
 
         self.config = config

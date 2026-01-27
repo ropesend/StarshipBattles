@@ -13,15 +13,33 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Major Issues | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Critical Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Major Issues | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-27 08:06
-**Active Phase:** Phase 1
-**Last Action:** Project created from review findings
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-01-27
+**Active Phase:** COMPLETE
+**Last Action:** Phase 2 completed - all 7 major issues addressed
+**Next Action:** None - project complete
 **Blockers:** None
+
+### Phase 1 Summary:
+- **Task 1.1-1.2:** Dead mixins (physics.py, combat.py) already deleted
+- **Task 1.3:** ShipControllableAdapter documented - deferred to future PROJ
+- **Task 1.4:** Module-level side effect fixed with lazy initialization
+- **Task 1.5:** GameSession legacy params fixed with deprecation warnings + test updates
+- **Task 1.6:** Unused ValidationResult import removed from ship.py
+- **Tests:** 4563 passed, 1 skipped
+
+### Phase 2 Summary:
+- **Task 2.1:** Deleted Marked_For_Deletion folder (103 files, 45MB)
+- **Task 2.2:** Deleted ship_theme.py deprecation shim
+- **Task 2.3:** Removed SHIP_CLASSES alias, updated builder/main.py
+- **Task 2.4:** Extracted _get_legacy_crew_requirement() and _get_total_crew_requirement() helpers
+- **Task 2.5:** Added warnings for old design metadata format
+- **Task 2.6:** Removed dead ValidationResult re-export
+- **Task 2.7:** Fixed TYPE_CHECKING import to use canonical path
+- **Tests:** 4563 passed, 1 skipped
 
 ## Overview
 Systematic remediation of findings from review: 2026-01-27_general_legacy-cleanup-verification. Total findings selected: 13 (Critical: 6, Major: 7, Other: 0).
@@ -77,7 +95,7 @@ Systematic remediation of findings from review: 2026-01-27_general_legacy-cleanu
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing (4563 passed, 1 skipped)
 - [ ] Audit passed
 - [ ] User verified

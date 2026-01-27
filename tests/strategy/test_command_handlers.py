@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.engine.game_session import GameSession
+from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.commands import IssueMoveCommand, IssueBuildShipCommand, CommandType
 from game.strategy.data.fleet import Fleet, OrderType, FleetOrder
 from game.strategy.data.hex_math import HexCoord
@@ -28,7 +29,8 @@ class MockGalaxy:
 
 def test_preview_fleet_path():
     """Test that preview_fleet_path returns a path without modifying state."""
-    session = GameSession(system_count=0)
+    config = GameConfig(system_count=0)
+    session = GameSession(config=config)
     session.galaxy = MockGalaxy() # Override with empty mock
     
     # Mock TurnEngine or internal pathfinder helper
@@ -50,7 +52,8 @@ def test_preview_fleet_path():
 
 def test_handle_move_command():
     """Test handling of IssueMoveCommand."""
-    session = GameSession(system_count=0)
+    config = GameConfig(system_count=0)
+    session = GameSession(config=config)
     
     # Setup Fleet
     fleet = Fleet(101, 0, HexCoord(0,0))
@@ -72,7 +75,8 @@ def test_handle_move_command():
 
 def test_handle_move_command_invalid_fleet():
     """Test IssueMoveCommand with bad fleet ID."""
-    session = GameSession(system_count=0)
+    config = GameConfig(system_count=0)
+    session = GameSession(config=config)
     cmd = IssueMoveCommand(9999, HexCoord(0,0)) # ID not in empire
     
     result = session.handle_command(cmd)
@@ -82,7 +86,8 @@ def test_handle_move_command_invalid_fleet():
 
 def test_handle_build_ship_command():
     """Test IssueBuildShipCommand adds to queue."""
-    session = GameSession(system_count=0)
+    config = GameConfig(system_count=0)
+    session = GameSession(config=config)
     
     # Setup Planet with proper ID (not Python id())
     planet = MagicMock()

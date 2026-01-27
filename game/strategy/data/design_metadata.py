@@ -9,7 +9,9 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional
 from datetime import datetime
 import os
+import warnings
 from game.core.json_utils import load_json_required, save_json
+from game.core.logger import log_warning
 
 
 @dataclass
@@ -159,9 +161,14 @@ class DesignMetadata:
 
         # Add component contributions
         layers = data.get("layers", {})
-        for layer_data in layers.values():
-            # Direct list format: layers[layer_name] = [comp1, comp2, ...]
-            components = layer_data if isinstance(layer_data, list) else []
+        for layer_name, layer_data in layers.items():
+            # New format: layers[layer_name] = [comp1, comp2, ...]
+            if isinstance(layer_data, list):
+                components = layer_data
+            else:
+                # Old format detected - warn but handle gracefully
+                log_warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
+                components = []
 
             for comp_data in components:
                 # Weapon components contribute heavily
@@ -199,9 +206,13 @@ class DesignMetadata:
 
         # Sum component costs
         layers = data.get("layers", {})
-        for layer_data in layers.values():
-            # Direct list format: layers[layer_name] = [comp1, comp2, ...]
-            components = layer_data if isinstance(layer_data, list) else []
+        for layer_name, layer_data in layers.items():
+            # New format: layers[layer_name] = [comp1, comp2, ...]
+            if isinstance(layer_data, list):
+                components = layer_data
+            else:
+                log_warning(f"DesignMetadata: Old layer format in '{layer_name}'. Expected list, got {type(layer_data).__name__}.")
+                components = []
 
             for comp_data in components:
                 comp_cost = comp_data.get("cost", {})

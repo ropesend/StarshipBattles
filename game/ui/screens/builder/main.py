@@ -845,7 +845,7 @@ class BuilderSceneGUI:
     def _reload_data(self, directory: str):
         """Reload global game data from the specified directory."""
         from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
-        from game.simulation.entities.ship import VEHICLE_CLASSES, SHIP_CLASSES
+        from game.simulation.entities.ship import VEHICLE_CLASSES
         from game.simulation.entities.ship_loader import load_vehicle_classes
 
         try:
@@ -855,7 +855,6 @@ class BuilderSceneGUI:
             COMPONENT_REGISTRY.clear()
             MODIFIER_REGISTRY.clear()
             VEHICLE_CLASSES.clear()
-            SHIP_CLASSES.clear()
             # Clear STRATEGY_MANAGER data
             if STRATEGY_MANAGER:
                 STRATEGY_MANAGER.strategies.clear()

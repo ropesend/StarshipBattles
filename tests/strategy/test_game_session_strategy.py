@@ -1,9 +1,11 @@
 import pytest
 from game.strategy.engine.game_session import GameSession
+from game.strategy.engine.game_config import GameConfig
 
 def test_game_session_initialization():
     """Test that GameSession initializes galaxy and empires correctly."""
-    session = GameSession(system_count=5)
+    config = GameConfig(system_count=5)
+    session = GameSession(config=config)
     
     assert session.galaxy is not None
     assert len(session.empires) == 2
@@ -22,7 +24,8 @@ def test_game_session_initialization():
 
 def test_process_turn_advancement():
     """Test that process_turn increments turn counter and calls engine."""
-    session = GameSession(system_count=5)
+    config = GameConfig(system_count=5)
+    session = GameSession(config=config)
     current_turn = session.turn_number
     
     session.process_turn()

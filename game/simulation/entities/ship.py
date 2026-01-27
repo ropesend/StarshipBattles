@@ -9,7 +9,6 @@ from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import get_vehicle_classes, get_component_registry, get_modifier_registry
 from game.core.constants import LayerDefaults, CombatConstants
-from game.simulation.ship_validator import ValidationResult
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_combat import ShipCombatMixin
@@ -19,10 +18,9 @@ from game.simulation.systems.resource_manager import ResourceRegistry
 # Internal import (no longer re-exported)
 from .ship_loader import get_or_create_validator
 
-# Convenience aliases for registry data (read-only references)
-# These are the actual registry dicts, so callers can use them directly
+# Convenience reference to registry data (read-only reference)
+# This is the actual registry dict, so callers can use it directly
 VEHICLE_CLASSES = get_vehicle_classes()
-SHIP_CLASSES = VEHICLE_CLASSES  # Alias for backward compatibility
 
 
 class _ValidatorProxy:
