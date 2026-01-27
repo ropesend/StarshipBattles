@@ -1,7 +1,7 @@
 import math
 import json
 import os
-import pygame
+from game.core.math import Vector2
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_info
 from game.ai.core.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior, 
@@ -150,11 +150,11 @@ class TargetEvaluator:
                     val = mass * factor # factor should be negative
                     
             elif r_type == 'fastest':
-                speed = getattr(candidate, 'velocity', pygame.math.Vector2(0,0)).length()
+                speed = getattr(candidate, 'velocity', Vector2(0,0)).length()
                 val = speed * (weight if weight > 0 else factor)
                 
             elif r_type == 'slowest':
-                speed = getattr(candidate, 'velocity', pygame.math.Vector2(0,0)).length()
+                speed = getattr(candidate, 'velocity', Vector2(0,0)).length()
                 val = -speed * (weight if weight > 0 else -factor)
                 
             elif r_type == 'most_damaged':
@@ -537,7 +537,7 @@ class AIController:
         
         if closest:
             vec = self.ship.position - closest.position
-            if vec.length() == 0: vec = pygame.math.Vector2(1,0)
+            if vec.length() == 0: vec = Vector2(1,0)
             return self.ship.position + vec.normalize() * 500
         return None
 

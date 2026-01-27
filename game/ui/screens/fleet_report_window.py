@@ -10,7 +10,7 @@ from game.core.config import UIConfig
 from game.core.logger import log_info
 from game.ui.screens.fleet_report_filters import calculate_fleet_stats, filter_ships, sort_ships
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 
 class FleetReportWindow(UIWindow):

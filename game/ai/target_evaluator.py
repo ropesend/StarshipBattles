@@ -3,7 +3,7 @@
 This module provides the TargetEvaluator class which scores potential targets
 based on configurable rules from combat strategies.
 """
-import pygame
+from game.core.math import Vector2
 from game.simulation.components.component_constants import LayerType
 from game.core.constants import AttackType
 
@@ -82,11 +82,11 @@ class TargetEvaluator:
                     val = mass * factor  # factor should be negative
 
             elif r_type == 'fastest':
-                speed = getattr(candidate, 'velocity', pygame.math.Vector2(0, 0)).length()
+                speed = getattr(candidate, 'velocity', Vector2(0, 0)).length()
                 val = speed * (weight if weight > 0 else factor)
 
             elif r_type == 'slowest':
-                speed = getattr(candidate, 'velocity', pygame.math.Vector2(0, 0)).length()
+                speed = getattr(candidate, 'velocity', Vector2(0, 0)).length()
                 val = -speed * (weight if weight > 0 else -factor)
 
             elif r_type == 'most_damaged':

@@ -69,7 +69,7 @@ def reset_game_state(monkeypatch, request):
         StrategyManager.instance().clear()
 
         # Reset singletons using thread-safe reset() methods
-        from game.simulation.ship_theme import ShipThemeManager
+        from game.ui.assets import ShipThemeManager
         ShipThemeManager.reset()
 
         from game.core.screenshot_manager import ScreenshotManager

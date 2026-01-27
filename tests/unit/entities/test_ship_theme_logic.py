@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pygame
 import os
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 
 class TestShipThemeLogic:
@@ -58,11 +58,11 @@ class TestShipThemeLogic:
         img = self.manager.get_image("NonExistentTheme", "AnyClass")
         assert img.get_size() == (100, 100)
 
-    @patch('game.simulation.ship_theme.log_error')
-    @patch('game.simulation.ship_theme.os.scandir')
-    @patch('game.simulation.ship_theme.os.path.exists')
-    @patch('game.simulation.ship_theme.load_json')
-    @patch('game.simulation.ship_theme.pygame.image.load')
+    @patch('game.ui.assets.ship_theme_manager.log_error')
+    @patch('game.ui.assets.ship_theme_manager.os.scandir')
+    @patch('game.ui.assets.ship_theme_manager.os.path.exists')
+    @patch('game.ui.assets.ship_theme_manager.load_json')
+    @patch('game.ui.assets.ship_theme_manager.pygame.image.load')
     def test_manual_scaling_and_loading(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_log):
         """Test loading a theme with manual scaling configured."""
 
@@ -115,11 +115,11 @@ class TestShipThemeLogic:
         scale_default = self.manager.get_manual_scale(theme_name, "OtherShip")
         assert scale_default == 1.0
 
-    @patch('game.simulation.ship_theme.log_error')
-    @patch('game.simulation.ship_theme.os.scandir')
-    @patch('game.simulation.ship_theme.os.path.exists')
-    @patch('game.simulation.ship_theme.load_json')
-    @patch('game.simulation.ship_theme.pygame.image.load')
+    @patch('game.ui.assets.ship_theme_manager.log_error')
+    @patch('game.ui.assets.ship_theme_manager.os.scandir')
+    @patch('game.ui.assets.ship_theme_manager.os.path.exists')
+    @patch('game.ui.assets.ship_theme_manager.load_json')
+    @patch('game.ui.assets.ship_theme_manager.pygame.image.load')
     def test_get_image_metrics(self, mock_load, mock_load_json, mock_exists, mock_scandir, mock_log):
         """Test that bounding rect is correctly calculated and cached."""
 
@@ -165,9 +165,9 @@ class TestShipThemeLogic:
         assert rect.width == 10
         assert rect.height == 10
 
-    @patch('game.simulation.ship_theme.os.scandir')
-    @patch('game.simulation.ship_theme.os.path.exists')
-    @patch('game.simulation.ship_theme.load_json')
+    @patch('game.ui.assets.ship_theme_manager.os.scandir')
+    @patch('game.ui.assets.ship_theme_manager.os.path.exists')
+    @patch('game.ui.assets.ship_theme_manager.load_json')
     def test_malformed_theme_json(self, mock_load_json, mock_exists, mock_scandir):
         """Test handling of malformed JSON in theme file."""
 

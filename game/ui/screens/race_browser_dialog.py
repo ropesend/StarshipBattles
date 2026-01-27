@@ -14,7 +14,7 @@ import pygame_gui
 from typing import Callable, Optional, TYPE_CHECKING
 
 from game.core.logger import log_debug
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 if TYPE_CHECKING:

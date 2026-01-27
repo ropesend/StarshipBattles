@@ -13,7 +13,7 @@ import pygame_gui
 from typing import Callable, Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from game.core.logger import log_debug
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig

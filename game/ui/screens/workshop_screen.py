@@ -22,7 +22,7 @@ from game.simulation.components.component import (
 from game.ui.renderer.sprites import SpriteManager
 from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
 from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
 from ui.builder.schematic_view import SchematicView

@@ -18,7 +18,7 @@ from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.constants import ASSET_DIR
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 # PROJ-12 Phase 4: Import extracted components
 from game.ui.screens.race_browser_dialog import RaceBrowserDialog

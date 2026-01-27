@@ -1,7 +1,7 @@
-
-import pygame
 import math
 from typing import Any, Dict
+
+from game.core.math import Vector2
 
 class AIBehavior:
     def __init__(self, controller: Any) -> None:
@@ -31,7 +31,7 @@ class FleeBehavior(AIBehavior):
         
         vec = self.controller.ship.position - target.position
         if vec.length() == 0: 
-            vec = pygame.math.Vector2(1, 0)
+            vec = Vector2(1, 0)
         
         flee_pos = self.controller.ship.position + vec.normalize() * self.FLEE_DISTANCE
         self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
@@ -65,7 +65,7 @@ class KiteBehavior(AIBehavior):
             # Kite - maintain distance
             vec = self.controller.ship.position - target.position
             if vec.length() == 0: 
-                vec = pygame.math.Vector2(1, 0)
+                vec = Vector2(1, 0)
             
             kite_pos = target.position + vec.normalize() * opt_dist
             self.controller.navigate_to(kite_pos, stop_dist=0, precise=True)
@@ -109,7 +109,7 @@ class AttackRunBehavior(AIBehavior):
             
             vec = self.controller.ship.position - target.position
             if vec.length() == 0: 
-                vec = pygame.math.Vector2(1, 0)
+                vec = Vector2(1, 0)
             flee_pos = self.controller.ship.position + vec.normalize() * self.FLEE_DISTANCE
             
             self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
@@ -235,7 +235,7 @@ class FormationBehavior(AIBehavior):
             # Navigate to FUTURE spot (Anticipation)
             # Predict where master will be in X ticks based on current speed
             prediction_ticks = self.PREDICTION_TICKS
-            predicted_master_pos = master.position + (pygame.math.Vector2(0, -1).rotate(-master.angle) * master.current_speed * prediction_ticks * self.TICK_DURATION)
+            predicted_master_pos = master.position + (Vector2(0, -1).rotate(-master.angle) * master.current_speed * prediction_ticks * self.TICK_DURATION)
             # Re-calculate offset based on master's current angle 
             if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
                  pred_offset = ship.formation_offset
@@ -341,7 +341,7 @@ class OrbitBehavior(AIBehavior):
         # Calculate tangent direction (perpendicular to radial vector)
         # Rotate 90 degrees for counter-clockwise orbit
         radial = vec_to_target.normalize()
-        tangent = pygame.math.Vector2(-radial.y, radial.x)
+        tangent = Vector2(-radial.y, radial.x)
         
         # Adjust radial component to maintain orbit distance
         if dist < orbit_distance * 0.9:

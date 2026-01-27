@@ -42,7 +42,7 @@ Example:
     controller.update()  # Called each tick by BattleEngine
 """
 import math
-import pygame
+from game.core.math import Vector2
 from game.core.config import AIConfig, BattleConfig
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
@@ -357,7 +357,7 @@ class AIController:
         if closest:
             vec = self.ship.position - closest.position
             if vec.length() == 0:
-                vec = pygame.math.Vector2(1, 0)
+                vec = Vector2(1, 0)
             return self.ship.position + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
         return None
 

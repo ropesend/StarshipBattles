@@ -76,3 +76,18 @@ class CombatConstants:
 # PROJ-11: Moved from game.strategy.data.planet to eliminate simulation->strategy dependency
 PLANET_RESOURCES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
 
+
+# Layer Types - Ship layer zones for component placement and damage distribution
+# PROJ-17: Moved from game/simulation/components/component_constants.py for proper layer architecture
+class LayerType(Enum):
+    """Ship layer zones for component placement and damage distribution."""
+    HULL = 0    # Innermost Chassis Layer
+    CORE = 1
+    INNER = 2
+    OUTER = 3
+    ARMOR = 4
+
+    @staticmethod
+    def from_string(s):
+        return getattr(LayerType, s.upper())
+

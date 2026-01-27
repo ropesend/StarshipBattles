@@ -14,16 +14,9 @@ class ComponentStatus(Enum):
     NO_AMMO = auto()
 
 
-class LayerType(Enum):
-    HULL = 0    # [NEW] Innermost Chassis Layer
-    CORE = 1
-    INNER = 2
-    OUTER = 3
-    ARMOR = 4
-
-    @staticmethod
-    def from_string(s):
-        return getattr(LayerType, s.upper())
+# Re-export LayerType from core for backward compatibility
+# PROJ-17: LayerType moved to game/core/constants.py for proper layer architecture
+from game.core.constants import LayerType
 
 
 class Modifier:

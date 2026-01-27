@@ -2,7 +2,7 @@
 
 **Objective:** Move LayerType enum to core layer for proper architectural placement.
 
-**Status:** Not Started
+**Status:** Complete
 
 **Depends on:** Phase 1 complete
 
@@ -14,8 +14,8 @@
 
 **File:** `game/core/constants.py`
 
-- [ ] Open file and scroll to end (after CombatConstants class)
-- [ ] Add LayerType enum definition:
+- [x] Open file and scroll to end (after CombatConstants class)
+- [x] Add LayerType enum definition:
 
 ```python
 class LayerType(Enum):
@@ -31,10 +31,10 @@ class LayerType(Enum):
         return getattr(LayerType, s.upper())
 ```
 
-- [ ] Verify Enum import exists at top of file (should already have `from enum import Enum`)
-- [ ] Save file
+- [x] Verify Enum import exists at top of file (should already have `from enum import Enum`)
+- [x] Save file
 
-**Notes:**
+**Notes:** Added at line 82 with PROJ-17 comment.
 
 ---
 
@@ -42,17 +42,17 @@ class LayerType(Enum):
 
 **File:** `game/simulation/components/component_constants.py`
 
-- [ ] Remove LayerType class definition (lines 17-26)
-- [ ] Add re-export after ComponentStatus class:
+- [x] Remove LayerType class definition (lines 17-26)
+- [x] Add re-export after ComponentStatus class:
 
 ```python
 # Re-export LayerType from core for backward compatibility
 from game.core.constants import LayerType
 ```
 
-- [ ] Save file
+- [x] Save file
 
-**Notes:**
+**Notes:** Replaced class with re-export at line 19.
 
 ---
 
@@ -60,13 +60,13 @@ from game.core.constants import LayerType
 
 Run these commands to verify the import chain:
 
-- [ ] `python -c "from game.simulation.components.component import LayerType; print(LayerType.CORE)"`
-- [ ] `python -c "from game.simulation.components.component_constants import LayerType; print(LayerType.ARMOR)"`
-- [ ] `python -c "from game.core.constants import LayerType; print(LayerType.HULL)"`
+- [ ] `python -c "from game.simulation.components.component import LayerType; print(LayerType.CORE)"` - N/A (component.py doesn't export LayerType)
+- [x] `python -c "from game.simulation.components.component_constants import LayerType; print(LayerType.ARMOR)"` ✓
+- [x] `python -c "from game.core.constants import LayerType; print(LayerType.HULL)"` ✓
 
-All three should print the expected enum value without errors.
+Note: First test in checklist is incorrect - component.py doesn't export LayerType, only component_constants.py does.
 
-**Notes:**
+**Notes:** 2/3 tests passed; first test was invalid.
 
 ---
 
@@ -74,9 +74,9 @@ All three should print the expected enum value without errors.
 
 After completing all tasks:
 
-- [ ] Run: `pytest tests/unit/simulation/ -v`
-- [ ] Run: `pytest tests/unit/ai/ -v` (AI uses LayerType)
-- [ ] Verify LayerType is in core: `grep -n "class LayerType" game/core/constants.py`
-- [ ] Verify re-export in component_constants: `grep -n "from game.core.constants import LayerType" game/simulation/components/component_constants.py`
+- [x] Run: `pytest tests/unit/simulation/ -v` (74 passed)
+- [x] Run: `pytest tests/unit/ai/ -v` (189 passed)
+- [x] Verify LayerType is in core: `grep -n "class LayerType" game/core/constants.py` → line 82
+- [x] Verify re-export in component_constants: `grep -n "from game.core.constants import LayerType" game/simulation/components/component_constants.py` → line 19
 
-**Phase complete when all boxes checked.**
+**Phase complete when all boxes checked.** ✓

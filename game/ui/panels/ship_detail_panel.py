@@ -11,7 +11,7 @@ from typing import Dict, Optional, Tuple, List
 
 from game.strategy.data.ship_instance import ShipInstance
 from game.simulation.components.component_constants import LayerType
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 
 def get_damage_color(hp_percentage: float) -> Tuple[int, int, int]:

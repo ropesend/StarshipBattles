@@ -26,7 +26,6 @@ from game.core.logger import log_debug, log_info, log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from game.strategy.data.fleet import Fleet
     from test_framework.scenario import CombatScenario
 
 
@@ -57,7 +56,7 @@ class BattleConfig:
     test_scenario: Optional['CombatScenario'] = None
 
     # For strategy mode
-    source_fleets: Optional[Tuple['Fleet', 'Fleet']] = None
+    source_fleets: Optional[Tuple[Any, Any]] = None
 
     # For hypothetical mode
     isolated: bool = True  # Never mutate source ships
@@ -698,7 +697,7 @@ class BattleController:
 
     def _apply_results_to_fleet(
         self,
-        fleet: 'Fleet',
+        fleet: Any,
         team_id: int,
         surviving: Dict[str, ShipState],
         destroyed: Dict[str, ShipState],
@@ -805,8 +804,8 @@ def create_test_battle(
 
 
 def create_strategy_battle(
-    fleet1: 'Fleet',
-    fleet2: 'Fleet',
+    fleet1: Any,
+    fleet2: Any,
     seed: Optional[int] = None,
     allow_retreat: bool = True,
 ) -> BattleController:

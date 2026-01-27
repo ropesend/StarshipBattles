@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 import pygame
 import os
-from game.simulation.ship_theme import ShipThemeManager
+from game.ui.assets import ShipThemeManager
 
 from game.core.constants import ASSET_DIR
 

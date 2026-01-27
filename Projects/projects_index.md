@@ -6,12 +6,12 @@
 |----|-------|--------|---------|--------------|
 | PROJ-18 | Standardize Registry Access | Planning | 2026-01-25 | 2026-01-25 |
 | PROJ-17 | Enforce Layer Boundaries | Planning | 2026-01-25 | 2026-01-25 |
-| PROJ-16 | Consolidate Re-exports (Phase 3) | Planning | 2026-01-25 | 2026-01-25 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-16 | Consolidate Re-exports (Phase 3) | Archived | 2026-01-25 | 2026-01-26 |
 | PROJ-15 | Phase 2 - Remove Shims and Aliases | Archived | 2026-01-25 | 2026-01-25 |
 | PROJ-14 | Legacy Cleanup Phase 1 - Delete Dead Code | Archived | 2026-01-25 | 2026-01-25 |
 | PROJ-12 | God Class Decomposition | Archived | 2026-01-24 | 2026-01-25 |
