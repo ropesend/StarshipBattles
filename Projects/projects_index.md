@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-23 | ShipStatsService Modifier Application Bug | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-22 | Legacy Cleanup Phase 2 | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
@@ -107,4 +108,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-23
+## Next Project ID: PROJ-24
