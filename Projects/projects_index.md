@@ -4,6 +4,13 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-33 | UI Screens: ViewModel Layer Introduction | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-32 | Research System: State Management Cleanup | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-31 | AI System: Dead Code Removal | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-30 | Strategy Mode: Layer Boundary Cleanup | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-29 | Simulation: Ship Decoupling | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-28 | Physics Engine: Constants Consolidation | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-27 | Core Foundation: Registry Singleton Refactoring | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-26 | Naming Consistency Cleanup | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-25 | Consolidate Dual AI Implementations | Planning | 2026-01-27 | 2026-01-27 |
 
@@ -111,4 +118,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-27
+## Next Project ID: PROJ-34
