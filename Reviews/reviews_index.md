@@ -13,6 +13,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-01-27 | General Review | self-contained-systems | In Progress | [2026-01-27_general_self-contained-systems](results/2026-01-27_general_self-contained-systems/) |
 | 2026-01-27 | General Review | path-centralization | Led to Project | [2026-01-27_general_path-centralization](results/2026-01-27_general_path-centralization/) |
 | 2026-01-27 | General Review | legacy-directory-assessment | In Progress | [2026-01-27_general_legacy-directory-assessment](results/2026-01-27_general_legacy-directory-assessment/) |
 | 2026-01-27 | General Review | legacy-cleanup-verification | In Progress | [2026-01-27_general_legacy-cleanup-verification](results/2026-01-27_general_legacy-cleanup-verification/) |
