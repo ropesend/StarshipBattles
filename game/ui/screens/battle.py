@@ -4,7 +4,6 @@ import math
 import random
 import time
 
-from game.ai.core.system import AIController
 from game.ui.renderer.renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.hud.battle import BattleInterface

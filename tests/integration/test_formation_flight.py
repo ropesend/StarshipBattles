@@ -11,7 +11,7 @@ from game.simulation.systems.battle_engine import BattleEngine
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers
-from game.ai.core.system import AIController
+from game.ai.controller import AIController
 import json
 
 def setup_simulation():

@@ -20,7 +20,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.simulation.components.component import load_components, create_component
 from game.simulation.systems.battle_engine import BattleEngine
-from game.ai.core.system import AIController
+from game.ai.controller import AIController
 
 from test_logger import ComponentTestLogger, TestEventType, enable_test_logging
 from test_log_parser import TestLogParser

@@ -22,7 +22,8 @@ pygame.init()
 pygame.display.set_mode((800, 600))
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.ai.core.system import AIController, COMBAT_STRATEGIES
+from game.ai.controller import AIController
+from game.ai.strategy_manager import StrategyManager
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, load_modifiers
 
@@ -292,7 +293,7 @@ def run_tournament():
         return
     
     # Get all strategy IDs
-    strategies = list(COMBAT_STRATEGIES.keys())
+    strategies = list(StrategyManager.instance().strategies.keys())
     print(f"Found {len(strategies)} strategies: {strategies}")
     
     # Create results log
@@ -315,8 +316,8 @@ def run_tournament():
     for strategy_a in strategies:
         for strategy_b in strategies:
             match_num += 1
-            name_a = COMBAT_STRATEGIES[strategy_a].get('name', strategy_a)
-            name_b = COMBAT_STRATEGIES[strategy_b].get('name', strategy_b)
+            name_a = StrategyManager.instance().strategies[strategy_a].get('name', strategy_a)
+            name_b = StrategyManager.instance().strategies[strategy_b].get('name', strategy_b)
             
             print(f"[{match_num}/{total_matches}] {name_a} vs {name_b}...", end=" ", flush=True)
             
@@ -383,7 +384,7 @@ def run_tournament():
     print(f"{'Strategy':<25} {'Wins':>6} {'Losses':>8} {'Draws':>7} {'Win %':>7}")
     print("-" * 55)
     for s in sorted_strategies:
-        name = COMBAT_STRATEGIES[s].get('name', s)
+        name = StrategyManager.instance().strategies[s].get('name', s)
         total = wins[s] + losses[s] + draws[s]
         win_pct = (wins[s] / total * 100) if total > 0 else 0
         print(f"{name:<25} {wins[s]:>6} {losses[s]:>8} {draws[s]:>7} {win_pct:>6.1f}%")
