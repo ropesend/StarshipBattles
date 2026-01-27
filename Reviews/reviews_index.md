@@ -13,6 +13,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-01-27 | General Review | path-centralization | Led to Project | [2026-01-27_general_path-centralization](results/2026-01-27_general_path-centralization/) |
 | 2026-01-27 | General Review | legacy-directory-assessment | In Progress | [2026-01-27_general_legacy-directory-assessment](results/2026-01-27_general_legacy-directory-assessment/) |
 | 2026-01-27 | General Review | legacy-cleanup-verification | In Progress | [2026-01-27_general_legacy-cleanup-verification](results/2026-01-27_general_legacy-cleanup-verification/) |
 | 2026-01-26 | Consistency Review | naming-inconsistencies | In Progress | [2026-01-26_consistency_naming-inconsistencies](results/2026-01-26_consistency_naming-inconsistencies/) |
@@ -41,6 +42,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | 2026-01-24_general_full-codebase-maintainability | PROJ-11 | Architecture Layer Separation (13+ findings) |
 | 2026-01-24_general_full-codebase-maintainability | PROJ-12 | God Class Decomposition (Ship, TurnEngine, RaceSetupScreen) |
 | 2026-01-24_general_full-codebase-maintainability | PROJ-13 | Code Quality & Documentation (remaining findings) |
+| 2026-01-27_general_path-centralization | PROJ-26 | Path Centralization (47+ hardcoded paths → single source of truth) |
 
 ---
 
