@@ -18,20 +18,23 @@
 | 3. Migrate Behaviors | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate core/* | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remove Delegation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Audit Fixes (Cycle 3) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-27
-**Active Phase:** COMPLETE
-**Last Action:** Completed Phase 5 - Removed __getattr__/__setattr__ delegation from ShipControllableAdapter. Updated all tests that relied on delegation. 4592 tests passing.
-**Next Action:** Project complete. Ready for user verification.
+**Active Phase:** AUDIT PASSED
+**Last Action:** Audit Cycle 4 passed with no significant issues. All 4594 tests passing.
+**Next Action:** User verification required
 **Blockers:** None
-**Context for Next Agent:** Project COMPLETE. All 5 phases finished. The IControllable interface migration is done - both AI implementations (simulation layer and UI layer) now use interface methods exclusively. The __getattr__/__setattr__ delegation has been removed from ShipControllableAdapter. Tests updated to use interface methods.
+**Context for Next Agent:** Project is audit-complete. User needs to verify and close.
 
 ## Audit Log
 | Cycle | Date | Findings | Resolution |
 |-------|------|----------|------------|
 | 1 | 2026-01-27 | 2 major issues - Phase 4 unjustifiably skipped, Phase 5 blocked | Returned to Phase 4, completed migration |
 | 2 | 2026-01-27 | Project complete after Phase 4+5 implementation | All phases complete, 4592 tests pass |
+| 3 | 2026-01-27 | 4 major issues - getattr() bypasses existing interface methods in core/system.py | Added Phase 6 for fixes |
+| 4 | 2026-01-27 | No significant issues | PASSED |
 
 ## Overview
 Refactor AIController and behavior classes to use IControllable interface methods exclusively instead of direct ship attribute access (~165 direct accesses across 4 files). This will allow removal of the `__getattr__`/`__setattr__` delegation in ShipControllableAdapter.
@@ -93,6 +96,7 @@ Both must be migrated before delegation can be removed.
 | `get_components_by_ability(name, op)` | `return self._ship.get_components_by_ability(...)` |
 | `adjust_position(delta)` | `self._ship.position += delta` |
 | `get_layers()` | `return self._ship.layers` |
+| `get_turn_throttle()` | `return self._ship.turn_throttle` (Phase 6) |
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and swarm findings
@@ -100,9 +104,9 @@ Both must be migrated before delegation can be removed.
 
 ## Verification
 - [x] All phase checklists complete
-- [x] All tests passing (4592 tests)
+- [x] All tests passing (4594 tests)
 - [x] No direct attribute access via grep verification
-- [x] Audit passed (Cycle 2)
+- [x] Audit passed (Cycle 4 - no significant issues)
 - [ ] User verified
 
 ## Estimated Effort
@@ -111,8 +115,9 @@ Both must be migrated before delegation can be removed.
 - Phase 3: ~2 hours (behaviors.py migration)
 - Phase 4: ~3 hours (core/*.py migration)
 - Phase 5: ~30 minutes (cleanup)
+- Phase 6: ~30 minutes (audit fixes)
 - Testing: ~1.5 hours
-- **Total: ~10-11 hours**
+- **Total: ~10-12 hours**
 
 ## Future Work (PROJ-25)
 After PROJ-24 completes, a separate project should consolidate the dual AI implementations:

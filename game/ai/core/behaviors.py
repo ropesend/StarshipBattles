@@ -171,9 +171,8 @@ class FormationBehavior(AIBehavior):
             # Feed-Forward: Match Master's angle exactly if we are already close
             # Correction: Close the gap
 
-            # Get turn_throttle via underlying ship (not in interface)
-            raw_ship = getattr(ship, '_ship', ship)
-            turn_throttle = getattr(raw_ship, 'turn_throttle', 1.0)
+            # Get turn_throttle via interface method
+            turn_throttle = ship.get_turn_throttle()
             turn_speed_per_tick = (ship.get_turn_speed() * turn_throttle) / self.TURN_SPEED_FACTOR
 
             # Snap to master's future angle?

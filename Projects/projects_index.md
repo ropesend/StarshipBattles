@@ -5,12 +5,12 @@
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
 | PROJ-25 | Consolidate Dual AI Implementations | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-24 | ShipControllableAdapter Interface Migration | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-24 | ShipControllableAdapter Interface Migration | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-23 | ShipStatsService Modifier Application Bug | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-22 | Legacy Cleanup Phase 2 | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-21 | Legacy Cleanup Phase 8: Tests and Patterns | Archived | 2026-01-26 | 2026-01-27 |

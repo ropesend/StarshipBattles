@@ -311,7 +311,7 @@ class AIController:
         self.attack_timer = 0
         
     def get_resolved_strategy(self):
-        strategy_id = getattr(self.ship, 'ai_strategy', 'standard_ranged')
+        strategy_id = self.ship.get_ai_strategy()
         return STRATEGY_MANAGER.resolve_strategy(strategy_id)
 
     def get_engage_distance_multiplier(self, policy):
@@ -362,7 +362,7 @@ class AIController:
 
     def find_secondary_targets(self):
         """Find additional targets if ship has multiplex tracking."""
-        max_targets = getattr(self.ship, 'max_targets', 1)
+        max_targets = self.ship.get_max_targets()
         if max_targets <= 1:
             return []
             
@@ -497,7 +497,7 @@ class AIController:
         self.ship.set_trigger_pulled(True)
         
         # Satellite Exception
-        if getattr(self.ship, 'vehicle_type', 'Ship') == 'Satellite':
+        if self.ship.get_vehicle_type() == 'Satellite':
              return
 
         # Determine Behavior
@@ -545,7 +545,7 @@ class AIController:
             if base_turn > 0:
                 turn_limit = max_w_deg / base_turn
                 # Read current turn_throttle, calculate new limit, set it
-                current_turn_throttle = getattr(self.ship, '_ship', self.ship).turn_throttle if hasattr(self.ship, '_ship') else 1.0
+                current_turn_throttle = self.ship.get_turn_throttle()
                 self.ship.set_turn_throttle(min(current_turn_throttle, turn_limit))
 
         slow_down = False
@@ -563,7 +563,7 @@ class AIController:
         if slow_down:
             self.ship.set_throttle(0.75)
             # For turn_throttle, we need to read current value and set min
-            current_turn_throttle = getattr(self.ship, '_ship', self.ship).turn_throttle if hasattr(self.ship, '_ship') else 1.0
+            current_turn_throttle = self.ship.get_turn_throttle()
             self.ship.set_turn_throttle(min(current_turn_throttle, 0.75))
 
     def _check_formation_integrity(self):

@@ -26,6 +26,11 @@ class IControllable(ABC):
     This interface abstracts away the specific implementation details
     of ships, vehicles, or other controllable entities, allowing the
     AI system to work with any entity that implements this interface.
+
+    Note: Some ship-specific attributes are intentionally NOT in this interface:
+    - formation_rotation_mode: A rendering-specific attribute for formation display.
+      Accessed via getattr(ship, 'formation_rotation_mode', 'relative') with default.
+      This is acceptable as it's visual/rendering logic, not core AI behavior.
     """
 
     # =========================================================================
@@ -89,6 +94,11 @@ class IControllable(ABC):
     @abstractmethod
     def set_turn_throttle(self, value: float) -> None:
         """Set the turn throttle (0.0 to 1.0)."""
+        pass
+
+    @abstractmethod
+    def get_turn_throttle(self) -> float:
+        """Get the current turn throttle (0.0 to 1.0)."""
         pass
 
     @abstractmethod
@@ -319,6 +329,10 @@ class ShipControllableAdapter(IControllable):
     def set_turn_throttle(self, value: float) -> None:
         """Set the turn throttle."""
         self._ship.turn_throttle = value
+
+    def get_turn_throttle(self) -> float:
+        """Get the current turn throttle (0.0 to 1.0)."""
+        return self._ship.turn_throttle
 
     def rotate(self, direction: int) -> None:
         """Command rotation."""
