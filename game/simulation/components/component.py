@@ -352,21 +352,30 @@ class Component:
         self.is_active = True
         self.status = ComponentStatus.ACTIVE
 
-    def get_resource_cost(self):
-        """Returns the current resource costs, including modifier multipliers."""
+    def get_resource_cost(self, context: dict = None):
+        """Returns the current resource costs, including modifier multipliers.
+
+        Args:
+            context: Optional dict with context for formula evaluation.
+                     Expected keys: 'ship_class_mass' (float).
+                     If not provided, falls back to component.ship reference.
+        """
         base_costs = getattr(self, 'evaluated_resource_cost', None) or self.data.get("resource_cost", {})
         multiplier = self.stats.get('cost_mult', 1.0)
 
-        # Build context for formula evaluation (use ship mass if available, else default)
-        context = {'ship_class_mass': 1000}
-        if self.ship:
-            context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+        # Build context for formula evaluation
+        # Priority: explicit context > ship reference > default
+        eval_context = {'ship_class_mass': 1000}
+        if context and 'ship_class_mass' in context:
+            eval_context['ship_class_mass'] = context['ship_class_mass']
+        elif self.ship:
+            eval_context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
 
         result = {}
         for res, amount in base_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
                 # Evaluate formula on-demand
-                amount = evaluate_math_formula(amount[1:], context)
+                amount = evaluate_math_formula(amount[1:], eval_context)
             result[res] = int(amount * multiplier)
         return result
 
@@ -468,14 +477,20 @@ class Component:
 
         return summary
 
-    def recalculate_stats(self):
-        """Recalculate component stats with multiplicative modifier stacking."""
+    def recalculate_stats(self, context: dict = None):
+        """Recalculate component stats with multiplicative modifier stacking.
+
+        Args:
+            context: Optional dict with context for formula evaluation.
+                     Expected keys: 'ship_class_mass' (float).
+                     If not provided, falls back to component.ship reference.
+        """
         # Capture old hp for current_hp logic at end
         old_max_hp = self.max_hp
 
         # 1. Reset and Evaluate Base Formulas
-        self._reset_and_evaluate_base_formulas()
-        
+        self._reset_and_evaluate_base_formulas(context)
+
         # 1.5 Re-instantiate Abilities (Sync instances with new abilities dict)
         self._instantiate_abilities()
 
@@ -488,21 +503,23 @@ class Component:
 
 
 
-    def _reset_and_evaluate_base_formulas(self):
+    def _reset_and_evaluate_base_formulas(self, context: dict = None):
         import copy
         # Reset abilities from raw data
         self.abilities = copy.deepcopy(self.data.get('abilities', {}))
-        
-        # Context building
-        context = {
+
+        # Context building - Priority: explicit context > ship reference > default
+        eval_context = {
             'ship_class_mass': 1000 # Default fallback
         }
-        if self.ship:
-             context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
+        if context and 'ship_class_mass' in context:
+            eval_context['ship_class_mass'] = context['ship_class_mass']
+        elif self.ship:
+            eval_context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
 
         # Evaluate Formulas for attributes
         for attr, formula in self.formulas.items():
-            val = evaluate_math_formula(formula, context)
+            val = evaluate_math_formula(formula, eval_context)
             if attr == 'mass':
                 self.base_mass = float(val)
                 self.mass = self.base_mass # Reset to base
@@ -515,31 +532,31 @@ class Component:
                          setattr(self, attr, int(val))
                      else:
                          setattr(self, attr, val)
-        
+
         # Evaluate formulas in abilities
-        def evaluate_formulas_recursive(obj, context):
+        def evaluate_formulas_recursive(obj, ctx):
             """Recursively evaluate formulas in nested structures (dicts and lists)."""
             if isinstance(obj, str) and obj.startswith("="):
-                return evaluate_math_formula(obj[1:], context)
+                return evaluate_math_formula(obj[1:], ctx)
             elif isinstance(obj, dict):
                 for key, sub_val in obj.items():
-                    obj[key] = evaluate_formulas_recursive(sub_val, context)
+                    obj[key] = evaluate_formulas_recursive(sub_val, ctx)
                 return obj
             elif isinstance(obj, list):
                 for i, item in enumerate(obj):
-                    obj[i] = evaluate_formulas_recursive(item, context)
+                    obj[i] = evaluate_formulas_recursive(item, ctx)
                 return obj
             return obj
 
         for ability_name, val in self.abilities.items():
-            self.abilities[ability_name] = evaluate_formulas_recursive(val, context)
+            self.abilities[ability_name] = evaluate_formulas_recursive(val, eval_context)
 
         # Evaluate formulas in resource_cost
         raw_costs = self.data.get("resource_cost", {})
         self.evaluated_resource_cost = {}
         for res, amount in raw_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
-                self.evaluated_resource_cost[res] = evaluate_math_formula(amount[1:], context)
+                self.evaluated_resource_cost[res] = evaluate_math_formula(amount[1:], eval_context)
             else:
                 self.evaluated_resource_cost[res] = amount
 
