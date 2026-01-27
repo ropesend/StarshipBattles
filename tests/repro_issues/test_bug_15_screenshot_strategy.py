@@ -177,7 +177,7 @@ class TestScreenshotInputHandler:
         """
         The strategy input handler should have screenshot methods wired to F11/F12.
         """
-        from game.ui.screens.strategy_input_handler import InputHandler
+        from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
         # Create a mock scene
         mock_scene = MagicMock()
@@ -186,7 +186,7 @@ class TestScreenshotInputHandler:
         mock_scene.screen_width = 1280
         mock_scene.screen_height = 720
 
-        handler = InputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene)
 
         # Verify screenshot methods exist
         assert hasattr(handler, '_take_screenshot_full')
@@ -195,7 +195,7 @@ class TestScreenshotInputHandler:
     @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
     def test_f12_triggers_full_screenshot(self, mock_sm_class):
         """F12 should trigger full screenshot capture."""
-        from game.ui.screens.strategy_input_handler import InputHandler
+        from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
         mock_sm = MagicMock()
         mock_sm_class.instance.return_value = mock_sm
@@ -206,7 +206,7 @@ class TestScreenshotInputHandler:
         mock_scene.screen_width = 1280
         mock_scene.screen_height = 720
 
-        handler = InputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene)
         handler._take_screenshot_full()
 
         mock_sm.capture_strategy_layer.assert_called_once()
@@ -216,7 +216,7 @@ class TestScreenshotInputHandler:
     @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
     def test_f11_triggers_viewport_screenshot(self, mock_sm_class):
         """F11 should trigger viewport-only screenshot capture."""
-        from game.ui.screens.strategy_input_handler import InputHandler
+        from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
         mock_sm = MagicMock()
         mock_sm_class.instance.return_value = mock_sm
@@ -227,7 +227,7 @@ class TestScreenshotInputHandler:
         mock_scene.screen_width = 1280
         mock_scene.screen_height = 720
 
-        handler = InputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene)
         handler._take_screenshot_viewport()
 
         mock_sm.capture_strategy_layer.assert_called_once()

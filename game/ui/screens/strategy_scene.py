@@ -27,7 +27,7 @@ from game.ui.screens.strategy_renderer import StrategyRenderer
 from game.ui.screens.strategy_camera_nav import CameraNavigator
 from game.ui.screens.strategy_fleet_ops import FleetOperations
 from game.ui.screens.strategy_colonization import ColonizationSystem
-from game.ui.screens.strategy_input_handler import InputHandler
+from game.ui.screens.strategy_input_handler import StrategyInputHandler
 from game.strategy.systems.save_game_service import SaveGameService
 
 
@@ -85,7 +85,7 @@ class StrategyScene:
         self._camera_nav = CameraNavigator(self)
         self._fleet_ops = FleetOperations(self)
         self._colonization = ColonizationSystem(self)
-        self._input = InputHandler(self)
+        self._input = StrategyInputHandler(self)
 
     # =========================================================================
     # Properties (delegate to session)
