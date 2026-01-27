@@ -11,7 +11,7 @@ import pygame
 # Set dummy video driver for headless
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-from game.ui.screens.battle import BattleScene
+from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship
 from designs import create_interceptor, create_brick
 from game.simulation.components.component import load_components, load_modifiers

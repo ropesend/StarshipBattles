@@ -17,13 +17,13 @@ from datetime import datetime
 from typing import Optional, Tuple, List
 from game.core.json_utils import save_json, load_json_required, load_json
 from game.core.logger import log_info, log_error, log_debug
+from game.core.paths import Paths
 
 
 class SaveGameService:
     """Manages saving and loading complete game state"""
 
     SAVE_VERSION = "2.0.0"
-    DEFAULT_SAVES_FOLDER = "saves"
 
     # Versions that can be migrated to current version
     # The modifier system was refactored in 2.0.0, but save format is compatible
@@ -55,8 +55,7 @@ class SaveGameService:
                     player_name = first_player_name.replace(" ", "_")
                     save_name = f"{player_name}_{timestamp}"
 
-                saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
-                save_path = os.path.join(saves_folder, save_name)
+                save_path = os.path.join(Paths.SAVES_DIR, save_name)
 
             # Create save folder structure
             os.makedirs(save_path, exist_ok=True)
@@ -161,8 +160,7 @@ class SaveGameService:
         try:
             # Resolve path
             if not os.path.isabs(save_path):
-                saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
-                save_path = os.path.join(saves_folder, save_path)
+                save_path = os.path.join(Paths.SAVES_DIR, save_path)
 
             # Validate save folder
             is_valid, error_msg = SaveGameService._validate_save(save_path)
@@ -251,8 +249,7 @@ class SaveGameService:
 
         # Resolve path
         if not os.path.isabs(save_path):
-            saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
-            save_path = os.path.join(saves_folder, save_path)
+            save_path = os.path.join(Paths.SAVES_DIR, save_path)
 
         turns_folder = os.path.join(save_path, "turns")
 
@@ -294,14 +291,13 @@ class SaveGameService:
             List of dicts containing save metadata
         """
         saves = []
-        saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
 
-        if not os.path.exists(saves_folder):
+        if not os.path.exists(Paths.SAVES_DIR):
             return saves
 
         try:
-            for save_name in os.listdir(saves_folder):
-                save_path = os.path.join(saves_folder, save_name)
+            for save_name in os.listdir(Paths.SAVES_DIR):
+                save_path = os.path.join(Paths.SAVES_DIR, save_name)
 
                 if not os.path.isdir(save_path):
                     continue
@@ -336,8 +332,7 @@ class SaveGameService:
         try:
             # Resolve path
             if not os.path.isabs(save_path):
-                saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
-                save_path = os.path.join(saves_folder, save_path)
+                save_path = os.path.join(Paths.SAVES_DIR, save_path)
 
             if not os.path.exists(save_path):
                 return False, "Save not found"
@@ -432,8 +427,7 @@ class SaveGameService:
         try:
             # Resolve path
             if not os.path.isabs(save_path):
-                saves_folder = os.path.join(os.getcwd(), SaveGameService.DEFAULT_SAVES_FOLDER)
-                save_path = os.path.join(saves_folder, save_path)
+                save_path = os.path.join(Paths.SAVES_DIR, save_path)
 
             metadata_path = os.path.join(save_path, "save_metadata.json")
             metadata = load_json(metadata_path)

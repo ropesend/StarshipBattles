@@ -13,7 +13,7 @@ from game.strategy.data.hex_math import pixel_to_hex
 from game.strategy.data.fleet import Fleet
 
 
-class InputHandler:
+class StrategyInputHandler:
     """Routes input events for strategy scene."""
 
     def __init__(self, scene):
