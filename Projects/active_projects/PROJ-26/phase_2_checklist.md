@@ -1,4 +1,4 @@
-# Phase 2: Core Files
+# Phase 2: Major Issues
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
 > 1. Run `python Projects/scripts/validate_phase.py PROJ-26 2`
@@ -6,68 +6,85 @@
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** Migrate core startup files to use centralized paths
+**Objective:** Address major severity findings that significantly impact quality
+**Priority:** High
 
 ---
 
 ## Tasks
 
-### Task 2.1: Migrate game/app.py [Medium]
-**File:** `game/app.py`
-**Tests:** `pytest tests/ -v` (full suite - entry point)
+### Task 2.1: NC-03 - ShipBuilderService shim []
+**File:** `ship_builder_service.py` deleted`
+**Tests:** `pytest tests/` (add appropriate test path)
 
-- [ ] Add import: `from game.core.paths import Paths`
-- [ ] Remove local `base_path` calculation (line ~107):
-  ```python
-  # REMOVE: base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-  ```
-- [ ] Replace `os.path.join(base_path, "data", "components.json")` with `Paths.COMPONENTS_FILE`
-- [ ] Replace `os.path.join(base_path, "data", "modifiers.json")` with `Paths.MODIFIERS_FILE`
-- [ ] Replace `os.path.join(base_path, "data", "resources.json")` with `Paths.RESOURCES_FILE`
-- [ ] Replace `"crash_log.txt"` (line ~747) with `Paths.CRASH_LOG`
-- [ ] Verify game launches: `python -m game.app --help` or equivalent
+- [ ] Investigate the issue at the specified location
+- [ ] Write test to verify the fix
+- [ ] Implement the fix
+- [ ] Verify: tests pass, no regressions
 
-**Notes:**
+**Notes:** [Filled during implementation]
 
-### Task 2.2: Migrate game/core/logger.py [Simple]
-**File:** `game/core/logger.py`
-**Tests:** `pytest tests/unit/core/ -v`
+### Task 2.2: NC-02 - Builder vs Workshop terminology []
+**File:** `Workshop files created, builder_* files remain`
+**Tests:** `pytest tests/` (add appropriate test path)
 
-- [ ] Add import: `from game.core.paths import Paths`
-- [ ] Replace `'battle.log'` (line ~36) with `Paths.BATTLE_LOG`
-- [ ] Verify logger creates file in correct location
+- [ ] Investigate the issue at the specified location
+- [ ] Write test to verify the fix
+- [ ] Implement the fix
+- [ ] Verify: tests pass, no regressions
 
-**Notes:**
+**Notes:** [Filled during implementation]
 
-### Task 2.3: Migrate game/core/profiling.py [Simple]
-**File:** `game/core/profiling.py`
-**Tests:** `pytest tests/unit/core/ -v`
+### Task 2.3: NC-05 - Battle vs Combat distinction []
+**File:** `Exists but not documented`
+**Tests:** `pytest tests/` (add appropriate test path)
 
-- [ ] Add import: `from game.core.paths import Paths`
-- [ ] Replace `'profiling_history.json'` default (line ~109) with `Paths.PROFILING_HISTORY`
-- [ ] Verify profiling history loads/saves correctly
+- [ ] Investigate the issue at the specified location
+- [ ] Write test to verify the fix
+- [ ] Implement the fix
+- [ ] Verify: tests pass, no regressions
 
-**Notes:**
+**Notes:** [Filled during implementation]
 
-### Task 2.4: Migrate game/simulation/entities/ship_loader.py [Simple]
-**File:** `game/simulation/entities/ship_loader.py`
-**Tests:** `pytest tests/unit/simulation/ -v`
+### Task 2.4: NC-02 - Workshop imports from Builder directory [Reg-03]
+**File:** ``
+**Tests:** `pytest tests/` (add appropriate test path)
 
-- [ ] Add import: `from game.core.paths import Paths`
-- [ ] Replace hardcoded `"data/vehicleclasses.json"` with `Paths.VEHICLE_CLASSES_FILE`
-- [ ] Remove local base_path calculation if present
-- [ ] Verify vehicle classes load correctly
+- [ ] Investigate the issue at the specified location
+- [ ] Write test to verify the fix
+- [ ] Implement the fix
+- [ ] Verify: tests pass, no regressions
 
-**Notes:**
+**Notes:** [Filled during implementation]
+
+### Task 2.5: NEW-03 - Duplicate InputHandler class []
+**File:** `input_handler.py` (2 files)`
+**Tests:** `pytest tests/` (add appropriate test path)
+
+- [ ] Investigate the issue at the specified location
+- [ ] Write test to verify the fix
+- [ ] Implement the fix
+- [ ] Verify: tests pass, no regressions
+
+**Notes:** [Filled during implementation]
+
+### Task 2.6: NEW-05 - Duplicate Ability classes []
+**File:** `abilities.py` + `abilities/*.py`
+**Tests:** `pytest tests/` (add appropriate test path)
+
+- [ ] Investigate the issue at the specified location
+- [ ] Write test to verify the fix
+- [ ] Implement the fix
+- [ ] Verify: tests pass, no regressions
+
+**Notes:** [Filled during implementation]
+
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
 - [ ] All task checkboxes above are checked
-- [ ] Game launches without errors
-- [ ] Battle log created in project root (not working directory)
-- [ ] All existing tests pass: `pytest tests/ -v`
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [ ] Update plan.md Current State to point to next phase

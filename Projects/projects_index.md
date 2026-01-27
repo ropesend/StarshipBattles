@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-26 | Naming Consistency Cleanup | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-25 | Consolidate Dual AI Implementations | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-24 | ShipControllableAdapter Interface Migration | Planning | 2026-01-27 | 2026-01-27 |
 
@@ -110,4 +111,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-26
+## Next Project ID: PROJ-27

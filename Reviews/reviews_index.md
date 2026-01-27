@@ -25,6 +25,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Update Reviews
 | Update Date | Original Review | Original Date | Progress | Link |
 |-------------|-----------------|---------------|----------|------|
+| 2026-01-27 | [2026-01-26_consistency_naming-inconsistencies](results/2026-01-26_consistency_naming-inconsistencies/) | 2026-01-26 | 29% Fixed (4/14) + 6 NEW | [2026-01-27_update_naming-inconsistencies](results/2026-01-27_update_naming-inconsistencies/) |
 
 ---
 
