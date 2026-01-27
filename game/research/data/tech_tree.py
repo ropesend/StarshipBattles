@@ -61,13 +61,8 @@ class TechTree:
             for or_group in node_data.get("requirements", []):
                 and_conditions = []
                 for req in or_group:
-                    # Support both level_range and single level
-                    if "level_range" in req:
-                        level_range = tuple(req["level_range"])
-                    elif "level" in req:
-                        level_range = (req["level"], req["level"])
-                    else:
-                        level_range = (1, 1)  # Default to level 1
+                    # Use level_range format; default to (1, 1) if missing
+                    level_range = tuple(req.get("level_range", (1, 1)))
 
                     and_conditions.append(TechRequirement(
                         node_id=req["node_id"],

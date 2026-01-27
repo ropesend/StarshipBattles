@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove dual-format handling for design layer format and tech tree requirements.
 
 **Risk:** Low - straightforward pattern simplification
@@ -35,12 +35,12 @@ elif isinstance(layer_data, dict):
 components = layer_data  # Always list format
 ```
 
-- [ ] Lines 163-171: Remove isinstance checks, assume direct list format
-- [ ] Lines 210-216: Same change
-- [ ] Remove any other dual format handling in this file
-- [ ] Verify: `grep -n "\.get.*components" game/strategy/data/design_metadata.py` returns nothing
+- [x] Lines 163-171: Remove isinstance checks, assume direct list format
+- [x] Lines 210-216: Same change
+- [x] Remove any other dual format handling in this file
+- [x] Verify: `grep -n "\.get.*components" game/strategy/data/design_metadata.py` returns nothing (for JSON dict methods)
 
-**Notes:**
+**Notes:** The `.get('components', [])` pattern remains in `_from_ship` methods which access Ship.layers (runtime objects) - this is correct as Ship instances use `{'components': [...]}` internal structure.
 
 ---
 
@@ -56,11 +56,11 @@ elif isinstance(layer_data, dict):
     for comp in layer_data.get("components", []): ...
 ```
 
-- [ ] Simplify to assume direct list format
-- [ ] Remove isinstance checks for layer data
-- [ ] Verify: Shipyard detection still works correctly
+- [x] Simplify to assume direct list format
+- [x] Remove isinstance checks for layer data
+- [x] Verify: Shipyard detection still works correctly
 
-**Notes:**
+**Notes:** Updated test fixtures in test_planetary_facilities.py, test_production.py, and test_complex_workflow.py to use new format.
 
 ---
 
@@ -76,11 +76,11 @@ elif isinstance(layer_components, dict):
     components = layer_components.get('components', [])
 ```
 
-- [ ] Simplify to assume direct list format
-- [ ] Remove dual format handling
-- [ ] Verify: Stats calculation still works
+- [x] Simplify to assume direct list format
+- [x] Remove dual format handling
+- [x] Verify: Stats calculation still works
 
-**Notes:**
+**Notes:** All 65 tests pass.
 
 ---
 
@@ -88,12 +88,12 @@ elif isinstance(layer_components, dict):
 **Files:** `data/designs/*.json` (if any)
 **Tests:** Manual verification
 
-- [ ] Check if any design JSON files exist with `{"components": [...]}` wrapper format
-- [ ] If so, convert them to direct list format `[...]`
-- [ ] If no JSON files exist in data/designs/, skip this task
-- [ ] Verify: All design files use direct list format
+- [x] Check if any design JSON files exist with `{"components": [...]}` wrapper format
+- [x] If so, convert them to direct list format `[...]`
+- [x] If no JSON files exist in data/designs/, skip this task
+- [x] Verify: All design files use direct list format
 
-**Notes:**
+**Notes:** No `data/designs/` folder exists. Design files in `saves/` and `tests/fixtures/` already use direct list format.
 
 ---
 
@@ -111,13 +111,13 @@ else:
     level_range = (1, 1)
 ```
 
-- [ ] Check techtree.json to verify all requirements use `level_range` format
-- [ ] If any use legacy `level` format, update the JSON file first
-- [ ] Remove `elif "level" in req` branch, keep only `level_range` handling
-- [ ] Keep the `else` default for safety
-- [ ] Verify: `grep -n "'level':" game/research/` shows no single-level format
+- [x] Check techtree.json to verify all requirements use `level_range` format
+- [x] If any use legacy `level` format, update the JSON file first
+- [x] Remove `elif "level" in req` branch, keep only `level_range` handling
+- [x] Keep the `else` default for safety
+- [x] Verify: `grep -n "'level':" game/research/` shows no single-level format
 
-**Notes:**
+**Notes:** Updated test_tech_tree.py test_load_node_with_requirements_single_level to use new format.
 
 ---
 
@@ -125,20 +125,20 @@ else:
 **File:** `data/research/techtree.json` (if exists)
 **Tests:** Manual verification + application launch
 
-- [ ] Check for any `"level": N` entries (legacy format)
-- [ ] Convert to `"level_range": [N, N]` format
-- [ ] Verify: Tech tree loads correctly
+- [x] Check for any `"level": N` entries (legacy format)
+- [x] Convert to `"level_range": [N, N]` format
+- [x] Verify: Tech tree loads correctly
 
-**Notes:**
+**Notes:** 17 entries with `"level": 1` converted to `"level_range": [1, 1]`. All research tests pass.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/strategy/ tests/unit/research/ -v` passes (relevant tests)
-- [ ] `grep -rn "\.get.*components" game/strategy/data/design_metadata.py` returns nothing
-- [ ] No dual format checks remain in layer iteration code
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/unit/strategy/ tests/unit/research/ -v` passes (relevant tests)
+- [x] `grep -rn "\.get.*components" game/strategy/data/design_metadata.py` returns nothing (for JSON data methods)
+- [x] No dual format checks remain in layer iteration code
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4

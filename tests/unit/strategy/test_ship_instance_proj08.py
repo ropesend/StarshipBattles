@@ -1197,16 +1197,15 @@ class TestResourceMethodInteractions:
 
 
 # =============================================================================
-# 3.16 Backward Compatibility (4 tests)
+# 3.16 Resource Convenience Methods (4 tests)
 # =============================================================================
 
-class TestBackwardCompatibility:
-    """Tests for backward compatibility with legacy fuel/energy methods."""
+class TestResourceConvenienceMethods:
+    """Tests for fuel/energy convenience methods."""
 
-    def test_legacy_methods_still_work_get_current_fuel(self, make_design_data_with_stats):
-        """Legacy get_current_fuel method still works."""
+    def test_get_current_fuel(self, make_design_data_with_stats):
+        """get_current_fuel method returns correct fuel level."""
         design_data = make_design_data_with_stats(expected_stats={
-            'max_fuel': 5000,
             'resource_storage': {'fuel': 5000}
         })
         ship = ShipInstance(
@@ -1226,10 +1225,9 @@ class TestBackwardCompatibility:
         current = ship.get_current_fuel()
         assert current == 3000
 
-    def test_legacy_methods_still_work_consume_fuel(self, make_design_data_with_stats):
-        """Legacy consume_fuel method still works."""
+    def test_consume_fuel(self, make_design_data_with_stats):
+        """consume_fuel method consumes fuel correctly."""
         design_data = make_design_data_with_stats(expected_stats={
-            'max_fuel': 5000,
             'resource_storage': {'fuel': 5000}
         })
         ship = ShipInstance(
@@ -1245,10 +1243,9 @@ class TestBackwardCompatibility:
         assert result is True
         assert ship.resource_levels['fuel'] == 4000
 
-    def test_legacy_methods_still_work_get_current_energy(self, make_design_data_with_stats):
-        """Legacy get_current_energy method still works."""
+    def test_get_current_energy(self, make_design_data_with_stats):
+        """get_current_energy method returns correct energy level."""
         design_data = make_design_data_with_stats(expected_stats={
-            'max_energy': 2000,
             'resource_storage': {'energy': 2000}
         })
         ship = ShipInstance(
@@ -1268,10 +1265,9 @@ class TestBackwardCompatibility:
         current = ship.get_current_energy()
         assert current == 1500
 
-    def test_legacy_methods_still_work_consume_energy(self, make_design_data_with_stats):
-        """Legacy consume_energy method still works."""
+    def test_consume_energy(self, make_design_data_with_stats):
+        """consume_energy method consumes energy correctly."""
         design_data = make_design_data_with_stats(expected_stats={
-            'max_energy': 2000,
             'resource_storage': {'energy': 2000}
         })
         ship = ShipInstance(

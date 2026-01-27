@@ -12,6 +12,7 @@ from game.strategy.engine.turn_engine import TurnEngine, ValidationResult
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.empire import Empire
+from game.strategy.data.ship_instance import ShipInstance
 
 
 # =============================================================================
@@ -45,7 +46,11 @@ def mock_fleet():
     fleet.speed = 10.0
     fleet.orders = []
     fleet.path = []
-    fleet.ships = ["Colony Ship"]
+    # Use mock ShipInstance instead of string
+    mock_ship = MagicMock(spec=ShipInstance)
+    mock_ship.name = "Colony Ship"
+    mock_ship.is_combat_capable = MagicMock(return_value=True)
+    fleet.ships = [mock_ship]
     fleet.get_current_order = MagicMock(return_value=None)
     fleet.pop_order = MagicMock()
     fleet.has_resources_for_movement = MagicMock(return_value=True)
@@ -53,7 +58,6 @@ def mock_fleet():
     fleet.consume_movement_resources = MagicMock()
     fleet.consume_warp_resources = MagicMock()
     fleet.clear_orders = MagicMock()
-    fleet.get_ship_instances = MagicMock(return_value=[])
     return fleet
 
 
@@ -383,13 +387,13 @@ class TestCombatResolution:
 
             mock_resolve.assert_not_called()
 
-    def test_resolve_combat_rng_fallback(self, turn_engine):
-        """RNG fallback for fleets without ShipInstances."""
+    def test_resolve_combat_rng_fallback_for_empty_fleet(self, turn_engine):
+        """RNG fallback for empty fleets."""
         fleet1 = MagicMock()
-        fleet1.has_ship_instances.return_value = False
+        fleet1.ships = []  # Empty fleet
 
         fleet2 = MagicMock()
-        fleet2.has_ship_instances.return_value = False
+        fleet2.ships = []  # Empty fleet
 
         with patch('game.strategy.engine.turn_engine.random.random') as mock_random:
             mock_random.return_value = 0.3  # < 0.5 means fleet2 wins
@@ -399,12 +403,12 @@ class TestCombatResolution:
             assert result == fleet2
 
     def test_resolve_combat_uses_simulation(self, turn_engine):
-        """Full simulation used when both fleets have ShipInstances."""
+        """Full simulation used when both fleets have ships."""
         fleet1 = MagicMock()
-        fleet1.has_ship_instances.return_value = True
+        fleet1.ships = [MagicMock()]  # Has ships
 
         fleet2 = MagicMock()
-        fleet2.has_ship_instances.return_value = True
+        fleet2.ships = [MagicMock()]  # Has ships
 
         with patch.object(turn_engine, '_resolve_combat_simulated') as mock_sim:
             mock_sim.return_value = fleet1
@@ -586,7 +590,7 @@ class TestPerTurnResources:
         mock_ship.get_all_resource_costs_per_turn.return_value = {"fuel": 100.0}
         mock_ship.consume_resource = MagicMock(return_value=True)
 
-        mock_fleet.get_ship_instances.return_value = [mock_ship]
+        mock_fleet.ships = [mock_ship]
         mock_empire.fleets = [mock_fleet]
 
         turn_engine._process_per_turn_resources(50, [mock_empire])
@@ -599,7 +603,7 @@ class TestPerTurnResources:
         mock_ship = MagicMock()
         mock_ship.is_combat_capable.return_value = False
 
-        mock_fleet.get_ship_instances.return_value = [mock_ship]
+        mock_fleet.ships = [mock_ship]
         mock_empire.fleets = [mock_fleet]
 
         turn_engine._process_per_turn_resources(1, [mock_empire])
@@ -613,7 +617,7 @@ class TestPerTurnResources:
         mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 50.0}
         mock_ship.consume_resource = MagicMock(return_value=False)  # Failed
 
-        mock_fleet.get_ship_instances.return_value = [mock_ship]
+        mock_fleet.ships = [mock_ship]
         mock_empire.fleets = [mock_fleet]
 
         with patch.object(turn_engine, '_auto_disable_components_for_resource') as mock_disable:

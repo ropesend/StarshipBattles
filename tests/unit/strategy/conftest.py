@@ -114,13 +114,6 @@ def ship_stats_with_custom_resources():
         'warp_resource_costs': {'energy': 1000, 'fuel': 50},
         'strategic_movement': 100,
         'warp_max_tonnage': 5000,
-        # Legacy fields for backward compatibility
-        'max_fuel': 500,
-        'max_energy': 300,
-        'max_ammo': 0,
-        'strategic_fuel_per_hex': 10,
-        'warp_energy_cost': 1000,
-        'warp_fuel_cost': 50,
     }
 
 
@@ -150,12 +143,6 @@ def ship_with_per_turn_component(make_design_data_with_stats):
             'warp_resource_costs': {},
             'strategic_movement': 50,
             'warp_max_tonnage': 0,
-            'max_fuel': 1000,
-            'max_energy': 500,
-            'max_ammo': 0,
-            'strategic_fuel_per_hex': 10,
-            'warp_energy_cost': 0,
-            'warp_fuel_cost': 0,
         }
     )
 
@@ -183,12 +170,6 @@ def ship_with_warp_drive(make_design_data_with_stats):
             'warp_resource_costs': {'energy': 500, 'fuel': 100},
             'strategic_movement': 80,
             'warp_max_tonnage': 3000,
-            'max_fuel': 5000,
-            'max_energy': 2000,
-            'max_ammo': 0,
-            'strategic_fuel_per_hex': 20,
-            'warp_energy_cost': 500,
-            'warp_fuel_cost': 100,
         }
     )
 
@@ -253,18 +234,3 @@ def empty_fleet():
     )
 
 
-@pytest.fixture
-def legacy_string_fleet():
-    """Fleet with only legacy string ships (no ShipInstance objects)."""
-    from game.strategy.data.fleet import Fleet
-    from game.strategy.data.hex_math import HexCoord
-
-    fleet = Fleet(
-        fleet_id='legacy-fleet',
-        owner_id=0,
-        location=HexCoord(0, 0),
-        speed=5.0
-    )
-    fleet.ships.append("Scout")
-    fleet.ships.append("Destroyer")
-    return fleet

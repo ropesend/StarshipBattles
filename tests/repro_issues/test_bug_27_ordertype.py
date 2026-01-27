@@ -6,6 +6,23 @@ import pygame
 import pygame_gui
 from unittest.mock import MagicMock
 
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """Create a mock ShipInstance for testing."""
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
+
 
 class TestBug27OrderTypeImport:
     """Regression tests for BUG-27: OrderType import missing in strategy_screen."""
@@ -40,7 +57,7 @@ class TestBug27OrderTypeImport:
 
         # Create fleet with MOVE order
         fleet = Fleet(1, 1, HexCoord(0, 0))
-        fleet.ships = ["TestShip"]
+        fleet.ships = [make_mock_ship_instance("TestShip", 1)]
         fleet.orders = [FleetOrder(OrderType.MOVE, HexCoord(1, 1))]
 
         # This should not raise NameError anymore
@@ -78,7 +95,7 @@ class TestBug27OrderTypeImport:
 
         # Create fleet with COLONIZE order
         fleet = Fleet(1, 1, HexCoord(0, 0))
-        fleet.ships = ["ColonyShip"]
+        fleet.ships = [make_mock_ship_instance("ColonyShip", 1)]
         fleet.orders = [FleetOrder(OrderType.COLONIZE, mock_planet)]
 
         # This should not raise NameError anymore

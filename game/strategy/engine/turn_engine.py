@@ -274,7 +274,7 @@ class TurnEngine:
         """
         for empire in empires:
             for fleet in empire.fleets:
-                for ship in fleet.get_ship_instances():
+                for ship in fleet.ships:
                     if not ship.is_combat_capable():
                         continue
 
@@ -393,15 +393,15 @@ class TurnEngine:
         """
         Return the winner of single encounter.
 
-        If both fleets have ShipInstance objects, uses the full battle
-        simulation via BattleController. Otherwise falls back to RNG.
+        Uses the full battle simulation via BattleController.
+        Falls back to RNG only if a fleet is empty.
         """
-        # Check if both fleets have proper ship instances for simulation
-        if f1.has_ship_instances() and f2.has_ship_instances():
+        # Check if both fleets have ships for simulation
+        if f1.ships and f2.ships:
             return self._resolve_combat_simulated(f1, f2)
 
-        # Fallback to simple RNG for legacy string-based ships
-        log_debug(f"Using RNG combat resolution (no ShipInstances)")
+        # Fallback to simple RNG for empty fleets
+        log_debug(f"Using RNG combat resolution (empty fleet)")
         if random.random() > 0.5:
             return f1
         return f2
@@ -461,11 +461,11 @@ class TurnEngine:
         f2.update_from_battle_results(team1_ships)
 
         # Log results
-        f1_destroyed = len(f1.get_ship_instances()) - len([
+        f1_destroyed = len(f1.ships) - len([
             s for s in f1.ships
             if hasattr(s, 'is_destroyed') and not s.is_destroyed
         ])
-        f2_destroyed = len(f2.get_ship_instances()) - len([
+        f2_destroyed = len(f2.ships) - len([
             s for s in f2.ships
             if hasattr(s, 'is_destroyed') and not s.is_destroyed
         ])

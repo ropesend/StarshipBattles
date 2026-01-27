@@ -171,9 +171,11 @@ class TestShipInstanceResourceDisplay:
             'name': 'Tanker',
             'expected_stats': {
                 'max_hp': 100,
-                'max_fuel': 500,
-                'max_energy': 200,
-                'max_ammo': 50,
+                'resource_storage': {
+                    'fuel': 500,
+                    'energy': 200,
+                    'ammo': 50,
+                },
             },
         }
 

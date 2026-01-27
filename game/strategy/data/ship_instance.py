@@ -214,7 +214,8 @@ class ShipInstance:
         Returns:
             Fuel consumed per hex of strategic movement, or 0 if no consumption.
         """
-        return self.get_calculated_stats().get('strategic_fuel_per_hex', 0)
+        stats = self.get_calculated_stats()
+        return stats.get('resource_consumption_per_hex', {}).get('fuel', 0)
 
     def get_current_fuel(self) -> float:
         """
@@ -223,7 +224,8 @@ class ShipInstance:
         Returns:
             Current fuel amount. Returns max_fuel if not tracked (assumed full).
         """
-        max_fuel = self.get_calculated_stats().get('max_fuel', 0)
+        stats = self.get_calculated_stats()
+        max_fuel = stats.get('resource_storage', {}).get('fuel', 0)
         return self.resource_levels.get('fuel', max_fuel)
 
     def consume_fuel(self, amount: float) -> bool:
@@ -236,7 +238,8 @@ class ShipInstance:
         Returns:
             True if fuel was available and consumed, False if insufficient
         """
-        max_fuel = self.get_calculated_stats().get('max_fuel', 0)
+        stats = self.get_calculated_stats()
+        max_fuel = stats.get('resource_storage', {}).get('fuel', 0)
         current = self.resource_levels.get('fuel', max_fuel)
 
         if current < amount:
@@ -253,7 +256,8 @@ class ShipInstance:
         Returns:
             Energy consumed per warp jump, or 0 if no energy cost.
         """
-        return self.get_calculated_stats().get('warp_energy_cost', 0)
+        stats = self.get_calculated_stats()
+        return stats.get('warp_resource_costs', {}).get('energy', 0)
 
     def get_warp_fuel_cost(self) -> float:
         """
@@ -262,7 +266,8 @@ class ShipInstance:
         Returns:
             Fuel consumed per warp jump, or 0 if no fuel cost.
         """
-        return self.get_calculated_stats().get('warp_fuel_cost', 0)
+        stats = self.get_calculated_stats()
+        return stats.get('warp_resource_costs', {}).get('fuel', 0)
 
     def get_current_energy(self) -> float:
         """
@@ -271,7 +276,8 @@ class ShipInstance:
         Returns:
             Current energy amount. Returns max_energy if not tracked (assumed full).
         """
-        max_energy = self.get_calculated_stats().get('max_energy', 0)
+        stats = self.get_calculated_stats()
+        max_energy = stats.get('resource_storage', {}).get('energy', 0)
         return self.resource_levels.get('energy', max_energy)
 
     def consume_energy(self, amount: float) -> bool:
@@ -284,7 +290,8 @@ class ShipInstance:
         Returns:
             True if energy was available and consumed, False if insufficient
         """
-        max_energy = self.get_calculated_stats().get('max_energy', 0)
+        stats = self.get_calculated_stats()
+        max_energy = stats.get('resource_storage', {}).get('energy', 0)
         current = self.resource_levels.get('energy', max_energy)
 
         if current < amount:
@@ -491,8 +498,9 @@ class ShipInstance:
         Returns:
             Resource display string like "250/500", or "N/A" if not tracked
         """
-        max_key = f'max_{resource_name}'
-        max_val = self.get_calculated_stats().get(max_key)
+        stats = self.get_calculated_stats()
+        resource_storage = stats.get('resource_storage', {})
+        max_val = resource_storage.get(resource_name)
 
         if max_val is None or max_val <= 0:
             return "N/A"

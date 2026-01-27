@@ -147,7 +147,7 @@ class TestTechTreeLoadFromJson:
             os.unlink(filepath)
 
     def test_load_node_with_requirements_single_level(self):
-        """Loading node with single level requirement (shorthand)."""
+        """Loading node with single level requirement (same min/max)."""
         data = {
             "tech_tree": [
                 {"id": "root", "name": "Root", "max_levels": 3},
@@ -156,7 +156,7 @@ class TestTechTreeLoadFromJson:
                     "name": "Child",
                     "max_levels": 2,
                     "requirements": [
-                        [{"node_id": "root", "level": 2}]
+                        [{"node_id": "root", "level_range": [2, 2]}]
                     ]
                 }
             ]

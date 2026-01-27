@@ -25,6 +25,22 @@ from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """Create a mock ShipInstance for testing."""
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
 
 
 # =============================================================================
@@ -582,11 +598,11 @@ class TestFleetMerge:
         # Create two fleets at same location
         loc = HexCoord(0, 0)
         target_fleet = Fleet(1, empire1.id, loc, speed=10.0)
-        target_fleet.ships = ["Scout"]
+        target_fleet.ships = [make_mock_ship_instance("Scout", empire1.id)]
         empire1.add_fleet(target_fleet)
 
         joining_fleet = Fleet(2, empire1.id, loc, speed=10.0)
-        joining_fleet.ships = ["Destroyer"]
+        joining_fleet.ships = [make_mock_ship_instance("Destroyer", empire1.id)]
         joining_fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
         empire1.add_fleet(joining_fleet)
 
@@ -608,11 +624,11 @@ class TestFleetMerge:
 
         # Create two fleets at DIFFERENT locations
         target_fleet = Fleet(1, empire1.id, HexCoord(0, 0), speed=10.0)
-        target_fleet.ships = ["Scout"]
+        target_fleet.ships = [make_mock_ship_instance("Scout", empire1.id)]
         empire1.add_fleet(target_fleet)
 
         joining_fleet = Fleet(2, empire1.id, HexCoord(10, 10), speed=10.0)  # Different location
-        joining_fleet.ships = ["Destroyer"]
+        joining_fleet.ships = [make_mock_ship_instance("Destroyer", empire1.id)]
         joining_fleet.add_order(FleetOrder(OrderType.JOIN_FLEET, target=target_fleet))
         empire1.add_fleet(joining_fleet)
 
@@ -643,11 +659,14 @@ class TestBattleResolution:
         # Create opposing fleets at same location
         loc = HexCoord(0, 0)
         fleet1 = Fleet(1, empire1.id, loc, speed=10.0)
-        fleet1.ships = ["Scout", "Destroyer"]
+        fleet1.ships = [
+            make_mock_ship_instance("Scout", empire1.id),
+            make_mock_ship_instance("Destroyer", empire1.id)
+        ]
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, loc, speed=10.0)
-        fleet2.ships = ["Scout"]
+        fleet2.ships = [make_mock_ship_instance("Scout", empire2.id)]
         empire2.add_fleet(fleet2)
 
         total_fleets = len(empire1.fleets) + len(empire2.fleets)
@@ -666,11 +685,11 @@ class TestBattleResolution:
         # Create two fleets from same empire at same location
         loc = HexCoord(0, 0)
         fleet1 = Fleet(1, empire1.id, loc, speed=10.0)
-        fleet1.ships = ["Scout"]
+        fleet1.ships = [make_mock_ship_instance("Scout", empire1.id)]
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire1.id, loc, speed=10.0)  # Same empire
-        fleet2.ships = ["Destroyer"]
+        fleet2.ships = [make_mock_ship_instance("Destroyer", empire1.id)]
         empire1.add_fleet(fleet2)
 
         initial_fleets = len(empire1.fleets)
@@ -706,11 +725,11 @@ class TestTurnEngineIsolation:
         # Create combat situation
         loc = HexCoord(0, 0)
         fleet1 = Fleet(1, empire1.id, loc, speed=10.0)
-        fleet1.ships = ["Scout"]
+        fleet1.ships = [make_mock_ship_instance("Scout", empire1.id)]
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, loc, speed=10.0)
-        fleet2.ships = ["Scout"]
+        fleet2.ships = [make_mock_ship_instance("Scout", empire2.id)]
         empire2.add_fleet(fleet2)
 
         turn_engine.process_turn(empires, galaxy)
@@ -769,7 +788,7 @@ class TestColonizationWorkflow:
 
         # Create fleet at planet's GLOBAL location (system + local offset)
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 
@@ -803,7 +822,7 @@ class TestColonizationWorkflow:
             pytest.skip("No unowned planet available")
 
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
-        fleet.ships = ["Colony Ship"]
+        fleet.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 

@@ -33,8 +33,7 @@ def make_mock_ship(
     expected_stats = {
         'mass': mass,
         'max_hp': 100,
-        'max_fuel': max_fuel,
-        'max_energy': max_energy,
+        'resource_storage': {'fuel': max_fuel, 'energy': max_energy},
         'warp_max_tonnage': warp_tonnage if warp_tonnage is not None else 0,
     }
 

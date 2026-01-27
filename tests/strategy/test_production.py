@@ -129,11 +129,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -262,11 +260,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -326,11 +322,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -376,11 +370,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -424,11 +416,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -480,11 +470,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -526,11 +514,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True
@@ -567,11 +553,9 @@ class TestProduction:
             name="Space Shipyard",
             design_data={
                 "layers": {
-                    "CORE": {
-                        "components": [{
-                            "abilities": {"SpaceShipyard": {"value": 1}}
-                        }]
-                    }
+                    "CORE": [{
+                        "abilities": {"SpaceShipyard": {"value": 1}}
+                    }]
                 }
             },
             is_operational=True

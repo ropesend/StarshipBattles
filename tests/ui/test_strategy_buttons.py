@@ -7,6 +7,22 @@ from game.ui.screens.strategy_screen import StrategyInterface
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """Create a mock ShipInstance for testing."""
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )
 
 class MockScene:
     def __init__(self):
@@ -74,7 +90,7 @@ def test_fleet_buttons_visibility_owned_fleet(strategy_ui):
     """Test that fleet buttons are visible for owned fleets."""
     # Setup
     fleet = Fleet(1, strategy_ui.scene.current_empire.id, (0,0))
-    fleet.ships = ["Ship"]
+    fleet.ships = [make_mock_ship_instance("Ship", strategy_ui.scene.current_empire.id)]
     
     # Act
     strategy_ui.show_detailed_report(fleet)
@@ -87,7 +103,7 @@ def test_fleet_buttons_visibility_enemy_fleet(strategy_ui):
     """Test that fleet buttons are hidden for enemy fleets."""
     # Setup
     fleet = Fleet(2, 999, (0,0)) # Enemy
-    fleet.ships = ["Ship"]
+    fleet.ships = [make_mock_ship_instance("Ship", 999)]
     
     # Act
     strategy_ui.show_detailed_report(fleet)

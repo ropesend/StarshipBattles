@@ -31,20 +31,18 @@ def test_savegame_dir():
             "vehicle_type": "Planetary Complex",
             "vehicle_class": "Planetary Complex (Tier 1)",
             "layers": {
-                "internal": {
-                    "components": [
-                        {
-                            "id": "metal_harvester",
-                            "position": [0, 0],
-                            "abilities": {
-                                "ResourceHarvester": {
-                                    "resource_type": "Metals",
-                                    "base_harvest_rate": 10.0
-                                }
+                "internal": [
+                    {
+                        "id": "metal_harvester",
+                        "position": [0, 0],
+                        "abilities": {
+                            "ResourceHarvester": {
+                                "resource_type": "Metals",
+                                "base_harvest_rate": 10.0
                             }
                         }
-                    ]
-                }
+                    }
+                ]
             }
         }
 
@@ -57,20 +55,18 @@ def test_savegame_dir():
             "vehicle_type": "Planetary Complex",
             "vehicle_class": "Planetary Complex (Tier 1)",
             "layers": {
-                "internal": {
-                    "components": [
-                        {
-                            "id": "space_shipyard",
-                            "position": [0, 0],
-                            "abilities": {
-                                "SpaceShipyard": {
-                                    "construction_speed_bonus": 1.0,
-                                    "max_ship_mass": 100000
-                                }
+                "internal": [
+                    {
+                        "id": "space_shipyard",
+                        "position": [0, 0],
+                        "abilities": {
+                            "SpaceShipyard": {
+                                "construction_speed_bonus": 1.0,
+                                "max_ship_mass": 100000
                             }
                         }
-                    ]
-                }
+                    }
+                ]
             }
         }
 
@@ -83,9 +79,7 @@ def test_savegame_dir():
             "vehicle_type": "Ship",
             "vehicle_class": "Ship (Tier 1)",
             "layers": {
-                "internal": {
-                    "components": []
-                }
+                "internal": []
             }
         }
 

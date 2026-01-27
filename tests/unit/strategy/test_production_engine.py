@@ -293,6 +293,9 @@ class TestShipSpawning:
 
             with patch('game.strategy.engine.production_engine.ShipInstance') as mock_ship_class:
                 mock_ship = MagicMock()
+                mock_ship.design_data = {'vehicle_type': 'Ship'}
+                mock_ship.get_calculated_stats.return_value = {'mass': 100, 'strategic_movement': 500}
+                mock_ship.is_combat_capable.return_value = True
                 mock_ship_class.create.return_value = mock_ship
 
                 engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
@@ -312,6 +315,9 @@ class TestShipSpawning:
 
             with patch('game.strategy.engine.production_engine.ShipInstance') as mock_ship_class:
                 mock_ship = MagicMock()
+                mock_ship.design_data = {'vehicle_type': 'Ship'}
+                mock_ship.get_calculated_stats.return_value = {'mass': 100, 'strategic_movement': 500}
+                mock_ship.is_combat_capable.return_value = True
                 mock_ship_class.create.return_value = mock_ship
 
                 engine._spawn_ship(mock_planet, "Scout", mock_empire, mock_galaxy, save_path="/test")
