@@ -21,7 +21,7 @@
 | 6. AI System Improvements | **Complete** | [phase_6_checklist.md](phase_6_checklist.md) | 4 Issues |
 | 7. UI Layer Remediation | **SUPERSEDED** | [phase_7_checklist.md](phase_7_checklist.md) | Moved to Phase 12 |
 | 8. Research System Polish | **Complete** | [phase_8_checklist.md](phase_8_checklist.md) | 7 Issues |
-| 9. Data & Config Cleanup | Not Started | [phase_9_checklist.md](phase_9_checklist.md) | 12 Issues |
+| 9. Data & Config Cleanup | **Complete** | [phase_9_checklist.md](phase_9_checklist.md) | 13 Issues |
 | 10. Test Infrastructure | Not Started | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
 | 11. Original Findings Completion | Not Started | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
 | 12. UI Layer Remediation (Final) | Not Started | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
@@ -31,12 +31,28 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 9 - Data & Config Cleanup
-**Last Action:** Completed Phase 8 - Research System Polish (7 tasks)
-**Next Action:** Begin Phase 9 - Data & Config Cleanup
+**Active Phase:** Phase 10 - Test Infrastructure
+**Last Action:** Completed Phase 9 - Data & Config Cleanup (13 tasks)
+**Next Action:** Begin Phase 10 - Test Infrastructure
 **Blockers:** None
 
 ### Recent Work
+- **Phase 9 Complete:** Data & config cleanup (13 tasks)
+  - 9.1: Consolidated modifier schema versions (merged v2 into canonical, deleted backup files)
+  - 9.2: Removed empty component_presets.json placeholder
+  - 9.3: Added modifier ID validation tests
+  - 9.4: Verified no duplicate modifier definitions
+  - 9.5: Renamed unprofessional formation file to irregular_formation.json
+  - 9.6: Added resource metadata (name, description)
+  - 9.7: Fixed Superdreadnaugh→Superdreadnought typo (6 files)
+  - 9.8: Verified tech presets have proper progression
+  - 9.9: Fixed builder_theme.json font_size type (string→int)
+  - 9.10: Verified modifier defaults are correct (0 = baseline)
+  - 9.11: Verified tech tree validation (done in Phase 8)
+  - 9.12: Created formations README.md documentation
+  - 9.13: Cleaned ui_presets.json test placeholder
+  - Created `tests/unit/data/test_data_validation.py` with 12 tests
+
 - **Phase 8 Complete:** Research system polish (7 tasks)
   - 8.1: Added type hints to _draw_node_text()
   - 8.2: Fixed font cache unbounded growth with size quantization

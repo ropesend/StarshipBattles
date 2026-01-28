@@ -2,7 +2,7 @@
     "defaults": {
         "font": {
             "name": "arial",
-            "size": "14",
+            "size": 14,
             "regular_resource": {
                 "package": "pygame_gui.data",
                 "resource": "FiraCode-Regular.ttf"

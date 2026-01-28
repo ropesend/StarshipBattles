@@ -1330,8 +1330,8 @@
             }
         },
         {
-            "id": "hull_superdreadnaugh",
-            "name": "Superdreadnaugh Hull",
+            "id": "hull_superdreadnought",
+            "name": "Superdreadnought Hull",
             "type": "Hull",
             "mass": 6400,
             "hp": 25600,

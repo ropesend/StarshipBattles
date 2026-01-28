@@ -413,6 +413,25 @@
             }
         },
         {
+            "id": "efficient_engines",
+            "name": "Efficient Engines",
+            "description": "Reduces fuel/energy consumption by 20%.",
+            "effects": [
+                {
+                    "stat": "consumption_mult",
+                    "formula": "-0.2"
+                }
+            ],
+            "restrictions": {
+                "allow_abilities": [
+                    "Engine",
+                    "Generator",
+                    "Weapon",
+                    "Thruster"
+                ]
+            }
+        },
+        {
             "id": "efficiency_mount",
             "name": "Efficiency",
             "description": "Reduces resource consumption. Mass increases exponentially as efficiency improves.",

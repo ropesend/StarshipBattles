@@ -19,8 +19,8 @@ def scan_ship_designs():
     designs = []
     for filepath in json_files:
         filename = os.path.basename(filepath)
-        # Skip config files
-        if filename in ['builder_theme.json', 'component_presets.json']:
+        # Skip config files (builder_theme.json may end up in ships folder)
+        if filename == 'builder_theme.json':
             continue
         # Try to load and verify it's a ship design
         try:
@@ -52,7 +52,7 @@ def scan_formations():
     for filepath in json_files:
         filename = os.path.basename(filepath)
         # Skip known non-formation files (though they shouldn't be here anymore)
-        if filename in ['builder_theme.json', 'component_presets.json']:
+        if filename == 'builder_theme.json':
             continue
             
         try:

@@ -35,7 +35,7 @@ class TestShipClasses:
             "Escort", "Frigate", "Destroyer",
             "Light Cruiser", "Cruiser", "Heavy Cruiser",
             "Battle Cruiser", "Battleship", "Dreadnought",
-            "Superdreadnaugh", "Monitor"
+            "Superdreadnought", "Monitor"
         ]
 
         classes = RegistryManager.instance().vehicle_classes
@@ -55,7 +55,7 @@ class TestShipClasses:
             "Escort", "Frigate", "Destroyer",
             "Light Cruiser", "Cruiser", "Heavy Cruiser",
             "Battle Cruiser", "Battleship", "Dreadnought",
-            "Superdreadnaugh", "Monitor"
+            "Superdreadnought", "Monitor"
         ]
 
         for theme in themes:
