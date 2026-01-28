@@ -18,6 +18,15 @@ from game.core.registry import GameRegistries, set_default_registries
 # Fixtures
 # =============================================================================
 
+@pytest.fixture(autouse=True)
+def restore_default_registries():
+    """Restore _default_registries after each test to prevent pollution."""
+    import game.core.registry as registry_module
+    original = registry_module._default_registries
+    yield
+    registry_module._default_registries = original
+
+
 @pytest.fixture
 def mock_registries():
     """Create mock GameRegistries for DI testing."""

@@ -20,26 +20,16 @@
 | 5. Remaining Consumers | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Cleanup & Test Migration | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Audit Fixes (Cycle 2) | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
-| **AUDIT** | **CYCLE 3** | Awaiting re-audit |
+| 8. Audit Fixes (Cycle 3) | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
+| **AUDIT** | **PASSED** | Cycle 4 complete |
 
 ## Current State
-**Last Updated:** 2026-01-28 Phase 7 complete
-**Active Phase:** AUDIT CYCLE 3 - Awaiting user decision
-**Last Action:** Completed Phase 7 - fixed test_registry.py pollution, documented pre-existing test bugs
-**Next Action:** User decision required on pre-existing flaky tests
-**Blockers:** Pre-existing flaky tests (5-15 failures depending on parallelism level)
-**Test Count:** 5154-5159 passed (5-15 flaky failures due to module-level singleton aliases)
-
-### User Decision Required
-The remaining test failures (5-15 depending on `-n` setting) are **PRE-EXISTING bugs**, not PROJ-38 regressions:
-- Tests pass when run individually, fail in full suite
-- Root cause: Module-level singleton aliases (`VEHICLE_CLASSES`, `COMPONENT_REGISTRY`) in Ship class
-- Tests mock registry data but Ship uses stale module-level references captured at import time
-
-**Options:**
-1. **Accept** - Mark audit passed with known limitation (these are pre-existing flaky tests)
-2. **Fix** - Create follow-up project to migrate Ship class to accept injected registries
-3. **Skip** - Mark failing tests as `@pytest.mark.skip` with explanation
+**Last Updated:** 2026-01-28 Audit Cycle 4 PASSED
+**Active Phase:** COMPLETE - Awaiting User Verification
+**Last Action:** Audit Cycle 4 passed with no significant issues
+**Next Action:** User verification required
+**Blockers:** None
+**Test Count:** 5159 passed, 0 failed with both `-n 0` and `-n auto`
 
 ### Session 6 Summary (2026-01-28)
 **Tasks Completed:**
@@ -145,16 +135,18 @@ Refactor the `RegistryManager` singleton in `game/core/registry.py` to use expli
 - [ ] Grep for `RegistryManager.instance()` - should only appear in registry.py
 
 ### Completion Checklist
-- [x] All phase checklists complete (Phases 1-7 complete)
+- [x] All phase checklists complete (Phases 1-8 complete)
+- [x] Phase 8 complete (DI test cleanup)
 - [x] All tests passing with `-n auto` (5159 passed, 0 failed)
-- [ ] Audit passed (Cycle 3 pending)
+- [x] All tests passing with `-n 0` (5159 passed, 0 failed)
+- [x] Audit passed (Cycle 4)
 - [ ] User verified
-
-**Note on `-n 0` failures:** 15 tests fail with `-n 0` due to PRE-EXISTING module-level singleton alias bugs in tests (not PROJ-38 regression). These tests pass with `-n auto` because parallel workers have fresh module imports.
 
 ## Audit Log
 | Cycle | Date | Findings | Resolution |
 |-------|------|----------|------------|
 | 1 | 2026-01-28 | 10-17 flaky tests in parallel mode | INCORRECTLY PASSED - failed to verify with -n 0 |
 | 2 | 2026-01-28 | CRITICAL: test_registry.py causes test pollution | Added Phase 7 for fixes |
-| 3 | 2026-01-28 | Phase 7 complete. Fixed test_registry.py. 15 remaining -n 0 failures are PRE-EXISTING bugs | PENDING - awaiting re-audit |
+| 3 | 2026-01-28 | Phase 7 MISDIAGNOSED: "15 pre-existing bugs" are actually PROJ-38 REGRESSIONS | FAILED - Added Phase 8 |
+| 3 | 2026-01-28 | Root cause: DI test files call set_default_registries() without cleanup | Phase 8 complete - PENDING Cycle 4 |
+| 4 | 2026-01-28 | No significant issues found | **PASSED** |
