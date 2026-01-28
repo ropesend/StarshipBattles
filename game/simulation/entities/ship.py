@@ -84,7 +84,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Auto-equip default Hull component if defined for this class
         default_hull_id = class_def.get('default_hull_id')
-        hull_equipped = False
         if default_hull_id:
             # PROJ-38: Pass registries to create_component
             hull_component = create_component(default_hull_id, registries=self._registries)
@@ -93,8 +92,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 self.layers[LayerType.HULL]['components'].append(hull_component)
                 hull_component.layer_assigned = LayerType.HULL
                 hull_component.ship = self
-                hull_equipped = True
-        
+            else:
+                log_warning(f"Ship '{name}': Failed to create default hull '{default_hull_id}'")
+
         # Stats - Cached values (populated by ShipStatsCalculator.calculate())
         self._cached_mass: float = 0.0
         self._cached_max_hp: int = 0
@@ -119,6 +119,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Resource initialization tracking
         self._resources_initialized: bool = False
+        self._prev_max_fuel: float = 0
+        self._prev_max_ammo: float = 0
+        self._prev_max_energy: float = 0
+        self._prev_max_shields: int = 0
         
         # To-Hit stats (total_defense_score initialized below with other combat stats)
         self.emissive_armor = 0

@@ -317,13 +317,15 @@ class Component:
         """Update component state for one tick (resource consumption, cooldowns)."""
         # 1. Update Abilities (Constant Consumption)
         all_satisfied = True
-        
+
         for ability in self.ability_instances:
             if not ability.update():
-                from game.simulation.systems.resource_manager import ResourceConsumption
-                if isinstance(ability, ResourceConsumption) and ability.trigger == 'constant':
-                     all_satisfied = False
-        
+                # Check if this is a constant resource consumption ability
+                # Use duck typing to avoid importing from systems layer
+                trigger = getattr(ability, 'trigger', None)
+                if trigger == 'constant':
+                    all_satisfied = False
+
         self._is_operational = all_satisfied and self.is_active
 
     @property
@@ -332,10 +334,12 @@ class Component:
 
     def can_afford_activation(self):
         """Check if component can afford activation costs."""
-        from game.simulation.systems.resource_manager import ResourceConsumption
         for ability in self.ability_instances:
-            if isinstance(ability, ResourceConsumption) and ability.trigger == 'activation':
-                if not ability.check_available():
+            # Use duck typing to check for activation-triggered resource consumption
+            trigger = getattr(ability, 'trigger', None)
+            check_fn = getattr(ability, 'check_available', None)
+            if trigger == 'activation' and check_fn is not None:
+                if not check_fn():
                     return False
         return True
 

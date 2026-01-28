@@ -1,3 +1,4 @@
+from typing import Any, Dict, List, Union
 from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.components.component_constants import LayerType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
@@ -445,7 +446,8 @@ class ShipStatsCalculator:
             'range': ship.max_weapon_range
         }
 
-    def _priority_sort_key(self, c):
+    def _priority_sort_key(self, c: Any) -> int:
+        """Return sort priority for component (lower = higher priority)."""
         # Bridge (Command)
         if c.has_ability('CommandAndControl'): return 0
         # Engines (Movement)
@@ -455,7 +457,7 @@ class ShipStatsCalculator:
         # Others
         return 3
 
-    def _check_mass_limits(self, ship):
+    def _check_mass_limits(self, ship: Any) -> None:
         ship.mass_limits_ok = True
         # Budget check (Max Mass)
         ship.max_mass_budget = 1000 # Default
@@ -478,19 +480,20 @@ class ShipStatsCalculator:
         if ship.mass > ship.max_mass_budget:
             ship.mass_limits_ok = False
 
-    def _initialize_resources(self, ship):
+    def _initialize_resources(self, ship: Any) -> None:
         # Resource Initialization (Auto-fill on first load only, or when capacity increases)
-        prev_max_fuel = getattr(ship, '_prev_max_fuel', 0)
-        prev_max_ammo = getattr(ship, '_prev_max_ammo', 0)
-        prev_max_energy = getattr(ship, '_prev_max_energy', 0)
-        prev_max_shields = getattr(ship, '_prev_max_shields', 0)
-        
+        # Note: These attributes are initialized in Ship.__init__
+        prev_max_fuel = ship._prev_max_fuel
+        prev_max_ammo = ship._prev_max_ammo
+        prev_max_energy = ship._prev_max_energy
+        prev_max_shields = ship._prev_max_shields
+
         # Get current max values directly from registry
         curr_max_fuel = ship.resources.get_max_value('fuel')
         curr_max_ammo = ship.resources.get_max_value('ammo')
         curr_max_energy = ship.resources.get_max_value('energy')
-        
-        if not getattr(ship, '_resources_initialized', False):
+
+        if not ship._resources_initialized:
             # First init - fill to max
             if curr_max_fuel > 0:
                 ship.resources.set_value('fuel', curr_max_fuel)
@@ -623,7 +626,7 @@ class ShipStatsCalculator:
         
         return totals
 
-    def _get_ability_total(self, component_list, ability_name):
+    def _get_ability_total(self, component_list: List[Any], ability_name: str) -> Union[int, float, bool]:
         """Calculate total value of a specific ability across provided components."""
         totals = self.calculate_ability_totals(component_list)
         return totals.get(ability_name, 0)

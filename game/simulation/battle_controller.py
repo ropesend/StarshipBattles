@@ -490,7 +490,22 @@ class BattleController:
             self._is_configured = True
             self._is_started = True
 
-            # TODO: Restore projectiles
+            # Restore projectiles
+            if engine and state.projectiles:
+                # Build ship_id -> Ship lookup for owner/target resolution
+                ship_lookup: Dict[str, 'Ship'] = {}
+                for ship in engine.ships:
+                    ship_id = self._ship_id_map.get(id(ship))
+                    if ship_id:
+                        ship_lookup[ship_id] = ship
+
+                # Restore each projectile
+                for proj_state in state.projectiles:
+                    if proj_state.is_alive:
+                        proj = proj_state.to_projectile(ship_lookup)
+                        engine.projectiles.append(proj)
+
+                log_info(f"Restored {len(state.projectiles)} projectiles")
 
             log_info(f"Battle state restored at tick {state.tick_count}")
 
@@ -645,9 +660,18 @@ class BattleController:
         destroyed: Dict[str, ShipState],
         escaped: Dict[str, ShipState],
     ) -> None:
-        """Apply battle results to a single fleet."""
-        # This requires ShipInstance integration - placeholder for now
-        # TODO: Implement when Fleet uses ShipInstance
+        """Apply battle results to a single fleet.
+
+        BLOCKING DEPENDENCY: This method requires Fleet to track ships via ShipInstance
+        rather than raw Ship objects. Once PROJ-41 (Fleet/ShipInstance Integration) is
+        complete, implement this to:
+        1. Mark destroyed ShipInstances as lost
+        2. Update damage state on surviving ShipInstances
+        3. Handle escaped ships appropriately
+
+        Until then, battle results are captured in BattleResults but not applied
+        back to the fleet's ShipInstance tracking.
+        """
         pass
 
     # === Callbacks ===

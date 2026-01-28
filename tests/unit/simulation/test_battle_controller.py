@@ -931,6 +931,7 @@ class TestBattleControllerStateSaveLoad:
         mock_state.allow_reinforcements = False
         mock_state.ships = {}
         mock_state.tick_count = 500
+        mock_state.projectiles = []  # Added for projectile restoration (NEW-SIM-007)
 
         mock_engine = Mock()
         mock_service.get_engine.return_value = mock_engine
