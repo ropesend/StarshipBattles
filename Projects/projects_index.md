@@ -7,12 +7,12 @@
 | PROJ-41 | Documentation Health Remediation | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-40 | Comprehensive Code Quality Remediation | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-38 | Registry DI Refactor | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-37 | Fragile Asset Loading Refactor | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-37 | Fragile Asset Loading Refactor | Archived | 2026-01-27 | 2026-01-28 |
 | PROJ-36 | TurnEngine God Class Decomposition | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-35 | Unify Fleet Movement Logic | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-34 | StrategyScene Strict Facade Refactor | Archived | 2026-01-27 | 2026-01-27 |
