@@ -1,3 +1,9 @@
+"""Strategy interface for the strategy screen.
+
+Cross-layer imports (acceptable for UI):
+- OrderType: Runtime - order formatting in fleet display
+- Protocols: Runtime - duck typing for object identification
+"""
 import os
 import pygame
 import pygame_gui

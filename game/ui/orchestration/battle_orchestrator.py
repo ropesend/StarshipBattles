@@ -8,6 +8,16 @@ we maintain proper layer boundaries:
   - UI coordinates between all layers
 
 PROJ-17: Created as part of layer boundary enforcement.
+
+Architecture Note:
+This is an intentional boundary-crossing module that coordinates between
+UI, AI, and Simulation layers. The cross-layer imports below are by design:
+
+Cross-layer imports (intentional - orchestration role):
+- AIController: Runtime - creates AI controllers for battle ships
+- ShipControllableAdapter: Runtime - wraps ships for AI consumption
+- SpatialGrid: Runtime - injected dependency for AI target queries
+- Ship: TYPE_CHECKING - type hints for method signatures
 """
 from typing import List, TYPE_CHECKING
 

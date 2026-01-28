@@ -1,8 +1,16 @@
+"""Component detail panel for the ship builder.
+
+Displays component details including portrait, stats, and abilities.
+
+Cross-layer imports (acceptable for builder UI):
+- LayerType: Runtime - layer display and component filtering
+- ABILITY_REGISTRY: Runtime (local import) - displays component abilities
+"""
 import pygame
 import pygame_gui
 import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 import json
 from .modifier_logic import ModifierLogic
 from .component_ref import ComponentRef

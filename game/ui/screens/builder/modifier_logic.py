@@ -1,6 +1,9 @@
 """
 Game logic for component modifiers.
 Handles validation, mandatory checks, and default value calculations.
+
+Cross-layer imports (acceptable for builder UI):
+- MODIFIER_REGISTRY: Runtime - needed to validate and apply modifiers
 """
 from game.simulation.components.component import MODIFIER_REGISTRY
 

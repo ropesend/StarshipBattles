@@ -1,6 +1,15 @@
+"""Schematic view for the ship builder.
+
+Displays ship schematic with layers, components, and firing arcs.
+
+Cross-layer imports (acceptable for builder UI):
+- VEHICLE_CLASSES: Runtime - calculates ship radius based on class max mass
+- LayerType: Runtime - iterates ship layers for display
+"""
 import pygame
 import math
-from game.simulation.entities.ship import VEHICLE_CLASSES, LayerType
+from game.simulation.entities.ship import VEHICLE_CLASSES
+from game.core.constants import LayerType  # Canonical location for LayerType
 
 from game.ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']

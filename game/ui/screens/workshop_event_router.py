@@ -5,6 +5,9 @@ This class handles all event routing for the Design Workshop screen using
 a composition + delegation pattern.
 
 PROJ-38: Access registries via gui.context.registries for DI.
+
+Cross-layer imports (acceptable for UI):
+- LayerType: Runtime - layer selection events and validation
 """
 import pygame
 import pygame_gui
@@ -13,7 +16,7 @@ from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.profiling import profile_block
 from game.core.registry import get_vehicle_classes
-from game.simulation.entities.ship import LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
 

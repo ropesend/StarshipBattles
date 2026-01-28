@@ -4,7 +4,13 @@ Design Selector Window - UI for browsing and selecting ship designs
 This module provides the DesignSelectorWindow class for browsing the design
 library in integrated mode. It supports filtering by class, type, and obsolete
 status, as well as text search.
+
+Cross-layer imports (acceptable for UI):
+- DesignLibrary: Runtime - required for browsing and selecting designs
+- DesignMetadata: TYPE_CHECKING only - used for type hints
 """
+from __future__ import annotations
+
 import os
 import pygame
 import pygame_gui
@@ -13,9 +19,11 @@ from pygame_gui.elements import (
     UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer,
     UITextEntryLine, UIDropDownMenu, UIImage
 )
-from typing import Optional, Callable, List
+from typing import Optional, Callable, List, TYPE_CHECKING
 from game.strategy.systems.design_library import DesignLibrary
-from game.strategy.data.design_metadata import DesignMetadata
+
+if TYPE_CHECKING:
+    from game.strategy.data.design_metadata import DesignMetadata
 
 
 class DesignSelectorWindow(UIWindow):

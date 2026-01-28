@@ -1,3 +1,8 @@
+"""Fleet orders management window.
+
+Cross-layer imports (acceptable for UI):
+- OrderType: Runtime - displays and filters order types
+"""
 import pygame
 import pygame_gui
 from pygame_gui.windows import UIConfirmationDialog

@@ -25,23 +25,87 @@
 | 10. Test Infrastructure | **Complete** | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
 | 11. Original Findings Completion | **Complete** | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
 | 12. UI Layer Remediation (Final) | **Complete** | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
+| 13. UI-Simulation Layer Remediation | **Complete** | [phase_13_checklist.md](phase_13_checklist.md) | 16 Files |
+| 14. UI-Strategy Layer Remediation | **Complete** | [phase_14_checklist.md](phase_14_checklist.md) | 9 Files |
+| 15. UI-AI Layer Remediation | **Complete** | [phase_15_checklist.md](phase_15_checklist.md) | 2 Files |
 
-**Total Issues:** ~74 (revised after Category 3 audit verification)
-**Estimated Effort:** 40-51 hours (reduced from 46-63 hours)
+**Total Issues:** ~74 original + 27 remaining files (Phases 13-15)
+**Estimated Effort:** 40-51 hours (Phases 1-12) + 10-14 hours (Phases 13-15)
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** PROJECT COMPLETE - All 12 Phases Done
-**Last Action:** Completed Phase 12 - marked as complete after verification
-**Next Action:** Close project or move to archive
+**Active Phase:** PROJECT COMPLETE
+**Last Action:** Completed Phases 13-15 - all 27 remaining files remediated
+**Next Action:** None - all phases complete
 **Blockers:** None
 
-### PROJECT COMPLETION SUMMARY
-- All 12 phases completed
+### PROJECT COMPLETE! 🎉
+- **All 15 phases completed**
+- **5199 tests passing, 3 skipped**
+- **No circular imports in game.ui**
+- **27 files remediated in Phases 13-15 this session**
+
+### PHASES 13-15 COMPLETION SUMMARY (This Session)
+
+**Phase 13: UI-Simulation Layer (16 files)**
+- LayerType imports changed to canonical location (game.core.constants)
+- ShipInstance/Ship moved to TYPE_CHECKING where appropriate
+- All cross-layer imports documented in module docstrings
+
+**Phase 14: UI-Strategy Layer (9 files)**
+- DesignMetadata moved to TYPE_CHECKING
+- OrderType, hex utilities, command imports documented as acceptable
+- StrategySessionFacade already properly guarded
+
+**Phase 15: UI-AI Layer (2 files)**
+- battle_orchestrator.py documented as intentional boundary module
+- setup_renderer.py StrategyManager documented as acceptable
+
+### Files Modified (This Session)
+**Phase 13 (16 files):**
+- `game/ui/hud/panels.py` - LayerType canonical + docstring
+- `game/ui/panels/design_report_panel.py` - Ship TYPE_CHECKING + LayerType canonical
+- `game/ui/panels/ship_detail_panel.py` - ShipInstance TYPE_CHECKING + LayerType canonical
+- `game/ui/renderer/game_renderer.py` - LayerType canonical + docstring
+- `game/ui/renderer/renderer.py` - LayerType canonical + docstring
+- `game/ui/screens/workshop_event_router.py` - LayerType canonical + docstring
+- `game/ui/screens/builder/detail_panel.py` - LayerType canonical + docstring
+- `game/ui/screens/builder/layer_panel.py` - LayerType canonical + docstring
+- `game/ui/screens/builder/legacy_components.py` - docstring
+- `game/ui/screens/builder/modifier_logic.py` - docstring
+- `game/ui/screens/builder/right_panel.py` - LayerType canonical (local) + docstring
+- `game/ui/screens/builder/stats_config.py` - LayerType canonical + docstring
+- `game/ui/screens/setup.py` - docstring
+- `game/ui/screens/setup_data_io.py` - docstring
+- `game/ui/screens/setup_screen.py` - docstring
+- `game/ui/screens/builder/schematic_view.py` - LayerType canonical + docstring
+
+**Phase 14 (9 files):**
+- `game/ui/screens/design_selector_window.py` - DesignMetadata TYPE_CHECKING + docstring
+- `game/ui/screens/race_setup_screen.py` - docstring
+- `game/ui/screens/fleet_orders_window.py` - docstring
+- `game/ui/screens/strategy_detail_fmt.py` - docstring
+- `game/ui/screens/strategy_screen.py` - docstring
+- `game/ui/screens/strategy_camera_nav.py` - docstring
+- `game/ui/screens/strategy_colonization.py` - docstring
+- `game/ui/screens/strategy_fleet_ops.py` - docstring
+- `game/ui/screens/strategy_renderer.py` - docstring
+
+**Phase 15 (2 files):**
+- `game/ui/orchestration/battle_orchestrator.py` - extended docstring with architecture note
+- `game/ui/screens/setup_renderer.py` - docstring
+
+### PHASE 12 COMPLETION SUMMARY
+- Phases 1-12 completed (original scope)
 - 5199 tests passing, 3 skipped
 - No circular imports in game.ui
 - All high-priority architectural violations addressed
 - 25 new tests added this session
+
+### PHASES 13-15 (NEW, ALL COMPLETE)
+- Phase 13: UI-Simulation Layer (16 files) - LayerType canonical imports, registry documentation - COMPLETE
+- Phase 14: UI-Strategy Layer (9 files) - Command imports, hex utilities documentation - COMPLETE
+- Phase 15: UI-AI Layer (2 files) - Orchestrator documentation - COMPLETE
 
 ### Latest Work (This Session)
 - **Phase 12 Tasks 12.15 & 12.16 COMPLETE:**

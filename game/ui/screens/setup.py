@@ -1,4 +1,9 @@
-"""Battle setup screen module for configuring teams before battle."""
+"""Battle setup screen module for configuring teams before battle.
+
+Cross-layer imports (acceptable for battle setup):
+- Ship: Runtime - creates Ship instances from design JSON for battle
+- StrategyManager: Runtime - populates AI strategy dropdown options
+"""
 import pygame
 import json
 import os

@@ -2,6 +2,9 @@
 Battle setup screen rendering functions.
 
 Pure rendering functions for drawing the setup screen UI elements.
+
+Cross-layer imports (acceptable for UI):
+- StrategyManager: Runtime - populates AI strategy dropdown options
 """
 import pygame
 from game.ai.strategy_manager import StrategyManager

@@ -3,15 +3,23 @@ Ship Detail Panel - Displays detailed ship information with damage tracking.
 
 PROJ-03 Phase 4: Wraps DesignReportPanel for ShipInstance display with
 component damage visualization.
+
+Cross-layer imports (acceptable for UI display):
+- ShipInstance: TYPE_CHECKING - used for type hints only
+- LayerType: Runtime - iterates ship layers for component display
 """
+from __future__ import annotations
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer, UIImage
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List, TYPE_CHECKING
 
-from game.strategy.data.ship_instance import ShipInstance
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 from game.ui.assets import ShipThemeManager
+
+if TYPE_CHECKING:
+    from game.strategy.data.ship_instance import ShipInstance
 
 
 def get_damage_color(hp_percentage: float) -> Tuple[int, int, int]:

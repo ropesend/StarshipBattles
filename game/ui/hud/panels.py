@@ -1,7 +1,19 @@
+"""Battle HUD panels for displaying ship stats, seeker monitoring, and battle controls.
+
+This module provides the UI panels displayed during battle:
+- ShipStatsPanel: Right-side panel showing ship health, resources, and components
+- SeekerMonitorPanel: Left-side panel tracking missiles and seekers
+- BattleControlPanel: Battle control buttons (end battle, etc.)
+
+Cross-layer imports (acceptable for UI display):
+- ComponentStatus: Runtime - displays component damage states
+- LayerType: Runtime - iterates ship layers for component display
+- StrategyManager: Runtime - displays AI strategy names
+"""
 import pygame
 import math
 from game.simulation.components.component_constants import ComponentStatus
-from game.simulation.entities.ship import LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 from game.ai.strategy_manager import StrategyManager
 from game.core.profiling import profile_action, profile_block
 
