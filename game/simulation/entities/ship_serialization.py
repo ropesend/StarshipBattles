@@ -1,16 +1,19 @@
 """
 ShipSerializer - Extracted serialization logic from Ship class.
 Handles to_dict() and from_dict() operations for Ship entities.
+
+PROJ-38: Added registries parameter for dependency injection.
 """
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import create_component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import get_component_registry, get_modifier_registry
+from game.core.registry import get_component_registry, get_modifier_registry, get_default_registries
 from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.core.registry import GameRegistries
 
 
 class ShipSerializer:
@@ -107,31 +110,44 @@ class ShipSerializer:
             raise
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'Ship':
+    def from_dict(data: Dict[str, Any], *, registries: Optional['GameRegistries'] = None) -> 'Ship':
         """
         Create ship from dictionary.
-        
+
+        PROJ-38: Supports dependency injection via registries parameter.
+
         Args:
             data: Dictionary containing ship data
-            
+            registries: Optional GameRegistries for DI. If None, uses default registries.
+
         Returns:
             New Ship instance populated from the dictionary
         """
         # Import here to avoid circular dependency
         from game.simulation.entities.ship import Ship
-        
+
+        # PROJ-38: Resolve registries for component/modifier operations
+        if registries is None:
+            try:
+                registries = get_default_registries()
+            except RuntimeError:
+                # Default registries not set - will use legacy functions below
+                pass
+
         name = data.get("name", "Unnamed")
         color_val = data.get("color", (200, 200, 200))
         # Ensure color is tuple
         color: tuple
-        if isinstance(color_val, list): 
+        if isinstance(color_val, list):
             color = tuple(color_val)
         else:
             color = color_val  # type: ignore
-        
-        s = Ship(name, 0, 0, color, data.get("team_id", 0), 
-                ship_class=data.get("ship_class", "Escort"), 
-                theme_id=data.get("theme_id", "Federation"))
+
+        # PROJ-38: Pass registries to Ship constructor
+        s = Ship(name, 0, 0, color, data.get("team_id", 0),
+                ship_class=data.get("ship_class", "Escort"),
+                theme_id=data.get("theme_id", "Federation"),
+                registries=registries)
         s.ai_strategy = data.get("ai_strategy", "standard_ranged")
         
         for l_name, comps_list in data.get("layers", {}).items():
@@ -148,19 +164,28 @@ class ShipSerializer:
             for c_entry in comps_list:
                 comp_id = ""
                 modifiers_data = []
-                
+
                 if isinstance(c_entry, str):
                     comp_id = c_entry
                 elif isinstance(c_entry, dict):
                     comp_id = c_entry.get("id", "")
                     modifiers_data = c_entry.get("modifiers", [])
-                
-                comps = get_component_registry()
-                if comp_id in comps:
-                    new_comp = comps[comp_id].clone()
-                    
-                    # Apply Modifiers
+
+                # PROJ-38: Use injected registries if available
+                if registries is not None:
+                    comps = registries.components
+                    mods = registries.modifiers
+                else:
+                    comps = get_component_registry()
                     mods = get_modifier_registry()
+
+                if comp_id in comps:
+                    # PROJ-38: Clone component and ensure it has registries
+                    new_comp = comps[comp_id].clone()
+                    if registries is not None:
+                        new_comp._registries = registries
+
+                    # Apply Modifiers
                     for m_dat in modifiers_data:
                         mid = m_dat['id']
                         mval = m_dat['value']

@@ -52,8 +52,18 @@ class ShipComponentManager:
         Creates layers based on the vehicle class definition. Always creates
         a HULL layer, then adds layers specified in the class definition.
         Calculates layer radii based on mass capacity percentages.
+
+        PROJ-38: Uses ship's registries if available, else legacy function.
         """
-        class_def = get_vehicle_classes().get(self._ship.ship_class, {})
+        # PROJ-38: Use ship's registries if available
+        # Note: Check for vehicle_classes attribute to avoid issues with MagicMock in tests
+        if (hasattr(self._ship, '_registries')
+            and self._ship._registries is not None
+            and hasattr(self._ship._registries, 'vehicle_classes')
+            and isinstance(self._ship._registries.vehicle_classes, dict)):
+            class_def = self._ship._registries.vehicle_classes.get(self._ship.ship_class, {})
+        else:
+            class_def = get_vehicle_classes().get(self._ship.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
 
