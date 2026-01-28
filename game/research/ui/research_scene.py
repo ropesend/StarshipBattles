@@ -340,13 +340,8 @@ class ResearchTreeScene:
         # Clear selection
         self.selected_node_id = None
 
-        # Update control panel
-        self.control_panel.tracker = self.tracker
-        self.control_panel.tech_tree = self.tech_tree
-        self.control_panel.clear_selection()
-        self.control_panel.update_budget_display()
-        self.control_panel.clear_log()
-        self.control_panel._update_auto_spread_button()
+        # Update control panel via proper reset method (RES-01 fix)
+        self.control_panel.reset(self.tracker, self.tech_tree)
 
     def _on_auto_spread_changed(self, enabled: bool):
         """Handle auto-spread toggle change."""

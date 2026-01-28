@@ -13,14 +13,23 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Critical Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-27 12:01
-**Active Phase:** Phase 1
-**Last Action:** Project created from review findings
-**Next Action:** Begin Phase 1 tasks
+**Last Updated:** 2026-01-27 16:30
+**Active Phase:** Phase 1 (Complete)
+**Last Action:** Completed Phase 1 - Refactored workshop_screen.py to use ViewModel methods instead of direct Ship mutations
+**Next Action:** Project ready for audit/verification
 **Blockers:** None
+**Context:**
+- Added `set_ship_name()` and `set_ship_theme()` to `WorkshopViewModel` with tests
+- Refactored `workshop_screen.py` to use ViewModel methods:
+  - Theme setting via `viewmodel.set_ship_theme()`
+  - Name setting via `viewmodel.set_ship_name()`
+  - Modifier sync via `viewmodel.sync_modifiers_to_selection()`
+  - Clear design via `viewmodel.clear_design()`
+- All direct Ship mutations removed from workshop_screen.py
+- Tests: 4 new ViewModel tests, 108 builder tests, 65 services tests, 87 UI tests - ALL PASSING
 
 ## Overview
 Systematic remediation of findings from review: 2026-01-27_general_self-contained-systems. Total findings selected: 1 (Critical: 1, Major: 0, Other: 0).
@@ -39,14 +48,17 @@ Systematic remediation of findings from review: 2026-01-27_general_self-containe
 ## Key Files
 | Component | File Path |
 |-----------|-----------|
-| [TBD] | `Complex` |
+| WorkshopViewModel | `game/ui/screens/workshop_viewmodel.py` |
+| DesignWorkshopGUI | `game/ui/screens/workshop_screen.py` |
+| VehicleDesignService | `game/simulation/services/vehicle_design_service.py` |
+| ViewModel Tests | `tests/unit/builder/test_builder_viewmodel.py` |
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing
 - [ ] Audit passed
 - [ ] User verified

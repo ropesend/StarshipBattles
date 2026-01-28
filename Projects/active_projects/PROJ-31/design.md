@@ -25,13 +25,19 @@ Findings from review - 13 total findings identified.
 
 
 ## Architecture
-[Key architecture points relevant to implementation - to be filled during planning]
+No implementation needed - the finding was already addressed by PROJ-25.
+
+**PROJ-25 Solution:**
+- Deleted `game/ai/core/behaviors.py` (duplicate behavior classes)
+- Deleted duplicate classes from `game/ai/core/system.py`
+- Updated all tests importing from `game.ai.core.behaviors`
+- Verified all imports use primary locations in `game/ai/`
 
 ## Key Patterns to Reuse
-- **[Pattern Name]**: `file:lines` - description
+N/A - No new implementation required.
 
 ## Dependencies & Risks
-1. **[Risk/Dependency]** - mitigation approach
+1. **PROJ-25 Dependency** - This project's finding was already addressed by PROJ-25 before this project was created
 
 ## Design Decisions
 See [decisions.md](decisions.md) for the full log with rationale.

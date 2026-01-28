@@ -586,7 +586,8 @@ class TestResetCallback:
 
             # Selection should be cleared
             assert scene.selected_node_id is None
-            mock_panel_instance.clear_selection.assert_called()
+            # Control panel reset() is called (which internally calls clear_selection)
+            mock_panel_instance.reset.assert_called()
 
     def test_on_reset_resolves_requirements_with_new_seed(self):
         """Reset re-resolves fuzzy requirements with new seed."""

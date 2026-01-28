@@ -383,3 +383,163 @@ class TestClearSelection:
         assert defaults['node_name'] == '(None)'
         assert defaults['level'] == 'Level: -'
         assert defaults['allocation'] == '-'
+
+
+class TestResetMethod:
+    """Tests for reset() method that properly reinitializes control panel state.
+
+    The reset() method is designed to be called by ResearchTreeScene._on_reset()
+    to properly update the control panel's internal state without bypassing
+    constructor initialization. This addresses finding RES-01.
+
+    Note: These tests create a minimal mock panel object to test the reset()
+    method logic without requiring full pygame_gui initialization.
+    """
+
+    def _create_mock_panel(self, rc, mock_tracker, mock_tech_tree):
+        """Create a mock panel with minimal attributes needed for reset()."""
+        panel = MagicMock(spec=rc.ResearchControlPanel)
+        panel.tracker = mock_tracker
+        panel.tech_tree = mock_tech_tree
+        panel._selected_node = None
+        panel.on_next_turn = MagicMock()
+        panel.on_close = MagicMock()
+        panel.on_reset = MagicMock()
+        panel.on_auto_spread_changed = MagicMock()
+        # Bind the actual reset method to the mock
+        panel.reset = lambda t, tt: rc.ResearchControlPanel.reset(panel, t, tt)
+        return panel
+
+    def test_reset_updates_tracker_reference(self, mock_pygame_gui, mock_tracker,
+                                              mock_tech_tree):
+        """Reset method should update tracker reference properly."""
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        # Create a new tracker for reset
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 300
+        new_tracker.auto_spread_enabled = True
+        new_tracker.get_total_allocated.return_value = 0
+
+        new_tech_tree = MagicMock()
+
+        # Call reset
+        panel.reset(new_tracker, new_tech_tree)
+
+        # Tracker should be updated
+        assert panel.tracker is new_tracker
+
+    def test_reset_updates_tech_tree_reference(self, mock_pygame_gui, mock_tracker,
+                                                mock_tech_tree):
+        """Reset method should update tech_tree reference properly."""
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 200
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        new_tech_tree = MagicMock()
+        new_tech_tree.nodes = {'new_node': MagicMock()}
+
+        panel.reset(new_tracker, new_tech_tree)
+
+        assert panel.tech_tree is new_tech_tree
+
+    def test_reset_calls_clear_selection(self, mock_pygame_gui, mock_tracker,
+                                          mock_tech_tree):
+        """Reset method should call clear_selection to update UI."""
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 200
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        panel.reset(new_tracker, mock_tech_tree)
+
+        panel.clear_selection.assert_called_once()
+
+    def test_reset_calls_update_budget_display(self, mock_pygame_gui, mock_tracker,
+                                                mock_tech_tree):
+        """Reset method should update budget display after reset."""
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 200
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        panel.reset(new_tracker, mock_tech_tree)
+
+        panel.update_budget_display.assert_called_once()
+
+    def test_reset_calls_clear_log(self, mock_pygame_gui, mock_tracker,
+                                    mock_tech_tree):
+        """Reset method should clear the event log."""
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 200
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        panel.reset(new_tracker, mock_tech_tree)
+
+        panel.clear_log.assert_called_once()
+
+    def test_reset_calls_update_auto_spread_button(self, mock_pygame_gui, mock_tracker,
+                                                    mock_tech_tree):
+        """Reset method should update auto-spread button state."""
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 200
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        panel.reset(new_tracker, mock_tech_tree)
+
+        panel._update_auto_spread_button.assert_called_once()
+
+    def test_reset_preserves_callbacks(self, mock_pygame_gui, mock_tracker,
+                                        mock_tech_tree):
+        """Reset method should not modify callback references."""
+        rc = mock_pygame_gui
+
+        on_next_turn = MagicMock()
+        on_close = MagicMock()
+        on_reset_cb = MagicMock()
+        on_auto_spread_changed = MagicMock()
+
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+        panel.on_next_turn = on_next_turn
+        panel.on_close = on_close
+        panel.on_reset = on_reset_cb
+        panel.on_auto_spread_changed = on_auto_spread_changed
+
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 200
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        panel.reset(new_tracker, mock_tech_tree)
+
+        # Callbacks should be unchanged
+        assert panel.on_next_turn is on_next_turn
+        assert panel.on_close is on_close
+        assert panel.on_reset is on_reset_cb
+        assert panel.on_auto_spread_changed is on_auto_spread_changed

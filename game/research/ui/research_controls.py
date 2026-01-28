@@ -437,3 +437,22 @@ class ResearchControlPanel:
         self.lbl_turn.set_text(f"Turn: {self.tracker.turn_number}")
         self.log_box.html_text = "<i>No events yet. Click 'Next Turn' to simulate.</i>"
         self.log_box.rebuild()
+
+    def reset(self, tracker: ResearchTracker, tech_tree: TechTree):
+        """
+        Reset the control panel with new tracker and tech tree instances.
+
+        This method provides a proper interface for resetting the control panel's
+        state, avoiding direct attribute mutation from external code. It ensures
+        all UI elements are updated consistently.
+
+        Args:
+            tracker: New ResearchTracker instance
+            tech_tree: New TechTree instance (may have re-resolved requirements)
+        """
+        self.tracker = tracker
+        self.tech_tree = tech_tree
+        self.clear_selection()
+        self.update_budget_display()
+        self.clear_log()
+        self._update_auto_spread_button()

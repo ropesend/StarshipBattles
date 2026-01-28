@@ -2,7 +2,7 @@
     "turn_number": 1,
     "save_path": "C:\\Dev\\Starship Battles\\saves\\TestIntegration",
     "config": {
-        "asset_base_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes",
+        "asset_base_path": "c:\\Dev\\Starship Battles\\assets\\ShipThemes",
         "galaxy_radius": 4000,
         "system_count": 25,
         "save_name": "TestIntegration",
@@ -15485,7 +15485,7 @@
                 100,
                 255
             ],
-            "theme_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes\\Federation",
+            "theme_path": "c:\\Dev\\Starship Battles\\assets\\ShipThemes\\Federation",
             "empire_theme_id": "Federation",
             "colony_ids": [
                 1
@@ -15503,7 +15503,7 @@
                 200,
                 150
             ],
-            "theme_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes\\Atlantians",
+            "theme_path": "c:\\Dev\\Starship Battles\\assets\\ShipThemes\\Atlantians",
             "empire_theme_id": "Atlantians",
             "colony_ids": [
                 240
