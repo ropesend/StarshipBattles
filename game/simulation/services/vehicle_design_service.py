@@ -131,6 +131,7 @@ class VehicleDesignService:
             warnings.append(f"Unknown ship class '{ship_class}', using defaults")
 
         try:
+            # PROJ-38: Pass registries to Ship constructor
             ship = Ship(
                 name=name,
                 x=x,
@@ -138,7 +139,8 @@ class VehicleDesignService:
                 color=color,
                 team_id=team_id,
                 ship_class=ship_class,
-                theme_id=theme_id
+                theme_id=theme_id,
+                registries=self._registries
             )
             ship.recalculate_stats()
 

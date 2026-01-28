@@ -16,40 +16,44 @@
 | 1. Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Service Layer | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Entity Layer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. UI Layer | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. UI Layer | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remaining Consumers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Cleanup & Test Migration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-28 Session 3 (end)
-**Active Phase:** Phase 3 Entity Layer Migration - COMPLETE
-**Last Action:** Completed all 4 tasks in Phase 3. Component, Ship, ShipSerializer, and ShipComponentManager now support DI.
-**Next Action:** Phase 4 - UI Layer Migration (migrate builder screens to use injected registries)
+**Last Updated:** 2026-01-28 Session 4 (end)
+**Active Phase:** Phase 4 UI Layer Migration - COMPLETE
+**Last Action:** Completed all 6 tasks in Phase 4. UI components now use context.registries for DI.
+**Next Action:** Phase 5 - Remaining Consumers (migrate remaining files to use DI)
 **Blockers:** None
-**Test Count:** 5067 passed, 1 skipped (23 flaky test failures due to pre-existing test isolation issues, not DI-related)
+**Test Count:** 5083 passed, 1 skipped, 16 flaky failures (pre-existing test isolation issues, pass when run individually)
 
-### Session 3 Summary (2026-01-28)
+### Session 4 Summary (2026-01-28)
 **Tasks Completed:**
-- Task 3.1: Converted `Component` class to constructor injection (11 new tests)
-- Task 3.2: Converted `Ship` class to constructor injection (7 new tests)
-- Task 3.3: Updated `ShipSerializer.from_dict()` to accept registries (6 new tests)
-- Task 3.4: Updated `ShipComponentManager` to use ship's registries (3 new tests)
+- Task 4.1: Updated `WorkshopContext` to accept registries (10 new tests)
+- Task 4.2: Updated `WorkshopViewModel` to use context registries (6 new tests)
+- Task 4.3: Updated `WorkshopDataLoader` to accept registries parameter
+- Task 4.4: Updated `DesignWorkshopGUI` with `_get_vehicle_classes()` helper
+- Task 4.5: Updated `ModifierEditorPanel` (builder_widgets.py) to accept registries
+- Task 4.6: Updated `WorkshopEventRouter` with `_get_vehicle_classes()` helper
 
 **Files Modified:**
-- `game/simulation/components/component.py` - Added `registries=` parameter to constructor and `create_component()` function
-- `game/simulation/entities/ship.py` - Added `registries=` parameter to constructor, uses registries in _initialize_layers()
-- `game/simulation/entities/ship_serialization.py` - Added `registries=` parameter to from_dict(), passes to Ship and Component creation
-- `game/simulation/entities/ship_component_manager.py` - Uses ship._registries in initialize_layers() with fallback
-- `tests/unit/entities/test_component_di.py` - New test file (11 tests)
-- `tests/unit/entities/test_ship_di.py` - New test file (7 tests)
-- `tests/unit/entities/test_ship_serialization_di.py` - New test file (6 tests)
-- `tests/unit/entities/test_ship_component_manager_di.py` - New test file (3 tests)
+- `game/ui/screens/workshop_context.py` - Added `registries` dataclass field with `__post_init__` fallback
+- `game/ui/screens/workshop_viewmodel.py` - Accepts `context=` parameter, uses registries for service and component operations
+- `game/ui/screens/workshop_data_loader.py` - Accepts `registries=` parameter for `_get_default_class()`
+- `game/ui/screens/workshop_screen.py` - Added `_get_vehicle_classes()` helper, passes context to viewmodel
+- `game/ui/panels/builder_widgets.py` - ModifierEditorPanel accepts `registries=` parameter
+- `game/ui/screens/workshop_event_router.py` - Added `_get_vehicle_classes()` helper
+- `game/simulation/services/vehicle_design_service.py` - Fixed `create_ship()` to pass registries to Ship constructor
+- `tests/unit/builder/test_workshop_context_di.py` - New test file (10 tests)
+- `tests/unit/builder/test_workshop_viewmodel_di.py` - New test file (6 tests)
 
 **Key Pattern Used:**
-Entity classes accept `registries: Optional[GameRegistries] = None` as keyword-only parameter:
-1. If registries provided, stored in `self._registries`
-2. If None, falls back to `get_default_registries()` or legacy `get_*()` functions
-3. Module-level aliases (COMPONENT_REGISTRY, MODIFIER_REGISTRY, VEHICLE_CLASSES) kept for backward compatibility with UI layer - will be removed in Phase 4
+UI components access registries via context chain:
+1. `WorkshopContext` stores registries as dataclass field
+2. `DesignWorkshopGUI` passes context to `WorkshopViewModel`
+3. Components use `_get_*()` helper methods that check context registries first, then fall back to global functions
+4. All tests pass (126 builder tests)
 
 **Verification Needed:**
 - [ ] Manual: Launch game and verify main menu displays correctly

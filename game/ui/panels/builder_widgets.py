@@ -1,12 +1,21 @@
+"""
+Builder Widgets - UI components for the Design Workshop.
+
+PROJ-38: Added registries parameter for dependency injection.
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIScrollingContainer
+from typing import Optional, TYPE_CHECKING
 from game.core.registry import get_modifier_registry
 from game.core.logger import log_info, log_debug
 
 from ui.builder.modifier_logic import ModifierLogic
 from ui.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
 from ui.builder.modifier_row import ModifierControlRow
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 
 class ModifierEditorPanel:
@@ -16,11 +25,25 @@ class ModifierEditorPanel:
     Uses UIScrollingContainer to handle overflow when many modifiers are present.
     """
 
-    def __init__(self, manager, container, width, on_change_callback):
+    def __init__(self, manager, container, width, on_change_callback,
+                 *, registries: Optional['GameRegistries'] = None):
+        """
+        Initialize the ModifierEditorPanel.
+
+        PROJ-38: Added registries parameter for DI.
+
+        Args:
+            manager: pygame_gui UIManager
+            container: Parent container
+            width: Panel width
+            on_change_callback: Callback when modifier changes
+            registries: Optional GameRegistries for DI
+        """
         self.manager = manager
         self.container = container
         self.width = width
         self.on_change_callback = on_change_callback
+        self._registries = registries
 
         # State
         self.editing_component = None
@@ -32,7 +55,13 @@ class ModifierEditorPanel:
         self.modifier_rows = {}  # mod_id -> ModifierControlRow
         self.scroll_container = None  # UIScrollingContainer for modifier rows
         self._cached_scroll_position = 0  # Preserve scroll on rebuild
-        
+
+    def _get_modifiers(self):
+        """PROJ-38: Get modifiers from registries or global fallback."""
+        if self._registries is not None:
+            return self._registries.modifiers
+        return get_modifier_registry()
+
     def rebuild(self, editing_component, is_readonly=False):
         """Rebuild/Update the modifier UI based on current state."""
         self.editing_component = editing_component
@@ -87,7 +116,7 @@ class ModifierEditorPanel:
             current_mod_ids = []
             content_height = 0
             row_height = 28  # Compact row height
-            for mod_id, mod_def in get_modifier_registry().items():
+            for mod_id, mod_def in self._get_modifiers().items():
                 if ModifierLogic.is_modifier_allowed(mod_id, self.editing_component):
                     current_mod_ids.append(mod_id)
                     content_height += row_height + 2  # 2px gap between rows
@@ -104,8 +133,9 @@ class ModifierEditorPanel:
 
             # 3. Build modifier rows inside scroll container
             row_y = 0
+            modifiers = self._get_modifiers()
             for mod_id in current_mod_ids:
-                mod_def = get_modifier_registry()[mod_id]
+                mod_def = modifiers[mod_id]
                 self._ensure_row(mod_id, mod_def, row_y, self.scroll_container)
 
                 row = self.modifier_rows[mod_id]
