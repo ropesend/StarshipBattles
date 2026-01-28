@@ -7,6 +7,9 @@
 ## Overview
 Address issues in `game/research/` - mostly minor type hints, validation, and UI improvements.
 
+> **Note:** This phase was reduced from 8 tasks to 7 after Category 3 audit verification:
+> - Task 8.4 (NEW-RES-004) REMOVED - Proper fallback exists at lines 144-145
+
 ---
 
 ## Tasks
@@ -43,18 +46,13 @@ Address issues in `game/research/` - mostly minor type hints, validation, and UI
 
 ---
 
-### 8.4 Add Validation for Unknown price_curve (NEW-RES-004)
-**Location:** `game/research/data/tech_node.py:127-145`
-**Effort:** Simple
-
-- [ ] Add validation during node creation
-- [ ] Log warning for unknown curve types
-- [ ] Raise error or use explicit fallback
-- [ ] Run: `pytest tests/unit/research/ -v`
+### ~~8.4 Add Validation for Unknown price_curve (NEW-RES-004)~~
+**Status:** REMOVED - ALREADY COMPLETE
+**Reason:** Proper fallback exists at lines 144-145 in tech_node.py.
 
 ---
 
-### 8.5 Add Cycle Detection Call (NEW-RES-005)
+### 8.4 Add Cycle Detection Call (NEW-RES-005)
 **Location:** `game/research/ui/research_scene.py:68-71`
 **Effort:** Simple
 

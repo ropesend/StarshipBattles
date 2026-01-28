@@ -1,65 +1,25 @@
 # Phase 6: AI System Improvements
 
 **Status:** Not Started
-**Estimated Effort:** 5-7 hours
+**Estimated Effort:** 2-3 hours
 **Priority:** Medium
 
 ## Overview
-Address issues in `game/ai/` and `game/engine/` focusing on god class pattern, magic numbers, and interface violations.
+Address remaining issues in `game/ai/` and `game/engine/` focusing on unsafe access and documentation.
+
+> **Note:** This phase was reduced from 10 tasks to 4 after Category 3 audit verification:
+> - Task 6.1 (NEW-AI-001) REMOVED - AIController is well-organized (384 lines, 16 methods)
+> - Task 6.2 (NEW-AI-002) REMOVED - Magic numbers ARE properly defined as AIConfig constants
+> - Task 6.3 (NEW-AI-003) REMOVED - Uses safe getattr() with defaults
+> - Task 6.5 (NEW-AI-005) REMOVED - Localized imports are acceptable
+> - Task 6.7 (NEW-AI-007) REMOVED - Intentional spatial indexing behavior
+> - Task 6.10 (NEW-AI-010) REMOVED - No division operation exists at cited location
 
 ---
 
 ## Tasks
 
-### 6.1 Plan AIController Decomposition (NEW-AI-001)
-**Location:** `game/ai/controller.py` (385 lines, 17 methods)
-**Effort:** Complex (planning only in this phase)
-
-- [ ] Document current AIController responsibilities:
-  - Behavior selection
-  - Target acquisition
-  - Formation management
-  - Collision avoidance
-  - Movement navigation
-- [ ] Create extraction plan:
-  - [ ] `BehaviorSelector` class
-  - [ ] `FormationManager` class
-  - [ ] `NavigationController` class
-- [ ] Add plan to `decisions.md`
-- [ ] Extract ONE class as proof of concept
-- [ ] Run: `pytest tests/unit/ai/ -v`
-
----
-
-### 6.2 Extract AI Magic Numbers (NEW-AI-002)
-**Location:** `game/ai/behaviors.py:104-105, 87`
-**Effort:** Medium
-
-- [ ] Create `AIConfig` class in `game/ai/config.py`
-- [ ] Define named constants:
-  - `MIN_SPACING`
-  - `FLEE_DISTANCE`
-  - `DEFAULT_AVOIDANCE`
-  - Other scattered magic numbers
-- [ ] Update behaviors.py to use `AIConfig`
-- [ ] Update strategy_manager.py to control defaults
-- [ ] Run: `pytest tests/unit/ai/ -v`
-
----
-
-### 6.3 Fix FormationBehavior Interface Violations (NEW-AI-003)
-**Location:** `game/ai/behaviors.py:212, 283, 317`
-**Effort:** Medium
-
-- [ ] Add `get_formation_rotation_mode()` to `IControllable` interface
-- [ ] Remove direct `_ship` attribute access
-- [ ] Replace `getattr(ship, '_ship', ship)` with interface method
-- [ ] Update all IControllable implementations
-- [ ] Run: `pytest tests/unit/ai/ -v -k formation`
-
----
-
-### 6.4 Fix CollisionSystem Unsafe Access (NEW-AI-004)
+### 6.1 Fix CollisionSystem Unsafe Access (NEW-AI-004)
 **Location:** `game/engine/collision.py:152-166`
 **Effort:** Simple
 
@@ -71,18 +31,7 @@ Address issues in `game/ai/` and `game/engine/` focusing on god class pattern, m
 
 ---
 
-### 6.5 Move Runtime Imports to Module Level (NEW-AI-005)
-**Location:** `game/ai/behaviors.py:378, 387`, `game/ai/target_evaluator.py:229`
-**Effort:** Simple
-
-- [ ] Move `import random` to module level
-- [ ] Move `import math` to module level
-- [ ] Verify no circular import issues
-- [ ] Run: `pytest tests/unit/ai/ -v`
-
----
-
-### 6.6 Add Type Hints to AIController (NEW-AI-006)
+### 6.2 Add Type Hints to AIController (NEW-AI-006)
 **Location:** `game/ai/controller.py:80, 95, 121, 140, 156, 195, 369`
 **Effort:** Simple
 
@@ -95,18 +44,7 @@ Address issues in `game/ai/` and `game/engine/` focusing on god class pattern, m
 
 ---
 
-### 6.7 Fix SpatialGrid Duplicate Handling (NEW-AI-007)
-**Location:** `game/engine/spatial.py:17-21`
-**Effort:** Simple
-
-- [ ] Add deduplication in `insert()` or `query_radius()`
-- [ ] Choose approach: prevent duplicates at insert or filter in query
-- [ ] Add unit test for duplicate handling
-- [ ] Run: `pytest tests/unit/engine/ -v`
-
----
-
-### 6.8 Standardize Collision Scoring (NEW-AI-008)
+### 6.3 Standardize Collision Scoring (NEW-AI-008)
 **Location:** `game/engine/collision.py:106-116`
 **Effort:** Simple
 
@@ -118,7 +56,7 @@ Address issues in `game/ai/` and `game/engine/` focusing on god class pattern, m
 
 ---
 
-### 6.9 Add Behavior Documentation (NEW-AI-009)
+### 6.4 Add Behavior Documentation (NEW-AI-009)
 **Location:** `game/ai/behaviors.py`
 **Effort:** Simple
 
@@ -129,14 +67,36 @@ Address issues in `game/ai/` and `game/engine/` focusing on god class pattern, m
 
 ---
 
-### 6.10 Fix Division by Zero Risk (NEW-AI-010)
-**Location:** `game/ai/behaviors.py:119`
-**Effort:** Simple
+## Removed Tasks (Audit Verification)
 
-- [ ] Add check: `if weapon_range == 0: weapon_range = MIN_SPACING`
-- [ ] Or use max(weapon_range, MIN_SPACING) for opt_dist calculation
-- [ ] Add unit test for zero weapon range case
-- [ ] Run: `pytest tests/unit/ai/ -v`
+### ~~6.1 Plan AIController Decomposition (NEW-AI-001)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** AIController (384 lines, 16 methods) is well-organized with focused methods for strategy resolution, target selection, formation handling, collision avoidance, and navigation.
+
+### ~~6.2 Extract AI Magic Numbers (NEW-AI-002)~~
+**Status:** REMOVED - ALREADY COMPLETE
+**Reason:** All magic numbers ARE properly defined as class constants via AIConfig:
+```python
+FLEE_DISTANCE: int = AIConfig.FLEE_DISTANCE
+MIN_SPACING: int = AIConfig.MIN_SPACING
+DEFAULT_AVOIDANCE: bool = True
+```
+
+### ~~6.3 Fix FormationBehavior Interface Violations (NEW-AI-003)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** Uses safe patterns: `getattr(ship, '_ship', ship)` with safe fallback.
+
+### ~~6.5 Move Runtime Imports to Module Level (NEW-AI-005)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** Localized imports of `random` and `math` are acceptable practice.
+
+### ~~6.7 Fix SpatialGrid Duplicate Handling (NEW-AI-007)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** Intentional spatial indexing behavior.
+
+### ~~6.10 Fix Division by Zero Risk (NEW-AI-010)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** No division operation exists at the cited location (behaviors.py:119).
 
 ---
 
@@ -149,6 +109,6 @@ Address issues in `game/ai/` and `game/engine/` focusing on god class pattern, m
 ---
 
 ## Notes
-- Task 6.1 (AIController decomposition) is too large for one phase - create plan only
-- Tasks 6.4-6.10 are quick wins that can be parallelized
-- Consider creating separate PROJ for full AI refactoring if needed
+- All remaining tasks are relatively simple
+- Tasks can be parallelized
+- Focus on documentation and defensive coding

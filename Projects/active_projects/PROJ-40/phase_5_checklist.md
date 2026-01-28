@@ -1,30 +1,29 @@
 # Phase 5: Strategy Layer Refinements
 
 **Status:** Not Started
-**Estimated Effort:** 4-6 hours
+**Estimated Effort:** 3-4 hours
 **Priority:** Medium
 
 ## Overview
-Address issues in `game/strategy/` focusing on incomplete facades, complex functions, and coupling concerns.
+Address issues in `game/strategy/` focusing on complex functions, coupling concerns, and code quality.
+
+> **Note:** This phase was reduced from 8 tasks to 5 after Category 3 audit verification:
+> - Task 5.1 (NEW-STRAT-001, NEW-STRAT-003) REMOVED - Facade methods fully implemented
+> - Task 5.7 (NEW-STRAT-010) REMOVED - Lazy-loading is intentional DI pattern
 
 ---
 
 ## Tasks
 
-### 5.1 Complete StrategySessionFacade (NEW-STRAT-001, NEW-STRAT-003)
-**Location:** `game/strategy/facade/strategy_session_facade.py:88, 99`
-**Effort:** Medium
-
-- [ ] Implement `get_fleet()` method (currently raises NotImplementedError)
-- [ ] Implement `get_fleets_at_hex()` method
-- [ ] Review other NotImplementedError stubs
-- [ ] Either implement or document as "Command-only facade"
-- [ ] Update module docstring to clarify scope
-- [ ] Run: `pytest tests/unit/strategy/ -v`
+### ~~5.1 Complete StrategySessionFacade (NEW-STRAT-001, NEW-STRAT-003)~~
+**Status:** REMOVED - ALREADY COMPLETE
+**Reason:** Both methods are now fully implemented:
+- `get_fleet()`: Lines 108-120, returns FleetInfo DTO
+- `get_fleets_at_hex()`: Lines 122-136, iterates empires and returns FleetInfo list
 
 ---
 
-### 5.2 Refactor calculate_intercept_point (NEW-STRAT-002)
+### 5.1 Refactor calculate_intercept_point (NEW-STRAT-002)
 **Location:** `game/strategy/data/pathfinding.py:229-370`
 **Effort:** Medium
 
@@ -87,15 +86,9 @@ Address issues in `game/strategy/` focusing on incomplete facades, complex funct
 
 ---
 
-### 5.7 Fix Runtime Import (NEW-STRAT-010)
-**Location:** `game/strategy/engine/turn_engine.py:80-81`
-**Effort:** Simple
-
-- [ ] Move `SimulationBattleResolver` import to module level
-- [ ] Use TYPE_CHECKING if needed for type hints
-- [ ] Resolve any circular import issues that arise
-- [ ] Document why runtime import was originally used (if necessary)
-- [ ] Run: `pytest tests/unit/strategy/ -v`
+### ~~5.7 Fix Runtime Import (NEW-STRAT-010)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** Runtime import of `SimulationBattleResolver` at lines 80-81 in turn_engine.py is intentional lazy-loading for the DI pattern.
 
 ---
 
@@ -108,6 +101,5 @@ Address issues in `game/strategy/` focusing on incomplete facades, complex funct
 ---
 
 ## Notes
-- Task 5.1 and 5.2 are the most complex
-- Task 5.2 (refactor) should maintain exact same behavior - add characterization tests first
-- Consider creating a design document for StrategySessionFacade scope
+- Task 5.1 (refactor) is the most complex
+- Task 5.1 should maintain exact same behavior - add characterization tests first

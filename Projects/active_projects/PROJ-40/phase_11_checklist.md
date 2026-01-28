@@ -1,43 +1,22 @@
 # Phase 11: Original Findings Completion
 
 **Status:** Not Started
-**Estimated Effort:** 2-3 hours
+**Estimated Effort:** 1 hour
 **Priority:** Low
 
 ## Overview
 Complete remaining items from the original legacy cleanup review that were not fully addressed.
 
+> **Note:** This phase was reduced from 5 tasks to 2 after Category 3 audit verification:
+> - Task 11.1 (LDF-03) REMOVED - Same as NEW-UI-004, already fixed
+> - Task 11.2 (LPA-04) REMOVED - Actively used as lazy proxy pattern
+> - Task 11.5 (PROJ comments) REMOVED - These are architectural documentation to PRESERVE
+
 ---
 
 ## Tasks
 
-### 11.1 Consolidate CrewCapacity Logic (LDF-03)
-**Location:** 3 locations with duplicated fallback logic
-**Status:** Still Present
-**Effort:** Medium
-
-- [ ] Identify all 3 locations with CrewCapacity fallback pattern
-- [ ] Create single `get_crew_capacity()` function
-- [ ] Place in appropriate module (game/simulation/utils.py?)
-- [ ] Update all callers to use single function
-- [ ] Add deprecation warning for legacy format
-- [ ] Run: `pytest tests/ -v -k crew`
-
----
-
-### 11.2 Remove _ValidatorProxy (LPA-04)
-**Location:** `game/simulation/entities/ship.py` (lines 26-31 approx)
-**Status:** Still Present
-**Effort:** Simple
-
-- [ ] Verify `_ValidatorProxy` has 0 usages in codebase
-- [ ] Search: `grep -r "_ValidatorProxy" game/`
-- [ ] Delete the class definition
-- [ ] Run: `pytest tests/unit/entities/test_ship.py -v`
-
----
-
-### 11.3 Delete modifiers_v1_backup.json (DC-03)
+### 11.1 Delete modifiers_v1_backup.json (DC-03)
 **Location:** `data/modifiers_v1_backup.json`
 **Status:** Still Present
 **Effort:** Simple
@@ -50,7 +29,7 @@ Complete remaining items from the original legacy cleanup review that were not f
 
 ---
 
-### 11.4 Clean Remaining Tools/ Scripts (DC-04)
+### 11.2 Clean Remaining Tools/ Scripts (DC-04)
 **Location:** `Tools/` directory
 **Status:** Partially Fixed
 **Effort:** Simple
@@ -63,16 +42,34 @@ Complete remaining items from the original legacy cleanup review that were not f
 
 ---
 
-### 11.5 Complete PROJ Comment Cleanup (MIG-01)
-**Location:** 237 instances across 14 files
-**Status:** Partially Fixed (84% reduction achieved)
-**Effort:** Medium
+## Removed Tasks (Audit Verification)
 
-- [ ] List remaining PROJ comment files
-- [ ] Review each comment for relevance
-- [ ] Remove completed/obsolete PROJ comments
-- [ ] Update any that are still valid
-- [ ] Run: `grep -r "PROJ-" game/ | wc -l`
+### ~~11.1 Consolidate CrewCapacity Logic (LDF-03)~~
+**Status:** REMOVED - ALREADY FIXED
+**Reason:** Same as NEW-UI-004 - CrewCapacity is now properly centralized with helper functions.
+
+### ~~11.2 Remove _ValidatorProxy (LPA-04)~~
+**Status:** REMOVED - NOT AN ISSUE
+**Reason:** `_ValidatorProxy` is actively used as a lazy proxy pattern:
+```python
+class _ValidatorProxy:
+    """Lazy proxy for validator to maintain backward compatibility."""
+    def __getattr__(self, name):
+        return getattr(get_or_create_validator(), name)
+
+VALIDATOR = _ValidatorProxy()
+```
+
+### ~~11.5 Complete PROJ Comment Cleanup (MIG-01)~~
+**Status:** REMOVED - PRESERVE INSTEAD
+**Reason:** The 4,044 PROJ references are NOT cleanup candidates. They are architectural documentation:
+- **184 refs in game code** document WHY architectural decisions were made
+- PROJ-38 (53 refs): Active DI implementation documentation
+- PROJ-12 (55 refs): God class decomposition documentation
+- PROJ-36 (16 refs): Validation refactoring documentation
+- PROJ-27 (15 refs): DI protocol documentation
+
+Removing these would harm code maintainability.
 
 ---
 
@@ -84,19 +81,7 @@ Complete remaining items from the original legacy cleanup review that were not f
 
 ---
 
-## Summary of Original Review Progress
-
-| ID | Severity | Title | Original Status | Action |
-|----|----------|-------|-----------------|--------|
-| LDF-03 | Major | CrewCapacity fallback logic | Still duplicated 3x | Task 11.1 |
-| LPA-04 | Minor | _ValidatorProxy unused | Still present, 0 usages | Task 11.2 |
-| DC-03 | Minor | modifiers_v1_backup.json | Still present, 0 references | Task 11.3 |
-| DC-04 | Minor | Debug scripts in Tools/ | Some remain | Task 11.4 |
-| MIG-01 | Minor | PROJ comment cleanup | 84% done (237 remain) | Task 11.5 |
-
----
-
 ## Notes
-- These are relatively simple cleanup tasks
-- All were identified in the original review but not completed
-- Completing these will achieve 100% remediation of original findings
+- These are simple cleanup tasks
+- Total effort reduced significantly after audit verification
+- Complete these before proceeding to Phase 12 (UI Layer Remediation)

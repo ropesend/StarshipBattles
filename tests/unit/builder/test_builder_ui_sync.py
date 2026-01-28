@@ -1,3 +1,8 @@
+"""
+Tests for Builder UI synchronization with Ship state.
+
+PROJ-38: Migrated to use fresh_registries fixture for cleaner test setup.
+"""
 import pytest
 import pygame
 import pygame_gui
@@ -10,30 +15,27 @@ from game.core.registry import RegistryManager
 class TestBuilderUISync:
 
     @pytest.fixture(autouse=True)
-    def setup_ui(self):
-        """Set up the UI components for testing."""
-        # Ensure registries are FULLY hydrated BEFORE accessing singletons.
-        # This is critical for parallel test execution (--dist loadscope).
-        # In parallel mode, other tests may have cleared or partially populated
-        # the registry (e.g., test_hull_layer.py's registry_with_hull fixture).
-        from tests.infrastructure.session_cache import SessionRegistryCache
+    def setup_ui(self, fresh_registries):
+        """Set up the UI components for testing.
+
+        PROJ-38: Uses fresh_registries fixture for data, then hydrates singleton
+        for UI components that still use the global pattern.
+        """
         from game.ai.strategy_manager import StrategyManager
+        from tests.infrastructure.session_cache import SessionRegistryCache
 
-        cache = SessionRegistryCache.instance()
-        cache.load_all_data()
-
-        # ALWAYS rehydrate registries to ensure full production data is available.
-        # Previous tests may have left the registry in a partial state (e.g., only
-        # "Escort" and "Cruiser" classes) which would cause tests expecting
-        # "Battleship" or other classes to fail.
+        # PROJ-38: Hydrate registry singleton from fresh_registries fixture data
+        # This is needed because UI components still use RegistryManager.instance()
         mgr = RegistryManager.instance()
         mgr.hydrate(
-            cache.get_components(),
-            cache.get_modifiers(),
-            cache.get_vehicle_classes()
+            fresh_registries.components,
+            fresh_registries.modifiers,
+            fresh_registries.vehicle_classes
         )
 
-        # ALWAYS rehydrate strategy manager for same reason
+        # Load strategy data from session cache (strategies not in GameRegistries yet)
+        cache = SessionRegistryCache.instance()
+        cache.load_all_data()
         strat_mgr = StrategyManager.instance()
         strat_mgr.strategies = cache.get_strategies()
         strat_mgr._loaded = True

@@ -19,5 +19,16 @@ VALID_STATUSES = [
     "Archived",
 ]
 
+# Valid phase statuses (for individual phase checklists)
+VALID_PHASE_STATUSES = [
+    "Not Started",
+    "In Progress",
+    "Complete",
+    "Deferred",
+    "Skipped",
+    "Extracted",           # Phase extracted to sub-project
+    "Extracted (Complete)", # Sub-project archived, phase auto-completed
+]
+
 # Freshness threshold for Current State (hours)
 FRESHNESS_THRESHOLD_HOURS = 48

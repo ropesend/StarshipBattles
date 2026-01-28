@@ -2,12 +2,17 @@
 
 PROJ-21: ValidationResult is now imported from game.core.validation
 for cross-layer consistency.
+
+PROJ-38: Added registries parameter to ShipDesignValidator for dependency injection.
 """
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, TYPE_CHECKING
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
 from game.core.validation import ValidationResult
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 class ValidationRule(ABC):
     @abstractmethod
@@ -166,20 +171,40 @@ class MassBudgetRule(ValidationRule):
 
 
 class ClassRequirementsRule(ValidationRule):
+    """Validates class-specific requirements (crew, life support, etc.).
+
+    PROJ-38: Added registries parameter for dependency injection.
+    """
+
+    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+        """Initialize the rule.
+
+        PROJ-38: Added registries parameter for DI.
+
+        Args:
+            registries: Optional GameRegistries for DI. Falls back to VEHICLE_CLASSES if None.
+        """
+        self._registries = registries
+
     def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
         result = ValidationResult(True)
         # This rule validates the whole design
-        
-        # Import internally to avoid circular imports
-        from game.simulation.entities.ship import VEHICLE_CLASSES
+
         from game.simulation.systems.stats import ShipStatsCalculator
-        
-        class_def = VEHICLE_CLASSES.get(ship.ship_class, {})
+
+        # PROJ-38: Use injected registries or fallback
+        if self._registries is not None:
+            vehicle_classes = self._registries.vehicle_classes
+        else:
+            from game.simulation.entities.ship import VEHICLE_CLASSES
+            vehicle_classes = VEHICLE_CLASSES
+
+        class_def = vehicle_classes.get(ship.ship_class, {})
         requirements = class_def.get('requirements', {})
         
         all_components = [c for layer in ship.layers.values() for c in layer['components']]
-        
-        stats_calculator = ShipStatsCalculator(VEHICLE_CLASSES)
+
+        stats_calculator = ShipStatsCalculator(vehicle_classes)
         ability_totals = stats_calculator.calculate_ability_totals(all_components)
         
         for req_name, req_def in requirements.items():
@@ -283,7 +308,16 @@ class ResourceDependencyRule(ValidationRule):
         return result
 
 class ShipDesignValidator:
-    def __init__(self):
+    """PROJ-38: Added registries parameter for dependency injection."""
+
+    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+        """Initialize the validator.
+
+        PROJ-38: Added registries parameter for DI.
+
+        Args:
+            registries: Optional GameRegistries for DI. Passed to ClassRequirementsRule.
+        """
         self.addition_rules: List[ValidationRule] = [
             LayerConstraintRule(),
             UniqueComponentRule(),
@@ -293,11 +327,11 @@ class ShipDesignValidator:
             MassBudgetRule()
         ]
         self.design_rules: List[ValidationRule] = [
-             ClassRequirementsRule(),
+             ClassRequirementsRule(registries=registries),
 
              ResourceDependencyRule(),
              # MassBudgetRule() could also apply here for final check
-             MassBudgetRule() 
+             MassBudgetRule()
         ]
 
     def validate_addition(self, ship, component: Component, layer_type: LayerType) -> ValidationResult:

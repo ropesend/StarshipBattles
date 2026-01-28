@@ -1,5 +1,6 @@
 import os
 import datetime
+import subprocess
 import pygame
 import threading
 from game.core.constants import ROOT_DIR, DEBUG_SCREENSHOTS, SCREENSHOT_DIR
@@ -114,8 +115,12 @@ class ScreenshotManager:
         except Exception as e:
             log_error(f"Error saving screenshot: {e}")
 
-    def _copy_to_clipboard(self, text):
-        """Copy text to clipboard using Tkinter or Windows clip."""
+    def _copy_to_clipboard(self, text: str) -> None:
+        """Copy text to clipboard using Tkinter or Windows clip.
+
+        Args:
+            text: Text to copy to clipboard (typically a file path)
+        """
         try:
             # Try Tkinter first (cross-platform if installed)
             import tkinter
@@ -123,13 +128,22 @@ class ScreenshotManager:
             r.withdraw()
             r.clipboard_clear()
             r.clipboard_append(text)
-            r.update() # Required to finalize clipboard
+            r.update()  # Required to finalize clipboard
             r.destroy()
         except Exception as e:
             log_warning(f"Clipboard copy failed (Tkinter): {e}")
-            # Fallback to Windows clip
+            # Fallback to Windows clip using subprocess (safer than os.system)
             if os.name == 'nt':
-                os.system(f'echo {text.strip()}| clip')
+                try:
+                    # Use subprocess.run with input instead of shell command
+                    # This avoids command injection vulnerabilities
+                    subprocess.run(
+                        ['clip'],
+                        input=text.strip().encode('utf-8'),
+                        check=False
+                    )
+                except Exception as clip_err:
+                    log_warning(f"Clipboard copy failed (clip): {clip_err}")
 
     def capture_step(self, step_name, surface=None):
         """

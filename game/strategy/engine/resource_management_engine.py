@@ -2,6 +2,7 @@
 ResourceManagementEngine - Per-Turn Resource Consumption
 
 PROJ-36: Extracted from TurnEngine to handle resource consumption.
+PROJ-38: Added registries parameter for dependency injection.
 
 Responsibilities:
 - Process per-turn resource consumption (1/100th per tick)
@@ -10,14 +11,14 @@ Responsibilities:
 """
 
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 from game.core.logger import log_info
 from game.core.registry import get_component_registry
 from game.strategy.services.ship_stats_service import ShipStatsService
 
 if TYPE_CHECKING:
-    pass
+    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -33,6 +34,7 @@ class ResourceManagementEngine:
     Engine for processing per-turn resource consumption.
 
     PROJ-36: Extracted from TurnEngine to decompose the god class.
+    PROJ-38: Added registries parameter for dependency injection.
 
     Handles:
     - Spreading per-turn costs over 100 ticks
@@ -40,9 +42,15 @@ class ResourceManagementEngine:
     - Auto-disabling components when resources run out
     """
 
-    def __init__(self):
-        """Initialize the resource management engine (stateless)."""
-        pass
+    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+        """Initialize the resource management engine.
+
+        PROJ-38: Added registries parameter for DI.
+
+        Args:
+            registries: Optional GameRegistries for DI. Falls back to global functions if None.
+        """
+        self._registries = registries
 
     def process_per_turn_consumption(self, tick: int, empires) -> List[ResourceDepletion]:
         """
@@ -102,7 +110,11 @@ class ResourceManagementEngine:
             List of component IDs that were disabled
         """
         disabled_components = []
-        registry = get_component_registry()
+        # PROJ-38: Use injected registries or fallback to global function
+        if self._registries is not None:
+            registry = self._registries.components
+        else:
+            registry = get_component_registry()
         layers = ship.design_data.get('layers', {})
 
         for layer_name, components in layers.items():

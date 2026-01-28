@@ -7,7 +7,7 @@ import random
 
 from game.core.json_utils import load_json
 from game.core.constants import DATA_DIR
-from game.core.logger import log_info, log_error
+from game.core.logger import log_info
 from .tech_node import TechNode, TechRequirement
 
 

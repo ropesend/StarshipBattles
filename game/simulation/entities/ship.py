@@ -115,14 +115,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.radius: float = 0.0 
         
         # Resources (New System)
-        from game.simulation.systems.resource_manager import ResourceRegistry
         self.resources = ResourceRegistry()
         
         # Resource initialization tracking
         self._resources_initialized: bool = False
         
-        # To-Hit stats
-        self.total_defense_score = 0.0 # Score (Size + Maneuver + ECM)
+        # To-Hit stats (total_defense_score initialized below with other combat stats)
         self.emissive_armor = 0
         self.crystalline_armor = 0
         
@@ -165,8 +163,10 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.total_shots_fired: int = 0
         
         # To-Hit Calculation Stats
-        self.total_defense_score: float = 1.0  # Defensive score (evasion)
-        self.baseline_to_hit_offense: float = 1.0 # Offensive Multiplier
+        # total_defense_score: 1.0 = neutral baseline before ShipStatsCalculator computes
+        # actual value from size_score + maneuver_score + ecm_score
+        self.total_defense_score: float = 1.0
+        self.baseline_to_hit_offense: float = 1.0  # Offensive multiplier (sensor strength)
         
         # Initialize helper (lazy or eager)
         self.stats_calculator: Optional[ShipStatsCalculator] = None

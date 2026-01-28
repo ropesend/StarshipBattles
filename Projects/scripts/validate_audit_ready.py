@@ -16,8 +16,8 @@ from typing import List
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils.markdown_parser import parse_project_file, find_incomplete_tasks
-from utils.index_manager import get_project_entry
+from utils.markdown_parser import parse_project_file, find_incomplete_tasks, find_extracted_phases
+from utils.index_manager import get_project_entry, is_project_archived, project_exists
 
 
 class ValidationResult:
@@ -46,12 +46,31 @@ def validate_audit_ready(project_id: str, run_tests: bool = False) -> Validation
         status_lower = phase.status.lower()
         if "complete" in status_lower:
             result.passes.append(f"Phase {phase.number}: {phase.status}")
+        elif "extracted" in status_lower:
+            # Extracted phases are acceptable - will be checked separately
+            result.passes.append(f"Phase {phase.number}: {phase.status} (extracted)")
         elif "deferred" in status_lower or "skipped" in status_lower:
             result.warnings.append(f"Phase {phase.number}: {phase.status} (acceptable)")
         elif "not started" in status_lower:
             result.errors.append(f"Phase {phase.number}: {phase.status} - not started")
         else:
             result.errors.append(f"Phase {phase.number}: {phase.status} - not complete")
+
+    # Check 1.5: Extracted phase sub-project dependencies
+    extracted_phases = find_extracted_phases(project_data)
+    for phase_num, sub_project_id in extracted_phases:
+        if not project_exists(sub_project_id):
+            result.errors.append(
+                f"Phase {phase_num}: Sub-project {sub_project_id} NOT FOUND - critical error"
+            )
+        elif is_project_archived(sub_project_id):
+            result.passes.append(
+                f"Phase {phase_num}: Sub-project {sub_project_id} is ARCHIVED (auto-complete ready)"
+            )
+        else:
+            result.warnings.append(
+                f"Phase {phase_num}: Sub-project {sub_project_id} still ACTIVE (phase pending)"
+            )
 
     # Check 2: All tasks complete
     incomplete = find_incomplete_tasks(project_data)

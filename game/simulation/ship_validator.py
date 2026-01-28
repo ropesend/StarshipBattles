@@ -2,11 +2,14 @@
 
 Phase 12: Refactored to use template method pattern from validation.base module.
 Rules extend AdditionValidationRule or DesignValidationRule to reduce guard clause duplication.
+
+PROJ-38: Added registries parameter to ClassRequirementsRule for dependency injection.
 """
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
+from game.core.registry import get_vehicle_classes, get_default_registries
 
 # Import base classes from validation module (Phase 12 refactoring)
 from game.simulation.validation.base import (
@@ -15,6 +18,9 @@ from game.simulation.validation.base import (
     DesignValidationRule,
     AdditionValidationRule
 )
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 
 class RestrictionPrefixes:
@@ -231,16 +237,33 @@ class MassBudgetRule(DesignValidationRule):
 
 
 class ClassRequirementsRule(DesignValidationRule):
-    """Validates class-specific requirements (crew, life support, etc.)."""
+    """Validates class-specific requirements (crew, life support, etc.).
+
+    PROJ-38: Added registries parameter for dependency injection.
+    """
+
+    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+        """Initialize the rule.
+
+        PROJ-38: Added registries parameter for DI.
+
+        Args:
+            registries: Optional GameRegistries for DI. Falls back to global function if None.
+        """
+        super().__init__()
+        self._registries = registries
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
         result = ValidationResult(True)
 
-        # Import internally to avoid circular imports
-        from game.core.registry import get_vehicle_classes
         from game.simulation.entities.ship_stats import ShipStatsCalculator
 
-        classes = get_vehicle_classes()
+        # PROJ-38: Use injected registries or fallback to global function
+        if self._registries is not None:
+            classes = self._registries.vehicle_classes
+        else:
+            classes = get_vehicle_classes()
+
         class_def = classes.get(ship.ship_class, {})
 
         all_components = ship.get_all_components()
@@ -339,9 +362,19 @@ class ResourceDependencyRule(DesignValidationRule):
 
 
 class ShipDesignValidator:
-    """Validates ship designs using a set of rules."""
+    """Validates ship designs using a set of rules.
 
-    def __init__(self):
+    PROJ-38: Added registries parameter for dependency injection.
+    """
+
+    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+        """Initialize the validator.
+
+        PROJ-38: Added registries parameter for DI.
+
+        Args:
+            registries: Optional GameRegistries for DI. Passed to ClassRequirementsRule.
+        """
         self.addition_rules: List[ValidationRule] = [
             LayerConstraintRule(),
             UniqueComponentRule(),
@@ -351,7 +384,7 @@ class ShipDesignValidator:
             MassBudgetRule()
         ]
         self.design_rules: List[ValidationRule] = [
-            ClassRequirementsRule(),
+            ClassRequirementsRule(registries=registries),
             ResourceDependencyRule(),
             # MassBudgetRule() could also apply here for final check
             MassBudgetRule()
