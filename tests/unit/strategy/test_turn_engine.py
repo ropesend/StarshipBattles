@@ -183,40 +183,6 @@ class TestColonizeValidation:
 
 
 # =============================================================================
-# Test: Battle Seed Generation
-# =============================================================================
-
-
-class TestBattleSeedGeneration:
-    """Tests for battle seed counter."""
-
-    def test_seed_counter_increments(self, turn_engine):
-        """Battle seed counter increments each call."""
-        seed1 = turn_engine._generate_battle_seed()
-        seed2 = turn_engine._generate_battle_seed()
-        seed3 = turn_engine._generate_battle_seed()
-
-        assert seed2 == seed1 + 1
-        assert seed3 == seed2 + 1
-
-    def test_seed_starts_at_one(self, turn_engine):
-        """First seed is 1."""
-        seed = turn_engine._generate_battle_seed()
-
-        assert seed == 1
-
-    def test_multiple_engines_independent(self):
-        """Different engine instances have independent counters."""
-        engine1 = TurnEngine()
-        engine2 = TurnEngine()
-
-        seed1 = engine1._generate_battle_seed()
-        seed2 = engine2._generate_battle_seed()
-
-        assert seed1 == seed2 == 1
-
-
-# =============================================================================
 # Test: Turn Processing Structure
 # =============================================================================
 
@@ -340,89 +306,6 @@ class TestMovementCalculation:
 
         mock_fleet.pop_order.assert_called()
         assert result is None
-
-
-# =============================================================================
-# Test: Combat Resolution
-# =============================================================================
-
-
-class TestCombatResolution:
-    """Tests for combat resolution methods."""
-
-    def test_resolve_conflicts_detects_collision(self, turn_engine, mock_empire):
-        """Conflicts are detected when fleets share location."""
-        empire1 = MagicMock()
-        empire1.id = 0
-        empire2 = MagicMock()
-        empire2.id = 1
-
-        fleet1 = MagicMock()
-        fleet1.location = HexCoord(5, 5)
-        fleet1.owner_id = 0
-
-        fleet2 = MagicMock()
-        fleet2.location = HexCoord(5, 5)  # Same location
-        fleet2.owner_id = 1
-
-        empire1.fleets = [fleet1]
-        empire2.fleets = [fleet2]
-
-        with patch.object(turn_engine, '_resolve_combat_at_hex') as mock_resolve:
-            turn_engine._resolve_conflicts([empire1, empire2])
-
-            mock_resolve.assert_called()
-
-    def test_no_conflict_same_empire(self, turn_engine):
-        """No conflict when same empire's fleets share location."""
-        empire = MagicMock()
-        empire.id = 0
-
-        fleet1 = MagicMock()
-        fleet1.location = HexCoord(5, 5)
-        fleet1.owner_id = 0
-
-        fleet2 = MagicMock()
-        fleet2.location = HexCoord(5, 5)
-        fleet2.owner_id = 0  # Same empire
-
-        empire.fleets = [fleet1, fleet2]
-
-        with patch.object(turn_engine, '_resolve_combat_at_hex') as mock_resolve:
-            turn_engine._resolve_conflicts([empire])
-
-            mock_resolve.assert_not_called()
-
-    def test_resolve_combat_rng_fallback_for_empty_fleet(self, turn_engine):
-        """RNG fallback for empty fleets."""
-        fleet1 = MagicMock()
-        fleet1.ships = []  # Empty fleet
-
-        fleet2 = MagicMock()
-        fleet2.ships = []  # Empty fleet
-
-        with patch('game.strategy.engine.turn_engine.random.random') as mock_random:
-            mock_random.return_value = 0.3  # < 0.5 means fleet2 wins
-
-            result = turn_engine._resolve_combat(fleet1, fleet2)
-
-            assert result == fleet2
-
-    def test_resolve_combat_uses_simulation(self, turn_engine):
-        """Full simulation used when both fleets have ships."""
-        fleet1 = MagicMock()
-        fleet1.ships = [MagicMock()]  # Has ships
-
-        fleet2 = MagicMock()
-        fleet2.ships = [MagicMock()]  # Has ships
-
-        with patch.object(turn_engine, '_resolve_combat_simulated') as mock_sim:
-            mock_sim.return_value = fleet1
-
-            result = turn_engine._resolve_combat(fleet1, fleet2)
-
-            mock_sim.assert_called_with(fleet1, fleet2)
-            assert result == fleet1
 
 
 # =============================================================================
@@ -582,57 +465,6 @@ class TestEndTurnOrders:
 
 
 # =============================================================================
-# Test: Per-Turn Resource Processing
-# =============================================================================
-
-
-class TestPerTurnResources:
-    """Tests for _process_per_turn_resources method."""
-
-    def test_consumes_resources_each_tick(self, turn_engine, mock_empire, mock_fleet):
-        """Per-turn costs are consumed each tick."""
-        mock_ship = MagicMock()
-        mock_ship.is_combat_capable.return_value = True
-        mock_ship.get_all_resource_costs_per_turn.return_value = {"fuel": 100.0}
-        mock_ship.consume_resource = MagicMock(return_value=True)
-
-        mock_fleet.ships = [mock_ship]
-        mock_empire.fleets = [mock_fleet]
-
-        turn_engine._process_per_turn_resources(50, [mock_empire])
-
-        # Should consume 1/100th of 100 = 1.0 fuel
-        mock_ship.consume_resource.assert_called_with("fuel", 1.0)
-
-    def test_skips_non_combat_ships(self, turn_engine, mock_empire, mock_fleet):
-        """Non-combat-capable ships are skipped."""
-        mock_ship = MagicMock()
-        mock_ship.is_combat_capable.return_value = False
-
-        mock_fleet.ships = [mock_ship]
-        mock_empire.fleets = [mock_fleet]
-
-        turn_engine._process_per_turn_resources(1, [mock_empire])
-
-        mock_ship.get_all_resource_costs_per_turn.assert_not_called()
-
-    def test_auto_disables_on_depletion(self, turn_engine, mock_empire, mock_fleet):
-        """Components auto-disabled when resource depleted."""
-        mock_ship = MagicMock()
-        mock_ship.is_combat_capable.return_value = True
-        mock_ship.get_all_resource_costs_per_turn.return_value = {"power": 50.0}
-        mock_ship.consume_resource = MagicMock(return_value=False)  # Failed
-
-        mock_fleet.ships = [mock_ship]
-        mock_empire.fleets = [mock_fleet]
-
-        with patch.object(turn_engine, '_auto_disable_components_for_resource') as mock_disable:
-            turn_engine._process_per_turn_resources(1, [mock_empire])
-
-            mock_disable.assert_called_with(mock_ship, "power")
-
-
-# =============================================================================
 # Test: Tick Processing
 # =============================================================================
 
@@ -640,17 +472,22 @@ class TestPerTurnResources:
 class TestTickProcessing:
     """Tests for _process_tick method."""
 
-    @patch.object(TurnEngine, '_process_per_turn_resources')
-    @patch.object(TurnEngine, '_resolve_conflicts')
-    def test_tick_processes_phases(self, mock_conflicts, mock_resources,
-                                   turn_engine, mock_empire, mock_galaxy):
+    def test_tick_processes_phases(self, turn_engine, mock_empire, mock_galaxy):
         """Each tick processes resource and conflict phases."""
         mock_empire.fleets = []
 
+        # PROJ-36: Combat delegated to ConflictResolutionEngine
+        mock_conflict_engine = MagicMock()
+        turn_engine._conflict_engine = mock_conflict_engine
+
+        # PROJ-36: Resource consumption delegated to ResourceManagementEngine
+        mock_resource_engine = MagicMock()
+        turn_engine._resource_engine = mock_resource_engine
+
         turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
-        mock_resources.assert_called()
-        mock_conflicts.assert_called()
+        mock_resource_engine.process_per_turn_consumption.assert_called()
+        mock_conflict_engine.resolve_all_conflicts.assert_called()
 
     def test_fleet_speed_determines_movement_frequency(self, turn_engine, mock_empire, mock_galaxy):
         """Fleet speed affects when movement occurs."""
@@ -667,16 +504,20 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
+        # PROJ-36: Set up mock conflict engine
+        turn_engine._conflict_engine = MagicMock()
+
+        # PROJ-36: Set up mock resource engine
+        turn_engine._resource_engine = MagicMock()
+
         with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
-            with patch.object(turn_engine, '_process_per_turn_resources'):
-                with patch.object(turn_engine, '_resolve_conflicts'):
-                    mock_calc.return_value = None
+            mock_calc.return_value = None
 
-                    # Tick 10 should trigger movement check (10 % 10 == 0)
-                    turn_engine._process_tick(10, [mock_empire], mock_galaxy)
+            # Tick 10 should trigger movement check (10 % 10 == 0)
+            turn_engine._process_tick(10, [mock_empire], mock_galaxy)
 
-                    # Tick 5 should also check but still call calculate_next_hex
-                    turn_engine._process_tick(5, [mock_empire], mock_galaxy)
+            # Tick 5 should also check but still call calculate_next_hex
+            turn_engine._process_tick(5, [mock_empire], mock_galaxy)
 
     def test_zero_speed_fleet_never_moves(self, turn_engine, mock_empire, mock_galaxy):
         """Fleet with zero speed never moves."""
@@ -692,13 +533,15 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
-            with patch.object(turn_engine, '_process_per_turn_resources'):
-                with patch.object(turn_engine, '_resolve_conflicts'):
-                    for tick in range(1, 11):  # Check first 10 ticks
-                        turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
+        # PROJ-36: Set up mock conflict and resource engines
+        turn_engine._conflict_engine = MagicMock()
+        turn_engine._resource_engine = MagicMock()
 
-                    mock_calc.assert_not_called()
+        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
+            for tick in range(1, 11):  # Check first 10 ticks
+                turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
+
+            mock_calc.assert_not_called()
 
     def test_movement_consumes_resources(self, turn_engine, mock_empire, mock_galaxy):
         """Movement consumes fleet resources."""
@@ -722,9 +565,11 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_process_per_turn_resources'):
-            with patch.object(turn_engine, '_resolve_conflicts'):
-                turn_engine._process_tick(1, [mock_empire], mock_galaxy)
+        # PROJ-36: Set up mock conflict and resource engines
+        turn_engine._conflict_engine = MagicMock()
+        turn_engine._resource_engine = MagicMock()
+
+        turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
         fleet.consume_movement_resources.assert_called()
 
@@ -750,9 +595,11 @@ class TestTickProcessing:
 
         mock_empire.fleets = [fleet]
 
-        with patch.object(turn_engine, '_process_per_turn_resources'):
-            with patch.object(turn_engine, '_resolve_conflicts'):
-                turn_engine._process_tick(1, [mock_empire], mock_galaxy)
+        # PROJ-36: Set up mock conflict and resource engines
+        turn_engine._conflict_engine = MagicMock()
+        turn_engine._resource_engine = MagicMock()
+
+        turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
         fleet.clear_orders.assert_called()
 
@@ -787,10 +634,12 @@ class TestJoinFleetDuringTick:
         mock_empire.fleets = [joining_fleet, target_fleet]
         mock_empire.remove_fleet = MagicMock()
 
+        # PROJ-36: Set up mock conflict and resource engines
+        turn_engine._conflict_engine = MagicMock()
+        turn_engine._resource_engine = MagicMock()
+
         # Process tick
-        with patch.object(turn_engine, '_process_per_turn_resources'):
-            with patch.object(turn_engine, '_resolve_conflicts'):
-                turn_engine._process_tick(1, [mock_empire], mock_galaxy)
+        turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
         joining_fleet.merge_with.assert_called_with(target_fleet)
         mock_empire.remove_fleet.assert_called_with(joining_fleet)
@@ -816,9 +665,11 @@ class TestJoinFleetDuringTick:
 
         mock_empire.fleets = [joining_fleet, target_fleet]
 
-        with patch.object(turn_engine, '_process_per_turn_resources'):
-            with patch.object(turn_engine, '_resolve_conflicts'):
-                turn_engine._process_tick(1, [mock_empire], mock_galaxy)
+        # PROJ-36: Set up mock conflict and resource engines
+        turn_engine._conflict_engine = MagicMock()
+        turn_engine._resource_engine = MagicMock()
+
+        turn_engine._process_tick(1, [mock_empire], mock_galaxy)
 
         joining_fleet.merge_with.assert_not_called()
 
@@ -907,6 +758,7 @@ class TestTurnEngineEdgeCases:
 
 # =============================================================================
 # PROJ-11 Phase 4: IBattleResolver Dependency Injection Tests
+# PROJ-36: Combat resolution moved to ConflictResolutionEngine
 # =============================================================================
 
 
@@ -916,6 +768,9 @@ class TestBattleResolverInjection:
 
     PROJ-11 Phase 4: TurnEngine now accepts an optional IBattleResolver
     parameter for clean separation between strategy and simulation layers.
+
+    PROJ-36: Combat resolution is now delegated to ConflictResolutionEngine.
+    TurnEngine still stores the resolver and passes it to the conflict engine.
     """
 
     def test_turn_engine_accepts_battle_resolver(self):
@@ -939,172 +794,36 @@ class TestBattleResolverInjection:
 
         assert isinstance(engine._battle_resolver, SimulationBattleResolver)
 
-    def test_resolve_combat_simulated_uses_injected_resolver(self):
-        """_resolve_combat_simulated should use injected resolver."""
+    def test_conflict_engine_receives_battle_resolver(self):
+        """ConflictResolutionEngine should receive the injected battle resolver."""
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
-        call_count = 0
-        last_fleets = []
-
-        class TrackingResolver(IBattleResolver):
+        class MockResolver(IBattleResolver):
             def resolve_battle(self, fleet1, fleet2, seed=None):
-                nonlocal call_count, last_fleets
-                call_count += 1
-                last_fleets = [fleet1, fleet2]
-                return BattleResult(
-                    winner=0,
-                    tick_count=100,
-                    team0_survivors=[],
-                    team1_survivors=[]
-                )
+                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
 
-        resolver = TrackingResolver()
+        resolver = MockResolver()
         engine = TurnEngine(battle_resolver=resolver)
 
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
+        # Access conflict_engine to trigger lazy initialization
+        conflict_engine = engine.conflict_engine
 
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
+        # The conflict engine should have the same resolver
+        assert conflict_engine._battle_resolver is resolver
 
-        result = engine._resolve_combat_simulated(fleet1, fleet2)
+    def test_conflict_engine_lazy_initialization(self):
+        """ConflictResolutionEngine should be lazily initialized."""
+        engine = TurnEngine()
 
-        assert call_count == 1
-        assert fleet1 in last_fleets
-        assert fleet2 in last_fleets
-        assert result == fleet1  # Winner was team 0 (fleet1)
+        # Before accessing, should be None
+        assert engine._conflict_engine is None
 
-    def test_mock_resolver_enables_unit_testing(self):
-        """Mock resolver allows unit testing without simulation."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+        # After accessing, should be created
+        conflict_engine = engine.conflict_engine
+        assert conflict_engine is not None
 
-        class AlwaysFleet1WinsResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                return BattleResult(
-                    winner=0,  # Team 0 (fleet1) wins
-                    tick_count=50,
-                    team0_survivors=[MagicMock()],
-                    team1_survivors=[]
-                )
-
-        engine = TurnEngine(battle_resolver=AlwaysFleet1WinsResolver())
-
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-        fleet1.get_ship_instances.return_value = [MagicMock()]
-        fleet1.ships = [MagicMock()]
-        fleet1.update_from_battle_results = MagicMock()
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-        fleet2.get_ship_instances.return_value = [MagicMock()]
-        fleet2.ships = [MagicMock()]
-        fleet2.update_from_battle_results = MagicMock()
-
-        winner = engine._resolve_combat_simulated(fleet1, fleet2)
-
-        assert winner == fleet1
-
-    def test_draw_result_handled(self):
-        """Draw (winner=None) should be handled correctly."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
-
-        class DrawResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                return BattleResult(
-                    winner=None,  # Draw
-                    tick_count=1000,
-                    team0_survivors=[MagicMock(), MagicMock()],  # 2 survivors
-                    team1_survivors=[MagicMock()]  # 1 survivor
-                )
-
-        engine = TurnEngine(battle_resolver=DrawResolver())
-
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-        fleet1.update_from_battle_results = MagicMock()
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-        fleet2.update_from_battle_results = MagicMock()
-
-        winner = engine._resolve_combat_simulated(fleet1, fleet2)
-
-        # Fleet with more survivors wins on draw
-        assert winner == fleet1
-
-    def test_seed_passed_to_resolver(self):
-        """Battle seed should be passed to resolver."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
-
-        received_seed = None
-
-        class SeedCapturingResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                nonlocal received_seed
-                received_seed = seed
-                return BattleResult(
-                    winner=0,
-                    tick_count=0,
-                    team0_survivors=[],
-                    team1_survivors=[]
-                )
-
-        engine = TurnEngine(battle_resolver=SeedCapturingResolver())
-
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-
-        engine._resolve_combat_simulated(fleet1, fleet2)
-
-        # The engine uses _generate_battle_seed() internally
-        assert received_seed is not None
-        assert isinstance(received_seed, int)
-
-    def test_battle_results_applied_to_fleets(self):
-        """Battle results should be applied to fleet ship states."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
-
-        survivor0 = MagicMock()
-        survivor1 = MagicMock()
-
-        class ResultResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                return BattleResult(
-                    winner=0,
-                    tick_count=100,
-                    team0_survivors=[survivor0],
-                    team1_survivors=[survivor1]
-                )
-
-        engine = TurnEngine(battle_resolver=ResultResolver())
-
-        fleet1 = MagicMock()
-        fleet1.id = 1
-        fleet1.has_ship_instances.return_value = True
-        fleet1.update_from_battle_results = MagicMock()
-
-        fleet2 = MagicMock()
-        fleet2.id = 2
-        fleet2.has_ship_instances.return_value = True
-        fleet2.update_from_battle_results = MagicMock()
-
-        engine._resolve_combat_simulated(fleet1, fleet2)
-
-        # Verify fleet.update_from_battle_results was called with survivors
-        fleet1.update_from_battle_results.assert_called_once_with([survivor0])
-        fleet2.update_from_battle_results.assert_called_once_with([survivor1])
+        # Should return same instance
+        assert engine.conflict_engine is conflict_engine
 
 
 # =============================================================================

@@ -9,12 +9,12 @@
 | PROJ-38 | Registry DI Refactor | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-37 | Fragile Asset Loading Refactor | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-36 | TurnEngine God Class Decomposition | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-35 | Unify Fleet Movement Logic | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-35 | Unify Fleet Movement Logic | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-34 | StrategyScene Strict Facade Refactor | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-33 | UI Screens: ViewModel Layer Introduction | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-32 | Research System: State Management Cleanup | Archived | 2026-01-27 | 2026-01-27 |

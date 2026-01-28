@@ -713,15 +713,18 @@ class TestTurnEngineIsolation:
         """Turn engine starts with clean state."""
         engine = TurnEngine()
 
-        # Should have initial seed counter
-        assert engine._battle_seed_counter == 0
+        # PROJ-36: Battle seed counter moved to ConflictResolutionEngine
+        # Conflict engine should be None initially (lazy initialization)
+        assert engine._conflict_engine is None
 
     def test_battle_seeds_increment(self, turn_engine, two_empire_setup):
         """Battle seeds increment for determinism."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
-        initial_seed = turn_engine._battle_seed_counter
+        # PROJ-36: Seed counter is now in ConflictResolutionEngine
+        # Access conflict_engine to initialize it, then get initial seed
+        initial_seed = turn_engine.conflict_engine._battle_seed_counter
 
         # Create combat situation
         loc = HexCoord(0, 0)
@@ -738,7 +741,7 @@ class TestTurnEngineIsolation:
         # Seed should have incremented if battle occurred
         # Note: RNG combat doesn't use seeds, only simulated combat does
         # But the counter still tracks battles
-        assert turn_engine._battle_seed_counter >= initial_seed
+        assert turn_engine.conflict_engine._battle_seed_counter >= initial_seed
 
     def test_different_sessions_independent(self):
         """Different game sessions are independent."""
