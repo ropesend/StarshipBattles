@@ -538,3 +538,22 @@ class WorkshopViewModel:
 
         self._ship.theme_id = theme_id
         self._emit_ship_updated()
+
+    def set_ship_ai_strategy(self, strategy_id: str) -> None:
+        """
+        Set the ship's AI strategy via the ViewModel.
+
+        Encapsulates direct ship mutation and emits SHIP_UPDATED event.
+        Does not emit if strategy is unchanged.
+
+        Args:
+            strategy_id: AI strategy identifier (e.g., "standard_ranged", "aggressive_close")
+        """
+        if not self._ship:
+            return
+
+        if self._ship.ai_strategy == strategy_id:
+            return  # No change, skip event emission
+
+        self._ship.ai_strategy = strategy_id
+        self._emit_ship_updated()

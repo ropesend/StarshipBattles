@@ -454,5 +454,6 @@ class ResearchControlPanel:
         self.tech_tree = tech_tree
         self.clear_selection()
         self.update_budget_display()
+        self.slider_budget.set_current_value(tracker.rp_budget)
         self.clear_log()
         self._update_auto_spread_button()

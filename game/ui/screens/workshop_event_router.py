@@ -343,7 +343,7 @@ class WorkshopEventRouter:
         elif hasattr(gui.right_panel, 'theme_dropdown') and event.ui_element == gui.right_panel.theme_dropdown:
             # Only allow theme change in standalone mode (integrated mode locks to empire theme)
             if gui.context.is_standalone():
-                gui.ship.theme_id = event.text
+                gui.viewmodel.set_ship_theme(event.text)
                 gui.right_panel.update_portrait_image()
                 log_info(f"Changed theme to {event.text}")
             return True
@@ -412,10 +412,10 @@ class WorkshopEventRouter:
         manager = StrategyManager.instance()
         for strategy_id, strat in manager.strategies.items():
             if strat.get('name', '') == selected_name:
-                gui.ship.ai_strategy = strategy_id
+                gui.viewmodel.set_ship_ai_strategy(strategy_id)
                 break
         else:
-            gui.ship.ai_strategy = event.text.lower().replace(' ', '_')
+            gui.viewmodel.set_ship_ai_strategy(event.text.lower().replace(' ', '_'))
         return True
     
     def _handle_confirmation(self, event) -> bool:

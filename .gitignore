@@ -22,3 +22,6 @@ collect_log*.txt
 
 # pytest-testmon
 .testmondata*
+
+# Personal development tools
+VibeCodingHotkeys.ahk

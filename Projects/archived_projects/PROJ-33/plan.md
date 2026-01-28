@@ -14,22 +14,23 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Critical Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Audit Fixes (Cycle 1) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-27 16:30
-**Active Phase:** Phase 1 (Complete)
-**Last Action:** Completed Phase 1 - Refactored workshop_screen.py to use ViewModel methods instead of direct Ship mutations
-**Next Action:** Project ready for audit/verification
+**Last Updated:** 2026-01-27
+**Active Phase:** Audit complete
+**Last Action:** Audit Cycle 2 passed with no significant issues
+**Next Action:** User verification required
 **Blockers:** None
 **Context:**
-- Added `set_ship_name()` and `set_ship_theme()` to `WorkshopViewModel` with tests
-- Refactored `workshop_screen.py` to use ViewModel methods:
-  - Theme setting via `viewmodel.set_ship_theme()`
-  - Name setting via `viewmodel.set_ship_name()`
-  - Modifier sync via `viewmodel.sync_modifiers_to_selection()`
-  - Clear design via `viewmodel.clear_design()`
-- All direct Ship mutations removed from workshop_screen.py
-- Tests: 4 new ViewModel tests, 108 builder tests, 65 services tests, 87 UI tests - ALL PASSING
+- Audit Cycle 2 verified all Phase 1 and Phase 2 fixes are complete and correct
+- All direct Ship mutations in DesignWorkshopGUI now go through ViewModel methods:
+  - `set_ship_name()`, `set_ship_theme()`, `set_ship_ai_strategy()`
+  - `change_ship_class()` (delegates to service)
+- All 18 ViewModel tests pass (6 for property setters)
+- All 472 UI tests pass
+- All 4711 project tests pass
+- BuilderSceneGUI (legacy) is out of scope - not used in main app
 
 ## Overview
 Systematic remediation of findings from review: 2026-01-27_general_self-contained-systems. Total findings selected: 1 (Critical: 1, Major: 0, Other: 0).
@@ -50,6 +51,7 @@ Systematic remediation of findings from review: 2026-01-27_general_self-containe
 |-----------|-----------|
 | WorkshopViewModel | `game/ui/screens/workshop_viewmodel.py` |
 | DesignWorkshopGUI | `game/ui/screens/workshop_screen.py` |
+| WorkshopEventRouter | `game/ui/screens/workshop_event_router.py` |
 | VehicleDesignService | `game/simulation/services/vehicle_design_service.py` |
 | ViewModel Tests | `tests/unit/builder/test_builder_viewmodel.py` |
 
@@ -60,5 +62,11 @@ Systematic remediation of findings from review: 2026-01-27_general_self-containe
 ## Verification
 - [x] All phase checklists complete
 - [x] All tests passing
-- [ ] Audit passed
+- [x] Audit passed (Cycle 2 - no significant issues)
 - [ ] User verified
+
+## Audit Log
+| Cycle | Date | Findings | Resolution |
+|-------|------|----------|------------|
+| 1 | 2026-01-27 | 2 major issues: direct mutations in workshop_event_router.py | Added Phase 2 for fixes |
+| 2 | 2026-01-27 | No significant issues | PASSED |
