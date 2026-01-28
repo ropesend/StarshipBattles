@@ -22,8 +22,8 @@
 | 7. UI Layer Remediation | **SUPERSEDED** | [phase_7_checklist.md](phase_7_checklist.md) | Moved to Phase 12 |
 | 8. Research System Polish | **Complete** | [phase_8_checklist.md](phase_8_checklist.md) | 7 Issues |
 | 9. Data & Config Cleanup | **Complete** | [phase_9_checklist.md](phase_9_checklist.md) | 13 Issues |
-| 10. Test Infrastructure | Not Started | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
-| 11. Original Findings Completion | Not Started | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
+| 10. Test Infrastructure | **Complete** | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
+| 11. Original Findings Completion | **Complete** | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
 | 12. UI Layer Remediation (Final) | Not Started | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
 
 **Total Issues:** ~74 (revised after Category 3 audit verification)
@@ -31,47 +31,34 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 10 - Test Infrastructure (6/18 tasks complete)
-**Last Action:** Completed Phase 10 Tasks 10.1, 10.2, 10.4, 10.6, 10.7, 10.12
-**Next Action:** Continue Phase 10 - Tasks 10.3, 10.5, 10.8-10.11, 10.13-10.18
+**Active Phase:** Phase 12 - UI Layer Remediation (Final) (not started)
+**Last Action:** Completed Phase 11 - Original Findings Completion (2/2 tasks)
+**Next Action:** Start Phase 12 - UI Layer Remediation (Final)
 **Blockers:** None
 
 ### Recent Work (This Session)
-- **Phase 10 In Progress:** Test infrastructure cleanup (6/18 tasks complete)
-  - 10.1: Removed 5 duplicate scripts (profile_simulation, repro_shield, repro_energy_stats, reproduce_scaling, stress_test)
-  - 10.2: Removed additional duplicates (generate_test_data, strategy_tournament, verify_determinism_current), renamed verify_builder_imports with _ prefix
-  - 10.4: Consolidated make_mock_ship_instance() to tests/conftest.py, removed duplicates from 3 integration test files
-  - 10.6: Renamed formation manual scripts (_test_formation_flight.py, _test_formation_attack.py) - they weren't pytest tests
-  - 10.7: Reviewed underutilized directories - all serve valid purpose (no changes needed)
-  - 10.12: Enhanced tests/README.md with Naming Conventions, Shared Test Helpers, Unit vs Integration Tests sections
-  - Created/expanded `tests/unit/data/test_test_infrastructure.py` with 13 validation tests
-  - All 5098 tests pass
+- **Phase 11 COMPLETE:** Original findings completion (2/2 tasks)
+  - 11.1: modifiers_v1_backup.json - Already deleted in Phase 9
+  - 11.2: Tools/ directory cleanup - Reduced from 43 to 10 files:
+    - Moved 10 migration/refactor scripts to `_legacy_docs/Tools/`
+    - Deleted 23 debug/reproduce/one-off scripts
+    - Added `Tools/README.md` documenting remaining scripts
+  - **Final: 5176 passed, 3 skipped** (tests/ directory)
 
 ### Files Modified This Session
-- tests/conftest.py - Added make_mock_ship_instance() helper
-- tests/README.md - Enhanced with naming conventions and guidelines
-- tests/unit/data/test_test_infrastructure.py - Created with 13 tests
-- tests/unit/refactor/test_modifier_loader_v2.py - Fixed reference to deleted modifiers_v2.json
-- tests/integration/test_gameplay_loop.py - Uses shared make_mock_ship_instance
-- tests/integration/test_colonization.py - Uses shared make_mock_ship_instance
-- tests/integration/test_save_load.py - Uses shared make_mock_ship_instance
+- Tools/ directory - Cleaned up, see 11.2 notes
+- Tools/README.md - Added documentation for remaining scripts
+- _legacy_docs/Tools/ - Created, contains 10 legacy migration scripts
 
-### Files Deleted This Session
-- tests/unit/profile_simulation.py (kept performance/ version)
-- tests/unit/repro_shield.py (kept performance/ version)
-- tests/unit/repro_energy_stats.py (kept performance/ version)
-- tests/unit/reproduce_scaling.py (kept performance/ version)
-- tests/unit/stress_test.py (kept performance/ version)
-- tests/unit/generate_test_data.py (kept performance/ version)
-- tests/unit/strategy_tournament.py (kept performance/ version)
-- tests/unit/verify_determinism_current.py (kept performance/ version)
+### Previous Work (Earlier Sessions)
+- **Phase 10 Complete:** Test infrastructure cleanup (18 tasks)
+  - Removed duplicate scripts, consolidated test helpers
+  - Fixed colonization test fragility with deterministic galaxy
+  - Added tests/README.md documentation
 
-### Files Renamed This Session
-- tests/unit/verify_builder_imports.py → tests/unit/_verify_builder_imports.py
-- tests/integration/test_formation_flight.py → tests/integration/_test_formation_flight.py
-- tests/integration/test_formation_attack.py → tests/integration/_test_formation_attack.py
+- **Phases 1-9 Complete:** All core remediation work done
 
-### Previous Work
+### Previous Work (Prior Sessions)
 - **Phase 9 Complete:** Data & config cleanup (13 tasks)
 
 - **Phase 8 Complete:** Research system polish (7 tasks)

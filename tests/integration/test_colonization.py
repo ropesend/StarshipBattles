@@ -6,11 +6,14 @@ Tests the colonization flow including:
 - Colonization target selection
 - Colonization execution and state changes
 - Post-colonization verification
+
+PROJ-40/NEW-INT-001: Uses deterministic galaxy generation with fixed seed.
 """
 
 import pytest
 import os
 import json
+import random
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -28,6 +31,10 @@ from game.strategy.data.ship_instance import ShipInstance
 from tests.conftest import make_mock_ship_instance
 
 
+# Fixed seed for deterministic galaxy generation
+GALAXY_SEED = 42
+
+
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -41,7 +48,12 @@ def turn_engine():
 
 @pytest.fixture
 def simple_galaxy():
-    """Create a simple galaxy with systems for testing."""
+    """Create a deterministic galaxy with systems for testing.
+
+    PROJ-40/NEW-INT-001: Uses fixed seed for reproducible results.
+    The seed guarantees at least one system with an unowned planet.
+    """
+    random.seed(GALAXY_SEED)
     galaxy = Galaxy(radius=500)
     galaxy.generate_systems(count=5, min_dist=100)
     galaxy.generate_warp_lanes()
@@ -50,7 +62,11 @@ def simple_galaxy():
 
 @pytest.fixture
 def empire_with_fleet(simple_galaxy):
-    """Create empire with a colonization-capable fleet."""
+    """Create empire with a colonization-capable fleet.
+
+    PROJ-40/NEW-INT-001: Deterministic fixture that always finds a planet.
+    The deterministic simple_galaxy fixture guarantees an unowned planet exists.
+    """
     empire = Empire(0, "Colonizer Empire", (0, 100, 200))
 
     # Find an unowned planet and create fleet at its location
@@ -65,13 +81,13 @@ def empire_with_fleet(simple_galaxy):
         if target_planet:
             break
 
-    if target_planet:
-        fleet = Fleet(1, empire.id, global_loc, speed=10.0)
-        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
-        empire.add_fleet(fleet)
-        return empire, fleet, target_planet, simple_galaxy
+    # With deterministic seed, we should always find a planet
+    assert target_planet is not None, "Deterministic galaxy should have an unowned planet"
 
-    return empire, None, None, simple_galaxy
+    fleet = Fleet(1, empire.id, global_loc, speed=10.0)
+    fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
+    empire.add_fleet(fleet)
+    return empire, fleet, target_planet, simple_galaxy
 
 
 # =============================================================================
@@ -85,8 +101,7 @@ class TestColonizationValidation:
     def test_validate_colonize_unowned_planet(self, turn_engine, empire_with_fleet):
         """Valid colonize order on unowned planet."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable planet found")
+        # PROJ-40: Deterministic fixture guarantees fleet and planet exist
 
         result = turn_engine.validate_colonize_order(galaxy, fleet, planet)
 
@@ -95,8 +110,7 @@ class TestColonizationValidation:
     def test_validate_colonize_owned_planet_fails(self, turn_engine, empire_with_fleet):
         """Cannot colonize already-owned planet."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable planet found")
+        # PROJ-40: Deterministic fixture guarantees fleet and planet exist
 
         # Claim the planet first
         planet.owner_id = 1  # Different empire
@@ -110,15 +124,15 @@ class TestColonizationValidation:
         """Cannot colonize planet from different location."""
         empire = Empire(0, "Test", (100, 100, 100))
 
-        # Find planet
+        # Find planet - deterministic galaxy guarantees planets exist
         planet = None
         for system in simple_galaxy.systems.values():
             if system.planets:
                 planet = system.planets[0]
                 break
 
-        if not planet:
-            pytest.skip("No planet found")
+        # PROJ-40: Deterministic fixture guarantees at least one planet
+        assert planet is not None
 
         # Create fleet at different location (far away)
         fleet = Fleet(1, empire.id, HexCoord(-1000, -1000), speed=10.0)
@@ -133,8 +147,7 @@ class TestColonizationValidation:
     def test_validate_colonize_any_planet(self, turn_engine, empire_with_fleet):
         """Validate colonize order with 'Any' planet (None target)."""
         empire, fleet, _, galaxy = empire_with_fleet
-        if not fleet:
-            pytest.skip("No fleet available")
+        # PROJ-40: Deterministic fixture guarantees fleet exists
 
         # Pass None for "any planet at location"
         result = turn_engine.validate_colonize_order(galaxy, fleet, None)
@@ -167,8 +180,7 @@ class TestColonizationExecution:
     def test_colonize_transfers_ownership(self, turn_engine, empire_with_fleet):
         """Colonize order transfers planet to empire."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable setup")
+        # PROJ-40: Deterministic fixture guarantees setup
 
         # Verify planet is unowned
         assert planet.owner_id is None
@@ -185,8 +197,7 @@ class TestColonizationExecution:
     def test_colonize_adds_to_colonies(self, turn_engine, empire_with_fleet):
         """Colonize adds planet to empire's colonies list."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable setup")
+        # PROJ-40: Deterministic fixture guarantees setup
 
         initial_colonies = len(empire.colonies)
 
@@ -199,8 +210,7 @@ class TestColonizationExecution:
     def test_colonize_consumes_fleet(self, turn_engine, empire_with_fleet):
         """Colonizing fleet is removed from game."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable setup")
+        # PROJ-40: Deterministic fixture guarantees setup
 
         initial_fleets = len(empire.fleets)
 
@@ -213,8 +223,7 @@ class TestColonizationExecution:
     def test_colonize_pops_order(self, turn_engine, empire_with_fleet):
         """Colonize order is removed after execution (if fleet survives the process)."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable setup")
+        # PROJ-40: Deterministic fixture guarantees setup
 
         # Add colonize and another order
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
@@ -239,7 +248,7 @@ class TestColonizationWithMovement:
         """Fleet can move to planet then colonize."""
         empire = Empire(0, "Mover", (100, 100, 100))
 
-        # Find a planet
+        # Find an unowned planet - deterministic galaxy guarantees one exists
         target_planet = None
         target_loc = None
         for system in simple_galaxy.systems.values():
@@ -251,8 +260,8 @@ class TestColonizationWithMovement:
             if target_planet:
                 break
 
-        if not target_planet:
-            pytest.skip("No unowned planet found")
+        # PROJ-40: Deterministic fixture guarantees unowned planet
+        assert target_planet is not None
 
         # Create fleet nearby (1 hex away)
         start_loc = HexCoord(target_loc.q + 1, target_loc.r)
@@ -280,10 +289,10 @@ class TestColonizationWithMovement:
         """Colonize order executes at destination, not start."""
         empire = Empire(0, "Traveler", (100, 100, 100))
 
-        # Find two systems with planets
+        # Find two systems with planets - deterministic galaxy guarantees this
         systems_with_planets = [s for s in simple_galaxy.systems.values() if s.planets]
-        if len(systems_with_planets) < 2:
-            pytest.skip("Need at least 2 systems with planets")
+        # PROJ-40: With seed 42 and 5 systems, we get enough systems with planets
+        assert len(systems_with_planets) >= 2, "Deterministic galaxy should have 2+ systems with planets"
 
         # Start at first system's planet
         start_sys = systems_with_planets[0]
@@ -298,8 +307,8 @@ class TestColonizationWithMovement:
                 target_loc = systems_with_planets[1].global_location + planet.location
                 break
 
-        if not target_planet:
-            pytest.skip("No target planet found")
+        # PROJ-40: Deterministic fixture guarantees unowned planet
+        assert target_planet is not None
 
         # Create fleet at start
         fleet = Fleet(1, empire.id, start_loc, speed=100.0)
@@ -349,7 +358,7 @@ class TestColonizationEdgeCases:
         empire1 = Empire(0, "First", (100, 0, 0))
         empire2 = Empire(1, "Second", (0, 0, 100))
 
-        # Find unowned planet
+        # Find unowned planet - deterministic galaxy guarantees one exists
         target_planet = None
         target_loc = None
         for system in simple_galaxy.systems.values():
@@ -361,8 +370,8 @@ class TestColonizationEdgeCases:
             if target_planet:
                 break
 
-        if not target_planet:
-            pytest.skip("No unowned planet found")
+        # PROJ-40: Deterministic fixture guarantees unowned planet
+        assert target_planet is not None
 
         # Both empires have fleets at the planet location
         fleet1 = Fleet(1, empire1.id, target_loc, speed=10.0)
@@ -390,7 +399,7 @@ class TestColonizationEdgeCases:
         empire1 = Empire(0, "Colonizer", (100, 0, 0))
         empire2 = Empire(1, "Aggressor", (0, 0, 100))
 
-        # Find unowned planet
+        # Find unowned planet - deterministic galaxy guarantees one exists
         target_planet = None
         target_loc = None
         for system in simple_galaxy.systems.values():
@@ -402,8 +411,8 @@ class TestColonizationEdgeCases:
             if target_planet:
                 break
 
-        if not target_planet:
-            pytest.skip("No unowned planet found")
+        # PROJ-40: Deterministic fixture guarantees unowned planet
+        assert target_planet is not None
 
         # Empire 1 has colony ship
         fleet1 = Fleet(1, empire1.id, target_loc, speed=10.0)
@@ -445,8 +454,7 @@ class TestColonizationStateIntegrity:
     def test_colony_planet_references_match(self, turn_engine, empire_with_fleet):
         """Colony list planet is the same object as galaxy planet."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable setup")
+        # PROJ-40: Deterministic fixture guarantees setup
 
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
         turn_engine.process_turn([empire], galaxy)
@@ -458,8 +466,7 @@ class TestColonizationStateIntegrity:
     def test_galaxy_planet_owner_updated(self, turn_engine, empire_with_fleet):
         """Planet in galaxy has owner_id set."""
         empire, fleet, planet, galaxy = empire_with_fleet
-        if not fleet or not planet:
-            pytest.skip("No suitable setup")
+        # PROJ-40: Deterministic fixture guarantees setup
 
         planet_id = planet.id
 
@@ -475,7 +482,7 @@ class TestColonizationStateIntegrity:
         """Empire can colonize at least one planet in a turn."""
         empire = Empire(0, "Expansionist", (100, 100, 100))
 
-        # Find an unowned planet
+        # Find an unowned planet - deterministic galaxy guarantees one exists
         target_planet = None
         target_loc = None
         for system in simple_galaxy.systems.values():
@@ -487,8 +494,8 @@ class TestColonizationStateIntegrity:
             if target_planet:
                 break
 
-        if not target_planet:
-            pytest.skip("No unowned planet found")
+        # PROJ-40: Deterministic fixture guarantees unowned planet
+        assert target_planet is not None
 
         # Create fleet at planet location
         fleet = Fleet(10, empire.id, target_loc, speed=10.0)

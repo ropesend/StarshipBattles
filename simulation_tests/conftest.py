@@ -4,6 +4,7 @@ Pytest fixtures for simulation tests.
 Provides isolated data loading to prevent registry pollution between tests.
 """
 import importlib.util
+import os
 import sys
 from pathlib import Path
 
