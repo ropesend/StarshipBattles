@@ -406,6 +406,8 @@ class TestResetMethod:
         panel.on_close = MagicMock()
         panel.on_reset = MagicMock()
         panel.on_auto_spread_changed = MagicMock()
+        # Mock the slider_budget UI element
+        panel.slider_budget = MagicMock()
         # Bind the actual reset method to the mock
         panel.reset = lambda t, tt: rc.ResearchControlPanel.reset(panel, t, tt)
         return panel
@@ -543,3 +545,25 @@ class TestResetMethod:
         assert panel.on_close is on_close
         assert panel.on_reset is on_reset_cb
         assert panel.on_auto_spread_changed is on_auto_spread_changed
+
+    def test_reset_updates_budget_slider_position(self, mock_pygame_gui, mock_tracker,
+                                                    mock_tech_tree):
+        """Reset method should update the budget slider to match new tracker's budget.
+
+        This test addresses Audit Cycle 1 finding: after reset(), the slider_budget
+        position should be synchronized with the new tracker's rp_budget value.
+        """
+        rc = mock_pygame_gui
+        panel = self._create_mock_panel(rc, mock_tracker, mock_tech_tree)
+
+        # New tracker has a specific budget value
+        new_tracker = MagicMock()
+        new_tracker.turn_number = 0
+        new_tracker.rp_budget = 300  # Different from default
+        new_tracker.auto_spread_enabled = False
+        new_tracker.get_total_allocated.return_value = 0
+
+        panel.reset(new_tracker, mock_tech_tree)
+
+        # Slider should be updated to match new tracker's budget
+        panel.slider_budget.set_current_value.assert_called_once_with(300)

@@ -354,3 +354,39 @@ class TestBuilderViewModel:
         # Should not emit if theme is the same
         events = event_bus.get_events('SHIP_UPDATED')
         assert len(events) == 0
+
+    def test_set_ship_ai_strategy_updates_and_emits(self, viewmodel_setup):
+        """set_ship_ai_strategy updates ship ai_strategy and emits SHIP_UPDATED event."""
+        from game.simulation.entities.ship import Ship
+
+        event_bus = viewmodel_setup['event_bus']
+        viewmodel = viewmodel_setup['viewmodel']
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship.ai_strategy = "standard_ranged"  # Set initial value
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_ai_strategy("aggressive_close")
+
+        assert ship.ai_strategy == "aggressive_close"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 1
+
+    def test_set_ship_ai_strategy_no_change_if_same(self, viewmodel_setup):
+        """set_ship_ai_strategy should not emit if strategy unchanged."""
+        from game.simulation.entities.ship import Ship
+
+        event_bus = viewmodel_setup['event_bus']
+        viewmodel = viewmodel_setup['viewmodel']
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship.ai_strategy = "standard_ranged"
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_ai_strategy("standard_ranged")
+
+        # Should not emit if strategy is the same
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0
