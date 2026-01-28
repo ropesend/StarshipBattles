@@ -150,7 +150,8 @@ class TestAdvancedFleetOrders:
         mock_find_path.return_value = [HexCoord(1, 0)]
 
         # Execute: Calculate next hex and apply movement manually
-        next_hex = turn_engine._calculate_next_hex(f1, galaxy_mock)
+        # PROJ-36: Use movement_engine directly instead of legacy wrapper
+        next_hex = turn_engine.movement_engine.calculate_next_hex(f1, galaxy_mock)
         if next_hex:
             f1.location = next_hex
             if not f1.path:

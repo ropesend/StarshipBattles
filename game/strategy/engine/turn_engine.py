@@ -1,32 +1,25 @@
 """
-Turn Engine - Strategy Layer Turn Processing
+Turn Engine - Strategy Layer Turn Orchestration
 
-This module contains TurnEngine, the core engine for processing strategy-layer
-turns. Each turn consists of 100 sub-ticks of movement and combat, followed by
-end-of-turn order processing and production.
+PROJ-36: Refactored to be a lightweight orchestrator that delegates
+to specialized engines.
 
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
-       For each tick:
-       - Phase 0: Per-turn resource consumption (1/100th of costs)
-       - Phase 1: Instant orders (JOIN_FLEET) executed
-       - Phase 2: Calculate next hex for all moving fleets
-       - Phase 3: Apply movements simultaneously
-       - Phase 4: Resolve combat at contested hexes
+       - Phase 0: Per-turn resources (via ResourceManagementEngine)
+       - Phase 1: Instant orders (via FleetOrderProcessor)
+       - Phase 2: Calculate moves (via FleetMovementEngine)
+       - Phase 3: Apply moves (via FleetMovementEngine)
+       - Phase 4: Combat (via ConflictResolutionEngine)
+    2. END-OF-TURN ORDERS (via FleetOrderProcessor)
+    3. PRODUCTION (via ProductionEngine)
 
-    2. END-OF-TURN ORDERS:
-       - Process static orders (COLONIZE, etc.)
-       - Fleet may be consumed by order (e.g., colonization)
-
-    3. PRODUCTION:
-       - Process construction queues for all colonies
-       - Spawn completed ships/complexes
-
-Order Types:
-    - MOVE: Fleet travels to destination hex via pathfinding
-    - COLONIZE: Fleet colonizes planet at current location
-    - JOIN_FLEET: Merge this fleet into another fleet at same location
-    - PATROL: Continuous movement between waypoints (future)
+Delegated Engines:
+    - FleetMovementEngine: Movement calculation and application
+    - ProductionEngine: Construction queue processing
+    - FleetOrderProcessor: Order lifecycle management
+    - ConflictResolutionEngine: Combat detection and resolution
+    - ResourceManagementEngine: Per-turn resource consumption
 
 Dependency Injection:
     TurnEngine accepts an optional IBattleResolver for combat resolution.
@@ -37,8 +30,7 @@ Example:
     engine = TurnEngine()
     engine.process_turn(empires, galaxy, save_path="saves/game1")
 """
-from game.core.validation import ValidationResult, validation_result
-from game.strategy.data.fleet import OrderType
+from game.core.validation import ValidationResult
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -159,44 +151,19 @@ class TurnEngine:
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
         """
         Validate if a fleet can colonize a specific planet (or 'Any' if target_planet is None).
-        
+
+        PROJ-36: Delegates to ColonizeValidator.
+
         Args:
             galaxy: The Galaxy object
             fleet: The Fleet object attempting to colonize
             target_planet: The Planet object or None for 'Any'
-            
+
         Returns:
             ValidationResult
         """
-        # 1. Base Validation: Fleet must exist
-        if not fleet:
-            return validation_result(False, "Fleet does not exist.")
-            
-        # 2. Get System/Location Context - Use O(1) spatial index
-        # Get all planets at the fleet's global hex location
-        all_planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
-        valid_candidates = [p for p in all_planets_at_hex if p.owner_id is None]
-        
-        # 3. Check Logic
-        if target_planet is None:
-            # "Any Planet"
-            if not valid_candidates:
-                return validation_result(False, "No colonizable planets at this location.", "NO_CANDIDATES")
-            return validation_result(True, "Valid candidate found.")
-            
-        else:
-            # Specific Planet
-            if target_planet.owner_id is not None:
-                return validation_result(False, f"Planet {target_planet.name} is already owned.", "ALREADY_OWNED")
-            
-            # Check if planet is in valid candidates (verifies location)
-            # We strictly check reference equality or ID equality if we had IDs
-            if target_planet not in valid_candidates:
-                # Determine detailed reason for better feedback
-                # If owner is none (checked above), then it must be location.
-                return validation_result(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
-
-            return validation_result(True, "Planet is valid for colonization.")
+        from game.strategy.validation import ColonizeValidator
+        return ColonizeValidator.validate(galaxy, fleet, target_planet)
 
     def process_production(self, empires, galaxy=None, save_path=None):
         """Process construction queues for all colonies.
@@ -209,22 +176,6 @@ class TurnEngine:
             save_path: Path to savegame folder for loading designs
         """
         self.production_engine.process_production(empires, galaxy, save_path)
-
-    def _spawn_complex(self, planet, design_id, empire, save_path=None):
-        """Add completed complex to planet's facilities.
-
-        PROJ-12 Phase 3: Delegates to ProductionEngine.
-        Kept for backward compatibility.
-        """
-        self.production_engine._spawn_complex(planet, design_id, empire, save_path)
-
-    def _spawn_ship(self, planet, design_id, empire, galaxy, save_path=None):
-        """Spawn ship/satellite/fighter as fleet with ShipInstance.
-
-        PROJ-12 Phase 3: Delegates to ProductionEngine.
-        Kept for backward compatibility.
-        """
-        self.production_engine._spawn_ship(planet, design_id, empire, galaxy, save_path)
 
     def _process_tick(self, tick, empires, galaxy):
         """Process 1 sub-tick of movement and combat.
@@ -258,17 +209,6 @@ class TurnEngine:
         # --- Phase 4: Combat ---
         # PROJ-36: Delegate to ConflictResolutionEngine
         self.conflict_engine.resolve_all_conflicts(empires)
-
-    def _calculate_next_hex(self, fleet, galaxy):
-        """Calculate (but don't apply) the next hex for a fleet.
-
-        PROJ-12 Phase 3: Delegates to FleetMovementEngine.
-        Kept for backward compatibility.
-
-        Returns the next hex to move to, or None if no movement.
-        Side effect: Updates fleet.path if needed.
-        """
-        return self.movement_engine.calculate_next_hex(fleet, galaxy)
 
     def _process_end_turn_orders(self, fleet, empire, galaxy):
         """Process static orders like COLONIZE.

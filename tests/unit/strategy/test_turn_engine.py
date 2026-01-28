@@ -233,13 +233,17 @@ class TestTurnProcessing:
 
 
 class TestMovementCalculation:
-    """Tests for _calculate_next_hex method."""
+    """Tests for movement calculation via FleetMovementEngine.
+
+    PROJ-36: Tests now use movement_engine.calculate_next_hex() directly.
+    Legacy wrapper _calculate_next_hex removed.
+    """
 
     def test_no_order_returns_none(self, turn_engine, mock_fleet, mock_galaxy):
         """Fleet with no orders returns None."""
         mock_fleet.get_current_order.return_value = None
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         assert result is None
 
@@ -256,7 +260,7 @@ class TestMovementCalculation:
         with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
-            result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+            result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
             mock_path.assert_called()
 
@@ -269,7 +273,7 @@ class TestMovementCalculation:
         mock_fleet.path = []
         mock_fleet.location = target  # Already there
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         mock_fleet.pop_order.assert_called()
         assert result is None
@@ -291,7 +295,7 @@ class TestMovementCalculation:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 
-                turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+                turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
                 mock_intercept.assert_called()
 
@@ -302,7 +306,7 @@ class TestMovementCalculation:
         mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
 
-        result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
+        result = turn_engine.movement_engine.calculate_next_hex(mock_fleet, mock_galaxy)
 
         mock_fleet.pop_order.assert_called()
         assert result is None
@@ -510,7 +514,8 @@ class TestTickProcessing:
         # PROJ-36: Set up mock resource engine
         turn_engine._resource_engine = MagicMock()
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
+        # PROJ-36: Use movement_engine directly (wrapper removed)
+        with patch.object(turn_engine.movement_engine, 'calculate_next_hex') as mock_calc:
             mock_calc.return_value = None
 
             # Tick 10 should trigger movement check (10 % 10 == 0)
@@ -537,7 +542,8 @@ class TestTickProcessing:
         turn_engine._conflict_engine = MagicMock()
         turn_engine._resource_engine = MagicMock()
 
-        with patch.object(turn_engine, '_calculate_next_hex') as mock_calc:
+        # PROJ-36: Use movement_engine directly (wrapper removed)
+        with patch.object(turn_engine.movement_engine, 'calculate_next_hex') as mock_calc:
             for tick in range(1, 11):  # Check first 10 ticks
                 turn_engine._process_tick(tick, [mock_empire], mock_galaxy)
 

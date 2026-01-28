@@ -248,7 +248,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
         turn_engine = TurnEngine()
 
         for tick in range(1, 101):
-            turn_engine._process_per_turn_resources(tick, empires)
+            turn_engine.resource_engine.process_per_turn_consumption(tick, empires)
 
         # Verify exact consumption: 100 energy per turn total
         # 100 ticks * (100/100) = 100 energy consumed
@@ -331,7 +331,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
 
         # Run ticks until resource depletes
         for tick in range(1, 101):
-            turn_engine._process_per_turn_resources(tick, empires)
+            turn_engine.resource_engine.process_per_turn_consumption(tick, empires)
 
         # Verify component was auto-disabled
         assert ship.is_component_enabled('test_plasma_engine') is False, \

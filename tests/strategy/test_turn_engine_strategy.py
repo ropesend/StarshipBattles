@@ -275,7 +275,7 @@ class TestPerTurnResourceConsumption:
         empire.add_fleet(fleet)
 
         # Process single tick
-        engine._process_per_turn_resources(1, [empire])
+        engine.resource_engine.process_per_turn_consumption(1, [empire])
 
         # Should consume 1/100th of the per-turn cost
         assert len(consumed_amounts) == 1
@@ -306,7 +306,7 @@ class TestPerTurnResourceConsumption:
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
 
-        engine._process_per_turn_resources(1, [empire])
+        engine.resource_engine.process_per_turn_consumption(1, [empire])
 
         assert consumed['energy'] == pytest.approx(0.3, rel=1e-6)  # 30/100
         assert consumed['fuel'] == pytest.approx(0.1, rel=1e-6)    # 10/100
@@ -328,7 +328,7 @@ class TestPerTurnResourceConsumption:
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
 
-        engine._process_per_turn_resources(1, [empire])
+        engine.resource_engine.process_per_turn_consumption(1, [empire])
 
         # Each ship should have consumed
         for ship in ships:
@@ -358,7 +358,7 @@ class TestPerTurnResourceConsumption:
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
 
-        engine._process_per_turn_resources(1, [empire])
+        engine.resource_engine.process_per_turn_consumption(1, [empire])
 
         # Only combat-capable ship should consume
         combat_ship.consume_resource.assert_called_once()
@@ -380,7 +380,7 @@ class TestPerTurnResourceConsumption:
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
 
-        engine._process_per_turn_resources(1, [empire])
+        engine.resource_engine.process_per_turn_consumption(1, [empire])
 
         # Zero cost should not trigger consumption
         ship.consume_resource.assert_not_called()
@@ -405,8 +405,8 @@ class TestResourceDepletion:
         empire.add_fleet(fleet)
 
         # Patch _auto_disable_components_for_resource to verify it's called
-        with patch.object(engine, '_auto_disable_components_for_resource') as mock_auto:
-            engine._process_per_turn_resources(1, [empire])
+        with patch.object(engine.resource_engine, '_auto_disable_components_for_resource') as mock_auto:
+            engine.resource_engine.process_per_turn_consumption(1, [empire])
             mock_auto.assert_called_once_with(ship, 'energy')
 
     def test_resource_depletion_triggers_auto_disable(self):
@@ -423,8 +423,8 @@ class TestResourceDepletion:
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
 
-        with patch.object(engine, '_auto_disable_components_for_resource') as mock_auto:
-            engine._process_per_turn_resources(50, [empire])
+        with patch.object(engine.resource_engine, '_auto_disable_components_for_resource') as mock_auto:
+            engine.resource_engine.process_per_turn_consumption(50, [empire])
             mock_auto.assert_called_once_with(ship, 'fuel')
 
     def test_no_auto_disable_for_non_per_turn_resources(self):
@@ -442,8 +442,8 @@ class TestResourceDepletion:
         empire = Empire(0, "P1", (255, 0, 0))
         empire.add_fleet(fleet)
 
-        with patch.object(engine, '_auto_disable_components_for_resource') as mock_auto:
-            engine._process_per_turn_resources(1, [empire])
+        with patch.object(engine.resource_engine, '_auto_disable_components_for_resource') as mock_auto:
+            engine.resource_engine.process_per_turn_consumption(1, [empire])
             mock_auto.assert_not_called()
 
 
@@ -476,9 +476,9 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.core.registry.get_component_registry') as mock_registry:
+        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
             mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
-            engine._auto_disable_components_for_resource(ship, 'energy')
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             ship.set_component_enabled.assert_called_once_with('shield_generator', False)
 
@@ -521,9 +521,9 @@ class TestAutoDisableLogic:
                 return mock_energy_comp
             return mock_fuel_comp
 
-        with patch('game.core.registry.get_component_registry') as mock_registry:
+        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
             mock_registry.return_value.get = get_mock_comp
-            engine._auto_disable_components_for_resource(ship, 'energy')
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             # Should disable comp_a and comp_b (energy), not comp_c (fuel)
             calls = ship.set_component_enabled.call_args_list
@@ -547,10 +547,10 @@ class TestAutoDisableLogic:
         )
         ship.set_component_enabled = MagicMock()
 
-        with patch('game.core.registry.get_component_registry') as mock_registry:
+        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
             mock_registry.return_value.get = MagicMock(return_value=None)
             # Should not raise exception
-            engine._auto_disable_components_for_resource(ship, 'energy')
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
             ship.set_component_enabled.assert_not_called()
 
     def test_auto_disable_handles_layer_formats(self):
@@ -579,9 +579,9 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.core.registry.get_component_registry') as mock_registry:
+        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
             mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
-            engine._auto_disable_components_for_resource(ship, 'energy')
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             # Both formats should be handled
             calls = ship.set_component_enabled.call_args_list
@@ -622,12 +622,12 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.core.registry.get_component_registry') as mock_registry:
+        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
             mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
             # Populate cache first
             ship._cached_stats = {'some': 'cached_data'}
 
-            engine._auto_disable_components_for_resource(ship, 'energy')
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             # Cache should be invalidated
             assert ship._cached_stats is None
@@ -659,10 +659,10 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.core.registry.get_component_registry') as mock_registry:
+        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
             mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
             with caplog.at_level(logging.INFO):
-                engine._auto_disable_components_for_resource(ship, 'energy')
+                engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
                 # Check that appropriate log message was created
                 assert any('TestCruiser' in record.message and
@@ -696,7 +696,7 @@ class TestFullTurnIntegration:
 
         # Process all 100 ticks
         for tick in range(1, 101):
-            engine._process_per_turn_resources(tick, [empire])
+            engine.resource_engine.process_per_turn_consumption(tick, [empire])
 
         # Should have consumed exactly 50 energy total
         assert total_consumed['energy'] == pytest.approx(50.0, rel=1e-6)
@@ -721,7 +721,7 @@ class TestFullTurnIntegration:
         empire.add_fleet(fleet)
 
         for tick in range(1, 101):
-            engine._process_per_turn_resources(tick, [empire])
+            engine.resource_engine.process_per_turn_consumption(tick, [empire])
 
         # Each tick should consume 0.25 (25/100)
         assert len(consume_calls) == 100

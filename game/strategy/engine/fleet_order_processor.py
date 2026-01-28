@@ -158,6 +158,8 @@ class FleetOrderProcessor:
         """
         Process a COLONIZE order.
 
+        PROJ-36: Uses ColonizeValidator for validation.
+
         Claims a planet for the empire if valid.
 
         Args:
@@ -168,36 +170,27 @@ class FleetOrderProcessor:
         Returns:
             ColonizeResult with colonization status
         """
+        from game.strategy.validation import ColonizeValidator
+
         order = fleet.get_current_order()
         if not order or order.type != OrderType.COLONIZE:
             return ColonizeResult(colonized=False)
 
         target_planet = order.target
 
-        # Get valid planets at location
-        planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
-        valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
+        # PROJ-36: Use centralized validation
+        validation = ColonizeValidator.validate(galaxy, fleet, target_planet)
+        if not validation.is_valid:
+            log_warning(f"FleetOrderProcessor: Colonize failed - {validation.message}")
+            fleet.pop_order()
+            return ColonizeResult(colonized=False)
 
-        # If specific planet, validate it
+        # Determine final planet (for "Any" case, pick first valid candidate)
         if target_planet is not None:
-            if target_planet.owner_id is not None:
-                log_warning(f"FleetOrderProcessor: Colonize failed - Planet already owned.")
-                fleet.pop_order()
-                return ColonizeResult(colonized=False)
-
-            if target_planet not in valid_candidates:
-                log_warning(f"FleetOrderProcessor: Colonize failed - Planet not at fleet location.")
-                fleet.pop_order()
-                return ColonizeResult(colonized=False)
-
             final_planet = target_planet
         else:
-            # "Any" planet - pick first valid candidate
-            if not valid_candidates:
-                log_warning(f"FleetOrderProcessor: Colonize failed - No colonizable planets at location.")
-                fleet.pop_order()
-                return ColonizeResult(colonized=False)
-
+            planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
+            valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
             final_planet = valid_candidates[0]
 
         # Execute colonization
