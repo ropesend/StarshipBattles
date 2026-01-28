@@ -10,13 +10,12 @@ Responsibilities:
 - Warp travel handling
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, List, Tuple, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_warning
-from game.strategy.data.fleet import Fleet, OrderType
+from game.strategy.data.fleet import Fleet
 from game.strategy.data.hex_math import HexCoord, hex_distance
-from game.strategy.data.pathfinding import find_hybrid_path, calculate_intercept_point
 
 if TYPE_CHECKING:
     pass
@@ -44,7 +43,7 @@ class FleetMovementEngine:
 
     def __init__(self):
         """Initialize the fleet movement engine."""
-        pass
+        self._nav_service = None
 
     def calculate_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
         """
@@ -53,6 +52,8 @@ class FleetMovementEngine:
         Returns the next hex to move to, or None if no movement.
         Side effect: Updates fleet.path if needed.
 
+        PROJ-35: Delegates to FleetNavigationService for unified navigation logic.
+
         Args:
             fleet: Fleet to calculate movement for
             galaxy: Galaxy object for pathfinding
@@ -60,57 +61,12 @@ class FleetMovementEngine:
         Returns:
             Next hex coordinate to move to, or None if no movement
         """
-        order = fleet.get_current_order()
-        if not order:
-            return None
+        from game.strategy.services.fleet_navigation_service import FleetNavigationService
 
-        destination = None
+        if self._nav_service is None:
+            self._nav_service = FleetNavigationService()
 
-        if order.type == OrderType.MOVE:
-            destination = order.target
-        elif order.type == OrderType.MOVE_TO_FLEET:
-            target_fleet = order.target
-            if not target_fleet or not hasattr(target_fleet, 'location'):
-                log_warning("FleetMovementEngine: Target fleet invalid. Order cancelled.")
-                fleet.pop_order()
-                return None
-
-            # Use Predictive Intercept
-            destination = calculate_intercept_point(fleet, target_fleet, galaxy)
-        else:
-            # Other order types (COLONIZE, JOIN_FLEET) not handled here
-            return None
-
-        # Check for Re-Pathing (for Dynamic Targets)
-        if fleet.path:
-            current_dest = fleet.path[-1]
-            if current_dest != destination:
-                fleet.path = []  # Force recalc
-
-        # Calculate path if needed
-        if not fleet.path:
-            if fleet.location == destination:
-                fleet.pop_order()
-                return None
-
-            fleet.path = find_hybrid_path(galaxy, fleet.location, destination, fleet=fleet)
-
-            # Remove start hex if path begins with current location
-            if fleet.path and fleet.path[0] == fleet.location:
-                fleet.path.pop(0)
-
-            if not fleet.path:
-                if fleet.location != destination:
-                    pass  # Retry next tick
-                else:
-                    fleet.pop_order()
-                return None
-
-        if fleet.path:
-            # Pop next hex from path
-            return fleet.path.pop(0)
-
-        return None
+        return self._nav_service.calculate_fleet_next_hex(fleet, galaxy)
 
     def apply_movement(
         self,
@@ -162,9 +118,8 @@ class FleetMovementEngine:
         old_location = fleet.location
         fleet.location = next_hex
 
-        # If path complete, order is done
-        if not fleet.path:
-            fleet.pop_order()
+        # PROJ-35: Order popping is now handled by calculate_next_hex (via FleetNavigationService)
+        # during the collect_movements phase. Don't pop again here.
 
         return MovementResult(
             moved=True,

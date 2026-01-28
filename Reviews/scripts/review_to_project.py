@@ -737,8 +737,16 @@ def create_project_from_review(
     project_dir = PROJECTS_ACTIVE_DIR / project_id
     findings_dir = project_dir / "findings"
 
+    # Safety check: fail if directory already exists (prevents overwrites)
+    if project_dir.exists():
+        print(f"\n[ERROR] Directory already exists: {project_dir}")
+        print("        This suggests the index is out of sync with the filesystem.")
+        print("        Run: python Projects/scripts/sync_index.py --fix")
+        print("        Or manually remove the directory if it's orphaned.")
+        sys.exit(1)
+
     print(f"\nSTEP 1: Create directory structure")
-    project_dir.mkdir(parents=True, exist_ok=True)
+    project_dir.mkdir(parents=True, exist_ok=False)
     findings_dir.mkdir(exist_ok=True)
     print(f"  Created: {project_dir}")
     print(f"  Created: {findings_dir}")

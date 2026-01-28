@@ -282,11 +282,12 @@ class TestMovementCalculation:
         target = HexCoord(10, 0)
         order = FleetOrder(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
+        mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        # PROJ-12: TurnEngine delegates to FleetMovementEngine, so patch there
-        with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
+        # PROJ-35: FleetMovementEngine delegates to FleetNavigationService, patch there
+        with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
             mock_path.return_value = [HexCoord(0, 0), HexCoord(1, 0), HexCoord(2, 0)]
 
             result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
@@ -298,6 +299,7 @@ class TestMovementCalculation:
         target = HexCoord(0, 0)
         order = FleetOrder(OrderType.MOVE, target)
         mock_fleet.get_current_order.return_value = order
+        mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
         mock_fleet.location = target  # Already there
 
@@ -312,12 +314,14 @@ class TestMovementCalculation:
         target_fleet.location = HexCoord(50, 0)
         order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
         mock_fleet.get_current_order.return_value = order
+        mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
         mock_fleet.location = HexCoord(0, 0)
 
-        # PROJ-12: TurnEngine delegates to FleetMovementEngine, so patch there
-        with patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point') as mock_intercept:
-            with patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path') as mock_path:
+        # PROJ-35: FleetMovementEngine delegates to FleetNavigationService
+        # calculate_intercept_point is imported locally, so patch at source
+        with patch('game.strategy.data.pathfinding.calculate_intercept_point') as mock_intercept:
+            with patch('game.strategy.services.fleet_navigation_service.find_hybrid_path') as mock_path:
                 mock_intercept.return_value = HexCoord(25, 0)
                 mock_path.return_value = [HexCoord(0, 0), HexCoord(5, 0)]
 
@@ -329,6 +333,7 @@ class TestMovementCalculation:
         """MOVE_TO_FLEET with invalid target cancels order."""
         order = FleetOrder(OrderType.MOVE_TO_FLEET, None)  # Invalid target
         mock_fleet.get_current_order.return_value = order
+        mock_fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         mock_fleet.path = []
 
         result = turn_engine._calculate_next_hex(mock_fleet, mock_galaxy)
@@ -702,12 +707,14 @@ class TestTickProcessing:
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
         fleet.speed = 100.0  # Move every tick
-        fleet.orders = []
+        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         fleet.path = [HexCoord(1, 0), HexCoord(2, 0)]  # Pre-computed path
-        fleet.get_current_order = MagicMock(return_value=FleetOrder(OrderType.MOVE, HexCoord(10, 0)))
+        fleet.get_current_order = MagicMock(return_value=order)
         fleet.pop_order = MagicMock()
         fleet.has_resources_for_movement = MagicMock(return_value=True)
         fleet.has_resources_for_warp = MagicMock(return_value=True)
+        fleet.can_use_warp = MagicMock(return_value=True)
         fleet.consume_movement_resources = MagicMock()
         fleet.consume_warp_resources = MagicMock()
         fleet.clear_orders = MagicMock()
@@ -728,12 +735,14 @@ class TestTickProcessing:
         fleet.owner_id = 0
         fleet.location = HexCoord(0, 0)
         fleet.speed = 100.0
-        fleet.orders = []
+        order = FleetOrder(OrderType.MOVE, HexCoord(10, 0))
+        fleet.orders = [order]  # PROJ-35: Service uses orders list directly
         fleet.path = [HexCoord(1, 0)]  # Has path
-        fleet.get_current_order = MagicMock(return_value=FleetOrder(OrderType.MOVE, HexCoord(10, 0)))
+        fleet.get_current_order = MagicMock(return_value=order)
         fleet.pop_order = MagicMock()
         fleet.has_resources_for_movement = MagicMock(return_value=False)  # No resources
         fleet.has_resources_for_warp = MagicMock(return_value=True)
+        fleet.can_use_warp = MagicMock(return_value=True)
         fleet.consume_movement_resources = MagicMock()
         fleet.consume_warp_resources = MagicMock()
         fleet.clear_orders = MagicMock()

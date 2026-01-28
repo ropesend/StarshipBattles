@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Update Engine to delegate navigation to the new service
 
 ---
@@ -29,30 +29,30 @@ def calculate_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
     return self._nav_service.calculate_fleet_next_hex(fleet, galaxy)
 ```
 
-- [ ] Add _nav_service attribute initialization (lazy or in __init__)
-- [ ] Replace calculate_next_hex body with delegation
-- [ ] Keep all resource consumption in apply_movement (unchanged)
-- [ ] Verify no other methods need updating
+- [x] Add _nav_service attribute initialization (lazy or in __init__)
+- [x] Replace calculate_next_hex body with delegation
+- [x] Keep all resource consumption in apply_movement (unchanged)
+- [x] Verify no other methods need updating
 
-**Notes:**
+**Notes:** Implemented with lazy initialization using `self._nav_service = None` in `__init__`. Cleaned up unused imports (`OrderType`, `find_hybrid_path`, `calculate_intercept_point`). Also updated test patches to reference correct module paths (`game.strategy.services.fleet_navigation_service.find_hybrid_path` instead of `game.strategy.engine.fleet_movement_engine.find_hybrid_path`).
 
 ---
 
 ### Task 4.2: Verify Engine Tests Pass [Simple]
 **Tests:** `pytest tests/unit/strategy/test_fleet_movement_engine.py -v`
 
-- [ ] All 26 tests must pass
-- [ ] Movement timing preserved (interval = 100 // speed)
-- [ ] Resource consumption unchanged
+- [x] All 29 tests pass (29 not 26 - includes 3 new tests added during implementation)
+- [x] Movement timing preserved (interval = 100 // speed)
+- [x] Resource consumption unchanged
 
-**Notes:**
+**Notes:** Updated tests to: (1) Set `fleet.orders = [order]` since NavigationService uses orders list directly, (2) Patch at correct module paths (`game.strategy.services.fleet_navigation_service` instead of `game.strategy.engine.fleet_movement_engine`). Fixed critical bugs: (1) Non-movement orders (COLONIZE, JOIN_FLEET) now preserved instead of being popped, (2) Removed double order-pop bug in `apply_movement()` since `calculate_next_hex` already pops completed orders.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/unit/strategy/test_fleet_movement_engine.py -v`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/unit/strategy/test_fleet_movement_engine.py -v`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

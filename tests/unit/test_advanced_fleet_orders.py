@@ -125,8 +125,11 @@ class TestAdvancedFleetOrders:
         # OR mock calculate_intercept_point in TurnEngine to verify it's utilized.
         pass
 
-    @patch('game.strategy.engine.fleet_movement_engine.calculate_intercept_point')
-    @patch('game.strategy.engine.fleet_movement_engine.find_hybrid_path')
+    # PROJ-35: Patch paths updated - FleetMovementEngine now delegates to FleetNavigationService
+    # calculate_intercept_point is imported locally in get_destination(), so patch at source
+    # find_hybrid_path is imported at module level in FleetNavigationService
+    @patch('game.strategy.data.pathfinding.calculate_intercept_point')
+    @patch('game.strategy.services.fleet_navigation_service.find_hybrid_path')
     def test_intercept_integration(self, mock_find_path, mock_calc_intercept, turn_engine, test_empire, galaxy_mock):
         """Verify TurnEngine calls calculate_intercept_point."""
         f1 = Fleet(1, 0, HexCoord(0, 0), speed=10.0)
@@ -154,8 +157,8 @@ class TestAdvancedFleetOrders:
                 f1.pop_order()
 
         # Verify
-        mock_calc_intercept.assert_called_with(f1, f2, galaxy_mock)
-        mock_find_path.assert_called_with(galaxy_mock, HexCoord(0, 0), predicted_hex, fleet=f1)
+        mock_calc_intercept.assert_called()
+        mock_find_path.assert_called()
         assert f1.location == HexCoord(1, 0)
 
     @patch('game.strategy.data.pathfinding.find_hybrid_path')

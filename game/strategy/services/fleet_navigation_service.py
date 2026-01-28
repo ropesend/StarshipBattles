@@ -231,16 +231,9 @@ class FleetNavigationService:
         destination = self.get_destination(state, order, galaxy)
 
         if destination is None:
-            # Non-movement order, skip it
-            new_orders = state.orders[1:]
-            new_state = NavigationState(
-                location=state.location,
-                path=(),
-                orders=new_orders,
-                speed=state.speed,
-                can_warp=state.can_warp
-            )
-            return NavigationStep(next_hex=None, new_state=new_state, order_complete=True)
+            # Non-movement order (COLONIZE, JOIN_FLEET, etc.) - leave it for
+            # other processors to handle. Don't pop it here.
+            return NavigationStep(next_hex=None, new_state=state, order_complete=False)
 
         # Check if we need to recalculate path
         current_path = list(state.path)
@@ -448,6 +441,16 @@ class FleetNavigationService:
         Returns:
             Next hex coordinate to move to, or None if no movement
         """
+        # Handle invalid MOVE_TO_FLEET orders (target is None or lacks location)
+        # This must be checked before compute_next_step since it needs to pop the order
+        order = fleet.get_current_order()
+        if order and order.type == OrderType.MOVE_TO_FLEET:
+            target_fleet = order.target
+            if not target_fleet or not hasattr(target_fleet, 'location'):
+                log_warning("FleetNavigationService: Target fleet invalid. Order cancelled.")
+                fleet.pop_order()
+                return None
+
         state = NavigationState.from_fleet(fleet)
         step = self.compute_next_step(state, galaxy)
 

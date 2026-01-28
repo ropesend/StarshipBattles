@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Guarantee projection matches execution
 
 ---
@@ -36,35 +36,40 @@ class TestProjectionMatchesExecution:
         """Multiple orders: full queue matches."""
 ```
 
-- [ ] Create test file with fixtures
-- [ ] Implement test_simple_move_consistency()
+- [x] Create test file with fixtures
+- [x] Implement test_simple_move_consistency()
   - Create fleet with MOVE order
   - Project path
   - Execute turns with TurnEngine
   - Compare final positions
-- [ ] Implement test_multi_turn_consistency()
+- [x] Implement test_multi_turn_consistency()
   - Longer journey spanning multiple turns
   - Verify each step matches projection
-- [ ] Implement test_warp_move_consistency()
+- [x] Implement test_warp_move_consistency()
   - Fleet with warp capability
   - Path crosses warp points
   - Verify warp segments match
-- [ ] Implement test_intercept_consistency()
+- [x] Implement test_intercept_consistency()
   - Create chaser and target fleets
   - Chaser has MOVE_TO_FLEET order
   - Verify intercept point calculation consistent
-- [ ] Implement test_chained_orders_consistency()
+- [x] Implement test_chained_orders_consistency()
   - Fleet with multiple orders in queue
   - Verify complete queue execution matches projection
 
-**Notes:**
+**Notes:** Created comprehensive test suite with 10 tests total:
+- 5 core consistency tests as specified (TestProjectionMatchesExecution)
+- 3 edge case tests (TestEdgeCases): already_at_destination, zero_speed, fractional_speed
+- 2 non-movement order tests (TestNonMovementOrderHandling): COLONIZE order handling, MOVE→COLONIZE chain
+
+All tests use real TurnEngine and FleetNavigationService (no mocks for core logic), ensuring true consistency verification. Tests mock only resource methods (has_resources_for_movement, etc.) to prevent test failures from resource depletion.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/strategy/test_fleet_navigation_consistency.py -v`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/strategy/test_fleet_navigation_consistency.py -v`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

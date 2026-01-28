@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from datetime import datetime
 
-from .config import INDEX_FILE, VALID_STATUSES
+from .config import INDEX_FILE, VALID_STATUSES, ACTIVE_DIR, ARCHIVED_DIR
 
 
 @dataclass
@@ -29,21 +29,33 @@ def write_projects_index(content: str) -> None:
 
 
 def get_next_project_id() -> str:
-    """Get the next available project ID from the index."""
+    """Get the next available project ID, checking for existing directories.
+
+    This function ensures we never return an ID that already has a directory
+    on disk, preventing accidental overwrites even if the index is out of sync.
+    """
     content = read_projects_index()
 
-    # Look for "Next Project ID: PROJ-XX"
-    match = re.search(r'Next Project ID:\s*(PROJ-\d+)', content)
+    # Start with ID from index
+    match = re.search(r'Next Project ID:\s*PROJ-(\d+)', content)
     if match:
-        return match.group(1)
+        next_num = int(match.group(1))
+    else:
+        # Fall back to finding highest existing ID and adding 1
+        ids = re.findall(r'PROJ-(\d+)', content)
+        next_num = max(int(id_num) for id_num in ids) + 1 if ids else 1
 
-    # Fall back to finding highest existing ID and adding 1
-    ids = re.findall(r'PROJ-(\d+)', content)
-    if ids:
-        max_id = max(int(id_num) for id_num in ids)
-        return f"PROJ-{max_id + 1:02d}"
+    # Keep incrementing until we find an unused ID (no directory exists)
+    while True:
+        project_id = f"PROJ-{next_num:02d}"
+        active_path = ACTIVE_DIR / project_id
+        archived_path = ARCHIVED_DIR / project_id
 
-    return "PROJ-01"
+        if not active_path.exists() and not archived_path.exists():
+            return project_id
+
+        # Directory exists, try next number
+        next_num += 1
 
 
 def parse_project_entries(content: str) -> List[ProjectEntry]:

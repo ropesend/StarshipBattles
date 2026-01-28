@@ -2,7 +2,7 @@
     "turn_number": 1,
     "save_path": "C:\\Dev\\Starship Battles\\saves\\NewAutoSave",
     "config": {
-        "asset_base_path": "c:\\Dev\\Starship Battles\\assets\\ShipThemes",
+        "asset_base_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes",
         "galaxy_radius": 4000,
         "system_count": 25,
         "save_name": "",

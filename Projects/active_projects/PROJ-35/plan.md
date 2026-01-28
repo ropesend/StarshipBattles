@@ -16,27 +16,30 @@
 | 1. Preparation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Create FleetNavigationService | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix Intercept Calculation | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate FleetMovementEngine | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Add Consistency Tests | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Deprecate Old Classes | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 4. Migrate FleetMovementEngine | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Add Consistency Tests | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Deprecate Old Classes | In Progress | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-27 19:15
-**Active Phase:** Phase 4 - Migrate FleetMovementEngine
-**Last Action:** Phase 3 complete - calculate_intercept_point now accepts NavigationState, project_fleet_path uses FleetNavigationService
-**Next Action:** Begin Phase 4 - Update FleetMovementEngine to delegate navigation to FleetNavigationService
-**Blockers:** None
+**Last Updated:** 2026-01-27
+**Active Phase:** Phase 6 - Deprecate Old Classes (pending manual verification)
+**Last Action:** Phase 6 nearly complete - FleetMovementSimulator deprecated, documentation updated, all 4913 tests pass
+**Next Action:** User to perform manual verification in running game, then mark project complete
+**Blockers:** Manual verification requires user to test in running game
 
 **Context for Next Agent:**
-- Phase 3 completed:
-  - Updated `calculate_intercept_point` to accept `Union[Fleet, NavigationState]` as chaser
-  - Added `ChaserProxy` class to wrap chaser properties for `find_hybrid_path` calls
-  - Added 4 new tests for NavigationState support (55 total pathfinding tests, all passing)
-  - Updated `project_fleet_path` to use `FleetNavigationService` instead of `FleetMovementSimulator`
-  - Fixed `FleetNavigationService.get_destination()` to pass NavigationState directly (removed fake fleet-like object hack)
-  - Fixed `FleetNavigationService.compute_path()` fleet-like object to include `id` field and proper `self` parameter
-- All tests passing: 91 tests (55 pathfinding + 36 fleet navigation service)
-- Next: Phase 4 will update FleetMovementEngine to delegate navigation logic to FleetNavigationService
+- Phase 6 progress:
+  - Task 6.1 Complete: FleetMovementSimulator deprecated with DeprecationWarning
+  - Task 6.2 Complete: Documentation updated (design.md, decisions.md)
+  - Task 6.3 Partial: All 4913 tests pass, but manual verification pending
+- Manual verification required (user must test in running game):
+  - [ ] Create fleet with MOVE order, verify UI path matches actual movement
+  - [ ] Create fleet with MOVE_TO_FLEET order, verify intercept works
+  - [ ] Create fleet with warp-capable path, verify warp segments correct
+- Once manual verification passes:
+  - Update phase_6_checklist.md status to Complete
+  - Update plan.md status table Phase 6 to Complete
+  - Move project folder to `Projects/completed_projects/`
 
 ## Overview
 Create a unified `FleetNavigationService` to replace duplicate movement logic in `FleetMovementSimulator` and `FleetMovementEngine`, ensuring UI path projection always matches actual turn execution. This fixes the "split brain" risk where the UI could show a fleet moving one way while the turn processor moves it differently.

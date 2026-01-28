@@ -1,7 +1,17 @@
 """
 Fleet movement simulation for the strategy layer.
-Provides a single source of truth for fleet movement logic.
+
+DEPRECATED: This module is deprecated as of PROJ-35.
+Use FleetNavigationService from game.strategy.services.fleet_navigation_service instead.
+
+The FleetNavigationService provides the same functionality with:
+- Better architecture (immutable NavigationState, pure functions)
+- Integration with TurnEngine (unified logic for projection and execution)
+- Support for NavigationState in intercept calculations (fixes fake fleet hack)
+
+This module is kept for backward compatibility but will be removed in a future release.
 """
+import warnings
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -52,12 +62,25 @@ class PathSegment:
 
 class FleetMovementSimulator:
     """
-    Stateless fleet movement simulation.
-    
-    Provides a single source of truth for movement logic used by both
-    the TurnEngine (actual movement) and path projection (UI visualization).
+    DEPRECATED: Stateless fleet movement simulation.
+
+    .. deprecated:: PROJ-35
+        Use :class:`FleetNavigationService` from
+        ``game.strategy.services.fleet_navigation_service`` instead.
+
+    This class was originally the source of truth for movement logic,
+    but has been superseded by FleetNavigationService which provides
+    unified logic for both UI projection and turn execution.
     """
-    
+
+    def __init__(self):
+        """Initialize the simulator with a deprecation warning."""
+        warnings.warn(
+            "FleetMovementSimulator is deprecated. Use FleetNavigationService instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
     def calculate_destination(self, state: FleetState, order: FleetOrder, galaxy) -> Optional[HexCoord]:
         """
         Determine the destination hex for a given order.

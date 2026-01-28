@@ -12,6 +12,9 @@
 | 2026-01-27 | **NavigationState with can_warp** | Pre-compute `can_warp` in NavigationState factory to eliminate need for Fleet object in pure navigation functions. |
 | 2026-01-27 | **Mutation Bridge Pattern** | `calculate_fleet_next_hex()` wraps pure function and applies mutations so FleetMovementEngine continues to work with mutable Fleet objects. |
 | 2026-01-27 | **Keep Resource Logic in Engine** | FleetMovementEngine retains all resource consumption logic (`apply_movement`). Service only handles navigation. |
+| 2026-01-27 | **Non-movement orders preserved** | Fixed critical bug where COLONIZE/JOIN_FLEET orders were being incorrectly popped by navigation service. Service now returns `order_complete=False` for non-movement orders, leaving them for other processors. |
+| 2026-01-27 | **Order popping in calculate_next_hex only** | Removed duplicate order-pop from `apply_movement()`. Order popping now happens exclusively in `calculate_next_hex()` during the collect_movements phase. |
+| 2026-01-27 | **FleetMovementSimulator deprecated** | Class no longer used in production code (pathfinding.py now uses FleetNavigationService). Added DeprecationWarning but kept code for backward compatibility. |
 
 ## Decision Details
 

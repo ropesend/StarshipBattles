@@ -125,3 +125,49 @@ See [decisions.md](decisions.md) for the full log with rationale.
 ### New Tests Required
 - `test_fleet_navigation_service.py` - Unit tests for new service
 - `test_fleet_navigation_consistency.py` - Verify projection = execution
+
+## Project Completion Notes (2026-01-27)
+
+### Final Architecture
+```
+FleetNavigationService (single source of truth)
+├── Core (stateless, pure functions):
+│   ├── get_destination(state, order, galaxy) → HexCoord?
+│   ├── compute_path(state, destination, galaxy) → [HexCoord]
+│   └── compute_next_step(state, galaxy) → NavigationStep
+├── Projection (for UI):
+│   ├── project_path(fleet, galaxy, max_turns) → [PathSegment]
+│   └── project_path_as_dicts(fleet, galaxy) → [dict]
+└── Execution (for TurnEngine):
+    └── calculate_fleet_next_hex(fleet, galaxy) → HexCoord?
+        (mutation bridge: applies state changes to mutable Fleet)
+
+FleetMovementEngine (simplified - delegates navigation)
+├── collect_movements(empires, galaxy, tick) → [(Fleet, HexCoord)]
+├── apply_movement(fleet, next_hex, galaxy) → MovementResult
+└── apply_movements(queue, galaxy) → [MovementResult]
+    (retains ALL resource consumption logic)
+
+pathfinding.py (updated)
+├── project_fleet_path() → delegates to FleetNavigationService
+└── calculate_intercept_point() → accepts Union[Fleet, NavigationState]
+
+FleetMovementSimulator (DEPRECATED)
+└── Retained for backward compatibility with DeprecationWarning
+```
+
+### Key Changes Made
+1. **FleetNavigationService created** (468 lines) - Single source of truth
+2. **FleetMovementEngine updated** - Delegates navigation to service
+3. **calculate_intercept_point updated** - Accepts NavigationState (no more fake fleet)
+4. **project_fleet_path updated** - Uses FleetNavigationService instead of FleetMovementSimulator
+5. **FleetMovementSimulator deprecated** - Warning added, code kept for compatibility
+
+### Tests Added
+- `test_fleet_navigation_service.py` - 36 unit tests
+- `test_fleet_navigation_consistency.py` - 10 consistency tests verifying projection = execution
+
+### Critical Bugs Fixed During Implementation
+1. Non-movement orders being incorrectly popped (COLONIZE, JOIN_FLEET)
+2. Double order-pop in apply_movement() causing chained orders to fail
+3. Invalid MOVE_TO_FLEET targets not being handled gracefully
