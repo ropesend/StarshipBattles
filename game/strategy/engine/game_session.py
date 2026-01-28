@@ -475,15 +475,39 @@ class GameSession:
         log_info(f"GameSession: Cleared orders for Fleet {fleet.id}")
         return validation_result(True, "Fleet orders cleared.")
 
-    def _get_fleet_by_id(self, fleet_id):
-        """Helper to find fleet."""
+    def _get_fleet_by_id(self, fleet_id: int):
+        """
+        Find fleet by ID across all empires.
+
+        PROJ-40/NEW-STRAT-009: Reviewed and kept - used 7 times for command validation.
+        Iterates all empires since fleets belong to empires but commands reference
+        fleets by global ID.
+
+        Args:
+            fleet_id: Fleet ID to find.
+
+        Returns:
+            Fleet if found, None otherwise.
+        """
         for emp in self.empires:
-             for f in emp.fleets:
-                 if f.id == fleet_id: return f
+            for f in emp.fleets:
+                if f.id == fleet_id:
+                    return f
         return None
 
-    def _get_planet_by_id(self, planet_id):
-        """Helper to find planet using Galaxy's O(1) registry."""
+    def _get_planet_by_id(self, planet_id: int):
+        """
+        Find planet by ID via Galaxy registry (O(1) lookup).
+
+        PROJ-40/NEW-STRAT-009: Reviewed and kept - provides consistent API with
+        _get_fleet_by_id and encapsulates galaxy dependency.
+
+        Args:
+            planet_id: Planet ID to find.
+
+        Returns:
+            Planet if found, None otherwise.
+        """
         return self.galaxy.get_planet_by_id(planet_id)
 
     def to_dict(self) -> dict:
