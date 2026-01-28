@@ -35,7 +35,8 @@
       "Bash(then echo \"$file\")",
       "Bash(fi)",
       "Bash(where:*)",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(pip show:*)"
     ]
   }
 }

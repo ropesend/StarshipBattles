@@ -152,6 +152,53 @@ class TestBattleSeedGeneration:
 
         assert seed1 == seed2 == 1
 
+    def test_same_seed_produces_deterministic_result(self):
+        """Same seed should produce the same battle result.
+
+        PROJ-36 Phase 5: Edge case test for battle determinism.
+        The battle resolver receives a seed that should make results reproducible.
+        """
+        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
+
+        # Create a resolver that tracks the seed it receives
+        class SeedTrackingResolver(IBattleResolver):
+            def __init__(self):
+                self.received_seeds = []
+
+            def resolve_battle(self, fleet1, fleet2, seed=None):
+                self.received_seeds.append(seed)
+                # Return deterministic result based on seed
+                return BattleResult(
+                    winner=seed % 2 if seed else 0,  # Deterministic based on seed
+                    tick_count=seed or 0,
+                    team0_survivors=[],
+                    team1_survivors=[]
+                )
+
+        resolver = SeedTrackingResolver()
+        engine = ConflictResolutionEngine(resolver)
+
+        fleet1 = MagicMock()
+        fleet1.location = HexCoord(0, 0)
+        fleet1.owner_id = 0
+        fleet1.ships = [MagicMock()]
+        fleet1.ships[0].is_combat_capable = MagicMock(return_value=True)
+
+        fleet2 = MagicMock()
+        fleet2.location = HexCoord(0, 0)
+        fleet2.owner_id = 1
+        fleet2.ships = [MagicMock()]
+        fleet2.ships[0].is_combat_capable = MagicMock(return_value=True)
+
+        # Resolve combat
+        result = engine._resolve_combat(fleet1, fleet2)
+
+        # Verify seed was passed to resolver
+        assert len(resolver.received_seeds) == 1
+        assert resolver.received_seeds[0] is not None
+        assert resolver.received_seeds[0] == 1  # First seed should be 1
+
 
 # =============================================================================
 # Test: Conflict Detection

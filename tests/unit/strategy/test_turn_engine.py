@@ -1,15 +1,25 @@
 """
-Unit tests for the turn engine.
+Unit tests for TurnEngine orchestration.
 
-Tests turn processing, phase execution, command validation,
-colonization, production, combat resolution, and resource handling.
+PROJ-36: Tests focus on turn engine orchestration and delegation.
+Detailed tests for delegated engines are in their respective test files:
+- test_conflict_resolution_engine.py - Combat resolution
+- test_resource_management_engine.py - Resource consumption
+- test_colonize_validator.py - Colonization validation
+
+Tests here verify:
+- Turn processing structure (100 ticks, end-turn orders, production)
+- Movement calculation delegation
+- Production processing delegation
+- End-turn order execution
+- Tick phase coordination
+- Edge cases and iterator safety
 """
 
 import pytest
 from unittest.mock import MagicMock, patch, PropertyMock
 
 from game.strategy.engine.turn_engine import TurnEngine
-from game.core.validation import ValidationResult, validation_result
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.empire import Empire
@@ -84,102 +94,6 @@ def mock_planet():
     planet.facilities = []
     planet.has_space_shipyard = True
     return planet
-
-
-# =============================================================================
-# Test: ValidationResult Dataclass
-# =============================================================================
-
-
-class TestValidationResult:
-    """Tests for ValidationResult dataclass."""
-
-    def test_valid_result(self):
-        """Create a valid result."""
-        result = validation_result(True, "Success")
-
-        assert result.is_valid is True
-        assert result.message == "Success"
-        assert result.error_code is None
-
-    def test_invalid_result_with_error_code(self):
-        """Create an invalid result with error code."""
-        result = validation_result(False, "Failed", "INVALID_TARGET")
-
-        assert result.is_valid is False
-        assert result.message == "Failed"
-        assert result.error_code == "INVALID_TARGET"
-
-    def test_default_message(self):
-        """Default message is empty string."""
-        result = ValidationResult()
-
-        assert result.message == ""
-
-
-# =============================================================================
-# Test: Colonize Order Validation
-# =============================================================================
-
-
-class TestColonizeValidation:
-    """Tests for validate_colonize_order method."""
-
-    def test_validate_colonize_no_fleet(self, turn_engine, mock_galaxy):
-        """Validation fails when fleet is None."""
-        result = turn_engine.validate_colonize_order(mock_galaxy, None, None)
-
-        assert result.is_valid is False
-        assert "fleet" in result.message.lower()
-
-    def test_validate_colonize_unowned_planet(self, turn_engine, mock_galaxy, mock_fleet, mock_planet):
-        """Valid colonize order on unowned planet."""
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
-        mock_fleet.location = mock_planet.location
-
-        result = turn_engine.validate_colonize_order(mock_galaxy, mock_fleet, mock_planet)
-
-        assert result.is_valid is True
-
-    def test_validate_colonize_owned_planet_fails(self, turn_engine, mock_galaxy, mock_fleet, mock_planet):
-        """Cannot colonize already-owned planet."""
-        mock_planet.owner_id = 1  # Already owned
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
-        mock_fleet.location = mock_planet.location
-
-        result = turn_engine.validate_colonize_order(mock_galaxy, mock_fleet, mock_planet)
-
-        assert result.is_valid is False
-        assert result.error_code == "ALREADY_OWNED"
-
-    def test_validate_colonize_wrong_location(self, turn_engine, mock_galaxy, mock_fleet, mock_planet):
-        """Cannot colonize planet from different location."""
-        mock_galaxy.get_planets_at_global_hex.return_value = []  # No planets at fleet location
-        mock_fleet.location = HexCoord(100, 100)  # Far away
-
-        result = turn_engine.validate_colonize_order(mock_galaxy, mock_fleet, mock_planet)
-
-        assert result.is_valid is False
-        assert result.error_code == "WRONG_LOCATION"
-
-    def test_validate_colonize_any_planet_success(self, turn_engine, mock_galaxy, mock_fleet, mock_planet):
-        """Validate colonize order with 'Any' planet (None target)."""
-        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
-        mock_fleet.location = mock_planet.location
-
-        result = turn_engine.validate_colonize_order(mock_galaxy, mock_fleet, None)
-
-        assert result.is_valid is True
-        assert "candidate" in result.message.lower()
-
-    def test_validate_colonize_any_no_candidates(self, turn_engine, mock_galaxy, mock_fleet):
-        """Colonize 'Any' fails when no unowned planets at location."""
-        mock_galaxy.get_planets_at_global_hex.return_value = []
-
-        result = turn_engine.validate_colonize_order(mock_galaxy, mock_fleet, None)
-
-        assert result.is_valid is False
-        assert result.error_code == "NO_CANDIDATES"
 
 
 # =============================================================================
@@ -681,44 +595,6 @@ class TestJoinFleetDuringTick:
 
 
 # =============================================================================
-# Test: Warp Resource Consumption
-# =============================================================================
-
-
-class TestWarpResources:
-    """Tests for warp resource consumption during movement."""
-
-    def test_warp_detection_uses_hex_distance(self, turn_engine):
-        """Warp is detected when hex distance > 1."""
-        from game.strategy.data.hex_math import hex_distance
-
-        # Adjacent hex - not warp
-        assert hex_distance(HexCoord(0, 0), HexCoord(1, 0)) == 1
-
-        # Distant hex - warp
-        assert hex_distance(HexCoord(0, 0), HexCoord(50, 0)) > 1
-
-    def test_warp_resources_checked_before_jump(self, turn_engine):
-        """has_resources_for_warp is checked during tick processing."""
-        # This tests the existence of the check in the code path
-        # The actual check happens in _process_tick when is_warp is True
-
-        fleet = MagicMock()
-        fleet.has_resources_for_warp = MagicMock(return_value=True)
-
-        # Method should exist and be callable
-        assert callable(fleet.has_resources_for_warp)
-
-    def test_warp_resource_consumption_method_exists(self, turn_engine):
-        """Fleet has consume_warp_resources method."""
-        fleet = MagicMock()
-        fleet.consume_warp_resources = MagicMock()
-
-        # Method should exist
-        assert callable(fleet.consume_warp_resources)
-
-
-# =============================================================================
 # Test: Edge Cases
 # =============================================================================
 
@@ -760,76 +636,6 @@ class TestTurnEngineEdgeCases:
             turn_engine.process_turn([mock_empire], mock_galaxy, save_path="/test/path")
 
             mock_prod.assert_called_with([mock_empire], mock_galaxy, "/test/path")
-
-
-# =============================================================================
-# PROJ-11 Phase 4: IBattleResolver Dependency Injection Tests
-# PROJ-36: Combat resolution moved to ConflictResolutionEngine
-# =============================================================================
-
-
-class TestBattleResolverInjection:
-    """
-    Tests for TurnEngine battle resolver dependency injection.
-
-    PROJ-11 Phase 4: TurnEngine now accepts an optional IBattleResolver
-    parameter for clean separation between strategy and simulation layers.
-
-    PROJ-36: Combat resolution is now delegated to ConflictResolutionEngine.
-    TurnEngine still stores the resolver and passes it to the conflict engine.
-    """
-
-    def test_turn_engine_accepts_battle_resolver(self):
-        """TurnEngine constructor should accept battle_resolver parameter."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
-
-        class MockResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
-
-        resolver = MockResolver()
-        engine = TurnEngine(battle_resolver=resolver)
-
-        assert engine._battle_resolver is resolver
-
-    def test_turn_engine_defaults_to_simulation_resolver(self):
-        """TurnEngine should default to SimulationBattleResolver."""
-        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
-
-        engine = TurnEngine()
-
-        assert isinstance(engine._battle_resolver, SimulationBattleResolver)
-
-    def test_conflict_engine_receives_battle_resolver(self):
-        """ConflictResolutionEngine should receive the injected battle resolver."""
-        from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
-
-        class MockResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
-                return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
-
-        resolver = MockResolver()
-        engine = TurnEngine(battle_resolver=resolver)
-
-        # Access conflict_engine to trigger lazy initialization
-        conflict_engine = engine.conflict_engine
-
-        # The conflict engine should have the same resolver
-        assert conflict_engine._battle_resolver is resolver
-
-    def test_conflict_engine_lazy_initialization(self):
-        """ConflictResolutionEngine should be lazily initialized."""
-        engine = TurnEngine()
-
-        # Before accessing, should be None
-        assert engine._conflict_engine is None
-
-        # After accessing, should be created
-        conflict_engine = engine.conflict_engine
-        assert conflict_engine is not None
-
-        # Should return same instance
-        assert engine.conflict_engine is conflict_engine
 
 
 # =============================================================================
