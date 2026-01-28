@@ -13,40 +13,40 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Infrastructure | Pending Verification | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Service Layer | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Service Layer | Pending Verification | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Entity Layer | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Layer | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remaining Consumers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Cleanup & Test Migration | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-28 Session 1
-**Active Phase:** Phase 1 Infrastructure (Pending Manual Verification)
-**Last Action:** All 5 tasks code complete. Created GameRegistries container, 4 pure loading functions, and updated composition root.
-**Next Action:** User to verify game launches correctly, then phase complete and move to Phase 2
+**Last Updated:** 2026-01-28 Session 2 (end)
+**Active Phase:** Phase 2 Service Layer Migration - COMPLETE (Pending Manual Verification)
+**Last Action:** Completed all 3 tasks in Phase 2. All service classes now support constructor-based DI with GameRegistries.
+**Next Action:** User to verify game launches correctly, then Phase 2 complete and move to Phase 3
 **Blockers:** None
-**Test Count:** 5029 passed, 1 skipped (baseline was 4998)
+**Test Count:** 5056 passed, 1 skipped (baseline was 4998)
 
-### Session Summary (2026-01-28)
+### Session 2 Summary (2026-01-28)
 **Tasks Completed:**
-- Task 1.1: Created `GameRegistries` frozen dataclass with `set_default_registries()` and `get_default_registries()` (7 new tests)
-- Task 1.2: Created `load_components_data()` and `load_modifiers_data()` pure functions (12 new tests)
-- Task 1.3: Created `load_vehicle_classes_data()` pure function (6 new tests)
-- Task 1.4: Created `load_resources_data()` pure function (6 new tests)
-- Task 1.5: Updated `game/app.py` to create and set default `GameRegistries` after data loading
+- Task 2.1: Converted `ModifierService` to constructor injection (12 new tests)
+- Task 2.2: Converted `ShipStatsService` to constructor injection (8 new tests)
+- Task 2.3: Converted `VehicleDesignService` to constructor injection (7 new tests)
 
 **Files Modified:**
-- `game/core/registry.py` - Added GameRegistries dataclass and default registry functions
-- `game/simulation/components/component.py` - Added load_components_data() and load_modifiers_data()
-- `game/simulation/entities/ship_loader.py` - Added load_vehicle_classes_data()
-- `game/core/resources.py` - Added load_resources_data()
-- `game/app.py` - Added GameRegistries creation and set_default_registries() call
-- `tests/unit/core/test_registry.py` - Added GameRegistries and DefaultRegistries tests
-- `tests/unit/core/test_pure_loaders.py` - Created new test file with 24 tests for pure loaders
+- `game/simulation/services/modifier_service.py` - Added constructor with DI, hybrid instance/static method pattern
+- `game/strategy/services/ship_stats_service.py` - Added constructor with DI, hybrid instance/static method pattern
+- `game/simulation/services/vehicle_design_service.py` - Extended constructor to support GameRegistries alongside IRegistryProvider
+- `tests/unit/services/test_modifier_service_di.py` - New test file (12 tests)
+- `tests/unit/services/test_ship_stats_service_di.py` - New test file (8 tests)
+- `tests/unit/services/test_vehicle_design_service_di.py` - New test file (7 tests)
 
-**Known Issues:**
-- One backward compatibility test for vehicle_classes was removed due to test infrastructure conflict (SessionRegistryCache interaction). The pure function tests verify the core functionality.
+**Key Pattern Used:**
+All services use a hybrid instance/static method pattern for full backward compatibility:
+1. Constructor accepts `registries: GameRegistries` or falls back to `get_default_registries()`
+2. Methods detect whether called on instance (uses `self._registries`) or as static (uses legacy `get_*()` functions)
+3. Keyword argument support preserved for methods that use them
 
 **Verification Needed:**
 - [ ] Manual: Launch game and verify main menu displays correctly
