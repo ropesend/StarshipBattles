@@ -101,9 +101,25 @@ class FleeBehavior(AIBehavior):
         self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
 
 class KiteBehavior(AIBehavior):
+    """Maintain optimal weapon range from target.
+
+    Decision Tree:
+        1. Check collision avoidance (if enabled in strategy)
+           - If nearby collision detected → navigate away, return
+        2. Calculate optimal distance = weapon_range * engage_distance_multiplier
+           - Minimum distance clamped to MIN_SPACING
+        3. Compare current distance to optimal:
+           - If too far → close in toward target
+           - If too close → back off to maintain kite range
+
+    Strategy Parameters:
+        avoid_collisions (bool): Enable collision avoidance check (default: True)
+        engage_distance (float|str): Range multiplier or 'max_range'/'ram' (default: 'max_range')
+    """
+
     MIN_SPACING: int = AIConfig.MIN_SPACING
     DEFAULT_AVOIDANCE: bool = True
-    
+
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         # Collision avoidance if enabled
         if strategy.get('avoid_collisions', self.DEFAULT_AVOIDANCE):
@@ -136,6 +152,27 @@ class KiteBehavior(AIBehavior):
             self.controller.navigate_to(kite_pos, stop_dist=0, precise=True)
 
 class AttackRunBehavior(AIBehavior):
+    """Hit-and-run attack pattern with approach/retreat cycles.
+
+    State Machine:
+        APPROACH → Navigate toward target until within approach_distance
+                   (with hysteresis factor to prevent flickering)
+                   Transition: distance < approach_distance * HYSTERESIS → RETREAT
+
+        RETREAT  → Flee away from target for retreat_duration seconds
+                   Timer decrements by TICK_DURATION each update
+                   Transition: timer <= 0 AND distance > retreat_distance → APPROACH
+
+    Strategy Parameters (via 'attack_run_behavior' dict):
+        approach_distance (float): Multiplier of weapon_range to approach (default: 0.3)
+        retreat_distance (float): Multiplier of weapon_range before re-approaching (default: 0.8)
+        retreat_duration (float): Seconds to retreat before checking distance (default: 2.0)
+
+    Best For:
+        - High-alpha, long-cooldown weapons (missiles, torpedoes)
+        - Ships that need time to cool down or reload between attacks
+    """
+
     DEFAULT_APPROACH_DIST_FACTOR: float = AIConfig.ATTACK_RUN_APPROACH_DIST_FACTOR
     DEFAULT_RETREAT_DIST_FACTOR: float = AIConfig.ATTACK_RUN_RETREAT_DIST_FACTOR
     DEFAULT_RETREAT_DURATION: float = AIConfig.ATTACK_RUN_RETREAT_DURATION
@@ -185,6 +222,36 @@ class AttackRunBehavior(AIBehavior):
                 self.attack_state = 'approach'
 
 class FormationBehavior(AIBehavior):
+    """Follow formation master, maintaining relative offset position.
+
+    State Machine:
+        IN_FORMATION (distance <= drift_threshold):
+            - Rotation: Match master's angle with feed-forward prediction
+              - If angle_diff small → snap to master angle
+              - Otherwise → rotate toward master angle
+            - Translation: Two-phase control
+              A) Velocity Sync: Match master's target speed via throttle
+              B) Position Correction: Spring-based drift correction
+                 - Deadband (< 2.0 units) → ignore micro-errors
+                 - Above deadband → apply 20% correction per tick
+                 - Capped to MAX_CORRECTION_FORCE to prevent wild jumps
+
+        OUT_OF_FORMATION (distance > drift_threshold):
+            - Calculate predicted master position (PREDICTION_TICKS ahead)
+            - Navigate to predicted offset position using standard navigation
+
+    Formation Offset Modes:
+        'relative': Offset rotates with master's heading (default)
+        'fixed': Offset maintains absolute direction regardless of master heading
+
+    Dropout Conditions:
+        - Master dies or becomes derelict → exit formation
+        - Ship propulsion damaged → AIController triggers dropout
+
+    Strategy Parameters:
+        (None directly - uses ship.formation_offset and ship.formation_rotation_mode)
+    """
+
     DRIFT_THRESHOLD_FACTOR: float = AIConfig.FORMATION_DRIFT_THRESHOLD_FACTOR
     DRIFT_THRESHOLD_DIAMETER_MULT: float = AIConfig.FORMATION_DRIFT_DIAMETER_MULT
     TURN_SPEED_FACTOR: float = AIConfig.FORMATION_TURN_SPEED_FACTOR

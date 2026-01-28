@@ -270,10 +270,13 @@ class ResearchControlPanel:
                 return True
 
             elif event.ui_element == self.slider_allocation:
-                if self._selected_node and selected_node_id:
+                # PROJ-40/NEW-RES-003: Use _selected_node.id consistently
+                # instead of the external selected_node_id parameter
+                if self._selected_node:
+                    node_id = self._selected_node.id
                     new_allocation = int(self.slider_allocation.get_current_value())
-                    self.tracker.set_allocation(selected_node_id, new_allocation)
-                    actual = self.tracker.get_state(selected_node_id).rp_allocation
+                    self.tracker.set_allocation(node_id, new_allocation)
+                    actual = self.tracker.get_state(node_id).rp_allocation
                     self.lbl_allocation_value.set_text(str(actual))
                     self.update_budget_display()
                     return True
@@ -363,9 +366,17 @@ class ResearchControlPanel:
             self.btn_auto_spread.set_text("Auto-Spread: OFF")
 
     def _update_allocation_slider_range(self):
-        """Update allocation slider max based on available RP."""
+        """Update allocation slider max based on available RP.
+
+        PROJ-40/NEW-RES-009: This method assumes _selected_node is valid and
+        that tracker.get_state() returns a valid NodeState. The None check
+        guards against null _selected_node, but get_state() always returns
+        a state (creating one if needed), so no additional check is required.
+        """
         if self._selected_node:
-            current_allocation = self.tracker.get_state(self._selected_node.id).rp_allocation
+            # get_state() always returns a valid NodeState, creating one if needed
+            state = self.tracker.get_state(self._selected_node.id)
+            current_allocation = state.rp_allocation
             remaining = self.tracker.get_remaining_rp()
             max_allocation = current_allocation + remaining
             # Update slider range

@@ -7,11 +7,15 @@ Draws:
 - Node labels (name, level, chance)
 """
 import pygame
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, TYPE_CHECKING
 
 from game.ui.renderer.camera import Camera
 from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
+
+if TYPE_CHECKING:
+    from game.research.data.tech_node import TechNode
+    from game.research.data.research_tracker import NodeState
 
 
 class ResearchRenderer:
@@ -28,6 +32,9 @@ class ResearchRenderer:
     COLOR_SELECTED = (200, 180, 50)    # Yellow/Gold border
     COLOR_LINE = (60, 65, 75)          # Dependency lines
     COLOR_LINE_MET = (80, 120, 80)     # Met dependency lines
+    # PROJ-40/NEW-RES-007: Visual indicator for negated requirements
+    COLOR_LINE_NEGATED = (180, 80, 80)      # Red for negated (NOT) dependencies
+    COLOR_LINE_NEGATED_MET = (100, 60, 60)  # Darker red when met (tech is below level)
     COLOR_TEXT = (220, 220, 230)       # Node text
     COLOR_CHANCE = (255, 220, 100)     # Chance percentage
     COLOR_ALLOCATION = (255, 255, 0)   # RP allocation - bright yellow for visibility
@@ -54,13 +61,20 @@ class ResearchRenderer:
         self.node_height = node_height
 
         # Cache fonts at different sizes for zoom levels
+        # PROJ-40/NEW-RES-002: Bounded cache via size quantization
         self._font_cache = {}
 
     def _get_font(self, size: int) -> pygame.font.Font:
-        """Get or create a font at the given size."""
-        if size not in self._font_cache:
-            self._font_cache[size] = pygame.font.SysFont("Arial", max(8, size))
-        return self._font_cache[size]
+        """Get or create a font at the given size.
+
+        PROJ-40/NEW-RES-002: Sizes are quantized to nearest 2 pixels to
+        prevent unbounded cache growth during continuous zoom operations.
+        """
+        # Quantize size to nearest 2 to bound cache growth
+        quantized_size = max(8, (size // 2) * 2)
+        if quantized_size not in self._font_cache:
+            self._font_cache[quantized_size] = pygame.font.SysFont("Arial", quantized_size)
+        return self._font_cache[quantized_size]
 
     def draw(self, screen: pygame.Surface, selected_node_id: Optional[str],
              canvas_rect: pygame.Rect):
@@ -89,7 +103,11 @@ class ResearchRenderer:
 
     def _draw_dependency_lines(self, screen: pygame.Surface,
                                tech_levels: Dict[str, int]):
-        """Draw dependency lines between nodes."""
+        """Draw dependency lines between nodes.
+
+        PROJ-40/NEW-RES-007: Negated requirements (NOT dependencies) are drawn
+        in red with a dashed style to distinguish them from normal dependencies.
+        """
         for node in self.tech_tree.nodes.values():
             if node.id not in self.node_positions:
                 continue
@@ -102,34 +120,73 @@ class ResearchRenderer:
                 continue
 
             # Draw lines to all prerequisites
-            prereq_ids = node.get_prerequisite_node_ids()
-            for prereq_id in prereq_ids:
-                if prereq_id not in self.node_positions:
-                    continue
+            for or_group in node.requirements:
+                for req in or_group:
+                    prereq_id = req.node_id
+                    if prereq_id not in self.node_positions:
+                        continue
 
-                prereq_pos = self.node_positions[prereq_id]
-                prereq_screen = self.camera.world_to_screen(prereq_pos)
+                    prereq_pos = self.node_positions[prereq_id]
+                    prereq_screen = self.camera.world_to_screen(prereq_pos)
 
-                # Check if prereq is met (for line color)
-                prereq_level = tech_levels.get(prereq_id, 0)
+                    # Check if prereq is met (for line color)
+                    prereq_level = tech_levels.get(prereq_id, 0)
+                    required_level = req.get_required_level()
 
-                # Find the requirement for this prereq
-                required_level = 1
-                for or_group in node.requirements:
-                    for req in or_group:
-                        if req.node_id == prereq_id:
-                            required_level = req.get_required_level()
-                            break
+                    # PROJ-40/NEW-RES-007: Handle negated requirements differently
+                    if req.negate:
+                        # Negated: must be BELOW target level
+                        is_met = prereq_level < required_level
+                        line_color = self.COLOR_LINE_NEGATED_MET if is_met else self.COLOR_LINE_NEGATED
+                    else:
+                        # Normal: must be AT OR ABOVE target level
+                        is_met = prereq_level >= required_level
+                        line_color = self.COLOR_LINE_MET if is_met else self.COLOR_LINE
 
-                is_met = prereq_level >= required_level
-                line_color = self.COLOR_LINE_MET if is_met else self.COLOR_LINE
+                    # Draw line from prereq (right edge) to node (left edge)
+                    half_w = (self.node_width / 2) * self.camera.zoom
+                    start = (int(prereq_screen[0] + half_w), int(prereq_screen[1]))
+                    end = (int(node_screen[0] - half_w), int(node_screen[1]))
 
-                # Draw line from prereq (right edge) to node (left edge)
-                half_w = (self.node_width / 2) * self.camera.zoom
-                start = (int(prereq_screen[0] + half_w), int(prereq_screen[1]))
-                end = (int(node_screen[0] - half_w), int(node_screen[1]))
+                    if req.negate:
+                        # PROJ-40/NEW-RES-007: Draw dashed line for negated requirements
+                        self._draw_dashed_line(screen, line_color, start, end, 2, 8)
+                    else:
+                        pygame.draw.line(screen, line_color, start, end, 2)
 
-                pygame.draw.line(screen, line_color, start, end, 2)
+    def _draw_dashed_line(self, screen: pygame.Surface, color: Tuple[int, int, int],
+                          start: Tuple[int, int], end: Tuple[int, int],
+                          width: int = 2, dash_length: int = 8):
+        """Draw a dashed line between two points.
+
+        PROJ-40/NEW-RES-007: Used to visually distinguish negated requirements.
+        """
+        import math
+        dx = end[0] - start[0]
+        dy = end[1] - start[1]
+        length = math.sqrt(dx * dx + dy * dy)
+        if length == 0:
+            return
+
+        # Normalize direction
+        dx /= length
+        dy /= length
+
+        # Draw dashes
+        num_dashes = int(length / (dash_length * 2))
+        for i in range(num_dashes + 1):
+            dash_start = (
+                int(start[0] + dx * (i * dash_length * 2)),
+                int(start[1] + dy * (i * dash_length * 2))
+            )
+            dash_end = (
+                int(min(start[0] + dx * (i * dash_length * 2 + dash_length), end[0])),
+                int(min(start[1] + dy * (i * dash_length * 2 + dash_length), end[1]))
+            )
+            # Clamp to not exceed end point
+            if (dash_end[0] - start[0]) * dx + (dash_end[1] - start[1]) * dy > length:
+                dash_end = end
+            pygame.draw.line(screen, color, dash_start, dash_end, width)
 
     def _draw_nodes(self, screen: pygame.Surface, selected_node_id: Optional[str],
                     tech_levels: Dict[str, int]):
@@ -197,7 +254,7 @@ class ResearchRenderer:
                 self._draw_node_text(screen, rect, node, state, status)
 
     def _draw_node_text(self, screen: pygame.Surface, rect: pygame.Rect,
-                        node, state, status: str):
+                        node: 'TechNode', state: 'NodeState', status: str) -> None:
         """Draw text labels on a node."""
         # Calculate font size based on zoom
         base_size = 14

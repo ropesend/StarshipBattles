@@ -8,11 +8,15 @@ Bridges between:
 
 Each ShipInstance tracks the current state of a ship (damage, resources)
 separate from its design template.
+
+PROJ-40/NEW-STRAT-008: Added validation and warning for serial parameter.
 """
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 import uuid
 import json
+
+from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -77,7 +81,17 @@ class ShipInstance:
             owner_id: Empire that owns this ship
             name: Instance name (defaults to design name)
             design_id: Design identifier (defaults to design name)
-            empire: Empire to get serial number from (optional)
+            empire: Empire to get serial number from. If None, no serial will be
+                    assigned and a warning will be logged. Provide empire for proper
+                    tracking of ships by serial number within empire fleets.
+
+        Returns:
+            New ShipInstance with unique instance_id.
+
+        Note:
+            Serial numbers are unique per design_id within an empire, allowing
+            identification like "USS Enterprise (NCC-1701)". Without an empire,
+            the ship will have serial=None which may affect fleet tracking.
         """
         design_name = design_data.get('name', 'Unknown Ship')
         actual_design_id = design_id or design_name
@@ -86,6 +100,10 @@ class ShipInstance:
         serial = None
         if empire is not None:
             serial = empire.get_next_serial(actual_design_id)
+        else:
+            # PROJ-40/NEW-STRAT-008: Log warning when empire not provided
+            log_warning(f"ShipInstance.create() called without empire - "
+                       f"serial will be None for '{actual_design_id}'")
 
         instance = cls(
             instance_id=str(uuid.uuid4()),

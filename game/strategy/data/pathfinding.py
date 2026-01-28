@@ -1,5 +1,5 @@
 import heapq
-from typing import Union, Optional, TYPE_CHECKING
+from typing import List, Union, Optional, TYPE_CHECKING
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
 from game.strategy.data.hex_math import hex_distance, hex_linedraw, HexCoord
@@ -7,23 +7,37 @@ from game.strategy.data.fleet import OrderType
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
+    from game.strategy.data.galaxy import Galaxy, StarSystem
     from game.strategy.services.fleet_navigation_service import NavigationState
 
-def find_path_deep_space(start, end):
+def find_path_deep_space(start: HexCoord, end: HexCoord) -> List[HexCoord]:
     """
     Find path in deep space (no obstacles).
-    Returns list of HexCoords.
+
+    Args:
+        start: Starting hex coordinate.
+        end: Destination hex coordinate.
+
+    Returns:
+        List of HexCoords forming the path from start to end.
     """
     return hex_linedraw(start, end)
 
-def find_path_interstellar(start_system, end_system, galaxy):
+def find_path_interstellar(
+    start_system: 'StarSystem',
+    end_system: 'StarSystem',
+    galaxy: 'Galaxy'
+) -> Optional[List['StarSystem']]:
     """
     Find path between systems using Warp Lanes (A*).
-    start_system: StarSystem object
-    end_system: StarSystem object
-    galaxy: Galaxy object
-    
-    Returns: List of StarSystem objects (the route).
+
+    Args:
+        start_system: Starting StarSystem object.
+        end_system: Destination StarSystem object.
+        galaxy: Galaxy object containing all systems and warp lanes.
+
+    Returns:
+        List of StarSystem objects representing the route, or None if no path exists.
     """
     if start_system == end_system:
         return [start_system]
@@ -90,8 +104,24 @@ def find_path_interstellar(start_system, end_system, galaxy):
     path.reverse()
     return path
 
-def get_system_at_hex(galaxy, hex_c, radius=50):
-    """Find which system implies ownership of this hex (simplistic radius check)."""
+def get_system_at_hex(
+    galaxy: 'Galaxy',
+    hex_c: HexCoord,
+    radius: int = 50
+) -> Optional['StarSystem']:
+    """
+    Find which system implies ownership of this hex.
+
+    Uses a simplistic radius check - returns the nearest system within radius.
+
+    Args:
+        galaxy: Galaxy containing all star systems.
+        hex_c: Hex coordinate to check.
+        radius: Maximum distance to search for a system (default 50).
+
+    Returns:
+        The nearest StarSystem within radius, or None if none found.
+    """
     # Fast path: O(1) exact match
     if hex_c in galaxy.systems:
         return galaxy.systems[hex_c]
@@ -108,8 +138,17 @@ def get_system_at_hex(galaxy, hex_c, radius=50):
                 best_sys = sys
     return best_sys
 
-def find_nearest_system(galaxy, hex_c):
-    """Find the nearest system to a hex coordinate (ignoring radius)."""
+def find_nearest_system(galaxy: 'Galaxy', hex_c: HexCoord) -> Optional['StarSystem']:
+    """
+    Find the nearest system to a hex coordinate (ignoring radius).
+
+    Args:
+        galaxy: Galaxy containing all star systems.
+        hex_c: Hex coordinate to find nearest system to.
+
+    Returns:
+        The nearest StarSystem, or None if galaxy has no systems.
+    """
     best_sys = None
     min_dist = float('inf')
     
@@ -233,16 +272,108 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
     service = FleetNavigationService()
     return service.project_path_as_dicts(fleet, galaxy, max_turns)
 
+class _ChaserProxy:
+    """Proxy object for find_hybrid_path that respects warp capability."""
+
+    def __init__(self, can_warp: bool, fleet_id):
+        self._can_warp = can_warp
+        self.id = fleet_id
+
+    def can_use_warp(self) -> bool:
+        return self._can_warp
+
+
+def _extract_chaser_info(chaser: Union['Fleet', 'NavigationState']) -> tuple:
+    """
+    Extract location, speed, ID, and warp capability from chaser.
+
+    Args:
+        chaser: Fleet or NavigationState object.
+
+    Returns:
+        Tuple of (location, speed, id, can_warp).
+    """
+    from game.strategy.services.fleet_navigation_service import NavigationState
+
+    if isinstance(chaser, NavigationState):
+        return (chaser.location, chaser.speed, -1, chaser.can_warp)
+    else:
+        return (
+            chaser.location,
+            chaser.speed,
+            getattr(chaser, 'id', 'unknown'),
+            chaser.can_use_warp() if hasattr(chaser, 'can_use_warp') else True
+        )
+
+
+def _evaluate_intercept_candidates(
+    points_to_check: list,
+    chaser_location: HexCoord,
+    chaser_speed: float,
+    chaser_proxy: _ChaserProxy,
+    galaxy
+) -> tuple:
+    """
+    Evaluate intercept candidates and find optimal intercept point.
+
+    Args:
+        points_to_check: List of dicts with 'hex' and 'turn' keys.
+        chaser_location: Chaser's starting position.
+        chaser_speed: Chaser's movement speed.
+        chaser_proxy: Proxy with warp capability info.
+        galaxy: Galaxy for pathfinding.
+
+    Returns:
+        Tuple of (best_intercept, best_intercept_time, best_target_turn, fallback_hex).
+    """
+    best_intercept = None
+    best_intercept_time = float('inf')
+    best_target_turn = None
+    fallback_hex = None
+
+    for pt in points_to_check:
+        target_turn = pt['turn']
+        target_hex = pt['hex']
+
+        path_to_target = find_hybrid_path(galaxy, chaser_location, target_hex, fleet=chaser_proxy)
+
+        if not path_to_target:
+            continue
+
+        path_length = max(0, len(path_to_target) - 1)
+        chaser_turns = path_length / chaser_speed
+
+        # Chaser can intercept if arrives before or during target's turn at that hex
+        if chaser_turns < target_turn + 1:
+            if chaser_turns < best_intercept_time:
+                best_intercept_time = chaser_turns
+                best_intercept = target_hex
+                best_target_turn = target_turn
+
+                # Early exit if perfectly synchronized
+                if abs(chaser_turns - target_turn) < 0.1:
+                    break
+        else:
+            if fallback_hex is None:
+                fallback_hex = target_hex
+
+        # Early exit if clearly past optimal point
+        if best_intercept is not None and target_turn > best_intercept_time + 3:
+            break
+
+    return (best_intercept, best_intercept_time, best_target_turn, fallback_hex)
+
+
 def calculate_intercept_point(
     chaser: Union['Fleet', 'NavigationState'],
     target_fleet,
     galaxy
 ) -> Optional[HexCoord]:
     """
-    Calculate the optimal interception hex.
+    Calculate the optimal interception hex for a chaser pursuing a target.
 
     Uses real path lengths (via find_hybrid_path) rather than straight-line
-    distance to ensure the chaser takes an efficient route.
+    distance to ensure the chaser takes an efficient route through warp lanes.
 
     Args:
         chaser: Fleet or NavigationState representing the pursuing fleet.
@@ -250,163 +381,55 @@ def calculate_intercept_point(
         target_fleet: Fleet object being pursued.
         galaxy: Galaxy object for pathfinding context.
 
+    Returns:
+        HexCoord of the optimal interception point, or target's current location
+        if interception is impossible.
+
     Algorithm:
-    1. Project target's future path.
-    2. For each point on target's path, calculate how long chaser needs to get there.
-    3. Find the point with MINIMUM chaser arrival time where chaser_turns < target_turn + 1.
-    4. Early exit if we find a perfect intercept (chaser arrives in <= 1 turn).
-    5. If no intercept possible, chase the endpoint of target's path.
+        1. Project target's future path over 50 turns.
+        2. For each point on target's path, calculate chaser's travel time
+           using hybrid pathfinding (respects warp lanes).
+        3. Find the earliest point where chaser arrives before target leaves
+           (chaser_turns < target_turn + 1).
+        4. Early exit on perfect synchronization (arrival times match within 0.1 turns).
+        5. If no intercept possible, chase the endpoint of target's path.
     """
-    # Import NavigationState here to avoid circular import
-    from game.strategy.services.fleet_navigation_service import NavigationState
+    # Extract chaser properties
+    chaser_location, chaser_speed, chaser_id, chaser_can_warp = _extract_chaser_info(chaser)
+    chaser_proxy = _ChaserProxy(chaser_can_warp, chaser_id)
 
-    # Extract chaser properties - support both Fleet and NavigationState
-    if isinstance(chaser, NavigationState):
-        chaser_location = chaser.location
-        chaser_speed = chaser.speed
-        chaser_id = -1  # Projection context, no real fleet ID
-        chaser_can_warp = chaser.can_warp
-    else:
-        chaser_location = chaser.location
-        chaser_speed = chaser.speed
-        chaser_id = getattr(chaser, 'id', 'unknown')
-        chaser_can_warp = chaser.can_use_warp() if hasattr(chaser, 'can_use_warp') else True
+    log_debug(f"Intercept: chaser={chaser_id} @ {chaser_location} (speed={chaser_speed}) -> "
+              f"target={getattr(target_fleet, 'id', '?')} @ {target_fleet.location}")
 
-    # Create a fleet-like object for find_hybrid_path that respects warp capability
-    class ChaserProxy:
-        def __init__(self, can_warp, fleet_id):
-            self._can_warp = can_warp
-            self.id = fleet_id
-        def can_use_warp(self):
-            return self._can_warp
+    # Handle zero/negative speed
+    if chaser_speed <= 0:
+        return target_fleet.location
 
-    chaser_proxy = ChaserProxy(chaser_can_warp, chaser_id)
-
-    # Log header
-    log_debug("=" * 60)
-    log_debug("INTERCEPT CALCULATION")
-    log_debug("=" * 60)
-    log_debug(f"Chaser Fleet ID: {chaser_id}")
-    log_debug(f"  Location: {chaser_location}")
-    log_debug(f"  Speed: {chaser_speed}")
-    log_debug(f"Target Fleet ID: {getattr(target_fleet, 'id', 'unknown')}")
-    log_debug(f"  Location: {target_fleet.location}")
-    log_debug(f"  Speed: {getattr(target_fleet, 'speed', 'unknown')}")
-    
     # Project target's future path
     target_path = project_fleet_path(target_fleet, galaxy, max_turns=50)
-    
-    log_debug(f"Target Projected Path ({len(target_path)} segments):")
-    for i, seg in enumerate(target_path[:15]):  # Log first 15
-        log_debug(f"  [{i}] Turn {seg['turn']}: {seg['hex']}")
-    if len(target_path) > 15:
-        log_debug(f"  ... ({len(target_path) - 15} more)")
-    
-    if chaser_speed <= 0:
-        log_debug("ERROR: Chaser speed <= 0, returning target location")
-        return target_fleet.location
-    
-    # Build list of intercept candidates
+
+    # Build candidate list
     if target_path:
         points_to_check = target_path
-        log_debug("Target is MOVING - using projected path only")
     else:
         points_to_check = [{'hex': target_fleet.location, 'turn': 0}]
-        log_debug("Target is STATIONARY - using current location")
-    
-    best_intercept = None
-    best_intercept_time = float('inf')
-    best_target_turn = None
-    fallback_hex = None
-    
-    log_debug("Evaluating intercept candidates:")
-    
-    for i, pt in enumerate(points_to_check):
-        target_turn = pt['turn']
-        target_hex = pt['hex']
-        
-        # Calculate REAL path length using hybrid pathfinding
-        # Use chaser_proxy to respect warp capability (BUG-45 fix)
-        path_to_target = find_hybrid_path(galaxy, chaser_location, target_hex, fleet=chaser_proxy)
-        
-        if not path_to_target:
-            log_debug(f"  [{i}] {target_hex} @ T{target_turn}: UNREACHABLE")
-            continue
-            
-        path_length = max(0, len(path_to_target) - 1)
-        chaser_turns = path_length / chaser_speed
-        
-        # Condition: chaser_turns < target_turn + 1
-        valid = chaser_turns < target_turn + 1
-        
-        log_debug(f"  [{i}] {target_hex} @ T{target_turn}: path={path_length} steps, "
-            f"chaser_time={chaser_turns:.2f} turns, valid={valid}")
-        
-        if valid:
-            if chaser_turns < best_intercept_time:
-                best_intercept_time = chaser_turns
-                best_intercept = target_hex
-                best_target_turn = target_turn
-                log_debug("      -> NEW BEST INTERCEPT")
-                
-                # Early exit ONLY if chaser would arrive at the SAME subtick as target
-                # (i.e., chaser_turns matches target_turn closely)
-                if abs(chaser_turns - target_turn) < 0.1:
-                    log_debug("      -> EARLY EXIT (perfectly synchronized)")
-                    break
-        else:
-            if fallback_hex is None:
-                fallback_hex = target_hex
-                
-        # Early exit if we've clearly passed the optimal point
-        if best_intercept is not None and target_turn > best_intercept_time + 3:
-            log_debug("      -> EARLY EXIT (target_turn >> best_time)")
-            break
-    
+
+    # Find optimal intercept
+    best_intercept, best_time, best_turn, fallback = _evaluate_intercept_candidates(
+        points_to_check, chaser_location, chaser_speed, chaser_proxy, galaxy
+    )
+
     # Determine result
     if best_intercept is not None:
-        result = best_intercept
-        log_debug(f">>> SELECTED INTERCEPT: {result}")
-        log_debug(f"    Chaser arrives in {best_intercept_time:.2f} turns")
-        log_debug(f"    Target at hex during turn {best_target_turn}")
-        
-        # Cross-verification: simulate chaser path to verify
-        chaser_path = find_hybrid_path(galaxy, chaser_location, result, fleet=chaser_proxy)
-        if chaser_path:
-            log_debug("--- CROSS-VERIFICATION ---")
-            chaser_path_len = len(chaser_path) - 1
-            chaser_subticks_total = int(chaser_path_len * (100 / chaser_speed))
-            chaser_arrival_turn = chaser_subticks_total // 100
-            chaser_arrival_subtick = chaser_subticks_total % 100
-            log_debug(f"Chaser path length: {chaser_path_len} steps")
-            log_debug(f"Chaser subticks: {chaser_subticks_total} (Turn {chaser_arrival_turn}, Subtick {chaser_arrival_subtick})")
-            
-            # Find when target is at intercept hex
-            target_at_intercept = None
-            for seg in target_path:
-                if seg['hex'] == result:
-                    target_at_intercept = seg
-                    break
-            
-            if target_at_intercept:
-                target_turn_at_intercept = target_at_intercept['turn']
-                log_debug(f"Target at intercept hex during turn: {target_turn_at_intercept}")
-                
-                # Check if they actually meet
-                if chaser_arrival_turn <= target_turn_at_intercept:
-                    log_debug(f"VERIFIED: Chaser arrives Turn {chaser_arrival_turn} <= Target there Turn {target_turn_at_intercept}")
-                else:
-                    log_debug(f"*** MISMATCH! Chaser Turn {chaser_arrival_turn} > Target leaves after Turn {target_turn_at_intercept} ***")
-            else:
-                log_debug("WARNING: Could not find intercept hex in target path")
+        log_debug(f"Intercept selected: {best_intercept} (chaser arrives turn {best_time:.1f}, "
+                  f"target at hex turn {best_turn})")
+        return best_intercept
     elif target_path:
         result = target_path[-1]['hex']
-        log_debug(f">>> NO INTERCEPT FOUND - chasing endpoint: {result}")
+        log_debug(f"No intercept possible - chasing endpoint: {result}")
+        return result
     else:
-        result = fallback_hex if fallback_hex else target_fleet.location
-        log_debug(f">>> FALLBACK: {result}")
-    
-    log_debug("=" * 60)
-    
-    return result
+        result = fallback if fallback else target_fleet.location
+        log_debug(f"Intercept fallback: {result}")
+        return result
 

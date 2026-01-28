@@ -70,26 +70,65 @@ class ExclusiveGroupRule(ValidationRule):
 
 class MountDependencyRule(ValidationRule):
     def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        if not component or not layer_type:
-            return result # TODO: Implement full ship scan for missing mounts
+        if component and layer_type:
+            # Single component validation (adding new component)
+            return self._validate_component_addition(ship, component, layer_type)
+        else:
+            # Full ship scan - validate all mount dependencies
+            return self._validate_full_ship(ship)
 
+    def _validate_component_addition(self, ship, component: Component, layer_type: LayerType) -> ValidationResult:
+        """Validate adding a single component that may require a mount."""
+        result = ValidationResult(True)
         req_mount = component.data.get('required_mount')
         if req_mount:
-             # Count mounts vs existing users in THIS layer
-             mount_count = 0
-             user_count = 0
-             
-             target_layer_comps = ship.layers[layer_type]['components']
-             for c in target_layer_comps:
-                 if c.data.get('mount_type') == req_mount:
-                     mount_count += 1
-                 if c.data.get('required_mount') == req_mount:
-                     user_count += 1
-             
-             if mount_count < (user_count + 1):
-                 result.add_error(f"Missing required mount: {req_mount} in {layer_type.name}")
-                 
+            # Count mounts vs existing users in THIS layer
+            mount_count = 0
+            user_count = 0
+
+            target_layer_comps = ship.layers[layer_type]['components']
+            for c in target_layer_comps:
+                if c.data.get('mount_type') == req_mount:
+                    mount_count += 1
+                if c.data.get('required_mount') == req_mount:
+                    user_count += 1
+
+            if mount_count < (user_count + 1):
+                result.add_error(f"Missing required mount: {req_mount} in {layer_type.name}")
+
+        return result
+
+    def _validate_full_ship(self, ship) -> ValidationResult:
+        """Validate all mount dependencies across the entire ship."""
+        result = ValidationResult(True)
+
+        # Check each layer independently (mounts must be in same layer as users)
+        for layer_type, layer_data in ship.layers.items():
+            components = layer_data.get('components', [])
+
+            # Count mounts by type in this layer
+            mount_counts: Dict[str, int] = {}
+            for c in components:
+                mount_type = c.data.get('mount_type')
+                if mount_type:
+                    mount_counts[mount_type] = mount_counts.get(mount_type, 0) + 1
+
+            # Count users by required mount type in this layer
+            user_counts: Dict[str, int] = {}
+            for c in components:
+                req_mount = c.data.get('required_mount')
+                if req_mount:
+                    user_counts[req_mount] = user_counts.get(req_mount, 0) + 1
+
+            # Validate: for each mount type needed, check if enough mounts exist
+            for mount_type, user_count in user_counts.items():
+                available = mount_counts.get(mount_type, 0)
+                if available < user_count:
+                    result.add_error(
+                        f"Missing required mount: {mount_type} in {layer_type.name} "
+                        f"(need {user_count}, have {available})"
+                    )
+
         return result
 
 class LayerRestrictionDefinitionRule(ValidationRule):

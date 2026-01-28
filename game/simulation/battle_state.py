@@ -420,6 +420,47 @@ class ProjectileState:
             is_alive=proj.is_alive,
         )
 
+    def to_projectile(self, ship_lookup: Dict[str, 'Ship']) -> 'Projectile':
+        """
+        Restore a Projectile from saved state.
+
+        Args:
+            ship_lookup: Mapping from ship_id to Ship object for owner/target resolution
+
+        Returns:
+            Projectile instance with restored state
+        """
+        from game.simulation.entities.projectile import Projectile
+        from game.core.math import Vector2
+
+        # Resolve owner ship reference
+        owner = ship_lookup.get(self.owner_ship_id) if self.owner_ship_id else None
+
+        # Resolve target ship reference (for missiles)
+        target = ship_lookup.get(self.target_ship_id) if self.target_ship_id else None
+
+        proj = Projectile(
+            owner=owner,
+            position=Vector2(self.position[0], self.position[1]),
+            velocity=Vector2(self.velocity[0], self.velocity[1]),
+            damage=self.damage,
+            range_val=self.max_range,
+            endurance=self.endurance,
+            proj_type=self.projectile_type,
+            turn_rate=self.turn_rate,
+            max_speed=self.max_speed,
+            target=target,
+            hp=self.hp,
+        )
+
+        # Restore additional state
+        proj.max_endurance = self.max_endurance
+        proj.max_hp = self.max_hp
+        proj.distance_traveled = self.distance_traveled
+        proj.is_alive = self.is_alive
+
+        return proj
+
 
 @dataclass
 class BattleState:

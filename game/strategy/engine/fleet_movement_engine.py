@@ -2,6 +2,7 @@
 FleetMovementEngine - Handles fleet movement calculations and resource consumption.
 
 PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
+PROJ-40/NEW-STRAT-007: Added constructor injection for FleetNavigationService.
 
 Responsibilities:
 - Calculate next hex for fleet movement (MOVE and MOVE_TO_FLEET orders)
@@ -18,7 +19,7 @@ from game.strategy.data.fleet import Fleet
 from game.strategy.data.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
-    pass
+    from game.strategy.services.fleet_navigation_service import FleetNavigationService
 
 
 @dataclass
@@ -39,11 +40,21 @@ class FleetMovementEngine:
     - Path management
     - Resource consumption for movement
     - Warp travel handling
+
+    Dependencies:
+    - FleetNavigationService: For pathfinding and movement calculation
+      (injected via constructor or lazily initialized)
     """
 
-    def __init__(self):
-        """Initialize the fleet movement engine."""
-        self._nav_service = None
+    def __init__(self, nav_service: Optional['FleetNavigationService'] = None):
+        """
+        Initialize the fleet movement engine.
+
+        Args:
+            nav_service: Optional FleetNavigationService for dependency injection.
+                         If None, service is lazily initialized on first use.
+        """
+        self._nav_service = nav_service
 
     def calculate_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
         """
