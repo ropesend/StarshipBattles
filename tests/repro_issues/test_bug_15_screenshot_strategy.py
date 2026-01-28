@@ -257,34 +257,19 @@ class TestBuildQueueScreenshotSupport:
     def test_build_queue_f12_triggers_screenshot(self, mock_save):
         """
         Pressing F12 while BuildQueueScreen is open should take a screenshot.
+        PROJ-40: Updated to pass injected dependencies instead of patching imports.
         """
         from game.ui.screens.build_queue_screen import BuildQueueScreen
 
-        # Mock objects
-        mock_manager = MagicMock()
-        mock_manager.get_root_container.return_value.get_container.return_value.get_size.return_value = (1280, 720)
-
-        mock_planet = MagicMock()
-        mock_planet.name = "Test Planet"
-        mock_planet.owner_id = 1
-        mock_planet.construction_queue = []
-
-        mock_session = MagicMock()
-        mock_session.save_path = None
-
-        # Patch DesignLibrary to avoid file system access
-        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_design_lib:
-            mock_design_lib.return_value.scan_designs.return_value = []
-            mock_design_lib.return_value.designs_folder = "test"
-
-            # Create instance - will need heavy mocking
-            # For now, just verify the method exists and is callable
-            assert hasattr(BuildQueueScreen, '_take_screenshot')
+        # For now, just verify the method exists and is callable
+        # The actual DI injection is tested via integration tests
+        assert hasattr(BuildQueueScreen, '_take_screenshot')
 
     @patch('game.ui.screens.build_queue_screen.ScreenshotManager')
     def test_build_queue_f12_event_calls_take_screenshot(self, mock_sm_class):
         """
         BUG-15 Rev 5: Verify F12 KEYDOWN event triggers _take_screenshot via handle_event.
+        PROJ-40: Updated to pass injected dependencies instead of patching imports.
         """
         from game.ui.screens.build_queue_screen import BuildQueueScreen
 
@@ -306,8 +291,15 @@ class TestBuildQueueScreenshotSupport:
         mock_session = MagicMock()
         mock_session.save_path = None
 
-        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_design_lib, \
-             patch('game.ui.screens.build_queue_screen.PlanetReportPanel'), \
+        # PROJ-40: Create mock dependencies for DI injection
+        mock_design_library = MagicMock()
+        mock_design_library.scan_designs.return_value = []
+        mock_design_library.designs_folder = "test"
+        mock_design_library.load_design_data.return_value = None
+
+        mock_design_loader = MagicMock()
+
+        with patch('game.ui.screens.build_queue_screen.PlanetReportPanel'), \
              patch('game.ui.screens.build_queue_screen.DesignReportPanel'), \
              patch('game.ui.screens.build_queue_screen.ui.UIPanel'), \
              patch('game.ui.screens.build_queue_screen.ui.UIButton'), \
@@ -315,15 +307,14 @@ class TestBuildQueueScreenshotSupport:
              patch('game.ui.screens.build_queue_screen.ui.UILabel'), \
              patch('game.ui.screens.build_queue_screen.ui.UIScrollingContainer'):
 
-            mock_design_lib.return_value.scan_designs.return_value = []
-            mock_design_lib.return_value.designs_folder = "test"
-
-            # Create screen instance
+            # Create screen instance with injected dependencies
             screen = BuildQueueScreen(
                 mock_manager,
                 mock_planet,
                 mock_session,
-                on_close_callback=lambda: None
+                on_close_callback=lambda: None,
+                design_library=mock_design_library,
+                design_loader=mock_design_loader
             )
 
             # Create F12 KEYDOWN event

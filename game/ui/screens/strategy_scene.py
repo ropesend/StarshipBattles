@@ -341,20 +341,30 @@ class StrategyScene:
             planet = self.selected_object
             if planet.owner_id == self.current_empire.id:
                 from game.ui.screens.build_queue_screen import BuildQueueScreen
-                
+                from game.strategy.systems.design_library import DesignLibrary
+                from game.simulation.services.design_loader import SimulationDesignLoader
+
                 # Hide main UI
                 self.ui.hide_ui()
 
                 # Get planet portrait from asset system
                 portrait_surface = self._get_object_asset(planet)
 
-                # Create screen
+                # PROJ-40: Create dependencies for DI injection
+                savegame_path = getattr(self.session, 'save_path', None)
+                empire_id = planet.owner_id
+                design_library = DesignLibrary(savegame_path, empire_id)
+                design_loader = SimulationDesignLoader()
+
+                # Create screen with injected dependencies
                 self.build_queue_screen = BuildQueueScreen(
                     self.ui.manager,
                     planet,
                     self.session,
                     on_close_callback=self._on_build_queue_close,
-                    portrait_surface=portrait_surface
+                    portrait_surface=portrait_surface,
+                    design_library=design_library,
+                    design_loader=design_loader
                 )
                 log_info(f"Opened build queue for {planet.name}")
 

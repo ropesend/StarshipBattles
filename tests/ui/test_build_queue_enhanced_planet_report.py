@@ -23,12 +23,25 @@ class MockSession:
 
 @pytest.fixture
 def mock_design_library():
-    """Mock DesignLibrary for testing."""
-    with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock:
-        mock_instance = MagicMock()
-        mock_instance.scan_designs.return_value = []
-        mock.return_value = mock_instance
-        yield mock
+    """Mock DesignLibrary for testing.
+
+    PROJ-40: Updated to create mock directly instead of patching.
+    Now injected via DI.
+    """
+    mock_instance = MagicMock()
+    mock_instance.scan_designs.return_value = []
+    mock_instance.designs_folder = "test_designs"
+    mock_instance.load_design_data.return_value = None
+    return mock_instance
+
+
+@pytest.fixture
+def mock_design_loader():
+    """Mock SimulationDesignLoader for testing.
+
+    PROJ-40: New fixture for DI injection.
+    """
+    return MagicMock()
 
 
 @pytest.fixture

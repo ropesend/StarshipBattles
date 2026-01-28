@@ -2,31 +2,16 @@
 Fleet Report filtering and stats calculation.
 
 PROJ-03: Fleet Report Window feature implementation.
-PROJ-11: has_warp_capability moved to strategy layer (ShipStatsService).
+PROJ-40: Removed backward-compat wrapper - use ShipStatsService directly.
 """
-from typing import Dict, Any, List
+from __future__ import annotations
 
-from game.strategy.data.ship_instance import ShipInstance
+from typing import TYPE_CHECKING, Dict, Any, List
 
-# PROJ-11: Import has_warp_capability from strategy services (canonical location)
-# Re-exported here for backward compatibility with existing code
 from game.strategy.services.ship_stats_service import ShipStatsService
 
-# Re-export for backward compatibility
-def has_warp_capability(ship: ShipInstance) -> bool:
-    """
-    Check if a ship has functional warp capability.
-
-    PROJ-11: This is a thin wrapper around ShipStatsService.has_warp_capability().
-    New code should import from game.strategy.services.ship_stats_service directly.
-
-    Args:
-        ship: ShipInstance to check
-
-    Returns:
-        True if ship can use warp points, False otherwise
-    """
-    return ShipStatsService.has_warp_capability(ship)
+if TYPE_CHECKING:
+    from game.strategy.data.ship_instance import ShipInstance
 
 
 def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
@@ -98,8 +83,8 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         else:
             total_energy += ship_max_energy  # Full if not tracked
 
-    # Warp capability counts
-    warp_capable_count = sum(1 for s in ships if has_warp_capability(s))
+    # Warp capability counts - PROJ-40: Call ShipStatsService directly
+    warp_capable_count = sum(1 for s in ships if ShipStatsService.has_warp_capability(s))
 
     return {
         'ship_count': ship_count,
@@ -141,8 +126,9 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
         show_not_warp = filter_state.get('show_not_warp_capable', True)
 
         # If either filter is off, we need to check warp capability
+        # PROJ-40: Call ShipStatsService directly
         if not show_warp or not show_not_warp:
-            is_warp_capable = has_warp_capability(ship)
+            is_warp_capable = ShipStatsService.has_warp_capability(ship)
             if is_warp_capable and not show_warp:
                 continue
             if not is_warp_capable and not show_not_warp:

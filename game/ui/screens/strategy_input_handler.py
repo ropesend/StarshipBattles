@@ -10,7 +10,6 @@ from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.strategy.data.hex_math import pixel_to_hex
-from game.strategy.data.fleet import Fleet
 
 
 class StrategyInputHandler:

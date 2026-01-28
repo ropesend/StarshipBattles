@@ -1,6 +1,6 @@
 # Phase 12: UI Layer Remediation (Consolidated)
 
-**Status:** Not Started
+**Status:** In Progress
 **Estimated Effort:** 12-16 hours
 **Priority:** Final Phase - Complete all other phases first
 
@@ -13,17 +13,19 @@ Consolidated UI layer cross-import violations from Phase 1.3 and Phase 7.
 
 ---
 
-## Tier 1: Easy Wins (2-3 hours)
+## Tier 1: Easy Wins (2-3 hours) ✅ COMPLETE
 
 ### 12.1 strategy_input_handler.py
 **Location:** `game/ui/screens/strategy_input_handler.py`
-**Violations:** 2 imports (pixel_to_hex, Fleet)
-**Approach:** TYPE_CHECKING for Fleet
+**Violations:** 1 import (Fleet - UNUSED)
+**Approach:** Remove unused import
 
-- [ ] Move Fleet import to TYPE_CHECKING block
-- [ ] Use string annotation 'Fleet' in type hints
-- [ ] Keep pixel_to_hex as runtime (pure utility function)
-- [ ] Run: `pytest tests/unit/ui/ -v`
+**Analysis:** The `Fleet` import at line 13 is completely unused in the file.
+The only occurrence of "Fleet" is in a comment at line 393.
+
+- [x] Remove unused `from game.strategy.data.fleet import Fleet` import
+- [x] Keep pixel_to_hex as runtime (pure utility function)
+- [x] Run: `pytest tests/unit/ui/ -v` - All tests pass
 
 ---
 
@@ -32,21 +34,60 @@ Consolidated UI layer cross-import violations from Phase 1.3 and Phase 7.
 **Violations:** 3 imports (Planet, DesignLibrary, SimulationDesignLoader)
 **Approach:** TYPE_CHECKING + DI
 
-- [ ] Move Planet to TYPE_CHECKING block
-- [ ] Inject DesignLibrary via constructor
-- [ ] Inject SimulationDesignLoader via constructor
-- [ ] Run: `pytest tests/unit/ui/ -v`
+**Analysis:**
+- `Planet` (line 10): Used only for type hint in `__init__` → TYPE_CHECKING
+- `DesignLibrary` (line 11): Instantiated at line 65 → Inject via constructor
+- `SimulationDesignLoader` (line 12): Instantiated at line 639 → Inject via constructor
+
+**Files to modify:**
+- `game/ui/screens/build_queue_screen.py` - DI refactoring
+- `game/ui/screens/strategy_scene.py` - Update caller to pass dependencies
+
+- [x] Add `from __future__ import annotations` and TYPE_CHECKING block
+- [x] Move Planet, DesignLibrary, SimulationDesignLoader to TYPE_CHECKING
+- [x] Add design_library and design_loader parameters to `__init__`
+- [x] Store design_loader as instance variable
+- [x] Remove internal instantiation of DesignLibrary (line 65)
+- [x] Use self.design_loader in _refresh_design_report (line 639)
+- [x] Update strategy_scene.py to create and pass dependencies
+- [x] Run: `pytest tests/unit/ui/ -v` - All tests pass
+- [x] Update test fixtures to use DI instead of patching (4 test files)
 
 ---
 
 ### 12.3 fleet_report_filters.py
 **Location:** `game/ui/screens/fleet_report_filters.py`
-**Violations:** 2 imports
-**Approach:** DI pattern
+**Violations:** 2 imports (ShipInstance, ShipStatsService)
+**Approach:** TYPE_CHECKING + eliminate backward-compat wrapper
 
-- [ ] Review current imports
-- [ ] Apply DI pattern for services
-- [ ] Run: `pytest tests/unit/ui/ -v`
+**Analysis:**
+- `ShipInstance` (line 9): Used only for type hints → TYPE_CHECKING
+- `ShipStatsService` (line 13): Used by wrapper function → Remove wrapper, call directly
+
+**Current state:** The file has a backward-compat wrapper `has_warp_capability()` (lines 16-29)
+that re-exports from ShipStatsService. The docstring says "New code should import from
+game.strategy.services.ship_stats_service directly" - we need to eliminate this.
+
+**Files to modify:**
+- `game/ui/screens/fleet_report_filters.py` - Remove wrapper, use direct calls
+- `tests/unit/strategy/test_fleet_report_filters.py` - Update imports to canonical location
+
+- [x] Add `from __future__ import annotations` and TYPE_CHECKING block
+- [x] Move ShipInstance to TYPE_CHECKING
+- [x] Keep ShipStatsService as runtime import (needed for direct calls)
+- [x] Remove backward-compat wrapper function `has_warp_capability()` (lines 16-29)
+- [x] Update internal usages at lines 102, 145 to call ShipStatsService directly
+- [x] Update test file to import from ShipStatsService directly
+- [x] Run: `pytest tests/unit/strategy/test_fleet_report_filters.py -v` - All tests pass
+
+**Notes:** Tier 1 complete. Also updated test fixtures in:
+- `tests/ui/test_build_queue_screen.py`
+- `tests/ui/test_build_queue_formatting.py`
+- `tests/ui/test_build_queue_enhanced_planet_report.py`
+- `tests/ui/test_build_queue_drag_drop.py`
+- `tests/repro_issues/test_bug_15_screenshot_strategy.py`
+
+Full test suite: **5176 passed, 3 skipped**
 
 ---
 
