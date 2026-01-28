@@ -19,6 +19,7 @@ from game.strategy.data.pathfinding import (
 )
 from game.strategy.data.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.services.fleet_navigation_service import NavigationState
 
 
 # =============================================================================
@@ -446,28 +447,28 @@ class TestHybridPath:
 class TestFleetPathProjection:
     """Tests for project_fleet_path function."""
 
-    @patch('game.strategy.engine.fleet_movement.FleetMovementSimulator')
-    def test_delegates_to_simulator(self, mock_simulator_class, mock_fleet, mock_galaxy):
-        """project_fleet_path delegates to FleetMovementSimulator."""
+    @patch('game.strategy.services.fleet_navigation_service.FleetNavigationService')
+    def test_delegates_to_navigation_service(self, mock_service_class, mock_fleet, mock_galaxy):
+        """project_fleet_path delegates to FleetNavigationService."""
         galaxy, sys_a, sys_b, sys_c = mock_galaxy
 
         mock_instance = MagicMock()
         mock_instance.project_path_as_dicts.return_value = []
-        mock_simulator_class.return_value = mock_instance
+        mock_service_class.return_value = mock_instance
 
         result = project_fleet_path(mock_fleet, galaxy)
 
-        mock_simulator_class.assert_called_once()
+        mock_service_class.assert_called_once()
         mock_instance.project_path_as_dicts.assert_called_once()
 
-    @patch('game.strategy.engine.fleet_movement.FleetMovementSimulator')
-    def test_passes_max_turns_parameter(self, mock_simulator_class, mock_fleet, mock_galaxy):
-        """max_turns is passed to simulator."""
+    @patch('game.strategy.services.fleet_navigation_service.FleetNavigationService')
+    def test_passes_max_turns_parameter(self, mock_service_class, mock_fleet, mock_galaxy):
+        """max_turns is passed to service."""
         galaxy, sys_a, sys_b, sys_c = mock_galaxy
 
         mock_instance = MagicMock()
         mock_instance.project_path_as_dicts.return_value = []
-        mock_simulator_class.return_value = mock_instance
+        mock_service_class.return_value = mock_instance
 
         project_fleet_path(mock_fleet, galaxy, max_turns=25)
 
@@ -475,8 +476,8 @@ class TestFleetPathProjection:
             mock_fleet, galaxy, 25
         )
 
-    @patch('game.strategy.engine.fleet_movement.FleetMovementSimulator')
-    def test_returns_list_of_dicts(self, mock_simulator_class, mock_fleet, mock_galaxy):
+    @patch('game.strategy.services.fleet_navigation_service.FleetNavigationService')
+    def test_returns_list_of_dicts(self, mock_service_class, mock_fleet, mock_galaxy):
         """Returns list of segment dictionaries."""
         galaxy, sys_a, sys_b, sys_c = mock_galaxy
 
@@ -486,7 +487,7 @@ class TestFleetPathProjection:
         ]
         mock_instance = MagicMock()
         mock_instance.project_path_as_dicts.return_value = expected
-        mock_simulator_class.return_value = mock_instance
+        mock_service_class.return_value = mock_instance
 
         result = project_fleet_path(mock_fleet, galaxy)
 
@@ -662,6 +663,128 @@ class TestInterceptCalculation:
 
                 # Should have called find_hybrid_path
                 assert mock_hybrid.called
+
+    def test_accepts_navigation_state_as_chaser(self, mock_galaxy):
+        """calculate_intercept_point accepts NavigationState as chaser."""
+        galaxy, sys_a, sys_b, sys_c = mock_galaxy
+
+        # Use NavigationState instead of Fleet
+        chaser_state = NavigationState(
+            location=HexCoord(0, 0),
+            path=(),
+            orders=(),
+            speed=10.0,
+            can_warp=True
+        )
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(50, 0)
+        target.speed = 0.0
+        target.orders = []
+        target.path = []
+
+        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+            mock_project.return_value = []  # Stationary
+
+            result = calculate_intercept_point(chaser_state, target, galaxy)
+
+            # Should return target's current location
+            assert result == target.location
+
+    def test_navigation_state_chaser_uses_can_warp_field(self, mock_galaxy):
+        """NavigationState chaser uses can_warp field for path calculation."""
+        galaxy, sys_a, sys_b, sys_c = mock_galaxy
+
+        # NavigationState with can_warp=False
+        chaser_state = NavigationState(
+            location=HexCoord(0, 0),
+            path=(),
+            orders=(),
+            speed=10.0,
+            can_warp=False  # Cannot warp
+        )
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(100, 0)
+        target.speed = 5.0
+
+        target_path = [{'hex': HexCoord(101, 0), 'turn': 0}]
+
+        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_hybrid:
+                mock_project.return_value = target_path
+                mock_hybrid.return_value = [HexCoord(0, 0), HexCoord(50, 0), HexCoord(100, 0)]
+
+                calculate_intercept_point(chaser_state, target, galaxy)
+
+                # find_hybrid_path should be called with a fleet-like object that respects can_warp
+                assert mock_hybrid.called
+                call_args = mock_hybrid.call_args
+                fleet_arg = call_args.kwargs.get('fleet') or call_args[1].get('fleet')
+                if fleet_arg:
+                    # Check the fleet-like object has correct warp capability
+                    assert fleet_arg.can_use_warp() == False
+
+    def test_navigation_state_uses_location_and_speed(self, mock_galaxy):
+        """NavigationState location and speed are used correctly."""
+        galaxy, sys_a, sys_b, sys_c = mock_galaxy
+
+        # NavigationState with specific location and speed
+        chaser_state = NavigationState(
+            location=HexCoord(25, 0),
+            path=(),
+            orders=(),
+            speed=15.0,
+            can_warp=True
+        )
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(50, 0)
+        target.speed = 0.0
+        target.orders = []
+        target.path = []
+
+        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+            with patch('game.strategy.data.pathfinding.find_hybrid_path') as mock_hybrid:
+                mock_project.return_value = []  # Stationary
+                # Return path from chaser location to target
+                mock_hybrid.return_value = [HexCoord(25, 0), HexCoord(35, 0), HexCoord(50, 0)]
+
+                result = calculate_intercept_point(chaser_state, target, galaxy)
+
+                # Should have calculated path from NavigationState's location
+                mock_hybrid.assert_called()
+                call_args = mock_hybrid.call_args
+                # First positional arg should be galaxy, second is start location
+                assert call_args[0][1] == HexCoord(25, 0)
+
+    def test_fleet_chaser_still_works_unchanged(self, mock_galaxy):
+        """Regular Fleet object still works as chaser (backward compatibility)."""
+        galaxy, sys_a, sys_b, sys_c = mock_galaxy
+
+        chaser = MagicMock()
+        chaser.id = 1
+        chaser.location = HexCoord(0, 0)
+        chaser.speed = 10.0
+        chaser.can_use_warp = MagicMock(return_value=True)
+
+        target = MagicMock()
+        target.id = 2
+        target.location = HexCoord(50, 0)
+        target.speed = 0.0
+        target.orders = []
+        target.path = []
+
+        with patch('game.strategy.data.pathfinding.project_fleet_path') as mock_project:
+            mock_project.return_value = []  # Stationary
+
+            result = calculate_intercept_point(chaser, target, galaxy)
+
+            # Should return target's current location (backward compat)
+            assert result == target.location
 
 
 # =============================================================================

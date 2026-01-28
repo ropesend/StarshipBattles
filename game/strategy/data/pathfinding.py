@@ -1,7 +1,13 @@
 import heapq
+from typing import Union, Optional, TYPE_CHECKING
+
 from game.core.logger import log_error, log_info, log_warning, log_debug
-from game.strategy.data.hex_math import hex_distance, hex_linedraw
+from game.strategy.data.hex_math import hex_distance, hex_linedraw, HexCoord
 from game.strategy.data.fleet import OrderType
+
+if TYPE_CHECKING:
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.services.fleet_navigation_service import NavigationState
 
 def find_path_deep_space(start, end):
     """
@@ -209,9 +215,10 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
 def project_fleet_path(fleet, galaxy, max_turns=10):
     """
     Simulate future fleet movement based on current speed and orders.
-    
-    Delegates to FleetMovementSimulator for consistent movement logic.
-    
+
+    Delegates to FleetNavigationService for consistent movement logic.
+    (PROJ-35: Migrated from FleetMovementSimulator to unified service)
+
     Returns a list of segment dictionaries:
     {
         'start': HexCoord,
@@ -221,18 +228,28 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
         'hex': HexCoord (alias for end)
     }
     """
-    from game.strategy.engine.fleet_movement import FleetMovementSimulator
-    
-    simulator = FleetMovementSimulator()
-    return simulator.project_path_as_dicts(fleet, galaxy, max_turns)
+    from game.strategy.services.fleet_navigation_service import FleetNavigationService
 
-def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
+    service = FleetNavigationService()
+    return service.project_path_as_dicts(fleet, galaxy, max_turns)
+
+def calculate_intercept_point(
+    chaser: Union['Fleet', 'NavigationState'],
+    target_fleet,
+    galaxy
+) -> Optional[HexCoord]:
     """
     Calculate the optimal interception hex.
-    
+
     Uses real path lengths (via find_hybrid_path) rather than straight-line
     distance to ensure the chaser takes an efficient route.
-    
+
+    Args:
+        chaser: Fleet or NavigationState representing the pursuing fleet.
+                Supports both for backward compatibility and pure function usage.
+        target_fleet: Fleet object being pursued.
+        galaxy: Galaxy object for pathfinding context.
+
     Algorithm:
     1. Project target's future path.
     2. For each point on target's path, calculate how long chaser needs to get there.
@@ -240,13 +257,38 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
     4. Early exit if we find a perfect intercept (chaser arrives in <= 1 turn).
     5. If no intercept possible, chase the endpoint of target's path.
     """
+    # Import NavigationState here to avoid circular import
+    from game.strategy.services.fleet_navigation_service import NavigationState
+
+    # Extract chaser properties - support both Fleet and NavigationState
+    if isinstance(chaser, NavigationState):
+        chaser_location = chaser.location
+        chaser_speed = chaser.speed
+        chaser_id = -1  # Projection context, no real fleet ID
+        chaser_can_warp = chaser.can_warp
+    else:
+        chaser_location = chaser.location
+        chaser_speed = chaser.speed
+        chaser_id = getattr(chaser, 'id', 'unknown')
+        chaser_can_warp = chaser.can_use_warp() if hasattr(chaser, 'can_use_warp') else True
+
+    # Create a fleet-like object for find_hybrid_path that respects warp capability
+    class ChaserProxy:
+        def __init__(self, can_warp, fleet_id):
+            self._can_warp = can_warp
+            self.id = fleet_id
+        def can_use_warp(self):
+            return self._can_warp
+
+    chaser_proxy = ChaserProxy(chaser_can_warp, chaser_id)
+
     # Log header
     log_debug("=" * 60)
     log_debug("INTERCEPT CALCULATION")
     log_debug("=" * 60)
-    log_debug(f"Chaser Fleet ID: {getattr(chaser_fleet, 'id', 'unknown')}")
-    log_debug(f"  Location: {chaser_fleet.location}")
-    log_debug(f"  Speed: {chaser_fleet.speed}")
+    log_debug(f"Chaser Fleet ID: {chaser_id}")
+    log_debug(f"  Location: {chaser_location}")
+    log_debug(f"  Speed: {chaser_speed}")
     log_debug(f"Target Fleet ID: {getattr(target_fleet, 'id', 'unknown')}")
     log_debug(f"  Location: {target_fleet.location}")
     log_debug(f"  Speed: {getattr(target_fleet, 'speed', 'unknown')}")
@@ -260,7 +302,6 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
     if len(target_path) > 15:
         log_debug(f"  ... ({len(target_path) - 15} more)")
     
-    chaser_speed = chaser_fleet.speed
     if chaser_speed <= 0:
         log_debug("ERROR: Chaser speed <= 0, returning target location")
         return target_fleet.location
@@ -285,8 +326,8 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
         target_hex = pt['hex']
         
         # Calculate REAL path length using hybrid pathfinding
-        # Pass chaser_fleet to respect warp capability (BUG-45 fix)
-        path_to_target = find_hybrid_path(galaxy, chaser_fleet.location, target_hex, fleet=chaser_fleet)
+        # Use chaser_proxy to respect warp capability (BUG-45 fix)
+        path_to_target = find_hybrid_path(galaxy, chaser_location, target_hex, fleet=chaser_proxy)
         
         if not path_to_target:
             log_debug(f"  [{i}] {target_hex} @ T{target_turn}: UNREACHABLE")
@@ -330,7 +371,7 @@ def calculate_intercept_point(chaser_fleet, target_fleet, galaxy):
         log_debug(f"    Target at hex during turn {best_target_turn}")
         
         # Cross-verification: simulate chaser path to verify
-        chaser_path = find_hybrid_path(galaxy, chaser_fleet.location, result, fleet=chaser_fleet)
+        chaser_path = find_hybrid_path(galaxy, chaser_location, result, fleet=chaser_proxy)
         if chaser_path:
             log_debug("--- CROSS-VERIFICATION ---")
             chaser_path_len = len(chaser_path) - 1

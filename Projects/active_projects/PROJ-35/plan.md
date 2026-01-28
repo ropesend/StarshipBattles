@@ -14,18 +14,29 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Preparation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Create FleetNavigationService | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Fix Intercept Calculation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 2. Create FleetNavigationService | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Fix Intercept Calculation | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate FleetMovementEngine | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Add Consistency Tests | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Deprecate Old Classes | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-27 12:45
-**Active Phase:** Phase 2 - Create FleetNavigationService
-**Last Action:** Phase 1 complete - baseline tests pass (4594 passed, 1 skipped)
-**Next Action:** Create `game/strategy/services/fleet_navigation_service.py` with NavigationState dataclass
+**Last Updated:** 2026-01-27 19:15
+**Active Phase:** Phase 4 - Migrate FleetMovementEngine
+**Last Action:** Phase 3 complete - calculate_intercept_point now accepts NavigationState, project_fleet_path uses FleetNavigationService
+**Next Action:** Begin Phase 4 - Update FleetMovementEngine to delegate navigation to FleetNavigationService
 **Blockers:** None
+
+**Context for Next Agent:**
+- Phase 3 completed:
+  - Updated `calculate_intercept_point` to accept `Union[Fleet, NavigationState]` as chaser
+  - Added `ChaserProxy` class to wrap chaser properties for `find_hybrid_path` calls
+  - Added 4 new tests for NavigationState support (55 total pathfinding tests, all passing)
+  - Updated `project_fleet_path` to use `FleetNavigationService` instead of `FleetMovementSimulator`
+  - Fixed `FleetNavigationService.get_destination()` to pass NavigationState directly (removed fake fleet-like object hack)
+  - Fixed `FleetNavigationService.compute_path()` fleet-like object to include `id` field and proper `self` parameter
+- All tests passing: 91 tests (55 pathfinding + 36 fleet navigation service)
+- Next: Phase 4 will update FleetMovementEngine to delegate navigation logic to FleetNavigationService
 
 ## Overview
 Create a unified `FleetNavigationService` to replace duplicate movement logic in `FleetMovementSimulator` and `FleetMovementEngine`, ensuring UI path projection always matches actual turn execution. This fixes the "split brain" risk where the UI could show a fleet moving one way while the turn processor moves it differently.
@@ -99,7 +110,8 @@ FleetMovementEngine (simplified - delegates navigation)
 - [x] `pytest tests/` - all pass (baseline) - **4594 passed, 1 skipped**
 
 ### After Each Phase
-- [ ] `pytest tests/ --testmon` - affected tests pass
+- [x] `pytest tests/ --testmon` - affected tests pass (Phase 2: 36 passed)
+- [x] `pytest tests/ --testmon` - affected tests pass (Phase 3: 91 pathfinding + navigation tests)
 
 ### Final Verification
 - [ ] `pytest tests/` - full suite passes

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Update calculate_intercept_point to accept NavigationState
 
 ---
@@ -42,15 +42,15 @@ def calculate_intercept_point(
         chaser_can_warp = chaser.can_use_warp() if hasattr(chaser, 'can_use_warp') else True
 ```
 
-- [ ] Add import for NavigationState and Union
-- [ ] Update function signature to accept Union[Fleet, NavigationState]
-- [ ] Add isinstance check at function start
-- [ ] Extract location, speed, can_warp from either type
-- [ ] Update all references to chaser.location → chaser_location, etc.
-- [ ] Update find_hybrid_path call to pass can_warp correctly
-- [ ] Run pathfinding tests to verify unchanged behavior
+- [x] Add import for NavigationState and Union
+- [x] Update function signature to accept Union[Fleet, NavigationState]
+- [x] Add isinstance check at function start
+- [x] Extract location, speed, can_warp from either type
+- [x] Update all references to chaser.location → chaser_location, etc.
+- [x] Update find_hybrid_path call to pass can_warp correctly
+- [x] Run pathfinding tests to verify unchanged behavior
 
-**Notes:**
+**Notes:** Implemented using ChaserProxy class to pass to find_hybrid_path (which needs a fleet-like object with id and can_use_warp()). Added 4 new tests for NavigationState support. Updated FleetNavigationService.get_destination() to pass NavigationState directly instead of fake fleet-like object.
 
 ---
 
@@ -73,18 +73,18 @@ service = FleetNavigationService()
 return service.project_path_as_dicts(fleet, galaxy, max_turns)
 ```
 
-- [ ] Update import to use FleetNavigationService
-- [ ] Update function call to use service
-- [ ] Run pathfinding tests to verify unchanged behavior
+- [x] Update import to use FleetNavigationService
+- [x] Update function call to use service
+- [x] Run pathfinding tests to verify unchanged behavior
 
-**Notes:**
+**Notes:** Updated project_fleet_path to use FleetNavigationService instead of FleetMovementSimulator. Also fixed fleet_like object in compute_path() to include `id` field and proper `self` parameter in lambda.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/unit/strategy/test_pathfinding.py -v`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/unit/strategy/test_pathfinding.py -v`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

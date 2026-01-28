@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Build the unified service with core navigation logic
 
 ---
@@ -37,12 +37,12 @@ class NavigationState:
         )
 ```
 
-- [ ] Create new file `game/strategy/services/fleet_navigation_service.py`
-- [ ] Create dataclass with frozen=True
-- [ ] Add from_fleet() factory method
-- [ ] Include can_warp field to eliminate fake fleet hack
+- [x] Create new file `game/strategy/services/fleet_navigation_service.py`
+- [x] Create dataclass with frozen=True
+- [x] Add from_fleet() factory method
+- [x] Include can_warp field to eliminate fake fleet hack
 
-**Notes:**
+**Notes:** Created NavigationState frozen dataclass with from_fleet() factory. Tests in test_fleet_navigation_service.py cover snapshot creation, immutability, and can_warp field.
 
 ---
 
@@ -68,45 +68,45 @@ class NavigationStep:
     order_complete: bool = False
 ```
 
-- [ ] Move PathSegment from fleet_movement.py
-- [ ] Create NavigationStep for step results
+- [x] Move PathSegment from fleet_movement.py
+- [x] Create NavigationStep for step results
 
-**Notes:**
+**Notes:** PathSegment and NavigationStep are frozen dataclasses. PathSegment.to_dict() includes legacy 'hex' field for backward compatibility.
 
 ---
 
 ### Task 2.3: Implement Core Navigation Methods [Medium]
 **File:** `game/strategy/services/fleet_navigation_service.py`
 
-- [ ] Implement `get_destination(state, order, galaxy) -> Optional[HexCoord]`
+- [x] Implement `get_destination(state, order, galaxy) -> Optional[HexCoord]`
   - Handle MOVE: return order.target
   - Handle MOVE_TO_FLEET: call calculate_intercept_point with NavigationState
   - Handle others: return None
-- [ ] Implement `compute_path(state, destination, galaxy) -> list[HexCoord]`
+- [x] Implement `compute_path(state, destination, galaxy) -> list[HexCoord]`
   - Wrap find_hybrid_path
   - Remove start hex if equals current location
-- [ ] Implement `compute_next_step(state, galaxy) -> NavigationStep`
+- [x] Implement `compute_next_step(state, galaxy) -> NavigationStep`
   - Pure function, no mutation
   - Handle path recalculation when destination changes
   - Handle order completion
-- [ ] Implement `_needs_path_recalculation(state, destination) -> bool`
+- [x] Implement `_needs_path_recalculation(state, destination) -> bool`
   - Check if path[-1] != destination
 
-**Notes:**
+**Notes:** All core methods implemented as pure functions. get_destination still uses a fake fleet-like object for MOVE_TO_FLEET (Phase 3 will fix this). Tests verify purity and correct behavior.
 
 ---
 
 ### Task 2.4: Implement Projection Methods [Medium]
 **File:** `game/strategy/services/fleet_navigation_service.py`
 
-- [ ] Implement `project_path(fleet, galaxy, max_turns) -> list[PathSegment]`
+- [x] Implement `project_path(fleet, galaxy, max_turns) -> list[PathSegment]`
   - Port from FleetMovementSimulator.project_path()
   - Use NavigationState internally
   - Preserve max_iterations safety limit
-- [ ] Implement `project_path_as_dicts(fleet, galaxy, max_turns) -> list[dict]`
+- [x] Implement `project_path_as_dicts(fleet, galaxy, max_turns) -> list[dict]`
   - Wrapper that converts PathSegments to dicts
 
-**Notes:**
+**Notes:** Projection methods implemented with NavigationState internally. Detects warp jumps via hex_distance > 1. Calculates turn numbers based on fleet speed.
 
 ---
 
@@ -135,11 +135,11 @@ def calculate_fleet_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
     return step.next_hex
 ```
 
-- [ ] Implement calculate_fleet_next_hex() with mutation bridge
-- [ ] Handle order completion correctly
-- [ ] Handle path updates correctly
+- [x] Implement calculate_fleet_next_hex() with mutation bridge
+- [x] Handle order completion correctly
+- [x] Handle path updates correctly
 
-**Notes:**
+**Notes:** Mutation bridge implemented. Wraps pure compute_next_step() and applies mutations to Fleet object. Pops orders on completion and updates path.
 
 ---
 
@@ -147,21 +147,21 @@ def calculate_fleet_next_hex(self, fleet: Fleet, galaxy) -> Optional[HexCoord]:
 **File:** `tests/unit/strategy/test_fleet_navigation_service.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/test_fleet_navigation_service.py -v`
 
-- [ ] Test NavigationState.from_fleet() creates correct snapshot
-- [ ] Test get_destination() for MOVE orders
-- [ ] Test get_destination() for MOVE_TO_FLEET orders
-- [ ] Test compute_path() path normalization (removes start hex)
-- [ ] Test compute_next_step() is pure (doesn't mutate input)
-- [ ] Test project_path() produces correct segments
+- [x] Test NavigationState.from_fleet() creates correct snapshot
+- [x] Test get_destination() for MOVE orders
+- [x] Test get_destination() for MOVE_TO_FLEET orders
+- [x] Test compute_path() path normalization (removes start hex)
+- [x] Test compute_next_step() is pure (doesn't mutate input)
+- [x] Test project_path() produces correct segments
 
-**Notes:**
+**Notes:** 36 tests covering all methods. Tests written following TDD - tests before implementation.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/unit/strategy/test_fleet_navigation_service.py -v`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/unit/strategy/test_fleet_navigation_service.py -v`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
