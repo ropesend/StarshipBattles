@@ -1,8 +1,12 @@
 {
     "turn_number": 3,
-    "save_path": "C:\\Dev\\Starship Battles\\saves\\LoadTest",
+    "save_path": "C:\\Developer\\StarshipBattles\\saves\\LoadTest",
     "config": {
+<<<<<<< HEAD
         "asset_base_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes",
+=======
+        "asset_base_path": "c:\\Developer\\StarshipBattles\\assets\\ShipThemes",
+>>>>>>> 97b9be7e3e1c4a5e951051c1acfb394cc8f51a44
         "galaxy_radius": 4000,
         "system_count": 5,
         "save_name": "LoadTest",
@@ -3090,7 +3094,11 @@
                 0,
                 0
             ],
+<<<<<<< HEAD
             "theme_path": "C:\\Dev\\Starship Battles\\assets\\ShipThemes\\Federation",
+=======
+            "theme_path": "c:\\Developer\\StarshipBattles\\assets\\ShipThemes\\Federation",
+>>>>>>> 97b9be7e3e1c4a5e951051c1acfb394cc8f51a44
             "empire_theme_id": "Federation",
             "colony_ids": [
                 1
