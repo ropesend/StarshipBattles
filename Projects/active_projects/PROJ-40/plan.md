@@ -18,7 +18,7 @@
 | 3. Core Infrastructure Improvements | **Complete** | [phase_3_checklist.md](phase_3_checklist.md) | 6 Issues |
 | 4. Simulation Engine Cleanup | **Complete** | [phase_4_checklist.md](phase_4_checklist.md) | 9 Issues |
 | 5. Strategy Layer Refinements | **Complete** | [phase_5_checklist.md](phase_5_checklist.md) | 5 Issues |
-| 6. AI System Improvements | Not Started | [phase_6_checklist.md](phase_6_checklist.md) | 4 Issues |
+| 6. AI System Improvements | **Complete** | [phase_6_checklist.md](phase_6_checklist.md) | 4 Issues |
 | 7. UI Layer Remediation | **SUPERSEDED** | [phase_7_checklist.md](phase_7_checklist.md) | Moved to Phase 12 |
 | 8. Research System Polish | Not Started | [phase_8_checklist.md](phase_8_checklist.md) | 7 Issues |
 | 9. Data & Config Cleanup | Not Started | [phase_9_checklist.md](phase_9_checklist.md) | 12 Issues |
@@ -31,12 +31,18 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 6 - AI System Improvements
-**Last Action:** Completed Phase 5 - Strategy Layer Refinements (5 tasks)
-**Next Action:** Begin Phase 6 - AI System Improvements
+**Active Phase:** Phase 8 - Research System Polish
+**Last Action:** Completed Phase 6 - AI System Improvements (4 tasks)
+**Next Action:** Begin Phase 8 - Research System Polish (Phase 7 superseded)
 **Blockers:** None
 
 ### Recent Work
+- **Phase 6 Complete:** AI system improvements (4 tasks)
+  - 6.1: Fixed CollisionSystem unsafe HP access with getattr defaults
+  - 6.2: Added type hints to AIController (5 methods)
+  - 6.3: Standardized collision scoring with fallback warning
+  - 6.4: Added comprehensive behavior documentation (KiteBehavior, AttackRunBehavior, FormationBehavior)
+
 - **Phase 5 Complete:** Strategy layer refinements
   - 5.1: Refactored calculate_intercept_point (176→90 lines, extracted helpers)
   - 5.3: Added type hints to pathfinding functions (find_path_*, get_system_at_hex)

@@ -42,6 +42,8 @@ Example:
     controller.update()  # Called each tick by BattleEngine
 """
 import math
+from typing import Any, Dict, List, Optional
+
 from game.core.math import Vector2
 from game.core.config import AIConfig, BattleConfig
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
@@ -77,7 +79,8 @@ class AIController:
         self.attack_state = 'approach'
         self.attack_timer = 0
 
-    def get_resolved_strategy(self):
+    def get_resolved_strategy(self) -> Dict[str, Any]:
+        """Get the fully resolved strategy for this ship's AI strategy ID."""
         strategy_id = self.ship.get_ai_strategy()
         return StrategyManager.instance().resolve_strategy(strategy_id)
 
@@ -137,7 +140,7 @@ class AIController:
         scored_enemies.sort(key=lambda x: x[0], reverse=True)
         return [e for _, e in scored_enemies]
 
-    def find_target(self):
+    def find_target(self) -> Optional[Any]:
         """Find target based on strategy's targeting priority."""
         resolved = self.get_resolved_strategy()
         targeting_policy = resolved['targeting']
@@ -153,7 +156,7 @@ class AIController:
         sorted_enemies = self._score_and_sort_enemies(enemies, rules)
         return sorted_enemies[0] if sorted_enemies else None
 
-    def find_secondary_targets(self):
+    def find_secondary_targets(self) -> List[Any]:
         """Find additional targets if ship has multiplex tracking."""
         max_targets = self.ship.get_max_targets()
         if max_targets <= CombatConstants.DEFAULT_MAX_TARGETS:
@@ -192,8 +195,8 @@ class AIController:
     def _is_in_pdc_arc(self, target):
         return TargetEvaluator._default_is_in_pdc_arc(self.ship, target)
 
-    def update(self):
-
+    def update(self) -> None:
+        """Execute one AI update cycle: target selection, behavior selection, movement."""
         if not self.ship.is_alive():
             return
 
@@ -366,7 +369,8 @@ class AIController:
             return self.ship.get_position() + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
         return None
 
-    def navigate_to(self, target_pos, stop_dist=0, precise=False):
+    def navigate_to(self, target_pos, stop_dist: float = 0, precise: bool = False) -> None:
+        """Navigate ship toward target position using rotation and thrust."""
         ship_pos = self.ship.get_position()
         distance = ship_pos.distance_to(target_pos)
         dx = target_pos.x - ship_pos.x

@@ -50,6 +50,7 @@ import random
 from typing import List, Dict, Any, TYPE_CHECKING
 
 from game.core.config import BattleConfig
+from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -108,12 +109,16 @@ class CollisionSystem:
                     if source_ship and hasattr(source_ship, 'get_total_sensor_score'):
                         attack_score = source_ship.get_total_sensor_score()
                         
+                    # PROJ-40/NEW-AI-008: Standardized defense scoring
+                    # Primary: total_defense_score (includes size, maneuver, ECM)
+                    # Fallback: get_total_ecm_score() for backward compatibility
                     defense_score = 0.0
                     if hasattr(target, 'total_defense_score'):
                         defense_score = target.total_defense_score
                     elif hasattr(target, 'get_total_ecm_score'):
-                        # Fallback
                         defense_score = target.get_total_ecm_score()
+                        log_warning(f"CollisionSystem: Using ECM fallback for defense score "
+                                   f"(target missing total_defense_score attribute)")
                         
                     # Calculate Chance with Sigmoid Logic using ability
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
@@ -149,8 +154,9 @@ class CollisionSystem:
             collision_radius = s.radius + target.radius
             
             if s.position.distance_to(target.position) < collision_radius:
-                hp_rammer = s.hp
-                hp_target = target.hp
+                # PROJ-40/NEW-AI-004: Use getattr with default for safe HP access
+                hp_rammer = getattr(s, 'hp', 100)
+                hp_target = getattr(target, 'hp', 100)
                 
                 msg = ""
                 if hp_rammer < hp_target:
