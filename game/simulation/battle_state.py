@@ -6,6 +6,8 @@ Provides full state capture for:
 - Strategy layer battle resolution
 - Deterministic replay support
 - Debugging and analysis
+
+PROJ-38: Added registries parameter for dependency injection.
 """
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, Tuple, TYPE_CHECKING
@@ -15,11 +17,13 @@ import uuid
 
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_warning
+from game.core.registry import get_component_registry, get_modifier_registry
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.simulation.systems.battle_engine import BattleEngine
     from game.simulation.entities.projectile import Projectile
+    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -223,18 +227,30 @@ class ShipState:
             current_target_id=current_target_id,
         )
 
-    def to_ship(self) -> 'Ship':
+    def to_ship(self, *, registries: Optional['GameRegistries'] = None) -> 'Ship':
         """
         Create a simulation Ship from this state.
+
+        PROJ-38: Added registries parameter for dependency injection.
+
+        Args:
+            registries: Optional GameRegistries for DI. Falls back to global functions if None.
 
         Note: This creates a new Ship with the stored state applied.
         Component damage and resource levels are restored.
         """
         from game.simulation.entities.ship import Ship
-        from game.core.registry import get_component_registry, get_modifier_registry
         from game.core.math import Vector2
 
-        # Create base ship
+        # PROJ-38: Use injected registries or fallback to global functions
+        if registries is not None:
+            comp_registry = registries.components
+            mod_registry = registries.modifiers
+        else:
+            comp_registry = get_component_registry()
+            mod_registry = get_modifier_registry()
+
+        # Create base ship - PROJ-38: Pass registries to Ship constructor
         ship = Ship(
             self.name,
             self.position[0],
@@ -242,15 +258,12 @@ class ShipState:
             self.color,
             self.team_id,
             ship_class=self.ship_class,
-            theme_id=self.theme_id
+            theme_id=self.theme_id,
+            registries=registries
         )
         ship.ai_strategy = self.ai_strategy
         ship.angle = self.angle
         ship.velocity = Vector2(self.velocity[0], self.velocity[1])
-
-        # Add components with proper state
-        comp_registry = get_component_registry()
-        mod_registry = get_modifier_registry()
 
         for layer_name, comp_states in self.components.items():
             try:

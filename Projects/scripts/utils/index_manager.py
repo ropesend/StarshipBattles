@@ -181,3 +181,21 @@ def get_project_entry(project_id: str) -> Optional[ProjectEntry]:
             return entry
 
     return None
+
+
+def is_project_archived(project_id: str) -> bool:
+    """Check if a project exists in the archived_projects directory."""
+    archived_dir = ARCHIVED_DIR / project_id
+    archived_file = ARCHIVED_DIR / f"{project_id}.md"
+    return archived_dir.exists() or archived_file.exists()
+
+
+def project_exists(project_id: str) -> bool:
+    """Check if a project exists (active or archived)."""
+    active_dir = ACTIVE_DIR / project_id
+    active_file = ACTIVE_DIR / f"{project_id}.md"
+    return (
+        active_dir.exists() or
+        active_file.exists() or
+        is_project_archived(project_id)
+    )

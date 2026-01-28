@@ -15,8 +15,8 @@ from pathlib import Path
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils.markdown_parser import parse_project_file, find_incomplete_tasks
-from utils.index_manager import read_projects_index, parse_project_entries
+from utils.markdown_parser import parse_project_file, find_incomplete_tasks, extract_sub_project_reference
+from utils.index_manager import read_projects_index, parse_project_entries, is_project_archived
 from utils.config import ACTIVE_DIR
 
 
@@ -72,6 +72,24 @@ def show_project_status(project_id: str, brief: bool = False) -> bool:
 
     print(f"\nProgress:")
     for phase in project_data.phases:
+        status_lower = phase.status.lower()
+
+        # Handle extracted phases specially
+        if "extracted" in status_lower:
+            sub_project_id = extract_sub_project_reference(phase)
+            name = f"Phase {phase.number}: {phase.name}"[:40]
+
+            if sub_project_id:
+                if is_project_archived(sub_project_id):
+                    status_str = f"-> {sub_project_id} (COMPLETE)"
+                else:
+                    status_str = f"-> {sub_project_id} (active)"
+            else:
+                status_str = "Extracted (ref missing)"
+
+            print(f"  {name:<42} {status_str}")
+            continue
+
         phase_tasks = len(phase.tasks)
         phase_complete = sum(1 for t in phase.tasks
                            if t.subtasks and all(c for c, _ in t.subtasks))

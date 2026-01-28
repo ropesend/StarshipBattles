@@ -13,10 +13,16 @@ TIER 2 - Domain Services (Computed Access):
 AVOID - Direct Singleton Access:
     # DON'T DO THIS - harder to test
     RegistryManager.instance().components
+
+PROJ-38: Deprecation
+====================
+The utility functions (get_component_registry, get_modifier_registry, etc.) are
+deprecated. Use GameRegistries via dependency injection instead.
 """
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 import threading
+import warnings
 
 
 # =============================================================================
@@ -255,26 +261,70 @@ class RegistryManager:
 
 def get_component_registry() -> Dict[str, Any]:
     """Get the component registry dictionary.
-    
+
+    .. deprecated::
+        Use GameRegistries via dependency injection instead.
+        This function will be removed in a future version.
+
     Returns a reference to the live dictionary managed by RegistryManager.
-    Prefer this over direct RegistryManager.instance().components access.
     """
+    warnings.warn(
+        "get_component_registry() is deprecated. Use GameRegistries via dependency injection.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return RegistryManager.instance().components
 
 def get_modifier_registry() -> Dict[str, Any]:
-    """Get the modifier registry dictionary."""
+    """Get the modifier registry dictionary.
+
+    .. deprecated::
+        Use GameRegistries via dependency injection instead.
+    """
+    warnings.warn(
+        "get_modifier_registry() is deprecated. Use GameRegistries via dependency injection.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return RegistryManager.instance().modifiers
 
 def get_vehicle_classes() -> Dict[str, Any]:
-    """Get the vehicle classes dictionary."""
+    """Get the vehicle classes dictionary.
+
+    .. deprecated::
+        Use GameRegistries via dependency injection instead.
+    """
+    warnings.warn(
+        "get_vehicle_classes() is deprecated. Use GameRegistries via dependency injection.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return RegistryManager.instance().vehicle_classes
 
 def get_validator():
-    """Get the ship design validator (lazy-loaded)."""
+    """Get the ship design validator (lazy-loaded).
+
+    .. deprecated::
+        Use GameRegistries via dependency injection instead.
+    """
+    warnings.warn(
+        "get_validator() is deprecated. Use GameRegistries via dependency injection.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return RegistryManager.instance().get_validator()
 
 def get_resource_registry() -> Dict[str, Any]:
-    """Get the resource registry dictionary."""
+    """Get the resource registry dictionary.
+
+    .. deprecated::
+        Use GameRegistries via dependency injection instead.
+    """
+    warnings.warn(
+        "get_resource_registry() is deprecated. Use GameRegistries via dependency injection.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return RegistryManager.instance().resources
 
 def freeze_registry() -> None:

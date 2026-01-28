@@ -17,8 +17,9 @@ from typing import List, Optional
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from utils.markdown_parser import parse_project_file, get_phases, get_current_state, Phase
+from utils.markdown_parser import parse_project_file, get_phases, get_current_state, Phase, extract_sub_project_reference
 from utils.config import FRESHNESS_THRESHOLD_HOURS
+from utils.index_manager import is_project_archived, project_exists
 
 
 class ValidationResult:
@@ -54,6 +55,31 @@ def validate_phase(project_id: str, phase_num: int, strict: bool = False) -> Val
 
     if not target_phase:
         result.errors.append(f"Phase {phase_num} not found in project")
+        return result
+
+    # Check for extracted phases - handle specially
+    status_lower = target_phase.status.lower()
+    if "extracted" in status_lower:
+        sub_project_id = extract_sub_project_reference(target_phase)
+        if not sub_project_id:
+            result.errors.append(f"Phase {phase_num} is marked as Extracted but no sub-project reference found")
+            return result
+
+        if not project_exists(sub_project_id):
+            result.errors.append(f"Phase {phase_num}: Sub-project {sub_project_id} not found")
+            return result
+
+        if is_project_archived(sub_project_id):
+            result.passes.append(f"Phase {phase_num}: Extracted to {sub_project_id} (ARCHIVED - auto-complete candidate)")
+            if "complete" not in status_lower:
+                result.warnings.append(
+                    f"Phase {phase_num} should be updated to 'Extracted (Complete)' - sub-project is archived"
+                )
+        else:
+            result.passes.append(f"Phase {phase_num}: Extracted to {sub_project_id} (active)")
+            result.warnings.append(f"Sub-project {sub_project_id} is still in progress")
+
+        # Skip normal task validation for extracted phases
         return result
 
     # Check 1: Checkbox completion

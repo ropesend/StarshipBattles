@@ -1,26 +1,39 @@
-"""Tests for ship design factory functions."""
+"""Tests for ship design factory functions.
+
+PROJ-38: Migrated to use fresh_registries fixture for cleaner test setup.
+"""
 import pytest
 import pygame
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components  # Phase 7: Removed legacy class imports
 from game.simulation.designs import create_brick, create_interceptor
 from game.core.registry import RegistryManager
-from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestDesignFactories:
     """Test programmatic ship creation functions."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
+        """Set up registry data for tests.
+
+        PROJ-38: Uses fresh_registries fixture for data, then hydrates singleton
+        for design functions that use global pattern.
+        """
         pygame.init()
-        initialize_ship_data(str(get_project_root()))
-        load_components(str(get_data_dir() / "components.json"))
+
+        # Hydrate registry singleton from fresh_registries fixture data
+        mgr = RegistryManager.instance()
+        mgr.hydrate(
+            fresh_registries.components,
+            fresh_registries.modifiers,
+            fresh_registries.vehicle_classes
+        )
+
         yield
+
         pygame.quit()
-        RegistryManager.instance().clear()
+        # Note: reset_singletons fixture in conftest.py handles cleanup
 
     def test_create_brick_returns_ship(self):
         """create_brick should return a valid Ship object."""

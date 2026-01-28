@@ -13,26 +13,34 @@
 ## Quick Status
 | Phase | Status | Checklist | Issues |
 |-------|--------|-----------|--------|
-| 1. Critical Architecture Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | 3 Critical |
-| 2. Quick Wins - Dead Code & Duplicates | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | 15 Simple |
-| 3. Core Infrastructure Improvements | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | 8 Issues |
-| 4. Simulation Engine Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | 10 Issues |
-| 5. Strategy Layer Refinements | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | 8 Issues |
-| 6. AI System Improvements | Not Started | [phase_6_checklist.md](phase_6_checklist.md) | 10 Issues |
-| 7. UI Layer Remediation | Not Started | [phase_7_checklist.md](phase_7_checklist.md) | 14 Issues |
-| 8. Research System Polish | Not Started | [phase_8_checklist.md](phase_8_checklist.md) | 8 Issues |
+| 1. Critical Architecture Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) | 1 Critical |
+| 2. Quick Wins - Dead Code & Duplicates | Not Started | [phase_2_checklist.md](phase_2_checklist.md) | 9 Simple |
+| 3. Core Infrastructure Improvements | Not Started | [phase_3_checklist.md](phase_3_checklist.md) | 6 Issues |
+| 4. Simulation Engine Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) | 9 Issues |
+| 5. Strategy Layer Refinements | Not Started | [phase_5_checklist.md](phase_5_checklist.md) | 5 Issues |
+| 6. AI System Improvements | Not Started | [phase_6_checklist.md](phase_6_checklist.md) | 4 Issues |
+| 7. UI Layer Remediation | **SUPERSEDED** | [phase_7_checklist.md](phase_7_checklist.md) | Moved to Phase 12 |
+| 8. Research System Polish | Not Started | [phase_8_checklist.md](phase_8_checklist.md) | 7 Issues |
 | 9. Data & Config Cleanup | Not Started | [phase_9_checklist.md](phase_9_checklist.md) | 12 Issues |
 | 10. Test Infrastructure | Not Started | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
-| 11. Original Findings Completion | Not Started | [phase_11_checklist.md](phase_11_checklist.md) | 5 Issues |
+| 11. Original Findings Completion | Not Started | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
+| 12. UI Layer Remediation (Final) | Not Started | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
 
-**Total Issues:** 111 (108 new + 3 remaining original findings)
+**Total Issues:** ~74 (revised after Category 3 audit verification)
+**Estimated Effort:** 40-51 hours (reduced from 46-63 hours)
 
 ## Current State
-**Last Updated:** 2026-01-27
-**Active Phase:** Planning
-**Last Action:** Project created from update review findings
-**Next Action:** Begin Phase 1 - Critical Architecture Fixes
+**Last Updated:** 2026-01-28
+**Active Phase:** Planning Complete - Ready for Implementation
+**Last Action:** Category 3 audit verification completed; 23 items removed from scope
+**Next Action:** Begin Phase 1 - Fix duplicate total_defense_score in ship.py
 **Blockers:** None
+
+### Audit Results Summary
+- **23 items REMOVED** from scope (not issues or already fixed)
+- **PROJ comments (11.5) PRESERVED** - architectural documentation
+- **UI items consolidated** into new Phase 12 (37 files, 12-16 hours)
+- See [PROJ-40_Independent_Audit_Report.md](PROJ-40_Independent_Audit_Report.md) for details
 
 ## Overview
 This project addresses all 108 issues discovered in the comprehensive code review (`2026-01-27_update_legacy-cleanup-verification`), plus 3 remaining issues from the original legacy cleanup review. Issues are organized into 11 phases by architectural layer and complexity.

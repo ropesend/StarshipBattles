@@ -296,3 +296,50 @@ def parse_phase_file(filepath: Path) -> Phase:
         objective=objective,
         tasks=tasks,
     )
+
+
+def extract_sub_project_reference(phase: Phase) -> Optional[str]:
+    """Extract the sub-project ID from an extracted phase.
+
+    Looks for patterns like:
+    - "Extracted to PROJ-42"
+    - "**Extracted To:** PROJ-42"
+    - "-> PROJ-42"
+
+    Args:
+        phase: The Phase object to check
+
+    Returns:
+        The sub-project ID (e.g., "PROJ-42") or None if not found
+    """
+    patterns = [
+        r'Extracted\s+[Tt]o[:\s]+\**(PROJ-\d+)',
+        r'->\s*(PROJ-\d+)',
+        r'\*\*Sub-Project:\*\*\s*\[?(PROJ-\d+)',
+        r'\*\*Extracted To:\*\*\s*(PROJ-\d+)',
+    ]
+    # Search in status and objective
+    search_text = phase.status + " " + (phase.objective or "")
+    for pattern in patterns:
+        match = re.search(pattern, search_text)
+        if match:
+            return match.group(1)
+    return None
+
+
+def find_extracted_phases(project_data: ProjectData) -> List[Tuple[int, str]]:
+    """Find all extracted phases and their sub-project references.
+
+    Args:
+        project_data: The parsed project data
+
+    Returns:
+        List of (phase_num, sub_project_id) tuples
+    """
+    extracted = []
+    for phase in project_data.phases:
+        if "extracted" in phase.status.lower():
+            sub_id = extract_sub_project_reference(phase)
+            if sub_id:
+                extracted.append((phase.number, sub_id))
+    return extracted

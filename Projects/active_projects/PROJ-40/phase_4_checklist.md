@@ -1,11 +1,14 @@
 # Phase 4: Simulation Engine Cleanup
 
 **Status:** Not Started
-**Estimated Effort:** 6-8 hours
+**Estimated Effort:** 5-7 hours
 **Priority:** Medium-High
 
 ## Overview
-Address issues in `game/simulation/` focusing on layer violations, incomplete implementations, and god class patterns.
+Address issues in `game/simulation/` focusing on layer violations, incomplete implementations, and code quality.
+
+> **Note:** This phase was reduced from 10 tasks to 9 after Category 3 audit verification:
+> - Task 4.5 (NEW-SIM-009) REMOVED - Ship.py decomposition IS complete (uses mixins & composition)
 
 ---
 
@@ -59,23 +62,18 @@ Address issues in `game/simulation/` focusing on layer violations, incomplete im
 
 ---
 
-### 4.5 Address Ship God Class (NEW-SIM-009)
-**Location:** `game/simulation/entities/ship.py:34` (793 lines)
-**Effort:** Complex (partial in this phase)
-
-This is a large refactoring effort. In this phase:
-- [ ] Document current Ship responsibilities
-- [ ] Identify extraction candidates:
-  - [ ] `ShipComponentManager` (already exists - verify usage)
-  - [ ] `ShipStatsCalculator` (extract stat calculation)
-  - [ ] `ShipSerializer` (extract serialization)
-- [ ] Create extraction plan in `decisions.md`
-- [ ] Extract ONE responsibility as proof of concept
-- [ ] Run: `pytest tests/unit/entities/test_ship.py -v`
+### ~~4.5 Address Ship God Class (NEW-SIM-009)~~
+**Status:** REMOVED - ALREADY COMPLETE
+**Reason:** Ship.py (793 lines) is no longer a god class. It now uses proper decomposition:
+- `ShipPhysicsMixin` for physics and movement
+- `ShipCombatMixin` for combat logic
+- `ShipFormation` composition for formation management
+- `ShipStatsCalculator` for stats calculation
+- `ShipSerializer` for serialization
 
 ---
 
-### 4.6 Fix Unused Variable (NEW-SIM-010)
+### 4.5 Fix Unused Variable (NEW-SIM-010)
 **Location:** `game/simulation/entities/ship.py:55`
 **Effort:** Simple
 
@@ -118,7 +116,6 @@ This is a large refactoring effort. In this phase:
 ---
 
 ## Notes
-- Task 4.1 (layer violation) and 4.5 (god class) are the most complex
-- Consider splitting 4.5 into a separate PROJ for full Ship decomposition
-- Tasks 4.6, 4.7 are quick wins within this phase
+- Task 4.1 (layer violation) and 4.3 (projectile restoration) are the most complex
+- Tasks 4.5, 4.6 are quick wins within this phase
 - Document all design decisions in `decisions.md`

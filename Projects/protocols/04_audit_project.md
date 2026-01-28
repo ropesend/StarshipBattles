@@ -37,6 +37,48 @@ Only proceed with audit if validation **PASSED**.
 
 ## Phase 1: Comprehensive Checklist Review
 
+### Phase 1.0: Sub-Project Dependency Check
+
+**FIRST**, check for any extracted phases that depend on sub-projects:
+
+```bash
+python Projects/scripts/validate_audit_ready.py PROJ-XX
+```
+
+Look for "Extracted" phases in the output. For each extracted phase:
+
+| Sub-Project Status | Action |
+|-------------------|--------|
+| **Archived** | Update phase to "Extracted (Complete)" - it's done! |
+| **Active - Awaiting Verification** | Note: Sub-project nearly complete, may need to wait |
+| **Active - In Progress** | Note: Sub-project still in progress |
+| **Not Found** | ERROR: Document as critical finding - escalate to user |
+
+#### Auto-Completing Extracted Phases
+
+If a sub-project is archived, update the original phase checklist:
+
+1. Change status from `Extracted` to `Extracted (Complete)`
+2. Add note to Audit Log:
+   ```markdown
+   | Cycle | Date | Findings | Resolution |
+   | [N] | [Date] | Phase X: sub-project PROJ-YY is archived | Auto-completed |
+   ```
+
+#### Documenting Pending Dependencies
+
+If sub-project is still active, add to audit findings:
+```markdown
+### Pending: Phase X awaiting sub-project completion
+**Sub-Project:** PROJ-YY
+**Status:** In Progress
+**Note:** Cannot fully complete audit until sub-project is archived
+```
+
+---
+
+### Phase 1.1: Task Checklist Review
+
 Go through EVERY task and subtask in the plan. For each one:
 
 ### Verification Checklist
