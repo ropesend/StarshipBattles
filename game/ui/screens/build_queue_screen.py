@@ -9,6 +9,7 @@ import pygame_gui.elements as ui
 import pygame_gui.windows
 from typing import TYPE_CHECKING, Optional, Callable
 
+from game.core.config import UIConfig
 from game.core.logger import log_info, log_warning, log_error, log_debug
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
@@ -858,7 +859,7 @@ class BuildQueueScreen:
     def _show_screenshot_toast(self):
         """Show a brief toast notification for screenshot feedback."""
         try:
-            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
             toast_rect.center = (self.screen_width // 2, 80)
             pygame_gui.windows.UIMessageWindow(
                 rect=toast_rect,

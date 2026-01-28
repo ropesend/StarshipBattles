@@ -142,7 +142,24 @@ class BattleConfig:
 
 
 class UIConfig:
-    """UI layout and sizing configuration."""
+    """UI layout and sizing configuration.
+
+    This class consolidates UI magic numbers that were scattered across screens.
+    When adding new UI code, check here for existing constants before creating
+    hardcoded values. When migrating existing code, replace magic numbers with
+    these constants.
+
+    Migration pattern:
+        # Before:
+        toast_rect = pygame.Rect(0, 0, 300, 60)
+
+        # After:
+        from game.core.config import UIConfig
+        toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
+
+    See also:
+        - game.ui.screens.builder_utils: Builder-specific layout constants
+    """
 
     # Builder panel dimensions
     BUILDER_PANEL_WIDTH: int = 300
@@ -156,6 +173,18 @@ class UIConfig:
     PANEL_GAP: int = 5
     ELEMENT_SPACING: int = 16
     INDENT: int = 20
+
+    # Standard rect offsets (for pygame.Rect positioning)
+    RECT_OFFSET_SMALL: int = 5
+    RECT_OFFSET_MEDIUM: int = 10
+
+    # Toast notification dimensions
+    TOAST_WIDTH: int = 300
+    TOAST_HEIGHT: int = 60
+
+    # Confirmation dialog dimensions
+    CONFIRM_DIALOG_WIDTH: int = 400
+    CONFIRM_DIALOG_HEIGHT: int = 200
 
     # Font sizes (pygame.font.Font None-font sizes)
     FONT_TITLE: int = 28

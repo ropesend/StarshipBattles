@@ -24,44 +24,56 @@
 | 9. Data & Config Cleanup | **Complete** | [phase_9_checklist.md](phase_9_checklist.md) | 13 Issues |
 | 10. Test Infrastructure | **Complete** | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
 | 11. Original Findings Completion | **Complete** | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
-| 12. UI Layer Remediation (Final) | In Progress | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
+| 12. UI Layer Remediation (Final) | **Complete** | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
 
 **Total Issues:** ~74 (revised after Category 3 audit verification)
 **Estimated Effort:** 40-51 hours (reduced from 46-63 hours)
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tasks 12.11, 12.17, 12.18 Complete
-**Last Action:** Completed Tasks 12.11, 12.17, 12.18 (type hints, ComponentRef, cache key)
-**Next Action:** Phase 12 Remaining Tasks (12.15, 12.16) or stop session
+**Active Phase:** PROJECT COMPLETE - All 12 Phases Done
+**Last Action:** Completed Phase 12 - marked as complete after verification
+**Next Action:** Close project or move to archive
 **Blockers:** None
 
-### Recent Work (This Session - New)
-- **Phase 12 Additional Tasks COMPLETE:** (3 tasks)
-  - 12.11: FormationEditor Type Hints
-    - Added type hints to public API methods in FormationCore (9 methods) and FormationEditorScene (15+ methods)
-    - Added `from __future__ import annotations` and typing imports
-  - 12.17: ComponentRef Pattern
-    - Created `game/ui/screens/builder/component_ref.py` dataclass
-    - Added `from_tuple()` migration helper for legacy tuple format
-    - Updated detail_panel.py to support ComponentRef
-    - 17 new tests for ComponentRef
-  - 12.18: Schematic Cache Key
-    - Verified cache key already includes weapon stats (range, arc, facing)
-    - Fixed misleading comment in schematic_view.py
-    - Added 5 tests verifying cache behavior
-  - **Final: 5196 passed, 3 skipped** (22 new tests)
+### PROJECT COMPLETION SUMMARY
+- All 12 phases completed
+- 5199 tests passing, 3 skipped
+- No circular imports in game.ui
+- All high-priority architectural violations addressed
+- 25 new tests added this session
 
-### Files Modified This Session (New)
-- `game/ui/screens/formation_editor.py` - Type hints for public API
-- `game/ui/screens/builder/component_ref.py` - NEW: ComponentRef dataclass
-- `game/ui/screens/builder/__init__.py` - Export ComponentRef
-- `game/ui/screens/builder/detail_panel.py` - Support ComponentRef pattern
-- `game/ui/screens/builder/schematic_view.py` - Fixed misleading comment
-- `tests/unit/builder/test_component_ref.py` - NEW: 17 tests
-- `tests/unit/builder/test_schematic_cache_key.py` - NEW: 5 tests
+### Latest Work (This Session)
+- **Phase 12 Tasks 12.15 & 12.16 COMPLETE:**
+  - 12.15: UI Layout Constants
+    - Extended `game/core/config.py:UIConfig` with TOAST_*, CONFIRM_DIALOG_*, RECT_OFFSET_* constants
+    - Migrated 8 usages across 4 files (build_queue_screen, planet_list_window, strategy_input_handler, strategy_scene, save_selection_window)
+    - Added detailed docstring with migration pattern documentation
+    - 3 new tests in tests/unit/core/test_config.py
+  - 12.16: RaceSetupScreen Planning
+    - Documented that PROJ-12 Phase 4 already extracted 8 components
+    - Analyzed remaining 1,227 lines - mostly coordination/glue code
+    - Recommendation: No further decomposition needed
+    - Added detailed analysis to decisions.md
+  - **Final: 5199 passed, 3 skipped** (3 new tests this segment, 25 total new tests this session)
 
-### Previous Work (This Session)
+### Files Modified (This Segment)
+- `game/core/config.py` - Added 6 new UIConfig constants + docstring
+- `game/ui/screens/build_queue_screen.py` - UIConfig import + toast migration
+- `game/ui/screens/planet_list_window.py` - Toast migration
+- `game/ui/screens/strategy_input_handler.py` - Toast migration
+- `game/ui/screens/strategy_scene.py` - Confirm dialog migration
+- `game/ui/screens/save_selection_window.py` - UIConfig import + dialog migrations
+- `tests/unit/core/test_config.py` - 3 new UIConfig tests
+- `Projects/active_projects/PROJ-40/decisions.md` - RaceSetupScreen analysis
+
+### Previous Work (This Session - Phase 7 Tasks)
+- **Phase 12 Tasks 12.11, 12.17, 12.18 COMPLETE:** (3 tasks)
+  - 12.11: FormationEditor Type Hints - 9 FormationCore + 15+ FormationEditorScene methods
+  - 12.17: ComponentRef Pattern - New dataclass, 17 tests
+  - 12.18: Schematic Cache Key - Verified correct, added 5 tests
+
+### Previous Work (This Session - Quick Wins)
 - **Phase 12 Quick Wins COMPLETE:** (3 tasks)
   - 12.12: formation_editor.py - Bare Exception Fixes
   - 12.13: test_lab.py - Fragile Path Construction

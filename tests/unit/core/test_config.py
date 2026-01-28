@@ -102,3 +102,25 @@ class TestUIConfig:
 
         assert hasattr(UIConfig, 'BUILDER_PANEL_WIDTH')
         assert isinstance(UIConfig.BUILDER_PANEL_WIDTH, int)
+
+    def test_toast_dimensions(self):
+        """Toast notification dimensions exist and have correct values."""
+        from game.core.config import UIConfig
+
+        assert UIConfig.TOAST_WIDTH == 300
+        assert UIConfig.TOAST_HEIGHT == 60
+
+    def test_confirmation_dialog_dimensions(self):
+        """Confirmation dialog dimensions exist and have correct values."""
+        from game.core.config import UIConfig
+
+        assert UIConfig.CONFIRM_DIALOG_WIDTH == 400
+        assert UIConfig.CONFIRM_DIALOG_HEIGHT == 200
+
+    def test_relative_rect_offsets(self):
+        """Standard relative rect offsets exist."""
+        from game.core.config import UIConfig
+
+        # Common pattern: relative_rect=pygame.Rect(10, 5, width, height)
+        assert UIConfig.RECT_OFFSET_SMALL == 5
+        assert UIConfig.RECT_OFFSET_MEDIUM == 10

@@ -410,7 +410,7 @@ class StrategyScene:
 
         # Show confirmation dialog
         if success:
-            dialog_rect = pygame.Rect(0, 0, 400, 200)
+            dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
             dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
             pygame_gui.windows.UIMessageWindow(
                 rect=dialog_rect,
@@ -420,7 +420,7 @@ class StrategyScene:
             )
             log_info(f"Game saved: {message}")
         else:
-            dialog_rect = pygame.Rect(0, 0, 400, 200)
+            dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
             dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
             pygame_gui.windows.UIMessageWindow(
                 rect=dialog_rect,
