@@ -158,3 +158,92 @@ class TestGameSessionCommands:
         # since GameSession just delegates.
         # But we added `handle_command` in GameSession.
         pass
+
+
+class TestIssueInterceptCommand:
+    """Tests for IssueInterceptCommand class."""
+
+    def test_create_intercept_command(self):
+        """IssueInterceptCommand can be created with fleet and target IDs."""
+        from game.strategy.engine.commands import IssueInterceptCommand, CommandType
+
+        cmd = IssueInterceptCommand(fleet_id=1, target_fleet_id=2)
+
+        assert cmd.fleet_id == 1
+        assert cmd.target_fleet_id == 2
+        assert cmd.type == CommandType.ISSUE_ORDER
+
+    def test_intercept_command_has_name(self):
+        """IssueInterceptCommand has correct name property."""
+        from game.strategy.engine.commands import IssueInterceptCommand
+
+        cmd = IssueInterceptCommand(fleet_id=1, target_fleet_id=2)
+
+        assert cmd.name == "IssueInterceptCommand"
+
+
+class TestIssueJoinFleetCommand:
+    """Tests for IssueJoinFleetCommand class."""
+
+    def test_create_join_fleet_command(self):
+        """IssueJoinFleetCommand can be created with fleet and target IDs."""
+        from game.strategy.engine.commands import IssueJoinFleetCommand, CommandType
+
+        cmd = IssueJoinFleetCommand(fleet_id=1, target_fleet_id=2)
+
+        assert cmd.fleet_id == 1
+        assert cmd.target_fleet_id == 2
+        assert cmd.type == CommandType.ISSUE_ORDER
+
+    def test_join_fleet_command_has_name(self):
+        """IssueJoinFleetCommand has correct name property."""
+        from game.strategy.engine.commands import IssueJoinFleetCommand
+
+        cmd = IssueJoinFleetCommand(fleet_id=1, target_fleet_id=2)
+
+        assert cmd.name == "IssueJoinFleetCommand"
+
+
+class TestQueueColonizeMissionCommand:
+    """Tests for QueueColonizeMissionCommand class."""
+
+    def test_create_colonize_mission_command(self):
+        """QueueColonizeMissionCommand can be created with all required fields."""
+        from game.strategy.engine.commands import QueueColonizeMissionCommand, CommandType
+
+        target = HexCoord(10, 20)
+        cmd = QueueColonizeMissionCommand(fleet_id=1, target_hex=target, planet_id=42)
+
+        assert cmd.fleet_id == 1
+        assert cmd.target_hex == target
+        assert cmd.planet_id == 42
+        assert cmd.type == CommandType.ISSUE_ORDER
+
+    def test_colonize_mission_command_has_name(self):
+        """QueueColonizeMissionCommand has correct name property."""
+        from game.strategy.engine.commands import QueueColonizeMissionCommand
+
+        cmd = QueueColonizeMissionCommand(fleet_id=1, target_hex=HexCoord(0, 0), planet_id=1)
+
+        assert cmd.name == "QueueColonizeMissionCommand"
+
+
+class TestClearFleetOrdersCommand:
+    """Tests for ClearFleetOrdersCommand class."""
+
+    def test_create_clear_orders_command(self):
+        """ClearFleetOrdersCommand can be created with fleet ID."""
+        from game.strategy.engine.commands import ClearFleetOrdersCommand, CommandType
+
+        cmd = ClearFleetOrdersCommand(fleet_id=5)
+
+        assert cmd.fleet_id == 5
+        assert cmd.type == CommandType.ISSUE_ORDER
+
+    def test_clear_orders_command_has_name(self):
+        """ClearFleetOrdersCommand has correct name property."""
+        from game.strategy.engine.commands import ClearFleetOrdersCommand
+
+        cmd = ClearFleetOrdersCommand(fleet_id=5)
+
+        assert cmd.name == "ClearFleetOrdersCommand"

@@ -4,23 +4,27 @@ Handles move, join, and intercept commands.
 
 Extracted from StrategyScene to reduce file size and improve testability.
 """
-import pygame
+from typing import TYPE_CHECKING
 from game.core.logger import log_debug, log_warning
-from game.strategy.data.fleet import FleetOrder, OrderType
 from game.strategy.data.hex_math import pixel_to_hex
+
+if TYPE_CHECKING:
+    from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
 
 class FleetOperations:
     """Handles fleet movement commands."""
 
-    def __init__(self, scene):
+    def __init__(self, scene, facade: 'StrategySessionFacade'):
         """
         Initialize fleet operations handler.
 
         Args:
-            scene: StrategyScene instance providing camera, empires, session, etc.
+            scene: StrategyScene instance providing camera, empires, hex_size, etc.
+            facade: StrategySessionFacade for all engine interactions
         """
         self.scene = scene
+        self.facade = facade
 
     @property
     def camera(self):
@@ -33,10 +37,6 @@ class FleetOperations:
     @property
     def hex_size(self):
         return self.scene.hex_size
-
-    @property
-    def session(self):
-        return self.scene.session
 
     def get_fleet_at_hex(self, hex_coord):
         """
@@ -100,7 +100,7 @@ class FleetOperations:
         """
         log_debug(f"Calculating path to {target_hex}...")
 
-        preview_path = self.session.preview_fleet_path(fleet, target_hex)
+        preview_path = self.facade.get_fleet_path_preview(fleet.id, target_hex)
 
         if preview_path:
             log_debug(f"Path confirmed: {len(preview_path)} steps.")
@@ -108,7 +108,7 @@ class FleetOperations:
             from game.strategy.engine.commands import IssueMoveCommand
             cmd = IssueMoveCommand(fleet.id, target_hex)
 
-            result = self.session.handle_command(cmd)
+            result = self.facade.handle_command(cmd)
 
             if result and result.is_valid:
                 return {'type': 'success', 'fleet': fleet}
@@ -133,10 +133,16 @@ class FleetOperations:
         """
         log_debug(f"Intercepting Fleet {target_fleet.id}...")
 
-        new_order = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
-        fleet.add_order(new_order)
+        from game.strategy.engine.commands import IssueInterceptCommand
+        cmd = IssueInterceptCommand(fleet.id, target_fleet.id)
+        result = self.facade.handle_command(cmd)
 
-        return {'type': 'success', 'fleet': fleet}
+        if result and result.is_valid:
+            return {'type': 'success', 'fleet': fleet}
+        else:
+            msg = result.message if result else 'Unknown'
+            log_warning(f"Intercept Failed: {msg}")
+            return {'type': 'error', 'message': msg}
 
     def handle_join_designation(self, mx, my, selected_fleet):
         """
@@ -171,12 +177,13 @@ class FleetOperations:
 
         log_debug(f"Queueing Join Order with Fleet {target_fleet.id}...")
 
-        # 1. Move Towards
-        order_move = FleetOrder(OrderType.MOVE_TO_FLEET, target_fleet)
-        selected_fleet.add_order(order_move)
+        from game.strategy.engine.commands import IssueJoinFleetCommand
+        cmd = IssueJoinFleetCommand(selected_fleet.id, target_fleet.id)
+        result = self.facade.handle_command(cmd)
 
-        # 2. Join
-        order_join = FleetOrder(OrderType.JOIN_FLEET, target_fleet)
-        selected_fleet.add_order(order_join)
-
-        return {'type': 'success', 'fleet': selected_fleet}
+        if result and result.is_valid:
+            return {'type': 'success', 'fleet': selected_fleet}
+        else:
+            msg = result.message if result else 'Unknown'
+            log_warning(f"Join Fleet Failed: {msg}")
+            return {'type': 'error', 'message': msg}

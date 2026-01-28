@@ -42,8 +42,67 @@ class IssueBuildShipCommand(Command):
     """Command to build a ship at a colony."""
     planet_id: int
     design_name: str
-    
+
     def __init__(self, planet_id: int, design_name: str):
         self.type = CommandType.ISSUE_ORDER
         self.planet_id = planet_id
         self.design_name = design_name
+
+
+@dataclass
+class IssueInterceptCommand(Command):
+    """Command to issue an intercept order to a fleet.
+
+    The fleet will move toward the target fleet's position.
+    """
+    fleet_id: int
+    target_fleet_id: int
+
+    def __init__(self, fleet_id: int, target_fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_fleet_id = target_fleet_id
+
+
+@dataclass
+class IssueJoinFleetCommand(Command):
+    """Command to issue a join fleet order.
+
+    The fleet will move to and merge with the target fleet.
+    """
+    fleet_id: int
+    target_fleet_id: int
+
+    def __init__(self, fleet_id: int, target_fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_fleet_id = target_fleet_id
+
+
+@dataclass
+class QueueColonizeMissionCommand(Command):
+    """Command to queue a colonize mission (move + colonize).
+
+    The fleet will move to the target hex and then colonize the planet.
+    If planet_id is None, the fleet will colonize the largest available
+    planet when it arrives at the target hex.
+    """
+    fleet_id: int
+    target_hex: Any  # HexCoord
+    planet_id: Optional[int]  # None for 'colonize any/largest available planet'
+
+    def __init__(self, fleet_id: int, target_hex: Any, planet_id: Optional[int] = None):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex
+        self.planet_id = planet_id
+
+
+@dataclass
+class ClearFleetOrdersCommand(Command):
+    """Command to clear all orders from a fleet."""
+    fleet_id: int
+
+    def __init__(self, fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id

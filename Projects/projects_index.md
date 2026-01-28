@@ -4,16 +4,18 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-41 | Documentation Health Remediation | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-40 | Comprehensive Code Quality Remediation | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-38 | Registry DI Refactor | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-37 | Fragile Asset Loading Refactor | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-36 | TurnEngine God Class Decomposition | Planning | 2026-01-27 | 2026-01-27 |
 | PROJ-35 | Unify Fleet Movement Logic | Planning | 2026-01-27 | 2026-01-27 |
-| PROJ-34 | StrategyScene Strict Facade Refactor | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-34 | StrategyScene Strict Facade Refactor | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-33 | UI Screens: ViewModel Layer Introduction | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-32 | Research System: State Management Cleanup | Archived | 2026-01-27 | 2026-01-27 |
 | PROJ-31 | AI System: Dead Code Removal | Archived | 2026-01-27 | 2026-01-27 |
@@ -124,4 +126,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-40
+## Next Project ID: PROJ-42

@@ -1,0 +1,149 @@
+"""Fleet Data Transfer Objects.
+
+Immutable DTOs representing fleet data for the UI layer.
+"""
+from dataclasses import dataclass, field
+from typing import Tuple, Optional, TYPE_CHECKING
+
+from game.strategy.data.hex_math import HexCoord
+
+if TYPE_CHECKING:
+    from game.strategy.data.fleet import Fleet
+
+
+@dataclass(frozen=True)
+class FleetOrderInfo:
+    """Immutable DTO representing a fleet order.
+
+    Attributes:
+        order_type: Type of order ("MOVE", "COLONIZE", "MOVE_TO_FLEET", "JOIN_FLEET")
+        target_description: Human-readable description of the target
+        target_hex: Target hex coordinate for movement orders
+        target_id: Target entity ID (fleet ID for JOIN_FLEET, planet ID for COLONIZE)
+    """
+
+    order_type: str
+    target_description: str
+    target_hex: Optional[HexCoord] = None
+    target_id: Optional[int] = None
+
+
+@dataclass(frozen=True)
+class ShipInfo:
+    """Immutable DTO representing a ship in a fleet.
+
+    Attributes:
+        instance_id: Unique identifier for this ship instance
+        name: Display name of the ship
+        design_id: Reference to the ship design
+        ship_class: Ship class (e.g., "Frigate", "Cruiser")
+        is_combat_capable: Whether the ship can participate in combat
+        current_hp_percent: Current HP as percentage of max (0.0-1.0)
+    """
+
+    instance_id: str
+    name: str
+    design_id: str
+    ship_class: str
+    is_combat_capable: bool
+    current_hp_percent: float
+
+
+@dataclass(frozen=True)
+class FleetInfo:
+    """Immutable DTO representing a fleet.
+
+    Attributes:
+        fleet_id: Unique identifier for the fleet
+        owner_id: Empire ID of the fleet owner
+        location: Current hex coordinate
+        speed: Fleet movement speed
+        ship_count: Number of ships in the fleet
+        ships: Tuple of ShipInfo DTOs for each ship (immutable)
+        orders: Tuple of FleetOrderInfo DTOs for queued orders (immutable)
+        has_orders: Whether the fleet has any orders queued
+        can_use_warp: Whether all ships in fleet can use warp points
+        projected_path: Tuple of movement path coordinates (immutable)
+    """
+
+    fleet_id: int
+    owner_id: int
+    location: HexCoord
+    speed: float
+    ship_count: int
+    ships: Tuple[ShipInfo, ...] = field(default_factory=tuple)
+    orders: Tuple[FleetOrderInfo, ...] = field(default_factory=tuple)
+    has_orders: bool = False
+    can_use_warp: bool = False
+    projected_path: Tuple[HexCoord, ...] = field(default_factory=tuple)
+
+    @classmethod
+    def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
+        """Create a FleetInfo DTO from a Fleet domain object.
+
+        Args:
+            fleet: The Fleet domain object to convert
+
+        Returns:
+            An immutable FleetInfo DTO
+        """
+        # Convert ships to ShipInfo DTOs
+        ship_infos = []
+        for ship in fleet.ships:
+            hp_percent = ship.get_hp_percentage()
+            ship_class = ship.design_data.get("ship_class", "Unknown")
+            ship_infos.append(
+                ShipInfo(
+                    instance_id=ship.instance_id,
+                    name=ship.name,
+                    design_id=ship.design_id,
+                    ship_class=ship_class,
+                    is_combat_capable=ship.is_combat_capable(),
+                    current_hp_percent=hp_percent,
+                )
+            )
+
+        # Convert orders to FleetOrderInfo DTOs
+        order_infos = []
+        for order in fleet.orders:
+            target_hex = None
+            target_id = None
+            target_description = ""
+
+            if order.type.name in ("MOVE", "COLONIZE"):
+                # Target is a HexCoord
+                if isinstance(order.target, HexCoord):
+                    target_hex = order.target
+                    target_description = f"({order.target.q}, {order.target.r})"
+                elif hasattr(order.target, "name"):
+                    # Planet or other named object
+                    target_description = order.target.name
+                    if hasattr(order.target, "location"):
+                        target_hex = order.target.location
+            elif order.type.name in ("MOVE_TO_FLEET", "JOIN_FLEET"):
+                # Target is a Fleet
+                if hasattr(order.target, "id"):
+                    target_id = order.target.id
+                    target_description = f"Fleet {order.target.id}"
+
+            order_infos.append(
+                FleetOrderInfo(
+                    order_type=order.type.name,
+                    target_description=target_description,
+                    target_hex=target_hex,
+                    target_id=target_id,
+                )
+            )
+
+        return cls(
+            fleet_id=fleet.id,
+            owner_id=fleet.owner_id,
+            location=fleet.location,
+            speed=fleet.speed,
+            ship_count=len(fleet.ships),
+            ships=tuple(ship_infos),
+            orders=tuple(order_infos),
+            has_orders=len(fleet.orders) > 0,
+            can_use_warp=fleet.can_use_warp(),
+            projected_path=tuple(fleet.path),
+        )

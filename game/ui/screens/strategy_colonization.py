@@ -4,35 +4,32 @@ Handles colonize commands, planet validation, and mission queuing.
 
 Extracted from StrategyScene to reduce file size and improve testability.
 """
+from typing import TYPE_CHECKING
 from game.core.logger import log_debug, log_info, log_warning
-from game.strategy.data.fleet import FleetOrder, OrderType
 from game.strategy.data.hex_math import pixel_to_hex
-from game.strategy.engine.commands import IssueColonizeCommand
+from game.strategy.engine.commands import IssueColonizeCommand, QueueColonizeMissionCommand
+
+if TYPE_CHECKING:
+    from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
 
 class ColonizationSystem:
     """Handles colonization commands and workflows."""
 
-    def __init__(self, scene):
+    def __init__(self, scene, facade: 'StrategySessionFacade'):
         """
         Initialize colonization system.
 
         Args:
-            scene: StrategyScene instance providing galaxy, session, etc.
+            scene: StrategyScene instance providing camera, systems, hex_size, etc.
+            facade: StrategySessionFacade for all engine interactions
         """
         self.scene = scene
-
-    @property
-    def galaxy(self):
-        return self.scene.galaxy
+        self.facade = facade
 
     @property
     def systems(self):
         return self.scene.systems
-
-    @property
-    def turn_engine(self):
-        return self.scene.turn_engine
 
     @property
     def camera(self):
@@ -41,10 +38,6 @@ class ColonizationSystem:
     @property
     def hex_size(self):
         return self.scene.hex_size
-
-    @property
-    def session(self):
-        return self.scene.session
 
     def on_colonize_click(self, fleet):
         """
@@ -82,10 +75,10 @@ class ColonizationSystem:
                     if p.location == loc_local:
                         potential_planets.append(p)
 
-        # Validate with engine
+        # Validate with facade
         valid_planets = []
         for p in potential_planets:
-            res = self.turn_engine.validate_colonize_order(self.galaxy, fleet, p)
+            res = self.facade.can_colonize(fleet.id, p.id)
             if res.is_valid:
                 valid_planets.append(p)
 
@@ -105,7 +98,7 @@ class ColonizationSystem:
 
     def issue_colonize_order(self, fleet, planet):
         """
-        Issue colonize command to session.
+        Issue colonize command via facade.
 
         Args:
             fleet: Fleet to colonize with
@@ -117,7 +110,7 @@ class ColonizationSystem:
         cmd = IssueColonizeCommand(fleet.id, planet.id)
         log_info(f"Issued IssueColonizeCommand for {planet.name}")
 
-        result = self.session.handle_command(cmd)
+        result = self.facade.handle_command(cmd)
         if not result.is_valid:
             log_warning(f"Command Failed: {result.message}")
             return {'type': 'error', 'message': result.message}
@@ -166,11 +159,11 @@ class ColonizationSystem:
 
     def queue_colonize_mission(self, target_hex, planet, fleet):
         """
-        Queue MOVE + COLONIZE orders for a colonization mission.
+        Queue MOVE + COLONIZE orders for a colonization mission via facade.
 
         Args:
             target_hex: Destination hex coordinate
-            planet: Planet to colonize
+            planet: Planet to colonize, or None for "any available planet"
             fleet: Fleet to issue orders to
 
         Returns:
@@ -179,38 +172,18 @@ class ColonizationSystem:
         if not fleet:
             return None
 
-        # Determine start hex (current location or last order target)
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        # Handle planet=None (colonize any available planet when arriving)
+        planet_id = planet.id if planet else None
+        cmd = QueueColonizeMissionCommand(fleet.id, target_hex, planet_id)
+        result = self.facade.handle_command(cmd)
 
-        # Calculate path
-        from game.strategy.data.pathfinding import find_hybrid_path
-        path = find_hybrid_path(self.galaxy, start_hex, target_hex)
-
-        if path:
-            # Queue MOVE if not already at target
-            if start_hex != target_hex:
-                move = FleetOrder(OrderType.MOVE, target_hex)
-                fleet.add_order(move)
-                if len(fleet.orders) == 1:
-                    # Remove start hex from path before assigning
-                    if path and path[0] == fleet.location:
-                        path = path[1:]
-                    fleet.path = path
-
-            # Queue COLONIZE
-            col = FleetOrder(OrderType.COLONIZE, planet)
-            fleet.add_order(col)
-
+        if result.is_valid:
             p_name = planet.name if planet else "Any Planet"
             log_info(f"Mission Queued: Colonize {p_name} at {target_hex}")
             return {'type': 'success', 'fleet': fleet}
         else:
-            log_warning("Cannot find path.")
-            return {'type': 'error', 'message': 'No path found'}
+            log_warning(f"Colonize mission failed: {result.message}")
+            return {'type': 'error', 'message': result.message}
 
     def request_colonize_order(self, fleet, planet):
         """
@@ -245,7 +218,8 @@ class ColonizationSystem:
             StarSystem or None
         """
         from game.strategy.data.pathfinding import get_system_at_hex
-        return get_system_at_hex(self.galaxy, hex_coord)
+        # Access galaxy through scene (read-only for internal lookups)
+        return get_system_at_hex(self.scene.galaxy, hex_coord)
 
     def _resolve_planet_global_hex(self, planet):
         """
@@ -257,7 +231,8 @@ class ColonizationSystem:
         Returns:
             HexCoord or None
         """
-        for sys in self.galaxy.systems.values():
+        # Access galaxy through scene (read-only for internal lookups)
+        for sys in self.scene.galaxy.systems.values():
             if planet in sys.planets:
                 return sys.global_location + planet.location
         return None

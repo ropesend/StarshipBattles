@@ -29,6 +29,7 @@ from game.ui.screens.strategy_fleet_ops import FleetOperations
 from game.ui.screens.strategy_colonization import ColonizationSystem
 from game.ui.screens.strategy_input_handler import StrategyInputHandler
 from game.strategy.systems.save_game_service import SaveGameService
+from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
 
 class StrategyScene:
@@ -46,6 +47,9 @@ class StrategyScene:
         else:
             from game.strategy.engine.game_session import GameSession
             self.session = GameSession()
+
+        # Create facade for UI-to-engine communication
+        self._facade = StrategySessionFacade(self.session)
 
         # Camera
         self.camera = Camera(
@@ -83,12 +87,14 @@ class StrategyScene:
         # Initialize sub-modules
         self._renderer = StrategyRenderer(self)
         self._camera_nav = CameraNavigator(self)
-        self._fleet_ops = FleetOperations(self)
-        self._colonization = ColonizationSystem(self)
+        self._fleet_ops = FleetOperations(self, self._facade)
+        self._colonization = ColonizationSystem(self, self._facade)
         self._input = StrategyInputHandler(self)
 
     # =========================================================================
     # Properties (delegate to session)
+    # NOTE: These are deprecated for external access. Use facade methods instead.
+    # Internal use within StrategyScene is still valid.
     # =========================================================================
 
     @property
@@ -105,6 +111,13 @@ class StrategyScene:
 
     @property
     def turn_engine(self):
+        import warnings
+        warnings.warn(
+            "Direct turn_engine access is deprecated. Use facade.can_colonize() "
+            "or other facade validation methods instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return self.session.turn_engine
 
     @property
@@ -261,7 +274,7 @@ class StrategyScene:
             pygame.display.flip()
 
         # Process turn for all empires
-        self.session.process_turn()
+        self._facade.process_turn()
 
         # Auto-save after turn processing
         if self.session.save_path:

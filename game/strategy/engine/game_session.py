@@ -237,8 +237,16 @@ class GameSession:
                 return self._handle_move_command(command)
             elif cmd_name == 'IssueBuildShipCommand':
                 return self._handle_build_ship_command(command)
+            elif cmd_name == 'IssueInterceptCommand':
+                return self._handle_intercept_command(command)
+            elif cmd_name == 'IssueJoinFleetCommand':
+                return self._handle_join_command(command)
+            elif cmd_name == 'QueueColonizeMissionCommand':
+                return self._handle_colonize_mission_command(command)
+            elif cmd_name == 'ClearFleetOrdersCommand':
+                return self._handle_clear_orders_command(command)
 
-        return None # Warning/Error?
+        return None  # Warning/Error?
 
     def _handle_colonize_command(self, cmd):
         """Handle IssueColonizeCommand."""
@@ -341,6 +349,131 @@ class GameSession:
         planet.add_production(cmd.design_name, 1)
 
         return validation_result(True, f"Started construction of {cmd.design_name}.")
+
+    def _handle_intercept_command(self, cmd):
+        """Handle IssueInterceptCommand.
+
+        Creates a MOVE_TO_FLEET order targeting another fleet.
+        """
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        # 1. Resolve source fleet
+        fleet = self._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Resolve target fleet
+        target_fleet = self._get_fleet_by_id(cmd.target_fleet_id)
+        if not target_fleet:
+            return validation_result(False, "Target fleet not found.")
+
+        # 3. Create MOVE_TO_FLEET order
+        order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
+        fleet.add_order(order)
+
+        log_info(f"GameSession: Issued Intercept Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
+        return validation_result(True, "Intercept order issued.")
+
+    def _handle_join_command(self, cmd):
+        """Handle IssueJoinFleetCommand.
+
+        Creates MOVE_TO_FLEET and JOIN_FLEET orders to move to and merge with target.
+        """
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        # 1. Resolve source fleet
+        fleet = self._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Resolve target fleet
+        target_fleet = self._get_fleet_by_id(cmd.target_fleet_id)
+        if not target_fleet:
+            return validation_result(False, "Target fleet not found.")
+
+        # 3. Create MOVE_TO_FLEET order first
+        move_order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
+        fleet.add_order(move_order)
+
+        # 4. Then create JOIN_FLEET order
+        join_order = FleetOrder(OrderType.JOIN_FLEET, target=target_fleet)
+        fleet.add_order(join_order)
+
+        log_info(f"GameSession: Issued Join Fleet Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
+        return validation_result(True, "Join fleet order issued.")
+
+    def _handle_colonize_mission_command(self, cmd):
+        """Handle QueueColonizeMissionCommand.
+
+        Queues MOVE and COLONIZE orders. Calculates path from current location
+        or last order's target hex if fleet has existing orders.
+
+        If planet_id is None, queues a colonize order with target=None,
+        meaning "colonize any available planet" when the fleet arrives.
+        """
+        from game.strategy.data.fleet import FleetOrder, OrderType
+        from game.strategy.data.pathfinding import find_hybrid_path
+
+        # 1. Resolve fleet
+        fleet = self._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Resolve planet (None is valid - means "any planet")
+        planet = None
+        if cmd.planet_id is not None:
+            planet = self._get_planet_by_id(cmd.planet_id)
+            if not planet:
+                return validation_result(False, "Planet not found.")
+
+        # 3. Determine start hex (current location or last order target)
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
+        # 4. Calculate path
+        path = find_hybrid_path(self.galaxy, start_hex, cmd.target_hex)
+        if not path:
+            return validation_result(False, "No path found to target.")
+
+        # 5. Queue MOVE order if not already at target
+        if start_hex != cmd.target_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+            fleet.add_order(move_order)
+
+            # Set path immediately if it's the active order
+            if len(fleet.orders) == 1:
+                # Remove start hex from path before assigning
+                if path and path[0] == fleet.location:
+                    path = path[1:]
+                fleet.path = path
+
+        # 6. Queue COLONIZE order (target=None means "any available planet")
+        colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
+        fleet.add_order(colonize_order)
+
+        planet_name = planet.name if planet else "Any Planet"
+        log_info(f"GameSession: Queued Colonize Mission for Fleet {fleet.id} -> {planet_name}")
+        return validation_result(True, "Colonize mission queued.")
+
+    def _handle_clear_orders_command(self, cmd):
+        """Handle ClearFleetOrdersCommand.
+
+        Clears all orders and the path from a fleet.
+        """
+        # 1. Resolve fleet
+        fleet = self._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Clear orders and path
+        fleet.orders = []
+        fleet.path = []
+
+        log_info(f"GameSession: Cleared orders for Fleet {fleet.id}")
+        return validation_result(True, "Fleet orders cleared.")
 
     def _get_fleet_by_id(self, fleet_id):
         """Helper to find fleet."""
