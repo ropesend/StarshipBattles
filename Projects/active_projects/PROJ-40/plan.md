@@ -31,26 +31,41 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tasks 12.12-12.14 Complete
-**Last Action:** Completed Phase 12 Quick Wins (Tasks 12.12-12.14)
-**Next Action:** Phase 12 Remaining Tasks (12.11, 12.15-12.18) or stop session
+**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tasks 12.11, 12.17, 12.18 Complete
+**Last Action:** Completed Tasks 12.11, 12.17, 12.18 (type hints, ComponentRef, cache key)
+**Next Action:** Phase 12 Remaining Tasks (12.15, 12.16) or stop session
 **Blockers:** None
 
-### Recent Work (This Session - Latest)
+### Recent Work (This Session - New)
+- **Phase 12 Additional Tasks COMPLETE:** (3 tasks)
+  - 12.11: FormationEditor Type Hints
+    - Added type hints to public API methods in FormationCore (9 methods) and FormationEditorScene (15+ methods)
+    - Added `from __future__ import annotations` and typing imports
+  - 12.17: ComponentRef Pattern
+    - Created `game/ui/screens/builder/component_ref.py` dataclass
+    - Added `from_tuple()` migration helper for legacy tuple format
+    - Updated detail_panel.py to support ComponentRef
+    - 17 new tests for ComponentRef
+  - 12.18: Schematic Cache Key
+    - Verified cache key already includes weapon stats (range, arc, facing)
+    - Fixed misleading comment in schematic_view.py
+    - Added 5 tests verifying cache behavior
+  - **Final: 5196 passed, 3 skipped** (22 new tests)
+
+### Files Modified This Session (New)
+- `game/ui/screens/formation_editor.py` - Type hints for public API
+- `game/ui/screens/builder/component_ref.py` - NEW: ComponentRef dataclass
+- `game/ui/screens/builder/__init__.py` - Export ComponentRef
+- `game/ui/screens/builder/detail_panel.py` - Support ComponentRef pattern
+- `game/ui/screens/builder/schematic_view.py` - Fixed misleading comment
+- `tests/unit/builder/test_component_ref.py` - NEW: 17 tests
+- `tests/unit/builder/test_schematic_cache_key.py` - NEW: 5 tests
+
+### Previous Work (This Session)
 - **Phase 12 Quick Wins COMPLETE:** (3 tasks)
   - 12.12: formation_editor.py - Bare Exception Fixes
-    - Fixed tkinter init exception to `except (tkinter.TclError, RuntimeError):`
-    - Fixed file I/O exceptions to specific types (OSError, IOError, json.JSONDecodeError)
   - 12.13: test_lab.py - Fragile Path Construction
-    - Replaced nested `os.path.dirname()` with `Path(__file__).resolve().parents[3]`
-    - Updated glob usage to pathlib
-    - Fixed broken import (MENU, BATTLE from game.app)
   - 12.14: Already completed in Task 12.10
-  - **Final: 5174 passed, 3 skipped** (tests/ directory)
-
-### Files Modified This Session (Latest)
-- `game/ui/screens/formation_editor.py` - Specific exception types
-- `game/ui/screens/test_lab.py` - Pathlib refactoring, fixed imports
 
 ### Previous Work (This Session - Tier 3)
 - **Phase 12 Tier 3 COMPLETE:** Hard Cases (2 tasks)

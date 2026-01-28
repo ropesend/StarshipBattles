@@ -5,6 +5,7 @@ from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, U
 from game.simulation.components.component_constants import LayerType
 import json
 from .modifier_logic import ModifierLogic
+from .component_ref import ComponentRef
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -65,15 +66,28 @@ class ComponentDetailPanel:
         )
 
     def on_selection_changed(self, selection_data):
-         # selection_data matches what BuilderSceneGUI emits: self.selected_component
-         # which is a tuple (layer, idx, comp) or None using the new system
-         
-         if selection_data and isinstance(selection_data, tuple):
-             self.show_component(selection_data[2])
-         elif hasattr(selection_data, 'id'): # Direct component
-             self.show_component(selection_data)
-         else:
-             self.show_component(None)
+        """Handle component selection changes from the event bus.
+
+        Args:
+            selection_data: One of:
+                - ComponentRef: New typed reference (preferred)
+                - tuple: Legacy (layer, idx, comp) format
+                - Component: Direct component object
+                - None: No selection
+        """
+        if selection_data is None:
+            self.show_component(None)
+        elif isinstance(selection_data, ComponentRef):
+            # NEW: Preferred typed reference pattern
+            self.show_component(selection_data.component)
+        elif isinstance(selection_data, tuple):
+            # LEGACY: Support old (layer, idx, comp) tuple format
+            self.show_component(selection_data[2])
+        elif hasattr(selection_data, 'id'):
+            # Direct component object
+            self.show_component(selection_data)
+        else:
+            self.show_component(None)
         
         
     def show_component(self, comp):

@@ -130,9 +130,9 @@ class SchematicView:
         w_id = weapon.id
         
         # Cache Key: (Weapon ID, Range, Arc, Facing, Screen Size Tuple)
-        # Using Weapon ID ensures unique weapons (with modifiers) are cached uniquely.
-        # But if we modify the weapon, we need to invalidate or key off value.
-        # Ideally we key off value.
+        # The key includes actual stat VALUES (not just weapon ID), so modified
+        # weapons with different stats get different cache entries automatically.
+        # Weapon ID differentiates weapons that happen to have identical stats.
         cache_key = (w_id, weapon_range, arc_degrees, facing, screen_size)
         
         if cache_key in self.arc_cache:
