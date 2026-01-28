@@ -244,3 +244,101 @@ def clear_registry() -> None:
         RuntimeError: If the registry is frozen
     """
     RegistryManager.instance().clear()
+
+
+# =============================================================================
+# Registry Provider Implementations (PROJ-27)
+# =============================================================================
+
+class DefaultRegistryProvider:
+    """
+    Default IRegistryProvider implementation backed by the RegistryManager singleton.
+
+    PROJ-27: This class provides the production implementation of IRegistryProvider.
+    It delegates all registry access to the existing singleton, maintaining full
+    backward compatibility while enabling dependency injection.
+
+    Usage:
+        provider = get_default_registry_provider()
+        components = provider.get_components()
+    """
+
+    def get_components(self) -> Dict[str, Any]:
+        """Get the component registry dictionary from singleton."""
+        return RegistryManager.instance().components
+
+    def get_modifiers(self) -> Dict[str, Any]:
+        """Get the modifier registry dictionary from singleton."""
+        return RegistryManager.instance().modifiers
+
+    def get_vehicle_classes(self) -> Dict[str, Any]:
+        """Get the vehicle classes dictionary from singleton."""
+        return RegistryManager.instance().vehicle_classes
+
+
+class TestRegistryProvider:
+    """
+    Test-friendly IRegistryProvider implementation with isolated data.
+
+    PROJ-27: This class provides an isolated registry for testing. Each instance
+    has its own data dictionaries, completely independent of the global singleton.
+
+    Usage:
+        # Create isolated provider with custom test data
+        provider = TestRegistryProvider(
+            components={"test_laser": {"id": "test_laser", "damage": 10}},
+            modifiers={"test_mod": {"id": "test_mod", "effect": 1.5}}
+        )
+        service.calculate_stats(design, registry=provider)
+    """
+
+    def __init__(
+        self,
+        components: Optional[Dict[str, Any]] = None,
+        modifiers: Optional[Dict[str, Any]] = None,
+        vehicle_classes: Optional[Dict[str, Any]] = None
+    ):
+        """
+        Initialize with optional custom data.
+
+        Args:
+            components: Custom component definitions (default: empty dict)
+            modifiers: Custom modifier definitions (default: empty dict)
+            vehicle_classes: Custom vehicle class definitions (default: empty dict)
+        """
+        self._components = components if components is not None else {}
+        self._modifiers = modifiers if modifiers is not None else {}
+        self._vehicle_classes = vehicle_classes if vehicle_classes is not None else {}
+
+    def get_components(self) -> Dict[str, Any]:
+        """Get the isolated component registry dictionary."""
+        return self._components
+
+    def get_modifiers(self) -> Dict[str, Any]:
+        """Get the isolated modifier registry dictionary."""
+        return self._modifiers
+
+    def get_vehicle_classes(self) -> Dict[str, Any]:
+        """Get the isolated vehicle classes dictionary."""
+        return self._vehicle_classes
+
+
+# Singleton instance of DefaultRegistryProvider
+_default_provider: Optional[DefaultRegistryProvider] = None
+
+
+def get_default_registry_provider() -> DefaultRegistryProvider:
+    """
+    Get the default registry provider (singleton instance).
+
+    PROJ-27: Factory function that returns a shared DefaultRegistryProvider
+    instance. This is the recommended way to get the production registry
+    provider for dependency injection.
+
+    Returns:
+        DefaultRegistryProvider: The shared provider instance
+    """
+    global _default_provider
+    if _default_provider is None:
+        _default_provider = DefaultRegistryProvider()
+    return _default_provider

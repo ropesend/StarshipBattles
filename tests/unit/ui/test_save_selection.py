@@ -5,10 +5,11 @@ import pytest
 import tempfile
 import shutil
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.engine.game_config import GameConfig
+from game.core import paths as paths_module
 
 
 class MockGameSession:
@@ -43,16 +44,15 @@ class MockGameSession:
 class TestSaveSelectionTurnList:
     """Tests for turn list functionality in save selection."""
 
-    def setup_method(self):
-        """Create temporary directory for tests."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def teardown_method(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
 
     def test_list_turns_returns_all_turns(self):
         """list_turns() returns metadata for each turn file."""
@@ -145,16 +145,15 @@ class TestSaveSelectionTurnList:
 class TestSaveSelectionListSaves:
     """Tests for save listing functionality."""
 
-    def setup_method(self):
-        """Create temporary directory for tests."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def teardown_method(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
 
     def test_list_saves_returns_all_saves(self):
         """list_saves() returns all available saves."""
@@ -215,16 +214,15 @@ class TestSaveSelectionListSaves:
 class TestSaveSelectionEmpireInfo:
     """Tests for empire information in save metadata."""
 
-    def setup_method(self):
-        """Create temporary directory for tests."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
-
-    def teardown_method(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
 
     def test_save_metadata_includes_empire_count(self):
         """Metadata includes number of empires."""
@@ -252,11 +250,12 @@ class TestSaveSelectionEmpireInfo:
 class TestSaveSelectionWindowButtons:
     """Tests for SaveSelectionWindow button enable/disable behavior (BUG-30)."""
 
-    def setup_method(self):
-        """Create temporary directory and set up pygame for UI testing."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
 
         # Set up pygame and pygame_gui
         import pygame
@@ -268,10 +267,9 @@ class TestSaveSelectionWindowButtons:
 
         self.manager = pygame_gui.UIManager((1440, 900))
 
-    def teardown_method(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
 
     def test_buttons_enable_after_selection(self):
         """BUG-30: Load/Show Turns/Delete buttons should enable when save is selected."""
@@ -332,11 +330,12 @@ class TestSaveSelectionWindowButtons:
 class TestSaveSelectionTimestampParsing:
     """Tests for timestamp parsing in save selection window (ERR-001)."""
 
-    def setup_method(self):
-        """Create temporary directory and set up pygame for UI testing."""
-        self.tmpdir = tempfile.mkdtemp()
-        self.original_cwd = os.getcwd()
-        os.chdir(self.tmpdir)
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
 
         # Set up pygame and pygame_gui
         import pygame
@@ -348,10 +347,9 @@ class TestSaveSelectionTimestampParsing:
 
         self.manager = pygame_gui.UIManager((1440, 900))
 
-    def teardown_method(self):
-        """Clean up temporary directory."""
-        os.chdir(self.original_cwd)
-        shutil.rmtree(self.tmpdir)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
 
     def test_malformed_timestamp_handled_gracefully(self):
         """Malformed timestamp should not crash, should log warning."""

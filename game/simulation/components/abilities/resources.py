@@ -42,11 +42,32 @@ class ResourceConsumption(Ability):
     def recalculate(self):
         self.amount = self._base_amount * self.get_effective_stat('consumption_mult', 1.0)
 
-    def update(self) -> bool:
+    def _get_resource_registry(self, resources=None):
+        """Get the resource registry to use.
+
+        Args:
+            resources: Optional ResourceRegistry to use instead of component.ship.resources.
+
+        Returns:
+            ResourceRegistry or None if not available.
+        """
+        if resources is not None:
+            return resources
+        if self.component.ship and self.component.ship.resources:
+            return self.component.ship.resources
+        return None
+
+    def update(self, resources=None) -> bool:
+        """Update resource consumption for one tick.
+
+        Args:
+            resources: Optional ResourceRegistry to use instead of component.ship.resources.
+                       Supports decoupled operation without ship reference.
+        """
         if self.trigger == 'constant':
-            # Need access to ship's resources
-            if self.component.ship and self.component.ship.resources:
-                res = self.component.ship.resources.get_resource(self.resource_name)
+            registry = self._get_resource_registry(resources)
+            if registry:
+                res = registry.get_resource(self.resource_name)
                 if res:
                     # Constant consumption is per second, multiply by tick duration
                     cost = self.amount * PhysicsConfig.TICK_RATE
@@ -57,19 +78,30 @@ class ResourceConsumption(Ability):
                         return False
         return True
 
-    def check_and_consume(self) -> bool:
-        """Explicitly call for one-shot consumption checks."""
-        if self.component.ship and self.component.ship.resources:
-            res = self.component.ship.resources.get_resource(self.resource_name)
+    def check_and_consume(self, resources=None) -> bool:
+        """Explicitly call for one-shot consumption checks.
+
+        Args:
+            resources: Optional ResourceRegistry to use instead of component.ship.resources.
+        """
+        registry = self._get_resource_registry(resources)
+        if registry:
+            res = registry.get_resource(self.resource_name)
             if res:
                 return res.consume(self.amount)
             else:
                 return self.amount <= 0
         return False
 
-    def check_available(self) -> bool:
-        if self.component.ship and self.component.ship.resources:
-            res = self.component.ship.resources.get_resource(self.resource_name)
+    def check_available(self, resources=None) -> bool:
+        """Check if resource is available for consumption.
+
+        Args:
+            resources: Optional ResourceRegistry to use instead of component.ship.resources.
+        """
+        registry = self._get_resource_registry(resources)
+        if registry:
+            res = registry.get_resource(self.resource_name)
             if res:
                 return res.check(self.amount)
             else:

@@ -282,3 +282,75 @@ class TestBuilderViewModel:
         # Hull should remain
         if LayerType.HULL in ship.layers:
             assert len(ship.layers[LayerType.HULL]['components']) > 0
+
+    # ─────────────────────────────────────────────────────────────────
+    # Ship Property Mutation Tests (PROJ-33: UI-01 Remediation)
+    # ─────────────────────────────────────────────────────────────────
+
+    def test_set_ship_name_updates_and_emits(self, viewmodel_setup):
+        """set_ship_name updates ship name and emits SHIP_UPDATED event."""
+        from game.simulation.entities.ship import Ship
+
+        event_bus = viewmodel_setup['event_bus']
+        viewmodel = viewmodel_setup['viewmodel']
+
+        ship = Ship("Original Name", 640, 360, (255, 255, 255), ship_class="Escort")
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_name("New Ship Name")
+
+        assert ship.name == "New Ship Name"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 1
+
+    def test_set_ship_name_no_change_if_same(self, viewmodel_setup):
+        """set_ship_name should not emit if name unchanged."""
+        from game.simulation.entities.ship import Ship
+
+        event_bus = viewmodel_setup['event_bus']
+        viewmodel = viewmodel_setup['viewmodel']
+
+        ship = Ship("Same Name", 640, 360, (255, 255, 255), ship_class="Escort")
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_name("Same Name")
+
+        # Should not emit if name is the same
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0
+
+    def test_set_ship_theme_updates_and_emits(self, viewmodel_setup):
+        """set_ship_theme updates ship theme_id and emits SHIP_UPDATED event."""
+        from game.simulation.entities.ship import Ship
+
+        event_bus = viewmodel_setup['event_bus']
+        viewmodel = viewmodel_setup['viewmodel']
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_theme("Klingon")
+
+        assert ship.theme_id == "Klingon"
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 1
+
+    def test_set_ship_theme_no_change_if_same(self, viewmodel_setup):
+        """set_ship_theme should not emit if theme unchanged."""
+        from game.simulation.entities.ship import Ship
+
+        event_bus = viewmodel_setup['event_bus']
+        viewmodel = viewmodel_setup['viewmodel']
+
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", theme_id="Federation")
+        viewmodel._ship = ship
+        event_bus.clear()
+
+        viewmodel.set_ship_theme("Federation")
+
+        # Should not emit if theme is the same
+        events = event_bus.get_events('SHIP_UPDATED')
+        assert len(events) == 0

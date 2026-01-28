@@ -17,67 +17,44 @@ Usage:
 """
 import pytest
 from pathlib import Path
-from typing import Optional
 
-# Cache the project root to avoid repeated filesystem traversal
-_project_root: Optional[Path] = None
+from game.core.paths import Paths
 
 
 def get_project_root() -> Path:
     """
     Return the project root directory.
 
-    The project root is identified by containing both 'game/' and 'data/' directories.
-    This function caches the result for performance.
+    Delegates to game.core.paths.Paths for consistent path resolution.
 
     Returns:
         Path to the project root directory
-
-    Raises:
-        RuntimeError: If project root cannot be found
     """
-    global _project_root
-
-    if _project_root is not None:
-        return _project_root
-
-    # Start from this file's location and walk up
-    current = Path(__file__).resolve().parent
-
-    # Walk up the directory tree looking for project markers
-    for _ in range(10):  # Limit iterations to avoid infinite loop
-        if (current / "game").is_dir() and (current / "data").is_dir():
-            _project_root = current
-            return _project_root
-        parent = current.parent
-        if parent == current:
-            # Reached filesystem root
-            break
-        current = parent
-
-    raise RuntimeError(
-        "Could not find project root. Expected directory containing 'game/' and 'data/'."
-    )
+    return Paths.get_root()
 
 
 def get_data_dir() -> Path:
     """
     Return the game data directory.
 
+    Delegates to game.core.paths.Paths for consistent path resolution.
+
     Returns:
         Path to the data/ directory
     """
-    return get_project_root() / "data"
+    return Paths.get_data_dir()
 
 
 def get_assets_dir() -> Path:
     """
     Return the assets directory.
 
+    Delegates to game.core.paths.Paths for consistent path resolution.
+
     Returns:
         Path to the assets/ directory
     """
-    return get_project_root() / "assets"
+    return Paths.get_assets_dir()
 
 
 def get_test_data_dir() -> Path:

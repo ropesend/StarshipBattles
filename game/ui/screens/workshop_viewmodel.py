@@ -500,3 +500,41 @@ class WorkshopViewModel:
 
         self.clear_selection()
         self.notify_ship_changed()
+
+    def set_ship_name(self, name: str) -> None:
+        """
+        Set the ship's name via the ViewModel.
+
+        Encapsulates direct ship mutation and emits SHIP_UPDATED event.
+        Does not emit if name is unchanged.
+
+        Args:
+            name: New name for the ship
+        """
+        if not self._ship:
+            return
+
+        if self._ship.name == name:
+            return  # No change, skip event emission
+
+        self._ship.name = name
+        self._emit_ship_updated()
+
+    def set_ship_theme(self, theme_id: str) -> None:
+        """
+        Set the ship's visual theme via the ViewModel.
+
+        Encapsulates direct ship mutation and emits SHIP_UPDATED event.
+        Does not emit if theme is unchanged.
+
+        Args:
+            theme_id: Theme identifier (e.g., "Federation", "Klingon")
+        """
+        if not self._ship:
+            return
+
+        if self._ship.theme_id == theme_id:
+            return  # No change, skip event emission
+
+        self._ship.theme_id = theme_id
+        self._emit_ship_updated()

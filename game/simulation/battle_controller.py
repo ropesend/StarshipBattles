@@ -22,6 +22,12 @@ import copy
 from game.simulation.services.battle_service import BattleService, BattleResult
 from game.simulation.battle_state import BattleState, BattleResults, ShipState
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
+from game.simulation.managers.retreat_manager import (
+    RetreatManager,
+    RetreatState as _RetreatState,
+    RetreatMethod,
+)
+from game.simulation.managers.battle_state_manager import BattleStateManager
 from game.core.logger import log_debug, log_info, log_warning
 
 if TYPE_CHECKING:
@@ -65,14 +71,8 @@ class BattleConfig:
     map_bounds: Tuple[float, float, float, float] = (0, 0, 100000, 100000)
 
 
-@dataclass
-class RetreatState:
-    """Tracks retreat progress for a ship."""
-    method: str  # "edge" or "warp"
-    target: Optional[Tuple[float, float]] = None  # For edge escape
-    charge_ticks: int = 0  # For warp
-    required_ticks: int = 500  # Ticks needed for warp (5 seconds at 100 TPS)
-    interruptible: bool = True
+# RetreatState is now imported from retreat_manager for backwards compatibility
+RetreatState = _RetreatState
 
 
 class BattleController:
@@ -103,9 +103,9 @@ class BattleController:
         # Ship ID tracking (for state capture/restore)
         self._ship_id_map: Dict[int, str] = {}  # object id -> string id
 
-        # Retreat tracking
-        self._retreating_ships: Dict[str, RetreatState] = {}
-        self._escaped_ships: List[str] = []  # ship_ids that escaped
+        # Extracted managers (initialized in configure when map_bounds are known)
+        self._retreat_manager: Optional[RetreatManager] = None
+        self._state_manager: BattleStateManager = BattleStateManager()
 
         # Callbacks
         self._on_battle_complete: Optional[Callable[['BattleResults'], None]] = None
@@ -126,10 +126,11 @@ class BattleController:
         """
         self._config = config
         self._ship_id_map.clear()
-        self._retreating_ships.clear()
-        self._escaped_ships.clear()
         self._initial_state = None
         self._is_started = False
+
+        # Initialize retreat manager with map bounds from config
+        self._retreat_manager = RetreatManager(map_bounds=config.map_bounds)
 
         result = self._service.create_battle(
             seed=config.seed,
@@ -337,47 +338,25 @@ class BattleController:
         if not self._config.allow_retreat:
             return BattleResult(success=False, errors=["Retreat not allowed in this battle"])
 
-        if not ship.is_alive:
-            return BattleResult(success=False, errors=["Ship is not alive"])
-
-        ship_id = self._ship_id_map.get(id(ship))
-        if not ship_id:
-            return BattleResult(success=False, errors=["Ship not found in battle"])
-
-        if ship_id in self._retreating_ships:
-            return BattleResult(success=False, errors=["Ship already retreating"])
-
-        if method == "edge":
-            # Find nearest edge
-            target = self._find_nearest_edge(ship)
-            self._retreating_ships[ship_id] = RetreatState(
-                method="edge",
-                target=target,
-            )
-            log_debug(f"Ship {ship.name} retreating to edge at {target}")
-
-        elif method == "warp":
-            self._retreating_ships[ship_id] = RetreatState(
-                method="warp",
-                charge_ticks=0,
-                required_ticks=500,  # ~5 seconds at 100 TPS
-                interruptible=True,
-            )
-            log_debug(f"Ship {ship.name} charging warp drive")
-
-        else:
+        # Convert string method to enum
+        retreat_method = RetreatMethod.EDGE if method == "edge" else RetreatMethod.WARP
+        if method not in ("edge", "warp"):
             return BattleResult(success=False, errors=[f"Unknown retreat method: {method}"])
 
-        return BattleResult(success=True)
+        success, error = self._retreat_manager.request_retreat(
+            ship, self._ship_id_map, method=retreat_method
+        )
+
+        if success:
+            return BattleResult(success=True)
+        return BattleResult(success=False, errors=[error])
 
     def cancel_retreat(self, ship: 'Ship') -> BattleResult:
         """Cancel a ship's retreat."""
-        ship_id = self._ship_id_map.get(id(ship))
-        if ship_id and ship_id in self._retreating_ships:
-            del self._retreating_ships[ship_id]
-            log_debug(f"Ship {ship.name} retreat cancelled")
+        success, error = self._retreat_manager.cancel_retreat(ship, self._ship_id_map)
+        if success:
             return BattleResult(success=True)
-        return BattleResult(success=False, errors=["Ship not retreating"])
+        return BattleResult(success=False, errors=[error])
 
     def add_reinforcements(
         self,
@@ -427,94 +406,37 @@ class BattleController:
         return BattleResult(success=len(errors) == 0, errors=errors)
 
     def _update_retreats(self) -> None:
-        """Process retreat states each tick."""
+        """Process retreat states each tick (delegates to RetreatManager)."""
         engine = self._service.get_engine()
         if not engine:
             return
 
-        escaped = []
-
-        for ship_id, state in list(self._retreating_ships.items()):
-            # Find ship by ID
-            ship = None
+        def get_ship_by_id(ship_id: str) -> Optional['Ship']:
+            """Find ship by ID in current engine ships."""
             for s in engine.ships:
                 if self._ship_id_map.get(id(s)) == ship_id:
-                    ship = s
-                    break
+                    return s
+            return None
 
-            if not ship or not ship.is_alive:
-                escaped.append(ship_id)
-                continue
+        # Set callback before update
+        self._retreat_manager.set_on_ship_escaped(self._on_ship_escaped)
 
-            if state.method == "edge":
-                # Check if reached edge
-                if self._at_map_edge(ship):
-                    self._handle_ship_escaped(ship, ship_id)
-                    escaped.append(ship_id)
-                else:
-                    # TODO: Override AI to move toward edge
-                    pass
-
-            elif state.method == "warp":
-                state.charge_ticks += 1
-                if state.charge_ticks >= state.required_ticks:
-                    self._handle_ship_escaped(ship, ship_id)
-                    escaped.append(ship_id)
-
-        for ship_id in escaped:
-            if ship_id in self._retreating_ships:
-                del self._retreating_ships[ship_id]
-
-    def _handle_ship_escaped(self, ship: 'Ship', ship_id: str) -> None:
-        """Handle a ship successfully escaping."""
-        # Mark as escaped (not dead, but out of combat)
-        ship.is_alive = False
-        if hasattr(ship, 'retreat_status'):
-            ship.retreat_status = "escaped"
-
-        self._escaped_ships.append(ship_id)
-
-        log_info(f"Ship {ship.name} escaped via retreat")
-
-        if self._on_ship_escaped:
-            self._on_ship_escaped(ship)
+        # Delegate to manager
+        self._retreat_manager.update(get_ship_by_id)
 
     def _find_nearest_edge(self, ship: 'Ship') -> Tuple[float, float]:
-        """Find the nearest map edge for retreat."""
-        min_x, min_y, max_x, max_y = self._config.map_bounds
-
-        # Calculate distances to each edge
-        dist_left = ship.x - min_x
-        dist_right = max_x - ship.x
-        dist_top = ship.y - min_y
-        dist_bottom = max_y - ship.y
-
-        min_dist = min(dist_left, dist_right, dist_top, dist_bottom)
-
-        if min_dist == dist_left:
-            return (min_x, ship.y)
-        elif min_dist == dist_right:
-            return (max_x, ship.y)
-        elif min_dist == dist_top:
-            return (ship.x, min_y)
-        else:
-            return (ship.x, max_y)
+        """Find the nearest map edge for retreat (delegates to RetreatManager)."""
+        return self._retreat_manager.find_nearest_edge(ship)
 
     def _at_map_edge(self, ship: 'Ship', threshold: float = 500) -> bool:
-        """Check if ship is at map edge."""
-        min_x, min_y, max_x, max_y = self._config.map_bounds
-        return (
-            ship.x <= min_x + threshold or
-            ship.x >= max_x - threshold or
-            ship.y <= min_y + threshold or
-            ship.y >= max_y - threshold
-        )
+        """Check if ship is at map edge (delegates to RetreatManager)."""
+        return self._retreat_manager.at_map_edge(ship, threshold)
 
     # === State Management ===
 
     def save_state(self) -> BattleState:
         """
-        Capture current battle state for save/resume.
+        Capture current battle state for save/resume (delegates to BattleStateManager).
 
         Returns:
             BattleState with complete battle state
@@ -522,17 +444,14 @@ class BattleController:
         if not self._is_started:
             raise RuntimeError("Cannot save state - battle not started")
 
-        return BattleState.capture_from_engine(
+        return self._state_manager.capture_state(
             self._service.get_engine(),
-            mode=self._config.mode.value,
-            seed=self._config.seed,
-            allow_retreat=self._config.allow_retreat,
-            allow_reinforcements=self._config.allow_reinforcements,
+            self._config
         )
 
     def load_state(self, state: BattleState) -> BattleResult:
         """
-        Restore battle from saved state.
+        Restore battle from saved state (uses BattleStateManager for config restoration).
 
         Args:
             state: BattleState to restore from
@@ -541,15 +460,11 @@ class BattleController:
             BattleResult indicating success/failure
         """
         try:
-            # Recreate config from state
-            self._config = BattleConfig(
-                mode=BattleMode(state.mode),
-                seed=state.seed,
-                max_ticks=state.max_ticks or 100000,
-                end_mode=BattleEndMode[state.end_mode],
-                allow_retreat=state.allow_retreat,
-                allow_reinforcements=state.allow_reinforcements,
-            )
+            # Recreate config from state using manager
+            self._config = self._state_manager.restore_config_from_state(state)
+
+            # Initialize retreat manager with config bounds
+            self._retreat_manager = RetreatManager(map_bounds=self._config.map_bounds)
 
             # Create new battle
             self._service.create_battle(seed=state.seed)
@@ -623,6 +538,32 @@ class BattleController:
         """Get underlying BattleService."""
         return self._service
 
+    @property
+    def _retreating_ships(self) -> Dict[str, RetreatState]:
+        """Backward compatibility: delegate to retreat manager."""
+        if self._retreat_manager:
+            return self._retreat_manager.retreating_ships
+        return {}
+
+    @_retreating_ships.setter
+    def _retreating_ships(self, value: Dict[str, RetreatState]) -> None:
+        """Backward compatibility: set retreat manager state directly."""
+        if self._retreat_manager:
+            self._retreat_manager.retreating_ships = value
+
+    @property
+    def _escaped_ships(self) -> List[str]:
+        """Backward compatibility: delegate to retreat manager."""
+        if self._retreat_manager:
+            return self._retreat_manager.escaped_ships
+        return []
+
+    @_escaped_ships.setter
+    def _escaped_ships(self, value: List[str]) -> None:
+        """Backward compatibility: set retreat manager state directly."""
+        if self._retreat_manager:
+            self._retreat_manager.escaped_ships = value
+
     # === Results ===
 
     def get_results(self) -> BattleResults:
@@ -643,8 +584,9 @@ class BattleController:
         escaped = []
 
         if final_state:
+            escaped_ids = self._retreat_manager.escaped_ships if self._retreat_manager else []
             for ship_id, ship_state in final_state.ships.items():
-                if ship_id in self._escaped_ships:
+                if ship_id in escaped_ids:
                     escaped.append(ship_state)
                 elif ship_state.is_alive:
                     surviving.append(ship_state)
@@ -732,8 +674,8 @@ class BattleController:
         self._is_configured = False
         self._is_started = False
         self._ship_id_map.clear()
-        self._retreating_ships.clear()
-        self._escaped_ships.clear()
+        if self._retreat_manager:
+            self._retreat_manager.reset()
 
 
 # === Factory Functions ===

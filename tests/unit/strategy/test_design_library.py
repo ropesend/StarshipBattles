@@ -145,39 +145,6 @@ class TestDesignLibrary:
 
         assert success
 
-    def test_load_design(self, setup_library):
-        """Can load a design by ID"""
-        tmpdir, designs_folder, library = setup_library
-        # Create design file
-        design_data = {
-            "name": "Loadable Ship",
-            "ship_class": "Frigate",
-            "vehicle_type": "Ship",
-            "mass": 2000.0,
-            "layers": {}
-        }
-        save_json(os.path.join(designs_folder, "loadable.json"), design_data)
-
-        # Mock Ship.from_dict
-        with patch('game.strategy.systems.design_library.Ship') as MockShip:
-            mock_ship = MagicMock()
-            mock_ship.name = "Loadable Ship"
-            MockShip.from_dict.return_value = mock_ship
-
-            ship, message = library.load_design("loadable", 1920, 1080)
-
-            assert ship is not None
-            assert "Loaded" in message
-            MockShip.from_dict.assert_called_once()
-
-    def test_load_design_not_found(self, setup_library):
-        """Loading nonexistent design returns None"""
-        tmpdir, designs_folder, library = setup_library
-        ship, message = library.load_design("nonexistent", 1920, 1080)
-
-        assert ship is None
-        assert "not found" in message.lower()
-
     def test_mark_obsolete(self, setup_library):
         """Can mark design as obsolete"""
         tmpdir, designs_folder, library = setup_library

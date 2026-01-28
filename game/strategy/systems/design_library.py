@@ -11,7 +11,6 @@ from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import load_json_required, save_json
-from game.simulation.entities.ship import Ship
 
 
 class DesignLibrary:
@@ -172,39 +171,6 @@ class DesignLibrary:
             import traceback
             log_error(traceback.format_exc())
             return False, f"Failed to save design: {str(e)}"
-
-    def load_design(self, design_id: str, width: int = 1920, height: int = 1080) -> Tuple[Optional[Ship], str]:
-        """
-        Load design by ID.
-
-        Args:
-            design_id: Design ID to load
-            width: Screen width for positioning
-            height: Screen height for positioning
-
-        Returns:
-            Tuple of (Ship object or None, message: str)
-        """
-        filepath = os.path.join(self.designs_folder, f"{design_id}.json")
-
-        if not os.path.exists(filepath):
-            return None, f"Design not found: {design_id}"
-
-        try:
-            data = load_json_required(filepath)
-            ship = Ship.from_dict(data)
-
-            # Position ship at screen center
-            import pygame
-            ship.position = pygame.math.Vector2(width // 2, height // 2)
-
-            # Recalculate stats
-            ship.recalculate_stats()
-
-            return ship, f"Loaded design: {ship.name}"
-
-        except Exception as e:
-            return None, f"Failed to load design: {str(e)}"
 
     def load_design_data(self, design_id: str) -> Optional[dict]:
         """

@@ -11,17 +11,17 @@ import pygame
 from game.core.logger import log_info, log_warning, log_error
 from game.simulation.entities.ship import Ship
 from game.core.json_utils import load_json, load_json_required, save_json
+from game.core.paths import Paths
 
 
 def get_base_path():
-    """Get the base path (root of project)."""
-    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    """Get the base path (root of project). Delegates to Paths.ROOT_DIR."""
+    return Paths.ROOT_DIR
 
 
 def scan_ship_designs():
     """Scan for available ship design JSON files in ships/ folder."""
-    base_path = get_base_path()
-    ships_folder = os.path.join(base_path, "ships")
+    ships_folder = Paths.SHIPS_DIR
     json_files = glob.glob(os.path.join(ships_folder, "*.json"))
 
     designs = []
@@ -47,8 +47,7 @@ def scan_ship_designs():
 
 def scan_formations():
     """Scan for available formation JSON files in data/formations directory."""
-    base_path = get_base_path()
-    formations_dir = os.path.join(base_path, "data", "formations")
+    formations_dir = Paths.FORMATIONS_DIR
 
     if not os.path.exists(formations_dir):
         os.makedirs(formations_dir)

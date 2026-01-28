@@ -36,21 +36,21 @@ HEIGHT = DisplayConfig.DEFAULT_HEIGHT
 FONT_MAIN = "Arial"
 
 
-# Directory Paths
-import os
-CORE_DIR = os.path.dirname(os.path.abspath(__file__))
-GAME_DIR = os.path.dirname(CORE_DIR)
-ROOT_DIR = os.path.dirname(GAME_DIR)
+# Directory Paths - Import from centralized paths module
+from game.core.paths import Paths
 
-ASSET_DIR = os.path.join(ROOT_DIR, "assets")
-DATA_DIR = os.path.join(ROOT_DIR, "data")
-SHIPS_DIR = os.path.join(ROOT_DIR, "ships")
-SCREENSHOT_DIR = os.path.join(ROOT_DIR, "screenshots")
+ROOT_DIR = Paths.ROOT_DIR
+GAME_DIR = Paths.GAME_DIR
+CORE_DIR = Paths.CORE_DIR
+ASSET_DIR = Paths.ASSET_DIR
+DATA_DIR = Paths.DATA_DIR
+SHIPS_DIR = Paths.SHIPS_DIR
+SCREENSHOT_DIR = Paths.SCREENSHOTS_DIR
 
 # Standard data file paths
-COMPONENTS_FILE = os.path.join(DATA_DIR, "components.json")
-MODIFIERS_FILE = os.path.join(DATA_DIR, "modifiers.json")
-VEHICLE_CLASSES_FILE = os.path.join(DATA_DIR, "vehicleclasses.json")
+COMPONENTS_FILE = Paths.COMPONENTS_FILE
+MODIFIERS_FILE = Paths.MODIFIERS_FILE
+VEHICLE_CLASSES_FILE = Paths.VEHICLE_CLASSES_FILE
 
 # Debug Flags
 DEBUG_SCREENSHOTS = True

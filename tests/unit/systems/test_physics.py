@@ -208,3 +208,32 @@ class TestAbilityDrivenPhysics:
         slow_speed = mock_ship.current_speed
 
         assert fast_speed > slow_speed
+
+
+class TestPhysicsConstantsConsolidation:
+    """Test that physics constants are centralized - PHYS-01 regression test."""
+
+    def test_stats_uses_physics_constants_module(self, pygame_init):
+        """Verify stats.py imports K_SPEED, K_THRUST, K_TURN from physics_constants.py."""
+        from game.simulation import physics_constants
+        import game.simulation.systems.stats as stats_module
+
+        # Verify the constants are imported into stats module (not defined locally)
+        # If the fix is correct, stats_module should reference physics_constants values
+        assert hasattr(stats_module, 'K_SPEED'), "stats module should import K_SPEED"
+        assert hasattr(stats_module, 'K_THRUST'), "stats module should import K_THRUST"
+        assert hasattr(stats_module, 'K_TURN'), "stats module should import K_TURN"
+
+        # Verify values match physics_constants (single source of truth)
+        assert stats_module.K_SPEED == physics_constants.K_SPEED
+        assert stats_module.K_THRUST == physics_constants.K_THRUST
+        assert stats_module.K_TURN == physics_constants.K_TURN
+
+    def test_physics_constants_values(self, pygame_init):
+        """Verify physics_constants has expected values (documentation check)."""
+        from game.simulation import physics_constants
+
+        # These are the canonical values per physics_constants.py
+        assert physics_constants.K_SPEED == 25
+        assert physics_constants.K_THRUST == 2500
+        assert physics_constants.K_TURN == 25000

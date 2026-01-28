@@ -36,6 +36,7 @@ from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.strategy.systems.design_library import DesignLibrary
+from game.simulation.services.design_loader import SimulationDesignLoader
 from game.ui.screens.design_selector_window import DesignSelectorWindow
 
 # Initialize Tkinter root and hide it (for simpledialog)
@@ -104,7 +105,7 @@ class DesignWorkshopGUI:
 
         # In integrated mode, set ship theme from empire
         if self.context.is_integrated() and self.context.empire_theme_id:
-            self.ship.theme_id = self.context.empire_theme_id
+            self.viewmodel.set_ship_theme(self.context.empire_theme_id)
             log_debug(f"Workshop set ship.theme_id to {self.ship.theme_id}")
         else:
             log_debug(f"Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
@@ -298,29 +299,8 @@ class DesignWorkshopGUI:
         self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.selected_component)
 
     def _on_modifier_change(self):
-        # Propagate to ALL selected components
-        if self.selected_components:
-            # The modifier panel edits "editing_component".
-            # We need to sync that to others.
-            editing_comp = self.selected_component[2]
-            
-            for item in self.selected_components:
-                comp = item[2]
-                if comp is editing_comp: continue
-                
-                # Apply modifiers from editing_comp to comp
-                # Copy modifiers
-                comp.modifiers = []
-                for m in editing_comp.modifiers:
-                    new_m = m.__class__(m.definition, m.value)
-                    comp.modifiers.append(new_m)
-                comp.recalculate_stats()
-                
-            editing_comp.recalculate_stats()
-            
-        self.ship.recalculate_stats()
-        # self.right_panel.update_stats_display(self.ship) # Now handled by event
-        self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.ship)
+        # Delegate to ViewModel - syncs modifiers across selection and emits SHIP_UPDATED
+        self.viewmodel.sync_modifiers_to_selection()
 
     def rebuild_modifier_ui(self):
         editing_component = self.selected_component[2] if self.selected_component else None
@@ -484,9 +464,10 @@ class DesignWorkshopGUI:
         self.detail_panel.show_component(target_comp)
         self.ui_manager.update(dt)
         
-        # Check name entry
-        if self.right_panel.name_entry.get_text() != self.ship.name:
-            self.ship.name = self.right_panel.name_entry.get_text()
+        # Check name entry - use ViewModel to update name
+        new_name = self.right_panel.name_entry.get_text()
+        if new_name != self.ship.name:
+            self.viewmodel.set_ship_name(new_name)
 
     def draw(self, screen):
         screen.fill(BG_COLOR)
@@ -765,13 +746,23 @@ class DesignWorkshopGUI:
 
             def on_design_selected(design_id: str):
                 log_info(f"Workshop: User selected design_id='{design_id}'")
-                ship, msg = library.load_design(design_id, self.width, self.height)
-                if ship:
-                    log_info(f"Workshop: Successfully loaded design '{ship.name}'")
-                    self._apply_loaded_ship(ship, msg)
+                design_data = library.load_design_data(design_id)
+                if design_data:
+                    loader = SimulationDesignLoader()
+                    ship = loader.load_ship_from_design_data(
+                        design_data,
+                        center_x=self.width // 2,
+                        center_y=self.height // 2
+                    )
+                    if ship:
+                        log_info(f"Workshop: Successfully loaded design '{ship.name}'")
+                        self._apply_loaded_ship(ship, f"Loaded design: {ship.name}")
+                    else:
+                        log_error(f"Workshop: Failed to create ship from design '{design_id}'")
+                        self.show_error("Failed to create ship from design data")
                 else:
-                    log_error(f"Workshop: Failed to load design '{design_id}': {msg}")
-                    self.show_error(msg)
+                    log_error(f"Workshop: Failed to load design '{design_id}'")
+                    self.show_error(f"Design not found: {design_id}")
 
             # Open design selector window
             window_rect = pygame.Rect(
@@ -850,15 +841,10 @@ class DesignWorkshopGUI:
         return buttons
 
     def _clear_design(self):
-        log_info("Clearing ship design")
-        self.ship.clear_non_hull_components()
+        # Delegate ship mutation to ViewModel
+        self.viewmodel.clear_design()
 
-        self.ship.ai_strategy = "standard_ranged"
-
-        # Reset Name
-        self.ship.name = "Custom Ship"
-
-        # Refresh UI
+        # Refresh UI (ViewModel handles ship state; GUI handles UI refresh)
         self.right_panel.refresh_controls()
         self.update_stats()
         self.rebuild_modifier_ui()
@@ -886,12 +872,21 @@ class DesignWorkshopGUI:
             )
 
             def on_target_selected(design_id: str):
-                ship, msg = library.load_design(design_id, self.width, self.height)
-                if ship:
-                    self.weapons_report_panel.set_target(ship)
-                    log_info(f"Selected target: {ship.name}")
+                design_data = library.load_design_data(design_id)
+                if design_data:
+                    loader = SimulationDesignLoader()
+                    ship = loader.load_ship_from_design_data(
+                        design_data,
+                        center_x=self.width // 2,
+                        center_y=self.height // 2
+                    )
+                    if ship:
+                        self.weapons_report_panel.set_target(ship)
+                        log_info(f"Selected target: {ship.name}")
+                    else:
+                        self.show_error("Failed to create ship from design data")
                 else:
-                    self.show_error(msg)
+                    self.show_error(f"Design not found: {design_id}")
 
             # Open design selector window
             window_rect = pygame.Rect(

@@ -14,9 +14,12 @@ Key design decisions:
 - Stats cached on ShipInstance with invalidation on damage change
 """
 
-from typing import Dict, Any, Optional, List, Tuple
-from game.core.registry import get_component_registry, get_vehicle_classes, get_modifier_registry
+from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
+from game.core.registry import get_component_registry, get_vehicle_classes, get_modifier_registry, get_default_registry_provider
 from game.core.logger import log_warning
+
+if TYPE_CHECKING:
+    from game.core.protocols import IRegistryProvider
 from game.simulation.formula_system import evaluate_math_formula
 from game.simulation.components.modifiers import calculate_stat_multipliers
 
@@ -43,7 +46,8 @@ class ShipStatsService:
     def calculate_stats(
         design_data: Dict[str, Any],
         component_damage: Optional[Dict[str, int]] = None,
-        component_toggles: Optional[Dict[str, bool]] = None
+        component_toggles: Optional[Dict[str, bool]] = None,
+        registry: Optional['IRegistryProvider'] = None
     ) -> Dict[str, Any]:
         """
         Calculate all ship stats from design data and component damage.
@@ -54,6 +58,8 @@ class ShipStatsService:
                              If None, assumes all components undamaged
             component_toggles: Optional dict of component_id -> enabled
                               If None, assumes all components enabled
+            registry: Optional IRegistryProvider for dependency injection.
+                     If None, uses the default singleton-backed provider.
 
         Returns:
             Dict with calculated stats including:
@@ -84,17 +90,23 @@ class ShipStatsService:
         # Build formula evaluation context from ship class
         formula_context = {'ship_class_mass': 1000}  # Default fallback
         ship_class = design_data.get('ship_class', '')
-        if ship_class:
+
+        # PROJ-27: Use injected registry if provided, else use original functions
+        # for backward compatibility with tests that patch those functions
+        if registry is not None:
+            vehicle_classes = registry.get_vehicle_classes()
+            modifier_registry = registry.get_modifiers()
+        else:
             vehicle_classes = get_vehicle_classes()
+            modifier_registry = get_modifier_registry()
+
+        if ship_class:
             class_data = vehicle_classes.get(ship_class, {})
             if isinstance(class_data, dict):
                 formula_context['ship_class_mass'] = class_data.get('max_mass', 1000)
 
-        # Get modifier registry once for all components
-        modifier_registry = get_modifier_registry()
-
         # Iterate through all components in design
-        components_found = ShipStatsService._iterate_design_components(design_data)
+        components_found = ShipStatsService._iterate_design_components(design_data, registry)
 
         # Fallback to expected_stats if no components found in layers
         # This handles test fixtures and designs without component registry entries
@@ -330,18 +342,30 @@ class ShipStatsService:
 
     @staticmethod
     def _iterate_design_components(
-        design_data: Dict[str, Any]
+        design_data: Dict[str, Any],
+        registry: Optional['IRegistryProvider'] = None
     ) -> List[Tuple[str, Dict[str, Any], Any]]:
         """
         Iterate through all components in a design.
 
-        Yields:
-            Tuples of (layer_name, component_entry, component_def)
+        Args:
+            design_data: Serialized ship design containing 'layers' dict
+            registry: Optional IRegistryProvider for dependency injection.
+                     If None, uses the original function for backward compatibility.
+
+        Returns:
+            List of tuples (layer_name, component_entry, component_def)
             where component_def is the registry definition or None if not found
         """
         result = []
         layers = design_data.get('layers', {})
-        registry = get_component_registry()
+
+        # PROJ-27: Use injected registry if provided, else use original function
+        # for backward compatibility with tests that patch those functions
+        if registry is not None:
+            component_registry = registry.get_components()
+        else:
+            component_registry = get_component_registry()
 
         for layer_name, layer_components in layers.items():
             # Direct list format: layers[layer_name] = [comp1, comp2, ...]
@@ -351,7 +375,7 @@ class ShipStatsService:
 
             for comp_entry in components:
                 comp_id = comp_entry.get('id', '')
-                comp_def = registry.get(comp_id)
+                comp_def = component_registry.get(comp_id)
 
                 if comp_def is None:
                     log_warning(f"Component '{comp_id}' not found in registry, skipping")

@@ -11,11 +11,12 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import get_component_registry, get_vehicle_classes
+from game.core.registry import get_component_registry, get_vehicle_classes, get_default_registry_provider
 from game.core.logger import log_error, log_warning, log_info
 
 if TYPE_CHECKING:
     from game.core.validation import ValidationResult
+    from game.core.protocols import IRegistryProvider
 
 
 @dataclass
@@ -34,7 +35,23 @@ class VehicleDesignService:
 
     Provides an abstraction between the UI and Ship domain objects,
     encapsulating validation, component management, and class changes.
+
+    PROJ-27: Added registry injection for testability.
     """
+
+    def __init__(self, registry: Optional['IRegistryProvider'] = None):
+        """
+        Initialize the VehicleDesignService.
+
+        Args:
+            registry: Optional IRegistryProvider for dependency injection.
+                     If None, uses the default singleton-backed provider.
+        """
+        # PROJ-27: Store registry provider for use in methods
+        if registry is None:
+            self._registry = get_default_registry_provider()
+        else:
+            self._registry = registry
 
     def create_ship(
         self,
@@ -64,8 +81,8 @@ class VehicleDesignService:
         errors = []
         warnings = []
 
-        # Validate class exists
-        vehicle_classes = get_vehicle_classes()
+        # Validate class exists - PROJ-27: Use injected registry
+        vehicle_classes = self._registry.get_vehicle_classes()
         if ship_class not in vehicle_classes:
             warnings.append(f"Unknown ship class '{ship_class}', using defaults")
 
@@ -284,8 +301,8 @@ class VehicleDesignService:
         """
         errors = []
 
-        # Validate new class exists
-        vehicle_classes = get_vehicle_classes()
+        # Validate new class exists - PROJ-27: Use injected registry
+        vehicle_classes = self._registry.get_vehicle_classes()
         if new_class not in vehicle_classes:
             errors.append(f"Unknown vehicle class '{new_class}'")
             return DesignResult(success=False, errors=errors)
@@ -306,6 +323,12 @@ class VehicleDesignService:
     def validate_design(self, ship: Ship) -> 'ValidationResult':
         """
         Validate the complete ship design.
+
+        Note: This method always uses the singleton-backed validator via
+        get_or_create_validator(), regardless of the registry passed to the
+        constructor. Full registry injection into the validator is out of
+        scope for PROJ-27. For isolated testing of validation, mock the
+        validator directly.
 
         Args:
             ship: The ship to validate
@@ -333,7 +356,8 @@ class VehicleDesignService:
         """
         available = []
         validator = get_or_create_validator()
-        registry = get_component_registry()
+        # PROJ-27: Use injected registry instead of singleton
+        registry = self._registry.get_components()
 
         for comp_id in registry.keys():
             component = create_component(comp_id)
