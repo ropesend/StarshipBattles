@@ -31,40 +31,46 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tier 1 Complete
-**Last Action:** Completed Phase 12 Tier 1 - Easy Wins (Tasks 12.1-12.3)
-**Next Action:** Phase 12 Tier 2 (Tasks 12.4-12.8) or stop session
+**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tier 2 Complete
+**Last Action:** Completed Phase 12 Tier 2 - Medium Complexity (Tasks 12.4-12.8)
+**Next Action:** Phase 12 Tier 3 (Tasks 12.9-12.10) or stop session
 **Blockers:** None
 
 ### Recent Work (This Session)
-- **Phase 12 Tier 1 COMPLETE:** Easy Wins (3 tasks)
-  - 12.1: Removed unused Fleet import from strategy_input_handler.py
-  - 12.2: TYPE_CHECKING + DI for build_queue_screen.py
-    - Moved Planet, DesignLibrary, SimulationDesignLoader to TYPE_CHECKING
-    - Injected dependencies via constructor parameters
-    - Updated strategy_scene.py caller
-    - Updated 5 test files to use DI fixtures
-  - 12.3: Removed backward-compat wrapper from fleet_report_filters.py
-    - Moved ShipInstance to TYPE_CHECKING
-    - Removed has_warp_capability() wrapper, using ShipStatsService directly
-    - Updated test file to use canonical import
-  - **Final: 5176 passed, 3 skipped** (tests/ directory)
+- **Phase 12 Tier 2 COMPLETE:** Medium Complexity (5 tasks)
+  - 12.4: workshop_viewmodel.py - TYPE_CHECKING + DI
+    - Moved Ship, LayerType, Component, DesignResult to TYPE_CHECKING
+    - Required registries via context (removed fallback to globals)
+    - Removed fallback Ship creation and get_all_components() fallback
+    - Updated WorkshopContext to auto-create registries from loaded data
+    - Updated test files to use DI pattern
+  - 12.5: new_game_setup_screen.py - TYPE_CHECKING for RaceConfig
+    - Moved RaceConfig to TYPE_CHECKING (type hints only)
+    - Kept GameConfig, PlayerConfig, THEME_DEFAULTS, RaceLibrary at runtime
+  - 12.6: ship_stats_renderer.py - Canonical imports
+    - Import LayerType from game.core.constants (canonical location)
+    - Documented ComponentStatus and StrategyManager as acceptable cross-layer
+  - 12.7: strategy_scene.py - TYPE_CHECKING + protocol type guards
+    - Moved StarSystem, Fleet to TYPE_CHECKING
+    - Replaced isinstance() with protocol type guards (is_star_system, is_fleet)
+  - 12.8: battle_scene.py - Remove unused imports
+    - Removed unused AIController import
+    - Kept BattleService at runtime (instantiated)
+  - **Final: 5174 passed, 3 skipped** (tests/ directory)
 
 ### Files Modified This Session
-- `game/ui/screens/strategy_input_handler.py` - Removed unused Fleet import
-- `game/ui/screens/build_queue_screen.py` - TYPE_CHECKING + DI
-- `game/ui/screens/fleet_report_filters.py` - TYPE_CHECKING, removed wrapper
-- `game/ui/screens/strategy_scene.py` - Pass DI dependencies to BuildQueueScreen
-- `tests/unit/strategy/test_fleet_report_filters.py` - Use canonical import
-- `tests/ui/test_build_queue_screen.py` - DI fixtures
-- `tests/ui/test_build_queue_formatting.py` - DI fixtures
-- `tests/ui/test_build_queue_enhanced_planet_report.py` - DI fixtures
-- `tests/ui/test_build_queue_drag_drop.py` - DI fixtures
-- `tests/repro_issues/test_bug_15_screenshot_strategy.py` - DI fixtures
+- `game/ui/screens/workshop_viewmodel.py` - TYPE_CHECKING + removed fallbacks
+- `game/ui/screens/workshop_context.py` - Auto-create registries in __post_init__
+- `game/ui/screens/new_game_setup_screen.py` - TYPE_CHECKING for RaceConfig
+- `game/ui/panels/ship_stats_renderer.py` - Import LayerType from canonical location
+- `game/ui/screens/strategy_scene.py` - TYPE_CHECKING + protocol type guards
+- `game/ui/screens/battle_scene.py` - Removed unused AIController import
+- `tests/unit/workshop/test_workshop_viewmodel.py` - DI fixtures
+- `tests/unit/builder/test_workshop_viewmodel_di.py` - Removed backward-compat tests
+- `tests/unit/builder/test_builder_viewmodel.py` - DI fixtures
+- `tests/repro_issues/test_bug_13_clear_removes_hull.py` - DI fixtures
 
-### Previous Work (Earlier Sessions)
-
-### Previous Work (Earlier Sessions)
+### Previous Work (Earlier Session)
 - **Phase 10 Complete:** Test infrastructure cleanup (18 tasks)
   - Removed duplicate scripts, consolidated test helpers
   - Fixed colonization test fragility with deterministic galaxy

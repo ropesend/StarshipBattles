@@ -2,12 +2,16 @@
 
 This module provides rendering functions for ship statistics, resources,
 weapons, and components display in the battle UI.
+
+PROJ-40: Import LayerType from core/constants (canonical location).
+ComponentStatus import from simulation layer is acceptable for status display.
+StrategyManager is used for strategy name display - acceptable cross-layer access.
 """
 import pygame
-from game.simulation.components.component_constants import ComponentStatus, LayerType
+from game.simulation.components.component_constants import ComponentStatus
 from game.ai.strategy_manager import StrategyManager
 from game.core.config import UIConfig
-from game.core.constants import CombatConstants
+from game.core.constants import CombatConstants, LayerType
 
 
 # Define standard colors for known resources (fallback to gray)

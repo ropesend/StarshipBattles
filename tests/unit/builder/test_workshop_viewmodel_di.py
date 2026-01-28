@@ -5,27 +5,20 @@ These tests verify that WorkshopViewModel:
 1. Accepts registries via context parameter
 2. Passes registries to VehicleDesignService
 3. Uses registries for component lookups
+
+PROJ-40: Removed backward compatibility tests - DI is now required.
 """
 import pytest
 from unittest.mock import MagicMock
 
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
-from game.core.registry import GameRegistries, set_default_registries
+from game.core.registry import GameRegistries
 
 
 # =============================================================================
 # Fixtures
 # =============================================================================
-
-@pytest.fixture(autouse=True)
-def restore_default_registries():
-    """Restore _default_registries after each test to prevent pollution."""
-    import game.core.registry as registry_module
-    original = registry_module._default_registries
-    yield
-    registry_module._default_registries = original
-
 
 @pytest.fixture
 def mock_registries():
@@ -96,33 +89,6 @@ class TestWorkshopViewModelDI:
         # Ship should have registries from viewmodel
         assert ship._registries is mock_registries
 
-
-# =============================================================================
-# Test: Backward Compatibility
-# =============================================================================
-
-class TestWorkshopViewModelBackwardCompatibility:
-    """Tests ensuring backward compatibility with legacy interface."""
-
-    def test_works_without_context_arg(self, mock_registries, mock_event_bus):
-        """WorkshopViewModel should work without context argument (legacy pattern)."""
-        # Set default registries as fallback
-        set_default_registries(mock_registries)
-
-        viewmodel = WorkshopViewModel(mock_event_bus, 1280, 720)
-
-        assert viewmodel is not None
-        # Should still be able to create ships
-        ship = viewmodel.create_default_ship("Escort")
-        assert ship is not None
-
-    def test_works_with_none_context(self, mock_registries, mock_event_bus):
-        """WorkshopViewModel should work with None context (legacy pattern)."""
-        set_default_registries(mock_registries)
-
-        viewmodel = WorkshopViewModel(mock_event_bus, 1280, 720, context=None)
-
-        assert viewmodel is not None
 
     def test_refresh_available_components_works(self, mock_registries, mock_event_bus):
         """refresh_available_components should work with injected registries."""

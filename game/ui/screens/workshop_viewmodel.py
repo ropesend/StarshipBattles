@@ -7,18 +7,21 @@ Extracted from DesignWorkshopGUI for better separation of concerns and testabili
 Uses VehicleDesignService for ship operations, providing validation and error handling.
 
 PROJ-38: Added context parameter for dependency injection via WorkshopContext.
+PROJ-40: Moved cross-layer imports to TYPE_CHECKING, removed backward-compat fallbacks.
 """
+from __future__ import annotations
+
 from typing import List, Tuple, Optional, TYPE_CHECKING
 
-from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component, get_all_components
-from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
-from game.core.registry import get_default_registries
+from game.simulation.services.vehicle_design_service import VehicleDesignService
 from game.ui.screens.builder_utils import BuilderEvents
 
-from game.core.logger import log_error, log_info, log_warning, log_debug
+from game.core.logger import log_error, log_info, log_warning
 
 if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship, LayerType
+    from game.simulation.components.component import Component
+    from game.simulation.services.vehicle_design_service import DesignResult
     from game.ui.screens.workshop_context import WorkshopContext
     from game.core.registry import GameRegistries
 
@@ -38,30 +41,33 @@ class WorkshopViewModel:
     """
     
     def __init__(self, event_bus, screen_width: int, screen_height: int,
-                 *, context: Optional['WorkshopContext'] = None):
+                 *, context: Optional[WorkshopContext] = None):
         """
         Initialize the ViewModel.
 
         PROJ-38: Added context parameter for dependency injection.
+        PROJ-40: Context with registries is now required (no fallback to globals).
 
         Args:
             event_bus: EventBus instance for emitting state change notifications
             screen_width: Screen width for ship positioning
             screen_height: Screen height for ship positioning
-            context: Optional WorkshopContext with registries for DI
+            context: WorkshopContext with registries for DI (required for proper operation)
+
+        Raises:
+            ValueError: If context is None or context.registries is None
         """
         self.event_bus = event_bus
         self.screen_width = screen_width
         self.screen_height = screen_height
 
-        # PROJ-38: Store registries from context or fallback to default
-        if context is not None and context.registries is not None:
-            self._registries: Optional['GameRegistries'] = context.registries
-        else:
-            try:
-                self._registries = get_default_registries()
-            except RuntimeError:
-                self._registries = None
+        # PROJ-40: Require registries via context (no fallback)
+        if context is None or context.registries is None:
+            raise ValueError(
+                "WorkshopViewModel requires a WorkshopContext with registries. "
+                "Pass context=WorkshopContext(mode=..., registries=...) to constructor."
+            )
+        self._registries: GameRegistries = context.registries
 
         # Service layer for ship operations - PROJ-38: Pass registries
         self._ship_service = VehicleDesignService(registries=self._registries)
@@ -231,12 +237,11 @@ class WorkshopViewModel:
         return self._available_components
     
     def refresh_available_components(self):
-        """Refresh the available components list from registry."""
-        # PROJ-38: Use registries if available, else global function
-        if self._registries is not None:
-            self._available_components = list(self._registries.components.values())
-        else:
-            self._available_components = get_all_components()
+        """Refresh the available components list from registry.
+
+        PROJ-40: Removed fallback to global get_all_components() - use registries.
+        """
+        self._available_components = list(self._registries.components.values())
         
     # ─────────────────────────────────────────────────────────────────
     # Hull Layer Visibility
@@ -312,7 +317,13 @@ class WorkshopViewModel:
         return self._last_result.warnings if self._last_result else []
 
     def create_default_ship(self, ship_class: str = "Escort") -> Ship:
-        """Create a new ship with default settings using the service."""
+        """Create a new ship with default settings using the service.
+
+        PROJ-40: Removed fallback to direct Ship creation - service must succeed.
+
+        Raises:
+            RuntimeError: If service fails to create ship
+        """
         result = self._ship_service.create_ship(
             name="Custom Ship",
             ship_class=ship_class,
@@ -326,20 +337,10 @@ class WorkshopViewModel:
             self.ship = result.ship
             return result.ship
         else:
-            # Fallback to direct creation if service fails
-            log_warning(f"Service failed to create ship: {result.errors}")
-            # PROJ-38: Pass registries to Ship constructor
-            ship = Ship(
-                "Custom Ship",
-                self.screen_width // 2,
-                self.screen_height // 2,
-                (100, 100, 255),
-                ship_class=ship_class,
-                registries=self._registries
-            )
-            ship.recalculate_stats()
-            self.ship = ship
-            return ship
+            # PROJ-40: No fallback - fail fast with clear error
+            error_msg = f"Service failed to create ship: {result.errors}"
+            log_error(error_msg)
+            raise RuntimeError(error_msg)
 
     def add_component(self, component_id: str, layer: LayerType) -> bool:
         """

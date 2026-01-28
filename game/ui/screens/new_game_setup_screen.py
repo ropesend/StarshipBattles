@@ -6,17 +6,23 @@ Allows users to:
 - Select number of players (1-4)
 - Select or create races for each player
 - Start the game with race-based themes and visuals
+
+PROJ-40: Moved RaceConfig to TYPE_CHECKING (type-hints only).
 """
+from __future__ import annotations
+
 import os
 import re
 import pygame
 import pygame_gui
-from typing import Callable, Optional, Tuple, List
+from typing import Callable, Optional, Tuple, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
-from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
+
+if TYPE_CHECKING:
+    from game.strategy.data.race_config import RaceConfig
 
 
 class NewGameSetupScreen(pygame_gui.elements.UIWindow):

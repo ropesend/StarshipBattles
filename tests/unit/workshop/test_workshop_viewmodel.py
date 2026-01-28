@@ -3,13 +3,16 @@ Unit tests for WorkshopViewModel class (renamed from BuilderViewModel).
 
 Tests the MVVM ViewModel for the Design Workshop, verifying state management
 and event emission without requiring Pygame display.
+
+PROJ-40: Updated to use DI pattern with WorkshopContext instead of global fallbacks.
 """
 import pytest
 from unittest.mock import MagicMock, patch, call
 
 import pygame
 
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
+from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -52,11 +55,35 @@ def workshop_class_setup():
 
 
 @pytest.fixture
-def viewmodel_setup(workshop_class_setup):
-    """Set up a fresh viewmodel with mock event bus for each test."""
+def mock_registries(workshop_class_setup):
+    """Create GameRegistries for DI testing.
+
+    PROJ-40: Load real data into registries for proper testing.
+    """
+    from game.simulation.components.component import load_components_data, load_modifiers_data
+    from game.simulation.entities.ship_loader import load_vehicle_classes_data
+
+    return GameRegistries(
+        components=load_components_data(),
+        modifiers=load_modifiers_data(),
+        vehicle_classes=load_vehicle_classes_data(),
+        resources={}
+    )
+
+
+@pytest.fixture
+def viewmodel_setup(workshop_class_setup, mock_registries):
+    """Set up a fresh viewmodel with mock event bus for each test.
+
+    PROJ-40: Updated to use DI with WorkshopContext instead of global fallbacks.
+    """
     event_bus = MockEventBus()
+    context = WorkshopContext(
+        mode=WorkshopMode.STANDALONE,
+        registries=mock_registries
+    )
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel
-    viewmodel = WorkshopViewModel(event_bus, 1280, 720)
+    viewmodel = WorkshopViewModel(event_bus, 1280, 720, context=context)
 
     yield viewmodel, event_bus
 

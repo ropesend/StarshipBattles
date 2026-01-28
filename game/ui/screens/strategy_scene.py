@@ -10,16 +10,23 @@ Refactored from 1,568 lines to ~350 lines by extracting:
 - CameraNavigator: Camera focus and zoom (~90 lines)
 - FleetOperations: Fleet movement commands (~130 lines)
 - ColonizationSystem: Colonization workflow (~175 lines)
+
+PROJ-40: Use protocol type guards instead of isinstance for cross-layer checks.
 """
+from __future__ import annotations
+
 import pygame
+from typing import TYPE_CHECKING
 from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
-from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point
-from game.strategy.data.galaxy import StarSystem
-from game.strategy.data.fleet import Fleet
+from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
 from game.strategy.data.hex_math import hex_to_pixel
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_screen import StrategyInterface
+
+if TYPE_CHECKING:
+    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.fleet import Fleet
 
 # Extracted modules
 from game.ui.screens.strategy_renderer import StrategyRenderer
@@ -310,20 +317,20 @@ class StrategyScene:
         """Called when user selects an item in the UI list."""
         self.selected_object = obj
 
-        # Track last selected system
-        if isinstance(obj, StarSystem):
+        # Track last selected system - PROJ-40: Use protocol type guard
+        if is_star_system(obj):
             self.last_selected_system = obj
         elif hasattr(obj, 'location'):
             parent_sys = next((s for s in self.systems if obj in s.planets or obj in s.warp_points), None)
             if parent_sys:
                 self.last_selected_system = parent_sys
 
-        # Update fleet selection
+        # Update fleet selection - PROJ-40: Use protocol type guard
         current_player_id = self.human_player_ids[self.current_player_index]
-        if isinstance(obj, Fleet) and obj.owner_id == current_player_id:
+        if is_fleet(obj) and obj.owner_id == current_player_id:
             self.selected_fleet = obj
         else:
-            if not isinstance(obj, Fleet):
+            if not is_fleet(obj):
                 self.selected_fleet = None
 
         # Update UI

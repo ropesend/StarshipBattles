@@ -64,15 +64,35 @@ class WorkshopContext:
     registries: Optional['GameRegistries'] = None
 
     def __post_init__(self):
-        """PROJ-38: Set default registries if not provided."""
+        """PROJ-38: Set default registries if not provided.
+
+        PROJ-40: If no registries are provided and default registries are not set,
+        attempt to create registries from loaded data. This is needed for tests
+        that initialize component data via global loaders.
+        """
         if self.registries is None:
-            from game.core.registry import get_default_registries
+            from game.core.registry import get_default_registries, GameRegistries
             try:
-                # Use object.__setattr__ since dataclass may be frozen in future
+                # Try to get default registries first
                 object.__setattr__(self, 'registries', get_default_registries())
             except RuntimeError:
-                # Default registries not set yet - will be None
-                pass
+                # Default registries not set - try to create from loaded data
+                try:
+                    from game.simulation.components.component import (
+                        load_components_data, load_modifiers_data
+                    )
+                    from game.simulation.entities.ship_loader import load_vehicle_classes_data
+                    registries = GameRegistries(
+                        components=load_components_data(),
+                        modifiers=load_modifiers_data(),
+                        vehicle_classes=load_vehicle_classes_data(),
+                        resources={}
+                    )
+                    object.__setattr__(self, 'registries', registries)
+                except Exception:
+                    # Data not loaded yet - leave as None
+                    # WorkshopViewModel will raise if registries is None
+                    pass
 
     @classmethod
     def standalone(cls, tech_preset_name: str = "default",
