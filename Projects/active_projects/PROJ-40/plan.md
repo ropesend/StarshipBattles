@@ -31,27 +31,48 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 10 - Test Infrastructure
-**Last Action:** Completed Phase 9 - Data & Config Cleanup (13 tasks)
-**Next Action:** Begin Phase 10 - Test Infrastructure
+**Active Phase:** Phase 10 - Test Infrastructure (6/18 tasks complete)
+**Last Action:** Completed Phase 10 Tasks 10.1, 10.2, 10.4, 10.6, 10.7, 10.12
+**Next Action:** Continue Phase 10 - Tasks 10.3, 10.5, 10.8-10.11, 10.13-10.18
 **Blockers:** None
 
-### Recent Work
+### Recent Work (This Session)
+- **Phase 10 In Progress:** Test infrastructure cleanup (6/18 tasks complete)
+  - 10.1: Removed 5 duplicate scripts (profile_simulation, repro_shield, repro_energy_stats, reproduce_scaling, stress_test)
+  - 10.2: Removed additional duplicates (generate_test_data, strategy_tournament, verify_determinism_current), renamed verify_builder_imports with _ prefix
+  - 10.4: Consolidated make_mock_ship_instance() to tests/conftest.py, removed duplicates from 3 integration test files
+  - 10.6: Renamed formation manual scripts (_test_formation_flight.py, _test_formation_attack.py) - they weren't pytest tests
+  - 10.7: Reviewed underutilized directories - all serve valid purpose (no changes needed)
+  - 10.12: Enhanced tests/README.md with Naming Conventions, Shared Test Helpers, Unit vs Integration Tests sections
+  - Created/expanded `tests/unit/data/test_test_infrastructure.py` with 13 validation tests
+  - All 5098 tests pass
+
+### Files Modified This Session
+- tests/conftest.py - Added make_mock_ship_instance() helper
+- tests/README.md - Enhanced with naming conventions and guidelines
+- tests/unit/data/test_test_infrastructure.py - Created with 13 tests
+- tests/unit/refactor/test_modifier_loader_v2.py - Fixed reference to deleted modifiers_v2.json
+- tests/integration/test_gameplay_loop.py - Uses shared make_mock_ship_instance
+- tests/integration/test_colonization.py - Uses shared make_mock_ship_instance
+- tests/integration/test_save_load.py - Uses shared make_mock_ship_instance
+
+### Files Deleted This Session
+- tests/unit/profile_simulation.py (kept performance/ version)
+- tests/unit/repro_shield.py (kept performance/ version)
+- tests/unit/repro_energy_stats.py (kept performance/ version)
+- tests/unit/reproduce_scaling.py (kept performance/ version)
+- tests/unit/stress_test.py (kept performance/ version)
+- tests/unit/generate_test_data.py (kept performance/ version)
+- tests/unit/strategy_tournament.py (kept performance/ version)
+- tests/unit/verify_determinism_current.py (kept performance/ version)
+
+### Files Renamed This Session
+- tests/unit/verify_builder_imports.py → tests/unit/_verify_builder_imports.py
+- tests/integration/test_formation_flight.py → tests/integration/_test_formation_flight.py
+- tests/integration/test_formation_attack.py → tests/integration/_test_formation_attack.py
+
+### Previous Work
 - **Phase 9 Complete:** Data & config cleanup (13 tasks)
-  - 9.1: Consolidated modifier schema versions (merged v2 into canonical, deleted backup files)
-  - 9.2: Removed empty component_presets.json placeholder
-  - 9.3: Added modifier ID validation tests
-  - 9.4: Verified no duplicate modifier definitions
-  - 9.5: Renamed unprofessional formation file to irregular_formation.json
-  - 9.6: Added resource metadata (name, description)
-  - 9.7: Fixed Superdreadnaugh→Superdreadnought typo (6 files)
-  - 9.8: Verified tech presets have proper progression
-  - 9.9: Fixed builder_theme.json font_size type (string→int)
-  - 9.10: Verified modifier defaults are correct (0 = baseline)
-  - 9.11: Verified tech tree validation (done in Phase 8)
-  - 9.12: Created formations README.md documentation
-  - 9.13: Cleaned ui_presets.json test placeholder
-  - Created `tests/unit/data/test_data_validation.py` with 12 tests
 
 - **Phase 8 Complete:** Research system polish (7 tasks)
   - 8.1: Added type hints to _draw_node_text()

@@ -192,3 +192,36 @@ def minimal_registries() -> 'GameRegistries':
         vehicle_classes={},
         resources={}
     )
+
+
+# =============================================================================
+# PROJ-40: Shared Test Helpers
+# =============================================================================
+
+def make_mock_ship_instance(name="Test Ship", owner_id=0):
+    """
+    Create a mock ShipInstance for testing.
+
+    PROJ-40/NEW-INT-003: Consolidated from multiple integration test files.
+    Use this helper instead of defining local versions in test files.
+
+    Args:
+        name: Ship name (also used as design_id)
+        owner_id: Owner empire ID
+
+    Returns:
+        ShipInstance: A mock ship instance for testing
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    return ShipInstance(
+        instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=name,
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100}
+        },
+    )

@@ -24,21 +24,7 @@ from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.ship_instance import ShipInstance
-
-
-def make_mock_ship_instance(name="Test Ship", owner_id=0):
-    """Create a mock ShipInstance for testing."""
-    return ShipInstance(
-        instance_id=f"test-{name.lower().replace(' ', '-')}-{id(name)}",
-        design_id=name,
-        name=name,
-        owner_id=owner_id,
-        design_data={
-            'name': name,
-            'vehicle_type': 'Ship',
-            'stats': {'mass': 100}
-        },
-    )
+from tests.conftest import make_mock_ship_instance
 
 
 # =============================================================================
