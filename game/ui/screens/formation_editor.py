@@ -11,7 +11,8 @@ from tkinter import filedialog, simpledialog
 try:
     tk_root = tkinter.Tk()
     tk_root.withdraw()
-except Exception:
+except (tkinter.TclError, RuntimeError):
+    # TclError occurs when display unavailable; RuntimeError when Tcl not initialized
     tk_root = None
 
 class FormationCore:
@@ -169,7 +170,8 @@ class FormationCore:
             
             data = {'arrows': out_arrows}
             with open(filename, 'w') as f: json.dump(data, f, indent=4)
-        except Exception as e: print(f"Error saving: {e}")
+        except (OSError, IOError, json.JSONDecodeError) as e:
+            print(f"Error saving formation: {e}")
 
     def load_from_file(self, filename):
         try:
@@ -188,7 +190,8 @@ class FormationCore:
                             self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
                     
                     self.selected_indices = set()
-        except Exception as e: print(f"Error loading: {e}")
+        except (OSError, IOError, json.JSONDecodeError, KeyError) as e:
+            print(f"Error loading formation: {e}")
 
 class FormationEditorScene:
     def __init__(self, screen_width, screen_height, on_return_menu):

@@ -24,51 +24,46 @@
 | 9. Data & Config Cleanup | **Complete** | [phase_9_checklist.md](phase_9_checklist.md) | 13 Issues |
 | 10. Test Infrastructure | **Complete** | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
 | 11. Original Findings Completion | **Complete** | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
-| 12. UI Layer Remediation (Final) | Not Started | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
+| 12. UI Layer Remediation (Final) | In Progress | [phase_12_checklist.md](phase_12_checklist.md) | 37 Files |
 
 **Total Issues:** ~74 (revised after Category 3 audit verification)
 **Estimated Effort:** 40-51 hours (reduced from 46-63 hours)
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tier 2 Complete
-**Last Action:** Completed Phase 12 Tier 2 - Medium Complexity (Tasks 12.4-12.8)
-**Next Action:** Phase 12 Tier 3 (Tasks 12.9-12.10) or stop session
+**Active Phase:** Phase 12 - UI Layer Remediation (Final) - Tasks 12.12-12.14 Complete
+**Last Action:** Completed Phase 12 Quick Wins (Tasks 12.12-12.14)
+**Next Action:** Phase 12 Remaining Tasks (12.11, 12.15-12.18) or stop session
 **Blockers:** None
 
-### Recent Work (This Session)
-- **Phase 12 Tier 2 COMPLETE:** Medium Complexity (5 tasks)
-  - 12.4: workshop_viewmodel.py - TYPE_CHECKING + DI
-    - Moved Ship, LayerType, Component, DesignResult to TYPE_CHECKING
-    - Required registries via context (removed fallback to globals)
-    - Removed fallback Ship creation and get_all_components() fallback
-    - Updated WorkshopContext to auto-create registries from loaded data
-    - Updated test files to use DI pattern
-  - 12.5: new_game_setup_screen.py - TYPE_CHECKING for RaceConfig
-    - Moved RaceConfig to TYPE_CHECKING (type hints only)
-    - Kept GameConfig, PlayerConfig, THEME_DEFAULTS, RaceLibrary at runtime
-  - 12.6: ship_stats_renderer.py - Canonical imports
-    - Import LayerType from game.core.constants (canonical location)
-    - Documented ComponentStatus and StrategyManager as acceptable cross-layer
-  - 12.7: strategy_scene.py - TYPE_CHECKING + protocol type guards
-    - Moved StarSystem, Fleet to TYPE_CHECKING
-    - Replaced isinstance() with protocol type guards (is_star_system, is_fleet)
-  - 12.8: battle_scene.py - Remove unused imports
-    - Removed unused AIController import
-    - Kept BattleService at runtime (instantiated)
+### Recent Work (This Session - Latest)
+- **Phase 12 Quick Wins COMPLETE:** (3 tasks)
+  - 12.12: formation_editor.py - Bare Exception Fixes
+    - Fixed tkinter init exception to `except (tkinter.TclError, RuntimeError):`
+    - Fixed file I/O exceptions to specific types (OSError, IOError, json.JSONDecodeError)
+  - 12.13: test_lab.py - Fragile Path Construction
+    - Replaced nested `os.path.dirname()` with `Path(__file__).resolve().parents[3]`
+    - Updated glob usage to pathlib
+    - Fixed broken import (MENU, BATTLE from game.app)
+  - 12.14: Already completed in Task 12.10
   - **Final: 5174 passed, 3 skipped** (tests/ directory)
 
-### Files Modified This Session
-- `game/ui/screens/workshop_viewmodel.py` - TYPE_CHECKING + removed fallbacks
-- `game/ui/screens/workshop_context.py` - Auto-create registries in __post_init__
-- `game/ui/screens/new_game_setup_screen.py` - TYPE_CHECKING for RaceConfig
-- `game/ui/panels/ship_stats_renderer.py` - Import LayerType from canonical location
-- `game/ui/screens/strategy_scene.py` - TYPE_CHECKING + protocol type guards
-- `game/ui/screens/battle_scene.py` - Removed unused AIController import
-- `tests/unit/workshop/test_workshop_viewmodel.py` - DI fixtures
-- `tests/unit/builder/test_workshop_viewmodel_di.py` - Removed backward-compat tests
-- `tests/unit/builder/test_builder_viewmodel.py` - DI fixtures
-- `tests/repro_issues/test_bug_13_clear_removes_hull.py` - DI fixtures
+### Files Modified This Session (Latest)
+- `game/ui/screens/formation_editor.py` - Specific exception types
+- `game/ui/screens/test_lab.py` - Pathlib refactoring, fixed imports
+
+### Previous Work (This Session - Tier 3)
+- **Phase 12 Tier 3 COMPLETE:** Hard Cases (2 tasks)
+  - 12.9: workshop_screen.py - Canonical imports
+  - 12.10: builder/main.py - Documented as architectural exception
+
+### Previous Work (This Session - Tier 2)
+- **Phase 12 Tier 2 COMPLETE:** Medium Complexity (5 tasks)
+  - 12.4: workshop_viewmodel.py - TYPE_CHECKING + DI
+  - 12.5: new_game_setup_screen.py - TYPE_CHECKING for RaceConfig
+  - 12.6: ship_stats_renderer.py - Canonical imports
+  - 12.7: strategy_scene.py - TYPE_CHECKING + protocol type guards
+  - 12.8: battle_scene.py - Remove unused imports
 
 ### Previous Work (Earlier Session)
 - **Phase 10 Complete:** Test infrastructure cleanup (18 tasks)

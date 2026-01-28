@@ -4,8 +4,10 @@ import glob
 import importlib.util
 import importlib
 import sys
+from pathlib import Path
 
-from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN, MENU, BATTLE
+from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
+from game.app import MENU, BATTLE
 from game.ui.widgets import Button
 from test_framework.runner import TestRunner
 from test_framework.scenario import CombatScenario
@@ -27,32 +29,26 @@ class TestLabScene:
     def scan_scenarios(self):
         """Scan test_framework/scenarios for valid scenario classes."""
         self.scenarios = []
-        # game/ui/screens/test_lab.py -> ../../.. -> game/.. -> root?
-        # NO. __file__ is c:\Dev\Starship Battles\game\ui\screens\test_lab.py
-        # dirname -> screens
-        # .. -> ui
-        # .. -> game
-        # .. -> root
-        # Correct path to test_framework: os.path.join(root, "test_framework", "scenarios")
+        # Navigate from game/ui/screens/test_lab.py to project root using pathlib
+        # Path(__file__).parents[3] goes: screens -> ui -> game -> root
+        base_dir = Path(__file__).resolve().parents[3]
+        scenarios_dir = base_dir / "test_framework" / "scenarios"
         
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        scenarios_dir = os.path.join(base_dir, "test_framework", "scenarios")
-        
-        if not os.path.exists(scenarios_dir):
+        if not scenarios_dir.exists():
             print(f"Warning: Scenarios dir not found at {scenarios_dir}")
             return
 
-        files = glob.glob(os.path.join(scenarios_dir, "*.py"))
+        files = list(scenarios_dir.glob("*.py"))
         for f in files:
-            if "__init__" in f: continue
-            
+            if "__init__" in f.name: continue
+
             # Load Module
             try:
-                module_name = "test_framework.scenarios." + os.path.basename(f)[:-3]
-                spec = importlib.util.spec_from_file_location(module_name, f)
+                module_name = "test_framework.scenarios." + f.stem
+                spec = importlib.util.spec_from_file_location(module_name, str(f))
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
-                
+
                 # Find Classes
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
@@ -64,7 +60,7 @@ class TestLabScene:
                                 "name": instance.name,
                                 "desc": instance.description,
                                 "class": attr,
-                                "file": os.path.basename(f)
+                                "file": f.name
                             })
                         except Exception as e:
                             print(f"Failed to instantiate scenario {attr_name}: {e}")
