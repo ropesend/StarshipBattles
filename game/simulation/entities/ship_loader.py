@@ -21,11 +21,25 @@ def get_or_create_validator():
     return val
 
 
-def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = None) -> None:
+def load_vehicle_classes_data(
+    filepath: str = None,
+    layers_filepath: Optional[str] = None
+) -> dict:
     """
-    Load vehicle class definitions from JSON.
-    This should be called explicitly during game initialization.
+    Pure function to load vehicle class definitions from JSON.
+
+    PROJ-38: Returns a dictionary of vehicle class definitions without
+    modifying any global state. Use this for DI patterns.
+
+    Args:
+        filepath: Path to the vehicle classes JSON file
+        layers_filepath: Optional path to the layer definitions JSON file
+
+    Returns:
+        Dict[str, dict]: Vehicle class definitions keyed by class name
     """
+    import copy
+
     if filepath is None:
         filepath = Paths.VEHICLE_CLASSES_FILE
 
@@ -48,7 +62,6 @@ def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = 
     layer_data = load_json(layers_path, default={})
     if layer_data:
         layer_definitions = layer_data.get('definitions', {})
-        log_info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
 
     # Load vehicle classes (required)
     try:
@@ -56,22 +69,50 @@ def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = 
     except FileNotFoundError:
         raise RuntimeError(f"Critical Error: {filepath} not found. Vehicle class data is required for game operation.")
 
-    # Update in place to preserve references
-    classes = get_vehicle_classes()
-    classes.clear()
-
     raw_classes = data.get('classes', {})
 
+    # Deep copy to ensure independence
+    result = copy.deepcopy(raw_classes)
+
     # Post-process to resolve layer configurations
-    for cls_name, cls_def in raw_classes.items():
+    for cls_name, cls_def in result.items():
         if 'layer_config' in cls_def:
             config_id = cls_def['layer_config']
             if config_id in layer_definitions:
-                cls_def['layers'] = layer_definitions[config_id]
-            else:
-                log_warning(f"Class {cls_name} references unknown layer config {config_id}")
+                cls_def['layers'] = copy.deepcopy(layer_definitions[config_id])
 
-    classes.update(raw_classes)
+    return result
+
+
+def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = None) -> None:
+    """
+    Load vehicle class definitions from JSON and populate the global registry.
+
+    This is a thin wrapper around load_vehicle_classes_data() for backward
+    compatibility. New code should prefer DI via load_vehicle_classes_data().
+    """
+    if filepath is None:
+        filepath = Paths.VEHICLE_CLASSES_FILE
+
+    # Load data using pure function
+    result = load_vehicle_classes_data(filepath, layers_filepath)
+
+    # Log layer info (we need to check the layers file to get the count)
+    if layers_filepath:
+        layers_path = layers_filepath
+    else:
+        layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+
+    layer_data = load_json(layers_path, default={})
+    if layer_data:
+        layer_definitions = layer_data.get('definitions', {})
+        log_info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
+
+    # Update registry in place to preserve references
+    classes = get_vehicle_classes()
+    classes.clear()
+    classes.update(result)
+
     log_info(f"Loaded {len(classes)} vehicle classes.")
 
 
