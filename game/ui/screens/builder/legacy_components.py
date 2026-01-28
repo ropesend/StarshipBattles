@@ -1,3 +1,11 @@
+"""Legacy modifier editor panel for the ship builder.
+
+Cross-layer imports (acceptable for builder UI):
+- MODIFIER_REGISTRY: Runtime - needed to display and apply modifiers in editor
+
+Note: This file contains legacy modifier editing functionality.
+Consider migration to ModifierLogic for new code.
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIHorizontalSlider

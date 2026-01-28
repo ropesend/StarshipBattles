@@ -4,15 +4,23 @@ Design Report Panel - Reusable widget for displaying ship/design information.
 This widget displays comprehensive design specifications including portrait
 and detailed stats in a two-column scrollable layout, adapted from the
 design workshop's BuilderRightPanel but without requirements/warnings.
+
+Cross-layer imports (acceptable for UI display):
+- Ship: TYPE_CHECKING only - used for type hints in method signatures
+- LayerType: Runtime - iterates ship layers for layer status display
 """
+from __future__ import annotations
 
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UIPanel, UIScrollingContainer, UITextBox, UILabel
-from typing import Optional
-from game.simulation.entities.ship import Ship
+from typing import Optional, TYPE_CHECKING
+from game.core.constants import LayerType  # Canonical location for LayerType
 from ui.builder.right_panel import StatRow
 from ui.builder.stats_config import STATS_CONFIG, get_construction_rows
+
+if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship
 
 
 class DesignReportPanel:
@@ -304,9 +312,9 @@ class DesignReportPanel:
             if section_name == "Armor":
                 y = self._create_layers_section(ship, col_x, y, col_width)
 
-    def _create_layers_section(self, ship: Ship, x: int, y: int, width: int) -> int:
+    def _create_layers_section(self, ship: "Ship", x: int, y: int, width: int) -> int:
         """Create the Layers section showing layer distribution."""
-        from game.simulation.entities.ship import LayerType
+        # LayerType now imported from game.core.constants at module level
 
         # Only show if ship has layers
         if not hasattr(ship, 'layers') or not ship.layers:

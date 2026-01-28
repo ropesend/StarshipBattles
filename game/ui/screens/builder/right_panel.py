@@ -1,3 +1,12 @@
+"""Right panel for the ship builder.
+
+Displays ship statistics and configuration options.
+
+Cross-layer imports (acceptable for builder UI):
+- VEHICLE_CLASSES: Runtime - displays vehicle class options in dropdown
+- StrategyManager: Runtime - displays AI strategy options in dropdown
+- LayerType: Runtime (local import) - iterates ship layers for stats display
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
@@ -497,7 +506,7 @@ class BuilderRightPanel:
                 row.update(fmt_val, final_unit)
         
         # Update layer stats (Still somewhat special case due to dynamic list)
-        from game.simulation.entities.ship import LayerType
+        from game.core.constants import LayerType  # Canonical location
         
         # Hide all first
         for row in self.layer_rows:

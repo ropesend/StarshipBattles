@@ -8,6 +8,10 @@ Allows users to:
 - Configure environmental preferences (gravity, temperature, atmosphere)
 - Enter descriptive text (biological, sociological)
 - Review and save race configuration
+
+Cross-layer imports (acceptable for UI):
+- RaceConfig: Runtime - callback data and configuration state
+- RaceLibrary: Runtime - save/load race configurations
 """
 import os
 import pygame

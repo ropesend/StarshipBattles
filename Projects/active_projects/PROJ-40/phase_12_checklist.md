@@ -209,48 +209,14 @@ Production code uses WorkshopContext with dependency injection instead.
 
 ---
 
-## Remaining Files Summary (27 files) - DOCUMENTATION ONLY
+## Remaining Files
 
-> **NOTE:** This section documents files that could be improved in future work.
-> These are NOT blocking tasks for Phase 12 completion. The high-priority
-> architectural violations (Tier 1-3) and Phase 7 tasks have been addressed.
-> The remaining files have acceptable cross-layer imports that don't violate
-> the core architectural principles.
+> **NOTE:** The 27 remaining files have been moved to new phases:
+> - **Phase 13:** UI-Simulation Layer files (16 files)
+> - **Phase 14:** UI-Strategy Layer files (9 files)
+> - **Phase 15:** UI-AI Layer files (2 files)
 
-The following files could be reviewed using the same patterns:
-
-### Simulation Layer (14 files):
-- [ ] hud/panels.py
-- [ ] panels/design_report_panel.py
-- [ ] panels/ship_detail_panel.py
-- [ ] renderer/game_renderer.py
-- [ ] renderer/renderer.py
-- [ ] builder/detail_panel.py
-- [ ] builder/layer_panel.py
-- [ ] builder/legacy_components.py
-- [ ] builder/modifier_logic.py
-- [ ] builder/right_panel.py
-- [ ] builder/schematic_view.py
-- [ ] builder/stats_config.py
-- [ ] setup.py / setup_data_io.py / setup_screen.py
-- [ ] workshop_event_router.py
-
-### Strategy Layer (16 files):
-- [ ] design_selector_window.py
-- [ ] fleet_orders_window.py
-- [ ] race_setup_screen.py
-- [ ] strategy_camera_nav.py
-- [ ] strategy_colonization.py
-- [ ] strategy_detail_fmt.py
-- [ ] strategy_fleet_ops.py
-- [ ] strategy_renderer.py
-- [ ] strategy_screen.py
-- [ ] (remaining strategy imports)
-
-### AI Layer (7 files):
-- [ ] orchestration/battle_orchestrator.py
-- [ ] setup_renderer.py
-- [ ] (remaining AI imports)
+See the respective phase checklists for task details.
 
 ---
 

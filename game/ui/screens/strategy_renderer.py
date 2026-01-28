@@ -4,6 +4,10 @@ Extracted from StrategyScene to reduce file size and improve testability.
 
 This module contains all the drawing functions for the galaxy map,
 including grid, warp lanes, systems, planets, and fleets.
+
+Cross-layer imports (acceptable for UI rendering):
+- hex_to_pixel, pixel_to_hex, HexCoord: Runtime - coordinate conversions for rendering
+- OrderType: Runtime - move preview line styling based on order type
 """
 import math
 import pygame

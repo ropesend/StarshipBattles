@@ -3,6 +3,9 @@ Battle setup data I/O operations.
 
 Functions for scanning ship designs, formations, loading/saving battle setups,
 and loading ships from configuration entries.
+
+Cross-layer imports (acceptable for battle setup):
+- Ship: Runtime - creates Ship instances from design JSON for battle
 """
 import os
 import glob

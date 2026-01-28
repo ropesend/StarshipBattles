@@ -1,13 +1,21 @@
+"""Layer panel for the ship builder.
+
+Displays and manages ship layer structure with component grouping.
+
+Cross-layer imports (acceptable for builder UI):
+- LayerType: Runtime - layer display and iteration
+- VALIDATOR: Runtime - layer capacity validation feedback
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIScrollingContainer, UIDropDownMenu
 
-from game.simulation.entities.ship import LayerType
+from game.core.constants import LayerType  # Canonical location for LayerType
 from .structure_list_items import (
-    LayerHeaderItem, 
-    LayerComponentItem, 
+    LayerHeaderItem,
+    LayerComponentItem,
     IndividualComponentItem,
-    ACTION_ADD_GROUP, ACTION_ADD_INDIVIDUAL, 
+    ACTION_ADD_GROUP, ACTION_ADD_INDIVIDUAL,
     ACTION_REMOVE_GROUP, ACTION_REMOVE_INDIVIDUAL,
     ACTION_SELECT_GROUP, ACTION_SELECT_INDIVIDUAL,
     ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER

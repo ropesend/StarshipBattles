@@ -3,6 +3,11 @@ Colonization workflow for strategy scene.
 Handles colonize commands, planet validation, and mission queuing.
 
 Extracted from StrategyScene to reduce file size and improve testability.
+
+Cross-layer imports (acceptable for UI):
+- pixel_to_hex: Runtime - coordinate conversion for command targeting
+- IssueColonizeCommand, QueueColonizeMissionCommand: Runtime - UI issues commands
+- StrategySessionFacade: TYPE_CHECKING - used for type hints only
 """
 from typing import TYPE_CHECKING
 from game.core.logger import log_debug, log_info, log_warning

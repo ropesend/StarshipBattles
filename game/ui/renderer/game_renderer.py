@@ -1,8 +1,12 @@
-"""Rendering module for drawing ships, HUD elements, and utility functions."""
+"""Rendering module for drawing ships, HUD elements, and utility functions.
+
+Cross-layer imports (acceptable for rendering):
+- LayerType: Runtime - keys layer color map, iterates ship layers
+- LayerDefaults: Runtime - default radius percentages for ship layers
+"""
 import pygame
 import math
-from game.simulation.entities.ship import LayerType
-from game.core.constants import LayerDefaults
+from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
 
 
 # Layer color constants

@@ -3,6 +3,10 @@ Detail formatting utilities for strategy screen.
 
 Functions for formatting HTML reports for planets, stars, fleets,
 and other objects displayed in the detail panel.
+
+Cross-layer imports (acceptable for UI):
+- OrderType: Runtime - formats order type display strings
+- Protocols: Runtime - duck typing for object identification
 """
 from game.strategy.data.fleet import OrderType
 from game.core.protocols import (
