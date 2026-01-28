@@ -132,11 +132,50 @@ class AssetManager:
         group = self.get_group(category, group_key)
         if not group:
             return self.get_missing_texture()
-            
+
         if seed_id is not None:
              idx = seed_id % len(group)
              return group[idx]
         return group[0]
+
+    def get_star_color_key(self, rgb: tuple) -> str:
+        """
+        Determine the star asset key based on RGB color values.
+
+        Uses thresholds defined in manifest's 'star_colors' section.
+        Returns 'yellow' as default if no rules match.
+
+        Args:
+            rgb: Tuple of (r, g, b) color values (0-255)
+
+        Returns:
+            Star asset key string (e.g., 'red', 'blue', 'yellow')
+        """
+        star_colors = self.manifest.get('star_colors', {})
+        r, g, b = rgb[0], rgb[1], rgb[2]
+
+        for color_name, thresholds in star_colors.items():
+            if not thresholds:  # Empty dict = default (yellow)
+                continue
+
+            matches = True
+            if 'r_min' in thresholds and r <= thresholds['r_min']:
+                matches = False
+            if 'r_max' in thresholds and r >= thresholds['r_max']:
+                matches = False
+            if 'g_min' in thresholds and g <= thresholds['g_min']:
+                matches = False
+            if 'g_max' in thresholds and g >= thresholds['g_max']:
+                matches = False
+            if 'b_min' in thresholds and b <= thresholds['b_min']:
+                matches = False
+            if 'b_max' in thresholds and b >= thresholds['b_max']:
+                matches = False
+
+            if matches:
+                return color_name
+
+        return 'yellow'  # default
 
     def load_external_image(self, path):
         """Load an image from an absolute or relative path, using the cache."""

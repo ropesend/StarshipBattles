@@ -11,7 +11,6 @@ Refactored from 1,568 lines to ~350 lines by extracting:
 - FleetOperations: Fleet movement commands (~130 lines)
 - ColonizationSystem: Colonization workflow (~175 lines)
 """
-import os
 import pygame
 from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
@@ -30,6 +29,7 @@ from game.ui.screens.strategy_colonization import ColonizationSystem
 from game.ui.screens.strategy_input_handler import StrategyInputHandler
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 
 class StrategyScene:
@@ -82,6 +82,7 @@ class StrategyScene:
 
         # Assets
         self.empire_assets = {}
+        self._race_loader = RaceAssetLoader()
         self._load_assets()
 
         # Initialize sub-modules
@@ -446,11 +447,9 @@ class StrategyScene:
                 self.camera.position = pygame.math.Vector2(fx, fy)
 
     def _load_assets(self):
-        """Load visual assets using AssetManager."""
+        """Load visual assets using AssetManager and RaceAssetLoader."""
         from game.assets.asset_manager import get_asset_manager
         from game.strategy.engine.game_config import GameConfig
-        from game.core.constants import ASSET_DIR
-        from game.core.logger import log_debug
 
         am = get_asset_manager()
         am.load_manifest()
@@ -459,48 +458,11 @@ class StrategyScene:
         config = GameConfig()
         asset_base = config.asset_base_path
 
-        # Race flags are stored in a different location
-        race_flags_base = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
-
         for emp in self.empires:
-            self.empire_assets[emp.id] = {}
-
-            # Check if empire has custom race flag
-            if emp.flag_id:
-                # Load race-specific flags from Flags/Processed/{flag_id}/
-                flag_dir = os.path.join(race_flags_base, emp.flag_id)
-                if os.path.exists(flag_dir):
-                    # Rectangle flag for colonies (try 256 size first, then root)
-                    rect_flag_path = os.path.join(flag_dir, "256", "rectangle.png")
-                    if not os.path.exists(rect_flag_path):
-                        rect_flag_path = os.path.join(flag_dir, "rectangle.png")
-                    if os.path.exists(rect_flag_path):
-                        self.empire_assets[emp.id]['colony'] = am.load_external_image(rect_flag_path)
-                        log_debug(f"Loaded race rectangle flag for empire {emp.id}: {rect_flag_path}")
-
-                    # Shield flag for fleets
-                    shield_flag_path = os.path.join(flag_dir, "256", "shield.png")
-                    if not os.path.exists(shield_flag_path):
-                        shield_flag_path = os.path.join(flag_dir, "shield.png")
-                    if os.path.exists(shield_flag_path):
-                        self.empire_assets[emp.id]['fleet_flag'] = am.load_external_image(shield_flag_path)
-                        log_debug(f"Loaded race shield flag for empire {emp.id}: {shield_flag_path}")
-
-            # Recalculate theme_path using empire_theme_id and current asset location
-            # This fixes BUG-13: saved absolute paths may not exist on current machine
-            theme_path = os.path.join(asset_base, emp.empire_theme_id)
-
-            if os.path.exists(theme_path):
-                # Colony Flag - only load from theme if not already loaded from race
-                if 'colony' not in self.empire_assets[emp.id]:
-                    colony_path = os.path.join(theme_path, "Flags", "Colony_Flag.jpg")
-                    if os.path.exists(colony_path):
-                        self.empire_assets[emp.id]['colony'] = am.load_external_image(colony_path)
-
-                # Fleet Icon (ship silhouette - always load from theme)
-                fleet_path = os.path.join(theme_path, "Skins", "Battlecruiser.png")
-                if os.path.exists(fleet_path):
-                    self.empire_assets[emp.id]['fleet'] = am.load_external_image(fleet_path)
+            self.empire_assets[emp.id] = self._race_loader.load_all_empire_assets(
+                emp,
+                asset_base
+            )
 
     def _get_object_asset(self, obj):
         """Resolve the visual asset for a data object."""
@@ -508,16 +470,7 @@ class StrategyScene:
         am = get_asset_manager()
 
         if is_star(obj):
-            color = obj.color
-            asset_key = 'yellow'
-            if color[0] > 200 and color[1] < 100:
-                asset_key = 'red'
-            elif color[2] > 200 and color[0] < 100:
-                asset_key = 'blue'
-            elif color[0] > 200 and color[1] > 200 and color[2] > 200:
-                asset_key = 'white'
-            elif color[0] > 200 and color[1] > 150:
-                asset_key = 'orange'
+            asset_key = am.get_star_color_key(obj.color)
             return am.get_image('stars', asset_key)
 
         elif is_planet(obj):
