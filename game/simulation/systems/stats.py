@@ -40,7 +40,6 @@ class ShipStatsCalculator:
         ship.max_shields = 0
         ship.shield_regen_rate = 0
         ship.shield_regen_cost = 0
-        ship.shield_regen_cost = 0
         ship.repair_rate = 0
         if LayerType.ARMOR in ship.layers:
             ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
@@ -319,8 +318,6 @@ class ShipStatsCalculator:
         # 6. Aggregate Resources (Storage & Generation) - DEPRECATED / REMOVED
         # Phase 3 already handles Ability aggregation for Ship properties and ResourceRegistry.
         # This block was legacy/redundant and risked double-counting if active.
-        pass
-
 
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:
@@ -383,12 +380,11 @@ class ShipStatsCalculator:
             
             # Additional Energy Consumers that might not be fully in abilities yet?
             # ShieldRegenerator cost is usually handled via generic abilities now?
-            # Note: ShieldRegen is usually 'constant' consumption in some systems, 
-            # but here it's traditionally per tick conditional. 
+            # Note: ShieldRegen is usually 'constant' consumption in some systems,
+            # but here it's traditionally per tick conditional.
             # ship_combat.py logic: if current < max, consume.
             # Stats assume WORST CASE (continuous regeneration).
             # OLD Logic: ship.shield_regen_cost added to energy_consumption.
-            pass
 
         # Add aggregated shield cost (Assuming worst case continuous regen)
         energy_consumption += ship.shield_regen_cost

@@ -1,6 +1,6 @@
 # Phase 1: Critical Architecture Fixes
 
-**Status:** Not Started
+**Status:** Complete
 **Estimated Effort:** 30 minutes
 **Priority:** Highest - Address first
 
@@ -16,16 +16,23 @@ Address the critical duplicate initialization issue in Ship class.
 ## Tasks
 
 ### 1.1 Fix Duplicate Attribute Initialization (NEW-SIM-001)
-**Location:** `game/simulation/entities/ship.py:92, 135`
+**Location:** `game/simulation/entities/ship.py:125, 167` (was 92, 135 before line shifts)
 **Issue:** `total_defense_score` initialized twice with different values (0.0 then 1.0).
 
-- [ ] Identify correct initial value for `total_defense_score`
-- [ ] Remove duplicate assignment (keep line 135 with value 1.0 based on usage)
-- [ ] Add comment explaining why default is 1.0 (not 0.0)
-- [ ] Search for any code that depends on 0.0 default
-- [ ] Run tests: `pytest tests/unit/entities/test_ship.py -v`
+- [x] Identify correct initial value for `total_defense_score`
+- [x] Remove duplicate assignment (keep line 167 with value 1.0 based on usage)
+- [x] Add comment explaining why default is 1.0 (not 0.0)
+- [x] Search for any code that depends on 0.0 default
+- [x] Run tests: `pytest tests/unit/entities/test_ship.py -v`
 
 **Acceptance:** Single initialization with documented rationale
+
+**Notes:**
+- Removed line 125 (`self.total_defense_score = 0.0`)
+- Kept line 167 (`self.total_defense_score: float = 1.0`)
+- Added comment explaining 1.0 is neutral baseline before ShipStatsCalculator computes actual value
+- Added new test class `TestTotalDefenseScoreInitialization` in `tests/unit/entities/test_ship.py`
+- No code depended on the 0.0 initial value
 
 ---
 
@@ -43,8 +50,8 @@ Address the critical duplicate initialization issue in Ship class.
 
 ## Verification
 
-- [ ] Run ship tests: `pytest tests/unit/entities/test_ship.py -v`
-- [ ] Verify no import errors: `python -c "from game.simulation.entities.ship import Ship"`
+- [x] Run ship tests: `pytest tests/unit/entities/test_ship.py -v`
+- [x] Verify no import errors: `python -c "from game.simulation.entities.ship import Ship"`
 
 ---
 

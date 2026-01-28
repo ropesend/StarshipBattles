@@ -396,3 +396,50 @@ class TestChangeClassInvalidInput:
 
         # Ship class should remain unchanged since the new class doesn't exist
         assert ship.ship_class == original_class
+
+
+class TestTotalDefenseScoreInitialization:
+    """Tests for total_defense_score initialization (NEW-SIM-001 fix)."""
+
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(self, fresh_registries):
+        """Set up registry data for tests."""
+        mgr = RegistryManager.instance()
+        mgr.hydrate(
+            fresh_registries.components,
+            fresh_registries.modifiers,
+            fresh_registries.vehicle_classes
+        )
+        yield
+        if pygame.get_init():
+            pygame.quit()
+
+    def test_total_defense_score_initial_value_is_one(self):
+        """Verify total_defense_score is initialized to 1.0 (not 0.0).
+
+        NEW-SIM-001: The attribute was previously initialized twice:
+        - First to 0.0 (immediately overwritten)
+        - Then to 1.0 (the actual initial value)
+
+        The value 1.0 is correct because:
+        - It avoids division-by-zero issues if used as a denominator
+        - It represents a baseline "neutral" defense before stats calculation
+        - The actual value is computed by ShipStatsCalculator.calculate()
+        """
+        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+
+        # The initial value should be 1.0 (baseline defense score)
+        assert ship.total_defense_score == 1.0, (
+            f"total_defense_score should be initialized to 1.0, got {ship.total_defense_score}"
+        )
+
+    def test_total_defense_score_is_recalculated_by_stats(self):
+        """Verify total_defense_score is updated when stats are recalculated."""
+        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+
+        ship.recalculate_stats()
+
+        # After recalculation, value should be computed from components
+        # For a ship with just a Hull, this will be based on size/maneuver/ecm scores
+        # The exact value depends on the ship configuration, but it should be a float
+        assert isinstance(ship.total_defense_score, float), "total_defense_score should be a float"

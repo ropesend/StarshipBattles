@@ -19,6 +19,30 @@ def _get_default_resources() -> dict:
     }
 
 
+def _resolve_resource_path(filepath: str) -> str | None:
+    """
+    Resolve resource file path, trying relative then absolute paths.
+
+    Args:
+        filepath: Path to the resources JSON file (relative or absolute)
+
+    Returns:
+        Resolved absolute path if file exists, None otherwise
+    """
+    if os.path.exists(filepath):
+        return filepath
+
+    # Try absolute path based on this file's location
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(base_dir))  # game/core -> game -> project
+    abs_path = os.path.join(project_root, filepath)
+
+    if os.path.exists(abs_path):
+        return abs_path
+
+    return None
+
+
 def load_resources_data(filepath: str = "data/resources.json") -> dict:
     """
     Pure function to load resource definitions from JSON.
@@ -34,20 +58,12 @@ def load_resources_data(filepath: str = "data/resources.json") -> dict:
     """
     import copy
 
-    if not os.path.exists(filepath):
-        # Try absolute path based on this file's location
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(os.path.dirname(base_dir))  # game/core -> game -> project
-        abs_path = os.path.join(project_root, filepath)
-
-        if os.path.exists(abs_path):
-            filepath = abs_path
-        else:
-            # File doesn't exist - use defaults
-            return copy.deepcopy(_get_default_resources())
+    resolved_path = _resolve_resource_path(filepath)
+    if resolved_path is None:
+        return copy.deepcopy(_get_default_resources())
 
     try:
-        data = load_json_required(filepath)
+        data = load_json_required(resolved_path)
 
         result = {}
         # Parse resources list into dict keyed by ID
@@ -58,7 +74,7 @@ def load_resources_data(filepath: str = "data/resources.json") -> dict:
 
         return result
 
-    except Exception as e:
+    except Exception:
         # Fall back to defaults on error
         return copy.deepcopy(_get_default_resources())
 
@@ -75,23 +91,14 @@ def load_resources(filepath: str = "data/resources.json") -> None:
     """
     resources = get_resource_registry()
 
-    if not os.path.exists(filepath):
-        # Try absolute path based on this file's location
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(os.path.dirname(base_dir))  # game/core -> game -> project
-        abs_path = os.path.join(project_root, filepath)
-
-        if os.path.exists(abs_path):
-            filepath = abs_path
-        else:
-            # File doesn't exist - use defaults
-            log_warning(f"Resources file not found at {filepath}, using defaults")
-            default_resources = _get_default_resources()
-            resources.update(default_resources)
-            return
+    resolved_path = _resolve_resource_path(filepath)
+    if resolved_path is None:
+        log_warning(f"Resources file not found at {filepath}, using defaults")
+        resources.update(_get_default_resources())
+        return
 
     try:
-        data = load_json_required(filepath)
+        data = load_json_required(resolved_path)
 
         # Parse resources list into dict keyed by ID
         for res_def in data.get('resources', []):
@@ -103,6 +110,4 @@ def load_resources(filepath: str = "data/resources.json") -> None:
 
     except Exception as e:
         log_warning(f"Failed to load resources from {filepath}: {e}")
-        # Fall back to defaults
-        default_resources = _get_default_resources()
-        resources.update(default_resources)
+        resources.update(_get_default_resources())

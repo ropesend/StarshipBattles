@@ -2,13 +2,27 @@
 Registry Access Patterns
 ========================
 
-TIER 1 - Utility Functions (Raw Access):
+TIER 1 - Utility Functions (Raw Access) [DEPRECATED]:
     from game.core.registry import get_component_registry
     components = get_component_registry()
 
 TIER 2 - Domain Services (Computed Access):
     from game.strategy.services.ship_stats_service import ShipStatsService
     stats = ShipStatsService.calculate_ship_stats(design)
+
+TIER 3 - Dependency Injection (PROJ-27) [RECOMMENDED]:
+    from game.core.registry import get_default_registry_provider, TestRegistryProvider
+
+    # Production code - uses the shared singleton-backed provider
+    provider = get_default_registry_provider()
+    components = provider.get_components()
+
+    # Test code - uses isolated data
+    provider = TestRegistryProvider(
+        components={"test_laser": {"id": "test_laser"}},
+        modifiers={}
+    )
+    service.calculate_stats(design, registry=provider)
 
 AVOID - Direct Singleton Access:
     # DON'T DO THIS - harder to test
@@ -19,6 +33,28 @@ PROJ-38: Deprecation
 The utility functions (get_component_registry, get_modifier_registry, etc.) are
 deprecated. Use GameRegistries via dependency injection instead.
 """
+
+__all__ = [
+    # Core containers
+    'GameRegistries',
+    'RegistryManager',
+    # DI providers (PROJ-27)
+    'DefaultRegistryProvider',
+    'TestRegistryProvider',
+    'get_default_registry_provider',
+    # Lifecycle functions
+    'get_default_registries',
+    'set_default_registries',
+    'freeze_registry',
+    'clear_registry',
+    'set_validator',
+    # Deprecated utility functions (use DI instead)
+    'get_component_registry',
+    'get_modifier_registry',
+    'get_vehicle_classes',
+    'get_validator',
+    'get_resource_registry',
+]
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
 import threading

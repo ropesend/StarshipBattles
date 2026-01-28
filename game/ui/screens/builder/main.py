@@ -1,7 +1,7 @@
 import json
 import math
 import tkinter
-from tkinter import simpledialog, filedialog
+from tkinter import filedialog
 import os
 
 import pygame
@@ -31,11 +31,11 @@ from .schematic_view import SchematicView
 from .interaction_controller import InteractionController
 from .event_bus import EventBus
 
-# Initialize Tkinter root and hide it (for simpledialog)
+# Initialize Tkinter root and hide it (for filedialog)
 try:
     tk_root = tkinter.Tk()
     tk_root.withdraw()
-except:
+except Exception:
     tk_root = None
 
 # Colors
@@ -48,9 +48,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 from .detail_panel import ComponentDetailPanel
-
-
-
 
 
 
