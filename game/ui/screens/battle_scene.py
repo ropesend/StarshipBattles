@@ -5,6 +5,9 @@ separation between UI and simulation logic.
 
 Can optionally use BattleController for unified battle mode support
 (manual, test, strategy, hypothetical battles).
+
+PROJ-40: Removed unused AIController import. BattleService is instantiated at
+runtime so must remain a runtime import.
 """
 import pygame
 import math
@@ -14,7 +17,6 @@ from typing import Optional, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.config import UIConfig
-from game.ai.controller import AIController
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_screen import BattleInterface

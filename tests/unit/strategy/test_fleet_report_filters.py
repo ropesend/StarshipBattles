@@ -290,51 +290,54 @@ class TestFilterShips:
 
 
 class TestHasWarpCapability:
-    """Test cases for has_warp_capability function."""
+    """Test cases for ShipStatsService.has_warp_capability function.
+
+    PROJ-40: Updated to use canonical import from ShipStatsService directly.
+    """
 
     def test_ship_without_warp_drive(self):
         """Ship without WarpJump ability should return False."""
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         ship = make_mock_ship(mass=1000, warp_tonnage=None)
-        assert has_warp_capability(ship) is False
+        assert ShipStatsService.has_warp_capability(ship) is False
 
     def test_ship_with_sufficient_warp_drive(self):
         """Ship with WarpJump exceeding mass should return True."""
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         ship = make_mock_ship(mass=1000, warp_tonnage=1500)
-        assert has_warp_capability(ship) is True
+        assert ShipStatsService.has_warp_capability(ship) is True
 
     def test_ship_with_equal_warp_tonnage(self):
         """Ship with WarpJump equal to mass should return True."""
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         ship = make_mock_ship(mass=1000, warp_tonnage=1000)
-        assert has_warp_capability(ship) is True
+        assert ShipStatsService.has_warp_capability(ship) is True
 
     def test_ship_with_insufficient_warp_drive(self):
         """Ship with WarpJump less than mass should return False."""
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         ship = make_mock_ship(mass=1000, warp_tonnage=500)
-        assert has_warp_capability(ship) is False
+        assert ShipStatsService.has_warp_capability(ship) is False
 
     def test_ship_with_zero_mass(self):
         """Ship with zero mass should return False (edge case)."""
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         ship = make_mock_ship(mass=0, warp_tonnage=1000)
-        assert has_warp_capability(ship) is False
+        assert ShipStatsService.has_warp_capability(ship) is False
 
     def test_warp_capability_with_expected_stats(self):
         """Warp capability determined from expected_stats should work."""
-        from game.ui.screens.fleet_report_filters import has_warp_capability
+        from game.strategy.services.ship_stats_service import ShipStatsService
 
         ship = make_mock_ship(mass=1000, warp_tonnage=1500)
         # Verify expected_stats has warp_max_tonnage
         assert ship.design_data['expected_stats']['warp_max_tonnage'] == 1500
-        assert has_warp_capability(ship) is True
+        assert ShipStatsService.has_warp_capability(ship) is True
 
 
 class TestFilterShipsWarp:

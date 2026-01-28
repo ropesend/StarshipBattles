@@ -3,13 +3,16 @@ Unit tests for BuilderViewModel class.
 
 Tests the MVVM ViewModel for the Ship Builder, verifying state management
 and event emission without requiring Pygame display.
+
+PROJ-40: Updated to use DI pattern with WorkshopContext.
 """
 import pytest
 from unittest.mock import MagicMock, patch
 
 import pygame
 
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
+from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -52,11 +55,35 @@ def pygame_and_data():
 
 
 @pytest.fixture
-def viewmodel_setup(pygame_and_data):
-    """Per-test fixture to create a fresh viewmodel."""
+def mock_registries(pygame_and_data):
+    """Create GameRegistries for DI testing.
+
+    PROJ-40: Load real data into registries.
+    """
+    from game.simulation.components.component import load_components_data, load_modifiers_data
+    from game.simulation.entities.ship_loader import load_vehicle_classes_data
+
+    return GameRegistries(
+        components=load_components_data(),
+        modifiers=load_modifiers_data(),
+        vehicle_classes=load_vehicle_classes_data(),
+        resources={}
+    )
+
+
+@pytest.fixture
+def viewmodel_setup(pygame_and_data, mock_registries):
+    """Per-test fixture to create a fresh viewmodel.
+
+    PROJ-40: Updated to use DI with WorkshopContext.
+    """
     event_bus = MockEventBus()
+    context = WorkshopContext(
+        mode=WorkshopMode.STANDALONE,
+        registries=mock_registries
+    )
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel as BuilderViewModel
-    viewmodel = BuilderViewModel(event_bus, 1280, 720)
+    viewmodel = BuilderViewModel(event_bus, 1280, 720, context=context)
 
     yield {'event_bus': event_bus, 'viewmodel': viewmodel}
 

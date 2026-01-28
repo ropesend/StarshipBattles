@@ -24,42 +24,57 @@ class MockSession:
 
 @pytest.fixture
 def mock_design_library():
-    """Mock DesignLibrary for testing."""
-    with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock:
-        # Create mock designs
-        mock_instance = MagicMock()
+    """Mock DesignLibrary for testing.
 
-        complex_design = MagicMock()
-        complex_design.design_id = "mining_complex_mk1"
-        complex_design.name = "Mining Complex"
-        complex_design.vehicle_type = "Planetary Complex"
+    PROJ-40: Updated to create mock directly instead of patching.
+    Now injected via DI in build_queue_screen fixture.
+    """
+    mock_instance = MagicMock()
 
-        ship_design = MagicMock()
-        ship_design.design_id = "frigate_mk1"
-        ship_design.name = "Frigate"
-        ship_design.vehicle_type = "Ship"
+    complex_design = MagicMock()
+    complex_design.design_id = "mining_complex_mk1"
+    complex_design.name = "Mining Complex"
+    complex_design.vehicle_type = "Planetary Complex"
 
-        satellite_design = MagicMock()
-        satellite_design.design_id = "defense_sat_mk1"
-        satellite_design.name = "Defense Satellite"
-        satellite_design.vehicle_type = "Satellite"
+    ship_design = MagicMock()
+    ship_design.design_id = "frigate_mk1"
+    ship_design.name = "Frigate"
+    ship_design.vehicle_type = "Ship"
 
-        fighter_design = MagicMock()
-        fighter_design.design_id = "interceptor_mk1"
-        fighter_design.name = "Interceptor"
-        fighter_design.vehicle_type = "Fighter"
+    satellite_design = MagicMock()
+    satellite_design.design_id = "defense_sat_mk1"
+    satellite_design.name = "Defense Satellite"
+    satellite_design.vehicle_type = "Satellite"
 
-        mock_instance.scan_designs.return_value = [
-            complex_design, ship_design, satellite_design, fighter_design
-        ]
+    fighter_design = MagicMock()
+    fighter_design.design_id = "interceptor_mk1"
+    fighter_design.name = "Interceptor"
+    fighter_design.vehicle_type = "Fighter"
 
-        mock.return_value = mock_instance
-        yield mock
+    mock_instance.scan_designs.return_value = [
+        complex_design, ship_design, satellite_design, fighter_design
+    ]
+    mock_instance.designs_folder = "test_designs"
+    mock_instance.load_design_data.return_value = None
+
+    return mock_instance
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library):
-    """Create BuildQueueScreen for testing."""
+def mock_design_loader():
+    """Mock SimulationDesignLoader for testing.
+
+    PROJ-40: New fixture for DI injection.
+    """
+    return MagicMock()
+
+
+@pytest.fixture
+def build_queue_screen(mock_design_library, mock_design_loader):
+    """Create BuildQueueScreen for testing.
+
+    PROJ-40: Updated to use DI injection for dependencies.
+    """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
@@ -90,9 +105,16 @@ def build_queue_screen(mock_design_library):
     # Mock callback
     on_close = MagicMock()
 
-    # Import and create screen
+    # Import and create screen with injected dependencies
     from game.ui.screens.build_queue_screen import BuildQueueScreen
-    bq_screen = BuildQueueScreen(manager, planet, session, on_close)
+    bq_screen = BuildQueueScreen(
+        manager,
+        planet,
+        session,
+        on_close,
+        design_library=mock_design_library,
+        design_loader=mock_design_loader
+    )
 
     yield bq_screen
 
@@ -226,8 +248,11 @@ def test_bottom_bar_exists(build_queue_screen):
     assert build_queue_screen.btn_close is not None
 
 
-def test_no_savegame_path_handled_gracefully(mock_design_library):
-    """Test that BuildQueueScreen handles None savegame_path without crashing."""
+def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_loader):
+    """Test that BuildQueueScreen handles None savegame_path without crashing.
+
+    PROJ-40: Updated to use DI injection for dependencies.
+    """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
@@ -256,11 +281,18 @@ def test_no_savegame_path_handled_gracefully(mock_design_library):
     session = MockSession()
     session.savegame_path = None
 
-    # Should not crash
+    # Should not crash - pass injected dependencies
     from game.ui.screens.build_queue_screen import BuildQueueScreen
-    screen_obj = BuildQueueScreen(manager, planet, session, lambda: None)
+    screen_obj = BuildQueueScreen(
+        manager,
+        planet,
+        session,
+        lambda: None,
+        design_library=mock_design_library,
+        design_loader=mock_design_loader
+    )
 
-    # Should create with no designs available
+    # Should create with design_library injected
     assert screen_obj is not None
     assert screen_obj.design_library is not None
 
@@ -355,9 +387,12 @@ def test_add_ship_fails_without_shipyard(build_queue_screen):
 
 
 class TestBuildQueuePortraitLogging:
-    """Tests for portrait loading error logging (ERR-011)."""
+    """Tests for portrait loading error logging (ERR-011).
 
-    def test_portrait_load_failure_logs_warning(self, caplog):
+    PROJ-40: Updated to use DI injection for dependencies.
+    """
+
+    def test_portrait_load_failure_logs_warning(self, caplog, mock_design_library, mock_design_loader):
         """Portrait loading failure should log warning with path context."""
         import logging
         import os
@@ -388,40 +423,43 @@ class TestBuildQueuePortraitLogging:
         session = MockSession()
         on_close = MagicMock()
 
-        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_lib:
-            mock_lib.return_value = MagicMock()
-            mock_lib.return_value.scan_designs.return_value = []
+        from game.ui.screens.build_queue_screen import BuildQueueScreen
+        bq_screen = BuildQueueScreen(
+            manager,
+            planet,
+            session,
+            on_close,
+            design_library=mock_design_library,
+            design_loader=mock_design_loader
+        )
 
-            from game.ui.screens.build_queue_screen import BuildQueueScreen
-            bq_screen = BuildQueueScreen(manager, planet, session, on_close)
+        # Create mock design
+        mock_design = MagicMock()
+        mock_design.ship_class = "TestClass"
+        mock_design.vehicle_type = "Ship"
 
-            # Create mock design
-            mock_design = MagicMock()
-            mock_design.ship_class = "TestClass"
-            mock_design.vehicle_type = "Ship"
+        # Simulate file exists but loading fails
+        # Make os.path.exists return True for the first portrait path
+        with patch('os.path.exists', return_value=True):
+            # Make pygame.image.load always raise an exception
+            with patch('pygame.image.load', side_effect=pygame.error("Cannot identify image file")):
+                with caplog.at_level(logging.WARNING):
+                    result = bq_screen._load_design_portrait(mock_design, 64)
 
-            # Simulate file exists but loading fails
-            # Make os.path.exists return True for the first portrait path
-            with patch('os.path.exists', return_value=True):
-                # Make pygame.image.load always raise an exception
-                with patch('pygame.image.load', side_effect=pygame.error("Cannot identify image file")):
-                    with caplog.at_level(logging.WARNING):
-                        result = bq_screen._load_design_portrait(mock_design, 64)
+        # Should have returned placeholder (since all paths failed)
+        assert result is not None  # Placeholder surface
 
-            # Should have returned placeholder (since all paths failed)
-            assert result is not None  # Placeholder surface
-
-            # Should have logged a warning about the failed load
-            warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
-            assert len(warning_logs) > 0, "Should log warning when portrait load fails"
-            warning_text = ' '.join(r.message for r in warning_logs)
-            # Warning should include the path
-            assert 'portrait' in warning_text.lower() or 'load' in warning_text.lower(), \
-                f"Warning should mention portrait load failure. Got: {warning_text}"
+        # Should have logged a warning about the failed load
+        warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
+        assert len(warning_logs) > 0, "Should log warning when portrait load fails"
+        warning_text = ' '.join(r.message for r in warning_logs)
+        # Warning should include the path
+        assert 'portrait' in warning_text.lower() or 'load' in warning_text.lower(), \
+            f"Warning should mention portrait load failure. Got: {warning_text}"
 
         pygame.quit()
 
-    def test_portrait_placeholder_fallback_no_spam(self, caplog):
+    def test_portrait_placeholder_fallback_no_spam(self, caplog, mock_design_library, mock_design_loader):
         """When no portrait exists, fallback to placeholder without log spam."""
         import logging
         pygame.init()
@@ -449,31 +487,34 @@ class TestBuildQueuePortraitLogging:
 
         session = MockSession()
 
-        with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock_lib:
-            mock_lib.return_value = MagicMock()
-            mock_lib.return_value.scan_designs.return_value = []
+        from game.ui.screens.build_queue_screen import BuildQueueScreen
+        bq_screen = BuildQueueScreen(
+            manager,
+            planet,
+            session,
+            lambda: None,
+            design_library=mock_design_library,
+            design_loader=mock_design_loader
+        )
 
-            from game.ui.screens.build_queue_screen import BuildQueueScreen
-            bq_screen = BuildQueueScreen(manager, planet, session, lambda: None)
+        mock_design = MagicMock()
+        mock_design.ship_class = "NonexistentClass"
+        mock_design.vehicle_type = "Ship"
 
-            mock_design = MagicMock()
-            mock_design.ship_class = "NonexistentClass"
-            mock_design.vehicle_type = "Ship"
+        # No paths exist - should silently fall through to placeholder
+        with patch('os.path.exists', return_value=False):
+            with caplog.at_level(logging.WARNING):
+                result = bq_screen._load_design_portrait(mock_design, 64)
 
-            # No paths exist - should silently fall through to placeholder
-            with patch('os.path.exists', return_value=False):
-                with caplog.at_level(logging.WARNING):
-                    result = bq_screen._load_design_portrait(mock_design, 64)
+        # Should return placeholder surface
+        assert result is not None
+        assert isinstance(result, pygame.Surface)
 
-            # Should return placeholder surface
-            assert result is not None
-            assert isinstance(result, pygame.Surface)
-
-            # Should NOT log warnings when files simply don't exist
-            # (that's expected behavior, not an error)
-            portrait_warnings = [r for r in caplog.records
-                                if 'portrait' in r.message.lower() or 'load' in r.message.lower()]
-            assert len(portrait_warnings) == 0, \
-                "Should not spam warnings when portraits simply don't exist"
+        # Should NOT log warnings when files simply don't exist
+        # (that's expected behavior, not an error)
+        portrait_warnings = [r for r in caplog.records
+                            if 'portrait' in r.message.lower() or 'load' in r.message.lower()]
+        assert len(portrait_warnings) == 0, \
+            "Should not spam warnings when portraits simply don't exist"
 
         pygame.quit()

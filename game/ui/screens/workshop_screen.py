@@ -13,8 +13,7 @@ from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
-
-from game.simulation.entities.ship import LayerType
+from game.core.constants import LayerType
 from game.core.registry import get_vehicle_classes
 from game.simulation.components.component import (
     get_all_components

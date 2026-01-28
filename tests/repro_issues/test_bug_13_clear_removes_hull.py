@@ -1,15 +1,21 @@
+"""
+BUG-13 Reproduction Test: Clear Design removes hull.
+
+PROJ-40: Updated to use DI pattern with WorkshopContext.
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
 from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 
 @pytest.fixture
 def simple_ship_registry():
     RegistryManager.instance().clear()
-    
+
     classes = {
         "Escort": {
             "type": "Ship",
@@ -20,7 +26,7 @@ def simple_ship_registry():
             ]
         }
     }
-    
+
     components = {
         "hull_escort": {
             "id": "hull_escort",
@@ -30,26 +36,41 @@ def simple_ship_registry():
             "hp": 500
         }
     }
-    
+
     with patch('game.core.registry.get_vehicle_classes', return_value=classes), \
          patch('game.simulation.entities.ship.get_vehicle_classes', return_value=classes), \
          patch('game.simulation.components.component.get_component_registry', return_value={k: Component(v) for k,v in components.items()}):
-        yield
+        yield classes, components
 
 def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     """
     BUG-13 Reproduction: Verify that _clear_design removes the hull component.
     """
+    classes, components = simple_ship_registry
+
     # Instantiate DesignWorkshopGUI without calling __init__ to avoid UI complexity
     gui = DesignWorkshopGUI.__new__(DesignWorkshopGUI)
-    
+
     # Setup minimal required state - MVVM architecture requires viewmodel
+    # PROJ-40: Use DI pattern with WorkshopContext
     from ui.builder.event_bus import EventBus
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 
+    # Create registries for DI
+    registries = GameRegistries(
+        components={k: Component(v) for k, v in components.items()},
+        modifiers={},
+        vehicle_classes=classes,
+        resources={}
+    )
+    context = WorkshopContext(
+        mode=WorkshopMode.STANDALONE,
+        registries=registries
+    )
+
     gui.event_bus = EventBus()
-    gui.viewmodel = WorkshopViewModel(gui.event_bus, 1280, 720)
-    
+    gui.viewmodel = WorkshopViewModel(gui.event_bus, 1280, 720, context=context)
+
     # Setup ship via viewmodel
     gui.viewmodel._ship = Ship("Test Ship", 0, 0, (255,255,255), ship_class="Escort")
     gui.viewmodel._template_modifiers = {"some_mod": 1.0}

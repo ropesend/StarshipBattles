@@ -153,6 +153,50 @@ class TestClass:
    - Fixed file paths (use temp directories)
    - Port conflicts for network tests
 
+## Naming Conventions
+
+### File Naming
+- **Test files**: Must start with `test_` prefix: `test_ship.py`
+- **Utility scripts**: Must start with `_` prefix to avoid pytest collection: `_verify_imports.py`
+- **Performance scripts**: Keep in `unit/performance/` directory (not collected by default)
+
+### Function/Method Naming
+- **Test functions**: Must start with `test_` prefix
+- **Test helpers**: Regular function names (no prefix needed)
+- **Fixtures**: Descriptive names without `test_` prefix
+
+### Class Naming
+- **Test classes**: Must start with `Test` prefix: `class TestShip:`
+- **Helper classes**: Regular class names (no prefix to avoid collection)
+
+## Shared Test Helpers
+
+The following helpers are available from `tests/conftest.py`:
+
+```python
+from tests.conftest import make_mock_ship_instance
+
+# Create a mock ShipInstance for testing
+ship = make_mock_ship_instance(name="Test Ship", owner_id=1)
+```
+
+### Available Helpers
+- `make_mock_ship_instance(name, owner_id)` - Creates a mock ShipInstance for strategy layer tests
+
+## Unit vs Integration Tests
+
+### Use Unit Tests When:
+- Testing a single function/method in isolation
+- Testing edge cases and error handling
+- Tests should run in milliseconds
+- External dependencies can be mocked
+
+### Use Integration Tests When:
+- Testing complete workflows (save/load, turn execution)
+- Testing interactions between multiple components
+- Testing real file I/O or state persistence
+- Tests may take seconds to run
+
 ## Troubleshooting
 
 ### Tests Pass in Parallel but Fail Sequentially

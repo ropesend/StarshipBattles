@@ -14,27 +14,45 @@ class MockSession:
 
 @pytest.fixture
 def mock_design_library():
-    """Mock DesignLibrary for testing."""
-    with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock:
-        mock_instance = MagicMock()
-        
-        # Design matching the default "complex" category
-        design = MagicMock()
-        design.design_id = "mining_complex_mk1"
-        design.name = "Mining Complex"
-        design.vehicle_type = "Planetary Complex" # Category matching
-        
-        mock_instance.scan_designs.return_value = [design]
-        mock.return_value = mock_instance
-        yield mock
+    """Mock DesignLibrary for testing.
+
+    PROJ-40: Updated to create mock directly instead of patching.
+    Now injected via DI.
+    """
+    mock_instance = MagicMock()
+
+    # Design matching the default "complex" category
+    design = MagicMock()
+    design.design_id = "mining_complex_mk1"
+    design.name = "Mining Complex"
+    design.vehicle_type = "Planetary Complex"  # Category matching
+
+    mock_instance.scan_designs.return_value = [design]
+    mock_instance.designs_folder = "test_designs"
+    mock_instance.load_design_data.return_value = None
+
+    return mock_instance
+
 
 @pytest.fixture
-def build_queue_screen(mock_design_library):
-    """Create BuildQueueScreen for testing."""
+def mock_design_loader():
+    """Mock SimulationDesignLoader for testing.
+
+    PROJ-40: New fixture for DI injection.
+    """
+    return MagicMock()
+
+
+@pytest.fixture
+def build_queue_screen(mock_design_library, mock_design_loader):
+    """Create BuildQueueScreen for testing.
+
+    PROJ-40: Updated to use DI injection.
+    """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
-    
+
     planet = Planet(
         name="Test Colony",
         location=HexCoord(5, 5),
@@ -53,15 +71,22 @@ def build_queue_screen(mock_design_library):
     )
     planet.owner_id = 1
     planet.id = 100
-    
+
     session = MockSession()
     on_close = MagicMock()
-    
-    bq_screen = BuildQueueScreen(manager, planet, session, on_close)
-    
+
+    bq_screen = BuildQueueScreen(
+        manager,
+        planet,
+        session,
+        on_close,
+        design_library=mock_design_library,
+        design_loader=mock_design_loader
+    )
+
     # CRITICAL: Update manager to calculate rects
     manager.update(0.1)
-    
+
     yield bq_screen
     pygame.quit()
 

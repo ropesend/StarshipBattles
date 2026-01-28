@@ -63,12 +63,12 @@
             "layer_config": "Capital_Standard",
             "default_hull_id": "hull_dreadnought"
         },
-        "Superdreadnaugh": {
+        "Superdreadnought": {
             "type": "Ship",
             "code": "SD",
             "max_mass": 512000,
             "layer_config": "Capital_Standard",
-            "default_hull_id": "hull_superdreadnaugh"
+            "default_hull_id": "hull_superdreadnought"
         },
         "Monitor": {
             "type": "Ship",

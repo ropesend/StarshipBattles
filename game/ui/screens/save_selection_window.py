@@ -9,6 +9,7 @@ Supports:
 """
 import pygame
 import pygame_gui
+from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 
 
@@ -331,7 +332,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
         save_name = self.selected_save.get('save_name', 'Unknown')
 
         # Show confirmation dialog
-        confirm_rect = pygame.Rect(0, 0, 400, 200)
+        confirm_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
         confirm_rect.center = (self.rect.centerx, self.rect.centery)
 
         pygame_gui.windows.UIConfirmationDialog(
@@ -375,7 +376,7 @@ class SaveSelectionWindow(pygame_gui.elements.UIWindow):
             log_debug(f"Failed to delete save: {message}")
 
             # Show error dialog
-            error_rect = pygame.Rect(0, 0, 400, 200)
+            error_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
             error_rect.center = (self.rect.centerx, self.rect.centery)
             pygame_gui.windows.UIMessageWindow(
                 rect=error_rect,

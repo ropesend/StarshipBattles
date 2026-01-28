@@ -27,23 +27,40 @@ class MockSession:
 
 @pytest.fixture
 def mock_design_library():
-    """Mock DesignLibrary for testing."""
-    with patch('game.ui.screens.build_queue_screen.DesignLibrary') as mock:
-        mock_instance = MagicMock()
+    """Mock DesignLibrary for testing.
 
-        complex_design = MagicMock()
-        complex_design.design_id = "mining_complex_mk1"
-        complex_design.name = "Mining Complex"
-        complex_design.vehicle_type = "Planetary Complex"
+    PROJ-40: Updated to create mock directly instead of patching.
+    Now injected via DI in build_queue_screen fixture.
+    """
+    mock_instance = MagicMock()
 
-        mock_instance.scan_designs.return_value = [complex_design]
-        mock.return_value = mock_instance
-        yield mock
+    complex_design = MagicMock()
+    complex_design.design_id = "mining_complex_mk1"
+    complex_design.name = "Mining Complex"
+    complex_design.vehicle_type = "Planetary Complex"
+
+    mock_instance.scan_designs.return_value = [complex_design]
+    mock_instance.designs_folder = "test_designs"
+    mock_instance.load_design_data.return_value = None
+
+    return mock_instance
 
 
 @pytest.fixture
-def build_queue_screen(mock_design_library):
-    """Create BuildQueueScreen for testing."""
+def mock_design_loader():
+    """Mock SimulationDesignLoader for testing.
+
+    PROJ-40: New fixture for DI injection.
+    """
+    return MagicMock()
+
+
+@pytest.fixture
+def build_queue_screen(mock_design_library, mock_design_loader):
+    """Create BuildQueueScreen for testing.
+
+    PROJ-40: Updated to use DI injection for dependencies.
+    """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
@@ -74,9 +91,16 @@ def build_queue_screen(mock_design_library):
     # Mock callback
     on_close = MagicMock()
 
-    # Import and create screen
+    # Import and create screen with injected dependencies
     from game.ui.screens.build_queue_screen import BuildQueueScreen
-    bq_screen = BuildQueueScreen(manager, planet, session, on_close)
+    bq_screen = BuildQueueScreen(
+        manager,
+        planet,
+        session,
+        on_close,
+        design_library=mock_design_library,
+        design_loader=mock_design_loader
+    )
 
     yield bq_screen
 

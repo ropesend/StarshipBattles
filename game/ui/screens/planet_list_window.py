@@ -944,7 +944,7 @@ class PlanetListWindow(UIWindow):
     def _show_screenshot_toast(self):
         """Show a brief toast notification for screenshot feedback."""
         try:
-            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
             toast_rect.center = (self.rect.width // 2, 80)
             pygame_gui.windows.UIMessageWindow(
                 rect=toast_rect,

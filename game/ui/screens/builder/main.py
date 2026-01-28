@@ -1,3 +1,15 @@
+"""
+Legacy standalone ship builder GUI.
+
+This is the original BuilderSceneGUI implementation, used for standalone
+ship design testing. The newer DesignWorkshopGUI (workshop_screen.py) is
+the production version with MVVM architecture and dependency injection.
+
+ARCHITECTURAL NOTE: This module has cross-layer imports to simulation layer
+(Ship, VEHICLE_CLASSES, get_all_components, ShipIO). These are acceptable for
+a standalone development/testing tool that directly manipulates ship designs.
+For production code, use WorkshopContext with dependency injection instead.
+"""
 import json
 import math
 import tkinter
@@ -13,8 +25,9 @@ from pygame_gui.elements import (
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.profiling import profile_action, profile_block
+from game.core.constants import LayerType
 
-from game.simulation.entities.ship import Ship, LayerType, VEHICLE_CLASSES
+from game.simulation.entities.ship import Ship, VEHICLE_CLASSES
 from game.simulation.components.component import (
     get_all_components, MODIFIER_REGISTRY
 )
@@ -35,7 +48,10 @@ from .event_bus import EventBus
 try:
     tk_root = tkinter.Tk()
     tk_root.withdraw()
-except Exception:
+except (tkinter.TclError, RuntimeError) as e:
+    # TclError occurs when display unavailable; RuntimeError when Tcl not initialized
+    import logging
+    logging.getLogger(__name__).debug(f"Tkinter not available: {e}")
     tk_root = None
 
 # Colors

@@ -1,25 +1,39 @@
 """
 Build Queue Screen - Full-screen interface for managing planetary construction.
 """
+from __future__ import annotations
 
 import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 import pygame_gui.windows
-from typing import Optional, Callable
-from game.strategy.data.planet import Planet
-from game.strategy.systems.design_library import DesignLibrary
-from game.simulation.services.design_loader import SimulationDesignLoader
+from typing import TYPE_CHECKING, Optional, Callable
+
+from game.core.config import UIConfig
 from game.core.logger import log_info, log_warning, log_error, log_debug
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.panels.design_report_panel import DesignReportPanel
 
+if TYPE_CHECKING:
+    from game.strategy.data.planet import Planet
+    from game.strategy.systems.design_library import DesignLibrary
+    from game.simulation.services.design_loader import SimulationDesignLoader
+
 
 class BuildQueueScreen:
     """Full-screen modal interface for managing build queues on planets."""
 
-    def __init__(self, manager: pygame_gui.UIManager, planet: Planet, session, on_close_callback: Callable, portrait_surface: Optional[pygame.Surface] = None):
+    def __init__(
+        self,
+        manager: pygame_gui.UIManager,
+        planet: Planet,
+        session,
+        on_close_callback: Callable,
+        portrait_surface: Optional[pygame.Surface] = None,
+        design_library: DesignLibrary = None,
+        design_loader: SimulationDesignLoader = None
+    ):
         """
         Initialize the build queue screen.
 
@@ -29,6 +43,8 @@ class BuildQueueScreen:
             session: Game session with current_empire and savegame_path
             on_close_callback: Function to call when screen closes
             portrait_surface: Optional pygame Surface for planet portrait
+            design_library: Injected DesignLibrary instance (PROJ-40: DI pattern)
+            design_loader: Injected SimulationDesignLoader instance (PROJ-40: DI pattern)
         """
         self.manager = manager
         self.planet = planet
@@ -44,8 +60,9 @@ class BuildQueueScreen:
         self.drag_start_pos = None  # Track mouse position for drag threshold
         self.drag_threshold = 10  # Pixels to move before starting drag
 
-        # Load design library
-        from game.core.logger import log_debug, log_info
+        # PROJ-40: Use injected dependencies
+        self.design_library = design_library
+        self.design_loader = design_loader
 
         # Validate required attributes
         if not hasattr(planet, 'owner_id'):
@@ -53,18 +70,9 @@ class BuildQueueScreen:
         if not hasattr(planet, 'name'):
             log_warning("BuildQueueScreen: planet missing 'name' attribute")
 
-        savegame_path = getattr(session, 'save_path', None)  # FIXED: was 'savegame_path', should be 'save_path'
-
-        # FIXED: Use planet's owner_id to determine which empire's designs to load
-        # session.current_empire doesn't exist - planet.owner_id tells us who owns this planet
-        empire_id = planet.owner_id
-
-        log_info(f"BuildQueue: Initializing DesignLibrary for planet '{planet.name}' (owner_id={empire_id})")
-        log_debug(f"BuildQueue: save_path='{savegame_path}', empire_id={empire_id}")
-
-        self.design_library = DesignLibrary(savegame_path, empire_id)
-
-        log_info(f"BuildQueue: DesignLibrary created with designs_folder: {self.design_library.designs_folder}")
+        log_info(f"BuildQueue: Initialized for planet '{planet.name}' (owner_id={planet.owner_id})")
+        if self.design_library:
+            log_info(f"BuildQueue: DesignLibrary with designs_folder: {self.design_library.designs_folder}")
 
         # Get screen dimensions
         screen_size = manager.get_root_container().get_container().get_size()
@@ -635,9 +643,8 @@ class BuildQueueScreen:
                 self.design_report.show_placeholder()
                 return
 
-            # Create Ship using SimulationDesignLoader (simulation layer)
-            loader = SimulationDesignLoader()
-            ship = loader.load_ship_from_design_data(
+            # PROJ-40: Use injected design_loader instead of creating new instance
+            ship = self.design_loader.load_ship_from_design_data(
                 design_data,
                 center_x=1920 // 2,
                 center_y=1080 // 2
@@ -852,7 +859,7 @@ class BuildQueueScreen:
     def _show_screenshot_toast(self):
         """Show a brief toast notification for screenshot feedback."""
         try:
-            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
             toast_rect.center = (self.screen_width // 2, 80)
             pygame_gui.windows.UIMessageWindow(
                 rect=toast_rect,

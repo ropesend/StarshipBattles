@@ -10,7 +10,6 @@ from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.strategy.data.hex_math import pixel_to_hex
-from game.strategy.data.fleet import Fleet
 
 
 class StrategyInputHandler:
@@ -510,7 +509,7 @@ class StrategyInputHandler:
         """Show a brief toast notification for screenshot feedback."""
         try:
             import pygame_gui.windows
-            toast_rect = pygame.Rect(0, 0, 300, 60)
+            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
             toast_rect.center = (self.scene.screen_width // 2, 80)
             pygame_gui.windows.UIMessageWindow(
                 rect=toast_rect,

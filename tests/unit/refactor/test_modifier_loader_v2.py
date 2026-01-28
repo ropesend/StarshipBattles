@@ -86,8 +86,11 @@ class TestModifierLoaderV2:
         assert mass_effect.value == pytest.approx(2.0)
         assert hp_effect.value == pytest.approx(4.0)
 
-    def test_load_v2_modifiers_file(self):
-        """Should load modifiers_v2.json file correctly."""
+    def test_load_modifiers_file(self):
+        """Should load modifiers.json file correctly.
+
+        Note: modifiers_v2.json was consolidated into modifiers.json in Phase 9 (PROJ-40).
+        """
         from game.simulation.components.component import load_modifiers
         from game.core.registry import get_modifier_registry
 
@@ -95,8 +98,8 @@ class TestModifierLoaderV2:
         reg = get_modifier_registry()
         reg.clear()
 
-        # Load V2 format
-        load_modifiers('data/modifiers_v2.json')
+        # Load canonical modifiers file (V2 format)
+        load_modifiers('data/modifiers.json')
 
         # Verify some modifiers loaded
         assert 'hardened_mount' in reg

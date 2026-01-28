@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import pygame
 import pygame_gui
@@ -6,37 +7,51 @@ import os
 import math
 import tkinter
 from tkinter import filedialog, simpledialog
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Callable, Any
+
+if TYPE_CHECKING:
+    from pygame import Rect, Surface
 
 # Initialize Tkinter root and hide it
 try:
     tk_root = tkinter.Tk()
     tk_root.withdraw()
-except Exception:
+except (tkinter.TclError, RuntimeError):
+    # TclError occurs when display unavailable; RuntimeError when Tcl not initialized
     tk_root = None
 
 class FormationCore:
-    def __init__(self):
+    """Core data model for formation editor, managing arrow positions and attributes."""
+
+    arrows: List[List[float]]
+    arrow_attrs: List[Dict[str, str]]
+    selected_indices: Set[int]
+    shape_count: int
+
+    def __init__(self) -> None:
         # Data
         # list of [x, y] coordinates (World Space)
-        self.arrows = [] 
+        self.arrows: List[List[float]] = []
         # Parallel list of attributes: [{'rotation_mode': 'relative'}, ...]
-        self.arrow_attrs = []
+        self.arrow_attrs: List[Dict[str, str]] = []
         # Multi-selection: set of indices
-        self.selected_indices = set()
-        self.shape_count = 5
+        self.selected_indices: Set[int] = set()
+        self.shape_count: int = 5
 
-    def add_arrow(self, pos):
+    def add_arrow(self, pos: Tuple[float, float]) -> None:
+        """Add a new arrow at the given world position."""
         self.arrows.append(list(pos))
         self.arrow_attrs.append({'rotation_mode': 'relative'})
         self.selected_indices = {len(self.arrows) - 1}
 
-    def move_arrow(self, from_idx, to_idx):
+    def move_arrow(self, from_idx: int, to_idx: int) -> None:
+        """Move an arrow from one index to another in the list order."""
         if from_idx == to_idx: return
         # Adjust indices if needed to prevent OOB
         if from_idx < 0 or from_idx >= len(self.arrows): return
         if to_idx < 0: to_idx = 0
         if to_idx >= len(self.arrows): to_idx = len(self.arrows) - 1
-        
+
         item = self.arrows.pop(from_idx)
         self.arrows.insert(to_idx, item)
         attr = self.arrow_attrs.pop(from_idx)
@@ -44,7 +59,8 @@ class FormationCore:
         # Update selection to follow the item
         self.selected_indices = {to_idx}
 
-    def delete_selected(self):
+    def delete_selected(self) -> None:
+        """Delete all currently selected arrows."""
         if not self.selected_indices: return
         to_delete = sorted(list(self.selected_indices), reverse=True)
         for idx in to_delete:
@@ -53,10 +69,11 @@ class FormationCore:
                 self.arrow_attrs.pop(idx)
         self.selected_indices = set()
 
-    def clone_selection(self, offset):
+    def clone_selection(self, offset: float) -> None:
+        """Clone selected arrows with an offset."""
         if not self.selected_indices: return
         sorted_indices = sorted(list(self.selected_indices))
-        new_indices = set()
+        new_indices: Set[int] = set()
         for idx in sorted_indices:
             ax, ay = self.arrows[idx]
             self.arrows.append([ax + offset, ay + offset])
@@ -64,12 +81,13 @@ class FormationCore:
             new_indices.add(len(self.arrows) - 1)
         self.selected_indices = new_indices
 
-    def clear_all(self):
+    def clear_all(self) -> None:
+        """Clear all arrows and selection."""
         self.arrows = []
         self.arrow_attrs = []
         self.selected_indices = set()
 
-    def generate_shape(self, shape_type, center_pos, radius=200):
+    def generate_shape(self, shape_type: str, center_pos: Tuple[float, float], radius: float = 200) -> None:
         # Use Core's shape_count
         count = self.shape_count
         cx, cy = center_pos
@@ -141,24 +159,26 @@ class FormationCore:
 
         self.selected_indices = new_indices
 
-    def toggle_rotation_mode(self):
+    def toggle_rotation_mode(self) -> None:
+        """Toggle rotation mode between 'relative' and 'fixed' for selected arrows."""
         if not self.selected_indices: return
-        
+
         # Check current state of selection
         any_relative = False
         for idx in self.selected_indices:
             if self.arrow_attrs[idx].get('rotation_mode', 'relative') == 'relative':
                 any_relative = True
                 break
-        
+
         new_mode = 'fixed' if any_relative else 'relative'
         for idx in self.selected_indices:
             self.arrow_attrs[idx]['rotation_mode'] = new_mode
 
-    def save_to_file(self, filename):
+    def save_to_file(self, filename: str) -> None:
+        """Save formation to JSON file."""
         try:
             # Serialize to new format (List of Dicts) if mixed, or just Dicts
-            out_arrows = []
+            out_arrows: List[Dict[str, Any]] = []
             for i, pos in enumerate(self.arrows):
                 attr = self.arrow_attrs[i]
                 # Format: {"pos": [x, y], "rotation_mode": "relative"}
@@ -166,12 +186,13 @@ class FormationCore:
                     "pos": pos,
                     "rotation_mode": attr.get('rotation_mode', 'relative')
                 })
-            
+
             data = {'arrows': out_arrows}
             with open(filename, 'w') as f: json.dump(data, f, indent=4)
-        except Exception as e: print(f"Error saving: {e}")
+        except (OSError, IOError, json.JSONDecodeError) as e:
+            print(f"Error saving formation: {e}")
 
-    def load_from_file(self, filename):
+    def load_from_file(self, filename: str) -> None:
         try:
             with open(filename, 'r') as f:
                 data = json.load(f)
@@ -188,13 +209,16 @@ class FormationCore:
                             self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
                     
                     self.selected_indices = set()
-        except Exception as e: print(f"Error loading: {e}")
+        except (OSError, IOError, json.JSONDecodeError, KeyError) as e:
+            print(f"Error loading formation: {e}")
 
 class FormationEditorScene:
-    def __init__(self, screen_width, screen_height, on_return_menu):
-        self.width = screen_width
-        self.height = screen_height
-        self.on_return_menu = on_return_menu
+    """Main UI scene for the formation editor with canvas, toolbar, and event handling."""
+
+    def __init__(self, screen_width: int, screen_height: int, on_return_menu: Callable[[], None]) -> None:
+        self.width: int = screen_width
+        self.height: int = screen_height
+        self.on_return_menu: Callable[[], None] = on_return_menu
         
         # Instantiate Core Model
         self.core = FormationCore()
@@ -393,42 +417,54 @@ class FormationEditorScene:
         )
 
     @property
-    def arrows(self): return self.core.arrows
+    def arrows(self) -> List[List[float]]:
+        """List of arrow positions in world coordinates."""
+        return self.core.arrows
 
     @property
-    def arrow_attrs(self): return self.core.arrow_attrs
-    
+    def arrow_attrs(self) -> List[Dict[str, str]]:
+        """List of arrow attributes (rotation mode, etc.)."""
+        return self.core.arrow_attrs
+
     @property
-    def selected_indices(self): return self.core.selected_indices
-    
+    def selected_indices(self) -> Set[int]:
+        """Set of currently selected arrow indices."""
+        return self.core.selected_indices
+
     @selected_indices.setter
-    def selected_indices(self, val): self.core.selected_indices = val
-    
+    def selected_indices(self, val: Set[int]) -> None:
+        self.core.selected_indices = val
+
     # --- Coordinate Transforms ---
-    def world_to_screen(self, wx, wy):
+    def world_to_screen(self, wx: float, wy: float) -> Tuple[float, float]:
+        """Convert world coordinates to screen coordinates."""
         cx, cy = self.width / 2, (self.height - self.toolbar_height) / 2
         sx = (wx * self.camera_zoom) + self.camera_pan[0] + cx
         sy = (wy * self.camera_zoom) + self.camera_pan[1] + cy
         return sx, sy
 
-    def move_arrow(self, from_idx, to_idx):
+    def move_arrow(self, from_idx: int, to_idx: int) -> None:
+        """Move an arrow from one list position to another."""
         self.core.move_arrow(from_idx, to_idx)
         self.update_info()
 
-    def screen_to_world(self, sx, sy):
+    def screen_to_world(self, sx: float, sy: float) -> Tuple[float, float]:
+        """Convert screen coordinates to world coordinates."""
         cx, cy = self.width / 2, (self.height - self.toolbar_height) / 2
         wx = (sx - self.camera_pan[0] - cx) / self.camera_zoom
         wy = (sy - self.camera_pan[1] - cy) / self.camera_zoom
         return wx, wy
 
-    def snap(self, val):
+    def snap(self, val: float) -> float:
+        """Snap value to grid if snap is enabled."""
         if not self.snap_enabled: return val
         return round(val / self.grid_size) * self.grid_size
 
-    def get_selection_bounds(self):
+    def get_selection_bounds(self) -> Optional[pygame.Rect]:
+        """Get bounding rectangle of selected arrows, or None if no selection."""
         if not self.selected_indices: return None
-        xs = []
-        ys = []
+        xs: List[float] = []
+        ys: List[float] = []
         for i in self.selected_indices:
             ax, ay = self.arrows[i]
             if self.snap_enabled:
@@ -438,7 +474,7 @@ class FormationEditorScene:
             ys.append(ay)
         return pygame.Rect(min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
 
-    def get_resize_handles(self, bounds_rect):
+    def get_resize_handles(self, bounds_rect: Optional[pygame.Rect]) -> Dict[str, pygame.Rect]:
         if not bounds_rect: return {}
         
         # Inflate bounds by 1 grid unit for drawing box
@@ -468,7 +504,8 @@ class FormationEditorScene:
         return handles
 
     # --- Interaction ---
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> None:
+        """Process pygame events for the formation editor."""
         self.ui_manager.process_events(event)
         
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -846,34 +883,40 @@ class FormationEditorScene:
              if dist < click_radius: return i
         return None
 
-    def add_arrow(self, pos):
+    def add_arrow(self, pos: Tuple[float, float]) -> None:
+        """Add a new arrow at the given world position."""
         self.core.add_arrow(pos)
         self.update_info()
 
-    def delete_selected(self):
+    def delete_selected(self) -> None:
+        """Delete all selected arrows."""
         self.core.delete_selected()
         self.update_info()
 
-    def clone_selection(self):
+    def clone_selection(self) -> None:
+        """Clone selected arrows with offset based on grid settings."""
         offset = self.grid_size if self.snap_enabled else 20
         self.core.clone_selection(offset)
         self.update_info()
 
-    def clear_all(self):
+    def clear_all(self) -> None:
+        """Clear all arrows from the formation."""
         self.core.clear_all()
         self.update_info()
 
-    def generate_shape(self, shape_type):
+    def generate_shape(self, shape_type: str) -> None:
+        """Generate arrows in a predefined shape pattern."""
         cx, cy = self.screen_to_world(self.width/2, (self.height - self.toolbar_height)/2)
         if self.snap_enabled:
              cx = self.snap(cx)
              cy = self.snap(cy)
-        
+
         self.core.shape_count = self.shape_count
         self.core.generate_shape(shape_type, (cx, cy))
         self.update_info()
 
-    def save_formation(self):
+    def save_formation(self) -> None:
+        """Save formation to file via dialog."""
         if not tk_root: return
         base_path = os.path.dirname(os.path.abspath(__file__))
         initial_dir = os.path.join(base_path, "data", "formations")
@@ -886,7 +929,8 @@ class FormationEditorScene:
         if filename:
             self.core.save_to_file(filename)
 
-    def load_formation(self):
+    def load_formation(self) -> None:
+        """Load formation from file via dialog."""
         if not tk_root: return
         base_path = os.path.dirname(os.path.abspath(__file__))
         initial_dir = os.path.join(base_path, "data", "formations")
@@ -899,7 +943,8 @@ class FormationEditorScene:
             self.core.load_from_file(filename)
             self.update_info()
 
-    def update_info(self):
+    def update_info(self) -> None:
+        """Update the UI info label to reflect current arrow count and selection."""
         count = len(self.arrows)
         sel_count = len(self.selected_indices)
         sel_str = f" | Selected: {sel_count}" if sel_count > 0 else ""
@@ -932,10 +977,12 @@ class FormationEditorScene:
              # Let's just assume 50 is enough or create it with dynamic max if we rebuild whole UI.
              pass
 
-    def update(self, dt):
+    def update(self, dt: float) -> None:
+        """Update UI manager and animations."""
         self.ui_manager.update(dt)
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
+        """Draw the formation editor canvas and UI."""
         screen.fill(self.col_bg)
         if self.show_grid: self._draw_grid(screen)
         
@@ -1046,7 +1093,8 @@ class FormationEditorScene:
              pygame.draw.line(screen, grid_col, (0, sy), (self.width, sy))
              y += self.grid_size
 
-    def handle_resize(self, w, h):
+    def handle_resize(self, w: int, h: int) -> None:
+        """Handle window resize by updating dimensions and rebuilding UI."""
         self.width = w
         self.height = h
         self.ui_manager.set_window_resolution((w, h))
