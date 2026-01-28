@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "timestamp": "2026-01-27T16:30:27.849853",
+    "player_name": "Gorgons",
+    "empire_count": 3,
+    "empire_names": [
+        "Gorgons",
+        "Rossarians",
+        "sarians"
+    ],
+    "latest_turn_number": 1,
+    "turn_number": 1,
+    "galaxy_radius": 4000,
+    "system_count": 25
+}
