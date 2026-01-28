@@ -20,7 +20,7 @@
 | 5. Strategy Layer Refinements | **Complete** | [phase_5_checklist.md](phase_5_checklist.md) | 5 Issues |
 | 6. AI System Improvements | **Complete** | [phase_6_checklist.md](phase_6_checklist.md) | 4 Issues |
 | 7. UI Layer Remediation | **SUPERSEDED** | [phase_7_checklist.md](phase_7_checklist.md) | Moved to Phase 12 |
-| 8. Research System Polish | Not Started | [phase_8_checklist.md](phase_8_checklist.md) | 7 Issues |
+| 8. Research System Polish | **Complete** | [phase_8_checklist.md](phase_8_checklist.md) | 7 Issues |
 | 9. Data & Config Cleanup | Not Started | [phase_9_checklist.md](phase_9_checklist.md) | 12 Issues |
 | 10. Test Infrastructure | Not Started | [phase_10_checklist.md](phase_10_checklist.md) | 18 Issues |
 | 11. Original Findings Completion | Not Started | [phase_11_checklist.md](phase_11_checklist.md) | 2 Issues |
@@ -31,12 +31,21 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 8 - Research System Polish
-**Last Action:** Completed Phase 6 - AI System Improvements (4 tasks)
-**Next Action:** Begin Phase 8 - Research System Polish (Phase 7 superseded)
+**Active Phase:** Phase 9 - Data & Config Cleanup
+**Last Action:** Completed Phase 8 - Research System Polish (7 tasks)
+**Next Action:** Begin Phase 9 - Data & Config Cleanup
 **Blockers:** None
 
 ### Recent Work
+- **Phase 8 Complete:** Research system polish (7 tasks)
+  - 8.1: Added type hints to _draw_node_text()
+  - 8.2: Fixed font cache unbounded growth with size quantization
+  - 8.3: Fixed state reference inconsistency (use _selected_node.id consistently)
+  - 8.4: Added detect_cycles() call during validation
+  - 8.6: Documented RP allocation validation with warning logs
+  - 8.7: Added negated requirement visibility (red dashed lines)
+  - 8.8: Documented fragile state assumption
+
 - **Phase 6 Complete:** AI system improvements (4 tasks)
   - 6.1: Fixed CollisionSystem unsafe HP access with getattr defaults
   - 6.2: Added type hints to AIController (5 methods)

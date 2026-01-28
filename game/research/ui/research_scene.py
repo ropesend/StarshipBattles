@@ -70,6 +70,12 @@ class ResearchTreeScene:
             for err in errors[:5]:  # Log first 5 errors
                 log_info(f"TechTree validation: {err}")
 
+        # PROJ-40/NEW-RES-005: Check for cycles in tech tree
+        cycle_errors = self.tech_tree.detect_cycles()
+        if cycle_errors:
+            for err in cycle_errors[:5]:  # Log first 5 cycle errors
+                log_info(f"TechTree validation: {err}")
+
         # Calculate node positions for layout
         self.node_positions = {}  # node_id -> (world_x, world_y)
         self._calculate_layout()

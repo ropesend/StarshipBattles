@@ -567,3 +567,90 @@ class TestResetMethod:
 
         # Slider should be updated to match new tracker's budget
         panel.slider_budget.set_current_value.assert_called_once_with(300)
+
+
+# =============================================================================
+# Test: State Reference Consistency (PROJ-40/NEW-RES-003)
+# =============================================================================
+
+
+class TestStateReferenceConsistency:
+    """Tests for state reference consistency in ResearchControlPanel.
+
+    PROJ-40/NEW-RES-003: Ensure _selected_node.id is used consistently.
+
+    Note: These tests mock the panel object directly instead of instantiating
+    ResearchControlPanel due to pygame_gui dependencies.
+    """
+
+    def test_allocation_uses_internal_selected_node(self, mock_pygame_gui, mock_tracker, mock_tech_tree):
+        """Allocation slider uses _selected_node.id, not external parameter.
+
+        PROJ-40/NEW-RES-003: When allocation slider is moved, should use
+        the internally stored _selected_node, not the parameter.
+        """
+        rc = mock_pygame_gui
+
+        # Create a mock panel with just the needed attributes
+        mock_panel = MagicMock()
+        mock_panel.tracker = mock_tracker
+        mock_panel.slider_allocation = MagicMock()
+        mock_panel.slider_budget = MagicMock()
+        mock_panel.btn_next_turn = MagicMock()
+        mock_panel.btn_reset = MagicMock()
+        mock_panel.btn_close = MagicMock()
+        mock_panel.btn_auto_spread = MagicMock()
+        mock_panel.lbl_allocation_value = MagicMock()
+        mock_panel.slider_allocation.get_current_value.return_value = 50
+
+        # Set up selected node
+        mock_node = MagicMock()
+        mock_node.id = "test_node_id"
+        mock_panel._selected_node = mock_node
+
+        # Set up tracker state
+        mock_state = MagicMock()
+        mock_state.rp_allocation = 50
+        mock_tracker.get_state.return_value = mock_state
+
+        # Create a slider moved event
+        event = MagicMock()
+        event.type = rc.pygame_gui.UI_HORIZONTAL_SLIDER_MOVED
+        event.ui_element = mock_panel.slider_allocation
+
+        # Call handle_event with a DIFFERENT node_id parameter
+        # Use the real method bound to our mock
+        result = rc.ResearchControlPanel.handle_event(mock_panel, event, "different_node_id", mock_tech_tree)
+
+        # Should use _selected_node.id for allocation
+        mock_tracker.set_allocation.assert_called_once_with("test_node_id", 50)
+        assert result is True
+
+    def test_allocation_validates_node_state_consistency(self, mock_pygame_gui, mock_tracker, mock_tech_tree):
+        """Allocation slider validates that _selected_node matches operation.
+
+        PROJ-40/NEW-RES-003: Internal state should be validated before operations.
+        """
+        rc = mock_pygame_gui
+
+        # Create a mock panel with no selected node
+        mock_panel = MagicMock()
+        mock_panel.tracker = mock_tracker
+        mock_panel.slider_allocation = MagicMock()
+        mock_panel.slider_budget = MagicMock()
+        mock_panel.btn_next_turn = MagicMock()
+        mock_panel.btn_reset = MagicMock()
+        mock_panel.btn_close = MagicMock()
+        mock_panel.btn_auto_spread = MagicMock()
+        mock_panel._selected_node = None
+
+        # Create a slider moved event
+        event = MagicMock()
+        event.type = rc.pygame_gui.UI_HORIZONTAL_SLIDER_MOVED
+        event.ui_element = mock_panel.slider_allocation
+
+        # Should not crash and should not set allocation
+        result = rc.ResearchControlPanel.handle_event(mock_panel, event, "some_node", mock_tech_tree)
+
+        mock_tracker.set_allocation.assert_not_called()
+        assert result is False

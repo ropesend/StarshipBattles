@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional, TYPE_CHECKING
 import random
 
+from game.core.logger import log_warning
+
 if TYPE_CHECKING:
     from game.research.data.tech_tree import TechTree
 
@@ -110,14 +112,23 @@ class ResearchTracker:
         """
         Set RP allocation for a node.
 
-        The allocation is clamped to available RP and non-negative values.
+        The allocation is clamped to valid values:
+        - Negative values are clamped to 0
+        - Values exceeding available RP are clamped to the maximum available
+
+        PROJ-40/NEW-RES-006: Return value semantics:
+        - Returns True if the requested allocation was set exactly as requested
+        - Returns False if the value was clamped (either due to budget limits
+          or invalid negative input). The allocation IS still set to the
+          clamped value, so callers should check the actual allocation if needed.
 
         Args:
             node_id: ID of the node
-            rp: RP amount to allocate
+            rp: RP amount to allocate (should be non-negative)
 
         Returns:
-            True if allocation was set, False if exceeds budget
+            True if allocation was set to exactly the requested value,
+            False if the value was clamped (allocation still set to clamped value)
         """
         state = self.get_state(node_id)
         old_allocation = state.rp_allocation
@@ -125,6 +136,15 @@ class ResearchTracker:
         # Calculate max we can allocate (current allocation + remaining)
         remaining = self.get_remaining_rp() + old_allocation
         new_allocation = max(0, min(rp, remaining))
+
+        # PROJ-40/NEW-RES-006: Log warning when value is clamped
+        if new_allocation != rp:
+            if rp < 0:
+                log_warning(f"ResearchTracker: Negative RP allocation ({rp}) "
+                           f"for node '{node_id}' clamped to 0")
+            else:
+                log_warning(f"ResearchTracker: RP allocation ({rp}) for node "
+                           f"'{node_id}' clamped to {new_allocation} (budget limit)")
 
         state.rp_allocation = new_allocation
         return new_allocation == rp
