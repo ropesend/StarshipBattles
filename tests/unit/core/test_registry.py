@@ -780,3 +780,162 @@ class TestEdgeCases:
 
         assert len(registry.components) == 1
         assert len(registry.resources) == 0
+
+
+# =============================================================================
+# Test: GameRegistries Container (PROJ-38)
+# =============================================================================
+
+class TestGameRegistries:
+    """
+    Tests for the GameRegistries frozen dataclass container.
+
+    PROJ-38: This container enables DI by bundling all registries together
+    as an immutable package that can be passed to consumers.
+    """
+
+    def test_game_registries_is_frozen_dataclass(self):
+        """GameRegistries should be a frozen dataclass."""
+        from game.core.registry import GameRegistries
+        from dataclasses import is_dataclass, FrozenInstanceError
+
+        assert is_dataclass(GameRegistries)
+
+        # Create an instance
+        gr = GameRegistries(
+            components={"a": 1},
+            modifiers={"b": 2},
+            vehicle_classes={"c": 3},
+            resources={"d": 4}
+        )
+
+        # Should raise when trying to modify
+        with pytest.raises(FrozenInstanceError):
+            gr.components = {"new": "value"}
+
+    def test_game_registries_stores_all_registries(self):
+        """GameRegistries should store all four registry types."""
+        from game.core.registry import GameRegistries
+
+        components = {"laser": {"id": "laser"}}
+        modifiers = {"boost": {"id": "boost"}}
+        vehicle_classes = {"Cruiser": {"name": "Cruiser"}}
+        resources = {"fuel": {"id": "fuel"}}
+
+        gr = GameRegistries(
+            components=components,
+            modifiers=modifiers,
+            vehicle_classes=vehicle_classes,
+            resources=resources
+        )
+
+        assert gr.components is components
+        assert gr.modifiers is modifiers
+        assert gr.vehicle_classes is vehicle_classes
+        assert gr.resources is resources
+
+    def test_game_registries_requires_all_fields(self):
+        """GameRegistries should require all four fields."""
+        from game.core.registry import GameRegistries
+
+        # Missing fields should raise TypeError
+        with pytest.raises(TypeError):
+            GameRegistries(components={})  # Missing modifiers, vehicle_classes, resources
+
+        with pytest.raises(TypeError):
+            GameRegistries(
+                components={},
+                modifiers={}
+            )  # Missing vehicle_classes, resources
+
+    def test_game_registries_immutable_but_contents_mutable(self):
+        """GameRegistries container is immutable but dicts inside are mutable."""
+        from game.core.registry import GameRegistries
+
+        components = {"laser": {"id": "laser"}}
+        gr = GameRegistries(
+            components=components,
+            modifiers={},
+            vehicle_classes={},
+            resources={}
+        )
+
+        # Can modify the dict contents
+        gr.components["new_item"] = {"id": "new_item"}
+
+        assert "new_item" in gr.components
+
+
+# =============================================================================
+# Test: Default Registries Functions (PROJ-38)
+# =============================================================================
+
+class TestDefaultRegistries:
+    """
+    Tests for set_default_registries() and get_default_registries() functions.
+
+    PROJ-38: These functions allow setting a global default GameRegistries
+    instance for transitional fallback during incremental migration.
+    """
+
+    def test_get_default_registries_raises_when_not_set(self):
+        """get_default_registries() should raise RuntimeError when not set."""
+        from game.core.registry import get_default_registries, GameRegistries
+        import game.core.registry as registry_module
+
+        # Ensure default is not set
+        registry_module._default_registries = None
+
+        with pytest.raises(RuntimeError, match="not set"):
+            get_default_registries()
+
+    def test_set_default_registries_stores_instance(self):
+        """set_default_registries() should store the GameRegistries instance."""
+        from game.core.registry import (
+            GameRegistries,
+            set_default_registries,
+            get_default_registries
+        )
+        import game.core.registry as registry_module
+
+        # Reset state
+        registry_module._default_registries = None
+
+        gr = GameRegistries(
+            components={"a": 1},
+            modifiers={"b": 2},
+            vehicle_classes={"c": 3},
+            resources={"d": 4}
+        )
+
+        set_default_registries(gr)
+
+        result = get_default_registries()
+        assert result is gr
+
+    def test_get_default_registries_returns_same_instance(self):
+        """get_default_registries() should return the exact same instance."""
+        from game.core.registry import (
+            GameRegistries,
+            set_default_registries,
+            get_default_registries
+        )
+        import game.core.registry as registry_module
+
+        # Reset state
+        registry_module._default_registries = None
+
+        gr = GameRegistries(
+            components={},
+            modifiers={},
+            vehicle_classes={},
+            resources={}
+        )
+
+        set_default_registries(gr)
+
+        result1 = get_default_registries()
+        result2 = get_default_registries()
+
+        assert result1 is result2
+        assert result1 is gr

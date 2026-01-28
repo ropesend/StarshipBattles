@@ -1,14 +1,17 @@
 import random
 import math
 import typing
-from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
+from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator, TYPE_CHECKING
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_vehicle_classes, get_component_registry, get_modifier_registry
+from game.core.registry import get_vehicle_classes, get_component_registry, get_modifier_registry, get_default_registries
 from game.core.constants import LayerDefaults, CombatConstants
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_combat import ShipCombatMixin
@@ -32,8 +35,24 @@ VALIDATOR = _ValidatorProxy()
 
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
-    def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]], 
-                 team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation"):
+    def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
+                 team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation",
+                 *, registries: Optional['GameRegistries'] = None):
+        """
+        Initialize Ship with properties and optional registries.
+
+        PROJ-38: Supports constructor-based dependency injection.
+
+        Args:
+            name: Ship name
+            x, y: Initial position
+            color: RGB tuple for ship color
+            team_id: Team identifier
+            ship_class: Vehicle class name (e.g., "frigate", "cruiser")
+            theme_id: Visual theme identifier
+            registries: Optional GameRegistries for DI. If None, falls back to
+                       get_default_registries() or legacy get_vehicle_classes().
+        """
         super().__init__(x, y)
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
@@ -43,9 +62,22 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.max_targets: int = CombatConstants.DEFAULT_MAX_TARGETS  # Primary target only by default
         self.ship_class: str = ship_class
         self.theme_id: str = theme_id
-        
-        # Get class definition (no fallback - data must be present)
-        class_def = get_vehicle_classes().get(self.ship_class, {})
+
+        # PROJ-38: Store registries for DI pattern
+        if registries is not None:
+            self._registries = registries
+        else:
+            try:
+                self._registries = get_default_registries()
+            except RuntimeError:
+                # Default registries not set yet - will use legacy pattern
+                self._registries = None
+
+        # Get class definition using injected registries or legacy function
+        if self._registries is not None:
+            class_def = self._registries.vehicle_classes.get(self.ship_class, {})
+        else:
+            class_def = get_vehicle_classes().get(self.ship_class, {})
 
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
@@ -54,7 +86,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         default_hull_id = class_def.get('default_hull_id')
         hull_equipped = False
         if default_hull_id:
-            hull_component = create_component(default_hull_id)
+            # PROJ-38: Pass registries to create_component
+            hull_component = create_component(default_hull_id, registries=self._registries)
             if hull_component:
                 # Direct append to avoid validation during init
                 self.layers[LayerType.HULL]['components'].append(hull_component)
@@ -319,7 +352,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
-        class_def = get_vehicle_classes().get(self.ship_class, {})
+        # PROJ-38: Use injected registries if available
+        if self._registries is not None:
+            class_def = self._registries.vehicle_classes.get(self.ship_class, {})
+        else:
+            class_def = get_vehicle_classes().get(self.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
         

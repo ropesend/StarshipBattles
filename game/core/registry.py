@@ -14,8 +14,75 @@ AVOID - Direct Singleton Access:
     # DON'T DO THIS - harder to test
     RegistryManager.instance().components
 """
+from dataclasses import dataclass
 from typing import Dict, Any, Optional
 import threading
+
+
+# =============================================================================
+# GameRegistries Container (PROJ-38)
+# =============================================================================
+
+@dataclass(frozen=True)
+class GameRegistries:
+    """
+    Immutable container for all game data registries.
+
+    PROJ-38: This container enables Dependency Injection by bundling all
+    registries together as an immutable package that can be passed to consumers.
+
+    The container itself is frozen (immutable), but the dictionaries inside
+    can still be modified. This ensures registry references cannot be swapped
+    after initialization while still allowing data to be loaded.
+
+    Attributes:
+        components: Dict of component definitions keyed by ID
+        modifiers: Dict of modifier definitions keyed by ID
+        vehicle_classes: Dict of vehicle class definitions keyed by name
+        resources: Dict of resource definitions keyed by ID
+    """
+    components: Dict[str, Any]
+    modifiers: Dict[str, Any]
+    vehicle_classes: Dict[str, Any]
+    resources: Dict[str, Any]
+
+
+# Module-level default registries for transitional fallback
+_default_registries: Optional[GameRegistries] = None
+
+
+def set_default_registries(registries: GameRegistries) -> None:
+    """
+    Set the default GameRegistries instance for transitional fallback.
+
+    PROJ-38: During incremental migration, consumers that haven't been
+    converted to DI can use get_default_registries() to access registries.
+
+    Args:
+        registries: The GameRegistries instance to use as default
+    """
+    global _default_registries
+    _default_registries = registries
+
+
+def get_default_registries() -> GameRegistries:
+    """
+    Get the default GameRegistries instance.
+
+    PROJ-38: Returns the default GameRegistries instance set by the
+    composition root. Raises RuntimeError if not set.
+
+    Returns:
+        The default GameRegistries instance
+
+    Raises:
+        RuntimeError: If set_default_registries() has not been called
+    """
+    if _default_registries is None:
+        raise RuntimeError(
+            "Default registries not set. Call set_default_registries() first."
+        )
+    return _default_registries
 
 class RegistryManager:
     """

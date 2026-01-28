@@ -11,7 +11,10 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import get_component_registry, get_vehicle_classes, get_default_registry_provider
+from game.core.registry import (
+    get_component_registry, get_vehicle_classes, get_default_registry_provider,
+    get_default_registries, GameRegistries
+)
 from game.core.logger import log_error, log_warning, log_info
 
 if TYPE_CHECKING:
@@ -37,21 +40,62 @@ class VehicleDesignService:
     encapsulating validation, component management, and class changes.
 
     PROJ-27: Added registry injection for testability.
+    PROJ-38: Added GameRegistries support for constructor injection.
+
+    Usage:
+        # New DI pattern (preferred)
+        service = VehicleDesignService(registries=game_registries)
+
+        # Transitional pattern (uses default registries)
+        service = VehicleDesignService()
+
+        # Legacy pattern (uses IRegistryProvider)
+        service = VehicleDesignService(registry=provider)
     """
 
-    def __init__(self, registry: Optional['IRegistryProvider'] = None):
+    def __init__(
+        self,
+        registry: Optional['IRegistryProvider'] = None,
+        *,
+        registries: Optional[GameRegistries] = None
+    ):
         """
         Initialize the VehicleDesignService.
 
         Args:
-            registry: Optional IRegistryProvider for dependency injection.
-                     If None, uses the default singleton-backed provider.
+            registry: Optional IRegistryProvider for dependency injection (legacy).
+            registries: Optional GameRegistries for dependency injection (preferred).
+                       If None, falls back to registry or get_default_registries().
         """
-        # PROJ-27: Store registry provider for use in methods
-        if registry is None:
-            self._registry = get_default_registry_provider()
-        else:
+        # PROJ-38: Prefer GameRegistries if provided
+        if registries is not None:
+            self._registries = registries
+            self._registry = None  # Not using legacy provider
+        elif registry is not None:
+            # Legacy: Use IRegistryProvider
             self._registry = registry
+            self._registries = None
+        else:
+            # Transitional fallback to default registries
+            try:
+                self._registries = get_default_registries()
+                self._registry = None
+            except RuntimeError:
+                # Default registries not set yet - use legacy provider
+                self._registry = get_default_registry_provider()
+                self._registries = None
+
+    def _get_vehicle_classes(self):
+        """Get vehicle_classes from either GameRegistries or IRegistryProvider."""
+        if self._registries is not None:
+            return self._registries.vehicle_classes
+        return self._registry.get_vehicle_classes()
+
+    def _get_components(self):
+        """Get component registry from either GameRegistries or IRegistryProvider."""
+        if self._registries is not None:
+            return self._registries.components
+        return self._registry.get_components()
 
     def create_ship(
         self,
@@ -81,12 +125,13 @@ class VehicleDesignService:
         errors = []
         warnings = []
 
-        # Validate class exists - PROJ-27: Use injected registry
-        vehicle_classes = self._registry.get_vehicle_classes()
+        # Validate class exists - PROJ-27/38: Use injected registry
+        vehicle_classes = self._get_vehicle_classes()
         if ship_class not in vehicle_classes:
             warnings.append(f"Unknown ship class '{ship_class}', using defaults")
 
         try:
+            # PROJ-38: Pass registries to Ship constructor
             ship = Ship(
                 name=name,
                 x=x,
@@ -94,7 +139,8 @@ class VehicleDesignService:
                 color=color,
                 team_id=team_id,
                 ship_class=ship_class,
-                theme_id=theme_id
+                theme_id=theme_id,
+                registries=self._registries
             )
             ship.recalculate_stats()
 
@@ -301,8 +347,8 @@ class VehicleDesignService:
         """
         errors = []
 
-        # Validate new class exists - PROJ-27: Use injected registry
-        vehicle_classes = self._registry.get_vehicle_classes()
+        # Validate new class exists - PROJ-27/38: Use injected registry
+        vehicle_classes = self._get_vehicle_classes()
         if new_class not in vehicle_classes:
             errors.append(f"Unknown vehicle class '{new_class}'")
             return DesignResult(success=False, errors=errors)
@@ -356,8 +402,8 @@ class VehicleDesignService:
         """
         available = []
         validator = get_or_create_validator()
-        # PROJ-27: Use injected registry instead of singleton
-        registry = self._registry.get_components()
+        # PROJ-27/38: Use injected registry instead of singleton
+        registry = self._get_components()
 
         for comp_id in registry.keys():
             component = create_component(comp_id)

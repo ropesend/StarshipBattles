@@ -16,6 +16,7 @@ args, _ = parser.parse_known_args()
 
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources
+from game.core.registry import GameRegistries, set_default_registries, RegistryManager
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopGUI
 from game.ui.screens.workshop_context import WorkshopContext
@@ -112,6 +113,16 @@ class Game:
         # Initialize ship data
         from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(Paths.ROOT_DIR)
+
+        # Create GameRegistries container for DI (PROJ-38)
+        registry = RegistryManager.instance()
+        self.registries = GameRegistries(
+            components=registry.components,
+            modifiers=registry.modifiers,
+            vehicle_classes=registry.vehicle_classes,
+            resources=registry.resources
+        )
+        set_default_registries(self.registries)
 
         # Load sprites
         sprite_mgr = SpriteManager.instance()

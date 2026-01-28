@@ -5,10 +5,15 @@ Defines how the Design Workshop is launched and what features are available.
 Supports two modes:
 1. STANDALONE: Development/testing mode with tech preset selection
 2. INTEGRATED: Strategy layer integration with empire context
+
+PROJ-38: Added registries parameter for dependency injection.
 """
 from enum import Enum
 from dataclasses import dataclass, field
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 
 class WorkshopMode(Enum):
@@ -55,8 +60,23 @@ class WorkshopContext:
     on_return: Optional[Callable] = None
     return_state: Optional[str] = None  # For app.py state management
 
+    # PROJ-38: Dependency injection for registries
+    registries: Optional['GameRegistries'] = None
+
+    def __post_init__(self):
+        """PROJ-38: Set default registries if not provided."""
+        if self.registries is None:
+            from game.core.registry import get_default_registries
+            try:
+                # Use object.__setattr__ since dataclass may be frozen in future
+                object.__setattr__(self, 'registries', get_default_registries())
+            except RuntimeError:
+                # Default registries not set yet - will be None
+                pass
+
     @classmethod
-    def standalone(cls, tech_preset_name: str = "default") -> 'WorkshopContext':
+    def standalone(cls, tech_preset_name: str = "default",
+                   *, registries: Optional['GameRegistries'] = None) -> 'WorkshopContext':
         """
         Create standalone workshop context for development/testing.
 
@@ -78,7 +98,8 @@ class WorkshopContext:
         """
         return cls(
             mode=WorkshopMode.STANDALONE,
-            tech_preset_name=tech_preset_name
+            tech_preset_name=tech_preset_name,
+            registries=registries
         )
 
     @classmethod
@@ -87,7 +108,8 @@ class WorkshopContext:
                    savegame_path: str,
                    available_tech_ids: Optional[List[str]] = None,
                    built_designs: Optional[set] = None,
-                   empire_theme_id: Optional[str] = None) -> 'WorkshopContext':
+                   empire_theme_id: Optional[str] = None,
+                   *, registries: Optional['GameRegistries'] = None) -> 'WorkshopContext':
         """
         Create integrated workshop context for strategy layer.
 
@@ -124,7 +146,8 @@ class WorkshopContext:
             savegame_path=savegame_path,
             available_tech_ids=available_tech_ids if available_tech_ids is not None else [],
             built_designs=built_designs if built_designs is not None else set(),
-            empire_theme_id=empire_theme_id
+            empire_theme_id=empire_theme_id,
+            registries=registries
         )
 
     def is_standalone(self) -> bool:

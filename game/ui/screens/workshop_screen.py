@@ -15,7 +15,7 @@ from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 
 from game.simulation.entities.ship import LayerType
-from game.core.registry import RegistryManager, get_component_registry, get_vehicle_classes
+from game.core.registry import get_vehicle_classes
 from game.simulation.components.component import (
     get_all_components
 )
@@ -89,7 +89,8 @@ class DesignWorkshopGUI:
         self.screenshot_manager = ScreenshotManager.instance()
 
         # MVVM: Create ViewModel to manage builder state
-        self.viewmodel = WorkshopViewModel(self.event_bus, screen_width, screen_height)
+        # PROJ-38: Pass context for DI
+        self.viewmodel = WorkshopViewModel(self.event_bus, screen_width, screen_height, context=context)
         
         # UI Manager
         from game.core.constants import ROOT_DIR, DATA_DIR, ASSET_DIR
@@ -149,9 +150,15 @@ class DesignWorkshopGUI:
         
         # Event Router (composition pattern for event handling)
         self.event_router = WorkshopEventRouter(self)
-        
+
         self._create_ui()
-        
+
+    def _get_vehicle_classes(self):
+        """PROJ-38: Get vehicle_classes from context registries or global fallback."""
+        if self.context.registries is not None:
+            return self.context.registries.vehicle_classes
+        return get_vehicle_classes()
+
     def _create_ui(self):
         # Use shared height calculation for bottom panels
         self.bottom_panel_height = calculate_bottom_panel_height(self.height)
@@ -201,11 +208,13 @@ class DesignWorkshopGUI:
                 object_id='#modifier_panel_container'
             )
             
+            # PROJ-38: Pass context registries to ModifierEditorPanel
             self.modifier_panel = ModifierEditorPanel(
                 manager=self.ui_manager,
                 container=self.modifier_container_panel,
                 width=mod_panel_rect.width,
-                on_change_callback=self._on_modifier_change
+                on_change_callback=self._on_modifier_change,
+                registries=self.context.registries
             )
             self.modifier_panel.set_panel_height(self.modifier_panel_height)
         
@@ -389,7 +398,7 @@ class DesignWorkshopGUI:
                 self.viewmodel.change_ship_class(data, migrate_components=False)
                 
                 # We also need to update the Class Dropdown options
-                classes = get_vehicle_classes()
+                classes = self._get_vehicle_classes()
                 new_type = classes[data].get('type', 'Ship')
                 valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
                 valid_classes.sort(key=lambda x: x[1])
@@ -609,7 +618,7 @@ class DesignWorkshopGUI:
         self.selected_components = []
         
         # Update Class Dropdown
-        classes = get_vehicle_classes()
+        classes = self._get_vehicle_classes()
         valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items()]
         valid_classes.sort(key=lambda x: x[1])
         valid_class_names = [n for n, m in valid_classes]
@@ -627,7 +636,7 @@ class DesignWorkshopGUI:
             
         # Update Type Dropdown if it exists
         if hasattr(self.right_panel, 'vehicle_type_dropdown'):
-            classes = get_vehicle_classes()
+            classes = self._get_vehicle_classes()
             types = sorted(list(set(c.get('type', 'Ship') for c in classes.values())))
             if not types: types = ["Ship"]
             default_type = classes[default_class].get('type', 'Ship')

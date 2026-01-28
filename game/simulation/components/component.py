@@ -60,11 +60,15 @@ Key Classes:
 import math
 import threading
 from game.simulation.formula_system import evaluate_math_formula
-from game.core.registry import get_component_registry, get_modifier_registry
+from typing import Optional, TYPE_CHECKING
+from game.core.registry import get_component_registry, get_modifier_registry, get_default_registries
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
 from .component_constants import ComponentStatus, Modifier, ApplicationModifier
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 # Convenience aliases for registry data (read-only references)
 COMPONENT_REGISTRY = get_component_registry()
@@ -72,9 +76,29 @@ MODIFIER_REGISTRY = get_modifier_registry()
 
 
 class Component:
-    def __init__(self, data):
+    def __init__(self, data, *, registries: Optional['GameRegistries'] = None):
+        """
+        Initialize Component with data and optional registries.
+
+        PROJ-38: Supports constructor-based dependency injection.
+
+        Args:
+            data: Component definition dictionary
+            registries: Optional GameRegistries for DI. If None, falls back to
+                       get_default_registries() or legacy get_modifier_registry().
+        """
         import copy
         self.data = copy.deepcopy(data) # Store raw data for reference/cloning
+
+        # PROJ-38: Store registries for modifier operations
+        if registries is not None:
+            self._registries = registries
+        else:
+            try:
+                self._registries = get_default_registries()
+            except RuntimeError:
+                # Default registries not set yet - will use legacy pattern in methods
+                self._registries = None
         self.id = data['id']
         self.name = data['name']
         self.base_mass = data['mass']
@@ -123,13 +147,15 @@ class Component:
         self._instantiate_abilities()
         
         # Load default modifiers from data definition
+        # PROJ-38: Use injected registries if available
         if 'modifiers' in self.data:
+            if self._registries is not None:
+                mods = self._registries.modifiers
+            else:
+                mods = get_modifier_registry()
             for mod_data in self.data['modifiers']:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
-                # We need to access modifier registry.
-                from game.core.registry import get_modifier_registry
-                mods = get_modifier_registry()
                 if mod_id in mods:
                     mod_def = mods[mod_id]
                     self.modifiers.append(mod_def.create_modifier(val))
@@ -380,9 +406,13 @@ class Component:
         return result
 
     def add_modifier(self, mod_id, value=None):
-        mods = get_modifier_registry()
+        # PROJ-38: Use injected registries if available, else legacy fallback
+        if self._registries is not None:
+            mods = self._registries.modifiers
+        else:
+            mods = get_modifier_registry()
         if mod_id not in mods: return False
-        
+
         # Check restrictions
         mod_def = mods[mod_id]
         if 'deny_types' in mod_def.restrictions:
@@ -607,9 +637,8 @@ class Component:
 
     def clone(self):
         # Create a new instance with the same data
-        # We need a Factory, but since we are refactoring, we can just make a new instance of the same class.
-        # But we need to know the class.
-        return self.__class__(self.data)
+        # PROJ-38: Pass registries to the clone for DI consistency
+        return self.__class__(self.data, registries=self._registries)
 
 
 # All component types use Component directly via the ability system.
@@ -656,7 +685,56 @@ def reset_component_caches():
     """
     ComponentCacheManager.reset()
 
+def load_components_data(filepath: str = "data/components.json") -> dict:
+    """
+    Pure function to load components from JSON file.
+
+    PROJ-38: Returns a dictionary of Component objects keyed by ID without
+    modifying any global state. Use this for DI patterns.
+
+    Args:
+        filepath: Path to the components JSON file
+
+    Returns:
+        Dict[str, Component]: Component objects keyed by their ID
+    """
+    import os
+
+    # Try absolute path based on this file if CWD fails
+    if not os.path.exists(filepath):
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.join(base_dir, filepath)
+        if os.path.exists(abs_path):
+            filepath = abs_path
+        else:
+            log_error(f"components file not found at {abs_path}")
+            return {}
+
+    try:
+        data = load_json_required(filepath)
+
+        result = {}
+        for comp_def in data['components']:
+            try:
+                obj = Component(comp_def)
+                result[comp_def['id']] = obj
+            except Exception as e:
+                log_error(f"creating component {comp_def.get('id')}: {e}")
+
+        return result
+
+    except Exception as e:
+        log_error(f"loading/parsing components json: {e}")
+        return {}
+
+
 def load_components(filepath="data/components.json"):
+    """
+    Load components from JSON and populate the global registry.
+
+    This is a thin wrapper around load_components_data() for backward
+    compatibility. New code should prefer DI via load_components_data().
+    """
     import os
     import copy
     from game.core.registry import get_component_registry
@@ -670,49 +748,76 @@ def load_components(filepath="data/components.json"):
             comps[c_id] = comp.clone()
         return
 
-    # Slow Path: Load from Disk
+    # Slow Path: Load from Disk using pure function
+    result = load_components_data(filepath)
+    if not result:
+        return
+
+    # Populate Cache
+    cache_mgr.component_cache = result
+    cache_mgr.last_component_file = filepath
+
+    # Populate Registry from Cache
+    comps = get_component_registry()
+    for c_id, comp in cache_mgr.component_cache.items():
+        comps[c_id] = comp.clone()
+
+def load_modifiers_data(filepath: str = "data/modifiers.json") -> dict:
+    """
+    Pure function to load modifiers from JSON file.
+
+    PROJ-38: Returns a dictionary of Modifier objects keyed by ID without
+    modifying any global state. Use this for DI patterns.
+
+    Args:
+        filepath: Path to the modifiers JSON file
+
+    Returns:
+        Dict[str, Modifier]: Modifier objects keyed by their ID
+    """
+    import os
+    import copy
+    from game.simulation.components.modifier_schema import validate_modifier_v2
+
     # Try absolute path based on this file if CWD fails
     if not os.path.exists(filepath):
-        log_warning(f"{filepath} not found in CWD ({os.getcwd()}).")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         abs_path = os.path.join(base_dir, filepath)
-
         if os.path.exists(abs_path):
             filepath = abs_path
         else:
-            log_error(f"components file not found at {abs_path}")
-            return
+            log_error(f"modifiers file not found at {abs_path}")
+            return {}
 
     try:
         data = load_json_required(filepath)
 
-        temp_cache = {}
-        for comp_def in data['components']:
-            c_type = comp_def['type']
-            try:
-                cls = Component
-                obj = cls(comp_def)
-                temp_cache[comp_def['id']] = obj
-            except Exception as e:
-                log_error(f"creating component {comp_def.get('id')}: {e}")
+        result = {}
+        for mod_def in data['modifiers']:
+            # Validate modifier schema (graceful degradation - warn but continue)
+            if not validate_modifier_v2(mod_def):
+                mod_id = mod_def.get('id', 'unknown')
+                log_warning(f"Modifier '{mod_id}' failed schema validation, loading anyway")
+            mod = Modifier(mod_def)
+            result[mod.id] = copy.deepcopy(mod)
 
-        # Populate Cache
-        cache_mgr.component_cache = temp_cache
-        cache_mgr.last_component_file = filepath
-
-        # Populate Registry from Cache
-        comps = get_component_registry()
-        for c_id, comp in cache_mgr.component_cache.items():
-            comps[c_id] = comp.clone()
+        return result
 
     except Exception as e:
-        log_error(f"loading/parsing components json: {e}")
+        log_error(f"loading modifiers: {e}")
+        return {}
+
 
 def load_modifiers(filepath="data/modifiers.json"):
+    """
+    Load modifiers from JSON and populate the global registry.
+
+    This is a thin wrapper around load_modifiers_data() for backward
+    compatibility. New code should prefer DI via load_modifiers_data().
+    """
     import os
     import copy
     from game.core.registry import get_modifier_registry
-    from game.simulation.components.modifier_schema import validate_modifier_v2
 
     cache_mgr = ComponentCacheManager.instance()
 
@@ -723,38 +828,43 @@ def load_modifiers(filepath="data/modifiers.json"):
             mods[m_id] = copy.deepcopy(mod)
         return
 
-    # Slow Path
-    if not os.path.exists(filepath):
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        filepath = os.path.join(base_dir, filepath)
+    # Slow Path: Load using pure function
+    result = load_modifiers_data(filepath)
+    if not result:
+        return
 
-    try:
-        data = load_json_required(filepath)
+    cache_mgr.modifier_cache = result
+    cache_mgr.last_modifier_file = filepath
 
-        temp_cache = {}
-        for mod_def in data['modifiers']:
-            # Validate modifier schema (graceful degradation - warn but continue)
-            if not validate_modifier_v2(mod_def):
-                mod_id = mod_def.get('id', 'unknown')
-                log_warning(f"Modifier '{mod_id}' failed schema validation, loading anyway")
-            mod = Modifier(mod_def)
-            temp_cache[mod.id] = mod
+    mods = get_modifier_registry()
+    for m_id, mod in cache_mgr.modifier_cache.items():
+        mods[m_id] = copy.deepcopy(mod)
 
-        cache_mgr.modifier_cache = temp_cache
-        cache_mgr.last_modifier_file = filepath
+def create_component(component_id, *, registries: Optional['GameRegistries'] = None):
+    """Create a clone of a component from the registry by ID.
 
-        mods = get_modifier_registry()
-        for m_id, mod in cache_mgr.modifier_cache.items():
-            mods[m_id] = copy.deepcopy(mod)
+    PROJ-38: Accepts optional registries parameter for DI.
 
-    except Exception as e:
-        log_error(f"loading modifiers: {e}")
+    Args:
+        component_id: The ID of the component to create
+        registries: Optional GameRegistries for DI. If provided, uses
+                   registries.components instead of global registry.
 
-def create_component(component_id):
-    """Create a clone of a component from the registry by ID."""
-    comps = get_component_registry()
+    Returns:
+        Component clone or None if not found
+    """
+    # PROJ-38: Use injected registries if provided
+    if registries is not None:
+        comps = registries.components
+    else:
+        comps = get_component_registry()
+
     if component_id in comps:
-        return comps[component_id].clone()
+        clone = comps[component_id].clone()
+        # PROJ-38: Ensure clone has correct registries
+        if registries is not None:
+            clone._registries = registries
+        return clone
     log_error(f"Component ID {component_id} not found in registry.")
     return None
 

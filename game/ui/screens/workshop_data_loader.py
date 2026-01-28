@@ -2,13 +2,18 @@
 WorkshopDataLoader - Handles loading and reloading game data from a directory (renamed from BuilderDataLoader).
 
 Extracted from DesignWorkshopGUI._reload_data() for better testability and reusability.
+
+PROJ-38: Added registries parameter for dependency injection support.
 """
 import os
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union, TYPE_CHECKING
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
 from game.core.registry import get_vehicle_classes, clear_registry
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -30,16 +35,21 @@ class WorkshopDataLoader:
     3. Fallback to default data directory
     """
     
-    def __init__(self, directory: str, default_data_dir: Optional[str] = None):
+    def __init__(self, directory: str, default_data_dir: Optional[str] = None,
+                 *, registries: Optional['GameRegistries'] = None):
         """
         Initialize the data loader.
-        
+
+        PROJ-38: Added registries parameter for DI support.
+
         Args:
             directory: Primary directory to load data from
             default_data_dir: Fallback directory (defaults to cwd/data)
+            registries: Optional GameRegistries for DI. Used for _get_default_class()
         """
         self.directory = directory
         self.default_data_dir = default_data_dir or os.path.join(os.getcwd(), "data")
+        self._registries = registries
     
     def find_file(self, base_names: Union[str, List[str]], 
                   allow_default: bool = True) -> Tuple[Optional[str], bool]:
@@ -192,10 +202,14 @@ class WorkshopDataLoader:
     def _get_default_class(self) -> str:
         """Determine the default ship class after loading."""
         default_class = "Escort"
-        classes = get_vehicle_classes()
-        
+        # PROJ-38: Use injected registries if available
+        if self._registries is not None:
+            classes = self._registries.vehicle_classes
+        else:
+            classes = get_vehicle_classes()
+
         if default_class not in classes and classes:
             # Pick first available class
             default_class = next(iter(classes.keys()))
-        
+
         return default_class

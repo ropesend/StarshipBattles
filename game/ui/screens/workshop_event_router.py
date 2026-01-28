@@ -3,6 +3,8 @@ WorkshopEventRouter - Extracted event handling logic from DesignWorkshopGUI (ren
 
 This class handles all event routing for the Design Workshop screen using
 a composition + delegation pattern.
+
+PROJ-38: Access registries via gui.context.registries for DI.
 """
 import pygame
 import pygame_gui
@@ -30,7 +32,13 @@ class WorkshopEventRouter:
             gui: The DesignWorkshopGUI instance to route events for.
         """
         self.gui = gui
-    
+
+    def _get_vehicle_classes(self):
+        """PROJ-38: Get vehicle_classes from context registries or global fallback."""
+        if self.gui.context.registries is not None:
+            return self.gui.context.registries.vehicle_classes
+        return get_vehicle_classes()
+
     def handle_event(self, event) -> bool:
         """Route events to appropriate handlers.
         
@@ -383,7 +391,7 @@ class WorkshopEventRouter:
             return True
         
         # Determine default class for this type
-        classes = get_vehicle_classes()
+        classes = self._get_vehicle_classes()
         valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
         valid_classes.sort(key=lambda x: x[1])
         target_class = valid_classes[0][0] if valid_classes else "Escort"
