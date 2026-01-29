@@ -1,14 +1,6 @@
 {
     "version": "2.0.0",
-<<<<<<< HEAD
-    "timestamp": "2026-01-28T15:49:04.226276",
-=======
-<<<<<<< HEAD
-    "timestamp": "2026-01-28T15:40:38.434359",
-=======
-    "timestamp": "2026-01-28T15:46:26.786748",
->>>>>>> 3b1c741e711aa22101c5faf71f14b756878a253d
->>>>>>> 97b9be7e3e1c4a5e951051c1acfb394cc8f51a44
+    "timestamp": "2026-01-28T15:56:02.367711",
     "player_name": "Saved Empire",
     "empire_count": 1,
     "empire_names": [
