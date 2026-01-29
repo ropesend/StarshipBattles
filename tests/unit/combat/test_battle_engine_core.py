@@ -274,3 +274,86 @@ class TestBattleEngineAIControllerInjection:
         assert len(engine.ai_controllers) == initial_count + 1
         assert reinforcement in engine.ships
         assert reinforcement.team_id == 0
+
+
+class TestBattleEngineAIFactory:
+    """Tests for PROJ-43: ai_factory parameter for decoupled AI creation."""
+
+    def test_engine_with_ai_factory_creates_controllers_on_start(self):
+        """Verify start() uses ai_factory to create controllers when provided."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+        from game.simulation.factories.ai_factory import AIControllerFactory
+
+        mock_logger = MagicMock()
+        engine = BattleEngine(logger=mock_logger)
+
+        # Create factory using engine's grid
+        factory = AIControllerFactory(engine.grid)
+        engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
+
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+
+        # Start without explicit ai_controllers - should use factory
+        engine_with_factory.start([ship1], [ship2])
+
+        # Verify controllers were created via factory
+        assert len(engine_with_factory.ai_controllers) == 2
+        assert ship1.team_id == 0
+        assert ship2.team_id == 1
+
+    def test_engine_with_ai_factory_creates_controller_for_mid_battle_ship(self):
+        """Verify add_ship_mid_battle() uses ai_factory when no controller provided."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+        from game.simulation.factories.ai_factory import AIControllerFactory
+
+        mock_logger = MagicMock()
+
+        # Create engine with factory
+        engine = BattleEngine(logger=mock_logger)
+        factory = AIControllerFactory(engine.grid)
+        engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
+
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        engine_with_factory.start([ship1], [ship2])
+
+        initial_count = len(engine_with_factory.ai_controllers)
+
+        # Add reinforcement without explicit controller
+        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0))
+        engine_with_factory.add_ship_mid_battle(reinforcement, team_id=0)
+
+        # Verify controller was created via factory
+        assert len(engine_with_factory.ai_controllers) == initial_count + 1
+        assert reinforcement in engine_with_factory.ships
+        assert reinforcement.team_id == 0
+
+    def test_explicit_ai_controllers_take_precedence_over_factory(self):
+        """Verify explicit ai_controllers parameter overrides factory."""
+        from game.simulation.systems.battle_engine import BattleEngine
+        from game.simulation.entities.ship import Ship
+        from game.simulation.factories.ai_factory import AIControllerFactory
+        from game.ui.orchestration import BattleOrchestrator
+
+        mock_logger = MagicMock()
+
+        # Create engine with factory
+        engine = BattleEngine(logger=mock_logger)
+        factory = AIControllerFactory(engine.grid)
+        engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
+
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+
+        # Create controllers explicitly via orchestrator
+        orchestrator = BattleOrchestrator(engine_with_factory.grid)
+        explicit_controllers = orchestrator.create_ai_controllers([ship1], [ship2])
+
+        # Start with explicit controllers - should NOT use factory
+        engine_with_factory.start([ship1], [ship2], ai_controllers=explicit_controllers)
+
+        # Verify explicit controllers were used
+        assert engine_with_factory.ai_controllers == explicit_controllers

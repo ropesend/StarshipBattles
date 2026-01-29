@@ -71,6 +71,8 @@ from game.simulation.entities.ship import Ship
 
 if TYPE_CHECKING:
     from game.ai.controller import AIController
+    from game.simulation.factories.ai_factory import AIControllerFactory
+    from game.simulation.interfaces.ai_controller import IAIController
 
 class BattleLogger:
     """Toggleable logger that writes battle events to file."""
@@ -152,9 +154,23 @@ class BattleEngine:
         logger: Battle event logger (disabled by default)
     """
 
-    def __init__(self, logger: Optional[BattleLogger] = None):
+    def __init__(
+        self,
+        logger: Optional[BattleLogger] = None,
+        ai_factory: Optional['AIControllerFactory'] = None
+    ):
+        """
+        Create a BattleEngine instance.
+
+        Args:
+            logger: Optional battle logger for event recording
+            ai_factory: Optional AI controller factory for creating controllers.
+                        If provided, used for fighter launches and legacy paths.
+                        If None, imports from game.ai directly (legacy behavior).
+                        PROJ-43: Use AIControllerFactory to decouple from AI layer.
+        """
         self.ships: List['Ship'] = []
-        self.ai_controllers: List['AIController'] = []
+        self.ai_controllers: List['IAIController'] = []
 
         self.projectile_manager = ProjectileManager()
         self.collision_system = CollisionSystem()
@@ -169,6 +185,9 @@ class BattleEngine:
 
         # Use provided logger or create a default one (disabled by default to avoid side effects unless requested)
         self.logger = logger if logger else BattleLogger(enabled=False)
+
+        # PROJ-43: AI factory for decoupled AI controller creation
+        self._ai_factory = ai_factory
 
     @property
     def projectiles(self) -> List[Any]:
@@ -223,6 +242,18 @@ class BattleEngine:
             for s in team2_ships:
                 s.team_id = 1
                 self.ships.append(s)
+        elif self._ai_factory is not None:
+            # PROJ-43: Use injected factory to create AI controllers
+            for s in team1_ships:
+                s.team_id = 0
+                self.ships.append(s)
+            for s in team2_ships:
+                s.team_id = 1
+                self.ships.append(s)
+            # Create controllers for all ships
+            team1_controllers = self._ai_factory.create_for_ships(team1_ships, enemy_team_id=1)
+            team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
+            self.ai_controllers = team1_controllers + team2_controllers
         else:
             # Legacy path: create controllers internally (backward compatibility)
             from game.ai.controller import AIController
@@ -280,6 +311,11 @@ class BattleEngine:
         if ai_controller is not None:
             # PROJ-17: Use pre-created controller from BattleOrchestrator
             self.ai_controllers.append(ai_controller)
+        elif self._ai_factory is not None:
+            # PROJ-43: Use injected factory to create AI controller
+            enemy_team = 1 if team_id == 0 else 0
+            ai = self._ai_factory.create_for_ship(ship, enemy_team)
+            self.ai_controllers.append(ai)
         else:
             # Legacy path: create controller internally
             from game.ai.controller import AIController
@@ -430,16 +466,17 @@ class BattleEngine:
                 
                 # Add to battle
                 self.ships.append(new_ship)
-                # Create AI
-                # Fighters use 'attack_run' usually? Defined in class?
-                # Using 1-source.team_id as enemy team logic from start()
-                # Should be dynamic based on teams?
-                # Assuming 2 teams: 0 and 1. Enemy is 1 - team_id.
-                # Note: This is an internal operation during battle, uses legacy import path
-                from game.ai.controller import AIController
-                from game.ai.interfaces import ShipControllableAdapter
+                # Create AI for fighter
                 enemy_team = 1 - new_ship.team_id
-                self.ai_controllers.append(AIController(ShipControllableAdapter(new_ship), self.grid, enemy_team))
+                if self._ai_factory is not None:
+                    # PROJ-43: Use injected factory to create AI controller
+                    ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
+                    self.ai_controllers.append(ai)
+                else:
+                    # Legacy path: create controller internally
+                    from game.ai.controller import AIController
+                    from game.ai.interfaces import ShipControllableAdapter
+                    self.ai_controllers.append(AIController(ShipControllableAdapter(new_ship), self.grid, enemy_team))
                 
                 self.logger.log(f"LAUNCH: {new_name} launched from {source_ship.name}")
 
