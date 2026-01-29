@@ -13,37 +13,76 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. TBD | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Critical Infrastructure Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Conftest Consolidation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Test File Splitting | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Weak Assertion Fixes | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Naming Convention Standardization | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 6. Directory Structure Reorganization | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Mock Pattern Standardization | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. Test Quality Improvements | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-28 18:53
-**Active Phase:** Planning
-**Last Action:** Project created
-**Next Action:** Define project scope and phases
+**Last Updated:** 2026-01-28 19:30
+**Active Phase:** Planning Complete - Ready for Phase 1
+**Last Action:** Created comprehensive 8-phase plan from 36 identified issues
+**Next Action:** Begin Phase 1 - Re-enable disabled integration tests
 **Blockers:** None
 
 ## Overview
-[2-3 sentence description of what this project accomplishes]
+This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.
 
 ## Goals
-- [Goal 1]
-- [Goal 2]
+- Fix critical issues preventing tests from running (2 disabled integration tests)
+- Standardize fixture patterns across 13 conftest.py files
+- Split 50 monolith test files (>500 LOC) into smaller focused files
+- Replace 875 weak assertions with specific value checks
+- Standardize naming conventions across test files, classes, and methods
+- Mirror source directory structure in tests
+- Establish consistent mock patterns across 3011 mock usages
+- Clean up print statements, stub classes, and skipped tests
 
 ## Scope
-**In:** [What's included]
-**Out:** [What's explicitly excluded]
+**In:**
+- All 36 issues from `findings_07_testing_infrastructure.md`
+- TSR-001 to TSR-015 (Critical and Major structure issues)
+- TNC-001 to TNC-011 (Naming convention issues)
+- TC-06 (Test isolation)
+- Aggressive splitting of all 50 files >500 LOC
+
+**Out:**
+- Writing new tests for coverage gaps (TC-01 to TC-09) - separate project
+- Fixing 5 pre-existing test failures in `test_builder_io_integration.py`
+- Production code changes
 
 ## Key Files
 | Component | File Path |
 |-----------|-----------|
-| [Name] | `path/to/file.py` |
+| Root conftest | `conftest.py` |
+| Tests conftest | `tests/conftest.py` |
+| Session cache | `tests/infrastructure/session_cache.py` |
+| Fixtures module | `tests/fixtures/*.py` |
+| Disabled tests | `tests/integration/_test_formation_*.py` |
+| Largest monolith | `tests/unit/strategy/test_ship_stats_service.py` (1756 LOC) |
+| Findings source | `findings_07_testing_infrastructure.md` |
 
 ## Related Documents
-- [design.md](design.md) - Architecture analysis and design rationale
+- [design.md](design.md) - Architecture analysis and swarm findings
 - [decisions.md](decisions.md) - Full decisions log
+
+## Baseline
+**Test Suite Status (2026-01-28):**
+- 5244 passed
+- 5 failed (pre-existing, excluded from this project)
+- 3 skipped
+- 28,166 warnings
+- ~40 seconds runtime
 
 ## Verification
 - [ ] All phase checklists complete
-- [ ] All tests passing
+- [ ] All tests passing (baseline maintained)
+- [ ] No test file exceeds 500 LOC
+- [ ] All test files follow `test_*.py` naming
+- [ ] Parallel execution works (`pytest -n 4`)
 - [ ] Audit passed
 - [ ] User verified

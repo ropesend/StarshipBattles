@@ -17,8 +17,8 @@
 | 2A. UI-Simulation Decoupling - Setup | Complete | [phase_2a_checklist.md](phase_2a_checklist.md) |
 | 2B. UI-Simulation Decoupling - Builder | Complete | [phase_2b_checklist.md](phase_2b_checklist.md) |
 | 2C. UI-Simulation Decoupling - Workshop/Battle | Complete | [phase_2c_checklist.md](phase_2c_checklist.md) |
-| 3. Workshop Circular Import Fix | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. TurnEngine Constructor DI | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Workshop Circular Import Fix | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. TurnEngine Constructor DI | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Registry Access Consolidation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Simulation Deferred Imports | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Strategy Deferred Imports | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
@@ -30,29 +30,24 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 2C Complete / Ready for Phase 3
-**Last Action:** Completed Phase 2C - Created UI adapters and decoupled workshop/battle screens from simulation
-**Next Action:** Begin Phase 3 - Workshop Circular Import Fix
+**Active Phase:** Phase 4 Complete / Ready for Phase 5
+**Last Action:** Completed Phase 4 - TurnEngine Constructor DI
+**Next Action:** Begin Phase 5 - Registry Access Consolidation
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 2C COMPLETE: Created 2 new UI adapters and removed all direct simulation imports from workshop_screen.py
-- New adapters created:
-  - `game/ui/services/ship_io_adapter.py` - Wraps ShipIO for ship save/load operations (8 tests)
-  - `game/ui/services/design_loader_adapter.py` - Wraps SimulationDesignLoader for design loading (6 tests)
-- Workshop screen changes:
-  - Removed 3 simulation imports (get_all_components, ShipIO, SimulationDesignLoader)
-  - Added ShipIOAdapter and DesignLoaderAdapter instances created in `__init__()`
-  - Replaced all direct simulation calls with adapter calls
-  - Uses viewmodel.refresh_available_components() instead of get_all_components()
-- Verification completed:
-  - workshop_viewmodel.py: VehicleDesignService import is acceptable (proper service abstraction)
-  - battle_scene.py: BattleService import is acceptable (proper abstraction)
-  - Both have TYPE_CHECKING imports properly guarded
-- Test files fixed for adapter injection:
-  - `tests/unit/builder/test_builder_io_integration.py` - Uses mock _ship_io_adapter
-  - `tests/unit/builder/test_builder_improvements.py` - Uses mock adapter for loading test
-- Test baseline: 5249 passed, 3 skipped (up from 5235 due to 14 new adapter tests)
-- UI layer now completely decoupled from direct simulation imports (uses services/adapters only)
+- Phase 4 COMPLETE: Full constructor dependency injection for TurnEngine
+- Key accomplishments:
+  - Created 5 engine interfaces in `game/strategy/interfaces/engines.py`:
+    - IMovementEngine, IProductionEngine, IOrderProcessor, IConflictEngine, IResourceEngine
+  - Refactored TurnEngine constructor to accept optional engine parameters
+  - Created `create_default_turn_engine()` factory function
+  - Created mock engines in `tests/unit/strategy/mocks/mock_engines.py` for testing
+  - Added 17 new tests (10 DI, 3 factory, 4 mock usage)
+- Design decisions:
+  - Kept lazy @property pattern for defaults (avoids import cycles, enables late binding)
+  - Properties now return interface types instead of concrete types
+  - Backwards compatible: existing `TurnEngine()` calls work unchanged
+- Test baseline: 5296 passed, 3 skipped (up from 5249 - added 47 tests this phase)
 
 ## Overview
 This project addresses **21 architecture layer violations** identified in `findings_01_architecture_layer_violations.md`. The focus is on decoupling UI from simulation layer, completing DI migration, refactoring TurnEngine for extensibility, eliminating circular dependencies, and establishing clean package APIs.
