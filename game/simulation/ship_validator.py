@@ -8,7 +8,7 @@ PROJ-38: Added registries parameter to ClassRequirementsRule for dependency inje
 from typing import List, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import get_default_registry_provider, get_default_registries
 
 # Import base classes from validation module (Phase 12 refactoring)

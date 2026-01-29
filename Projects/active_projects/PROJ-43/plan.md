@@ -23,28 +23,30 @@
 | 6. Simulation Deferred Imports | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Strategy Deferred Imports | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. BattleEngine-AI Decoupling | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
-| 9. Constant Consolidation | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
-| 10. Package API Definition | Not Started | [phase_10_checklist.md](phase_10_checklist.md) |
+| 9. Constant Consolidation | Complete | [phase_9_checklist.md](phase_9_checklist.md) |
+| 10. Package API Definition | Complete | [phase_10_checklist.md](phase_10_checklist.md) |
 | 11. Validation Consolidation | Not Started | [phase_11_checklist.md](phase_11_checklist.md) |
 | 12. UI-Battle Interface | Not Started | [phase_12_checklist.md](phase_12_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 8 COMPLETE - Ready for Phase 9
-**Last Action:** Completed Phase 8 - BattleEngine-AI Decoupling
-**Next Action:** Phase 9 - Constant Consolidation
+**Active Phase:** Phase 10 COMPLETE - Ready for Phase 11
+**Last Action:** Completed Phase 10 - Package API Definition
+**Next Action:** Phase 11 - Validation Consolidation
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 8 COMPLETE: BattleEngine-AI Decoupling
-- Created IAIController protocol in game/simulation/interfaces/ai_controller.py
-- Created AIControllerFactory in game/simulation/factories/ai_factory.py
-- Created MockAIController in tests/unit/simulation/mocks/mock_ai_controller.py
-- Refactored BattleEngine to accept optional ai_factory parameter
-- BattleEngine now uses factory for AI creation when provided (start, mid-battle, fighter launch)
-- Kept legacy paths for backward compatibility (all existing tests pass)
-- Updated BattleService to use AIControllerFactory
-- All tests passing: 192 integration, 10 battle engine, 9 factory, 8 interface, 15 battle service
-- Ready for Phase 9: Constant Consolidation
+- Phase 10 COMPLETE: Package API Definition (AR-014)
+- Added __all__ exports to all major packages:
+  - game/core/__init__.py: 35 exports (math, registry, constants, logging, validation, config, paths, protocols)
+  - game/simulation/__init__.py: 12 exports (Ship, Component, BattleEngine, BattleService, etc.)
+  - game/strategy/__init__.py: 15 exports (Fleet, TurnEngine, GameSession, Facade, DTOs, interfaces)
+  - game/ui/__init__.py: Already had 7 module exports (verified)
+  - game/engine/__init__.py: 3 exports (PhysicsBody, CollisionSystem, SpatialGrid)
+  - game/ai/__init__.py: 11 exports (AIController, behaviors, StrategyManager, TargetEvaluator)
+- Updated docs/ARCHITECTURE.md with Package Public APIs section
+- All package-level imports verified working
+- Incremental tests: 52 passed
+- Ready for Phase 11: Validation Consolidation
 
 ## Overview
 This project addresses **21 architecture layer violations** identified in `findings_01_architecture_layer_violations.md`. The focus is on decoupling UI from simulation layer, completing DI migration, refactoring TurnEngine for extensibility, eliminating circular dependencies, and establishing clean package APIs.

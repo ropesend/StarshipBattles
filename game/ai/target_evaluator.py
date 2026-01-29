@@ -4,8 +4,7 @@ This module provides the TargetEvaluator class which scores potential targets
 based on configurable rules from combat strategies.
 """
 from game.core.math import Vector2
-from game.simulation.components.component_constants import LayerType
-from game.core.constants import AttackType
+from game.core.constants import AttackType, LayerType
 
 
 def _is_vector2_like(obj):

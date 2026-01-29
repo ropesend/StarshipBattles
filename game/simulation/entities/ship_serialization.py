@@ -7,7 +7,7 @@ PROJ-38: Added registries parameter for dependency injection.
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import create_component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.logger import log_warning
 

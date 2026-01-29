@@ -1,5 +1,28 @@
 from enum import Enum, auto
 
+__all__ = [
+    'AttackType',
+    'GameState',
+    'LayerType',
+    'LayerDefaults',
+    'CombatConstants',
+    'PLANET_RESOURCES',
+    # Colors
+    'WHITE', 'BLACK', 'BLUE', 'RED', 'GREEN',
+    # Screen dimensions (legacy re-exports)
+    'WIDTH', 'HEIGHT',
+    # Font
+    'FONT_MAIN',
+    # Directory paths (legacy re-exports)
+    'ROOT_DIR', 'GAME_DIR', 'CORE_DIR', 'ASSET_DIR', 'DATA_DIR',
+    'SHIPS_DIR', 'SCREENSHOT_DIR',
+    # Data file paths
+    'COMPONENTS_FILE', 'MODIFIERS_FILE', 'VEHICLE_CLASSES_FILE',
+    # Debug flags
+    'DEBUG_SCREENSHOTS',
+]
+
+
 class AttackType(Enum):
     PROJECTILE = "projectile"
     MISSILE = "missile"
