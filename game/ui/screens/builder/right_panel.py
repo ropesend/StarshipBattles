@@ -2,17 +2,13 @@
 
 Displays ship statistics and configuration options.
 
-Cross-layer imports (acceptable for builder UI):
-- VEHICLE_CLASSES: Runtime - displays vehicle class options in dropdown
-- StrategyManager: Runtime - displays AI strategy options in dropdown
-- LayerType: Runtime (local import) - iterates ship layers for stats display
+PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 """
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
-from game.simulation.entities.ship import VEHICLE_CLASSES
 from game.ai.strategy_manager import StrategyManager
 
 class StatRow:
@@ -59,20 +55,26 @@ class StatRow:
         self._visible = visible
 
 class BuilderRightPanel:
-    def __init__(self, builder, manager, rect, event_bus=None):
+    def __init__(self, builder, manager, rect, event_bus=None, vehicle_class_service=None):
         self.builder = builder
         self.manager = manager
         self.rect = rect
-        
+
+        # PROJ-43: Inject vehicle class service
+        if vehicle_class_service is None:
+            from game.ui.services.vehicle_class_service import VehicleClassService
+            vehicle_class_service = VehicleClassService()
+        self._vehicle_class_service = vehicle_class_service
+
         if event_bus:
             event_bus.subscribe("SHIP_UPDATED", self.on_ship_updated)
-        
+
         self.panel = UIPanel(
             relative_rect=rect,
             manager=manager,
             object_id='#right_panel'
         )
-        
+
         self.setup_controls()
         self.setup_stats()
         
@@ -131,29 +133,31 @@ class BuilderRightPanel:
         self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         y += 40
         
-        # Vehicle Type
+        # Vehicle Type (PROJ-43: via VehicleClassService)
         UILabel(pygame.Rect(10, y, 60, 25), "Type:", manager=self.manager, container=self.panel)
-        # Get unique types
-        types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
-        if not types: types = ["Ship"]
-        
+        types = self._vehicle_class_service.get_vehicle_types()
+        if not types:
+            types = ["Ship"]
+
         curr_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
-        if curr_type not in types: curr_type = types[0]
-        
+        if curr_type not in types:
+            curr_type = types[0]
+
         self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         y += 40
 
-        # Class
+        # Class (PROJ-43: via VehicleClassService)
         UILabel(pygame.Rect(10, y, 60, 25), "Class:", manager=self.manager, container=self.panel)
-        # Filter classes by current type and sort by max_mass (smallest to largest)
-        class_options = [(name, cls.get('max_mass', 0)) for name, cls in VEHICLE_CLASSES.items() if cls.get('type', 'Ship') == curr_type]
+        class_options = self._vehicle_class_service.get_classes_for_type(curr_type)
         class_options.sort(key=lambda x: x[1])  # Sort by max_mass
         class_options = [name for name, _ in class_options]  # Extract just names
-        if not class_options: class_options = ["Escort"]
+        if not class_options:
+            class_options = ["Escort"]
 
         curr_class = self.builder.ship.ship_class
-        if curr_class not in class_options: curr_class = class_options[0]
-        
+        if curr_class not in class_options:
+            curr_class = class_options[0]
+
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
         y += 40
         
@@ -220,32 +224,35 @@ class BuilderRightPanel:
         
         self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
         
-        # 3. Recreate Type
-        # Get unique types
-        types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
-        if not types: types = ["Ship"]
-        
+        # 3. Recreate Type (PROJ-43: via VehicleClassService)
+        types = self._vehicle_class_service.get_vehicle_types()
+        if not types:
+            types = ["Ship"]
+
         curr_type = getattr(s, 'vehicle_type', "Ship")
         # Ensure consistency from class if vehicle_type not set or mismatched
-        class_def = VEHICLE_CLASSES.get(s.ship_class, {})
+        class_def = self._vehicle_class_service.get_class_definition(s.ship_class)
         if class_def:
-             curr_type = class_def.get('type', curr_type)
-        
-        if curr_type not in types: curr_type = types[0]
-        
+            curr_type = class_def.get('type', curr_type)
+
+        if curr_type not in types:
+            curr_type = types[0]
+
         self.vehicle_type_dropdown = UIDropDownMenu(types, curr_type, type_rect, manager=self.manager, container=self.panel)
-        
-        # 4. Recreate Class
-        class_options = [(name, cls.get('max_mass', 0)) for name, cls in VEHICLE_CLASSES.items() if cls.get('type', 'Ship') == curr_type]
+
+        # 4. Recreate Class (PROJ-43: via VehicleClassService)
+        class_options = self._vehicle_class_service.get_classes_for_type(curr_type)
         class_options.sort(key=lambda x: x[1])  # Sort by max_mass
         class_options = [name for name, _ in class_options]  # Extract just names
-        if not class_options: class_options = ["Escort"]
+        if not class_options:
+            class_options = ["Escort"]
 
         curr_class = s.ship_class
-        if curr_class not in class_options: 
-            if curr_class in VEHICLE_CLASSES:
-                 curr_class = class_options[0]
-        
+        all_classes = self._vehicle_class_service.get_all_classes()
+        if curr_class not in class_options:
+            if curr_class in all_classes:
+                curr_class = class_options[0]
+
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
         
         # 5. Recreate AI

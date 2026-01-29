@@ -2,10 +2,20 @@
 
 Task 12.18: Verify cache keys include weapon stats values (not just ID),
 ensuring modified weapons with different stats are cached separately.
+
+PROJ-43: Updated to use mock VehicleClassService instead of patching VEHICLE_CLASSES.
 """
 import pytest
 from unittest.mock import MagicMock, patch
 import pygame
+
+
+@pytest.fixture
+def mock_vehicle_class_service():
+    """Create a mock VehicleClassService."""
+    service = MagicMock()
+    service.get_class_definition.return_value = {'max_mass': 1000}
+    return service
 
 
 @pytest.fixture
@@ -44,9 +54,8 @@ def mock_weapon_with_ability():
 class TestSchematicCacheKey:
     """Verify weapon arc cache key correctly distinguishes weapons."""
 
-    @patch('game.ui.screens.builder.schematic_view.VEHICLE_CLASSES', {})
     def test_same_id_different_range_creates_different_cache_keys(
-        self, mock_weapon_with_ability
+        self, mock_weapon_with_ability, mock_vehicle_class_service
     ):
         """Two weapons with same ID but different range should have different cache keys."""
         from game.ui.screens.builder.schematic_view import SchematicView
@@ -55,7 +64,8 @@ class TestSchematicCacheKey:
         pygame.display.set_mode((100, 100))
 
         rect = pygame.Rect(0, 0, 200, 200)
-        view = SchematicView(rect, MagicMock(), MagicMock())
+        view = SchematicView(rect, MagicMock(), MagicMock(),
+                            vehicle_class_service=mock_vehicle_class_service)
 
         # Same weapon ID, different ranges
         weapon1 = mock_weapon_with_ability("laser_mk1", weapon_range=1000, firing_arc=45, facing=0)
@@ -70,9 +80,8 @@ class TestSchematicCacheKey:
         # Verify we have 2 different cache entries
         assert len(view.arc_cache) == 2
 
-    @patch('game.ui.screens.builder.schematic_view.VEHICLE_CLASSES', {})
     def test_same_id_different_arc_creates_different_cache_keys(
-        self, mock_weapon_with_ability
+        self, mock_weapon_with_ability, mock_vehicle_class_service
     ):
         """Two weapons with same ID but different arc should have different cache keys."""
         from game.ui.screens.builder.schematic_view import SchematicView
@@ -81,7 +90,8 @@ class TestSchematicCacheKey:
         pygame.display.set_mode((100, 100))
 
         rect = pygame.Rect(0, 0, 200, 200)
-        view = SchematicView(rect, MagicMock(), MagicMock())
+        view = SchematicView(rect, MagicMock(), MagicMock(),
+                            vehicle_class_service=mock_vehicle_class_service)
 
         # Same weapon ID, different arcs (e.g., one has Extended Arc modifier)
         weapon1 = mock_weapon_with_ability("laser_mk1", weapon_range=1000, firing_arc=45, facing=0)
@@ -94,8 +104,9 @@ class TestSchematicCacheKey:
 
         assert len(view.arc_cache) == 2
 
-    @patch('game.ui.screens.builder.schematic_view.VEHICLE_CLASSES', {})
-    def test_same_id_same_stats_reuses_cache(self, mock_weapon_with_ability):
+    def test_same_id_same_stats_reuses_cache(
+        self, mock_weapon_with_ability, mock_vehicle_class_service
+    ):
         """Two weapons with same ID and same stats should reuse cache."""
         from game.ui.screens.builder.schematic_view import SchematicView
 
@@ -103,7 +114,8 @@ class TestSchematicCacheKey:
         pygame.display.set_mode((100, 100))
 
         rect = pygame.Rect(0, 0, 200, 200)
-        view = SchematicView(rect, MagicMock(), MagicMock())
+        view = SchematicView(rect, MagicMock(), MagicMock(),
+                            vehicle_class_service=mock_vehicle_class_service)
 
         # Same weapon ID AND same stats - should share cache
         weapon1 = mock_weapon_with_ability("laser_mk1", weapon_range=1000, firing_arc=45, facing=0)
@@ -117,9 +129,8 @@ class TestSchematicCacheKey:
         # Should only have 1 cache entry (reused)
         assert len(view.arc_cache) == 1
 
-    @patch('game.ui.screens.builder.schematic_view.VEHICLE_CLASSES', {})
     def test_different_id_same_stats_creates_different_cache_keys(
-        self, mock_weapon_with_ability
+        self, mock_weapon_with_ability, mock_vehicle_class_service
     ):
         """Two different weapons with same stats should have different cache keys."""
         from game.ui.screens.builder.schematic_view import SchematicView
@@ -128,7 +139,8 @@ class TestSchematicCacheKey:
         pygame.display.set_mode((100, 100))
 
         rect = pygame.Rect(0, 0, 200, 200)
-        view = SchematicView(rect, MagicMock(), MagicMock())
+        view = SchematicView(rect, MagicMock(), MagicMock(),
+                            vehicle_class_service=mock_vehicle_class_service)
 
         # Different weapon IDs but same stats
         weapon1 = mock_weapon_with_ability("laser_mk1", weapon_range=1000, firing_arc=45, facing=0)
@@ -142,8 +154,9 @@ class TestSchematicCacheKey:
         # Should have 2 different cache entries (different weapon IDs)
         assert len(view.arc_cache) == 2
 
-    @patch('game.ui.screens.builder.schematic_view.VEHICLE_CLASSES', {})
-    def test_invalidate_cache_clears_all_entries(self, mock_weapon_with_ability):
+    def test_invalidate_cache_clears_all_entries(
+        self, mock_weapon_with_ability, mock_vehicle_class_service
+    ):
         """invalidate_cache() should clear all cached arc surfaces."""
         from game.ui.screens.builder.schematic_view import SchematicView
 
@@ -151,7 +164,8 @@ class TestSchematicCacheKey:
         pygame.display.set_mode((100, 100))
 
         rect = pygame.Rect(0, 0, 200, 200)
-        view = SchematicView(rect, MagicMock(), MagicMock())
+        view = SchematicView(rect, MagicMock(), MagicMock(),
+                            vehicle_class_service=mock_vehicle_class_service)
 
         weapon = mock_weapon_with_ability("laser_mk1", weapon_range=1000, firing_arc=45, facing=0)
         screen = pygame.Surface((200, 200), pygame.SRCALPHA)

@@ -1,7 +1,7 @@
 """Battle setup screen module for configuring teams before battle.
 
-Cross-layer imports (acceptable for battle setup):
-- Ship: Runtime - creates Ship instances from design JSON for battle
+PROJ-43: Uses ShipFactory facade instead of direct Ship import.
+- ShipFactory: Creates and configures Ship instances via UI services layer
 - StrategyManager: Runtime - populates AI strategy dropdown options
 """
 import pygame
@@ -11,8 +11,12 @@ import glob
 import tkinter as tk
 from tkinter import filedialog, simpledialog
 
-from game.simulation.entities.ship import Ship
+from game.ui.services.ship_factory import ShipFactory
 from game.ai.strategy_manager import StrategyManager
+
+
+# Module-level factory instance for convenience
+_ship_factory = ShipFactory()
 
 
 def scan_ship_designs():
@@ -77,57 +81,50 @@ def scan_formations():
 
 
 def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angle=0):
-    """Load ships from team entry list. Returns list of Ship objects."""
+    """Load ships from team entry list. Returns list of Ship objects.
+
+    PROJ-43: Uses ShipFactory facade instead of direct Ship import.
+    """
     ships = []
-    formation_masters = {}
-    
+    formation_data = []
+
     for i, entry in enumerate(team_entries):
         with open(entry['design']['path'], 'r') as f:
             data = json.load(f)
-        ship = Ship.from_dict(data)
-        
-        # Position Logic
+        ship = _ship_factory.create_from_design(data)
+
+        # Calculate position
         if 'relative_position' in entry:
-            # Formation-based or custom position
             rx, ry = entry['relative_position']
-            # Coordinates are relative to team start center
-            ship.position = pygame.math.Vector2(start_x + rx, start_y + ry)
+            position = pygame.math.Vector2(start_x + rx, start_y + ry)
         else:
-            # Default linear spacing
-            ship.position = pygame.math.Vector2(start_x, start_y + i * 5000)
-            
-        ship.angle = facing_angle
-        ship.ai_strategy = entry['strategy']
-        ship.source_file = os.path.basename(entry['design']['path'])
-        ship.team_id = team_id
+            position = pygame.math.Vector2(start_x, start_y + i * 5000)
+
+        # Configure ship via factory
+        _ship_factory.configure_ship(
+            ship,
+            position=position,
+            angle=facing_angle,
+            team_id=team_id,
+            ai_strategy=entry['strategy'],
+            source_file=os.path.basename(entry['design']['path'])
+        )
         ship.recalculate_stats()
-        
-        # Formation Linking
+
+        # Collect formation data for later linking
         if 'formation_id' in entry:
-            f_id = entry['formation_id']
-            if f_id not in formation_masters:
-                # First ship encountered with this ID is the Master
-                formation_masters[f_id] = ship
-            else:
-                # Subsequent ships are Followers
-                master = formation_masters[f_id]
-                ship.formation_master = master
-                master.formation_members.append(ship)
-                
-                # Calculate Offset: Vector from Master to Follower, in Master's local space
-                # Global Diff = Follower - Master
-                # Local Diff = Global Diff rotated by -MasterAngle
-                diff = ship.position - master.position
-                
-                rot_mode = entry.get('rotation_mode', 'relative')
-                ship.formation_rotation_mode = rot_mode
-                
-                if rot_mode == 'fixed':
-                     ship.formation_offset = diff
-                else:
-                     ship.formation_offset = diff.rotate(-master.angle)
-        
+            formation_data.append({
+                'ship_index': len(ships),
+                'formation_id': entry['formation_id'],
+                'rotation_mode': entry.get('rotation_mode', 'relative')
+            })
+
         ships.append(ship)
+
+    # Set up formations via factory
+    if formation_data:
+        _ship_factory.setup_formation(ships, formation_data)
+
     return ships
 
 
@@ -309,10 +306,10 @@ class BattleSetupScreen:
 
             with open(ship_path, 'r') as f:
                 ship_data = json.load(f)
-            
-            temp_ship = Ship.from_dict(ship_data)
-            temp_ship.recalculate_stats()
-            diameter = temp_ship.radius * 2
+
+            # PROJ-43: Use factory to get radius without direct Ship import
+            radius = _ship_factory.get_ship_radius(ship_data)
+            diameter = radius * 2
             
             # Find existing design entry or create new one
             design_entry = None

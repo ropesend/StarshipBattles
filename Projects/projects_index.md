@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-47 | Documentation Gaps Remediation | Planning | 2026-01-28 | 2026-01-28 |
+| PROJ-46 | Naming Consistency Standardization | Planning | 2026-01-28 | 2026-01-28 |
+| PROJ-45 | Error Handling and Exception Management Refactor | Ready | 2026-01-28 | 2026-01-28 |
+| PROJ-44 | Code Quality & God Classes Refactoring | Planning | 2026-01-28 | 2026-01-28 |
+| PROJ-43 | Architecture Layer Violations Remediation | Ready | 2026-01-28 | 2026-01-28 |
+| PROJ-42 | Backward Compatibility and Legacy Pattern Cleanup | Ready | 2026-01-28 | 2026-01-28 |
 | PROJ-41 | Documentation Health Remediation | Planning | 2026-01-27 | 2026-01-27 |
 
 ## Archived Projects
@@ -63,6 +69,20 @@
 ---
 
 ## Project Summaries
+
+### PROJ-45: Error Handling and Exception Management Refactor
+**Scope:** 30+ error handling issues from findings_04_error_handling.md
+**Phases:** 7 (Foundation → Core → Simulation → AI → Strategy → UI → Docs)
+**Key Goals:** Create custom exception hierarchy, standardize error codes, fix 46+ broad exception catches, eliminate silent exception swallowing, establish error handling guidelines
+**Dependencies:** None - self-contained refactor
+**Source:** [findings_04_error_handling.md](../findings_04_error_handling.md)
+
+### PROJ-42: Backward Compatibility and Legacy Pattern Cleanup
+**Scope:** 44 backward compatibility issues from findings_03_backward_compatibility_legacy.md
+**Phases:** 6 (Quick Wins → Registry Migration → Static/Instance → Serialization → BattleEngine → Tests)
+**Key Goals:** Complete PROJ-38 DI migration, remove FleetMovementSimulator (331 LOC), eliminate 28,319 deprecation warnings, standardize service APIs
+**Dependencies:** None - self-contained cleanup project
+**Source:** [findings_03_backward_compatibility_legacy.md](../findings_03_backward_compatibility_legacy.md)
 
 ### PROJ-16: Consolidate Re-exports (Phase 3)
 **Scope:** Legacy Code Cleanup Phase 3 - Update callers to import from canonical locations and remove re-exports
@@ -126,4 +146,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-42
+## Next Project ID: PROJ-48
