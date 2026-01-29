@@ -189,5 +189,19 @@
     "orange": {"r_min": 200, "g_min": 150},
     "yellow": {}
   },
-  "ui": {}
+  "ui": {},
+  "resource_icons": {
+    "metals": "assets/Images/Resource Icons/resource_metals_icon.png",
+    "organics": "assets/Images/Resource Icons/resource_organics_icon.png",
+    "vapors": "assets/Images/Resource Icons/resource_vapors_icon.png",
+    "radioactives": "assets/Images/Resource Icons/resource_radioactives_icon.png",
+    "exotics": "assets/Images/Resource Icons/resource_exotics_icon.png"
+  },
+  "resource_portraits": {
+    "metals": "assets/Images/Resource Portraits/resource_metals_portrait.png",
+    "organics": "assets/Images/Resource Portraits/resource_organics_portrait.png",
+    "vapors": "assets/Images/Resource Portraits/resource_vapors_portrait.png",
+    "radioactives": "assets/Images/Resource Portraits/resource_radioactives_portrait.png",
+    "exotics": "assets/Images/Resource Portraits/resource_exotics_portrait.png"
+  }
 }

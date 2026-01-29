@@ -9,13 +9,21 @@ Usage:
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Dict, List
 from datetime import datetime
 
+from game.core.paths import Paths
 
-def load_test_log(log_file="combat_lab_test_log.jsonl") -> List[Dict]:
+# Default log file path
+_DEFAULT_TEST_LOG = os.path.join(Paths.SIMULATION_TESTS_OUTPUT_DIR, "combat_lab_test_log.jsonl")
+
+
+def load_test_log(log_file=None) -> List[Dict]:
     """Load all test log entries from JSONL file."""
+    if log_file is None:
+        log_file = _DEFAULT_TEST_LOG
     entries = []
     log_path = Path(log_file)
     if log_path.exists():
@@ -99,8 +107,10 @@ def compare_test_modes(test_id: str, log_entries: List[Dict]) -> Dict:
         }
 
 
-def generate_comparison_report(log_file="combat_lab_test_log.jsonl"):
+def generate_comparison_report(log_file=None):
     """Generate full comparison report for all tests."""
+    if log_file is None:
+        log_file = _DEFAULT_TEST_LOG
     entries = load_test_log(log_file)
 
     if not entries:
@@ -151,8 +161,10 @@ def generate_comparison_report(log_file="combat_lab_test_log.jsonl"):
         print("✓ All tested scenarios match between UI and headless modes.\n")
 
 
-def show_test_history(test_id: str, log_file="combat_lab_test_log.jsonl"):
+def show_test_history(test_id: str, log_file=None):
     """Show execution history for a specific test."""
+    if log_file is None:
+        log_file = _DEFAULT_TEST_LOG
     entries = load_test_log(log_file)
     test_entries = [e for e in entries if e['test_id'] == test_id]
 

@@ -1,4 +1,5 @@
 import logging
+import os
 import threading
 
 from game.core.paths import Paths
@@ -35,7 +36,9 @@ class Logger:
         self.enabled = True
         self.logger = logging.getLogger("StarshipBattles")
         self.logger.setLevel(logging.DEBUG)
-        
+
+        # Ensure logs directory exists
+        os.makedirs(os.path.dirname(Paths.BATTLE_LOG), exist_ok=True)
         fh = logging.FileHandler(Paths.BATTLE_LOG, mode='w')
         fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')

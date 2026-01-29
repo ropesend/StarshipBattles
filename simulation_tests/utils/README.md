@@ -80,7 +80,7 @@ These tolerances account for minor floating-point differences and timing variati
 
 ### Log File Format
 
-Test executions are logged to `combat_lab_test_log.jsonl` in the project root.
+Test executions are logged to `simulation_tests/output/combat_lab_test_log.jsonl`.
 
 **Format:** JSON Lines (one JSON object per line)
 

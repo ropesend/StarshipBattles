@@ -6,6 +6,7 @@ import pygame
 # Set dummy video driver for headless
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
+from game.core.paths import Paths
 from game.ui.screens.battle_scene import BattleScene
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
@@ -77,8 +78,8 @@ def compare_files(f1, f2):
 if __name__ == "__main__":
     print("Running Determinism Verification...")
     
-    log1 = "test_run_1.log"
-    log2 = "test_run_2.log"
+    log1 = os.path.join(Paths.LOGS_DIR, "test_run_1.log")
+    log2 = os.path.join(Paths.LOGS_DIR, "test_run_2.log")
     
     try:
         print("  Executing Run 1...")

@@ -41,10 +41,12 @@ class Paths:
     ASSET_DIR: str = os.path.join(ROOT_DIR, "assets")
     SHIPS_DIR: str = os.path.join(ROOT_DIR, "ships")
 
-    # === User/Runtime Directories ===
-    SAVES_DIR: str = os.path.join(ROOT_DIR, "saves")
-    RACES_DIR: str = os.path.join(ROOT_DIR, "races")
-    SCREENSHOTS_DIR: str = os.path.join(ROOT_DIR, "screenshots")
+    # === Output Directory (user/runtime data) ===
+    OUTPUT_DIR: str = os.path.join(ROOT_DIR, "output")
+    SAVES_DIR: str = os.path.join(OUTPUT_DIR, "saves")
+    RACES_DIR: str = os.path.join(OUTPUT_DIR, "races")
+    SCREENSHOTS_DIR: str = os.path.join(OUTPUT_DIR, "screenshots")
+    LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
 
     # === Data Subdirectories ===
     FORMATIONS_DIR: str = os.path.join(DATA_DIR, "formations")
@@ -64,9 +66,12 @@ class Paths:
     ASSET_MANIFEST_FILE: str = os.path.join(ASSET_DIR, "asset_manifest.json")
 
     # === Log Files ===
-    BATTLE_LOG: str = os.path.join(ROOT_DIR, "battle.log")
-    CRASH_LOG: str = os.path.join(ROOT_DIR, "crash_log.txt")
-    PROFILING_HISTORY: str = os.path.join(ROOT_DIR, "profiling_history.json")
+    BATTLE_LOG: str = os.path.join(LOGS_DIR, "battle.log")
+    CRASH_LOG: str = os.path.join(LOGS_DIR, "crash_log.txt")
+    PROFILING_HISTORY: str = os.path.join(LOGS_DIR, "profiling_history.json")
+
+    # === Simulation Tests Output ===
+    SIMULATION_TESTS_OUTPUT_DIR: str = os.path.join(ROOT_DIR, "simulation_tests", "output")
 
     # === pathlib.Path Accessors ===
     @classmethod
@@ -82,8 +87,16 @@ class Paths:
         return _PROJECT_ROOT / "assets"
 
     @classmethod
+    def get_output_dir(cls) -> Path:
+        return _PROJECT_ROOT / "output"
+
+    @classmethod
     def get_saves_dir(cls) -> Path:
-        return _PROJECT_ROOT / "saves"
+        return _PROJECT_ROOT / "output" / "saves"
+
+    @classmethod
+    def get_logs_dir(cls) -> Path:
+        return _PROJECT_ROOT / "output" / "logs"
 
 
 # Backward compatibility exports

@@ -11,10 +11,10 @@ class TestNewThemes(unittest.TestCase):
         # Create dummy display for image loading
         pygame.display.set_mode((1, 1), pygame.HIDDEN)
         
-        # Verify resources exist
-        if not os.path.exists("resources/ShipThemes/Klingons/theme.json"):
+        # Verify assets exist
+        if not os.path.exists("assets/ShipThemes/Klingons/theme.json"):
             print("Klingon theme.json missing")
-        if not os.path.exists("resources/ShipThemes/Romulans/theme.json"):
+        if not os.path.exists("assets/ShipThemes/Romulans/theme.json"):
             print("Romulan theme.json missing")
             
         # Re-initialize to ensure new files are picked up if manager was already loaded

@@ -51,12 +51,14 @@ Example:
     engine.shutdown()
 """
 import math
+import os
 import random
 import time
 from typing import List, Optional, Tuple, Dict, Any, TYPE_CHECKING
 
 from game.core.math import Vector2
 from game.core.logger import log_warning, log_info
+from game.core.paths import Paths
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig, BattleConfig
@@ -72,8 +74,10 @@ if TYPE_CHECKING:
 
 class BattleLogger:
     """Toggleable logger that writes battle events to file."""
-    
-    def __init__(self, filename: str = "battle_log.txt", enabled: bool = True):
+
+    def __init__(self, filename: str = None, enabled: bool = True):
+        if filename is None:
+            filename = os.path.join(Paths.LOGS_DIR, "battle_log.txt")
         self.enabled = enabled
         self.filename = filename
         self.file = None
@@ -97,6 +101,7 @@ class BattleLogger:
         if self.enabled:
             self.close() # Ensure existing file is closed before opening new one
             try:
+                os.makedirs(os.path.dirname(self.filename), exist_ok=True)
                 self.file = open(self.filename, 'w', encoding='utf-8')
                 self.log("=== BATTLE LOG STARTED ===")
             except IOError as e:

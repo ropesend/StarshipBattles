@@ -10,6 +10,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from game.core.paths import Paths
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.simulation.components.component import load_components, load_modifiers
@@ -166,8 +167,9 @@ class TestRunner:
         self.test_log.append(log_entry)
 
         # Write to persistent log file
-        log_file = Path("combat_lab_test_log.jsonl")
+        log_file = Path(Paths.SIMULATION_TESTS_OUTPUT_DIR) / "combat_lab_test_log.jsonl"
         try:
+            os.makedirs(log_file.parent, exist_ok=True)
             with open(log_file, 'a') as f:
                 f.write(json.dumps(log_entry) + '\n')
             logger.debug(f"Logged test execution to {log_file}")

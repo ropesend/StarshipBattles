@@ -16,6 +16,7 @@ from dataclasses import dataclass
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 import pygame
+from game.core.paths import Paths
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.simulation.components.component import load_components, create_component
@@ -130,7 +131,7 @@ class ComponentTestRunner:
         config = TestConfig.from_file(config_path)
         
         # Create logger
-        log_filename = f"{config.test_id}.log"
+        log_filename = os.path.join(Paths.LOGS_DIR, f"{config.test_id}.log")
         logger = ComponentTestLogger(log_filename, enabled=True)
         logger.start()
         

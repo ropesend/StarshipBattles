@@ -3,13 +3,14 @@ import pytest
 import os
 import warnings
 
+from game.core.paths import Paths
 from game.simulation.systems.battle_engine import BattleLogger
 
 
 @pytest.fixture
 def test_file():
     """Provide test file path and clean up after test."""
-    file_path = "test_battle_log.txt"
+    file_path = os.path.join(Paths.LOGS_DIR, "test_battle_log.txt")
     yield file_path
     # Clean up test files
     if os.path.exists(file_path):

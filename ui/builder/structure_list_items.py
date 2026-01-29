@@ -35,7 +35,7 @@ class StructureListHeader:
         
         icon_x = -160 - (len(PLANET_RESOURCES) * config.RESOURCE_COL_WIDTH)
         for res in PLANET_RESOURCES:
-            icon_path = f"Resources/images/icons/resource_{res.lower()}_icon.png"
+            icon_path = f"assets/Images/Resource Icons/resource_{res.lower()}_icon.png"
             if os.path.exists(icon_path):
                 try:
                     img = pygame.image.load(icon_path).convert_alpha()

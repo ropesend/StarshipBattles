@@ -313,18 +313,12 @@ class BuilderRightPanel:
 
         filename = f"{class_clean}_Portrait.jpg"
         
-        base_path = "resources/Portraits"
-        # We need absolute path or relative to CWD
-        full_path = os.path.join(base_path, theme, filename)
-        
-        # Check for new location: assets/ShipThemes/{theme}/Portraits
-        new_loc = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
-        if os.path.exists(new_loc):
-            full_path = new_loc
-            
+        # Load from assets/ShipThemes/{theme}/Portraits/
+        full_path = os.path.join("assets", "ShipThemes", theme, "Portraits", filename)
+
         if not os.path.exists(full_path):
-            # Try with spaces?
-            full_path_space = os.path.join(base_path, theme, f"{ship_class}_Portrait.jpg")
+            # Try with spaces in ship class name
+            full_path_space = os.path.join("assets", "ShipThemes", theme, "Portraits", f"{ship_class}_Portrait.jpg")
             if os.path.exists(full_path_space):
                 full_path = full_path_space
             else:

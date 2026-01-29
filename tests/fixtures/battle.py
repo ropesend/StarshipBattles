@@ -20,9 +20,11 @@ Available fixtures:
     - mock_battle_engine: Mock battle engine for unit tests
     - mock_battle_scene: Mock battle scene with engine
 """
+import os
 import pytest
 from unittest.mock import Mock
 
+from game.core.paths import Paths
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from tests.fixtures.ships import create_test_ship
 
@@ -31,17 +33,19 @@ from tests.fixtures.ships import create_test_ship
 # Factory Functions
 # =============================================================================
 
-def create_battle_engine(enable_logging: bool = False, log_filename: str = "test_battle_log.txt") -> BattleEngine:
+def create_battle_engine(enable_logging: bool = False, log_filename: str = None) -> BattleEngine:
     """
     Create a battle engine for testing.
 
     Args:
         enable_logging: If True, enable battle logging (default: False)
-        log_filename: Filename for battle log if logging enabled
+        log_filename: Filename for battle log if logging enabled (default: output/logs/test_battle_log.txt)
 
     Returns:
         Configured BattleEngine instance
     """
+    if log_filename is None:
+        log_filename = os.path.join(Paths.LOGS_DIR, "test_battle_log.txt")
     logger = BattleLogger(filename=log_filename, enabled=enable_logging)
     return BattleEngine(logger=logger)
 

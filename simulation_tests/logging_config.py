@@ -21,14 +21,20 @@ Usage:
 """
 
 import logging
+import os
 import sys
 from pathlib import Path
+
+from game.core.paths import Paths
 
 # Track whether logging has been initialized
 _logging_initialized = False
 
+# Default log file path
+_DEFAULT_LOG_FILE = os.path.join(Paths.LOGS_DIR, "combat_lab.log")
 
-def setup_combat_lab_logging(log_file="combat_lab.log", console_level=logging.INFO):
+
+def setup_combat_lab_logging(log_file=None, console_level=logging.INFO):
     """
     Configure logging for Combat Lab test framework.
 
@@ -37,7 +43,7 @@ def setup_combat_lab_logging(log_file="combat_lab.log", console_level=logging.IN
     - File handler: DEBUG and above (full diagnostics)
 
     Args:
-        log_file: Path to log file (default: "combat_lab.log" in current directory)
+        log_file: Path to log file (default: output/logs/combat_lab.log)
         console_level: Minimum level for console output (default: logging.INFO)
 
     Returns:
@@ -48,6 +54,13 @@ def setup_combat_lab_logging(log_file="combat_lab.log", console_level=logging.IN
         create duplicate handlers.
     """
     global _logging_initialized
+
+    # Use default log file if not specified
+    if log_file is None:
+        log_file = _DEFAULT_LOG_FILE
+
+    # Ensure logs directory exists
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
     # Get or create the CombatLab logger
     logger = logging.getLogger("CombatLab")

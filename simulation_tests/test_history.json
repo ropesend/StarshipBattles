@@ -2927,96 +2927,6 @@
   ],
   "BEAMWEAPON-001": [
     {
-      "timestamp": "2026-01-17T21:19:28.337173",
-      "ticks_run": 500,
-      "passed": true,
-      "metrics": {
-        "initial_hp": 1000000100,
-        "final_hp": 999999838.0,
-        "damage_dealt": 262.0,
-        "ticks_run": 500,
-        "target_alive": true,
-        "hit_rate": 0.524,
-        "expected_hit_chance": 0.5317890211570807,
-        "duration_real": 0.04121541976928711,
-        "ticks": 500
-      },
-      "validation_summary": {
-        "pass": 7,
-        "fail": 0,
-        "warn": 0,
-        "info": 0
-      },
-      "validation_results": [
-        {
-          "name": "Beam Weapon Damage",
-          "status": "PASS",
-          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
-          "expected": 1,
-          "actual": 1.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Base Accuracy",
-          "status": "PASS",
-          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
-          "expected": 0.5,
-          "actual": 0.5,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Accuracy Falloff",
-          "status": "PASS",
-          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
-          "expected": 0.002,
-          "actual": 0.002,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Weapon Range",
-          "status": "PASS",
-          "message": "Weapon Range: ✓ Expected 800, got 800.0",
-          "expected": 800,
-          "actual": 800.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Target Mass",
-          "status": "PASS",
-          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
-          "expected": 400.0,
-          "actual": 400.0,
-          "p_value": null,
-          "tolerance": 0.0
-        },
-        {
-          "name": "Expected Hit Chance",
-          "status": "PASS",
-          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
-          "expected": 0.5318,
-          "actual": 0.5317890211570807,
-          "p_value": null,
-          "tolerance": 0.0001
-        },
-        {
-          "name": "Hit Rate",
-          "status": "PASS",
-          "message": "Hit Rate: ✓ Expected 53.18%, observed 52.40% (262/500), deviation -1.5%, p=0.0097 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
-          "expected": 0.5318,
-          "actual": 0.524,
-          "p_value": 0.009662782348229038,
-          "tolerance": 0.05
-        }
-      ],
-      "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-28-295314_initial.json",
-      "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-17T21-19-28-295314_final.json",
-      "seed": 478163327
-    },
-    {
       "timestamp": "2026-01-17T21:36:36.005204",
       "ticks_run": 500,
       "passed": true,
@@ -3825,6 +3735,96 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-27T17-17-54-099076_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-27T17-17-54-099076_final.json",
       "seed": 144385920
+    },
+    {
+      "timestamp": "2026-01-28T16:58:30.491085",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "initial_hp": 1000000100,
+        "final_hp": 999999835.0,
+        "damage_dealt": 265.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.53,
+        "expected_hit_chance": 0.5317890211570807,
+        "duration_real": 0.08498597145080566,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 7,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Beam Weapon Damage",
+          "status": "PASS",
+          "message": "Beam Weapon Damage: ✓ Expected 1, got 1.0",
+          "expected": 1,
+          "actual": 1.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Base Accuracy",
+          "status": "PASS",
+          "message": "Base Accuracy: ✓ Expected 0.5, got 0.5",
+          "expected": 0.5,
+          "actual": 0.5,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Accuracy Falloff",
+          "status": "PASS",
+          "message": "Accuracy Falloff: ✓ Expected 0.002, got 0.002",
+          "expected": 0.002,
+          "actual": 0.002,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Weapon Range",
+          "status": "PASS",
+          "message": "Weapon Range: ✓ Expected 800, got 800.0",
+          "expected": 800,
+          "actual": 800.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Target Mass",
+          "status": "PASS",
+          "message": "Target Mass: ✓ Expected 400.0, got 400.0",
+          "expected": 400.0,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Expected Hit Chance",
+          "status": "PASS",
+          "message": "Expected Hit Chance: ✓ Expected 0.5318, got 0.5317890211570807 - within tolerance\n  Formula: P = 1/(1+e^-0.1273) from sigmoid formula with net_score = 0.5 - 0.0411 - 0.3316",
+          "expected": 0.5318,
+          "actual": 0.5317890211570807,
+          "p_value": null,
+          "tolerance": 0.0001
+        },
+        {
+          "name": "Hit Rate",
+          "status": "PASS",
+          "message": "Hit Rate: ✓ Expected 53.18%, observed 53.00% (265/500), deviation -0.3%, p=0.0046 (proven equivalent)\n  Equivalence margin: ±6.0% [47.18%, 59.18%]\n  (Each beam hit = 1 damage, so damage_dealt = number of hits)",
+          "expected": 0.5318,
+          "actual": 0.53,
+          "p_value": 0.0045528066920488275,
+          "tolerance": 0.05
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-28T16-58-28-805912_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\BEAMWEAPON-001_2026-01-28T16-58-28-805912_final.json",
+      "seed": 1541245133
     }
   ],
   "BEAMWEAPON-001-HT": [

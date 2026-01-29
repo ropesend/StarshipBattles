@@ -18,6 +18,7 @@ import pygame_gui
 from typing import Callable, Optional, Tuple, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info
+from game.core.paths import Paths
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
 from game.strategy.systems.race_library import RaceLibrary
 
@@ -410,7 +411,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         save_name = self.save_name_input.get_text().strip()
 
         # Validate save name
-        saves_folder = os.path.join(os.getcwd(), "saves")
+        saves_folder = Paths.SAVES_DIR
         is_valid, error = self.validate_save_name(save_name, saves_folder)
 
         if not is_valid:

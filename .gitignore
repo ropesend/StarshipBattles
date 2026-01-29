@@ -13,10 +13,8 @@ venv/
 # Ignore root-level config JSONs except specific ones
 
 /component_presets.json
-battle.log
-battle_log.txt
-combat_lab.log
-crash_log.txt
+/output/
+/simulation_tests/output/
 collect_log*.txt
 .pytest_cache/
 
