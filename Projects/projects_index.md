@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-48 | Testing Infrastructure Overhaul | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-47 | Documentation Gaps Remediation | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-46 | Naming Consistency Standardization | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-45 | Error Handling and Exception Management Refactor | Ready | 2026-01-28 | 2026-01-28 |
@@ -146,4 +147,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-48
+## Next Project ID: PROJ-49

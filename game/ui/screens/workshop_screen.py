@@ -15,11 +15,8 @@ from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 from game.core.constants import LayerType
 from game.core.registry import get_vehicle_classes
-from game.simulation.components.component import (
-    get_all_components
-)
+# PROJ-43: Removed direct simulation imports - using adapters instead
 from game.ui.renderer.sprites import SpriteManager
-from game.simulation.systems.persistence import ShipIO
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
 from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
@@ -35,8 +32,10 @@ from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.strategy.systems.design_library import DesignLibrary
-from game.simulation.services.design_loader import SimulationDesignLoader
 from game.ui.screens.design_selector_window import DesignSelectorWindow
+# PROJ-43: UI service adapters
+from game.ui.services.ship_io_adapter import ShipIOAdapter
+from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
 # Initialize Tkinter root and hide it (for simpledialog)
 try:
@@ -86,6 +85,10 @@ class DesignWorkshopGUI:
 
         self.event_bus = EventBus()
         self.screenshot_manager = ScreenshotManager.instance()
+
+        # PROJ-43: UI service adapters for ship I/O and design loading
+        self._ship_io_adapter = ShipIOAdapter()
+        self._design_loader_adapter = DesignLoaderAdapter()
 
         # MVVM: Create ViewModel to manage builder state
         # PROJ-38: Pass context for DI
@@ -549,7 +552,8 @@ class DesignWorkshopGUI:
         with profile_block("Builder: Load Standard Data"):
             directory = os.path.join(os.getcwd(), "data")
             self._reload_data(directory)
-            ShipIO.default_ships_folder = "ships"
+            # PROJ-43: Use adapter instead of direct ShipIO access
+            self._ship_io_adapter.set_ships_folder("ships")
             self.show_error("Loaded Standard Data • Ships: ships/")
 
     def _load_test_data(self):
@@ -557,7 +561,8 @@ class DesignWorkshopGUI:
         with profile_block("Builder: Load Test Data"):
             directory = os.path.join(os.getcwd(), "tests", "data")
             self._reload_data(directory)
-            ShipIO.default_ships_folder = os.path.join("tests", "data", "ships")
+            # PROJ-43: Use adapter instead of direct ShipIO access
+            self._ship_io_adapter.set_ships_folder(os.path.join("tests", "data", "ships"))
             self.show_error("Loaded Test Data • Ships: tests/data/ships/")
 
     def _reload_data(self, directory: str):
@@ -600,9 +605,10 @@ class DesignWorkshopGUI:
         self.right_panel.refresh_controls()
         self.left_panel.update_component_list()
         self.rebuild_modifier_ui()
-        
-        # Refresh Builder State
-        self.available_components = get_all_components()
+
+        # Refresh Builder State (PROJ-43: Use viewmodel instead of direct get_all_components)
+        self.viewmodel.refresh_available_components()
+        self.available_components = self.viewmodel.available_components
         
         # Reset Ship with new default class (using service layer via viewmodel)
         self.ship = self.viewmodel.create_default_ship(ship_class=default_class)
@@ -662,8 +668,8 @@ class DesignWorkshopGUI:
     def _save_ship(self):
         """Save ship design (context-aware)"""
         if self.context.mode == WorkshopMode.STANDALONE:
-            # Use old file dialog system
-            success, message = ShipIO.save_ship(self.ship)
+            # PROJ-43: Use adapter instead of direct ShipIO access
+            success, message = self._ship_io_adapter.save_ship(self.ship)
             if success:
                 log_info(message)
             elif message:
@@ -711,8 +717,8 @@ class DesignWorkshopGUI:
     def _load_ship(self):
         """Load ship design (context-aware)"""
         if self.context.mode == WorkshopMode.STANDALONE:
-            # Use old file dialog system
-            new_ship, message = ShipIO.load_ship(self.width, self.height)
+            # PROJ-43: Use adapter instead of direct ShipIO access
+            new_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
             if new_ship:
                 self._apply_loaded_ship(new_ship, message)
             elif message:
@@ -756,11 +762,9 @@ class DesignWorkshopGUI:
                 log_info(f"Workshop: User selected design_id='{design_id}'")
                 design_data = library.load_design_data(design_id)
                 if design_data:
-                    loader = SimulationDesignLoader()
-                    ship = loader.load_ship_from_design_data(
-                        design_data,
-                        center_x=self.width // 2,
-                        center_y=self.height // 2
+                    # PROJ-43: Use adapter instead of direct SimulationDesignLoader
+                    ship = self._design_loader_adapter.load_ship_from_design_data(
+                        design_data, self.width, self.height
                     )
                     if ship:
                         log_info(f"Workshop: Successfully loaded design '{ship.name}'")
@@ -865,8 +869,8 @@ class DesignWorkshopGUI:
     def _on_select_target_pressed(self):
         """Select target ship (context-aware)"""
         if self.context.mode == WorkshopMode.STANDALONE:
-            # Use old file dialog system (scans global ships/ folder)
-            target_ship, message = ShipIO.load_ship(self.width, self.height)
+            # PROJ-43: Use adapter instead of direct ShipIO access
+            target_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
             if target_ship:
                 self.weapons_report_panel.set_target(target_ship)
                 log_info(f"Selected target: {target_ship.name}")
@@ -882,11 +886,9 @@ class DesignWorkshopGUI:
             def on_target_selected(design_id: str):
                 design_data = library.load_design_data(design_id)
                 if design_data:
-                    loader = SimulationDesignLoader()
-                    ship = loader.load_ship_from_design_data(
-                        design_data,
-                        center_x=self.width // 2,
-                        center_y=self.height // 2
+                    # PROJ-43: Use adapter instead of direct SimulationDesignLoader
+                    ship = self._design_loader_adapter.load_ship_from_design_data(
+                        design_data, self.width, self.height
                     )
                     if ship:
                         self.weapons_report_panel.set_target(ship)

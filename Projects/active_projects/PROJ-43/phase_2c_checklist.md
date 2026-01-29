@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Remove direct simulation imports from workshop and battle screens
 
 ---
@@ -19,14 +19,14 @@
 **File:** `game/ui/services/ship_io_adapter.py` (NEW)
 **Tests:** `pytest tests/unit/ui/services/test_ship_io_adapter.py`
 
-- [ ] Create `ShipIOAdapter` class wrapping ShipIO:
+- [x] Create `ShipIOAdapter` class wrapping ShipIO:
   - `set_ships_folder(folder_path)` - configure folder
   - `save_ship(ship) -> (bool, str)` - save ship design
   - `load_ship(width, height) -> (Ship, str)` - load ship design
-- [ ] Inject actual ShipIO via constructor for testability
-- [ ] Create unit tests with mock ShipIO
+- [x] Inject actual ShipIO via constructor for testability
+- [x] Create unit tests with mock ShipIO
 
-**Notes:**
+**Notes:** Created ShipIOAdapter with 8 unit tests (all passing). Added `get_ships_folder()` method for completeness. Added to `game/ui/services/__init__.py` exports.
 
 ---
 
@@ -34,12 +34,12 @@
 **File:** `game/ui/services/design_loader_adapter.py` (NEW)
 **Tests:** `pytest tests/unit/ui/services/test_design_loader_adapter.py`
 
-- [ ] Create `DesignLoaderAdapter` class wrapping SimulationDesignLoader:
+- [x] Create `DesignLoaderAdapter` class wrapping SimulationDesignLoader:
   - `load_ship_from_design_data(design_data, width, height) -> Ship`
-- [ ] Inject actual loader via constructor for testability
-- [ ] Create unit tests with mock loader
+- [x] Inject actual loader via constructor for testability
+- [x] Create unit tests with mock loader
 
-**Notes:**
+**Notes:** Created DesignLoaderAdapter with 6 unit tests (all passing). Also added `load_ship_from_file()` method. Added to `game/ui/services/__init__.py` exports.
 
 ---
 
@@ -53,16 +53,16 @@
 - Line 38: `from game.simulation.services.design_loader import SimulationDesignLoader`
 
 **Changes:**
-- [ ] Add imports for new adapters
-- [ ] Remove simulation imports (lines 18-19, 22, 38)
-- [ ] Update `__init__()` to accept adapters via context/constructor
-- [ ] Replace `get_all_components()` (line 605) with viewmodel access
-- [ ] Replace `ShipIO.default_ships_folder` assignments (lines 552, 560) with adapter
-- [ ] Replace `ShipIO.save_ship()` (line 666) with adapter
-- [ ] Replace `ShipIO.load_ship()` (lines 715, 869) with adapter
-- [ ] Replace `SimulationDesignLoader()` instantiation (lines 759, 885) with adapter
+- [x] Add imports for new adapters
+- [x] Remove simulation imports (lines 18-19, 22, 38)
+- [x] Update `__init__()` to accept adapters via context/constructor
+- [x] Replace `get_all_components()` (line 605) with viewmodel access
+- [x] Replace `ShipIO.default_ships_folder` assignments (lines 552, 560) with adapter
+- [x] Replace `ShipIO.save_ship()` (line 666) with adapter
+- [x] Replace `ShipIO.load_ship()` (lines 715, 869) with adapter
+- [x] Replace `SimulationDesignLoader()` instantiation (lines 759, 885) with adapter
 
-**Notes:**
+**Notes:** Removed all 3 simulation imports. Added ShipIOAdapter and DesignLoaderAdapter instances created in `__init__()`. Replaced all usages with adapter calls. Workshop tests pass (37 tests).
 
 ---
 
@@ -75,12 +75,12 @@
 - Lines 22-24: TYPE_CHECKING imports (already decoupled)
 
 **Changes:**
-- [ ] Verify VehicleDesignService import is acceptable (service pattern)
-- [ ] Verify TYPE_CHECKING imports are properly guarded
-- [ ] Document that this import is intentional (service layer)
-- [ ] No changes needed if pattern is acceptable
+- [x] Verify VehicleDesignService import is acceptable (service pattern)
+- [x] Verify TYPE_CHECKING imports are properly guarded
+- [x] Document that this import is intentional (service layer)
+- [x] No changes needed if pattern is acceptable
 
-**Notes:** VehicleDesignService is already an abstraction - may not need changes.
+**Notes:** VERIFIED - VehicleDesignService is a proper service abstraction layer ("Provides an abstraction layer between UI and Ship domain objects"). It accepts dependency injection via registries parameter (PROJ-38). TYPE_CHECKING imports (Ship, LayerType, Component, DesignResult) are properly guarded. No changes needed.
 
 ---
 
@@ -93,35 +93,35 @@
 - Lines 26-27: TYPE_CHECKING imports (already decoupled)
 
 **Changes:**
-- [ ] Verify BattleService import is acceptable (abstraction layer)
-- [ ] Verify no direct BattleEngine imports exist
-- [ ] Document that BattleService is intentional facade
-- [ ] No changes needed if pattern is acceptable
+- [x] Verify BattleService import is acceptable (abstraction layer)
+- [x] Verify no direct BattleEngine imports exist
+- [x] Document that BattleService is intentional facade
+- [x] No changes needed if pattern is acceptable
 
-**Notes:** BattleService is already a proper abstraction layer.
+**Notes:** VERIFIED - BattleService is a proper abstraction ("Provides an abstraction between the UI and BattleEngine"). No direct BattleEngine imports exist. TYPE_CHECKING imports (BattleController, BattleConfig, Ship) are properly guarded. No changes needed.
 
 ---
 
 ### Task 2C.6: Integration Testing [Simple]
 **Tests:** `pytest tests/integration/test_workshop*.py tests/integration/test_battle*.py`
 
-- [ ] Run workshop integration tests
-- [ ] Run battle integration tests
-- [ ] Verify workshop ship save/load works
-- [ ] Verify design library loading works
-- [ ] Verify battle scene initialization works
-- [ ] Run full test suite
+- [x] Run workshop integration tests
+- [x] Run battle integration tests
+- [x] Verify workshop ship save/load works
+- [x] Verify design library loading works
+- [x] Verify battle scene initialization works
+- [x] Run full test suite
 
-**Notes:**
+**Notes:** Full test suite: 5249 passed, 3 skipped (up from 5235 due to 14 new adapter tests). Fixed 5 failing tests in test_builder_io_integration.py and test_builder_improvements.py that were patching removed ShipIO import.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] workshop_screen.py has no direct simulation imports (uses adapters)
-- [ ] workshop_viewmodel.py and battle_scene.py verified (service imports acceptable)
-- [ ] All tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] workshop_screen.py has no direct simulation imports (uses adapters)
+- [x] workshop_viewmodel.py and battle_scene.py verified (service imports acceptable)
+- [x] All tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3

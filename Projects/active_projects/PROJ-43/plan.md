@@ -16,7 +16,7 @@
 | 1. Verification of Previous Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2A. UI-Simulation Decoupling - Setup | Complete | [phase_2a_checklist.md](phase_2a_checklist.md) |
 | 2B. UI-Simulation Decoupling - Builder | Complete | [phase_2b_checklist.md](phase_2b_checklist.md) |
-| 2C. UI-Simulation Decoupling - Workshop/Battle | Not Started | [phase_2c_checklist.md](phase_2c_checklist.md) |
+| 2C. UI-Simulation Decoupling - Workshop/Battle | Complete | [phase_2c_checklist.md](phase_2c_checklist.md) |
 | 3. Workshop Circular Import Fix | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. TurnEngine Constructor DI | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Registry Access Consolidation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -30,30 +30,29 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 2B Complete / Ready for Phase 2C
-**Last Action:** Completed Phase 2B - Created UI services and decoupled builder package from simulation
-**Next Action:** Begin Phase 2C - UI-Simulation Decoupling for Workshop/Battle screens
+**Active Phase:** Phase 2C Complete / Ready for Phase 3
+**Last Action:** Completed Phase 2C - Created UI adapters and decoupled workshop/battle screens from simulation
+**Next Action:** Begin Phase 3 - Workshop Circular Import Fix
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 2B COMPLETE: Created 3 new UI services and updated 6 builder files
-- New services created:
-  - `game/ui/services/component_service.py` - Component and modifier registry access
-  - `game/ui/services/vehicle_class_service.py` - Vehicle class data access
-  - `game/ui/services/validation_service.py` - Ship validation facade
-- New tests: 30 tests across 3 service test files (all passing)
-- Builder files updated to use services:
-  - `game/ui/screens/builder/main.py` - Uses ShipFactory, all 3 new services
-  - `game/ui/screens/builder/legacy_components.py` - Uses ComponentService
-  - `game/ui/screens/builder/modifier_logic.py` - Uses ComponentService (class-level injection)
-  - `game/ui/screens/builder/schematic_view.py` - Uses VehicleClassService
-  - `game/ui/screens/builder/right_panel.py` - Uses VehicleClassService
-  - `game/ui/screens/builder/layer_panel.py` - Uses ValidationService
-- Test files fixed for service injection:
-  - `tests/unit/builder/test_schematic_cache_key.py`
-  - `tests/unit/repro_issues/test_slider_increment.py`
-- Test baseline: 5235 passed, 3 skipped (up from 5199 due to new service tests)
-- Builder package no longer imports directly from simulation layer (except ShipIO for persistence)
-- Services use lazy initialization pattern with dependency injection for testing
+- Phase 2C COMPLETE: Created 2 new UI adapters and removed all direct simulation imports from workshop_screen.py
+- New adapters created:
+  - `game/ui/services/ship_io_adapter.py` - Wraps ShipIO for ship save/load operations (8 tests)
+  - `game/ui/services/design_loader_adapter.py` - Wraps SimulationDesignLoader for design loading (6 tests)
+- Workshop screen changes:
+  - Removed 3 simulation imports (get_all_components, ShipIO, SimulationDesignLoader)
+  - Added ShipIOAdapter and DesignLoaderAdapter instances created in `__init__()`
+  - Replaced all direct simulation calls with adapter calls
+  - Uses viewmodel.refresh_available_components() instead of get_all_components()
+- Verification completed:
+  - workshop_viewmodel.py: VehicleDesignService import is acceptable (proper service abstraction)
+  - battle_scene.py: BattleService import is acceptable (proper abstraction)
+  - Both have TYPE_CHECKING imports properly guarded
+- Test files fixed for adapter injection:
+  - `tests/unit/builder/test_builder_io_integration.py` - Uses mock _ship_io_adapter
+  - `tests/unit/builder/test_builder_improvements.py` - Uses mock adapter for loading test
+- Test baseline: 5249 passed, 3 skipped (up from 5235 due to 14 new adapter tests)
+- UI layer now completely decoupled from direct simulation imports (uses services/adapters only)
 
 ## Overview
 This project addresses **21 architecture layer violations** identified in `findings_01_architecture_layer_violations.md`. The focus is on decoupling UI from simulation layer, completing DI migration, refactoring TurnEngine for extensibility, eliminating circular dependencies, and establishing clean package APIs.
@@ -94,8 +93,8 @@ This project addresses **21 architecture layer violations** identified in `findi
 | Architecture Doc | `docs/ARCHITECTURE.md` |
 
 ## Test Baseline
-- **5235 passed**, 3 skipped
-- **~28354 warnings** (many are deprecation warnings to be addressed)
+- **5249 passed**, 3 skipped
+- **~28363 warnings** (many are deprecation warnings to be addressed)
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
