@@ -12,8 +12,7 @@ from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
 from game.core.registry import (
-    get_component_registry, get_vehicle_classes, get_default_registry_provider,
-    get_default_registries, GameRegistries
+    get_default_registry_provider, get_default_registries, GameRegistries
 )
 from game.core.logger import log_error, log_warning, log_info
 

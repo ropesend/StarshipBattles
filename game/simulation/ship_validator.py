@@ -9,7 +9,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import get_vehicle_classes, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries
 
 # Import base classes from validation module (Phase 12 refactoring)
 from game.simulation.validation.base import (
@@ -258,11 +258,11 @@ class ClassRequirementsRule(DesignValidationRule):
 
         from game.simulation.entities.ship_stats import ShipStatsCalculator
 
-        # PROJ-38: Use injected registries or fallback to global function
+        # PROJ-38: Use injected registries or fallback to provider
         if self._registries is not None:
             classes = self._registries.vehicle_classes
         else:
-            classes = get_vehicle_classes()
+            classes = get_default_registry_provider().get_vehicle_classes()
 
         class_def = classes.get(ship.ship_class, {})
 

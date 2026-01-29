@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Union, TYPE_CHECKING
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
-from game.core.registry import get_vehicle_classes, clear_registry
+from game.core.registry import get_default_registry_provider, clear_registry
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -202,11 +202,11 @@ class WorkshopDataLoader:
     def _get_default_class(self) -> str:
         """Determine the default ship class after loading."""
         default_class = "Escort"
-        # PROJ-38: Use injected registries if available
+        # PROJ-38: Use injected registries if available, else provider
         if self._registries is not None:
             classes = self._registries.vehicle_classes
         else:
-            classes = get_vehicle_classes()
+            classes = get_default_registry_provider().get_vehicle_classes()
 
         if default_class not in classes and classes:
             # Pick first available class

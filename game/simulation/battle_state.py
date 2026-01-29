@@ -17,7 +17,7 @@ import uuid
 
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_warning
-from game.core.registry import get_component_registry, get_modifier_registry
+from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -242,13 +242,14 @@ class ShipState:
         from game.simulation.entities.ship import Ship
         from game.core.math import Vector2
 
-        # PROJ-38: Use injected registries or fallback to global functions
+        # PROJ-38: Use injected registries or fallback to provider
         if registries is not None:
             comp_registry = registries.components
             mod_registry = registries.modifiers
         else:
-            comp_registry = get_component_registry()
-            mod_registry = get_modifier_registry()
+            provider = get_default_registry_provider()
+            comp_registry = provider.get_components()
+            mod_registry = provider.get_modifiers()
 
         # Create base ship - PROJ-38: Pass registries to Ship constructor
         ship = Ship(

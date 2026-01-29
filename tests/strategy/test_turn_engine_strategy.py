@@ -476,8 +476,8 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
             engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             ship.set_component_enabled.assert_called_once_with('shield_generator', False)
@@ -521,8 +521,8 @@ class TestAutoDisableLogic:
                 return mock_energy_comp
             return mock_fuel_comp
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get = get_mock_comp
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = get_mock_comp
             engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             # Should disable comp_a and comp_b (energy), not comp_c (fuel)
@@ -547,8 +547,8 @@ class TestAutoDisableLogic:
         )
         ship.set_component_enabled = MagicMock()
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get = MagicMock(return_value=None)
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=None)
             # Should not raise exception
             engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
             ship.set_component_enabled.assert_not_called()
@@ -579,8 +579,8 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
             engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
             # Both formats should be handled
@@ -622,8 +622,8 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
             # Populate cache first
             ship._cached_stats = {'some': 'cached_data'}
 
@@ -659,8 +659,8 @@ class TestAutoDisableLogic:
             }
         )
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get = MagicMock(return_value=mock_comp_def)
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
             with caplog.at_level(logging.INFO):
                 engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
 
@@ -884,7 +884,8 @@ class TestComponentToggleIntegration:
         mock_registry_obj = MagicMock()
         mock_registry_obj.get = MagicMock(return_value=mock_comp_def)
 
-        with patch('game.strategy.services.ship_stats_service.get_component_registry', return_value=mock_registry_obj):
+        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value = mock_registry_obj
             # Component enabled - should have consumption
             enabled_stats = ShipStatsService.calculate_stats(
                 design_data,

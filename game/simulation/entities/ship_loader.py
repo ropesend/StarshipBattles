@@ -7,14 +7,14 @@ from typing import Optional
 
 from game.core.logger import log_info, log_warning
 from game.core.json_utils import load_json, load_json_required
-from game.core.registry import get_vehicle_classes, get_validator, set_validator
+from game.core.registry import RegistryManager, set_validator, get_default_registry_provider
 from game.simulation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
 
 
 def get_or_create_validator():
     """Get the ship design validator, creating it if necessary."""
-    val = get_validator()
+    val = RegistryManager.instance().get_validator()
     if not val:
         val = ShipDesignValidator()
         set_validator(val)
@@ -109,7 +109,7 @@ def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = 
         log_info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
 
     # Update registry in place to preserve references
-    classes = get_vehicle_classes()
+    classes = get_default_registry_provider().get_vehicle_classes()
     classes.clear()
     classes.update(result)
 

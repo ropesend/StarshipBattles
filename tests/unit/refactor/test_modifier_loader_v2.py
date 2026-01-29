@@ -92,10 +92,10 @@ class TestModifierLoaderV2:
         Note: modifiers_v2.json was consolidated into modifiers.json in Phase 9 (PROJ-40).
         """
         from game.simulation.components.component import load_modifiers
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         # Clear registry first
-        reg = get_modifier_registry()
+        reg = RegistryManager.instance().modifiers
         reg.clear()
 
         # Load canonical modifiers file (V2 format)

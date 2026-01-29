@@ -114,7 +114,7 @@ class TestAbilitySpecificStats:
         """Effects with target_ability should populate ability_stats[ability_name]."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         railgun = create_component('railgun')
 
@@ -132,7 +132,7 @@ class TestAbilitySpecificStats:
         }
 
         # Register the test modifier
-        mod_registry = get_modifier_registry()
+        mod_registry = RegistryManager.instance().modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['test_targeted_mod'] = test_mod_def
 
@@ -148,7 +148,7 @@ class TestAbilitySpecificStats:
         """Effects without target_ability should stay in component.stats."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         railgun = create_component('railgun')
 
@@ -170,7 +170,7 @@ class TestAbilitySpecificStats:
             ]
         }
 
-        mod_registry = get_modifier_registry()
+        mod_registry = RegistryManager.instance().modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['test_mixed_mod'] = test_mod_def
 
@@ -190,7 +190,7 @@ class TestAbilityRecalculateWithTargetedStats:
         """Ability should use ability_stats[cls_name][stat] if present."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         # Use generator which has simpler formula (no range_to_target)
         generator = create_component('generator')
@@ -218,7 +218,7 @@ class TestAbilityRecalculateWithTargetedStats:
             ]
         }
 
-        mod_registry = get_modifier_registry()
+        mod_registry = RegistryManager.instance().modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['gen_boost_targeted'] = test_mod_def
 
@@ -235,7 +235,7 @@ class TestAbilityRecalculateWithTargetedStats:
         """Different abilities consuming same stat can be targeted independently."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         generator = create_component('generator')
         if generator is None:
@@ -260,7 +260,7 @@ class TestAbilityRecalculateWithTargetedStats:
             ]
         }
 
-        mod_registry = get_modifier_registry()
+        mod_registry = RegistryManager.instance().modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['gen_boost'] = test_mod_def
 
@@ -277,7 +277,7 @@ class TestMixedGlobalAndTargetedEffects:
         """A modifier can have both global effects and ability-targeted effects."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         generator = create_component('generator')
         if generator is None:
@@ -308,7 +308,7 @@ class TestMixedGlobalAndTargetedEffects:
             ]
         }
 
-        mod_registry = get_modifier_registry()
+        mod_registry = RegistryManager.instance().modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['heavy_gen_boost'] = test_mod_def
 

@@ -61,7 +61,7 @@ import math
 import threading
 from game.simulation.formula_system import evaluate_math_formula
 from typing import Optional, TYPE_CHECKING
-from game.core.registry import get_component_registry, get_modifier_registry, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
@@ -71,8 +71,9 @@ if TYPE_CHECKING:
     from game.core.registry import GameRegistries
 
 # Convenience aliases for registry data (read-only references)
-COMPONENT_REGISTRY = get_component_registry()
-MODIFIER_REGISTRY = get_modifier_registry()
+# Note: Uses provider pattern instead of deprecated utility functions
+COMPONENT_REGISTRY = get_default_registry_provider().get_components()
+MODIFIER_REGISTRY = get_default_registry_provider().get_modifiers()
 
 
 class Component:
@@ -152,7 +153,7 @@ class Component:
             if self._registries is not None:
                 mods = self._registries.modifiers
             else:
-                mods = get_modifier_registry()
+                mods = get_default_registry_provider().get_modifiers()
             for mod_data in self.data['modifiers']:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
@@ -410,11 +411,11 @@ class Component:
         return result
 
     def add_modifier(self, mod_id, value=None):
-        # PROJ-38: Use injected registries if available, else legacy fallback
+        # PROJ-38: Use injected registries if available, else provider fallback
         if self._registries is not None:
             mods = self._registries.modifiers
         else:
-            mods = get_modifier_registry()
+            mods = get_default_registry_provider().get_modifiers()
         if mod_id not in mods: return False
 
         # Check restrictions
@@ -741,13 +742,12 @@ def load_components(filepath="data/components.json"):
     """
     import os
     import copy
-    from game.core.registry import get_component_registry
 
     cache_mgr = ComponentCacheManager.instance()
+    comps = get_default_registry_provider().get_components()
 
     # If cache exists and matches filepath, hydrate Registry from cache (Fast Path)
     if cache_mgr.component_cache is not None and cache_mgr.last_component_file == filepath:
-        comps = get_component_registry()
         for c_id, comp in cache_mgr.component_cache.items():
             comps[c_id] = comp.clone()
         return
@@ -762,7 +762,6 @@ def load_components(filepath="data/components.json"):
     cache_mgr.last_component_file = filepath
 
     # Populate Registry from Cache
-    comps = get_component_registry()
     for c_id, comp in cache_mgr.component_cache.items():
         comps[c_id] = comp.clone()
 
@@ -821,13 +820,12 @@ def load_modifiers(filepath="data/modifiers.json"):
     """
     import os
     import copy
-    from game.core.registry import get_modifier_registry
 
     cache_mgr = ComponentCacheManager.instance()
+    mods = get_default_registry_provider().get_modifiers()
 
     # Fast Path
     if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == filepath:
-        mods = get_modifier_registry()
         for m_id, mod in cache_mgr.modifier_cache.items():
             mods[m_id] = copy.deepcopy(mod)
         return
@@ -840,7 +838,6 @@ def load_modifiers(filepath="data/modifiers.json"):
     cache_mgr.modifier_cache = result
     cache_mgr.last_modifier_file = filepath
 
-    mods = get_modifier_registry()
     for m_id, mod in cache_mgr.modifier_cache.items():
         mods[m_id] = copy.deepcopy(mod)
 
@@ -857,11 +854,11 @@ def create_component(component_id, *, registries: Optional['GameRegistries'] = N
     Returns:
         Component clone or None if not found
     """
-    # PROJ-38: Use injected registries if provided
+    # PROJ-38: Use injected registries if provided, else provider
     if registries is not None:
         comps = registries.components
     else:
-        comps = get_component_registry()
+        comps = get_default_registry_provider().get_components()
 
     if component_id in comps:
         clone = comps[component_id].clone()
@@ -874,5 +871,5 @@ def create_component(component_id, *, registries: Optional['GameRegistries'] = N
 
 def get_all_components():
     """Get a list of all components in the registry."""
-    return list(get_component_registry().values())
+    return list(get_default_registry_provider().get_components().values())
 

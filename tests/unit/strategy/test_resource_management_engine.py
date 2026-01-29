@@ -246,8 +246,8 @@ class TestAutoDisableComponents:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -287,8 +287,8 @@ class TestAutoDisableComponents:
                 return mock_power_comp
             return mock_fuel_comp
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.side_effect = get_comp
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.side_effect = get_comp
 
             # Deplete power - only power_comp should be disabled
             engine._auto_disable_components_for_resource(mock_ship, 'power')
@@ -317,8 +317,8 @@ class TestAutoDisableComponents:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -343,8 +343,8 @@ class TestAutoDisableComponents:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -369,8 +369,8 @@ class TestAutoDisableComponents:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -388,8 +388,8 @@ class TestAutoDisableComponents:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = None
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = None
 
             # Should not raise an error
             engine._auto_disable_components_for_resource(mock_ship, 'power')
@@ -411,8 +411,8 @@ class TestAutoDisableComponents:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             engine._auto_disable_components_for_resource(mock_ship, 'power')
 
@@ -463,8 +463,8 @@ class TestResourceManagementEdgeCases:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             # Call twice - should not raise error
             engine._auto_disable_components_for_resource(mock_ship, 'power')
@@ -537,8 +537,8 @@ class TestResourceManagementEdgeCases:
             }
         }
 
-        with patch('game.strategy.engine.resource_management_engine.get_component_registry') as mock_registry:
-            mock_registry.return_value.get.return_value = mock_comp_def
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get.return_value = mock_comp_def
 
             result = engine.process_per_turn_consumption(1, [mock_empire])
 

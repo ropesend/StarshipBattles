@@ -231,13 +231,13 @@ class TestMaxTargetsDefault:
         """ShipStatsCalculator reset should use CombatConstants.DEFAULT_MAX_TARGETS."""
         from game.core.constants import CombatConstants
         from game.simulation.entities.ship_stats import ShipStatsCalculator
-        from game.core.registry import get_vehicle_classes
+        from game.core.registry import get_default_registry_provider
 
         ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
         # Manually set max_targets to a different value
         ship.max_targets = 99
 
-        calculator = ShipStatsCalculator(get_vehicle_classes())
+        calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
         calculator.calculate(ship)
 
         # After recalculation, should be reset to default

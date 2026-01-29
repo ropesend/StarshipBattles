@@ -14,7 +14,7 @@ from pygame_gui.windows import UIConfirmationDialog
 from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 from game.core.constants import LayerType
-from game.core.registry import get_vehicle_classes
+from game.core.registry import get_default_registry_provider
 # PROJ-43: Removed direct simulation imports - using adapters instead
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.panels.builder_widgets import ModifierEditorPanel
@@ -156,10 +156,10 @@ class DesignWorkshopGUI:
         self._create_ui()
 
     def _get_vehicle_classes(self):
-        """PROJ-38: Get vehicle_classes from context registries or global fallback."""
+        """PROJ-38: Get vehicle_classes from context registries or provider fallback."""
         if self.context.registries is not None:
             return self.context.registries.vehicle_classes
-        return get_vehicle_classes()
+        return get_default_registry_provider().get_vehicle_classes()
 
     def _create_ui(self):
         # Use shared height calculation for bottom panels

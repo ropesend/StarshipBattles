@@ -7,7 +7,7 @@ from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_vehicle_classes, get_component_registry, get_modifier_registry, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.constants import LayerDefaults, CombatConstants
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ from .ship_loader import get_or_create_validator
 
 # Convenience reference to registry data (read-only reference)
 # This is the actual registry dict, so callers can use it directly
-VEHICLE_CLASSES = get_vehicle_classes()
+VEHICLE_CLASSES = get_default_registry_provider().get_vehicle_classes()
 
 
 class _ValidatorProxy:
@@ -73,11 +73,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 # Default registries not set yet - will use legacy pattern
                 self._registries = None
 
-        # Get class definition using injected registries or legacy function
+        # Get class definition using injected registries or provider
         if self._registries is not None:
             class_def = self._registries.vehicle_classes.get(self.ship_class, {})
         else:
-            class_def = get_vehicle_classes().get(self.ship_class, {})
+            class_def = get_default_registry_provider().get_vehicle_classes().get(self.ship_class, {})
 
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
@@ -356,11 +356,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
-        # PROJ-38: Use injected registries if available
+        # PROJ-38: Use injected registries if available, else provider
         if self._registries is not None:
             class_def = self._registries.vehicle_classes.get(self.ship_class, {})
         else:
-            class_def = get_vehicle_classes().get(self.ship_class, {})
+            class_def = get_default_registry_provider().get_vehicle_classes().get(self.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
         
@@ -432,7 +432,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             migrate_components: If True, attempts to keep components and fit them into new layers.
                                 If False, clears all components.
         """
-        if new_class not in get_vehicle_classes():
+        if new_class not in get_default_registry_provider().get_vehicle_classes():
             log_error(f"Unknown class {new_class}")
             return
 
@@ -449,7 +449,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         
         # Update Class
         self.ship_class = new_class
-        class_def = get_vehicle_classes().get(self.ship_class)
+        class_def = get_default_registry_provider().get_vehicle_classes().get(self.ship_class)
         if class_def is None:
             # log_error is imported at module level (line 11)
             log_error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
@@ -586,8 +586,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
         if not self.stats_calculator:
              from .ship_stats import ShipStatsCalculator
-             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
-        
+             self.stats_calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
+
         self.stats_calculator.calculate(self)
 
     def get_missing_requirements(self) -> List[str]:
@@ -614,8 +614,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         all_components = self.get_all_components()
 
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(get_vehicle_classes())
-             
+             self.stats_calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
+
         totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
     
