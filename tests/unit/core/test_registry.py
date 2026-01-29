@@ -15,6 +15,8 @@ import pytest
 import threading
 from unittest.mock import MagicMock
 
+from game.core.registry import RegistryManager
+
 
 # =============================================================================
 # Fixtures
@@ -495,72 +497,60 @@ class TestHydrateMethod:
 
 
 # =============================================================================
-# Test: Utility Functions
+# Test: Registry Direct Access (replaces deprecated utility functions)
 # =============================================================================
 
-class TestUtilityFunctions:
-    """Tests for utility functions (get_component_registry, etc.)."""
+class TestRegistryDirectAccess:
+    """Tests for accessing registries directly through RegistryManager."""
 
-    def test_get_component_registry_returns_components(self, registry):
-        """get_component_registry() should return components dict."""
-        from game.core.registry import get_component_registry
-
+    def test_components_dict_accessible(self, registry):
+        """RegistryManager.instance().components should return components dict."""
         registry.components["test"] = {"id": "test"}
 
-        result = get_component_registry()
+        result = RegistryManager.instance().components
 
         assert result is registry.components
         assert "test" in result
 
-    def test_get_modifier_registry_returns_modifiers(self, registry):
-        """get_modifier_registry() should return modifiers dict."""
-        from game.core.registry import get_modifier_registry
-
+    def test_modifiers_dict_accessible(self, registry):
+        """RegistryManager.instance().modifiers should return modifiers dict."""
         registry.modifiers["mod"] = {"id": "mod"}
 
-        result = get_modifier_registry()
+        result = RegistryManager.instance().modifiers
 
         assert result is registry.modifiers
         assert "mod" in result
 
-    def test_get_vehicle_classes_returns_classes(self, registry):
-        """get_vehicle_classes() should return vehicle_classes dict."""
-        from game.core.registry import get_vehicle_classes
-
+    def test_vehicle_classes_dict_accessible(self, registry):
+        """RegistryManager.instance().vehicle_classes should return vehicle_classes dict."""
         registry.vehicle_classes["Cruiser"] = {"name": "Cruiser"}
 
-        result = get_vehicle_classes()
+        result = RegistryManager.instance().vehicle_classes
 
         assert result is registry.vehicle_classes
         assert "Cruiser" in result
 
-    def test_get_resource_registry_returns_resources(self, registry):
-        """get_resource_registry() should return resources dict."""
-        from game.core.registry import get_resource_registry
-
+    def test_resources_dict_accessible(self, registry):
+        """RegistryManager.instance().resources should return resources dict."""
         registry.resources["fuel"] = {"id": "fuel"}
 
-        result = get_resource_registry()
+        result = RegistryManager.instance().resources
 
         assert result is registry.resources
         assert "fuel" in result
 
     def test_get_validator_returns_validator(self, registry):
-        """get_validator() should return the validator."""
-        from game.core.registry import get_validator
-
+        """RegistryManager.instance().get_validator() should return the validator."""
         mock_validator = MagicMock()
         registry.set_validator(mock_validator)
 
-        result = get_validator()
+        result = RegistryManager.instance().get_validator()
 
         assert result is mock_validator
 
     def test_get_validator_returns_none_when_not_set(self, registry):
-        """get_validator() should return None when not set."""
-        from game.core.registry import get_validator
-
-        result = get_validator()
+        """RegistryManager.instance().get_validator() should return None when not set."""
+        result = RegistryManager.instance().get_validator()
 
         assert result is None
 

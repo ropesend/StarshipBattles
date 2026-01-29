@@ -2,50 +2,44 @@
 Game logic for component modifiers.
 Handles validation, mandatory checks, and default value calculations.
 
-Cross-layer imports (acceptable for builder UI):
-- MODIFIER_REGISTRY: Runtime - needed to validate and apply modifiers
+PROJ-43: Now uses ComponentService for modifier registry access instead of
+direct MODIFIER_REGISTRY import. Uses class-level service injection.
 """
-from game.simulation.components.component import MODIFIER_REGISTRY
+
 
 class ModifierLogic:
-    
+    """Logic for component modifier operations.
+
+    PROJ-43: Uses a class-level ComponentService for registry access.
+    Service is lazily initialized on first use.
+    """
+
+    # Class-level service instance (lazily initialized)
+    _component_service = None
+
     # Modifiers that cannot be removed by the user
     MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
-    
+
+    @classmethod
+    def _get_service(cls):
+        """Get or create the ComponentService instance."""
+        if cls._component_service is None:
+            from game.ui.services.component_service import ComponentService
+            cls._component_service = ComponentService()
+        return cls._component_service
+
+    @classmethod
+    def set_service(cls, service):
+        """Set the ComponentService instance (for testing)."""
+        cls._component_service = service
+
     @staticmethod
     def is_modifier_allowed(mod_id, component):
-        """Check if a modifier is allowed for the given component."""
-        if mod_id not in MODIFIER_REGISTRY:
-            return False
-            
-        mod_def = MODIFIER_REGISTRY[mod_id]
-        if not mod_def.restrictions:
-            return True
-            
-        if 'allow_types' in mod_def.restrictions:
-            if component.type_str not in mod_def.restrictions['allow_types']:
-                return False
-                
-        if 'deny_types' in mod_def.restrictions:
-            if component.type_str in mod_def.restrictions['deny_types']:
-                return False
-                
-        if 'allow_abilities' in mod_def.restrictions:
-            # Check if component has ANY of the allowed abilities
-            # Logic: If 'allow_abilities' is present, component MUST have at least one.
-            # Assuming AND logical requirement? Usually "Allow if X OR Y". 
-            # But here allow_abilities usually lists required capability.
-            # Let's check if component.abilities is used.
-            required = mod_def.restrictions['allow_abilities']
-            has_ability = False
-            for abil in required:
-                if abil in component.abilities or abil in component.data.get('abilities', {}):
-                    has_ability = True
-                    break
-            if not has_ability:
-                return False
-                
-        return True
+        """Check if a modifier is allowed for the given component.
+
+        PROJ-43: Delegates to ComponentService.
+        """
+        return ModifierLogic._get_service().is_modifier_allowed(mod_id, component)
 
     @staticmethod
     def get_mandatory_modifiers(component):
@@ -108,10 +102,14 @@ class ModifierLogic:
 
     @staticmethod
     def get_initial_value(mod_id, component):
-        """Get the initial value for a newly applied modifier."""
-        mod_def = MODIFIER_REGISTRY.get(mod_id)
-        if not mod_def: return 0
-        
+        """Get the initial value for a newly applied modifier.
+
+        PROJ-43: Uses ComponentService for modifier lookup.
+        """
+        mod_def = ModifierLogic._get_service().get_modifier_definition(mod_id)
+        if not mod_def:
+            return 0
+
         if mod_id == 'simple_size_mount':
             return 1.0
         elif mod_id == 'range_mount':
@@ -135,7 +133,7 @@ class ModifierLogic:
             if base_arc is None:
                 base_arc = mod_def.min_val
             return float(base_arc)
-            
+
         return mod_def.default_val
         
     @staticmethod
@@ -151,9 +149,13 @@ class ModifierLogic:
 
     @staticmethod
     def get_local_min_max(mod_id, component):
-        """Returns (min, max) for a modifier, accounting for component-specific constraints."""
-        mod_def = MODIFIER_REGISTRY.get(mod_id)
-        if not mod_def: return (0, 100)
+        """Returns (min, max) for a modifier, accounting for component-specific constraints.
+
+        PROJ-43: Uses ComponentService for modifier lookup.
+        """
+        mod_def = ModifierLogic._get_service().get_modifier_definition(mod_id)
+        if not mod_def:
+            return (0, 100)
         
         local_min = float(mod_def.min_val)
         local_max = float(mod_def.max_val)

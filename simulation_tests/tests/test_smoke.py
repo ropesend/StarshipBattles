@@ -4,7 +4,7 @@ import os
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import create_component
-from game.core.registry import get_vehicle_classes
+from game.core.registry import get_default_registry_provider
 
 
 @pytest.mark.simulation
@@ -18,7 +18,7 @@ class TestSimulationInfrastructure:
     
     def test_vehicle_classes_loaded(self):
         """Verify test vehicle classes are loaded."""
-        classes = get_vehicle_classes()
+        classes = get_default_registry_provider().get_vehicle_classes()
         vc = classes.get('TestS_2L')
         assert vc is not None
         assert vc['max_mass'] == 2000

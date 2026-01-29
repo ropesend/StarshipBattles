@@ -51,6 +51,8 @@ class TestBuilderImprovements:
     def test_loading_sync(self, pygame_window):
         """
         Test that loading a ship updates the dropdowns.
+
+        PROJ-43: Updated to mock _ship_io_adapter instead of ShipIO directly.
         """
         context = WorkshopContext.standalone(tech_preset_name="default")
         builder = DesignWorkshopGUI(1200, 800, context)
@@ -92,9 +94,9 @@ class TestBuilderImprovements:
         mock_ship.total_defense_score = 1.0
         mock_ship.baseline_to_hit_offense = 1.0
 
-        # Mock ShipIO
-        with patch('game.ui.screens.workshop_screen.ShipIO.load_ship', return_value=(mock_ship, "Success")):
-            builder._load_ship()
+        # PROJ-43: Mock the adapter's load_ship method (not ShipIO directly)
+        builder._ship_io_adapter.load_ship = MagicMock(return_value=(mock_ship, "Success"))
+        builder._load_ship()
 
         # Verification
         assert builder.ship == mock_ship

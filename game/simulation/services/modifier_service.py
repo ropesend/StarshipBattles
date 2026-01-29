@@ -6,7 +6,7 @@ PROJ-27: Added registry injection for testability.
 PROJ-38: Added constructor-based DI with GameRegistries support.
 """
 from typing import Optional, Dict, Any, TYPE_CHECKING
-from game.core.registry import get_modifier_registry, get_default_registry_provider, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
@@ -48,8 +48,8 @@ class ModifierService:
             try:
                 self._modifiers = get_default_registries().modifiers
             except RuntimeError:
-                # Default registries not set yet - use legacy function
-                self._modifiers = get_modifier_registry()
+                # Default registries not set yet - use provider
+                self._modifiers = get_default_registry_provider().get_modifiers()
 
     def is_modifier_allowed(
         self_or_mod_id,
@@ -95,7 +95,7 @@ class ModifierService:
             elif registry is not None:
                 modifier_registry = registry.get_modifiers()
             else:
-                modifier_registry = get_modifier_registry()
+                modifier_registry = get_default_registry_provider().get_modifiers()
 
         if mod_id not in modifier_registry:
             return False
@@ -276,7 +276,7 @@ class ModifierService:
             elif registry is not None:
                 modifier_registry = registry.get_modifiers()
             else:
-                modifier_registry = get_modifier_registry()
+                modifier_registry = get_default_registry_provider().get_modifiers()
 
         mod_def = modifier_registry.get(mod_id)
         if not mod_def:
@@ -384,7 +384,7 @@ class ModifierService:
             elif registry is not None:
                 modifier_registry = registry.get_modifiers()
             else:
-                modifier_registry = get_modifier_registry()
+                modifier_registry = get_default_registry_provider().get_modifiers()
 
         mod_def = modifier_registry.get(mod_id)
         if not mod_def:

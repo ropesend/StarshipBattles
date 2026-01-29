@@ -7,21 +7,20 @@ from game.ui.screens.setup_data_io import load_ships_from_entries, scan_ship_des
 
 
 class TestFleetComposition:
+    """Tests for fleet composition and ship loading.
 
-    @patch('game.ui.screens.setup_data_io.Ship')
+    PROJ-43: Updated to use ShipFactory mocking instead of direct Ship mocking.
+    """
+
+    @patch('game.simulation.entities.ship.Ship.from_dict')
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    def test_load_ships_from_entries_basic(self, mock_load_json_required, MockShip):
+    def test_load_ships_from_entries_basic(self, mock_load_json_required, mock_from_dict):
         """Test loading simple ships without formation."""
         # Setup
         # Create distinct mocks for each iteration
         mock_ship_1 = MagicMock()
         mock_ship_2 = MagicMock()
-        MockShip.from_dict.side_effect = [mock_ship_1, mock_ship_2]
-
-        # Mock Vector2 behavior is not strictly needed if we just check attribute assignment,
-        # but if the code did math, we'd need it. Here 'load_ships' does:
-        # ship.position = pygame.math.Vector2(start_x, start_y + i * 5000)
-        # So the checks below should just check if .position was set.
+        mock_from_dict.side_effect = [mock_ship_1, mock_ship_2]
 
         team_entries = [
             {
@@ -44,16 +43,17 @@ class TestFleetComposition:
         assert ships[0] == mock_ship_1
         assert ships[1] == mock_ship_2
 
-        # verify Ship attributes set
+        # verify Ship attributes set (via factory.configure_ship)
+        assert mock_ship_1.position == pygame.math.Vector2(100, 200)
         assert mock_ship_1.angle == 90
         assert mock_ship_1.team_id == 0
         assert mock_ship_1.ai_strategy == 'aggressive'
 
         assert mock_ship_2.ai_strategy == 'defensive'
 
-    @patch('game.ui.screens.setup_data_io.Ship')
+    @patch('game.simulation.entities.ship.Ship.from_dict')
     @patch('game.ui.screens.setup_data_io.load_json_required')
-    def test_load_ships_from_entries_formation(self, mock_load_json_required, MockShip):
+    def test_load_ships_from_entries_formation(self, mock_load_json_required, mock_from_dict):
         """Test formation linking and positioning."""
 
         # Create distinct ship mocks
@@ -65,7 +65,7 @@ class TestFleetComposition:
         follower_ship = MagicMock()
         follower_ship.position = pygame.math.Vector2(0, 0)
 
-        MockShip.from_dict.side_effect = [master_ship, follower_ship]
+        mock_from_dict.side_effect = [master_ship, follower_ship]
         mock_load_json_required.return_value = {}
 
         team_entries = [
@@ -90,32 +90,18 @@ class TestFleetComposition:
         # Assert
         assert len(ships) == 2
 
-        # Master checks
-        # First ship in formation_id group is master
-        # It shouldn't have formation_master set (or rather, code relies on existing value or doesn't set it)
-        # The code: if f_id in formation_masters ... else ...
-        # If not in, sets formation_masters[f_id] = ship.
-
-        # Follower checks
+        # Follower checks (via factory.setup_formation)
         assert follower_ship.formation_master == master_ship
         assert follower_ship in master_ship.formation_members
 
-        # Position checks
+        # Position checks (via factory.configure_ship)
         # Master: start_x + 0, start_y + 0 = 1000, 1000
         assert master_ship.position == pygame.math.Vector2(1000, 1000)
 
         # Follower: start_x + 10, start_y + 10 = 1010, 1010
         assert follower_ship.position == pygame.math.Vector2(1010, 1010)
 
-        # Check formation_offset calculation logic
-        # diff = ship.position - master.position
-        # The logic uses Vector2 subtraction. Since we mocked position with actual Vector2 (above),
-        # or we rely on the code setting them to Vector2.
-        # Wait, the code sets ship.position = Vector2(...).
-        # So master.position IS a Vector2(1000, 1000).
-        # follower.position IS a Vector2(1010, 1010).
-        # diff = Vector2(10, 10).
-        # fixed mode: formation_offset = diff
+        # Check formation_offset calculation logic (via factory.setup_formation)
         assert follower_ship.formation_offset == pygame.math.Vector2(10, 10)
         assert follower_ship.formation_rotation_mode == 'fixed'
 
@@ -151,13 +137,16 @@ class TestFleetComposition:
         assert designs[0]['name'] == 'Valid Ship'
         assert designs[0]['path'] == os.path.join('ships', 'valid.json')
 
-    @patch('game.ui.screens.setup_screen.Ship')
+    @patch('game.simulation.entities.ship.Ship.from_dict')
     @patch('game.ui.screens.setup_screen.filedialog.askopenfilename')
     @patch('game.ui.screens.setup_screen.tk.Tk')
     @patch('game.ui.screens.setup_screen.uuid.uuid4')
     @patch('game.ui.screens.setup_screen.load_json_required')
-    def test_add_formation_to_team(self, mock_load_json_required, mock_uuid, mock_tk, mock_dialog, MockShip):
-        """Test adding a formation to a team."""
+    def test_add_formation_to_team(self, mock_load_json_required, mock_uuid, mock_tk, mock_dialog, mock_from_dict):
+        """Test adding a formation to a team.
+
+        PROJ-43: Updated to use ShipFactory mocking - patching Ship.from_dict.
+        """
         # Setup
         setup_screen = BattleSetupScreen()
         setup_screen.available_ship_designs = [
@@ -179,10 +168,10 @@ class TestFleetComposition:
         # Mock Ship loaded data
         mock_load_json_required.return_value = {'name': 'Test Ship', 'ship_class': 'Frigate', 'ai_strategy': 'test_strat'}
 
-        # Mock Ship instance processing
+        # Mock Ship instance processing (now via ShipFactory.get_ship_radius)
         mock_ship = MagicMock()
         mock_ship.radius = 50
-        MockShip.from_dict.return_value = mock_ship
+        mock_from_dict.return_value = mock_ship
 
         # Mock UUID
         mock_uuid.return_value = 'form-uuid-123'
@@ -199,28 +188,6 @@ class TestFleetComposition:
         assert entry0['formation_id'] == 'form-uuid-123'
         assert entry0['formation_name'] == 'Delta'
         assert entry0['design']['name'] == 'Test Ship'
-
-        # Check positions
-        # Diameter = 100. GRID_UNIT = 50.
-        # Scale = 2.0
-        # Center of input:
-        # Xs: 0, -100, 100 -> Avg: 0
-        # Ys: 0, -100, -100 -> Avg: -66.66...
-        # Let's verify math relative to center
-        # CenterX = 0
-        # CenterY = -200/3 = -66.67
-
-        # Point 1 (0,0): dx = 0, dy = 66.67.
-        # world_x = 0 * 2 = 0
-        # world_y = 66.67 / 50 * 100 = 133.34
-
-        # Validating checking roughly
-        p0 = setup_screen.team1[0]['relative_position']
-        # We can't be 100% sure of order unless we know dict iteration or list order is preserved.
-        # The code iterates 'arrows', which is a list. So order is preserved.
-
-        # 1st arrow: (0,0)
-        # 2nd arrow: (-100, -100)
 
         # Just ensure they are all present and have correct IDs
         for entry in setup_screen.team1:

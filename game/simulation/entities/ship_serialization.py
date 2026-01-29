@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import create_component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import get_component_registry, get_modifier_registry, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.logger import log_warning
 
 if TYPE_CHECKING:
@@ -171,13 +171,14 @@ class ShipSerializer:
                     comp_id = c_entry.get("id", "")
                     modifiers_data = c_entry.get("modifiers", [])
 
-                # PROJ-38: Use injected registries if available
+                # PROJ-38: Use injected registries if available, else provider
                 if registries is not None:
                     comps = registries.components
                     mods = registries.modifiers
                 else:
-                    comps = get_component_registry()
-                    mods = get_modifier_registry()
+                    provider = get_default_registry_provider()
+                    comps = provider.get_components()
+                    mods = provider.get_modifiers()
 
                 if comp_id in comps:
                     # PROJ-38: Clone component and ensure it has registries

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING
 
 from game.core.logger import log_info
-from game.core.registry import get_component_registry
+from game.core.registry import get_default_registry_provider
 from game.strategy.services.ship_stats_service import ShipStatsService
 
 if TYPE_CHECKING:
@@ -110,11 +110,11 @@ class ResourceManagementEngine:
             List of component IDs that were disabled
         """
         disabled_components = []
-        # PROJ-38: Use injected registries or fallback to global function
+        # PROJ-38: Use injected registries or fallback to provider
         if self._registries is not None:
             registry = self._registries.components
         else:
-            registry = get_component_registry()
+            registry = get_default_registry_provider().get_components()
         layers = ship.design_data.get('layers', {})
 
         for layer_name, components in layers.items():

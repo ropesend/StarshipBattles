@@ -5,10 +5,9 @@ This is the original BuilderSceneGUI implementation, used for standalone
 ship design testing. The newer DesignWorkshopGUI (workshop_screen.py) is
 the production version with MVVM architecture and dependency injection.
 
-ARCHITECTURAL NOTE: This module has cross-layer imports to simulation layer
-(Ship, VEHICLE_CLASSES, get_all_components, ShipIO). These are acceptable for
-a standalone development/testing tool that directly manipulates ship designs.
-For production code, use WorkshopContext with dependency injection instead.
+PROJ-43: Migrated to use UI services layer for Ship, VEHICLE_CLASSES,
+get_all_components, MODIFIER_REGISTRY. Direct simulation imports remain
+only in _reload_data() for registry clearing (development tool function).
 """
 import json
 import math
@@ -19,7 +18,7 @@ import os
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
-    UIPanel, UILabel, UIButton, UIDropDownMenu, 
+    UIPanel, UILabel, UIButton, UIDropDownMenu,
     UITextEntryLine, UISelectionList, UIWindow
 )
 from pygame_gui.windows import UIConfirmationDialog
@@ -27,10 +26,10 @@ from pygame_gui.windows import UIConfirmationDialog
 from game.core.profiling import profile_action, profile_block
 from game.core.constants import LayerType
 
-from game.simulation.entities.ship import Ship, VEHICLE_CLASSES
-from game.simulation.components.component import (
-    get_all_components, MODIFIER_REGISTRY
-)
+from game.ui.services.ship_factory import ShipFactory
+from game.ui.services.component_service import ComponentService
+from game.ui.services.vehicle_class_service import VehicleClassService
+from game.ui.services.validation_service import ValidationService
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.planet_list_presets import PresetManager
 from game.simulation.systems.persistence import ShipIO
@@ -74,9 +73,15 @@ class BuilderSceneGUI:
         self.width = screen_width
         self.height = screen_height
         self.on_start_battle = on_start_battle
-        
+
         self.event_bus = EventBus()
-        
+
+        # PROJ-43: UI Services for decoupling from simulation layer
+        self._ship_factory = ShipFactory()
+        self._component_service = ComponentService()
+        self._vehicle_class_service = VehicleClassService()
+        self._validation_service = ValidationService()
+
         # UI Manager
         import os
         theme_path = os.path.join(os.path.dirname(__file__), 'builder_theme.json')
@@ -85,13 +90,20 @@ class BuilderSceneGUI:
                 (screen_width, screen_height),
                 theme_path=theme_path if os.path.exists(theme_path) else None
             )
-        
-        # Ship
-        self.ship = Ship("Custom Ship", screen_width // 2, screen_height // 2, (100, 100, 255))
+
+        # Ship (created via factory)
+        self.ship = self._ship_factory.create_from_design({
+            'name': 'Custom Ship',
+            'ship_class': 'Escort',
+            'theme_id': 'Federation',
+            'color': [100, 100, 255],
+            'layers': {}
+        })
+        self.ship.position = pygame.math.Vector2(screen_width // 2, screen_height // 2)
         self.ship.recalculate_stats()
-        
+
         # Managers
-        self.available_components = get_all_components()
+        self.available_components = self._component_service.get_all_components()
         self.template_modifiers = {}
         self.sprite_mgr = SpriteManager.instance()
         
@@ -422,18 +434,13 @@ class BuilderSceneGUI:
                     self.layer_panel.rebuild()
                     
                     self.controller.dragged_item = c.clone()
-                    # Apply template modifiers
+                    # Apply template modifiers (PROJ-43: via ComponentService)
                     for m_id, val in self.template_modifiers.items():
-                       if m_id in MODIFIER_REGISTRY:
-                           mod_def = MODIFIER_REGISTRY[m_id]
-                           allow = True
-                           if mod_def.restrictions:
-                               if 'allow_types' in mod_def.restrictions and c.type_str not in mod_def.restrictions['allow_types']:
-                                   allow = False
-                           if allow:
-                               self.controller.dragged_item.add_modifier(m_id)
-                               m = self.controller.dragged_item.get_modifier(m_id)
-                               if m: m.value = val
+                        if self._component_service.is_modifier_allowed(m_id, c):
+                            self.controller.dragged_item.add_modifier(m_id)
+                            m = self.controller.dragged_item.get_modifier(m_id)
+                            if m:
+                                m.value = val
                     self.controller.dragged_item.recalculate_stats()
                     
                     # Set as selected so modifiers panel updates
@@ -566,13 +573,13 @@ class BuilderSceneGUI:
                              break
                              
                      if target_layer:
-                         from game.simulation.entities.ship import VALIDATOR
-                         validation = VALIDATOR.validate_addition(self.ship, new_comp, target_layer)
-                         if validation.is_valid:
-                             self.ship.add_component(new_comp, target_layer)
-                             self.update_stats()
-                         else:
-                             self.show_error(f"Cannot add: {', '.join(validation.errors)}")
+                        # PROJ-43: Use ValidationService instead of direct VALIDATOR import
+                        validation = self._validation_service.validate_addition(self.ship, new_comp, target_layer)
+                        if validation.is_valid:
+                            self.ship.add_component(new_comp, target_layer)
+                            self.update_stats()
+                        else:
+                            self.show_error(f"Cannot add: {', '.join(validation.errors)}")
 
             elif act_type == 'apply_preset':
                 self.template_modifiers = data
@@ -640,10 +647,11 @@ class BuilderSceneGUI:
                                                           
             elif hasattr(self, 'right_panel') and hasattr(self.right_panel, 'vehicle_type_dropdown') and event.ui_element == self.right_panel.vehicle_type_dropdown:
                 new_type = event.text
-                if new_type == getattr(self.ship, 'vehicle_type', "Ship"): return
-                
-                # Determine default class for this type
-                valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
+                if new_type == getattr(self.ship, 'vehicle_type', "Ship"):
+                    return
+
+                # Determine default class for this type (PROJ-43: via VehicleClassService)
+                valid_classes = self._vehicle_class_service.get_classes_for_type(new_type)
                 valid_classes.sort(key=lambda x: x[1])
                 target_class = valid_classes[0][0] if valid_classes else "Escort"
                 
@@ -702,18 +710,21 @@ class BuilderSceneGUI:
             elif act == 'change_type':
                 # Clear and Change
                 self.ship.change_class(data, migrate_components=False)
-                
-                # We also need to update the Class Dropdown options
-                new_type = VEHICLE_CLASSES[data].get('type', 'Ship')
-                valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items() if c.get('type', 'Ship') == new_type]
+
+                # We also need to update the Class Dropdown options (PROJ-43: via VehicleClassService)
+                new_type = self._vehicle_class_service.get_type_for_class(data)
+                valid_classes = self._vehicle_class_service.get_classes_for_type(new_type)
                 valid_classes.sort(key=lambda x: x[1])
                 valid_class_names = [n for n, m in valid_classes]
-                if not valid_class_names: valid_class_names = ["Escort"]
-                
+                if not valid_class_names:
+                    valid_class_names = ["Escort"]
+
                 self.right_panel.class_dropdown.kill()
-                self.right_panel.class_dropdown = UIDropDownMenu(valid_class_names, data, 
-                                                   pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                                                   manager=self.ui_manager, container=self.right_panel.panel)
+                self.right_panel.class_dropdown = UIDropDownMenu(
+                    valid_class_names, data,
+                    pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30),
+                    manager=self.ui_manager, container=self.right_panel.panel
+                )
                 
                 self.update_stats()
                 self.right_panel.update_portrait_image()
@@ -749,20 +760,18 @@ class BuilderSceneGUI:
                  mx, my = pygame.mouse.get_pos()
                  hovered_item = self.left_panel.get_hovered_list_item(mx, my)
                  if hovered_item:
-                     # Create preview with current template modifiers
+                     # Create preview with current template modifiers (PROJ-43: via ComponentService)
                      comp_template = hovered_item.component
                      preview_comp = comp_template.clone()
                      for m_id, val in self.template_modifiers.items():
-                        if m_id in MODIFIER_REGISTRY:
-                            mod_def = MODIFIER_REGISTRY[m_id]
-                            if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
-                                continue
-                            preview_comp.add_modifier(m_id)
-                            m = preview_comp.get_modifier(m_id)
-                            if m: m.value = val
+                         if self._component_service.is_modifier_allowed(m_id, preview_comp):
+                             preview_comp.add_modifier(m_id)
+                             m = preview_comp.get_modifier(m_id)
+                             if m:
+                                 m.value = val
                      preview_comp.recalculate_stats()
                      target_comp = preview_comp
-        
+
         self.detail_panel.show_component(target_comp)
         self.ui_manager.update(dt)
         
@@ -776,22 +785,21 @@ class BuilderSceneGUI:
         # Determine efficient hover
         hovered = self.controller.hovered_component
         if not hovered:
-             mx, my = pygame.mouse.get_pos()
-             if not self.view.rect.collidepoint(mx, my):
-                 hovered_item = self.left_panel.get_hovered_list_item(mx, my)
-                 if hovered_item:
-                     comp_template = hovered_item.component
-                     preview_comp = comp_template.clone()
-                     for m_id, val in self.template_modifiers.items():
-                        if m_id in MODIFIER_REGISTRY:
-                            mod_def = MODIFIER_REGISTRY[m_id]
-                            if mod_def.restrictions and 'allow_types' in mod_def.restrictions and preview_comp.type_str not in mod_def.restrictions['allow_types']:
-                                continue
+            mx, my = pygame.mouse.get_pos()
+            if not self.view.rect.collidepoint(mx, my):
+                hovered_item = self.left_panel.get_hovered_list_item(mx, my)
+                if hovered_item:
+                    # PROJ-43: Apply modifiers via ComponentService
+                    comp_template = hovered_item.component
+                    preview_comp = comp_template.clone()
+                    for m_id, val in self.template_modifiers.items():
+                        if self._component_service.is_modifier_allowed(m_id, preview_comp):
                             preview_comp.add_modifier(m_id)
                             m = preview_comp.get_modifier(m_id)
-                            if m: m.value = val
-                     preview_comp.recalculate_stats()
-                     hovered = preview_comp
+                            if m:
+                                m.value = val
+                    preview_comp.recalculate_stats()
+                    hovered = preview_comp
         
         # Also check if hovering a weapon in the weapons report panel
         if not hovered and hasattr(self, 'weapons_report_panel'):
@@ -958,62 +966,72 @@ class BuilderSceneGUI:
             
             self.show_error("Data Reloaded Successfully!")
             
-            # 5. Refresh Builder State
-            self.available_components = get_all_components()
+            # 5. Refresh Builder State (PROJ-43: use services after reload)
+            self.available_components = self._component_service.get_all_components()
             self.template_modifiers = {}
-            
-            # Reset Ship
-            # Find a valid default class
+
+            # Reset Ship - Find a valid default class
             default_class = "Escort"
-            if default_class not in VEHICLE_CLASSES and VEHICLE_CLASSES:
+            all_classes = self._vehicle_class_service.get_all_classes()
+            if default_class not in all_classes and all_classes:
                 # Pick first available
-                default_class = next(iter(VEHICLE_CLASSES.keys()))
-                
-            self.ship = Ship("Custom Ship", self.width // 2, self.height // 2, (100, 100, 255), ship_class=default_class)
+                default_class = next(iter(all_classes.keys()))
+
+            self.ship = self._ship_factory.create_from_design({
+                'name': 'Custom Ship',
+                'ship_class': default_class,
+                'theme_id': 'Federation',
+                'color': [100, 100, 255],
+                'layers': {}
+            })
+            self.ship.position = pygame.math.Vector2(self.width // 2, self.height // 2)
             self.ship.recalculate_stats()
-            
+
             # Reset UI Panels
             # Left Panel needs to rebuild list
             self.left_panel.update_component_list()
-            
+
             # Center View
             self.view.selected_component = None
             self.controller.selected_component = None
             self.selected_components = []
-            
+
             # Right Panel needs to refresh dropdowns
             # We need to recreate the class dropdown or update its items
             # Accessing right_panel internals (tight coupling, but needed for quick fix)
-            
-            # Update Class Dropdown
-            valid_classes = [(n, VEHICLE_CLASSES[n].get('max_mass', 0)) for n, c in VEHICLE_CLASSES.items()]
+
+            # Update Class Dropdown (PROJ-43: via VehicleClassService)
+            valid_classes = [(name, self._vehicle_class_service.get_max_mass(name))
+                            for name in all_classes.keys()]
             valid_classes.sort(key=lambda x: x[1])
             valid_class_names = [n for n, m in valid_classes]
-            if not valid_class_names: valid_class_names = ["Escort"]
-            
+            if not valid_class_names:
+                valid_class_names = ["Escort"]
+
             if hasattr(self.right_panel, 'class_dropdown'):
                 self.right_panel.class_dropdown.kill()
                 self.right_panel.class_dropdown = UIDropDownMenu(
-                    valid_class_names, 
+                    valid_class_names,
                     default_class,
-                    pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                    manager=self.ui_manager, 
+                    pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30),
+                    manager=self.ui_manager,
                     container=self.right_panel.panel
                 )
-                
+
             # Update Type Dropdown if it exists
             if hasattr(self.right_panel, 'vehicle_type_dropdown'):
-                types = sorted(list(set(c.get('type', 'Ship') for c in VEHICLE_CLASSES.values())))
-                if not types: types = ["Ship"]
-                default_type = VEHICLE_CLASSES[default_class].get('type', 'Ship')
-                
+                types = self._vehicle_class_service.get_vehicle_types()
+                if not types:
+                    types = ["Ship"]
+                default_type = self._vehicle_class_service.get_type_for_class(default_class)
+
                 self.right_panel.vehicle_type_dropdown.kill()
                 self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
-                     types,
-                     default_type,
-                     pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
-                     manager=self.ui_manager,
-                     container=self.right_panel.panel
+                    types,
+                    default_type,
+                    pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
+                    manager=self.ui_manager,
+                    container=self.right_panel.panel
                 )
             
             self.update_stats()

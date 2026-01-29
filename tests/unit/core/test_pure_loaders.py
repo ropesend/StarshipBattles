@@ -51,10 +51,10 @@ class TestLoadComponentsData:
     def test_load_components_data_does_not_modify_registry(self):
         """load_components_data() should NOT modify the global registry."""
         from game.simulation.components.component import load_components_data
-        from game.core.registry import get_component_registry
+        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = get_component_registry()
+        registry = RegistryManager.instance().components
         assert len(registry) == 0
 
         # Call pure function
@@ -120,10 +120,10 @@ class TestLoadModifiersData:
     def test_load_modifiers_data_does_not_modify_registry(self):
         """load_modifiers_data() should NOT modify the global registry."""
         from game.simulation.components.component import load_modifiers_data
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = get_modifier_registry()
+        registry = RegistryManager.instance().modifiers
         assert len(registry) == 0
 
         # Call pure function
@@ -185,10 +185,10 @@ class TestLoadVehicleClassesData:
     def test_load_vehicle_classes_data_does_not_modify_registry(self):
         """load_vehicle_classes_data() should NOT modify the global registry."""
         from game.simulation.entities.ship_loader import load_vehicle_classes_data
-        from game.core.registry import get_vehicle_classes
+        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = get_vehicle_classes()
+        registry = RegistryManager.instance().vehicle_classes
         assert len(registry) == 0
 
         # Call pure function
@@ -264,10 +264,10 @@ class TestLoadResourcesData:
     def test_load_resources_data_does_not_modify_registry(self):
         """load_resources_data() should NOT modify the global registry."""
         from game.core.resources import load_resources_data
-        from game.core.registry import get_resource_registry
+        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = get_resource_registry()
+        registry = RegistryManager.instance().resources
         assert len(registry) == 0
 
         # Call pure function
@@ -324,10 +324,10 @@ class TestBackwardCompatibility:
     def test_load_components_populates_registry(self):
         """load_components() should still populate the global registry."""
         from game.simulation.components.component import load_components
-        from game.core.registry import get_component_registry
+        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = get_component_registry()
+        registry = RegistryManager.instance().components
         assert len(registry) == 0
 
         # Call wrapper function
@@ -340,10 +340,10 @@ class TestBackwardCompatibility:
     def test_load_modifiers_populates_registry(self):
         """load_modifiers() should still populate the global registry."""
         from game.simulation.components.component import load_modifiers
-        from game.core.registry import get_modifier_registry
+        from game.core.registry import RegistryManager
 
         # Ensure registry is empty
-        registry = get_modifier_registry()
+        registry = RegistryManager.instance().modifiers
         assert len(registry) == 0
 
         # Call wrapper function

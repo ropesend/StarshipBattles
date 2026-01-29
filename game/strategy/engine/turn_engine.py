@@ -4,6 +4,8 @@ Turn Engine - Strategy Layer Turn Orchestration
 PROJ-36: Refactored to be a lightweight orchestrator that delegates
 to specialized engines.
 
+PROJ-43 Phase 4: Full constructor dependency injection for all engines.
+
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
        - Phase 0: Per-turn resources (via ResourceManagementEngine)
@@ -22,19 +24,34 @@ Delegated Engines:
     - ResourceManagementEngine: Per-turn resource consumption
 
 Dependency Injection:
-    TurnEngine accepts an optional IBattleResolver for combat resolution.
-    Default: SimulationBattleResolver (full battle simulation)
-    Testing: Mock resolvers can be injected for fast strategy tests.
+    TurnEngine accepts optional engine parameters for all sub-engines.
+    Default: Creates standard implementations when not provided.
+    Testing: Mock engines can be injected for fast, isolated tests.
 
 Example:
+    # Default usage
     engine = TurnEngine()
     engine.process_turn(empires, galaxy, save_path="saves/game1")
+
+    # Testing with mock engines
+    engine = TurnEngine(
+        movement_engine=mock_movement,
+        production_engine=mock_production,
+        conflict_engine=mock_conflict
+    )
 """
 from game.core.validation import ValidationResult
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
+    from game.strategy.interfaces.engines import (
+        IMovementEngine,
+        IProductionEngine,
+        IOrderProcessor,
+        IConflictEngine,
+        IResourceEngine,
+    )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
     from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
@@ -57,15 +74,39 @@ class TurnEngine:
     PROJ-36: Additional delegation to:
     - ConflictResolutionEngine: Combat detection and resolution
     - ResourceManagementEngine: Per-turn resource consumption
+
+    PROJ-43 Phase 4: Full constructor dependency injection for all engines.
+    All engines can be injected via constructor for testing and extensibility.
     """
 
-    def __init__(self, battle_resolver: Optional['IBattleResolver'] = None):
+    def __init__(
+        self,
+        battle_resolver: Optional['IBattleResolver'] = None,
+        *,
+        movement_engine: Optional['IMovementEngine'] = None,
+        production_engine: Optional['IProductionEngine'] = None,
+        order_processor: Optional['IOrderProcessor'] = None,
+        conflict_engine: Optional['IConflictEngine'] = None,
+        resource_engine: Optional['IResourceEngine'] = None,
+    ):
         """
         Initialize the turn engine.
+
+        PROJ-43 Phase 4: All engines can be injected for testing.
 
         Args:
             battle_resolver: Optional battle resolver implementation.
                            If None, defaults to SimulationBattleResolver.
+            movement_engine: Optional movement engine (IMovementEngine).
+                           If None, creates FleetMovementEngine.
+            production_engine: Optional production engine (IProductionEngine).
+                           If None, creates ProductionEngine.
+            order_processor: Optional order processor (IOrderProcessor).
+                           If None, creates FleetOrderProcessor.
+            conflict_engine: Optional conflict engine (IConflictEngine).
+                           If None, creates ConflictResolutionEngine.
+            resource_engine: Optional resource engine (IResourceEngine).
+                           If None, creates ResourceManagementEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -74,52 +115,48 @@ class TurnEngine:
         else:
             self._battle_resolver = battle_resolver
 
-        # PROJ-12 Phase 3: Lazy-initialized specialized engines
-        self._movement_engine: Optional['FleetMovementEngine'] = None
-        self._production_engine: Optional['ProductionEngine'] = None
-        self._order_processor: Optional['FleetOrderProcessor'] = None
-
-        # PROJ-36: Conflict resolution engine
-        self._conflict_engine: Optional['ConflictResolutionEngine'] = None
-
-        # PROJ-36: Resource management engine
-        self._resource_engine: Optional['ResourceManagementEngine'] = None
+        # PROJ-43 Phase 4: Store injected engines or None for lazy init
+        self._movement_engine: Optional['IMovementEngine'] = movement_engine
+        self._production_engine: Optional['IProductionEngine'] = production_engine
+        self._order_processor: Optional['IOrderProcessor'] = order_processor
+        self._conflict_engine: Optional['IConflictEngine'] = conflict_engine
+        self._resource_engine: Optional['IResourceEngine'] = resource_engine
 
     @property
-    def movement_engine(self) -> 'FleetMovementEngine':
-        """Lazy initialization of FleetMovementEngine."""
+    def movement_engine(self) -> 'IMovementEngine':
+        """Return movement engine, lazily creating default if not injected."""
         if self._movement_engine is None:
             from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
             self._movement_engine = FleetMovementEngine()
         return self._movement_engine
 
     @property
-    def production_engine(self) -> 'ProductionEngine':
-        """Lazy initialization of ProductionEngine."""
+    def production_engine(self) -> 'IProductionEngine':
+        """Return production engine, lazily creating default if not injected."""
         if self._production_engine is None:
             from game.strategy.engine.production_engine import ProductionEngine
             self._production_engine = ProductionEngine()
         return self._production_engine
 
     @property
-    def order_processor(self) -> 'FleetOrderProcessor':
-        """Lazy initialization of FleetOrderProcessor."""
+    def order_processor(self) -> 'IOrderProcessor':
+        """Return order processor, lazily creating default if not injected."""
         if self._order_processor is None:
             from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
             self._order_processor = FleetOrderProcessor()
         return self._order_processor
 
     @property
-    def conflict_engine(self) -> 'ConflictResolutionEngine':
-        """Lazy initialization of ConflictResolutionEngine."""
+    def conflict_engine(self) -> 'IConflictEngine':
+        """Return conflict engine, lazily creating default if not injected."""
         if self._conflict_engine is None:
             from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
             self._conflict_engine = ConflictResolutionEngine(self._battle_resolver)
         return self._conflict_engine
 
     @property
-    def resource_engine(self) -> 'ResourceManagementEngine':
-        """Lazy initialization of ResourceManagementEngine."""
+    def resource_engine(self) -> 'IResourceEngine':
+        """Return resource engine, lazily creating default if not injected."""
         if self._resource_engine is None:
             from game.strategy.engine.resource_management_engine import ResourceManagementEngine
             self._resource_engine = ResourceManagementEngine()
@@ -219,4 +256,31 @@ class TurnEngine:
             True if fleet was consumed/deleted by the order, False otherwise.
         """
         return self.order_processor.process_end_turn_orders(fleet, empire, galaxy)
+
+
+def create_default_turn_engine() -> TurnEngine:
+    """
+    Factory function to create a TurnEngine with all default engines.
+
+    PROJ-43 Phase 4: Simplifies instantiation for production code.
+
+    This factory creates a TurnEngine with all default sub-engines.
+    For testing, use the TurnEngine constructor directly to inject
+    mock engines.
+
+    Returns:
+        TurnEngine with default implementations of all sub-engines.
+
+    Example:
+        # Production code
+        engine = create_default_turn_engine()
+        engine.process_turn(empires, galaxy, save_path)
+
+        # Test code - use constructor for mocking
+        engine = TurnEngine(
+            movement_engine=mock_movement,
+            production_engine=mock_production
+        )
+    """
+    return TurnEngine()
 

@@ -1,7 +1,7 @@
 """Legacy modifier editor panel for the ship builder.
 
-Cross-layer imports (acceptable for builder UI):
-- MODIFIER_REGISTRY: Runtime - needed to display and apply modifiers in editor
+PROJ-43: Now uses ComponentService for modifier registry access instead of
+direct MODIFIER_REGISTRY import.
 
 Note: This file contains legacy modifier editing functionality.
 Consider migration to ModifierLogic for new code.
@@ -9,7 +9,6 @@ Consider migration to ModifierLogic for new code.
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIHorizontalSlider
-from game.simulation.components.component import MODIFIER_REGISTRY
 from game.core.logger import log_info, log_debug
 
 from .modifier_logic import ModifierLogic
@@ -17,22 +16,30 @@ from .modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
 from .modifier_row import ModifierControlRow
 from .preset_ui import PresetManagerUI
 
+
 class ModifierEditorPanel:
-    def __init__(self, manager, container, width, preset_manager, on_change_callback):
+    def __init__(self, manager, container, width, preset_manager, on_change_callback,
+                 component_service=None):
         self.manager = manager
         self.container = container
         self.width = width
         self.preset_manager = preset_manager
         self.on_change_callback = on_change_callback
-        
+
+        # PROJ-43: Inject component service for modifier access
+        if component_service is None:
+            from game.ui.services.component_service import ComponentService
+            component_service = ComponentService()
+        self._component_service = component_service
+
         # State
         self.editing_component = None
         self.template_modifiers = {}
-        
+
         # UI Elements
-        self.extra_ui_elements = [] # Headers, global buttons
-        self.modifier_rows = {} # mod_id -> ModifierControlRow
-        
+        self.extra_ui_elements = []  # Headers, global buttons
+        self.modifier_rows = {}  # mod_id -> ModifierControlRow
+
         # Preset UI Sub-Component
         self.preset_ui = PresetManagerUI(manager, container, width, preset_manager)
         
@@ -77,17 +84,18 @@ class ModifierEditorPanel:
         self.extra_ui_elements.append(self.clear_settings_btn)
         y += 35
         
-        # 2. Reconcile Rows
+        # 2. Reconcile Rows (PROJ-43: via ComponentService)
         current_mod_ids = []
-        
-        for mod_id, mod_def in MODIFIER_REGISTRY.items():
+        modifier_registry = self._component_service.get_modifier_registry()
+
+        for mod_id, mod_def in modifier_registry.items():
             # Check availability
             allowed = False
             if self.editing_component:
-                allowed = ModifierLogic.is_modifier_allowed(mod_id, self.editing_component)
+                allowed = self._component_service.is_modifier_allowed(mod_id, self.editing_component)
             else:
                 allowed = True
-                
+
             if allowed:
                 current_mod_ids.append(mod_id)
                 self._ensure_row(mod_id, mod_def, y)

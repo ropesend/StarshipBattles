@@ -24,7 +24,7 @@ from game.simulation.components.component import (
     Component, load_components, load_modifiers, create_component,
     reset_component_caches
 )
-from game.core.registry import get_component_registry, get_modifier_registry
+from game.core.registry import RegistryManager
 
 
 # =============================================================================

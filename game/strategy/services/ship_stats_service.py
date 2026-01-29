@@ -17,7 +17,6 @@ Key design decisions:
 
 from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
 from game.core.registry import (
-    get_component_registry, get_vehicle_classes, get_modifier_registry,
     get_default_registry_provider, get_default_registries, GameRegistries
 )
 from game.core.logger import log_warning
@@ -75,11 +74,12 @@ class ShipStatsService:
             try:
                 self._registries = get_default_registries()
             except RuntimeError:
-                # Default registries not set yet - create a minimal one from legacy functions
+                # Default registries not set yet - create from provider
+                provider = get_default_registry_provider()
                 self._registries = GameRegistries(
-                    components=get_component_registry(),
-                    modifiers=get_modifier_registry(),
-                    vehicle_classes=get_vehicle_classes(),
+                    components=provider.get_components(),
+                    modifiers=provider.get_modifiers(),
+                    vehicle_classes=provider.get_vehicle_classes(),
                     resources={}
                 )
 
@@ -154,13 +154,14 @@ class ShipStatsService:
                 component_damage_or_toggles if component_damage_or_toggles is not None else {}
             )
             reg = component_toggles_or_registry if component_toggles_or_registry is not None else registry
-            # PROJ-27: Use injected registry if provided, else use original functions
+            # PROJ-27: Use injected registry if provided, else use provider
             if reg is not None and hasattr(reg, 'get_vehicle_classes'):
                 vehicle_classes = reg.get_vehicle_classes()
                 modifier_registry = reg.get_modifiers()
             else:
-                vehicle_classes = get_vehicle_classes()
-                modifier_registry = get_modifier_registry()
+                provider = get_default_registry_provider()
+                vehicle_classes = provider.get_vehicle_classes()
+                modifier_registry = provider.get_modifiers()
             iterate_components = lambda d: ShipStatsService._iterate_design_components(d, reg)
 
         # Use the resolved values
@@ -464,11 +465,11 @@ class ShipStatsService:
             # Static-style call: ShipStatsService._iterate_design_components(design, registry)
             design_data = self_or_design
             reg = design_or_registry if design_or_registry is not None else registry
-            # PROJ-27: Use injected registry if provided, else use original function
+            # PROJ-27: Use injected registry if provided, else use provider
             if reg is not None and hasattr(reg, 'get_components'):
                 component_registry = reg.get_components()
             else:
-                component_registry = get_component_registry()
+                component_registry = get_default_registry_provider().get_components()
 
         result = []
         layers = design_data.get('layers', {})

@@ -4,17 +4,20 @@ Battle setup data I/O operations.
 Functions for scanning ship designs, formations, loading/saving battle setups,
 and loading ships from configuration entries.
 
-Cross-layer imports (acceptable for battle setup):
-- Ship: Runtime - creates Ship instances from design JSON for battle
+PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 """
 import os
 import glob
 import pygame
 
 from game.core.logger import log_info, log_warning, log_error
-from game.simulation.entities.ship import Ship
+from game.ui.services.ship_factory import ShipFactory
 from game.core.json_utils import load_json, load_json_required, save_json
 from game.core.paths import Paths
+
+
+# Module-level factory instance for convenience
+_ship_factory = ShipFactory()
 
 
 def get_base_path():
@@ -80,6 +83,8 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     """
     Load ships from team entry list.
 
+    PROJ-43: Uses ShipFactory facade instead of direct Ship import.
+
     Args:
         team_entries: List of team entry dicts with design and strategy info
         team_id: Team identifier (0 or 1)
@@ -91,45 +96,44 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
         List of Ship objects
     """
     ships = []
-    formation_masters = {}
+    formation_data = []
 
     for i, entry in enumerate(team_entries):
         data = load_json_required(entry['design']['path'])
-        ship = Ship.from_dict(data)
+        ship = _ship_factory.create_from_design(data)
 
-        # Position Logic
+        # Calculate position
         if 'relative_position' in entry:
             rx, ry = entry['relative_position']
-            ship.position = pygame.math.Vector2(start_x + rx, start_y + ry)
+            position = pygame.math.Vector2(start_x + rx, start_y + ry)
         else:
-            ship.position = pygame.math.Vector2(start_x, start_y + i * 5000)
+            position = pygame.math.Vector2(start_x, start_y + i * 5000)
 
-        ship.angle = facing_angle
-        ship.ai_strategy = entry['strategy']
-        ship.source_file = os.path.basename(entry['design']['path'])
-        ship.team_id = team_id
+        # Configure ship via factory
+        _ship_factory.configure_ship(
+            ship,
+            position=position,
+            angle=facing_angle,
+            team_id=team_id,
+            ai_strategy=entry['strategy'],
+            source_file=os.path.basename(entry['design']['path'])
+        )
         ship.recalculate_stats()
 
-        # Formation Linking
+        # Collect formation data for later linking
         if 'formation_id' in entry:
-            f_id = entry['formation_id']
-            if f_id not in formation_masters:
-                formation_masters[f_id] = ship
-            else:
-                master = formation_masters[f_id]
-                ship.formation_master = master
-                master.formation_members.append(ship)
-
-                diff = ship.position - master.position
-                rot_mode = entry.get('rotation_mode', 'relative')
-                ship.formation_rotation_mode = rot_mode
-
-                if rot_mode == 'fixed':
-                    ship.formation_offset = diff
-                else:
-                    ship.formation_offset = diff.rotate(-master.angle)
+            formation_data.append({
+                'ship_index': len(ships),
+                'formation_id': entry['formation_id'],
+                'rotation_mode': entry.get('rotation_mode', 'relative')
+            })
 
         ships.append(ship)
+
+    # Set up formations via factory
+    if formation_data:
+        _ship_factory.setup_formation(ships, formation_data)
+
     return ships
 
 

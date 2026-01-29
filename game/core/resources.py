@@ -5,7 +5,7 @@ Loads resource type definitions from data/resources.json into the RegistryManage
 """
 
 import os
-from game.core.registry import get_resource_registry
+from game.core.registry import RegistryManager
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_info
 
@@ -89,7 +89,7 @@ def load_resources(filepath: str = "data/resources.json") -> None:
     Args:
         filepath: Path to the resources JSON file. Defaults to data/resources.json.
     """
-    resources = get_resource_registry()
+    resources = RegistryManager.instance().resources
 
     resolved_path = _resolve_resource_path(filepath)
     if resolved_path is None:

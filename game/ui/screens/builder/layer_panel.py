@@ -2,9 +2,7 @@
 
 Displays and manages ship layer structure with component grouping.
 
-Cross-layer imports (acceptable for builder UI):
-- LayerType: Runtime - layer display and iteration
-- VALIDATOR: Runtime - layer capacity validation feedback
+PROJ-43: Now uses ValidationService instead of direct VALIDATOR import.
 """
 import pygame
 import pygame_gui
@@ -23,24 +21,30 @@ from .structure_list_items import (
 from .grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
 from .panel_layout_config import StructurePanelLayoutConfig
 from .drop_target import DropTarget
-from game.simulation.entities.ship import VALIDATOR
+
 
 class LayerPanel(DropTarget):
-    def __init__(self, builder, manager, rect):
+    def __init__(self, builder, manager, rect, validation_service=None):
         self.builder = builder
         self.manager = manager
         self.rect = rect
-        self.items = [] 
+        self.items = []
         self.config = StructurePanelLayoutConfig()
-        
+
+        # PROJ-43: Inject validation service
+        if validation_service is None:
+            from game.ui.services.validation_service import ValidationService
+            validation_service = ValidationService()
+        self._validation_service = validation_service
+
         # UI Reconciliation Cache
         # Key: Unique Identifier (str or tuple), Value: UI Item Instance
-        self.ui_cache = {} 
-        
+        self.ui_cache = {}
+
         # State
         self.selected_group_key = None
-        self.selected_component_id = None 
-        
+        self.selected_component_id = None
+
         # Strategy
         self.grouping_strategies = {
             'Default': DefaultGroupingStrategy(),
@@ -49,7 +53,7 @@ class LayerPanel(DropTarget):
         }
         self.current_strategy_name = 'Default'
         self.grouping_strategy = self.grouping_strategies[self.current_strategy_name]
-        
+
         self.toggle_suppress_timer = 0.0
         
         self.panel = UIPanel(
@@ -380,13 +384,14 @@ class LayerPanel(DropTarget):
                  self.builder.update_stats()
                  return True
              else:
-                 # If 0 added, show error from validation of first attempt?
-                 # ship.add_components_bulk prints errors to console, but builder.show_error might be needed.
-                 # Let's re-run single validation to get the error message for UI if it failed completely.
-                 validation = VALIDATOR.validate_addition(self.builder.ship, component, target_layer)
-                 if not validation.is_valid:
-                     self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
-                 return False
+                # If 0 added, show error from validation of first attempt?
+                # ship.add_components_bulk prints errors to console, but builder.show_error might be needed.
+                # Let's re-run single validation to get the error message for UI if it failed completely.
+                # PROJ-43: Use ValidationService instead of direct VALIDATOR
+                validation = self._validation_service.validate_addition(self.builder.ship, component, target_layer)
+                if not validation.is_valid:
+                    self.builder.show_error(f"Cannot add: {', '.join(validation.errors)}")
+                return False
         return False
 
     def get_target_layer_at(self, pos):

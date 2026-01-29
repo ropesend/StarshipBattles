@@ -116,11 +116,10 @@ class TestShipStateToShipDI:
     def test_to_ship_accepts_registries_parameter(self, minimal_ship_state):
         """to_ship() should accept an optional registries parameter."""
         # This test verifies the method signature accepts registries
-        # When registries is None, it should fall back to global functions
-        with patch('game.simulation.battle_state.get_component_registry') as mock_comp_reg, \
-             patch('game.simulation.battle_state.get_modifier_registry') as mock_mod_reg:
-            mock_comp_reg.return_value = {}
-            mock_mod_reg.return_value = {}
+        # When registries is None, it should fall back to provider
+        with patch('game.simulation.battle_state.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value = {}
+            mock_provider.return_value.get_modifiers.return_value = {}
 
             # Should not raise - registries parameter accepted
             ship = minimal_ship_state.to_ship(registries=None)
@@ -130,22 +129,19 @@ class TestShipStateToShipDI:
 
     def test_to_ship_uses_injected_registries(self, ship_state_with_components, mock_registries):
         """to_ship() should use injected registries when provided."""
-        # When registries is provided, it should NOT call global functions
-        with patch('game.simulation.battle_state.get_component_registry') as mock_comp_reg, \
-             patch('game.simulation.battle_state.get_modifier_registry') as mock_mod_reg:
-            mock_comp_reg.return_value = {}  # Should not be used
-            mock_mod_reg.return_value = {}   # Should not be used
+        # When registries is provided, it should NOT call provider
+        with patch('game.simulation.battle_state.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value = {}  # Should not be used
+            mock_provider.return_value.get_modifiers.return_value = {}   # Should not be used
 
             ship = ship_state_with_components.to_ship(registries=mock_registries)
 
-            # Global functions should NOT be called when registries is provided
-            mock_comp_reg.assert_not_called()
-            mock_mod_reg.assert_not_called()
+            # Provider should NOT be called when registries is provided
+            mock_provider.assert_not_called()
 
     def test_to_ship_falls_back_to_global_when_no_registries(self, ship_state_with_components):
-        """to_ship() should use global functions when registries is None."""
-        with patch('game.simulation.battle_state.get_component_registry') as mock_comp_reg, \
-             patch('game.simulation.battle_state.get_modifier_registry') as mock_mod_reg:
+        """to_ship() should use provider when registries is None."""
+        with patch('game.simulation.battle_state.get_default_registry_provider') as mock_provider:
             mock_component = Mock()
             mock_component.clone.return_value = Mock(
                 id="laser_mk1",
@@ -154,14 +150,13 @@ class TestShipStateToShipDI:
                 is_active=True,
                 add_modifier=Mock(),
             )
-            mock_comp_reg.return_value = {"laser_mk1": mock_component}
-            mock_mod_reg.return_value = {"power_boost": Mock()}
+            mock_provider.return_value.get_components.return_value = {"laser_mk1": mock_component}
+            mock_provider.return_value.get_modifiers.return_value = {"power_boost": Mock()}
 
             ship = ship_state_with_components.to_ship()  # No registries parameter
 
-            # Global functions SHOULD be called when registries is None
-            mock_comp_reg.assert_called_once()
-            mock_mod_reg.assert_called_once()
+            # Provider SHOULD be called when registries is None
+            mock_provider.assert_called_once()
 
     def test_to_ship_uses_registries_components(self, ship_state_with_components, mock_registries):
         """to_ship() should lookup components from injected registries."""

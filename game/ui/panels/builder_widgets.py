@@ -7,7 +7,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIScrollingContainer
 from typing import Optional, TYPE_CHECKING
-from game.core.registry import get_modifier_registry
+from game.core.registry import get_default_registry_provider
 from game.core.logger import log_info, log_debug
 
 from ui.builder.modifier_logic import ModifierLogic
@@ -57,10 +57,10 @@ class ModifierEditorPanel:
         self._cached_scroll_position = 0  # Preserve scroll on rebuild
 
     def _get_modifiers(self):
-        """PROJ-38: Get modifiers from registries or global fallback."""
+        """PROJ-38: Get modifiers from registries or provider fallback."""
         if self._registries is not None:
             return self._registries.modifiers
-        return get_modifier_registry()
+        return get_default_registry_provider().get_modifiers()
 
     def rebuild(self, editing_component, is_readonly=False):
         """Rebuild/Update the modifier UI based on current state."""

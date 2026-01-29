@@ -23,7 +23,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from game.core.resources import load_resources
-from game.core.registry import RegistryManager, get_resource_registry
+from game.core.registry import RegistryManager
 
 
 @pytest.fixture(autouse=True)
@@ -530,30 +530,30 @@ class TestDataAccumulationBug:
 class TestRegistryIntegration:
     """Tests for integration with RegistryManager."""
 
-    def test_get_resource_registry_returns_correct_dict(self, sample_resources_file):
-        """get_resource_registry() returns the same dict as registry.resources."""
+    def test_registry_resources_returns_correct_dict(self, sample_resources_file):
+        """RegistryManager.instance().resources returns the resource dict."""
         load_resources(sample_resources_file)
 
         registry = RegistryManager.instance()
-        resource_registry = get_resource_registry()
+        resource_registry = registry.resources
 
-        # Should be the exact same object
-        assert resource_registry is registry.resources
+        # Should be a dict with resources
+        assert isinstance(resource_registry, dict)
         assert "fuel" in resource_registry
 
-    def test_get_resource_registry_empty_after_clear(self):
-        """After clearing registry, get_resource_registry() returns empty dict."""
+    def test_registry_resources_empty_after_clear(self):
+        """After clearing registry, resources dict is empty."""
         registry = RegistryManager.instance()
         registry.resources["test"] = {"id": "test"}
 
         # Verify it's there
-        assert len(get_resource_registry()) == 1
+        assert len(registry.resources) == 1
 
         # Clear
         registry.resources.clear()
 
         # Should be empty
-        assert len(get_resource_registry()) == 0
+        assert len(registry.resources) == 0
 
     def test_resource_registry_keyed_by_id(self, tmp_path):
         """Resources are keyed by their 'id' field in the registry."""

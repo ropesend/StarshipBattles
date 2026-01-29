@@ -50,27 +50,27 @@ class TestClassRequirementsRuleDI:
         """ClassRequirementsRule should use injected registries when provided."""
         rule = ClassRequirementsRule(registries=mock_registries)
 
-        with patch('game.simulation.ship_validator.get_vehicle_classes') as mock_get_classes:
-            mock_get_classes.return_value = {}  # Should not be used
+        with patch('game.simulation.ship_validator.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_vehicle_classes.return_value = {}  # Should not be used
 
             result = rule.validate(mock_ship)
 
-            # Global function should NOT be called when registries provided
-            mock_get_classes.assert_not_called()
+            # Provider should NOT be called when registries provided
+            mock_provider.assert_not_called()
 
     def test_class_requirements_rule_falls_back_to_global(self, mock_ship):
-        """ClassRequirementsRule should use global function when no registries."""
+        """ClassRequirementsRule should use provider when no registries."""
         rule = ClassRequirementsRule()  # No registries parameter
 
-        with patch('game.simulation.ship_validator.get_vehicle_classes') as mock_get_classes:
-            mock_get_classes.return_value = {
+        with patch('game.simulation.ship_validator.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_vehicle_classes.return_value = {
                 "Cruiser": {"max_mass": 10000}
             }
 
             result = rule.validate(mock_ship)
 
-            # Global function SHOULD be called when no registries
-            mock_get_classes.assert_called_once()
+            # Provider SHOULD be called when no registries
+            mock_provider.assert_called_once()
 
     def test_class_requirements_rule_stores_registries(self, mock_registries):
         """ClassRequirementsRule should store registries on instance."""
@@ -78,15 +78,15 @@ class TestClassRequirementsRuleDI:
         assert rule._registries is mock_registries
 
     def test_class_requirements_rule_none_registries_uses_fallback(self, mock_ship):
-        """ClassRequirementsRule with registries=None should use global fallback."""
+        """ClassRequirementsRule with registries=None should use provider fallback."""
         rule = ClassRequirementsRule(registries=None)
 
-        with patch('game.simulation.ship_validator.get_vehicle_classes') as mock_get_classes:
-            mock_get_classes.return_value = {
+        with patch('game.simulation.ship_validator.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_vehicle_classes.return_value = {
                 "Cruiser": {"max_mass": 10000}
             }
 
             result = rule.validate(mock_ship)
 
-            # Global function should be called when registries=None
-            mock_get_classes.assert_called_once()
+            # Provider should be called when registries=None
+            mock_provider.assert_called_once()

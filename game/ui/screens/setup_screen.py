@@ -1,7 +1,7 @@
 """Battle setup screen module for configuring teams before battle.
 
-Cross-layer imports (acceptable for battle setup):
-- Ship: Runtime - creates Ship instances from design JSON for battle
+PROJ-43: Uses ShipFactory facade instead of direct Ship import.
+- ShipFactory: Creates and configures Ship instances via UI services layer
 - StrategyManager: Runtime - populates AI strategy dropdown options
 """
 import os
@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 from game.core.logger import log_error
-from game.simulation.entities.ship import Ship
+from game.ui.services.ship_factory import ShipFactory
 from game.ai.strategy_manager import StrategyManager
 from game.core.json_utils import load_json_required
 from game.ui.screens.setup_data_io import (
@@ -22,6 +22,10 @@ from game.ui.screens.setup_renderer import (
     draw_title, draw_available_ships, draw_load_save_buttons,
     draw_team, draw_action_buttons, draw_ai_dropdown
 )
+
+
+# Module-level factory instance for convenience
+_ship_factory = ShipFactory()
 
 
 class BattleSetupScreen:
@@ -129,9 +133,9 @@ class BattleSetupScreen:
                 return
 
             ship_data = load_json_required(ship_path)
-            temp_ship = Ship.from_dict(ship_data)
-            temp_ship.recalculate_stats()
-            diameter = temp_ship.radius * 2
+            # PROJ-43: Use factory to get radius without direct Ship import
+            radius = _ship_factory.get_ship_radius(ship_data)
+            diameter = radius * 2
 
             design_entry = self._find_or_create_design(ship_path, ship_data)
             self._add_formation_entries(arrows, design_entry, diameter, formation['name'], team_idx)

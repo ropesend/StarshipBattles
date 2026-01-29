@@ -15,7 +15,7 @@ from typing import Dict, Any, List
 from dataclasses import dataclass
 
 from game.core.resources import load_resources
-from game.core.registry import RegistryManager, get_component_registry
+from game.core.registry import RegistryManager
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.hex_math import HexCoord

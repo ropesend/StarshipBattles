@@ -2,26 +2,30 @@
 
 Displays ship schematic with layers, components, and firing arcs.
 
-Cross-layer imports (acceptable for builder UI):
-- VEHICLE_CLASSES: Runtime - calculates ship radius based on class max mass
-- LayerType: Runtime - iterates ship layers for display
+PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 """
 import pygame
 import math
-from game.simulation.entities.ship import VEHICLE_CLASSES
 from game.core.constants import LayerType  # Canonical location for LayerType
 
 from game.ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
 
+
 class SchematicView:
-    def __init__(self, rect, sprite_manager, theme_manager):
+    def __init__(self, rect, sprite_manager, theme_manager, vehicle_class_service=None):
         self.rect = rect
         self.sprite_mgr = sprite_manager
         self.theme_manager = theme_manager
         self.cx = rect.centerx
         self.cy = rect.centery
-        self.arc_cache = {} # Key: (weapon_id, range, arc, facing, rect_size) -> surface
+        self.arc_cache = {}  # Key: (weapon_id, range, arc, facing, rect_size) -> surface
+
+        # PROJ-43: Inject vehicle class service
+        if vehicle_class_service is None:
+            from game.ui.services.vehicle_class_service import VehicleClassService
+            vehicle_class_service = VehicleClassService()
+        self._vehicle_class_service = vehicle_class_service
 
     def update_rect(self, rect):
         self.rect = rect
@@ -36,7 +40,8 @@ class SchematicView:
         self.arc_cache = {}
 
     def _calculate_max_r(self, ship):
-        class_def = VEHICLE_CLASSES.get(ship.ship_class, {})
+        # PROJ-43: Use VehicleClassService
+        class_def = self._vehicle_class_service.get_class_definition(ship.ship_class) or {}
         ref_mass = class_def.get('max_mass', 1000)
         # Scale: Dreadnought(64000)->40->280px. Escort(1000)->10->70px.
         PIXELS_PER_MASS_ROOT = 7.0 

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Any, Iterator, Tuple, Ca
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_vehicle_classes
+from game.core.registry import get_default_registry_provider
 from game.core.constants import LayerDefaults
 
 if TYPE_CHECKING:
@@ -63,7 +63,7 @@ class ShipComponentManager:
             and isinstance(self._ship._registries.vehicle_classes, dict)):
             class_def = self._ship._registries.vehicle_classes.get(self._ship.ship_class, {})
         else:
-            class_def = get_vehicle_classes().get(self._ship.ship_class, {})
+            class_def = get_default_registry_provider().get_vehicle_classes().get(self._ship.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
 
