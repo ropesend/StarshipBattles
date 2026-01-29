@@ -121,16 +121,51 @@ Component definition registry accessible by all layers.
 Some circular dependencies are resolved through late imports within methods.
 These are **intentional design patterns**, not workarounds:
 
-1. **`game/app.py`**: Lazy imports for UI screens/services
+### Ship Module (game/simulation/entities/ship.py)
+
+1. **Line 262: `from game.simulation.components.abilities import WeaponAbility, SeekerWeaponAbility`**
+   - Location: `max_weapon_range` property
+   - Purpose: abilities.py may have transitive Ship dependencies
+   - Rationale: Property is rarely called at module load time
+
+2. **Lines 517, 558: `from game.simulation.services.modifier_service import ModifierService`**
+   - Location: `add_component()`, `add_components_bulk()`
+   - Purpose: ModifierService validates with component context
+   - Rationale: Only called during component addition (edge operation, not hot path)
+
+3. **Lines 808, 827: `from .ship_serialization import ShipSerializer`**
+   - Location: `to_dict()`, `from_dict()`
+   - Purpose: Bidirectional dependency (Ship ↔ ShipSerializer)
+   - Rationale: Serialization inherently coupled to Ship; I/O operation not performance-critical
+
+### App Module (game/app.py)
+
+4. **Lazy imports for UI screens/services**
    - Purpose: Avoid circular deps, improve startup performance
 
-2. **`game/simulation/entities/ship_serialization.py:120`**:
-   `from game.simulation.entities.ship import Ship`
-   - Purpose: Ship imports ShipSerializer, ShipSerializer imports Ship
+### Fleet Module (game/strategy/data/fleet.py)
 
-3. **`game/strategy/data/ship_instance.py:171`**:
-   `from game.strategy.services.ship_stats_service import ShipStatsService`
-   - Purpose: ShipInstance uses service, service may reference ShipInstance types
+5. **Line 88: `from game.strategy.services.fleet_mobility_service import FleetMobilityService`**
+   - Location: `_trigger_speed_recalculation()`
+   - Purpose: FleetMobilityService may have transitive dependencies
+   - Rationale: Edge operation (only called when ships added/removed)
+
+6. **Lines 110, 128: `from game.strategy.services.ship_stats_service import ShipStatsService`**
+   - Location: `can_use_warp()`, `get_warp_limiting_ship()`
+   - Purpose: ShipStatsService encapsulates warp capability logic
+   - Rationale: Query operations, not hot path
+
+### ShipInstance Module (game/strategy/data/ship_instance.py)
+
+7. **Lines 125, 597: `from game.simulation.entities.ship_serialization import ShipSerializer`**
+   - Location: `from_ship()`, `to_ship()`
+   - Purpose: Cross-layer boundary import (strategy -> simulation)
+   - Rationale: Maintains layer separation; deferred to avoid load-time coupling
+
+8. **Line 189: `from game.strategy.services.ship_stats_service import ShipStatsService`**
+   - Location: `get_calculated_stats()`
+   - Purpose: Lazy initialization pattern for cached stats
+   - Rationale: Stats only calculated when first accessed
 
 ## Testing Without Display
 

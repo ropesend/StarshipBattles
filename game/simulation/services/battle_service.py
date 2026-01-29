@@ -9,6 +9,7 @@ from typing import List, Optional, Any, Dict, TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
+from game.simulation.factories.ai_factory import AIControllerFactory
 from game.core.logger import log_error, log_info
 
 if TYPE_CHECKING:
@@ -56,7 +57,12 @@ class BattleService:
         """
         try:
             logger = BattleLogger(enabled=enable_logging)
+            # PROJ-43: Create engine first (without factory), then create factory with its grid
+            # This allows BattleEngine to create AI controllers without internal imports
             self._engine = BattleEngine(logger=logger)
+            ai_factory = AIControllerFactory(self._engine.grid)
+            # Set factory on engine after creation (since factory needs engine's grid)
+            self._engine._ai_factory = ai_factory
             self._team0_ships = []
             self._team1_ships = []
             self._is_started = False

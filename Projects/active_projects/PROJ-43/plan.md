@@ -20,9 +20,9 @@
 | 3. Workshop Circular Import Fix | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. TurnEngine Constructor DI | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Registry Access Consolidation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Simulation Deferred Imports | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Strategy Deferred Imports | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. BattleEngine-AI Decoupling | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
+| 6. Simulation Deferred Imports | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Strategy Deferred Imports | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
+| 8. BattleEngine-AI Decoupling | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. Constant Consolidation | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 | 10. Package API Definition | Not Started | [phase_10_checklist.md](phase_10_checklist.md) |
 | 11. Validation Consolidation | Not Started | [phase_11_checklist.md](phase_11_checklist.md) |
@@ -30,28 +30,21 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 5 COMPLETE - Ready for Phase 6
-**Last Action:** Removed all deprecated registry functions from registry.py
-**Next Action:** Phase 6 - Simulation Deferred Imports
+**Active Phase:** Phase 8 COMPLETE - Ready for Phase 9
+**Last Action:** Completed Phase 8 - BattleEngine-AI Decoupling
+**Next Action:** Phase 9 - Constant Consolidation
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 5 COMPLETE: Registry Access Consolidation
-- All 8 tasks complete:
-  - Audit: 189 usages found (63 game, 126 test)
-  - Updated ALL game code to use `get_default_registry_provider()` pattern
-  - Updated ALL test code patches to use provider pattern
-  - Singleton audit: 71 game usages (30 files), 329 test usages (102 files) - documented
-  - REMOVED all 5 deprecated functions from registry.py:
-    - `get_component_registry()`
-    - `get_modifier_registry()`
-    - `get_vehicle_classes()`
-    - `get_validator()`
-    - `get_resource_registry()`
-  - Updated `__all__` exports
-  - Deleted test_registry_deprecation.py
-  - All deprecation warnings eliminated
-- All tests passing: 4436 unit tests, 441 integration tests
-- Ready for Phase 6: Simulation Deferred Imports
+- Phase 8 COMPLETE: BattleEngine-AI Decoupling
+- Created IAIController protocol in game/simulation/interfaces/ai_controller.py
+- Created AIControllerFactory in game/simulation/factories/ai_factory.py
+- Created MockAIController in tests/unit/simulation/mocks/mock_ai_controller.py
+- Refactored BattleEngine to accept optional ai_factory parameter
+- BattleEngine now uses factory for AI creation when provided (start, mid-battle, fighter launch)
+- Kept legacy paths for backward compatibility (all existing tests pass)
+- Updated BattleService to use AIControllerFactory
+- All tests passing: 192 integration, 10 battle engine, 9 factory, 8 interface, 15 battle service
+- Ready for Phase 9: Constant Consolidation
 
 ## Overview
 This project addresses **21 architecture layer violations** identified in `findings_01_architecture_layer_violations.md`. The focus is on decoupling UI from simulation layer, completing DI migration, refactoring TurnEngine for extensibility, eliminating circular dependencies, and establishing clean package APIs.

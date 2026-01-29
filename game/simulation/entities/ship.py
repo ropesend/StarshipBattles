@@ -259,6 +259,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     @property
     def max_weapon_range(self) -> float:
         """Calculate maximum range of all equipped weapons."""
+        # INTENTIONAL LATE IMPORT: Avoid circular dependency with abilities module
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.simulation.components.abilities import SeekerWeaponAbility, WeaponAbility
         max_rng = 0.0
         for comp in self.get_all_components():
@@ -514,6 +516,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         component.ship = self
         component.recalculate_stats()
         # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+        # INTENTIONAL LATE IMPORT: Edge operation, ModifierService has component dependencies
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.simulation.services.modifier_service import ModifierService
         ModifierService.ensure_mandatory_modifiers(component)
         self._cached_summary = {}  # Invalidate cache
@@ -555,6 +559,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             new_comp.ship = self
             new_comp.recalculate_stats()
             # Apply mandatory modifiers (e.g., size mount) immediately upon addition
+            # INTENTIONAL LATE IMPORT: Edge operation, ModifierService has component dependencies
             from game.simulation.services.modifier_service import ModifierService
             ModifierService.ensure_mandatory_modifiers(new_comp)
             added_count += 1
@@ -585,7 +590,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 comp.recalculate_stats()
 
         if not self.stats_calculator:
-             from .ship_stats import ShipStatsCalculator
+             # ShipStatsCalculator imported at module level (line 15)
              self.stats_calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
 
         self.stats_calculator.calculate(self)
@@ -805,6 +810,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         Raises:
             TypeError: If component data cannot be serialized to JSON-compatible types.
         """
+        # INTENTIONAL LATE IMPORT: Bidirectional dependency (Ship ↔ ShipSerializer)
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from .ship_serialization import ShipSerializer
         return ShipSerializer.to_dict(self)
 
@@ -824,6 +831,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             TypeError: If data types are invalid or incompatible.
             ValueError: If component or modifier IDs are invalid.
         """
+        # INTENTIONAL LATE IMPORT: Bidirectional dependency (Ship ↔ ShipSerializer)
         from .ship_serialization import ShipSerializer
         return ShipSerializer.from_dict(data)
 
