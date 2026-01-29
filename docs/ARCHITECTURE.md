@@ -181,6 +181,55 @@ controller.configure(config)
 results = controller.run_headless()
 ```
 
+## Package Public APIs (PROJ-43)
+
+Each major package defines an explicit public API via `__all__` in its `__init__.py`.
+This establishes clear contracts for what is safe to import directly.
+
+### Recommended Import Patterns
+
+```python
+# GOOD: Import from package public API
+from game.core import Vector2, LayerType, ValidationResult
+from game.simulation import Ship, BattleEngine, Component
+from game.strategy import Fleet, TurnEngine, GameSession
+from game.engine import PhysicsBody, SpatialGrid
+from game.ai import AIController, KiteBehavior
+
+# ACCEPTABLE: Import from specific module (for less common items)
+from game.core.config import DisplayConfig, AIConfig
+from game.simulation.services.battle_service import BattleService
+
+# AVOID: Deep implementation imports (may change)
+from game.simulation.entities.ship_physics import ShipPhysicsMixin  # internal
+```
+
+### Package API Summary
+
+| Package | Public Exports | Description |
+|---------|----------------|-------------|
+| `game.core` | 35 exports | Math, registry, constants, logging, validation, config, paths, protocols |
+| `game.simulation` | 12 exports | Ship, Component, BattleEngine, BattleService, validators |
+| `game.strategy` | 15 exports | Fleet, TurnEngine, GameSession, Facade, DTOs, interfaces |
+| `game.ui` | 7 modules | Renderer, screens, panels (module-level exports for race condition prevention) |
+| `game.engine` | 3 exports | PhysicsBody, CollisionSystem, SpatialGrid |
+| `game.ai` | 11 exports | AIController, behaviors, StrategyManager, TargetEvaluator |
+
+### Public vs. Private Modules
+
+- **Public**: Listed in `__all__` - stable API, safe to import
+- **Private**: Not in `__all__` - implementation details, may change
+
+When a module is not exported in `__all__`, prefer importing via the public API:
+
+```python
+# Instead of this (private module):
+from game.simulation.entities.ship_serialization import ShipSerializer
+
+# Use this (public API):
+from game.simulation import ShipSerializer
+```
+
 ## Related Documentation
 
 - [PROJ-11: Architecture Layer Separation](../Projects/active_projects/PROJ-11/plan.md)
