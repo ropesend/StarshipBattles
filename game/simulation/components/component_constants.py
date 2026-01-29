@@ -4,6 +4,13 @@ Component Constants - Enums and basic data classes for the component system.
 
 from enum import Enum, auto
 
+__all__ = [
+    'ComponentStatus',
+    'LayerType',  # Re-exported from game.core.constants for backward compatibility
+    'Modifier',
+    'ApplicationModifier',
+]
+
 
 class ComponentStatus(Enum):
     ACTIVE = auto()

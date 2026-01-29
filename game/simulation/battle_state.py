@@ -15,7 +15,7 @@ from datetime import datetime
 import json
 import uuid
 
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.logger import log_debug, log_warning
 from game.core.registry import get_default_registry_provider
 

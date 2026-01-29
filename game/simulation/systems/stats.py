@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Union
 from game.simulation.components.component_constants import ComponentStatus
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from game.simulation.systems.resource_manager import (
     ResourceStorage, ResourceGeneration, ResourceConsumption

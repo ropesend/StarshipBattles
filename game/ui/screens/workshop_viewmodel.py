@@ -19,7 +19,8 @@ from game.ui.screens.builder_utils import BuilderEvents
 from game.core.logger import log_error, log_info, log_warning
 
 if TYPE_CHECKING:
-    from game.simulation.entities.ship import Ship, LayerType
+    from game.simulation.entities.ship import Ship
+    from game.core.constants import LayerType
     from game.simulation.components.component import Component
     from game.simulation.services.vehicle_design_service import DesignResult
     from game.ui.screens.workshop_context import WorkshopContext

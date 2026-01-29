@@ -5,7 +5,7 @@ from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Itera
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.constants import LayerDefaults, CombatConstants

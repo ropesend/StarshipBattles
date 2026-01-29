@@ -256,7 +256,7 @@ class BuilderLeftPanel:
 
         
         from game.simulation.systems.validator import LayerRestrictionDefinitionRule
-        from game.simulation.entities.ship import LayerType
+        from game.core.constants import LayerType
         # Create a temporary rule instance for filtering
         restriction_rule = LayerRestrictionDefinitionRule()
 
