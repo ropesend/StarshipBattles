@@ -1,9 +1,9 @@
 from game.strategy.data.hex_math import HexCoord
+from game.strategy.data.ship_instance import ShipInstance
 from enum import Enum, auto
 from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
-    from game.strategy.data.ship_instance import ShipInstance
     from game.simulation.entities.ship import Ship
 
 
@@ -53,24 +53,24 @@ class Fleet:
         self.id = fleet_id
         self.owner_id = owner_id  # 0=Player, 1=Enemy, etc
         self.location = location  # HexCoord
-        self.ships: List['ShipInstance'] = []
+        self.ships: List[ShipInstance] = []
 
         # Movement & Orders
         self.speed = float(speed)
         self.orders: List[FleetOrder] = []
         self.path: List[HexCoord] = []  # Current movement path for the ACTIVE Move order
 
-    def add_ship(self, ship: 'ShipInstance'):
+    def add_ship(self, ship: ShipInstance):
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)
         self._trigger_speed_recalculation()
 
-    def add_ship_instance(self, instance: 'ShipInstance'):
+    def add_ship_instance(self, instance: ShipInstance):
         """Add a ShipInstance to the fleet."""
         self.ships.append(instance)
         self._trigger_speed_recalculation()
 
-    def remove_ship(self, ship: 'ShipInstance') -> bool:
+    def remove_ship(self, ship: ShipInstance) -> bool:
         """Remove a ship from the fleet. Returns True if found and removed."""
         if ship in self.ships:
             self.ships.remove(ship)
@@ -85,6 +85,8 @@ class Fleet:
         Fleet speed is the minimum of all combat-capable ships' speeds,
         ensuring the fleet moves at the pace of its slowest member.
         """
+        # INTENTIONAL LATE IMPORT: Edge operation (only on ship add/remove)
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.strategy.services.fleet_mobility_service import FleetMobilityService
         FleetMobilityService.recalculate_fleet_speed(self)
 
@@ -92,7 +94,7 @@ class Fleet:
         """Get names of all ships in the fleet."""
         return [s.name for s in self.ships]
 
-    def get_combat_capable_ships(self) -> List['ShipInstance']:
+    def get_combat_capable_ships(self) -> List[ShipInstance]:
         """Get ships capable of combat (not destroyed or derelict)."""
         return [s for s in self.ships if s.is_combat_capable()]
 
@@ -107,6 +109,8 @@ class Fleet:
             True if all combat-capable ships are warp-capable, False otherwise.
             Returns False if fleet has no combat-capable ships.
         """
+        # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.strategy.services.ship_stats_service import ShipStatsService
 
         combat_ships = self.get_combat_capable_ships()
@@ -118,13 +122,15 @@ class Fleet:
                 return False
         return True
 
-    def get_warp_limiting_ship(self) -> Optional['ShipInstance']:
+    def get_warp_limiting_ship(self) -> Optional[ShipInstance]:
         """
         Get the ship that prevents the fleet from using warp, if any.
 
         Returns:
             The first ship without warp capability, or None if all ships are warp-capable.
         """
+        # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.strategy.services.ship_stats_service import ShipStatsService
 
         for ship in self.get_combat_capable_ships():
@@ -570,7 +576,7 @@ class Fleet:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Fleet':
         """Deserialize from save game."""
-        from game.strategy.data.ship_instance import ShipInstance
+        # ShipInstance imported at module level
 
         location = data.get('location')
         if isinstance(location, list):

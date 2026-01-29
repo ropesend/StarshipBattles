@@ -143,11 +143,29 @@ These are **intentional design patterns**, not workarounds:
 4. **Lazy imports for UI screens/services**
    - Purpose: Avoid circular deps, improve startup performance
 
-### Strategy Module
+### Fleet Module (game/strategy/data/fleet.py)
 
-5. **`game/strategy/data/ship_instance.py:171`**:
-   `from game.strategy.services.ship_stats_service import ShipStatsService`
-   - Purpose: ShipInstance uses service, service may reference ShipInstance types
+5. **Line 88: `from game.strategy.services.fleet_mobility_service import FleetMobilityService`**
+   - Location: `_trigger_speed_recalculation()`
+   - Purpose: FleetMobilityService may have transitive dependencies
+   - Rationale: Edge operation (only called when ships added/removed)
+
+6. **Lines 110, 128: `from game.strategy.services.ship_stats_service import ShipStatsService`**
+   - Location: `can_use_warp()`, `get_warp_limiting_ship()`
+   - Purpose: ShipStatsService encapsulates warp capability logic
+   - Rationale: Query operations, not hot path
+
+### ShipInstance Module (game/strategy/data/ship_instance.py)
+
+7. **Lines 125, 597: `from game.simulation.entities.ship_serialization import ShipSerializer`**
+   - Location: `from_ship()`, `to_ship()`
+   - Purpose: Cross-layer boundary import (strategy -> simulation)
+   - Rationale: Maintains layer separation; deferred to avoid load-time coupling
+
+8. **Line 189: `from game.strategy.services.ship_stats_service import ShipStatsService`**
+   - Location: `get_calculated_stats()`
+   - Purpose: Lazy initialization pattern for cached stats
+   - Rationale: Stats only calculated when first accessed
 
 ## Testing Without Display
 

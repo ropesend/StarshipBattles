@@ -16,7 +16,7 @@ from typing import Dict, Any, Optional, Tuple, List, TYPE_CHECKING
 import uuid
 import json
 
-from game.core.logger import log_warning
+from game.core.logger import log_warning, log_debug
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -122,6 +122,8 @@ class ShipInstance:
 
         Captures the current state of the ship including any damage.
         """
+        # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.simulation.entities.ship_serialization import ShipSerializer
 
         # Serialize the ship design
@@ -185,7 +187,8 @@ class ShipInstance:
             Dict with calculated stats (max_hp, mass, max_fuel, etc.)
         """
         if self._cached_stats is None or force_refresh:
-            # Import here to avoid circular imports
+            # INTENTIONAL LATE IMPORT: Lazy initialization pattern
+            # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_service import ShipStatsService
             self._cached_stats = ShipStatsService.calculate_stats(
                 self.design_data,
@@ -594,8 +597,10 @@ class ShipInstance:
             position: (x, y) spawn position for the ship
             team_id: Team assignment for battle (0 or 1)
         """
+        # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
+        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.simulation.entities.ship_serialization import ShipSerializer
-        from game.core.logger import log_debug
+        # log_debug imported at module level
 
         # Create ship from design data
         ship = ShipSerializer.from_dict(self.design_data)

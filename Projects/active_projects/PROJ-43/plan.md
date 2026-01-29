@@ -21,7 +21,7 @@
 | 4. TurnEngine Constructor DI | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Registry Access Consolidation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Simulation Deferred Imports | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Strategy Deferred Imports | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Strategy Deferred Imports | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. BattleEngine-AI Decoupling | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. Constant Consolidation | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 | 10. Package API Definition | Not Started | [phase_10_checklist.md](phase_10_checklist.md) |
@@ -30,26 +30,26 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 6 COMPLETE - Ready for Phase 7
-**Last Action:** Completed Phase 6 - Simulation Deferred Import analysis and refactoring
-**Next Action:** Phase 7 - Strategy Deferred Imports
+**Active Phase:** Phase 7 COMPLETE - Ready for Phase 8
+**Last Action:** Completed Phase 7 - Strategy Deferred Import analysis and refactoring
+**Next Action:** Phase 8 - BattleEngine-AI Decoupling
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 6 COMPLETE: Simulation Deferred Import Elimination
-- Analysis: Documented 10 deferred imports across ship.py and stats.py
-- Eliminated 5 deferred imports:
-  - stats.py: Moved ResourceStorage/ResourceGeneration/ResourceConsumption to module level
-  - stats.py: Removed redundant ability imports (code uses get_abilities())
-  - ship.py: Removed redundant ShipStatsCalculator import (already at module level)
-- Documented 5 intentional late imports (cannot be eliminated):
-  - ship.py: WeaponAbility/SeekerWeaponAbility in max_weapon_range
-  - ship.py: ModifierService in add_component/add_components_bulk
-  - ship.py: ShipSerializer in to_dict/from_dict
-- Updated docs/ARCHITECTURE.md with detailed late import documentation
-- Added INTENTIONAL LATE IMPORT comments in ship.py
-- IModifierApplicator interface SKIPPED (not beneficial after analysis)
-- All tests passing: 5290 passed, 1 skipped
-- Ready for Phase 7: Strategy Deferred Imports
+- Phase 7 COMPLETE: Strategy Deferred Import Elimination
+- Analysis: Documented 8 deferred imports across fleet.py and ship_instance.py
+- Eliminated 2 deferred imports:
+  - fleet.py: Moved ShipInstance import to module level (no actual circular)
+  - ship_instance.py: Consolidated log_debug with log_warning at module level
+- Documented 6 intentional late imports (cannot be eliminated):
+  - fleet.py: FleetMobilityService in _trigger_speed_recalculation (edge operation)
+  - fleet.py: ShipStatsService in can_use_warp/get_warp_limiting_ship (query operations)
+  - ship_instance.py: ShipSerializer in from_ship/to_ship (cross-layer boundary)
+  - ship_instance.py: ShipStatsService in get_calculated_stats (lazy init pattern)
+- Updated docs/ARCHITECTURE.md with strategy layer late import documentation
+- Added INTENTIONAL LATE IMPORT comments in fleet.py and ship_instance.py
+- FleetHelperService SKIPPED (not beneficial after analysis)
+- All tests passing: integration 192, fleet 70, ship_instance 71, strategy 828
+- Ready for Phase 8: BattleEngine-AI Decoupling
 
 ## Overview
 This project addresses **21 architecture layer violations** identified in `findings_01_architecture_layer_violations.md`. The focus is on decoupling UI from simulation layer, completing DI migration, refactoring TurnEngine for extensibility, eliminating circular dependencies, and establishing clean package APIs.
