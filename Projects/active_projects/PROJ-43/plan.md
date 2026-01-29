@@ -20,7 +20,7 @@
 | 3. Workshop Circular Import Fix | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. TurnEngine Constructor DI | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Registry Access Consolidation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Simulation Deferred Imports | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Simulation Deferred Imports | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Strategy Deferred Imports | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. BattleEngine-AI Decoupling | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. Constant Consolidation | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
@@ -30,28 +30,26 @@
 
 ## Current State
 **Last Updated:** 2026-01-28
-**Active Phase:** Phase 5 COMPLETE - Ready for Phase 6
-**Last Action:** Removed all deprecated registry functions from registry.py
-**Next Action:** Phase 6 - Simulation Deferred Imports
+**Active Phase:** Phase 6 COMPLETE - Ready for Phase 7
+**Last Action:** Completed Phase 6 - Simulation Deferred Import analysis and refactoring
+**Next Action:** Phase 7 - Strategy Deferred Imports
 **Blockers:** None
 **Context for Next Agent:**
-- Phase 5 COMPLETE: Registry Access Consolidation
-- All 8 tasks complete:
-  - Audit: 189 usages found (63 game, 126 test)
-  - Updated ALL game code to use `get_default_registry_provider()` pattern
-  - Updated ALL test code patches to use provider pattern
-  - Singleton audit: 71 game usages (30 files), 329 test usages (102 files) - documented
-  - REMOVED all 5 deprecated functions from registry.py:
-    - `get_component_registry()`
-    - `get_modifier_registry()`
-    - `get_vehicle_classes()`
-    - `get_validator()`
-    - `get_resource_registry()`
-  - Updated `__all__` exports
-  - Deleted test_registry_deprecation.py
-  - All deprecation warnings eliminated
-- All tests passing: 4436 unit tests, 441 integration tests
-- Ready for Phase 6: Simulation Deferred Imports
+- Phase 6 COMPLETE: Simulation Deferred Import Elimination
+- Analysis: Documented 10 deferred imports across ship.py and stats.py
+- Eliminated 5 deferred imports:
+  - stats.py: Moved ResourceStorage/ResourceGeneration/ResourceConsumption to module level
+  - stats.py: Removed redundant ability imports (code uses get_abilities())
+  - ship.py: Removed redundant ShipStatsCalculator import (already at module level)
+- Documented 5 intentional late imports (cannot be eliminated):
+  - ship.py: WeaponAbility/SeekerWeaponAbility in max_weapon_range
+  - ship.py: ModifierService in add_component/add_components_bulk
+  - ship.py: ShipSerializer in to_dict/from_dict
+- Updated docs/ARCHITECTURE.md with detailed late import documentation
+- Added INTENTIONAL LATE IMPORT comments in ship.py
+- IModifierApplicator interface SKIPPED (not beneficial after analysis)
+- All tests passing: 5290 passed, 1 skipped
+- Ready for Phase 7: Strategy Deferred Imports
 
 ## Overview
 This project addresses **21 architecture layer violations** identified in `findings_01_architecture_layer_violations.md`. The focus is on decoupling UI from simulation layer, completing DI migration, refactoring TurnEngine for extensibility, eliminating circular dependencies, and establishing clean package APIs.

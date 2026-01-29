@@ -121,14 +121,31 @@ Component definition registry accessible by all layers.
 Some circular dependencies are resolved through late imports within methods.
 These are **intentional design patterns**, not workarounds:
 
-1. **`game/app.py`**: Lazy imports for UI screens/services
+### Ship Module (game/simulation/entities/ship.py)
+
+1. **Line 262: `from game.simulation.components.abilities import WeaponAbility, SeekerWeaponAbility`**
+   - Location: `max_weapon_range` property
+   - Purpose: abilities.py may have transitive Ship dependencies
+   - Rationale: Property is rarely called at module load time
+
+2. **Lines 517, 558: `from game.simulation.services.modifier_service import ModifierService`**
+   - Location: `add_component()`, `add_components_bulk()`
+   - Purpose: ModifierService validates with component context
+   - Rationale: Only called during component addition (edge operation, not hot path)
+
+3. **Lines 808, 827: `from .ship_serialization import ShipSerializer`**
+   - Location: `to_dict()`, `from_dict()`
+   - Purpose: Bidirectional dependency (Ship ↔ ShipSerializer)
+   - Rationale: Serialization inherently coupled to Ship; I/O operation not performance-critical
+
+### App Module (game/app.py)
+
+4. **Lazy imports for UI screens/services**
    - Purpose: Avoid circular deps, improve startup performance
 
-2. **`game/simulation/entities/ship_serialization.py:120`**:
-   `from game.simulation.entities.ship import Ship`
-   - Purpose: Ship imports ShipSerializer, ShipSerializer imports Ship
+### Strategy Module
 
-3. **`game/strategy/data/ship_instance.py:171`**:
+5. **`game/strategy/data/ship_instance.py:171`**:
    `from game.strategy.services.ship_stats_service import ShipStatsService`
    - Purpose: ShipInstance uses service, service may reference ShipInstance types
 
