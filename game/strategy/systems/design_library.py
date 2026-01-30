@@ -435,7 +435,7 @@ class DesignLibrary:
         """
         return os.path.join(self.designs_folder, f"{design_id}.json")
 
-    def design_exists(self, design_id: str) -> bool:
+    def has_design(self, design_id: str) -> bool:
         """
         Check if a design exists.
 

@@ -16,7 +16,7 @@ Resource Lifecycle:
        - Each resource applies regeneration based on regen_rate
 
     3. CONSUMPTION:
-       - Components check resource availability via check(amount)
+       - Components check resource availability via has_sufficient(amount)
        - Components consume resources via consume(amount)
        - Failed consumption may disable the component
 
@@ -80,7 +80,7 @@ class ResourceState:
             return True
         return False
 
-    def check(self, amount: float) -> bool:
+    def has_sufficient(self, amount: float) -> bool:
         """Check if enough resource is available without consuming."""
         return self.current_value >= amount
 

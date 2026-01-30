@@ -103,7 +103,7 @@ class ResourceConsumption(Ability):
         if registry:
             res = registry.get_resource(self.resource_name)
             if res:
-                return res.check(self.amount)
+                return res.has_sufficient(self.amount)
             else:
                 return self.amount <= 0
         return False

@@ -265,7 +265,7 @@ class TestDesignLibrary:
         assert DesignLibrary._sanitize_design_id("   Spaces   ") == "Spaces"
         assert DesignLibrary._sanitize_design_id("") == "unnamed_design"
 
-    def test_design_exists(self, setup_library):
+    def test_has_design(self, setup_library):
         """Can check if design exists"""
         tmpdir, designs_folder, library = setup_library
         # Create a design
@@ -276,8 +276,8 @@ class TestDesignLibrary:
         }
         save_json(os.path.join(designs_folder, "existing.json"), design)
 
-        assert library.design_exists("existing")
-        assert not library.design_exists("nonexistent")
+        assert library.has_design("existing")
+        assert not library.has_design("nonexistent")
 
     def test_increment_built_count(self, setup_library):
         """Can increment built count"""

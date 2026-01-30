@@ -842,49 +842,49 @@ class TestBattleControllerFindNearestEdge:
 
 # === At Map Edge Tests ===
 
-class TestBattleControllerAtMapEdge:
-    """Tests for _at_map_edge()."""
+class TestBattleControllerIsAtMapEdge:
+    """Tests for _is_at_map_edge()."""
 
-    def test_at_map_edge_left(self, controller, basic_config, mock_service):
-        """_at_map_edge detects left edge."""
+    def test_is_at_map_edge_left(self, controller, basic_config, mock_service):
+        """_is_at_map_edge detects left edge."""
         controller.configure(basic_config)
 
         mock_ship = Mock()
         mock_ship.x = 400  # Within threshold (500) of left edge
         mock_ship.y = 50000
 
-        assert controller._at_map_edge(mock_ship) is True
+        assert controller._is_at_map_edge(mock_ship) is True
 
-    def test_at_map_edge_right(self, controller, basic_config, mock_service):
-        """_at_map_edge detects right edge."""
+    def test_is_at_map_edge_right(self, controller, basic_config, mock_service):
+        """_is_at_map_edge detects right edge."""
         controller.configure(basic_config)
 
         mock_ship = Mock()
         mock_ship.x = 99600  # Within threshold (500) of right edge
         mock_ship.y = 50000
 
-        assert controller._at_map_edge(mock_ship) is True
+        assert controller._is_at_map_edge(mock_ship) is True
 
-    def test_at_map_edge_center(self, controller, basic_config, mock_service):
-        """_at_map_edge returns False for center position."""
+    def test_is_at_map_edge_center(self, controller, basic_config, mock_service):
+        """_is_at_map_edge returns False for center position."""
         controller.configure(basic_config)
 
         mock_ship = Mock()
         mock_ship.x = 50000
         mock_ship.y = 50000
 
-        assert controller._at_map_edge(mock_ship) is False
+        assert controller._is_at_map_edge(mock_ship) is False
 
-    def test_at_map_edge_custom_threshold(self, controller, basic_config, mock_service):
-        """_at_map_edge respects custom threshold."""
+    def test_is_at_map_edge_custom_threshold(self, controller, basic_config, mock_service):
+        """_is_at_map_edge respects custom threshold."""
         controller.configure(basic_config)
 
         mock_ship = Mock()
         mock_ship.x = 800  # Outside default threshold but inside 1000
         mock_ship.y = 50000
 
-        assert controller._at_map_edge(mock_ship, threshold=500) is False
-        assert controller._at_map_edge(mock_ship, threshold=1000) is True
+        assert controller._is_at_map_edge(mock_ship, threshold=500) is False
+        assert controller._is_at_map_edge(mock_ship, threshold=1000) is True
 
 
 # === State Save/Load Tests ===

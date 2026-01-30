@@ -12,6 +12,7 @@ Exceptions:
 
 import json
 import os
+from typing import Optional
 from game.core.registry import RegistryManager
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_info
@@ -26,7 +27,7 @@ def _get_default_resources() -> dict:
     }
 
 
-def _resolve_resource_path(filepath: str) -> str | None:
+def _resolve_resource_path(filepath: str) -> Optional[str]:
     """
     Resolve resource file path, trying relative then absolute paths.
 

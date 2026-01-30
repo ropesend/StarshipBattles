@@ -25,7 +25,7 @@ from game.simulation.battle_state import BattleState, BattleResults, ShipState
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
 from game.simulation.managers.retreat_manager import (
     RetreatManager,
-    RetreatState as _RetreatState,
+    RetreatState,
     RetreatMethod,
 )
 from game.simulation.managers.battle_state_manager import BattleStateManager
@@ -79,8 +79,7 @@ class BattleConfig:
     )
 
 
-# RetreatState is now imported from retreat_manager for backwards compatibility
-RetreatState = _RetreatState
+# RetreatState is imported directly from retreat_manager
 
 
 class BattleController:
@@ -448,7 +447,7 @@ class BattleController:
         """Find the nearest map edge for retreat (delegates to RetreatManager)."""
         return self._retreat_manager.find_nearest_edge(ship)
 
-    def _at_map_edge(self, ship: 'Ship', threshold: float = 500) -> bool:
+    def _is_at_map_edge(self, ship: 'Ship', threshold: float = 500) -> bool:
         """Check if ship is at map edge (delegates to RetreatManager)."""
         return self._retreat_manager.at_map_edge(ship, threshold)
 
