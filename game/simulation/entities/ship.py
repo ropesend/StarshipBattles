@@ -146,7 +146,15 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.construction_cost: Dict[str, int] = {}
         self._cached_summary = {}  # Performance optimization for UI
         self._loading_warnings: List[str] = []
-        
+
+        # PROJ-49 Phase 3: Component list caching
+        self._components_cache: Optional[List[Component]] = None
+        self._components_dirty: bool = True
+
+        # PROJ-49 Phase 3: Per-tick weapon cache for AI hot path
+        self._weapons_cache: Optional[List[Component]] = None
+        self._weapons_cache_tick: int = -1
+
         self.is_alive: bool = True
         self.is_derelict: bool = False
         self.bridge_destroyed: bool = False
@@ -211,6 +219,15 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def hp(self, value: int) -> None:
         """Set cached hp value."""
         self._cached_hp = value
+
+    # =========================================================================
+    # Component Cache Management (PROJ-49 Phase 3)
+    # =========================================================================
+
+    def _invalidate_components_cache(self) -> None:
+        """Mark component cache as dirty for lazy recalculation."""
+        self._components_dirty = True
+        self._components_cache = None
 
     # =========================================================================
     # Formation Delegation Properties (backward compatibility)
@@ -531,7 +548,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         service = ModifierService()
         service.ensure_mandatory_modifiers(component)
         self._cached_summary = {}  # Invalidate cache
-        
+        self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
+
         # Update Stats
         self.recalculate_stats()
         return True
@@ -585,6 +603,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """Remove a component from the specified layer by index."""
         if 0 <= index < len(self.layers[layer_type]['components']):
             comp = self.layers[layer_type]['components'].pop(index)
+            self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
             self.recalculate_stats()
             return comp
         log_warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")
@@ -594,6 +613,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         Recalculates derived stats. Delegates to ShipStatsCalculator.
         """
+        # PROJ-49: Invalidate component cache when stats recalculated
+        self._invalidate_components_cache()
+
         # 1. Update components with current ship context
         for layer_data in self.layers.values():
             for comp in layer_data['components']:
@@ -683,16 +705,22 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def get_all_components(self) -> List[Component]:
         """
-        Return a list of all components across all layers.
+        Return a cached list of all components across all layers.
+
+        PROJ-49 Phase 3: Uses dirty-flag caching to avoid repeated iteration.
+        Cache is invalidated when components are added/removed or stats recalculated.
 
         Returns:
             List of Component instances from all layers (HULL, CORE, INNER, OUTER, ARMOR).
-            Returns a fresh list each call (not a reference to internal storage).
+            Returns cached list - do not modify the returned list directly.
         """
-        result = []
-        for layer_data in self.layers.values():
-            result.extend(layer_data['components'])
-        return result
+        if self._components_dirty or self._components_cache is None:
+            result = []
+            for layer_data in self.layers.values():
+                result.extend(layer_data['components'])
+            self._components_cache = result
+            self._components_dirty = False
+        return self._components_cache
 
     def iter_components(self) -> Iterator[Tuple[LayerType, Component]]:
         """
@@ -730,6 +758,24 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 if comp.has_ability(ability_name):
                     result.append(comp)
         return result
+
+    def get_weapon_components_cached(self, current_tick: int) -> List[Component]:
+        """
+        Get weapon components, cached per tick to avoid repeated lookups.
+
+        PROJ-49 Phase 3: Tick-based caching for AI targeting hot path.
+        Cache is invalidated when tick changes, ensuring fresh data each tick.
+
+        Args:
+            current_tick: Current simulation tick number for cache validation.
+
+        Returns:
+            List of operational Component instances with WeaponAbility.
+        """
+        if self._weapons_cache is None or self._weapons_cache_tick != current_tick:
+            self._weapons_cache = self.get_components_by_ability('WeaponAbility', operational_only=True)
+            self._weapons_cache_tick = current_tick
+        return self._weapons_cache
 
     def get_components_by_layer(self, layer_type: LayerType) -> List[Component]:
         """

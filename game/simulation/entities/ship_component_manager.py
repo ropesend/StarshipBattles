@@ -168,6 +168,10 @@ class ShipComponentManager:
         if hasattr(self._ship, '_cached_summary'):
             self._ship._cached_summary = {}
 
+        # PROJ-49: Invalidate component cache
+        if hasattr(self._ship, '_invalidate_components_cache'):
+            self._ship._invalidate_components_cache()
+
         # Update Stats
         self._ship.recalculate_stats()
         return True
@@ -231,6 +235,9 @@ class ShipComponentManager:
         """
         if 0 <= index < len(self.layers[layer_type]['components']):
             comp = self.layers[layer_type]['components'].pop(index)
+            # PROJ-49: Invalidate component cache
+            if hasattr(self._ship, '_invalidate_components_cache'):
+                self._ship._invalidate_components_cache()
             self._ship.recalculate_stats()
             return comp
         log_warning(f"remove_component failed: index {index} out of range for layer {layer_type.name}")

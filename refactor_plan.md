@@ -8,26 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-49 Phase 2 - Simple Performance Fixes
-**Current Status:** PROJ-49 Phase 2 Complete
+**Last Completed:** PROJ-49 Phase 3 - Component Caching
+**Current Status:** PROJ-49 Phase 3 Complete
 **Current Project:** PROJ-49
-**Current Phase:** Phase 3 - Component Caching
-**Test Status:** 5745 passed (full suite)
+**Current Phase:** Phase 4 - HP Ratio Caching
+**Test Status:** 5757 passed (full suite, +12 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-49 Phase 2 COMPLETE - Simple Performance Fixes
-  - Task 2.1: Projectile list reconstruction - in-place mark-and-sweep algorithm
-  - Task 2.2: Ability index caching - O(1) lookup with MRO for polymorphism
-  - Task 2.3: Distance pre-calculation - cache for AI targeting rules
-  - Task 2.4: Deepcopy analysis - documented as required for correctness
+- PROJ-49 Phase 3 COMPLETE - Component Caching
+  - Task 3.1: Component list caching with dirty-flag invalidation in Ship
+  - Task 3.2: Cache invalidation in add_component, remove_component, recalculate_stats
+  - Task 3.3: Per-tick weapon cache method (get_weapon_components_cached)
 - Files modified:
-  - game/simulation/projectile_manager.py
-  - game/simulation/components/component.py
-  - game/ai/target_evaluator.py
-  - game/ai/controller.py
-- Test suite: 5745 passed (46 failures + 12 errors pre-existing)
-- Next: Phase 3 - Component Caching
+  - game/simulation/entities/ship.py - component cache + invalidation
+  - game/simulation/entities/ship_component_manager.py - invalidation hooks
+  - tests/unit/entities/test_ship_caching.py - 12 new cache tests
+  - tests/unit/entities/ship_helpers/test_component_getters.py - updated test for cached behavior
+- Test suite: 5757 passed (pre-existing failures unrelated)
+- Next: Phase 4 - HP Ratio Caching
 
 ---
 
@@ -119,6 +118,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-49 | Phase 3 | Complete | 5757 passed | 70f2dab2 | Component caching: dirty-flag invalidation, per-tick weapon cache, +12 tests |
 | 2026-01-30 | PROJ-49 | Phase 2 | Complete | 5745 passed | d24b4a7f | Simple perf fixes: projectile list, ability index, distance cache, deepcopy analysis |
 | 2026-01-30 | PROJ-49 | Phase 1 | Complete | 5745 passed | ecec7ecd | Dead code cleanup: archived 4 files, removed _ValidatorProxy, cleaned old archive |
 | 2026-01-30 | PROJ-48 | Audit Cycle 1 | PASSED | 5745 passed | 6b0b2e5d | All phases verified, no issues found, project complete |
