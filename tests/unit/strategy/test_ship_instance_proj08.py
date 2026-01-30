@@ -1067,7 +1067,7 @@ class TestStatsIntegration:
     """Tests for component toggle integration with stats calculation."""
 
     def test_component_toggles_passed_to_stats_calculation(self, make_design_data_with_stats):
-        """component_toggles are passed to ShipStatsService.calculate_stats."""
+        """component_toggles are passed to ShipStatsCalculator.calculate_stats."""
         design_data = make_design_data_with_stats(expected_stats={'max_hp': 100})
         ship = ShipInstance(
             instance_id='test-1',
@@ -1078,7 +1078,7 @@ class TestStatsIntegration:
         )
         ship.set_component_enabled('engine', False)
 
-        with patch('game.strategy.services.ship_stats_service.ShipStatsService.calculate_stats') as mock_calc:
+        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator.calculate_stats') as mock_calc:
             mock_calc.return_value = {'max_hp': 100}
 
             _ = ship.get_calculated_stats(force_refresh=True)
@@ -1090,7 +1090,7 @@ class TestStatsIntegration:
 
     def test_disabled_component_affects_stats(self, make_design_data_with_stats):
         """Disabled component should affect calculated stats."""
-        # This is more of an integration test with ShipStatsService
+        # This is more of an integration test with ShipStatsCalculator
         # The stats service should exclude disabled components' abilities
         design_data = make_design_data_with_stats(expected_stats={
             'max_hp': 100,
@@ -1110,7 +1110,7 @@ class TestStatsIntegration:
         ship.set_component_enabled('fuel_tank', False)
 
         # Toggles should be passed to stats calculation
-        # The actual effect depends on ShipStatsService implementation
+        # The actual effect depends on ShipStatsCalculator implementation
         stats2 = ship.get_calculated_stats()
 
         # This verifies the toggle is in place

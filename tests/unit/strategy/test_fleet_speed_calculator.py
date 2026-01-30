@@ -1,5 +1,5 @@
 """
-Tests for FleetMobilityService.
+Tests for FleetSpeedCalculator.
 
 TDD Phase 2, Step 2.3: Tests for fleet speed calculation from strategic movement abilities.
 """
@@ -7,12 +7,12 @@ TDD Phase 2, Step 2.3: Tests for fleet speed calculation from strategic movement
 from unittest.mock import MagicMock
 
 
-class TestFleetMobilityServiceShipSpeed:
+class TestFleetSpeedCalculatorShipSpeed:
     """Tests for calculate_ship_speed() method."""
 
     def test_calculate_ship_speed_formula(self):
         """Ship speed should follow the formula: floor((mp * K_STRATEGIC) / mass)."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService, K_STRATEGIC
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator, K_STRATEGIC
 
         # Create mock ship instance with known values
         # mass=1000, strategic_movement=100 -> (100 * 25) / 1000 = 2500 / 1000 = 2.5 -> 2
@@ -24,14 +24,14 @@ class TestFleetMobilityServiceShipSpeed:
         }
         ship_instance.get_calculated_stats.return_value = stats
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         expected = int((100 * K_STRATEGIC) / 1000)  # 2
         assert speed == expected
 
     def test_calculate_ship_speed_higher_movement(self):
         """Higher movement points should result in higher speed."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService, K_STRATEGIC
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator, K_STRATEGIC
 
         # mass=1000, strategic_movement=300 -> (300 * 25) / 1000 = 7500 / 1000 = 7.5 -> 7
         ship_instance = MagicMock()
@@ -42,14 +42,14 @@ class TestFleetMobilityServiceShipSpeed:
         }
         ship_instance.get_calculated_stats.return_value = stats
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         expected = int((300 * K_STRATEGIC) / 1000)  # 7
         assert speed == expected
 
     def test_calculate_ship_speed_clamped_to_max(self):
         """Ship speed should be clamped to maximum of 10 hexes/turn."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         # Extremely high movement points should still cap at 10
         ship_instance = MagicMock()
@@ -60,13 +60,13 @@ class TestFleetMobilityServiceShipSpeed:
         }
         ship_instance.get_calculated_stats.return_value = stats
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         assert speed == 10  # Capped at maximum
 
     def test_calculate_ship_speed_zero_for_fighters(self):
         """Fighters should have 0 strategic movement (carrier-based)."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         ship_instance = MagicMock()
         ship_instance.design_data = {
@@ -77,13 +77,13 @@ class TestFleetMobilityServiceShipSpeed:
             }
         }
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         assert speed == 0
 
     def test_calculate_ship_speed_zero_for_complexes(self):
         """Planetary Complexes should have 0 strategic movement."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         ship_instance = MagicMock()
         ship_instance.design_data = {
@@ -94,13 +94,13 @@ class TestFleetMobilityServiceShipSpeed:
             }
         }
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         assert speed == 0
 
     def test_calculate_ship_speed_zero_for_no_movement(self):
         """Ships with no strategic movement should return 0."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         ship_instance = MagicMock()
         stats = {'mass': 1000, 'strategic_movement': 0}
@@ -110,13 +110,13 @@ class TestFleetMobilityServiceShipSpeed:
         }
         ship_instance.get_calculated_stats.return_value = stats
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         assert speed == 0
 
     def test_calculate_ship_speed_handles_missing_stats(self):
         """Should handle missing expected_stats gracefully."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         ship_instance = MagicMock()
         ship_instance.design_data = {
@@ -126,17 +126,17 @@ class TestFleetMobilityServiceShipSpeed:
         # get_calculated_stats returns empty dict when no components
         ship_instance.get_calculated_stats.return_value = {}
 
-        speed = FleetMobilityService.calculate_ship_speed(ship_instance)
+        speed = FleetSpeedCalculator.calculate_ship_speed(ship_instance)
 
         assert speed == 0
 
 
-class TestFleetMobilityServiceFleetSpeed:
+class TestFleetSpeedCalculatorFleetSpeed:
     """Tests for calculate_fleet_speed() method."""
 
     def test_calculate_fleet_speed_uses_slowest(self):
         """Fleet speed should be the minimum of all ship speeds."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         # Create fleet with two ships - one fast, one slow
         fast_stats = {'mass': 500, 'strategic_movement': 200}
@@ -161,15 +161,15 @@ class TestFleetMobilityServiceFleetSpeed:
         fleet.get_ship_instances.return_value = [fast_ship, slow_ship]
         fleet.speed = 5.0  # Default
 
-        speed = FleetMobilityService.calculate_fleet_speed(fleet)
+        speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
         # Should be the slower ship's speed
-        slow_speed = FleetMobilityService.calculate_ship_speed(slow_ship)
+        slow_speed = FleetSpeedCalculator.calculate_ship_speed(slow_ship)
         assert speed == float(slow_speed)
 
     def test_calculate_fleet_speed_single_ship(self):
         """Fleet with one ship should use that ship's speed."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         stats = {'mass': 1000, 'strategic_movement': 150}
         ship = MagicMock()
@@ -184,26 +184,26 @@ class TestFleetMobilityServiceFleetSpeed:
         fleet.ships = [ship]
         fleet.speed = 5.0
 
-        speed = FleetMobilityService.calculate_fleet_speed(fleet)
+        speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
-        expected = FleetMobilityService.calculate_ship_speed(ship)
+        expected = FleetSpeedCalculator.calculate_ship_speed(ship)
         assert speed == float(expected)
 
     def test_calculate_fleet_speed_empty_fleet(self):
         """Empty fleet should return 0."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         fleet = MagicMock()
         fleet.ships = []
         fleet.speed = 5.0
 
-        speed = FleetMobilityService.calculate_fleet_speed(fleet)
+        speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
         assert speed == 0.0
 
     def test_calculate_fleet_speed_excludes_destroyed(self):
         """Should exclude destroyed/derelict ships from speed calculation."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         working_stats = {'mass': 1000, 'strategic_movement': 100}
         working_ship = MagicMock()
@@ -226,15 +226,15 @@ class TestFleetMobilityServiceFleetSpeed:
         fleet = MagicMock()
         fleet.ships = [working_ship, destroyed_ship]
 
-        speed = FleetMobilityService.calculate_fleet_speed(fleet)
+        speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)
 
         # Should only consider the working ship
-        expected = FleetMobilityService.calculate_ship_speed(working_ship)
+        expected = FleetSpeedCalculator.calculate_ship_speed(working_ship)
         assert speed == float(expected)
 
-    def test_recalculate_fleet_speed_updates_attribute(self):
-        """recalculate_fleet_speed() should update fleet.speed attribute."""
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
+    def test_update_fleet_speed_updates_attribute(self):
+        """update_fleet_speed() should update fleet.speed attribute."""
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
         stats = {'mass': 1000, 'strategic_movement': 150}
         ship = MagicMock()
@@ -249,8 +249,8 @@ class TestFleetMobilityServiceFleetSpeed:
         fleet.ships = [ship]
         fleet.speed = 5.0  # Original value
 
-        FleetMobilityService.recalculate_fleet_speed(fleet)
+        FleetSpeedCalculator.update_fleet_speed(fleet)
 
         # Check that fleet.speed was updated
-        expected = float(FleetMobilityService.calculate_ship_speed(ship))
+        expected = float(FleetSpeedCalculator.calculate_ship_speed(ship))
         assert fleet.speed == expected

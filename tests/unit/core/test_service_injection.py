@@ -68,28 +68,28 @@ class MockModifierDef:
 
 
 # =============================================================================
-# Test: ShipStatsService Registry Injection
+# Test: ShipStatsCalculator Registry Injection
 # =============================================================================
 
-class TestShipStatsServiceInjection:
-    """Tests for ShipStatsService constructor injection.
+class TestShipStatsCalculatorInjection:
+    """Tests for ShipStatsCalculator constructor injection.
 
     PROJ-42: Updated to use instance-only patterns.
     """
 
     def test_constructor_accepts_registries_parameter(self):
-        """ShipStatsService constructor should accept registries parameter."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        """ShipStatsCalculator constructor should accept registries parameter."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         import inspect
 
         # Check constructor signature accepts registries parameter
-        sig = inspect.signature(ShipStatsService.__init__)
+        sig = inspect.signature(ShipStatsCalculator.__init__)
         param_names = list(sig.parameters.keys())
         assert 'registries' in param_names
 
     def test_calculate_stats_uses_injected_registries(self):
         """calculate_stats() should use injected registries when provided."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         # Create test registries with a custom vehicle class
         test_classes = {
@@ -102,7 +102,7 @@ class TestShipStatsServiceInjection:
             resources={}
         )
 
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Call with minimal design data
         design_data = {
@@ -118,10 +118,10 @@ class TestShipStatsServiceInjection:
 
     def test_calculate_stats_uses_default_registries(self):
         """calculate_stats() should use default registries when none provided."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         # Create service without explicit registries
-        service = ShipStatsService()
+        service = ShipStatsCalculator()
 
         design_data = {
             "ship_class": "Escort",
@@ -134,7 +134,7 @@ class TestShipStatsServiceInjection:
 
     def test_calculate_stats_uses_injected_vehicle_class_data(self):
         """Verify calculate_stats actually uses injected registry values."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.core.registry import RegistryManager
 
         # Create registries with a unique vehicle class
@@ -148,7 +148,7 @@ class TestShipStatsServiceInjection:
             resources={}
         )
 
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Ensure singleton does NOT have this class
         assert "UniqueTestClass" not in RegistryManager.instance().vehicle_classes

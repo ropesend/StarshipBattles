@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 
 from game.simulation.components.abilities.propulsion import StrategicMovement, WarpJump
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
-from game.strategy.services.fleet_mobility_service import FleetMobilityService
+from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
 
 
 class TestStrategicMovementIntegration:
@@ -61,7 +61,7 @@ class TestStrategicMovementIntegration:
 
     def test_fleet_speed_calculation_with_design_data(self):
         """Test fleet speed calculation using design data with StrategicMovement."""
-        from game.strategy.services.fleet_mobility_service import K_STRATEGIC
+        from game.strategy.services.fleet_speed_calculator import K_STRATEGIC
 
         # Create mock ship instance with design data containing strategic movement
         mock_ship = MagicMock()
@@ -74,7 +74,7 @@ class TestStrategicMovementIntegration:
         mock_ship.is_combat_capable.return_value = True
 
         # Calculate speed: floor((100 * 25) / 1000) = floor(2500/1000) = floor(2.5) = 2
-        speed = FleetMobilityService.calculate_ship_speed(mock_ship)
+        speed = FleetSpeedCalculator.calculate_ship_speed(mock_ship)
         expected = int((100 * K_STRATEGIC) / 1000)
         assert speed == expected
 
@@ -104,7 +104,7 @@ class TestStrategicMovementIntegration:
         mock_fleet = MagicMock()
         mock_fleet.get_ship_instances.return_value = [fast_ship, slow_ship]
 
-        fleet_speed = FleetMobilityService.calculate_fleet_speed(mock_fleet)
+        fleet_speed = FleetSpeedCalculator.calculate_fleet_speed(mock_fleet)
 
         # Fast ship: floor((200 * 25) / 100) = floor(50) = clamped to 10
         # Slow ship: floor((100 * 25) / 5000) = floor(0.5) = 0
@@ -123,7 +123,7 @@ class TestStrategicMovementIntegration:
         }
         mock_ship.is_combat_capable.return_value = True
 
-        speed = FleetMobilityService.calculate_ship_speed(mock_ship)
+        speed = FleetSpeedCalculator.calculate_ship_speed(mock_ship)
         assert speed == 0
 
 

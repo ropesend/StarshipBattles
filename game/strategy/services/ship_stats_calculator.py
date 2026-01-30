@@ -1,5 +1,5 @@
 """
-Ship Stats Service - Calculates ship statistics from component definitions.
+Ship Stats Calculator - Calculates ship statistics from component definitions.
 
 PROJ-07: Strategy Layer Stats Calculation Refactor
 PROJ-38: Added constructor-based DI with GameRegistries support.
@@ -38,7 +38,7 @@ NON_DEGRADING_TYPES = {'Armor'}
 FULL_HP_REQUIRED_ABILITIES = {'WarpJump'}
 
 
-class ShipStatsService:
+class ShipStatsCalculator:
     """
     Service for calculating ship statistics from component definitions.
 
@@ -46,11 +46,11 @@ class ShipStatsService:
 
     Usage:
         # With explicit DI (preferred)
-        service = ShipStatsService(registries=game_registries)
+        service = ShipStatsCalculator(registries=game_registries)
         stats = service.calculate_stats(design_data)
 
         # With default registries (uses fallback)
-        service = ShipStatsService()
+        service = ShipStatsCalculator()
         stats = service.calculate_stats(design_data)
 
     This replaces reading from expected_stats with dynamic calculation
@@ -59,14 +59,14 @@ class ShipStatsService:
 
     def __init__(self, registries: Optional[GameRegistries] = None):
         """
-        Initialize ShipStatsService with optional GameRegistries.
+        Initialize ShipStatsCalculator with optional GameRegistries.
 
         Args:
             registries: GameRegistries container with components, modifiers,
                        vehicle_classes. If None, uses fallback registries.
         """
         # PROJ-42: Simplified DI pattern with fallback
-        self._registries = registries if registries is not None else ShipStatsService._get_registries_fallback()
+        self._registries = registries if registries is not None else ShipStatsCalculator._get_registries_fallback()
 
     @staticmethod
     def _get_registries_fallback() -> GameRegistries:
@@ -101,7 +101,7 @@ class ShipStatsService:
         PROJ-42: Simplified to instance-only method (removed static calling pattern).
 
         Usage:
-            service = ShipStatsService(registries=...)
+            service = ShipStatsCalculator(registries=...)
             stats = service.calculate_stats(design_data)
             stats = service.calculate_stats(design_data, component_damage={}, component_toggles={})
 
@@ -182,23 +182,23 @@ class ShipStatsService:
             # Check if component is toggled off
             if not component_toggles.get(comp_id, True):
                 # Still count mass (with modifiers), skip abilities
-                comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0, formula_context)
+                comp_mass = ShipStatsCalculator._get_numeric_value(comp_def, 'mass', 0, formula_context)
                 comp_mass = (comp_mass + multipliers.get('mass_add', 0.0)) * multipliers.get('mass_mult', 1.0)
                 total_mass += comp_mass
                 continue
 
             # Get effectiveness based on damage (0.0 to 1.0)
-            effectiveness = ShipStatsService.get_component_effectiveness(
+            effectiveness = ShipStatsCalculator.get_component_effectiveness(
                 comp_id, comp_def, component_damage
             )
 
             # Mass never degrades - add full mass regardless of damage (with modifiers)
-            comp_mass = ShipStatsService._get_numeric_value(comp_def, 'mass', 0, formula_context)
+            comp_mass = ShipStatsCalculator._get_numeric_value(comp_def, 'mass', 0, formula_context)
             comp_mass = (comp_mass + multipliers.get('mass_add', 0.0)) * multipliers.get('mass_mult', 1.0)
             total_mass += comp_mass
 
             # HP degrades with damage (with modifiers)
-            comp_hp = ShipStatsService._get_numeric_value(comp_def, 'max_hp', 0, formula_context)
+            comp_hp = ShipStatsCalculator._get_numeric_value(comp_def, 'max_hp', 0, formula_context)
             comp_hp *= multipliers.get('hp_mult', 1.0)
             total_hp += comp_hp * effectiveness
 
@@ -209,9 +209,9 @@ class ShipStatsService:
             capacity_mult = multipliers.get('capacity_mult', 1.0)
 
             # Resource Storage - degrades with damage (generic handling)
-            for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceStorage'):
+            for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceStorage'):
                 resource_type = ability_data.get('resource', '')
-                max_amount = ShipStatsService._evaluate_value(
+                max_amount = ShipStatsCalculator._evaluate_value(
                     ability_data.get('max_amount') or ability_data.get('amount', 0), 0, formula_context
                 )
                 # Apply capacity multiplier from design modifiers
@@ -223,21 +223,21 @@ class ShipStatsService:
 
             # Also check shortcut abilities (FuelStorage, EnergyStorage, AmmoStorage)
             if 'FuelStorage' in abilities:
-                val = ShipStatsService._get_ability_value(abilities, 'FuelStorage', formula_context)
+                val = ShipStatsCalculator._get_ability_value(abilities, 'FuelStorage', formula_context)
                 val *= capacity_mult
                 resource_storage['fuel'] = resource_storage.get('fuel', 0) + val * effectiveness
             if 'EnergyStorage' in abilities:
-                val = ShipStatsService._get_ability_value(abilities, 'EnergyStorage', formula_context)
+                val = ShipStatsCalculator._get_ability_value(abilities, 'EnergyStorage', formula_context)
                 val *= capacity_mult
                 resource_storage['energy'] = resource_storage.get('energy', 0) + val * effectiveness
             if 'AmmoStorage' in abilities:
-                val = ShipStatsService._get_ability_value(abilities, 'AmmoStorage', formula_context)
+                val = ShipStatsCalculator._get_ability_value(abilities, 'AmmoStorage', formula_context)
                 val *= capacity_mult
                 resource_storage['ammo'] = resource_storage.get('ammo', 0) + val * effectiveness
 
             # Strategic Movement - degrades with damage (with modifiers)
             if 'StrategicMovement' in abilities:
-                movement = ShipStatsService._get_ability_value(abilities, 'StrategicMovement', formula_context)
+                movement = ShipStatsCalculator._get_ability_value(abilities, 'StrategicMovement', formula_context)
                 movement *= multipliers.get('strategic_mult', 1.0)
                 total_strategic_movement += movement * effectiveness
 
@@ -245,9 +245,9 @@ class ShipStatsService:
             consumption_mult = multipliers.get('consumption_mult', 1.0)
 
             # Resource Consumption - generic handling by trigger type
-            for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
+            for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
                 resource_type = ability_data.get('resource', '')
-                amount = ShipStatsService._evaluate_value(ability_data.get('amount', 0), 0, formula_context)
+                amount = ShipStatsCalculator._evaluate_value(ability_data.get('amount', 0), 0, formula_context)
                 # Apply consumption multiplier from design modifiers
                 amount *= consumption_mult
                 trigger = ability_data.get('trigger', 'constant')
@@ -264,18 +264,18 @@ class ShipStatsService:
 
             # Warp Jump - requires 100% HP (effectiveness must be 1.0)
             if 'WarpJump' in abilities:
-                warp_effectiveness = ShipStatsService._get_warp_effectiveness(
+                warp_effectiveness = ShipStatsCalculator._get_warp_effectiveness(
                     comp_id, comp_def, component_damage
                 )
                 if warp_effectiveness > 0:
                     warp_data = abilities.get('WarpJump', {})
                     if isinstance(warp_data, dict):
                         # Evaluate formulas for max_tonnage (e.g., "=ship_class_mass")
-                        tonnage = ShipStatsService._evaluate_value(
+                        tonnage = ShipStatsCalculator._evaluate_value(
                             warp_data.get('max_tonnage', 0), 0, formula_context
                         )
                     else:
-                        tonnage = ShipStatsService._evaluate_value(
+                        tonnage = ShipStatsCalculator._evaluate_value(
                             warp_data, 0, formula_context
                         ) if isinstance(warp_data, str) and warp_data.startswith("=") else (
                             warp_data if isinstance(warp_data, (int, float)) else 0
@@ -286,11 +286,11 @@ class ShipStatsService:
                         warp_max_tonnage = int(tonnage)
 
                     # Warp resource costs from ResourceConsumption with trigger='warp_jump'
-                    for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
+                    for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
                         if ability_data.get('trigger') == 'warp_jump':
                             resource_type = ability_data.get('resource', '')
                             # Evaluate formulas for amount (e.g., "=5 * (ship_class_mass ** (2/3))")
-                            amount = ShipStatsService._evaluate_value(
+                            amount = ShipStatsCalculator._evaluate_value(
                                 ability_data.get('amount', 0), 0, formula_context
                             )
                             warp_resource_costs[resource_type] = (
@@ -347,12 +347,12 @@ class ShipStatsService:
             return 1.0
 
         # Get max HP from component definition
-        max_hp = ShipStatsService._get_numeric_value(comp_def, 'max_hp', 0)
+        max_hp = ShipStatsCalculator._get_numeric_value(comp_def, 'max_hp', 0)
         if max_hp <= 0:
             return 1.0  # No HP means always active
 
         # Get current HP - check both indexed and base forms
-        current_hp = ShipStatsService._get_current_hp(comp_id, max_hp, component_damage)
+        current_hp = ShipStatsCalculator._get_current_hp(comp_id, max_hp, component_damage)
 
         # Calculate HP percentage
         hp_pct = current_hp / max_hp
@@ -380,11 +380,11 @@ class ShipStatsService:
         Warp drives are either fully functional (100% HP) or completely
         non-functional (any damage at all disables warp).
         """
-        max_hp = ShipStatsService._get_numeric_value(comp_def, 'max_hp', 0)
+        max_hp = ShipStatsCalculator._get_numeric_value(comp_def, 'max_hp', 0)
         if max_hp <= 0:
             return 1.0  # No HP tracked = always works
 
-        current_hp = ShipStatsService._get_current_hp(comp_id, max_hp, component_damage)
+        current_hp = ShipStatsCalculator._get_current_hp(comp_id, max_hp, component_damage)
 
         # Must be at exactly full HP
         if current_hp >= max_hp:
@@ -462,7 +462,7 @@ class ShipStatsService:
     def _get_numeric_value(obj: Any, attr: str, default: float, context: Optional[Dict[str, Any]] = None) -> float:
         """Get a numeric attribute from an object, handling formulas."""
         val = getattr(obj, attr, default)
-        return ShipStatsService._evaluate_value(val, default, context)
+        return ShipStatsCalculator._evaluate_value(val, default, context)
 
     @staticmethod
     def _evaluate_value(val: Any, default: float, context: Optional[Dict[str, Any]] = None) -> float:
@@ -481,14 +481,14 @@ class ShipStatsService:
         """Get the primary value from an ability definition."""
         val = abilities.get(ability_name, 0)
         if isinstance(val, str):
-            return ShipStatsService._evaluate_value(val, 0.0, context)
+            return ShipStatsCalculator._evaluate_value(val, 0.0, context)
         if isinstance(val, (int, float)):
             return float(val)
         elif isinstance(val, dict):
             # Try common keys for primary value
             for key in ['value', 'amount', 'max_amount', 'thrust_force', 'movement_points']:
                 if key in val:
-                    return ShipStatsService._evaluate_value(val[key], 0.0, context)
+                    return ShipStatsCalculator._evaluate_value(val[key], 0.0, context)
             return 0.0
         return 0.0
 

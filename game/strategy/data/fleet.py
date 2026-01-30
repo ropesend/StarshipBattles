@@ -87,8 +87,8 @@ class Fleet:
         """
         # INTENTIONAL LATE IMPORT: Edge operation (only on ship add/remove)
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.fleet_mobility_service import FleetMobilityService
-        FleetMobilityService.recalculate_fleet_speed(self)
+        from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+        FleetSpeedCalculator.update_fleet_speed(self)
 
     def get_ship_names(self) -> List[str]:
         """Get names of all ships in the fleet."""
@@ -111,14 +111,14 @@ class Fleet:
         """
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         combat_ships = self.get_combat_capable_ships()
         if not combat_ships:
             return False
 
         for ship in combat_ships:
-            if not ShipStatsService.has_warp_capability(ship):
+            if not ShipStatsCalculator.has_warp_capability(ship):
                 return False
         return True
 
@@ -131,10 +131,10 @@ class Fleet:
         """
         # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         for ship in self.get_combat_capable_ships():
-            if not ShipStatsService.has_warp_capability(ship):
+            if not ShipStatsCalculator.has_warp_capability(ship):
                 return ship
         return None
 

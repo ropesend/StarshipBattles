@@ -1,5 +1,5 @@
 """
-Tests for ShipStatsService - dynamic stat calculation from components.
+Tests for ShipStatsCalculator - dynamic stat calculation from components.
 
 PROJ-07: Strategy Layer Stats Calculation Refactor
 PROJ-42: Updated to instance-only method patterns (removed static calling support)
@@ -52,16 +52,16 @@ def make_design_data(components_by_layer: dict) -> dict:
     return {'layers': layers}
 
 
-class TestShipStatsServiceBasics:
+class TestShipStatsCalculatorBasics:
     """Basic functionality tests."""
 
     def test_empty_design_returns_zeros(self):
         """Empty design should return zero stats."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         design_data = {'layers': {}}
         registries = create_mock_registries()
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data)
 
         assert stats['max_hp'] == 0
@@ -72,10 +72,10 @@ class TestShipStatsServiceBasics:
 
     def test_undamaged_component_full_effectiveness(self):
         """Undamaged components should have full effectiveness."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('test_comp', mass=100, max_hp=200)
-        effectiveness = ShipStatsService.get_component_effectiveness(
+        effectiveness = ShipStatsCalculator.get_component_effectiveness(
             'test_comp', comp, {}
         )
 
@@ -83,11 +83,11 @@ class TestShipStatsServiceBasics:
 
     def test_missing_component_skipped(self):
         """Components not in registry should be skipped with warning."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         design_data = make_design_data({'CORE': ['nonexistent_component']})
         registries = create_mock_registries(components={})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data)
 
         assert stats['max_hp'] == 0
@@ -99,58 +99,58 @@ class TestDamageEffectiveness:
 
     def test_full_hp_full_effectiveness(self):
         """100% HP = 100% effectiveness."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('engine', max_hp=100)
-        eff = ShipStatsService.get_component_effectiveness('engine', comp, {})
+        eff = ShipStatsCalculator.get_component_effectiveness('engine', comp, {})
         assert eff == 1.0
 
     def test_below_threshold_zero_effectiveness(self):
         """Below 30% HP = 0% effectiveness (inactive)."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('engine', max_hp=100, damage_threshold=0.3)
         # At 25% HP (below 30% threshold)
-        eff = ShipStatsService.get_component_effectiveness(
+        eff = ShipStatsCalculator.get_component_effectiveness(
             'engine', comp, {'engine': 25}
         )
         assert eff == 0.0
 
     def test_at_threshold_zero_effectiveness(self):
         """At exactly 30% HP = 0% effectiveness."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('engine', max_hp=100, damage_threshold=0.3)
-        eff = ShipStatsService.get_component_effectiveness(
+        eff = ShipStatsCalculator.get_component_effectiveness(
             'engine', comp, {'engine': 30}
         )
         assert eff == 0.0
 
     def test_gradual_degradation(self):
         """Between 30% and 100% HP = gradual degradation."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('engine', max_hp=100, damage_threshold=0.3)
 
         # At 65% HP: (0.65 - 0.3) / (1.0 - 0.3) = 0.35 / 0.7 = 0.5
-        eff = ShipStatsService.get_component_effectiveness(
+        eff = ShipStatsCalculator.get_component_effectiveness(
             'engine', comp, {'engine': 65}
         )
         assert abs(eff - 0.5) < 0.01
 
         # At 100% HP = full
-        eff_full = ShipStatsService.get_component_effectiveness(
+        eff_full = ShipStatsCalculator.get_component_effectiveness(
             'engine', comp, {'engine': 100}
         )
         assert eff_full == 1.0
 
     def test_armor_never_degrades(self):
         """Armor should always be 100% effective regardless of damage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         # Test by type
         armor_by_type = MockComponent('armor', max_hp=100, type_str='Armor')
-        eff = ShipStatsService.get_component_effectiveness(
+        eff = ShipStatsCalculator.get_component_effectiveness(
             'armor', armor_by_type, {'armor': 1}  # 1% HP
         )
         assert eff == 1.0
@@ -160,7 +160,7 @@ class TestDamageEffectiveness:
             'armor2', max_hp=100, type_str='Generic',
             abilities={'Armor': True}
         )
-        eff2 = ShipStatsService.get_component_effectiveness(
+        eff2 = ShipStatsCalculator.get_component_effectiveness(
             'armor2', armor_by_ability, {'armor2': 1}
         )
         assert eff2 == 1.0
@@ -171,7 +171,7 @@ class TestWarpCapability:
 
     def test_warp_requires_full_hp(self):
         """Warp drives must be at 100% HP to function."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent(
             'warp_drive', max_hp=100,
@@ -182,18 +182,18 @@ class TestWarpCapability:
         )
 
         # Full HP - warp works
-        eff = ShipStatsService._get_warp_effectiveness('warp_drive', comp, {})
+        eff = ShipStatsCalculator._get_warp_effectiveness('warp_drive', comp, {})
         assert eff == 1.0
 
         # 99% HP - warp disabled
-        eff_damaged = ShipStatsService._get_warp_effectiveness(
+        eff_damaged = ShipStatsCalculator._get_warp_effectiveness(
             'warp_drive', comp, {'warp_drive': 99}
         )
         assert eff_damaged == 0.0
 
     def test_damaged_warp_drive_zero_tonnage(self):
         """Damaged warp drive should contribute 0 to warp_max_tonnage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp_comp = MockComponent(
             'warp_drive', max_hp=100, mass=50,
@@ -206,7 +206,7 @@ class TestWarpCapability:
         design_data = make_design_data({'OUTER': ['warp_drive']})
 
         registries = create_mock_registries(components={'warp_drive': warp_comp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Undamaged - has warp capability
         stats_ok = service.calculate_stats(design_data, {})
@@ -222,7 +222,7 @@ class TestWarpCapability:
 
     def test_multiple_warp_drives_largest_tonnage(self):
         """With multiple warp drives, use largest tonnage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp1 = MockComponent(
             'warp_small', max_hp=100, mass=30,
@@ -242,7 +242,7 @@ class TestWarpCapability:
         design_data = make_design_data({'OUTER': ['warp_small', 'warp_large']})
 
         registries = create_mock_registries(components={'warp_small': warp1, 'warp_large': warp2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
 
@@ -253,7 +253,7 @@ class TestWarpCapability:
 
     def test_one_damaged_warp_drive_reduces_capability(self):
         """If one of two warp drives is damaged, only undamaged contributes."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp1 = MockComponent(
             'warp_small', max_hp=100,
@@ -273,7 +273,7 @@ class TestWarpCapability:
         design_data = make_design_data({'OUTER': ['warp_small', 'warp_large']})
 
         registries = create_mock_registries(components={'warp_small': warp1, 'warp_large': warp2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Large warp damaged - only small works
         stats = service.calculate_stats(
@@ -289,13 +289,13 @@ class TestStatAggregation:
 
     def test_mass_does_not_degrade(self):
         """Mass should be full regardless of damage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('heavy_part', mass=500, max_hp=100)
         design_data = make_design_data({'CORE': ['heavy_part']})
 
         registries = create_mock_registries(components={'heavy_part': comp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Even with damaged component
         stats = service.calculate_stats(
@@ -306,13 +306,13 @@ class TestStatAggregation:
 
     def test_hp_degrades_with_damage(self):
         """HP contribution should degrade with damage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('hull', mass=100, max_hp=200, damage_threshold=0.3)
         design_data = make_design_data({'CORE': ['hull']})
 
         registries = create_mock_registries(components={'hull': comp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Full HP
         stats_full = service.calculate_stats(design_data, {})
@@ -328,7 +328,7 @@ class TestStatAggregation:
 
     def test_strategic_movement_aggregation(self):
         """Strategic movement should sum across engines, degraded by damage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=80, max_hp=100,
@@ -337,7 +337,7 @@ class TestStatAggregation:
         design_data = make_design_data({'OUTER': ['engine']})
 
         registries = create_mock_registries(components={'engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Full HP
         stats = service.calculate_stats(design_data, {})
@@ -351,7 +351,7 @@ class TestStatAggregation:
 
     def test_fuel_storage_aggregation(self):
         """Fuel storage should sum, degraded by damage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         tank = MockComponent(
             'fuel_tank', mass=20, max_hp=50,
@@ -360,14 +360,14 @@ class TestStatAggregation:
         design_data = make_design_data({'OUTER': ['fuel_tank']})
 
         registries = create_mock_registries(components={'fuel_tank': tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
         assert stats['resource_storage']['fuel'] == 10000
 
     def test_strategic_fuel_consumption(self):
         """Strategic fuel per hex should sum across engines."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=80, max_hp=100,
@@ -380,7 +380,7 @@ class TestStatAggregation:
         design_data = make_design_data({'OUTER': ['engine']})
 
         registries = create_mock_registries(components={'engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
         assert stats['resource_consumption_per_hex']['fuel'] == 100
@@ -391,31 +391,31 @@ class TestComponentIdMatching:
 
     def test_indexed_component_id(self):
         """Should match indexed component IDs (e.g., 'engine_0')."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('engine', max_hp=100)
 
         # Damage dict uses indexed ID
-        current_hp = ShipStatsService._get_current_hp('engine', 100, {'engine_0': 50})
+        current_hp = ShipStatsCalculator._get_current_hp('engine', 100, {'engine_0': 50})
         assert current_hp == 50
 
     def test_base_id_takes_precedence(self):
         """Base ID should match before indexed forms."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent('engine', max_hp=100)
 
         # Both base and indexed exist - base wins
-        current_hp = ShipStatsService._get_current_hp(
+        current_hp = ShipStatsCalculator._get_current_hp(
             'engine', 100, {'engine': 30, 'engine_0': 50}
         )
         assert current_hp == 30
 
     def test_no_damage_returns_max_hp(self):
         """No damage entry should return max HP."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
-        current_hp = ShipStatsService._get_current_hp('engine', 100, {})
+        current_hp = ShipStatsCalculator._get_current_hp('engine', 100, {})
         assert current_hp == 100
 
 
@@ -424,7 +424,7 @@ class TestIntegrationScenarios:
 
     def test_escort_with_warp_drive(self):
         """Test escort ship with engine and warp drive."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         bridge = MockComponent(
             'bridge', mass=50, max_hp=200,
@@ -462,7 +462,7 @@ class TestIntegrationScenarios:
             'warp_drive': warp,
             'fuel_tank': tank
         })
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
 
@@ -476,7 +476,7 @@ class TestIntegrationScenarios:
 
     def test_damaged_escort_loses_warp(self):
         """Escort with damaged warp drive loses warp capability."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=80, max_hp=100,
@@ -493,7 +493,7 @@ class TestIntegrationScenarios:
         design_data = make_design_data({'OUTER': ['engine', 'warp_drive']})
 
         registries = create_mock_registries(components={'engine': engine, 'warp_drive': warp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Warp drive at 99% HP - disabled
         stats = service.calculate_stats(
@@ -516,7 +516,7 @@ class TestGenericDictAccumulators:
 
     def test_resource_storage_generic_dict_structure(self):
         """resource_storage should be a dict with resource types as keys."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         tank = MockComponent(
             'multi_tank', mass=50, max_hp=100,
@@ -530,7 +530,7 @@ class TestGenericDictAccumulators:
         design_data = make_design_data({'OUTER': ['multi_tank']})
 
         registries = create_mock_registries(components={'multi_tank': tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['resource_storage'], dict)
@@ -539,7 +539,7 @@ class TestGenericDictAccumulators:
 
     def test_resource_consumption_per_hex_generic_dict(self):
         """resource_consumption_per_hex should be a dict with resource types."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'advanced_engine', mass=80, max_hp=100,
@@ -553,7 +553,7 @@ class TestGenericDictAccumulators:
         design_data = make_design_data({'OUTER': ['advanced_engine']})
 
         registries = create_mock_registries(components={'advanced_engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['resource_consumption_per_hex'], dict)
@@ -562,7 +562,7 @@ class TestGenericDictAccumulators:
 
     def test_resource_consumption_per_turn_generic_dict(self):
         """resource_consumption_per_turn should be a dict with resource types."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         life_support = MockComponent(
             'life_support', mass=30, max_hp=50,
@@ -576,7 +576,7 @@ class TestGenericDictAccumulators:
         design_data = make_design_data({'CORE': ['life_support']})
 
         registries = create_mock_registries(components={'life_support': life_support})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['resource_consumption_per_turn'], dict)
@@ -585,7 +585,7 @@ class TestGenericDictAccumulators:
 
     def test_warp_resource_costs_generic_dict(self):
         """warp_resource_costs should be a dict with resource types."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp_drive = MockComponent(
             'warp_drive', mass=100, max_hp=100,
@@ -600,7 +600,7 @@ class TestGenericDictAccumulators:
         design_data = make_design_data({'OUTER': ['warp_drive']})
 
         registries = create_mock_registries(components={'warp_drive': warp_drive})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['warp_resource_costs'], dict)
@@ -609,7 +609,7 @@ class TestGenericDictAccumulators:
 
     def test_multiple_custom_resources_accumulate(self):
         """Multiple components should accumulate custom resources in same dict."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         tank1 = MockComponent(
             'fuel_tank', mass=20, max_hp=50,
@@ -630,7 +630,7 @@ class TestGenericDictAccumulators:
         design_data = make_design_data({'OUTER': ['fuel_tank', 'fuel_tank_2']})
 
         registries = create_mock_registries(components={'fuel_tank': tank1, 'fuel_tank_2': tank2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Should accumulate: 3000 + 2000 = 5000
@@ -642,7 +642,7 @@ class TestComponentToggles:
 
     def test_toggled_off_component_mass_still_counted(self):
         """Toggled off components should still contribute mass."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=200, max_hp=100,
@@ -651,7 +651,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['engine']})
 
         registries = create_mock_registries(components={'engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(
             design_data, {}, component_toggles={'engine': False}
         )
@@ -660,13 +660,13 @@ class TestComponentToggles:
 
     def test_toggled_off_component_no_hp_contribution(self):
         """Toggled off components should not contribute HP."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         hull = MockComponent('hull', mass=100, max_hp=500)
         design_data = make_design_data({'CORE': ['hull']})
 
         registries = create_mock_registries(components={'hull': hull})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Enabled
         stats_on = service.calculate_stats(design_data, {})
@@ -680,7 +680,7 @@ class TestComponentToggles:
 
     def test_toggled_off_component_no_strategic_movement(self):
         """Toggled off engines should not contribute strategic movement."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=80, max_hp=100,
@@ -689,7 +689,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['engine']})
 
         registries = create_mock_registries(components={'engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats_on = service.calculate_stats(design_data, {})
         assert stats_on['strategic_movement'] == 150
@@ -701,7 +701,7 @@ class TestComponentToggles:
 
     def test_toggled_off_warp_drive_no_warp_capability(self):
         """Toggled off warp drive should contribute no warp capability."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp = MockComponent(
             'warp_drive', mass=60, max_hp=100,
@@ -710,7 +710,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['warp_drive']})
 
         registries = create_mock_registries(components={'warp_drive': warp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats_on = service.calculate_stats(design_data, {})
         assert stats_on['warp_max_tonnage'] == 8000
@@ -722,7 +722,7 @@ class TestComponentToggles:
 
     def test_toggled_off_resource_storage_not_counted(self):
         """Toggled off storage components should not contribute storage capacity."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         tank = MockComponent(
             'fuel_tank', mass=30, max_hp=50,
@@ -731,7 +731,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['fuel_tank']})
 
         registries = create_mock_registries(components={'fuel_tank': tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats_on = service.calculate_stats(design_data, {})
         assert stats_on['resource_storage']['fuel'] == 10000
@@ -743,7 +743,7 @@ class TestComponentToggles:
 
     def test_mixed_enabled_disabled_components(self):
         """Mix of enabled and disabled components should calculate correctly."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine1 = MockComponent(
             'engine_a', mass=80, max_hp=100,
@@ -756,7 +756,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['engine_a', 'engine_b']})
 
         registries = create_mock_registries(components={'engine_a': engine1, 'engine_b': engine2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(
             design_data, {},
@@ -772,7 +772,7 @@ class TestComponentToggles:
 
     def test_missing_toggle_defaults_to_enabled(self):
         """Components not in toggle dict should default to enabled."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=80, max_hp=100,
@@ -781,7 +781,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['engine']})
 
         registries = create_mock_registries(components={'engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Pass empty toggle dict - should default to enabled
         stats = service.calculate_stats(
@@ -793,7 +793,7 @@ class TestComponentToggles:
 
     def test_toggled_off_custom_resource_consumption_not_counted(self):
         """Toggled off components should not contribute resource consumption."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'advanced_engine', mass=100, max_hp=100,
@@ -808,7 +808,7 @@ class TestComponentToggles:
         design_data = make_design_data({'OUTER': ['advanced_engine']})
 
         registries = create_mock_registries(components={'advanced_engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats_on = service.calculate_stats(design_data, {})
         assert stats_on['resource_consumption_per_hex']['fuel'] == 200
@@ -827,7 +827,7 @@ class TestTriggerTypes:
 
     def test_trigger_strategic_per_hex_accumulates_correctly(self):
         """strategic_per_hex trigger should accumulate in resource_consumption_per_hex."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine1 = MockComponent(
             'engine_1', mass=50, max_hp=100,
@@ -848,14 +848,14 @@ class TestTriggerTypes:
         design_data = make_design_data({'OUTER': ['engine_1', 'engine_2']})
 
         registries = create_mock_registries(components={'engine_1': engine1, 'engine_2': engine2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_hex']['fuel'] == 100
 
     def test_trigger_per_turn_accumulates_correctly(self):
         """per_turn trigger should accumulate in resource_consumption_per_turn."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         life_support_1 = MockComponent(
             'ls_1', mass=20, max_hp=50,
@@ -876,14 +876,14 @@ class TestTriggerTypes:
         design_data = make_design_data({'CORE': ['ls_1', 'ls_2']})
 
         registries = create_mock_registries(components={'ls_1': life_support_1, 'ls_2': life_support_2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_turn']['oxygen'] == 25
 
     def test_trigger_warp_jump_accumulates_correctly(self):
         """warp_jump trigger should accumulate in warp_resource_costs."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp1 = MockComponent(
             'warp_1', mass=60, max_hp=100,
@@ -906,7 +906,7 @@ class TestTriggerTypes:
         design_data = make_design_data({'OUTER': ['warp_1', 'warp_2']})
 
         registries = create_mock_registries(components={'warp_1': warp1, 'warp_2': warp2})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Energy costs accumulate
@@ -914,7 +914,7 @@ class TestTriggerTypes:
 
     def test_different_triggers_dont_cross_buckets(self):
         """Different trigger types should go into separate buckets."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         multi_consumer = MockComponent(
             'multi', mass=100, max_hp=100,
@@ -930,7 +930,7 @@ class TestTriggerTypes:
         design_data = make_design_data({'CORE': ['multi']})
 
         registries = create_mock_registries(components={'multi': multi_consumer})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Each should be in its own bucket, not mixed
@@ -940,7 +940,7 @@ class TestTriggerTypes:
 
     def test_trigger_per_turn_degrades_with_damage(self):
         """per_turn consumption should degrade with component damage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         life_support = MockComponent(
             'life_support', mass=30, max_hp=100, damage_threshold=0.3,
@@ -953,7 +953,7 @@ class TestTriggerTypes:
         design_data = make_design_data({'CORE': ['life_support']})
 
         registries = create_mock_registries(components={'life_support': life_support})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Full HP
         stats_full = service.calculate_stats(design_data, {})
@@ -967,7 +967,7 @@ class TestTriggerTypes:
 
     def test_trigger_warp_jump_requires_full_hp(self):
         """warp_jump consumption requires full HP (warp resource costs are 0 if damaged)."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         # warp_jump trigger now uses warp effectiveness: either 0 (damaged) or 1 (100% HP)
         # If warp drive is damaged, warp_resource_costs should be 0 (no warp possible)
@@ -983,7 +983,7 @@ class TestTriggerTypes:
         design_data = make_design_data({'OUTER': ['warp']})
 
         registries = create_mock_registries(components={'warp': warp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Full HP - warp works
         stats_full = service.calculate_stats(design_data, {})
@@ -1001,7 +1001,7 @@ class TestTriggerTypes:
 
     def test_trigger_unknown_type_ignored(self):
         """Unknown trigger types should be ignored (no error)."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         comp = MockComponent(
             'strange', mass=50, max_hp=100,
@@ -1014,7 +1014,7 @@ class TestTriggerTypes:
         design_data = make_design_data({'CORE': ['strange']})
 
         registries = create_mock_registries(components={'strange': comp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Should not appear in any bucket
@@ -1028,7 +1028,7 @@ class TestCustomResources:
 
     def test_custom_resource_type_in_storage(self):
         """Custom resource types should work in ResourceStorage."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         tank = MockComponent(
             'plasma_tank', mass=40, max_hp=80,
@@ -1041,14 +1041,14 @@ class TestCustomResources:
         design_data = make_design_data({'OUTER': ['plasma_tank']})
 
         registries = create_mock_registries(components={'plasma_tank': tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_storage']['plasma'] == 2500
 
     def test_custom_resource_per_hex_consumption(self):
         """Custom resource types should work in per-hex consumption."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         drive = MockComponent(
             'plasma_drive', mass=100, max_hp=100,
@@ -1061,14 +1061,14 @@ class TestCustomResources:
         design_data = make_design_data({'OUTER': ['plasma_drive']})
 
         registries = create_mock_registries(components={'plasma_drive': drive})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_hex']['plasma'] == 75
 
     def test_custom_resource_per_turn_consumption(self):
         """Custom resource types should work in per-turn consumption."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         reactor = MockComponent(
             'fusion_reactor', mass=80, max_hp=100,
@@ -1081,14 +1081,14 @@ class TestCustomResources:
         design_data = make_design_data({'CORE': ['fusion_reactor']})
 
         registries = create_mock_registries(components={'fusion_reactor': reactor})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_turn']['deuterium'] == 5
 
     def test_custom_resource_warp_costs(self):
         """Custom resource types should work in warp costs."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         warp = MockComponent(
             'exotic_warp', mass=100, max_hp=100,
@@ -1102,14 +1102,14 @@ class TestCustomResources:
         design_data = make_design_data({'OUTER': ['exotic_warp']})
 
         registries = create_mock_registries(components={'exotic_warp': warp})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         assert stats['warp_resource_costs']['exotic_matter'] == 50
 
     def test_many_different_custom_resources_coexist(self):
         """Many different custom resources should coexist without conflict."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         multi_tank = MockComponent(
             'multi_resource', mass=100, max_hp=100,
@@ -1126,7 +1126,7 @@ class TestCustomResources:
         design_data = make_design_data({'CORE': ['multi_resource']})
 
         registries = create_mock_registries(components={'multi_resource': multi_tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         storage = stats['resource_storage']
@@ -1147,7 +1147,7 @@ class TestBugDocumentation:
         When a component has an empty string as resource type, it creates
         an empty string key in the resource dict. This is documented behavior.
         """
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         buggy_tank = MockComponent(
             'buggy_tank', mass=50, max_hp=100,
@@ -1160,7 +1160,7 @@ class TestBugDocumentation:
         design_data = make_design_data({'OUTER': ['buggy_tank']})
 
         registries = create_mock_registries(components={'buggy_tank': buggy_tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # BUG: Empty string creates '' key - this documents current behavior
@@ -1169,7 +1169,7 @@ class TestBugDocumentation:
 
     def test_empty_resource_type_in_consumption_ignored(self):
         """Empty resource type in consumption should be handled (not create '' key)."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         buggy_engine = MockComponent(
             'buggy_engine', mass=80, max_hp=100,
@@ -1182,7 +1182,7 @@ class TestBugDocumentation:
         design_data = make_design_data({'OUTER': ['buggy_engine']})
 
         registries = create_mock_registries(components={'buggy_engine': buggy_engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Empty string key will be created (current behavior - no validation)
@@ -1193,7 +1193,7 @@ class TestBugDocumentation:
 
     def test_none_resource_type_handled_safely(self):
         """None as resource type should be handled without errors."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         # Component with None resource (missing 'resource' key)
         bad_tank = MockComponent(
@@ -1207,7 +1207,7 @@ class TestBugDocumentation:
         design_data = make_design_data({'OUTER': ['bad_tank']})
 
         registries = create_mock_registries(components={'bad_tank': bad_tank})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         # Should not raise an exception
         stats = service.calculate_stats(design_data, {})
 
@@ -1221,7 +1221,7 @@ class TestIntegrationProj08:
 
     def test_damaged_toggled_component_full_mass_partial_stats(self):
         """Damaged then toggled component: full mass from toggle, no stats."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         engine = MockComponent(
             'engine', mass=100, max_hp=100, damage_threshold=0.3,
@@ -1235,7 +1235,7 @@ class TestIntegrationProj08:
         design_data = make_design_data({'OUTER': ['engine']})
 
         registries = create_mock_registries(components={'engine': engine})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Damaged engine at 50% HP (about 29% effectiveness)
         # But then toggled off - should get mass but no stats
@@ -1254,7 +1254,7 @@ class TestIntegrationProj08:
 
     def test_all_resource_types_in_one_component(self):
         """Component with storage, per-hex, per-turn, and warp costs."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         super_component = MockComponent(
             'super', mass=200, max_hp=200,
@@ -1275,7 +1275,7 @@ class TestIntegrationProj08:
         design_data = make_design_data({'CORE': ['super']})
 
         registries = create_mock_registries(components={'super': super_component})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Verify all fields populated correctly
@@ -1289,7 +1289,7 @@ class TestIntegrationProj08:
 
     def test_fallback_handles_new_generic_fields(self):
         """Fallback to expected_stats should include new generic fields."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         # Design with no layers, just expected_stats (fallback path)
         design_data = {
@@ -1307,7 +1307,7 @@ class TestIntegrationProj08:
         }
 
         registries = create_mock_registries(components={})  # Empty registry forces fallback
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
         stats = service.calculate_stats(design_data, {})
 
         # Should use expected_stats values
@@ -1330,10 +1330,10 @@ class TestIntegrationProj08:
 
 class TestHasWarpCapability:
     """
-    Tests for has_warp_capability function in ShipStatsService.
+    Tests for has_warp_capability function in ShipStatsCalculator.
 
     PROJ-11 Phase 3: This function was moved from game.ui.screens.fleet_report_filters
-    to game.strategy.services.ship_stats_service to eliminate strategy->UI dependency.
+    to game.strategy.services.ship_stats_calculator to eliminate strategy->UI dependency.
 
     A ship is warp-capable if:
     1. warp_max_tonnage >= ship's mass
@@ -1343,7 +1343,7 @@ class TestHasWarpCapability:
 
     def test_ship_without_warp_drive_not_capable(self):
         """Ship without warp drive should not be warp capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1353,12 +1353,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 500, 'fuel': 5000},
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_ship_with_sufficient_warp_drive_capable(self):
         """Ship with warp drive exceeding mass should be warp capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1368,12 +1368,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 1000, 'fuel': 5000},  # Enough for warp
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is True
 
     def test_ship_with_equal_warp_tonnage_capable(self):
         """Ship with warp tonnage equal to mass should be warp capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1383,12 +1383,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is True
 
     def test_ship_with_insufficient_warp_tonnage_not_capable(self):
         """Ship with warp tonnage less than mass should not be warp capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1398,12 +1398,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_ship_with_zero_mass_not_capable(self):
         """Ship with zero mass should not be warp capable (edge case)."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1413,12 +1413,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_insufficient_energy_storage_not_capable(self):
         """Ship with insufficient energy storage for warp should not be capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1428,12 +1428,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 300, 'fuel': 5000},  # Only has 300 energy capacity
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_insufficient_fuel_storage_not_capable(self):
         """Ship with insufficient fuel storage for warp should not be capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1443,12 +1443,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 500, 'fuel': 500},  # Only has 500 fuel capacity
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_exactly_sufficient_storage_capable(self):
         """Ship with exactly enough storage for warp should be capable."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1458,12 +1458,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 500, 'fuel': 200},  # Exactly enough
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is True
 
     def test_no_warp_cost_no_storage_check(self):
         """If warp has no resource cost, storage check should pass."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1473,15 +1473,15 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 0, 'fuel': 0},  # No storage
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is True
 
     def test_damaged_warp_drive_returns_zero_tonnage(self):
         """
         When warp drive is damaged, warp_max_tonnage from get_calculated_stats
-        should already be 0 (handled by ShipStatsService.calculate_stats).
+        should already be 0 (handled by ShipStatsCalculator.calculate_stats).
         """
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1491,12 +1491,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 1000, 'fuel': 5000},
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_multiple_resource_requirements_all_must_be_met(self):
         """If warp costs both energy and fuel, ship must have enough of both."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1506,12 +1506,12 @@ class TestHasWarpCapability:
             'resource_storage': {'energy': 600, 'fuel': 500},  # Enough energy but NOT enough fuel
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False
 
     def test_missing_stats_default_to_zero(self):
         """Missing stats should default to zero without crashing."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         ship = MagicMock()
         ship.get_calculated_stats.return_value = {
@@ -1519,19 +1519,19 @@ class TestHasWarpCapability:
             # Missing warp_max_tonnage - should default to 0
         }
 
-        result = ShipStatsService.has_warp_capability(ship)
+        result = ShipStatsCalculator.has_warp_capability(ship)
         assert result is False  # No warp capability without warp_max_tonnage
 
 
 class TestModifierApplication:
-    """Tests for PROJ-23: modifier application in ShipStatsService."""
+    """Tests for PROJ-23: modifier application in ShipStatsCalculator."""
 
     def test_scaled_battery_energy_capacity(self):
         """Battery with size modifier should have scaled energy capacity.
 
         PROJ-23 regression test: Ensures modifiers from design are applied.
         """
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.simulation.components.component_constants import Modifier
 
         # Create mock battery component
@@ -1568,7 +1568,7 @@ class TestModifierApplication:
             components={'battery': battery},
             modifiers={'simple_size_mount': size_modifier}
         )
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
 
@@ -1580,7 +1580,7 @@ class TestModifierApplication:
 
         This validates that modifier scaling is applied consistently.
         """
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.simulation.components.component_constants import Modifier
 
         battery = MockComponent(
@@ -1625,7 +1625,7 @@ class TestModifierApplication:
             components={'battery': battery},
             modifiers={'simple_size_mount': size_modifier}
         )
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats_small = service.calculate_stats(design_small, {})
         stats_large = service.calculate_stats(design_large, {})
@@ -1640,7 +1640,7 @@ class TestModifierApplication:
 
         PROJ-23 regression test: CRU_1 design with 1 large battery should work.
         """
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.simulation.components.component_constants import Modifier
 
         battery = MockComponent(
@@ -1691,7 +1691,7 @@ class TestModifierApplication:
             components={'battery': battery, 'warp_drive': warp_drive},
             modifiers={'simple_size_mount': size_modifier}
         )
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
 
@@ -1709,7 +1709,7 @@ class TestModifierApplication:
 
     def test_no_modifiers_uses_base_values(self):
         """Component without modifiers should use base ability values."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
         battery = MockComponent(
             'battery',
@@ -1726,7 +1726,7 @@ class TestModifierApplication:
         }
 
         registries = create_mock_registries(components={'battery': battery})
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
 
@@ -1736,7 +1736,7 @@ class TestModifierApplication:
 
     def test_mass_modifier_applied(self):
         """Mass modifier should be applied to component mass."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.simulation.components.component_constants import Modifier
 
         component = MockComponent(
@@ -1767,7 +1767,7 @@ class TestModifierApplication:
             components={'test_comp': component},
             modifiers={'simple_size_mount': size_modifier}
         )
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         stats = service.calculate_stats(design_data, {})
 

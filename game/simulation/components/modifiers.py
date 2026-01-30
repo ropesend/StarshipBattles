@@ -122,7 +122,7 @@ def get_default_stat_multipliers():
     Return default stat multipliers dictionary.
 
     This is the canonical list of all supported modifier stats.
-    Used by both Component and ShipStatsService for consistency.
+    Used by both Component and ShipStatsCalculator for consistency.
 
     Returns:
         Dict with all stat keys initialized to neutral values
@@ -161,7 +161,7 @@ def calculate_stat_multipliers(modifier_entries, modifier_registry):
     Calculate stat multipliers from a list of modifier entries.
 
     Pure function - no side effects, no object state needed.
-    Used by both Component and ShipStatsService for consistent modifier handling.
+    Used by both Component and ShipStatsCalculator for consistent modifier handling.
 
     Args:
         modifier_entries: List of dicts with 'id' and 'value' keys

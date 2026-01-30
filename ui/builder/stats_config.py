@@ -115,7 +115,7 @@ def get_maneuver_points(ship):
 
 def get_strategic_speed(ship):
     """Calculate strategic speed (hexes per turn) from movement points and mass."""
-    # Uses same formula as FleetMobilityService
+    # Uses same formula as FleetSpeedCalculator
     K_STRATEGIC = 25
     MAX_HEXES = 10
     MIN_HEXES = 0

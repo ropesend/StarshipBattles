@@ -176,7 +176,7 @@ class ShipInstance:
         """
         Get calculated stats from components, respecting damage state.
 
-        Uses ShipStatsService to calculate stats dynamically rather than
+        Uses ShipStatsCalculator to calculate stats dynamically rather than
         reading from cached expected_stats. Results are cached and invalidated
         when component damage changes.
 
@@ -189,9 +189,9 @@ class ShipInstance:
         if self._cached_stats is None or force_refresh:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-            from game.strategy.services.ship_stats_service import ShipStatsService
+            from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
             # PROJ-42: Use instance pattern (no more static calling)
-            service = ShipStatsService()
+            service = ShipStatsCalculator()
             self._cached_stats = service.calculate_stats(
                 self.design_data,
                 self.component_damage,

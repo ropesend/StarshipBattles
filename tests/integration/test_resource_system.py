@@ -19,7 +19,7 @@ from game.core.registry import RegistryManager
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.hex_math import HexCoord
-from game.strategy.services.ship_stats_service import ShipStatsService
+from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 from game.strategy.engine.turn_engine import TurnEngine
 from tests.fixtures.paths import get_data_dir, get_project_root
 

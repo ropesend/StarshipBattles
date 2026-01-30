@@ -16,18 +16,18 @@
 | 1. Quick Wins | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Validator Consolidation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Parameter Naming | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Service Renaming | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Service Renaming | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Asset Manager Methods | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. UI Directory Consolidation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Screen Naming | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 4 - Service Renaming
-**Last Action:** Completed Phase 3: Parameter Naming (filepath → file_path)
-**Next Action:** Begin Phase 4: Service Renaming (FleetMobilityService → FleetSpeedCalculator, ShipStatsService → ShipStatsCalculator)
+**Active Phase:** Phase 5 - Asset Manager Methods
+**Last Action:** Completed Phase 4: Service Renaming
+**Next Action:** Begin Phase 5: Asset Manager Methods (get_image → load_image, get_group → load_group)
 **Blockers:** None
-**Context for Next Agent:** Phase 3 complete. Renamed all `filepath` parameters to `file_path` across 10 files: json_utils.py, resources.py, component.py, ship_loader.py, design_loader.py, tech_tree.py, design_metadata.py, race_config.py, setup_data_io.py. Also updated 2 call sites using `layers_filepath=` keyword arg. Tests: 2781 passed (testmon), 1 skipped.
+**Context for Next Agent:** Phase 4 complete. Renamed FleetMobilityService → FleetSpeedCalculator (class + file), ShipStatsService → ShipStatsCalculator (class + file). Also renamed recalculate_fleet_speed → update_fleet_speed. Updated 9 production files, 12 test files. All test files renamed. Tests: 5775 passed (testmon), 1 skipped (6 pre-existing failures in test_io_interactive.py unrelated to this phase).
 
 ## Overview
 This project addresses ALL 30+ naming inconsistencies identified in `findings_05_naming_consistency.md`, consolidates the dual UI directory structure (`ui/` into `game/ui/`), and standardizes UI class naming to "Screen" convention.
@@ -137,7 +137,7 @@ Standardize Scene/Interface/GUI → Screen for all UI classes.
 - [x] Phase 1 complete
 - [x] Phase 2 complete
 - [x] Phase 3 complete
-- [ ] Phase 4 complete
+- [x] Phase 4 complete
 - [ ] Phase 5 complete
 - [ ] Phase 6 complete
 - [ ] Phase 7 complete

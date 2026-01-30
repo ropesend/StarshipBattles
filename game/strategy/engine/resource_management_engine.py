@@ -15,7 +15,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 from game.core.logger import log_info
 from game.core.registry import get_default_registry_provider
-from game.strategy.services.ship_stats_service import ShipStatsService
+from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -132,7 +132,7 @@ class ResourceManagementEngine:
                     continue
 
                 abilities = getattr(comp_def, 'abilities', {}) or {}
-                for ability_data in ShipStatsService._get_ability_list(abilities, 'ResourceConsumption'):
+                for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceConsumption'):
                     if (ability_data.get('trigger') == 'per_turn' and
                         ability_data.get('resource') == resource_type):
                         ship.set_component_enabled(comp_id, False)

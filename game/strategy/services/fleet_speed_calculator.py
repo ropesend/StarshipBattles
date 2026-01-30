@@ -1,7 +1,7 @@
 """
-FleetMobilityService - Calculates strategic movement for fleets.
+FleetSpeedCalculator - Calculates strategic movement for fleets.
 
-This service handles:
+This calculator handles:
 1. Individual ship speed calculation from design data
 2. Fleet speed as minimum of all ships (slowest ship determines fleet speed)
 3. Caching for performance (future)
@@ -38,8 +38,8 @@ IMMOBILE_VEHICLE_TYPES = {'Planetary Complex', 'Satellite', 'Station'}
 CARRIER_BASED_TYPES = {'Fighter'}
 
 
-class FleetMobilityService:
-    """Service for calculating fleet strategic movement."""
+class FleetSpeedCalculator:
+    """Calculator for fleet strategic movement speeds."""
 
     @staticmethod
     def calculate_ship_speed(ship_instance: 'ShipInstance') -> int:
@@ -110,7 +110,7 @@ class FleetMobilityService:
         speeds = []
         for ship in fleet.ships:
             if ship.is_combat_capable():
-                speed = FleetMobilityService.calculate_ship_speed(ship)
+                speed = FleetSpeedCalculator.calculate_ship_speed(ship)
                 speeds.append(speed)
 
         if not speeds:
@@ -120,7 +120,7 @@ class FleetMobilityService:
         return float(min(speeds))
 
     @staticmethod
-    def recalculate_fleet_speed(fleet: 'Fleet') -> None:
+    def update_fleet_speed(fleet: 'Fleet') -> None:
         """
         Update fleet.speed based on current ship composition.
 
@@ -132,4 +132,4 @@ class FleetMobilityService:
         Args:
             fleet: The Fleet to update
         """
-        fleet.speed = FleetMobilityService.calculate_fleet_speed(fleet)
+        fleet.speed = FleetSpeedCalculator.calculate_fleet_speed(fleet)

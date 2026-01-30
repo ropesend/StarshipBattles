@@ -3,8 +3,8 @@ Registry Access Patterns
 ========================
 
 TIER 1 - Domain Services (Computed Access):
-    from game.strategy.services.ship_stats_service import ShipStatsService
-    stats = ShipStatsService.calculate_ship_stats(design)
+    from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+    stats = ShipStatsCalculator.calculate_ship_stats(design)
 
 TIER 2 - Dependency Injection (PROJ-27) [RECOMMENDED]:
     from game.core.registry import get_default_registry_provider, TestRegistryProvider

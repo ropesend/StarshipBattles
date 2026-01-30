@@ -1,14 +1,14 @@
 """
-Tests for ShipStatsService dependency injection (PROJ-38).
+Tests for ShipStatsCalculator dependency injection (PROJ-38).
 
-These tests verify that ShipStatsService:
+These tests verify that ShipStatsCalculator:
 1. Accepts GameRegistries via constructor
 2. Works with injected registries (no global state needed)
 3. Has transitional fallback to get_default_registries()
 """
 import pytest
 
-from game.strategy.services.ship_stats_service import ShipStatsService
+from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 from game.core.registry import GameRegistries, set_default_registries
 
 
@@ -60,22 +60,22 @@ def simple_design():
 # Test: Constructor Injection
 # =============================================================================
 
-class TestShipStatsServiceConstructor:
-    """Tests for ShipStatsService constructor injection."""
+class TestShipStatsCalculatorConstructor:
+    """Tests for ShipStatsCalculator constructor injection."""
 
     def test_accepts_registries_in_constructor(self, mock_registries):
-        """ShipStatsService should accept GameRegistries in constructor."""
-        service = ShipStatsService(registries=mock_registries)
+        """ShipStatsCalculator should accept GameRegistries in constructor."""
+        service = ShipStatsCalculator(registries=mock_registries)
 
         assert hasattr(service, '_registries')
         assert service._registries is mock_registries
 
     def test_constructor_with_none_uses_default(self, mock_registries):
-        """ShipStatsService with None should fall back to default registries."""
+        """ShipStatsCalculator with None should fall back to default registries."""
         # Set up default registries
         set_default_registries(mock_registries)
 
-        service = ShipStatsService(registries=None)
+        service = ShipStatsCalculator(registries=None)
 
         assert service._registries is not None
         assert service._registries.components is not None
@@ -85,12 +85,12 @@ class TestShipStatsServiceConstructor:
 # Test: Instance Methods with Injected Registries
 # =============================================================================
 
-class TestShipStatsServiceInstanceMethods:
-    """Tests for ShipStatsService instance methods using injected registries."""
+class TestShipStatsCalculatorInstanceMethods:
+    """Tests for ShipStatsCalculator instance methods using injected registries."""
 
     def test_calculate_stats_uses_injected_registries(self, mock_registries, simple_design):
         """calculate_stats should use the injected registries."""
-        service = ShipStatsService(registries=mock_registries)
+        service = ShipStatsCalculator(registries=mock_registries)
 
         result = service.calculate_stats(simple_design)
 
@@ -101,7 +101,7 @@ class TestShipStatsServiceInstanceMethods:
 
     def test_iterate_design_components_uses_injected_registries(self, mock_registries, simple_design):
         """_iterate_design_components should use the injected registries."""
-        service = ShipStatsService(registries=mock_registries)
+        service = ShipStatsCalculator(registries=mock_registries)
 
         result = service._iterate_design_components(simple_design)
 
@@ -119,7 +119,7 @@ class TestShipStatsServiceInstanceMethods:
                 ]
             }
         }
-        service = ShipStatsService(registries=mock_registries)
+        service = ShipStatsCalculator(registries=mock_registries)
 
         result = service.calculate_stats(design)
 
@@ -134,8 +134,8 @@ class TestShipStatsServiceInstanceMethods:
 # Test: Static Utility Methods (PROJ-42)
 # =============================================================================
 
-class TestShipStatsServiceStaticMethods:
-    """Tests for ShipStatsService static utility methods.
+class TestShipStatsCalculatorStaticMethods:
+    """Tests for ShipStatsCalculator static utility methods.
 
     PROJ-42: After removing dual static/instance patterns, only pure utility
     methods like get_component_effectiveness remain as static methods.
@@ -148,7 +148,7 @@ class TestShipStatsServiceStaticMethods:
         comp = create_component('bridge')
 
         # Static call (no instance needed)
-        result = ShipStatsService.get_component_effectiveness('bridge_0', comp, {})
+        result = ShipStatsCalculator.get_component_effectiveness('bridge_0', comp, {})
 
         assert isinstance(result, float)
         assert 0.0 <= result <= 1.0

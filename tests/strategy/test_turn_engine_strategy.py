@@ -858,7 +858,7 @@ class TestComponentToggleIntegration:
 
     def test_disabled_component_not_consumed_per_turn(self):
         """Verify disabled components don't contribute to per-turn consumption."""
-        from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
         from game.core.registry import GameRegistries
 
         # Create design with a component that has per-turn consumption
@@ -888,7 +888,7 @@ class TestComponentToggleIntegration:
             vehicle_classes={},
             resources={}
         )
-        service = ShipStatsService(registries=registries)
+        service = ShipStatsCalculator(registries=registries)
 
         # Component enabled - should have consumption
         enabled_stats = service.calculate_stats(

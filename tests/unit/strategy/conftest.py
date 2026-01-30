@@ -122,7 +122,7 @@ def mock_component_registry():
     """Fixture that provides a mock component registry context manager."""
     def _create_mock_registry(components_dict: Dict[str, MockComponent]):
         return patch(
-            'game.strategy.services.ship_stats_service.get_default_registry_provider',
+            'game.strategy.services.ship_stats_calculator.get_default_registry_provider',
             return_value=MagicMock(get_components=MagicMock(return_value=components_dict))
         )
     return _create_mock_registry
