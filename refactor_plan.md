@@ -8,25 +8,31 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-49 Phase 3 - Component Caching
-**Current Status:** PROJ-49 Phase 3 Complete
+**Last Completed:** PROJ-49 Phase 4 - HP Ratio Caching
+**Current Status:** PROJ-49 Phase 4 Complete
 **Current Project:** PROJ-49
-**Current Phase:** Phase 4 - HP Ratio Caching
-**Test Status:** 5757 passed (full suite, +12 new tests)
+**Current Phase:** Phase 5 - Spatial Grid Optimization
+**Test Status:** 5764 passed (full suite, +7 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-49 Phase 3 COMPLETE - Component Caching
-  - Task 3.1: Component list caching with dirty-flag invalidation in Ship
-  - Task 3.2: Cache invalidation in add_component, remove_component, recalculate_stats
-  - Task 3.3: Per-tick weapon cache method (get_weapon_components_cached)
+- PROJ-49 Phase 4 COMPLETE - HP Ratio Caching
+  - Task 4.1: Added _hp_ratio_dirty and _cached_hp_ratio to Component
+  - Task 4.1: Added hp_ratio property with dirty-flag caching
+  - Task 4.1: Mark dirty in take_damage, reset_hp, component_stats_calculator, battle_state, ship_combat_engine
+  - Task 4.2: Updated ship_stats.py, stats.py to use hp_ratio property
+  - Task 4.2: Updated ship_combat_engine.py repair sorting to use hp_ratio
+  - Task 4.2: Added cache invalidation at start of stats recalculation for external HP mods
 - Files modified:
-  - game/simulation/entities/ship.py - component cache + invalidation
-  - game/simulation/entities/ship_component_manager.py - invalidation hooks
-  - tests/unit/entities/test_ship_caching.py - 12 new cache tests
-  - tests/unit/entities/ship_helpers/test_component_getters.py - updated test for cached behavior
-- Test suite: 5757 passed (pre-existing failures unrelated)
-- Next: Phase 4 - HP Ratio Caching
+  - game/simulation/components/component.py - hp_ratio cache + property
+  - game/simulation/components/component_stats_calculator.py - dirty flag on HP change
+  - game/simulation/entities/ship_stats.py - use hp_ratio, invalidate at start
+  - game/simulation/entities/ship_combat_engine.py - use hp_ratio for repair
+  - game/simulation/systems/stats.py - use hp_ratio, invalidate at start
+  - game/simulation/battle_state.py - dirty flag on state restore
+  - tests/unit/entities/test_ship_caching.py - +7 HP ratio cache tests
+- Test suite: 5764 passed
+- Next: Phase 5 - Spatial Grid Optimization
 
 ---
 
@@ -118,6 +124,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-49 | Phase 4 | Complete | 5764 passed | 00b29665 | HP ratio caching: dirty-flag, property, +7 tests |
 | 2026-01-30 | PROJ-49 | Phase 3 | Complete | 5757 passed | 70f2dab2 | Component caching: dirty-flag invalidation, per-tick weapon cache, +12 tests |
 | 2026-01-30 | PROJ-49 | Phase 2 | Complete | 5745 passed | d24b4a7f | Simple perf fixes: projectile list, ability index, distance cache, deepcopy analysis |
 | 2026-01-30 | PROJ-49 | Phase 1 | Complete | 5745 passed | ecec7ecd | Dead code cleanup: archived 4 files, removed _ValidatorProxy, cleaned old archive |

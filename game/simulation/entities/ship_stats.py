@@ -142,9 +142,13 @@ class ShipStatsCalculator:
             comp.is_active = True
             comp.status = ComponentStatus.ACTIVE
 
+            # PROJ-49: Ensure HP ratio cache is refreshed (handles external HP modifications)
+            comp._hp_ratio_dirty = True
+
             # Check Damage Threshold (ignore Armor - armor uses HP pool, not individual component threshold)
+            # PROJ-49: Use cached hp_ratio property to avoid repeated division
             if not comp.abilities.get('Armor', False):
-                if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= comp.damage_threshold:
+                if comp.hp_ratio <= comp.damage_threshold:
                     comp.is_active = False
                     comp.status = ComponentStatus.DAMAGED
 

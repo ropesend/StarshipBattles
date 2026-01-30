@@ -141,7 +141,10 @@ class Component:
         self.base_max_hp = data['hp']
         self.max_hp = self.base_max_hp
         self.current_hp = self.max_hp
-        
+
+        # PROJ-49: HP ratio caching - reduces division operations in hot paths
+        self._hp_ratio_dirty: bool = True
+        self._cached_hp_ratio: float = 1.0
 
 
         # allowed_layers removed in refactor
@@ -259,6 +262,21 @@ class Component:
 
 
     @property
+    def hp_ratio(self) -> float:
+        """Get current HP as ratio of max HP. Cached with dirty flag.
+
+        PROJ-49: Caches the division result to avoid repeated calculations
+        in hot paths like damage threshold checks.
+
+        Returns:
+            float: HP ratio (0.0 to 1.0), returns 1.0 if max_hp is 0
+        """
+        if self._hp_ratio_dirty:
+            self._cached_hp_ratio = self.current_hp / self.max_hp if self.max_hp > 0 else 1.0
+            self._hp_ratio_dirty = False
+        return self._cached_hp_ratio
+
+    @property
     def cooldown_timer(self):
         # Map to first weapon ability if present
         ab = self.get_ability('WeaponAbility')
@@ -353,13 +371,14 @@ class Component:
             raise TypeError(f"amount must be numeric, got {type(amount).__name__}")
 
         self.current_hp -= amount
+        self._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty
 
         # Update Status
         if self.current_hp <= 0:
             self.current_hp = 0
             self.is_active = False
             return True # Destroyed
-        
+
         # Update status to DAMAGED if below damage threshold (default 50%)
         if self.current_hp < (self.max_hp * self.damage_threshold):
             self.status = ComponentStatus.DAMAGED
@@ -368,6 +387,7 @@ class Component:
 
     def reset_hp(self):
         self.current_hp = self.max_hp
+        self._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty
         self.is_active = True
         self.status = ComponentStatus.ACTIVE
 

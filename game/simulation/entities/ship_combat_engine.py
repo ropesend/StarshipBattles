@@ -215,15 +215,18 @@ class ShipCombatEngine:
             return
 
         # Repair the most damaged (relative) component
-        damaged_candidates.sort(key=lambda c: c.current_hp / c.max_hp)
+        # PROJ-49: Use cached hp_ratio property to avoid repeated division
+        damaged_candidates.sort(key=lambda c: c.hp_ratio)
         target = damaged_candidates[0]
 
         missing = target.max_hp - target.current_hp
         amount_to_apply = min(missing, repair_amount)
         target.current_hp += amount_to_apply
+        target._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty after HP change
 
         # Restore status if HP above threshold
+        # PROJ-49: Use cached hp_ratio property
         if not target.is_active:
-            if target.current_hp > (target.max_hp * CombatConstants.DEFAULT_DAMAGE_THRESHOLD):
+            if target.hp_ratio > CombatConstants.DEFAULT_DAMAGE_THRESHOLD:
                 target.is_active = True
                 target.status = ComponentStatus.ACTIVE

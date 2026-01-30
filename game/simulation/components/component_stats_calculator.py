@@ -92,13 +92,23 @@ class ComponentStatsCalculator:
             component.cost = int(component.data.get('cost', 0) * stats['cost_mult'])
 
         # Handle HP update (healing/new component logic)
+        hp_changed = False
         if old_max_hp == 0:
             component.current_hp = component.max_hp
+            hp_changed = True
         elif component.current_hp >= old_max_hp:
             component.current_hp = component.max_hp
+            hp_changed = True
 
         # Ensure cap
-        component.current_hp = min(component.current_hp, component.max_hp)
+        new_hp = min(component.current_hp, component.max_hp)
+        if new_hp != component.current_hp:
+            component.current_hp = new_hp
+            hp_changed = True
+
+        # PROJ-49: Mark HP ratio cache dirty if HP changed
+        if hp_changed:
+            component._hp_ratio_dirty = True
 
         # Recalculate all abilities with updated stats from modifiers
         for ab in component.ability_instances:

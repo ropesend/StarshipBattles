@@ -301,3 +301,110 @@ class TestWeaponCachePerTick:
         assert len(weapons) == 1
         assert weapon2 in weapons
         assert weapon1 not in weapons
+
+
+class TestComponentHpRatioCaching:
+    """PROJ-49 Phase 4: Tests for HP ratio caching in Component."""
+
+    @pytest.fixture
+    def component(self):
+        """Create a basic component for testing."""
+        data = {
+            "id": "TestComponent",
+            "name": "Test Component",
+            "type": "Generic",
+            "mass": 10,
+            "hp": 100,
+            "abilities": {}
+        }
+        return Component(data)
+
+    def test_hp_ratio_cache_starts_dirty(self, component):
+        """New components should have dirty HP ratio cache."""
+        assert component._hp_ratio_dirty is True
+        assert component._cached_hp_ratio == 1.0  # Default value
+
+    def test_hp_ratio_property_calculates_ratio(self, component):
+        """hp_ratio should calculate current_hp / max_hp."""
+        # Full HP
+        assert component.hp_ratio == 1.0
+
+        # Take some damage
+        component.current_hp = 50
+        component._hp_ratio_dirty = True  # Manual mark for test
+        assert component.hp_ratio == 0.5
+
+        # Zero HP
+        component.current_hp = 0
+        component._hp_ratio_dirty = True
+        assert component.hp_ratio == 0.0
+
+    def test_hp_ratio_caches_value(self, component):
+        """hp_ratio should cache the calculated value."""
+        # First access - calculates and caches
+        ratio1 = component.hp_ratio
+        assert component._hp_ratio_dirty is False
+        assert component._cached_hp_ratio == 1.0
+
+        # Modify current_hp WITHOUT marking dirty (to test caching)
+        component.current_hp = 50
+
+        # Second access - should return cached value (still 1.0)
+        ratio2 = component.hp_ratio
+        assert ratio2 == 1.0  # Cached, not recalculated
+        assert component._cached_hp_ratio == 1.0
+
+    def test_take_damage_marks_cache_dirty(self, component):
+        """take_damage should mark HP ratio cache as dirty."""
+        # Ensure cache is populated
+        _ = component.hp_ratio
+        assert component._hp_ratio_dirty is False
+
+        # Take damage
+        component.take_damage(25)
+
+        # Cache should be dirty
+        assert component._hp_ratio_dirty is True
+
+        # Next access should recalculate
+        assert component.hp_ratio == 0.75
+
+    def test_reset_hp_marks_cache_dirty(self, component):
+        """reset_hp should mark HP ratio cache as dirty."""
+        # Damage the component first
+        component.take_damage(50)
+        _ = component.hp_ratio
+        assert component._hp_ratio_dirty is False
+
+        # Reset HP
+        component.reset_hp()
+
+        # Cache should be dirty
+        assert component._hp_ratio_dirty is True
+
+        # Next access should recalculate to 1.0
+        assert component.hp_ratio == 1.0
+
+    def test_hp_ratio_handles_zero_max_hp(self, component):
+        """hp_ratio should return 1.0 when max_hp is 0."""
+        component.max_hp = 0
+        component._hp_ratio_dirty = True
+
+        # Should not divide by zero
+        assert component.hp_ratio == 1.0
+
+    def test_hp_ratio_updates_after_damage_sequence(self, component):
+        """hp_ratio should correctly update through damage sequence."""
+        assert component.hp_ratio == 1.0
+
+        component.take_damage(25)
+        assert component.hp_ratio == 0.75
+
+        component.take_damage(25)
+        assert component.hp_ratio == 0.50
+
+        component.take_damage(50)
+        assert component.hp_ratio == 0.0
+
+        component.reset_hp()
+        assert component.hp_ratio == 1.0
