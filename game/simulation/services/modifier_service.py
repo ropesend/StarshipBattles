@@ -6,7 +6,7 @@ PROJ-27: Added registry injection for testability.
 PROJ-38: Added constructor-based DI with GameRegistries support.
 """
 from typing import Optional, Dict, Any, TYPE_CHECKING
-from game.core.registry import get_default_registry_provider, get_default_registries, GameRegistries
+from game.core.registry import get_default_registry_provider, get_default_registries
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
@@ -41,24 +41,15 @@ class ModifierService:
             modifier_registry: Dictionary of Modifier objects keyed by ID.
                               If None, falls back to get_default_registries().modifiers.
         """
-        # PROJ-42: Use DI pattern - either explicit or default registries
         if modifier_registry is not None:
             self._modifiers = modifier_registry
         else:
-            self._modifiers = get_default_registries().modifiers
-
-    @staticmethod
-    def _get_modifiers_for_static_call() -> dict:
-        """
-        Get modifiers dict for static method calls.
-
-        PROJ-42: Tries get_default_registries() first, falls back to provider
-        for backward compatibility during the transition period.
-        """
-        try:
-            return get_default_registries().modifiers
-        except RuntimeError:
-            return get_default_registry_provider().get_modifiers()
+            # Transitional fallback to default registries
+            try:
+                self._modifiers = get_default_registries().modifiers
+            except RuntimeError:
+                # Default registries not set yet - use provider
+                self._modifiers = get_default_registry_provider().get_modifiers()
 
     def is_modifier_allowed(
         self_or_mod_id,
@@ -98,13 +89,13 @@ class ModifierService:
             # Static-style call: ModifierService.is_modifier_allowed(mod_id, component, ...)
             mod_id = self_or_mod_id
             component = mod_id_or_component
-            # PROJ-42: Use injected registry if provided, else use default registries
+            # PROJ-27: Use injected registry if provided, else use original function
             if component_or_registry is not None and hasattr(component_or_registry, 'get_modifiers'):
                 modifier_registry = component_or_registry.get_modifiers()
             elif registry is not None:
                 modifier_registry = registry.get_modifiers()
             else:
-                modifier_registry = ModifierService._get_modifiers_for_static_call()
+                modifier_registry = get_default_registry_provider().get_modifiers()
 
         if mod_id not in modifier_registry:
             return False
@@ -280,13 +271,12 @@ class ModifierService:
             # Static-style call: ModifierService.get_initial_value(mod_id, component, ...)
             mod_id = self_or_mod_id
             component = mod_id_or_component
-            # PROJ-42: Use injected registry if provided, else use default registries
             if component_or_registry is not None and hasattr(component_or_registry, 'get_modifiers'):
                 modifier_registry = component_or_registry.get_modifiers()
             elif registry is not None:
                 modifier_registry = registry.get_modifiers()
             else:
-                modifier_registry = ModifierService._get_modifiers_for_static_call()
+                modifier_registry = get_default_registry_provider().get_modifiers()
 
         mod_def = modifier_registry.get(mod_id)
         if not mod_def:
@@ -389,13 +379,12 @@ class ModifierService:
             # Static-style call: ModifierService.get_local_min_max(mod_id, component, ...)
             mod_id = self_or_mod_id
             component = mod_id_or_component
-            # PROJ-42: Use injected registry if provided, else use default registries
             if component_or_registry is not None and hasattr(component_or_registry, 'get_modifiers'):
                 modifier_registry = component_or_registry.get_modifiers()
             elif registry is not None:
                 modifier_registry = registry.get_modifiers()
             else:
-                modifier_registry = ModifierService._get_modifiers_for_static_call()
+                modifier_registry = get_default_registry_provider().get_modifiers()
 
         mod_def = modifier_registry.get(mod_id)
         if not mod_def:

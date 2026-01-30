@@ -33,11 +33,7 @@ This protocol defines how Claude CLI operates in automated loop mode, executing 
    # File: refactor_plan.md
    ```
    - Check Agent Context for current state
-   - Identify current project (prioritize `[/]`, then `[ ]`)
-   - **If starting new project (`[ ]`):**
-     ```bash
-     python Projects/scripts/update_plan.py update-project refactor_plan.md PROJ-XX /
-     ```
+   - Identify current project (or find next incomplete project)
    - Note audit status and cycle count
 
 2. **Load Project Context**

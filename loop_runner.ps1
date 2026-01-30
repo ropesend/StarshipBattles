@@ -9,9 +9,6 @@ $WORKSPACE_DIR = "C:/Dev/Starship Battles"
 $SLEEP_DURATION = 10
 $MAX_ITERATIONS = 1000
 
-# Set git-bash path for Claude CLI on Windows
-$env:CLAUDE_CODE_GIT_BASH_PATH = "C:\Development Tools\Git\bin\bash.exe"
-
 # Colors
 function Write-Info ($msg) { Write-Host "[INFO] $msg" -ForegroundColor Cyan }
 function Write-Success ($msg) { Write-Host "[SUCCESS] $msg" -ForegroundColor Green }
@@ -60,7 +57,7 @@ while ($iteration -lt $MAX_ITERATIONS) {
         # Using cmd /c ensuring proper execution of the claude.cmd batch file if present
         # and handling the arguments correctly
         claude `
-            --dangerously-skip-permissions `
+            --dangerously-skip-user-approval `
             --system-prompt-file WORKER.md `
             -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit."
             
