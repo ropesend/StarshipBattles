@@ -24,8 +24,9 @@ from .drop_target import DropTarget
 
 
 class LayerPanel(DropTarget):
-    def __init__(self, builder, manager, rect, validation_service=None):
+    def __init__(self, builder, manager, rect, viewmodel=None, validation_service=None):
         self.builder = builder
+        self.viewmodel = viewmodel or builder.viewmodel
         self.manager = manager
         self.rect = rect
         self.items = []

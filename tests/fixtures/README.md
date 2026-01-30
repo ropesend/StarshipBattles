@@ -80,7 +80,7 @@ engine = create_engine("advanced_engine")  # Specific ID
 - `battle_engine` - Clean BattleEngine with no ships
 - `battle_engine_with_ships` - BattleEngine with two opposing ships
 - `mock_battle_engine` - Mock for unit tests
-- `mock_battle_scene` - Mock scene with engine
+- `mock_battle_screen` - Mock battle screen with engine
 
 **Factory Functions:**
 ```python

@@ -26,7 +26,7 @@ class TestRunVisual:
     def test_run_visual_success(
         self,
         mock_game,
-        mock_battle_scene,
+        mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
@@ -39,19 +39,19 @@ class TestRunVisual:
         # Mock runner methods
         service.runner.load_data_for_scenario = Mock()
 
-        success = service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        success = service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
         assert success is True
-        mock_test_scenario.setup.assert_called_once_with(mock_battle_scene.engine)
-        assert mock_battle_scene.test_mode is True
-        assert mock_battle_scene.sim_paused is True
-        assert mock_battle_scene.headless_mode is False
-        assert mock_battle_scene.test_scenario is mock_test_scenario
+        mock_test_scenario.setup.assert_called_once_with(mock_battle_screen.engine)
+        assert mock_battle_screen.test_mode is True
+        assert mock_battle_screen.sim_paused is True
+        assert mock_battle_screen.headless_mode is False
+        assert mock_battle_screen.test_scenario is mock_test_scenario
 
     def test_run_visual_loads_data(
         self,
         mock_game,
-        mock_battle_scene,
+        mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
@@ -60,14 +60,14 @@ class TestRunVisual:
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
 
-        service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
         service.runner.load_data_for_scenario.assert_called_once_with(mock_test_scenario)
 
     def test_run_visual_clears_engine(
         self,
         mock_game,
-        mock_battle_scene,
+        mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
@@ -76,14 +76,14 @@ class TestRunVisual:
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
 
-        service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
-        mock_battle_scene.engine.start.assert_called_once_with([], [])
+        mock_battle_screen.engine.start.assert_called_once_with([], [])
 
     def test_run_visual_fits_camera(
         self,
         mock_game,
-        mock_battle_scene,
+        mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
@@ -95,16 +95,16 @@ class TestRunVisual:
         # Add mock ships
         mock_ship1 = Mock()
         mock_ship2 = Mock()
-        mock_battle_scene.engine.ships = [mock_ship1, mock_ship2]
+        mock_battle_screen.engine.ships = [mock_ship1, mock_ship2]
 
-        service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
-        mock_battle_scene.camera.fit_objects.assert_called_once_with([mock_ship1, mock_ship2])
+        mock_battle_screen.camera.fit_objects.assert_called_once_with([mock_ship1, mock_ship2])
 
     def test_run_visual_switches_to_battle_state(
         self,
         mock_game,
-        mock_battle_scene,
+        mock_battle_screen,
         sample_scenario_info,
         mock_test_scenario
     ):
@@ -116,14 +116,14 @@ class TestRunVisual:
         # Import the actual GameState to check against
         from game.core.constants import GameState
 
-        service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
         assert mock_game.state == GameState.BATTLE
 
     def test_run_visual_error_handling(
         self,
         mock_game,
-        mock_battle_scene,
+        mock_battle_screen,
         sample_scenario_info
     ):
         """Test error handling in visual execution."""
@@ -132,7 +132,7 @@ class TestRunVisual:
         # Make scenario instantiation fail
         sample_scenario_info['class'] = Mock(side_effect=Exception("Test error"))
 
-        success = service.run_visual(sample_scenario_info, mock_battle_scene, mock_game)
+        success = service.run_visual(sample_scenario_info, mock_battle_screen, mock_game)
 
         assert success is False
 

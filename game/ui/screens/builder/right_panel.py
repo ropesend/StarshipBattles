@@ -55,10 +55,12 @@ class StatRow:
         self._visible = visible
 
 class BuilderRightPanel:
-    def __init__(self, builder, manager, rect, event_bus=None, vehicle_class_service=None):
+    def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None):
         self.builder = builder
+        self.viewmodel = viewmodel or builder.viewmodel
         self.manager = manager
         self.rect = rect
+        self.event_bus = event_bus
 
         # PROJ-43: Inject vehicle class service
         if vehicle_class_service is None:
@@ -67,7 +69,9 @@ class BuilderRightPanel:
         self._vehicle_class_service = vehicle_class_service
 
         if event_bus:
-            event_bus.subscribe("SHIP_UPDATED", self.on_ship_updated)
+            from game.ui.screens.builder_utils import BuilderEvents
+            event_bus.subscribe(BuilderEvents.SHIP_UPDATED, self.on_ship_updated)
+            event_bus.subscribe(BuilderEvents.REGISTRY_RELOADED, self.on_registry_reloaded)
 
         self.panel = UIPanel(
             relative_rect=rect,
@@ -77,7 +81,11 @@ class BuilderRightPanel:
 
         self.setup_controls()
         self.setup_stats()
-        
+
+    def on_registry_reloaded(self, data):
+        """Handle registry reload event - refresh all controls with new data."""
+        self.refresh_controls()
+
     def on_ship_updated(self, ship):
         # Check if resource keys match our current rows
         # If mismatch, we must rebuild the layout to add/remove rows

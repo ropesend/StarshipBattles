@@ -77,7 +77,7 @@ __all__ = [
     'create_battle_engine',
     'create_battle_engine_with_ships',
     'create_mock_battle_engine',
-    'create_mock_battle_scene',
+    'create_mock_battle_screen',
     # Test scenario factories
     'create_test_metadata',
     'create_mock_test_scenario',

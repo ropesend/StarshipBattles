@@ -87,26 +87,26 @@ class TestMockBattleEngineFixture:
 
 
 class TestMockBattleScreenFixture:
-    """Tests for mock_battle_scene fixture."""
+    """Tests for mock_battle_screen fixture."""
 
-    def test_is_mock(self, mock_battle_scene):
+    def test_is_mock(self, mock_battle_screen):
         """Returns a Mock object."""
-        assert isinstance(mock_battle_scene, Mock)
+        assert isinstance(mock_battle_screen, Mock)
 
-    def test_has_engine(self, mock_battle_scene):
+    def test_has_engine(self, mock_battle_screen):
         """Mock has engine attribute."""
-        assert hasattr(mock_battle_scene, 'engine')
-        assert mock_battle_scene.engine is not None
+        assert hasattr(mock_battle_screen, 'engine')
+        assert mock_battle_screen.engine is not None
 
-    def test_has_headless_mode(self, mock_battle_scene):
+    def test_has_headless_mode(self, mock_battle_screen):
         """Mock has headless_mode attribute."""
-        assert hasattr(mock_battle_scene, 'headless_mode')
-        assert mock_battle_scene.headless_mode is False
+        assert hasattr(mock_battle_screen, 'headless_mode')
+        assert mock_battle_screen.headless_mode is False
 
-    def test_has_sim_paused(self, mock_battle_scene):
+    def test_has_sim_paused(self, mock_battle_screen):
         """Mock has sim_paused attribute."""
-        assert hasattr(mock_battle_scene, 'sim_paused')
-        assert mock_battle_scene.sim_paused is True
+        assert hasattr(mock_battle_screen, 'sim_paused')
+        assert mock_battle_screen.sim_paused is True
 
 
 class TestBattleFactory:
