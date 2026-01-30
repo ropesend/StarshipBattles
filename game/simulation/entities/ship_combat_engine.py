@@ -16,6 +16,7 @@ Refactored in PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 """
 from typing import TYPE_CHECKING, List, Optional, Any
 
+from game.core.constants import CombatConstants
 from game.simulation.combat.targeting_system import TargetingSystem
 from game.simulation.combat.damage_calculator import DamageCalculator
 from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
@@ -211,6 +212,6 @@ class ShipCombatEngine:
 
         # Restore status if HP above threshold
         if not target.is_active:
-            if target.current_hp > (target.max_hp * 0.5):
+            if target.current_hp > (target.max_hp * CombatConstants.DEFAULT_DAMAGE_THRESHOLD):
                 target.is_active = True
                 target.status = ComponentStatus.ACTIVE

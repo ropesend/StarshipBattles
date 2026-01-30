@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Tuple, Union
 from game.simulation.components.component_constants import ComponentStatus
-from game.core.constants import LayerType
+from game.core.constants import LayerType, CombatConstants
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from game.simulation.systems.resource_manager import (
     ResourceStorage, ResourceGeneration, ResourceConsumption
@@ -114,7 +114,7 @@ class ShipStatsCalculator:
 
                 # Check Damage Threshold (ignore Armor - uses HP pool)
                 if not comp.abilities.get('Armor', False):
-                    if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= 0.5:
+                    if comp.max_hp > 0 and (comp.current_hp / comp.max_hp) <= CombatConstants.DEFAULT_DAMAGE_THRESHOLD:
                         comp.is_active = False
                         comp.status = ComponentStatus.DAMAGED
 
