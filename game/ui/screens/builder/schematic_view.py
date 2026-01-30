@@ -22,10 +22,12 @@ class SchematicView:
         self.cy = rect.centery
         self.arc_cache = {}  # Key: (weapon_id, range, arc, facing, rect_size) -> surface
 
-        # PROJ-43: Inject vehicle class service
+        # PROJ-43/PROJ-50: Inject vehicle class service (strict DI)
+        # If no service provided, use RegistryManager-backed provider
         if vehicle_class_service is None:
+            from game.core.registry import get_default_registry_provider
             from game.ui.services.vehicle_class_service import VehicleClassService
-            vehicle_class_service = VehicleClassService()
+            vehicle_class_service = VehicleClassService(get_default_registry_provider())
         self._vehicle_class_service = vehicle_class_service
 
     def update_rect(self, rect):

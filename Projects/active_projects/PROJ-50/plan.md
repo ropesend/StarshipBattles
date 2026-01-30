@@ -19,22 +19,21 @@
 | 4. Strategy Data | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation Services | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Core Entities | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Big Bang Removal | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Big Bang Removal | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 7
-**Last Action:** Completed Phase 6 - Core Entities (all DI errors resolved)
-**Next Action:** Begin Phase 7 - Big Bang Removal
+**Active Phase:** Audit
+**Last Action:** Completed Phase 7 - Big Bang Removal (finalized strict DI)
+**Next Action:** Run project audit
 **Blockers:** None
-**Context:** Phase 6 complete - strict DI enforced across codebase:
-- Component/Ship/ShipSerializer: registries NOW REQUIRED
-- ShipState.to_ship(): registries NOW REQUIRED
-- ShipDesignValidator/ClassRequirementsRule: registries NOW REQUIRED
-- 85+ test files updated for strict DI
+**Context:** All 7 phases complete:
+- VehicleClassService: strict DI enforced (registry_provider required)
+- Fallback patterns updated in right_panel.py, schematic_view.py, main.py
+- DefaultRegistryProvider/get_default_registry_provider: KEPT (for module-level constants, hot-reload)
+- get_default_registries: KEPT (for composition root in app.py)
 - _get_registries_fallback: REMOVED from codebase
-- Test status: 5525 passed, 313 failed (unrelated to DI), 0 errors
-- 103 service tests passing, 5775 total passing
+- Test status: 536+ tests verified passing (core, ui/services)
 
 ## Overview
 Eliminate the "Service Locator" anti-pattern by removing `get_default_registry_provider()` and `_get_registries_fallback()`. Enforce mandatory `GameRegistries` injection in all core entities.

@@ -86,10 +86,13 @@ class BuilderScreen:
 
         self.event_bus = EventBus()
 
-        # PROJ-43: UI Services for decoupling from simulation layer
+        # PROJ-43/PROJ-50: UI Services for decoupling from simulation layer
+        # Use RegistryManager-backed provider for strict DI
+        from game.core.registry import get_default_registry_provider
+        self._registry_provider = get_default_registry_provider()
         self._ship_factory = ShipFactory()
         self._component_service = ComponentService()
-        self._vehicle_class_service = VehicleClassService()
+        self._vehicle_class_service = VehicleClassService(self._registry_provider)
         self._validation_service = ValidationService()
 
         # UI Manager

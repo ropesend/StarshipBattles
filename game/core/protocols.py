@@ -46,17 +46,16 @@ class IRegistryProvider(Protocol):
     """
     Protocol for registry access abstraction.
 
-    PROJ-27: Enables dependency injection for registry access, allowing
+    PROJ-27/PROJ-50: Enables dependency injection for registry access, allowing
     services to be tested in isolation without relying on the global singleton.
 
     Implementations:
         - DefaultRegistryProvider: Delegates to RegistryManager singleton (production)
         - TestRegistryProvider: Provides isolated registry data (testing)
 
-    Usage:
-        def calculate_stats(design: dict, registry: IRegistryProvider = None):
-            if registry is None:
-                registry = get_default_registry_provider()
+    Usage (PROJ-50 strict DI - registry is required):
+        def calculate_stats(design: dict, registry: IRegistryProvider):
+            # PROJ-50: registry is now required, not optional
             components = registry.get_components()
             ...
     """

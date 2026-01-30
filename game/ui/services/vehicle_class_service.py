@@ -5,6 +5,8 @@ PROJ-43: This service provides a facade for vehicle class data access,
 allowing UI code to work with vehicle classes without directly importing from
 game.simulation.entities.ship.
 
+PROJ-50: Strict DI - registry_provider is now required.
+
 The service encapsulates:
 - Vehicle class registry access
 - Vehicle type enumeration
@@ -13,7 +15,6 @@ The service encapsulates:
 """
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
-from game.core.registry import get_default_registry_provider
 from game.core.protocols import IRegistryProvider
 
 if TYPE_CHECKING:
@@ -27,25 +28,30 @@ class VehicleClassService:
     information without directly importing from the simulation layer.
 
     Usage:
-        service = VehicleClassService()
+        # PROJ-50: Strict DI - registry_provider is required
+        provider = get_default_registry_provider()  # Or inject from caller
+        service = VehicleClassService(provider)
         all_classes = service.get_all_classes()
         types = service.get_vehicle_types()
         ship_classes = service.get_classes_for_type('Ship')
     """
 
-    def __init__(self, registry_provider: Optional[IRegistryProvider] = None):
+    def __init__(self, registry_provider: IRegistryProvider):
         """Initialize the VehicleClassService.
 
         Args:
-            registry_provider: Optional registry provider for dependency injection.
-                If None, uses get_default_registries().
+            registry_provider: Registry provider for dependency injection.
+                PROJ-50: This parameter is now required (strict DI).
+
+        Raises:
+            ValueError: If registry_provider is None.
         """
+        if registry_provider is None:
+            raise ValueError("registry_provider is required (PROJ-50: strict DI)")
         self._provider = registry_provider
 
     def _get_provider(self) -> IRegistryProvider:
-        """Get the registry provider, using default if not injected."""
-        if self._provider is None:
-            self._provider = get_default_registry_provider()
+        """Get the registry provider."""
         return self._provider
 
     def get_all_classes(self) -> Dict[str, Any]:

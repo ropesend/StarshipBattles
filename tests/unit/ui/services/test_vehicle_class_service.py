@@ -1,6 +1,7 @@
 """Unit tests for VehicleClassService.
 
 PROJ-43: Tests for the VehicleClassService facade that decouples UI from simulation.
+PROJ-50: Added test for strict DI (registry_provider is required).
 """
 from unittest.mock import MagicMock
 import pytest
@@ -10,6 +11,11 @@ from game.ui.services.vehicle_class_service import VehicleClassService
 
 class TestVehicleClassService:
     """Tests for VehicleClassService class."""
+
+    def test_init_requires_registry_provider(self):
+        """Test that registry_provider is required (PROJ-50 strict DI)."""
+        with pytest.raises(ValueError, match="registry_provider is required"):
+            VehicleClassService(None)
 
     def test_get_all_classes_returns_dict(self):
         """Test get_all_classes returns vehicle classes from registry."""
