@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 3 - Strategy Services
+**Last Completed:** PROJ-50 Phase 4 - Strategy Data
 **Current Status:** PROJ-50 In Progress
 **Current Project:** PROJ-50
-**Current Phase:** Phase 4
-**Test Status:** 838 strategy passed, 5775+ total (baseline preserved)
+**Current Phase:** Phase 5
+**Test Status:** 838 strategy passed, 5775 total passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 3 COMPLETE - Strategy Services
-  - Removed get_default_registry_provider from ShipStatsCalculator, ResourceManagementEngine
-  - Made registries parameter required (strict DI)
-  - Removed _get_registries_fallback() method from ShipStatsCalculator
-  - Updated TurnEngine to accept registries parameter and pass to ResourceManagementEngine
-  - Updated ShipInstance.get_calculated_stats() with fallback for tests
-  - Updated test files: test_service_injection.py, resource_management_engine/ (conftest, consumption, auto_disable, initialization)
-- Files modified: ship_stats_calculator.py, resource_management_engine.py, turn_engine.py, ship_instance.py, 5 test files
-- Next: Phase 4 - Strategy Data
+- PROJ-50 Phase 4 COMPLETE - Strategy Data
+  - Added `registries: Optional[GameRegistries] = None` parameter to:
+    - ShipInstance.to_ship()
+    - Fleet.to_battle_ships()
+    - SimulationBattleResolver.resolve_battle()
+  - Updated test_simulation_adapter.py assertion to include registries=None
+  - All parameters optional for now (transitional) - Phase 6 will make required
+- Files modified: ship_instance.py, fleet.py, simulation_adapter.py, test_simulation_adapter.py
+- Next: Phase 5 - Simulation Services
 
 ---
 
@@ -116,6 +116,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-50 | Phase 4 | Complete | 5775 passed | c1f68b31 | Strategy data: registries param, 4 files |
 | 2026-01-30 | PROJ-50 | Phase 3 | Complete | 838 strategy | 5a72ce16 | Strategy services: strict DI, 5 test files |
 | 2026-01-30 | PROJ-50 | Phase 2 | Complete | 5782 passed | 62044ecc | UI strictness: 4 files, registries required, 4 tests |
 | 2026-01-30 | PROJ-50 | Phase 1 | Complete | 5782 passed | 1752ae60 | Test infrastructure: mock_registries, ships.py, 8 repro tests |

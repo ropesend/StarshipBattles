@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.core.registry import GameRegistries
 
 
 class OrderType(Enum):
@@ -431,7 +432,8 @@ class Fleet:
     def to_battle_ships(
         self,
         team_id: int,
-        formation_positions: Optional[List[Tuple[float, float]]] = None
+        formation_positions: Optional[List[Tuple[float, float]]] = None,
+        registries: Optional['GameRegistries'] = None
     ) -> List['Ship']:
         """
         Convert fleet ships to simulation Ship objects for battle.
@@ -441,6 +443,8 @@ class Fleet:
         Args:
             team_id: Team assignment for battle (0 or 1)
             formation_positions: Optional list of (x, y) positions for ships
+            registries: Optional GameRegistries for DI. If None, uses global fallback
+                        (transitional - will be required in Phase 6).
 
         Returns:
             List of Ship objects ready for battle
@@ -459,7 +463,7 @@ class Fleet:
                 continue
 
             pos = formation_positions[i] if i < len(formation_positions) else (0, 0)
-            ship = instance.to_ship(pos, team_id)
+            ship = instance.to_ship(pos, team_id, registries=registries)
             ships.append(ship)
 
         return ships

@@ -18,6 +18,7 @@ from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResu
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
+    from game.core.registry import GameRegistries
 
 
 # Import simulation layer components
@@ -39,7 +40,8 @@ class SimulationBattleResolver(IBattleResolver):
         self,
         fleet1: 'Fleet',
         fleet2: 'Fleet',
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        registries: Optional['GameRegistries'] = None
     ) -> BattleResult:
         """
         Resolve a battle between two fleets using the battle simulation.
@@ -48,6 +50,8 @@ class SimulationBattleResolver(IBattleResolver):
             fleet1: First fleet (assigned to team 0)
             fleet2: Second fleet (assigned to team 1)
             seed: Optional random seed for deterministic battles
+            registries: Optional GameRegistries for DI. If None, uses global fallback
+                        (transitional - will be required in Phase 6).
 
         Returns:
             BattleResult containing winner, tick count, and survivors
@@ -55,8 +59,8 @@ class SimulationBattleResolver(IBattleResolver):
         log_info(f"Simulating battle: Fleet {fleet1.id} vs Fleet {fleet2.id}")
 
         # Convert fleets to battle ships
-        team1_ships = fleet1.to_battle_ships(team_id=0)
-        team2_ships = fleet2.to_battle_ships(team_id=1)
+        team1_ships = fleet1.to_battle_ships(team_id=0, registries=registries)
+        team2_ships = fleet2.to_battle_ships(team_id=1, registries=registries)
 
         # Handle edge cases
         if not team1_ships and not team2_ships:

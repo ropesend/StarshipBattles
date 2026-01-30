@@ -21,6 +21,7 @@ from game.core.logger import log_warning, log_debug
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.strategy.data.empire import Empire
+    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -601,7 +602,12 @@ class ShipInstance:
 
         return result
 
-    def to_ship(self, position: Tuple[float, float], team_id: int) -> 'Ship':
+    def to_ship(
+        self,
+        position: Tuple[float, float],
+        team_id: int,
+        registries: Optional['GameRegistries'] = None
+    ) -> 'Ship':
         """
         Create a simulation Ship from this instance.
 
@@ -610,6 +616,8 @@ class ShipInstance:
         Args:
             position: (x, y) spawn position for the ship
             team_id: Team assignment for battle (0 or 1)
+            registries: Optional GameRegistries for DI. If None, uses global fallback
+                        (transitional - will be required in Phase 6).
         """
         # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
@@ -617,7 +625,7 @@ class ShipInstance:
         # log_debug imported at module level
 
         # Create ship from design data
-        ship = ShipSerializer.from_dict(self.design_data)
+        ship = ShipSerializer.from_dict(self.design_data, registries=registries)
 
         # Set position and team
         ship.x, ship.y = position

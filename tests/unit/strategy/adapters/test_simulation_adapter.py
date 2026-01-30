@@ -175,11 +175,11 @@ class TestSimulationBattleResolverBehavior:
 
             resolver.resolve_battle(mock_fleet_with_ships, fleet2)
 
-            # Verify fleet1 converted with team_id=0
-            mock_fleet_with_ships.to_battle_ships.assert_called_with(team_id=0)
+            # Verify fleet1 converted with team_id=0 (registries=None is default)
+            mock_fleet_with_ships.to_battle_ships.assert_called_with(team_id=0, registries=None)
 
-            # Verify fleet2 converted with team_id=1
-            fleet2.to_battle_ships.assert_called_with(team_id=1)
+            # Verify fleet2 converted with team_id=1 (registries=None is default)
+            fleet2.to_battle_ships.assert_called_with(team_id=1, registries=None)
 
     def test_resolve_battle_converts_survivors_to_ships(self, mock_fleet_with_ships):
         """Survivors should be converted using to_ship() method."""
