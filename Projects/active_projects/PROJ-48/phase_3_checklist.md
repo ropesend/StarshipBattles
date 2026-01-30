@@ -113,9 +113,9 @@
 - [x] `test_test_lab_scene.py` (789 LOC) -> 2 files (57 tests)
 - [x] `test_controllable_interface.py` (788 LOC) -> 2 files (96 tests)
 - [x] `test_projectile_guidance.py` (780 LOC) -> 2 files (27 tests)
-- [ ] `test_target_evaluator.py` (765 LOC) -> 2 files
-- [ ] `test_turn_engine.py` (746 LOC) -> 2 files
-- [ ] `test_battle_state_viewer.py` (739 LOC) -> 2 files
+- [x] `test_target_evaluator.py` (765 LOC) -> 2 files (41 tests)
+- [x] `test_turn_engine.py` (746 LOC) -> 3 files (50 tests)
+- [x] `test_battle_state_viewer.py` (739 LOC) -> 2 files (66 tests)
 - [ ] `test_resource_system.py` (725 LOC) -> 2 files
 - [ ] `test_planet_atmosphere.py` (716 LOC) -> 2 files
 - [ ] `test_fleet_combat.py` (714 LOC) -> 2 files

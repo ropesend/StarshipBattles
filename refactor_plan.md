@@ -8,7 +8,7 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (12 of 20 files split)
+**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (15 of 20 files split)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
@@ -18,23 +18,15 @@
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
-  - Task 3.2 In Progress: Split 12 of 20 severe monoliths
-    - test_pathfinding.py (996 LOC) -> 3 files (55 tests)
-    - test_registry.py (973 LOC) -> 3 files (69 tests)
-    - test_research_scene.py (954 LOC) -> 3 files (30 tests)
-    - test_collision_edge_cases.py (949 LOC) -> 3 files (32 tests)
-    - test_turn_engine_strategy.py (932 LOC) -> 3 files (27 tests)
-    - test_modifier_ability_snapshots.py (907 LOC) -> 2 files (70 tests)
-    - test_fleet_navigation_service.py (852 LOC) -> 2 files (36 tests)
-    - test_resources_registry.py (838 LOC) -> 2 files (39 tests)
-    - test_gameplay_loop.py (824 LOC) -> 3 files (27 tests)
-    - test_test_lab_scene.py (789 LOC) -> 2 files (57 tests)
-    - test_controllable_interface.py (788 LOC) -> 2 files (96 tests)
-    - test_projectile_guidance.py (780 LOC) -> 2 files (27 tests)
+  - Task 3.2 In Progress: Split 15 of 20 severe monoliths
+    - This session: Split 3 more severe monoliths:
+      - test_target_evaluator.py (765 LOC) -> 2 files (41 tests)
+      - test_turn_engine.py (746 LOC) -> 3 files (50 tests)
+      - test_battle_state_viewer.py (739 LOC) -> 2 files (66 tests)
 - Remaining Phase 3 work:
-  - Task 3.2: 8 more severe monoliths (700-1000 LOC)
+  - Task 3.2: 5 more severe monoliths (700-1000 LOC)
   - Task 3.3: 26 moderate monoliths (500-700 LOC)
-- Next: Continue Task 3.2 - Split more severe monoliths
+- Next: Continue Task 3.2 - Split remaining severe monoliths
 - Note: 46 failures + 12 errors are pre-existing (same as before changes)
 
 ---
@@ -127,6 +119,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 41e8ba0b | Split test_lab_scene + controllable_interface + projectile_guidance -> 6 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 96c19ed4 | Split fleet_navigation + resources_registry + gameplay_loop -> 7 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 0c504e8e | Split turn_engine_strategy + modifier_snapshots -> 5 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 884224ed | Split research_scene + collision -> 6 files |
