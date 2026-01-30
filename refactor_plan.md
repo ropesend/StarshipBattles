@@ -118,7 +118,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-01-30 | PROJ-48 | Phase 8 COMPLETE | Complete | 5745 passed | pending | Test quality: print removal, docstrings, skip docs |
+| 2026-01-30 | PROJ-48 | Phase 8 COMPLETE | Complete | 5745 passed | b5f3e950 | Test quality: print removal, docstrings, skip docs |
 | 2026-01-30 | PROJ-48 | Phase 7 COMPLETE | Complete | 5746 passed | 69ac10d7 | Mock pattern docs: README updates, factory naming, 52 mocks audited |
 | 2026-01-30 | PROJ-48 | Phase 6 COMPLETE | Complete | 5746 passed | 0fe70fc4 | Dir reorg: moved strategy/ui/test_framework, created 6 dirs |
 | 2026-01-30 | PROJ-48 | Phase 5 COMPLETE | Complete | 5746 passed | 7ba8f5af | Naming: renamed files, converted tests, added conventions docs |
