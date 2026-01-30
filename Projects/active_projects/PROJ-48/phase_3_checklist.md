@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Split 50 test files over 500 LOC into smaller, focused files.
 **Issues Addressed:** TSR-005
 
@@ -155,23 +155,25 @@ Split into 2 files each based on test class groupings:
 - [x] `test_design_library.py` (544 LOC) -> design_library/ (3 files, 24 tests)
 - [x] `test_ai_strategy.py` (540 LOC) -> ai_strategy/ (3 files, 23 tests)
 - [x] `test_build_queue_screen.py` (520 LOC) -> build_queue_screen/ (2 files, 17 tests)
-- [x] `test_utilities.py` (533 LOC) -> battle_controller/ (3 files total, split existing) - this session
-- [x] `test_diff_logic.py` (519 LOC) -> battle_state_viewer/ (2 files, 43 tests) - this session
-- [x] `test_logger.py` (518 LOC) -> logger/ (4 files, 39 tests) - this session
-- [x] `test_production_engine.py` (515 LOC) -> production_engine/ (3 files, 23 tests) - this session
-- [ ] Remaining moderate monoliths (~3 files >500 LOC): test_colonization.py, test_ship_combat_engine.py, test_adapter.py
+- [x] `test_utilities.py` (533 LOC) -> battle_controller/ (3 files total, split existing)
+- [x] `test_diff_logic.py` (519 LOC) -> battle_state_viewer/ (2 files, 43 tests)
+- [x] `test_logger.py` (518 LOC) -> logger/ (4 files, 39 tests)
+- [x] `test_production_engine.py` (515 LOC) -> production_engine/ (3 files, 23 tests)
+- [x] `test_colonization.py` (512 LOC) -> colonization/ (3 files, 17 tests) - this session
+- [x] `test_ship_combat_engine.py` (507 LOC) -> ship_combat_engine/ (3 files, 24 tests) - this session
+- [x] `test_adapter.py` (504 LOC) -> controllable_interface/ (2 files, 32 tests) - this session
 
-**Notes:** Task 3.3 spans multiple sessions. 32/34+ moderate files split. 4 files split this session (138 tests).
+**Notes:** Task 3.3 COMPLETE. All 35 moderate monoliths split. 3 files split this session (73 tests).
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] No test file exceeds 500 LOC: `find tests/ -name "test_*.py" -exec wc -l {} \; | awk '$1 > 500 {print}'`
-- [ ] All new directories have `__init__.py` and `conftest.py`
-- [ ] Run `pytest tests/ -v --tb=short` - all tests pass
-- [ ] Same total test count as baseline
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] All task checkboxes above are checked
+- [x] No test file exceeds 500 LOC: `find tests/ -name "test_*.py" -exec wc -l {} \; | awk '$1 > 500 {print}'`
+- [x] All new directories have `__init__.py` and `conftest.py`
+- [x] Run `pytest tests/ -v --tb=short` - all tests pass (5734 passed)
+- [x] Same total test count as baseline
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4
