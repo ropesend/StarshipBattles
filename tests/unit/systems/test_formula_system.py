@@ -5,68 +5,67 @@ These tests verify:
 1. The eval() sandbox properly blocks dangerous operations
 2. Basic formula evaluation works correctly
 
-Note: evaluate_math_formula returns 0 on any error (including security violations),
-so security tests verify that dangerous operations return 0 (blocked) rather than
-raising exceptions directly.
+PROJ-45: Updated to expect FormulaException on errors instead of returning 0.
+Use safe_evaluate_math_formula for backwards-compatible behavior that returns defaults.
 """
 
 import pytest
-from game.simulation.formula_system import evaluate_math_formula
+from game.simulation.formula_system import evaluate_math_formula, safe_evaluate_math_formula
+from game.core.exceptions import FormulaException
 
 
 class TestFormulaSystemSecurity:
     """Security tests to verify the eval() sandbox blocks dangerous operations.
 
-    The sandbox blocks dangerous operations by causing them to fail (returning 0).
-    These tests verify that malicious formulas cannot execute and return 0 instead.
+    The sandbox blocks dangerous operations by raising FormulaException.
+    These tests verify that malicious formulas cannot execute and raise exceptions.
     """
 
     def test_eval_sandbox_blocks_imports(self):
-        """Verify that __import__ is blocked by the sandbox (returns 0, not actual import)."""
-        # If __import__ worked, this would not return 0
-        result = evaluate_math_formula("__import__('os').system('echo pwned')", {})
-        assert result == 0, "Import should be blocked and return 0"
+        """Verify that __import__ is blocked by the sandbox (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("__import__('os').system('echo pwned')", {})
 
     def test_eval_sandbox_blocks_builtins(self):
-        """Verify that builtin functions like open() are blocked (returns 0)."""
-        result = evaluate_math_formula("open('/etc/passwd')", {})
-        assert result == 0, "open() should be blocked and return 0"
+        """Verify that builtin functions like open() are blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("open('/etc/passwd')", {})
 
     def test_eval_sandbox_blocks_exec(self):
-        """Verify that exec() is blocked (returns 0)."""
-        result = evaluate_math_formula("exec('x=1')", {})
-        assert result == 0, "exec() should be blocked and return 0"
+        """Verify that exec() is blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("exec('x=1')", {})
 
     def test_eval_sandbox_blocks_eval(self):
-        """Verify that nested eval() is blocked (returns 0)."""
-        result = evaluate_math_formula("eval('1+1')", {})
-        assert result == 0, "eval() should be blocked and return 0"
+        """Verify that nested eval() is blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("eval('1+1')", {})
 
     def test_eval_sandbox_blocks_compile(self):
-        """Verify that compile() is blocked (returns 0)."""
-        result = evaluate_math_formula("compile('1+1', '', 'eval')", {})
-        assert result == 0, "compile() should be blocked and return 0"
+        """Verify that compile() is blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("compile('1+1', '', 'eval')", {})
 
     def test_eval_sandbox_blocks_getattr_builtins(self):
-        """Verify that accessing __builtins__ via tricks is blocked (returns 0)."""
-        result = evaluate_math_formula("getattr(__builtins__, 'open')", {})
-        assert result == 0, "getattr on __builtins__ should be blocked and return 0"
+        """Verify that accessing __builtins__ via tricks is blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("getattr(__builtins__, 'open')", {})
 
     def test_eval_sandbox_blocks_globals_access(self):
-        """Verify that globals() is blocked (returns 0)."""
-        result = evaluate_math_formula("globals()", {})
-        assert result == 0, "globals() should be blocked and return 0"
+        """Verify that globals() is blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("globals()", {})
 
     def test_eval_sandbox_blocks_locals_access(self):
-        """Verify that locals() is blocked (returns 0)."""
-        result = evaluate_math_formula("locals()", {})
-        assert result == 0, "locals() should be blocked and return 0"
+        """Verify that locals() is blocked (raises FormulaException)."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("locals()", {})
 
     def test_sandbox_allows_valid_math(self):
         """Verify that valid math expressions still work (not blocked)."""
         # This ensures our security tests aren't false positives
         result = evaluate_math_formula("sqrt(16) + 2", {})
-        assert result == 6.0, "Valid math should work, not return 0"
+        assert result == 6.0, "Valid math should work"
 
 
 class TestFormulaSystemFunctionality:
@@ -100,52 +99,63 @@ class TestFormulaSystemFunctionality:
         result = evaluate_math_formula("50 * sqrt(ship_class_mass / 1000)", context)
         assert result == 50.0
 
-    def test_error_returns_zero(self):
-        """Test that errors return 0 instead of raising."""
-        assert evaluate_math_formula("undefined_var", {}) == 0
-        assert evaluate_math_formula("1 / 0", {}) == 0
-        assert evaluate_math_formula("invalid syntax ??", {}) == 0
+    def test_error_raises_formula_exception(self):
+        """Test that errors raise FormulaException."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("undefined_var", {})
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("1 / 0", {})
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("invalid syntax ??", {})
+
+    def test_safe_evaluate_returns_zero_on_error(self):
+        """Test that safe_evaluate_math_formula returns default on error."""
+        assert safe_evaluate_math_formula("undefined_var", {}, default=0) == 0
+        assert safe_evaluate_math_formula("1 / 0", {}, default=0) == 0
+        assert safe_evaluate_math_formula("invalid syntax ??", {}, default=0) == 0
 
 
 class TestFormulaSystemErrorLogging:
-    """Tests for error logging in formula evaluation (ERR-002)."""
+    """Tests for error logging in formula evaluation (ERR-002).
 
-    def test_syntax_error_logs_warning(self, caplog):
-        """Syntax errors should log a warning with formula and error details."""
-        import logging
+    PROJ-45: evaluate_math_formula now raises FormulaException.
+    Use safe_evaluate_math_formula for logging behavior.
+    """
+
+    def test_syntax_error_raises_exception(self):
+        """Syntax errors should raise FormulaException with details."""
         bad_formula = "1 +* 2"  # Actually invalid Python syntax
 
-        with caplog.at_level(logging.WARNING):
-            result = evaluate_math_formula(bad_formula, {})
+        with pytest.raises(FormulaException) as exc_info:
+            evaluate_math_formula(bad_formula, {})
 
-        assert result == 0  # Still returns 0 on error
-        # Should have logged a warning
+        # Exception should include the formula
+        assert bad_formula in exc_info.value.context.get("formula", "")
+
+    def test_safe_evaluate_logs_warning(self, caplog):
+        """safe_evaluate_math_formula should log warning on error."""
+        import logging
+        bad_formula = "1 +* 2"
+
+        with caplog.at_level(logging.WARNING):
+            result = safe_evaluate_math_formula(bad_formula, {}, default=0)
+
+        assert result == 0
         assert len(caplog.records) > 0, "Should log warning on formula error"
-        # Warning should include the formula
         warning_text = ' '.join(r.message for r in caplog.records)
         assert bad_formula in warning_text, "Warning should include the formula string"
 
-    def test_undefined_variable_logs_warning(self, caplog):
-        """Undefined variable errors should log with context."""
-        import logging
+    def test_undefined_variable_raises_exception(self):
+        """Undefined variable errors should raise FormulaException."""
+        with pytest.raises(FormulaException) as exc_info:
+            evaluate_math_formula("unknown_var * 2", {'x': 1})
 
-        with caplog.at_level(logging.WARNING):
-            result = evaluate_math_formula("unknown_var * 2", {'x': 1})
+        assert "unknown_var" in str(exc_info.value).lower()
 
-        assert result == 0
-        assert len(caplog.records) > 0, "Should log warning for undefined variable"
-        warning_text = ' '.join(r.message for r in caplog.records)
-        assert 'unknown_var' in warning_text, "Warning should include the formula with undefined var"
-
-    def test_math_error_logs_warning(self, caplog):
-        """Math errors like division by zero should log with formula."""
-        import logging
-
-        with caplog.at_level(logging.WARNING):
-            result = evaluate_math_formula("1 / 0", {})
-
-        assert result == 0
-        assert len(caplog.records) > 0, "Should log warning for math error"
+    def test_math_error_raises_exception(self):
+        """Math errors like division by zero should raise FormulaException."""
+        with pytest.raises(FormulaException):
+            evaluate_math_formula("1 / 0", {})
 
     def test_valid_formula_no_warning(self, caplog):
         """Valid formulas should not produce any warnings."""

@@ -19,6 +19,7 @@ from enum import Enum
 from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
 import copy
 
+from game.core.exceptions import StateException
 from game.simulation.services.battle_service import BattleService, BattleResult
 from game.simulation.battle_state import BattleState, BattleResults, ShipState
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
@@ -287,7 +288,11 @@ class BattleController:
             BattleResults with battle outcome
         """
         if not self._is_started:
-            raise RuntimeError("Battle not started - call start() first")
+            raise StateException(
+                "Battle not started - call start() first",
+                code="S001",
+                context={"operation": "run_headless"}
+            )
 
         tick = 0
         max_ticks = self._config.max_ticks
@@ -477,7 +482,11 @@ class BattleController:
             BattleState with complete battle state
         """
         if not self._is_started:
-            raise RuntimeError("Cannot save state - battle not started")
+            raise StateException(
+                "Cannot save state - battle not started",
+                code="S001",
+                context={"operation": "save_state"}
+            )
 
         return self._state_manager.capture_state(
             self._service.get_engine(),

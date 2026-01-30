@@ -57,9 +57,10 @@ Key Classes:
     LayerType: Enum (CORE, INNER, OUTER)
     ApplicationModifier: Applied modifier with value
 """
+import json
 import math
 import threading
-from game.simulation.formula_system import evaluate_math_formula
+from game.simulation.formula_system import safe_evaluate_math_formula
 from typing import Optional, TYPE_CHECKING
 from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.json_utils import load_json_required
@@ -359,7 +360,7 @@ class Component:
         for res, amount in base_costs.items():
             if isinstance(amount, str) and amount.startswith("="):
                 # Evaluate formula on-demand
-                amount = evaluate_math_formula(amount[1:], eval_context)
+                amount = safe_evaluate_math_formula(amount[1:], eval_context, default=0)
             result[res] = int(amount * multiplier)
         return result
 
@@ -508,17 +509,34 @@ def load_components_data(filepath: str = "data/components.json") -> dict:
         data = load_json_required(filepath)
 
         result = {}
+        errors = []
         for comp_def in data['components']:
+            comp_id = comp_def.get('id', 'unknown')
             try:
                 obj = Component(comp_def)
-                result[comp_def['id']] = obj
+                result[comp_id] = obj
+            except (KeyError, TypeError, ValueError) as e:
+                # Schema/data issues - log and continue (collect errors)
+                log_error(f"Component '{comp_id}': invalid data - {e}")
+                errors.append(comp_id)
             except Exception as e:
-                log_error(f"creating component {comp_def.get('id')}: {e}")
+                # Unexpected error - log with full context
+                log_error(f"Component '{comp_id}': unexpected error - {type(e).__name__}: {e}")
+                errors.append(comp_id)
+
+        if errors:
+            log_warning(f"Loaded {len(result)} components, {len(errors)} failed: {errors[:5]}{'...' if len(errors) > 5 else ''}")
 
         return result
 
+    except KeyError as e:
+        log_error(f"Missing required key in components JSON: {e}")
+        return {}
+    except json.JSONDecodeError as e:
+        log_error(f"Invalid JSON in components file: {e}")
+        return {}
     except Exception as e:
-        log_error(f"loading/parsing components json: {e}")
+        log_error(f"loading/parsing components json: {type(e).__name__}: {e}")
         return {}
 
 
@@ -586,18 +604,32 @@ def load_modifiers_data(filepath: str = "data/modifiers.json") -> dict:
         data = load_json_required(filepath)
 
         result = {}
+        errors = []
         for mod_def in data['modifiers']:
+            mod_id = mod_def.get('id', 'unknown')
             # Validate modifier schema (graceful degradation - warn but continue)
             if not validate_modifier_v2(mod_def):
-                mod_id = mod_def.get('id', 'unknown')
                 log_warning(f"Modifier '{mod_id}' failed schema validation, loading anyway")
-            mod = Modifier(mod_def)
-            result[mod.id] = copy.deepcopy(mod)
+            try:
+                mod = Modifier(mod_def)
+                result[mod.id] = copy.deepcopy(mod)
+            except (KeyError, TypeError, ValueError) as e:
+                log_error(f"Modifier '{mod_id}': invalid data - {e}")
+                errors.append(mod_id)
+
+        if errors:
+            log_warning(f"Loaded {len(result)} modifiers, {len(errors)} failed: {errors[:5]}{'...' if len(errors) > 5 else ''}")
 
         return result
 
+    except KeyError as e:
+        log_error(f"Missing required key in modifiers JSON: {e}")
+        return {}
+    except json.JSONDecodeError as e:
+        log_error(f"Invalid JSON in modifiers file: {e}")
+        return {}
     except Exception as e:
-        log_error(f"loading modifiers: {e}")
+        log_error(f"loading modifiers: {type(e).__name__}: {e}")
         return {}
 
 

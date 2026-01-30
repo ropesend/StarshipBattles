@@ -10,6 +10,7 @@ from typing import List, Optional, TYPE_CHECKING
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
 from game.core.registry import get_default_registry_provider, get_default_registries
+from game.core.error_codes import ErrorCode
 
 # Import base classes from validation module (Phase 12 refactoring)
 from game.simulation.validation.base import (
@@ -58,11 +59,11 @@ class LayerConstraintRule(AdditionValidationRule):
         result = ValidationResult(True)
 
         if layer_type not in ship.layers:
-            result.add_error(f"Layer {layer_type.name} does not exist on {ship.ship_class}")
+            result.add_error(f"Layer {layer_type.name} does not exist on {ship.ship_class}", ErrorCode.VALIDATION_FAILED)
             return result
 
         if ship.vehicle_type not in component.allowed_vehicle_types:
-            result.add_error(f"Component {component.name} not allowed on {ship.vehicle_type}")
+            result.add_error(f"Component {component.name} not allowed on {ship.vehicle_type}", ErrorCode.INCOMPATIBLE_COMPONENT)
 
         return result
 
@@ -80,7 +81,7 @@ class UniqueComponentRule(AdditionValidationRule):
         if component.data.get('is_unique', False):
             for c in ship.get_all_components():
                 if c.id == component.id:
-                    result.add_error(f"Usage limit exceeded for unique component {component.name}")
+                    result.add_error(f"Usage limit exceeded for unique component {component.name}", ErrorCode.SLOT_OCCUPIED)
                     return result
         return result
 
@@ -99,7 +100,7 @@ class ExclusiveGroupRule(AdditionValidationRule):
         if ex_group:
             for c in ship.get_all_components():
                 if c.data.get('exclusive_group') == ex_group:
-                    result.add_error(f"Key component conflict: {ex_group}")
+                    result.add_error(f"Key component conflict: {ex_group}", ErrorCode.INCOMPATIBLE_COMPONENT)
                     return result
         return result
 

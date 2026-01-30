@@ -1,8 +1,9 @@
 from game.core.math import Vector2
 from game.engine.physics import PhysicsBody
-from game.core.logger import log_debug, log_event
+from game.core.logger import log_debug, log_event, log_warning
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig
+from game.core.exceptions import ValidationException
 
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
@@ -14,15 +15,36 @@ class Projectile(PhysicsBody):
         self.max_range = range_val
         self.endurance = endurance # in seconds
         self.max_endurance = endurance  # Store initial value for UI
-        
+
+        # ERR-009: Validate required parameters
+        if damage is None or damage < 0:
+            raise ValidationException(
+                f"Invalid projectile damage: {damage}",
+                code="V003",
+                context={"damage": damage, "owner": str(owner)}
+            )
+        if range_val is None or range_val <= 0:
+            raise ValidationException(
+                f"Invalid projectile range: {range_val}",
+                code="V003",
+                context={"range": range_val, "owner": str(owner)}
+            )
+        # Note: endurance can be None for range-limited projectiles (non-seeking)
+        if endurance is not None and endurance <= 0:
+            raise ValidationException(
+                f"Invalid projectile endurance: {endurance}",
+                code="V003",
+                context={"endurance": endurance, "owner": str(owner)}
+            )
+
         # Ensure type is AttackType
         if isinstance(proj_type, str):
             try:
                 self.type = AttackType(proj_type)
             except ValueError:
-                # Fallback if unknown string, though ideally we strictly define valid types
-                # Assuming 'missile' and 'projectile' match AttackType values
-                self.type = proj_type 
+                # Log warning but allow fallback for extensibility
+                log_warning(f"Unknown projectile type '{proj_type}', using as-is")
+                self.type = proj_type
         else:
             self.type = proj_type
         

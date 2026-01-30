@@ -99,16 +99,26 @@ class BattleLogger:
         self.close()
         
     def start_session(self):
-        """Start a new logging session."""
+        """Start a new logging session.
+
+        ERR-010: Uses try/except/finally for proper cleanup on failure.
+        """
         if self.enabled:
-            self.close() # Ensure existing file is closed before opening new one
+            self.close()  # Ensure existing file is closed before opening new one
+            new_file = None
             try:
                 os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-                self.file = open(self.filename, 'w', encoding='utf-8')
-                self.log("=== BATTLE LOG STARTED ===")
+                new_file = open(self.filename, 'w', encoding='utf-8')
+                new_file.write("=== BATTLE LOG STARTED ===\n")
+                self.file = new_file  # Only assign on success
             except IOError as e:
-                log_warning(f"Could not open battle log: {e}")
+                log_warning(f"Could not open battle log '{self.filename}': {e}")
                 self.enabled = False
+                if new_file:
+                    try:
+                        new_file.close()
+                    except IOError:
+                        pass  # Already in error state, ignore close failure
     
     def log(self, message: str):
         """Log a message if logging is enabled."""

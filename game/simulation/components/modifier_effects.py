@@ -9,11 +9,14 @@ These classes enable:
 1. Data-driven modifier formulas (JSON instead of Python handlers)
 2. UI introspection (what does this modifier affect?)
 3. Multi-ability targeting (one modifier affects different abilities differently)
+
+PROJ-45: Error handling updated to raise FormulaException for formula evaluation errors.
 """
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional
 import math
 import logging
+from game.core.exceptions import FormulaException
 
 logger = logging.getLogger(__name__)
 
@@ -122,8 +125,11 @@ class ModifierEffectEvaluator:
             Evaluated result as float
 
         Raises:
-            ValueError: If formula cannot be evaluated
+            FormulaException: If formula cannot be evaluated (syntax error,
+                undefined variable, or runtime error).
         """
+        original_formula = formula
+
         # Add math functions to context
         eval_context = {
             'ln': math.log,
@@ -138,6 +144,12 @@ class ModifierEffectEvaluator:
             **context
         }
 
+        # Build error context for exceptions
+        error_context = {
+            "formula": original_formula,
+            "available_vars": list(context.keys()) if context else [],
+        }
+
         try:
             # Replace ^ with ** for Python
             formula = formula.replace('^', '**')
@@ -145,8 +157,30 @@ class ModifierEffectEvaluator:
             # Evaluate safely
             result = eval(formula, {"__builtins__": {}}, eval_context)
             return float(result)
+        except SyntaxError as e:
+            raise FormulaException(
+                f"Syntax error in modifier formula '{original_formula}': {e.msg}",
+                code="F001",
+                context=error_context
+            ) from e
+        except NameError as e:
+            raise FormulaException(
+                f"Undefined variable in modifier formula '{original_formula}': {e}",
+                code="F002",
+                context=error_context
+            ) from e
+        except (ZeroDivisionError, ValueError, ArithmeticError) as e:
+            raise FormulaException(
+                f"Runtime error in modifier formula '{original_formula}': {e}",
+                code="F003",
+                context=error_context
+            ) from e
         except Exception as e:
-            raise ValueError(f"Cannot evaluate formula '{formula}': {e}")
+            raise FormulaException(
+                f"Cannot evaluate modifier formula '{original_formula}': {e}",
+                code="F004",
+                context=error_context
+            ) from e
 
     @classmethod
     def evaluate_modifier(
@@ -195,7 +229,7 @@ class ModifierEffectEvaluator:
 
                 try:
                     value = cls.evaluate_formula(formula, context)
-                except ValueError as e:
+                except FormulaException as e:
                     # Log error and fallback to param value
                     logger.error(
                         f"Formula evaluation failed for modifier '{modifier_id}': "

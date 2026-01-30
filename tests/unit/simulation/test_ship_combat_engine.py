@@ -321,6 +321,7 @@ class TestFireWeapons:
         proj_ab.projectile_speed = 500
         proj_ab.damage = 10
         proj_ab.range = 1000
+        proj_ab.endurance = 2.0  # PROJ-45: Required for projectile validation
 
         # Create weapon component
         weapon = MagicMock()

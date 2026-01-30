@@ -417,7 +417,12 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
                 }
             except KeyError:
-                log_warning(f"Unknown LayerType {l_type_str} in class {self.ship_class}")
+                # PROJ-45: Enhanced logging with context for unknown layer types
+                valid_layers = [lt.name for lt in LayerType]
+                log_warning(
+                    f"Unknown LayerType '{l_type_str}' in ship class '{self.ship_class}'. "
+                    f"Valid types: {valid_layers}. Skipping layer."
+                )
 
         # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
         # Sort layers: HULL -> CORE -> INNER -> OUTER -> ARMOR

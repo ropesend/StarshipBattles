@@ -270,7 +270,12 @@ class ShipState:
             try:
                 layer_type = LayerType[layer_name]
             except KeyError:
-                log_warning(f"Unknown layer type: {layer_name}")
+                # ERR-08/ERR-015: Log missing key with context before skipping
+                valid_layers = [lt.name for lt in LayerType]
+                log_warning(
+                    f"Unknown layer type '{layer_name}' while rebuilding ship '{self.ship_id}'. "
+                    f"Valid layers: {valid_layers}. Skipping this layer."
+                )
                 continue
 
             if layer_type not in ship.layers:

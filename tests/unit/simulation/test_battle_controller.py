@@ -447,10 +447,11 @@ class TestBattleControllerRunHeadless:
     """Tests for BattleController.run_headless()."""
 
     def test_run_headless_raises_when_not_started(self, controller, basic_config, mock_service):
-        """run_headless raises RuntimeError when not started."""
+        """run_headless raises StateException when not started."""
+        from game.core.exceptions import StateException
         controller.configure(basic_config)
 
-        with pytest.raises(RuntimeError, match="not started"):
+        with pytest.raises(StateException, match="not started"):
             controller.run_headless()
 
     def test_run_headless_runs_until_battle_over(self, controller, basic_config, mock_service):
@@ -892,10 +893,11 @@ class TestBattleControllerStateSaveLoad:
     """Tests for state save and load."""
 
     def test_save_state_raises_when_not_started(self, controller, basic_config, mock_service):
-        """save_state raises RuntimeError when not started."""
+        """save_state raises StateException when not started."""
+        from game.core.exceptions import StateException
         controller.configure(basic_config)
 
-        with pytest.raises(RuntimeError, match="not started"):
+        with pytest.raises(StateException, match="not started"):
             controller.save_state()
 
     def test_save_state_captures_state(self, controller, basic_config, mock_service):

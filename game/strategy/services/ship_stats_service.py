@@ -23,7 +23,7 @@ from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.core.protocols import IRegistryProvider
-from game.simulation.formula_system import evaluate_math_formula
+from game.simulation.formula_system import safe_evaluate_math_formula
 from game.simulation.components.modifiers import calculate_stat_multipliers
 
 
@@ -471,8 +471,8 @@ class ShipStatsService:
             return default
         if isinstance(val, str):
             if val.startswith("=") and context:
-                result = evaluate_math_formula(val[1:], context)
-                return float(result) if result is not None else default
+                result = safe_evaluate_math_formula(val[1:], context, default=default)
+                return float(result)
             return default  # Formula but no context
         return float(val)
 

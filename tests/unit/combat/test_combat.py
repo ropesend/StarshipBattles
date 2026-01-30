@@ -281,7 +281,7 @@ class TestCombatFlow:
             "hp": 50,
             "abilities": {
                 "WeaponAbility": {"range": 1000, "fire_rate": 1, "cooldown": 0},
-                "ProjectileWeaponAbility": {"projectile_speed": 100, "damage": 10}
+                "ProjectileWeaponAbility": {"projectile_speed": 100, "damage": 10, "range": 1000}
             }
         })
         ship.add_component(weapon, LayerType.OUTER)

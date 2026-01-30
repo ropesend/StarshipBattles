@@ -7,12 +7,16 @@ This belongs in the simulation layer because it creates simulation entities (Shi
 Part of PROJ-30: Strategy Mode Layer Boundary Cleanup (STRAT-01 fix).
 Previously, this functionality was incorrectly placed in DesignLibrary (strategy layer),
 which violated the architectural boundary between strategy and simulation layers.
+
+PROJ-45: Added specific exception handling with exception chaining.
 """
+import json
 import os
 from typing import Optional, Tuple
 
 from game.core.json_utils import load_json_required
 from game.core.logger import log_info, log_error
+from game.core.exceptions import PersistenceException, ValidationException
 from game.simulation.entities.ship import Ship
 
 
@@ -52,8 +56,13 @@ class SimulationDesignLoader:
             ship.position = pygame.math.Vector2(center_x, center_y)
             ship.recalculate_stats()
             return ship
+        except (KeyError, TypeError, ValueError) as e:
+            # Data validation errors
+            log_error(f"SimulationDesignLoader: Invalid design data - {type(e).__name__}: {e}")
+            return None
         except Exception as e:
-            log_error(f"SimulationDesignLoader: Failed to create Ship from data: {e}")
+            # Unexpected errors - log with full context
+            log_error(f"SimulationDesignLoader: Failed to create Ship from data - {type(e).__name__}: {e}")
             return None
 
     def load_ship_from_file(
@@ -90,6 +99,19 @@ class SimulationDesignLoader:
             log_info(f"SimulationDesignLoader: Loaded design '{ship.name}' from {filepath}")
             return ship, f"Loaded design: {ship.name}"
 
+        except json.JSONDecodeError as e:
+            # Invalid JSON format
+            log_error(f"SimulationDesignLoader: Invalid JSON in {filepath}: {e}")
+            return None, f"Failed to load design: Invalid JSON format"
+        except (KeyError, TypeError, ValueError) as e:
+            # Data validation errors
+            log_error(f"SimulationDesignLoader: Invalid design data in {filepath} - {type(e).__name__}: {e}")
+            return None, f"Failed to load design: Invalid design data"
+        except OSError as e:
+            # File I/O errors
+            log_error(f"SimulationDesignLoader: I/O error loading {filepath}: {e}")
+            return None, f"Failed to load design: {str(e)}"
         except Exception as e:
-            log_error(f"SimulationDesignLoader: Failed to load design from {filepath}: {e}")
+            # Unexpected errors - log with full context
+            log_error(f"SimulationDesignLoader: Failed to load design from {filepath} - {type(e).__name__}: {e}")
             return None, f"Failed to load design: {str(e)}"
