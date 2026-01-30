@@ -25,8 +25,8 @@
 ## Current State
 **Last Updated:** 2026-01-30
 **Active Phase:** Phase 3 In Progress - Test File Splitting
-**Last Action:** Split 3 severe monoliths (fleet_navigation_service, resources_registry, gameplay_loop)
-**Next Action:** Continue Phase 3 - Split remaining 11 severe monoliths (Task 3.2)
+**Last Action:** Split 3 more severe monoliths (test_lab_scene, controllable_interface, projectile_guidance)
+**Next Action:** Continue Phase 3 - Split remaining 8 severe monoliths (Task 3.2)
 **Blockers:** None
 
 **Phase 3 Progress:**
@@ -43,8 +43,11 @@
 - Split test_fleet_navigation_service.py (852 LOC) -> 2 files in tests/unit/strategy/fleet_navigation/ (36 tests)
 - Split test_resources_registry.py (838 LOC) -> 2 files in tests/unit/core/resources_registry/ (39 tests)
 - Split test_gameplay_loop.py (824 LOC) -> 3 files in tests/integration/gameplay_loop/ (27 tests)
-- Remaining: 11 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
-- Tests pass: 5734 passed (385 tests moved to new files)
+- Split test_test_lab_scene.py (789 LOC) -> 2 files in tests/unit/ui/test_lab_scene/ (57 tests)
+- Split test_controllable_interface.py (788 LOC) -> 2 files in tests/unit/ai/controllable_interface/ (96 tests)
+- Split test_projectile_guidance.py (780 LOC) -> 2 files in tests/unit/simulation/projectile_guidance/ (27 tests)
+- Remaining: 8 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
+- Tests pass: 5734 passed (565 tests moved to new files)
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.
