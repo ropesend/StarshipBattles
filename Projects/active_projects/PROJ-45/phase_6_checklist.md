@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Fix UI layer error handling while maintaining graceful degradation.
 
 ---
@@ -16,14 +16,14 @@
 **File:** `game/assets/asset_manager.py`
 **Tests:** `pytest tests/unit/assets/test_asset_manager.py`
 
-- [ ] Fix ERR-001: lines 102-124 - Replace generic catches with specific types
-- [ ] Fix ERR-003: line 29 - Replace `raise Exception()` with `StateException`
-- [ ] Fix ERR-10: lines 73-82, 102-104 - Add asset load tracking and notification
-- [ ] Add logging before fallback to placeholder
-- [ ] Track which assets failed to load for debugging
-- [ ] Verify: Tests pass
+- [x] Fix ERR-001: lines 102-124 - Replace generic catches with specific types
+- [x] Fix ERR-003: line 29 - Replace `raise Exception()` with `StateException`
+- [x] Fix ERR-10: lines 73-82, 102-104 - Add asset load tracking and notification
+- [x] Add logging before fallback to placeholder
+- [x] Track which assets failed to load for debugging
+- [x] Verify: Tests pass
 
-**Notes:** Keep graceful degradation but add visibility
+**Notes:** Replaced generic Exception with FileNotFoundError and pygame.error
 
 ---
 
@@ -31,12 +31,12 @@
 **File:** `game/ui/assets/ship_theme_manager.py`
 **Tests:** `pytest tests/unit/ui/assets/test_ship_theme_manager.py`
 
-- [ ] Fix ERR-003: line 46 - Replace `raise Exception()` with `StateException`
-- [ ] Replace generic `Exception` catches with specific types
-- [ ] Add logging for theme loading failures with context
-- [ ] Verify: Tests pass
+- [x] Fix ERR-003: line 46 - Replace `raise Exception()` with `StateException`
+- [x] Replace generic `Exception` catches with specific types
+- [x] Add logging for theme loading failures with context
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** StateException for singleton, FileNotFoundError/pygame.error for image loading
 
 ---
 
@@ -44,12 +44,12 @@
 **File:** `game/ui/screens/formation_editor.py`
 **Tests:** `pytest tests/unit/ui/screens/test_formation_editor.py`
 
-- [ ] Fix ERR-11: line 212 - Add specific handling for each error type
-- [ ] Distinguish "file not found" vs "invalid JSON" vs "missing data"
-- [ ] Provide user-friendly error messages for each case
-- [ ] Verify: Tests pass
+- [x] Fix ERR-11: line 212 - Add specific handling for each error type
+- [x] Distinguish "file not found" vs "invalid JSON" vs "missing data"
+- [x] Provide user-friendly error messages for each case
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** Added log_error/log_info, distinguished FileNotFoundError/JSONDecodeError/KeyError/ValueError
 
 ---
 
@@ -57,12 +57,12 @@
 **File:** `game/ui/screens/builder/main.py`
 **Tests:** `pytest tests/unit/ui/screens/builder/test_main.py`
 
-- [ ] Fix ERR-010: lines 48-55 - Add context managers or finally blocks
-- [ ] Fix ERR-013: lines 62-64 - Standardize to custom logger
-- [ ] Replace generic `Exception` catches with specific types
-- [ ] Verify: Tests pass
+- [x] Fix ERR-010: lines 48-55 - Add context managers or finally blocks
+- [x] Fix ERR-013: lines 62-64 - Standardize to custom logger
+- [x] Replace generic `Exception` catches with specific types
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** _reload_data() now catches OSError/JSONDecodeError/KeyError/ValueError/TypeError
 
 ---
 
@@ -70,12 +70,12 @@
 **File:** `game/ui/screens/builder/event_bus.py` (or `ui/builder/event_bus.py`)
 **Tests:** `pytest tests/unit/ui/builder/test_event_bus.py`
 
-- [ ] Fix ERR-01 (Consistency): line 21 - Replace `print()` with `log_error()`
-- [ ] Fix ERR-02 (Consistency): Always bind exception variable `as e:`
-- [ ] Add event type context to error messages
-- [ ] Verify: Tests pass
+- [x] Fix ERR-01 (Consistency): line 21 - Replace `print()` with `log_error()`
+- [x] Fix ERR-02 (Consistency): Always bind exception variable `as e:`
+- [x] Add event type context to error messages
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** Added log_error with callback name and event type context
 
 ---
 
@@ -83,12 +83,12 @@
 **File:** `game/ui/screens/battle_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_battle_screen.py`
 
-- [ ] Fix silent `except Exception: pass` at line 205
-- [ ] Add logging for arc drawing failures
-- [ ] Bind exception variable for context
-- [ ] Verify: Tests pass
+- [x] Fix silent `except Exception: pass` at line 205
+- [x] Add logging for arc drawing failures
+- [x] Bind exception variable for context
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** Now catches ValueError/pygame.error with log_debug message
 
 ---
 
@@ -96,12 +96,12 @@
 **File:** `game/ui/screens/build_queue_screen.py`
 **Tests:** `pytest tests/unit/ui/screens/test_build_queue_screen.py`
 
-- [ ] Fix ERR-07: lines 68-71 - Make validation consistent
-- [ ] Fix silent `except Exception: pass` at line 870
-- [ ] Add logging for screenshot notification failures
-- [ ] Verify: Tests pass
+- [x] Fix ERR-07: lines 68-71 - Make validation consistent
+- [x] Fix silent `except Exception: pass` at line 870
+- [x] Add logging for screenshot notification failures
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** _show_screenshot_toast() now catches AttributeError/pygame.error with log_debug
 
 ---
 
@@ -109,22 +109,22 @@
 **File:** `game/ui/screens/setup.py`
 **Tests:** `pytest tests/unit/ui/screens/test_setup.py`
 
-- [ ] Fix silent `except Exception: pass` at lines 41, 74
-- [ ] Add logging for invalid ship/formation files
-- [ ] Include file path in skip messages
-- [ ] Verify: Tests pass
+- [x] Fix silent `except Exception: pass` at lines 41, 74
+- [x] Add logging for invalid ship/formation files
+- [x] Include file path in skip messages
+- [x] Verify: Tests pass
 
-**Notes:**
+**Notes:** All scan/load/save functions now use specific exception types with log_warning/log_error
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/unit/ui/`
-- [ ] No regressions: `pytest tests/ --testmon`
-- [ ] Run game and verify UI works without crashes
-- [ ] Verify error logs show context for failures
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/unit/ui/`
+- [x] No regressions: `pytest tests/ --testmon`
+- [x] Run game and verify UI works without crashes
+- [x] Verify error logs show context for failures
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

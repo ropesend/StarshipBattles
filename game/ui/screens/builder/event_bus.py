@@ -1,3 +1,6 @@
+from game.core.logger import log_error
+
+
 class EventBus:
     def __init__(self):
         self._subscribers = {}
@@ -18,4 +21,7 @@ class EventBus:
                 try:
                     callback(data)
                 except Exception as e:
-                    print(f"Error in event handler for {event_type}: {e}")
+                    # Keep broad catch here - event handlers could raise anything
+                    # but log properly with context
+                    callback_name = getattr(callback, '__name__', repr(callback))
+                    log_error(f"Error in event handler '{callback_name}' for {event_type}: {e}")

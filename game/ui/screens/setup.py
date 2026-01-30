@@ -3,6 +3,8 @@
 PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 - ShipFactory: Creates and configures Ship instances via UI services layer
 - StrategyManager: Runtime - populates AI strategy dropdown options
+
+PROJ-45: Improved error handling with specific exception types and logging.
 """
 import pygame
 import json
@@ -13,6 +15,7 @@ from tkinter import filedialog, simpledialog
 
 from game.ui.services.ship_factory import ShipFactory
 from game.ai.strategy_manager import StrategyManager
+from game.core.logger import log_warning, log_error, log_info
 
 
 # Module-level factory instance for convenience
@@ -42,8 +45,12 @@ def scan_ship_designs():
                     'ship_class': data.get('ship_class', 'Unknown'),
                     'ai_strategy': data.get('ai_strategy', 'standard_ranged')
                 })
-        except Exception:
-            pass  # Skip invalid ship files
+        except FileNotFoundError:
+            log_warning(f"Ship file not found during scan: {filepath}")
+        except json.JSONDecodeError as e:
+            log_warning(f"Invalid JSON in ship file {filepath}: {e}")
+        except (KeyError, TypeError) as e:
+            log_warning(f"Invalid ship data in {filepath}: {e}")
     return designs
 
 
@@ -67,7 +74,7 @@ def scan_formations():
         try:
             with open(filepath, 'r') as f:
                 data = json.load(f)
-            
+
             # Check for formation data (arrows list)
             if 'arrows' in data:
                 formations.append({
@@ -75,8 +82,12 @@ def scan_formations():
                     'name': filename.replace('.json', ''),
                     'arrows': data['arrows']
                 })
-        except Exception:
-            pass
+        except FileNotFoundError:
+            log_warning(f"Formation file not found during scan: {filepath}")
+        except json.JSONDecodeError as e:
+            log_warning(f"Invalid JSON in formation file {filepath}: {e}")
+        except (KeyError, TypeError) as e:
+            log_warning(f"Invalid formation data in {filepath}: {e}")
     return formations
 
 
@@ -214,9 +225,11 @@ class BattleSetupScreen:
         try:
             with open(filepath, 'w') as f:
                 json.dump(data, f, indent=2)
-            print(f"Saved battle setup to {filepath}")
-        except Exception as e:
-            print(f"Error saving setup: {e}")
+            log_info(f"Saved battle setup to {filepath}")
+        except OSError as e:
+            log_error(f"Error saving setup (file error): {e}")
+        except (TypeError, ValueError) as e:
+            log_error(f"Error saving setup (serialization error): {e}")
 
     def load_setup(self):
         """Open dialog to load a battle setup."""
@@ -276,10 +289,14 @@ class BattleSetupScreen:
             self.team1 = new_team1
             self.team2 = new_team2
             self.ai_dropdown_open = None
-            print(f"Loaded setup from {filepath}")
-            
-        except Exception as e:
-            print(f"Error loading setup: {e}")
+            log_info(f"Loaded setup from {filepath}")
+
+        except FileNotFoundError:
+            log_error(f"Setup file not found: {filepath}")
+        except json.JSONDecodeError as e:
+            log_error(f"Invalid JSON in setup file {filepath}: {e}")
+        except (KeyError, TypeError, ValueError) as e:
+            log_error(f"Error loading setup from {filepath}: {e}")
 
     def add_formation_to_team(self, formation, team_idx):
         """Add a formation to a specific team with a selected ship design."""
@@ -370,8 +387,12 @@ class BattleSetupScreen:
                     'formation_name': formation['name'],
                     'rotation_mode': rot_mode
                 })
-        except Exception as e:
-            print(f"Error adding formation: {e}")
+        except FileNotFoundError:
+            log_error(f"Ship file not found when adding formation: {ship_path}")
+        except json.JSONDecodeError as e:
+            log_error(f"Invalid JSON in ship file {ship_path}: {e}")
+        except (KeyError, TypeError, ValueError) as e:
+            log_error(f"Error adding formation: {e}")
 
     def get_team_display_groups(self, team_list):
         """Group team entries for display."""

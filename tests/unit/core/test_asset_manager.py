@@ -63,7 +63,7 @@ class TestAssetManagerLogging:
 
     @patch("game.assets.asset_manager.log_error")
     @patch("os.path.exists", return_value=True)
-    @patch("pygame.image.load", side_effect=Exception("Load failed"))
+    @patch("pygame.image.load", side_effect=pygame.error("Load failed"))
     def test_get_image_load_error_uses_log_error(self, mock_load, mock_exists, mock_log_error):
         """get_image should call log_error when image loading fails."""
         am = AssetManager()
@@ -72,7 +72,7 @@ class TestAssetManagerLogging:
 
         mock_log_error.assert_called_once()
         call_arg = mock_log_error.call_args[0][0]
-        assert "failed" in call_arg.lower()
+        assert "failed" in call_arg.lower() or "pygame error" in call_arg.lower()
 
     @patch("game.assets.asset_manager.log_warning")
     def test_get_group_missing_uses_log_warning(self, mock_log_warning):
@@ -85,7 +85,7 @@ class TestAssetManagerLogging:
 
     @patch("game.assets.asset_manager.log_error")
     @patch("os.path.exists", return_value=True)
-    @patch("pygame.image.load", side_effect=Exception("Load failed"))
+    @patch("pygame.image.load", side_effect=pygame.error("Load failed"))
     def test_get_group_load_error_uses_log_error(self, mock_load, mock_exists, mock_log_error):
         """get_group should call log_error when an image in group fails to load."""
         am = AssetManager()

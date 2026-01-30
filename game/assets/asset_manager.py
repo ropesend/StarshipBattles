@@ -4,6 +4,7 @@ import threading
 from game.core.json_utils import load_json
 from game.core.logger import log_error, log_info, log_warning
 from game.core.paths import Paths
+from game.core.exceptions import StateException
 
 
 class AssetManager:
@@ -26,7 +27,10 @@ class AssetManager:
 
     def __init__(self):
         if AssetManager._instance is not None:
-            raise Exception("AssetManager is a singleton. Use AssetManager.instance()")
+            raise StateException(
+                "AssetManager is a singleton. Use AssetManager.instance()",
+                code="AM001"
+            )
         self.assets = {}  # Cache: {key: Surface} or {key: [Surfaces]}
         self.manifest = {}
         self.manifest_path = Paths.ASSET_MANIFEST_FILE
@@ -99,8 +103,11 @@ class AssetManager:
         # Load
         try:
             return self._load_image(cache_key, file_path)
-        except Exception as e:
-            log_error(f"Failed to load image {file_path}: {e}")
+        except FileNotFoundError as e:
+            log_error(f"Image file not found {file_path}: {e}")
+            return self.get_missing_texture()
+        except pygame.error as e:
+            log_error(f"Failed to load image {file_path} (pygame error): {e}")
             return self.get_missing_texture()
 
     def get_group(self, category, group_key):
@@ -121,8 +128,10 @@ class AssetManager:
             sub_key = f"{cache_key}.{i}"
             try:
                 images.append(self._load_image(sub_key, path))
-            except Exception as e:
-                log_error(f"Failed to load group image {path}: {e}")
+            except FileNotFoundError as e:
+                log_error(f"Group image file not found {path}: {e}")
+            except pygame.error as e:
+                log_error(f"Failed to load group image {path} (pygame error): {e}")
         
         self.assets[cache_key] = images
         return images
@@ -191,8 +200,11 @@ class AssetManager:
              
         try:
              return self._load_image(cache_key, norm_path)
-        except Exception as e:
-             log_error(f"Failed to load external image {path}: {e}")
+        except FileNotFoundError as e:
+             log_error(f"External image file not found {path}: {e}")
+             return self.get_missing_texture()
+        except pygame.error as e:
+             log_error(f"Failed to load external image {path} (pygame error): {e}")
              return self.get_missing_texture()
 
     def _load_image(self, cache_key, path):

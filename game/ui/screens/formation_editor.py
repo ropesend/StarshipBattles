@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Callable, An
 
 from game.ui.screens.formation.renderer import FormationRenderer
 from game.ui.screens.formation.input_handler import FormationInputHandler
+from game.core.logger import log_error, log_info
 
 if TYPE_CHECKING:
     from pygame import Rect, Surface
@@ -192,8 +193,11 @@ class FormationCore:
 
             data = {'arrows': out_arrows}
             with open(filename, 'w') as f: json.dump(data, f, indent=4)
-        except (OSError, IOError, json.JSONDecodeError) as e:
-            print(f"Error saving formation: {e}")
+            log_info(f"Formation saved to {filename}")
+        except OSError as e:
+            log_error(f"Error saving formation (file error): {e}")
+        except (TypeError, ValueError) as e:
+            log_error(f"Error saving formation (serialization error): {e}")
 
     def load_from_file(self, filename: str) -> None:
         try:
@@ -212,8 +216,15 @@ class FormationCore:
                         self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
 
                     self.selected_indices = set()
-        except (OSError, IOError, json.JSONDecodeError, KeyError, ValueError) as e:
-            print(f"Error loading formation: {e}")
+                    log_info(f"Formation loaded from {filename} ({len(self.arrows)} arrows)")
+        except FileNotFoundError:
+            log_error(f"Formation file not found: {filename}")
+        except json.JSONDecodeError as e:
+            log_error(f"Invalid JSON in formation file {filename}: {e}")
+        except (KeyError, ValueError) as e:
+            log_error(f"Invalid formation data in {filename}: {e}")
+        except OSError as e:
+            log_error(f"Error reading formation file {filename}: {e}")
 
 class FormationEditorScene:
     """Main UI scene for the formation editor with canvas, toolbar, and event handling.

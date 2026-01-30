@@ -5,6 +5,7 @@ from game.core.logger import log_info, log_error
 from game.core.json_utils import load_json
 from game.core.profiling import profile_block
 from game.core.constants import ASSET_DIR
+from game.core.exceptions import StateException
 
 class ShipThemeManager:
     """
@@ -43,7 +44,10 @@ class ShipThemeManager:
 
     def __init__(self):
         if ShipThemeManager._instance is not None:
-            raise Exception("ShipThemeManager is a singleton. Use ShipThemeManager.instance()")
+            raise StateException(
+                "ShipThemeManager is a singleton. Use ShipThemeManager.instance()",
+                code="STM001"
+            )
              
         # self.themes acts as the image cache: {theme_name: {class_name: surface}}
         self.themes = {}  
@@ -147,7 +151,7 @@ class ShipThemeManager:
                 else:
                     log_error(f"Image not found for {theme_name}/{ship_class}: {filename}")
                     
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             log_error(f"Failed to discover theme {theme_dir}: {e}")
 
     def get_image(self, theme_name, ship_class):
@@ -193,8 +197,11 @@ class ShipThemeManager:
                     self.image_metrics[theme_name][ship_class] = rect
                     
                     return surf
-            except Exception as e:
-                log_error(f"Lazy load failed for {path}: {e}")
+            except FileNotFoundError as e:
+                log_error(f"Lazy load failed - file not found {path}: {e}")
+                return self._create_fallback_image(ship_class)
+            except pygame.error as e:
+                log_error(f"Lazy load failed for {path} (pygame error): {e}")
                 return self._create_fallback_image(ship_class)
 
     def get_image_metrics(self, theme_name, ship_class):
@@ -316,8 +323,10 @@ class ShipThemeManager:
                     self.portraits[theme_name][ship_class] = surf
 
                     return surf
-                except Exception as e:
-                    log_error(f"Failed to load portrait {portrait_path}: {e}")
+                except FileNotFoundError as e:
+                    log_error(f"Portrait file not found {portrait_path}: {e}")
+                except pygame.error as e:
+                    log_error(f"Failed to load portrait {portrait_path} (pygame error): {e}")
 
             return None
 

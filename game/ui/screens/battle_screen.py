@@ -202,8 +202,9 @@ class BattleInterface:
                     r_start = math.radians(ship_angle + facing - arc)
                     r_end = math.radians(ship_angle + facing + arc)
                     pygame.draw.arc(screen, arc_col, rect, -r_end, -r_start, 1)
-                except Exception:
-                    pass
+                except (ValueError, pygame.error) as e:
+                    # Arc drawing can fail with invalid rect dimensions (e.g., negative or zero)
+                    log_debug(f"Arc drawing failed for ship {s.name}: {e}")
 
     def _get_return_button_rect(self):
         """Get the rect for the Return to Combat Lab button."""

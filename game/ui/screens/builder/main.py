@@ -947,7 +947,7 @@ class BuilderSceneGUI:
             # Show success
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
             
-        except Exception as e:
+        except (OSError, json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
             logger.error(f"Failed to reload data: {e}")
             import traceback
             traceback.print_exc()

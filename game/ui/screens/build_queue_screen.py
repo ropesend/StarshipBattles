@@ -867,8 +867,9 @@ class BuildQueueScreen:
                 manager=self.manager,
                 window_title="Screenshot"
             )
-        except Exception:
-            pass
+        except (AttributeError, pygame.error) as e:
+            # UI element creation may fail if manager not ready
+            log_debug(f"Could not show screenshot toast: {e}")
 
     def update(self, time_delta: float):
         """
