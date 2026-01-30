@@ -12,40 +12,93 @@ tests/fixtures/
     README.md             # This file
     ai.py                 # AI behavior fixtures
     battle.py             # Battle engine fixtures
-    common.py             # Common utilities
+    common.py             # Data initialization fixtures
     components.py         # Component fixtures
-    paths.py              # Path constants
+    paths.py              # Path utilities
     ships.py              # Ship fixtures
-    test_scenarios.py     # Pre-built test scenarios
+    test_scenarios.py     # Combat Lab scenario mocks
 ```
 
-## Fixture Modules
+---
+
+## Module Documentation
+
+### paths.py
+
+**Purpose:** Path utilities and fixtures for consistent path resolution.
+
+**Utility Functions:**
+```python
+from tests.fixtures.paths import (
+    get_project_root,       # Returns Path to project root
+    get_data_dir,           # Returns Path to data/ directory
+    get_assets_dir,         # Returns Path to assets/ directory
+    get_test_data_dir,      # Returns Path to tests/data/
+    get_unit_test_data_dir, # Returns Path to tests/unit/data/
+    get_simulation_test_data_dir,  # Returns Path to simulation_tests/data/
+)
+```
+
+**Fixtures:**
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `project_root` | function | Path to project root |
+| `data_dir` | function | Path to data/ directory |
+| `assets_dir` | function | Path to assets/ directory |
+| `test_data_dir` | function | Path to tests/data/ |
+| `unit_test_data_dir` | function | Path to tests/unit/data/ |
+| `simulation_test_data_dir` | function | Path to simulation_tests/data/ |
+
+---
+
+### common.py
+
+**Purpose:** Data initialization fixtures for loading game data.
+
+**Fixtures:**
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `initialized_ship_data` | function | Loads vehicle classes + components |
+| `initialized_ship_data_with_modifiers` | function | Loads vehicle classes + components + modifiers |
+
+**Note:** For read-only tests that don't modify registry state, prefer the session-scoped
+`global_ship_data` and `global_ship_data_with_modifiers` fixtures in `tests/conftest.py`.
+
+---
 
 ### ships.py
 
 **Purpose:** Ship creation for tests.
-
-**Fixtures:**
-- `empty_ship` - Ship with only auto-equipped hull
-- `basic_ship` - Ship with bridge and engine
-- `armed_ship` - Ship with weapons
-- `shielded_ship` - Ship with shields
-- `fully_equipped_ship` - Ship with all common component types
-- `two_opposing_ships` - Tuple of two ships on different teams
 
 **Factory Function:**
 ```python
 from tests.fixtures.ships import create_test_ship
 
 ship = create_test_ship(
-    name="Custom Ship",
-    x=100, y=200,
-    ship_class="Escort",
-    add_bridge=True,
-    add_engine=True,
-    add_weapons=2
+    name="Custom Ship",      # Ship name
+    x=100, y=200,            # Position
+    color=(255, 255, 255),   # RGB color
+    ship_class="Escort",     # Vehicle class name
+    team_id=0,               # Team ID
+    add_bridge=True,         # Add bridge component
+    add_engine=True,         # Add engine component
+    add_weapons=2,           # Number of weapons to add
+    add_shields=1,           # Number of shields to add
+    add_crew=True,           # Add crew quarters + life support (default)
 )
 ```
+
+**Fixtures:**
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `empty_ship` | function | Ship with only auto-equipped hull |
+| `basic_ship` | function | Ship with bridge and engine |
+| `armed_ship` | function | Ship with weapons and shields |
+| `shielded_ship` | function | Ship with shields, no weapons |
+| `fully_equipped_ship` | function | Ship with all common component types |
+| `two_opposing_ships` | function | Tuple of (ship1, ship2) on different teams |
+| `basic_cruiser_ship` | function | Cruiser class ship (requires initialized_ship_data) |
+| `basic_escort_ship` | function | Escort class ship (requires initialized_ship_data) |
 
 ---
 
@@ -53,75 +106,109 @@ ship = create_test_ship(
 
 **Purpose:** Component creation for tests.
 
-**Fixtures:**
-- `weapon_component` - Laser cannon
-- `engine_component` - Standard engine
-- `shield_component` - Shield generator
-- `armor_component` - Armor plate
-- `bridge_component` - Bridge
-- `crew_quarters_component` - Crew quarters
-- `life_support_component` - Life support
-
 **Factory Functions:**
 ```python
-from tests.fixtures.components import create_weapon, create_engine
+from tests.fixtures.components import (
+    create_weapon,          # Creates laser_cannon
+    create_engine,          # Creates standard_engine
+    create_shield,          # Creates shield_generator
+    create_armor,           # Creates armor_plate
+    create_bridge,          # Creates bridge
+    create_crew_quarters,   # Creates crew_quarters
+    create_life_support,    # Creates life_support
+)
 
-weapon = create_weapon()  # Default laser cannon
-engine = create_engine("advanced_engine")  # Specific ID
+# Custom component ID
+weapon = create_weapon("advanced_laser")
 ```
+
+**Fixtures:**
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `weapon_component` | function | Laser cannon component |
+| `engine_component` | function | Standard engine component |
+| `shield_component` | function | Shield generator component |
+| `armor_component` | function | Armor plate component |
+| `bridge_component` | function | Bridge component |
+| `crew_quarters_component` | function | Crew quarters component |
+| `life_support_component` | function | Life support component |
 
 ---
 
 ### battle.py
 
-**Purpose:** Battle engine setup for tests.
-
-**Fixtures:**
-- `battle_engine` - Clean BattleEngine with no ships
-- `battle_engine_with_ships` - BattleEngine with two opposing ships
-- `mock_battle_engine` - Mock for unit tests
-- `mock_battle_screen` - Mock battle screen with engine
+**Purpose:** Battle engine setup for combat tests.
 
 **Factory Functions:**
 ```python
-from tests.fixtures.battle import create_battle_engine, create_battle_engine_with_ships
+from tests.fixtures.battle import (
+    create_battle_engine,           # Clean engine, no ships
+    create_battle_engine_with_ships, # Engine with ships added
+    create_mock_battle_engine,      # Mock for unit tests
+    create_mock_battle_screen,      # Mock battle screen
+)
 
 engine = create_battle_engine(enable_logging=True)
 engine = create_battle_engine_with_ships(team1_count=3, team2_count=2)
 ```
 
----
-
-### paths.py
-
-**Purpose:** Path constants for tests.
-
 **Fixtures:**
-- `project_root` - Path to project root
-- `data_dir` - Path to data directory
-- `assets_dir` - Path to assets directory
-- `test_data_dir` - Path to test data directory
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `battle_engine` | function | Clean BattleEngine with no ships |
+| `battle_engine_with_ships` | function | BattleEngine with two opposing ships |
+| `mock_battle_engine` | function | Mock for unit tests |
+| `mock_battle_screen` | function | Mock battle screen with engine |
 
 ---
 
 ### ai.py
 
-**Purpose:** AI behavior fixtures.
+**Purpose:** AI-related fixtures and setup.
 
-Provides pre-configured AI behaviors and mock targets for AI testing.
+**Fixtures:**
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `strategy_manager_with_test_data` | function | StrategyManager loaded with test AI policies |
+
+**Usage:**
+```python
+def test_ai_targeting(strategy_manager_with_test_data):
+    manager = strategy_manager_with_test_data
+    # Manager has test targeting, movement, and strategy policies loaded
+```
 
 ---
 
-### common.py
+### test_scenarios.py
 
-**Purpose:** Common data initialization fixtures.
+**Purpose:** Mock fixtures for Combat Lab service tests.
+
+**Factory Functions:**
+```python
+from tests.fixtures.test_scenarios import (
+    create_test_metadata,       # Create TestMetadata with defaults
+    create_mock_test_scenario,  # Create mock TestScenario
+    create_mock_test_registry,  # Create mock TestRegistry
+    create_mock_test_runner,    # Create mock TestRunner
+    create_mock_test_history,   # Create mock TestHistory
+    create_scenario_info,       # Create scenario info dict
+    create_sample_ship_data,    # Create sample ship JSON
+    create_sample_component_data, # Create sample component JSON
+)
+```
 
 **Fixtures:**
-- `initialized_ship_data` - Load vehicle classes and components (function-scoped)
-- `initialized_ship_data_with_modifiers` - Load data + modifiers (function-scoped)
-
-**Note:** For read-only tests that don't modify registry state, prefer the session-scoped
-`global_ship_data` and `global_ship_data_with_modifiers` fixtures in `tests/conftest.py`.
+| Fixture | Scope | Description |
+|---------|-------|-------------|
+| `sample_test_metadata` | function | Sample TestMetadata object |
+| `mock_test_scenario` | function | Mock TestScenario instance |
+| `mock_test_registry` | function | Mock TestRegistry instance |
+| `mock_test_runner` | function | Mock TestRunner instance |
+| `mock_test_history` | function | Mock TestHistory instance |
+| `sample_scenario_info` | function | Sample scenario info dict |
+| `sample_ship_data` | function | Sample ship JSON data |
+| `sample_component_data` | function | Sample component JSON data |
 
 ---
 
@@ -228,12 +315,25 @@ def test_fleet_battle():
 # In appropriate module (e.g., ships.py)
 
 def create_custom_thing(param1: str = "default") -> Thing:
-    """Factory function with customization options."""
+    """
+    Factory function with customization options.
+
+    Args:
+        param1: Description of parameter
+
+    Returns:
+        Thing instance
+    """
     return Thing(param1)
+
 
 @pytest.fixture
 def custom_thing():
-    """Fixture using factory with defaults."""
+    """
+    Fixture using factory with defaults.
+
+    Returns a Thing instance for testing basic functionality.
+    """
     return create_custom_thing()
 ```
 
@@ -241,16 +341,24 @@ def custom_thing():
 
 ## Fixture Dependencies
 
-Some fixtures depend on game data being loaded. The `reset_game_state` autouse fixture in `tests/unit/conftest.py` ensures registries are populated before tests run.
+Some fixtures depend on game data being loaded. The `reset_game_state` autouse fixture in the root `conftest.py` ensures registries are populated before tests run.
 
 **Marker for custom data tests:**
 ```python
 @pytest.mark.use_custom_data
 def test_with_custom_registry():
     # This test uses custom component definitions
+    # Production data will NOT be hydrated
     pass
 ```
 
 ---
 
-*Last Updated: January 2026*
+## See Also
+
+- [tests/README.md](../README.md) - Test suite overview and fixture hierarchy
+- [CLAUDE.md](../../CLAUDE.md) - Development guidelines
+
+---
+
+*Last Updated: January 2026 (PROJ-48 Phase 2)*

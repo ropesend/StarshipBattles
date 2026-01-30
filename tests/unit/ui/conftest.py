@@ -1,9 +1,13 @@
 """
 UI test configuration and shared fixtures.
-Ensures proper import order and cleanup for parallel execution.
 
-This conftest.py pre-imports game.ui submodules in a deterministic order
-to prevent race conditions when pytest-xdist spawns multiple workers.
+This conftest provides:
+1. Pre-imports game.ui submodules in deterministic order (race condition prevention)
+2. pygame_display_reset fixture for UI-specific display handling
+
+Note: Basic pygame initialization is handled by enforce_headless in root conftest.py.
+Test isolation (cleanup) is handled by reset_game_state in root conftest.py.
+The pygame_display_reset fixture here handles UI-specific display mode reset.
 """
 import sys
 import pytest

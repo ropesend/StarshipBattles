@@ -8,24 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 1 Complete
+**Last Completed:** PROJ-48 Phase 2 Complete
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
-**Current Phase:** Phase 2 (Conftest Consolidation)
-**Test Status:** 5734 passed, 46 failed (pre-existing UI failures)
+**Current Phase:** Phase 3 (Test File Splitting)
+**Test Status:** 5728 passed, 52 failed (pre-existing UI failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-48 Phase 1 Complete - Critical Infrastructure Fixes
-  - Re-enabled 2 disabled integration tests (formation_attack, formation_flight)
-  - Converted from script-style to pytest class format with proper fixtures
-  - Consolidated test isolation into root conftest.py reset_game_state fixture
-  - Added Logger/Profiler cleanup to reset_game_state
-  - Removed duplicate reset_singletons fixture from tests/conftest.py
-  - Added 6 isolation verification tests in tests/unit/core/test_isolation.py
-  - Added `integration` marker to pytest.ini
-  - All 11 new tests passing
-- Next: Phase 2 - Conftest Consolidation
+- PROJ-48 Phase 2 Complete - Conftest Consolidation
+  - Updated tests/README.md with comprehensive fixture hierarchy diagram
+  - Updated tests/fixtures/README.md with detailed module documentation
+  - Removed 4 empty/redundant autouse fixtures:
+    - builder_test_setup (empty yield)
+    - combat_test_setup (empty yield)
+    - entities_test_setup (redundant - root handles pygame init + cleanup)
+    - systems_test_setup (redundant - root handles pygame init + cleanup)
+  - Kept pygame_display_reset in UI conftest (useful display mode reset)
+  - All fixture docstrings verified complete
+- Next: Phase 3 - Test File Splitting
 
 ---
 
@@ -109,7 +110,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-01-30 | PROJ-48 | Phase 1 | Complete | 5734 passed | pending | Re-enabled formation tests, consolidated test isolation, +11 tests |
+| 2026-01-30 | PROJ-48 | Phase 2 | Complete | 5728 passed | 673ecec7 | Conftest consolidation, removed 4 redundant fixtures, updated READMEs |
+| 2026-01-30 | PROJ-48 | Phase 1 | Complete | 5734 passed | 382cb0f3 | Re-enabled formation tests, consolidated test isolation, +11 tests |
 | 2026-01-30 | PROJ-47 | Audit Cycle 1 | PASSED | 5499 passed | 2a0f3684 | All 4 phases verified, project complete |
 | 2026-01-30 | PROJ-47 | Phase 4 | Complete | 5499 passed | 2a0f3684 | External docs: PROJ-11 links, API ref, errors, MVVM, layers, migration guide |
 | 2026-01-30 | PROJ-47 | Phase 3 | Complete | 805 testmon | f2d94cc9 | Sim docs: weapons, battle_controller, modifier_service, combat_engine, component_system.md |
