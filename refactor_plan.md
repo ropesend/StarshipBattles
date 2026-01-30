@@ -8,22 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 AUDIT PASSED - Project Complete
-**Current Status:** PROJ-48 Complete, PROJ-49 Next
+**Last Completed:** PROJ-49 Phase 1 - Dead Code Cleanup
+**Current Status:** PROJ-49 Phase 1 Complete
 **Current Project:** PROJ-49
-**Current Phase:** Not Started
+**Current Phase:** Phase 2 - Simple Performance Fixes
 **Test Status:** 5745 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-48 COMPLETE - Testing Infrastructure Overhaul
-  - All 8 phases completed successfully
-  - Audit Cycle 1: PASSED
-  - Test suite: 5745 passed, 4 skipped, 2 xfailed
-  - 46 failures + 12 errors are pre-existing (not introduced by PROJ-48)
-  - All test files < 500 LOC
-  - Parallel execution works (pytest -n 4)
-- Next: Start PROJ-49 - Performance & Dead Code Cleanup
+- PROJ-49 Phase 1 COMPLETE - Dead Code Cleanup
+  - Archived 4 dead files to _marked_for_deletion_2026-01-28/:
+    - projectile_manager_systems.py (duplicate ProjectileManager)
+    - setup_screen_old.py (dead BattleSetupScreen)
+    - hud_battle.py (dead battle screen)
+    - hud_panels.py (dead duplicate panels)
+  - Removed _ValidatorProxy from ship.py (dead code)
+  - Deleted old _marked_for_deletion_2026-01-27/ archive
+  - .gitignore already correctly configured
+  - Test suite: 5745 passed (46 failures + 12 errors pre-existing)
+- Next: Phase 2 - Simple Performance Fixes
 
 ---
 
@@ -87,8 +90,8 @@
 
 ---
 
-- [ ] **PROJ-49: Performance & Dead Code Cleanup**
-  - **Phases:** 4 | **Status:** Planning | **Priority:** Medium
+- [/] **PROJ-49: Performance & Dead Code Cleanup**
+  - **Phases:** 6 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-49/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-49/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -115,6 +118,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-49 | Phase 1 | Complete | 5745 passed | ecec7ecd | Dead code cleanup: archived 4 files, removed _ValidatorProxy, cleaned old archive |
 | 2026-01-30 | PROJ-48 | Audit Cycle 1 | PASSED | 5745 passed | 6b0b2e5d | All phases verified, no issues found, project complete |
 | 2026-01-30 | PROJ-48 | Phase 8 COMPLETE | Complete | 5745 passed | b5f3e950 | Test quality: print removal, docstrings, skip docs |
 | 2026-01-30 | PROJ-48 | Phase 7 COMPLETE | Complete | 5746 passed | 69ac10d7 | Mock pattern docs: README updates, factory naming, 52 mocks audited |

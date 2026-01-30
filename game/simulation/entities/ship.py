@@ -27,22 +27,6 @@ from .ship_loader import get_or_create_validator
 VEHICLE_CLASSES = get_default_registry_provider().get_vehicle_classes()
 
 
-class _ValidatorProxy:
-    """
-    Lazy proxy for validator to maintain backward compatibility.
-
-    PROJ-42: This proxy is intentionally kept for external callers that
-    import VALIDATOR from ship.py. It provides lazy initialization without
-    forcing validator creation at module load time.
-
-    Internal Ship methods use get_or_create_validator() directly.
-    """
-    def __getattr__(self, name):
-        return getattr(get_or_create_validator(), name)
-
-VALIDATOR = _ValidatorProxy()
-
-
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     @staticmethod
