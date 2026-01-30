@@ -8,22 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-46 Phase 1: Quick Wins
-**Current Status:** PROJ-46 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-46 Phase 2: Validator Consolidation
+**Current Status:** PROJ-46 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-46
-**Current Phase:** Phase 2 - Validator Consolidation
+**Current Phase:** Phase 3 - Parameter Naming
 **Test Status:** 5781 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-46 Phase 1 complete: Quick Wins
-- Fixed type hint: str|None → Optional[str] in resources.py
-- Renamed check() → has_sufficient() in ResourceState
-- Renamed design_exists() → has_design() in DesignLibrary
-- Renamed _at_map_edge() → _is_at_map_edge() in BattleController
-- Removed RetreatState backward compat alias pattern
-- Updated tests for all renamed methods
-- Next: Phase 2 - Validator Consolidation
+- PROJ-46 Phase 2 complete: Validator Consolidation
+- Consolidated ShipDesignValidator to canonical location (game/simulation/ship_validator.py)
+- Updated 3 imports: left_panel.py, test_mount_validation.py, test_builder_validation.py
+- Deleted legacy game/simulation/systems/validator.py
+- Next: Phase 3 - Parameter Naming (filepath → file_path)
 
 ---
 
@@ -64,7 +61,7 @@
 ---
 
 - [/] **PROJ-46: Naming Consistency Standardization**
-  - **Phases:** 7 | **Status:** In Progress (Phase 1/7 complete) | **Priority:** Medium
+  - **Phases:** 7 | **Status:** In Progress (Phase 2/7 complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-46/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-46/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -99,7 +96,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-01-30 | PROJ-46 | Phase 1 | Complete | 5781 passed | TBD | Quick Wins: type hints, boolean prefixes, alias cleanup |
+| 2026-01-30 | PROJ-46 | Phase 2 | Complete | 5781 passed | a85cea4e | Validator consolidation: deleted legacy, updated 3 imports |
+| 2026-01-30 | PROJ-46 | Phase 1 | Complete | 5781 passed | 92893c26 | Quick Wins: type hints, boolean prefixes, alias cleanup |
 | 2026-01-30 | PROJ-45 | Audit Cycle 1 | PASSED | 5781 passed | 627800cd | All 7 phases verified, no issues found, project complete |
 | 2026-01-30 | PROJ-45 | Phase 7 Complete | Complete | 5781 passed | 627800cd | Documentation: ERROR_HANDLING_GUIDELINES.md, updated ERROR_HANDLING.md, enhanced exceptions.py docstrings |
 | 2026-01-30 | PROJ-45 | Phase 6 Complete | Complete | 5781 passed | dd32ff8b | UI layer: asset_manager, ship_theme_manager, formation_editor, builder/main, event_bus, battle_screen, build_queue_screen, setup |

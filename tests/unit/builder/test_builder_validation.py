@@ -260,7 +260,7 @@ class TestComplexRules:
 
         self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
 
-        from game.simulation.systems.validator import ShipDesignValidator
+        from game.simulation.ship_validator import ShipDesignValidator
         self.validator = ShipDesignValidator()
 
         yield

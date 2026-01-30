@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Quick Wins | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Validator Consolidation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Validator Consolidation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Parameter Naming | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Service Renaming | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Asset Manager Methods | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -23,11 +23,11 @@
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 2 - Validator Consolidation
-**Last Action:** Completed Phase 1: Quick Wins
-**Next Action:** Begin Phase 2: Validator Consolidation
+**Active Phase:** Phase 3 - Parameter Naming
+**Last Action:** Completed Phase 2: Validator Consolidation
+**Next Action:** Begin Phase 3: Parameter Naming (filepath → file_path)
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Fixed: type hints Optional[str], boolean prefixes (has_sufficient, has_design, _is_at_map_edge), removed RetreatState alias pattern. Tests: 5781 passed.
+**Context for Next Agent:** Phase 2 complete. Consolidated ShipDesignValidator to canonical location (game/simulation/ship_validator.py). Updated 3 imports: left_panel.py, test_mount_validation.py, test_builder_validation.py. Deleted legacy game/simulation/systems/validator.py. Tests: 5781 passed.
 
 ## Overview
 This project addresses ALL 30+ naming inconsistencies identified in `findings_05_naming_consistency.md`, consolidates the dual UI directory structure (`ui/` into `game/ui/`), and standardizes UI class naming to "Screen" convention.
@@ -135,7 +135,7 @@ Standardize Scene/Interface/GUI → Screen for all UI classes.
 
 ## Completion Checklist
 - [x] Phase 1 complete
-- [ ] Phase 2 complete
+- [x] Phase 2 complete
 - [ ] Phase 3 complete
 - [ ] Phase 4 complete
 - [ ] Phase 5 complete

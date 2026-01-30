@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Remove duplicate ShipDesignValidator - consolidate to canonical version
 
 ---
@@ -17,9 +17,9 @@
 - Uses `game.simulation.validation.base` module
 - 9+ test files specifically test this version
 
-**Legacy Version (TO DELETE):** `game/simulation/systems/validator.py`
+**Legacy Version (DELETED):** `game/simulation/systems/validator.py`
 - Older monolithic implementation
-- Only 3 importers
+- Only 3 importers - all updated
 
 ---
 
@@ -29,11 +29,11 @@
 **File:** `game/ui/screens/builder/left_panel.py`
 **Tests:** `pytest tests/unit/builder/`
 
-- [ ] Line 258 (approx): Change import from `game.simulation.systems.validator` to `game.simulation.ship_validator`
-- [ ] Verify the imported class names match (may need to import specific rules)
-- [ ] Run builder tests to verify no regressions
+- [x] Line 258 (approx): Change import from `game.simulation.systems.validator` to `game.simulation.ship_validator`
+- [x] Verify the imported class names match (may need to import specific rules)
+- [x] Run builder tests to verify no regressions
 
-**Notes:**
+**Notes:** Updated LayerRestrictionDefinitionRule import to canonical location.
 
 ---
 
@@ -41,11 +41,11 @@
 **File:** `tests/unit/systems/test_mount_validation.py`
 **Tests:** `pytest tests/unit/systems/test_mount_validation.py`
 
-- [ ] Line 9 (approx): Change import from `game.simulation.systems.validator` to `game.simulation.ship_validator`
-- [ ] Verify test still imports correct classes (e.g., `MountDependencyRule`)
-- [ ] Run the test file directly to verify
+- [x] Line 17: Change import from `game.simulation.systems.validator` to `game.simulation.ship_validator`
+- [x] Verify test still imports correct classes (MountDependencyRule)
+- [x] Run the test file directly to verify
 
-**Notes:**
+**Notes:** Updated MountDependencyRule import to canonical location.
 
 ---
 
@@ -53,11 +53,11 @@
 **File:** `tests/unit/builder/test_builder_validation.py`
 **Tests:** `pytest tests/unit/builder/test_builder_validation.py`
 
-- [ ] Line 263 (approx): Change import from `game.simulation.systems.validator` to `game.simulation.ship_validator`
-- [ ] Verify ShipDesignValidator is imported correctly
-- [ ] Run the test file directly to verify
+- [x] Line 263: Change import from `game.simulation.systems.validator` to `game.simulation.ship_validator`
+- [x] Verify ShipDesignValidator is imported correctly
+- [x] Run the test file directly to verify
 
-**Notes:**
+**Notes:** Updated ShipDesignValidator import to canonical location.
 
 ---
 
@@ -65,20 +65,20 @@
 **File:** `game/simulation/systems/validator.py`
 **Tests:** `pytest tests/unit/systems/ tests/unit/builder/`
 
-- [ ] Verify no other files import from this location (grep for "from game.simulation.systems.validator")
-- [ ] Delete the file: `game/simulation/systems/validator.py`
-- [ ] Run full test suite for affected areas
-- [ ] Verify no import errors at runtime
+- [x] Verify no other files import from this location
+- [x] Delete the file: `game/simulation/systems/validator.py`
+- [x] Run full test suite for affected areas
+- [x] Verify no import errors at runtime
 
-**Notes:**
+**Notes:** Legacy file deleted. All 5781 tests pass.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Legacy validator file is deleted
-- [ ] Run `pytest tests/unit/systems/ tests/unit/builder/` - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] Legacy validator file is deleted
+- [x] Run `pytest tests/unit/systems/ tests/unit/builder/` - all tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3
