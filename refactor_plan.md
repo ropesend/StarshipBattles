@@ -8,26 +8,34 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 6 - All DI errors resolved
-**Current Status:** PROJ-50 In Progress - Phase 6 Complete
+**Last Completed:** PROJ-50 Phase 6 Complete
+**Current Status:** PROJ-50 In Progress - Ready for Phase 7
 **Current Project:** PROJ-50
-**Current Phase:** Phase 6 Complete, ready for Phase 7
+**Current Phase:** Phase 7 - Big Bang Removal
 **Test Status:** 5525 passed, 313 failed, 0 errors (all DI errors fixed)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 6 - ALL DI ERRORS RESOLVED
-- Tasks 6.1-6.6 (core code changes): COMPLETE
-- Task 6.7 (test updates): COMPLETE - ~85 test files updated
+- PROJ-50 Phase 6 COMPLETE:
+  - Tasks 6.1-6.6: Core code changes (Component, Ship, etc. require registries)
+  - Task 6.7: 85+ test files updated for strict DI
+  - _get_registries_fallback: REMOVED from codebase
+  - All DI TypeError errors: RESOLVED
 
-- All test directories now have proper DI
-- _get_registries_fallback: REMOVED from codebase
-- Remaining 313 failures are UNRELATED to DI:
-  - ModifierControlRow API mismatch (pre-existing)
+- Remaining 313 test failures are UNRELATED to DI:
+  - ModifierControlRow API mismatch (pre-existing builder_widgets issue)
   - Workshop viewmodel tests
   - Repro tests for actual bugs
 
-- Next: Update phase checklists, proceed to Phase 7
+- READY FOR PHASE 7:
+  - Task 7.1: Remove get_default_registry_provider() from registry.py
+  - Task 7.2: Decide on get_default_registries() fate
+  - Task 7.3: Update app.py entry point
+  - Task 7.4: Final grep verification
+
+- Files to review for Phase 7:
+  - game/core/registry.py - contains global state to remove
+  - game/app.py - composition root
 
 ---
 
