@@ -21,13 +21,22 @@ from game.simulation.systems.resource_manager import ResourceRegistry
 # Internal import (no longer re-exported)
 from .ship_loader import get_or_create_validator
 
-# Convenience reference to registry data (read-only reference)
-# This is the actual registry dict, so callers can use it directly
+# PROJ-42: Module-level VEHICLE_CLASSES kept for UI hot-reload compatibility.
+# This is the actual registry dict reference - UI uses it for in-place reload.
+# Internal Ship methods use self._registries.vehicle_classes instead.
 VEHICLE_CLASSES = get_default_registry_provider().get_vehicle_classes()
 
 
 class _ValidatorProxy:
-    """Lazy proxy for validator to maintain backward compatibility."""
+    """
+    Lazy proxy for validator to maintain backward compatibility.
+
+    PROJ-42: This proxy is intentionally kept for external callers that
+    import VALIDATOR from ship.py. It provides lazy initialization without
+    forcing validator creation at module load time.
+
+    Internal Ship methods use get_or_create_validator() directly.
+    """
     def __getattr__(self, name):
         return getattr(get_or_create_validator(), name)
 
