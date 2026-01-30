@@ -402,6 +402,83 @@ assert_list_length(events, 1, "events after selection")
 
 ---
 
+## Mock Patterns
+
+### Patch Styles
+
+Both styles are acceptable. Choose based on readability and scope:
+
+**Context Manager** (preferred for localized patches):
+```python
+from unittest.mock import patch, MagicMock
+
+def test_something():
+    with patch('module.path.ClassName') as mock_class:
+        mock_class.return_value = MagicMock()
+        # test code - patch is scoped to this block
+```
+
+**Decorator** (preferred for whole-function patches):
+```python
+@patch('module.path.ClassName')
+def test_something(mock_class):
+    # test code - patch is scoped to entire function
+```
+
+**Guideline**: Maintain consistency within a single test file. Avoid mixing styles in the same file unless necessary.
+
+### Factory Functions
+
+Factory functions provide reusable mock creation with configurable defaults.
+
+**Naming Convention:**
+- Pattern: `create_mock_<resource>()` for mock factories
+- Pattern: `create_<resource>()` for real object factories
+- Example: `create_mock_battle_engine()`, `create_test_ship()`
+
+**Location:**
+- Domain-specific mocks: Co-locate with related fixtures in `tests/fixtures/*.py`
+- Test-specific mocks: Within test file or local conftest.py
+
+**Available Mock Factories:**
+```python
+from tests.fixtures.battle import (
+    create_mock_battle_engine,  # Mock BattleEngine
+    create_mock_battle_screen,  # Mock BattleScreen
+)
+from tests.fixtures.test_scenarios import (
+    create_mock_test_scenario,  # Mock TestScenario
+    create_mock_test_registry,  # Mock TestRegistry
+    create_mock_test_runner,    # Mock TestRunner
+    create_mock_test_history,   # Mock TestHistory
+)
+```
+
+### Inline Mock Classes
+
+When a test needs a custom mock class:
+
+```python
+class MockComponent:
+    """Test double for Component class."""
+    def __init__(self, comp_id="test"):
+        self.id = comp_id
+        self.abilities = {}
+```
+
+- Always use `Mock*` prefix
+- Add docstring explaining what it mocks
+- Keep in test file if used only there
+- Move to conftest.py if used across multiple files in same directory
+
+### MagicMock vs Mock
+
+- Use `MagicMock` when you need magic method support (`__len__`, `__iter__`, etc.)
+- Use `Mock` for simpler mocks without magic method needs
+- Both auto-create attributes on access
+
+---
+
 ## Adding New Fixtures
 
 1. **Module-specific**: Add to module's conftest.py

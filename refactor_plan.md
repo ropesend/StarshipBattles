@@ -8,24 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 6 COMPLETE (Directory Structure Reorganization)
+**Last Completed:** PROJ-48 Phase 7 COMPLETE (Mock Pattern Standardization)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
-**Current Phase:** Phase 6 Complete, Phase 7 Next (Mock Pattern Standardization)
+**Current Phase:** Phase 7 Complete, Phase 8 Next (Test Quality Improvements)
 **Test Status:** 5746 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-48 Phase 6 COMPLETE - Directory Structure Reorganization
-  - Task 6.1 Complete: Created 6 new test directories (assets, simulation/managers, simulation/services, research/data, research/systems, research/ui)
-  - Task 6.2 Complete: Moved tests/strategy/ -> tests/integration/strategy/ (249 tests)
-  - Task 6.2 Complete: Moved tests/ui/ -> tests/integration/ui/ (115 tests)
-  - Task 6.2 Complete: Moved tests/test_framework/ -> tests/unit/test_framework/ (137 tests)
-  - Task 6.2 Complete: Fixed 3 import paths in test_framework files
-  - Task 6.3 Complete: No duplicate - test_logger.py is utility module not test file
-  - Task 6.4 Complete: pytest.ini unchanged (no hardcoded paths)
-  - Task 6.5 Complete: Updated tests/README.md with new directory structure
-- Next: Start Phase 7 - Mock Pattern Standardization
+- PROJ-48 Phase 7 COMPLETE - Mock Pattern Standardization
+  - Task 7.1 Complete: Evaluated mock factory organization - domain co-location is superior pattern (no separate mocks.py needed)
+  - Task 7.2 Complete: Documented @patch patterns in tests/README.md (both decorator and context manager acceptable)
+  - Task 7.3 Complete: Documented factory naming conventions (create_* for real, create_mock_* for mocks)
+  - Task 7.4 Complete: Audited 52 inline mock classes - all follow Mock* naming convention
+  - Modified: tests/README.md (added Mock Patterns section)
+  - Modified: tests/fixtures/README.md (added Mock Factory Organization section)
+- Next: Start Phase 8 - Test Quality Improvements
 
 ---
 
@@ -117,6 +115,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 7 COMPLETE | Complete | 5746 passed | 69ac10d7 | Mock pattern docs: README updates, factory naming, 52 mocks audited |
 | 2026-01-30 | PROJ-48 | Phase 6 COMPLETE | Complete | 5746 passed | 0fe70fc4 | Dir reorg: moved strategy/ui/test_framework, created 6 dirs |
 | 2026-01-30 | PROJ-48 | Phase 5 COMPLETE | Complete | 5746 passed | 7ba8f5af | Naming: renamed files, converted tests, added conventions docs |
 | 2026-01-30 | PROJ-48 | Phase 4 COMPLETE | Complete | 5734 passed | c141cdec | Weak assertion fixes: 18 success, 48+ bool, helpers added |

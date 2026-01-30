@@ -354,6 +354,28 @@ def test_with_custom_registry():
 
 ---
 
+## Mock Factory Organization
+
+Mock factories are organized by domain rather than in a separate `mocks.py` module. This keeps related functionality together:
+
+| Mock Factory | Location | Purpose |
+|--------------|----------|---------|
+| `create_mock_battle_engine()` | `battle.py` | Mock BattleEngine for unit tests |
+| `create_mock_battle_screen()` | `battle.py` | Mock BattleScreen with engine |
+| `create_mock_test_scenario()` | `test_scenarios.py` | Mock TestScenario for Combat Lab tests |
+| `create_mock_test_registry()` | `test_scenarios.py` | Mock TestRegistry |
+| `create_mock_test_runner()` | `test_scenarios.py` | Mock TestRunner |
+| `create_mock_test_history()` | `test_scenarios.py` | Mock TestHistory |
+
+**Design Decision:** Mock factories are co-located with their related real object factories. This provides:
+- Better discoverability (mocks near related code)
+- Easier maintenance (changes to both in same place)
+- Domain cohesion (all battle-related code together)
+
+For detailed mock patterns and guidelines, see [tests/README.md](../README.md#mock-patterns).
+
+---
+
 ## See Also
 
 - [tests/README.md](../README.md) - Test suite overview and fixture hierarchy
@@ -361,4 +383,4 @@ def test_with_custom_registry():
 
 ---
 
-*Last Updated: January 2026 (PROJ-48 Phase 2)*
+*Last Updated: January 2026 (PROJ-48 Phase 7)*
