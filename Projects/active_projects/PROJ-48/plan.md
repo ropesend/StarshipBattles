@@ -25,39 +25,17 @@
 ## Current State
 **Last Updated:** 2026-01-30
 **Active Phase:** Phase 3 In Progress - Test File Splitting
-**Last Action:** Task 3.2 Complete - Split all 20 severe monoliths
-**Next Action:** Continue Phase 3 - Split moderate monoliths (Task 3.3)
+**Last Action:** Task 3.3 partial - Split 8 moderate monoliths
+**Next Action:** Continue Phase 3 - Split remaining moderate monoliths (Task 3.3)
 **Blockers:** None
 
 **Phase 3 Progress:**
 - Task 3.1 Complete: 4 critical monoliths split (>1000 LOC)
 - Task 3.2 Complete: 20 severe monoliths split (700-1000 LOC)
-  - Split test_ship_stats_calculator.py (1775 LOC) -> 5 files (70 tests)
-  - Split test_ship_instance_proj08.py (1458 LOC) -> 3 files (71 tests)
-  - Split test_battle_controller.py (1425 LOC) -> 4 files (110 tests)
-  - Split test_fleet.py (1103 LOC) -> 3 files (70 tests)
-  - Split test_pathfinding.py (996 LOC) -> 3 files (55 tests)
-  - Split test_registry.py (973 LOC) -> 3 files (69 tests)
-  - Split test_research_scene.py (954 LOC) -> 3 files (30 tests)
-  - Split test_collision_edge_cases.py (949 LOC) -> 3 files (32 tests)
-  - Split test_turn_engine_strategy.py (932 LOC) -> 3 files (27 tests)
-  - Split test_modifier_ability_snapshots.py (907 LOC) -> 2 files (70 tests)
-  - Split test_fleet_navigation_service.py (852 LOC) -> 2 files (36 tests)
-  - Split test_resources_registry.py (838 LOC) -> 2 files (39 tests)
-  - Split test_gameplay_loop.py (824 LOC) -> 3 files (27 tests)
-  - Split test_test_lab_scene.py (789 LOC) -> 2 files (57 tests)
-  - Split test_controllable_interface.py (788 LOC) -> 2 files (96 tests)
-  - Split test_projectile_guidance.py (780 LOC) -> 2 files (27 tests)
-  - Split test_target_evaluator.py (765 LOC) -> 2 files (41 tests)
-  - Split test_turn_engine.py (746 LOC) -> 3 files (50 tests)
-  - Split test_battle_state_viewer.py (739 LOC) -> 2 files (66 tests)
-  - Split test_resource_system.py (725 LOC) -> 2 files (7 tests)
-  - Split test_planet_atmosphere.py (716 LOC) -> 2 files (47 tests)
-  - Split test_fleet_combat.py (714 LOC) -> 2 files (29 tests)
-  - Split test_conflict_resolution_engine.py (708 LOC) -> 2 files (26 tests)
-  - Split test_formation_prediction.py (682 LOC) -> 2 files (30 tests)
-- Task 3.3 Remaining: 26 moderate monoliths (500-700 LOC)
-- Total: 861 tests moved to new files across 24 monoliths split
+- Task 3.3 In Progress: 12/26+ moderate monoliths split (500-700 LOC)
+  - Session 1: battle_ui_service, armor_mechanics, schematic_view, save_game_service (4 files)
+  - Session 2: profiling, research_controls, math_utils, save_load (4 files, 172 tests)
+- Total: 1179 tests moved to new files across 32 monoliths split
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.

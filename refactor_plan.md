@@ -8,27 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 3 Task 3.2 Complete (all 20 severe monoliths split)
+**Last Completed:** PROJ-48 Phase 3 Task 3.3 partial (8 more moderate monoliths split)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
-**Test Status:** Tests passing (2 pre-existing failures unrelated to splitting)
+**Test Status:** 172 passed (this session's split files)
 **Active Blockers:** None
 
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
   - Task 3.2 Complete: All 20 severe monoliths split
-    - This session: Split final 5 severe monoliths:
-      - test_resource_system.py (725 LOC) -> 2 files (7 tests)
-      - test_planet_atmosphere.py (716 LOC) -> 2 files (47 tests)
-      - test_fleet_combat.py (714 LOC) -> 2 files (29 tests)
-      - test_conflict_resolution_engine.py (708 LOC) -> 2 files (26 tests)
-      - test_formation_prediction.py (682 LOC) -> 2 files (30 tests)
+  - Task 3.3 In Progress: 12/26+ moderate monoliths split (8 this session):
+    - test_profiling.py (667 LOC) -> profiling/ (4 files, 50 tests)
+    - test_research_controls.py (656 LOC) -> research_controls/ (3 files, 28 tests)
+    - test_math.py (653 LOC) -> math_utils/ (3 files, 60 tests) - renamed to avoid stdlib collision
+    - test_save_load.py (645 LOC) -> save_load/ (3 files, 34 tests)
 - Remaining Phase 3 work:
-  - Task 3.3: 26 moderate monoliths (500-700 LOC) - NOT STARTED
-- Next: Start Task 3.3 - Split moderate monoliths
-- Total: 861 tests moved to new files across 24 monoliths split so far
+  - Task 3.3 remaining: ~18 moderate monoliths (500-700 LOC)
+- Next: Continue Task 3.3 - Split remaining moderate monoliths
+- Total: 1179 tests moved to new files across 32 monoliths split so far
 
 ---
 
@@ -120,6 +119,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 172 passed | 7473ce72 | Split profiling+research_controls+math_utils+save_load -> 13 files |
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 5734 passed | ae8665c8 | Split battle_ui_service+armor_mechanics+schematic_view+save_game_service -> 8 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 complete | Complete | 139 passed | 652f35de | Split resource_system+planet_atm+fleet_combat+conflict_res+formation -> 10 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 41e8ba0b | Split test_lab_scene + controllable_interface + projectile_guidance -> 6 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 96c19ed4 | Split fleet_navigation + resources_registry + gameplay_loop -> 7 files |

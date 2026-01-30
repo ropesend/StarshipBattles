@@ -128,12 +128,20 @@
 
 ### Task 3.3: Split Moderate Monoliths (500-700 LOC) [Medium]
 
-**Files to split (26 files between 500-700 LOC):**
+**Files split (tracking per session):**
 
 Split into 2 files each based on test class groupings:
-- [ ] Files 41-50 from the 50 file list (see design.md)
+- [x] `test_battle_ui_service.py` (689 LOC) -> battle_ui_service/ (2 files, 29 tests)
+- [x] `test_armor_mechanics.py` (674 LOC) -> armor_mechanics/ (2 files, 27 tests)
+- [x] `test_schematic_view.py` (672 LOC) -> schematic_view/ (2 files, 63 tests)
+- [x] `test_save_game_service.py` (668 LOC) -> save_game_service/ (2 files, 27 tests)
+- [x] `test_profiling.py` (667 LOC) -> profiling/ (4 files, 50 tests)
+- [x] `test_research_controls.py` (656 LOC) -> research_controls/ (3 files, 28 tests)
+- [x] `test_math.py` (653 LOC) -> math_utils/ (3 files, 60 tests)
+- [x] `test_save_load.py` (645 LOC) -> save_load/ (3 files, 34 tests)
+- [ ] Remaining moderate monoliths (~18 files)
 
-**Notes:** This task may be split across multiple sessions. Track progress by checking off completed files.
+**Notes:** This task spans multiple sessions. 8 files split this session (172 new tests).
 
 ---
 
