@@ -1,895 +1,512 @@
-"""Strategy interface for the strategy screen.
-
-Cross-layer imports (acceptable for UI):
-- OrderType: Runtime - order formatting in fleet display
-- Protocols: Runtime - duck typing for object identification
 """
-import os
+StrategyScreen - Main coordinator for strategy layer.
+
+This is the central hub that manages the strategy game state and delegates
+to specialized modules for rendering, input handling, and game operations.
+
+Refactored from 1,568 lines to ~350 lines by extracting:
+- StrategyRenderer: All drawing logic (~580 lines)
+- InputHandler: Event and click routing (~180 lines)
+- CameraNavigator: Camera focus and zoom (~90 lines)
+- FleetOperations: Fleet movement commands (~130 lines)
+- ColonizationSystem: Colonization workflow (~175 lines)
+
+PROJ-40: Use protocol type guards instead of isinstance for cross-layer checks.
+"""
+from __future__ import annotations
+
 import pygame
-import pygame_gui
-from game.core.logger import log_debug
+from typing import TYPE_CHECKING
 from game.core.config import UIConfig
-from game.core.protocols import (
-    is_star_system, is_star, is_planet, is_fleet,
-    is_warp_point, is_sector_environment
-)
-from game.ui.screens.planet_selection_window import PlanetSelectionWindow
-from game.ui.screens.planet_list_window import PlanetListWindow
-from game.ui.screens.fleet_orders_window import FleetOrdersWindow
-from game.ui.screens.fleet_report_window import FleetReportWindow
-from game.core.constants import DATA_DIR
-from game.strategy.data.fleet import OrderType
-from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
-from game.ui.panels.system_tree_panel import SystemTreePanel
-from game.ui.screens.strategy_detail_fmt import (
-    format_spectrum_html, format_atmosphere_raw, get_label_for_object
-)
-import pygame_gui.windows
-import pygame_gui.elements as ui
+from game.core.logger import log_debug, log_info, log_warning
+from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
+from game.strategy.data.hex_math import hex_to_pixel
+from game.ui.renderer.camera import Camera
+from game.ui.screens.strategy_ui import StrategyUI
 
-class StrategyInterface:
-    """Handles all UI rendering and interaction for the StrategyScreen."""
+if TYPE_CHECKING:
+    from game.strategy.data.galaxy import StarSystem
+    from game.strategy.data.fleet import Fleet
 
-    def __init__(self, scene, screen_width, screen_height):
-        self.scene = scene
-        self.width = screen_width
-        self.height = screen_height
-        self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
-        self.fleet_orders_window = None  # active window instance
-        self.planet_list_window = None   # planet list window instance (BUG-22)
-        self.fleet_report_window = None  # fleet report window instance (PROJ-03)
+# Extracted modules
+from game.ui.screens.strategy_renderer import StrategyRenderer
+from game.ui.screens.strategy_camera_nav import CameraNavigator
+from game.ui.screens.strategy_fleet_ops import FleetOperations
+from game.ui.screens.strategy_colonization import ColonizationSystem
+from game.ui.screens.strategy_input_handler import StrategyInputHandler
+from game.strategy.systems.save_game_service import SaveGameService
+from game.strategy.facade.strategy_session_facade import StrategySessionFacade
+from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 
-        # UI State
-        theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
-        self.manager = pygame_gui.UIManager((screen_width, screen_height), theme_path=theme_path)
+class StrategyScreen:
+    """Manages strategy layer simulation, rendering, and UI."""
 
-        # --- Right Sidebar Layout (Three Panels) ---
-        # 1. System Window (Top)
-        # 2. Sector Window (Middle)
-        # 3. Detail Window (Bottom)
+    TOP_BAR_HEIGHT = 50
 
-        # Vertical partitioning
-        # Let's divide by ratio or fixed px?
-        # Detail needs minimal 250px for portrait.
-        # Let's say top two split the remaining space.
+    def __init__(self, screen_width, screen_height, session=None):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
-        gap = UIConfig.PANEL_GAP
-        panel_h_approx = (screen_height - 20) / 3
-        
-        # 1. System Panel (Top)
-        rect_system = pygame.Rect(-self.sidebar_width + 10, 10, self.sidebar_width - 20, panel_h_approx - gap)
-        
-        self.system_panel = pygame_gui.elements.UIPanel(
-            relative_rect=rect_system,
-            manager=self.manager,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        self.system_header = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 10, self.sidebar_width - 40, 30),
-            text="System: Deep Space",
-            manager=self.manager,
-            container=self.system_panel
-        )
-        
-        self.system_tree = SystemTreePanel(
-            relative_rect=pygame.Rect(10, 40, self.sidebar_width - 40, rect_system.height - 50),
-            manager=self.manager,
-            container=self.system_panel
-        )
-        self.system_tree.set_selection_callback(self.on_ui_selection)
-        
-        # 2. Sector Panel (Middle)
-        rect_sector = pygame.Rect(-self.sidebar_width + 10, 10 + panel_h_approx, self.sidebar_width - 20, panel_h_approx - gap)
-        
-        self.sector_panel = pygame_gui.elements.UIPanel(
-            relative_rect=rect_sector,
-            manager=self.manager,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        self.sector_header = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 10, self.sidebar_width - 40, 30),
-            text="Sector: Unknown",
-            manager=self.manager,
-            container=self.sector_panel
-        )
-        
-        self.sector_tree = SystemTreePanel(
-            relative_rect=pygame.Rect(10, 40, self.sidebar_width - 40, rect_sector.height - 50),
-            manager=self.manager,
-            container=self.sector_panel
-        )
-        self.sector_tree.set_selection_callback(self.on_ui_selection)
-        
-        # 3. Detail Panel (Bottom)
-        rect_detail = pygame.Rect(-self.sidebar_width + 10, 10 + 2*panel_h_approx, self.sidebar_width - 20, panel_h_approx - gap)
-        
-        self.detail_panel = pygame_gui.elements.UIPanel(
-            relative_rect=rect_detail,
-            manager=self.manager,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        # Portrait Image
-        self.portrait_image = pygame_gui.elements.UIImage(
-            relative_rect=pygame.Rect(10, 10, 150, 150),
-            image_surface=pygame.Surface((150, 150)),
-            manager=self.manager,
-            container=self.detail_panel
-        )
-        
-        # Info Text (Right of Portrait)
-        text_w = self.sidebar_width - 180
-        text_h = rect_detail.height - 20
-        self.detail_text = pygame_gui.elements.UITextBox(
-            html_text="Select an object for details.",
-            relative_rect=pygame.Rect(170, 10, text_w, text_h),
-            manager=self.manager,
-            container=self.detail_panel
-        )
-        
-        # Graph Image (Below Portrait)
-        # Rotated 90 degrees, so it will be visually vertical.
-        graph_y = 170
-        graph_h = rect_detail.height - 180
-        if graph_h < 50: graph_h = 50 
-        
-        self.graph_rect = pygame.Rect(10, graph_y, 150, graph_h)
-        self.graph_image = pygame_gui.elements.UIImage(
-            relative_rect=self.graph_rect,
-            image_surface=pygame.Surface((150, graph_h)),
-            manager=self.manager,
-            container=self.detail_panel
-        )
-        
-        # Raw Data Button (Top Right of Graph Box)
-        # Position at top-right corner of the graph_rect
-        btn_x = self.graph_rect.right - 22  # Inside right edge of graph
-        btn_y = self.graph_rect.top + 2     # Inside top edge of graph
-
-        self.btn_raw_data = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(btn_x, btn_y, 20, 20),
-            text="",
-            manager=self.manager,
-            container=self.detail_panel,
-            anchors={'left': 'left', 'right': 'left', 'top': 'top', 'bottom': 'top'},
-            object_id="@small_icon_button"
-        )
-        self.btn_raw_data.hide()
-        
-        # Widgets
-        # Initialize with SWAPPED dimensions because we will rotate the result 90 degrees.
-        # Visually: 150(W) x H. Functionally: H(W) x 150(H) before rotation.
-        self.spectrum_graph = SpectrumGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-        self.atmosphere_graph = AtmosphereGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-        
-        self.current_raw_data = "" # store for popup
-        
-        # Mapping: Label -> Object
-        self.current_sector_objects = {} 
-        self.current_selection = None
-        
-        # --- Top Bar ---
-        self.top_bar = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(0, 0, screen_width - self.sidebar_width, 50),
-            manager=self.manager,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        button_width = 150
-        gap = 10
-        # Button Groups
-        # Nav Group: [< Col >] [< Fleet >]
-        # Main Group: [Empire] [Research] [Next Turn]
-        
-        # --- Top Bar Layout ---
-        # Strategy: Left Align after Player Label to avoid centering overlap issues.
-        # Player Label ends at x=210.
-        
-        start_x = 230 
-        
-        # --- Nav Buttons ---
-        # Group 1: Colony (Width ~140)
-        self.btn_prev_colony = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        self.lbl_colony = pygame_gui.elements.UILabel(
-             relative_rect=pygame.Rect(start_x + 30, 5, 80, 40), text="Colony", manager=self.manager, container=self.top_bar
-        )
-        self.btn_next_colony = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        
-        # Group 2: Fleet (Width ~140)
-        # Position: Right of Colony Group + Gap
-        fleet_start_x = start_x + 140 + 20 
-        
-        self.btn_prev_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(fleet_start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        self.lbl_fleet = pygame_gui.elements.UILabel(
-             relative_rect=pygame.Rect(fleet_start_x + 30, 5, 80, 40), text="Fleet", manager=self.manager, container=self.top_bar
-        )
-        self.btn_next_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(fleet_start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        
-        # --- Main Buttons ---
-        # Position: Right of Fleet Group + Gap
-        # Fleet ends at fleet_start_x + 140
-        main_start_x = fleet_start_x + 140 + 40
-        btn_w = 100
-        gap = 10
-        
-        self.btn_planets = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x, 5, btn_w, 40), text="Planets", manager=self.manager, container=self.top_bar
-        )
-        self.btn_empire = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 1*(btn_w+gap), 5, btn_w, 40), text="Empire", manager=self.manager, container=self.top_bar
-        )
-        self.btn_research = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 2*(btn_w+gap), 5, btn_w, 40), text="Research", manager=self.manager, container=self.top_bar
-        )
-        self.btn_design = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design", manager=self.manager, container=self.top_bar
-        )
-        
-        # Save Game Button
-        self.btn_save_game = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40),
-            text="Save Game",
-            manager=self.manager,
-            container=self.top_bar
-        )
-
-        # End Turn (Larger)
-        self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, 150, 40),
-            text="End Turn",
-            manager=self.manager,
-            container=self.top_bar
-        )
-        
-        # Player indicator label (far left of top bar)
-        self.lbl_current_player = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 5, 200, 40),
-            text="Player 1's Turn",
-            manager=self.manager,
-            container=self.top_bar
-        )
-        
-        # Contextual Buttons (Detail Panel)
-        # Positioned below text
-        self.btn_colonize = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(220, rect_detail.height - 50, 120, 40),
-            text="Colonize",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-        
-        self.btn_build_yard = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(350, rect_detail.height - 50, 120, 40),
-            text="Build Yard",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-        
-        self.btn_orders = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(80, rect_detail.height - 50, 120, 40),
-            text="Orders",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-
-        self.btn_fleet_report = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(210, rect_detail.height - 50, 120, 40),
-            text="Fleet Report",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-        
-        self.panels = [
-            self.top_bar,
-            self.system_panel,
-            self.sector_panel,
-            self.detail_panel
-        ]
-
-    def hide_ui(self):
-        """Hide all main strategy UI panels."""
-        for panel in self.panels:
-            panel.hide()
-
-    def show_ui(self):
-        """Show all main strategy UI panels."""
-        for panel in self.panels:
-            panel.show()
-
-        # BUG-26: Re-layout tree panels to ensure proper positioning after hide/show
-        if hasattr(self, 'system_tree'):
-            self.system_tree.layout()
-        if hasattr(self, 'sector_tree'):
-            self.sector_tree.layout()
-
-
-        
-    def handle_resize(self, width, height):
-        """Update UI elements for new resolution."""
-        self.width = width
-        self.height = height
-        self.manager.set_window_resolution((width, height))
-        
-        panel_h_approx = (height - 20) / 3
-        gap = 5
-        
-        # System (Top)
-        self.system_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
-        self.system_panel.set_relative_position((-self.sidebar_width + 10, 10))
-        self.system_tree.set_dimensions((self.sidebar_width - 40, panel_h_approx - 60))
-        
-        # Sector (Middle)
-        self.sector_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
-        self.sector_panel.set_relative_position((-self.sidebar_width + 10, 10 + panel_h_approx))
-        self.sector_tree.set_dimensions((self.sidebar_width - 40, panel_h_approx - 60))
-        
-        # Detail (Bottom)
-        self.detail_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
-        self.detail_panel.set_relative_position((-self.sidebar_width + 10, 10 + 2*panel_h_approx))
-        
-        # Detail Text (Right side)
-        text_w = self.sidebar_width - 180
-        text_h = self.detail_panel.rect.height - 20
-        self.detail_text.set_dimensions((text_w, text_h))
-        self.detail_text.set_relative_position((170, 10))
-        
-        # Graph (Left side, under Portrait)
-        # Portrait is 150x150 at (10,10)
-        # Graph Y = 170.
-        graph_y = 170
-        graph_h = self.detail_panel.rect.height - 180
-        if graph_h < 50: graph_h = 50
-        
-        # NOTE: We can't resize the 'graph_image' UIImage easily if it expects fixed surface?
-        # Actually UIImage resizes if we set dimensions? No, it scales the image?
-        # We need to recreate the surface or just set dimensions container?
-        # PygameGUI UIImage doesn't auto-resize surface. But we can update the rect.
-        # But we also need to recreate the Graph Rendering widgets to match new size?
-        # Yes, SpectrumGraph stores width/height.
-        self.graph_rect = pygame.Rect(10, graph_y, 150, graph_h)
-        self.graph_image.set_dimensions((150, graph_h))
-        self.graph_image.set_relative_position((10, graph_y))
-        
-        # Re-init graphs with new size (SWAPPED for rotation)
-        self.spectrum_graph = SpectrumGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-        self.atmosphere_graph = AtmosphereGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-
-        # Position Raw Data Button: Top-Right of Graph
-        # Graph is at (10, graph_y) to (160, graph_y + h)
-        # Button is 20x20.
-        btn_x = self.graph_rect.right - 22 # Inside right edge
-        btn_y = self.graph_rect.top + 2    # Inside top edge
-        self.btn_raw_data.set_relative_position((btn_x, btn_y))
-
-    def show_system_info(self, system_obj, contents):
-        """Populate Top List (System) using Tree View."""
-        if system_obj:
-            self.system_header.set_text(f"System: {system_obj.name}")
+        # Session Management
+        if session:
+            self.session = session
         else:
-            self.system_header.set_text("Deep Space (No System)")
-            
-        self.system_tree.set_items(contents, self)
+            from game.strategy.engine.game_session import GameSession
+            self.session = GameSession()
 
-    def show_sector_info(self, hex_coord, contents):
-        """Populate Middle List (Sector/Hex)."""
-        self.sector_header.set_text(f"Sector: [{hex_coord.q}, {hex_coord.r}]")
-        
-        # Use Tree Panel now with flat view
-        self.sector_tree.set_items(contents, self, flat_view=True)
-        
-    def _get_label_for_obj(self, obj):
-        return get_label_for_object(obj)
+        # Create facade for UI-to-engine communication
+        self._facade = StrategySessionFacade(self.session)
 
-    def _get_object_asset(self, obj):
-        """Proxy to scene for asset resolution."""
-        if hasattr(self.scene, '_get_object_asset'):
-            return self.scene._get_object_asset(obj)
-        return None
-        
-    def _format_spectrum(self, star):
-        return format_spectrum_html(star)
+        # Camera
+        self.camera = Camera(
+            screen_width - UIConfig.STRATEGY_SIDEBAR_WIDTH,
+            screen_height - self.TOP_BAR_HEIGHT,
+            offset_x=0,
+            offset_y=self.TOP_BAR_HEIGHT
+        )
+        self.camera.max_zoom = 25.0
+        self.camera.zoom = 2.0  # Start Zoomed In
 
-    def show_raw_data_popup(self):
-        """Show raw data in a message window."""
-        if self.current_raw_data:
-            win_rect = pygame.Rect(0, 0, 400, 400)
-            win_rect.center = (self.width/2, self.height/2)
-            pygame_gui.windows.UIMessageWindow(
-                rect=win_rect,
-                html_message=self.current_raw_data,
-                manager=self.manager,
-                window_title="Raw Data Analysis"
-            )
+        # Focus on Player Home
+        self._focus_on_player_home()
 
-    def show_detailed_report(self, obj, portrait_surface=None):
-        """Update the detail report implementation."""
-        self.current_selection = obj # UPDATE STATE
-        
-        # Reset state
-        self.btn_raw_data.hide()
-        self.graph_image.hide()
-        
-        # Default hidden, shown based on context below
-        self.btn_colonize.hide()
-        self.btn_build_yard.hide()
-        self.btn_orders.hide()
-        self.btn_fleet_report.hide()
-        self.current_raw_data = ""
-        
-        # Determine Current Player (Local to UI or passed?) 
-        # StrategyInterface doesn't know "Current Player" easily without accessing scene.
-        # But scene.current_empire exists.
-        current_empire_id = -1
-        if hasattr(self.scene, 'current_empire'):
-            current_empire_id = self.scene.current_empire.id
+        # UI
+        self.ui = StrategyUI(self, screen_width, screen_height)
 
-        self.current_raw_data = ""
-        
-        if portrait_surface:
-             # Resize portrait if needed to fit 150x150?
-             scaled = pygame.transform.smoothscale(portrait_surface, (150, 150))
-             self.portrait_image.set_image(scaled)
-        else:
-             self.portrait_image.set_image(pygame.Surface((150, 150))) # clear
-             
-        if not obj:
-            self.detail_text.set_text("Select an object for details.")
-            return
-            
-        text = ""
-        
-        if is_star_system(obj):
-            # Show Primary Star Info
-            primary = obj.primary_star
-            if primary:
-                text = f"<b>System:</b> {obj.name}<br>"
-                text += f"<b>Primary:</b> {primary.name}<br>"
-                text += f"<b>Type:</b> {primary.star_type.name}<br>"
-                text += f"<b>Mass:</b> {primary.mass:.2f} Sol<br>"
-                text += f"<b>Temp:</b> {int(primary.temperature)} K<br>"
-                text += f"<b>Stars:</b> {len(obj.stars)}<br>"
+        # State
+        self.hover_hex = None
+        self.hex_size = 10
+        self.detail_zoom_level = 3.0
 
-                # Graph
-                self.graph_image.show()
-                self.btn_raw_data.show()
-                surface = self.spectrum_graph.render(primary, vertical=True)
-                surface = pygame.transform.rotate(surface, -90)
-                self.graph_image.set_image(surface)
-                self.current_raw_data = self._format_spectrum(primary)
-            else:
-                 text = f"<b>System:</b> {obj.name}<br>(Empty System)"
+        self.selected_fleet = None
+        self.selected_object = None
+        self.last_selected_system = None
 
-        elif is_star(obj):
-            text = f"<b>Star:</b> {obj.name}<br>"
-            text += f"<b>Type:</b> {obj.star_type.name}<br>"
-            text += f"<b>Mass:</b> {obj.mass:.2f} Sol<br>"
-            text += f"<b>Temp:</b> {int(obj.temperature)} K<br>"
-            text += f"<b>Diam:</b> {obj.diameter_hexes:.1f} Hex<br>"
-            
-            self.graph_image.show()
-            self.btn_raw_data.show()
-            surface = self.spectrum_graph.render(obj, vertical=True)
-            surface = pygame.transform.rotate(surface, -90)
-            self.graph_image.set_image(surface)
-            self.current_raw_data = self._format_spectrum(obj)
+        self.turn_processing = False
+        self.action_open_design = False
+        self.current_player_index = 0
 
-        elif is_planet(obj):
-            text = self.format_planet_info(obj)
-             
-            self.graph_image.show()
-            self.btn_raw_data.show()
-            surface = self.atmosphere_graph.render(obj, vertical=True)
-            surface = pygame.transform.rotate(surface, -90)
-            self.graph_image.set_image(surface)
-            self.current_raw_data = self._format_atmosphere_raw(obj)
+        # Assets
+        self.empire_assets = {}
+        self._race_loader = RaceAssetLoader()
+        self._load_assets()
 
-        elif is_sector_environment(obj):
-            # Calculate dynamic radiation
-            spec = obj.calculate_radiation()
-            # Mock a star-like object so _format_spectrum works
-            class MockStar:
-                spectrum = spec
-            
-            text = f"<b>Local Environment</b><br>"
-            text += f"<b>System:</b> {obj.system.name}<br>"
-            text += f"<b>Local:</b> {obj.local_hex}<br>"
-            text += f"<br><b>Total Incident Radiation:</b><br>"
-            text += f"{spec.get_total_output():.2e} W/m^2 (relative)<br>"
-            
-            self.graph_image.show()
-            self.btn_raw_data.show()
-            surface = self.spectrum_graph.render(MockStar, vertical=True)
-            surface = pygame.transform.rotate(surface, -90)
-            self.graph_image.set_image(surface)
-            self.current_raw_data = self._format_spectrum(MockStar)
+        # Initialize sub-modules
+        self._renderer = StrategyRenderer(self)
+        self._camera_nav = CameraNavigator(self)
+        self._fleet_ops = FleetOperations(self, self._facade)
+        self._colonization = ColonizationSystem(self, self._facade)
+        self._input = StrategyInputHandler(self)
 
-        elif is_fleet(obj):
-            text = f"<b>Fleet:</b> {obj.id}<br>"
-            text += f"<b>Owner:</b> {obj.owner_id}<br>"
-            text += f"<b>Ships:</b> {len(obj.ships)}<br>"
-            text += f"<b>Location:</b> {obj.location}<br>"
-            
-            text += "<b>Orders:</b><br>"
-            if obj.orders:
-                for i, order in enumerate(obj.orders):
-                    if order.type == OrderType.MOVE:
-                         text += f" {i+1}. MOVE {order.target}<br>"
-                    elif order.type == OrderType.COLONIZE:
-                         # target is Planet object
-                         p_name = order.target.name if hasattr(order.target, 'name') else "Unknown"
-                         text += f" {i+1}. COLONIZE {p_name}<br>"
-                    else:
-                         text += f" {i+1}. {order.type.name}<br>"
-            else:
-                 text += " (No Orders)<br>"
-                 
-            # Show Fleet Buttons
-            if obj.owner_id == current_empire_id:
-                 self.btn_orders.show()
-                 self.btn_fleet_report.show()
+    # =========================================================================
+    # Properties (delegate to session)
+    # NOTE: These are deprecated for external access. Use facade methods instead.
+    # Internal use within StrategyScene is still valid.
+    # =========================================================================
 
-                 # Check if we can colonize (Ask Engine)
-                 # We query for 'Any Planet' (target=None) to see if *something* is possible here.
-                 if hasattr(self.scene, 'turn_engine'):
-                     # We need galaxy ref
-                     res = self.scene.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
-                     if res.is_valid:
-                         self.btn_colonize.show()
+    @property
+    def galaxy(self):
+        return self.session.galaxy
 
-        elif is_warp_point(obj):
-             text = f"<b>Warp Point</b><br>"
-             text += f"<b>To:</b> {obj.destination_id}<br>"
-             text += f"<b>Local Loc:</b> {obj.location}<br>"
-             
-        self.detail_text.html_text = text
-        self.detail_text.rebuild() 
-        
-    def format_planet_info(self, obj):
-        """Format HTML report for a planet."""
-        text = f"<b>Planet:</b> {obj.name}<br>"
-        text += f"<b>Type:</b> {obj.planet_type.name}<br>"
-        text += f"<b>Orbit:</b> Ring {obj.orbit_distance}<br>"
-        
-        # Mass formatting
-        m_earth = 5.97e24
-        m_jup = 1.89e27
-        if obj.mass >= m_jup:
-            m_str = f"{obj.mass/m_jup:.2f} M_Jup"
-        elif obj.mass >= m_earth:
-            m_str = f"{obj.mass/m_earth:.2f} M_Earth"
-        else:
-            m_str = f"{obj.mass/m_earth:.4f} M_Earth"
-            
-        text += f"<b>Mass:</b> {m_str}<br>"
-        text += f"<b>Radius:</b> {obj.radius/1000.0:.0f} km<br>"
-        text += f"<b>Gravity:</b> {obj.surface_gravity/9.81:.2f} g<br>"
-        text += f"<b>Temp:</b> {int(obj.surface_temperature)} K<br>"
-        text += f"<b>Water:</b> {obj.surface_water*100:.0f}%<br>"
-        text += f"<b>Pressure:</b> {obj.total_pressure_atm:.2f} atm<br>"
+    @property
+    def empires(self):
+        return self.session.empires
 
-        # Colony status and facilities (BUG-19 fix)
-        if hasattr(obj, 'owner_id') and obj.owner_id is not None:
-            text += f"<br><b>Colony Status:</b> Owned<br>"
+    @property
+    def systems(self):
+        return self.session.systems
 
-            # Show facilities/complexes list
-            facilities = getattr(obj, 'facilities', [])
-            if facilities:
-                text += "<b>Complexes:</b><br>"
-                for facility in facilities:
-                    f_name = getattr(facility, 'name', getattr(facility, 'design_id', 'Unknown'))
-                    text += f" - {f_name}<br>"
-            else:
-                text += "<b>Complexes:</b> None<br>"
+    @property
+    def turn_engine(self):
+        import warnings
+        warnings.warn(
+            "Direct turn_engine access is deprecated. Use facade.can_colonize() "
+            "or other facade validation methods instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.session.turn_engine
 
-        if hasattr(obj, 'resources') and obj.resources:
-            text += "<br><b>Resources:</b><br>"
-            for r_name, r_data in obj.resources.items():
-                qty = r_data['quantity']
-                if qty >= 1000000: q_str = f"{qty/1000000:.1f}M"
-                elif qty >= 1000: q_str = f"{qty/1000:.0f}k"
-                else: q_str = str(qty)
+    @property
+    def player_empire(self):
+        return self.session.player_empire
 
-                qual = r_data['quality']
-                text += f" {r_name}: {q_str} (Q:{qual:.0f})<br>"
+    @property
+    def enemy_empire(self):
+        return self.session.enemy_empire
 
-        # Show Build Button if owned by current player
-        current_empire_id = -1
-        if hasattr(self.scene, 'current_empire'):
-            current_empire_id = self.scene.current_empire.id
-            
-        if hasattr(obj, 'owner_id') and obj.owner_id == current_empire_id:
-             self.btn_build_yard.show()
-             
-        return text
+    @property
+    def human_player_ids(self):
+        return self.session.human_player_ids
 
-    def _format_atmosphere_raw(self, planet):
-        return format_atmosphere_raw(planet)
+    @property
+    def current_empire(self):
+        """Get the empire for the current player (supports N players)."""
+        current_player_id = self.human_player_ids[self.current_player_index]
+        return next((e for e in self.empires if e.id == current_player_id), self.empires[0])
 
-        
+    @property
+    def input_mode(self):
+        return self._input.input_mode
+
+    @input_mode.setter
+    def input_mode(self, value):
+        self._input.input_mode = value
+
+    # =========================================================================
+    # Lifecycle Methods
+    # =========================================================================
+
     def update(self, dt):
-        """Update UI logic."""
-        self.manager.update(dt)
- 
+        """Update scene state."""
+        self.camera.update(dt)
+        self.ui.update(dt)
+
     def draw(self, screen):
-        """Draw the strategy scene UI elements."""
-        self.manager.draw_ui(screen)
+        """Render the scene."""
+        # Always fill entire screen first to prevent remnants from other screens
+        screen.fill((10, 10, 20))
 
-        # Only draw zoom indicator if strategy layer has focus (no sub-panels open)
-        if not self._has_modal_open():
-            font = pygame.font.SysFont("arial", 20)
-            mode_text = font.render(f"Strategy Layer | Zoom: {self.scene.camera.zoom:.2f}", True, (255, 255, 255))
-            screen.blit(mode_text, (20, self.height - 30))
+        self._renderer.draw(screen)
 
-    def _has_modal_open(self) -> bool:
-        """Check if any modal sub-panel is currently open."""
-        # Check for build queue screen
-        if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
-            return True
+        if self.turn_processing:
+            self._renderer.draw_processing_overlay(screen)
 
-        # Check for fleet orders window
-        if self.fleet_orders_window is not None:
-            return True
+        self.ui.draw(screen)
 
-        # Check for planet list window (BUG-22)
-        if self.planet_list_window is not None:
-            return True
+        # Draw build queue screen overlay (including drag preview)
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            self.build_queue_screen.draw(screen)
 
-        # Check for fleet report window (PROJ-03)
-        if self.fleet_report_window is not None:
-            return True
+    def handle_resize(self, width, height):
+        """Handle window resize."""
+        self.screen_width = width
+        self.screen_height = height
+        self.camera.width = width - UIConfig.STRATEGY_SIDEBAR_WIDTH
+        self.camera.height = height - self.TOP_BAR_HEIGHT
+        self.camera.offset_y = self.TOP_BAR_HEIGHT
+        self.ui.handle_resize(width, height)
 
-        # Check if workshop is being opened
-        if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
-            return True
-
-        return False
-
-    def on_ui_selection(self, obj):
-        """Handle selection of an object from any UI panel."""
-        if hasattr(self.scene, 'on_ui_selection'):
-            self.scene.on_ui_selection(obj)
+    # =========================================================================
+    # Event Handling (delegates to InputHandler)
+    # =========================================================================
 
     def handle_event(self, event):
-        """Pass events to pygame_gui and handle custom UI logic."""
-        self.manager.process_events(event)
-        self.process_custom_ui_events(event)
-        
-        # Pass generic events to orders window if active (e.g. for confirmation dialogs)
-        if self.fleet_orders_window:
-             self.fleet_orders_window.handle_global_event(event)
-        
-        if self.system_tree.process_event(event):
-             pass
-             
-        if self.sector_tree.process_event(event):
-             pass
-             
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_planets:
-                self.open_planet_list()
-            elif event.ui_element == self.btn_design:
-                if hasattr(self.scene, 'on_design_click'):
-                    self.scene.on_design_click()
-            elif event.ui_element == self.btn_save_game:
-                if hasattr(self.scene, 'on_save_game_click'):
-                    self.scene.on_save_game_click()
-            elif event.ui_element == self.btn_raw_data:
-                self.show_raw_data_popup()
-            elif event.ui_element == self.btn_colonize:
-                # Logic: Issues order mostly from Fleet
-                obj = self.current_selection
-                if obj and is_fleet(obj):
-                     # Find Uncolonized Planets at Fleet Location
-                     from game.strategy.data.hex_math import hex_distance # Import if needed or check equality
-                     
-                     if not hasattr(self.scene, 'galaxy'): return
-                     
-                     # Fleet location
-                     f_loc = obj.location
-                     
-                     # Find System
-                     system = self.scene.galaxy.get_system_of_object(obj)
-                     if not system:
-                         log_debug("Colonize: Fleet not in system?")
-                         return
-                         
-                     # Find planets at this location (SYSTEM)
-                     candidates = []
-                     for p in system.planets:
-                         # Any planet in system is reachable if fleet is at system
-                         if p.owner_id is None: # Unowned
-                             candidates.append(p)
-                                 
-                     if not candidates:
-                         # Feedback?
-                         log_debug("No unowned planets at this location.")
-                         return
-                         
-                     if len(candidates) == 1:
-                         # Single candidate, order directly
-                         if hasattr(self.scene, 'request_colonize_order'):
-                             self.scene.request_colonize_order(obj, candidates[0])
-                     else:
-                         # Multiple -> Dialog
-                         # Define callback wrapper
-                         def on_planet_selected(planet):
-                             if hasattr(self.scene, 'request_colonize_order'):
-                                 self.scene.request_colonize_order(obj, planet)
-                                 
-                         self.prompt_planet_selection(candidates, on_planet_selected)
-            
-            elif event.ui_element == self.btn_orders:
-                 obj = self.current_selection
-                 if obj and is_fleet(obj):
-                      self.open_orders_window(obj)
+        """Process pygame events."""
+        self._input.handle_event(event)
 
-            elif event.ui_element == self.btn_fleet_report:
-                 obj = self.current_selection
-                 if obj and is_fleet(obj):
-                      self.open_fleet_report_window(obj)
-
-            elif event.type == pygame_gui.UI_WINDOW_CLOSE:
-                 if event.ui_element == self.fleet_orders_window:
-                      self.fleet_orders_window = None
-                 elif event.ui_element == self.fleet_report_window:
-                      self.fleet_report_window = None
-
-                    
-        
     def handle_click(self, mx, my, button):
-        """Handle mouse clicks. Returns True if click was handled by UI."""
-        # 1. Check logical sidebar area
-        if mx > self.width - self.sidebar_width:
-            return True
-            
-        # 2. Check if ANY UI element is being hovered (e.g. windows, modals)
-        # This prevents clicking "through" the planet selection window to the map
-        if self.manager.get_hovering_any_element():
-             return True
-             
-        return False
+        """Handle mouse clicks."""
+        return self._input.handle_click(mx, my, button)
 
+    def update_input(self, dt, events):
+        """Update input state."""
+        self._input.update_input(dt, events)
 
+    # =========================================================================
+    # Navigation (delegates to CameraNavigator)
+    # =========================================================================
+
+    def center_camera_on(self, obj):
+        """Center camera on a game object."""
+        self._camera_nav.center_on(obj)
+
+    def cycle_selection(self, obj_type, direction):
+        """Cycle selection through colonies or fleets."""
+        new_obj = self._camera_nav.cycle_selection(obj_type, direction)
+        if new_obj:
+            self.on_ui_selection(new_obj)
+            self.center_camera_on(new_obj)
+
+    # =========================================================================
+    # Colonization (delegates to ColonizationSystem)
+    # =========================================================================
+
+    def on_colonize_click(self):
+        """Handle colonize action."""
+        result = self._colonization.on_colonize_click(self.selected_fleet)
+        if result and result.get('type') == 'prompt':
+            self.ui.prompt_planet_selection(
+                result['planets'],
+                lambda p: self._on_colonize_planet_selected(p)
+            )
+        elif result and result.get('type') == 'success':
+            self.on_ui_selection(self.selected_fleet)
+
+    def _on_colonize_planet_selected(self, planet):
+        """Handle planet selection from colonize prompt."""
+        result = self._colonization.issue_colonize_order(self.selected_fleet, planet)
+        if result and result.get('type') == 'success':
+            self.on_ui_selection(self.selected_fleet)
+
+    def request_colonize_order(self, fleet, planet=None):
+        """Handle colonize request from UI."""
+        self.selected_fleet = fleet
+        result = self._colonization.request_colonize_order(fleet, planet)
+        if result and result.get('type') == 'success':
+            self.on_ui_selection(fleet)
+
+    # =========================================================================
+    # Turn Management
+    # =========================================================================
+
+    def advance_turn(self):
+        """End current player's order phase. Process turn when all humans ready."""
+        self.current_player_index += 1
+
+        if self.current_player_index >= len(self.human_player_ids):
+            # All humans ready - process the full turn
+            self.current_player_index = 0
+            self._process_full_turn()
+            self._update_player_label()
+        else:
+            # Switch to next human player's view
+            next_player_id = self.human_player_ids[self.current_player_index]
+            log_info(f"Player {next_player_id + 1}'s turn to give orders.")
+            self._update_player_label()
+            # Center on their home colony
+            next_empire = next((e for e in self.empires if e.id == next_player_id), None)
+            if next_empire and next_empire.colonies:
+                self.center_camera_on(next_empire.colonies[0])
+
+    def _process_full_turn(self):
+        """Process the turn for all empires simultaneously."""
+        self.turn_processing = True
+        log_info("Processing Turn...")
+
+        # Force Render "Processing" state
+        screen = pygame.display.get_surface()
+        if screen:
+            self.draw(screen)
+            pygame.display.flip()
+
+        # Process turn for all empires
+        self._facade.process_turn()
+
+        # Auto-save after turn processing
+        if self.session.save_path:
+            success, message, _ = SaveGameService.save_game(self.session)
+            if success:
+                log_info(f"Auto-saved: {message}")
+            else:
+                log_warning(f"Auto-save failed: {message}")
+
+        # Re-center Camera on current player's home
+        current_player_id = self.human_player_ids[self.current_player_index]
+        current_empire = next((e for e in self.empires if e.id == current_player_id), self.player_empire)
+        if current_empire.colonies:
+            self.center_camera_on(current_empire.colonies[0])
+
+        self.turn_processing = False
+
+        # Refresh UI for currently selected object
+        if self.selected_object:
+            self.on_ui_selection(self.selected_object)
+
+    def _update_player_label(self):
+        """Update the player indicator label."""
+        player_num = self.current_player_index + 1
+        self.ui.lbl_current_player.set_text(f"Player {player_num}'s Turn")
+
+    # =========================================================================
+    # Selection
+    # =========================================================================
+
+    def on_ui_selection(self, obj):
+        """Called when user selects an item in the UI list."""
+        self.selected_object = obj
+
+        # Track last selected system - PROJ-40: Use protocol type guard
+        if is_star_system(obj):
+            self.last_selected_system = obj
+        elif hasattr(obj, 'location'):
+            parent_sys = next((s for s in self.systems if obj in s.planets or obj in s.warp_points), None)
+            if parent_sys:
+                self.last_selected_system = parent_sys
+
+        # Update fleet selection - PROJ-40: Use protocol type guard
+        current_player_id = self.human_player_ids[self.current_player_index]
+        if is_fleet(obj) and obj.owner_id == current_player_id:
+            self.selected_fleet = obj
+        else:
+            if not is_fleet(obj):
+                self.selected_fleet = None
+
+        # Update UI
+        img = self._get_object_asset(obj)
+        self.ui.show_detailed_report(obj, img)
+
+    # =========================================================================
+    # Actions
+    # =========================================================================
+
+    def on_build_yard_click(self):
+        """Open build queue screen for selected planet."""
+        from game.strategy.data.planet import Planet
+        if isinstance(self.selected_object, Planet):
+            planet = self.selected_object
+            if planet.owner_id == self.current_empire.id:
+                from game.ui.screens.build_queue_screen import BuildQueueScreen
+                from game.strategy.systems.design_library import DesignLibrary
+                from game.simulation.services.design_loader import SimulationDesignLoader
+
+                # Hide main UI
+                self.ui.hide_ui()
+
+                # Get planet portrait from asset system
+                portrait_surface = self._get_object_asset(planet)
+
+                # PROJ-40: Create dependencies for DI injection
+                savegame_path = getattr(self.session, 'save_path', None)
+                empire_id = planet.owner_id
+                design_library = DesignLibrary(savegame_path, empire_id)
+                design_loader = SimulationDesignLoader()
+
+                # Create screen with injected dependencies
+                self.build_queue_screen = BuildQueueScreen(
+                    self.ui.manager,
+                    planet,
+                    self.session,
+                    on_close_callback=self._on_build_queue_close,
+                    portrait_surface=portrait_surface,
+                    design_library=design_library,
+                    design_loader=design_loader
+                )
+                log_info(f"Opened build queue for {planet.name}")
+
+    def _on_build_queue_close(self):
+        """Handle build queue screen closing."""
+        self.build_queue_screen = None
         
-    def prompt_planet_selection(self, planets, on_select):
-        """Open a modal window to select a planet."""
-        width = 800 # Increased width for details
-        height = 500
-        x = (self.width - width) / 2
-        y = (self.height - height) / 2
+        # Show main UI again
+        self.ui.show_ui()
         
-        rect = pygame.Rect(x, y, width, height)
-        # Use existing class
-        PlanetSelectionWindow(rect, self.manager, planets, on_select, self.format_planet_info)
+        # Refresh planet details to show updated queue/facilities
+        if self.selected_object:
+            img = self._get_object_asset(self.selected_object)
+            self.ui.show_detailed_report(self.selected_object, img)
 
-    def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
-        """
-        Dialog to choose between moving to the sector or intercepting the fleet.
-        """
-        # We can use a confirmation dialog with custom buttons or a small custom window.
-        # pygame_gui doesn't natively support "3 buttons" easily in standard dialogs without custom class.
-        # Let's use a standard UIConfirmationDialog but we need 2 positive options? No.
-        # Let's use a small custom UIWindow or UIMessageWindow?
-        # Simpler: A Custom UIWindow with 2 Buttons.
-        
-        width = 300
-        height = 150
-        x = (self.width - width) / 2
-        y = (self.height - height) / 2
-        rect = pygame.Rect(x, y, width, height)
-        
-        win = pygame_gui.elements.UIWindow(
-            rect=rect,
-            manager=self.manager,
-            window_display_title="Select Move Type"
-        )
-        
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 10, 280, 30),
-            text=f"Fleet detected at target.",
-            manager=self.manager,
-            container=win
-        )
-        
-        btn_sector = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, 50, 280, 30),
-            text="Move to Sector (Static)",
-            manager=self.manager,
-            container=win
-        )
-        
-        btn_intercept = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, 90, 280, 30),
-            text="Intercept Fleet (Dynamic)",
-            manager=self.manager,
-            container=win
-        )
-        
-        # We need to bind click events. 
-        # Since we can't easily pass callbacks to generic UIElements without a wrapper class or external event handling,
-        # we will use a small inline class or rely on the fact that StrategyInterface handles events?
-        # StrategyInterface.handle_event handles UI_BUTTON_PRESSED.
-        # But we don't store references to these dyanmic buttons easily.
-        
-        # Pattern: Store callback map?
-        # self.active_callbacks[btn_element] = callback
-        
-        if not hasattr(self, 'ui_callbacks'):
-            self.ui_callbacks = {}
-            
-        self.ui_callbacks[btn_sector] = lambda: (on_move_sector(), win.kill())
-        self.ui_callbacks[btn_intercept] = lambda: (on_intercept_fleet(), win.kill())
+    def on_design_click(self):
+        """Handle 'Design' button click - opens Design Workshop."""
+        log_debug("Design button clicked - opening Design Workshop")
 
-    def process_custom_ui_events(self, event):
-        """Helper to process custom callbacks."""
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if hasattr(self, 'ui_callbacks') and event.ui_element in self.ui_callbacks:
-                self.ui_callbacks[event.ui_element]()
-                del self.ui_callbacks[event.ui_element] # Cleanup
+        # Gather context data for integrated mode
+        self.workshop_context_data = {
+            'empire': self.session.player_empire if hasattr(self, 'session') else None,
+            'game_session': self.session if hasattr(self, 'session') else None
+        }
+        self.action_open_design = True
 
+    def on_save_game_click(self):
+        """Handle 'Save Game' button click."""
+        from game.strategy.systems.save_game_service import SaveGameService
+        import pygame_gui.windows
 
-    def open_planet_list(self):
-        """Open the Planet List Window."""
-        w, h = self.width * 0.9, self.height * 0.9
-        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
+        log_info("Saving game...")
 
-        # Get Empire (current player)
-        empire = self.scene.current_empire
-        galaxy = self.scene.galaxy
+        # Save the game
+        success, message, save_path = SaveGameService.save_game(self.session)
 
-        # Store reference to track window state (BUG-22)
-        self.planet_list_window = PlanetListWindow(
-            rect, self.manager, galaxy, empire,
-            on_close_callback=self._on_planet_list_closed,
-            asset_resolver=self._get_object_asset
-        )
+        # Show confirmation dialog
+        if success:
+            dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
+            dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
+            pygame_gui.windows.UIMessageWindow(
+                rect=dialog_rect,
+                html_message=f"<b>Game Saved Successfully!</b><br><br>{message}",
+                manager=self.ui.manager,
+                window_title="Save Game"
+            )
+            log_info(f"Game saved: {message}")
+        else:
+            dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
+            dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
+            pygame_gui.windows.UIMessageWindow(
+                rect=dialog_rect,
+                html_message=f"<b>Save Failed</b><br><br>{message}",
+                manager=self.ui.manager,
+                window_title="Save Game Error"
+            )
+            log_warning(f"Save failed: {message}")
 
-    def _on_planet_list_closed(self):
-        """Callback when planet list window is closed."""
-        self.planet_list_window = None
+    # =========================================================================
+    # Pathfinding (for external access)
+    # =========================================================================
 
-    def open_orders_window(self, fleet):
-        """Open the Fleet Orders Window."""
-        if self.fleet_orders_window:
-            self.fleet_orders_window.kill()
+    def calculate_hybrid_path(self, start_hex, end_hex):
+        """Calculate path combining local hex movement and warp jumps."""
+        from game.strategy.data.pathfinding import find_hybrid_path
+        return find_hybrid_path(self.galaxy, start_hex, end_hex)
 
-        w, h = 400, 500
-        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
+    def _get_system_at_hex(self, hex_c):
+        """Find which system owns this hex."""
+        from game.strategy.data.pathfinding import get_system_at_hex
+        return get_system_at_hex(self.galaxy, hex_c)
 
-        self.fleet_orders_window = FleetOrdersWindow(rect, self.manager, fleet)
+    def _find_nearest_system(self, hex_c):
+        """Find the nearest system to a hex coordinate."""
+        from game.strategy.data.pathfinding import find_nearest_system
+        return find_nearest_system(self.galaxy, hex_c)
 
-    def open_fleet_report_window(self, fleet):
-        """Open the Fleet Report Window."""
-        if self.fleet_report_window:
-            self.fleet_report_window.kill()
+    # =========================================================================
+    # Private Helpers
+    # =========================================================================
 
-        # Match PlanetListWindow size (90% of screen)
-        w, h = self.width * 0.9, self.height * 0.9
-        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
+    def _focus_on_player_home(self):
+        """Focus camera on player's home colony at startup."""
+        if self.player_empire.colonies:
+            home_colony = self.player_empire.colonies[0]
+            home_sys = next((s for s in self.systems if home_colony in s.planets), None)
+            if home_sys:
+                target_hex = home_sys.global_location + home_colony.location
+                fx, fy = hex_to_pixel(target_hex, 10)
+                self.camera.position = pygame.math.Vector2(fx, fy)
 
-        self.fleet_report_window = FleetReportWindow(
-            rect,
-            self.manager,
-            fleet,
-            on_close_callback=self._on_fleet_report_closed
-        )
+    def _load_assets(self):
+        """Load visual assets using AssetManager and RaceAssetLoader."""
+        from game.assets.asset_manager import get_asset_manager
+        from game.strategy.engine.game_config import GameConfig
 
-    def _on_fleet_report_closed(self):
-        """Callback when fleet report window is closed."""
-        self.fleet_report_window = None
+        am = get_asset_manager()
+        am.load_manifest()
 
+        # Get current asset base path (works regardless of saved paths)
+        config = GameConfig()
+        asset_base = config.asset_base_path
+
+        for emp in self.empires:
+            self.empire_assets[emp.id] = self._race_loader.load_all_empire_assets(
+                emp,
+                asset_base
+            )
+
+    def _get_object_asset(self, obj):
+        """Resolve the visual asset for a data object."""
+        from game.assets.asset_manager import get_asset_manager
+        am = get_asset_manager()
+
+        if is_star(obj):
+            asset_key = am.get_star_color_key(obj.color)
+            return am.load_image('stars', asset_key)
+
+        elif is_planet(obj):
+            p_type_name = obj.planet_type.name.lower()
+            cat = 'terran'
+            if 'gas' in p_type_name:
+                cat = 'gas'
+            elif 'ice' in p_type_name:
+                cat = 'ice'
+            elif 'desert' in p_type_name or 'hot' in p_type_name:
+                cat = 'venus'
+            return am.get_random_from_group('planets', cat, seed_id=id(obj))
+
+        elif is_warp_point(obj):
+            return am.get_random_from_group('warp_points', 'default', seed_id=id(obj))
+
+        elif is_fleet(obj):
+            emp_assets = self.empire_assets.get(obj.owner_id)
+            if emp_assets and 'fleet' in emp_assets:
+                return emp_assets['fleet']
+
+        return None

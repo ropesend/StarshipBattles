@@ -5,7 +5,7 @@ import os
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from game.ui.screens.strategy_scene import StrategyScene
+from game.ui.screens.strategy_screen import StrategyScreen
 
 def verify_star_scaling():
     print("Verifying Star Scaling Logic...")

@@ -67,7 +67,7 @@ class TestRaceFlagLoading:
 
     def test_load_race_flag_rectangle_from_256_dir(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When flag_id exists with 256 subdir, loads rectangle.png from 256/."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_test123", empire_theme_id="Federation")
 
@@ -94,7 +94,7 @@ class TestRaceFlagLoading:
 
     def test_load_race_flag_rectangle_fallback_to_root(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """RaceAssetLoader handles fallback logic internally."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_rootonly", empire_theme_id="Federation")
 
@@ -118,7 +118,7 @@ class TestRaceFlagLoading:
 
     def test_load_race_flag_shield(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When flag_id exists, loads shield.png as 'fleet_flag'."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_shield", empire_theme_id="Federation")
 
@@ -149,7 +149,7 @@ class TestThemeFlagLoading:
 
     def test_load_fleet_icon_from_theme(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When empire_theme_id exists, loads Battlecruiser.png as 'fleet'."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="Federation")
 
@@ -173,7 +173,7 @@ class TestThemeFlagLoading:
 
     def test_load_colony_flag_from_theme_when_no_race_flag(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When no race flag_id, loads Colony_Flag.jpg from theme as 'colony'."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="Romulan")
 
@@ -205,7 +205,7 @@ class TestFlagPrecedence:
 
     def test_race_flag_precedence_over_theme(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """RaceAssetLoader returns race flag over theme when both exist."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_race", empire_theme_id="Federation")
 
@@ -235,7 +235,7 @@ class TestFlagPrecedence:
 
     def test_fallback_to_theme_when_race_flag_dir_missing(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When race flag directory doesn't exist, uses theme assets."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_missing", empire_theme_id="Klingon")
 
@@ -269,7 +269,7 @@ class TestMissingAssets:
 
     def test_missing_all_assets_leaves_empty_dict(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When no assets exist, empire_assets[id] is an empty dict."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="NonExistentTheme")
 
@@ -291,7 +291,7 @@ class TestMissingAssets:
 
     def test_missing_fleet_icon_only(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When theme exists but Battlecruiser.png missing, 'fleet' key is not set."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="PartialTheme")
 
@@ -325,7 +325,7 @@ class TestMultipleEmpires:
 
     def test_loads_assets_for_multiple_empires(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """Each empire gets its own asset dict entry from RaceAssetLoader."""
-        from game.ui.screens.strategy_scene import StrategyScreen
+        from game.ui.screens.strategy_screen import StrategyScreen
 
         empire1 = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="Federation")
         empire2 = mock_empire_factory(empire_id=2, flag_id="flag_custom", empire_theme_id="Romulan")

@@ -12,7 +12,7 @@ lazy imports in ui.builder (see left_panel.py, right_panel.py, detail_panel.py).
 # Pre-import submodules in dependency order
 # Exclude workshop_screen due to module-level Tkinter initialization side effects
 from game.ui.renderer import sprites, camera, game_renderer
-from game.ui.screens import battle_scene, battle_screen
+from game.ui.screens import battle_screen, battle_ui
 from game.ui.panels import battle_panels, builder_widgets
 
 # Export for convenience (optional but recommended)
@@ -20,8 +20,8 @@ __all__ = [
     'sprites',
     'camera',
     'game_renderer',
-    'battle_scene',
     'battle_screen',
+    'battle_ui',
     'battle_panels',
     'builder_widgets'
 ]

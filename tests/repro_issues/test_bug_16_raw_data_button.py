@@ -46,9 +46,9 @@ class TestRawDataButtonPosition:
         not (0, 0) which was the buggy position.
         """
         import inspect
-        from game.ui.screens import strategy_screen
+        from game.ui.screens import strategy_ui
 
-        source = inspect.getsource(strategy_screen.StrategyInterface.__init__)
+        source = inspect.getsource(strategy_ui.StrategyUI.__init__)
 
         # The fix: button should be created with calculated position, not (0, 0)
         # Check that graph_rect.right is used for button positioning

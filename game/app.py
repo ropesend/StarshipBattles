@@ -22,12 +22,12 @@ from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.ui.renderer.sprites import SpriteManager
-from game.ui.screens.battle_scene import BattleScreen
+from game.ui.screens.battle_screen import BattleScreen
 from game.ui.screens.setup_screen import BattleSetupScreen
-from game.ui.screens.strategy_scene import StrategyScreen
+from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from Tools.formation_editor import FormationEditorScreen
-from game.ui.screens.test_lab_scene import TestLabScreen
+from game.ui.screens.test_lab_screen import TestLabScreen
 from game.core.profiling import PROFILER, profile_action
 from game.battle_coordinator import (
     update_battle_headless, update_battle_visual,

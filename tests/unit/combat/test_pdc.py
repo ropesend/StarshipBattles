@@ -3,7 +3,7 @@ import pygame
 import math
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component
-from game.ui.screens.battle_scene import BattleScreen
+from game.ui.screens.battle_screen import BattleScreen
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType
 

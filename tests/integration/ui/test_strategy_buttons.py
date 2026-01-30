@@ -3,7 +3,7 @@ import pytest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock
-from game.ui.screens.strategy_screen import StrategyInterface
+from game.ui.screens.strategy_ui import StrategyUI
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
@@ -39,7 +39,7 @@ def strategy_ui():
     pygame.init()
     pygame.display.set_mode((800, 600))
     scene = MockScene()
-    ui = StrategyInterface(scene, 800, 600)
+    ui = StrategyUI(scene, 800, 600)
     return ui
 
 from game.strategy.data.hex_math import HexCoord

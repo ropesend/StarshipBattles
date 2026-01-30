@@ -7,7 +7,7 @@ import pygame
 
 
 
-from game.ui.screens.battle_scene import BattleScreen
+from game.ui.screens.battle_screen import BattleScreen
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import create_component, load_components
@@ -22,8 +22,8 @@ class TestBattleScreen:
         # Note: pygame, registry, and data loading handled by conftest fixtures
         # initialize_ship_data() and load_components() are patched to be no-ops
         # because the reset_game_state fixture already loaded the data
-        # Patch BattleInterface to avoid UI overhead
-        with patch('game.ui.screens.battle_screen.BattleInterface') as MockUI:
+        # Patch BattleUI to avoid UI overhead
+        with patch('game.ui.screens.battle_screen.BattleUI') as MockUI:
             scene = BattleScreen(800, 600)
             scene.ui = MockUI.return_value
             scene.ui.show_overlay = False

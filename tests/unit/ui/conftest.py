@@ -36,8 +36,8 @@ def pytest_configure(config):
         import game.ui.renderer.sprites
         import game.ui.renderer.camera
         import game.ui.renderer.game_renderer
-        import game.ui.screens.battle_scene
         import game.ui.screens.battle_screen
+        import game.ui.screens.battle_ui
         import game.ui.screens.workshop_screen
         import game.ui.panels.battle_panels
         import game.ui.panels.builder_widgets
@@ -58,7 +58,7 @@ def pytest_configure_node(node):
     # Verify critical imports succeeded (they should be loaded by pytest_configure)
     try:
         import game.ui.renderer.sprites
-        import game.ui.screens.battle_scene
+        import game.ui.screens.battle_screen
         import game.ui.panels.battle_panels
     except ImportError as e:
         print(f"ERROR: Worker {node.gateway.id} failed to import game.ui modules: {e}",

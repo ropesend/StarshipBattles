@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Validation Consolidation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. UI File Naming | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. UI File Naming | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. InputHandler Rename | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Stats Service Location | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** Moved ship_validator.py to validation/, updated 13 files
-**Next Action:** Begin Phase 2 - UI File Naming (scene -> screen)
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** Renamed *_scene.py to *_screen.py, *Interface to *UI (19 files updated)
+**Next Action:** Begin Phase 3 - InputHandler Rename (input_handler.py -> battle_input_handler.py)
 **Blockers:** None
 
 ## Overview
