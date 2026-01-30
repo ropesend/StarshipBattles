@@ -22,7 +22,21 @@ class Camera:
         self._zoom_anchor_screen = None
         
     def update(self, dt):
-        """Update camera validation, target following, and smooth zoom."""
+        """
+        Update camera state including smooth zoom interpolation and target following.
+
+        Zoom Animation:
+            Uses exponential interpolation for smooth, natural-feeling zoom.
+            The zoom anchor (mouse position at zoom start) remains stable on screen
+            during the animation - world position under the cursor doesn't shift.
+
+        Target Following:
+            If a target object is set, the camera centers on its position.
+            Dead targets are still followed (to keep viewing the wreckage).
+
+        Args:
+            dt: Delta time in seconds since last frame
+        """
         # Smooth zoom interpolation
         if abs(self.zoom - self.target_zoom) > 0.001:
             # Exponential interpolation for smooth feel
@@ -45,7 +59,22 @@ class Camera:
              self.position = pygame.math.Vector2(self.target.position)
              
     def update_input(self, dt, events):
-        """Handle keyboard and mouse input for camera movement."""
+        """
+        Process keyboard and mouse input for camera control.
+
+        Controls:
+            Arrow Keys / WASD - Pan camera (speed inversely scales with zoom)
+            Middle Mouse Drag - Pan camera by dragging
+            Mouse Wheel       - Zoom in/out centered on cursor position
+
+        Camera Focus:
+            Manual movement (keys or middle-drag) clears any target follow.
+            Mouse wheel zoom preserves target following.
+
+        Args:
+            dt: Delta time in seconds for frame-rate independent movement
+            events: List of pygame events to check for mouse wheel
+        """
         keys = pygame.key.get_pressed()
         speed = 1000 / self.zoom  # Pan faster when zoomed out
         

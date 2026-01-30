@@ -114,7 +114,9 @@ class Paths:
         return _PROJECT_ROOT / "output" / "logs"
 
 
-# Backward compatibility exports
+# Backward compatibility exports - Deprecated in favor of Paths class access
+# New code should use: from game.core.paths import Paths; Paths.ROOT_DIR
+# These module-level exports will be removed in a future version.
 ROOT_DIR = Paths.ROOT_DIR
 DATA_DIR = Paths.DATA_DIR
 ASSET_DIR = Paths.ASSET_DIR

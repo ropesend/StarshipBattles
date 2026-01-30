@@ -8,23 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-47 Phase 1 - Critical UI Documentation
-**Current Status:** PROJ-47 Phase 1 Complete
+**Last Completed:** PROJ-47 Phase 2 - Core Infrastructure Documentation
+**Current Status:** PROJ-47 Phase 2 Complete
 **Current Project:** PROJ-47
-**Current Phase:** Phase 1 Complete
-**Test Status:** 804 passed (testmon), 46 pre-existing failures (PROJ-48 test infrastructure)
+**Current Phase:** Phase 2 Complete
+**Test Status:** 5717 passed (testmon), 52 pre-existing failures (PROJ-48 test infrastructure)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-47 Phase 1 Complete
-- Added docstrings to:
-  - interaction_controller.py: module, class, __init__, register_drop_target, handle_event, update
-  - modifier_row.py: module, class, __init__, _build_linear_controls, _clear_ui
-  - modifier_logic.py: expanded class docstring
-- event_bus.py was already fully documented (no changes needed)
+- PROJ-47 Phase 2 Complete
+- Added type hints and documentation to:
+  - logger.py: 12 method return type hints, typing imports
+  - registry.py: 3 method type hints, PROJ-38 deprecation timeline in docstring
+  - paths.py: backward compatibility deprecation comment
+  - input_handler.py: module docstring, constant comments, keybinding docs
+  - camera.py: update() and update_input() docstrings with zoom anchor explanation
+  - protocols.py: 5 protocol property docstrings (ILocatable, INamed, IOwnable, ICombatant, IDamageable)
 - All py_compile checks pass
-- 46 pre-existing test failures are test infrastructure issues (for PROJ-48)
-- Next: Phase 2 - Core Infrastructure Documentation
+- 52 pre-existing test failures are test infrastructure issues (for PROJ-48)
+- Next: Phase 3 - Simulation Documentation
 
 ---
 
@@ -100,6 +102,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-47 | Phase 2 | Complete | 5717 testmon | fc01f905 | Core docs: logger, registry, paths, input_handler, camera, protocols |
 | 2026-01-30 | PROJ-47 | Phase 1 | Complete | 804 testmon | a00843e5 | UI docstrings: interaction_controller, modifier_row, modifier_logic |
 | 2026-01-30 | PROJ-46 | Audit Cycle 1 | PASSED | 5723 passed | e3f681d5 | Fixed fixture naming + panel constructor params |
 | 2026-01-30 | PROJ-46 | Phase 7 | Complete | 1034 testmon | f8c88b3a | Screen naming: renamed 6 classes to use Screen suffix, 61 files |

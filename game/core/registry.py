@@ -23,6 +23,14 @@ TIER 2 - Dependency Injection (PROJ-27) [RECOMMENDED]:
 TIER 3 - Direct Singleton Access (for internal/low-level code):
     # Use sparingly - prefer DI for better testability
     RegistryManager.instance().components
+
+PROJ-38: Deprecation Timeline
+-----------------------------
+- v0.9.0: Deprecation warnings added to utility functions
+- v1.0.0 (Target): Remove deprecated utility functions (get_component_registry, etc.)
+- Migration: Replace get_component_registry() with GameRegistries via DI
+  - Use get_default_registry_provider() for production code
+  - Use TestRegistryProvider for test code with isolated data
 """
 
 __all__ = [
@@ -275,11 +283,11 @@ class RegistryManager:
         self.resources.clear()
         self._validator = None
 
-    def get_validator(self):
+    def get_validator(self) -> Any:
         """Get the ship design validator (may be None if not initialized)."""
         return self._validator
-    
-    def set_validator(self, validator):
+
+    def set_validator(self, validator: Any) -> None:
         """
         Set the ship design validator.
 
@@ -292,7 +300,7 @@ class RegistryManager:
         self._check_frozen()
         self._validator = validator
 
-    def _check_frozen(self):
+    def _check_frozen(self) -> None:
         """Helper to raise error if modifications are attempted while frozen."""
         if self._frozen:
             raise FrozenStateException(

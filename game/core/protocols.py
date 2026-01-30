@@ -82,7 +82,7 @@ class ILocatable(Protocol):
     """Protocol for objects with a location property."""
     @property
     def location(self) -> Any:
-        """HexCoord or similar location type."""
+        """Entity's position (HexCoord for strategy, Vector2 for simulation)."""
         ...
 
 
@@ -91,6 +91,7 @@ class INamed(Protocol):
     """Protocol for objects with a name property."""
     @property
     def name(self) -> str:
+        """Human-readable display name, always non-empty."""
         ...
 
 
@@ -99,6 +100,7 @@ class IOwnable(Protocol):
     """Protocol for objects that can be owned by a player."""
     @property
     def owner_id(self) -> Optional[int]:
+        """Player ID of owner, None for unowned/neutral entities."""
         ...
 
 
@@ -255,6 +257,7 @@ class ICombatant(Protocol):
 
     @property
     def is_alive(self) -> bool:
+        """True if entity can participate in combat (not destroyed/derelict)."""
         ...
 
     @property
@@ -276,6 +279,7 @@ class IDamageable(Protocol):
 
     @property
     def is_derelict(self) -> bool:
+        """True if destroyed but still present on battlefield (hulk/wreckage)."""
         ...
 
 

@@ -1,14 +1,19 @@
+"""
+Input handling for game state-specific keyboard commands.
 
+Provides centralized keyboard input routing based on current GameState.
+Decouples input logic from the main Game class for testability.
+"""
 import pygame
 from game.core.constants import GameState
 
 
-# Speed multiplier constants for simulation
-# Min: 1/256 (very slow motion), Max: 16x (fast forward), Pause UI uses 100x
-MIN_SPEED_MULTIPLIER = 0.00390625  # 1/256 - minimum slow-motion speed
-MAX_SPEED_MULTIPLIER = 16.0        # Maximum fast-forward speed
-NORMAL_SPEED = 1.0                 # Real-time speed
-UI_PAUSE_SPEED = 100.0             # Speed used by pause/UI mode for instant updates
+# Speed multiplier constants for simulation time control
+# These control how fast the battle simulation runs relative to real-time
+MIN_SPEED_MULTIPLIER = 0.00390625  # 1/256 - minimum slow-motion speed for detailed observation
+MAX_SPEED_MULTIPLIER = 16.0        # 16x - maximum fast-forward speed for quick resolution
+NORMAL_SPEED = 1.0                 # 1x - real-time simulation speed
+UI_PAUSE_SPEED = 100.0             # 100x - instant updates when UI is paused (menu open, etc.)
 
 
 class InputHandler:
@@ -19,12 +24,36 @@ class InputHandler:
     
     @staticmethod
     def handle_keydown(game, event):
-        """Handle key press events."""
+        """
+        Route keyboard events to the appropriate handler based on game state.
+
+        Currently only handles BATTLE state keyboard shortcuts. Other states
+        (MAIN_MENU, BUILDER, etc.) handle their own input through pygame_gui.
+
+        Args:
+            game: The main Game instance containing current state and scenes
+            event: pygame.KEYDOWN event to process
+        """
         if game.state == GameState.BATTLE:
             InputHandler._handle_battle_keydown(game, event)
 
     @staticmethod
     def _handle_battle_keydown(game, event):
+        """
+        Handle keyboard shortcuts during battle simulation.
+
+        Keybindings:
+            O       - Toggle overlay display (ship stats, targeting lines)
+            SPACE   - Pause/unpause simulation
+            COMMA   - Slow down simulation (halve speed, min 1/256x)
+            PERIOD  - Speed up simulation (double speed, max 16x)
+            M       - Reset to normal speed (1x real-time)
+            SLASH   - Set UI pause speed (100x for instant resolution)
+
+        Args:
+            game: The main Game instance
+            event: pygame.KEYDOWN event to process
+        """
         scene = game.battle_scene
         key = event.key
         

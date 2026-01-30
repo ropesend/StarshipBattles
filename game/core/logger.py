@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from typing import Any, Callable, Optional
 
 from game.core.paths import Paths
 
@@ -45,52 +46,52 @@ class Logger:
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
         
-    def log(self, msg):
+    def log(self, msg: str) -> None:
         if self.enabled:
             self.logger.debug(msg)
-            
-    def info(self, msg):
+
+    def info(self, msg: str) -> None:
         if self.enabled:
             self.logger.info(msg)
-            
-    def warning(self, msg):
+
+    def warning(self, msg: str) -> None:
         if self.enabled:
             self.logger.warning(msg)
 
-    def error(self, msg):
+    def error(self, msg: str) -> None:
         if self.enabled:
             self.logger.error(msg)
 
-    def set_enabled(self, enabled):
+    def set_enabled(self, enabled: bool) -> None:
         self.enabled = enabled
 
 # Global accessor
 _logger = Logger()
 
-def log_debug(msg):
+def log_debug(msg: str) -> None:
     _logger.log(msg)
 
-def log_info(msg):
+def log_info(msg: str) -> None:
     _logger.info(msg)
 
-def log_warning(msg):
+def log_warning(msg: str) -> None:
     _logger.warning(msg)
 
-def log_error(msg):
+def log_error(msg: str) -> None:
     _logger.error(msg)
-    
-def set_logging(enabled):
+
+def set_logging(enabled: bool) -> None:
     _logger.set_enabled(enabled)
 
 # Event Logging for Simulation/Tests
 _event_handler = None
 
-def set_event_handler(handler):
+def set_event_handler(handler: Optional[Callable[..., Any]]) -> None:
     """Register a callback for structured events."""
     global _event_handler
     _event_handler = handler
 
-def log_event(event_type, **kwargs):
+def log_event(event_type: str, **kwargs: Any) -> None:
     """Log a structured event if a handler is registered.
 
     Handler exceptions are caught and logged to prevent test or simulation
