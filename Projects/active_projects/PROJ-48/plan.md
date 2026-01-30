@@ -25,15 +25,16 @@
 ## Current State
 **Last Updated:** 2026-01-30
 **Active Phase:** Phase 3 In Progress - Test File Splitting
-**Last Action:** Completed Tasks 3.1.1 and 3.1.2 - Split 2 critical monoliths
-**Next Action:** Continue Phase 3 - Split remaining monoliths (Tasks 3.1.3, 3.1.4, 3.2, 3.3)
+**Last Action:** Completed Task 3.1.3 - Split test_battle_controller.py (1425 LOC) -> 4 files
+**Next Action:** Continue Phase 3 - Split remaining monoliths (Task 3.1.4, 3.2, 3.3)
 **Blockers:** None
 
 **Phase 3 Progress:**
 - Split test_ship_stats_calculator.py (1775 LOC) -> 5 files in tests/unit/strategy/ship_stats/ (70 tests)
 - Split test_ship_instance_proj08.py (1458 LOC) -> 3 files in tests/unit/strategy/ship_instance/ (71 tests)
-- Remaining: 2 critical monoliths (test_battle_controller, test_fleet), 20 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
-- Tests pass: 5734 passed (pre-existing UI/builder failures unchanged)
+- Split test_battle_controller.py (1425 LOC) -> 4 files in tests/unit/simulation/battle_controller/ (110 tests)
+- Remaining: 1 critical monolith (test_fleet), 20 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
+- Tests pass: simulation tests verified
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.

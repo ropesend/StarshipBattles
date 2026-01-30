@@ -57,22 +57,22 @@
 
 ---
 
-#### 3.1.3: Split test_battle_controller.py (1317 LOC -> 4 files)
+#### 3.1.3: Split test_battle_controller.py (1425 LOC -> 4 files) ✅ COMPLETE
 **Source:** `tests/unit/simulation/test_battle_controller.py`
 **Target:** `tests/unit/simulation/battle_controller/`
 **Tests:** `pytest tests/unit/simulation/battle_controller/ -v`
 
-- [ ] Create directory `tests/unit/simulation/battle_controller/`
-- [ ] Create `__init__.py` and `conftest.py`
-- [ ] Split into:
-  - [ ] `test_initialization.py` - Init, configure, add ships
-  - [ ] `test_execution.py` - Start, update, run_headless, run_ticks
-  - [ ] `test_mechanics.py` - Retreat, reinforcements, edge finding
-  - [ ] `test_utilities.py` - Queries, callbacks, reset, results
-- [ ] Delete original file after verification
-- [ ] Verify: All tests pass, same count
+- [x] Create directory `tests/unit/simulation/battle_controller/`
+- [x] Create `__init__.py` and `conftest.py`
+- [x] Split into:
+  - [x] `test_initialization.py` - TestBattleControllerInit, TestBattleControllerConfigure
+  - [x] `test_execution.py` - TestBattleControllerStart, TestBattleControllerUpdate, TestBattleControllerRunHeadless, TestBattleControllerRunTicks
+  - [x] `test_mechanics.py` - TestBattleControllerAddShips, TestBattleControllerAddShipsFromState, TestBattleControllerRetreat, TestBattleControllerReinforcements, TestBattleControllerFindNearestEdge, TestBattleControllerIsAtMapEdge
+  - [x] `test_utilities.py` - TestBattleControllerStateSaveLoad, TestBattleControllerQueryMethods, TestBattleControllerCallbacks, TestBattleControllerReset, TestFactoryFunctions, TestBattleControllerGetResults, TestBattleMode, TestBattleConfig, TestRetreatState, TestBattleControllerModeHandlers
+- [x] Delete original file after verification
+- [x] Verify: All tests pass (110 passed), same count (110 = 110)
 
-**Notes:**
+**Notes:** Split into 4 files with conftest.py for shared fixtures.
 
 ---
 
