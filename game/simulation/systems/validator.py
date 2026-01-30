@@ -1,396 +1,57 @@
 """Ship design validation rules.
 
-PROJ-21: ValidationResult is now imported from game.core.validation
-for cross-layer consistency.
+PROJ-43 Phase 11: This file now re-exports from the canonical location
+at game/simulation/ship_validator.py. The implementation was consolidated
+to use the template method pattern in game/simulation/validation/base.py.
 
-PROJ-38: Added registries parameter to ShipDesignValidator for dependency injection.
+For backward compatibility, all previously exported classes are available
+from this module.
+
+DEPRECATED: Import directly from game.simulation.ship_validator or use
+the package-level import from game.simulation (ShipDesignValidator).
 """
-from abc import ABC, abstractmethod
-from typing import List, Tuple, Optional, Dict, TYPE_CHECKING
-from game.simulation.components.component import Component
-from game.core.constants import LayerType
+
+# Re-export all validation classes from canonical location
+from game.simulation.ship_validator import (
+    # Main validator
+    ShipDesignValidator,
+    # Individual rules (for direct use in UI filtering, etc.)
+    LayerConstraintRule,
+    UniqueComponentRule,
+    ExclusiveGroupRule,
+    MountDependencyRule,
+    LayerRestrictionDefinitionRule,
+    MassBudgetRule,
+    ClassRequirementsRule,
+    ResourceDependencyRule,
+)
+
+# Re-export base classes for type checking
+from game.simulation.validation.base import (
+    ValidationRule,
+    DesignValidationRule,
+    AdditionValidationRule,
+)
+
+# Re-export ValidationResult for convenience
 from game.core.validation import ValidationResult
 
-if TYPE_CHECKING:
-    from game.core.registry import GameRegistries
-
-class ValidationRule(ABC):
-    @abstractmethod
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        """
-        Validate a specific component addition or the entire ship state.
-        If component and layer_type are provided, validates the addition.
-        Otherwise, validates the ship state.
-        """
-        pass
-
-class LayerConstraintRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        if not component or not layer_type:
-            return result
-
-        if layer_type not in ship.layers:
-             result.add_error(f"Layer {layer_type.name} does not exist on {ship.ship_class}")
-             return result
-
-        if ship.vehicle_type not in component.allowed_vehicle_types:
-            result.add_error(f"Component {component.name} not allowed on {ship.vehicle_type}")
-            
-        return result
-
-class UniqueComponentRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        if not component: 
-            return result # This rule only checks addition for now, or could check full ship for duplicates
-
-        if component.data.get('is_unique', False):
-             for layer in ship.layers.values():
-                 for c in layer['components']:
-                     if c.id == component.id:
-                         result.add_error(f"Usage limit exceeded for unique component {component.name}")
-                         return result
-        return result
-
-class ExclusiveGroupRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        if not component:
-            return result
-        
-        ex_group = component.data.get('exclusive_group')
-        if ex_group:
-             for layer in ship.layers.values():
-                 for c in layer['components']:
-                     if c.data.get('exclusive_group') == ex_group:
-                         result.add_error(f"Key component conflict: {ex_group}")
-                         return result
-        return result
-
-class MountDependencyRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        if component and layer_type:
-            # Single component validation (adding new component)
-            return self._validate_component_addition(ship, component, layer_type)
-        else:
-            # Full ship scan - validate all mount dependencies
-            return self._validate_full_ship(ship)
-
-    def _validate_component_addition(self, ship, component: Component, layer_type: LayerType) -> ValidationResult:
-        """Validate adding a single component that may require a mount."""
-        result = ValidationResult(True)
-        req_mount = component.data.get('required_mount')
-        if req_mount:
-            # Count mounts vs existing users in THIS layer
-            mount_count = 0
-            user_count = 0
-
-            target_layer_comps = ship.layers[layer_type]['components']
-            for c in target_layer_comps:
-                if c.data.get('mount_type') == req_mount:
-                    mount_count += 1
-                if c.data.get('required_mount') == req_mount:
-                    user_count += 1
-
-            if mount_count < (user_count + 1):
-                result.add_error(f"Missing required mount: {req_mount} in {layer_type.name}")
-
-        return result
-
-    def _validate_full_ship(self, ship) -> ValidationResult:
-        """Validate all mount dependencies across the entire ship."""
-        result = ValidationResult(True)
-
-        # Check each layer independently (mounts must be in same layer as users)
-        for layer_type, layer_data in ship.layers.items():
-            components = layer_data.get('components', [])
-
-            # Count mounts by type in this layer
-            mount_counts: Dict[str, int] = {}
-            for c in components:
-                mount_type = c.data.get('mount_type')
-                if mount_type:
-                    mount_counts[mount_type] = mount_counts.get(mount_type, 0) + 1
-
-            # Count users by required mount type in this layer
-            user_counts: Dict[str, int] = {}
-            for c in components:
-                req_mount = c.data.get('required_mount')
-                if req_mount:
-                    user_counts[req_mount] = user_counts.get(req_mount, 0) + 1
-
-            # Validate: for each mount type needed, check if enough mounts exist
-            for mount_type, user_count in user_counts.items():
-                available = mount_counts.get(mount_type, 0)
-                if available < user_count:
-                    result.add_error(
-                        f"Missing required mount: {mount_type} in {layer_type.name} "
-                        f"(need {user_count}, have {available})"
-                    )
-
-        return result
-
-class LayerRestrictionDefinitionRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        if not component or not layer_type:
-            return result
-
-        restrictions = ship.layers[layer_type]['restrictions']
-        
-        # 1. Process "Block" Rules (Blacklist)
-        for r in restrictions:
-            if r.startswith("block_classification:"):
-                blocked_class = r.split(":")[1]
-                if component.data.get('major_classification') == blocked_class:
-                    result.add_error(f"Classification '{blocked_class}' blocked in this layer")
-            elif r.startswith("block_id:"):
-                blocked_id = r.split(":")[1]
-                if component.id == blocked_id:
-                     result.add_error(f"Component '{blocked_id}' blocked in this layer")
-            elif r.startswith("deny_ability:"):
-                denied_ability = r.split(":")[1]
-                if component.has_ability(denied_ability):
-                    result.add_error(f"Ability '{denied_ability}' blocked in this layer")
-
-        # 2. Process "Allow" Rules (Whitelist)
-        # Logic: If ANY allow rule exists, the component MUST match at least one of them.
-        # If NO allow rules exist, everything is allowed (unless blocked above).
-        
-        allow_rules = [r for r in restrictions if r.startswith("allow_")]
-        
-        if allow_rules:
-            allowed = False
-            for r in allow_rules:
-                if r.startswith("allow_classification:"):
-                    target = r.split(":")[1]
-                    if component.data.get('major_classification') == target:
-                        allowed = True
-                        break
-                elif r.startswith("allow_id:"):
-                    target = r.split(":")[1]
-                    if component.id == target:
-                        allowed = True
-                        break
-                elif r.startswith("allow_ability:"):
-                    target_ability = r.split(":")[1]
-                    if component.has_ability(target_ability):
-                        allowed = True
-                        break
-            
-            if not allowed:
-                 result.add_error(f"Layer restricts components to specific types/classes only.")
-
-        return result
-
-class MassBudgetRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        
-        # Check overall ship mass
-        current_total = ship.current_mass
-        if component:
-             current_total += component.mass
-             
-        if current_total > ship.max_mass_budget:
-            result.add_error(f"Mass budget exceeded for {ship.name}")
-
-        # Check layer mass
-        if component and layer_type:
-             if layer_type in ship.layers:
-                layer_data = ship.layers[layer_type]
-                current_layer_mass = sum(c.mass for c in layer_data['components'])
-                max_layer_mass = ship.max_mass_budget * layer_data.get('max_mass_pct', 1.0)
-                
-                if current_layer_mass + component.mass > max_layer_mass:
-                    result.add_error(f"Mass budget exceeded for {layer_type.name}")
-
-        return result
-
-
-class ClassRequirementsRule(ValidationRule):
-    """Validates class-specific requirements (crew, life support, etc.).
-
-    PROJ-38: Added registries parameter for dependency injection.
-    """
-
-    def __init__(self, *, registries: Optional['GameRegistries'] = None):
-        """Initialize the rule.
-
-        PROJ-38: Added registries parameter for DI.
-
-        Args:
-            registries: Optional GameRegistries for DI. Falls back to VEHICLE_CLASSES if None.
-        """
-        self._registries = registries
-
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        # This rule validates the whole design
-
-        from game.simulation.systems.stats import ShipStatsCalculator
-
-        # PROJ-38: Use injected registries or fallback
-        if self._registries is not None:
-            vehicle_classes = self._registries.vehicle_classes
-        else:
-            from game.simulation.entities.ship import VEHICLE_CLASSES
-            vehicle_classes = VEHICLE_CLASSES
-
-        class_def = vehicle_classes.get(ship.ship_class, {})
-        requirements = class_def.get('requirements', {})
-        
-        all_components = [c for layer in ship.layers.values() for c in layer['components']]
-
-        stats_calculator = ShipStatsCalculator(vehicle_classes)
-        ability_totals = stats_calculator.calculate_ability_totals(all_components)
-        
-        for req_name, req_def in requirements.items():
-            ability_name = req_def.get('ability', '')
-            min_value = req_def.get('min_value', 0)
-            
-            if not ability_name:
-                continue
-            
-            current_value = ability_totals.get(ability_name, 0)
-            
-            # Format name helper (duplicated from game.simulation.entities.ship.py or we can move it)
-            import re
-            nice_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', ability_name)
-
-            if isinstance(min_value, bool):
-                if min_value and not current_value:
-                    result.add_error(f"Needs {nice_name}")
-            elif isinstance(min_value, (int, float)):
-                if current_value < min_value:
-                    result.add_error(f"Needs {nice_name}")
-
-        # Crew & Life Support
-        crew_capacity = ability_totals.get('CrewCapacity', 0)
-        if crew_capacity < 0: crew_capacity = 0
-        
-        life_support = ability_totals.get('LifeSupportCapacity', 0)
-        crew_required = ability_totals.get('CrewRequired', 0)
-        
-        
-        # legacy_req removed in Phase 9
-        pass
-        
-        if crew_capacity < crew_required:
-             result.add_error(f"Need {crew_required - crew_capacity} more crew housing")
-
-        if crew_required > 0 and life_support < crew_required:
-            result.add_error(f"Need {crew_required - life_support} more life support")
-            
-        return result
-
-
-class ResourceDependencyRule(ValidationRule):
-    def validate(self, ship, component: Optional[Component] = None, layer_type: Optional[LayerType] = None) -> ValidationResult:
-        result = ValidationResult(True)
-        # Scan all components to determine needs vs sources
-        needs_fuel = False
-        needs_ammo = False
-        needs_energy_storage = False 
-        
-        has_fuel_storage = False
-        has_ammo_storage = False
-        has_energy_storage = False # Battery
-        
-        all_components = []
-        for l in ship.layers.values():
-            all_components.extend(l['components'])
-            
-        for c in all_components:
-            abilities = getattr(c, 'abilities', {})
-            
-            # Check Consumption
-            if 'ResourceConsumption' in abilities:
-                for cons in abilities['ResourceConsumption']:
-                    if not isinstance(cons, dict): continue
-                    res_name = cons.get('resource')
-                    if not res_name: continue
-                    
-                    if res_name == 'fuel':
-                        needs_fuel = True
-                    elif res_name == 'ammo':
-                        needs_ammo = True
-                    elif res_name == 'energy':
-                        needs_energy_storage = True
-
-            # Check Sources (Storage)
-            if 'ResourceStorage' in abilities:
-                 for store in abilities['ResourceStorage']:
-                    if not isinstance(store, dict): continue
-                    res_name = store.get('resource')
-                    capacity = store.get('amount', 0)
-                    
-                    if capacity > 0:
-                        if res_name == 'fuel':
-                            has_fuel_storage = True
-                        elif res_name == 'ammo':
-                            has_ammo_storage = True
-                        elif res_name == 'energy':
-                            has_energy_storage = True
-            
-        # Warnings
-        if needs_fuel and not has_fuel_storage:
-             result.add_warning("Needs Fuel Storage")
-             
-        if needs_ammo and not has_ammo_storage:
-             result.add_warning("Needs Ammo Storage")
-             
-        if needs_energy_storage and not has_energy_storage:
-             result.add_warning("Needs Energy Storage")
-             
-        return result
-
-class ShipDesignValidator:
-    """PROJ-38: Added registries parameter for dependency injection."""
-
-    def __init__(self, *, registries: Optional['GameRegistries'] = None):
-        """Initialize the validator.
-
-        PROJ-38: Added registries parameter for DI.
-
-        Args:
-            registries: Optional GameRegistries for DI. Passed to ClassRequirementsRule.
-        """
-        self.addition_rules: List[ValidationRule] = [
-            LayerConstraintRule(),
-            UniqueComponentRule(),
-            ExclusiveGroupRule(),
-            MountDependencyRule(),
-            LayerRestrictionDefinitionRule(),
-            MassBudgetRule()
-        ]
-        self.design_rules: List[ValidationRule] = [
-             ClassRequirementsRule(registries=registries),
-
-             ResourceDependencyRule(),
-             # MassBudgetRule() could also apply here for final check
-             MassBudgetRule()
-        ]
-
-    def validate_addition(self, ship, component: Component, layer_type: LayerType) -> ValidationResult:
-        final_result = ValidationResult(True)
-        for rule in self.addition_rules:
-            res = rule.validate(ship, component, layer_type)
-            if not res.is_valid:
-                final_result.is_valid = False
-                final_result.errors.extend(res.errors)
-        return final_result
-
-    def validate_design(self, ship) -> ValidationResult:
-        final_result = ValidationResult(True)
-        for rule in self.design_rules:
-            res = rule.validate(ship)
-            # Accumulate errors but don't stop? Or stop on critical?
-            # Usually accumulation is better for reporting.
-            if not res.is_valid:
-                final_result.is_valid = False
-                final_result.errors.extend(res.errors)
-            final_result.warnings.extend(res.warnings)
-        return final_result
-
+__all__ = [
+    # Main validator
+    'ShipDesignValidator',
+    # Individual rules
+    'LayerConstraintRule',
+    'UniqueComponentRule',
+    'ExclusiveGroupRule',
+    'MountDependencyRule',
+    'LayerRestrictionDefinitionRule',
+    'MassBudgetRule',
+    'ClassRequirementsRule',
+    'ResourceDependencyRule',
+    # Base classes
+    'ValidationRule',
+    'DesignValidationRule',
+    'AdditionValidationRule',
+    # Result type
+    'ValidationResult',
+]

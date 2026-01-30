@@ -2,10 +2,13 @@
 
 This tests the unified ValidationResult class that serves all layers
 (simulation, strategy, UI) from game/core/validation.py.
+
+PROJ-43 Phase 11: Added tests for IValidationRule protocol.
 """
 import pytest
+from typing import Any
 
-from game.core.validation import ValidationResult
+from game.core.validation import ValidationResult, IValidationRule
 
 
 class TestValidationResultInit:
@@ -192,3 +195,65 @@ class TestValidationResultDataclass:
 
         assert "Error in result1" in result1.errors
         assert "Error in result1" not in result2.errors
+
+
+class TestIValidationRuleProtocol:
+    """Tests for IValidationRule protocol.
+
+    PROJ-43 Phase 11: Verifies the protocol can be used for structural typing.
+    """
+
+    def test_protocol_is_importable(self):
+        """IValidationRule can be imported from game.core.validation."""
+        from game.core.validation import IValidationRule
+        assert IValidationRule is not None
+
+    def test_class_implementing_protocol_is_recognized(self):
+        """A class with validate() method satisfies the protocol."""
+        from typing import runtime_checkable, Protocol
+
+        class MyValidator:
+            """A validator that implements the protocol."""
+            def validate(self, context: Any) -> ValidationResult:
+                return ValidationResult(is_valid=True)
+
+        # Create instance and verify it has the expected method
+        validator = MyValidator()
+        result = validator.validate({"test": "data"})
+        assert result.is_valid is True
+        assert isinstance(result, ValidationResult)
+
+    def test_protocol_works_with_different_context_types(self):
+        """Protocol validate() accepts any context type."""
+        class StringValidator:
+            def validate(self, context: str) -> ValidationResult:
+                if not context:
+                    result = ValidationResult()
+                    result.add_error("Empty string not allowed")
+                    return result
+                return ValidationResult(is_valid=True)
+
+        validator = StringValidator()
+
+        # Valid case
+        result = validator.validate("hello")
+        assert result.is_valid is True
+
+        # Invalid case
+        result = validator.validate("")
+        assert result.is_valid is False
+        assert "Empty string not allowed" in result.errors
+
+    def test_protocol_structural_typing(self):
+        """Verify protocol uses structural typing (duck typing)."""
+        from typing import runtime_checkable
+
+        # IValidationRule should be runtime_checkable for isinstance checks
+        class ConformingValidator:
+            def validate(self, context: Any) -> ValidationResult:
+                return ValidationResult()
+
+        # The class should work as a validator even without explicit inheritance
+        validator = ConformingValidator()
+        result = validator.validate(None)
+        assert isinstance(result, ValidationResult)

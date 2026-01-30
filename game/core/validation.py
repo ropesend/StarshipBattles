@@ -9,9 +9,51 @@ PROJ-21 Phase 1: Consolidated from 5 duplicate implementations:
 - game/simulation/systems/validator.py
 - game/strategy/engine/turn_engine.py
 - game/ui/screens/race_validator.py
+
+PROJ-43 Phase 11: Added IValidationRule protocol for cross-layer contracts.
 """
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Protocol, runtime_checkable
+
+
+@runtime_checkable
+class IValidationRule(Protocol):
+    """Protocol for validation rules across all layers.
+
+    This protocol defines the contract for validators that can be used
+    consistently across simulation, strategy, and UI layers. Using Protocol
+    enables structural typing (duck typing) - any class with a matching
+    validate() method satisfies this protocol without explicit inheritance.
+
+    The context parameter is intentionally typed as Any to allow different
+    layers to pass their domain-specific objects (ships, fleets, race configs).
+
+    Usage:
+        class MyValidator:
+            def validate(self, context: Any) -> ValidationResult:
+                result = ValidationResult()
+                if not context:
+                    result.add_error("Context required")
+                return result
+
+        # MyValidator automatically satisfies IValidationRule
+        validator: IValidationRule = MyValidator()
+        result = validator.validate(some_object)
+    """
+
+    def validate(self, context: Any) -> 'ValidationResult':
+        """Validate the given context.
+
+        Args:
+            context: The object to validate. Type varies by domain:
+                - Simulation: Ship, Component, etc.
+                - Strategy: Fleet, Galaxy, etc.
+                - UI: RaceConfig, etc.
+
+        Returns:
+            ValidationResult with is_valid, errors, and warnings.
+        """
+        ...
 
 
 @dataclass

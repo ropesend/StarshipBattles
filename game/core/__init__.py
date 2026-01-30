@@ -22,7 +22,7 @@ Logging (game.core.logger):
     log_debug, log_info, log_warning, log_error, set_logging
 
 Validation (game.core.validation):
-    ValidationResult
+    ValidationResult, IValidationRule
 
 Configuration (game.core.config):
     DisplayConfig, AIConfig, PhysicsConfig, BattleConfig, UIConfig
@@ -69,7 +69,7 @@ from game.core.logger import (
 )
 
 # Validation
-from game.core.validation import ValidationResult
+from game.core.validation import ValidationResult, IValidationRule
 
 # Configuration
 from game.core.config import (
@@ -108,7 +108,7 @@ __all__ = [
     # Logging
     'log_debug', 'log_info', 'log_warning', 'log_error', 'set_logging',
     # Validation
-    'ValidationResult',
+    'ValidationResult', 'IValidationRule',
     # Configuration
     'DisplayConfig', 'AIConfig', 'PhysicsConfig', 'BattleConfig', 'UIConfig',
     # Paths
