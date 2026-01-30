@@ -28,7 +28,8 @@ from game.simulation.components.modifiers import calculate_stat_multipliers
 
 
 # Default damage threshold - components become useless below this HP percentage
-DEFAULT_DAMAGE_THRESHOLD = 0.3  # 30%
+# PROJ-44: Unified to 50% to match CombatConstants.DEFAULT_DAMAGE_THRESHOLD
+DEFAULT_DAMAGE_THRESHOLD = 0.5  # 50% - aligned with simulation layer
 
 # Component types that never degrade (always 100% effective)
 NON_DEGRADING_TYPES = {'Armor'}

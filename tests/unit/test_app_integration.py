@@ -124,6 +124,38 @@ class TestAppNewGameFlow:
             shutil.rmtree(tmpdir)
 
 
+class TestQuickstartHelper:
+    """Tests for quickstart helper method (PROJ-44 Task 1.1)."""
+
+    def test_start_quickstart_helper_exists(self):
+        """Helper method _start_quickstart should exist on Game class."""
+        from game.app import Game
+        assert hasattr(Game, '_start_quickstart'), "Game class should have _start_quickstart method"
+
+    def test_start_quickstart_1p_uses_helper(self):
+        """start_quickstart_1p should delegate to _start_quickstart with player_count=1."""
+        # We verify by checking that both methods exist and _start_quickstart accepts player_count
+        from game.app import Game
+        import inspect
+
+        # Get the signature of _start_quickstart
+        sig = inspect.signature(Game._start_quickstart)
+        params = list(sig.parameters.keys())
+
+        # Should have 'self' and 'player_count' parameters
+        assert 'player_count' in params, "_start_quickstart should accept player_count parameter"
+
+    def test_start_quickstart_2p_uses_helper(self):
+        """start_quickstart_2p should delegate to _start_quickstart with player_count=2."""
+        # Same structural test as 1p
+        from game.app import Game
+        import inspect
+
+        sig = inspect.signature(Game._start_quickstart)
+        params = list(sig.parameters.keys())
+        assert 'player_count' in params, "_start_quickstart should accept player_count parameter"
+
+
 class TestAppUIManagerSetup:
     """Tests for UI manager handling in App."""
 

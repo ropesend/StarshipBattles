@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Quick Wins (DRY, Magic Numbers) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Quick Wins (DRY, Magic Numbers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Registry & Service Extraction | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Helper Methods | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Decomposition | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -24,11 +24,11 @@
 | 9. Minor Cleanup | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-28 18:05
-**Active Phase:** Planning Complete - Ready for Implementation
-**Last Action:** Project setup complete - all 9 phase checklists created
-**Next Action:** Run `pytest tests/` to establish baseline, then begin Phase 1, Task 1.1
-**Blockers:** Other projects must be completed first (PROJ-43)
+**Last Updated:** 2026-01-29
+**Active Phase:** Phase 2 - Registry & Service Extraction
+**Last Action:** Phase 1 complete - DRY violations fixed, SimulationConstants created, damage threshold unified
+**Next Action:** Begin Phase 2, Task 2.1 - see phase_2_checklist.md
+**Blockers:** None
 
 ## Overview
 A comprehensive refactoring project to address 35+ code quality issues including 8 god classes (1000+ LOC files), DRY violations, SOLID violations, magic numbers, and code smells. Uses a **risk-based approach** - tackling the most tightly-coupled code first to reduce cascading changes.
@@ -69,9 +69,9 @@ A comprehensive refactoring project to address 35+ code quality issues including
 - [Full plan details](C:\Users\rossr\.claude\plans\cheerful-spinning-candy.md) - Detailed task breakdown
 
 ## Test Baseline
-- **Date:** 2026-01-28
-- **Tests:** 5199 passed, 3 skipped
-- **Warnings:** 28291 (mostly deprecation warnings for registry access - will be fixed in Phase 2)
+- **Date:** 2026-01-29 (Phase 1 complete)
+- **Tests:** 5398 passed, 3 skipped
+- **Warnings:** 213 (reduced from 28291 after PROJ-42 completion)
 
 ## Verification
 - [ ] All phase checklists complete

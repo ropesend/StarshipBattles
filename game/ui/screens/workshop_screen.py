@@ -13,6 +13,7 @@ from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
+from game.ui.utils import create_centered_rect
 from game.core.constants import LayerType
 from game.core.registry import get_default_registry_provider
 # PROJ-43: Removed direct simulation imports - using adapters instead
@@ -777,11 +778,7 @@ class DesignWorkshopGUI:
                     self.show_error(f"Design not found: {design_id}")
 
             # Open design selector window
-            window_rect = pygame.Rect(
-                self.width // 2 - 600,
-                self.height // 2 - 400,
-                1200, 800
-            )
+            window_rect = create_centered_rect(1200, 800, self.width, self.height)
             selector = DesignSelectorWindow(
                 rect=window_rect,
                 manager=self.ui_manager,
@@ -899,11 +896,7 @@ class DesignWorkshopGUI:
                     self.show_error(f"Design not found: {design_id}")
 
             # Open design selector window
-            window_rect = pygame.Rect(
-                self.width // 2 - 600,
-                self.height // 2 - 400,
-                1200, 800
-            )
+            window_rect = create_centered_rect(1200, 800, self.width, self.height)
             _selector = DesignSelectorWindow(
                 rect=window_rect,
                 manager=self.ui_manager,

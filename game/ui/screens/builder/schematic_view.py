@@ -7,6 +7,7 @@ PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
 import pygame
 import math
 from game.core.constants import LayerType  # Canonical location for LayerType
+from game.ui.utils import calculate_ship_image_scale
 
 from game.ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
@@ -67,31 +68,27 @@ class SchematicView:
         ship_img = self.theme_manager.get_image(theme_id, ship.ship_class)
         
         if ship_img:
-            img_w, img_h = ship_img.get_size()
-            
-            # Robust scaling using metrics if available
+            # Get visible metrics to ignore transparent padding
             metrics = self.theme_manager.get_image_metrics(theme_id, ship.ship_class)
-            visible_size = max(img_w, img_h)
-            if metrics:
-                visible_size = max(metrics.width, metrics.height)
-                
+            visible_size = max(metrics.width, metrics.height) if metrics else None
+
             manual_scale = self.theme_manager.get_manual_scale(theme_id, ship.ship_class)
-            if manual_scale <= 0: manual_scale = 1.0
-            
+            if manual_scale <= 0:
+                manual_scale = 1.0
+
             # Target size is diameter of the armor ring (2 * max_r)
             target_diameter = max_r * 2.0
-            
-            # Prevent div by zero
-            if visible_size < 1: visible_size = 1
-            
-            scale_factor = (target_diameter / visible_size) * manual_scale
-            
+
+            scale_factor = calculate_ship_image_scale(
+                ship_img.get_size(), target_diameter, visible_size, manual_scale
+            )
+
+            img_w, img_h = ship_img.get_size()
             new_w = int(img_w * scale_factor)
             new_h = int(img_h * scale_factor)
-            
+
             if new_w > 0 and new_h > 0:
                 scaled_img = pygame.transform.scale(ship_img, (new_w, new_h))
-                # Center image
                 rect = scaled_img.get_rect(center=(cx, cy))
                 screen.blit(scaled_img, rect)
             

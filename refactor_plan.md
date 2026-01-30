@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Complete - All Phases + Audit Passed
-**Current Status:** PROJ-42 complete, awaiting user verification
-**Current Project:** None (ready for next project)
-**Current Phase:** N/A
-**Test Status:** 5375 passed, 3 skipped
+**Last Completed:** PROJ-44 Phase 1 Complete - DRY & Magic Numbers
+**Current Status:** PROJ-44 Phase 1 complete, Phase 2 ready
+**Current Project:** PROJ-44
+**Current Phase:** Phase 2 (pending)
+**Test Status:** 5398 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-42 fully complete: 6 phases + 1 audit cycle
-- Audit Cycle 1 passed with no issues
-- All deprecated code verified removed
-- 15 verification tests prevent re-introduction of deprecated patterns
-- All 5375 tests passing
-- Project marked [x] complete in Master Task List
-- Next project in queue: PROJ-44 (PROJ-43 already complete)
+- PROJ-44 Phase 1 complete: DRY violations fixed, SimulationConstants created
+- Created game/ui/utils.py with create_centered_rect, calculate_ship_image_scale, scale_and_rotate_image
+- Unified damage threshold to 50% (was 30% in strategy layer)
+- Task 1.4 skipped - existing pattern better than global UIConstants
+- 23 new tests added
+- Next: Phase 2 - Registry & Service Extraction
 
 ---
 
@@ -46,8 +45,8 @@
 
 ---
 
-- [ ] **PROJ-44: Code Quality & God Classes Refactoring**
-  - **Phases:** 6 | **Status:** Planning | **Priority:** High
+- [/] **PROJ-44: Code Quality & God Classes Refactoring**
+  - **Phases:** 9 | **Status:** In Progress (Phase 1 Complete) | **Priority:** High
   - **Plan:** [Projects/active_projects/PROJ-44/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-44/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** PROJ-43 recommended (not blocking)
@@ -98,6 +97,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-44 | Phase 1 Complete | Complete | 5398 passed | 7d61275 | DRY fixes, SimulationConstants, damage threshold unified |
 | 2026-01-29 | PROJ-42 | Audit Cycle 1 | PASSED | 5375 passed | db9d164 | No issues found, project complete |
 | 2026-01-29 | PROJ-42 | Phase 6 Complete | Complete | 5375 passed | db9d164 | Verification tests, 0 unintended deprecation warnings |
 | 2026-01-29 | PROJ-42 | Phase 5 Complete | Complete | 5360 passed | 1bdec33 | Deprecation warnings, documented patterns, removed legacy crew func |

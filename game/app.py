@@ -7,6 +7,7 @@ import os
 from game.core.logger import log_debug, log_info, log_error
 from game.core.config import DisplayConfig
 from game.core.paths import Paths
+from game.ui.utils import create_centered_rect
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Starship Battles")
@@ -209,14 +210,7 @@ class Game:
             self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
         # Create new game setup window (expanded for race selection UI)
-        window_width = 650
-        window_height = 600
-        window_rect = pygame.Rect(
-            (WIDTH - window_width) // 2,
-            (HEIGHT - window_height) // 2,
-            window_width,
-            window_height
-        )
+        window_rect = create_centered_rect(650, 600, WIDTH, HEIGHT)
 
         self.new_game_setup_window = NewGameSetupScreen(
             window_rect,
@@ -267,55 +261,50 @@ class Game:
         self.showing_new_game_setup = False
         log_debug("New game setup cancelled")
 
-    def start_quickstart_1p(self):
-        """Start a single-player quickstart game."""
+    def _start_quickstart(self, player_count: int):
+        """
+        Start a quickstart game with the specified number of players.
+
+        Args:
+            player_count: Number of players (1 or 2)
+        """
         from game.strategy.quickstart_builder import QuickstartBuilder
         from game.strategy.engine.game_session import GameSession
         from game.strategy.systems.save_game_service import SaveGameService
 
-        log_info("Starting Quickstart 1P")
+        log_info(f"Starting Quickstart {player_count}P")
 
-        config = QuickstartBuilder.build_1p_config()
+        # Build config based on player count
+        if player_count == 1:
+            config = QuickstartBuilder.build_1p_config()
+            empire_ids = [0]
+        else:
+            config = QuickstartBuilder.build_2p_config()
+            empire_ids = [0, 1]
+
         session = GameSession(config=config)
 
         success, message, save_path = SaveGameService.save_game(session, config.save_name)
 
         if success:
             session.save_path = save_path
-            log_info(f"Quickstart 1P save created: {save_path}")
+            log_info(f"Quickstart {player_count}P save created: {save_path}")
 
-            # Copy quickstart designs for empire 0
-            QuickstartBuilder.copy_quickstart_designs(save_path, [0])
+            # Copy quickstart designs for empires
+            QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
             self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
             self.state = GameState.STRATEGY
         else:
-            log_error(f"Quickstart 1P failed: {message}")
+            log_error(f"Quickstart {player_count}P failed: {message}")
+
+    def start_quickstart_1p(self):
+        """Start a single-player quickstart game."""
+        self._start_quickstart(player_count=1)
 
     def start_quickstart_2p(self):
         """Start a two-player quickstart game."""
-        from game.strategy.quickstart_builder import QuickstartBuilder
-        from game.strategy.engine.game_session import GameSession
-        from game.strategy.systems.save_game_service import SaveGameService
-
-        log_info("Starting Quickstart 2P")
-
-        config = QuickstartBuilder.build_2p_config()
-        session = GameSession(config=config)
-
-        success, message, save_path = SaveGameService.save_game(session, config.save_name)
-
-        if success:
-            session.save_path = save_path
-            log_info(f"Quickstart 2P save created: {save_path}")
-
-            # Copy quickstart designs for both empires
-            QuickstartBuilder.copy_quickstart_designs(save_path, [0, 1])
-
-            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
-            self.state = GameState.STRATEGY
-        else:
-            log_error(f"Quickstart 2P failed: {message}")
+        self._start_quickstart(player_count=2)
 
     def show_load_menu(self):
         """Show load game menu."""
@@ -329,14 +318,7 @@ class Game:
             self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
         # Create save selection window
-        window_width = 600
-        window_height = 500
-        window_rect = pygame.Rect(
-            (WIDTH - window_width) // 2,
-            (HEIGHT - window_height) // 2,
-            window_width,
-            window_height
-        )
+        window_rect = create_centered_rect(600, 500, WIDTH, HEIGHT)
 
         self.save_selection_window = SaveSelectionWindow(
             window_rect,
@@ -423,14 +405,7 @@ class Game:
             self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
 
         # Create race setup window (larger for 2560x1600 displays)
-        window_width = 1800
-        window_height = 1200
-        window_rect = pygame.Rect(
-            (WIDTH - window_width) // 2,
-            (HEIGHT - window_height) // 2,
-            window_width,
-            window_height
-        )
+        window_rect = create_centered_rect(1800, 1200, WIDTH, HEIGHT)
 
         # Import here to avoid circular imports
         from game.ui.screens.race_setup_screen import RaceSetupScreen

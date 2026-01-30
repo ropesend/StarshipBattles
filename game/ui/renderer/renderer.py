@@ -6,6 +6,7 @@ Cross-layer imports (acceptable for rendering):
 import pygame
 import math
 from game.core.constants import LayerType  # Canonical location for LayerType
+from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
 
 
 # Layer color constants
@@ -49,35 +50,24 @@ def draw_ship(surface, ship, camera):
     drawn_image = False
     
     if ship_img and camera.zoom > 0.01:
-        # Scale logic: "scaled so that the visible portion of the vesle is approximatly the same length as the diameter of the circle"
-        # Circle diameter = 2 * base_radius. 
-        target_size = 2 * scale(base_radius) # Matches diameter exactly
-        
-        img_w, img_h = ship_img.get_size()
-        
+        # Scale logic: visible portion should match diameter of the collision circle
+        target_size = 2 * scale(base_radius)
+
         # Get visible metrics to ignore transparent padding
         metrics = theme_mgr.get_image_metrics(theme_id, ship.ship_class)
-        visible_size = max(img_w, img_h)
-        if metrics:
-            visible_size = max(metrics.width, metrics.height)
-            
-        # Avoid division by zero
-        if visible_size < 1: visible_size = 1
-        
+        visible_size = max(metrics.width, metrics.height) if metrics else None
+
         # Get optional manual scale from theme.json (default 1.0)
         manual_scale = theme_mgr.get_manual_scale(theme_id, ship.ship_class)
-        
-        scale_factor = (target_size / visible_size) * manual_scale
-        
+
+        scale_factor = calculate_ship_image_scale(
+            ship_img.get_size(), target_size, visible_size, manual_scale
+        )
+
         rotation_angle = -ship.angle - 90
-        
-        new_w = int(img_w * scale_factor)
-        new_h = int(img_h * scale_factor)
-        
-        if new_w > 0 and new_h > 0:
-            scaled_img = pygame.transform.scale(ship_img, (new_w, new_h))
-            rotated_img = pygame.transform.rotate(scaled_img, rotation_angle)
-            
+        rotated_img = scale_and_rotate_image(ship_img, scale_factor, rotation_angle)
+
+        if rotated_img.get_size() != ship_img.get_size() or scale_factor > 0:
             rect = rotated_img.get_rect(center=(cx, cy))
             surface.blit(rotated_img, rect)
             drawn_image = True

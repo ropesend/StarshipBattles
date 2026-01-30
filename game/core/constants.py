@@ -6,6 +6,7 @@ __all__ = [
     'LayerType',
     'LayerDefaults',
     'CombatConstants',
+    'SimulationConstants',
     'PLANET_RESOURCES',
     # Colors
     'WHITE', 'BLACK', 'BLUE', 'RED', 'GREEN',
@@ -93,6 +94,23 @@ class CombatConstants:
     DEFAULT_MAX_TARGETS = 1           # Default maximum targets for multi-target weapons
     DEFAULT_DAMAGE_THRESHOLD = 0.5    # Components fail at 50% HP by default
     # Note: FIGHTER_LAUNCH_SPEED is in BattleConfig (game/core/config.py)
+
+
+# Simulation Constants
+class SimulationConstants:
+    """Constants for battle simulation timing and bounds."""
+    # Timing
+    TICKS_PER_SECOND = 100            # Simulation tick rate
+
+    # Warp retreat charging
+    WARP_CHARGE_TICKS = 500           # Ticks needed for warp retreat (5 seconds at 100 TPS)
+
+    # Map bounds
+    DEFAULT_MAP_EDGE_THRESHOLD = 500  # Units from edge to trigger edge escape
+    DEFAULT_MAP_SIZE = 100000         # Default map dimension
+
+    # Battle limits
+    DEFAULT_MAX_TICKS = 100000        # Maximum ticks before battle timeout
 
 
 # Resource Types

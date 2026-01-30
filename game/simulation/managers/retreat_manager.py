@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Dict, Optional, Callable, Tuple, List, Any, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info
+from game.core.constants import SimulationConstants
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -30,7 +31,7 @@ class RetreatState:
     method: RetreatMethod
     target: Optional[Tuple[float, float]] = None  # For edge escape
     charge_ticks: int = 0  # For warp
-    required_ticks: int = 500  # Ticks needed for warp (5 seconds at 100 TPS)
+    required_ticks: int = SimulationConstants.WARP_CHARGE_TICKS
     interruptible: bool = True
 
 
@@ -46,7 +47,7 @@ class RetreatManager:
     """
 
     # Default edge detection threshold in world units
-    DEFAULT_EDGE_THRESHOLD = 500
+    DEFAULT_EDGE_THRESHOLD = SimulationConstants.DEFAULT_MAP_EDGE_THRESHOLD
 
     def __init__(self, map_bounds: Tuple[float, float, float, float]):
         """

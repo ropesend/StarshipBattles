@@ -29,6 +29,7 @@ from game.simulation.managers.retreat_manager import (
 )
 from game.simulation.managers.battle_state_manager import BattleStateManager
 from game.core.logger import log_debug, log_info, log_warning
+from game.core.constants import SimulationConstants
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -48,7 +49,7 @@ class BattleConfig:
     """Configuration for a battle instance."""
     mode: BattleMode = BattleMode.MANUAL
     seed: Optional[int] = None
-    max_ticks: int = 100000
+    max_ticks: int = SimulationConstants.DEFAULT_MAX_TICKS
     end_mode: BattleEndMode = BattleEndMode.HP_BASED
 
     # Mode-specific options
@@ -68,7 +69,9 @@ class BattleConfig:
     isolated: bool = True  # Never mutate source ships
 
     # Map bounds for retreat calculations
-    map_bounds: Tuple[float, float, float, float] = (0, 0, 100000, 100000)
+    map_bounds: Tuple[float, float, float, float] = (
+        0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE
+    )
 
 
 # RetreatState is now imported from retreat_manager for backwards compatibility
