@@ -101,10 +101,10 @@
 2. Split by test class groupings
 3. Verify all tests pass
 
-- [ ] `test_pathfinding.py` (996 LOC) -> 2-3 files
-- [ ] `test_registry.py` (973 LOC) -> 2-3 files
-- [ ] `test_research_scene.py` (954 LOC) -> 2-3 files
-- [ ] `test_collision_edge_cases.py` (949 LOC) -> 2-3 files
+- [x] `test_pathfinding.py` (996 LOC) -> 3 files (55 tests)
+- [x] `test_registry.py` (973 LOC) -> 3 files (69 tests)
+- [x] `test_research_scene.py` (954 LOC) -> 3 files (30 tests)
+- [x] `test_collision_edge_cases.py` (949 LOC) -> 3 files (32 tests)
 - [ ] `test_turn_engine_strategy.py` (932 LOC) -> 2-3 files
 - [ ] `test_modifier_ability_snapshots.py` (907 LOC) -> 2 files
 - [ ] `test_fleet_navigation_service.py` (852 LOC) -> 2 files

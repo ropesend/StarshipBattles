@@ -25,8 +25,8 @@
 ## Current State
 **Last Updated:** 2026-01-30
 **Active Phase:** Phase 3 In Progress - Test File Splitting
-**Last Action:** Completed Task 3.1.4 - Split test_fleet.py (1103 LOC) -> 3 files
-**Next Action:** Continue Phase 3 - Split severe monoliths (Task 3.2)
+**Last Action:** Split 2 more severe monoliths (research_scene, collision_edge_cases)
+**Next Action:** Continue Phase 3 - Split remaining severe monoliths (Task 3.2)
 **Blockers:** None
 
 **Phase 3 Progress:**
@@ -34,8 +34,12 @@
 - Split test_ship_instance_proj08.py (1458 LOC) -> 3 files in tests/unit/strategy/ship_instance/ (71 tests)
 - Split test_battle_controller.py (1425 LOC) -> 4 files in tests/unit/simulation/battle_controller/ (110 tests)
 - Split test_fleet.py (1103 LOC) -> 3 files in tests/unit/strategy/fleet/ (70 tests)
-- Remaining: 20 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
-- Tests pass: 838 strategy tests verified
+- Split test_pathfinding.py (996 LOC) -> 3 files in tests/unit/strategy/pathfinding/ (55 tests)
+- Split test_registry.py (973 LOC) -> 3 files in tests/unit/core/registry/ (69 tests)
+- Split test_research_scene.py (954 LOC) -> 3 files in tests/unit/research/research_scene/ (30 tests)
+- Split test_collision_edge_cases.py (949 LOC) -> 3 files in tests/unit/engine/collision_edge_cases/ (32 tests)
+- Remaining: 16 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
+- Tests pass: 5734 passed (186 tests moved to new files)
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.

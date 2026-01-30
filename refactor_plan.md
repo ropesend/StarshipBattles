@@ -8,24 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 3 Task 3.1.4
+**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (4 of 20 files split)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
-**Test Status:** 838 passed (strategy tests), 70 fleet tests, full suite passes
+**Test Status:** 5734 passed, 46 failed (pre-existing), 12 errors (pre-existing)
 **Active Blockers:** None
 
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
-    - test_ship_stats_calculator.py -> 5 files (70 tests)
-    - test_ship_instance_proj08.py -> 3 files (71 tests)
-    - test_battle_controller.py -> 4 files (110 tests)
-    - test_fleet.py -> 3 files (70 tests) - conftest.py + test_basics.py + test_resources.py + test_serialization.py
+  - Task 3.2 In Progress: Split 4 of 20 severe monoliths
+    - test_pathfinding.py (996 LOC) -> 3 files (55 tests)
+    - test_registry.py (973 LOC) -> 3 files (69 tests)
+    - test_research_scene.py (954 LOC) -> 3 files (30 tests)
+    - test_collision_edge_cases.py (949 LOC) -> 3 files (32 tests)
 - Remaining Phase 3 work:
-  - Task 3.2: Split 20 severe monoliths (700-1000 LOC)
-  - Task 3.3: Split 26 moderate monoliths (500-700 LOC)
-- Next: Start Task 3.2 - Split severe monoliths
+  - Task 3.2: 16 more severe monoliths (700-1000 LOC)
+  - Task 3.3: 26 moderate monoliths (500-700 LOC)
+- Next: Continue Task 3.2 - Split more severe monoliths
+- Note: 46 failures + 12 errors are pre-existing (same as before changes)
 
 ---
 
@@ -117,6 +119,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 884224ed | Split research_scene + collision -> 6 files |
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 4f070184 | Split pathfinding + registry -> 6 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.1.4 | Complete | 70 passed | d5094c2e | Split test_fleet.py -> 3 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.1.3 | Complete | 110 passed | 7539e71d | Split test_battle_controller.py -> 4 files |
 | 2026-01-30 | PROJ-48 | Phase 2 | Complete | 5728 passed | 673ecec7 | Conftest consolidation, removed 4 redundant fixtures, updated READMEs |
