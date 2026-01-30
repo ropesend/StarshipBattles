@@ -66,6 +66,9 @@ from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
 from .component_constants import ComponentStatus, Modifier, ApplicationModifier
+from .ability_manager import AbilityManager
+from .modifier_manager import ModifierManager
+from .component_stats_calculator import ComponentStatsCalculator
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -206,55 +209,26 @@ class Component:
         """
         Get all abilities of a specific type (by registry name).
         Supports polymorphism if the registry entry is a class.
+
+        Delegates to AbilityManager for consistency.
         """
-        from game.simulation.components.abilities import ABILITY_REGISTRY
-        
-        target_class = None
-        if ability_name in ABILITY_REGISTRY:
-            val = ABILITY_REGISTRY[ability_name]
-            if isinstance(val, type):
-                target_class = val
-        
-        found = []
-        for ab in self.ability_instances:
-            # 1. Polymorphic check (preferred)
-            if target_class and isinstance(ab, target_class):
-                found.append(ab)
-            # [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
-            # When test modules reload ability classes, isinstance() fails due to
-            # different class objects. This __name__ check provides test isolation.
-            # Ref: Phase 2 Task 2.5 audit - documented as intentional tech debt.
-            else:
-                for cls in ab.__class__.mro():
-                    if cls.__name__ == ability_name:
-                        found.append(ab)
-                        break
-        return found
+        return AbilityManager.get_abilities(ability_name, self.ability_instances)
 
     def get_ability(self, ability_name: str):
-        """Get first ability of type."""
-        l = self.get_abilities(ability_name)
-        return l[0] if l else None
+        """Get first ability of type. Delegates to AbilityManager."""
+        return AbilityManager.get_ability(ability_name, self.ability_instances)
 
     def has_ability(self, ability_name: str):
-        # 1. Direct check (fast)
-        if ability_name in self.abilities:
-            return True
-        # 2. Polymorphic check (e.g. asking for 'WeaponAbility' when we have 'ProjectileWeaponAbility')
-        return len(self.get_abilities(ability_name)) > 0
+        """Check if component has ability. Delegates to AbilityManager."""
+        return AbilityManager.has_ability(ability_name, self.ability_instances, self.abilities)
 
     def has_pdc_ability(self) -> bool:
         """Check if component has a Point Defense weapon ability.
-        
-        Returns True if any ability has 'pdc' in its tags.
-        """
-        # 1. Check new tag-based system
-        for ab in self.ability_instances:
-            if 'pdc' in ab.tags:
-                return True
-        
 
-        return False
+        Returns True if any ability has 'pdc' in its tags.
+        Delegates to AbilityManager.
+        """
+        return AbilityManager.has_pdc_ability(self.ability_instances)
 
 
 
@@ -272,69 +246,24 @@ class Component:
 
     def get_ui_rows(self):
         """Aggregate UI rows from all ability instances.
-        
+
         Returns list of dicts: [{'label': 'Thrust', 'value': '1500 N'}, ...]
         Used by detail panels and capability scanners.
+        Delegates to AbilityManager.
         """
-        rows = []
-        for ab in self.ability_instances:
-            rows.extend(ab.get_ui_rows())
-        return rows
+        return AbilityManager.get_ui_rows(self.ability_instances)
 
     def _instantiate_abilities(self):
-        """Instantiate or Sync Ability objects from self.abilities dict."""
-        # We want to preserve existing instances to maintain runtime state (cooldowns, energy)
-        # but also add new ones or remove obsolete ones.
-        
-        # 1. Map existing instances for quick lookup
-        # Key: (ability_type_name, index_in_that_type)
-        existing_map = {}
-        for ab in self.ability_instances:
-            # We track by class name
-            cls_name = ab.__class__.__name__
-            if cls_name not in existing_map:
-                existing_map[cls_name] = []
-            existing_map[cls_name].append(ab)
+        """Instantiate or Sync Ability objects from self.abilities dict.
 
-        new_instances = []
-        
-        # Standard Loading from abilities dict
-        from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
-        
-        for name, data in self.abilities.items():
-            if name not in ABILITY_REGISTRY:
-                continue
-            
-            items = data if isinstance(data, list) else [data]
-            
-        # Get the target class for this registry entry (could be class or lambda)
-            target = ABILITY_REGISTRY[name]
-            target_cls_name = None
-            if isinstance(target, type):
-                target_cls_name = target.__name__
-            else:
-                # Use centralized map for shortcut factories (lambdas)
-                from game.simulation.components.abilities import ABILITY_CLASS_MAP
-                target_cls_name = ABILITY_CLASS_MAP.get(name)
-
-            for item in items:
-                # Heuristic: Match by Target Class Name if known, otherwise fallback to registry name
-                match_name = target_cls_name or name
-                
-                found_existing = False
-                if match_name in existing_map and existing_map[match_name]:
-                    ab = existing_map[match_name].pop(0)
-                    # Support live data sync if ability supports it
-                    if hasattr(ab, 'sync_data'):
-                        ab.sync_data(item)
-                    new_instances.append(ab)
-                    found_existing = True
-                
-                if not found_existing:
-                    ab = create_ability(name, self, item)
-                    if ab: new_instances.append(ab)
-        
-        self.ability_instances = new_instances
+        Preserves existing instances to maintain runtime state (cooldowns, energy).
+        Delegates to AbilityManager.
+        """
+        self.ability_instances = AbilityManager.instantiate_abilities(
+            self.abilities,
+            self.ability_instances,
+            self
+        )
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""
@@ -433,231 +362,70 @@ class Component:
         return result
 
     def add_modifier(self, mod_id, value=None):
-        # PROJ-42: self._registries is always set via _get_registries_fallback()
-        mods = self._registries.modifiers
-        if mod_id not in mods: return False
-
-        # Check restrictions
-        mod_def = mods[mod_id]
-        if 'deny_types' in mod_def.restrictions:
-            if self.type_str in mod_def.restrictions['deny_types']:
-                return False
-        if 'allow_types' in mod_def.restrictions:
-            if self.type_str not in mod_def.restrictions['allow_types']:
-                return False
-                
-        # Remove existing if any (replace)
-        self.remove_modifier(mod_id)
-            
-        app_mod = ApplicationModifier(mod_def, value)
-        self.modifiers.append(app_mod)
-        self.recalculate_stats()
-        return True
+        """Add a modifier to this component. Delegates to ModifierManager."""
+        result = ModifierManager.add_modifier(
+            self.modifiers,
+            mod_id,
+            value,
+            self._registries,
+            self.type_str
+        )
+        if result:
+            self.recalculate_stats()
+        return result
 
     def remove_modifier(self, mod_id):
-        self.modifiers = [m for m in self.modifiers if m.definition.id != mod_id]
+        """Remove a modifier from this component. Delegates to ModifierManager."""
+        self.modifiers = ModifierManager.remove_modifier(self.modifiers, mod_id)
         self.recalculate_stats()
 
     def get_modifier(self, mod_id):
-        for m in self.modifiers:
-            if m.definition.id == mod_id:
-                return m
-        return None
+        """Get a modifier by ID. Delegates to ModifierManager."""
+        return ModifierManager.get_modifier(self.modifiers, mod_id)
 
     def get_all_modifier_effects(self):
         """Get all evaluated effects from all applied modifiers.
 
+        Delegates to ModifierManager.
+
         Returns:
             List[ModifierEffect]: All effects from all modifiers on this component
         """
-        all_effects = []
-        for app_mod in self.modifiers:
-            effects = app_mod.definition.evaluate_effects(app_mod.value)
-            all_effects.extend(effects)
-        return all_effects
+        return ModifierManager.get_all_effects(self.modifiers)
 
     def get_modifier_stat_summary(self):
         """Get summary grouped by stat with net values and contributors.
 
+        Delegates to ModifierManager.
+
         Returns:
-            Dict[str, Dict]: Mapping from stat_key to:
-                {
-                    'net_value': float,  # Combined value for this stat
-                    'operation': str,    # 'multiply', 'add', or 'set'
-                    'contributors': [    # List of contributing modifiers
-                        {
-                            'modifier_id': str,
-                            'modifier_name': str,
-                            'value': float,
-                            'formula': str
-                        },
-                        ...
-                    ]
-                }
+            Dict[str, Dict]: Mapping from stat_key to summary info
         """
-        summary = {}
-
-        all_effects = self.get_all_modifier_effects()
-
-        for effect in all_effects:
-            stat_key = effect.stat_key
-
-            if stat_key not in summary:
-                # Initialize based on operation type
-                default_value = 1.0 if effect.operation == 'multiply' else 0.0
-                summary[stat_key] = {
-                    'net_value': default_value,
-                    'operation': effect.operation,
-                    'contributors': []
-                }
-
-            entry = summary[stat_key]
-
-            # Add contributor info
-            entry['contributors'].append({
-                'modifier_id': effect.source_modifier_id,
-                'modifier_name': effect.source_modifier_name,
-                'value': effect.value,
-                'formula': effect.formula_str
-            })
-
-            # Calculate net value based on operation
-            if effect.operation == 'multiply':
-                entry['net_value'] *= effect.value
-            elif effect.operation == 'add':
-                entry['net_value'] += effect.value
-            elif effect.operation == 'set':
-                entry['net_value'] = effect.value  # Last set wins
-
-        return summary
+        return ModifierManager.get_stat_summary(self.modifiers)
 
     def recalculate_stats(self, context: dict = None):
         """Recalculate component stats with multiplicative modifier stacking.
+
+        Delegates to ComponentStatsCalculator for the multi-phase calculation.
 
         Args:
             context: Optional dict with context for formula evaluation.
                      Expected keys: 'ship_class_mass' (float).
                      If not provided, falls back to component.ship reference.
         """
-        # Capture old hp for current_hp logic at end
-        old_max_hp = self.max_hp
-
-        # 1. Reset and Evaluate Base Formulas
-        self._reset_and_evaluate_base_formulas(context)
-
-        # 1.5 Re-instantiate Abilities (Sync instances with new abilities dict)
-        self._instantiate_abilities()
-
-        # 2. Calculate Modifier Stats (Accumulate multipliers)
-        stats = self._calculate_modifier_stats()
-        self.stats = stats # Persist for introspection/ability access
-
-        # 3. Apply Base Stats (Generic attributes)
-        self._apply_base_stats(stats, old_max_hp)
-
-
+        ComponentStatsCalculator.recalculate(self, context)
 
     def _reset_and_evaluate_base_formulas(self, context: dict = None):
-        import copy
-        # Reset abilities from raw data
-        self.abilities = copy.deepcopy(self.data.get('abilities', {}))
-
-        # Context building - Priority: explicit context > ship reference > default
-        eval_context = {
-            'ship_class_mass': 1000 # Default fallback
-        }
-        if context and 'ship_class_mass' in context:
-            eval_context['ship_class_mass'] = context['ship_class_mass']
-        elif self.ship:
-            eval_context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
-
-        # Evaluate Formulas for attributes
-        for attr, formula in self.formulas.items():
-            val = evaluate_math_formula(formula, eval_context)
-            if attr == 'mass':
-                self.base_mass = float(val)
-                self.mass = self.base_mass # Reset to base
-            elif attr == 'hp':
-                self.base_max_hp = int(val)
-                self.max_hp = self.base_max_hp # Reset to base
-            else:
-                 if hasattr(self, attr):
-                     if isinstance(getattr(self, attr), int):
-                         setattr(self, attr, int(val))
-                     else:
-                         setattr(self, attr, val)
-
-        # Evaluate formulas in abilities
-        def evaluate_formulas_recursive(obj, ctx):
-            """Recursively evaluate formulas in nested structures (dicts and lists)."""
-            if isinstance(obj, str) and obj.startswith("="):
-                return evaluate_math_formula(obj[1:], ctx)
-            elif isinstance(obj, dict):
-                for key, sub_val in obj.items():
-                    obj[key] = evaluate_formulas_recursive(sub_val, ctx)
-                return obj
-            elif isinstance(obj, list):
-                for i, item in enumerate(obj):
-                    obj[i] = evaluate_formulas_recursive(item, ctx)
-                return obj
-            return obj
-
-        for ability_name, val in self.abilities.items():
-            self.abilities[ability_name] = evaluate_formulas_recursive(val, eval_context)
-
-        # Evaluate formulas in resource_cost
-        raw_costs = self.data.get("resource_cost", {})
-        self.evaluated_resource_cost = {}
-        for res, amount in raw_costs.items():
-            if isinstance(amount, str) and amount.startswith("="):
-                self.evaluated_resource_cost[res] = evaluate_math_formula(amount[1:], eval_context)
-            else:
-                self.evaluated_resource_cost[res] = amount
+        """Reset to base values and evaluate formulas. Delegates to ComponentStatsCalculator."""
+        ComponentStatsCalculator.reset_and_evaluate_formulas(self, context)
 
     def _calculate_modifier_stats(self):
-        from game.simulation.components.modifiers import (
-            apply_modifier_effects,
-            get_default_stat_multipliers
-        )
-
-        # Use shared function for canonical default stats
-        stats = get_default_stat_multipliers()
-
-        # Apply modifiers with component reference for targeted effects
-        for m in self.modifiers:
-            apply_modifier_effects(m.definition, m.value, stats, component=self)
-
-        return stats
+        """Calculate modifier stats. Delegates to ComponentStatsCalculator."""
+        return ComponentStatsCalculator.calculate_modifier_stats(self.modifiers, self)
 
     def _apply_base_stats(self, stats, old_max_hp):
-        # Apply specific property overrides
-        for prop, val in stats['properties'].items():
-            if hasattr(self, prop):
-                setattr(self, prop, val)
-
-        # Apply Base Multipliers
-        self.mass = (self.base_mass + stats['mass_add']) * stats['mass_mult']
-        
-        # Note: old_max_hp is passed in, captured before base formula reset
-        self.max_hp = int(self.base_max_hp * stats['hp_mult'])
-        
-        if hasattr(self, 'cost'):
-            self.cost = int(self.data.get('cost', 0) * stats['cost_mult'])
-
-
-
-        # Handle HP update (healing/new component logic)
-        if old_max_hp == 0:
-            self.current_hp = self.max_hp
-        elif self.current_hp >= old_max_hp:
-            self.current_hp = self.max_hp
-            
-        # Ensure cap
-        self.current_hp = min(self.current_hp, self.max_hp)
-
-        # Recalculate all abilities with updated stats from modifiers
-        for ab in self.ability_instances:
-            ab.recalculate()
+        """Apply stats to component. Delegates to ComponentStatsCalculator."""
+        ComponentStatsCalculator.apply_base_stats(self, stats, old_max_hp)
 
     def clone(self):
         # Create a new instance with the same data
