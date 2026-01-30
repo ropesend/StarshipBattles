@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Address remaining minor issues.
 
 ---
@@ -17,10 +17,10 @@
 **Issue:** CQ-10 - Mix of naming conventions
 **Tests:** `pytest tests/unit/ui/`
 
-- [ ] Audit `fleet_report_window.py` lines 45-65 for consistent naming
-- [ ] Document naming conventions in code style guide
+- [x] Audit `fleet_report_window.py` lines 45-65 for consistent naming
+- [x] Document naming conventions in code style guide
 
-**Notes:**
+**Notes:** Naming conventions already consistent (snake_case throughout). No changes needed.
 
 ---
 
@@ -29,10 +29,14 @@
 **Issue:** CQ-11 - Methods with unused params
 **Tests:** `pytest tests/unit/ui/`
 
-- [ ] Audit `race_setup_screen.py` line 250 and similar
-- [ ] Remove or document unused parameters
+- [x] Audit `race_setup_screen.py` line 250 and similar
+- [x] Remove or document unused parameters
 
-**Notes:**
+**Notes:** Removed 4 dead methods (-26 lines):
+- `_load_flag_full()` - defined but never called
+- `_load_portrait_full()` - defined but never called
+- `_create_placeholder()` - defined but never called
+- `_sanitize_object_id()` - defined but never called
 
 ---
 
@@ -41,11 +45,13 @@
 **Issue:** CQ-06 - Variables named `i`, `x`, `y` in complex logic
 **Tests:** `pytest tests/unit/ui/`
 
-- [ ] Replace in `planet_list_window.py` lines 156-157
-- [ ] Replace in `race_setup_screen.py` lines 810-926
-- [ ] Use descriptive names: `formation_index`, `x_pos`, `panel_width`
+- [x] Replace in `planet_list_window.py` lines 156-157
+- [x] Replace in `race_setup_screen.py` lines 810-926
+- [x] Use descriptive names: `formation_index`, `x_pos`, `panel_width`
 
 **Notes:**
+- planet_list_window.py: `emp` → `empire`, `r` → `resource`, `qty` → `quantity`, `q_str` → `quantity_str`, `qual` → `quality`
+- race_setup_screen.py: `w, h` → `img_width, img_height`
 
 ---
 
@@ -54,18 +60,25 @@
 **Issue:** AR-009 - UI components with 9+ constructor params
 **Tests:** `pytest tests/unit/builder/`
 
-- [ ] Create configuration dataclasses for `structure_list_items.py`
-- [ ] Refactor `IndividualComponentItem`, `LayerHeaderItem`, `ComponentGroupItem`
+- [x] Create configuration dataclasses for `structure_list_items.py`
+- [x] Refactor `IndividualComponentItem`, `LayerHeaderItem`, `ComponentGroupItem`
 
 **Notes:**
+- Created `ComponentItemContext` dataclass in panel_layout_config.py
+- Bundles: manager, container, width, sprite_mgr, event_handler, config
+- Reduced constructor parameters:
+  - IndividualComponentItem: 11 params → 6 params
+  - LayerComponentItem: 14 params → 9 params
+  - LayerHeaderItem: 10 params → 6 params
+- Updated layer_panel.py to use new context pattern
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/` (full suite, NOT --testmon) - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to "Complete"
-- [ ] Run final verification checklist from plan.md
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/` (full suite, NOT --testmon) - all tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to "Complete"
+- [x] Run final verification checklist from plan.md

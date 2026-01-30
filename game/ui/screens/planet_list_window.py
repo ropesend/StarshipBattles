@@ -152,12 +152,12 @@ class PlanetListWindow(UIWindow):
 
         # Try to get empire name from galaxy's empires list
         if hasattr(self, 'galaxy') and hasattr(self.galaxy, 'empires'):
-            for emp in self.galaxy.empires:
-                if emp.id == planet.owner_id:
+            for empire in self.galaxy.empires:
+                if empire.id == planet.owner_id:
                     # Add indicator if it's the player's empire
                     if planet.owner_id == self.empire.id:
-                        return f"★ {emp.name}"
-                    return emp.name
+                        return f"★ {empire.name}"
+                    return empire.name
 
         # Fallback to simple labels
         if planet.owner_id == self.empire.id:
@@ -170,18 +170,18 @@ class PlanetListWindow(UIWindow):
 
     def _get_resource_str(self, planet, resource_name):
         if hasattr(planet, 'resources') and resource_name in planet.resources:
-            r = planet.resources[resource_name]
-            qty = r['quantity']
+            resource = planet.resources[resource_name]
+            quantity = resource['quantity']
             # Format k/M
-            if qty >= 1000000:
-                q_str = f"{qty/1000000:.1f}M"
-            elif qty >= 1000:
-                q_str = f"{qty/1000:.0f}k"
+            if quantity >= 1000000:
+                quantity_str = f"{quantity/1000000:.1f}M"
+            elif quantity >= 1000:
+                quantity_str = f"{quantity/1000:.0f}k"
             else:
-                q_str = str(qty)
+                quantity_str = str(quantity)
 
-            qual = r['quality']
-            return f"{q_str} (Q{qual:.0f})"
+            quality = resource['quality']
+            return f"{quantity_str} (Q{quality:.0f})"
         return "-"
 
     def _compute_planet_ranges(self):

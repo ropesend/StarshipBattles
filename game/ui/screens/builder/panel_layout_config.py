@@ -1,5 +1,32 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any, Optional
 import pygame
+
+
+@dataclass
+class ComponentItemContext:
+    """
+    Bundles common dependencies for component list items.
+
+    Reduces constructor parameter count by grouping:
+    - manager: pygame_gui UIManager
+    - container: Parent UI container
+    - width: Available width for the item
+    - sprite_mgr: Sprite manager for component icons
+    - event_handler: Handler for item actions
+    - config: Layout configuration
+    """
+    manager: Any  # pygame_gui.UIManager
+    container: Any  # pygame_gui container
+    width: int
+    sprite_mgr: Any  # SpriteManager
+    event_handler: Any  # Event handler with handle_item_action method
+    config: 'StructurePanelLayoutConfig' = None
+
+    def __post_init__(self):
+        if self.config is None:
+            self.config = StructurePanelLayoutConfig()
+
 
 @dataclass
 class StructurePanelLayoutConfig:

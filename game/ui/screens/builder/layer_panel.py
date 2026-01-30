@@ -19,7 +19,7 @@ from .structure_list_items import (
     ACTION_TOGGLE_GROUP, ACTION_TOGGLE_LAYER
 )
 from .grouping_strategies import DefaultGroupingStrategy, TypeGroupingStrategy, FlatGroupingStrategy
-from .panel_layout_config import StructurePanelLayoutConfig
+from .panel_layout_config import StructurePanelLayoutConfig, ComponentItemContext
 from .drop_target import DropTarget
 
 
@@ -143,17 +143,21 @@ class LayerPanel(DropTarget):
                 header.update(current_mass, layer_max_mass, self.expanded_layers.get(l_type, True))
                 header.panel.set_relative_position((0, y_pos))
             else:
+                ctx = ComponentItemContext(
+                    manager=self.manager,
+                    container=self.scroll_container,
+                    width=content_width,
+                    sprite_mgr=self.builder.sprite_mgr,
+                    event_handler=self,
+                    config=self.config
+                )
                 header = LayerHeaderItem(
-                    self.manager,
-                    self.scroll_container,
-                    l_type,
-                    current_mass,
-                    layer_max_mass,
-                    self.expanded_layers.get(l_type, True),
-                    self, # Event Handler
-                    y_pos,
-                    content_width,
-                    self.config
+                    ctx=ctx,
+                    layer_type=l_type,
+                    current_mass=current_mass,
+                    max_mass=layer_max_mass,
+                    is_expanded=self.expanded_layers.get(l_type, True),
+                    y_pos=y_pos
                 )
                 self.ui_cache[header_key] = header
                 
@@ -187,21 +191,24 @@ class LayerPanel(DropTarget):
                         item.update(count, mass_total, pct_val, is_expanded, is_selected_group, comp_template.name)
                         item.panel.set_relative_position((0, y_pos))
                     else:
+                        ctx = ComponentItemContext(
+                            manager=self.manager,
+                            container=self.scroll_container,
+                            width=content_width,
+                            sprite_mgr=self.builder.sprite_mgr,
+                            event_handler=self,
+                            config=self.config
+                        )
                         item = LayerComponentItem(
-                            self.manager,
-                            self.scroll_container,
-                            comp_template,
-                            count,
-                            mass_total,
-                            pct_val,
-                            is_expanded,
-                            group_key,
-                            is_selected_group,
-                            y_pos,
-                            content_width,
-                            self.builder.sprite_mgr,
-                            self,
-                            self.config
+                            ctx=ctx,
+                            component=comp_template,
+                            count=count,
+                            total_mass=mass_total,
+                            total_pct=pct_val,
+                            is_expanded=is_expanded,
+                            group_key=group_key,
+                            is_selected=is_selected_group,
+                            y_pos=y_pos
                         )
                         self.ui_cache[item_key] = item
                         
@@ -225,18 +232,21 @@ class LayerPanel(DropTarget):
                                  ind_item.update(comp, total_max_mass, is_sel_ind, is_last)
                                  ind_item.panel.set_relative_position((0, y_pos))
                              else:
+                                 ctx = ComponentItemContext(
+                                     manager=self.manager,
+                                     container=self.scroll_container,
+                                     width=content_width,
+                                     sprite_mgr=self.builder.sprite_mgr,
+                                     event_handler=self,
+                                     config=self.config
+                                 )
                                  ind_item = IndividualComponentItem(
-                                    self.manager,
-                                    self.scroll_container,
-                                    comp,
-                                    total_max_mass,
-                                    y_pos,
-                                    content_width,
-                                    self.builder.sprite_mgr,
-                                    self,
-                                    is_sel_ind,
-                                    is_last,
-                                    self.config
+                                    ctx=ctx,
+                                    component=comp,
+                                    max_mass=total_max_mass,
+                                    y_pos=y_pos,
+                                    is_selected=is_sel_ind,
+                                    is_last=is_last
                                  )
                                  self.ui_cache[ind_key] = ind_item
                                  

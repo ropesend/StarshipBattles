@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIImage
-from .panel_layout_config import StructurePanelLayoutConfig
+from .panel_layout_config import StructurePanelLayoutConfig, ComponentItemContext
 
 # Action Constants for Command Pattern
 ACTION_SELECT_INDIVIDUAL = 'select_individual'
@@ -16,78 +16,89 @@ ACTION_START_DRAG = 'start_drag'
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
-    def __init__(self, manager, container, component, max_mass, y_pos, width, sprite_mgr, event_handler, is_selected, is_last=False, config=StructurePanelLayoutConfig()):
+    def __init__(self, ctx: ComponentItemContext, component, max_mass, y_pos, is_selected, is_last=False):
+        """
+        Create an individual component row item.
+
+        Args:
+            ctx: ComponentItemContext with manager, container, width, sprite_mgr, event_handler, config
+            component: The component to display
+            max_mass: Maximum mass for percentage calculation
+            y_pos: Vertical position
+            is_selected: Whether this item is selected
+            is_last: Whether this is the last item in the group (affects tree line)
+        """
         self.component = component
-        self.event_handler = event_handler
+        self.event_handler = ctx.event_handler
         self.is_selected = is_selected
         self.is_last = is_last
-        self.config = config
-        self.height = config.ROW_HEIGHT
-        self.rect = pygame.Rect(0, y_pos, width, self.height)
-        
+        self.config = ctx.config
+        self.height = ctx.config.ROW_HEIGHT
+        self.rect = pygame.Rect(0, y_pos, ctx.width, self.height)
+
         self.panel = UIPanel(
             relative_rect=self.rect,
-            manager=manager,
-            container=container,
+            manager=ctx.manager,
+            container=ctx.container,
             object_id='#individual_component_item',
-            anchors=config.ANCHOR_TOP_LEFT
+            anchors=ctx.config.ANCHOR_TOP_LEFT
         )
-        self.panel.background_colour = pygame.Color(config.BG_COLOR_INDIVIDUAL) 
-        
+        self.panel.background_colour = pygame.Color(ctx.config.BG_COLOR_INDIVIDUAL)
+
         # Clickable Area (Button covering text/icon)
         self.select_button = UIButton(
-            relative_rect=pygame.Rect(0, 0, width - 35, self.height),
+            relative_rect=pygame.Rect(0, 0, ctx.width - 35, self.height),
             text="",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
-            object_id='#transparent_button', 
+            object_id='#transparent_button',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
-        
+
         # Tree Connector
-        self.line_surface = self._create_tree_line(is_last, config)
+        self.line_surface = self._create_tree_line(is_last, ctx.config)
         self.line_image = UIImage(
             relative_rect=pygame.Rect(5, 0, 20, self.height),
             image_surface=self.line_surface,
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel
         )
-        
+
         # Icon
-        sprite = sprite_mgr.get_sprite(component.sprite_index)
+        sprite = ctx.sprite_mgr.get_sprite(component.sprite_index)
         if sprite:
-            scaled = pygame.transform.scale(sprite, (config.ICON_SIZE, config.ICON_SIZE))
+            scaled = pygame.transform.scale(sprite, (ctx.config.ICON_SIZE, ctx.config.ICON_SIZE))
             UIImage(
-                relative_rect=pygame.Rect(config.INDENT_STEP, (self.height - config.ICON_SIZE)//2, config.ICON_SIZE, config.ICON_SIZE),
+                relative_rect=pygame.Rect(ctx.config.INDENT_STEP, (self.height - ctx.config.ICON_SIZE)//2, ctx.config.ICON_SIZE, ctx.config.ICON_SIZE),
                 image_surface=scaled,
-                manager=manager,
+                manager=ctx.manager,
                 container=self.panel
             )
-            
+
         UILabel(
-            relative_rect=pygame.Rect(config.LABEL_OFFSET_X, 0, config.NAME_WIDTH, self.height),
+            relative_rect=pygame.Rect(ctx.config.LABEL_OFFSET_X, 0, ctx.config.NAME_WIDTH, self.height),
             text=f"{component.name}",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#left_aligned_label'
         )
-        
-        
+
+
         # Mass shifted right
         self.mass_label = UILabel(
-            relative_rect=pygame.Rect(-160, 0, config.MASS_WIDTH, self.height),
+            relative_rect=pygame.Rect(-160, 0, ctx.config.MASS_WIDTH, self.height),
             text=f"{int(component.mass)}t",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
-            anchors=config.ANCHOR_TOP_RIGHT.copy()
+            anchors=ctx.config.ANCHOR_TOP_RIGHT.copy()
         )
-        self.mass_label.set_dimensions((config.MASS_WIDTH, self.height)) # Fix anchor adjustment if needed? pygame_gui usually handles it
-        
+        self.mass_label.set_dimensions((ctx.config.MASS_WIDTH, self.height)) # Fix anchor adjustment if needed? pygame_gui usually handles it
+
         pct_val = (component.mass / max_mass * 100) if max_mass > 0 else 0
         self.pct_label = UILabel(
             relative_rect=pygame.Rect(-100, 0, 50, self.height),
             text=f"{pct_val:.1f}%",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
@@ -96,28 +107,28 @@ class IndividualComponentItem:
         self.add_button = UIButton(
             relative_rect=pygame.Rect(-62, 5, 28, 20),
             text="+",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
-            anchors=config.ANCHOR_TOP_RIGHT
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
 
         # Remove Button
         self.remove_button = UIButton(
             relative_rect=pygame.Rect(-32, 5, 28, 20),
             text="-",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#delete_button',
-            anchors=config.ANCHOR_TOP_RIGHT
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
 
         # Drag Handle
         self.drag_button = UIButton(
             relative_rect=pygame.Rect(-92, 5, 28, 20),
             text="≡",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
-            anchors=config.ANCHOR_TOP_RIGHT
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
         
     def update(self, component, max_mass, is_selected, is_last=False):
@@ -179,84 +190,98 @@ class IndividualComponentItem:
 
 class LayerComponentItem:
     """Row representing a component group."""
-    def __init__(self, manager, container, component, count, total_mass, total_pct, is_expanded, 
-                 group_key, is_selected, y_pos, width, sprite_mgr, event_handler, config=StructurePanelLayoutConfig()):
+    def __init__(self, ctx: ComponentItemContext, component, count, total_mass, total_pct, is_expanded,
+                 group_key, is_selected, y_pos):
+        """
+        Create a component group row item.
+
+        Args:
+            ctx: ComponentItemContext with manager, container, width, sprite_mgr, event_handler, config
+            component: Representative component for this group
+            count: Number of components in the group
+            total_mass: Total mass of all components in the group
+            total_pct: Percentage of layer mass this group represents
+            is_expanded: Whether the group is expanded to show individuals
+            group_key: Unique key for this component group
+            is_selected: Whether this group is selected
+            y_pos: Vertical position
+        """
         self.group_key = group_key
-        self.event_handler = event_handler
+        self.event_handler = ctx.event_handler
         self.count = count
         self.is_selected = is_selected
-        self.config = config
-        self.height = config.LAYER_ROW_HEIGHT
-        self.rect = pygame.Rect(0, y_pos, width, self.height)
-        
+        self.config = ctx.config
+        self.height = ctx.config.LAYER_ROW_HEIGHT
+        self.rect = pygame.Rect(0, y_pos, ctx.width, self.height)
+
         self.panel = UIPanel(
             relative_rect=self.rect,
-            manager=manager,
-            container=container,
+            manager=ctx.manager,
+            container=ctx.container,
             object_id='#layer_component_item',
-            anchors=config.ANCHOR_TOP_LEFT
+            anchors=ctx.config.ANCHOR_TOP_LEFT
         )
-        self.panel.background_colour = pygame.Color(config.BG_COLOR_GROUP)
-        
+        self.panel.background_colour = pygame.Color(ctx.config.BG_COLOR_GROUP)
+
         # Selection Button
         self.select_button = UIButton(
-            relative_rect=pygame.Rect(0, 0, width - 35, self.height),
+            relative_rect=pygame.Rect(0, 0, ctx.width - 35, self.height),
             text="",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#transparent_button',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
-        
+
         # Expand Button
         self.expand_button = UIButton(
             relative_rect=pygame.Rect(2, 5, 20, 30),
             text="▲" if is_expanded else "▼",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#expand_button'
         )
         if count <= 1:
             self.expand_button.hide()
-        
+
         # Icon
-        sprite = sprite_mgr.get_sprite(component.sprite_index)
+        sprite = ctx.sprite_mgr.get_sprite(component.sprite_index)
         if sprite:
-            scaled = pygame.transform.scale(sprite, (config.LAYER_ICON_SIZE, config.LAYER_ICON_SIZE))
+            scaled = pygame.transform.scale(sprite, (ctx.config.LAYER_ICON_SIZE, ctx.config.LAYER_ICON_SIZE))
             UIImage(
-                relative_rect=pygame.Rect(config.INDENT_STEP, (self.height - config.LAYER_ICON_SIZE)//2, config.LAYER_ICON_SIZE, config.LAYER_ICON_SIZE),
+                relative_rect=pygame.Rect(ctx.config.INDENT_STEP, (self.height - ctx.config.LAYER_ICON_SIZE)//2, ctx.config.LAYER_ICON_SIZE, ctx.config.LAYER_ICON_SIZE),
                 image_surface=scaled,
-                manager=manager,
+                manager=ctx.manager,
                 container=self.panel
             )
-            
+
         # Name & Count
         name_text = f"{component.name}"
         if count > 1:
             name_text += f" x{count}"
-            
+
         self.name_label = UILabel(
-            relative_rect=pygame.Rect(config.LAYER_NAME_OFFSET_X, 0, config.NAME_WIDTH, self.height),
+            relative_rect=pygame.Rect(ctx.config.LAYER_NAME_OFFSET_X, 0, ctx.config.NAME_WIDTH, self.height),
             text=name_text,
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#left_aligned_label'
         )
-        
+
         # Mass
         self.mass_label = UILabel(
-            relative_rect=pygame.Rect(-160, 0, config.MASS_WIDTH, self.height),
+            relative_rect=pygame.Rect(-160, 0, ctx.config.MASS_WIDTH, self.height),
             text=f"{int(total_mass)}t",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
-        
+
         # Percent
         self.pct_label = UILabel(
-            relative_rect=pygame.Rect(-100, 0, config.PCT_WIDTH, self.height),
+            relative_rect=pygame.Rect(-100, 0, ctx.config.PCT_WIDTH, self.height),
             text=f"{total_pct:.1f}%",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}
         )
@@ -265,19 +290,19 @@ class LayerComponentItem:
         self.add_button = UIButton(
             relative_rect=pygame.Rect(-62, 5, 28, 30),
             text="+",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
-            anchors=config.ANCHOR_TOP_RIGHT
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
 
         # Remove Button
         self.remove_button = UIButton(
             relative_rect=pygame.Rect(-32, 5, 28, 30),
             text="-",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#delete_button',
-            anchors=config.ANCHOR_TOP_RIGHT
+            anchors=ctx.config.ANCHOR_TOP_RIGHT
         )
 
     def update(self, count, total_mass, total_pct, is_expanded, is_selected, component_name):
@@ -322,55 +347,66 @@ class LayerComponentItem:
 
 class LayerHeaderItem:
     """Header row for a Layer."""
-    def __init__(self, manager, container, layer_type, current_mass, max_mass, is_expanded, event_handler, y_pos, width, config=StructurePanelLayoutConfig()):
+    def __init__(self, ctx: ComponentItemContext, layer_type, current_mass, max_mass, is_expanded, y_pos):
+        """
+        Create a layer header row item.
+
+        Args:
+            ctx: ComponentItemContext with manager, container, width, event_handler, config
+            layer_type: The layer type enum value
+            current_mass: Current mass used in this layer
+            max_mass: Maximum allowed mass for this layer
+            is_expanded: Whether the layer is expanded
+            y_pos: Vertical position
+        """
         self.layer_type = layer_type
-        self.event_handler = event_handler
-        self.config = config
-        self.height = config.HEADER_HEIGHT
-        self.rect = pygame.Rect(0, y_pos, width, self.height)
+        self.event_handler = ctx.event_handler
+        self.config = ctx.config
+        self.height = ctx.config.HEADER_HEIGHT
+        self.rect = pygame.Rect(0, y_pos, ctx.width, self.height)
         self.panel = UIPanel(
              relative_rect=self.rect,
-             manager=manager,
-             container=container,
+             manager=ctx.manager,
+             container=ctx.container,
              object_id='#layer_header_panel',
-             anchors=config.ANCHOR_TOP_LEFT
+             anchors=ctx.config.ANCHOR_TOP_LEFT
         )
-        
+
         self.button = UIButton(
-            relative_rect=pygame.Rect(0, 0, width, self.height),
+            relative_rect=pygame.Rect(0, 0, ctx.width, self.height),
             text="",
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id='#layer_header_button',
             anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
-        
+
         arrow = "▲" if is_expanded else "▼"
         self.arrow_label = UILabel(
             relative_rect=pygame.Rect(5, 0, 20, self.height),
             text=arrow,
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel
         )
-        
+
         UILabel(
             relative_rect=pygame.Rect(30, 0, 100, self.height),
             text=layer_type.name,
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel
         )
-        
+
         pct_filled = (current_mass / max_mass * 100) if max_mass > 0 else 0
         stats_text = f"{int(current_mass)}/{int(max_mass)}t ({pct_filled:.1f}%)"
-        
+
         obj_id = '#layer_stats_text'
         if current_mass > max_mass:
             obj_id = '#layer_stats_text_overflow'
-            
+
         self.stats_label = UILabel(
-            relative_rect=pygame.Rect(-210, 0, config.STATS_WIDTH, self.height),
+            relative_rect=pygame.Rect(-210, 0, ctx.config.STATS_WIDTH, self.height),
             text=stats_text,
-            manager=manager,
+            manager=ctx.manager,
             container=self.panel,
             object_id=obj_id,
             anchors={'left': 'right', 'right': 'right', 'centerY': 'center'}

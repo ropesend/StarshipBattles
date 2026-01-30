@@ -224,33 +224,6 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self.step_panels.append(panel_descriptions)
 
 
-    def _load_flag_full(self, flag_id: str) -> List[pygame.Surface]:
-        """
-        Load all three shapes for a flag at full display size.
-
-        PROJ-12 Phase 4: Delegates to RaceAssetLoader.
-        """
-        return self._asset_loader.load_flag_full(flag_id)
-
-    def _load_portrait_full(self, portrait_id: str) -> Optional[pygame.Surface]:
-        """
-        Load a portrait at full display size.
-
-        PROJ-12 Phase 4: Delegates to RaceAssetLoader.
-        """
-        return self._asset_loader.load_portrait_full(portrait_id)
-
-    def _create_placeholder(self, width: int, height: int) -> pygame.Surface:
-        """Create a placeholder surface for missing assets.
-
-        PROJ-12 Phase 4: Delegates to RaceAssetLoader.
-        """
-        return self._asset_loader.create_placeholder(width, height)
-
-    def _sanitize_object_id(self, text: str) -> str:
-        """Sanitize text for use in pygame_gui object_id (no dots or spaces)."""
-        return text.replace(".", "_").replace(" ", "_")
-
     # =========================================================================
     # Visuals Panel (Flags and Portraits)
     # =========================================================================
@@ -436,9 +409,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             log_debug(f"Ship {ship_class}: skin_surf={skin_surf is not None}")
             if skin_surf:
                 # Scale to preview size
-                w, h = skin_surf.get_size()
-                scale = min(ship_size / w, ship_size / h)
-                new_size = (int(w * scale), int(h * scale))
+                img_width, img_height = skin_surf.get_size()
+                scale = min(ship_size / img_width, ship_size / img_height)
+                new_size = (int(img_width * scale), int(img_height * scale))
                 scaled_skin = pygame.transform.smoothscale(skin_surf, new_size)
 
                 # Display top-down view
