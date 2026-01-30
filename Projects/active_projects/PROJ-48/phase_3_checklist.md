@@ -116,11 +116,11 @@
 - [x] `test_target_evaluator.py` (765 LOC) -> 2 files (41 tests)
 - [x] `test_turn_engine.py` (746 LOC) -> 3 files (50 tests)
 - [x] `test_battle_state_viewer.py` (739 LOC) -> 2 files (66 tests)
-- [ ] `test_resource_system.py` (725 LOC) -> 2 files
-- [ ] `test_planet_atmosphere.py` (716 LOC) -> 2 files
-- [ ] `test_fleet_combat.py` (714 LOC) -> 2 files
-- [ ] `test_conflict_resolution_engine.py` (708 LOC) -> 2 files
-- [ ] `test_formation_prediction.py` (682 LOC) -> 2 files
+- [x] `test_resource_system.py` (725 LOC) -> 2 files (7 tests)
+- [x] `test_planet_atmosphere.py` (716 LOC) -> 2 files (47 tests)
+- [x] `test_fleet_combat.py` (714 LOC) -> 2 files (29 tests)
+- [x] `test_conflict_resolution_engine.py` (708 LOC) -> 2 files (26 tests)
+- [x] `test_formation_prediction.py` (682 LOC) -> 2 files (30 tests)
 
 **Notes:**
 

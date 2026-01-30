@@ -1,15 +1,10 @@
 """
 Integration tests for fleet combat workflows.
 
-Tests the end-to-end battle system including:
-- Fleet vs fleet combat workflow
-- Damage accumulation across ships
-- Projectile-to-ship damage pipeline
-- Battle outcome determination
-- BattleController integration with BattleService and BattleEngine
+Tests complete battle workflow, determinism, damage tracking, and fleet scale combat.
 """
+
 import pytest
-from typing import List
 
 from game.simulation.battle_controller import (
     BattleController,
@@ -18,88 +13,9 @@ from game.simulation.battle_controller import (
     create_manual_battle,
     create_hypothetical_battle,
 )
-from game.simulation.services.battle_service import BattleService
-from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
-from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.battle_state import ShipState
 from tests.fixtures.ships import create_test_ship
-from tests.fixtures.battle import create_battle_engine, create_battle_engine_with_ships
 
-
-# === Fixtures ===
-
-@pytest.fixture
-def battle_service():
-    """Create a fresh BattleService."""
-    return BattleService()
-
-
-@pytest.fixture
-def two_ship_teams():
-    """Create two teams of ships for battle testing.
-
-    Ships are positioned close enough for weapons to engage (within ~2000 units).
-    """
-    team1 = [
-        create_test_ship(
-            name="Team1_Attacker",
-            x=500,
-            y=400,
-            team_id=0,
-            add_bridge=True,
-            add_engine=True,
-            add_weapons=2,
-        )
-    ]
-    team2 = [
-        create_test_ship(
-            name="Team2_Defender",
-            x=2000,
-            y=400,
-            team_id=1,
-            add_bridge=True,
-            add_engine=True,
-            add_weapons=2,
-        )
-    ]
-    return team1, team2
-
-
-@pytest.fixture
-def fleet_battle_teams():
-    """Create multi-ship fleets for larger scale testing.
-
-    Ships are positioned close enough for weapons to engage.
-    """
-    team1 = [
-        create_test_ship(
-            name=f"Fleet1_Ship{i}",
-            x=500 + (i * 200),
-            y=400 + (i * 100),
-            team_id=0,
-            add_bridge=True,
-            add_engine=True,
-            add_weapons=1,
-            add_shields=1,
-        )
-        for i in range(3)
-    ]
-    team2 = [
-        create_test_ship(
-            name=f"Fleet2_Ship{i}",
-            x=2000 + (i * 200),
-            y=400 + (i * 100),
-            team_id=1,
-            add_bridge=True,
-            add_engine=True,
-            add_weapons=1,
-            add_shields=1,
-        )
-        for i in range(3)
-    ]
-    return team1, team2
-
-
-# === Full Combat Workflow Tests ===
 
 class TestFleetCombatWorkflow:
     """Integration tests for complete fleet combat workflows."""
@@ -224,8 +140,6 @@ class TestFleetCombatWorkflow:
         assert team2[0].hp == original_hp2
 
 
-# === Damage Accumulation Tests ===
-
 class TestDamageAccumulation:
     """Tests for damage accumulation mechanics."""
 
@@ -258,8 +172,6 @@ class TestDamageAccumulation:
 
     def test_destroyed_ship_state_is_not_alive(self):
         """Test that ShipState for destroyed ships has is_alive=False."""
-        from game.simulation.battle_state import ShipState
-
         # Create a ShipState representing destroyed ship
         state = ShipState(
             ship_id="test-id",
@@ -281,8 +193,6 @@ class TestDamageAccumulation:
 
         assert not state.is_alive
 
-
-# === Fleet Scale Tests ===
 
 class TestFleetScaleCombat:
     """Tests for multi-ship fleet combat."""
@@ -347,8 +257,6 @@ class TestFleetScaleCombat:
             assert ship.team_id in (0, 1)
 
 
-# === Battle Outcome Tests ===
-
 class TestBattleOutcome:
     """Tests for battle outcome determination."""
 
@@ -412,206 +320,6 @@ class TestBattleOutcome:
         # Final state should have battle tick count
         assert results.final_state.tick_count == results.tick_count
 
-
-# === Battle Service Integration Tests ===
-
-class TestBattleServiceIntegration:
-    """Tests for BattleService integration."""
-
-    def test_service_creates_engine(self, battle_service):
-        """Test that BattleService creates a battle engine."""
-        result = battle_service.create_battle()
-
-        assert result.success
-        assert result.engine is not None
-        assert isinstance(result.engine, BattleEngine)
-
-    def test_service_adds_ships(self, battle_service, two_ship_teams):
-        """Test that BattleService adds ships correctly."""
-        team1, team2 = two_ship_teams
-
-        battle_service.create_battle()
-
-        for ship in team1:
-            result = battle_service.add_ship(ship, team_id=0)
-            assert result.success
-
-        for ship in team2:
-            result = battle_service.add_ship(ship, team_id=1)
-            assert result.success
-
-        # All ships should be tracked
-        assert len(battle_service.get_all_ships()) == 2
-
-    def test_service_starts_and_updates_battle(self, battle_service, two_ship_teams):
-        """Test that BattleService starts and updates battle."""
-        team1, team2 = two_ship_teams
-
-        battle_service.create_battle()
-        for ship in team1:
-            battle_service.add_ship(ship, team_id=0)
-        for ship in team2:
-            battle_service.add_ship(ship, team_id=1)
-
-        result = battle_service.start_battle()
-        assert result.success
-
-        # Update should work
-        result = battle_service.update()
-        assert result.success
-
-        # Tick counter should increment
-        engine = battle_service.get_engine()
-        assert engine.tick_counter == 1
-
-    def test_service_run_ticks(self, battle_service, two_ship_teams):
-        """Test that BattleService can run multiple ticks."""
-        team1, team2 = two_ship_teams
-
-        battle_service.create_battle()
-        for ship in team1:
-            battle_service.add_ship(ship, team_id=0)
-        for ship in team2:
-            battle_service.add_ship(ship, team_id=1)
-
-        battle_service.start_battle()
-        result = battle_service.run_ticks(100)
-
-        assert result.success
-        assert battle_service.get_engine().tick_counter == 100
-
-    def test_service_provides_battle_state(self, battle_service, two_ship_teams):
-        """Test that BattleService provides battle state information."""
-        team1, team2 = two_ship_teams
-
-        battle_service.create_battle()
-        for ship in team1:
-            battle_service.add_ship(ship, team_id=0)
-        for ship in team2:
-            battle_service.add_ship(ship, team_id=1)
-
-        battle_service.start_battle()
-
-        # Run a few ticks
-        battle_service.run_ticks(100)
-
-        # Should be able to get battle state
-        state = battle_service.get_battle_state()
-        assert state['is_started'] is True
-        assert state['tick_count'] == 100
-
-    def test_service_is_battle_over_initially_false(self, battle_service, two_ship_teams):
-        """Test that is_battle_over is False at start."""
-        team1, team2 = two_ship_teams
-
-        battle_service.create_battle()
-        for ship in team1:
-            battle_service.add_ship(ship, team_id=0)
-        for ship in team2:
-            battle_service.add_ship(ship, team_id=1)
-
-        battle_service.start_battle()
-
-        # Battle should not be over immediately
-        assert battle_service.is_battle_over() is False
-
-
-# === Battle Engine Direct Tests ===
-
-class TestBattleEngineDirect:
-    """Direct tests for BattleEngine."""
-
-    def test_engine_starts_with_ships(self, two_ship_teams):
-        """Test that engine starts with provided ships."""
-        team1, team2 = two_ship_teams
-
-        engine = create_battle_engine()
-        engine.start(team1, team2)
-
-        assert len(engine.ships) == 2
-        assert engine.tick_counter == 0
-
-    def test_engine_update_increments_tick(self, two_ship_teams):
-        """Test that engine update increments tick counter."""
-        team1, team2 = two_ship_teams
-
-        engine = create_battle_engine()
-        engine.start(team1, team2)
-
-        initial_tick = engine.tick_counter
-        engine.update()
-
-        assert engine.tick_counter == initial_tick + 1
-
-    def test_engine_fixture_provides_ready_battle(self):
-        """Test that battle_engine_with_ships fixture works."""
-        engine = create_battle_engine_with_ships(team1_count=2, team2_count=2)
-
-        assert len(engine.ships) == 4
-        team0_ships = [s for s in engine.ships if s.team_id == 0]
-        team1_ships = [s for s in engine.ships if s.team_id == 1]
-        assert len(team0_ships) == 2
-        assert len(team1_ships) == 2
-
-
-# === Adapter Integration Tests ===
-
-class TestAIAdapterIntegration:
-    """Tests for ShipControllableAdapter integration with BattleEngine."""
-
-    def test_ai_controllers_use_adapter(self, two_ship_teams):
-        """Test that AI controllers receive wrapped ships via adapter."""
-        from game.ai.interfaces import ShipControllableAdapter
-
-        team1, team2 = two_ship_teams
-        engine = create_battle_engine()
-        engine.start(team1, team2)
-
-        # All AI controllers should have ShipControllableAdapter as their ship
-        for ai in engine.ai_controllers:
-            assert isinstance(ai.ship, ShipControllableAdapter), \
-                f"AI controller should use ShipControllableAdapter, got {type(ai.ship)}"
-
-    def test_adapter_provides_interface_methods(self, two_ship_teams):
-        """Test that adapter provides IControllable interface methods."""
-        team1, team2 = two_ship_teams
-        engine = create_battle_engine()
-        engine.start(team1, team2)
-
-        for ai in engine.ai_controllers:
-            adapter = ai.ship
-            # Test interface methods exist and work
-            assert hasattr(adapter, 'get_position')
-            assert hasattr(adapter, 'get_velocity')
-            assert hasattr(adapter, 'get_rotation')
-            assert hasattr(adapter, 'set_throttle')
-            assert hasattr(adapter, 'is_alive')
-            assert hasattr(adapter, 'get_team_id')
-
-            # Call methods to ensure they work
-            pos = adapter.get_position()
-            assert pos is not None
-
-    def test_adapter_provides_ship_access(self, two_ship_teams):
-        """Test that adapter provides access to underlying ship."""
-        from game.simulation.entities.ship import Ship
-
-        team1, team2 = two_ship_teams
-        engine = create_battle_engine()
-        engine.start(team1, team2)
-
-        for ai in engine.ai_controllers:
-            adapter = ai.ship
-            # Test access to underlying ship via .ship property
-            assert hasattr(adapter, 'ship')
-            assert isinstance(adapter.ship, Ship)
-
-            # Test interface methods work (PROJ-24 migration - no __getattr__ fallback)
-            assert adapter.get_position() is not None
-            assert adapter.get_team_id() == adapter.ship.team_id
-
-
-# === Edge Case Tests ===
 
 class TestBattleEdgeCases:
     """Tests for edge cases in battle system."""
@@ -712,3 +420,7 @@ class TestBattleEdgeCases:
         assert controller._is_configured is False
         assert controller._is_started is False
         assert len(controller._ship_id_map) == 0
+
+
+if __name__ == '__main__':
+    pytest.main([__file__, '-v'])

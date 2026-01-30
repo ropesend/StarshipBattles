@@ -1,120 +1,14 @@
 """
-Comprehensive tests for Formation Prediction in game/ai/behaviors.py
+Tests for FormationBehavior calculation and prediction.
 
-This test file covers:
-- FormationBehavior calculation and prediction
-- Formation offset calculations
-- Rotation modes (fixed vs relative)
-- Drift vs navigation transitions
-- Position correction logic
-- Master velocity matching
-- Formation integrity checks
+Tests basic formation updates, offset calculations, drift thresholds,
+rotation matching, velocity sync, position correction, and prediction.
 """
+
 import pytest
 import pygame
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
-
-# =============================================================================
-# Fixtures
-# =============================================================================
-
-@pytest.fixture(autouse=True)
-def pygame_init():
-    """Initialize pygame for Vector2 usage."""
-    pygame.init()
-    yield
-    pygame.quit()
-
-
-@pytest.fixture
-def mock_controller():
-    """Create a mock AI controller."""
-    controller = MagicMock()
-    controller.navigate_to = MagicMock()
-    return controller
-
-
-@pytest.fixture
-def mock_ship():
-    """Create a mock ship for formation testing."""
-    ship = MagicMock()
-    ship.position = pygame.math.Vector2(100, 100)
-    ship.angle = 0
-    ship.radius = 25
-    ship.max_speed = 500
-    ship.turn_speed = 90
-    ship.turn_throttle = 1.0
-    ship.engine_throttle = 1.0
-    ship.acceleration_rate = 100
-    ship.in_formation = True
-    ship.formation_offset = pygame.math.Vector2(50, 50)
-    ship.formation_rotation_mode = 'relative'
-    ship.formation_master = None
-
-    # Interface method mocks - use lambdas to dynamically return current values
-    ship.get_position.side_effect = lambda: ship.position
-    ship.get_rotation.side_effect = lambda: ship.angle
-    ship.get_radius.return_value = ship.radius
-    ship.get_max_speed.side_effect = lambda: ship.max_speed
-    ship.get_turn_speed.side_effect = lambda: ship.turn_speed
-    ship.get_acceleration_rate.return_value = ship.acceleration_rate
-    ship.get_formation_offset.side_effect = lambda: ship.formation_offset
-    ship.get_formation_master.side_effect = lambda: ship.formation_master
-
-    # Interface method setters should update attributes for assertion checking
-    def set_in_formation(value):
-        ship.in_formation = value
-    ship.set_in_formation.side_effect = set_in_formation
-
-    def set_throttle(value):
-        ship.engine_throttle = value
-    ship.set_throttle.side_effect = set_throttle
-
-    def set_rotation(value):
-        ship.angle = value
-        ship.get_rotation.side_effect = lambda: ship.angle
-    ship.set_rotation.side_effect = set_rotation
-
-    def adjust_position(delta):
-        ship.position = ship.position + delta
-    ship.adjust_position.side_effect = adjust_position
-
-    return ship
-
-
-@pytest.fixture
-def mock_master():
-    """Create a mock formation master ship."""
-    master = MagicMock()
-    master.position = pygame.math.Vector2(0, 0)
-    master.angle = 0
-    master.is_alive = True
-    master.is_derelict = False
-    master.velocity = pygame.math.Vector2(10, 0)
-    master.current_speed = 10
-    master.is_thrusting = True
-    master.max_speed = 500
-    master.engine_throttle = 1.0
-    return master
-
-
-@pytest.fixture
-def formation_behavior(mock_controller, mock_ship, mock_master):
-    """Create a FormationBehavior with mocked components."""
-    from game.ai.behaviors import FormationBehavior
-
-    mock_ship.formation_master = mock_master
-    mock_ship.get_formation_master.return_value = mock_master
-    mock_controller.ship = mock_ship
-
-    behavior = FormationBehavior(mock_controller)
-    return behavior
-
-
-# =============================================================================
-# Test: Basic Formation Update
-# =============================================================================
 
 class TestFormationBasic:
     """Tests for basic formation behavior."""
@@ -144,10 +38,6 @@ class TestFormationBasic:
 
         assert mock_ship.in_formation == False
 
-
-# =============================================================================
-# Test: Offset Calculations
-# =============================================================================
 
 class TestOffsetCalculations:
     """Tests for formation offset calculations."""
@@ -197,10 +87,6 @@ class TestOffsetCalculations:
         assert call_args is not None
 
 
-# =============================================================================
-# Test: Drift vs Navigate Threshold
-# =============================================================================
-
 class TestDriftThreshold:
     """Tests for drift vs navigation decision."""
 
@@ -231,10 +117,6 @@ class TestDriftThreshold:
         # Should call navigate_to when outside threshold
         assert formation_behavior.controller.navigate_to.call_count == 1
 
-
-# =============================================================================
-# Test: Rotation Matching
-# =============================================================================
 
 class TestRotationMatching:
     """Tests for rotation synchronization with master."""
@@ -281,10 +163,6 @@ class TestRotationMatching:
         mock_ship.rotate.assert_called()
 
 
-# =============================================================================
-# Test: Velocity Synchronization
-# =============================================================================
-
 class TestVelocitySync:
     """Tests for velocity synchronization with master."""
 
@@ -316,10 +194,6 @@ class TestVelocitySync:
         # Throttle should be 0 or near 0
         assert mock_ship.engine_throttle == 0.0
 
-
-# =============================================================================
-# Test: Position Correction
-# =============================================================================
 
 class TestPositionCorrection:
     """Tests for positional drift correction."""
@@ -363,10 +237,6 @@ class TestPositionCorrection:
         assert new_pos.x < original_pos.x
 
 
-# =============================================================================
-# Test: Prediction
-# =============================================================================
-
 class TestPrediction:
     """Tests for formation position prediction."""
 
@@ -389,10 +259,6 @@ class TestPrediction:
         # Predicted position should be ahead of current master position
         # Based on master moving forward (negative y direction at angle 0)
 
-
-# =============================================================================
-# Test: Edge Cases
-# =============================================================================
 
 class TestEdgeCases:
     """Tests for edge cases."""
@@ -435,10 +301,6 @@ class TestEdgeCases:
         formation_behavior.update(None, {})
 
 
-# =============================================================================
-# Test: Behavior States
-# =============================================================================
-
 class TestBehaviorStates:
     """Tests for behavior state transitions."""
 
@@ -475,10 +337,6 @@ class TestBehaviorStates:
         # navigate_to should be called
         assert formation_behavior.controller.navigate_to.call_count > initial_nav_count
 
-
-# =============================================================================
-# Test: Formation Integrity (from controller.py)
-# =============================================================================
 
 class TestFormationIntegrity:
     """Tests for formation integrity checks in AIController."""
@@ -525,158 +383,5 @@ class TestFormationIntegrity:
         assert mock_ship.formation_master is None  # Master reference should be cleared
 
 
-# =============================================================================
-# Test: Other Behaviors
-# =============================================================================
-
-class TestOtherBehaviors:
-    """Tests for other AI behaviors in behaviors.py."""
-
-    def test_flee_behavior_basic(self, mock_controller, pygame_init):
-        """FleeBehavior should navigate away from target."""
-        from game.ai.behaviors import FleeBehavior
-
-        mock_ship = MagicMock()
-        mock_ship.position = pygame.math.Vector2(0, 0)
-        mock_ship.comp_trigger_pulled = True
-        mock_controller.ship = mock_ship
-
-        # Interface methods
-        mock_ship.get_position.return_value = mock_ship.position
-        mock_ship.set_trigger_pulled.side_effect = lambda v: setattr(mock_ship, 'comp_trigger_pulled', v)
-
-        target = MagicMock()
-        target.position = pygame.math.Vector2(100, 0)
-
-        behavior = FleeBehavior(mock_controller)
-        behavior.update(target, {'fire_while_retreating': False})
-
-        # Should set trigger to false when not firing while retreating
-        assert mock_ship.comp_trigger_pulled == False
-
-        # Should navigate away
-        mock_controller.navigate_to.assert_called_once()
-        nav_pos = mock_controller.navigate_to.call_args[0][0]
-
-        # Navigate position should be away from target
-        assert nav_pos.x < 0  # Opposite direction from target
-
-    def test_ram_behavior_basic(self, mock_controller, pygame_init):
-        """RamBehavior should navigate toward target."""
-        from game.ai.behaviors import RamBehavior
-
-        mock_ship = MagicMock()
-        mock_ship.position = pygame.math.Vector2(0, 0)
-        mock_controller.ship = mock_ship
-
-        target = MagicMock()
-        target.position = pygame.math.Vector2(100, 100)
-
-        behavior = RamBehavior(mock_controller)
-        behavior.update(target, {})
-
-        # Should navigate to target
-        mock_controller.navigate_to.assert_called_once_with(
-            target.position, stop_dist=0, precise=False
-        )
-
-    def test_attack_run_behavior_approach(self, mock_controller, pygame_init):
-        """AttackRunBehavior should approach initially."""
-        from game.ai.behaviors import AttackRunBehavior
-
-        mock_ship = MagicMock()
-        mock_ship.position = pygame.math.Vector2(0, 0)
-        mock_ship.max_weapon_range = 1000
-        mock_controller.ship = mock_ship
-
-        # Interface methods
-        mock_ship.get_position.return_value = mock_ship.position
-        mock_ship.get_weapon_range.return_value = mock_ship.max_weapon_range
-
-        target = MagicMock()
-        target.position = pygame.math.Vector2(2000, 0)  # Far away
-
-        behavior = AttackRunBehavior(mock_controller)
-        behavior.enter()
-
-        assert behavior.attack_state == 'approach'
-
-        behavior.update(target, {})
-
-        # Should navigate toward target
-        mock_controller.navigate_to.assert_called()
-
-    def test_orbit_behavior_no_target(self, mock_controller, pygame_init):
-        """OrbitBehavior should do nothing with no target."""
-        from game.ai.behaviors import OrbitBehavior
-
-        mock_ship = MagicMock()
-        mock_controller.ship = mock_ship
-
-        behavior = OrbitBehavior(mock_controller)
-        behavior.update(None, {})
-
-        # Should not call navigate_to
-        mock_controller.navigate_to.assert_not_called()
-
-
-# =============================================================================
-# Test: DoNothing and StationaryFire Behaviors
-# =============================================================================
-
-class TestSpecialBehaviors:
-    """Tests for special test behaviors."""
-
-    def test_do_nothing_disables_firing(self, mock_controller):
-        """DoNothingBehavior should disable firing."""
-        from game.ai.behaviors import DoNothingBehavior
-
-        mock_ship = MagicMock()
-        mock_ship.comp_trigger_pulled = True
-        mock_controller.ship = mock_ship
-
-        # Interface method
-        mock_ship.set_trigger_pulled.side_effect = lambda v: setattr(mock_ship, 'comp_trigger_pulled', v)
-
-        behavior = DoNothingBehavior(mock_controller)
-        behavior.update(None, {})
-
-        assert mock_ship.comp_trigger_pulled == False
-
-    def test_stationary_fire_allows_firing(self, mock_controller):
-        """StationaryFireBehavior should allow firing."""
-        from game.ai.behaviors import StationaryFireBehavior
-
-        mock_ship = MagicMock()
-        mock_ship.comp_trigger_pulled = True
-        mock_controller.ship = mock_ship
-
-        behavior = StationaryFireBehavior(mock_controller)
-        behavior.update(None, {})
-
-        # Should not change trigger state
-        assert mock_ship.comp_trigger_pulled == True
-
-    def test_straight_line_thrusts_forward(self, mock_controller):
-        """StraightLineBehavior should thrust forward."""
-        from game.ai.behaviors import StraightLineBehavior
-
-        mock_ship = MagicMock()
-        mock_controller.ship = mock_ship
-
-        behavior = StraightLineBehavior(mock_controller)
-        behavior.update(None, {})
-
-        mock_ship.thrust_forward.assert_called_once()
-
-    def test_rotate_only_rotates(self, mock_controller):
-        """RotateOnlyBehavior should only rotate."""
-        from game.ai.behaviors import RotateOnlyBehavior
-
-        mock_ship = MagicMock()
-        mock_controller.ship = mock_ship
-
-        behavior = RotateOnlyBehavior(mock_controller)
-        behavior.update(None, {'rotation_direction': 1})
-
-        mock_ship.rotate.assert_called_once_with(1)
+if __name__ == '__main__':
+    pytest.main([__file__, '-v'])
