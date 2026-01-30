@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Break down combat responsibilities into focused strategies.
 
 ---
@@ -17,15 +17,15 @@
 **Issue:** CQ-005 - Targeting mixed with firing and damage
 **Tests:** `pytest tests/unit/simulation/test_ship_combat_engine.py`
 
-- [ ] Create `TargetingSystem` class with:
+- [x] Create `TargetingSystem` class with:
   - `select_target(ship, candidates) -> Optional[Ship]`
   - `find_valid_target(ship, primary, secondaries, weapon) -> Optional[Ship]`
   - `calculate_firing_solution(ship, target, weapon) -> Tuple[Vector2, Vector2]`
   - `solve_lead(target_pos, target_vel, ship_pos, projectile_speed) -> float`
-- [ ] Move methods from `ship_combat_engine.py` lines 47-189, 298-354
-- [ ] Verify: Target selection works in combat
+- [x] Move methods from `ship_combat_engine.py` lines 47-189, 298-354
+- [x] Verify: Target selection works in combat
 
-**Notes:**
+**Notes:** Created 198-line TargetingSystem class with 18 tests.
 
 ---
 
@@ -34,15 +34,15 @@
 **Issue:** CQ-005 - Damage application complex
 **Tests:** `pytest tests/unit/simulation/test_ship_combat_engine.py`
 
-- [ ] Create `DamageCalculator` class with:
+- [x] Create `DamageCalculator` class with:
   - `apply_damage(ship, damage, damage_type) -> int`
   - `_process_armor_absorption(ship, damage) -> int`
   - `_process_shield_absorption(ship, damage) -> int`
   - `_damage_layer(ship, layer_type, damage) -> int`
-- [ ] Move methods from `ship_combat_engine.py` lines 485-581
-- [ ] Verify: Damage application works correctly
+- [x] Move methods from `ship_combat_engine.py` lines 485-581
+- [x] Verify: Damage application works correctly
 
-**Notes:**
+**Notes:** Created 99-line DamageCalculator class with 12 tests.
 
 ---
 
@@ -51,16 +51,16 @@
 **Issue:** CQ-005 - Firing logic mixed with other concerns
 **Tests:** `pytest tests/unit/simulation/test_ship_combat_engine.py`
 
-- [ ] Create `WeaponFiringSystem` class with:
+- [x] Create `WeaponFiringSystem` class with:
   - `fire_weapons(ship, targeting_system) -> List[Attack]`
   - `_process_weapon_fire(ship, component, target) -> Optional[Attack]`
   - `_create_attack(ship, target, weapon, solution) -> Attack`
   - `_create_seeker_projectile(ship, target, weapon) -> Attack`
   - `_create_standard_projectile(ship, target, weapon) -> Attack`
-- [ ] Move methods from `ship_combat_engine.py` lines 195-479
-- [ ] Verify: Weapons fire correctly
+- [x] Move methods from `ship_combat_engine.py` lines 195-479
+- [x] Verify: Weapons fire correctly
 
-**Notes:**
+**Notes:** Created 221-line WeaponFiringSystem class with 12 tests.
 
 ---
 
@@ -69,19 +69,19 @@
 **Issue:** CQ-005 - Reduce to coordinator
 **Tests:** `pytest tests/unit/simulation/test_ship_combat_engine.py`
 
-- [ ] ShipCombatEngine now coordinates: TargetingSystem, DamageCalculator, WeaponFiringSystem
-- [ ] Keep: `__init__`, `update_combat_cooldowns`, `_apply_repair`
-- [ ] Should be ~200-250 lines
-- [ ] Verify: Full combat integration works
+- [x] ShipCombatEngine now coordinates: TargetingSystem, DamageCalculator, WeaponFiringSystem
+- [x] Keep: `__init__`, `update_combat_cooldowns`, `_apply_repair`
+- [x] Should be ~200-250 lines
+- [x] Verify: Full combat integration works
 
-**Notes:**
+**Notes:** ShipCombatEngine reduced from 657 to 217 lines (67% reduction). Delegates to focused subsystems. Uses class-level shared instances for stateless subsystems.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - all tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

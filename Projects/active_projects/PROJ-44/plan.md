@@ -17,7 +17,7 @@
 | 2. Registry & Service Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Helper Methods | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Decomposition | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. ShipCombatEngine Decomposition | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. ShipCombatEngine Decomposition | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. BattleController Mode Handlers | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. UI God Class Decomposition | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Long Method Refactoring | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 5 - ShipCombatEngine Decomposition (next)
-**Last Action:** Phase 4 complete - Decomposed Component god class into AbilityManager, ModifierManager, ComponentStatsCalculator
-**Next Action:** Start Phase 5 - ShipCombatEngine Decomposition
+**Active Phase:** Phase 6 - BattleController Mode Handlers (next)
+**Last Action:** Phase 5 complete - Decomposed ShipCombatEngine into TargetingSystem, DamageCalculator, WeaponFiringSystem
+**Next Action:** Start Phase 6 - BattleController Mode Handlers
 **Blockers:** None
 
 ## Overview
@@ -56,7 +56,10 @@ A comprehensive refactoring project to address 35+ code quality issues including
 |-----------|-----------|-----|
 | Component (refactored) | `game/simulation/components/component.py` | 665 |
 | Ship (god class) | `game/simulation/entities/ship.py` | 834 |
-| ShipCombatEngine | `game/simulation/entities/ship_combat_engine.py` | 655 |
+| ShipCombatEngine (refactored) | `game/simulation/entities/ship_combat_engine.py` | 217 |
+| TargetingSystem (new) | `game/simulation/combat/targeting_system.py` | 198 |
+| DamageCalculator (new) | `game/simulation/combat/damage_calculator.py` | 99 |
+| WeaponFiringSystem (new) | `game/simulation/combat/weapon_firing_system.py` | 221 |
 | BattleController | `game/simulation/battle_controller.py` | 889 |
 | BuilderSceneGUI | `game/ui/screens/builder/main.py` | 1100 |
 | RaceSetupScreen | `game/ui/screens/race_setup_screen.py` | 1231 |

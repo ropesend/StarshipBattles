@@ -8,22 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-44 Phase 4 Complete
-**Current Status:** PROJ-44 Phase 4 complete, ready for Phase 5
+**Last Completed:** PROJ-44 Phase 5 Complete
+**Current Status:** PROJ-44 Phase 5 complete, ready for Phase 6
 **Current Project:** PROJ-44
-**Current Phase:** Phase 5 (next)
-**Test Status:** 5448 passed, 3 skipped
+**Current Phase:** Phase 6 (next)
+**Test Status:** 5490 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 4 complete: Decomposed Component god class into three manager classes
-- Created: game/simulation/components/ability_manager.py (211 lines)
-- Created: game/simulation/components/modifier_manager.py (203 lines)
-- Created: game/simulation/components/component_stats_calculator.py (235 lines)
-- Component reduced from 898 to 665 lines (-233 lines, 26% reduction)
-- Added tests: test_ability_manager.py, test_modifier_manager.py, test_component_stats_calculator.py
-- 5448 tests pass
-- Next: Start Phase 5 - ShipCombatEngine Decomposition
+- Phase 5 complete: Decomposed ShipCombatEngine into focused subsystems
+- Created: game/simulation/combat/targeting_system.py (198 lines)
+- Created: game/simulation/combat/damage_calculator.py (99 lines)
+- Created: game/simulation/combat/weapon_firing_system.py (221 lines)
+- ShipCombatEngine reduced from 657 to 217 lines (-440 lines, 67% reduction)
+- Added tests: test_targeting_system.py (18), test_damage_calculator.py (12), test_weapon_firing_system.py (12)
+- 5490 tests pass (42 new tests)
+- Next: Start Phase 6 - BattleController Mode Handlers
 
 ---
 
@@ -99,6 +99,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-44 | Phase 5 Complete | Complete | 5490 passed | 0c914d35 | ShipCombatEngine decomposition: TargetingSystem, DamageCalculator, WeaponFiringSystem |
 | 2026-01-30 | PROJ-44 | Phase 4 Complete | Complete | 5448 passed | 9023d082 | Component decomposition: AbilityManager, ModifierManager, ComponentStatsCalculator |
 | 2026-01-30 | PROJ-44 | Phase 3 Complete | Complete | 5410 passed | f410c156 | Replaced layer access patterns with Ship helpers |
 | 2026-01-30 | PROJ-44 | Phase 2 Complete | Complete | 5409 passed | c683502 | Refactored BuilderSceneGUI to WorkshopDataLoader |
