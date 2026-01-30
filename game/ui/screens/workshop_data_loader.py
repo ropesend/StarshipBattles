@@ -190,7 +190,7 @@ class WorkshopDataLoader:
         
         if vclass_path:
             if vlayer_path:
-                load_vehicle_classes(vclass_path, layers_filepath=vlayer_path)
+                load_vehicle_classes(vclass_path, layers_file_path=vlayer_path)
                 log_info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
             else:
                 load_vehicle_classes(vclass_path)

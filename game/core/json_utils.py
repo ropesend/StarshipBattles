@@ -31,7 +31,7 @@ from game.core.logger import log_error, log_debug
 
 
 def load_json(
-    filepath: Union[str, Path],
+    file_path: Union[str, Path],
     default: Optional[Any] = None,
     encoding: str = 'utf-8'
 ) -> Any:
@@ -39,7 +39,7 @@ def load_json(
     Load JSON from a file with consistent error handling.
 
     Args:
-        filepath: Path to the JSON file (string or Path object)
+        file_path: Path to the JSON file (string or Path object)
         default: Value to return if loading fails (default: None)
         encoding: File encoding (default: utf-8)
 
@@ -51,24 +51,24 @@ def load_json(
         >>> data = load_json("config.json", default={})
         >>> data = load_json(Path("data") / "config.json")
     """
-    filepath = Path(filepath)
+    file_path = Path(file_path)
 
     try:
-        with open(filepath, 'r', encoding=encoding) as f:
+        with open(file_path, 'r', encoding=encoding) as f:
             return json.load(f)
     except FileNotFoundError:
-        log_debug(f"JSON file not found: {filepath}")
+        log_debug(f"JSON file not found: {file_path}")
         return default
     except json.JSONDecodeError as e:
-        log_error(f"Invalid JSON in {filepath}: {e}")
+        log_error(f"Invalid JSON in {file_path}: {e}")
         return default
     except IOError as e:
-        log_error(f"Error reading {filepath}: {e}")
+        log_error(f"Error reading {file_path}: {e}")
         return default
 
 
 def load_json_required(
-    filepath: Union[str, Path],
+    file_path: Union[str, Path],
     encoding: str = 'utf-8'
 ) -> Any:
     """
@@ -77,7 +77,7 @@ def load_json_required(
     Use this for critical files that must exist and be valid.
 
     Args:
-        filepath: Path to the JSON file (string or Path object)
+        file_path: Path to the JSON file (string or Path object)
         encoding: File encoding (default: utf-8)
 
     Returns:
@@ -90,14 +90,14 @@ def load_json_required(
     Examples:
         >>> data = load_json_required("critical_config.json")
     """
-    filepath = Path(filepath)
+    file_path = Path(file_path)
 
-    with open(filepath, 'r', encoding=encoding) as f:
+    with open(file_path, 'r', encoding=encoding) as f:
         return json.load(f)
 
 
 def save_json(
-    filepath: Union[str, Path],
+    file_path: Union[str, Path],
     data: Any,
     indent: int = 2,
     encoding: str = 'utf-8',
@@ -109,7 +109,7 @@ def save_json(
     Creates parent directories if they don't exist.
 
     Args:
-        filepath: Path to the output file (string or Path object)
+        file_path: Path to the output file (string or Path object)
         data: Data to serialize to JSON
         indent: Indentation level for pretty printing (default: 2)
         encoding: File encoding (default: utf-8)
@@ -124,20 +124,20 @@ def save_json(
         >>> save_json(Path("data") / "output.json", data, indent=4)
         True
     """
-    filepath = Path(filepath)
+    file_path = Path(file_path)
 
     try:
         # Create parent directories if needed
-        filepath.parent.mkdir(parents=True, exist_ok=True)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(filepath, 'w', encoding=encoding) as f:
+        with open(file_path, 'w', encoding=encoding) as f:
             json.dump(data, f, indent=indent, ensure_ascii=ensure_ascii)
 
-        log_debug(f"Saved JSON to {filepath}")
+        log_debug(f"Saved JSON to {file_path}")
         return True
     except IOError as e:
-        log_error(f"Failed to save JSON to {filepath}: {e}")
+        log_error(f"Failed to save JSON to {file_path}: {e}")
         return False
     except TypeError as e:
-        log_error(f"Failed to serialize data to JSON for {filepath}: {e}")
+        log_error(f"Failed to serialize data to JSON for {file_path}: {e}")
         return False

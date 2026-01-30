@@ -26,21 +26,21 @@ class TechTree:
         self._depth_cache: Dict[str, int] = {}
 
     @classmethod
-    def load_from_json(cls, filepath: str = None) -> 'TechTree':
+    def load_from_json(cls, file_path: str = None) -> 'TechTree':
         """
         Load tech tree from JSON file.
 
         Args:
-            filepath: Path to JSON file. Defaults to data/techtree.json
+            file_path: Path to JSON file. Defaults to data/techtree.json
 
         Returns:
             Populated TechTree instance
         """
-        if filepath is None:
-            filepath = os.path.join(DATA_DIR, "techtree.json")
+        if file_path is None:
+            file_path = os.path.join(DATA_DIR, "techtree.json")
 
         tree = cls()
-        data = load_json(filepath, default={"tech_tree": []})
+        data = load_json(file_path, default={"tech_tree": []})
 
         loaded_count = 0
         skipped_count = 0
@@ -86,7 +86,7 @@ class TechTree:
             tree.nodes[node.id] = node
             loaded_count += 1
 
-        log_info(f"TechTree: Loaded {loaded_count} nodes from {filepath}")
+        log_info(f"TechTree: Loaded {loaded_count} nodes from {file_path}")
         if skipped_count > 0:
             log_info(f"TechTree: Skipped {skipped_count} comment/invalid entries")
 

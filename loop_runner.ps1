@@ -58,7 +58,6 @@ while ($iteration -lt $MAX_ITERATIONS) {
         claude `
             --dangerously-skip-permissions `
             --system-prompt-file WORKER.md `
-            --verbose `
             -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress."
             
         if ($LASTEXITCODE -ne 0) {

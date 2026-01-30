@@ -22,8 +22,8 @@ def get_or_create_validator():
 
 
 def load_vehicle_classes_data(
-    filepath: str = None,
-    layers_filepath: Optional[str] = None
+    file_path: str = None,
+    layers_file_path: Optional[str] = None
 ) -> dict:
     """
     Pure function to load vehicle class definitions from JSON.
@@ -32,32 +32,32 @@ def load_vehicle_classes_data(
     modifying any global state. Use this for DI patterns.
 
     Args:
-        filepath: Path to the vehicle classes JSON file
-        layers_filepath: Optional path to the layer definitions JSON file
+        file_path: Path to the vehicle classes JSON file
+        layers_file_path: Optional path to the layer definitions JSON file
 
     Returns:
         Dict[str, dict]: Vehicle class definitions keyed by class name
     """
     import copy
 
-    if filepath is None:
-        filepath = Paths.VEHICLE_CLASSES_FILE
+    if file_path is None:
+        file_path = Paths.VEHICLE_CLASSES_FILE
 
     # Check if we need to resolve path relative to this file
-    if not os.path.exists(filepath):
+    if not os.path.exists(file_path):
         # Try finding it relative to module
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        abs_path = os.path.join(base_dir, filepath)
+        abs_path = os.path.join(base_dir, file_path)
         if os.path.exists(abs_path):
-            filepath = abs_path
+            file_path = abs_path
 
     # Try to load layer definitions (optional)
     layer_definitions = {}
 
-    if layers_filepath:
-        layers_path = layers_filepath
+    if layers_file_path:
+        layers_path = layers_file_path
     else:
-        layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+        layers_path = os.path.join(os.path.dirname(file_path), "vehiclelayers.json")
 
     layer_data = load_json(layers_path, default={})
     if layer_data:
@@ -65,9 +65,9 @@ def load_vehicle_classes_data(
 
     # Load vehicle classes (required)
     try:
-        data = load_json_required(filepath)
+        data = load_json_required(file_path)
     except FileNotFoundError:
-        raise RuntimeError(f"Critical Error: {filepath} not found. Vehicle class data is required for game operation.")
+        raise RuntimeError(f"Critical Error: {file_path} not found. Vehicle class data is required for game operation.")
 
     raw_classes = data.get('classes', {})
 
@@ -84,24 +84,24 @@ def load_vehicle_classes_data(
     return result
 
 
-def load_vehicle_classes(filepath: str = None, layers_filepath: Optional[str] = None) -> None:
+def load_vehicle_classes(file_path: str = None, layers_file_path: Optional[str] = None) -> None:
     """
     Load vehicle class definitions from JSON and populate the global registry.
 
     This is a thin wrapper around load_vehicle_classes_data() for backward
     compatibility. New code should prefer DI via load_vehicle_classes_data().
     """
-    if filepath is None:
-        filepath = Paths.VEHICLE_CLASSES_FILE
+    if file_path is None:
+        file_path = Paths.VEHICLE_CLASSES_FILE
 
     # Load data using pure function
-    result = load_vehicle_classes_data(filepath, layers_filepath)
+    result = load_vehicle_classes_data(file_path, layers_file_path)
 
     # Log layer info (we need to check the layers file to get the count)
-    if layers_filepath:
-        layers_path = layers_filepath
+    if layers_file_path:
+        layers_path = layers_file_path
     else:
-        layers_path = os.path.join(os.path.dirname(filepath), "vehiclelayers.json")
+        layers_path = os.path.join(os.path.dirname(file_path), "vehiclelayers.json")
 
     layer_data = load_json(layers_path, default={})
     if layer_data:

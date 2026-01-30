@@ -114,12 +114,12 @@ class RaceConfig:
             modified_date=data.get("modified_date", ""),
         )
 
-    def save(self, filepath: str) -> bool:
+    def save(self, file_path: str) -> bool:
         """
         Save race configuration to JSON file.
 
         Args:
-            filepath: Path to save the JSON file
+            file_path: Path to save the JSON file
 
         Returns:
             True if save succeeded, False otherwise
@@ -131,20 +131,20 @@ class RaceConfig:
         if not self.created_date:
             self.created_date = self.modified_date
 
-        return save_json(filepath, self.to_dict(), indent=2)
+        return save_json(file_path, self.to_dict(), indent=2)
 
     @classmethod
-    def load(cls, filepath: str) -> Optional['RaceConfig']:
+    def load(cls, file_path: str) -> Optional['RaceConfig']:
         """
         Load race configuration from JSON file.
 
         Args:
-            filepath: Path to the JSON file
+            file_path: Path to the JSON file
 
         Returns:
             RaceConfig instance or None if load failed
         """
-        data = load_json(filepath)
+        data = load_json(file_path)
         if data is None:
             return None
         return cls.from_dict(data)

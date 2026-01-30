@@ -480,7 +480,7 @@ def reset_component_caches():
     """
     ComponentCacheManager.reset()
 
-def load_components_data(filepath: str = "data/components.json") -> dict:
+def load_components_data(file_path: str = "data/components.json") -> dict:
     """
     Pure function to load components from JSON file.
 
@@ -488,7 +488,7 @@ def load_components_data(filepath: str = "data/components.json") -> dict:
     modifying any global state. Use this for DI patterns.
 
     Args:
-        filepath: Path to the components JSON file
+        file_path: Path to the components JSON file
 
     Returns:
         Dict[str, Component]: Component objects keyed by their ID
@@ -496,17 +496,17 @@ def load_components_data(filepath: str = "data/components.json") -> dict:
     import os
 
     # Try absolute path based on this file if CWD fails
-    if not os.path.exists(filepath):
+    if not os.path.exists(file_path):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        abs_path = os.path.join(base_dir, filepath)
+        abs_path = os.path.join(base_dir, file_path)
         if os.path.exists(abs_path):
-            filepath = abs_path
+            file_path = abs_path
         else:
             log_error(f"components file not found at {abs_path}")
             return {}
 
     try:
-        data = load_json_required(filepath)
+        data = load_json_required(file_path)
 
         result = {}
         errors = []
@@ -540,7 +540,7 @@ def load_components_data(filepath: str = "data/components.json") -> dict:
         return {}
 
 
-def load_components(filepath="data/components.json"):
+def load_components(file_path="data/components.json"):
     """
     Load components from JSON and populate the global registry.
 
@@ -554,26 +554,26 @@ def load_components(filepath="data/components.json"):
     # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
     comps = _get_registries_fallback().components
 
-    # If cache exists and matches filepath, hydrate Registry from cache (Fast Path)
-    if cache_mgr.component_cache is not None and cache_mgr.last_component_file == filepath:
+    # If cache exists and matches file_path, hydrate Registry from cache (Fast Path)
+    if cache_mgr.component_cache is not None and cache_mgr.last_component_file == file_path:
         for c_id, comp in cache_mgr.component_cache.items():
             comps[c_id] = comp.clone()
         return
 
     # Slow Path: Load from Disk using pure function
-    result = load_components_data(filepath)
+    result = load_components_data(file_path)
     if not result:
         return
 
     # Populate Cache
     cache_mgr.component_cache = result
-    cache_mgr.last_component_file = filepath
+    cache_mgr.last_component_file = file_path
 
     # Populate Registry from Cache
     for c_id, comp in cache_mgr.component_cache.items():
         comps[c_id] = comp.clone()
 
-def load_modifiers_data(filepath: str = "data/modifiers.json") -> dict:
+def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
     """
     Pure function to load modifiers from JSON file.
 
@@ -581,7 +581,7 @@ def load_modifiers_data(filepath: str = "data/modifiers.json") -> dict:
     modifying any global state. Use this for DI patterns.
 
     Args:
-        filepath: Path to the modifiers JSON file
+        file_path: Path to the modifiers JSON file
 
     Returns:
         Dict[str, Modifier]: Modifier objects keyed by their ID
@@ -591,17 +591,17 @@ def load_modifiers_data(filepath: str = "data/modifiers.json") -> dict:
     from game.simulation.components.modifier_schema import validate_modifier_v2
 
     # Try absolute path based on this file if CWD fails
-    if not os.path.exists(filepath):
+    if not os.path.exists(file_path):
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        abs_path = os.path.join(base_dir, filepath)
+        abs_path = os.path.join(base_dir, file_path)
         if os.path.exists(abs_path):
-            filepath = abs_path
+            file_path = abs_path
         else:
             log_error(f"modifiers file not found at {abs_path}")
             return {}
 
     try:
-        data = load_json_required(filepath)
+        data = load_json_required(file_path)
 
         result = {}
         errors = []
@@ -633,7 +633,7 @@ def load_modifiers_data(filepath: str = "data/modifiers.json") -> dict:
         return {}
 
 
-def load_modifiers(filepath="data/modifiers.json"):
+def load_modifiers(file_path="data/modifiers.json"):
     """
     Load modifiers from JSON and populate the global registry.
 
@@ -648,18 +648,18 @@ def load_modifiers(filepath="data/modifiers.json"):
     mods = _get_registries_fallback().modifiers
 
     # Fast Path
-    if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == filepath:
+    if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == file_path:
         for m_id, mod in cache_mgr.modifier_cache.items():
             mods[m_id] = copy.deepcopy(mod)
         return
 
     # Slow Path: Load using pure function
-    result = load_modifiers_data(filepath)
+    result = load_modifiers_data(file_path)
     if not result:
         return
 
     cache_mgr.modifier_cache = result
-    cache_mgr.last_modifier_file = filepath
+    cache_mgr.last_modifier_file = file_path
 
     for m_id, mod in cache_mgr.modifier_cache.items():
         mods[m_id] = copy.deepcopy(mod)

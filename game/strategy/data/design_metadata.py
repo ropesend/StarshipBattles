@@ -72,14 +72,14 @@ class DesignMetadata:
         )
 
     @classmethod
-    def from_design_file(cls, filepath: str, design_id: str) -> 'DesignMetadata':
+    def from_design_file(cls, file_path: str, design_id: str) -> 'DesignMetadata':
         """
         Load metadata from ship JSON file.
 
         Reads the ship design file and extracts metadata without fully
         instantiating the Ship object.
         """
-        data = load_json_required(filepath)
+        data = load_json_required(file_path)
 
         # Extract basic info
         name = data.get("name", "Unnamed")
@@ -98,7 +98,7 @@ class DesignMetadata:
         resource_cost = cls._calculate_resource_cost(data)
 
         # Get file timestamps
-        stat = os.stat(filepath)
+        stat = os.stat(file_path)
         created_date = datetime.fromtimestamp(stat.st_ctime).isoformat()
         last_modified = datetime.fromtimestamp(stat.st_mtime).isoformat()
 

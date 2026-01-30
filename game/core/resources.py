@@ -27,23 +27,23 @@ def _get_default_resources() -> dict:
     }
 
 
-def _resolve_resource_path(filepath: str) -> Optional[str]:
+def _resolve_resource_path(file_path: str) -> Optional[str]:
     """
     Resolve resource file path, trying relative then absolute paths.
 
     Args:
-        filepath: Path to the resources JSON file (relative or absolute)
+        file_path: Path to the resources JSON file (relative or absolute)
 
     Returns:
         Resolved absolute path if file exists, None otherwise
     """
-    if os.path.exists(filepath):
-        return filepath
+    if os.path.exists(file_path):
+        return file_path
 
     # Try absolute path based on this file's location
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(os.path.dirname(base_dir))  # game/core -> game -> project
-    abs_path = os.path.join(project_root, filepath)
+    abs_path = os.path.join(project_root, file_path)
 
     if os.path.exists(abs_path):
         return abs_path
@@ -51,7 +51,7 @@ def _resolve_resource_path(filepath: str) -> Optional[str]:
     return None
 
 
-def load_resources_data(filepath: str = "data/resources.json") -> dict:
+def load_resources_data(file_path: str = "data/resources.json") -> dict:
     """
     Pure function to load resource definitions from JSON.
 
@@ -59,14 +59,14 @@ def load_resources_data(filepath: str = "data/resources.json") -> dict:
     modifying any global state. Use this for DI patterns.
 
     Args:
-        filepath: Path to the resources JSON file. Defaults to data/resources.json.
+        file_path: Path to the resources JSON file. Defaults to data/resources.json.
 
     Returns:
         Dict[str, dict]: Resource definitions keyed by resource ID
     """
     import copy
 
-    resolved_path = _resolve_resource_path(filepath)
+    resolved_path = _resolve_resource_path(file_path)
     if resolved_path is None:
         return copy.deepcopy(_get_default_resources())
 
@@ -97,7 +97,7 @@ def load_resources_data(filepath: str = "data/resources.json") -> dict:
         return copy.deepcopy(_get_default_resources())
 
 
-def load_resources(filepath: str = "data/resources.json") -> None:
+def load_resources(file_path: str = "data/resources.json") -> None:
     """
     Load resource definitions from JSON into the resource registry.
 
@@ -105,13 +105,13 @@ def load_resources(filepath: str = "data/resources.json") -> None:
     compatibility. New code should prefer DI via load_resources_data().
 
     Args:
-        filepath: Path to the resources JSON file. Defaults to data/resources.json.
+        file_path: Path to the resources JSON file. Defaults to data/resources.json.
     """
     resources = RegistryManager.instance().resources
 
-    resolved_path = _resolve_resource_path(filepath)
+    resolved_path = _resolve_resource_path(file_path)
     if resolved_path is None:
-        log_warning(f"Resources file not found at {filepath}, using defaults")
+        log_warning(f"Resources file not found at {file_path}, using defaults")
         resources.update(_get_default_resources())
         return
 

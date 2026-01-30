@@ -67,7 +67,7 @@ class SimulationDesignLoader:
 
     def load_ship_from_file(
         self,
-        filepath: str,
+        file_path: str,
         width: int = 1920,
         height: int = 1080
     ) -> Tuple[Optional[Ship], str]:
@@ -75,18 +75,18 @@ class SimulationDesignLoader:
         Load a ship design from a JSON file.
 
         Args:
-            filepath: Full path to design JSON file
+            file_path: Full path to design JSON file
             width: Screen width for centering (default 1920)
             height: Screen height for centering (default 1080)
 
         Returns:
             Tuple of (Ship object or None, message string)
         """
-        if not os.path.exists(filepath):
-            return None, f"Design file not found: {filepath}"
+        if not os.path.exists(file_path):
+            return None, f"Design file not found: {file_path}"
 
         try:
-            data = load_json_required(filepath)
+            data = load_json_required(file_path)
             ship = self.load_ship_from_design_data(
                 data,
                 center_x=width // 2,
@@ -96,22 +96,22 @@ class SimulationDesignLoader:
             if ship is None:
                 return None, "Failed to create ship from design data"
 
-            log_info(f"SimulationDesignLoader: Loaded design '{ship.name}' from {filepath}")
+            log_info(f"SimulationDesignLoader: Loaded design '{ship.name}' from {file_path}")
             return ship, f"Loaded design: {ship.name}"
 
         except json.JSONDecodeError as e:
             # Invalid JSON format
-            log_error(f"SimulationDesignLoader: Invalid JSON in {filepath}: {e}")
+            log_error(f"SimulationDesignLoader: Invalid JSON in {file_path}: {e}")
             return None, f"Failed to load design: Invalid JSON format"
         except (KeyError, TypeError, ValueError) as e:
             # Data validation errors
-            log_error(f"SimulationDesignLoader: Invalid design data in {filepath} - {type(e).__name__}: {e}")
+            log_error(f"SimulationDesignLoader: Invalid design data in {file_path} - {type(e).__name__}: {e}")
             return None, f"Failed to load design: Invalid design data"
         except OSError as e:
             # File I/O errors
-            log_error(f"SimulationDesignLoader: I/O error loading {filepath}: {e}")
+            log_error(f"SimulationDesignLoader: I/O error loading {file_path}: {e}")
             return None, f"Failed to load design: {str(e)}"
         except Exception as e:
             # Unexpected errors - log with full context
-            log_error(f"SimulationDesignLoader: Failed to load design from {filepath} - {type(e).__name__}: {e}")
+            log_error(f"SimulationDesignLoader: Failed to load design from {file_path} - {type(e).__name__}: {e}")
             return None, f"Failed to load design: {str(e)}"

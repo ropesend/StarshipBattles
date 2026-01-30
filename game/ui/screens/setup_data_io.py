@@ -137,12 +137,12 @@ def load_ships_from_entries(team_entries, team_id, start_x, start_y, facing_angl
     return ships
 
 
-def save_battle_setup(filepath, team1, team2):
+def save_battle_setup(file_path, team1, team2):
     """
     Save battle setup to JSON file.
 
     Args:
-        filepath: Destination file path
+        file_path: Destination file path
         team1: Team 1 entry list
         team2: Team 2 entry list
 
@@ -150,7 +150,7 @@ def save_battle_setup(filepath, team1, team2):
         True if successful
     """
     data = {
-        "name": os.path.basename(filepath).replace(".json", ""),
+        "name": os.path.basename(file_path).replace(".json", ""),
         "team1": [],
         "team2": []
     }
@@ -172,27 +172,27 @@ def save_battle_setup(filepath, team1, team2):
     serialize_team(team1, data["team1"])
     serialize_team(team2, data["team2"])
 
-    if save_json(filepath, data):
-        log_info(f"Saved battle setup to {filepath}")
+    if save_json(file_path, data):
+        log_info(f"Saved battle setup to {file_path}")
         return True
     else:
-        log_error(f"Error saving setup to {filepath}")
+        log_error(f"Error saving setup to {file_path}")
         return False
 
 
-def load_battle_setup(filepath, available_designs):
+def load_battle_setup(file_path, available_designs):
     """
     Load battle setup from JSON file.
 
     Args:
-        filepath: Source file path
+        file_path: Source file path
         available_designs: List of available ship designs for lookup
 
     Returns:
         Tuple of (team1, team2) or (None, None) on error
     """
     try:
-        data = load_json_required(filepath)
+        data = load_json_required(file_path)
 
         def find_design(filename):
             for d in available_designs:
@@ -224,7 +224,7 @@ def load_battle_setup(filepath, available_designs):
         load_team(data.get('team1', []), new_team1)
         load_team(data.get('team2', []), new_team2)
 
-        log_info(f"Loaded setup from {filepath}")
+        log_info(f"Loaded setup from {file_path}")
         return new_team1, new_team2
 
     except Exception as e:

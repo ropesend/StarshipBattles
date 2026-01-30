@@ -386,7 +386,7 @@ class RegistryManager:
             try:
                 from game.simulation.entities.ship_loader import load_vehicle_classes
                 if vlayer_path:
-                    load_vehicle_classes(str(vclass_path), layers_filepath=str(vlayer_path))
+                    load_vehicle_classes(str(vclass_path), layers_file_path=str(vlayer_path))
                     logger.info(f"RegistryManager: Loaded classes from {vclass_path} with layers from {vlayer_path}")
                 else:
                     load_vehicle_classes(str(vclass_path))
