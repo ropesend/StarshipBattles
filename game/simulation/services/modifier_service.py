@@ -5,12 +5,9 @@ This provides domain logic that was previously in the UI layer.
 PROJ-27: Added registry injection for testability.
 PROJ-38: Added constructor-based DI with GameRegistries support.
 PROJ-42: Simplified DI pattern with _get_modifiers_fallback().
+PROJ-50: Removed fallback pattern - strict DI required.
 """
-from typing import Optional, Dict, Any, TYPE_CHECKING
-from game.core.registry import get_default_registry_provider, get_default_registries
-
-if TYPE_CHECKING:
-    from game.core.protocols import IRegistryProvider
+from typing import Dict, Any
 
 
 class ModifierService:
@@ -20,16 +17,12 @@ class ModifierService:
     for ship components. Modifiers customize component behavior (damage, range, firing arc, etc.).
 
     PROJ-42: Simplified to instance-only methods (removed static calling patterns).
+    PROJ-50: Strict DI - modifier_registry is now required (no fallback).
 
-    Usage Patterns:
-        # Instance pattern (preferred for new code):
+    Usage Pattern:
         service = ModifierService(modifier_registry=registries.modifiers)
         if service.is_modifier_allowed('turret_mount', component):
             service.ensure_mandatory_modifiers(component)
-
-        # With default registries (uses fallback via get_default_registries):
-        service = ModifierService()
-        mandatory = service.get_mandatory_modifiers(component)
 
     Common Methods:
         - is_modifier_allowed(mod_id, component): Check if modifier can be applied
@@ -42,31 +35,21 @@ class ModifierService:
     # Modifiers that cannot be removed by the user
     MANDATORY_MODIFIERS = ['simple_size_mount', 'range_mount', 'facing', 'turret_mount']
 
-    def __init__(self, modifier_registry: Optional[Dict[str, Any]] = None):
+    def __init__(self, modifier_registry: Dict[str, Any]):
         """
-        Initialize ModifierService with optional modifier registry.
+        Initialize ModifierService with modifier registry.
+
+        PROJ-50: modifier_registry is now required (strict DI).
 
         Args:
             modifier_registry: Dictionary of Modifier objects keyed by ID.
-                              If None, falls back via _get_modifiers_fallback().
-        """
-        # PROJ-42: Simplified DI pattern with fallback
-        self._modifiers = modifier_registry if modifier_registry is not None else ModifierService._get_modifiers_fallback()
 
-    @staticmethod
-    def _get_modifiers_fallback() -> Dict[str, Any]:
+        Raises:
+            TypeError: If modifier_registry is None.
         """
-        Get modifiers registry for when none are explicitly provided.
-
-        PROJ-42: Tries get_default_registries() first, falls back to provider
-        (which shares mutable dict refs) for backward compatibility.
-        PROJ-45: Also catches StateException for new exception hierarchy.
-        """
-        from game.core.exceptions import StateException
-        try:
-            return get_default_registries().modifiers
-        except (RuntimeError, StateException):
-            return get_default_registry_provider().get_modifiers()
+        if modifier_registry is None:
+            raise TypeError("modifier_registry is required")
+        self._modifiers = modifier_registry
 
     def is_modifier_allowed(self, mod_id: str, component) -> bool:
         """

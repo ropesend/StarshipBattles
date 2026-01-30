@@ -216,7 +216,9 @@ class TestModifierServiceInjection:
         )
 
         injected_service = ModifierService(modifier_registry={"unique_injected_mod": unique_mod})
-        default_service = ModifierService()
+        # PROJ-50: Singleton service now also requires registry injection
+        singleton_modifiers = RegistryManager.instance().modifiers
+        singleton_service = ModifierService(modifier_registry=singleton_modifiers)
 
         # Verify singleton does NOT have this modifier
         assert "unique_injected_mod" not in RegistryManager.instance().modifiers
@@ -230,8 +232,8 @@ class TestModifierServiceInjection:
         )
         assert result_with_injection is True
 
-        # With default registry (uses singleton) - should NOT find the modifier
-        result_without_injection = default_service.is_modifier_allowed(
+        # With singleton registry - should NOT find the modifier
+        result_without_injection = singleton_service.is_modifier_allowed(
             "unique_injected_mod",
             component
         )
@@ -347,14 +349,13 @@ class TestVehicleDesignServiceInjection:
         unknown_warnings = [w for w in result.warnings if "Unknown ship class" in w]
         assert len(unknown_warnings) > 0
 
-    def test_default_constructor_uses_fallback(self):
-        """VehicleDesignService() should work without registries parameter."""
+    def test_constructor_without_registries_raises_type_error(self):
+        """PROJ-50: VehicleDesignService() without registries should raise TypeError."""
         from game.simulation.services.vehicle_design_service import VehicleDesignService
 
-        # Should not raise
-        service = VehicleDesignService()
-        assert service is not None
-        assert service._registries is not None
+        # Python raises TypeError for missing required keyword-only argument
+        with pytest.raises(TypeError, match="registries"):
+            VehicleDesignService()
 
 
 # =============================================================================

@@ -544,8 +544,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         # INTENTIONAL LATE IMPORT: Edge operation, ModifierService has component dependencies
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
         from game.simulation.services.modifier_service import ModifierService
-        # PROJ-42: Use instance pattern (no more static calling)
-        service = ModifierService()
+        # PROJ-50: Use strict DI with ship's registries
+        service = ModifierService(modifier_registry=self._registries.modifiers)
         service.ensure_mandatory_modifiers(component)
         self._cached_summary = {}  # Invalidate cache
         self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
@@ -589,8 +589,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             # Apply mandatory modifiers (e.g., size mount) immediately upon addition
             # INTENTIONAL LATE IMPORT: Edge operation, ModifierService has component dependencies
             from game.simulation.services.modifier_service import ModifierService
-            # PROJ-42: Use instance pattern (no more static calling)
-            service = ModifierService()
+            # PROJ-50: Use strict DI with ship's registries
+            service = ModifierService(modifier_registry=self._registries.modifiers)
             service.ensure_mandatory_modifiers(new_comp)
             added_count += 1
             

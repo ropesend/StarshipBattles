@@ -1,10 +1,13 @@
 """
-Tests for ModifierService dependency injection (PROJ-38).
+Tests for ModifierService dependency injection.
+
+PROJ-38: Original tests for DI support.
+PROJ-50: Updated for strict DI - modifier_registry is now required.
 
 These tests verify that ModifierService:
-1. Accepts modifier_registry via constructor
+1. Accepts modifier_registry via constructor (required)
 2. Works with injected registry (no global state needed)
-3. Has transitional fallback to get_default_registries()
+3. Raises TypeError when modifier_registry is None
 """
 import pytest
 
@@ -15,15 +18,6 @@ from game.simulation.components.component import create_component
 # =============================================================================
 # Fixtures
 # =============================================================================
-
-@pytest.fixture(autouse=True)
-def restore_default_registries():
-    """Restore _default_registries after each test to prevent pollution."""
-    import game.core.registry as registry_module
-    original = registry_module._default_registries
-    yield
-    registry_module._default_registries = original
-
 
 @pytest.fixture
 def mock_modifier_registry():
@@ -83,26 +77,10 @@ class TestModifierServiceConstructor:
         assert hasattr(service, '_modifiers')
         assert service._modifiers is mock_modifier_registry
 
-    def test_constructor_with_none_uses_default(self):
-        """ModifierService with None should fall back to default registries."""
-        # This tests the transitional fallback pattern
-        from game.core.registry import set_default_registries, GameRegistries
-        from game.simulation.components.component import load_modifiers_data
-
-        # Set up default registries with real modifiers
-        modifiers = load_modifiers_data()
-        registries = GameRegistries(
-            components={},
-            modifiers=modifiers,
-            vehicle_classes={},
-            resources={}
-        )
-        set_default_registries(registries)
-
-        service = ModifierService(modifier_registry=None)
-
-        assert service._modifiers is not None
-        assert 'simple_size_mount' in service._modifiers
+    def test_constructor_with_none_raises_type_error(self):
+        """PROJ-50: ModifierService with None should raise TypeError."""
+        with pytest.raises(TypeError, match="modifier_registry is required"):
+            ModifierService(modifier_registry=None)
 
 
 # =============================================================================
@@ -176,33 +154,29 @@ class TestModifierServiceInstanceMethods:
 
 
 # =============================================================================
-# Test: Instance Methods Work With Default Registry
+# Test: Comparison of Injected vs Real Registry
 # =============================================================================
 
-class TestModifierServiceDefaultRegistry:
-    """Tests verifying instance methods work with default registry fallback.
+class TestModifierServiceRealRegistry:
+    """Tests comparing behavior with real modifiers registry."""
 
-    PROJ-42: After removing dual static/instance patterns, all methods
-    require an instance, but can use default registry if none provided.
-    """
-
-    def test_instance_with_default_registry_works(self, weapon_component):
-        """Instance with default registry should work."""
-        service = ModifierService()  # Uses default registry
-        result = service.is_modifier_allowed('simple_size_mount', weapon_component)
-        assert result is True
-
-    def test_get_mandatory_modifiers_with_default_and_injected(self, weapon_component):
-        """get_mandatory_modifiers should work with both default and injected registries."""
-        # Instance with default
-        default_service = ModifierService()
-        default_result = default_service.get_mandatory_modifiers(weapon_component)
-
-        # Instance call (with explicit real modifiers)
+    def test_get_mandatory_modifiers_with_real_registry(self, weapon_component):
+        """get_mandatory_modifiers should work with real modifiers registry."""
         from game.simulation.components.component import load_modifiers_data
         real_modifiers = load_modifiers_data()
-        injected_service = ModifierService(modifier_registry=real_modifiers)
-        injected_result = injected_service.get_mandatory_modifiers(weapon_component)
+        service = ModifierService(modifier_registry=real_modifiers)
 
-        # Both should return same mandatory modifiers
-        assert set(default_result) == set(injected_result)
+        result = service.get_mandatory_modifiers(weapon_component)
+
+        assert 'simple_size_mount' in result
+        assert isinstance(result, list)
+
+    def test_is_modifier_allowed_with_real_registry(self, weapon_component):
+        """is_modifier_allowed should work with real modifiers registry."""
+        from game.simulation.components.component import load_modifiers_data
+        real_modifiers = load_modifiers_data()
+        service = ModifierService(modifier_registry=real_modifiers)
+
+        result = service.is_modifier_allowed('simple_size_mount', weapon_component)
+
+        assert result is True

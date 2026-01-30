@@ -70,15 +70,10 @@ class TestShipStatsCalculatorConstructor:
         assert hasattr(service, '_registries')
         assert service._registries is mock_registries
 
-    def test_constructor_with_none_uses_default(self, mock_registries):
-        """ShipStatsCalculator with None should fall back to default registries."""
-        # Set up default registries
-        set_default_registries(mock_registries)
-
-        service = ShipStatsCalculator(registries=None)
-
-        assert service._registries is not None
-        assert service._registries.components is not None
+    def test_constructor_with_none_raises_type_error(self):
+        """PROJ-50: ShipStatsCalculator with None should raise TypeError."""
+        with pytest.raises(TypeError, match="registries is required"):
+            ShipStatsCalculator(registries=None)
 
 
 # =============================================================================

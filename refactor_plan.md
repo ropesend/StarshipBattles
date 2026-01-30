@@ -8,23 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 4 - Strategy Data
+**Last Completed:** PROJ-50 Phase 5 - Simulation Services
 **Current Status:** PROJ-50 In Progress
 **Current Project:** PROJ-50
-**Current Phase:** Phase 5
-**Test Status:** 838 strategy passed, 5775 total passing
+**Current Phase:** Phase 6
+**Test Status:** 103 services passed, 5775 total passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 4 COMPLETE - Strategy Data
-  - Added `registries: Optional[GameRegistries] = None` parameter to:
-    - ShipInstance.to_ship()
-    - Fleet.to_battle_ships()
-    - SimulationBattleResolver.resolve_battle()
-  - Updated test_simulation_adapter.py assertion to include registries=None
-  - All parameters optional for now (transitional) - Phase 6 will make required
-- Files modified: ship_instance.py, fleet.py, simulation_adapter.py, test_simulation_adapter.py
-- Next: Phase 5 - Simulation Services
+- PROJ-50 Phase 5 COMPLETE - Simulation Services
+  - ModifierService: strict DI, modifier_registry required, TypeError if None
+  - VehicleDesignService: strict DI, registries required, TypeError if None
+  - ShipLoader: uses RegistryManager.instance().vehicle_classes instead of provider
+  - Ship.add_component/add_components_bulk: use self._registries.modifiers for ModifierService
+  - ShipComponentManager: use self._ship._registries.modifiers for ModifierService
+  - Updated test files: test_modifier_service.py, test_modifier_service_di.py,
+    test_vehicle_design_service.py, test_vehicle_design_service_di.py,
+    test_ship_stats_calculator_di.py, test_service_injection.py
+- Files modified: modifier_service.py, vehicle_design_service.py, ship_loader.py,
+  ship.py, ship_component_manager.py, 6 test files
+- Next: Phase 6 - Core Entities
 
 ---
 
@@ -116,6 +119,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-50 | Phase 5 | Complete | 5775 passed | d8014ebf | Sim services: strict DI, 5 src + 6 test files |
 | 2026-01-30 | PROJ-50 | Phase 4 | Complete | 5775 passed | c1f68b31 | Strategy data: registries param, 4 files |
 | 2026-01-30 | PROJ-50 | Phase 3 | Complete | 838 strategy | 5a72ce16 | Strategy services: strict DI, 5 test files |
 | 2026-01-30 | PROJ-50 | Phase 2 | Complete | 5782 passed | 62044ecc | UI strictness: 4 files, registries required, 4 tests |

@@ -3,6 +3,8 @@ Vehicle Design Service (renamed from ShipBuilderService).
 
 Provides an abstraction layer between UI and Ship domain objects,
 handling vehicle creation, component management, and design validation.
+
+PROJ-50: Removed fallback pattern - strict DI required.
 """
 from dataclasses import dataclass, field
 from typing import List, Optional, Any, TYPE_CHECKING
@@ -11,9 +13,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import get_or_create_validator
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
-from game.core.registry import (
-    get_default_registry_provider, get_default_registries, GameRegistries
-)
+from game.core.registry import GameRegistries
 from game.core.logger import log_error, log_warning, log_info
 
 if TYPE_CHECKING:
@@ -40,50 +40,31 @@ class VehicleDesignService:
     PROJ-27: Added registry injection for testability.
     PROJ-38: Added GameRegistries support for constructor injection.
     PROJ-42: Removed IRegistryProvider support, simplified to GameRegistries only.
+    PROJ-50: Strict DI - registries is now required (no fallback).
 
     Usage:
-        # DI pattern (preferred)
         service = VehicleDesignService(registries=game_registries)
-
-        # Default registries (uses fallback)
-        service = VehicleDesignService()
     """
-
-    @staticmethod
-    def _get_registries_fallback() -> GameRegistries:
-        """
-        Get registries for when none are explicitly provided.
-
-        PROJ-42: Tries get_default_registries() first, falls back to provider
-        (which shares mutable dict refs) for backward compatibility.
-        PROJ-45: Also catches StateException for new exception hierarchy.
-        """
-        from game.core.exceptions import StateException
-        try:
-            return get_default_registries()
-        except (RuntimeError, StateException):
-            provider = get_default_registry_provider()
-            return GameRegistries(
-                components=provider.get_components(),
-                modifiers=provider.get_modifiers(),
-                vehicle_classes=provider.get_vehicle_classes(),
-                resources={}
-            )
 
     def __init__(
         self,
         *,
-        registries: Optional[GameRegistries] = None
+        registries: GameRegistries
     ):
         """
         Initialize the VehicleDesignService.
 
+        PROJ-50: registries is now required (strict DI).
+
         Args:
-            registries: Optional GameRegistries for dependency injection.
-                       If None, falls back to get_default_registries() or provider.
+            registries: GameRegistries for dependency injection (required).
+
+        Raises:
+            TypeError: If registries is None.
         """
-        # PROJ-42: Use fallback pattern for consistent DI behavior
-        self._registries = registries if registries is not None else self._get_registries_fallback()
+        if registries is None:
+            raise TypeError("registries is required")
+        self._registries = registries
 
     def create_ship(
         self,

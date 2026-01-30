@@ -1,30 +1,23 @@
 """
-Tests for VehicleDesignService dependency injection (PROJ-38, PROJ-42).
+Tests for VehicleDesignService dependency injection.
+
+PROJ-38, PROJ-42: Original tests for DI support.
+PROJ-50: Updated for strict DI - registries is now required.
 
 These tests verify that VehicleDesignService:
-1. Accepts GameRegistries via constructor
+1. Accepts GameRegistries via constructor (required)
 2. Works with injected registries (no global state needed)
-3. Has transitional fallback to get_default_registries()
-4. PROJ-42: IRegistryProvider support removed - only GameRegistries now
+3. Raises TypeError when registries is None
 """
 import pytest
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService
-from game.core.registry import GameRegistries, set_default_registries
+from game.core.registry import GameRegistries
 
 
 # =============================================================================
 # Fixtures
 # =============================================================================
-
-@pytest.fixture(autouse=True)
-def restore_default_registries():
-    """Restore _default_registries after each test to prevent pollution."""
-    import game.core.registry as registry_module
-    original = registry_module._default_registries
-    yield
-    registry_module._default_registries = original
-
 
 @pytest.fixture
 def mock_registries():
@@ -54,28 +47,10 @@ class TestVehicleDesignServiceConstructor:
         assert hasattr(service, '_registries')
         assert service._registries is mock_registries
 
-    def test_constructor_with_none_uses_default(self, mock_registries):
-        """VehicleDesignService with None should fall back to default registries."""
-        # Set up default registries
-        set_default_registries(mock_registries)
-
-        service = VehicleDesignService(registries=None)
-
-        assert service._registries is not None
-        assert service._registries.components is not None
-
-    def test_fallback_uses_provider_when_no_default_registries(self):
-        """When default registries not set, should fall back to provider."""
-        # Clear default registries to force fallback
-        import game.core.registry as registry_module
-        registry_module._default_registries = None
-
-        # Service should still work via provider fallback
-        service = VehicleDesignService()
-
-        # Should have registries set via fallback
-        assert service._registries is not None
-        assert service._registries.components is not None
+    def test_constructor_with_none_raises_type_error(self):
+        """PROJ-50: VehicleDesignService with None should raise TypeError."""
+        with pytest.raises(TypeError, match="registries is required"):
+            VehicleDesignService(registries=None)
 
 
 # =============================================================================
@@ -130,18 +105,18 @@ class TestVehicleDesignServiceInstanceMethods:
 
 
 # =============================================================================
-# Test: Backward Compatibility
+# Test: Comparison with Real Registries
 # =============================================================================
 
-class TestVehicleDesignServiceBackwardCompatibility:
-    """Tests ensuring backward compatibility with legacy registry interface."""
+class TestVehicleDesignServiceRealRegistries:
+    """Tests comparing behavior with real registries."""
 
-    def test_service_works_without_explicit_registries(self):
-        """VehicleDesignService should work with no constructor args (uses defaults)."""
-        service = VehicleDesignService()
+    def test_service_works_with_real_registries(self, mock_registries):
+        """VehicleDesignService should work with real registries."""
+        service = VehicleDesignService(registries=mock_registries)
 
         result = service.create_ship(
-            name="Default Ship",
+            name="Real Registry Ship",
             ship_class="frigate"
         )
 

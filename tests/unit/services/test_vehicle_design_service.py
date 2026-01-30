@@ -3,18 +3,34 @@ Tests for VehicleDesignService (renamed from ShipBuilderService).
 
 This service provides an abstraction layer between UI and Ship domain objects,
 handling vehicle creation, component management, and design validation.
+
+PROJ-50: Updated to use strict DI - registries is now required.
 """
 import pytest
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
 from game.simulation.components.component_constants import LayerType
+from game.core.registry import GameRegistries
 
 
 @pytest.fixture
-def service():
+def registries():
+    """Create GameRegistries with loaded data for testing."""
+    from game.simulation.components.component import load_components_data, load_modifiers_data
+    from game.simulation.entities.ship_loader import load_vehicle_classes_data
+
+    return GameRegistries(
+        components=load_components_data(),
+        modifiers=load_modifiers_data(),
+        vehicle_classes=load_vehicle_classes_data(),
+        resources={}
+    )
+
+
+@pytest.fixture
+def service(registries):
     """Create a VehicleDesignService instance with loaded data."""
-    # reset_game_state autouse fixture ensures registry is populated
-    return VehicleDesignService()
+    return VehicleDesignService(registries=registries)
 
 
 class TestVehicleDesignServiceCreateShip:

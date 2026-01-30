@@ -1,5 +1,7 @@
 """
 Ship Loader - Functions for loading vehicle class data and initializing ship data.
+
+PROJ-50: Removed get_default_registry_provider import - use RegistryManager instead.
 """
 
 import os
@@ -7,7 +9,7 @@ from typing import Optional
 
 from game.core.logger import log_info, log_warning
 from game.core.json_utils import load_json, load_json_required
-from game.core.registry import RegistryManager, set_validator, get_default_registry_provider
+from game.core.registry import RegistryManager, set_validator
 from game.simulation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
 
@@ -108,8 +110,8 @@ def load_vehicle_classes(file_path: str = None, layers_file_path: Optional[str] 
         layer_definitions = layer_data.get('definitions', {})
         log_info(f"Loaded {len(layer_definitions)} layer configurations from {os.path.basename(layers_path)}.")
 
-    # Update registry in place to preserve references
-    classes = get_default_registry_provider().get_vehicle_classes()
+    # PROJ-50: Update registry in place using RegistryManager (not provider)
+    classes = RegistryManager.instance().vehicle_classes
     classes.clear()
     classes.update(result)
 
