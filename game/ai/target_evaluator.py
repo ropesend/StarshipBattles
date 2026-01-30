@@ -136,7 +136,7 @@ class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
 
     @staticmethod
-    def evaluate(ship, candidate, rules, stat_helpers=None, distance_cache=None):
+    def evaluate(ship, candidate, rules, stat_helpers=None, distance_cache=None, ship_capabilities_cache=None):
         """Evaluate a candidate target based on targeting rules.
 
         Args:
@@ -147,6 +147,10 @@ class TargetEvaluator:
                          If not provided, uses default implementations
             distance_cache: Optional dict mapping candidate to pre-calculated distance.
                            PERF: Avoids redundant distance calculations across rules.
+            ship_capabilities_cache: Optional dict mapping ship.id to pre-computed capabilities.
+                           PERF: Avoids redundant component lookups for has_weapons, pdc_arc rules.
+                           Structure: {ship_id: {'has_weapons': bool, 'weapon_components': List,
+                                                  'has_pdc': bool, 'pdc_components': List}}
 
         Returns:
             Score for this target (higher is better), or -inf if required rule fails
@@ -255,8 +259,13 @@ class TargetEvaluator:
                 val = -mass * (weight if weight > 0 else -factor)
 
             elif r_type == 'has_weapons':
-                # Use Ship helper method to check for weapon components
-                has_wpns = any(candidate.get_components_by_ability('WeaponAbility', operational_only=False))
+                # PERF: Use cached capability check if available
+                candidate_id = getattr(candidate, 'id', None)
+                if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
+                    has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
+                else:
+                    # Fall back to component lookup
+                    has_wpns = any(candidate.get_components_by_ability('WeaponAbility', operational_only=False))
                 if has_wpns:
                     val = weight if weight > 0 else 1000
                 else:

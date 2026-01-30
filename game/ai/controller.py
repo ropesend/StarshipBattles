@@ -131,6 +131,48 @@ class AIController:
 
         return enemies
 
+    def _build_capabilities_cache(self, ships):
+        """Pre-compute expensive capability checks for all ships.
+
+        PERF: Builds capability data once per ship instead of repeatedly during
+        rule evaluation. This converts O(n*m) component lookups (n targets, m rules)
+        to O(n) lookups.
+
+        Args:
+            ships: List of ships to cache capabilities for
+
+        Returns:
+            Dict mapping ship.id to capability data:
+            {
+                ship_id: {
+                    'has_weapons': bool,
+                    'weapon_components': List[Component],
+                    'has_pdc': bool,
+                    'pdc_components': List[Component],
+                }
+            }
+        """
+        cache = {}
+        for ship in ships:
+            ship_id = getattr(ship, 'id', None)
+            if ship_id is None:
+                continue
+
+            # Get weapon components once
+            weapons = ship.get_components_by_ability('WeaponAbility', operational_only=True)
+
+            # Filter for PDC weapons
+            pdc_weapons = [w for w in weapons if w.has_ability('PDCAbility')]
+
+            cache[ship_id] = {
+                'has_weapons': len(weapons) > 0,
+                'weapon_components': weapons,
+                'has_pdc': len(pdc_weapons) > 0,
+                'pdc_components': pdc_weapons,
+            }
+
+        return cache
+
     def _score_and_sort_enemies(self, enemies, rules):
         """Score enemies using targeting rules and return sorted list (highest first).
 
@@ -161,9 +203,17 @@ class AIController:
             except (AttributeError, TypeError):
                 pass  # Will fall back to _safe_distance in evaluate()
 
+        # PERF: Pre-compute capability checks once for all candidates
+        # Avoids redundant component lookups for has_weapons, pdc_arc rules
+        capabilities_cache = self._build_capabilities_cache(enemies)
+
         for e in enemies:
             try:
-                score = TargetEvaluator.evaluate(self.ship, e, rules, distance_cache=distance_cache)
+                score = TargetEvaluator.evaluate(
+                    self.ship, e, rules,
+                    distance_cache=distance_cache,
+                    ship_capabilities_cache=capabilities_cache
+                )
                 if score > -float('inf'):
                     scored_enemies.append((score, e))
             except (AttributeError, TypeError) as err:

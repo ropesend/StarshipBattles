@@ -8,28 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-49 Phase 5 - Spatial Grid Optimization (Research Only)
-**Current Status:** PROJ-49 Phase 5 Complete
+**Last Completed:** PROJ-49 Phase 6 - O(n^2) Targeting Optimization
+**Current Status:** PROJ-49 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-49
-**Current Phase:** Phase 6 - O(n^2) Targeting Optimization
-**Test Status:** 5764 passed (full suite, no new tests)
+**Current Phase:** Audit Cycle 1
+**Test Status:** 5782 passed (+18 new tests, pre-existing builder test failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-49 Phase 5 COMPLETE - Spatial Grid Research
-  - Task 5.1: Analyzed spatial.py - simple dict-bucket system, O(1) cell lookup
-  - Task 5.1: Profiled full battle simulation (50 ships, 500 ticks, 17.6s total)
-  - Task 5.1: Grid methods NOT in top 30 functions
-  - Task 5.1: Isolated grid test: 50 ships x 1000 ticks = 0.020s (20μs/tick)
-  - Task 5.1: Grid overhead is only ~0.1% of tick time
-  - Task 5.1: Real bottlenecks: protocol isinstance (23%), AI collision avoidance (60%)
-  - Task 5.2: SKIPPED - Cost/benefit unfavorable for incremental updates
-- Files modified (docs only):
-  - Projects/active_projects/PROJ-49/design.md - Added Phase 5 Research Findings
-  - Projects/active_projects/PROJ-49/decisions.md - Added skip decision
-  - Projects/active_projects/PROJ-49/phase_5_checklist.md - Marked complete
-- Test suite: 5764 passed (no code changes)
-- Next: Phase 6 - O(n^2) Targeting Optimization
+- PROJ-49 Phase 6 COMPLETE - O(n^2) Targeting Optimization
+  - Task 6.1: Added ship_capabilities_cache parameter to TargetEvaluator.evaluate()
+  - Task 6.1: has_weapons rule now uses cached lookups when available
+  - Task 6.2: Added _build_capabilities_cache() method to AIController
+  - Task 6.2: _score_and_sort_enemies() now pre-computes capabilities once
+  - Performance: Component lookups now O(n) instead of O(n*m)
+- Files modified:
+  - game/ai/target_evaluator.py - Added capabilities cache parameter
+  - game/ai/controller.py - Added cache builder and integration
+  - tests/unit/ai/target_evaluator/test_capabilities_cache.py - 7 new tests
+  - tests/unit/ai/test_ai_capabilities_cache.py - 11 new tests
+  - Projects/active_projects/PROJ-49/phase_6_checklist.md - Complete
+  - Projects/active_projects/PROJ-49/plan.md - Updated
+- Test suite: 5782 passed, 246 AI tests, 48 target_evaluator tests
+- Next: Trigger PROJ-49 Audit
 
 ---
 
@@ -121,6 +122,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-49 | Phase 6 | Complete | 5782 passed | pending | O(n^2) targeting: capabilities cache, +18 tests |
 | 2026-01-30 | PROJ-49 | Phase 5 | Complete | 5764 passed | 32d8510a | Spatial grid research: 0.1% overhead, skipped implementation |
 | 2026-01-30 | PROJ-49 | Phase 4 | Complete | 5764 passed | 00b29665 | HP ratio caching: dirty-flag, property, +7 tests |
 | 2026-01-30 | PROJ-49 | Phase 3 | Complete | 5757 passed | 70f2dab2 | Component caching: dirty-flag invalidation, per-tick weapon cache, +12 tests |
