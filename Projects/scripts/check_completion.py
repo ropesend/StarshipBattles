@@ -51,7 +51,7 @@ def check_completion(plan_file: Path) -> bool:
         return True
     
     total_tasks = len(checkboxes)
-    completed_tasks = sum(1 for status in checkboxes if status == 'x')
+    completed_tasks = sum(1 for status in checkboxes if status.lower() == 'x')
     completed_with_issues = sum(1 for status in checkboxes if status == '~')
     in_progress_tasks = sum(1 for status in checkboxes if status == '/')
     incomplete_tasks = sum(1 for status in checkboxes if status == ' ')
