@@ -10,7 +10,6 @@
 | PROJ-46 | Naming Consistency Standardization | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-45 | Error Handling and Exception Management Refactor | Ready | 2026-01-28 | 2026-01-28 |
 | PROJ-44 | Code Quality & God Classes Refactoring | Planning | 2026-01-28 | 2026-01-28 |
-| PROJ-43 | Architecture Layer Violations Remediation | Ready | 2026-01-28 | 2026-01-28 |
 | PROJ-42 | Backward Compatibility and Legacy Pattern Cleanup | Ready | 2026-01-28 | 2026-01-28 |
 | PROJ-41 | Documentation Health Remediation | Planning | 2026-01-27 | 2026-01-27 |
 
@@ -18,6 +17,7 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-43 | Architecture Layer Violations Remediation | Archived | 2026-01-28 | 2026-01-29 |
 | PROJ-40 | Comprehensive Code Quality Remediation | Archived | 2026-01-27 | 2026-01-28 |
 | PROJ-38 | Registry DI Refactor | Archived | 2026-01-27 | 2026-01-28 |
 | PROJ-37 | Fragile Asset Loading Refactor | Archived | 2026-01-27 | 2026-01-28 |

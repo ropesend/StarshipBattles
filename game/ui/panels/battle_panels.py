@@ -8,7 +8,10 @@ from game.ui.panels.ship_stats_renderer import (
 )
 
 class BattlePanel:
-    """Base class for battle UI panels."""
+    """Base class for battle UI panels.
+
+    PROJ-43: Provides _get_ships() for DTO-based access to ship data.
+    """
     def __init__(self, scene, x, y, w, h):
         self.scene = scene
         self.rect = pygame.Rect(x, y, w, h)
@@ -24,13 +27,67 @@ class BattlePanel:
         """Draw a progress bar - delegates to extracted function."""
         draw_stat_bar(surface, x, y, width, height, pct, color)
 
+    def _get_ships(self):
+        """Get ships from ui_service if available, otherwise fallback to scene.ships.
+
+        PROJ-43: Provides DTO-based access to ship data through ui_service,
+        with backward compatibility for tests that set scene.ships directly.
+        """
+        # Check if ui_service is explicitly set and has get_ships method
+        ui_service = getattr(self.scene, 'ui_service', None)
+        if ui_service is not None:
+            try:
+                # Try to get ships from ui_service
+                ships = ui_service.get_ships()
+                # Verify it's actually a list (not a MagicMock auto-created result)
+                if isinstance(ships, list):
+                    return ships
+            except (AttributeError, TypeError):
+                pass
+        # Fallback to direct ships access
+        return getattr(self.scene, 'ships', [])
+
 class ShipStatsPanel(BattlePanel):
-    """Panel for displaying ship statistics (Right side)."""
+    """Panel for displaying ship statistics (Right side).
+
+    PROJ-43: Uses ui_service.get_ships() to access ship data through DTOs
+    when available, with fallback to scene.ships for backward compatibility.
+    Ship expansion state is tracked by ship ID (string) instead of object reference.
+    """
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
-        self.expanded_ships = set()
+        self.expanded_ships = set()  # Set of ship IDs (strings)
         self.scroll_offset = 0
         self.content_height = 0
+
+    def _get_ship_id(self, ship):
+        """Get the ship ID for expansion tracking.
+
+        PROJ-43: Supports both ShipDTO (has .id) and domain Ship objects
+        (use .name as fallback identifier).
+        """
+        # Try to get .id first (for ShipDTO)
+        ship_id = getattr(ship, 'id', None)
+        if isinstance(ship_id, str):
+            return ship_id
+        # Fallback to .name (for domain Ship objects and mocks)
+        ship_name = getattr(ship, 'name', None)
+        if isinstance(ship_name, str):
+            return ship_name
+        # Last resort: use Python object id
+        return str(id(ship))
+
+    def _is_expanded(self, ship):
+        """Check if a ship is expanded by its ID."""
+        return self._get_ship_id(ship) in self.expanded_ships
+
+    def _toggle_expanded(self, ship):
+        """Toggle expansion state for a ship by its ID."""
+        ship_id = self._get_ship_id(ship)
+        if ship_id in self.expanded_ships:
+            self.expanded_ships.discard(ship_id)
+        else:
+            self.expanded_ships.add(ship_id)
 
     def draw(self, screen):
         # Validate cache size
@@ -46,61 +103,65 @@ class ShipStatsPanel(BattlePanel):
         font_title = pygame.font.Font(None, UIConfig.FONT_TITLE)
         font_name = pygame.font.Font(None, UIConfig.FONT_NAME)
         font_stat = pygame.font.Font(None, UIConfig.FONT_STAT)
-        
+
         y = 10 - self.scroll_offset
         panel_w = self.rect.width
-        
+
+        # PROJ-43: Use _get_ships() for DTO-based access
+        ships = self._get_ships()
+
         # Team 1
-        team1_ships = [s for s in self.scene.ships if s.team_id == 0]
+        team1_ships = [s for s in ships if s.team_id == 0]
         team1_alive = sum(1 for s in team1_ships if s.is_alive and not getattr(s, 'is_derelict', False))
-        
+
         title = font_title.render(f"TEAM 1 ({team1_alive}/{len(team1_ships)})", True, (100, 200, 255))
         self.surface.blit(title, (10, y))
         y += 30
-        
+
         for ship in team1_ships:
             y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, (40, 60, 80))
-        
+
         y += 15
-        
+
         # Team 2
-        team2_ships = [s for s in self.scene.ships if s.team_id == 1]
+        team2_ships = [s for s in ships if s.team_id == 1]
         team2_alive = sum(1 for s in team2_ships if s.is_alive and not getattr(s, 'is_derelict', False))
-        
+
         title = font_title.render(f"TEAM 2 ({team2_alive}/{len(team2_ships)})", True, (255, 100, 100))
         self.surface.blit(title, (10, y))
         y += 30
-        
+
         for ship in team2_ships:
             y = self.draw_ship_entry(self.surface, ship, y, panel_w, font_name, font_stat, (80, 40, 40))
-        
+
         self.content_height = y + self.scroll_offset
-        
+
         screen.blit(self.surface, self.rect.topleft)
         pygame.draw.line(screen, (60, 60, 80), self.rect.topleft, self.rect.bottomleft, 2)
         
     def draw_ship_entry(self, surface, ship, y, panel_w, font_name, font_stat, banner_color):
         """Draw a single ship entry."""
-        arrow = "▼" if ship in self.expanded_ships else "►"
+        # PROJ-43: Use _is_expanded() for ID-based expansion tracking
+        arrow = "▼" if self._is_expanded(ship) else "►"
         status = ""
         if not ship.is_alive:
             status = " [DEAD]"
         elif getattr(ship, 'is_derelict', False):
             status = " [DERELICT]"
-            
+
         color = (200, 200, 200)
         if not ship.is_alive:
             color = (100, 100, 100)
         elif getattr(ship, 'is_derelict', False):
             color = (255, 165, 0)
         bg_color = banner_color if ship.is_alive else (40, 40, 40)
-        
+
         pygame.draw.rect(surface, bg_color, (5, y, panel_w - 10, UIConfig.BANNER_HEIGHT))
         name_text = font_name.render(f"{arrow} {ship.name}{status}", True, color)
         surface.blit(name_text, (10, y + 3))
         y += UIConfig.SHIP_ENTRY_HEIGHT
 
-        if ship in self.expanded_ships:
+        if self._is_expanded(ship):
             y = self.draw_ship_details(surface, ship, y, panel_w, font_stat)
 
         return y
@@ -141,74 +202,96 @@ class ShipStatsPanel(BattlePanel):
 
     @profile_action("Battle: ShipStats Click")
     def handle_click(self, mx, my):
-        # Convert absolute mx to relative (my is already absolute, but we need relative for layout)
-        # But wait, logic in battle_ui passed relative coordinates.
-        # Here we should expect relative coordinates or handle it.
-        # Let's assume standard event handling: receiver gets local coords or we transform.
-        # The BattleInterface.handle_click transformed it. 
-        # "return self.handle_stats_panel_click(mx - panel_x, my + self.stats_scroll_offset)"
-        
-        # Let's stick to the interface receiving (mx, my) relative to the panel's origin
-        # BUT we also need to account for scroll offset.
-        # So expects: rel_x, rel_y (where rel_y includes scroll? No, normally Mouse pos is local to TopLeft)
-        # In battle_ui, it passed `my + self.stats_scroll_offset`. 
-        
+        """Handle mouse click on the stats panel.
+
+        PROJ-43: Uses _get_ships() for DTO-based access and tracks expansion
+        by ship ID. Returns ("focus_ship", ship_id) for camera focus.
+        """
         rel_x = mx
         rel_y = my + self.scroll_offset
-        
-        team1_ships = [s for s in self.scene.ships if s.team_id == 0]
-        team2_ships = [s for s in self.scene.ships if s.team_id == 1]
-        
+
+        # PROJ-43: Use _get_ships() for DTO-based access
+        ships = self._get_ships()
+        team1_ships = [s for s in ships if s.team_id == 0]
+        team2_ships = [s for s in ships if s.team_id == 1]
+
         keys = pygame.key.get_pressed()
         shift_held = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
-        
-        y_pos = 10 + 30 # Initial + header
-        
+
+        y_pos = 10 + 30  # Initial + header
+
         for ship in team1_ships:
             banner_height = 25
             if y_pos <= rel_y < y_pos + banner_height:
                 if shift_held:
-                    return ("focus_ship", ship)
-                if ship in self.expanded_ships:
-                    self.expanded_ships.discard(ship)
-                else:
-                    self.expanded_ships.add(ship)
+                    # PROJ-43: Return ship ID for camera focus
+                    return ("focus_ship", self._get_ship_id(ship))
+                # PROJ-43: Use _toggle_expanded() for ID-based tracking
+                self._toggle_expanded(ship)
                 return True
             y_pos += banner_height
-            if ship in self.expanded_ships:
+            if self._is_expanded(ship):
                 y_pos += self.get_expanded_height(ship)
-        
+
         y_pos += 45
         for ship in team2_ships:
             banner_height = 25
             if y_pos <= rel_y < y_pos + banner_height:
                 if shift_held:
-                    return ("focus_ship", ship)
-                if ship in self.expanded_ships:
-                    self.expanded_ships.discard(ship)
-                else:
-                    self.expanded_ships.add(ship)
+                    # PROJ-43: Return ship ID for camera focus
+                    return ("focus_ship", self._get_ship_id(ship))
+                # PROJ-43: Use _toggle_expanded() for ID-based tracking
+                self._toggle_expanded(ship)
                 return True
             y_pos += banner_height
-            if ship in self.expanded_ships:
+            if self._is_expanded(ship):
                 y_pos += self.get_expanded_height(ship)
-            
+
         return False
 
 
 class SeekerMonitorPanel(BattlePanel):
-    """Panel for monitoring missiles and seekers (Left side)."""
+    """Panel for monitoring missiles and seekers (Left side).
+
+    PROJ-43: Expansion state is tracked by projectile ID (string) instead
+    of object reference, similar to ShipStatsPanel.
+    """
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
         self.tracked_seekers = []
-        self.expanded_seekers = set()
+        self.expanded_seekers = set()  # Set of projectile IDs (strings)
         self.scroll_offset = 0
         self.clear_btn_rect = None
         self.content_height = 0
-        
+
+    def _get_projectile_id(self, proj):
+        """Get the projectile ID for expansion tracking.
+
+        PROJ-43: Supports both ProjectileDTO (has .id) and domain Projectile
+        objects (use Python object id as fallback).
+        """
+        # Try to get .id first (for ProjectileDTO)
+        proj_id = getattr(proj, 'id', None)
+        if isinstance(proj_id, str):
+            return proj_id
+        # Last resort: use Python object id
+        return str(id(proj))
+
+    def _is_seeker_expanded(self, proj):
+        """Check if a projectile is expanded by its ID."""
+        return self._get_projectile_id(proj) in self.expanded_seekers
+
+    def _toggle_seeker_expanded(self, proj):
+        """Toggle expansion state for a projectile by its ID."""
+        proj_id = self._get_projectile_id(proj)
+        if proj_id in self.expanded_seekers:
+            self.expanded_seekers.discard(proj_id)
+        else:
+            self.expanded_seekers.add(proj_id)
+
     def add_seeker(self, proj):
         self.tracked_seekers.append(proj)
-        
+
     def clear_inactive(self):
         self.tracked_seekers = [p for p in self.tracked_seekers if p.status == 'active']
 
@@ -264,9 +347,10 @@ class SeekerMonitorPanel(BattlePanel):
         screen.blit(text, text_rect)
     
     def draw_seeker_entry(self, surface, proj, y, panel_w, font_name, font_stat):
-        arrow = "▼" if proj in self.expanded_seekers else "►"
+        # PROJ-43: Use _is_seeker_expanded() for ID-based expansion tracking
+        arrow = "▼" if self._is_seeker_expanded(proj) else "►"
         status = getattr(proj, 'status', 'active')
-        
+
         if status == 'hit':
             color = (50, 255, 50)
             status_str = "[HIT]"
@@ -283,13 +367,13 @@ class SeekerMonitorPanel(BattlePanel):
             color = (255, 255, 100)
             status_str = "[ACT]"
             bg_color = (50, 50, 60)
-            
+
         pygame.draw.rect(surface, bg_color, (5, y, panel_w - 35, 22))
-        
+
         name = "Missile"
         text = font_name.render(f"{arrow} {name} {status_str}", True, color)
         surface.blit(text, (10, y + 3))
-        
+
         # X button
         if status != 'active':
             x_rect = pygame.Rect(panel_w - 25, y, 20, 22)
@@ -298,12 +382,12 @@ class SeekerMonitorPanel(BattlePanel):
             x_text = font_name.render("X", True, (255, 100, 100))
             x_rect_center = x_rect.center
             surface.blit(x_text, (x_rect_center[0] - x_text.get_width()//2, x_rect_center[1] - x_text.get_height()//2))
-            
+
         y += 25
-        
-        if proj in self.expanded_seekers:
+
+        if self._is_seeker_expanded(proj):
             y = self.draw_seeker_details(surface, proj, y, panel_w, font_stat)
-            
+
         return y
 
     def draw_seeker_details(self, surface, proj, y, panel_w, font):
@@ -356,54 +440,54 @@ class SeekerMonitorPanel(BattlePanel):
     
     @profile_action("Battle: SeekerPanel Click")
     def handle_click(self, mx, my):
+        """Handle mouse click on the seeker panel.
+
+        PROJ-43: Uses ID-based expansion tracking via _toggle_seeker_expanded().
+        """
         # Check Clear Inactive - this is in absolute screen coords because we draw it to screen
-        # So we should check it first before relative logic?
-        # Actually BattleInterface passes absolute mx, my.
         if self.clear_btn_rect and self.clear_btn_rect.collidepoint(mx, my):
             self.clear_inactive()
             return True
-            
-        # Check relative clicks
-        # Check if click is within panel rect at all? 
-        # BattleInterface checks if mx < panel_width.
-        
+
         rel_x = mx - self.rect.x
         rel_y = my - self.rect.y + self.scroll_offset
-        
+
         y_pos = 10 + 30
-        
+
         for proj in self.tracked_seekers:
-             rect_h = 22
-             if y_pos <= rel_y < y_pos + rect_h:
-                 # Check X button
-                 x_btn_x_start = self.rect.width - 25
-                 if rel_x >= x_btn_x_start and rel_x <= x_btn_x_start + 20:
-                     if proj.status != 'active':
-                         self.tracked_seekers.remove(proj)
-                         return True
-                 
-                 # Toggle expand
-                 if proj in self.expanded_seekers:
-                     self.expanded_seekers.discard(proj)
-                 else:
-                     self.expanded_seekers.add(proj)
-                 return True
-             
-             y_pos += 25
-             if proj in self.expanded_seekers:
-                 y_pos += 72
+            rect_h = 22
+            if y_pos <= rel_y < y_pos + rect_h:
+                # Check X button
+                x_btn_x_start = self.rect.width - 25
+                if rel_x >= x_btn_x_start and rel_x <= x_btn_x_start + 20:
+                    if proj.status != 'active':
+                        self.tracked_seekers.remove(proj)
+                        return True
+
+                # PROJ-43: Use _toggle_seeker_expanded() for ID-based tracking
+                self._toggle_seeker_expanded(proj)
+                return True
+
+            y_pos += 25
+            if self._is_seeker_expanded(proj):
+                y_pos += 72
         return False
 
 class BattleControlPanel(BattlePanel):
-    """Panel for battle control buttons."""
+    """Panel for battle control buttons.
+
+    PROJ-43: Uses _get_ships() for DTO-based access to ship data.
+    """
     def __init__(self, scene, x, y, w, h):
         super().__init__(scene, x, y, w, h)
         self.battle_end_button_rect = None
         self.end_battle_early_rect = None
-        
+
     def draw(self, screen):
-        team1_alive = sum(1 for s in self.scene.ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
-        team2_alive = sum(1 for s in self.scene.ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
+        # PROJ-43: Use _get_ships() for DTO-based access
+        ships = self._get_ships()
+        team1_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
+        team2_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
         sw, sh = screen.get_size()
         
         if team1_alive == 0 or team2_alive == 0:

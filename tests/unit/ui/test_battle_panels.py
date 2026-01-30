@@ -106,12 +106,13 @@ class TestBattlePanels:
         # Test 1: Expand
         handled = panel.handle_click(10, 50)
         assert handled is True
-        assert ship1 in panel.expanded_ships
+        # PROJ-43: expanded_ships now tracks ship IDs (name used as fallback ID)
+        assert "Hero" in panel.expanded_ships
 
         # Test 2: Collapse
         handled = panel.handle_click(10, 50)
         assert handled is True
-        assert ship1 not in panel.expanded_ships
+        assert "Hero" not in panel.expanded_ships
 
     def test_stats_panel_scroll_offset(self):
         """Test that scroll offset shifts the click targets."""
@@ -132,7 +133,8 @@ class TestBattlePanels:
         # Test clicking Ship 2 WITHOUT scroll
         handled = panel.handle_click(10, 120)
         assert handled is True
-        assert ship2 in panel.expanded_ships
+        # PROJ-43: expanded_ships now tracks ship IDs (name used as fallback ID)
+        assert "Villain" in panel.expanded_ships
         panel.expanded_ships.clear()
 
         # Test clicking Ship 2 WITH scroll
@@ -146,7 +148,7 @@ class TestBattlePanels:
         panel.scroll_offset = 50
         handled = panel.handle_click(10, 70)
         assert handled is True, "Click at 70 with scroll 50 should map to 120 and hit ship2"
-        assert ship2 in panel.expanded_ships
+        assert "Villain" in panel.expanded_ships
 
         # Verify clicking original screen spot (120) now maps to 170 -> miss
         panel.expanded_ships.clear()
@@ -200,7 +202,9 @@ class TestBattlePanels:
 
         handled = panel.handle_click(150, 140)
         assert handled is True
-        assert s1 in panel.expanded_seekers
+        # PROJ-43: expanded_seekers now tracks projectile IDs (Python id used as fallback)
+        s1_id = str(id(s1))
+        assert s1_id in panel.expanded_seekers
 
         # Test clicking X button (Inactive seeker)
         s1.status = 'hit'
@@ -227,3 +231,139 @@ class TestBattlePanels:
         # Click outside
         res = panel.handle_click(200, 200)
         assert res is False
+
+
+# =============================================================================
+# PROJ-43 Task 12.5: Tests for DTO-Based Panel Access
+# =============================================================================
+# These tests verify that panels work correctly with ShipDTO objects
+# instead of direct Ship domain object access.
+
+class TestBattlePanelsDTOIntegration:
+    """Tests for panels using DTOs from ui_service (PROJ-43)."""
+
+    @pytest.fixture(autouse=True)
+    def setup_mocks(self):
+        """Set up mocks and patch pygame."""
+        mock_pygame = MagicMock()
+        mock_pygame.K_LSHIFT = 1
+        mock_pygame.K_RSHIFT = 2
+        mock_pygame.SRCALPHA = 0
+        mock_pygame.Rect = MockRect
+
+        # Patch sys.modules
+        modules_patcher = patch.dict(sys.modules, {'pygame': mock_pygame})
+        modules_patcher.start()
+
+        # Import module under test
+        from game.ui.panels import battle_panels
+        import importlib
+        importlib.reload(battle_panels)
+        self.module = battle_panels
+        self.mock_scene = MagicMock()
+
+        # Default key state: Not pressing shift
+        mock_keys = {mock_pygame.K_LSHIFT: False, mock_pygame.K_RSHIFT: False}
+        mock_pygame.key.get_pressed.return_value = mock_keys
+
+        self.mock_pygame = mock_pygame
+
+        yield
+
+        # Restore modules
+        modules_patcher.stop()
+
+    def create_mock_ship_dto(self, ship_id, team_id, name="Ship"):
+        """Create a mock ShipDTO for testing."""
+        dto = MagicMock()
+        dto.id = ship_id
+        dto.team_id = team_id
+        dto.name = name
+        dto.is_alive = True
+        dto.is_derelict = False
+        dto.max_shields = 100
+        dto.current_shields = 50
+        dto.max_hp = 100
+        dto.hp = 75
+        dto.current_speed = 0
+        dto.max_speed = 100
+        dto.total_shots_fired = 5
+        dto.crew_onboard = 10
+        dto.crew_required = 10
+        dto.current_target_name = None
+        dto.secondary_target_names = []
+        dto.max_targets = 1
+        dto.ai_strategy = "aggressive"
+        dto.source_file = None
+        dto.resources = []
+        dto.components = []
+        return dto
+
+    def test_expanded_ships_uses_ship_ids(self):
+        """Verify expanded_ships tracks ship IDs, not object references (PROJ-43)."""
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+
+        # Create ShipDTO mocks with IDs
+        ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
+        ship2 = self.create_mock_ship_dto("ship_002", 1, "Villain")
+
+        # Configure scene to return ships via ui_service
+        self.mock_scene.ui_service.get_ships.return_value = [ship1, ship2]
+
+        # Simulate clicking on ship1 entry
+        # With DTO-based approach, expanded_ships should contain ship ID
+        handled = panel.handle_click(10, 50)
+        assert handled is True
+
+        # Check that expanded_ships contains string ID, not object
+        assert len(panel.expanded_ships) == 1
+        expanded_id = list(panel.expanded_ships)[0]
+        assert isinstance(expanded_id, str), "expanded_ships should contain string IDs"
+        assert expanded_id == "ship_001"
+
+    def test_panel_uses_ui_service_for_ships(self):
+        """Verify panel retrieves ships from ui_service.get_ships() (PROJ-43)."""
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+
+        ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
+        self.mock_scene.ui_service.get_ships.return_value = [ship1]
+
+        # Trigger a click to force panel to query ships
+        panel.handle_click(10, 50)
+
+        # Verify ui_service.get_ships() was called
+        self.mock_scene.ui_service.get_ships.assert_called()
+
+    def test_toggle_expansion_with_dto_ids(self):
+        """Test toggle expand/collapse using DTO ship IDs (PROJ-43)."""
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+
+        ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
+        self.mock_scene.ui_service.get_ships.return_value = [ship1]
+
+        # Expand
+        panel.handle_click(10, 50)
+        assert "ship_001" in panel.expanded_ships
+
+        # Collapse
+        panel.handle_click(10, 50)
+        assert "ship_001" not in panel.expanded_ships
+
+    def test_focus_ship_returns_ship_id(self):
+        """Test shift-click returns ship ID for camera focus (PROJ-43)."""
+        panel = self.module.ShipStatsPanel(self.mock_scene, 800, 0, 200, 600)
+
+        ship1 = self.create_mock_ship_dto("ship_001", 0, "Hero")
+        self.mock_scene.ui_service.get_ships.return_value = [ship1]
+
+        # Enable shift key
+        mock_keys = {self.mock_pygame.K_LSHIFT: True, self.mock_pygame.K_RSHIFT: False}
+        self.mock_pygame.key.get_pressed.return_value = mock_keys
+
+        # Click on ship entry with shift held
+        result = panel.handle_click(10, 50)
+
+        # Should return focus_ship tuple with ship ID
+        assert isinstance(result, tuple)
+        assert result[0] == "focus_ship"
+        assert result[1] == "ship_001"

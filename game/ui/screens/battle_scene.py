@@ -21,6 +21,7 @@ from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_screen import BattleInterface
 from game.simulation.services import BattleService
+from game.ui.services.battle_ui_service import BattleUIService
 
 if TYPE_CHECKING:
     from game.simulation.battle_controller import BattleController, BattleConfig
@@ -46,6 +47,10 @@ class BattleScene:
         self._battle_service = BattleService()
         # Create initial battle for backward compatibility (engine must exist)
         self._battle_service.create_battle()
+
+        # Battle UI Service (PROJ-43: Clean interface for UI to access battle state)
+        # Provides DTOs instead of direct domain object access
+        self._ui_service = BattleUIService(self._battle_service)
 
         # Optional BattleController (for unified battle mode support)
         self._controller: Optional['BattleController'] = None
@@ -94,9 +99,10 @@ class BattleScene:
             controller: Configured BattleController instance
         """
         self._controller = controller
-        # Sync battle service reference
+        # Sync battle service reference and UI service
         if controller:
             self._battle_service = controller.service
+            self._ui_service = BattleUIService(self._battle_service)
 
     def get_controller(self) -> Optional['BattleController']:
         """Get the current BattleController (if any)."""
@@ -119,6 +125,7 @@ class BattleScene:
         """
         self._controller = controller
         self._battle_service = controller.service
+        self._ui_service = BattleUIService(self._battle_service)
 
         # Reset visual state
         self.beams = []
@@ -153,6 +160,18 @@ class BattleScene:
     def engine(self):
         """Access the underlying BattleEngine (for backward compatibility)."""
         return self._battle_service.get_engine()
+
+    @property
+    def ui_service(self) -> BattleUIService:
+        """Access the BattleUIService for DTO-based battle state queries.
+
+        PROJ-43: Provides clean interface for UI components to access battle
+        state through DTOs instead of direct domain object access.
+
+        Returns:
+            BattleUIService instance for this scene
+        """
+        return self._ui_service
 
     def handle_resize(self, width, height):
         """Handle window resize."""
@@ -208,6 +227,9 @@ class BattleScene:
 
         # Use BattleService to set up and start the battle
         self._battle_service.create_battle(seed=seed, enable_logging=True)
+
+        # Update UI service reference (PROJ-43)
+        self._ui_service = BattleUIService(self._battle_service)
 
         # Add ships to teams via service
         for ship in team1_ships:

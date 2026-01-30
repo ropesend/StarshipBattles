@@ -1,0 +1,13 @@
+!EXECUTE_PROTOCOL: Projects/protocols/10_manage_refactor_plan.md
+
+I need to manage the projects in `refactor_plan.md`.
+
+**Action:** [ADD / REMOVE / UPDATE / REORDER]
+**Project ID:** [e.g., PROJ-50]
+
+**Details:**
+- For ADD: [Project Title, Priority (High/Med/Low)]
+- For REORDER: [Move PROJ-XX to position N / Move PROJ-XX after PROJ-YY]
+- For REMOVE: [Delete / Archive / Skip]
+
+Please execute Protocol 10 to perform this change and verify the file structure is correct afterwards.

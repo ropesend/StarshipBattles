@@ -1,0 +1,282 @@
+"""BattleUIService - Adapter between BattleService and UI layer.
+
+PROJ-43 Phase 12: This service implements the IBattleUI protocol,
+converting simulation domain objects to DTOs for safe UI consumption.
+
+The service wraps a BattleService instance and provides read-only
+access to battle state through immutable DTOs.
+"""
+from typing import List, Optional, TYPE_CHECKING
+
+from game.ui.interfaces.battle_ui import (
+    IBattleUI,
+    ShipDTO,
+    ComponentDTO,
+    ProjectileDTO,
+    BeamDTO,
+    ResourceDTO,
+)
+from game.core.math import Vector2
+
+if TYPE_CHECKING:
+    from game.simulation.services import BattleService
+    from game.simulation.entities.ship import Ship
+
+
+class BattleUIService:
+    """Service that provides UI-friendly access to battle state.
+
+    This service implements the IBattleUI protocol, converting
+    simulation domain objects to immutable DTOs for safe UI consumption.
+
+    Usage:
+        battle_service = BattleService()
+        battle_service.create_battle()
+        # ... add ships, start battle ...
+
+        ui_service = BattleUIService(battle_service)
+        ships = ui_service.get_ships()  # List of ShipDTO
+        projectiles = ui_service.get_projectiles()  # List of ProjectileDTO
+    """
+
+    def __init__(self, battle_service: 'BattleService'):
+        """Initialize with a BattleService instance.
+
+        Args:
+            battle_service: The BattleService to wrap
+        """
+        self._battle_service = battle_service
+
+    def get_ships(self) -> List[ShipDTO]:
+        """Get all ships in the battle as DTOs.
+
+        Returns:
+            List of ShipDTO objects representing all ships
+        """
+        engine = self._battle_service.get_engine()
+        if engine is None:
+            return []
+
+        return [self._convert_ship(ship) for ship in engine.ships]
+
+    def get_projectiles(self) -> List[ProjectileDTO]:
+        """Get all projectiles in the battle as DTOs.
+
+        Returns:
+            List of ProjectileDTO objects representing all projectiles
+        """
+        engine = self._battle_service.get_engine()
+        if engine is None:
+            return []
+
+        return [self._convert_projectile(proj) for proj in engine.projectiles]
+
+    def get_recent_beams(self) -> List[BeamDTO]:
+        """Get recent beam weapon effects as DTOs.
+
+        Returns beams fired since last call. UI manages visual fade.
+
+        Returns:
+            List of BeamDTO objects for new beam effects
+        """
+        engine = self._battle_service.get_engine()
+        if engine is None:
+            return []
+
+        return [self._convert_beam(beam) for beam in engine.recent_beams]
+
+    def is_battle_over(self) -> bool:
+        """Check if the battle has ended.
+
+        Returns:
+            True if battle is over or no engine, False otherwise
+        """
+        engine = self._battle_service.get_engine()
+        if engine is None:
+            return True
+        return engine.is_battle_over()
+
+    def get_winner(self) -> Optional[int]:
+        """Get the winning team ID.
+
+        Returns:
+            Winning team ID (0 or 1), -1 for draw, or None if battle ongoing/no engine
+        """
+        engine = self._battle_service.get_engine()
+        if engine is None:
+            return None
+        return engine.get_winner()
+
+    def get_tick_count(self) -> int:
+        """Get the current simulation tick count.
+
+        Returns:
+            Number of simulation ticks elapsed, 0 if no engine
+        """
+        engine = self._battle_service.get_engine()
+        if engine is None:
+            return 0
+        return engine.tick_counter
+
+    def _convert_ship(self, ship: 'Ship') -> ShipDTO:
+        """Convert a Ship domain object to ShipDTO.
+
+        Args:
+            ship: The Ship object to convert
+
+        Returns:
+            ShipDTO with all ship data
+        """
+        # Convert resources
+        resources = []
+        ship_resources = getattr(ship, 'resources', None)
+        if ship_resources and hasattr(ship_resources, '_resources'):
+            res_dict = getattr(ship_resources, '_resources', {})
+            if res_dict:
+                for res in res_dict.values():
+                    resources.append(ResourceDTO(
+                        name=res.name,
+                        current_value=res.current_value,
+                        max_value=res.max_value
+                    ))
+
+        # Convert components
+        components = []
+        for layer_type, layer_data in ship.layers.items():
+            layer_name = layer_type.value if hasattr(layer_type, 'value') else str(layer_type)
+            for comp in layer_data.get('components', []):
+                components.append(self._convert_component(comp, layer_name))
+
+        # Get target name
+        current_target_name = None
+        current_target = getattr(ship, 'current_target', None)
+        if current_target and hasattr(current_target, 'name'):
+            current_target_name = current_target.name
+
+        # Get secondary target names
+        secondary_target_names = []
+        for target in getattr(ship, 'secondary_targets', []):
+            if hasattr(target, 'name'):
+                secondary_target_names.append(target.name)
+
+        # Get ship id - use object id if no explicit id
+        ship_id = str(getattr(ship, 'id', id(ship)))
+
+        # Get heading - Ship uses 'angle' internally, DTO exposes as 'heading'
+        heading = getattr(ship, 'heading', None)
+        if heading is None:
+            heading = getattr(ship, 'angle', 0.0)
+
+        return ShipDTO(
+            id=ship_id,
+            name=ship.name,
+            team_id=ship.team_id,
+            position=Vector2(ship.position.x, ship.position.y),
+            velocity=Vector2(ship.velocity.x, ship.velocity.y),
+            heading=heading,
+            is_alive=ship.is_alive,
+            is_derelict=getattr(ship, 'is_derelict', False),
+            hp=ship.hp,
+            max_hp=ship.max_hp,
+            current_shields=getattr(ship, 'current_shields', 0.0),
+            max_shields=getattr(ship, 'max_shields', 0.0),
+            current_speed=getattr(ship, 'current_speed', 0.0),
+            max_speed=ship.max_speed,
+            mass=ship.mass,
+            total_thrust=getattr(ship, 'total_thrust', 0.0),
+            turn_speed=getattr(ship, 'turn_speed', 0.0),
+            total_shots_fired=getattr(ship, 'total_shots_fired', 0),
+            crew_onboard=getattr(ship, 'crew_onboard', 0),
+            crew_required=getattr(ship, 'crew_required', 0),
+            current_target_name=current_target_name,
+            secondary_target_names=secondary_target_names,
+            max_targets=getattr(ship, 'max_targets', 1),
+            ai_strategy=getattr(ship, 'ai_strategy', 'default'),
+            source_file=getattr(ship, 'source_file', None),
+            resources=resources,
+            components=components
+        )
+
+    def _convert_component(self, comp, layer_name: str) -> ComponentDTO:
+        """Convert a component to ComponentDTO.
+
+        Args:
+            comp: The component object to convert
+            layer_name: The layer this component is in
+
+        Returns:
+            ComponentDTO with component data
+        """
+        # Determine status string
+        status = "active"
+        if hasattr(comp, 'status') and hasattr(comp.status, 'name'):
+            status = comp.status.name.lower()
+
+        # Check if it's a weapon
+        has_weapon = False
+        if hasattr(comp, 'has_ability'):
+            has_weapon = comp.has_ability('WeaponAbility')
+
+        return ComponentDTO(
+            name=comp.name,
+            layer=layer_name,
+            current_hp=comp.current_hp,
+            max_hp=comp.max_hp,
+            is_active=comp.is_active,
+            status=status,
+            has_weapon=has_weapon,
+            shots_fired=getattr(comp, 'shots_fired', 0),
+            shots_hit=getattr(comp, 'shots_hit', 0)
+        )
+
+    def _convert_projectile(self, proj) -> ProjectileDTO:
+        """Convert a projectile to ProjectileDTO.
+
+        Args:
+            proj: The projectile object to convert
+
+        Returns:
+            ProjectileDTO with projectile data
+        """
+        # Get target name
+        target_name = None
+        target = getattr(proj, 'target', None)
+        if target and hasattr(target, 'name'):
+            target_name = target.name
+
+        # Get projectile id
+        proj_id = str(getattr(proj, 'id', id(proj)))
+
+        return ProjectileDTO(
+            id=proj_id,
+            position=Vector2(proj.position.x, proj.position.y),
+            velocity=Vector2(proj.velocity.x, proj.velocity.y),
+            color=getattr(proj, 'color', (255, 200, 50)),
+            radius=getattr(proj, 'radius', 4.0),
+            damage=proj.damage,
+            hp=getattr(proj, 'hp', 0.0),
+            max_hp=getattr(proj, 'max_hp', 0.0),
+            status=getattr(proj, 'status', 'active'),
+            endurance=getattr(proj, 'endurance', 0.0),
+            max_endurance=getattr(proj, 'max_endurance', 0.0),
+            target_name=target_name,
+            max_speed=getattr(proj, 'max_speed', 0.0)
+        )
+
+    def _convert_beam(self, beam: dict) -> BeamDTO:
+        """Convert a beam dict to BeamDTO.
+
+        Args:
+            beam: Dictionary with beam data (start, end, color)
+
+        Returns:
+            BeamDTO with beam visual data
+        """
+        start = beam.get('start', Vector2(0, 0))
+        end = beam.get('end', Vector2(0, 0))
+
+        return BeamDTO(
+            start=Vector2(start.x, start.y),
+            end=Vector2(end.x, end.y),
+            color=beam.get('color', (255, 255, 255))
+        )

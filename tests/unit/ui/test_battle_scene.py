@@ -122,3 +122,31 @@ class TestBattleScene:
         self.scene.update([])
 
         assert proj not in self.scene.projectiles
+
+    def test_ui_service_property_available(self):
+        """Test that ui_service property is available (PROJ-43)."""
+        from game.ui.services.battle_ui_service import BattleUIService
+        from game.ui.interfaces.battle_ui import IBattleUI
+
+        self.scene.start([self.ship1], [self.ship2], headless=True)
+
+        # ui_service should be available
+        assert hasattr(self.scene, 'ui_service')
+        assert self.scene.ui_service is not None
+        assert isinstance(self.scene.ui_service, BattleUIService)
+        assert isinstance(self.scene.ui_service, IBattleUI)
+
+    def test_ui_service_returns_ship_dtos(self):
+        """Test that ui_service returns ShipDTOs for ships (PROJ-43)."""
+        from game.ui.interfaces.battle_ui import ShipDTO
+
+        self.scene.start([self.ship1], [self.ship2], headless=True)
+
+        ship_dtos = self.scene.ui_service.get_ships()
+        assert len(ship_dtos) == 2
+        assert all(isinstance(dto, ShipDTO) for dto in ship_dtos)
+
+        # Verify ship names are correct
+        names = {dto.name for dto in ship_dtos}
+        assert "Hero" in names
+        assert "Villain" in names
