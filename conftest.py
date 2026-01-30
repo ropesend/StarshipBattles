@@ -9,9 +9,21 @@ from game.core.config import DisplayConfig
 @pytest.fixture(autouse=True)
 def reset_game_state(monkeypatch, request):
     """
-    Context manager for strict test isolation using Fast Hydration.
-    Ensures global registries are populated from memory (Session Cache) before each test,
-    and cleaned up after. Registry is ALWAYS cleared pre/post-test for isolation.
+    Primary test isolation fixture using Fast Hydration pattern.
+
+    This fixture runs automatically for every test function and ensures:
+    1. PRE-TEST: Clear all singleton state for clean slate
+    2. SETUP: Hydrate registries from session cache (fast, no disk I/O)
+    3. POST-TEST: Clean up all singleton state to prevent leaks
+
+    Order of cleanup (post-test):
+        Core (RegistryManager, Logger, Profiler) ->
+        Simulation (ComponentCacheManager) ->
+        AI (StrategyManager) ->
+        UI (ShipThemeManager, ScreenshotManager, SpriteManager)
+
+    Use @pytest.mark.use_custom_data to skip production data hydration
+    for tests that need custom/empty registries.
     """
     from tests.infrastructure.session_cache import SessionRegistryCache
     from game.simulation.components.component import reset_component_caches
@@ -59,16 +71,34 @@ def reset_game_state(monkeypatch, request):
         yield
     finally:
         # POST-TEST CLEANUP (ALWAYS RUNS - even on test failure or use_custom_data)
+        # Order: Core singletons -> Simulation caches -> AI -> UI managers
+
+        # 1. Core singletons
         mgr.clear()
 
-        # Reset module-level caches to prevent pollution to next test
+        # Reset logger event handler to prevent test pollution
+        try:
+            from game.core.logger import set_event_handler
+            set_event_handler(None)
+        except Exception:
+            pass
+
+        # Clear profiler records
+        try:
+            from game.core.profiling import Profiler
+            if Profiler._instance is not None:
+                Profiler._instance.clear()
+        except Exception:
+            pass
+
+        # 2. Reset module-level caches to prevent pollution to next test
         reset_component_caches()
 
-        # Reset AI Strategy Manager using singleton pattern
+        # 3. Reset AI Strategy Manager using singleton pattern
         from game.ai.strategy_manager import StrategyManager
         StrategyManager.instance().clear()
 
-        # Reset singletons using thread-safe reset() methods
+        # 4. Reset UI singletons using thread-safe reset() methods
         from game.ui.assets import ShipThemeManager
         ShipThemeManager.reset()
 

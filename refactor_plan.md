@@ -8,25 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-47 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-47 Complete
+**Last Completed:** PROJ-48 Phase 1 Complete
+**Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
-**Current Phase:** Not Started
-**Test Status:** 5499 passed, pre-existing UI failures in PROJ-48 scope
+**Current Phase:** Phase 2 (Conftest Consolidation)
+**Test Status:** 5734 passed, 46 failed (pre-existing UI failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-47 COMPLETE - All 4 phases + Audit passed
-- Phase 4 completed: External documentation updates
-  - Fixed PROJ-11 links (active -> archived)
-  - Added API Reference to modifier_system.md
-  - Added Common Errors section to adding_abilities.md
-  - Added MVVM Pattern section to NAMING_CONVENTIONS.md
-  - Added Stat Resolution Order to adding_abilities.md
-  - Added Working with Ship Layers to adding_abilities.md
-  - Added FleetMovementSimulator migration guide to fleet_navigation_service.py
-  - Enhanced UI docstrings (draw_debug_overlay, _create_ui)
-- Next: PROJ-48 Testing Infrastructure Overhaul
+- PROJ-48 Phase 1 Complete - Critical Infrastructure Fixes
+  - Re-enabled 2 disabled integration tests (formation_attack, formation_flight)
+  - Converted from script-style to pytest class format with proper fixtures
+  - Consolidated test isolation into root conftest.py reset_game_state fixture
+  - Added Logger/Profiler cleanup to reset_game_state
+  - Removed duplicate reset_singletons fixture from tests/conftest.py
+  - Added 6 isolation verification tests in tests/unit/core/test_isolation.py
+  - Added `integration` marker to pytest.ini
+  - All 11 new tests passing
+- Next: Phase 2 - Conftest Consolidation
 
 ---
 
@@ -82,8 +81,8 @@
 
 ---
 
-- [ ] **PROJ-48: Testing Infrastructure Overhaul**
-  - **Phases:** 5 | **Status:** Planning | **Priority:** High
+- [/] **PROJ-48: Testing Infrastructure Overhaul**
+  - **Phases:** 8 | **Status:** In Progress | **Priority:** High
   - **Plan:** [Projects/active_projects/PROJ-48/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-48/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -110,6 +109,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 1 | Complete | 5734 passed | pending | Re-enabled formation tests, consolidated test isolation, +11 tests |
 | 2026-01-30 | PROJ-47 | Audit Cycle 1 | PASSED | 5499 passed | 2a0f3684 | All 4 phases verified, project complete |
 | 2026-01-30 | PROJ-47 | Phase 4 | Complete | 5499 passed | 2a0f3684 | External docs: PROJ-11 links, API ref, errors, MVVM, layers, migration guide |
 | 2026-01-30 | PROJ-47 | Phase 3 | Complete | 805 testmon | f2d94cc9 | Sim docs: weapons, battle_controller, modifier_service, combat_engine, component_system.md |

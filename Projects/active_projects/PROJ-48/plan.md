@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Critical Infrastructure Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Critical Infrastructure Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Conftest Consolidation | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Test File Splitting | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Weak Assertion Fixes | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -23,11 +23,18 @@
 | 8. Test Quality Improvements | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-28 19:30
-**Active Phase:** Planning Complete - Ready for Phase 1
-**Last Action:** Created comprehensive 8-phase plan from 36 identified issues
-**Next Action:** Begin Phase 1 - Re-enable disabled integration tests
+**Last Updated:** 2026-01-30
+**Active Phase:** Phase 1 Complete - Ready for Phase 2
+**Last Action:** Completed Phase 1 - Critical Infrastructure Fixes
+**Next Action:** Begin Phase 2 - Conftest Consolidation
 **Blockers:** None
+
+**Phase 1 Summary:**
+- Re-enabled 2 disabled integration tests (converted from scripts to pytest classes)
+- Consolidated test isolation into root conftest.py reset_game_state fixture
+- Added 6 isolation verification tests in tests/unit/core/test_isolation.py
+- Added `integration` marker to pytest.ini
+- All 11 new tests passing
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.
@@ -62,7 +69,7 @@ This project addresses 36 identified issues in the testing infrastructure, cover
 | Tests conftest | `tests/conftest.py` |
 | Session cache | `tests/infrastructure/session_cache.py` |
 | Fixtures module | `tests/fixtures/*.py` |
-| Disabled tests | `tests/integration/_test_formation_*.py` |
+| Formation tests | `tests/integration/test_formation_*.py` |
 | Largest monolith | `tests/unit/strategy/test_ship_stats_service.py` (1756 LOC) |
 | Findings source | `findings_07_testing_infrastructure.md` |
 
