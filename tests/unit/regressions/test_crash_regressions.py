@@ -71,9 +71,8 @@ class TestCrashRegressions:
             panel.draw(surface)
         except UnboundLocalError:
             pytest.fail("WeaponsReportPanel.draw() raised UnboundLocalError! Fix is not working.")
-        except Exception as e:
+        except Exception:
             # Other errors might happen due to mocking, but we specifically care about UnboundLocalError
-            print(f"Caught expected/unrelated error during mock draw: {e}")
             pass
 
         # Verify the draw method was called with a width of 0 (since range was 0)

@@ -62,7 +62,6 @@ class TestCrystallineArmor:
         # add_armor() will add components.
 
     def add_armor(self):
-        print("DEBUG: Adding armor...")
         from game.core.registry import RegistryManager
         c = RegistryManager.instance().components["crystalline_armor"].clone()
         self.ship.layers[LayerType.ARMOR]['components'].append(c)

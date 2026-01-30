@@ -17,7 +17,6 @@ class TestStarGeneration:
         # Check median ~1.0
         masses.sort()
         median = masses[500]
-        print(f"Median Mass: {median}")
         assert 0.5 < median < 2.0, f"Median mass {median} should be near 1.0"
 
         # Check range
@@ -51,7 +50,6 @@ class TestStarGeneration:
 
                 assert dist > primary.diameter_hexes, "Companion inside primary?"
 
-        print(f"Counts: {counts}")
         # Approx 10% binary -> ~200
         # Wide tolerance because random
         assert 150 < counts[2] < 250, "Binary count deviation"

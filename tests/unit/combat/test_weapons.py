@@ -12,6 +12,8 @@ from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestWeaponBasics:
+    """Tests for weapon component initialization and basic properties."""
+
     @pytest.fixture(autouse=True)
     def setup(self):
         initialize_ship_data(str(get_project_root()))
@@ -92,6 +94,7 @@ class TestWeaponBasics:
 
 
 class TestWeaponFiring:
+    """Tests for weapon firing mechanics and target selection."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -157,6 +160,7 @@ class TestWeaponFiring:
 
 
 class TestLeadCalculation:
+    """Tests for projectile lead calculation and targeting prediction."""
 
     @pytest.fixture(autouse=True)
     def setup(self):

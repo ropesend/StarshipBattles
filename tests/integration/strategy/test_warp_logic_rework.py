@@ -53,12 +53,9 @@ class TestWarpLogicRework:
         wp_large = large_sys.warp_points[0]
         dist_large = hex_distance(HexCoord(0,0), wp_large.location)
         
-        # Check assertions
         # Expected base ~15 + 1.5*Diam
-        # Small: ~16.5
-        # Large: ~30.0
-        print(f"Small Dist: {dist_small}, Large Dist: {dist_large}")
-        assert dist_large > dist_small + 5 # Gap should be significant
+        # Small: ~16.5, Large: ~30.0
+        assert dist_large > dist_small + 5, f"Gap should be significant: Small={dist_small}, Large={dist_large}"
 
     def test_angle_clearance_calculation(self, galaxy):
         """

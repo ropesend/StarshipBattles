@@ -359,6 +359,37 @@ assert_list_length(events, 1, "events after selection")
 
 ---
 
+### Docstrings
+
+Test classes and complex test methods should have docstrings:
+
+- **Test classes**: Add a docstring describing what class/feature is being tested
+  - Pattern: `"""Tests for <feature/class>."""`
+  - Example: `"""Tests for ShipStatsService damage calculations."""`
+
+- **Test methods**: Add docstrings for complex scenarios only
+  - Simple tests: Method name should be self-documenting
+  - Complex tests: Add docstring explaining the scenario
+
+```python
+class TestWeaponFiring:
+    """Tests for weapon firing mechanics and target selection."""
+
+    def test_fire_weapon_hits_target(self):
+        # Simple test - name is descriptive enough
+        ...
+
+    def test_fire_weapon_with_interference_field(self):
+        """Verify weapon accuracy penalty when firing through interference.
+
+        The interference field should reduce hit chance by 25% but
+        not affect damage if the shot lands.
+        """
+        ...
+```
+
+---
+
 ### Best Practices
 
 1. **Isolation**: Each test should be independent. The `reset_game_state` fixture handles cleanup automatically.
@@ -509,6 +540,32 @@ Check that:
 1. `__init__.py` exists in test directories
 2. Project root is in `PYTHONPATH`
 3. Fixtures are properly imported in `conftest.py`
+
+---
+
+---
+
+## Skipped Tests
+
+Some tests are conditionally skipped. This is intentional:
+
+### Snapshot Regression Tests (`tests/regression/`)
+- Tests in `modifier_ability_snapshots/` skip on first run to create baselines
+- Re-running the test after baseline creation runs the actual comparison
+- Normal behavior, no action needed
+
+### Missing Component/Data Skips
+- Various tests skip if expected components/modifiers not in registry
+- Pattern: `if 'component_id' not in registry: pytest.skip(...)`
+- These ensure tests gracefully handle missing test data
+
+### Platform/Environment Skips
+- `test_research_renderer.py`: Skips when running in xdist parallel workers
+- Uses `@pytest.mark.skipif` decorator properly
+
+### Feature Not Implemented
+- `test_bug_15_screenshot_strategy.py`: Skips if `capture_strategy_layer()` not implemented
+- Reproduction tests for features under development
 
 ---
 

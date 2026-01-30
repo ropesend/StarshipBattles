@@ -82,8 +82,6 @@ class TestBuilderWarningLogic:
 
         # Mock _execute_pending_action to verify it's called
         with patch.object(builder, '_execute_pending_action') as mock_execute:
-            print(f"DEBUG: Left Panel Handle Event returns: {builder.left_panel.handle_event(event)}")
-            print(f"DEBUG: Layer Panel Handle Event returns: {builder.layer_panel.handle_event(event)}")
             builder.handle_event(event)
 
             # Check success

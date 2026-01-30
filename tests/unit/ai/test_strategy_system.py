@@ -30,6 +30,7 @@ def strategy_system_setup():
 
 
 class TestStrategySystem:
+    """Tests for AI strategy system data loading and strategy selection."""
 
     def test_load_data(self, strategy_system_setup):
         """Verify data loading from test files."""

@@ -73,6 +73,7 @@ def ai_setup():
 
 
 class TestAIController:
+    """Tests for AIController target selection and combat behavior."""
 
     def test_find_target(self, ai_setup):
         """AI should find nearest enemy."""

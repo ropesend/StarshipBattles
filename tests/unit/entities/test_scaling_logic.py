@@ -118,10 +118,7 @@ class TestScalingLogic:
         expected_crew = int(math.ceil(base_crew * math.sqrt(mass_mult)))
         current_crew = self._get_crew_req(rg)
 
-        # We expect this to fail effectively until implemented
-        print(f"Range Mount Test: Base {base_crew}, MassMult {mass_mult}, Expected {expected_crew}, Got {current_crew}")
-
-        assert current_crew == expected_crew, f"Crew Req should scale with sqrt(mass_mult) for Range Mount."
+        assert current_crew == expected_crew, f"Crew Req should scale with sqrt(mass_mult) for Range Mount. Expected {expected_crew}, Got {current_crew}"
 
     def test_crew_requirement_scaling_combined(self, loaded_data):
         """

@@ -7,6 +7,8 @@ from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 class TestShields:
+    """Tests for shield projection, regeneration, and damage absorption."""
+
     @pytest.fixture(autouse=True)
     def setup(self):
         # Minimal init

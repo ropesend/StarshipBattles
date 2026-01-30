@@ -105,9 +105,6 @@ class TestBuilderValidation:
         # We assert False to flag if it succeeds (meaning check is missing/failing).
         result = self.ship.add_component(comp2, LayerType.CORE)
 
-        if result:
-            print("FAIL: is_unique validation missing (duplicate added)")
-
         assert not result, "Should not allow duplicate of unique component"
 
     def test_exclusive_group(self):
@@ -137,9 +134,7 @@ class TestBuilderValidation:
         has_comp1 = any(c.id == "group_a_1" for c in self.ship.layers[LayerType.INNER]['components'])
         has_comp2 = any(c.id == "group_a_2" for c in self.ship.layers[LayerType.INNER]['components'])
 
-        if has_comp1 and has_comp2:
-            print("FAIL: exclusive_group validation missing (both assumed)")
-            pytest.fail("Should not allow multiple components from same exclusive group")
+        assert not (has_comp1 and has_comp2), "Should not allow multiple components from same exclusive group"
 
     def test_component_dependencies(self):
         """Step 4: Test logic that requires specific mounts."""
@@ -156,9 +151,6 @@ class TestBuilderValidation:
 
         # Try adding weapon without mount
         result = self.ship.add_component(weapon, LayerType.OUTER)
-
-        if result:
-            print("FAIL: Dependency validation missing (weapon added without mount)")
 
         assert not result, "Should fail to add component without required mount"
 
@@ -222,15 +214,14 @@ class TestBuilderValidation:
         # Add Shield (Should fail - denied)
         assert not self.ship.add_component(shield, LayerType.INNER), "Should deny component with denied ability"
 
+    @pytest.mark.skip(reason="Symmetry enforcement is a UI feature, not implemented in Ship.check_validity()")
     def test_symmetry_enforcement(self):
-        """Step 5b: Test symmetry enforcement (if enabled)."""
-        # Symmetry is usually a Builder UI feature, not strict Ship validation?
-        # But if valid_ship() checks symmetry, we test it here.
-        # Checking ship.py, there is no symmetry check in check_validity().
-        # So this test checks for a feature likely essentially missing in backend validation.
+        """Step 5b: Test symmetry enforcement (if enabled).
 
-        # We'll just define the test structure.
-        pass
+        Note: Symmetry is a Builder UI feature, not part of backend validation.
+        This test is skipped until symmetry validation is added to Ship.check_validity().
+        """
+        pytest.fail("Symmetry enforcement not implemented in Ship validation")
 
     def test_block_id_restriction(self):
         """Step 7: Verify block_id restriction."""

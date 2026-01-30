@@ -98,7 +98,6 @@ class TestShipResources:
 
         # Reset ship
         self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
-        print(f"DEBUG: Created Ship LSTest. Class: {self.ship.ship_class} MassBudget: {self.ship.max_mass_budget}")
         self.ship.add_component(create_component('bridge'), LayerType.CORE)
         self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
 
@@ -110,7 +109,6 @@ class TestShipResources:
         # Wait, if no LS provided, available_life_support=0.
 
         bridge = [c for c in self.ship.layers[LayerType.CORE]['components'] if c.id == 'bridge'][0]
-        print(f"DEBUG: Bridge HP: {bridge.current_hp}/{bridge.max_hp} Status: {bridge.status}")
         assert bridge.is_active is False
         assert bridge.status == ComponentStatus.NO_CREW
 
