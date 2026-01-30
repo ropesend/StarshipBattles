@@ -394,11 +394,14 @@ class TestSaveGameServiceErrorLogging:
             success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
         assert not success
-        assert "Test save error" in message
+        # User-facing message should be generic (not expose internal error details)
+        assert "save failed" in message.lower() or "unable to serialize" in message.lower()
 
-        # Should have logged an error
+        # Should have logged an error with the actual error message
         error_logs = [r for r in caplog.records if r.levelno >= logging.ERROR]
         assert len(error_logs) > 0, "Should log error on save failure"
+        # Internal error should be logged (not shown to user)
+        assert any("Test save error" in r.message for r in error_logs)
 
     def test_load_error_logs_with_context(self, caplog, setup_tmpdir):
         """Load errors should log with save path context."""
@@ -514,3 +517,152 @@ class TestSaveGameServiceUserFriendlyErrors:
         # Should NOT expose raw exception details
         assert "RuntimeError" not in message, f"Should not expose exception type: {message}"
         assert "Internal processing error" not in message, f"Should not expose internal error details: {message}"
+
+
+class TestSaveGameServiceExceptionHandling:
+    """Tests for PROJ-45: Proper exception handling with PersistenceException."""
+
+    @pytest.fixture(autouse=True)
+    def setup_tmpdir(self):
+        """Create temporary directory for tests and patch Paths.SAVES_DIR."""
+        tmpdir = tempfile.mkdtemp()
+        saves_dir = os.path.join(tmpdir, "saves")
+        os.makedirs(saves_dir, exist_ok=True)
+        with patch.object(paths_module.Paths, 'SAVES_DIR', saves_dir):
+            yield tmpdir
+        shutil.rmtree(tmpdir)
+
+    def test_save_permission_denied_returns_clear_message(self, setup_tmpdir):
+        """Save permission error should return clear message with path context."""
+        session = MockGameSession()
+
+        # Mock os.makedirs to raise PermissionError
+        with patch('os.makedirs', side_effect=PermissionError("Permission denied")):
+            success, message, save_path = SaveGameService.save_game(session, "TestGame")
+
+        assert not success
+        assert "permission" in message.lower() or "save failed" in message.lower()
+        assert save_path is None
+
+    def test_save_disk_full_returns_clear_message(self, setup_tmpdir):
+        """Save disk full error should return clear message."""
+        session = MockGameSession()
+        success, _, save_path = SaveGameService.save_game(session, "TestGame")
+        session.save_path = save_path
+
+        # Mock save_json to return False (simulating disk full)
+        with patch('game.strategy.systems.save_game_service.save_json', return_value=False):
+            success, message, result_path = SaveGameService.save_game(session)
+
+        assert not success
+        assert "failed" in message.lower()
+
+    def test_load_corrupt_metadata_returns_specific_error(self, setup_tmpdir):
+        """Load with corrupt metadata should return specific error message."""
+        tmpdir = setup_tmpdir
+        save_path = os.path.join(tmpdir, "saves", "CorruptSave")
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+
+        # Write corrupt metadata
+        with open(os.path.join(save_path, "save_metadata.json"), "w") as f:
+            f.write("{ corrupt json }")
+
+        result, message = SaveGameService.load_game(save_path)
+
+        assert result is None
+        assert "corrupted" in message.lower() or "metadata" in message.lower()
+
+    def test_load_corrupt_turn_file_returns_specific_error(self, setup_tmpdir):
+        """Load with corrupt turn file should return specific error message."""
+        tmpdir = setup_tmpdir
+        save_path = os.path.join(tmpdir, "saves", "CorruptTurnSave")
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+
+        # Valid metadata
+        metadata = {
+            "version": "2.0.0",
+            "timestamp": "2026-01-24T12:00:00",
+            "player_name": "Test",
+            "latest_turn_number": 1
+        }
+        save_json(os.path.join(save_path, "save_metadata.json"), metadata)
+
+        # Corrupt turn file
+        with open(os.path.join(save_path, "turns", "turn_1.json"), "w") as f:
+            f.write("not valid json at all")
+
+        result, message = SaveGameService.load_game(save_path)
+
+        assert result is None
+        assert "corrupted" in message.lower() or "turn" in message.lower()
+
+    def test_load_missing_turn_file_returns_specific_error(self, setup_tmpdir):
+        """Load with missing turn file should return specific error message."""
+        tmpdir = setup_tmpdir
+        save_path = os.path.join(tmpdir, "saves", "MissingTurnSave")
+        os.makedirs(os.path.join(save_path, "turns"), exist_ok=True)
+
+        # Valid metadata pointing to turn 5
+        metadata = {
+            "version": "2.0.0",
+            "timestamp": "2026-01-24T12:00:00",
+            "player_name": "Test",
+            "latest_turn_number": 5
+        }
+        save_json(os.path.join(save_path, "save_metadata.json"), metadata)
+
+        result, message = SaveGameService.load_game(save_path)
+
+        assert result is None
+        assert "turn 5" in message.lower() or "not found" in message.lower()
+
+    def test_delete_nonexistent_save_returns_error(self, setup_tmpdir):
+        """Delete nonexistent save should return clear error."""
+        success, message = SaveGameService.delete_save("NonexistentSave")
+
+        assert not success
+        assert "not found" in message.lower()
+
+    def test_delete_permission_denied_returns_clear_message(self, setup_tmpdir):
+        """Delete permission error should return clear message."""
+        session = MockGameSession()
+        success, _, save_path = SaveGameService.save_game(session, "TestGame")
+        assert success
+
+        # Mock shutil.rmtree to raise PermissionError
+        with patch('shutil.rmtree', side_effect=PermissionError("Access denied")):
+            success, message = SaveGameService.delete_save(save_path)
+
+        assert not success
+        assert "delete failed" in message.lower() or "access denied" in message.lower()
+
+    def test_list_saves_handles_directory_error_gracefully(self, setup_tmpdir):
+        """list_saves should handle directory errors gracefully."""
+        # Mock os.listdir to raise error
+        with patch('os.listdir', side_effect=PermissionError("Cannot list directory")):
+            saves = SaveGameService.list_saves()
+
+        # Should return empty list, not raise
+        assert saves == []
+
+    def test_list_turns_handles_directory_error_gracefully(self, setup_tmpdir):
+        """list_turns should handle directory errors gracefully."""
+        session = MockGameSession()
+        success, _, save_path = SaveGameService.save_game(session, "TestGame")
+        assert success
+
+        # Mock os.listdir to raise error
+        with patch('os.listdir', side_effect=PermissionError("Cannot list directory")):
+            turns = SaveGameService.list_turns(save_path)
+
+        # Should return empty list, not raise
+        assert turns == []
+
+    def test_get_save_info_returns_none_on_error(self, setup_tmpdir):
+        """get_save_info should return None on errors, not raise."""
+        # Mock load_json to raise
+        with patch('game.strategy.systems.save_game_service.load_json',
+                   side_effect=PermissionError("Cannot read")):
+            info = SaveGameService.get_save_info("SomeSave")
+
+        assert info is None

@@ -5,6 +5,7 @@ This module provides the DesignLibrary class for managing ship designs in
 integrated mode, including saving, loading, filtering, and marking designs
 as obsolete. Designs are stored in the savegame's designs folder.
 """
+import json
 import os
 import glob
 from typing import List, Optional, Tuple, Set
@@ -49,8 +50,10 @@ class DesignLibrary:
         try:
             os.makedirs(self.designs_folder, exist_ok=True)
             log_debug(f"DesignLibrary: Ensured designs folder exists: {self.designs_folder}")
-        except Exception as e:
-            log_error(f"Failed to create designs folder '{self.designs_folder}' for empire_{empire_id}: {e}")
+        except PermissionError as e:
+            log_error(f"Permission denied creating designs folder '{self.designs_folder}' for empire_{empire_id}: {e}")
+        except OSError as e:
+            log_error(f"OS error creating designs folder '{self.designs_folder}' for empire_{empire_id}: {e}")
             # Fallback to temp directory
             import tempfile
             temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
@@ -87,9 +90,18 @@ class DesignLibrary:
                 metadata = DesignMetadata.from_design_file(filepath, design_id)
                 log_debug(f"scan_designs: Loaded design '{metadata.name}' (vehicle_type={metadata.vehicle_type}, design_id={design_id})")
                 designs.append(metadata)
+            except json.JSONDecodeError as e:
+                log_error(f"scan_designs: Corrupt JSON in design file {filepath}: {e}")
+                continue
+            except KeyError as e:
+                log_error(f"scan_designs: Missing required field in design {filepath}: {e}")
+                continue
+            except (PermissionError, OSError) as e:
+                log_error(f"scan_designs: Cannot read design file {filepath}: {e}")
+                continue
             except Exception as e:
-                # Log error but continue scanning
-                log_error(f"scan_designs: Failed to load design metadata from {filepath}: {e}")
+                # Log unexpected errors but continue scanning
+                log_error(f"scan_designs: Unexpected error loading design from {filepath}: {e}")
                 import traceback
                 log_error(traceback.format_exc())
                 continue
@@ -166,8 +178,19 @@ class DesignLibrary:
 
             return True, f"Saved design: {design_name}"
 
+        except PermissionError as e:
+            log_error(f"Permission denied saving design '{design_name}' to {filepath}")
+            return False, f"Failed to save design: Permission denied"
+        except OSError as e:
+            log_error(f"OS error saving design '{design_name}' to {filepath}: {e}")
+            return False, f"Failed to save design: {str(e)}"
+        except (TypeError, ValueError) as e:
+            log_error(f"Serialization error saving design '{design_name}': {e}")
+            import traceback
+            log_error(traceback.format_exc())
+            return False, f"Failed to save design: Invalid design data"
         except Exception as e:
-            log_error(f"Failed to save design '{design_name}': {e}")
+            log_error(f"Unexpected error saving design '{design_name}': {e}")
             import traceback
             log_error(traceback.format_exc())
             return False, f"Failed to save design: {str(e)}"
@@ -195,9 +218,17 @@ class DesignLibrary:
 
         try:
             return load_json_required(filepath)
+        except json.JSONDecodeError as e:
+            from game.core.logger import log_warning
+            log_warning(f"DesignLibrary: Corrupt JSON in design '{design_id}' at '{filepath}': {e}")
+            return None
+        except (PermissionError, OSError) as e:
+            from game.core.logger import log_warning
+            log_warning(f"DesignLibrary: Cannot read design '{design_id}' from '{filepath}': {e}")
+            return None
         except Exception as e:
             from game.core.logger import log_warning
-            log_warning(f"DesignLibrary: Failed to load design '{design_id}' from '{filepath}': {e}")
+            log_warning(f"DesignLibrary: Unexpected error loading design '{design_id}' from '{filepath}': {e}")
             return None
 
     def mark_obsolete(self, design_id: str, is_obsolete: bool) -> Tuple[bool, str]:
@@ -231,7 +262,13 @@ class DesignLibrary:
             status = "obsolete" if is_obsolete else "active"
             return True, f"Marked design as {status}"
 
+        except json.JSONDecodeError as e:
+            return False, f"Design file is corrupted"
+        except (PermissionError, OSError) as e:
+            return False, f"Failed to update design: {str(e)}"
         except Exception as e:
+            from game.core.logger import log_error
+            log_error(f"DesignLibrary: Unexpected error marking design '{design_id}' obsolete: {e}")
             return False, f"Failed to update design: {str(e)}"
 
     def increment_built_count(self, design_id: str) -> bool:
@@ -265,9 +302,17 @@ class DesignLibrary:
 
             return True
 
+        except json.JSONDecodeError as e:
+            from game.core.logger import log_warning
+            log_warning(f"DesignLibrary: Corrupt JSON in design '{design_id}': {e}")
+            return False
+        except (PermissionError, OSError) as e:
+            from game.core.logger import log_warning
+            log_warning(f"DesignLibrary: Cannot update design '{design_id}': {e}")
+            return False
         except Exception as e:
             from game.core.logger import log_warning
-            log_warning(f"DesignLibrary: Failed to increment built count for '{design_id}': {e}")
+            log_warning(f"DesignLibrary: Unexpected error incrementing built count for '{design_id}': {e}")
             return False
 
     def filter_designs(self,
@@ -349,7 +394,13 @@ class DesignLibrary:
         try:
             os.remove(filepath)
             return True, f"Deleted design: {design_id}"
+        except PermissionError as e:
+            return False, f"Failed to delete design: Permission denied"
+        except OSError as e:
+            return False, f"Failed to delete design: {str(e)}"
         except Exception as e:
+            from game.core.logger import log_error
+            log_error(f"DesignLibrary: Unexpected error deleting design '{design_id}': {e}")
             return False, f"Failed to delete design: {str(e)}"
 
     @staticmethod

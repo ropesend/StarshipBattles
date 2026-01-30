@@ -4,6 +4,7 @@ Race Library - Manages race configuration files
 This module provides the RaceLibrary class for saving, loading, listing,
 and deleting race configuration files stored in the races/ folder.
 """
+import json
 import os
 import glob
 import re
@@ -71,8 +72,11 @@ class RaceLibrary:
         try:
             os.makedirs(self.races_folder, exist_ok=True)
             return True
-        except Exception as e:
-            log_error(f"Failed to create races folder: {e}")
+        except PermissionError as e:
+            log_error(f"Permission denied creating races folder '{self.races_folder}': {e}")
+            return False
+        except OSError as e:
+            log_error(f"OS error creating races folder '{self.races_folder}': {e}")
             return False
 
     def get_all_races(self) -> List[RaceConfig]:
@@ -99,8 +103,17 @@ class RaceLibrary:
                         race.race_id = os.path.splitext(os.path.basename(filepath))[0]
                     races.append(race)
                     log_debug(f"Loaded race: {race.name} ({race.race_id})")
+            except json.JSONDecodeError as e:
+                log_warning(f"Corrupt JSON in race file {filepath}: {e}")
+                continue
+            except KeyError as e:
+                log_warning(f"Missing required field in race file {filepath}: {e}")
+                continue
+            except (PermissionError, OSError) as e:
+                log_warning(f"Cannot read race file {filepath}: {e}")
+                continue
             except Exception as e:
-                log_warning(f"Failed to load race from {filepath}: {e}")
+                log_warning(f"Unexpected error loading race from {filepath}: {e}")
                 continue
 
         # Sort by name
@@ -129,8 +142,17 @@ class RaceLibrary:
             if race is not None and not race.race_id:
                 race.race_id = race_id
             return race
+        except json.JSONDecodeError as e:
+            log_error(f"Corrupt JSON in race '{race_id}' at {filepath}: {e}")
+            return None
+        except KeyError as e:
+            log_error(f"Missing required field in race '{race_id}': {e}")
+            return None
+        except (PermissionError, OSError) as e:
+            log_error(f"Cannot read race '{race_id}' from {filepath}: {e}")
+            return None
         except Exception as e:
-            log_error(f"Failed to load race {race_id}: {e}")
+            log_error(f"Unexpected error loading race '{race_id}': {e}")
             return None
 
     def save_race(self, config: RaceConfig) -> Tuple[bool, str]:
@@ -163,8 +185,17 @@ class RaceLibrary:
                 return True, f"Race '{config.name}' saved successfully"
             else:
                 return False, "Failed to write race file"
+        except PermissionError as e:
+            log_error(f"Permission denied saving race '{config.race_id}' to {filepath}")
+            return False, "Error saving race: Permission denied"
+        except OSError as e:
+            log_error(f"OS error saving race '{config.race_id}' to {filepath}: {e}")
+            return False, f"Error saving race: {str(e)}"
+        except (TypeError, ValueError) as e:
+            log_error(f"Serialization error saving race '{config.race_id}': {e}")
+            return False, "Error saving race: Invalid race data"
         except Exception as e:
-            log_error(f"Failed to save race: {e}")
+            log_error(f"Unexpected error saving race '{config.race_id}': {e}")
             return False, f"Error saving race: {str(e)}"
 
     def delete_race(self, race_id: str) -> bool:
@@ -187,8 +218,14 @@ class RaceLibrary:
             os.remove(filepath)
             log_info(f"Deleted race: {race_id}")
             return True
+        except PermissionError as e:
+            log_error(f"Permission denied deleting race '{race_id}' at {filepath}")
+            return False
+        except OSError as e:
+            log_error(f"OS error deleting race '{race_id}' at {filepath}: {e}")
+            return False
         except Exception as e:
-            log_error(f"Failed to delete race {race_id}: {e}")
+            log_error(f"Unexpected error deleting race '{race_id}': {e}")
             return False
 
     def _generate_race_id(self, name: str) -> str:

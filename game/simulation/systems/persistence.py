@@ -1,15 +1,22 @@
+import json
 import os
 import tkinter
 from tkinter import filedialog
 from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
 from game.core.json_utils import load_json_required, save_json
-from game.core.logger import log_warning
+from game.core.logger import log_warning, log_error
 
 # Initialize Tkinter root and hide it (for file dialogs)
 try:
     tk_root = tkinter.Tk()
     tk_root.withdraw()
+except tkinter.TclError as e:
+    log_warning(f"Tkinter TCL error, file dialogs will be unavailable: {e}")
+    tk_root = None
+except RuntimeError as e:
+    log_warning(f"Tkinter runtime error, file dialogs will be unavailable: {e}")
+    tk_root = None
 except Exception as e:
     log_warning(f"Tkinter initialization failed, file dialogs will be unavailable: {e}")
     tk_root = None
@@ -50,8 +57,18 @@ class ShipIO:
                 return False, "Failed to save ship file"
             return False, None  # Cancelled
             
+        except PermissionError as e:
+            log_error(f"ShipIO: Permission denied saving ship: {e}")
+            return False, "Save failed: Permission denied"
+        except OSError as e:
+            log_error(f"ShipIO: OS error saving ship: {e}")
+            return False, f"Save failed: {str(e)}"
+        except (TypeError, ValueError) as e:
+            log_error(f"ShipIO: Serialization error saving ship: {e}")
+            return False, "Save failed: Invalid ship data"
         except Exception as e:
-            return False, f"Save failed: {e}"
+            log_error(f"ShipIO: Unexpected error saving ship: {e}")
+            return False, f"Save failed: {str(e)}"
 
     @staticmethod
     def load_ship(screen_width, screen_height):
@@ -84,5 +101,18 @@ class ShipIO:
                 return new_ship, msg
             return None, None  # Cancelled
             
+        except json.JSONDecodeError as e:
+            log_error(f"ShipIO: Corrupt JSON in ship file: {e}")
+            return None, "Load failed: File contains invalid JSON"
+        except KeyError as e:
+            log_error(f"ShipIO: Missing required field in ship file: {e}")
+            return None, f"Load failed: Missing required field"
+        except PermissionError as e:
+            log_error(f"ShipIO: Permission denied loading ship: {e}")
+            return None, "Load failed: Permission denied"
+        except OSError as e:
+            log_error(f"ShipIO: OS error loading ship: {e}")
+            return None, f"Load failed: {str(e)}"
         except Exception as e:
-            return None, f"Load failed: {e}"
+            log_error(f"ShipIO: Unexpected error loading ship: {e}")
+            return None, f"Load failed: {str(e)}"

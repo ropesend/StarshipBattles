@@ -544,14 +544,23 @@ class GameSession:
             KeyError: If required fields (config, galaxy, empires) are missing.
             TypeError: If data structures are invalid.
         """
+        from game.core.exceptions import PersistenceException
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.empire import Empire
 
         # Create empty session (bypass __init__ to avoid generating new galaxy)
         session = cls.__new__(cls)
 
-        # Restore config
-        session.config = GameConfig.from_dict(data['config'])
+        # Restore config with context on error
+        try:
+            session.config = GameConfig.from_dict(data['config'])
+        except KeyError as e:
+            raise PersistenceException(
+                f"Missing required config field: {e}",
+                code="P001",
+                context={"section": "config", "missing_field": str(e)}
+            ) from e
+
         session.turn_number = data.get('turn_number', 1)
         session.save_path = data.get('save_path')
 
@@ -559,14 +568,28 @@ class GameSession:
         session.turn_engine = TurnEngine()
 
         # Step 1: Load Galaxy (creates all planets with IDs)
-        session.galaxy = Galaxy.from_dict(data['galaxy'])
+        try:
+            session.galaxy = Galaxy.from_dict(data['galaxy'])
+        except KeyError as e:
+            raise PersistenceException(
+                f"Missing required galaxy field: {e}",
+                code="P002",
+                context={"section": "galaxy", "missing_field": str(e)}
+            ) from e
         session.systems = list(session.galaxy.systems.values())
 
         # Step 2: Load Empires (resolves planet references via galaxy)
-        session.empires = [
-            Empire.from_dict(emp_data, galaxy=session.galaxy)
-            for emp_data in data.get('empires', [])
-        ]
+        try:
+            session.empires = [
+                Empire.from_dict(emp_data, galaxy=session.galaxy)
+                for emp_data in data.get('empires', [])
+            ]
+        except KeyError as e:
+            raise PersistenceException(
+                f"Missing required empire field: {e}",
+                code="P003",
+                context={"section": "empires", "missing_field": str(e)}
+            ) from e
 
         # Restore human player IDs
         session.human_player_ids = data.get('human_player_ids', [0, 1])

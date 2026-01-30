@@ -437,10 +437,10 @@ class TestDesignLibraryErrorLogging:
                     # This should fail to create the folder and log with path context
                     library = DesignLibrary(tmpdir, empire_id=99)
 
-            # Should have logged an error with the path - find the "Failed to create" error
+            # Should have logged an error with the path - find the permission/creation error
             error_logs = [r for r in caplog.records
-                         if r.levelno >= logging.ERROR and 'Failed to create' in r.message]
-            assert len(error_logs) > 0, "Should log 'Failed to create' error"
+                         if r.levelno >= logging.ERROR and ('Permission denied' in r.message or 'designs folder' in r.message)]
+            assert len(error_logs) > 0, "Should log folder creation error"
             error_text = error_logs[0].message
             # The error should include the actual path being created
             assert 'empire_99' in error_text or tmpdir in error_text, \
