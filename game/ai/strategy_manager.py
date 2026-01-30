@@ -1,5 +1,10 @@
 """
 Strategy Manager - Singleton manager for combat strategies, targeting policies, and movement policies.
+
+Exception Handling
+==================
+- Uses StateException for singleton violations (programming errors)
+- All policy lookups return defaults for missing keys (graceful degradation)
 """
 
 import os
@@ -8,6 +13,7 @@ from typing import Optional
 
 from game.core.logger import log_info
 from game.core.json_utils import load_json
+from game.core.exceptions import StateException
 
 
 class StrategyManager:
@@ -34,10 +40,14 @@ class StrategyManager:
         Initialize the StrategyManager.
 
         Raises:
-            Exception: If called directly instead of via instance()
+            StateException: If called directly instead of via instance()
         """
         if StrategyManager._instance is not None:
-            raise Exception("StrategyManager is a singleton. Use StrategyManager.instance()")
+            raise StateException(
+                "StrategyManager is a singleton. Use StrategyManager.instance()",
+                code="AI001",
+                context={"class": "StrategyManager"}
+            )
 
         self.targeting_policies = {}
         self.movement_policies = {}

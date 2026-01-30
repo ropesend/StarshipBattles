@@ -25,6 +25,46 @@ Strategy (game.ai.strategy_manager):
 
 Targeting (game.ai.target_evaluator):
     TargetEvaluator - Scores and prioritizes potential targets
+
+
+Exception Handling
+==================
+
+The AI package uses defensive programming for combat robustness:
+
+**Design Philosophy:**
+- Combat must not crash due to individual entity errors
+- All errors are logged with context for debugging
+- Fallback behavior is used when possible
+
+**Exception Types (from game.core.exceptions):**
+- AIException: Base class for AI-related errors
+- TargetingException: Targeting system failures
+- StateException: Used for singleton violations
+
+**Logging Patterns:**
+- WARNING: Recoverable errors (fallback used)
+- DEBUG: Expected conditions (e.g., formation cleanup)
+- Errors include entity IDs for traceability
+
+**Fallback Behaviors:**
+- Position access failures: Falls back to direct attribute
+- Target evaluation failures: Target is skipped
+- Formation dropout: Logged but continues combat
+- Missing data: Safe defaults used (e.g., distance = infinity)
+
+Example error handling::
+
+    from game.ai.target_evaluator import TargetEvaluator
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        score = TargetEvaluator.evaluate(ship, target, rules)
+    except (AttributeError, TypeError) as e:
+        logger.warning("Evaluation failed for target %s: %s", target.id, e)
+        score = -float('inf')  # Skip this target
 """
 
 # Controller

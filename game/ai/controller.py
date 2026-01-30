@@ -40,9 +40,19 @@ Strategy Resolution:
 Example:
     controller = AIController(ship_adapter, grid, enemy_team=1)
     controller.update()  # Called each tick by BattleEngine
+
+Exception Handling
+==================
+This module uses defensive programming for robustness during combat:
+- Target evaluation failures are logged and targets are skipped
+- Formation dropout failures are logged but don't interrupt combat
+- All errors include ship/target context for debugging
 """
+import logging
 import math
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from game.core.math import Vector2
 from game.core.config import AIConfig, BattleConfig
@@ -130,12 +140,26 @@ class AIController:
 
         Returns:
             List of enemies sorted by score (highest first), excluding -inf scores
+
+        Note:
+            If target evaluation fails for a candidate, the candidate is skipped
+            and a warning is logged. This ensures combat continues even if
+            individual targets have invalid data.
         """
         scored_enemies = []
+        ship_id = getattr(self.ship, 'id', getattr(self.ship, 'name', str(id(self.ship))))
+
         for e in enemies:
-            score = TargetEvaluator.evaluate(self.ship, e, rules)
-            if score > -float('inf'):
-                scored_enemies.append((score, e))
+            try:
+                score = TargetEvaluator.evaluate(self.ship, e, rules)
+                if score > -float('inf'):
+                    scored_enemies.append((score, e))
+            except (AttributeError, TypeError) as err:
+                target_id = getattr(e, 'id', getattr(e, 'name', str(id(e))))
+                logger.warning(
+                    "Target evaluation failed for ship=%s target=%s: %s. Skipping target.",
+                    ship_id, target_id, err
+                )
 
         scored_enemies.sort(key=lambda x: x[0], reverse=True)
         return [e for _, e in scored_enemies]
@@ -331,8 +355,13 @@ class AIController:
                 # but self.ship may be a ShipControllableAdapter
                 own_ship = getattr(self.ship, 'ship', self.ship)
                 own_ship.formation_master.formation_members.remove(own_ship)
-            except (AttributeError, ValueError):
-                pass
+            except (AttributeError, ValueError) as e:
+                # Expected when formation structure is already broken
+                ship_id = getattr(self.ship, 'id', getattr(self.ship, 'name', str(id(self.ship))))
+                logger.debug(
+                    "Formation cleanup for ship=%s encountered expected condition: %s",
+                    ship_id, e
+                )
             self.ship.set_formation_master(None)
             self.ship.set_turn_throttle(1.0)
             self.ship.set_throttle(1.0)

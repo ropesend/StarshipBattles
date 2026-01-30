@@ -181,6 +181,29 @@ class FormulaException(SimulationException):
 
 
 # =============================================================================
+# AI Exceptions
+# =============================================================================
+
+class AIException(GameException):
+    """Base exception for AI-related errors.
+
+    Raised when AI decision-making encounters errors that cannot
+    be handled silently.
+    """
+    pass
+
+
+class TargetingException(AIException):
+    """Exception for targeting system errors.
+
+    Raised when target evaluation or selection fails in a way that
+    requires attention, such as invalid entity states or missing
+    required data.
+    """
+    pass
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -201,4 +224,7 @@ __all__ = [
     'SimulationException',
     'ComponentException',
     'FormulaException',
+    # AI
+    'AIException',
+    'TargetingException',
 ]
