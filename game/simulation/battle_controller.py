@@ -634,7 +634,16 @@ class BattleController:
         Get battle results after completion.
 
         Returns:
-            BattleResults with battle outcome and ship states
+            BattleResults dataclass with the following fields:
+            - winner: int - Winning team (0 or 1), -1 for draw, None if not over
+            - tick_count: int - Total simulation ticks elapsed
+            - seed: Optional[int] - Random seed used (for replay/determinism)
+            - initial_state: BattleState - State captured at battle start
+            - final_state: BattleState - State captured at battle end
+            - surviving_ships: List[ShipState] - Ships still alive at end
+            - destroyed_ships: List[ShipState] - Ships destroyed during battle
+            - escaped_ships: List[ShipState] - Ships that successfully retreated
+            - captured_ships: List[ShipState] - Future: derelicts captured by winner
         """
         engine = self._service.get_engine()
 

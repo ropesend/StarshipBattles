@@ -64,19 +64,31 @@ class ShipCombatEngine:
 
     def solve_lead(self, pos, vel, t_pos, t_vel, p_speed) -> float:
         """
-        Calculate interception time for a projectile.
+        Calculate intercept time for a projectile to hit a moving target.
 
-        Delegates to TargetingSystem.
+        Solves the lead calculation problem: where should I aim to hit a moving target?
+        Uses quadratic formula to find t where |D + V*t| = p_speed * t.
+
+        Usage:
+            t = engine.solve_lead(ship.position, ship.velocity, target.position, target.velocity, 500)
+            if t > 0:
+                aim_point = target.position + target.velocity * t
+                # Fire toward aim_point
+
+        When to use:
+            - Projectile weapons needing lead calculation
+            - Seeker missile intercept prediction
+            - AI aim prediction for turrets
 
         Args:
-            pos: Shooter position
-            vel: Shooter velocity
-            t_pos: Target position
-            t_vel: Target velocity
-            p_speed: Projectile speed
+            pos: Shooter position (Vector2)
+            vel: Shooter velocity (Vector2, typically unused for lead calc)
+            t_pos: Target position (Vector2)
+            t_vel: Target velocity (Vector2)
+            p_speed: Projectile speed (float, units per tick)
 
         Returns:
-            Interception time t > 0 if solution exists, else 0
+            Interception time t > 0 if valid solution exists, else 0
         """
         return self._targeting_system.solve_lead(pos, vel, t_pos, t_vel, p_speed)
 

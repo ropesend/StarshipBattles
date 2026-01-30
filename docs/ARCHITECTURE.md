@@ -232,5 +232,8 @@ from game.simulation import ShipSerializer
 
 ## Related Documentation
 
+- [Component System](component_system.md) - Ship components, abilities, and modifiers
+- [Modifier System](modifier_system.md) - Detailed modifier documentation
+- [Error Handling](ERROR_HANDLING.md) - Exception hierarchy and error codes
 - [PROJ-11: Architecture Layer Separation](../Projects/active_projects/PROJ-11/plan.md)
 - [PROJ-11 Design Document](../Projects/active_projects/PROJ-11/design.md)

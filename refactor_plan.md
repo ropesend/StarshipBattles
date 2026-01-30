@@ -8,25 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-47 Phase 2 - Core Infrastructure Documentation
-**Current Status:** PROJ-47 Phase 2 Complete
+**Last Completed:** PROJ-47 Phase 3 - Simulation Documentation
+**Current Status:** PROJ-47 Phase 3 Complete
 **Current Project:** PROJ-47
-**Current Phase:** Phase 2 Complete
-**Test Status:** 5717 passed (testmon), 52 pre-existing failures (PROJ-48 test infrastructure)
+**Current Phase:** Phase 3 Complete
+**Test Status:** 805 passed (testmon), pre-existing failures in PROJ-48 scope
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-47 Phase 2 Complete
-- Added type hints and documentation to:
-  - logger.py: 12 method return type hints, typing imports
-  - registry.py: 3 method type hints, PROJ-38 deprecation timeline in docstring
-  - paths.py: backward compatibility deprecation comment
-  - input_handler.py: module docstring, constant comments, keybinding docs
-  - camera.py: update() and update_input() docstrings with zoom anchor explanation
-  - protocols.py: 5 protocol property docstrings (ILocatable, INamed, IOwnable, ICombatant, IDamageable)
+- PROJ-47 Phase 3 Complete
+- Added simulation documentation:
+  - weapons.py: WeaponAbility formula system docstring, get_damage() expanded
+  - battle_controller.py: get_results() BattleResults structure documented
+  - modifier_service.py: Class docstring with usage patterns
+  - ship_combat_engine.py: solve_lead() intercept algorithm documented
+  - ship_physics.py: Verified existing docstring covers thrust model
+  - Created docs/component_system.md with full component/ability/modifier docs
+  - Added link from docs/ARCHITECTURE.md
 - All py_compile checks pass
-- 52 pre-existing test failures are test infrastructure issues (for PROJ-48)
-- Next: Phase 3 - Simulation Documentation
+- Next: Phase 4 - External Documentation Updates
 
 ---
 
@@ -98,10 +98,19 @@
 
 ---
 
+- [ ] **PROJ-50: Strict Dependency Injection Refactor**
+  - **Phases:** 7 | **Status:** Planning | **Priority:** High
+  - **Plan:** [Projects/active_projects/PROJ-50/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-50/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-47 | Phase 3 | Complete | 805 testmon | f2d94cc9 | Sim docs: weapons, battle_controller, modifier_service, combat_engine, component_system.md |
 | 2026-01-30 | PROJ-47 | Phase 2 | Complete | 5717 testmon | fc01f905 | Core docs: logger, registry, paths, input_handler, camera, protocols |
 | 2026-01-30 | PROJ-47 | Phase 1 | Complete | 804 testmon | a00843e5 | UI docstrings: interaction_controller, modifier_row, modifier_logic |
 | 2026-01-30 | PROJ-46 | Audit Cycle 1 | PASSED | 5723 passed | e3f681d5 | Fixed fixture naming + panel constructor params |

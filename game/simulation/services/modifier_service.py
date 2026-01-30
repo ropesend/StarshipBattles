@@ -16,16 +16,27 @@ if TYPE_CHECKING:
 class ModifierService:
     """Service for component modifier operations.
 
+    Manages modifier validation, mandatory modifier application, and value constraints
+    for ship components. Modifiers customize component behavior (damage, range, firing arc, etc.).
+
     PROJ-42: Simplified to instance-only methods (removed static calling patterns).
 
-    Usage:
-        # With explicit DI (preferred)
+    Usage Patterns:
+        # Instance pattern (preferred for new code):
         service = ModifierService(modifier_registry=registries.modifiers)
-        service.is_modifier_allowed('turret_mount', component)
+        if service.is_modifier_allowed('turret_mount', component):
+            service.ensure_mandatory_modifiers(component)
 
-        # With default registries (uses fallback)
+        # With default registries (uses fallback via get_default_registries):
         service = ModifierService()
-        service.is_modifier_allowed('turret_mount', component)
+        mandatory = service.get_mandatory_modifiers(component)
+
+    Common Methods:
+        - is_modifier_allowed(mod_id, component): Check if modifier can be applied
+        - get_mandatory_modifiers(component): Get list of required modifiers
+        - ensure_mandatory_modifiers(component): Auto-apply required modifiers
+        - get_initial_value(mod_id, component): Get default value for modifier
+        - get_local_min_max(mod_id, component): Get value constraints
     """
 
     # Modifiers that cannot be removed by the user

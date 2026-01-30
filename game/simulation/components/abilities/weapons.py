@@ -8,7 +8,33 @@ from .stat_keys import StatKey, AbilityStatBinding
 
 
 class WeaponAbility(Ability):
-    """Base for offensive capabilities."""
+    """Base class for all offensive weapon capabilities.
+
+    Formula System:
+        Damage, range, and reload values can be specified as either:
+        - Static numbers: damage=100
+        - Runtime formulas: damage="=10 + range_to_target * 0.5"
+
+        Formulas start with '=' and are evaluated at runtime using safe_evaluate_math_formula().
+        Available context variables:
+        - range_to_target (float): Distance to the target in game units
+
+        Example usage in component JSON:
+            "abilities": {
+                "ProjectileWeaponAbility": {
+                    "damage": "=50 + range_to_target * 0.1",
+                    "range": 5000,
+                    "reload": 2.0
+                }
+            }
+
+    Stat Bindings (modifiers applied via STAT_BINDINGS):
+        - DAMAGE_MULT: Multiplies base damage
+        - RANGE_MULT: Multiplies base range
+        - RELOAD_MULT: Multiplies base reload time
+        - ARC_SET: Overrides firing arc to fixed value
+        - ARC_ADD: Adds to base firing arc
+    """
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'multiply', '_base_damage'),
@@ -167,7 +193,18 @@ class WeaponAbility(Ability):
         return False
 
     def get_damage(self, range_to_target: float = 0) -> float:
-        """Evaluate damage at a specific range. Returns base damage if no formula."""
+        """Evaluate damage at a specific range.
+
+        If a damage formula was specified (starting with '='), evaluates the formula
+        with range_to_target as context. Otherwise returns the static damage value
+        (which may have been modified by DAMAGE_MULT modifiers).
+
+        Args:
+            range_to_target: Distance to target in game units (default 0)
+
+        Returns:
+            Calculated damage value, minimum 0.0
+        """
         if self.damage_formula:
             from game.simulation.formula_system import safe_evaluate_math_formula
             context = {'range_to_target': range_to_target}
