@@ -58,7 +58,7 @@ while ($iteration -lt $MAX_ITERATIONS) {
         # --print: Non-interactive mode (outputs work immediately)
         # --verbose: Show detailed progress information
         claude `
-            --dangerously-skip-user-approval `
+            --dangerously-skip-permissions `
             --system-prompt-file WORKER.md `
             --verbose `
             --print `

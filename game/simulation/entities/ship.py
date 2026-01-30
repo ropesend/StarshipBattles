@@ -7,11 +7,11 @@ from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_default_registry_provider, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries, GameRegistries
 from game.core.constants import LayerDefaults, CombatConstants
 
 if TYPE_CHECKING:
-    from game.core.registry import GameRegistries
+    pass  # GameRegistries imported above
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_combat import ShipCombatMixin
@@ -35,9 +35,29 @@ VALIDATOR = _ValidatorProxy()
 
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
+
+    @staticmethod
+    def _get_registries_fallback() -> GameRegistries:
+        """
+        Get registries for when none are explicitly provided.
+
+        PROJ-42: Tries get_default_registries() first, falls back to provider
+        (which shares mutable dict refs) for backward compatibility.
+        """
+        try:
+            return get_default_registries()
+        except RuntimeError:
+            provider = get_default_registry_provider()
+            return GameRegistries(
+                components=provider.get_components(),
+                modifiers=provider.get_modifiers(),
+                vehicle_classes=provider.get_vehicle_classes(),
+                resources={}
+            )
+
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
                  team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation",
-                 *, registries: Optional['GameRegistries'] = None):
+                 *, registries: Optional[GameRegistries] = None):
         """
         Initialize Ship with properties and optional registries.
 
@@ -51,7 +71,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             ship_class: Vehicle class name (e.g., "frigate", "cruiser")
             theme_id: Visual theme identifier
             registries: Optional GameRegistries for DI. If None, falls back to
-                       get_default_registries() or legacy get_vehicle_classes().
+                       get_default_registries() or legacy provider.
         """
         super().__init__(x, y)
         self.name: str = name
@@ -63,21 +83,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ship_class: str = ship_class
         self.theme_id: str = theme_id
 
-        # PROJ-38: Store registries for DI pattern
-        if registries is not None:
-            self._registries = registries
-        else:
-            try:
-                self._registries = get_default_registries()
-            except RuntimeError:
-                # Default registries not set yet - will use legacy pattern
-                self._registries = None
+        # PROJ-42: Simplified DI pattern with fallback
+        self._registries = registries if registries is not None else Ship._get_registries_fallback()
 
-        # Get class definition using injected registries or provider
-        if self._registries is not None:
-            class_def = self._registries.vehicle_classes.get(self.ship_class, {})
-        else:
-            class_def = get_default_registry_provider().get_vehicle_classes().get(self.ship_class, {})
+        # Get class definition using registries
+        class_def = self._registries.vehicle_classes.get(self.ship_class, {})
 
         # Initialize Layers dynamically from class definition
         self._initialize_layers()
@@ -358,11 +368,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
     def _initialize_layers(self) -> None:
         """Initialize or Re-initialize layers based on current ship_class."""
-        # PROJ-38: Use injected registries if available, else provider
-        if self._registries is not None:
-            class_def = self._registries.vehicle_classes.get(self.ship_class, {})
-        else:
-            class_def = get_default_registry_provider().get_vehicle_classes().get(self.ship_class, {})
+        # PROJ-42: Use registries (always set via fallback in __init__)
+        class_def = self._registries.vehicle_classes.get(self.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
         
@@ -428,13 +435,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
     def change_class(self, new_class: str, migrate_components: bool = False) -> None:
         """
         Change the ship class and optionally migrate components.
-        
+
         Args:
             new_class: The new class name (e.g. "Cruiser")
             migrate_components: If True, attempts to keep components and fit them into new layers.
                                 If False, clears all components.
         """
-        if new_class not in get_default_registry_provider().get_vehicle_classes():
+        # PROJ-42: Use registries instead of provider
+        if new_class not in self._registries.vehicle_classes:
             log_error(f"Unknown class {new_class}")
             return
 
@@ -448,25 +456,25 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                     if l_type == LayerType.HULL or comp.id.startswith('hull_'):
                         continue
                     old_components.append((comp, l_type))
-        
+
         # Update Class
         self.ship_class = new_class
-        class_def = get_default_registry_provider().get_vehicle_classes().get(self.ship_class)
+        class_def = self._registries.vehicle_classes.get(self.ship_class)
         if class_def is None:
-            # log_error is imported at module level (line 11)
             log_error(f"Ship.change_class: Unknown vehicle class '{self.ship_class}', using defaults")
             class_def = {}
         self.base_mass = 0.0  # Hull component provides mass via ShipStatsCalculator
         self.vehicle_type = class_def.get('type', "Ship")
         self.max_mass_budget = class_def.get('max_mass', 1000)
-        
+
         # Re-initialize Layers (clears self.layers)
         self._initialize_layers()
-        
+
         # Auto-equip default Hull component for the NEW class (BUG-11 Fix)
         default_hull_id = class_def.get('default_hull_id')
         if default_hull_id:
-            hull_component = create_component(default_hull_id)
+            # PROJ-42: Pass registries to create_component
+            hull_component = create_component(default_hull_id, registries=self._registries)
             if hull_component:
                 # Direct append to avoid validation during class change
                 self.layers[LayerType.HULL]['components'].append(hull_component)
@@ -590,8 +598,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 comp.recalculate_stats()
 
         if not self.stats_calculator:
-             # ShipStatsCalculator imported at module level (line 15)
-             self.stats_calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
+            # PROJ-42: Use registries instead of provider
+            self.stats_calculator = ShipStatsCalculator(self._registries.vehicle_classes)
 
         self.stats_calculator.calculate(self)
 
@@ -619,7 +627,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         all_components = self.get_all_components()
 
         if not self.stats_calculator:
-             self.stats_calculator = ShipStatsCalculator(get_default_registry_provider().get_vehicle_classes())
+            # PROJ-42: Use registries instead of provider
+            self.stats_calculator = ShipStatsCalculator(self._registries.vehicle_classes)
 
         totals = self.stats_calculator.calculate_ability_totals(all_components)
         return totals.get(ability_name, 0)
