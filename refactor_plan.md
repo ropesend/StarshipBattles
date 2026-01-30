@@ -98,7 +98,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-01-30 | PROJ-44 | Phase 7 Task 7.3 | Complete | 5624 passed | 659ebf28 | Extracted BuilderStateManager, BuilderSceneGUI -14 lines |
+| 2026-01-30 | PROJ-44 | Phase 7 Task 7.3 | Complete | 5624 passed | b29eb62f | Extracted BuilderStateManager, BuilderSceneGUI -14 lines |
 | 2026-01-30 | PROJ-44 | Phase 7 Task 7.2 | Complete | 5602 passed | ac38f6d1 | Extracted FormationRenderer/InputHandler, FormationEditor -216 lines |
 | 2026-01-30 | PROJ-44 | Phase 7 Task 7.1 | Complete | 5565 passed | 66cd264f | Extracted RaceSummaryPanel, RaceSetupScreen -370 lines |
 | 2026-01-30 | PROJ-44 | Phase 6 Complete | Complete | 5545 passed | 5cc5f26c | BattleModeHandler Strategy pattern, integrated with BattleController |
