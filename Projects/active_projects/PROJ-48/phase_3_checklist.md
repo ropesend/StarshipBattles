@@ -147,9 +147,17 @@ Split into 2 files each based on test class groupings:
 - [x] `test_left_panel.py` (620 LOC) -> left_panel/ (3 files, 39 tests)
 - [x] `test_ship_helpers.py` (618 LOC) -> ship_helpers/ (2 files, 50 tests)
 - [x] `test_service_methods.py` (605 LOC) -> split into 2 files (24 tests)
-- [ ] Remaining moderate monoliths (~15 files >500 LOC)
+- [x] `test_fleet_movement_engine.py` (598 LOC) -> fleet_movement_engine/ (3 files, 29 tests)
+- [x] `test_production.py` (581 LOC) -> production/ (2 files, 16 tests)
+- [x] `test_tech_tree.py` (579 LOC) -> tech_tree/ (2 files, 35 tests)
+- [x] `test_research_workflow.py` (566 LOC) -> research_workflow/ (2 files, 35 tests)
+- [x] `test_resource_management_engine.py` (549 LOC) -> resource_management_engine/ (3 files, 24 tests)
+- [x] `test_design_library.py` (544 LOC) -> design_library/ (3 files, 24 tests)
+- [x] `test_ai_strategy.py` (540 LOC) -> ai_strategy/ (3 files, 23 tests)
+- [x] `test_build_queue_screen.py` (520 LOC) -> build_queue_screen/ (2 files, 17 tests)
+- [ ] Remaining moderate monoliths (~7 files >500 LOC)
 
-**Notes:** Task 3.3 spans multiple sessions. 16/26+ moderate files split. 4 files split this session (153 tests).
+**Notes:** Task 3.3 spans multiple sessions. 28/34+ moderate files split. 4 files split this session (88 tests).
 
 ---
 

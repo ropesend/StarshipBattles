@@ -25,19 +25,21 @@
 ## Current State
 **Last Updated:** 2026-01-30
 **Active Phase:** Phase 3 In Progress - Test File Splitting
-**Last Action:** Task 3.3 partial - Split 4 more moderate monoliths (battle_coordinator, left_panel, ship_helpers, service_methods)
-**Next Action:** Continue Phase 3 - Split remaining ~15 moderate monoliths >500 LOC (Task 3.3)
+**Last Action:** Task 3.3 partial - Split 4 more moderate monoliths (resource_management_engine, design_library, ai_strategy, build_queue_screen)
+**Next Action:** Continue Phase 3 - Split remaining ~7 moderate monoliths >500 LOC (Task 3.3)
 **Blockers:** None
 
 **Phase 3 Progress:**
 - Task 3.1 Complete: 4 critical monoliths split (>1000 LOC)
 - Task 3.2 Complete: 20 severe monoliths split (700-1000 LOC)
-- Task 3.3 In Progress: 20/26+ moderate monoliths split (500-700 LOC)
+- Task 3.3 In Progress: 28/34+ moderate monoliths split (500-700 LOC)
   - Session 1: battle_ui_service, armor_mechanics, schematic_view, save_game_service (4 files)
   - Session 2: profiling, research_controls, math_utils, save_load (4 files, 172 tests)
   - Session 3: ship_instance resources, fleet resources, ship_component_manager, test_lab_controller (4 files, 139 tests)
   - Session 4: battle_coordinator, left_panel, ship_helpers, service_methods (4 files, 153 tests)
-- Total: 1471 tests moved to new files across 40 monoliths split
+  - Session 5: fleet_movement_engine, production, tech_tree, research_workflow (4 files, 115 tests)
+  - Session 6: resource_management_engine, design_library, ai_strategy, build_queue_screen (4 files, 88 tests)
+- Total: 1674 tests moved to new files across 48 monoliths split
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.
