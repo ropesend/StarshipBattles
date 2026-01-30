@@ -1,13 +1,61 @@
+"""UI row widget for controlling a single component modifier.
+
+Provides interactive controls (toggle, slider, buttons, text entry) for
+adjusting modifier values in the ship builder's modifier panel.
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UITextEntryLine, UIHorizontalSlider, UIPanel
 from .modifier_logic import ModifierLogic
 
+
 class ModifierControlRow:
+    """A single row in the modifier panel containing controls for one modifier.
+
+    Lifecycle:
+        1. __init__: Create instance with configuration (UI not built yet)
+        2. build_ui(y): Construct pygame_gui elements at specified y position
+        3. update(component, template): Sync state with component/template data
+        4. handle_event(event): Process user interactions, trigger callbacks
+        5. kill(): Destroy all UI elements for cleanup
+
+    The row adapts its controls based on the modifier's control_type config:
+        - 'linear': Slider + text entry for continuous values
+        - 'linear_stepped': Slider + step buttons for discrete values
+        - 'facing_selector': Preset buttons for common facing angles
+
+    Attributes:
+        manager: pygame_gui.UIManager for element creation.
+        container: Parent UIPanel this row belongs to.
+        mod_id: String identifier for the modifier (e.g., 'turret_mount').
+        mod_def: ModifierDefinition with name, description, min/max values.
+        config: Dict with control_type, step_buttons, presets, etc.
+        is_active: Whether the modifier is currently applied to the component.
+        current_value: Current numeric value of the modifier.
+        component_context: The Component being edited (set during update).
     """
-    A single row in the modifier panel containing controls for one modifier.
-    """
+
     def __init__(self, manager, container, width, mod_id, mod_def, config, on_change_callback):
+        """Initialize the modifier control row.
+
+        Args:
+            manager: pygame_gui.UIManager for creating UI elements.
+            container: Parent UIPanel to contain this row's elements.
+            width: Available width in pixels for laying out controls.
+            mod_id: String identifier for the modifier.
+            mod_def: ModifierDefinition object with metadata (name, description,
+                min_val, max_val, default_val, readonly).
+            config: Dict with UI configuration:
+                - control_type: 'linear', 'linear_stepped', or 'facing_selector'
+                - step_buttons: List of {label, mode, value} for step controls
+                - presets: List of preset values for quick selection
+                - slider_step: Increment for slider clicks
+                - smart_floor: Boolean for special size mount behavior
+            on_change_callback: Function(action, mod_id, value) called on changes:
+                - action: 'toggle' or 'value_change'
+                - mod_id: The modifier being changed
+                - value: New state (bool for toggle, float for value_change)
+        """
         self.manager = manager
         self.container = container # The panel this row sits in
         self.width = width
@@ -60,6 +108,19 @@ class ModifierControlRow:
         return self.height
 
     def _build_linear_controls(self, y, start_x, safe_id):
+        """Build controls for linear/stepped modifier types.
+
+        Creates a horizontal layout with:
+        1. Text entry field (60px) for direct value input
+        2. Preset buttons (if configured) for common values
+        3. Step buttons (if configured) for increment/decrement
+        4. Horizontal slider filling remaining width
+
+        Args:
+            y: Vertical position for elements.
+            start_x: Horizontal starting position (after toggle button).
+            safe_id: Sanitized modifier ID for pygame_gui object_id.
+        """
         current_x = start_x
         
         # Entry
@@ -121,6 +182,11 @@ class ModifierControlRow:
         current_x += available_slider_width + 5
 
     def _clear_ui(self):
+        """Destroy all pygame_gui elements and reset internal references.
+
+        Called during rebuild (build_ui) and final cleanup (kill).
+        Ensures proper cleanup of pygame_gui resources.
+        """
         for el in self.ui_elements:
             el.kill()
         self.ui_elements = []

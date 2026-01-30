@@ -8,10 +8,21 @@ direct MODIFIER_REGISTRY import. Uses class-level service injection.
 
 
 class ModifierLogic:
-    """Logic for component modifier operations.
+    """Static utility class for component modifier validation and calculations.
+
+    Provides logic for:
+    - Determining which modifiers are allowed for a component type
+    - Identifying mandatory modifiers that cannot be removed
+    - Calculating initial values for newly applied modifiers
+    - Computing component-specific min/max value constraints
+    - Snap calculations for step buttons
+
+    This class has no instance state and all methods are static or class methods.
+    It acts as a bridge between UI controls and the underlying ModifierService,
+    adding builder-specific business logic on top.
 
     PROJ-43: Uses a class-level ComponentService for registry access.
-    Service is lazily initialized on first use.
+    Service is lazily initialized on first use. Use set_service() for testing.
     """
 
     # Class-level service instance (lazily initialized)
