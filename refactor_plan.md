@@ -8,31 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-49 Phase 4 - HP Ratio Caching
-**Current Status:** PROJ-49 Phase 4 Complete
+**Last Completed:** PROJ-49 Phase 5 - Spatial Grid Optimization (Research Only)
+**Current Status:** PROJ-49 Phase 5 Complete
 **Current Project:** PROJ-49
-**Current Phase:** Phase 5 - Spatial Grid Optimization
-**Test Status:** 5764 passed (full suite, +7 new tests)
+**Current Phase:** Phase 6 - O(n^2) Targeting Optimization
+**Test Status:** 5764 passed (full suite, no new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-49 Phase 4 COMPLETE - HP Ratio Caching
-  - Task 4.1: Added _hp_ratio_dirty and _cached_hp_ratio to Component
-  - Task 4.1: Added hp_ratio property with dirty-flag caching
-  - Task 4.1: Mark dirty in take_damage, reset_hp, component_stats_calculator, battle_state, ship_combat_engine
-  - Task 4.2: Updated ship_stats.py, stats.py to use hp_ratio property
-  - Task 4.2: Updated ship_combat_engine.py repair sorting to use hp_ratio
-  - Task 4.2: Added cache invalidation at start of stats recalculation for external HP mods
-- Files modified:
-  - game/simulation/components/component.py - hp_ratio cache + property
-  - game/simulation/components/component_stats_calculator.py - dirty flag on HP change
-  - game/simulation/entities/ship_stats.py - use hp_ratio, invalidate at start
-  - game/simulation/entities/ship_combat_engine.py - use hp_ratio for repair
-  - game/simulation/systems/stats.py - use hp_ratio, invalidate at start
-  - game/simulation/battle_state.py - dirty flag on state restore
-  - tests/unit/entities/test_ship_caching.py - +7 HP ratio cache tests
-- Test suite: 5764 passed
-- Next: Phase 5 - Spatial Grid Optimization
+- PROJ-49 Phase 5 COMPLETE - Spatial Grid Research
+  - Task 5.1: Analyzed spatial.py - simple dict-bucket system, O(1) cell lookup
+  - Task 5.1: Profiled full battle simulation (50 ships, 500 ticks, 17.6s total)
+  - Task 5.1: Grid methods NOT in top 30 functions
+  - Task 5.1: Isolated grid test: 50 ships x 1000 ticks = 0.020s (20μs/tick)
+  - Task 5.1: Grid overhead is only ~0.1% of tick time
+  - Task 5.1: Real bottlenecks: protocol isinstance (23%), AI collision avoidance (60%)
+  - Task 5.2: SKIPPED - Cost/benefit unfavorable for incremental updates
+- Files modified (docs only):
+  - Projects/active_projects/PROJ-49/design.md - Added Phase 5 Research Findings
+  - Projects/active_projects/PROJ-49/decisions.md - Added skip decision
+  - Projects/active_projects/PROJ-49/phase_5_checklist.md - Marked complete
+- Test suite: 5764 passed (no code changes)
+- Next: Phase 6 - O(n^2) Targeting Optimization
 
 ---
 
@@ -124,6 +121,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-49 | Phase 5 | Complete | 5764 passed | 32d8510a | Spatial grid research: 0.1% overhead, skipped implementation |
 | 2026-01-30 | PROJ-49 | Phase 4 | Complete | 5764 passed | 00b29665 | HP ratio caching: dirty-flag, property, +7 tests |
 | 2026-01-30 | PROJ-49 | Phase 3 | Complete | 5757 passed | 70f2dab2 | Component caching: dirty-flag invalidation, per-tick weapon cache, +12 tests |
 | 2026-01-30 | PROJ-49 | Phase 2 | Complete | 5745 passed | d24b4a7f | Simple perf fixes: projectile list, ability index, distance cache, deepcopy analysis |

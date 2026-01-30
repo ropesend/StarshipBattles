@@ -16,6 +16,7 @@
 | 2026-01-28 | Pre-calculate distances before targeting loop | Target evaluator recalculates same distance 2-3x per target. Pre-calculation with dict cache eliminates duplicates. |
 | 2026-01-28 | In-place list modification for projectiles | Current list comprehension rebuilds entire list every tick. In-place mark-and-sweep with del slice is more efficient. |
 | 2026-01-28 | Phase 5 (spatial grid) conditional on research | Incremental grid updates may be complex with uncertain benefit. Task 5.1 is research-only to evaluate cost/benefit before implementation. |
+| 2026-01-30 | Skip incremental grid updates (Phase 5 Task 5.2) | Profiling showed spatial grid is only 0.1% of tick time (~20μs for 50 ships). Real bottlenecks are protocol isinstance checks (23%) and AI collision avoidance (60%). Implementation complexity not justified for ~10μs savings. See design.md Phase 5 Research Findings. |
 
 ## Clarification Questions Asked
 

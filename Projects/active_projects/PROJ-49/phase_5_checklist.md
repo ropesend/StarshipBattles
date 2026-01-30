@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Reduce spatial grid rebuild overhead (research first, implement if beneficial)
 
 ---
@@ -16,88 +16,49 @@
 **File:** `game/simulation/systems/battle_engine.py:349-356`, `game/engine/spatial.py`
 **Tests:** Research only - no code changes
 
-- [ ] Read current grid implementation in `game/engine/spatial.py`:
-  - Understand bucket structure
-  - Understand clear() and insert() methods
-  - Check if objects track their current cell
-- [ ] Analyze battle_engine.py grid usage (lines 349-356):
-  - Count how often grid is cleared per tick
-  - Estimate percentage of objects that actually move cells
-- [ ] Determine if incremental updates are feasible:
-  - Can we track which objects moved significantly?
-  - Can we only re-bucket objects that changed cells?
-  - What's the overhead of tracking vs full rebuild?
-- [ ] Profile current grid performance:
-  ```python
-  # Run: python tests/unit/performance/profile_simulation.py
-  # Look for spatial.py methods in output
-  ```
-- [ ] Document findings in design.md under "## Phase 5 Research Findings"
-- [ ] Make go/no-go decision for Task 5.2
+- [x] Read current grid implementation in `game/engine/spatial.py`:
+  - Understand bucket structure - dict with (x,y) tuple keys, list values
+  - Understand clear() and insert() methods - clear replaces with empty dict, insert appends to bucket list
+  - Check if objects track their current cell - NO, grid has no position tracking
+- [x] Analyze battle_engine.py grid usage (lines 349-356):
+  - Count how often grid is cleared per tick - Once per tick (line 413)
+  - Estimate percentage of objects that actually move cells - Depends on cell_size (2000 units), most ships move <50 units/tick
+- [x] Determine if incremental updates are feasible:
+  - Can we track which objects moved significantly? - Yes, with object_cells dict
+  - Can we only re-bucket objects that changed cells? - Yes
+  - What's the overhead of tracking vs full rebuild? - Tracking adds dict lookups, current overhead is already minimal
+- [x] Profile current grid performance:
+  - **Full battle simulation:** Grid methods NOT in top 30 functions (17.6s total)
+  - **Isolated grid test:** 50 ships x 1000 ticks = 0.020s total
+  - **Per-tick overhead:** ~20 microseconds for 50 ships
+  - **Percentage of tick time:** ~0.1%
+- [x] Document findings in design.md under "## Phase 5 Research Findings"
+- [x] Make go/no-go decision for Task 5.2: **NO-GO - Cost/benefit unfavorable**
 
-**Notes:** If research shows incremental updates aren't worth the complexity, skip Task 5.2 and mark phase complete.
+**Notes:** Research completed. Spatial grid is already highly optimized and is NOT a bottleneck. Real bottlenecks are protocol isinstance checks (23%) and AI collision avoidance (60%). Skipping Task 5.2.
 
 ---
 
-### Task 5.2: Implement Incremental Grid Updates [Complex]
+### Task 5.2: Implement Incremental Grid Updates [Complex] - SKIPPED
 **File:** `game/engine/spatial.py`, `game/simulation/systems/battle_engine.py`
-**Tests:** `pytest tests/unit/engine/ tests/unit/combat/test_battle_engine_core.py`
+**Tests:** N/A
 
-> **PREREQUISITE:** Only implement if Task 5.1 research shows clear benefit
+> **SKIPPED:** Task 5.1 research showed spatial grid is only 0.1% of tick time. Implementation would add complexity for ~10μs savings. Not justified.
 
-- [ ] Add position tracking to SpatialGrid:
-  ```python
-  def __init__(self, cell_size=...):
-      self.buckets = {}
-      self.object_cells = {}  # Track current cell for each object
-  ```
-- [ ] Add method to get cell for position:
-  ```python
-  def _get_cell(self, pos) -> Tuple[int, int]:
-      return (int(pos.x // self.cell_size), int(pos.y // self.cell_size))
-  ```
-- [ ] Add incremental update method:
-  ```python
-  def update_object(self, obj, new_pos) -> None:
-      """Update object position, only re-bucket if cell changed."""
-      new_cell = self._get_cell(new_pos)
-      old_cell = self.object_cells.get(id(obj))
-
-      if old_cell == new_cell:
-          return  # No change needed
-
-      # Remove from old cell
-      if old_cell and old_cell in self.buckets:
-          self.buckets[old_cell].discard(obj)
-
-      # Add to new cell
-      if new_cell not in self.buckets:
-          self.buckets[new_cell] = set()
-      self.buckets[new_cell].add(obj)
-      self.object_cells[id(obj)] = new_cell
-  ```
-- [ ] Update battle_engine.py to use incremental updates:
-  ```python
-  # Instead of clear() + insert all:
-  for s in alive_ships:
-      self.grid.update_object(s, s.position)
-  for p in self.projectiles:
-      if p.is_alive:
-          self.grid.update_object(p, p.position)
-  ```
-- [ ] Add fallback to full rebuild if too many objects moved (configurable threshold)
-- [ ] Run battle engine and combat tests
-- [ ] Re-run performance profile to measure improvement
-
-**Notes:** This is a complex change. Test thoroughly for edge cases: objects crossing multiple cells, objects being removed, new objects being added.
+**Justification:**
+- Current overhead: ~20μs per tick (50 ships)
+- Estimated savings: ~10μs per tick
+- Risk: Subtle bugs in cell tracking could break collision detection
+- Real bottlenecks identified: Protocol isinstance (23%), AI collision avoidance (60%)
+- See design.md "Phase 5 Research Findings" and decisions.md for full analysis
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked (or Task 5.2 skipped with justification)
-- [ ] Research findings documented in design.md
-- [ ] Run full test suite: `pytest tests/`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 6
+- [x] All task checkboxes above are checked (or Task 5.2 skipped with justification)
+- [x] Research findings documented in design.md
+- [x] Run full test suite: `pytest tests/`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 6

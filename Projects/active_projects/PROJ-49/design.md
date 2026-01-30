@@ -109,6 +109,52 @@ BattleEngine.update()
 | UI-002, UI-003 (ui.builder imports) | WORKING | ui/ has __init__.py, path setup works |
 | SIM-021 (formula eval) | SECURE | AST validation + restricted builtins |
 
+## Phase 5 Research Findings
+
+### Spatial Grid Profiling Results (2026-01-30)
+
+Ran `profile_simulation.py` with 50 ships for 500 ticks to measure actual overhead:
+
+**Full Battle Simulation (17.6 seconds total):**
+- Spatial grid methods (`clear`, `insert`, `_get_cell`) did NOT appear in top 30 functions
+- Top bottlenecks were:
+  1. `typing.py:1408(_get_protocol_attrs)` - 4.06s (Protocol isinstance checks)
+  2. `controller.py:381(check_avoidance)` - 0.64s + 10.5s cumulative (AI collision avoidance)
+  3. `ability_manager.py:29(get_abilities)` - 0.94s (Ability lookups)
+
+**Isolated Grid Profiling (50 ships x 1000 ticks):**
+- Total time: **0.020 seconds** (20 milliseconds for 1000 ticks)
+- Per-tick overhead: ~20 microseconds for 50 ships
+- `insert()`: 0.011s | `_get_cell()`: 0.007s | `clear()`: 0.000s
+
+### Analysis
+
+The spatial grid is already highly optimized:
+- Simple dict-based bucket system with O(1) cell lookup
+- `clear()` just replaces dict with empty dict - nearly free
+- `insert()` is single dict access + list append
+- Current overhead is **0.1%** of total tick time
+
+Incremental updates would add:
+- Position tracking dict (`object_cells`)
+- Old cell lookup + comparison per object
+- Set operations instead of list append
+- Memory overhead for tracking
+
+**Estimated savings: ~10 microseconds per tick**
+**Implementation complexity: Medium (edge cases with object removal, new objects)**
+**Risk: Bugs in cell tracking could cause collision detection failures**
+
+### Decision: Skip Incremental Grid Updates
+
+The cost/benefit ratio is unfavorable:
+1. Current grid overhead is negligible (~0.1% of tick time)
+2. Real bottlenecks are protocol isinstance checks and AI collision avoidance
+3. Implementation would add complexity with minimal measurable improvement
+4. Risk of subtle bugs outweighs microscopic performance gain
+
+**Recommendation:** Mark Phase 5 complete with research-only outcome. If future profiling shows grid as bottleneck (e.g., with 500+ ships), revisit then.
+
 ## Design Decisions
 
 See [decisions.md](decisions.md) for the full log with rationale.
