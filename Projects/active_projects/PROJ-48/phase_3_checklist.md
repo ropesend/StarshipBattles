@@ -76,21 +76,21 @@
 
 ---
 
-#### 3.1.4: Split test_fleet.py (1103 LOC -> 3 files)
+#### 3.1.4: Split test_fleet.py (1103 LOC -> 3 files) ✅ COMPLETE
 **Source:** `tests/unit/strategy/test_fleet.py`
 **Target:** `tests/unit/strategy/fleet/`
 **Tests:** `pytest tests/unit/strategy/fleet/ -v`
 
-- [ ] Create directory `tests/unit/strategy/fleet/`
-- [ ] Create `__init__.py` and `conftest.py`
-- [ ] Split into:
-  - [ ] `test_basics.py` - Fleet creation, orders, merge, equality
-  - [ ] `test_resources.py` - Movement resources, warp resources
-  - [ ] `test_serialization.py` - Serialization, backward compat, edge cases
-- [ ] Delete original file after verification
-- [ ] Verify: All tests pass, same count
+- [x] Create directory `tests/unit/strategy/fleet/`
+- [x] Create `__init__.py` and `conftest.py`
+- [x] Split into:
+  - [x] `test_basics.py` - Fleet creation, orders, merge, equality (TestFleetOrder, TestFleet, TestFleetOrders, TestFleetMerge, TestFleetEquality)
+  - [x] `test_resources.py` - Movement resources, warp resources (TestMovementResourceMethods, TestWarpResourceMethods, TestBackwardCompatibility, TestEdgeCases)
+  - [x] `test_serialization.py` - Serialization (TestFleetSerialization)
+- [x] Delete original file after verification
+- [x] Verify: All tests pass (70 passed), same count (70 = 70)
 
-**Notes:**
+**Notes:** Split into 3 files with conftest.py containing shared fixtures (basic_fleet, make_mock_ship, make_ship_instance).
 
 ---
 

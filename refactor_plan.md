@@ -8,27 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 3 Task 3.1.3
+**Last Completed:** PROJ-48 Phase 3 Task 3.1.4
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
-**Test Status:** 526 passed (simulation tests), full suite passes
+**Test Status:** 838 passed (strategy tests), 70 fleet tests, full suite passes
 **Active Blockers:** None
 
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
-  - Task 3.1.3 Complete: Split test_battle_controller.py (1425 LOC) -> 4 files
-    - tests/unit/simulation/battle_controller/conftest.py (shared fixtures)
-    - tests/unit/simulation/battle_controller/test_initialization.py (init, configure)
-    - tests/unit/simulation/battle_controller/test_execution.py (start, update, run_headless, run_ticks)
-    - tests/unit/simulation/battle_controller/test_mechanics.py (ships, retreats, reinforcements, edge finding)
-    - tests/unit/simulation/battle_controller/test_utilities.py (state, queries, callbacks, reset, factories)
-    - 110 tests preserved, original file deleted
+  - Task 3.1 Complete: All 4 critical monoliths split
+    - test_ship_stats_calculator.py -> 5 files (70 tests)
+    - test_ship_instance_proj08.py -> 3 files (71 tests)
+    - test_battle_controller.py -> 4 files (110 tests)
+    - test_fleet.py -> 3 files (70 tests) - conftest.py + test_basics.py + test_resources.py + test_serialization.py
 - Remaining Phase 3 work:
-  - Task 3.1.4: Split test_fleet.py (1103 LOC)
   - Task 3.2: Split 20 severe monoliths (700-1000 LOC)
   - Task 3.3: Split 26 moderate monoliths (500-700 LOC)
-- Next: Continue Task 3.1.4 - Split test_fleet.py
+- Next: Start Task 3.2 - Split severe monoliths
 
 ---
 
@@ -120,6 +117,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.1.4 | Complete | 70 passed | d5094c2e | Split test_fleet.py -> 3 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.1.3 | Complete | 110 passed | 7539e71d | Split test_battle_controller.py -> 4 files |
 | 2026-01-30 | PROJ-48 | Phase 2 | Complete | 5728 passed | 673ecec7 | Conftest consolidation, removed 4 redundant fixtures, updated READMEs |
 | 2026-01-30 | PROJ-48 | Phase 1 | Complete | 5734 passed | 382cb0f3 | Re-enabled formation tests, consolidated test isolation, +11 tests |
