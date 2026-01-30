@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Split 50 test files over 500 LOC into smaller, focused files.
 **Issues Addressed:** TSR-005
 
@@ -15,45 +15,45 @@
 
 ### Task 3.1: Split Critical Monoliths (>1000 LOC) [Complex]
 
-#### 3.1.1: Split test_ship_stats_service.py (1756 LOC -> 5 files)
-**Source:** `tests/unit/strategy/test_ship_stats_service.py`
+#### 3.1.1: Split test_ship_stats_calculator.py (1775 LOC -> 5 files) ✅ COMPLETE
+**Source:** `tests/unit/strategy/test_ship_stats_calculator.py` (was test_ship_stats_service.py, renamed in PROJ-46)
 **Target:** `tests/unit/strategy/ship_stats/`
 **Tests:** `pytest tests/unit/strategy/ship_stats/ -v`
 
-- [ ] Create directory `tests/unit/strategy/ship_stats/`
-- [ ] Create `tests/unit/strategy/ship_stats/__init__.py`
-- [ ] Read source file and identify test class groupings
-- [ ] Create `conftest.py` with shared fixtures from original file
-- [ ] Split into these files:
-  - [ ] `test_basics.py` - TestShipStatsServiceBasics class
-  - [ ] `test_damage.py` - TestDamageEffectiveness class
-  - [ ] `test_warp.py` - TestWarpCapability, TestHasWarpCapability classes
-  - [ ] `test_resources.py` - TestGenericDictAccumulators, TestTriggerTypes, TestCustomResources classes
-  - [ ] `test_modifiers.py` - TestModifierApplication class
-- [ ] Update imports in each new file
-- [ ] Delete original file after verification
-- [ ] Verify: `pytest tests/unit/strategy/ship_stats/ -v` - all tests pass
-- [ ] Verify: Same number of tests as before split
+- [x] Create directory `tests/unit/strategy/ship_stats/`
+- [x] Create `tests/unit/strategy/ship_stats/__init__.py`
+- [x] Read source file and identify test class groupings
+- [x] Create `conftest.py` with shared fixtures from original file
+- [x] Split into these files:
+  - [x] `test_basics.py` - TestShipStatsCalculatorBasics, TestDamageEffectiveness, TestStatAggregation, TestComponentIdMatching, TestIntegrationScenarios
+  - [x] `test_warp.py` - TestWarpCapability, TestHasWarpCapability classes
+  - [x] `test_resources.py` - TestGenericDictAccumulators, TestTriggerTypes, TestCustomResources classes
+  - [x] `test_toggles.py` - TestComponentToggles class
+  - [x] `test_modifiers.py` - TestBugDocumentation, TestIntegrationProj08, TestModifierApplication classes
+- [x] Update imports in each new file
+- [x] Delete original file after verification
+- [x] Verify: `pytest tests/unit/strategy/ship_stats/ -v` - all tests pass (70 passed)
+- [x] Verify: Same number of tests as before split (70 = 70)
 
-**Notes:**
+**Notes:** File was renamed to test_ship_stats_calculator.py during PROJ-46. Split into 5 files (test_basics.py, test_warp.py, test_resources.py, test_toggles.py, test_modifiers.py).
 
 ---
 
-#### 3.1.2: Split test_ship_instance_proj08.py (1458 LOC -> 3 files)
+#### 3.1.2: Split test_ship_instance_proj08.py (1458 LOC -> 3 files) ✅ COMPLETE
 **Source:** `tests/unit/strategy/test_ship_instance_proj08.py`
 **Target:** `tests/unit/strategy/ship_instance/`
 **Tests:** `pytest tests/unit/strategy/ship_instance/ -v`
 
-- [ ] Create directory `tests/unit/strategy/ship_instance/`
-- [ ] Create `__init__.py` and `conftest.py`
-- [ ] Split into:
-  - [ ] `test_component_toggles.py` - Component toggle related classes
-  - [ ] `test_resources.py` - Resource management classes
-  - [ ] `test_serialization.py` - Serialization and edge case classes
-- [ ] Delete original file after verification
-- [ ] Verify: All tests pass, same count
+- [x] Create directory `tests/unit/strategy/ship_instance/`
+- [x] Create `__init__.py` and `conftest.py`
+- [x] Split into:
+  - [x] `test_component_toggles.py` - Component toggle related classes (TestComponentTogglesField, TestSetComponentEnabled, TestIsComponentEnabled, TestCacheInvalidation, TestStatsIntegration)
+  - [x] `test_resources.py` - Resource management classes (TestGetResourceCapacity, TestGetCurrentResource, TestConsumeResource, TestGetAllResourceCostsPerHex, TestGetAllResourceCostsPerTurn, TestGetWarpResourceCosts, TestResourceConvenienceMethods, TestResourceMethodInteractions)
+  - [x] `test_serialization.py` - Serialization and edge case classes (TestToDictSerialization, TestFromDictSerialization, TestClonePreservation, TestAdditionalCoverage, TestEdgeCases)
+- [x] Delete original file after verification
+- [x] Verify: All tests pass (71 passed), same count (71 = 71)
 
-**Notes:**
+**Notes:** Split into 3 files with conftest.py for shared fixture.
 
 ---
 

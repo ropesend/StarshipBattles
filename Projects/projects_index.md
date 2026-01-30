@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-51 | Naming Consistency Remediation | Planning | 2026-01-30 | 2026-01-30 |
+| PROJ-50 | Strict Dependency Injection Refactor | Planning | 2026-01-30 | 2026-01-30 |
 | PROJ-49 | Performance & Dead Code Cleanup | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-48 | Testing Infrastructure Overhaul | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-47 | Documentation Gaps Remediation | Planning | 2026-01-28 | 2026-01-28 |
@@ -148,4 +150,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-50
+## Next Project ID: PROJ-52

@@ -8,25 +8,35 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 2 Complete
+**Last Completed:** PROJ-48 Phase 3 Tasks 3.1.1-3.1.2
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
-**Current Phase:** Phase 3 (Test File Splitting)
-**Test Status:** 5728 passed, 52 failed (pre-existing UI failures)
+**Current Phase:** Phase 3 (Test File Splitting) - In Progress
+**Test Status:** 5734 passed, 46 failed, 12 errors (pre-existing UI/builder failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-48 Phase 2 Complete - Conftest Consolidation
-  - Updated tests/README.md with comprehensive fixture hierarchy diagram
-  - Updated tests/fixtures/README.md with detailed module documentation
-  - Removed 4 empty/redundant autouse fixtures:
-    - builder_test_setup (empty yield)
-    - combat_test_setup (empty yield)
-    - entities_test_setup (redundant - root handles pygame init + cleanup)
-    - systems_test_setup (redundant - root handles pygame init + cleanup)
-  - Kept pygame_display_reset in UI conftest (useful display mode reset)
-  - All fixture docstrings verified complete
-- Next: Phase 3 - Test File Splitting
+- PROJ-48 Phase 3 In Progress - Test File Splitting
+  - Task 3.1.1 Complete: Split test_ship_stats_calculator.py (1775 LOC) -> 5 files
+    - tests/unit/strategy/ship_stats/conftest.py (shared fixtures)
+    - tests/unit/strategy/ship_stats/test_basics.py (basics, damage, aggregation, id matching, integration)
+    - tests/unit/strategy/ship_stats/test_warp.py (warp capability tests)
+    - tests/unit/strategy/ship_stats/test_resources.py (resource system tests)
+    - tests/unit/strategy/ship_stats/test_toggles.py (component toggles)
+    - tests/unit/strategy/ship_stats/test_modifiers.py (modifiers and edge cases)
+    - 70 tests preserved, original file deleted
+  - Task 3.1.2 Complete: Split test_ship_instance_proj08.py (1458 LOC) -> 3 files
+    - tests/unit/strategy/ship_instance/conftest.py (shared fixture)
+    - tests/unit/strategy/ship_instance/test_component_toggles.py
+    - tests/unit/strategy/ship_instance/test_resources.py
+    - tests/unit/strategy/ship_instance/test_serialization.py
+    - 71 tests preserved, original file deleted
+- Remaining Phase 3 work:
+  - Task 3.1.3: Split test_battle_controller.py (1424 LOC)
+  - Task 3.1.4: Split test_fleet.py (1103 LOC)
+  - Task 3.2: Split 20 severe monoliths (700-1000 LOC)
+  - Task 3.3: Split 26 moderate monoliths (500-700 LOC)
+- Next: Continue Task 3.1.3 - Split test_battle_controller.py
 
 ---
 

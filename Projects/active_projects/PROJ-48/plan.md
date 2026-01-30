@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Critical Infrastructure Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Conftest Consolidation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Test File Splitting | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Test File Splitting | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Weak Assertion Fixes | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Naming Convention Standardization | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Directory Structure Reorganization | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -24,18 +24,16 @@
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 2 Complete - Ready for Phase 3
-**Last Action:** Completed Phase 2 - Conftest Consolidation
-**Next Action:** Begin Phase 3 - Test File Splitting
+**Active Phase:** Phase 3 In Progress - Test File Splitting
+**Last Action:** Completed Tasks 3.1.1 and 3.1.2 - Split 2 critical monoliths
+**Next Action:** Continue Phase 3 - Split remaining monoliths (Tasks 3.1.3, 3.1.4, 3.2, 3.3)
 **Blockers:** None
 
-**Phase 2 Summary:**
-- Updated tests/README.md with comprehensive fixture hierarchy diagram
-- Updated tests/fixtures/README.md with detailed module documentation
-- Removed 4 empty/redundant autouse fixtures (builder_test_setup, combat_test_setup, entities_test_setup, systems_test_setup)
-- Kept pygame_display_reset for UI-specific display handling
-- All fixture docstrings verified complete
-- Tests pass: 5728 passed (pre-existing UI failures unchanged)
+**Phase 3 Progress:**
+- Split test_ship_stats_calculator.py (1775 LOC) -> 5 files in tests/unit/strategy/ship_stats/ (70 tests)
+- Split test_ship_instance_proj08.py (1458 LOC) -> 3 files in tests/unit/strategy/ship_instance/ (71 tests)
+- Remaining: 2 critical monoliths (test_battle_controller, test_fleet), 20 severe monoliths (700-1000 LOC), 26 moderate monoliths (500-700 LOC)
+- Tests pass: 5734 passed (pre-existing UI/builder failures unchanged)
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.
