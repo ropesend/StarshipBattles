@@ -5,25 +5,29 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Break down large UI screens into focused components.
 
 ---
 
 ## Tasks
 
-### Task 7.1: Extract RaceSummaryPanel [Medium]
+### Task 7.1: Extract RaceSummaryPanel [Medium] - COMPLETE
 **File:** Create `game/ui/panels/race_summary_panel.py`
 **Issue:** CQ-001 - RaceSetupScreen 1231 lines
 **Tests:** `pytest tests/unit/ui/`
 
-- [ ] Create `RaceSummaryPanel` class
-- [ ] Move `_create_summary_panel_content()` from race_setup_screen.py lines 577-771
-- [ ] Move `_refresh_summary()` logic
-- [ ] Update RaceSetupScreen to use RaceSummaryPanel
-- [ ] Verify: Summary tab still works
+- [x] Create `RaceSummaryPanel` class
+- [x] Move `_create_summary_panel_content()` from race_setup_screen.py lines 577-771
+- [x] Move `_refresh_summary()` logic
+- [x] Update RaceSetupScreen to use RaceSummaryPanel
+- [x] Verify: Summary tab still works
 
 **Notes:**
+- Created game/ui/panels/race_summary_panel.py (336 lines)
+- Created tests/unit/ui/test_race_summary_panel.py (20 tests)
+- RaceSetupScreen reduced from 1232 lines to 862 lines (-370 lines, ~30% reduction)
+- All 5565 tests pass (+20 new tests)
 
 ---
 
