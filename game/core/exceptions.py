@@ -19,7 +19,7 @@ Basic usage::
         context={"component_id": "laser_1", "field": "damage"}
     )
 
-Exception chaining::
+Exception chaining (preserve original cause)::
 
     try:
         load_json(path)
@@ -30,19 +30,42 @@ Exception chaining::
             context={"path": path}
         ) from e
 
+Catching and handling::
+
+    try:
+        component = load_component(data)
+    except ComponentException as e:
+        if e.code == "C002":  # COMPONENT_INVALID
+            log_warning(f"Invalid component: {e.context}")
+            component = default_component
+
 Hierarchy
 =========
 
 GameException (base)
-    StateException
-        FrozenStateException
-    ValidationException
-    ResourceException
-        MissingResourceException
-    PersistenceException
-    SimulationException
-        ComponentException
-        FormulaException
+    StateException         - Object state errors
+        FrozenStateException   - Modifying frozen objects
+    ValidationException    - Input validation failures
+    ResourceException      - Resource loading errors
+        MissingResourceException - Resource not found
+    PersistenceException   - Save/load failures
+    SimulationException    - Combat engine errors
+        ComponentException     - Component operation errors
+        FormulaException       - Formula evaluation errors
+    AIException            - AI decision errors
+        TargetingException     - Target selection errors
+
+Error Codes
+===========
+Use error codes from game.core.error_codes.ErrorCode for programmatic handling::
+
+    from game.core.error_codes import ErrorCode
+
+    raise ValidationException(
+        "Value out of range",
+        code=ErrorCode.OUT_OF_RANGE.value,  # "V004"
+        context={"value": 150, "max": 100}
+    )
 
 Design Notes
 ============
@@ -50,6 +73,7 @@ Design Notes
 - All exceptions support code and context attributes
 - Context defaults to empty dict (never None)
 - Exception chaining preserves original cause with `raise from`
+- See docs/ERROR_HANDLING_GUIDELINES.md for complete usage guide
 """
 from typing import Optional
 

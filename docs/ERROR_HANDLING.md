@@ -2,6 +2,11 @@
 
 This document establishes the error handling conventions and logging standards for the Starship Battles codebase.
 
+> **See Also:** [ERROR_HANDLING_GUIDELINES.md](ERROR_HANDLING_GUIDELINES.md) for the comprehensive guide including:
+> - Custom exception hierarchy (`game/core/exceptions.py`)
+> - Error codes (`game/core/error_codes.py`)
+> - Code examples and anti-patterns
+
 ## Logging Levels
 
 ### log_debug()
