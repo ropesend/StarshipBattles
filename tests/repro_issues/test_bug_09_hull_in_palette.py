@@ -25,22 +25,37 @@ def pygame_initialized():
     # No teardown needed at module level - individual tests handle their cleanup
 
 
+@pytest.fixture
+def test_registries():
+    """Provide fresh registries for DI compliance."""
+    from game.core.registry import GameRegistries, RegistryManager
+
+    mgr = RegistryManager.instance()
+    return GameRegistries(
+        components=dict(mgr.components),
+        modifiers=dict(mgr.modifiers),
+        vehicle_classes=dict(mgr.vehicle_classes),
+        resources={}
+    )
+
+
 class TestBug09Reproduction:
     @pytest.fixture(autouse=True)
-    def setup(self, pygame_initialized):
+    def setup(self, pygame_initialized, test_registries):
         self.window_surface = pygame.display.set_mode((800, 600))
         self.ui_manager = pygame_gui.UIManager((800, 600))
 
         # Mock Builder
         self.mock_builder = MagicMock()
         # Escort class has 'hull_escort' as default hull
-        self.ship = Ship("Test Escort", 0, 0, (255, 255, 255), ship_class="Escort")
+        self.ship = Ship("Test Escort", 0, 0, (255, 255, 255), ship_class="Escort",
+                         registries=test_registries)
         self.mock_builder.ship = self.ship
 
         # Mock sprite manager
         dummy_surf = pygame.Surface((32, 32))
         self.mock_builder.sprite_mgr.get_sprite.return_value = dummy_surf
-        self.mock_builder.available_components = get_all_components()
+        self.mock_builder.available_components = get_all_components(registries=test_registries)
 
         # Create BuilderLeftPanel
         self.panel_rect = pygame.Rect(0, 0, 300, 600)

@@ -15,7 +15,7 @@ from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 
 
 @pytest.fixture
-def simple_ship_registry():
+def simple_ship_registry(fresh_registries):
     """Set up registry with minimal ship data for testing."""
     RegistryManager.instance().clear()
 
@@ -45,9 +45,9 @@ def simple_ship_registry():
     registry = RegistryManager.instance()
     registry.vehicle_classes.update(classes)
     for comp_id, comp_data in components.items():
-        registry.components[comp_id] = Component(comp_data)
+        registry.components[comp_id] = Component(comp_data, registries=fresh_registries)
 
-    yield classes, components
+    yield classes, components, fresh_registries
 
     # Cleanup
     RegistryManager.instance().clear()
@@ -61,7 +61,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     the mandatory hull. The fix delegates to viewmodel.clear_design() which
     calls ship.clear_non_hull_components(), preserving the hull.
     """
-    classes, components = simple_ship_registry
+    classes, components, fresh_registries = simple_ship_registry
 
     # Instantiate DesignWorkshopScreen without calling __init__ to avoid UI complexity
     gui = DesignWorkshopScreen.__new__(DesignWorkshopScreen)
@@ -72,7 +72,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
 
     # Create registries for DI
     registries = GameRegistries(
-        components={k: Component(v) if isinstance(v, dict) else v
+        components={k: Component(v, registries=fresh_registries) if isinstance(v, dict) else v
                    for k, v in RegistryManager.instance().components.items()},
         modifiers={},
         vehicle_classes=classes,
@@ -104,7 +104,8 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     assert len(hull_comps) == 1, "Ship should start with a hull component"
 
     # Add a non-hull component to another layer
-    laser = Component({"id": "small_laser", "name": "Laser", "type": "Weapon", "mass": 10, "hp": 50})
+    laser = Component({"id": "small_laser", "name": "Laser", "type": "Weapon", "mass": 10, "hp": 50},
+                      registries=registries)
     gui.ship.layers[LayerType.CORE]['components'].append(laser)
 
     # Trigger clear design - this now delegates to viewmodel.clear_design()

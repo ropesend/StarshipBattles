@@ -21,7 +21,7 @@ def mock_ship():
 
 
 @pytest.fixture
-def armed_ship():
+def armed_ship(fresh_registries):
     """Create an armed ship for testing."""
     from tests.fixtures.ships import create_test_ship
     return create_test_ship(
@@ -31,4 +31,5 @@ def armed_ship():
         add_bridge=True,
         add_engine=True,
         add_weapons=2,
+        registries=fresh_registries,
     )

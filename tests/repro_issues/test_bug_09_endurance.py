@@ -14,12 +14,13 @@ from tests.fixtures.paths import get_project_root
 class TestBug09Endurance:
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         # Initialize shared data
         initialize_ship_data(str(get_project_root()))
         load_components(COMPONENTS_FILE)
-        ship = Ship("EnduranceRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        self.registries = fresh_registries
+        ship = Ship("EnduranceRepro", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
         calculator = ShipStatsCalculator(ship.vehicle_classes if hasattr(ship, 'vehicle_classes') else {})
         print(f"[DEBUG] Ship Layers keys: {list(ship.layers.keys())}")
         yield ship, calculator
@@ -30,11 +31,11 @@ class TestBug09Endurance:
         """
         ship, calculator = setup
         # 1. Add Fuel Tank (Capacity)
-        tank = create_component('fuel_tank')
+        tank = create_component('fuel_tank', registries=self.registries)
         ship.add_component(tank, LayerType.INNER)
 
         # 2. Add Standard Engine (Consumption)
-        engine = create_component('standard_engine')
+        engine = create_component('standard_engine', registries=self.registries)
         ship.add_component(engine, LayerType.OUTER)
 
         # 3. Recalculate Stats
