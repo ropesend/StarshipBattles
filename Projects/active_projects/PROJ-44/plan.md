@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Quick Wins (DRY, Magic Numbers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Registry & Service Extraction | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Registry & Service Extraction | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Helper Methods | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Decomposition | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. ShipCombatEngine Decomposition | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -24,10 +24,10 @@
 | 9. Minor Cleanup | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-29
+**Last Updated:** 2026-01-30
 **Active Phase:** Phase 2 - Registry & Service Extraction
-**Last Action:** Phase 1 complete - DRY violations fixed, SimulationConstants created, damage threshold unified
-**Next Action:** Begin Phase 2, Task 2.1 - see phase_2_checklist.md
+**Last Action:** Task 2.1 complete - Added reload_all_from_directory() to RegistryManager with 12 tests
+**Next Action:** Task 2.2 - Refactor BuilderSceneGUI to use RegistryManager.reload_all_from_directory()
 **Blockers:** None
 
 ## Overview

@@ -7,21 +7,21 @@
 
 ## Agent Context
 
-**Last Session:** 2026-01-29
-**Last Completed:** PROJ-44 Phase 1 Complete - DRY & Magic Numbers
-**Current Status:** PROJ-44 Phase 1 complete, Phase 2 ready
+**Last Session:** 2026-01-30
+**Last Completed:** PROJ-44 Phase 2 Task 2.1 - RegistryManager.reload_all_from_directory()
+**Current Status:** PROJ-44 Phase 2 in progress, Task 2.1 complete
 **Current Project:** PROJ-44
-**Current Phase:** Phase 2 (pending)
-**Test Status:** 5398 passed, 3 skipped
+**Current Phase:** Phase 2 (in progress)
+**Test Status:** 4541 passed, 3 skipped (unit tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-44 Phase 1 complete: DRY violations fixed, SimulationConstants created
-- Created game/ui/utils.py with create_centered_rect, calculate_ship_image_scale, scale_and_rotate_image
-- Unified damage threshold to 50% (was 30% in strategy layer)
-- Task 1.4 skipped - existing pattern better than global UIConstants
-- 23 new tests added
-- Next: Phase 2 - Registry & Service Extraction
+- Task 2.1 complete: Added reload_all_from_directory() method to RegistryManager
+- Created tests/unit/core/test_registry_manager_reload.py with 12 tests
+- Discovered root conftest.py patches load_vehicle_classes - tests need use_custom_data marker
+- Method clears all registries then reloads from specified directory
+- Supports test_ prefixed files for test data directories
+- Next: Task 2.2 - Refactor BuilderSceneGUI to use RegistryManager.reload_all_from_directory()
 
 ---
 
@@ -97,6 +97,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-44 | Phase 2 Task 2.1 | Complete | 4541 passed | 64bc570 | Added reload_all_from_directory() to RegistryManager |
 | 2026-01-29 | PROJ-44 | Phase 1 Complete | Complete | 5398 passed | 7d61275 | DRY fixes, SimulationConstants, damage threshold unified |
 | 2026-01-29 | PROJ-42 | Audit Cycle 1 | PASSED | 5375 passed | db9d164 | No issues found, project complete |
 | 2026-01-29 | PROJ-42 | Phase 6 Complete | Complete | 5375 passed | db9d164 | Verification tests, 0 unintended deprecation warnings |

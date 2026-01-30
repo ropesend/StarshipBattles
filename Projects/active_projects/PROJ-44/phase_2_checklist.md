@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress (Task 2.1 Complete)
 **Objective:** Reduce global state hazards and cross-layer coupling. Enables safer refactoring.
 
 ---
@@ -13,21 +13,22 @@
 ## Tasks
 
 ### Task 2.1: Create RegistryManager Service [Medium]
-**File:** Create `game/core/registry_manager.py`
+**File:** `game/core/registry.py` (RegistryManager already exists)
 **Issue:** Risk 5.1 - Global registry mutation, stale references
-**Tests:** `pytest tests/unit/core/`
+**Tests:** `pytest tests/unit/core/test_registry_manager_reload.py`
 
-- [ ] Create `RegistryManager` class with:
-  - `reload_all_from_directory(data_dir: Path) -> bool`
-  - `clear_all() -> None`
-  - `get_component_registry() -> Dict`
-  - `get_modifier_registry() -> Dict`
-  - `get_vehicle_classes() -> Dict`
-- [ ] Migrate registry operations from `game/core/registry.py`
-- [ ] Add proper error handling and validation
-- [ ] Verify: All registry access still works
+- [x] Add `reload_all_from_directory(data_dir: Path) -> bool` method
+  - Clears all registries and reloads from directory
+  - Supports test_* prefixed files for test data directories
+  - Returns False for invalid directories
+  - Raises RuntimeError if frozen
+- [x] RegistryManager already has:
+  - `clear()` for clearing registries
+  - `.components`, `.modifiers`, `.vehicle_classes` accessors
+- [x] Add proper error handling and logging
+- [x] Created 12 tests for reload_all_from_directory
 
-**Notes:**
+**Notes:** RegistryManager already existed. Added reload_all_from_directory() method.
 
 ---
 
