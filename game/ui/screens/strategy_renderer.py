@@ -1,6 +1,6 @@
 """
 Rendering logic for the strategy map.
-Extracted from StrategyScene to reduce file size and improve testability.
+Extracted from StrategyScreen to reduce file size and improve testability.
 
 This module contains all the drawing functions for the galaxy map,
 including grid, warp lanes, systems, planets, and fleets.
@@ -25,7 +25,7 @@ class StrategyRenderer:
         Initialize renderer with a scene reference.
 
         Args:
-            scene: StrategyScene instance providing camera, galaxy, empires, etc.
+            scene: StrategyScreen instance providing camera, galaxy, empires, etc.
         """
         self.scene = scene
 

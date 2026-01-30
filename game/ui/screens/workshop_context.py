@@ -27,7 +27,7 @@ class WorkshopContext:
     """
     Configuration for how the Design Workshop is launched.
 
-    This context object is passed to DesignWorkshopGUI to determine:
+    This context object is passed to DesignWorkshopScreen to determine:
     - Which UI buttons are visible
     - How tech filtering works (preset vs empire tech)
     - Where designs are saved/loaded from
@@ -116,7 +116,7 @@ class WorkshopContext:
 
         Example:
             >>> context = WorkshopContext.standalone(tech_preset_name="early_game")
-            >>> workshop = DesignWorkshopGUI(800, 600, context)
+            >>> workshop = DesignWorkshopScreen(800, 600, context)
         """
         return cls(
             mode=WorkshopMode.STANDALONE,
@@ -160,7 +160,7 @@ class WorkshopContext:
             ...     built_designs={"cruiser_mk1"},
             ...     empire_theme_id="Federation"
             ... )
-            >>> workshop = DesignWorkshopGUI(800, 600, context)
+            >>> workshop = DesignWorkshopScreen(800, 600, context)
         """
         return cls(
             mode=WorkshopMode.INTEGRATED,

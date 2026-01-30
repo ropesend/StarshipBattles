@@ -3,7 +3,7 @@ import pygame
 import math
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.simulation.entities.projectile import Projectile
 from game.core.constants import AttackType
 
@@ -64,7 +64,7 @@ class TestPDC:
         from game.simulation.components.component import load_components
         load_components()
 
-        self.scene = BattleScene(100, 100)
+        self.scene = BattleScreen(100, 100)
 
         # Ship with PDC - Use Satellite to avoid engine/crew requirements
         self.ship = Ship("Defender", 0, 0, (255, 255, 255), team_id=0, ship_class="Satellite (Small)")

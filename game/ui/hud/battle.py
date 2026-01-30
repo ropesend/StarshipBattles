@@ -3,7 +3,7 @@ import math
 from game.ui.hud.panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
 class BattleInterface:
-    """Handles all UI rendering and interaction for the BattleScene."""
+    """Handles all UI rendering and interaction for the BattleScreen."""
     
     def __init__(self, scene, screen_width, screen_height):
         self.scene = scene

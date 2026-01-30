@@ -1,6 +1,6 @@
 """FormationRenderer - Handles all rendering for the formation editor.
 
-Extracted from FormationEditorScene to separate rendering concerns from
+Extracted from FormationEditorScreen to separate rendering concerns from
 event handling and business logic.
 """
 

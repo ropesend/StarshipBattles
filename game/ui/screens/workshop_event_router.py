@@ -1,5 +1,5 @@
 """
-WorkshopEventRouter - Extracted event handling logic from DesignWorkshopGUI (renamed from BuilderEventRouter).
+WorkshopEventRouter - Extracted event handling logic from DesignWorkshopScreen (renamed from BuilderEventRouter).
 
 This class handles all event routing for the Design Workshop screen using
 a composition + delegation pattern.
@@ -24,15 +24,15 @@ from game.core.logger import log_error, log_info, log_warning, log_debug
 class WorkshopEventRouter:
     """Routes events to appropriate handlers in the Design Workshop.
 
-    Uses composition pattern - receives reference to DesignWorkshopGUI and
+    Uses composition pattern - receives reference to DesignWorkshopScreen and
     delegates to its components as needed.
     """
 
-    def __init__(self, gui: 'DesignWorkshopGUI'):
+    def __init__(self, gui: 'DesignWorkshopScreen'):
         """Initialize with reference to the parent GUI.
 
         Args:
-            gui: The DesignWorkshopGUI instance to route events for.
+            gui: The DesignWorkshopScreen instance to route events for.
         """
         self.gui = gui
 

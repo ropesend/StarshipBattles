@@ -1,7 +1,7 @@
 """
 BuilderStateManager - Centralized state management for ship builder.
 
-PROJ-44 Phase 7 Task 7.3: Extracted from BuilderSceneGUI to reduce
+PROJ-44 Phase 7 Task 7.3: Extracted from BuilderScreen to reduce
 complexity and improve testability.
 
 Manages:

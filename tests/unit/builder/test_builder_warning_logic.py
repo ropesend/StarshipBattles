@@ -7,7 +7,7 @@ import os
 # Dummy video driver
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.core.registry import RegistryManager
 
@@ -16,8 +16,8 @@ from game.core.registry import RegistryManager
 def builder_warning_setup():
     pygame.init()
 
-    # IMPORTANT: Patch DesignWorkshopGUI._create_ui since that's the real implementation
-    patcher = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
+    # IMPORTANT: Patch DesignWorkshopScreen._create_ui since that's the real implementation
+    patcher = patch('game.ui.screens.workshop_screen.DesignWorkshopScreen._create_ui')
     mock_create_ui = patcher.start()
 
     # Mock internal managers in both builder_screen and workshop_screen modules
@@ -32,7 +32,7 @@ def builder_warning_setup():
 
     context = WorkshopContext.standalone(tech_preset_name="default")
     context.on_return = MagicMock()
-    builder = DesignWorkshopGUI(800, 600, context)
+    builder = DesignWorkshopScreen(800, 600, context)
 
     # Manually setup the mocks that _create_ui would have created
     builder.ui_manager = MagicMock()

@@ -494,7 +494,7 @@ class LayerPanel(DropTarget):
             elif isinstance(item, LayerComponentItem):
                 # Resolve group to components
                 # We can't access 'ship' easily to find them all efficiently without strategy,
-                # but we can iterate ship layers like BuilderSceneGUI does.
+                # but we can iterate ship layers like BuilderScreen does.
                 g_key = item.group_key
                 for layers in self.builder.ship.layers.values():
                     for c in layers['components']:

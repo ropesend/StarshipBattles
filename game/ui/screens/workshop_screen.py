@@ -65,7 +65,7 @@ from game.ui.screens.builder.detail_panel import ComponentDetailPanel
 
 
 
-class DesignWorkshopGUI:
+class DesignWorkshopScreen:
     def __init__(self, screen_width, screen_height, context: WorkshopContext):
         """
         Initialize Design Workshop GUI.
@@ -77,7 +77,7 @@ class DesignWorkshopGUI:
 
         Example:
             >>> context = WorkshopContext.standalone(tech_preset_name="early_game")
-            >>> workshop = DesignWorkshopGUI(1920, 1080, context)
+            >>> workshop = DesignWorkshopScreen(1920, 1080, context)
         """
         self.width = screen_width
         self.height = screen_height
@@ -583,7 +583,7 @@ class DesignWorkshopGUI:
                 self.show_error(f"Data loading failed: {result.errors[0] if result.errors else 'Unknown error'}")
                 return
             
-            # 2. Refresh UI (stays in BuilderSceneGUI)
+            # 2. Refresh UI (stays in BuilderScreen)
             self._refresh_ui_after_data_reload(result.default_class)
             
             # Show success

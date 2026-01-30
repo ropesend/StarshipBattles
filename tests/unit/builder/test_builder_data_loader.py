@@ -1,7 +1,7 @@
 """
 Unit tests for BuilderDataLoader class.
 
-Tests the data loading logic extracted from BuilderSceneGUI._reload_data().
+Tests the data loading logic extracted from BuilderScreen._reload_data().
 """
 import pytest
 import os

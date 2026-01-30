@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pygame
 
 from game.engine.spatial import SpatialGrid
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components
@@ -30,7 +30,7 @@ def setup_game_data():
 
 
 class TestBattleSetupLogic:
-    """Test SpatialGrid functionality and BattleScene setup logic."""
+    """Test SpatialGrid functionality and BattleScreen setup logic."""
 
     def test_spatial_grid_insertion_query(self):
         """Verify SpatialGrid correctly stores and retrieves objects."""
@@ -63,8 +63,8 @@ class TestBattleSetupLogic:
         assert obj4 not in res
 
     def test_battle_scene_start_assignment(self):
-        """Verify BattleScene.start assigns teams and creates AI controllers."""
-        scene = BattleScene(1000, 1000)
+        """Verify BattleScreen.start assigns teams and creates AI controllers."""
+        scene = BattleScreen(1000, 1000)
 
         ship1 = Ship("T1-1", 0, 0, (255,0,0), team_id=0)
         ship2 = Ship("T2-1", 1000, 1000, (0,0,255), team_id=1)
@@ -88,8 +88,8 @@ class TestBattleSetupLogic:
         assert ai2.enemy_team_id == 0
 
     def test_battle_scene_clear_state(self):
-        """Verify BattleScene clears state between starts."""
-        scene = BattleScene(1000, 1000)
+        """Verify BattleScreen clears state between starts."""
+        scene = BattleScreen(1000, 1000)
         ship1 = Ship("S1", 0, 0, (255,255,255))
         scene.start([ship1], [])
         assert len(scene.ships) == 1

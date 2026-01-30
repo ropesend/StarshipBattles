@@ -2,7 +2,7 @@
 Unit tests for empire asset loading logic.
 
 PROJ-37 Phase 5: Updated tests for RaceAssetLoader-based implementation.
-These tests verify that StrategyScene delegates empire asset loading to
+These tests verify that StrategyScreen delegates empire asset loading to
 RaceAssetLoader.load_all_empire_assets().
 """
 
@@ -67,7 +67,7 @@ class TestRaceFlagLoading:
 
     def test_load_race_flag_rectangle_from_256_dir(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When flag_id exists with 256 subdir, loads rectangle.png from 256/."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_test123", empire_theme_id="Federation")
 
@@ -77,14 +77,14 @@ class TestRaceFlagLoading:
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface, 'fleet_flag': mock_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify RaceAssetLoader was called with empire and asset_base
         mock_race_loader.load_all_empire_assets.assert_called_once_with(empire, mock_game_config.asset_base_path)
@@ -94,7 +94,7 @@ class TestRaceFlagLoading:
 
     def test_load_race_flag_rectangle_fallback_to_root(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """RaceAssetLoader handles fallback logic internally."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_rootonly", empire_theme_id="Federation")
 
@@ -104,21 +104,21 @@ class TestRaceFlagLoading:
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify colony flag was loaded
         assert 'colony' in scene.empire_assets[1]
 
     def test_load_race_flag_shield(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When flag_id exists, loads shield.png as 'fleet_flag'."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_shield", empire_theme_id="Federation")
 
@@ -127,14 +127,14 @@ class TestRaceFlagLoading:
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface, 'fleet_flag': mock_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify fleet_flag was loaded
         assert 'fleet_flag' in scene.empire_assets[1]
@@ -149,7 +149,7 @@ class TestThemeFlagLoading:
 
     def test_load_fleet_icon_from_theme(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When empire_theme_id exists, loads Battlecruiser.png as 'fleet'."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="Federation")
 
@@ -159,21 +159,21 @@ class TestThemeFlagLoading:
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'fleet': mock_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify fleet icon was loaded
         assert 'fleet' in scene.empire_assets[1]
 
     def test_load_colony_flag_from_theme_when_no_race_flag(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When no race flag_id, loads Colony_Flag.jpg from theme as 'colony'."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="Romulan")
 
@@ -183,14 +183,14 @@ class TestThemeFlagLoading:
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify colony flag was loaded from theme
         assert 'colony' in scene.empire_assets[1]
@@ -205,7 +205,7 @@ class TestFlagPrecedence:
 
     def test_race_flag_precedence_over_theme(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """RaceAssetLoader returns race flag over theme when both exist."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_race", empire_theme_id="Federation")
 
@@ -220,14 +220,14 @@ class TestFlagPrecedence:
             'fleet': MagicMock(spec=pygame.Surface)  # Fleet icon from theme
         }
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify colony flag came from race flag (has loaded_from_path with flag_race)
         assert 'colony' in scene.empire_assets[1]
@@ -235,7 +235,7 @@ class TestFlagPrecedence:
 
     def test_fallback_to_theme_when_race_flag_dir_missing(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When race flag directory doesn't exist, uses theme assets."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="flag_missing", empire_theme_id="Klingon")
 
@@ -246,14 +246,14 @@ class TestFlagPrecedence:
         # RaceAssetLoader returns theme flag when race flag doesn't exist
         mock_race_loader.load_all_empire_assets.return_value = {'colony': theme_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Verify colony flag came from theme fallback
         assert 'colony' in scene.empire_assets[1]
@@ -269,21 +269,21 @@ class TestMissingAssets:
 
     def test_missing_all_assets_leaves_empty_dict(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When no assets exist, empire_assets[id] is an empty dict."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="NonExistentTheme")
 
         mock_race_loader = MagicMock()
         mock_race_loader.load_all_empire_assets.return_value = {}  # Nothing found
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Empire entry should exist but be empty
         assert 1 in scene.empire_assets
@@ -291,7 +291,7 @@ class TestMissingAssets:
 
     def test_missing_fleet_icon_only(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """When theme exists but Battlecruiser.png missing, 'fleet' key is not set."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="PartialTheme")
 
@@ -301,14 +301,14 @@ class TestMissingAssets:
         # Only colony loaded, no fleet
         mock_race_loader.load_all_empire_assets.return_value = {'colony': mock_surface}
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Colony flag should be loaded
         assert 'colony' in scene.empire_assets[1]
@@ -325,7 +325,7 @@ class TestMultipleEmpires:
 
     def test_loads_assets_for_multiple_empires(self, mock_asset_manager, mock_empire_factory, mock_game_config):
         """Each empire gets its own asset dict entry from RaceAssetLoader."""
-        from game.ui.screens.strategy_scene import StrategyScene
+        from game.ui.screens.strategy_scene import StrategyScreen
 
         empire1 = mock_empire_factory(empire_id=1, flag_id="", empire_theme_id="Federation")
         empire2 = mock_empire_factory(empire_id=2, flag_id="flag_custom", empire_theme_id="Romulan")
@@ -346,14 +346,14 @@ class TestMultipleEmpires:
 
         mock_race_loader.load_all_empire_assets.side_effect = load_all_empire_assets_side_effect
 
-        scene = MagicMock(spec=StrategyScene)
+        scene = MagicMock(spec=StrategyScreen)
         scene.empires = [empire1, empire2]
         scene.empire_assets = {}
         scene._race_loader = mock_race_loader
 
         with patch('game.assets.asset_manager.get_asset_manager', return_value=mock_asset_manager):
             with patch('game.strategy.engine.game_config.GameConfig', return_value=mock_game_config):
-                StrategyScene._load_assets(scene)
+                StrategyScreen._load_assets(scene)
 
         # Both empires should have entries
         assert 1 in scene.empire_assets

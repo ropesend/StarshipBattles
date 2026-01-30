@@ -309,7 +309,7 @@ class RegistryManager:
         and vehicle classes from JSON files in the specified directory.
 
         PROJ-44: Centralizes registry reload logic previously scattered across
-        BuilderSceneGUI and other locations.
+        BuilderScreen and other locations.
 
         Args:
             data_dir: Path to directory containing data files (string or Path).

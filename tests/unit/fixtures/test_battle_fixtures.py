@@ -86,7 +86,7 @@ class TestMockBattleEngineFixture:
         mock_battle_engine.start()  # Should not raise
 
 
-class TestMockBattleSceneFixture:
+class TestMockBattleScreenFixture:
     """Tests for mock_battle_scene fixture."""
 
     def test_is_mock(self, mock_battle_scene):

@@ -2,7 +2,7 @@
 Colonization workflow for strategy scene.
 Handles colonize commands, planet validation, and mission queuing.
 
-Extracted from StrategyScene to reduce file size and improve testability.
+Extracted from StrategyScreen to reduce file size and improve testability.
 
 Cross-layer imports (acceptable for UI):
 - pixel_to_hex: Runtime - coordinate conversion for command targeting
@@ -26,7 +26,7 @@ class ColonizationSystem:
         Initialize colonization system.
 
         Args:
-            scene: StrategyScene instance providing camera, systems, hex_size, etc.
+            scene: StrategyScreen instance providing camera, systems, hex_size, etc.
             facade: StrategySessionFacade for all engine interactions
         """
         self.scene = scene

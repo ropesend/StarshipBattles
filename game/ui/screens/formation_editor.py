@@ -226,8 +226,8 @@ class FormationCore:
         except OSError as e:
             log_error(f"Error reading formation file {filename}: {e}")
 
-class FormationEditorScene:
-    """Main UI scene for the formation editor with canvas, toolbar, and event handling.
+class FormationEditorScreen:
+    """Main UI screen for the formation editor with canvas, toolbar, and event handling.
 
     Delegates rendering to FormationRenderer and input state management to FormationInputHandler.
     """

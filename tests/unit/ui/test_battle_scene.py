@@ -1,4 +1,4 @@
-"""Tests for BattleScene logic."""
+"""Tests for BattleScreen logic."""
 import pytest
 from unittest.mock import MagicMock, patch
 import sys
@@ -7,14 +7,14 @@ import pygame
 
 
 
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import create_component, load_components
 from game.core.registry import RegistryManager
 
 
-class TestBattleScene:
+class TestBattleScreen:
 
     @pytest.fixture(autouse=True)
     def setup_scene_and_ships(self):
@@ -24,7 +24,7 @@ class TestBattleScene:
         # because the reset_game_state fixture already loaded the data
         # Patch BattleInterface to avoid UI overhead
         with patch('game.ui.screens.battle_screen.BattleInterface') as MockUI:
-            scene = BattleScene(800, 600)
+            scene = BattleScreen(800, 600)
             scene.ui = MockUI.return_value
             scene.ui.show_overlay = False
 

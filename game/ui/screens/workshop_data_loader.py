@@ -1,7 +1,7 @@
 """
 WorkshopDataLoader - Handles loading and reloading game data from a directory (renamed from BuilderDataLoader).
 
-Extracted from DesignWorkshopGUI._reload_data() for better testability and reusability.
+Extracted from DesignWorkshopScreen._reload_data() for better testability and reusability.
 
 PROJ-38: Added registries parameter for dependency injection support.
 """

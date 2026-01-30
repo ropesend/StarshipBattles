@@ -1,6 +1,6 @@
 """FormationInputHandler - Manages event handling state machine for formation editor.
 
-Extracted from FormationEditorScene to separate input handling concerns from
+Extracted from FormationEditorScreen to separate input handling concerns from
 rendering and business logic.
 """
 

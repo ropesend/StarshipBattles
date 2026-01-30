@@ -7,7 +7,7 @@ import pygame
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 from game.core.paths import Paths
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.designs import create_interceptor, create_brick
@@ -34,7 +34,7 @@ def run_battle(seed, log_filename):
         t2 = [create_interceptor(x=float(i*100), y=900.0) for i in range(2)]
         
         # Run Battle
-        scene = BattleScene(1000, 1000)
+        scene = BattleScreen(1000, 1000)
         
         # Configure Logger
         scene.engine.logger.filename = log_filename

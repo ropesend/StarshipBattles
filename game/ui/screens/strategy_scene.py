@@ -1,5 +1,5 @@
 """
-StrategyScene - Main coordinator for strategy layer.
+StrategyScreen - Main coordinator for strategy layer.
 
 This is the central hub that manages the strategy game state and delegates
 to specialized modules for rendering, input handling, and game operations.
@@ -39,7 +39,7 @@ from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 
-class StrategyScene:
+class StrategyScreen:
     """Manages strategy layer simulation, rendering, and UI."""
 
     TOP_BAR_HEIGHT = 50

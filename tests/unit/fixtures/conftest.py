@@ -25,5 +25,5 @@ from tests.fixtures.battle import (
     battle_engine,
     battle_engine_with_ships,
     mock_battle_engine,
-    mock_battle_scene,
+    mock_battle_screen,
 )

@@ -4,12 +4,12 @@ import pygame
 
 # We need to mock pygame_gui before importing builder_gui because it initializes UI
 # Actually builder_screen imports pygame_gui.
-# We can use reference imports if we can instantiate BuilderSceneGUI without a full window.
-# But BuilderSceneGUI __init__ creates UIManager which needs a window surface or size.
+# We can use reference imports if we can instantiate BuilderScreen without a full window.
+# But BuilderScreen __init__ creates UIManager which needs a window surface or size.
 # We can mock UIManager.
 
 from game.ui.screens import workshop_screen
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import LayerType
@@ -24,12 +24,12 @@ class TestBuilderDragDropReal:
             pygame.init()
             pygame.display.set_mode((1, 1))  # Mock display for UIManager
 
-        # Mock dependencies that DesignWorkshopGUI init calls
+        # Mock dependencies that DesignWorkshopScreen init calls
         # IMPORTANT: Patch at workshop_screen level since that's the real implementation
         patchers = []
 
         # Patch _create_ui to avoid complex UI initialization
-        p_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
+        p_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopScreen._create_ui')
         mock_create_ui = p_create_ui.start()
         patchers.append(p_create_ui)
 
@@ -52,7 +52,7 @@ class TestBuilderDragDropReal:
         # We need a valid screen size
         context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = lambda x: None
-        builder = DesignWorkshopGUI(1280, 720, context)
+        builder = DesignWorkshopScreen(1280, 720, context)
 
         # Manually setup the mocks that _create_ui would have created
         builder.ui_manager = MagicMock()
@@ -150,7 +150,7 @@ class TestBuilderDragDropReal:
         comp_template.is_active = True
 
         # Create a fake event or just call the handler logic?
-        # BuilderSceneGUI has handle_event which processes actions.
+        # BuilderScreen has handle_event which processes actions.
         # But actions come from panels.
         # Let's call the logic block directly via 'handle_event' mocking the action return from left_panel.
 

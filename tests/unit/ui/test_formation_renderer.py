@@ -1,4 +1,4 @@
-"""Tests for FormationRenderer - extracted rendering logic from FormationEditorScene."""
+"""Tests for FormationRenderer - extracted rendering logic from FormationEditorScreen."""
 
 import pytest
 from unittest.mock import MagicMock, patch

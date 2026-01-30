@@ -2,7 +2,7 @@
 Camera navigation operations for strategy scene.
 Handles focus, zoom, and selection cycling.
 
-Extracted from StrategyScene to reduce file size and improve testability.
+Extracted from StrategyScreen to reduce file size and improve testability.
 
 Cross-layer imports (acceptable for UI):
 - hex_to_pixel, HexCoord: Runtime - coordinate conversions for camera targeting
@@ -22,7 +22,7 @@ class CameraNavigator:
         Initialize camera navigator.
 
         Args:
-            scene: StrategyScene instance providing camera, systems, etc.
+            scene: StrategyScreen instance providing camera, systems, etc.
         """
         self.scene = scene
 

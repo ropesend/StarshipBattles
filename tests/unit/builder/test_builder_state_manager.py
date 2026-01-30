@@ -1,7 +1,7 @@
 """
 Tests for BuilderStateManager.
 
-PROJ-44 Phase 7 Task 7.3: Extract state management from BuilderSceneGUI.
+PROJ-44 Phase 7 Task 7.3: Extract state management from BuilderScreen.
 """
 import pytest
 from unittest.mock import MagicMock, Mock, patch, PropertyMock

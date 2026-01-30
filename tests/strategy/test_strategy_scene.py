@@ -1,4 +1,4 @@
-"""Tests for StrategyScene order queuing behavior."""
+"""Tests for StrategyScreen order queuing behavior."""
 import pytest
 from unittest.mock import MagicMock, patch
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType

@@ -2,7 +2,7 @@
 WorkshopViewModel - Central ViewModel for Design Workshop MVVM architecture (renamed from BuilderViewModel).
 
 Manages all workshop state and notifies views via EventBus when state changes.
-Extracted from DesignWorkshopGUI for better separation of concerns and testability.
+Extracted from DesignWorkshopScreen for better separation of concerns and testability.
 
 Uses VehicleDesignService for ship operations, providing validation and error handling.
 

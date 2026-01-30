@@ -2,7 +2,7 @@
 Legacy standalone ship builder GUI.
 
 This is the original BuilderSceneGUI implementation, used for standalone
-ship design testing. The newer DesignWorkshopGUI (workshop_screen.py) is
+ship design testing. The newer DesignWorkshopScreen (workshop_screen.py) is
 the production version with MVVM architecture and dependency injection.
 
 PROJ-43: Migrated to use UI services layer for Ship, VEHICLE_CLASSES,
@@ -78,7 +78,7 @@ from .detail_panel import ComponentDetailPanel
 
 
 
-class BuilderSceneGUI:
+class BuilderScreen:
     def __init__(self, screen_width, screen_height, on_start_battle):
         self.width = screen_width
         self.height = screen_height

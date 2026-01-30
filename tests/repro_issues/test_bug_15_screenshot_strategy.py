@@ -100,7 +100,7 @@ class TestScreenshotStrategyLayerSupport:
         that understands how to capture the strategy scene with proper layering.
 
         This method should accept:
-        - scene: The StrategyScene instance
+        - scene: The StrategyScreen instance
         - include_ui: Whether to include UI panels (default True)
         - include_subwindows: Whether to include modal windows (default True)
         """
@@ -123,7 +123,7 @@ class TestScreenshotStrategyLayerSupport:
         if not hasattr(manager, 'capture_strategy_layer'):
             pytest.skip("capture_strategy_layer() not implemented yet")
 
-        # Arrange: Mock a StrategyScene
+        # Arrange: Mock a StrategyScreen
         mock_scene = MagicMock()
         mock_scene.screen_width = 1280
         mock_scene.screen_height = 720

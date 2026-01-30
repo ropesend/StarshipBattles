@@ -160,7 +160,7 @@ class ScreenshotManager:
         This method renders the strategy scene to a temporary surface and captures it,
         allowing selective inclusion of UI panels and sub-windows.
 
-        :param scene: The StrategyScene instance to capture.
+        :param scene: The StrategyScreen instance to capture.
         :param include_ui: Whether to include UI panels (sidebar, top bar). Default True.
         :param include_subwindows: Whether to include modal sub-windows. Default True.
         :param label: Optional label to append to the filename.

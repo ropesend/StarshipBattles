@@ -1,7 +1,7 @@
 """
 Unit tests for WorkshopDataLoader class (renamed from WorkshopDataLoader).
 
-Tests the data loading logic extracted from DesignWorkshopGUI._reload_data().
+Tests the data loading logic extracted from DesignWorkshopScreen._reload_data().
 """
 import pytest
 import os

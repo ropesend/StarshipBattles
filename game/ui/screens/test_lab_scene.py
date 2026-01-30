@@ -1637,7 +1637,7 @@ class ResultsPanel:
                         border_radius=4)
 
 
-class TestLabScene:
+class TestLabScreen:
     """
     Combat Lab UI - Enhanced with TestRegistry and rich metadata display.
 

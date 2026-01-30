@@ -1,6 +1,6 @@
 """Formation editor components.
 
-This package contains extracted components from the FormationEditorScene:
+This package contains extracted components from the FormationEditorScreen:
 - FormationRenderer: Handles all rendering (grid, arrows, selection, handles)
 - FormationInputHandler: Manages event handling state machine
 """

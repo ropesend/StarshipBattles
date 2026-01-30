@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 import pygame
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.components.component import Component
 
@@ -15,7 +15,7 @@ class TestSelectionRefinements:
 
         # Mocking Builder with minimal dependencies
         context = WorkshopContext.standalone(tech_preset_name="default")
-        self.builder = DesignWorkshopGUI(800, 600, context)
+        self.builder = DesignWorkshopScreen(800, 600, context)
         self.builder.ship = MagicMock()
         self.builder.ship.layers = {}
 

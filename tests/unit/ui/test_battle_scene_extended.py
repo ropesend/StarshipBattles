@@ -2,7 +2,7 @@ import pytest
 import sys
 
 import pygame
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
@@ -13,8 +13,8 @@ from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_unit_test_data_dir
 
 
-class TestBattleSceneExtended:
-    """Test BattleScene simulation loop, victory conditions, and headless mode."""
+class TestBattleScreenExtended:
+    """Test BattleScreen simulation loop, victory conditions, and headless mode."""
 
     @pytest.fixture(autouse=True)
     def setup_strategy_manager(self):
@@ -41,7 +41,7 @@ class TestBattleSceneExtended:
 
     def test_is_battle_over_victory(self):
         """Verify is_battle_over identifies when one team is eliminated."""
-        scene = BattleScene(1000, 1000)
+        scene = BattleScreen(1000, 1000)
 
         ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort")
         ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort")
@@ -64,7 +64,7 @@ class TestBattleSceneExtended:
 
     def test_update_loop_tick_counter(self):
         """Verify update loop increments sim_tick_counter."""
-        scene = BattleScene(1000, 1000)
+        scene = BattleScreen(1000, 1000)
         ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort")
         ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort")
         for s in [ship1, ship2]:
@@ -82,7 +82,7 @@ class TestBattleSceneExtended:
 
     def test_headless_mode_initialization(self):
         """Verify headless mode sets start time and skips camera fit."""
-        scene = BattleScene(1000, 1000)
+        scene = BattleScreen(1000, 1000)
         # Mock camera to ensure fit_objects isn't called normally if fit_objects fails without screen
         scene.camera = MagicMock()
 
@@ -94,7 +94,7 @@ class TestBattleSceneExtended:
 
     def test_process_beam_attack_logic(self):
         """Verify _process_beam_attack applies damage to target."""
-        scene = BattleScene(1000, 1000)
+        scene = BattleScreen(1000, 1000)
         ship = Ship("Target", 0, 0, (255,255,255), team_id=1)
         ship.radius = 20
         # Mock take_damage

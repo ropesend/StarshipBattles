@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
 from game.ui.screens.builder.layer_panel import LayerComponentItem, IndividualComponentItem
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
@@ -28,7 +28,7 @@ def builder_setup():
     manager = pygame_gui.UIManager((800, 600))
 
     # Patch _create_ui to avoid complex UI initialization
-    patcher_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopGUI._create_ui')
+    patcher_create_ui = patch('game.ui.screens.workshop_screen.DesignWorkshopScreen._create_ui')
     mock_create_ui = patcher_create_ui.start()
 
     # Patch internal managers
@@ -86,7 +86,7 @@ def builder_setup():
 
     # Create Builder GUI (_create_ui is mocked so panels won't be created)
     context = WorkshopContext.standalone(tech_preset_name="default")
-    builder_gui = DesignWorkshopGUI(800, 600, context)
+    builder_gui = DesignWorkshopScreen(800, 600, context)
 
     # Manually setup the mocks that _create_ui would have created
     builder_gui.ui_manager = MagicMock()

@@ -190,7 +190,7 @@ class FormationCore:
                     self.selected_indices = set()
         except Exception as e: print(f"Error loading: {e}")
 
-class FormationEditorScene:
+class FormationEditorScreen:
     def __init__(self, screen_width, screen_height, on_return_menu):
         self.width = screen_width
         self.height = screen_height

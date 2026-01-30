@@ -4,7 +4,7 @@ import pygame
 
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.ai.controller import AIController
 from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter

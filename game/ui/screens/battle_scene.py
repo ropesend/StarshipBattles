@@ -1,4 +1,4 @@
-"""Battle scene module for combat simulation and UI.
+"""Battle screen module for combat simulation and UI.
 
 Uses BattleService as an abstraction layer over BattleEngine for cleaner
 separation between UI and simulation logic.
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 
 
-class BattleScene:
+class BattleScreen:
     """Manages battle simulation, rendering, and UI.
 
     Uses BattleService for battle management, providing a cleaner abstraction

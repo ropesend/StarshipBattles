@@ -2,7 +2,7 @@
 Fleet movement operations for strategy scene.
 Handles move, join, and intercept commands.
 
-Extracted from StrategyScene to reduce file size and improve testability.
+Extracted from StrategyScreen to reduce file size and improve testability.
 
 Cross-layer imports (acceptable for UI):
 - pixel_to_hex: Runtime - coordinate conversion for command targeting
@@ -25,7 +25,7 @@ class FleetOperations:
         Initialize fleet operations handler.
 
         Args:
-            scene: StrategyScene instance providing camera, empires, hex_size, etc.
+            scene: StrategyScreen instance providing camera, empires, hex_size, etc.
             facade: StrategySessionFacade for all engine interactions
         """
         self.scene = scene

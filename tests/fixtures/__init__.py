@@ -38,7 +38,7 @@ from tests.fixtures.battle import (
     create_battle_engine,
     create_battle_engine_with_ships,
     create_mock_battle_engine,
-    create_mock_battle_scene,
+    create_mock_battle_screen,
 )
 from tests.fixtures.test_scenarios import (
     create_test_metadata,

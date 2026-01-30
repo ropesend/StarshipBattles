@@ -3,7 +3,7 @@ import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
 from game.ui.screens import workshop_screen
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
 from game.core.registry import RegistryManager
@@ -39,7 +39,7 @@ class TestBuilderImprovements:
 
         # Real Builder with Real UI Manager
         context = WorkshopContext.standalone(tech_preset_name="default")
-        builder = DesignWorkshopGUI(1200, 800, context)
+        builder = DesignWorkshopScreen(1200, 800, context)
         builder._create_ui()
 
         # Test Draw
@@ -55,7 +55,7 @@ class TestBuilderImprovements:
         PROJ-43: Updated to mock _ship_io_adapter instead of ShipIO directly.
         """
         context = WorkshopContext.standalone(tech_preset_name="default")
-        builder = DesignWorkshopGUI(1200, 800, context)
+        builder = DesignWorkshopScreen(1200, 800, context)
         builder._create_ui()
 
         # Create a mock ship to load

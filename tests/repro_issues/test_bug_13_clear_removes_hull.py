@@ -10,7 +10,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager, GameRegistries
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 
 
@@ -63,8 +63,8 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     """
     classes, components = simple_ship_registry
 
-    # Instantiate DesignWorkshopGUI without calling __init__ to avoid UI complexity
-    gui = DesignWorkshopGUI.__new__(DesignWorkshopGUI)
+    # Instantiate DesignWorkshopScreen without calling __init__ to avoid UI complexity
+    gui = DesignWorkshopScreen.__new__(DesignWorkshopScreen)
 
     # Setup minimal required state - MVVM architecture requires viewmodel
     from game.ui.screens.builder.event_bus import EventBus
@@ -109,7 +109,7 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
 
     # Trigger clear design - this now delegates to viewmodel.clear_design()
     # which properly preserves the hull
-    DesignWorkshopGUI._clear_design(gui)
+    DesignWorkshopScreen._clear_design(gui)
 
     # Verify the fix is working:
     # 1. Non-hull component is correctly removed

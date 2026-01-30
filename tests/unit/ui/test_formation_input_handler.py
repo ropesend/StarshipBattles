@@ -1,4 +1,4 @@
-"""Tests for FormationInputHandler - extracted event handling from FormationEditorScene."""
+"""Tests for FormationInputHandler - extracted event handling from FormationEditorScreen."""
 
 import pytest
 from unittest.mock import MagicMock, patch

@@ -57,7 +57,7 @@ def find_path_interstellar(
         
         # Optimization: Build name_to_system cache or linear search?
         # Galaxy doesn't have name index by default.
-        # StrategyScene probably needs to build one or we iterate.
+        # StrategyScreen probably needs to build one or we iterate.
         # For now, let's assume galaxy has a helper or we search.
         # Actually start_system AND end_system are passed as objects.
         # We can iterate neighbors via warp points.

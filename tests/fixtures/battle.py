@@ -18,7 +18,7 @@ Available fixtures:
     - battle_engine: Clean BattleEngine with no ships
     - battle_engine_with_ships: BattleEngine with two opposing ships
     - mock_battle_engine: Mock battle engine for unit tests
-    - mock_battle_scene: Mock battle scene with engine
+    - mock_battle_screen: Mock battle screen with engine
 """
 import os
 import pytest
@@ -126,15 +126,15 @@ def create_mock_battle_engine() -> Mock:
     return engine
 
 
-def create_mock_battle_scene(engine: Mock = None) -> Mock:
+def create_mock_battle_screen(engine: Mock = None) -> Mock:
     """
-    Create a mock battle scene for unit tests.
+    Create a mock battle screen for unit tests.
 
     Args:
         engine: Mock battle engine to use (creates new one if None)
 
     Returns:
-        Mock object mimicking BattleScene interface
+        Mock object mimicking BattleScreen interface
     """
     if engine is None:
         engine = create_mock_battle_engine()
@@ -190,11 +190,11 @@ def mock_battle_engine():
 
 
 @pytest.fixture
-def mock_battle_scene(mock_battle_engine):
+def mock_battle_screen(mock_battle_engine):
     """
-    Create a mock battle scene with engine.
+    Create a mock battle screen with engine.
 
-    Returns a Mock object with common BattleScene attributes set.
+    Returns a Mock object with common BattleScreen attributes set.
     The engine attribute is set to the mock_battle_engine fixture.
     """
-    return create_mock_battle_scene(engine=mock_battle_engine)
+    return create_mock_battle_screen(engine=mock_battle_engine)

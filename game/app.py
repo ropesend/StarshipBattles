@@ -19,15 +19,15 @@ from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources
 from game.core.registry import GameRegistries, set_default_registries, RegistryManager
 from pygame_gui.elements import UIButton
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.ui.renderer.sprites import SpriteManager
-from game.ui.screens.battle_scene import BattleScene
+from game.ui.screens.battle_scene import BattleScreen
 from game.ui.screens.setup_screen import BattleSetupScreen
-from game.ui.screens.strategy_scene import StrategyScene
+from game.ui.screens.strategy_scene import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
-from Tools.formation_editor import FormationEditorScene
-from game.ui.screens.test_lab_scene import TestLabScene
+from Tools.formation_editor import FormationEditorScreen
+from game.ui.screens.test_lab_scene import TestLabScreen
 from game.core.profiling import PROFILER, profile_action
 from game.battle_coordinator import (
     update_battle_headless, update_battle_visual,
@@ -125,12 +125,12 @@ class Game:
         # Scene objects
         context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = self.on_builder_return
-        self.builder_scene = DesignWorkshopGUI(WIDTH, HEIGHT, context)
+        self.builder_scene = DesignWorkshopScreen(WIDTH, HEIGHT, context)
         self.battle_setup = BattleSetupScreen()
-        self.battle_scene = BattleScene(WIDTH, HEIGHT)
-        self.strategy_scene = StrategyScene(WIDTH, HEIGHT)
-        self.formation_scene = FormationEditorScene(WIDTH, HEIGHT, self.on_formation_return)
-        self.test_lab_scene = TestLabScene(self)
+        self.battle_scene = BattleScreen(WIDTH, HEIGHT)
+        self.strategy_scene = StrategyScreen(WIDTH, HEIGHT)
+        self.formation_scene = FormationEditorScreen(WIDTH, HEIGHT, self.on_formation_return)
+        self.test_lab_scene = TestLabScreen(self)
 
     def update_menu_buttons(self):
         # Clear old buttons if they exist
@@ -176,7 +176,7 @@ class Game:
         if context is None:
             context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = self.on_builder_return
-        self.builder_scene = DesignWorkshopGUI(WIDTH, HEIGHT, context)
+        self.builder_scene = DesignWorkshopScreen(WIDTH, HEIGHT, context)
 
     def on_builder_return(self, custom_ship=None):
         """Return from design workshop to caller or main menu."""
@@ -240,7 +240,7 @@ class Game:
             log_info(f"Initial save created: {save_path}")
 
             # Create strategy scene with new session
-            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
+            self.strategy_scene = StrategyScreen(WIDTH, HEIGHT, session=session)
             self.state = GameState.STRATEGY
             self.showing_new_game_setup = False
         else:
@@ -293,7 +293,7 @@ class Game:
             # Copy quickstart designs for empires
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
-            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
+            self.strategy_scene = StrategyScreen(WIDTH, HEIGHT, session=session)
             self.state = GameState.STRATEGY
         else:
             log_error(f"Quickstart {player_count}P failed: {message}")
@@ -341,7 +341,7 @@ class Game:
 
         if game_session:
             # Create new strategy scene with loaded session
-            self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=game_session)
+            self.strategy_scene = StrategyScreen(WIDTH, HEIGHT, session=game_session)
             self.state = GameState.STRATEGY
             self.showing_load_menu = False
             log_info(f"Game loaded successfully: {message}")

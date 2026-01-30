@@ -13,7 +13,7 @@ from game.core.json_utils import save_json
 # Import shared fixtures from consolidated location
 from tests.fixtures.battle import (
     create_mock_battle_engine,
-    create_mock_battle_scene,
+    create_mock_battle_screen,
 )
 from tests.fixtures.test_scenarios import (
     create_test_metadata,
@@ -36,17 +36,17 @@ def mock_battle_engine():
 
 
 @pytest.fixture
-def mock_battle_scene(mock_battle_engine):
-    """Mock battle scene with engine."""
-    return create_mock_battle_scene(engine=mock_battle_engine)
+def mock_battle_screen(mock_battle_engine):
+    """Mock battle screen with engine."""
+    return create_mock_battle_screen(engine=mock_battle_engine)
 
 
 @pytest.fixture
-def mock_game(mock_battle_scene):
+def mock_game(mock_battle_screen):
     """Mock game object."""
     from unittest.mock import Mock
     game = Mock()
-    game.battle_scene = mock_battle_scene
+    game.battle_scene = mock_battle_screen
     game.state = None
     return game
 

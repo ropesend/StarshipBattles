@@ -28,7 +28,7 @@ import pygame_gui.windows
 import pygame_gui.elements as ui
 
 class StrategyInterface:
-    """Handles all UI rendering and interaction for the StrategyScene."""
+    """Handles all UI rendering and interaction for the StrategyScreen."""
 
     def __init__(self, scene, screen_width, screen_height):
         self.scene = scene

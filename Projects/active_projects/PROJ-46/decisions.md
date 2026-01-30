@@ -19,3 +19,4 @@
 | 2026-01-28 | Defer NS-03/NS-04 (import order) | Use isort tool separately - not core to naming consistency |
 | 2026-01-28 | Defer service directory moves | SaveGameService/ResearchService location is low priority |
 | 2026-01-28 | 7-phase implementation order | Dependencies: Quick wins → Validator → filepath → Services → AssetManager → UI consolidation → Screen naming |
+| 2026-01-30 | Keep BattleInterface/StrategyInterface naming | These are internal UI helper classes composed inside Screen classes, not screens themselves. "Interface" accurately describes their role as UI adapters handling panels/HUD rendering. |

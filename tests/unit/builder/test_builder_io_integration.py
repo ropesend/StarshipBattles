@@ -5,7 +5,7 @@ The workshop_screen now uses adapters for ship I/O operations.
 """
 from unittest.mock import patch, MagicMock
 from game.ui.screens import workshop_screen
-from game.ui.screens.workshop_screen import DesignWorkshopGUI
+from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopMode
 
 
@@ -28,7 +28,7 @@ class TestBuilderIOIntegration:
         gui_mock._ship_io_adapter.save_ship.return_value = (True, "Saved successfully")
 
         # Call the method (we grab it from the class and bind it to our mock)
-        DesignWorkshopGUI._save_ship(gui_mock)
+        DesignWorkshopScreen._save_ship(gui_mock)
 
         # Verify adapter save_ship called
         gui_mock._ship_io_adapter.save_ship.assert_called_once_with(gui_mock.ship)
@@ -43,7 +43,7 @@ class TestBuilderIOIntegration:
         gui_mock.ship = MagicMock()
         gui_mock._ship_io_adapter.save_ship.return_value = (False, "Permission Denied")
 
-        DesignWorkshopGUI._save_ship(gui_mock)
+        DesignWorkshopScreen._save_ship(gui_mock)
 
         # Verify error shown
         gui_mock.show_error.assert_called_once_with("Permission Denied")
@@ -61,7 +61,7 @@ class TestBuilderIOIntegration:
         # Mock _apply_loaded_ship to verify it's called with the right ship
         gui_mock._apply_loaded_ship = MagicMock()
 
-        DesignWorkshopGUI._load_ship(gui_mock)
+        DesignWorkshopScreen._load_ship(gui_mock)
 
         # Verify adapter load_ship called with correct dimensions
         gui_mock._ship_io_adapter.load_ship.assert_called_once_with(1920, 1080)
@@ -83,7 +83,7 @@ class TestBuilderIOIntegration:
         gui_mock.right_panel = MagicMock()
         gui_mock._ship_io_adapter.load_ship.return_value = (None, "Corrupt File")
 
-        DesignWorkshopGUI._load_ship(gui_mock)
+        DesignWorkshopScreen._load_ship(gui_mock)
 
         # Verify error shown
         gui_mock.show_error.assert_called_once_with("Corrupt File")

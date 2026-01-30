@@ -2,7 +2,7 @@
 Input handling for strategy scene.
 Routes keyboard and mouse events to appropriate handlers.
 
-Extracted from StrategyScene to reduce file size and improve testability.
+Extracted from StrategyScreen to reduce file size and improve testability.
 """
 import pygame
 import pygame_gui
@@ -20,7 +20,7 @@ class StrategyInputHandler:
         Initialize input handler.
 
         Args:
-            scene: StrategyScene instance providing state and sub-modules
+            scene: StrategyScreen instance providing state and sub-modules
         """
         self.scene = scene
         self.input_mode = 'SELECT'

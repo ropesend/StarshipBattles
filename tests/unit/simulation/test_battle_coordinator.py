@@ -24,7 +24,7 @@ def mock_game():
 
 @pytest.fixture
 def mock_battle_scene():
-    """Create a mock BattleScene object."""
+    """Create a mock BattleScreen object."""
     scene = Mock()
     scene.sim_tick_counter = 0
     scene.sim_paused = False
