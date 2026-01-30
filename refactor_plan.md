@@ -8,20 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-44 Phase 2 Task 2.1 - RegistryManager.reload_all_from_directory()
-**Current Status:** PROJ-44 Phase 2 in progress, Task 2.1 complete
+**Last Completed:** PROJ-44 Phase 2 Complete
+**Current Status:** PROJ-44 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-44
-**Current Phase:** Phase 2 (in progress)
-**Test Status:** 4541 passed, 3 skipped (unit tests)
+**Current Phase:** Phase 3 (next)
+**Test Status:** 5409 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 2.1 complete: Added reload_all_from_directory() method to RegistryManager
-- Created tests/unit/core/test_registry_manager_reload.py with 12 tests
-- Discovered root conftest.py patches load_vehicle_classes - tests need use_custom_data marker
-- Method clears all registries then reloads from specified directory
-- Supports test_ prefixed files for test data directories
-- Next: Task 2.2 - Refactor BuilderSceneGUI to use RegistryManager.reload_all_from_directory()
+- Phase 2 complete: All 3 tasks done
+- Task 2.2: Refactored BuilderSceneGUI._reload_data() to use WorkshopDataLoader instead of direct registry manipulation (~100 lines removed)
+- Task 2.3: Already complete from PROJ-43 (ShipFactory already existed and was in use)
+- 151 builder tests pass
+- Next: Start Phase 3 - Ship Helper Methods
 
 ---
 
@@ -97,6 +96,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-44 | Phase 2 Complete | Complete | 5409 passed | c683502 | Refactored BuilderSceneGUI to WorkshopDataLoader |
 | 2026-01-30 | PROJ-44 | Phase 2 Task 2.1 | Complete | 4541 passed | 64bc570 | Added reload_all_from_directory() to RegistryManager |
 | 2026-01-29 | PROJ-44 | Phase 1 Complete | Complete | 5398 passed | 7d61275 | DRY fixes, SimulationConstants, damage threshold unified |
 | 2026-01-29 | PROJ-42 | Audit Cycle 1 | PASSED | 5375 passed | db9d164 | No issues found, project complete |

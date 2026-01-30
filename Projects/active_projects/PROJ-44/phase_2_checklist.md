@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (Task 2.1 Complete)
+**Status:** Complete
 **Objective:** Reduce global state hazards and cross-layer coupling. Enables safer refactoring.
 
 ---
@@ -37,12 +37,16 @@
 **Issue:** AR-03 lines 859-1002 - Direct registry manipulation
 **Tests:** `pytest tests/unit/builder/`
 
-- [ ] Import `RegistryManager` instead of individual registries
-- [ ] Replace lines 859-869 (direct registry clears) with `registry_manager.reload_all_from_directory()`
-- [ ] Remove imports of `COMPONENT_REGISTRY`, `MODIFIER_REGISTRY`, `VEHICLE_CLASSES`
-- [ ] Verify: Data reload in builder still works
+- [x] ~~Import `RegistryManager` instead of individual registries~~ Used WorkshopDataLoader instead (better abstraction)
+- [x] ~~Replace lines 859-869 (direct registry clears) with `registry_manager.reload_all_from_directory()`~~ Replaced with WorkshopDataLoader.load_all()
+- [x] Remove imports of `COMPONENT_REGISTRY`, `MODIFIER_REGISTRY`, `VEHICLE_CLASSES` - No longer imported
+- [x] Verify: Data reload in builder still works - 151 builder tests pass
 
-**Notes:**
+**Notes:** Used WorkshopDataLoader instead of RegistryManager.reload_all_from_directory() because:
+1. WorkshopDataLoader already exists and handles StrategyManager (which RegistryManager doesn't)
+2. WorkshopDataLoader provides LoadResult with success/errors/warnings/default_class
+3. More appropriate abstraction for UI layer (returns structured result vs bool)
+4. Reduces ~100 lines of duplicate code in _reload_data()
 
 ---
 
@@ -51,21 +55,19 @@
 **Issue:** Lines 90-91, 972 in BuilderSceneGUI - Direct ship creation
 **Tests:** `pytest tests/unit/simulation/`
 
-- [ ] Create `ShipFactory` with:
-  - `create_default_ship(name, x, y, color, ship_class=None, registries=None) -> Ship`
-  - `create_from_template(template_path, x, y) -> Ship`
-- [ ] Refactor BuilderSceneGUI lines 90-91 to use factory
-- [ ] Refactor BuilderSceneGUI line 972 to use factory
-- [ ] Verify: Ship creation in builder works
+- [x] Create `ShipFactory` - Already exists at game/ui/services/ship_factory.py (PROJ-43)
+- [x] Refactor BuilderSceneGUI lines 90-91 to use factory - Already done (PROJ-43)
+- [x] Refactor BuilderSceneGUI line 972 to use factory - Already done (now line 904)
+- [x] Verify: Ship creation in builder works - Tests pass
 
-**Notes:**
+**Notes:** PROJ-43 already created ShipFactory in game/ui/services/ and refactored BuilderSceneGUI to use it. Task was already complete.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - all tests pass (5409 passed, 3 skipped)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

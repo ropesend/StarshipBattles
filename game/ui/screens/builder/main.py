@@ -6,8 +6,11 @@ ship design testing. The newer DesignWorkshopGUI (workshop_screen.py) is
 the production version with MVVM architecture and dependency injection.
 
 PROJ-43: Migrated to use UI services layer for Ship, VEHICLE_CLASSES,
-get_all_components, MODIFIER_REGISTRY. Direct simulation imports remain
-only in _reload_data() for registry clearing (development tool function).
+get_all_components, MODIFIER_REGISTRY.
+
+PROJ-44: Refactored _reload_data() to use WorkshopDataLoader instead of
+direct registry manipulation. No more direct simulation layer imports for
+registry clearing.
 """
 import json
 import math
@@ -32,6 +35,7 @@ from game.ui.services.vehicle_class_service import VehicleClassService
 from game.ui.services.validation_service import ValidationService
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.planet_list_presets import PresetManager
+from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 from game.simulation.systems.persistence import ShipIO
 from game.ui.screens.builder.legacy_components import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
@@ -863,119 +867,39 @@ class BuilderSceneGUI:
             self.show_error("Loaded Test Data • Ships: tests/data/ships/")
 
     def _reload_data(self, directory: str):
-        """Reload global game data from the specified directory."""
-        from game.simulation.components.component import load_components, load_modifiers, COMPONENT_REGISTRY, MODIFIER_REGISTRY
-        from game.simulation.entities.ship import VEHICLE_CLASSES
-        from game.simulation.entities.ship_loader import load_vehicle_classes
+        """Reload global game data from the specified directory.
 
+        PROJ-44: Refactored to use WorkshopDataLoader instead of direct
+        registry manipulation. This centralizes data loading logic and
+        reduces cross-layer coupling.
+        """
         try:
-            # 1. Clear Registries
-            from game.ai.strategy_manager import StrategyManager
+            # 1. Load all data via WorkshopDataLoader
+            loader = WorkshopDataLoader(directory)
+            result = loader.load_all()
 
-            COMPONENT_REGISTRY.clear()
-            MODIFIER_REGISTRY.clear()
-            VEHICLE_CLASSES.clear()
-            # Clear STRATEGY_MANAGER data
-            StrategyManager.instance().clear()
-            
-            # 2. Helper to find file (standard, test prefix, or alias) -> returns (path, is_default_fallback)
-            def find_file(base_names, allow_default=True):
-                if isinstance(base_names, str): base_names = [base_names]
-                
-                # 1. Custom Directory Support
-                for name in base_names:
-                    # Direct match
-                    p = os.path.join(directory, name)
-                    if os.path.exists(p): return p, False
-                    
-                    # Test prefix match
-                    p = os.path.join(directory, "test_" + name)
-                    if os.path.exists(p): return p, False
-                
-                # 2. Default Fallback
-                if allow_default:
-                     default_dir = os.path.join(os.getcwd(), "data")
-                     for name in base_names:
-                         p = os.path.join(default_dir, name)
-                         if os.path.exists(p): return p, True
-                
-                return None, False
-            
-            # 3. Load Data
-            
-            # Modifiers
-            mod_path, _ = find_file("modifiers.json")
-            if mod_path:
-                load_modifiers(mod_path)
-                logger.info(f"Loaded modifiers from {mod_path}")
-            else:
-                logger.warning("No modifiers.json found")
+            if not result.success:
+                for error in result.errors:
+                    logger.error(f"Data load error: {error}")
+                self.show_error("Failed to reload data!")
+                return
 
-            # Components
-            comp_path, _ = find_file("components.json")
-            if comp_path:
-                load_components(comp_path)
-                logger.info(f"Loaded components from {comp_path}")
-            else:
-                logger.warning("No components.json found")
-                
-            # Combat Strategies - Need to load all three files
-            # Check if test files exist (with test_ prefix)
-            test_strat = os.path.join(directory, "test_combat_strategies.json")
+            for warning in result.warnings:
+                logger.warning(warning)
 
-            if os.path.exists(test_strat):
-                # Test data mode - use test_ prefixed files
-                StrategyManager.instance().load_data(
-                    directory,
-                    targeting_file="test_targeting_policies.json",
-                    movement_file="test_movement_policies.json",
-                    strategy_file="test_combat_strategies.json"
-                )
-                logger.info(f"Loaded strategies from test data in {directory}")
-            else:
-                # Production mode - try standard names
-                strat_path, is_def = find_file(["combatstrategies.json", "combat_strategies.json"])
-                if strat_path:
-                    # Load from the directory containing the strategy file
-                    strat_dir = os.path.dirname(strat_path)
-                    strat_filename = os.path.basename(strat_path)
-                    StrategyManager.instance().load_data(strat_dir, strategy_file=strat_filename)
-                    logger.info(f"Loaded strategies from {strat_path}")
-            
-            # Vehicle Classes & Layers
-            # Check for 'vehicleclasses.json' OR 'classes.json'
-            vclass_path, _ = find_file(["vehicleclasses.json", "classes.json"])
-            vlayer_path, _ = find_file(["vehiclelayers.json", "layers.json"])
-            
-            if vclass_path:
-                if vlayer_path:
-                     load_vehicle_classes(vclass_path, layers_filepath=vlayer_path)
-                     logger.info(f"Loaded classes from {vclass_path} with layers from {vlayer_path}")
-                else:
-                     load_vehicle_classes(vclass_path)
-                     logger.info(f"Loaded classes from {vclass_path}")
-            else:
-                # If checking tests/data failed, try global default explicitly if not already tried?
-                # find_file with allow_default=True should have caught it.
-                logger.warning("No vehicleclasses.json found")
+            default_class = result.default_class
 
-            # 4. Refresh UI
+            # 2. Refresh UI
             self.right_panel.refresh_controls()
             self.left_panel.update_component_list()
             self.rebuild_modifier_ui()
             
             self.show_error("Data Reloaded Successfully!")
             
-            # 5. Refresh Builder State (PROJ-43: use services after reload)
+            # 3. Refresh Builder State (PROJ-43: use services after reload)
             self.available_components = self._component_service.get_all_components()
             self.template_modifiers = {}
-
-            # Reset Ship - Find a valid default class
-            default_class = "Escort"
             all_classes = self._vehicle_class_service.get_all_classes()
-            if default_class not in all_classes and all_classes:
-                # Pick first available
-                default_class = next(iter(all_classes.keys()))
 
             self.ship = self._ship_factory.create_from_design({
                 'name': 'Custom Ship',
