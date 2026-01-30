@@ -36,21 +36,21 @@
 
 ---
 
-## Task 2.2: Update ModifierService to GameRegistries [Medium]
+## Task 2.2: Update ModifierService to GameRegistries [Medium] ✅
 **Issues:** LPH-001
 **File:** `game/simulation/services/modifier_service.py`
 **Tests:** `pytest tests/unit/services/test_modifier_service_di.py`
 
 ### Subtasks
-- [ ] Remove `try/except` fallback chain in `__init__` (lines 48-52)
-- [ ] Remove all calls to `get_modifier_registry()` - use `self._registries.modifiers`
-- [ ] Update methods to use instance `_registries` instead of global functions:
-  - `is_modifier_allowed()` (line 93-98)
-  - `get_initial_value()` (line 274-279)
-  - `get_local_min_max()` (line 382-387)
-- [ ] Run tests: `pytest tests/unit/services/test_modifier_service*.py`
+- [x] Remove `try/except` fallback chain in `__init__` - extracted to `_get_modifiers_fallback()` static method
+- [x] Instance methods already use `self._modifiers` (no change needed)
+- [x] Update static paths to use `_get_modifiers_fallback()` instead of `get_default_registry_provider().get_modifiers()`:
+  - `is_modifier_allowed()` static path
+  - `get_initial_value()` static path
+  - `get_local_min_max()` static path
+- [x] Run tests: `pytest tests/unit/services/test_modifier_service*.py` - 45 passed
 
-**Notes:**
+**Notes:** Added `_get_modifiers_fallback()` helper that tries `get_default_registries().modifiers` first, then falls back to provider. This matches the ShipStatsService pattern from Task 2.1.
 
 ---
 

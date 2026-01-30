@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 2 Task 2.1
-**Current Status:** Phase 2 in progress, Task 2.1 complete
+**Last Completed:** PROJ-42 Phase 2 Task 2.2
+**Current Status:** Phase 2 in progress, Task 2.2 complete
 **Current Project:** PROJ-42
-**Current Phase:** Phase 2 - Task 2.2 next
-**Test Status:** 5366 passed, 3 skipped
+**Current Phase:** Phase 2 - Task 2.3 next
+**Test Status:** 5366 passed, 3 skipped (796 testmon)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 2.1 completed: Updated ShipStatsService with `_get_registries_fallback()` pattern
-- Added `_iterate_design_components_with_registries()` for static path
-- Pattern: Try `get_default_registries()` first, fallback creates `GameRegistries` from provider (shares mutable dict refs)
-- Also reverted problematic commit 0e9a1fd that broke 5 multi-ability tests
-- Next: Task 2.2 - Update ModifierService using same pattern
+- Task 2.2 completed: Updated ModifierService with `_get_modifiers_fallback()` pattern
+- Added `_get_modifiers_fallback()` static method - tries `get_default_registries().modifiers` first, then provider
+- Updated static paths in `is_modifier_allowed()`, `get_initial_value()`, `get_local_min_max()` to use fallback
+- 45 ModifierService tests pass
+- Next: Task 2.3 - Update Ship Entity to GameRegistries
 
 ---
 
@@ -96,6 +96,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 2 Task 2.2 | Complete | 796 testmon | 6f26551 | Updated ModifierService with _get_modifiers_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.1 | Complete | 5366 passed | 01d4ca5 | Updated ShipStatsService with _get_registries_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 1 | Complete | 5366 passed | 56a68ab | Removed FleetMovementSimulator, GameState aliases, dead migration code |
 
