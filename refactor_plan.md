@@ -8,22 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-44 Phase 6 Complete
-**Current Status:** PROJ-44 Phase 6 complete, ready for Phase 7
+**Last Completed:** PROJ-44 Phase 7 Task 7.2 Complete
+**Current Status:** PROJ-44 Phase 7 in progress (Tasks 7.1-7.2 done, Tasks 7.3-7.4 remain)
 **Current Project:** PROJ-44
-**Current Phase:** Phase 7 (next)
-**Test Status:** 5545 passed, 3 skipped
+**Current Phase:** Phase 7 (in progress)
+**Test Status:** 5602 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 6 complete: Created BattleModeHandler Strategy pattern for battle modes
-- Created: game/simulation/combat/battle_mode_handler.py (BattleModeHandler ABC + 4 implementations)
-- Handlers: ManualBattleModeHandler, TestBattleModeHandler, StrategyBattleModeHandler, HypotheticalBattleModeHandler
-- Refactored: BattleController now uses mode handlers via _mode_handler field
-- Added helper methods: _retreat_allowed(), _reinforcements_allowed()
-- Added tests: test_battle_mode_handlers.py (45 tests) + controller integration tests (10 tests)
-- 5545 tests pass (+55 new tests)
-- Next: Start Phase 7 - UI God Class Decomposition
+- Phase 7 Task 7.2 complete: Extracted FormationRenderer and FormationInputHandler
+- Created: game/ui/screens/formation/renderer.py (427 lines)
+- Created: game/ui/screens/formation/input_handler.py (422 lines)
+- Created: tests/unit/ui/test_formation_renderer.py (17 tests)
+- Created: tests/unit/ui/test_formation_input_handler.py (20 tests)
+- FormationEditorScene reduced from 1103 to 887 lines (-216 lines, ~20% reduction)
+- 5602 tests pass (+37 new tests)
+- Next: Continue Phase 7 - Tasks 7.3 (BuilderStateManager), 7.4 (FleetReportWindow)
 
 ---
 
@@ -48,7 +48,7 @@
 ---
 
 - [/] **PROJ-44: Code Quality & God Classes Refactoring**
-  - **Phases:** 9 | **Status:** In Progress (Phase 4 Complete) | **Priority:** High
+  - **Phases:** 9 | **Status:** In Progress (Phase 7 Task 7.1 Complete) | **Priority:** High
   - **Plan:** [Projects/active_projects/PROJ-44/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-44/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** PROJ-43 recommended (not blocking)
@@ -99,6 +99,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-44 | Phase 7 Task 7.2 | Complete | 5602 passed | ac38f6d1 | Extracted FormationRenderer/InputHandler, FormationEditor -216 lines |
+| 2026-01-30 | PROJ-44 | Phase 7 Task 7.1 | Complete | 5565 passed | 66cd264f | Extracted RaceSummaryPanel, RaceSetupScreen -370 lines |
 | 2026-01-30 | PROJ-44 | Phase 6 Complete | Complete | 5545 passed | 5cc5f26c | BattleModeHandler Strategy pattern, integrated with BattleController |
 | 2026-01-30 | PROJ-44 | Phase 5 Complete | Complete | 5490 passed | 0c914d35 | ShipCombatEngine decomposition: TargetingSystem, DamageCalculator, WeaponFiringSystem |
 | 2026-01-30 | PROJ-44 | Phase 4 Complete | Complete | 5448 passed | 9023d082 | Component decomposition: AbilityManager, ModifierManager, ComponentStatsCalculator |

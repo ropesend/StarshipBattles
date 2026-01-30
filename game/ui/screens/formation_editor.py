@@ -9,6 +9,9 @@ import tkinter
 from tkinter import filedialog, simpledialog
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Callable, Any
 
+from game.ui.screens.formation.renderer import FormationRenderer
+from game.ui.screens.formation.input_handler import FormationInputHandler
+
 if TYPE_CHECKING:
     from pygame import Rect, Surface
 
@@ -213,60 +216,40 @@ class FormationCore:
             print(f"Error loading formation: {e}")
 
 class FormationEditorScene:
-    """Main UI scene for the formation editor with canvas, toolbar, and event handling."""
+    """Main UI scene for the formation editor with canvas, toolbar, and event handling.
+
+    Delegates rendering to FormationRenderer and input state management to FormationInputHandler.
+    """
 
     def __init__(self, screen_width: int, screen_height: int, on_return_menu: Callable[[], None]) -> None:
         self.width: int = screen_width
         self.height: int = screen_height
         self.on_return_menu: Callable[[], None] = on_return_menu
-        
+
+        # Layout
+        self.toolbar_height = 80
+
         # Instantiate Core Model
         self.core = FormationCore()
-        
-        # Camera
-        
-        # Camera
-        self.camera_zoom = 1.0
-        self.camera_pan = [0, 0] # Offset in World Space
-        
-        # Settings
-        self.grid_size = 50
-        self.snap_enabled = True
-        self.show_grid = True
-        self.shape_count = 5 # Default count for shape generation
-        
-        # Interaction States
-        self.state = 'IDLE' # IDLE, DRAGGING_ITEMS, BOX_SELECT, RESIZING_GROUP, PANNING, POTENTIAL_CLICK
-        self.drag_start_world = None
-        self.drag_start_screen = None
-        self.drag_offsets = {} # index -> (offset_x, offset_y)
-        self.resize_handle = None # 'TL', 'TR', 'BL', 'BR', 'T', 'R', 'B', 'L'
-        self.initial_group_bounds = None # Rect
-        self.initial_arrow_positions = {} # index -> (x,y)
-        self.current_selection_rect = None # For marquee
-        self.resize_aspect_ratio = None # To maintain aspect ratio
-        
+
+        # Instantiate Renderer (handles drawing and coordinate transforms)
+        self.renderer = FormationRenderer(screen_width, screen_height, self.toolbar_height)
+
+        # Instantiate Input Handler (manages interaction state machine)
+        self.input_handler = FormationInputHandler()
+
+        # Settings (synced with renderer)
+        self.shape_count = 5  # Default count for shape generation
+
         # Renumbering
         self.renumber_mode = False
         self.renumber_target = 1
-        
+
         # UI Manager
         self.ui_manager = pygame_gui.UIManager((screen_width, screen_height))
-        
-        # Layout
-        self.toolbar_height = 80 # Increased for more controls
-        self.canvas_rect = pygame.Rect(0, 0, screen_width, screen_height - self.toolbar_height)
-        
+
         # Setup UI
         self._create_ui()
-        
-        # Colors
-        self.col_bg = (30, 30, 40)
-        self.col_grid = (45, 45, 55)
-        self.col_axis = (60, 60, 70)
-        self.col_arrow = (100, 200, 255)
-        self.col_arrow_sel = (255, 255, 100)
-        self.col_box = (100, 255, 100)
 
     def _create_ui(self):
         btn_y = self.height - 70
@@ -435,13 +418,73 @@ class FormationEditorScene:
     def selected_indices(self, val: Set[int]) -> None:
         self.core.selected_indices = val
 
-    # --- Coordinate Transforms ---
+    # --- Delegate properties to renderer ---
+    @property
+    def camera_zoom(self) -> float:
+        """Camera zoom level."""
+        return self.renderer.camera_zoom
+
+    @camera_zoom.setter
+    def camera_zoom(self, val: float) -> None:
+        self.renderer.camera_zoom = val
+
+    @property
+    def camera_pan(self) -> List[float]:
+        """Camera pan offset."""
+        return self.renderer.camera_pan
+
+    @camera_pan.setter
+    def camera_pan(self, val: List[float]) -> None:
+        self.renderer.camera_pan = val
+
+    @property
+    def grid_size(self) -> int:
+        """Grid size for snapping."""
+        return self.renderer.grid_size
+
+    @grid_size.setter
+    def grid_size(self, val: int) -> None:
+        self.renderer.grid_size = val
+
+    @property
+    def snap_enabled(self) -> bool:
+        """Whether snap to grid is enabled."""
+        return self.renderer.snap_enabled
+
+    @snap_enabled.setter
+    def snap_enabled(self, val: bool) -> None:
+        self.renderer.snap_enabled = val
+
+    @property
+    def show_grid(self) -> bool:
+        """Whether to show the grid."""
+        return self.renderer.show_grid
+
+    @show_grid.setter
+    def show_grid(self, val: bool) -> None:
+        self.renderer.show_grid = val
+
+    @property
+    def canvas_rect(self) -> pygame.Rect:
+        """Get the canvas drawing area."""
+        return self.renderer.get_canvas_rect()
+
+    @property
+    def state(self) -> str:
+        """Current interaction state."""
+        return self.input_handler.state
+
+    @state.setter
+    def state(self, val: str) -> None:
+        if val == 'IDLE':
+            self.input_handler.reset_state()
+        else:
+            self.input_handler.state = val
+
+    # --- Coordinate Transforms (delegate to renderer) ---
     def world_to_screen(self, wx: float, wy: float) -> Tuple[float, float]:
         """Convert world coordinates to screen coordinates."""
-        cx, cy = self.width / 2, (self.height - self.toolbar_height) / 2
-        sx = (wx * self.camera_zoom) + self.camera_pan[0] + cx
-        sy = (wy * self.camera_zoom) + self.camera_pan[1] + cy
-        return sx, sy
+        return self.renderer.world_to_screen(wx, wy)
 
     def move_arrow(self, from_idx: int, to_idx: int) -> None:
         """Move an arrow from one list position to another."""
@@ -450,58 +493,19 @@ class FormationEditorScene:
 
     def screen_to_world(self, sx: float, sy: float) -> Tuple[float, float]:
         """Convert screen coordinates to world coordinates."""
-        cx, cy = self.width / 2, (self.height - self.toolbar_height) / 2
-        wx = (sx - self.camera_pan[0] - cx) / self.camera_zoom
-        wy = (sy - self.camera_pan[1] - cy) / self.camera_zoom
-        return wx, wy
+        return self.renderer.screen_to_world(sx, sy)
 
     def snap(self, val: float) -> float:
         """Snap value to grid if snap is enabled."""
-        if not self.snap_enabled: return val
-        return round(val / self.grid_size) * self.grid_size
+        return self.renderer.snap(val)
 
     def get_selection_bounds(self) -> Optional[pygame.Rect]:
         """Get bounding rectangle of selected arrows, or None if no selection."""
-        if not self.selected_indices: return None
-        xs: List[float] = []
-        ys: List[float] = []
-        for i in self.selected_indices:
-            ax, ay = self.arrows[i]
-            if self.snap_enabled:
-                ax = self.snap(ax)
-                ay = self.snap(ay)
-            xs.append(ax)
-            ys.append(ay)
-        return pygame.Rect(min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys))
+        return self.renderer.get_selection_bounds(self.arrows, self.selected_indices)
 
     def get_resize_handles(self, bounds_rect: Optional[pygame.Rect]) -> Dict[str, pygame.Rect]:
-        if not bounds_rect: return {}
-        
-        # Inflate bounds by 1 grid unit for drawing box
-        padding = self.grid_size
-        inflated = bounds_rect.inflate(padding*2, padding*2)
-        
-        l, t = self.world_to_screen(inflated.left, inflated.top)
-        r, b = self.world_to_screen(inflated.right, inflated.bottom)
-        w, h = r - l, b - t
-        
-        handles = {}
-        hs = 8 # handle size
-        
-        # Corners
-        handles['TL'] = pygame.Rect(l - hs, t - hs, hs*2, hs*2)
-        handles['TR'] = pygame.Rect(r - hs, t - hs, hs*2, hs*2)
-        handles['BL'] = pygame.Rect(l - hs, b - hs, hs*2, hs*2)
-        handles['BR'] = pygame.Rect(r - hs, b - hs, hs*2, hs*2)
-        
-        if w > 40: # Only if large enough
-             handles['T'] = pygame.Rect(l + w/2 - hs, t - hs, hs*2, hs*2)
-             handles['B'] = pygame.Rect(l + w/2 - hs, b - hs, hs*2, hs*2)
-        if h > 40:
-             handles['L'] = pygame.Rect(l - hs, t + h/2 - hs, hs*2, hs*2)
-             handles['R'] = pygame.Rect(r - hs, t + h/2 - hs, hs*2, hs*2)
-             
-        return handles
+        """Get resize handle rectangles for selection bounds."""
+        return self.renderer.get_resize_handles(bounds_rect)
 
     # --- Interaction ---
     def handle_event(self, event: pygame.event.Event) -> None:
@@ -599,9 +603,7 @@ class FormationEditorScene:
                      return
 
             if event.button == 3: # Right click -> Pan
-                self.state = 'PANNING'
-                self.drag_start_screen = event.pos
-                self.drag_start_world = self.camera_pan[:]
+                self.input_handler.start_panning(event.pos, self.camera_pan)
             elif event.button == 1: # Left click
                 self._handle_left_down(event.pos)
 
@@ -636,24 +638,14 @@ class FormationEditorScene:
             handles = self.get_resize_handles(bounds)
             for name, rect in handles.items():
                 if rect.collidepoint(screen_pos):
-                    self.state = 'RESIZING_GROUP'
-                    self.resize_handle = name
-                    self.initial_group_bounds = bounds
-                    self.initial_arrow_positions = {i: self.arrows[i][:] for i in self.selected_indices}
-                    self.drag_start_screen = screen_pos
-                    
-                    # Store Aspect Ratio if resizing corner
-                    # Aspect Ratio should be of the BOX (bounds + padding) or the CONTENT?
-                    # Visually, the user resizes the BOX.
-                    # Padded box dimensions:
-                    w = max(1, bounds.width + self.grid_size*2)
-                    h = max(1, bounds.height + self.grid_size*2)
-                    
-                    if len(name) == 2: # TL, TR, BL, BR
-                        self.resize_aspect_ratio = w / h
-                    else:
-                        self.resize_aspect_ratio = None
-                        
+                    self.input_handler.start_resizing_group(
+                        handle_name=name,
+                        bounds=bounds,
+                        arrows=self.arrows,
+                        selected=self.selected_indices,
+                        screen_pos=screen_pos,
+                        grid_size=self.grid_size
+                    )
                     return
         
         # Re-fetch index if handle check failed (it might have been cleared by early return above, but safe to fetch again)
@@ -669,219 +661,108 @@ class FormationEditorScene:
             else:
                 if clicked_idx not in self.selected_indices:
                     self.selected_indices = {clicked_idx}
-            
+
             if self.selected_indices:
-                self.state = 'DRAGGING_ITEMS'
-                self.drag_start_world = (wx, wy)
-                self.drag_offsets = {}
-                for idx in self.selected_indices:
-                    self.drag_offsets[idx] = (self.arrows[idx][0] - wx, self.arrows[idx][1] - wy)
+                self.input_handler.start_dragging_items(
+                    (wx, wy), self.arrows, self.selected_indices
+                )
             return
         
         # Clicked Blank Space
         # If selection exists and no handle/arrow clicked, we first check if it's a drag or click in mouse_up.
         # But if user just wants to deselect, logic happens later.
-        
-        self.state = 'POTENTIAL_CLICK'
-        self.drag_start_screen = screen_pos
-        self.drag_start_world = (wx, wy)
+        self.input_handler.start_potential_click(screen_pos, (wx, wy))
 
     def _check_renumber_arrows(self, screen_pos, idx):
-        # Calculate arrow positions identical to draw()
-        ax, ay = self.arrows[idx]
-        if self.snap_enabled:
-            ax = self.snap(ax)
-            ay = self.snap(ay)
-            
-        sx, sy = self.world_to_screen(ax, ay)
-        scale = 20 * self.camera_zoom 
-        
-        # Up Arrow Rect (Approximate hit box)
-        up_rect = pygame.Rect(sx - 15, sy - scale - 30, 30, 30)
-        # Down Arrow Rect
-        down_rect = pygame.Rect(sx - 15, sy + scale - 5, 30, 30)
-        
-        if up_rect.collidepoint(screen_pos): return 'up'
-        if down_rect.collidepoint(screen_pos): return 'down'
+        """Check if click is on up/down reorder arrows for single selection."""
+        up_rect, down_rect = self.renderer.get_renumber_arrow_rects(
+            self.arrows, {idx}
+        )
+
+        if up_rect and up_rect.collidepoint(screen_pos):
+            return 'up'
+        if down_rect and down_rect.collidepoint(screen_pos):
+            return 'down'
         return None
 
     def _handle_mouse_motion(self, screen_pos):
         if self.state == 'PANNING':
-            dx = screen_pos[0] - self.drag_start_screen[0]
-            dy = screen_pos[1] - self.drag_start_screen[1]
-            self.camera_pan[0] = self.drag_start_world[0] + dx
-            self.camera_pan[1] = self.drag_start_world[1] + dy
-            
+            new_pan = self.input_handler.calculate_pan_delta(screen_pos)
+            self.camera_pan[0] = new_pan[0]
+            self.camera_pan[1] = new_pan[1]
+
         elif self.state == 'DRAGGING_ITEMS':
             wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
-            if self.snap_enabled: pass 
-            
-            for idx, (off_x, off_y) in self.drag_offsets.items():
-                target_x = wx + off_x
-                target_y = wy + off_y
-                if self.snap_enabled:
-                    target_x = self.snap(target_x)
-                    target_y = self.snap(target_y)
-                self.arrows[idx] = [target_x, target_y]
-                
+            new_positions = self.input_handler.calculate_new_positions(
+                (wx, wy), snap_func=self.snap
+            )
+            for idx, pos in new_positions.items():
+                self.arrows[idx] = pos
+
         elif self.state == 'RESIZING_GROUP':
-             self._update_group_resize(screen_pos)
-             
+            self._update_group_resize(screen_pos)
+
         elif self.state == 'POTENTIAL_CLICK':
-            dist = math.hypot(screen_pos[0] - self.drag_start_screen[0], screen_pos[1] - self.drag_start_screen[1])
-            if dist > 5:
-                # If we had a selection and started dragging blank space, clear it?
-                # User asked: "clicking on a blank portion should unselect, don't draw another"
-                # But previously: drag creates marquee.
-                # Reconcile: Click = Deselect (handled in Up). Drag = Marquee (handled here).
-                # But wait, does user want marquee at all? "When there are a group of selected arrows, clicking blank... unselect"
-                # This implies dragging blank while selected might mean something else? Or usually it means deselect+marquee.
-                
-                # Let's keep marquee logic, but ensure click clears selection.
-                self.state = 'BOX_SELECT'
+            if self.input_handler.should_transition_to_box_select(screen_pos):
+                self.input_handler.start_box_select(
+                    self.input_handler.drag_start_screen,
+                    self.input_handler.drag_start_world
+                )
                 keys = pygame.key.get_pressed()
                 if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
-                     self.selected_indices = set()
+                    self.selected_indices = set()
                      
     def _toggle_rotation_mode(self):
         self.core.toggle_rotation_mode()
         self.update_info()
 
     def _update_group_resize(self, screen_pos):
-        if not self.initial_group_bounds: return
-        wx, wy = self.screen_to_world(screen_pos[0], screen_pos[1])
-        if self.snap_enabled:
-            wx = self.snap(wx)
-            wy = self.snap(wy)
-
-        padding = self.grid_size
-        
-        b = self.initial_group_bounds
-        # Bounds used for math
-        l, t, r, bot = b.left, b.top, b.right, b.bottom
-        nl, nt, nr, nb = l, t, r, bot
-        
-        h = self.resize_handle
-        
-        # Adjust input wx, wy to be 'edge' positions by removing padding bias depending on handle side
-        # e.g. Right handle is at r + padding. So valid 'r' is wx - padding.
-        
-        target_x = wx
-        target_y = wy
-        
-        if 'L' in h: nl = min(target_x + padding, nr - 10)
-        if 'R' in h: nr = max(target_x - padding, nl + 10)
-        if 'T' in h: nt = min(target_y + padding, nb - 10)
-        if 'B' in h: nb = max(target_y - padding, nt + 10)
-        
-        # Aspect Ratio Lock for Corners
-        if self.resize_aspect_ratio:
-            # Padded dimensions logic
-            current_padded_w = (nr - nl) + padding*2
-            current_padded_h = (nb - nt) + padding*2
-            
-            # Maintain ratio of padded box
-            # ratio = w / h -> w = ratio * h
-            
-            # If changing Width (L/R driven), adjust Height
-            if 'L' in h or 'R' in h:
-                target_padded_h = current_padded_w / self.resize_aspect_ratio
-                target_h_content = target_padded_h - padding*2
-                
-                # Center vertical expansion or from opposite side?
-                # Usually Aspect Scale is from opposite corner.
-                # If dragging TR, Bottom Left is anchor.
-                
-                # If T/B not in handle, we need to decide which way to expand.
-                # If top-row (TL, TR), B is anchor.
-                if 'T' in h: # dragging corner
-                     nt = nb - target_h_content
-                elif 'B' in h:
-                     nb = nt + target_h_content
-                else: # Just side drag? Aspect ratio usually only for corners.
-                     # If handle is just 'L', we don't aspect restrict?
-                     # Code in handle_left_down sets ratio only for corners.
-                     # So we are essentially guaranteed T or B is present if ratio is set.
-                     pass
-
-            elif 'T' in h or 'B' in h:
-                target_padded_w = current_padded_h * self.resize_aspect_ratio
-                target_w_content = target_padded_w - padding*2
-                
-                if 'L' in h:
-                    nl = nr - target_w_content
-                elif 'R' in h:
-                    nr = nl + target_w_content
-        
-        old_w = max(1, r - l)
-        old_h = max(1, bot - t)
-        new_w = max(1, nr - nl)
-        new_h = max(1, nb - nt)
-        
-        scale_x = new_w / old_w
-        scale_y = new_h / old_h
-        
-        for idx in self.selected_indices:
-            orig_x, orig_y = self.initial_arrow_positions[idx]
-            rel_x = orig_x - l
-            rel_y = orig_y - t
-            new_x = nl + rel_x * scale_x
-            new_y = nt + rel_y * scale_y
-        for idx in self.selected_indices:
-            orig_x, orig_y = self.initial_arrow_positions[idx]
-            rel_x = orig_x - l
-            rel_y = orig_y - t
-            new_x = nl + rel_x * scale_x
-            new_y = nt + rel_y * scale_y
-            # Do NOT snap here to preserve floating point relative positions during scaling
-            # Visual snapping happens in draw()
-            self.arrows[idx] = [new_x, new_y]
+        """Update arrow positions during group resize using input handler."""
+        new_positions = self.input_handler.calculate_resize_positions(
+            screen_pos=screen_pos,
+            screen_to_world=self.screen_to_world,
+            snap_func=self.snap,
+            grid_size=self.grid_size
+        )
+        # Do NOT snap here to preserve floating point relative positions during scaling
+        # Visual snapping happens in draw()
+        for idx, pos in new_positions.items():
+            self.arrows[idx] = pos
 
     def _handle_left_up(self, screen_pos):
         if self.state == 'POTENTIAL_CLICK':
-             # This was a click (no drag)
-             keys = pygame.key.get_pressed()
-             shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
-             
-             if self.selected_indices and not shift:
-                 self.selected_indices = set()
-
-             
-             self.state = 'IDLE'
-             
-        elif self.state == 'BOX_SELECT':
-            start_wx, start_wy = self.drag_start_world
-            end_wx, end_wy = self.screen_to_world(screen_pos[0], screen_pos[1])
-            l = min(start_wx, end_wx)
-            r = max(start_wx, end_wx)
-            t = min(start_wy, end_wy)
-            b = max(start_wy, end_wy)
-            box_rect = pygame.Rect(l, t, r-l, b-t)
-            
+            # This was a click (no drag)
             keys = pygame.key.get_pressed()
             shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
-            new_selection = set()
-            for i, (ax, ay) in enumerate(self.arrows):
-                if box_rect.collidepoint(ax, ay):
-                    new_selection.add(i)
-            if shift: self.selected_indices.update(new_selection)
-            else: self.selected_indices = new_selection
-            self.state = 'IDLE'
+
+            if self.selected_indices and not shift:
+                self.selected_indices = set()
+
+            self.input_handler.reset_state()
+
+        elif self.state == 'BOX_SELECT':
+            keys = pygame.key.get_pressed()
+            shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+
+            new_selection = self.input_handler.find_arrows_in_box(
+                screen_pos, self.arrows, self.screen_to_world
+            )
+            if shift:
+                self.selected_indices.update(new_selection)
+            else:
+                self.selected_indices = new_selection
+
+            self.input_handler.reset_state()
         else:
-            self.state = 'IDLE'
-            self.resize_handle = None
-            self.initial_group_bounds = None
+            self.input_handler.reset_state()
+
         self.update_info()
 
     def _get_arrow_at(self, wx, wy):
-        mx, my = self.world_to_screen(wx, wy)
-        click_radius = 25 # Increased for easy clicking
-        for i in range(len(self.arrows) - 1, -1, -1):
-             ax, ay = self.arrows[i]
-             sx, sy = self.world_to_screen(ax, ay)
-             dist = math.hypot(mx - sx, my - sy)
-             if dist < click_radius: return i
-        return None
+        """Find arrow at given world position."""
+        return self.input_handler.get_arrow_at(
+            (wx, wy), self.arrows, self.world_to_screen, click_radius=25
+        )
 
     def add_arrow(self, pos: Tuple[float, float]) -> None:
         """Add a new arrow at the given world position."""
@@ -982,122 +863,25 @@ class FormationEditorScene:
         self.ui_manager.update(dt)
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Draw the formation editor canvas and UI."""
-        screen.fill(self.col_bg)
-        if self.show_grid: self._draw_grid(screen)
-        
-        ox, oy = self.world_to_screen(0, 0)
-        pygame.draw.line(screen, self.col_axis, (ox, 0), (ox, self.height - self.toolbar_height), 2)
-        pygame.draw.line(screen, self.col_axis, (0, oy), (self.width, oy), 2)
-        
-        font = pygame.font.SysFont("Arial", 14, bold=True)
-        # Visual Update: Large Triangles ("Arrows")
-        scale = 20 * self.camera_zoom # increased size
-        
-        for i, (ax, ay) in enumerate(self.arrows):
-            if self.snap_enabled:
-                ax = self.snap(ax)
-                ay = self.snap(ay)
-            
-            sx, sy = self.world_to_screen(ax, ay)
-            if not self.canvas_rect.inflate(100,100).collidepoint(sx, sy): continue
-                
-            color = self.col_arrow_sel if i in self.selected_indices else self.col_arrow
-            border_col = (255,255,255) if i in self.selected_indices else (0,0,0)
-            
-            # Check attribute
-            attr = self.arrow_attrs[i]
-            is_fixed = attr.get('rotation_mode', 'relative') == 'fixed'
-            if is_fixed:
-                color = (100, 255, 100) if i not in self.selected_indices else (200, 255, 200)
-            
-            # Draw Triangle
-            # Point Up
-            points = [
-                (sx, sy - scale),
-                (sx - scale*0.8, sy + scale*0.8),
-                (sx + scale*0.8, sy + scale*0.8)
-            ]
-            
-            pygame.draw.polygon(screen, color, points)
-            pygame.draw.polygon(screen, border_col, points, 2)
-            
-            # Draw Number
-            if scale > 10:
-                txt = font.render(str(i + 1), True, (0, 0, 0))
-                # rough center
-                screen.blit(txt, (int(sx) - txt.get_width()//2, int(sy)))
+        """Draw the formation editor canvas and UI.
 
-        # Draw Single Selection Extras (Renumber arrows)
-        if len(self.selected_indices) == 1:
-            idx = list(self.selected_indices)[0]
-            ax, ay = self.arrows[idx]
-            if self.snap_enabled:
-                ax = self.snap(ax)
-                ay = self.snap(ay)
-                
-            sx, sy = self.world_to_screen(ax, ay)
-            
-            # Up Arrow (Decrease Number)
-            up_poly = [(sx, sy - scale - 25), (sx - 10, sy - scale - 10), (sx + 10, sy - scale - 10)]
-            pygame.draw.polygon(screen, (200, 200, 200), up_poly)
-            
-            # Down Arrow (Increase Number)
-            down_poly = [(sx, sy + scale + 25), (sx - 10, sy + scale + 10), (sx + 10, sy + scale + 10)]
-            pygame.draw.polygon(screen, (200, 200, 200), down_poly)
-
-        if self.selected_indices:
-            bounds = self.get_selection_bounds()
-            if bounds:
-                # Inflate Visual bounds for handles (+ padding)
-                padding = self.grid_size
-                inflated = bounds.inflate(padding*2, padding*2)
-                
-                l, t = self.world_to_screen(inflated.left, inflated.top)
-                r, b = self.world_to_screen(inflated.right, inflated.bottom)
-                screen_bounds = pygame.Rect(l, t, r-l, b-t)
-                pygame.draw.rect(screen, self.col_box, screen_bounds, 1)
-                handles = self.get_resize_handles(bounds)
-                for h_rect in handles.values():
-                    pygame.draw.rect(screen, self.col_box, h_rect)
-
-        if self.state == 'BOX_SELECT' or self.state == 'POTENTIAL_CLICK':
-             mx, my = pygame.mouse.get_pos()
-             sx, sy = self.drag_start_screen
-             rect = pygame.Rect(min(sx, mx), min(sy, my), abs(mx-sx), abs(my-sy))
-             if self.state == 'BOX_SELECT':
-                 surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-                 surf.fill((100, 255, 100, 50))
-                 screen.blit(surf, rect.topleft)
-                 pygame.draw.rect(screen, (100, 255, 100), rect, 1)
-
-        pygame.draw.rect(screen, (20, 20, 30), (0, self.height - self.toolbar_height, self.width, self.toolbar_height))
+        Delegates to FormationRenderer for all drawing operations.
+        """
+        self.renderer.draw(
+            screen=screen,
+            arrows=self.arrows,
+            arrow_attrs=self.arrow_attrs,
+            selected_indices=self.selected_indices,
+            state=self.state,
+            drag_start_screen=self.input_handler.drag_start_screen
+        )
         self.ui_manager.draw_ui(screen)
-
-    def _draw_grid(self, screen):
-        wx0, wy0 = self.screen_to_world(0, 0)
-        wx1, wy1 = self.screen_to_world(self.width, self.height - self.toolbar_height)
-        start_x = math.floor(wx0 / self.grid_size) * self.grid_size
-        end_x = math.ceil(wx1 / self.grid_size) * self.grid_size
-        start_y = math.floor(wy0 / self.grid_size) * self.grid_size
-        end_y = math.ceil(wy1 / self.grid_size) * self.grid_size
-        grid_col = self.col_grid
-        x = start_x
-        while x <= end_x:
-            sx, _ = self.world_to_screen(x, 0)
-            pygame.draw.line(screen, grid_col, (sx, 0), (sx, self.height - self.toolbar_height))
-            x += self.grid_size
-        y = start_y
-        while y <= end_y:
-             _, sy = self.world_to_screen(0, y)
-             pygame.draw.line(screen, grid_col, (0, sy), (self.width, sy))
-             y += self.grid_size
 
     def handle_resize(self, w: int, h: int) -> None:
         """Handle window resize by updating dimensions and rebuilding UI."""
         self.width = w
         self.height = h
+        self.renderer.handle_resize(w, h)
         self.ui_manager.set_window_resolution((w, h))
-        self.canvas_rect = pygame.Rect(0, 0, w, h - self.toolbar_height)
         self.ui_manager.clear_and_reset()
         self._create_ui()

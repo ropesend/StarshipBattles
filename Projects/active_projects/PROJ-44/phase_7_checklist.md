@@ -31,17 +31,23 @@
 
 ---
 
-### Task 7.2: Extract FormationRenderer and FormationInputHandler [Complex]
+### Task 7.2: Extract FormationRenderer and FormationInputHandler [Complex] - COMPLETE
 **File:** Create `game/ui/screens/formation/`
 **Issue:** CQ-002 - FormationEditor 1103 lines
 **Tests:** `pytest tests/unit/builder/test_formation_editor_logic.py`
 
-- [ ] Create `FormationRenderer` with `draw()`, `_draw_grid()`, coordinate transforms
-- [ ] Create `FormationInputHandler` with event handling state machine
-- [ ] Update `FormationEditorScene` to delegate to both
-- [ ] Verify: Formation editor interaction and rendering works
+- [x] Create `FormationRenderer` with `draw()`, `_draw_grid()`, coordinate transforms
+- [x] Create `FormationInputHandler` with event handling state machine
+- [x] Update `FormationEditorScene` to delegate to both
+- [x] Verify: Formation editor interaction and rendering works
 
 **Notes:**
+- Created game/ui/screens/formation/renderer.py (427 lines)
+- Created game/ui/screens/formation/input_handler.py (422 lines)
+- Created tests/unit/ui/test_formation_renderer.py (17 tests)
+- Created tests/unit/ui/test_formation_input_handler.py (20 tests)
+- FormationEditorScene reduced from 1103 to 887 lines (-216 lines, ~20% reduction)
+- 5602 tests pass (+37 new tests)
 
 ---
 
