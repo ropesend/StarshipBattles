@@ -48,7 +48,7 @@ from game.simulation.services.battle_service import BattleService, BattleResult
 from game.simulation.battle_state import BattleState
 
 # Validation
-from game.simulation.ship_validator import ShipDesignValidator
+from game.simulation.validation.ship_validator import ShipDesignValidator
 
 
 __all__ = [

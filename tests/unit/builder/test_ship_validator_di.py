@@ -1,12 +1,12 @@
 """
-Tests for ShipValidator Dependency Injection (PROJ-38 Phase 5).
+Tests for ShipValidator Dependency Injection (PROJ-50 Strict DI).
 
-Tests that ClassRequirementsRule accepts registries parameter for DI.
+Tests that ClassRequirementsRule requires registries parameter (no fallback).
 """
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-from game.simulation.ship_validator import ClassRequirementsRule
+from game.simulation.validation.ship_validator import ClassRequirementsRule, ShipDesignValidator
 from game.simulation.validation.base import ValidationResult
 
 
@@ -47,46 +47,48 @@ class TestClassRequirementsRuleDI:
         assert rule._registries is mock_registries
 
     def test_class_requirements_rule_uses_injected_registries(self, mock_ship, mock_registries):
-        """ClassRequirementsRule should use injected registries when provided."""
+        """ClassRequirementsRule should use injected registries."""
         rule = ClassRequirementsRule(registries=mock_registries)
 
-        with patch('game.simulation.ship_validator.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_vehicle_classes.return_value = {}  # Should not be used
+        result = rule.validate(mock_ship)
 
-            result = rule.validate(mock_ship)
+        # Should complete without error using injected registries
+        assert isinstance(result, ValidationResult)
 
-            # Provider should NOT be called when registries provided
-            mock_provider.assert_not_called()
-
-    def test_class_requirements_rule_falls_back_to_global(self, mock_ship):
-        """ClassRequirementsRule should use provider when no registries."""
-        rule = ClassRequirementsRule()  # No registries parameter
-
-        with patch('game.simulation.ship_validator.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_vehicle_classes.return_value = {
-                "Cruiser": {"max_mass": 10000}
-            }
-
-            result = rule.validate(mock_ship)
-
-            # Provider SHOULD be called when no registries
-            mock_provider.assert_called_once()
+    def test_class_requirements_rule_requires_registries(self):
+        """PROJ-50: ClassRequirementsRule now requires registries parameter."""
+        # Should raise TypeError when registries=None
+        with pytest.raises(TypeError, match="registries is required"):
+            ClassRequirementsRule(registries=None)
 
     def test_class_requirements_rule_stores_registries(self, mock_registries):
         """ClassRequirementsRule should store registries on instance."""
         rule = ClassRequirementsRule(registries=mock_registries)
         assert rule._registries is mock_registries
 
-    def test_class_requirements_rule_none_registries_uses_fallback(self, mock_ship):
-        """ClassRequirementsRule with registries=None should use provider fallback."""
-        rule = ClassRequirementsRule(registries=None)
 
-        with patch('game.simulation.ship_validator.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_vehicle_classes.return_value = {
-                "Cruiser": {"max_mass": 10000}
-            }
+class TestShipDesignValidatorDI:
+    """Tests for ShipDesignValidator dependency injection."""
 
-            result = rule.validate(mock_ship)
+    @pytest.fixture
+    def mock_registries(self):
+        """Create mock GameRegistries with vehicle_classes."""
+        registries = Mock()
+        registries.vehicle_classes = {
+            "Cruiser": {
+                "max_mass": 10000,
+                "layers": [],
+            },
+        }
+        return registries
 
-            # Provider should be called when registries=None
-            mock_provider.assert_called_once()
+    def test_ship_design_validator_requires_registries(self):
+        """PROJ-50: ShipDesignValidator now requires registries parameter."""
+        with pytest.raises(TypeError, match="registries is required"):
+            ShipDesignValidator(registries=None)
+
+    def test_ship_design_validator_accepts_registries(self, mock_registries):
+        """ShipDesignValidator should accept registries parameter."""
+        validator = ShipDesignValidator(registries=mock_registries)
+        # Should complete without error
+        assert validator is not None

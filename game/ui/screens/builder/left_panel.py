@@ -287,7 +287,7 @@ class BuilderLeftPanel:
             self.filter_layer_dropdown.change_layer(5)
 
         
-        from game.simulation.ship_validator import LayerRestrictionDefinitionRule
+        from game.simulation.validation.ship_validator import LayerRestrictionDefinitionRule
         from game.core.constants import LayerType
         # Create a temporary rule instance for filtering
         restriction_rule = LayerRestrictionDefinitionRule()

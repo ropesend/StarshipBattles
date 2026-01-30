@@ -10,7 +10,7 @@ from typing import Optional
 from game.core.logger import log_info, log_warning
 from game.core.json_utils import load_json, load_json_required
 from game.core.registry import RegistryManager, set_validator
-from game.simulation.ship_validator import ShipDesignValidator
+from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.core.paths import Paths
 
 

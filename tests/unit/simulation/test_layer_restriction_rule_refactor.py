@@ -20,7 +20,7 @@ class TestLayerRestrictionRuleRefactor:
         })
         self.modules_patcher.start()
 
-        from game.simulation.ship_validator import LayerRestrictionDefinitionRule
+        from game.simulation.validation.ship_validator import LayerRestrictionDefinitionRule
         from game.core.constants import LayerType
 
         self.LayerRestrictionDefinitionRule = LayerRestrictionDefinitionRule

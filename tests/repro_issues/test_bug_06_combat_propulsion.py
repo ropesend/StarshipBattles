@@ -12,7 +12,7 @@ from game.simulation.components.abilities import (
     CombatPropulsion, CommandAndControl, ResourceStorage
 )
 from game.simulation.entities.ship_stats import ShipStatsCalculator
-from game.simulation.ship_validator import ShipDesignValidator
+from game.simulation.validation.ship_validator import ShipDesignValidator
 
 
 class TestBug06CombatPropulsion:

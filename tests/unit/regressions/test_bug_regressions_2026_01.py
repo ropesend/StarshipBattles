@@ -2,7 +2,8 @@ import pytest
 import math
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import ComponentStatus, LayerType
-from game.simulation.ship_validator import ResourceDependencyRule, ValidationResult
+from game.simulation.validation.ship_validator import ResourceDependencyRule
+from game.core.validation import ValidationResult
 from game.simulation.entities.ship import Ship
 from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability, ResourceStorage, ResourceConsumption
 from game.simulation.components.abilities import CrewRequired
@@ -16,7 +17,7 @@ class TestBugFixRegressions:
     - Bug 3: Resource Validation (AttributeError / Logic Flaws)
     """
 
-    def test_bug1_crew_requirement_update(self):
+    def test_bug1_crew_requirement_update(self, fresh_registries):
         """
         Bug 1: Crew Required stat should update when modifiers change 'crew_req_mult'.
         Root cause: CrewRequired ability wasn't accepting 'amount' key (defaulting to 0)
@@ -29,7 +30,7 @@ class TestBugFixRegressions:
                 'CrewRequired': {'amount': 10}  # 'amount' key was previously ignored
             }
         }
-        c = Component(comp_data)
+        c = Component(comp_data, registries=fresh_registries)
 
         # Verify initial
         ab = c.get_ability('CrewRequired')
@@ -55,26 +56,26 @@ class TestBugFixRegressions:
         # 10 * 1.0 * 2.5 = 25
         assert ab.amount == 25, "Crew requirement should update based on multipliers"
 
-    def test_bug3_resource_validation_logic(self):
+    def test_bug3_resource_validation_logic(self, fresh_registries):
         """
         Bug 3: Validator crashed on 'resource_name' attribute error for Storage,
         and logic needs to ensure specific resources are checked.
         """
-        ship = Ship("Test Ship", 0, 0, (0, 0, 0))
+        ship = Ship("Test Ship", 0, 0, (0, 0, 0), registries=fresh_registries)
         rule = ResourceDependencyRule()
 
         # 1. Add Fuel Consumer (Engine)
         engine = Component({
             'id': 'engine', 'name': 'Engine', 'type': 'Engine', 'mass': 10, 'hp': 10,
             'abilities': {'ResourceConsumption': [{'resource': 'fuel', 'amount': 1}]}
-        })
+        }, registries=fresh_registries)
         ship.add_component(engine, LayerType.CORE)
 
         # 2. Add Ammo Storage (Should NOT satisfy Fuel)
         ammo_tank = Component({
             'id': 'ammo', 'name': 'Ammo', 'type': 'Tank', 'mass': 10, 'hp': 10,
             'abilities': {'ResourceStorage': [{'resource': 'ammo', 'amount': 100}]}
-        })
+        }, registries=fresh_registries)
         ship.add_component(ammo_tank, LayerType.CORE)
 
         # 3. Validate
@@ -85,7 +86,7 @@ class TestBugFixRegressions:
         assert any("Needs Fuel Storage" in w for w in warnings), \
             f"Warning for Fuel should exist. Got: {warnings}"
 
-    def test_bug2_weapon_ability_access(self):
+    def test_bug2_weapon_ability_access(self, fresh_registries):
         """
         Bug 2: WeaponsPanel was using getattr(comp, 'range') which doesn't exist.
         Fix ensures we use comp.get_ability('WeaponAbility').range.
@@ -97,7 +98,7 @@ class TestBugFixRegressions:
                 'WeaponAbility': {'range': 1000, 'damage': 50}
             }
         }
-        c = Component(comp_data)
+        c = Component(comp_data, registries=fresh_registries)
 
         # Verify Component NO LONGER has range property (Shim Removed)
         assert not hasattr(c, 'range'), "Component should NOT have 'range' attribute shim (Phase 11 Removal)"

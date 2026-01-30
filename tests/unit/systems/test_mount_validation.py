@@ -14,7 +14,7 @@ mount consistency is enforced during the build process, not as a post-hoc check.
 import pytest
 from unittest.mock import Mock
 
-from game.simulation.ship_validator import MountDependencyRule
+from game.simulation.validation.ship_validator import MountDependencyRule
 from game.simulation.components.component_constants import LayerType
 
 

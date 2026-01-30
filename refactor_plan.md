@@ -8,28 +8,41 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Audit Cycle 1 PASSED
-**Current Status:** PROJ-50 Complete - Moving to PROJ-51
+**Last Completed:** PROJ-51 Phase 1 Complete
+**Current Status:** PROJ-51 Phase 1 Complete - Ready for Phase 2
 **Current Project:** PROJ-51
-**Current Phase:** Not Started
-**Test Status:** 536+ tests verified (core, ui/services)
+**Current Phase:** Phase 2 (UI File Naming)
+**Test Status:** 69 passed in validation tests (5 pre-existing failures unrelated)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 AUDIT PASSED:
-  - ✅ _get_registries_fallback: CONFIRMED REMOVED (0 results in source)
-  - ✅ Strict DI enforced: VehicleClassService requires registry_provider
-  - ✅ Documented exceptions only: module-level constants for hot-reload
-  - ✅ Core tests: 522 passed
-  - ✅ UI service tests: 14 passed
+- PROJ-51 Phase 1 Complete:
+  - ✅ Moved ship_validator.py to validation/ship_validator.py
+  - ✅ Updated validation/__init__.py to export all validator classes
+  - ✅ Updated simulation/__init__.py import path
+  - ✅ Updated 3 production files: ship_loader.py, left_panel.py, simulation/__init__.py
+  - ✅ Updated 10 test files with new import paths
+  - ✅ Rewrote test_ship_validator_di.py for PROJ-50 strict DI pattern
+  - ✅ Fixed 3 tests missing registries param (pre-existing PROJ-50 issue)
 
-- PROJ-50 SUCCESS:
-  - All 7 phases complete
-  - All success metrics met (with documented exceptions)
-  - Anti-pattern eliminated: _get_registries_fallback removed
-  - Documented exception: get_default_registry_provider kept for hot-reload
+- Files Modified:
+  - game/simulation/validation/ship_validator.py (moved)
+  - game/simulation/validation/__init__.py
+  - game/simulation/__init__.py
+  - game/simulation/entities/ship_loader.py
+  - game/ui/screens/builder/left_panel.py
+  - tests/unit/builder/test_ship_validator_di.py (rewrote)
+  - tests/unit/builder/test_builder_validation.py
+  - tests/unit/builder/test_requirement_abilities.py
+  - tests/unit/systems/test_mount_validation.py
+  - tests/unit/systems/test_layer_restrictions_refactor.py
+  - tests/unit/systems/test_layer_refinements.py
+  - tests/unit/simulation/test_layer_restriction_rule_refactor.py
+  - tests/unit/entities/test_bridge_requirement_removal.py
+  - tests/unit/regressions/test_bug_regressions_2026_01.py
+  - tests/repro_issues/test_bug_06_combat_propulsion.py
 
-- NEXT: PROJ-51 Naming Consistency Remediation
+- NEXT: Phase 2 - Rename *_scene.py to *_screen.py
 
 ---
 
@@ -109,8 +122,8 @@
 
 ---
 
-- [ ] **PROJ-51: Naming Consistency Remediation**
-  - **Phases:** 5 | **Status:** Planning | **Priority:** Medium
+- [/] **PROJ-51: Naming Consistency Remediation**
+  - **Phases:** 5 | **Status:** In Progress (Phase 1/5 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-51/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-51/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -121,6 +134,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-51 | Phase 1 | Complete | 69 passed | 1e371358 | ship_validator.py moved to validation/, 18 files updated |
 | 2026-01-30 | PROJ-50 | Audit Cycle 1 | PASSED | 536+ verified | 3ce74e28 | All success metrics met, documented exceptions OK |
 | 2026-01-30 | PROJ-50 | Phase 7 Complete | Complete | 536+ verified | 3ce74e28 | VehicleClassService strict DI, module constants kept |
 | 2026-01-30 | PROJ-50 | Phase 6 Complete | Complete | 5525 passed | 9b17776d | All DI errors fixed, 85+ test files updated |

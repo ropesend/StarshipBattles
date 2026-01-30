@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 import json
 
-from game.simulation.ship_validator import ShipDesignValidator, ValidationResult
+from game.simulation.validation.ship_validator import ShipDesignValidator
+from game.core.validation import ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
