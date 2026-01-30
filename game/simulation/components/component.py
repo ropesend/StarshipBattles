@@ -71,9 +71,37 @@ if TYPE_CHECKING:
     from game.core.registry import GameRegistries
 
 # Convenience aliases for registry data (read-only references)
-# Note: Uses provider pattern instead of deprecated utility functions
+# PROJ-42 Note: These module-level references are intentionally kept for UI hot-reload
+# functionality (see builder/main.py _reload_data). They provide mutable dict refs
+# that can be cleared. Internal Component methods should use _get_registries_fallback().
 COMPONENT_REGISTRY = get_default_registry_provider().get_components()
 MODIFIER_REGISTRY = get_default_registry_provider().get_modifiers()
+
+
+def _get_registries_fallback() -> 'GameRegistries':
+    """Get registries with fallback to legacy provider.
+
+    PROJ-42: Helper for static paths and module-level functions.
+    Tries get_default_registries() first (preferred), falls back to provider.
+    Wraps provider in GameRegistries for consistent attribute access.
+
+    Returns:
+        GameRegistries instance
+    """
+    from game.core.registry import GameRegistries
+    try:
+        return get_default_registries()
+    except RuntimeError:
+        # Fall back to provider - wrap in GameRegistries for consistent interface
+        # Note: Provider only has components/modifiers/vehicle_classes.
+        # Resources is set to empty dict since this module doesn't use it.
+        provider = get_default_registry_provider()
+        return GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources={}
+        )
 
 
 class Component:
@@ -91,15 +119,12 @@ class Component:
         import copy
         self.data = copy.deepcopy(data) # Store raw data for reference/cloning
 
-        # PROJ-38: Store registries for modifier operations
+        # PROJ-38/PROJ-42: Store registries for modifier operations
+        # Uses _get_registries_fallback() pattern for consistent DI behavior
         if registries is not None:
             self._registries = registries
         else:
-            try:
-                self._registries = get_default_registries()
-            except RuntimeError:
-                # Default registries not set yet - will use legacy pattern in methods
-                self._registries = None
+            self._registries = _get_registries_fallback()
         self.id = data['id']
         self.name = data['name']
         self.base_mass = data['mass']
@@ -148,12 +173,9 @@ class Component:
         self._instantiate_abilities()
         
         # Load default modifiers from data definition
-        # PROJ-38: Use injected registries if available
+        # PROJ-42: self._registries is always set via _get_registries_fallback()
         if 'modifiers' in self.data:
-            if self._registries is not None:
-                mods = self._registries.modifiers
-            else:
-                mods = get_default_registry_provider().get_modifiers()
+            mods = self._registries.modifiers
             for mod_data in self.data['modifiers']:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
@@ -411,11 +433,8 @@ class Component:
         return result
 
     def add_modifier(self, mod_id, value=None):
-        # PROJ-38: Use injected registries if available, else provider fallback
-        if self._registries is not None:
-            mods = self._registries.modifiers
-        else:
-            mods = get_default_registry_provider().get_modifiers()
+        # PROJ-42: self._registries is always set via _get_registries_fallback()
+        mods = self._registries.modifiers
         if mod_id not in mods: return False
 
         # Check restrictions
@@ -744,7 +763,8 @@ def load_components(filepath="data/components.json"):
     import copy
 
     cache_mgr = ComponentCacheManager.instance()
-    comps = get_default_registry_provider().get_components()
+    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
+    comps = _get_registries_fallback().components
 
     # If cache exists and matches filepath, hydrate Registry from cache (Fast Path)
     if cache_mgr.component_cache is not None and cache_mgr.last_component_file == filepath:
@@ -822,7 +842,8 @@ def load_modifiers(filepath="data/modifiers.json"):
     import copy
 
     cache_mgr = ComponentCacheManager.instance()
-    mods = get_default_registry_provider().get_modifiers()
+    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
+    mods = _get_registries_fallback().modifiers
 
     # Fast Path
     if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == filepath:
@@ -844,7 +865,7 @@ def load_modifiers(filepath="data/modifiers.json"):
 def create_component(component_id, *, registries: Optional['GameRegistries'] = None):
     """Create a clone of a component from the registry by ID.
 
-    PROJ-38: Accepts optional registries parameter for DI.
+    PROJ-38/PROJ-42: Accepts optional registries parameter for DI.
 
     Args:
         component_id: The ID of the component to create
@@ -854,22 +875,23 @@ def create_component(component_id, *, registries: Optional['GameRegistries'] = N
     Returns:
         Component clone or None if not found
     """
-    # PROJ-38: Use injected registries if provided, else provider
+    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
     if registries is not None:
-        comps = registries.components
+        regs = registries
     else:
-        comps = get_default_registry_provider().get_components()
+        regs = _get_registries_fallback()
+    comps = regs.components
 
     if component_id in comps:
         clone = comps[component_id].clone()
-        # PROJ-38: Ensure clone has correct registries
-        if registries is not None:
-            clone._registries = registries
+        # PROJ-42: Ensure clone has correct registries
+        clone._registries = regs
         return clone
     log_error(f"Component ID {component_id} not found in registry.")
     return None
 
 def get_all_components():
     """Get a list of all components in the registry."""
-    return list(get_default_registry_provider().get_components().values())
+    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
+    return list(_get_registries_fallback().components.values())
 

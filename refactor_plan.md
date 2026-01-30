@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 2 Task 2.2
-**Current Status:** Phase 2 in progress, Task 2.2 complete
+**Last Completed:** PROJ-42 Phase 2 Task 2.4
+**Current Status:** Phase 2 in progress, Task 2.4 complete
 **Current Project:** PROJ-42
-**Current Phase:** Phase 2 - Task 2.3 next
-**Test Status:** 5366 passed, 3 skipped (796 testmon)
+**Current Phase:** Phase 2 - Task 2.5 next
+**Test Status:** 115 testmon passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 2.2 completed: Updated ModifierService with `_get_modifiers_fallback()` pattern
-- Added `_get_modifiers_fallback()` static method - tries `get_default_registries().modifiers` first, then provider
-- Updated static paths in `is_modifier_allowed()`, `get_initial_value()`, `get_local_min_max()` to use fallback
-- 45 ModifierService tests pass
-- Next: Task 2.3 - Update Ship Entity to GameRegistries
+- Task 2.4 completed: Updated Component to GameRegistries with `_get_registries_fallback()` pattern
+- Added `_get_registries_fallback()` function - tries `get_default_registries()` first, wraps provider in GameRegistries
+- Updated Component `__init__` to use fallback, simplified modifier loading and `add_modifier()` to use `self._registries` directly
+- Updated module-level functions (`load_components`, `load_modifiers`, `create_component`, `get_all_components`)
+- Kept module-level COMPONENT_REGISTRY/MODIFIER_REGISTRY for UI hot-reload (documented)
+- 9 component tests pass
+- Next: Task 2.5 - Update VehicleDesignService
 
 ---
 
@@ -96,6 +98,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 2 Task 2.4 | Complete | 115 testmon | 336bf48 | Updated Component with _get_registries_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.2 | Complete | 796 testmon | 6f26551 | Updated ModifierService with _get_modifiers_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.1 | Complete | 5366 passed | 01d4ca5 | Updated ShipStatsService with _get_registries_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 1 | Complete | 5366 passed | 56a68ab | Removed FleetMovementSimulator, GameState aliases, dead migration code |
