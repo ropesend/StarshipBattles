@@ -51,20 +51,25 @@
 
 ---
 
-### Task 7.3: Extract BuilderStateManager [Medium]
+### Task 7.3: Extract BuilderStateManager [Medium] - COMPLETE
 **File:** Create `game/ui/screens/builder/state_manager.py`
 **Issue:** CQ-003, CQ-09 - BuilderSceneGUI 1100 lines
 **Tests:** `pytest tests/unit/builder/`
 
-- [ ] Create `BuilderStateManager` with:
+- [x] Create `BuilderStateManager` with:
   - Selection management (`on_selection_changed` logic)
   - Drag/drop state tracking
   - Pending action queue
   - Template modifiers
-- [ ] Refactor BuilderSceneGUI to delegate state management
-- [ ] Verify: Selection and drag-drop works
+- [x] Refactor BuilderSceneGUI to delegate state management
+- [x] Verify: Selection and drag-drop works
 
 **Notes:**
+- Created game/ui/screens/builder/state_manager.py (284 lines)
+- Created tests/unit/builder/test_builder_state_manager.py (22 tests)
+- BuilderSceneGUI reduced from 1043 to 1029 lines (-14 lines)
+- Net reduction modest because delegation properties added, but testability improved
+- All 5624 tests pass (+22 new tests)
 
 ---
 

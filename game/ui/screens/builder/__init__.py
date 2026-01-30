@@ -4,3 +4,4 @@ from .weapons_panel import WeaponsReportPanel
 from .components import ComponentListItem
 from .layer_panel import LayerPanel
 from .component_ref import ComponentRef
+from .state_manager import BuilderStateManager

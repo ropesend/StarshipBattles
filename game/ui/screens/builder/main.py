@@ -11,6 +11,11 @@ get_all_components, MODIFIER_REGISTRY.
 PROJ-44: Refactored _reload_data() to use WorkshopDataLoader instead of
 direct registry manipulation. No more direct simulation layer imports for
 registry clearing.
+
+PROJ-44 Phase 7 Task 7.3: Extracted state management to BuilderStateManager.
+Selection, template modifiers, pending actions, and drag/drop state are now
+managed by a dedicated BuilderStateManager class for better testability and
+reduced complexity.
 """
 import json
 import math
@@ -46,6 +51,7 @@ from .layer_panel import LayerPanel
 from .schematic_view import SchematicView
 from .interaction_controller import InteractionController
 from .event_bus import EventBus
+from .state_manager import BuilderStateManager
 
 # Initialize Tkinter root and hide it (for filedialog)
 try:
@@ -108,8 +114,11 @@ class BuilderSceneGUI:
 
         # Managers
         self.available_components = self._component_service.get_all_components()
-        self.template_modifiers = {}
         self.sprite_mgr = SpriteManager.instance()
+
+        # PROJ-44 Phase 7: State management extracted to BuilderStateManager
+        self._state_manager = BuilderStateManager(self.ship)
+        self._state_manager.on_selection_changed_callback = self._on_state_selection_changed
         
         base_path = os.path.dirname(os.path.abspath(__file__))
         with profile_block("Builder: Init Managers"):
@@ -141,11 +150,11 @@ class BuilderSceneGUI:
         self.show_firing_arcs = False
         
         self.show_firing_arcs = False
-        
-        # New Selection System
-        self.selected_components = [] # List of (layer_type, index, component) tuples or wrapped components
 
-        
+        # PROJ-44: Selection managed by BuilderStateManager
+        # self.selected_components property delegates to state_manager
+
+
         self._create_ui()
         
     def _create_ui(self):
@@ -268,88 +277,60 @@ class BuilderSceneGUI:
     def on_selection_changed(self, new_selection, append=False, toggle=False):
         """
         Handle selection changes.
-        new_selection: can be a single component tuple (layer, idx, comp), a list of them, or None.
-        append: If True, add to existing selection instead of replacing.
-        toggle: If True, toggles selection state of existing items (Ctrl+Click behavior).
-        """
-        if new_selection is None:
-            if not append:
-                self.selected_components = []
-        else:
-            if not isinstance(new_selection, list):
-                new_selection = [new_selection]
-            
-            # Normalize to tuples if possible, or wrapping objects
-            # Ideally we want (layer, index, comp)
-            # If we get just component, we'll have to find it or wrap it
-            
-            norm_selection = []
-            for item in new_selection:
-                if isinstance(item, tuple) and len(item) == 3:
-                    norm_selection.append(item)
-                elif hasattr(item, 'id'): # It's a component
-                     # Find it in ship?
-                     found = False
-                     for l_type, l_data in self.ship.layers.items():
-                         try:
-                             idx = l_data['components'].index(item)
-                             norm_selection.append((l_type, idx, item))
-                             found = True
-                             break
-                         except ValueError:
-                             continue
-                     if not found:
-                         # Maybe it's a template (dragged)
-                         norm_selection.append((None, -1, item))
-            
-            if append:
-                # 1. Enforce Homogeneity
-                # Check if new items match the type (definition ID) of existing selection
-                if self.selected_components and norm_selection:
-                    # Get definition ID of currently selected items (assuming they are homogeneous)
-                    # We can check the first one.
-                    current_def_id = self.selected_components[0][2].id
-                    
-                    # Check if all new items match this ID
-                    matches_type = all(item[2].id == current_def_id for item in norm_selection)
-                    
-                    if not matches_type:
-                        # User clicked a different type. Standard behavior: Replace selection.
-                        # This feels cleaner than ignoring it.
-                        self.selected_components = norm_selection
-                        append = False # Treat as replace
-                    else:
-                        # Add unique items (Uniqueness based on OBJECT IDENTITY, not Def ID)
-                        current_objs = {c[2] for c in self.selected_components}
-                        for item in norm_selection:
-                            if item[2] in current_objs:
-                                if toggle:
-                                    # Toggle OFF
-                                    self.selected_components = [x for x in self.selected_components if x[2] is not item[2]]
-                                else:
-                                    # Ensure selected (do nothing if already there)
-                                    pass
-                            else:
-                                self.selected_components.append(item)
-                else:
-                    # Nothing currently selected, just append (which effectively is a set)
-                     self.selected_components = norm_selection
-            else:
-                self.selected_components = norm_selection
 
-        # Update dependent UI
-        # For properties panel, we generally show the LAST selected item (or first?)
-        # Let's show the last one added to selection as "primary"
-        self.selected_component = self.selected_components[-1] if self.selected_components else None
-        
-        # Update Builder State for Panel
-        if self.selected_components:
-             # If we have a group selected, layer panel needs to know?
-             # Layer panel now highlights based on builder.selected_components check in its rebuild
-             pass
+        PROJ-44 Phase 7: Delegates to BuilderStateManager for state management.
+
+        Args:
+            new_selection: Component, tuple (layer, idx, comp), list of them, or None
+            append: If True, add to existing selection instead of replacing
+            toggle: If True, toggles selection state (Ctrl+Click behavior)
+        """
+        self._state_manager.on_selection_changed(new_selection, append=append, toggle=toggle)
+
+    def _on_state_selection_changed(self, selected_component):
+        """
+        Callback from BuilderStateManager when selection changes.
+
+        Updates dependent UI components (modifier panel, event bus).
+        """
+        # Sync with controller (for schematic view highlighting)
+        self.controller.selected_component = selected_component
 
         self.rebuild_modifier_ui()
-        self.event_bus.emit('SELECTION_CHANGED', self.selected_component)
+        self.event_bus.emit('SELECTION_CHANGED', selected_component)
+
+    @property
+    def selected_components(self):
+        """List of (layer, index, component) tuples. Delegates to state manager."""
+        return self._state_manager.selected_components
+
+    @selected_components.setter
+    def selected_components(self, value):
+        """Set selected components directly. Delegates to state manager."""
+        self._state_manager.selected_components = value
+
+    @property
+    def template_modifiers(self):
+        """Template modifiers for new components. Delegates to state manager."""
+        return self._state_manager.template_modifiers
+
+    @template_modifiers.setter
+    def template_modifiers(self, value):
+        """Set template modifiers. Delegates to state manager."""
+        self._state_manager.set_template_modifiers(value)
+
+    @property
+    def pending_action(self):
+        """Pending action awaiting confirmation. Delegates to state manager."""
+        return self._state_manager.pending_action
+
+    @pending_action.setter
+    def pending_action(self, value):
+        """Set pending action. Delegates to state manager."""
+        if value is None:
+            self._state_manager.clear_pending_action()
+        else:
+            self._state_manager.set_pending_action(value[0], value[1])
 
     def _on_modifier_change(self):
         # Propagate to ALL selected components
@@ -898,7 +879,7 @@ class BuilderSceneGUI:
             
             # 3. Refresh Builder State (PROJ-43: use services after reload)
             self.available_components = self._component_service.get_all_components()
-            self.template_modifiers = {}
+            self._state_manager.clear_all()  # Clear selection, modifiers, etc.
             all_classes = self._vehicle_class_service.get_all_classes()
 
             self.ship = self._ship_factory.create_from_design({
@@ -911,6 +892,9 @@ class BuilderSceneGUI:
             self.ship.position = pygame.math.Vector2(self.width // 2, self.height // 2)
             self.ship.recalculate_stats()
 
+            # Update state manager with new ship
+            self._state_manager.ship = self.ship
+
             # Reset UI Panels
             # Left Panel needs to rebuild list
             self.left_panel.update_component_list()
@@ -918,7 +902,6 @@ class BuilderSceneGUI:
             # Center View
             self.view.selected_component = None
             self.controller.selected_component = None
-            self.selected_components = []
 
             # Right Panel needs to refresh dropdowns
             # We need to recreate the class dropdown or update its items
@@ -984,9 +967,13 @@ class BuilderSceneGUI:
         new_ship, message = ShipIO.load_ship(self.width, self.height)
         if new_ship:
             self.ship = new_ship
+            # Update state manager with new ship
+            self._state_manager.ship = self.ship
+            self._state_manager.clear_selection()
+
             # Fully refresh UI controls to match new ship state
             self.right_panel.refresh_controls()
-            
+
             self.update_stats()
             # Also update the layers panel in case components changed
             self.layer_panel.rebuild()
