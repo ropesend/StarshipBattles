@@ -12,7 +12,7 @@ from tests.fixtures.paths import get_project_root
 class TestBuilderValidation:
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
         # Initialize pygame for Vector2
         if not pygame.get_init():
             pygame.init()
@@ -21,9 +21,12 @@ class TestBuilderValidation:
         from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(str(get_project_root()))
 
+        # Store registries for use in tests
+        self.registries = fresh_registries
+
         # Create a standard ship for testing
         # Use Cruiser because it uses Capital_Standard which has INNER layer (Frigate/Escort no longer does)
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
 
         # Helper to create component data
         self.base_component_data = {
@@ -46,7 +49,7 @@ class TestBuilderValidation:
         data = self.base_component_data.copy()
         data.update(kwargs)
         # Handle allowed_layers if passed as list of strings, Component expects strings in data
-        return Component(data)
+        return Component(data, registries=self.registries)
 
     def test_layer_restrictions(self):
         """Step 2: Verify layer restrictions are enforced."""
@@ -54,7 +57,7 @@ class TestBuilderValidation:
         # 1. Test Restriction: Block specific classification
         comp_data = self.base_component_data.copy()
         comp_data["major_classification"] = "Weapons"
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=self.registries)
 
         # Inject restriction into INNER layer for this test
         self.ship.layers[LayerType.INNER]['restrictions'].append("block_classification:Weapons")
@@ -70,9 +73,9 @@ class TestBuilderValidation:
         # 2. Test Allow only restriction (Armor layer)
         armor_comp_data = self.base_component_data.copy()
         armor_comp_data["major_classification"] = "Armor"
-        armor_comp = Component(armor_comp_data)
+        armor_comp = Component(armor_comp_data, registries=self.registries)
 
-        generic_comp = Component(self.base_component_data) # Classification is None or default?
+        generic_comp = Component(self.base_component_data, registries=self.registries) # Classification is None or default?
         generic_comp.data['major_classification'] = "Generic"
 
         # Verify ARMOR layer usually has restriction (from ship init)
@@ -93,8 +96,8 @@ class TestBuilderValidation:
         unique_data["id"] = "unique_bridge"
         unique_data["is_unique"] = True # Hypothetical flag
 
-        comp1 = Component(unique_data)
-        comp2 = Component(unique_data) # Same ID/Definition
+        comp1 = Component(unique_data, registries=self.registries)
+        comp2 = Component(unique_data, registries=self.registries) # Same ID/Definition
 
         # Add first one
         self.ship.add_component(comp1, LayerType.CORE)
@@ -118,8 +121,8 @@ class TestBuilderValidation:
         group_a_2["id"] = "group_a_2"
         group_a_2["exclusive_group"] = "GroupA"
 
-        comp1 = Component(group_a_1)
-        comp2 = Component(group_a_2)
+        comp1 = Component(group_a_1, registries=self.registries)
+        comp2 = Component(group_a_2, registries=self.registries)
 
         self.ship.add_component(comp1, LayerType.INNER)
 
@@ -142,12 +145,12 @@ class TestBuilderValidation:
         mount_data = self.base_component_data.copy()
         mount_data["id"] = "heavy_mount"
         mount_data["mount_type"] = "Heavy"
-        mount = Component(mount_data)
+        mount = Component(mount_data, registries=self.registries)
 
         weapon_data = self.base_component_data.copy()
         weapon_data["id"] = "heavy_weapon"
         weapon_data["required_mount"] = "Heavy"
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
 
         # Try adding weapon without mount
         result = self.ship.add_component(weapon, LayerType.OUTER)
@@ -166,7 +169,7 @@ class TestBuilderValidation:
         from game.core.registry import RegistryManager
         with patch.object(RegistryManager.instance(), 'vehicle_classes', {"Cruiser": {"max_mass": 100, "layers": []}}):
             # Re-init ship to pick up new class limit
-            self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+            self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=self.registries)
             # Force explicit override just in case update overwrites it with 100
             self.ship.max_mass_budget = 100
 
@@ -187,12 +190,12 @@ class TestBuilderValidation:
         # Create a component with 'WeaponAbility'
         weapon_data = self.base_component_data.copy()
         weapon_data["abilities"] = {"WeaponAbility": {"damage": 10}}
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
 
         # Create a component with 'ShieldProjection'
         shield_data = self.base_component_data.copy()
         shield_data["abilities"] = {"ShieldProjection": {"capacity": 100}}
-        shield = Component(shield_data)
+        shield = Component(shield_data, registries=self.registries)
 
         # 1. Test allow_ability
         # Inject restriction: Only allow components with WeaponAbility in OUTER
@@ -241,7 +244,7 @@ class TestBuilderValidation:
 class TestComplexRules:
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
         if not pygame.get_init():
             pygame.init()
         # Initialize ship logic
@@ -249,10 +252,13 @@ class TestComplexRules:
         from game.simulation.entities.ship_loader import initialize_ship_data
         initialize_ship_data(str(get_project_root()))
 
-        self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        # Store registries for use in tests
+        self.registries = fresh_registries
+
+        self.ship = Ship("Complex Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
 
         from game.simulation.ship_validator import ShipDesignValidator
-        self.validator = ShipDesignValidator()
+        self.validator = ShipDesignValidator(registries=fresh_registries)
 
         yield
 
@@ -269,7 +275,7 @@ class TestComplexRules:
             "allowed_vehicle_types": ["Ship"],
             "abilities": abilities
         }
-        return Component(data)
+        return Component(data, registries=self.registries)
 
     def test_class_requirements(self):
         """Verify ClassRequirementsRule (Crew/LifeSupport) validates component abilities."""

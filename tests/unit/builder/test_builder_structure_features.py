@@ -22,7 +22,7 @@ def pygame_manager():
 
 
 @pytest.fixture
-def builder_setup():
+def builder_setup(fresh_registries):
     pygame.init()
     pygame.display.set_mode((800, 600))
     manager = pygame_gui.UIManager((800, 600))
@@ -55,7 +55,7 @@ def builder_setup():
         "damage": 0,
         "modifiers": []
     }
-    component = Component(comp_data)
+    component = Component(comp_data, registries=fresh_registries)
     component.mass = 10
     component.name = "Test Component"
 
@@ -112,7 +112,8 @@ def builder_setup():
         'comp_data': comp_data,
         'patcher_create_ui': patcher_create_ui,
         'p1': p1,
-        'p2': p2
+        'p2': p2,
+        'registries': fresh_registries
     }
 
     # Stop patches
@@ -125,7 +126,7 @@ def builder_setup():
 
 
 class TestBuilderStructureFeatures:
-    def test_individual_item_ui_elements(self, pygame_manager):
+    def test_individual_item_ui_elements(self, pygame_manager, fresh_registries):
         """Test that IndividualComponentItem has correct buttons and label style."""
         manager = pygame_manager
         container = manager.get_root_container()
@@ -141,7 +142,7 @@ class TestBuilderStructureFeatures:
             "damage": 0,
             "modifiers": []
         }
-        component = Component(comp_data)
+        component = Component(comp_data, registries=fresh_registries)
         component.mass = 10
         component.name = "Test Component"
 
@@ -166,7 +167,7 @@ class TestBuilderStructureFeatures:
         assert '+' in button_texts
         assert '-' in button_texts
 
-    def test_layer_item_ui_elements(self, pygame_manager):
+    def test_layer_item_ui_elements(self, pygame_manager, fresh_registries):
         """Test that LayerComponentItem has correct buttons and label style."""
         manager = pygame_manager
         container = manager.get_root_container()
@@ -182,7 +183,7 @@ class TestBuilderStructureFeatures:
             "damage": 0,
             "modifiers": []
         }
-        component = Component(comp_data)
+        component = Component(comp_data, registries=fresh_registries)
         component.mass = 10
         component.name = "Test Component"
 
@@ -208,10 +209,11 @@ class TestBuilderStructureFeatures:
         """Test selecting multiple components and property propagation."""
         builder_gui = builder_setup['builder_gui']
         comp_data = builder_setup['comp_data']
+        registries = builder_setup['registries']
 
-        c1 = Component(comp_data)
-        c2 = Component(comp_data)
-        c3 = Component(comp_data)
+        c1 = Component(comp_data, registries=registries)
+        c2 = Component(comp_data, registries=registries)
+        c3 = Component(comp_data, registries=registries)
         c1.id = "test_id"  # Ensure they are same type
         c2.id = "test_id"
         c3.id = "test_id"
@@ -238,9 +240,10 @@ class TestBuilderStructureFeatures:
         """Test that changing a modifier on one selected component updates others."""
         builder_gui = builder_setup['builder_gui']
         comp_data = builder_setup['comp_data']
+        registries = builder_setup['registries']
 
-        c1 = Component(comp_data)
-        c2 = Component(comp_data)
+        c1 = Component(comp_data, registries=registries)
+        c2 = Component(comp_data, registries=registries)
         c1.id = "test_id"
         c2.id = "test_id"
 
@@ -301,7 +304,8 @@ class TestBuilderStructureFeatures:
         builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
 
         # Need to clone component
-        comp.clone = MagicMock(return_value=Component(comp_data))
+        registries = builder_setup['registries']
+        comp.clone = MagicMock(return_value=Component(comp_data, registries=registries))
 
         builder_gui.handle_event(event)
         builder_gui.viewmodel.add_component_instance.assert_called()

@@ -52,15 +52,15 @@ def mock_modifier_registry():
 
 
 @pytest.fixture
-def weapon_component():
+def weapon_component(fresh_registries):
     """Create a weapon component for testing."""
-    return create_component("laser_cannon")
+    return create_component("laser_cannon", registries=fresh_registries)
 
 
 @pytest.fixture
-def engine_component():
+def engine_component(fresh_registries):
     """Create an engine component for testing."""
-    return create_component("standard_engine")
+    return create_component("standard_engine", registries=fresh_registries)
 
 
 # =============================================================================

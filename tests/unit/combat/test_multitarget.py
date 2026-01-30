@@ -30,9 +30,9 @@ def grid():
 
 
 @pytest.fixture
-def base_ship(grid):
+def base_ship(grid, fresh_registries):
     """Create a fully equipped base ship for testing."""
-    ship = Ship("TestShip", 1000, 1000, (255, 0, 0), team_id=0, ship_class="Cruiser")
+    ship = Ship("TestShip", 1000, 1000, (255, 0, 0), team_id=0, ship_class="Cruiser", registries=fresh_registries)
     # Use ShipControllableAdapter to match production behavior (battle_engine.py)
     ai = AIController(ShipControllableAdapter(ship), grid, enemy_team_id=1)
     ship.ai_controller = ai

@@ -15,7 +15,7 @@ from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
 @pytest.fixture
-def ai_setup():
+def ai_setup(fresh_registries):
     """Setup fixture for AI controller tests."""
     data_dir = get_data_dir()
     unit_test_data_dir = get_unit_test_data_dir()
@@ -36,20 +36,20 @@ def ai_setup():
     grid = SpatialGrid(cell_size=2000)
 
     # Create two ships with full crew infrastructure
-    ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L")
-    ship1.add_component(create_component('bridge'), LayerType.CORE)
-    ship1.add_component(create_component('crew_quarters'), LayerType.CORE)
-    ship1.add_component(create_component('life_support'), LayerType.CORE)
-    ship1.add_component(create_component('standard_engine'), LayerType.OUTER)
-    ship1.add_component(create_component('thruster'), LayerType.INNER)
+    ship1 = Ship("Ally", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L", registries=fresh_registries)
+    ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+    ship1.add_component(create_component('thruster', registries=fresh_registries), LayerType.INNER)
     ship1.recalculate_stats()
 
-    ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
-    ship2.add_component(create_component('bridge'), LayerType.CORE)
-    ship2.add_component(create_component('crew_quarters'), LayerType.CORE)
-    ship2.add_component(create_component('life_support'), LayerType.CORE)
-    ship2.add_component(create_component('standard_engine'), LayerType.OUTER)
-    ship2.add_component(create_component('thruster'), LayerType.INNER)
+    ship2 = Ship("Enemy", 1000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L", registries=fresh_registries)
+    ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+    ship2.add_component(create_component('thruster', registries=fresh_registries), LayerType.INNER)
     ship2.recalculate_stats()
 
     # Insert ships into grid
@@ -64,7 +64,8 @@ def ai_setup():
         'grid': grid,
         'ship1': ship1,
         'ship2': ship2,
-        'ai': ai_controller
+        'ai': ai_controller,
+        'registries': fresh_registries
     }
 
     # Cleanup
@@ -147,7 +148,7 @@ class TestAIController:
 
 
 @pytest.fixture
-def strategy_setup():
+def strategy_setup(fresh_registries):
     """Setup fixture for AI strategy state tests."""
     data_dir = get_data_dir()
     unit_test_data_dir = get_unit_test_data_dir()
@@ -166,20 +167,20 @@ def strategy_setup():
     manager._loaded = True
     grid = SpatialGrid(cell_size=2000)
 
-    ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L")
-    ship.add_component(create_component('bridge'), LayerType.CORE)
-    ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-    ship.add_component(create_component('life_support'), LayerType.CORE)
-    ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-    ship.add_component(create_component('railgun'), LayerType.OUTER)
+    ship = Ship("Attacker", 0, 0, (0, 255, 0), team_id=0, ship_class="TestM_4L", registries=fresh_registries)
+    ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+    ship.add_component(create_component('railgun', registries=fresh_registries), LayerType.OUTER)
     ship.recalculate_stats()
 
-    target = Ship("Target", 500, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
-    target.add_component(create_component('bridge'), LayerType.CORE)
-    target.add_component(create_component('crew_quarters'), LayerType.CORE)
-    target.add_component(create_component('life_support'), LayerType.CORE)
-    target.add_component(create_component('standard_engine'), LayerType.OUTER)
-    target.add_component(create_component('thruster'), LayerType.INNER)
+    target = Ship("Target", 500, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L", registries=fresh_registries)
+    target.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    target.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    target.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    target.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+    target.add_component(create_component('thruster', registries=fresh_registries), LayerType.INNER)
     target.recalculate_stats()
 
     grid.insert(ship)
@@ -192,7 +193,8 @@ def strategy_setup():
         'grid': grid,
         'ship': ship,
         'target': target,
-        'ai': ai_controller
+        'ai': ai_controller,
+        'registries': fresh_registries
     }
 
     # Cleanup
@@ -296,11 +298,12 @@ class TestTargetingHelpers:
         # Create a third ship
         from game.simulation.entities.ship import Ship
         from game.simulation.components.component import create_component
+        registries = ai_setup['registries']
 
-        ship3 = Ship("Enemy2", 2000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L")
-        ship3.add_component(create_component('bridge'), LayerType.CORE)
-        ship3.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship3.add_component(create_component('life_support'), LayerType.CORE)
+        ship3 = Ship("Enemy2", 2000, 0, (255, 0, 0), team_id=1, ship_class="TestM_4L", registries=registries)
+        ship3.add_component(create_component('bridge', registries=registries), LayerType.CORE)
+        ship3.add_component(create_component('crew_quarters', registries=registries), LayerType.CORE)
+        ship3.add_component(create_component('life_support', registries=registries), LayerType.CORE)
         ship3.recalculate_stats()
         ai_setup['grid'].insert(ship3)
 

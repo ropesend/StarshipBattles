@@ -10,7 +10,7 @@ from game.simulation.components.component import Component
 
 class TestMultiSelectionLogic:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         # Initialize display for pygame_gui
@@ -41,10 +41,10 @@ class TestMultiSelectionLogic:
             "modifiers": []
         }
 
-        self.comp_a1 = Component(self.comp_data_a)
-        self.comp_a2 = Component(self.comp_data_a)
-        self.comp_a3 = Component(self.comp_data_a)
-        self.comp_a4 = Component(self.comp_data_a)
+        self.comp_a1 = Component(self.comp_data_a, registries=fresh_registries)
+        self.comp_a2 = Component(self.comp_data_a, registries=fresh_registries)
+        self.comp_a3 = Component(self.comp_data_a, registries=fresh_registries)
+        self.comp_a4 = Component(self.comp_data_a, registries=fresh_registries)
 
         self.builder.selected_components = []
 

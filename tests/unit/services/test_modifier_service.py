@@ -29,33 +29,33 @@ def modifier_service(modifier_registry):
 
 
 @pytest.fixture
-def weapon_component():
+def weapon_component(fresh_registries):
     """Create a weapon component (laser cannon) for testing."""
-    return create_component("laser_cannon")
+    return create_component("laser_cannon", registries=fresh_registries)
 
 
 @pytest.fixture
-def engine_component():
+def engine_component(fresh_registries):
     """Create an engine component for testing."""
-    return create_component("standard_engine")
+    return create_component("standard_engine", registries=fresh_registries)
 
 
 @pytest.fixture
-def armor_component():
+def armor_component(fresh_registries):
     """Create an armor component for testing."""
-    return create_component("armor_plate")
+    return create_component("armor_plate", registries=fresh_registries)
 
 
 @pytest.fixture
-def seeker_component():
+def seeker_component(fresh_registries):
     """Create a seeker weapon component for testing."""
-    return create_component("missile_launcher")
+    return create_component("missile_launcher", registries=fresh_registries)
 
 
 @pytest.fixture
-def beam_component():
+def beam_component(fresh_registries):
     """Create a beam weapon component for testing."""
-    return create_component("beam_emitter")
+    return create_component("beam_emitter", registries=fresh_registries)
 
 
 # =============================================================================

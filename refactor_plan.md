@@ -8,46 +8,42 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 6 Core Changes (Tasks 6.1-6.6)
-**Current Status:** PROJ-50 In Progress - Phase 6 (70% complete)
+**Last Completed:** PROJ-50 Phase 6 Task 6.7 - Test DI updates (53 files)
+**Current Status:** PROJ-50 In Progress - Phase 6 (85% complete)
 **Current Project:** PROJ-50
-**Current Phase:** Phase 6 - Test Updates (Task 6.7)
-**Test Status:** DI tests passing (23), ~100 other tests need registry updates
+**Current Phase:** Phase 6 - Test Updates (Task 6.7 continued)
+**Test Status:** 5314 passed, 352 failed, 172 errors
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 6 - Core Entity Updates PARTIAL COMPLETE
-- COMPLETED Tasks 6.1-6.6 (all core code changes):
-  - Component: registries now REQUIRED, TypeError if None
-  - Ship: registries now REQUIRED, TypeError if None
-  - ShipSerializer.from_dict(): registries now REQUIRED
-  - ShipState.to_ship(): registries now REQUIRED
-  - ShipDesignValidator/ClassRequirementsRule: registries now REQUIRED
-  - ShipComponentManager: uses ship._registries directly
-  - ship_loader.get_or_create_validator(): creates GameRegistries from RegistryManager
-  - load_components_data(): accepts optional registries for bootstrap (creates from provider if None)
+- PROJ-50 Phase 6 - Test DI updates significant progress
+- Tasks 6.1-6.6 (core code changes): COMPLETE
+- Task 6.7 (test updates): 85% COMPLETE
 
-- REMAINING: Task 6.7 - Update ~60 test files to pass fresh_registries
-  - Pattern: Add `fresh_registries` fixture, pass `registries=fresh_registries`
-  - Updated: tests/fixtures/ships.py, test_component_di.py, test_ship_di.py,
-    test_ship_serialization_di.py
-  - Still need: test_component*.py, test_ship*.py, ship_helpers/, combat/,
-    services/, builder/, integration/
+- Completed test directories:
+  - tests/unit/entities/ - 30+ files updated
+  - tests/unit/combat/ - 8 files updated
+  - tests/unit/ui/ - 6 files updated
+  - tests/unit/services/ - files updated
+  - tests/unit/builder/ - files updated
+  - tests/unit/fixtures/ - fixture tests updated
+  - tests/fixtures/ - factory functions updated
 
-- Files modified this session:
-  - game/simulation/components/component.py
-  - game/simulation/entities/ship.py
-  - game/simulation/entities/ship_serialization.py
-  - game/simulation/entities/ship_component_manager.py
-  - game/simulation/entities/ship_loader.py
-  - game/simulation/battle_state.py
-  - game/simulation/ship_validator.py
-  - tests/fixtures/ships.py
-  - tests/unit/entities/test_component_di.py
-  - tests/unit/entities/test_ship_di.py
-  - tests/unit/entities/test_ship_serialization_di.py
+- Remaining test directories:
+  - tests/unit/systems/ - ~5 files need updates
+  - tests/unit/strategy/ - ~10 files need updates
+  - tests/integration/ - ~10 files need updates
+  - Scattered remaining failures
 
-- Next: Continue Task 6.7 - Update remaining test files
+- Pattern for remaining fixes:
+  - Add `fresh_registries` fixture parameter
+  - Pass `registries=fresh_registries` to Ship(), Component(), create_component()
+
+- Known unrelated failures (not DI issues):
+  - ModifierControlRow API mismatch (builder_widgets.py uses old API)
+  - 13 tests in test_modifier_row.py and test_mandatory_modifiers.py
+
+- Next: Continue Task 6.7 - Fix remaining systems/, strategy/, integration/ tests
 
 ---
 
@@ -139,6 +135,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-50 | Phase 6 Task 6.7 partial | In Progress | 5314 passed | 65a652e8 | Test DI updates: 53 files, entities/combat/ui done |
 | 2026-01-30 | PROJ-50 | Phase 5 | Complete | 5775 passed | d8014ebf | Sim services: strict DI, 5 src + 6 test files |
 | 2026-01-30 | PROJ-50 | Phase 4 | Complete | 5775 passed | c1f68b31 | Strategy data: registries param, 4 files |
 | 2026-01-30 | PROJ-50 | Phase 3 | Complete | 838 strategy | 5a72ce16 | Strategy services: strict DI, 5 test files |

@@ -3,42 +3,29 @@ import pygame
 import math
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, create_component
-from game.core.registry import RegistryManager
-from tests.fixtures.paths import get_project_root, get_data_dir
+from game.simulation.components.component import create_component
 
 
 @pytest.fixture
-def ship_data():
-    """Initialize ship data and load components, clean up pygame and registry after test."""
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
-    yield
-    pygame.quit()
-    RegistryManager.instance().clear()
-
-
-@pytest.fixture
-def fully_equipped_ship(ship_data):
+def fully_equipped_ship(fresh_registries):
     """Create a fully equipped Cruiser ship for testing movement."""
     # Use Cruiser class which has INNER layer (Capital_Standard config)
-    ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Cruiser")
+    ship = Ship("TestShip", 100, 100, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
     # Basic setup - need crew infrastructure for components to be active
     # Core: Bridge (requires crew to function)
-    ship.add_component(create_component('bridge'), LayerType.CORE)
+    ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
     # Core: Generator
-    ship.add_component(create_component('generator'), LayerType.CORE)
+    ship.add_component(create_component('generator', registries=fresh_registries), LayerType.CORE)
 
     # INNER: Multiple crew quarters and life support (Cruiser needs more crew than Escort)
     for _ in range(3):
-        ship.add_component(create_component('crew_quarters'), LayerType.INNER)
-        ship.add_component(create_component('life_support'), LayerType.INNER)
+        ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.INNER)
+        ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.INNER)
 
     # Inner: Fuel Tank
-    ship.add_component(create_component('fuel_tank'), LayerType.INNER)
+    ship.add_component(create_component('fuel_tank', registries=fresh_registries), LayerType.INNER)
     # Outer: Engine (requires crew to be active)
-    ship.add_component(create_component('standard_engine'), LayerType.OUTER)
+    ship.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
 
     # Initial recalc
     ship.recalculate_stats()

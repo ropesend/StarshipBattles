@@ -2,30 +2,19 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import Component
-from game.core.registry import RegistryManager
-from tests.fixtures.paths import get_project_root
 
 
 @pytest.fixture
-def ship_data():
-    """Initialize ship data and clean up registry after test."""
-    initialize_ship_data(str(get_project_root()))
-    yield
-    RegistryManager.instance().clear()
-
-
-@pytest.fixture
-def fighter(ship_data):
+def fighter(fresh_registries):
     """Create a Fighter ship (2 layers: CORE, ARMOR)."""
-    return Ship("TestFighter", 0, 0, (255, 0, 0), ship_class="Fighter (Small)")
+    return Ship("TestFighter", 0, 0, (255, 0, 0), ship_class="Fighter (Small)", registries=fresh_registries)
 
 
 @pytest.fixture
-def escort(ship_data):
+def escort(fresh_registries):
     """Create an Escort ship (3 layers: CORE, OUTER, ARMOR)."""
-    return Ship("TestEscort", 0, 0, (0, 255, 0), ship_class="Escort")
+    return Ship("TestEscort", 0, 0, (0, 255, 0), ship_class="Escort", registries=fresh_registries)
 
 
 class TestLayerRefinements:

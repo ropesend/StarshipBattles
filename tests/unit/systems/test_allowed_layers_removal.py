@@ -6,26 +6,14 @@ Specifically tests that:
 """
 import pytest
 
-from game.simulation.components.component import Component, load_components
-from game.core.registry import RegistryManager
+from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.entities.ship_loader import initialize_ship_data
-from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 @pytest.fixture
-def ship_data():
-    """Initialize ship data and load components, clean up registry after test."""
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
-    yield
-    RegistryManager.instance().clear()
-
-
-@pytest.fixture
-def cruiser_ship(ship_data):
+def cruiser_ship(fresh_registries):
     """Create a Cruiser ship for testing."""
-    return Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
+    return Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser", registries=fresh_registries)
 
 
 class TestAllowedLayersRemoval:
@@ -34,7 +22,7 @@ class TestAllowedLayersRemoval:
     from all component classes to prevent AttributeError crashes.
     """
 
-    def test_component_base_class_no_allowed_layers(self, ship_data):
+    def test_component_base_class_no_allowed_layers(self, fresh_registries):
         """Base Component class should not define allowed_layers."""
         # Create a minimal component with required fields
         comp = Component({
@@ -43,40 +31,40 @@ class TestAllowedLayersRemoval:
             'type': 'TestType',
             'mass': 10,
             'hp': 10
-        })
+        }, registries=fresh_registries)
         assert not hasattr(comp, 'allowed_layers'), \
             "Component base class should not have 'allowed_layers' attribute"
 
-    def test_bridge_no_allowed_layers(self, ship_data):
+    def test_bridge_no_allowed_layers(self, fresh_registries):
         """Bridge component should not have allowed_layers."""
-        comps = RegistryManager.instance().components
+        comps = fresh_registries.components
         if 'bridge' in comps:
             bridge = comps['bridge'].clone()
             assert not hasattr(bridge, 'allowed_layers'), \
                 "Bridge should not have 'allowed_layers' attribute"
 
-    def test_engine_no_allowed_layers(self, ship_data):
+    def test_engine_no_allowed_layers(self, fresh_registries):
         """Engine component should not have allowed_layers."""
-        comps = RegistryManager.instance().components
+        comps = fresh_registries.components
         if 'standard_engine' in comps:
             engine = comps['standard_engine'].clone()
             assert not hasattr(engine, 'allowed_layers'), \
                 "Engine should not have 'allowed_layers' attribute"
 
-    def test_armor_no_allowed_layers(self, ship_data):
+    def test_armor_no_allowed_layers(self, fresh_registries):
         """Armor component should not have allowed_layers."""
-        comps = RegistryManager.instance().components
+        comps = fresh_registries.components
         if 'basic_armor' in comps:
             armor = comps['basic_armor'].clone()
             assert not hasattr(armor, 'allowed_layers'), \
                 "Armor should not have 'allowed_layers' attribute"
 
-    def test_all_registry_components_no_allowed_layers(self, ship_data):
+    def test_all_registry_components_no_allowed_layers(self, fresh_registries):
         """
         Comprehensive check: ALL components in the registry must not have allowed_layers.
         This prevents any component from causing an AttributeError when dropped in the builder.
         """
-        for comp_id, comp in RegistryManager.instance().components.items():
+        for comp_id, comp in fresh_registries.components.items():
             cloned = comp.clone()
             assert not hasattr(cloned, 'allowed_layers'), \
                 f"Component '{comp_id}' should not have 'allowed_layers' attribute"
@@ -88,11 +76,11 @@ class TestBuilderDropValidation:
     centralized validator, not through a per-component allowed_layers check.
     """
 
-    def test_validator_handles_component_placement(self, cruiser_ship):
+    def test_validator_handles_component_placement(self, cruiser_ship, fresh_registries):
         """Validator should handle layer checks without allowed_layers."""
         from game.simulation.entities.ship_loader import get_or_create_validator
 
-        comps = RegistryManager.instance().components
+        comps = fresh_registries.components
         if 'bridge' not in comps:
             pytest.skip("No bridge in registry")
         bridge = comps['bridge'].clone()
@@ -104,13 +92,13 @@ class TestBuilderDropValidation:
         assert hasattr(result, 'is_valid')
         assert hasattr(result, 'errors')
 
-    def test_weapon_blocked_in_core_layer(self, cruiser_ship):
+    def test_weapon_blocked_in_core_layer(self, cruiser_ship, fresh_registries):
         """Weapon should be blocked in CORE layer via vehiclelayers.json rules."""
         from game.simulation.entities.ship_loader import get_or_create_validator
 
         # Find any weapon component in registry
         weapon_id = None
-        comps = RegistryManager.instance().components
+        comps = fresh_registries.components
         for comp_id, comp in comps.items():
             if getattr(comp, 'major_classification', None) == 'Weapons':
                 weapon_id = comp_id
@@ -127,13 +115,13 @@ class TestBuilderDropValidation:
         # Weapon should fail validation in CORE
         assert not result.is_valid, "Weapon should not be allowed in CORE layer"
 
-    def test_armor_allowed_in_armor_layer(self, cruiser_ship):
+    def test_armor_allowed_in_armor_layer(self, cruiser_ship, fresh_registries):
         """Armor should be allowed in ARMOR layer."""
         from game.simulation.entities.ship_loader import get_or_create_validator
 
         # Find any armor component in registry
         armor_id = None
-        for comp_id, comp in RegistryManager.instance().components.items():
+        for comp_id, comp in fresh_registries.components.items():
             if getattr(comp, 'major_classification', None) == 'Armor':
                 armor_id = comp_id
                 break
@@ -141,7 +129,7 @@ class TestBuilderDropValidation:
         if not armor_id:
             pytest.skip("No armor component in registry")
 
-        armor = RegistryManager.instance().components[armor_id].clone()
+        armor = fresh_registries.components[armor_id].clone()
 
         result = get_or_create_validator().validate_addition(cruiser_ship, armor, LayerType.ARMOR)
 

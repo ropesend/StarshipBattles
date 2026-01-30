@@ -8,7 +8,7 @@ from game.simulation.components.component import Component
 
 
 @pytest.fixture
-def ship_with_registry():
+def ship_with_registry(fresh_registries):
     """Set up pygame, registry, and ship for testing."""
     if not pygame.get_init():
         pygame.init()
@@ -16,9 +16,9 @@ def ship_with_registry():
     if "Cruiser" not in RegistryManager.instance().vehicle_classes:
         RegistryManager.instance().vehicle_classes["Cruiser"] = {"max_mass": 16000, "default_hull_id": "hull_cruiser"}
 
-    ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+    ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
 
-    yield ship
+    yield ship, fresh_registries
 
     pygame.quit()
     RegistryManager.instance().clear()
@@ -39,22 +39,22 @@ def base_data():
     }
 
 
-def create_comp(base_data, **kwargs):
+def create_comp(base_data, registries, **kwargs):
     """Helper to create component with modified data."""
     data = base_data.copy()
     data.update(kwargs)
-    return Component(data)
+    return Component(data, registries=registries)
 
 
 class TestValidationWarnings:
     def test_fuel_warning(self, ship_with_registry, base_data):
-        ship = ship_with_registry
+        ship, registries = ship_with_registry
 
         # Add Engine requiring fuel
         engine_abilities = {
             "ResourceConsumption": [{"resource": "fuel", "amount": 10, "trigger": "constant"}]
         }
-        engine = create_comp(base_data, id="engine", type="Engine", abilities=engine_abilities)
+        engine = create_comp(base_data, registries, id="engine", type="Engine", abilities=engine_abilities)
 
         ship.add_component(engine, LayerType.INNER)
 
@@ -65,20 +65,20 @@ class TestValidationWarnings:
         tank_abilities = {
             "ResourceStorage": [{"resource": "fuel", "amount": 100}]
         }
-        tank = create_comp(base_data, id="tank", type="Tank", abilities=tank_abilities)
+        tank = create_comp(base_data, registries, id="tank", type="Tank", abilities=tank_abilities)
         ship.add_component(tank, LayerType.INNER)
 
         warnings = ship.get_validation_warnings()
         assert not any("Needs Fuel Storage" in w for w in warnings), f"Warning should be resolved, got {warnings}"
 
     def test_ammo_warning(self, ship_with_registry, base_data):
-        ship = ship_with_registry
+        ship, registries = ship_with_registry
 
         # Add Railgun requiring ammo
         gun_abilities = {
             "ResourceConsumption": [{"resource": "ammo", "amount": 1, "trigger": "activation"}]
         }
-        gun = create_comp(base_data, id="railgun", type="ProjectileWeapon", abilities=gun_abilities)
+        gun = create_comp(base_data, registries, id="railgun", type="ProjectileWeapon", abilities=gun_abilities)
         ship.add_component(gun, LayerType.OUTER)
 
         warnings = ship.get_validation_warnings()
@@ -88,20 +88,20 @@ class TestValidationWarnings:
         tank_abilities = {
             "ResourceStorage": [{"resource": "ammo", "amount": 100}]
         }
-        tank = create_comp(base_data, id="ammo_tank", type="Tank", abilities=tank_abilities)
+        tank = create_comp(base_data, registries, id="ammo_tank", type="Tank", abilities=tank_abilities)
         ship.add_component(tank, LayerType.INNER)
 
         warnings = ship.get_validation_warnings()
         assert not any("Needs Ammo Storage" in w for w in warnings), f"Warning should be resolved, got {warnings}"
 
     def test_energy_warning(self, ship_with_registry, base_data):
-        ship = ship_with_registry
+        ship, registries = ship_with_registry
 
         # Add Laser requiring energy
         laser_abilities = {
             "ResourceConsumption": [{"resource": "energy", "amount": 5, "trigger": "activation"}]
         }
-        laser = create_comp(base_data, id="laser", type="BeamWeapon", abilities=laser_abilities)
+        laser = create_comp(base_data, registries, id="laser", type="BeamWeapon", abilities=laser_abilities)
         ship.add_component(laser, LayerType.OUTER)
 
         warnings = ship.get_validation_warnings()
@@ -111,7 +111,7 @@ class TestValidationWarnings:
         battery_abilities = {
             "ResourceStorage": [{"resource": "energy", "amount": 1000}]
         }
-        battery = create_comp(base_data, id="battery", type="Tank", abilities=battery_abilities)
+        battery = create_comp(base_data, registries, id="battery", type="Tank", abilities=battery_abilities)
         ship.add_component(battery, LayerType.INNER)
 
         warnings = ship.get_validation_warnings()

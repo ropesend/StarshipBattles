@@ -49,7 +49,7 @@ class TestBuilderUISync:
 
         # Mock Builder
         mock_builder = MagicMock()
-        test_ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Escort")
+        test_ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         mock_builder.ship = test_ship
 
         # MVVM: viewmodel.ship must return the same ship for Panel refactoring

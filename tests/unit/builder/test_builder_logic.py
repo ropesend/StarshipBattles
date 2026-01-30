@@ -12,11 +12,12 @@ class TestBuilderLogic:
     """Test ship validation logic used by the builder."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
-        self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort")
+        self.registries = fresh_registries
+        self.ship = Ship("BuilderTarget", 0, 0, (255,255,255), ship_class="Escort", registries=fresh_registries)
         yield
         pygame.quit()
         RegistryManager.instance().clear()
@@ -27,7 +28,7 @@ class TestBuilderLogic:
         # Layer limit for OUTER is 50%.
         # 8 plates * 30 mass = 240. (within 1000 and within 50%)
         for _ in range(8):
-            self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+            self.ship.add_component(create_component('armor_plate', registries=self.registries), LayerType.ARMOR)
 
         self.ship.recalculate_stats()
         # ARMOR limit is 30%. 240 / 1000 = 0.24 (OK)
@@ -38,7 +39,7 @@ class TestBuilderLogic:
         # Since add_component prevents exceeding mass, we expect it to return False eventually.
         added_count = 0
         for _ in range(50):
-            if self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR):
+            if self.ship.add_component(create_component('armor_plate', registries=self.registries), LayerType.ARMOR):
                 added_count += 1
 
         # Should have stopped adding
@@ -50,7 +51,7 @@ class TestBuilderLogic:
         assert self.ship.mass_limits_ok, "Ship should remain valid via add_component"
 
         # Now manually inject a huge component to verify mass_limits_ok handles invalid states (e.g. from loading)
-        huge_plate = create_component('armor_plate')
+        huge_plate = create_component('armor_plate', registries=self.registries)
         huge_plate.mass = 2000 # Way over budget
         self.ship.layers[LayerType.ARMOR]['components'].append(huge_plate)
         huge_plate.ship = self.ship
@@ -66,7 +67,7 @@ class TestBuilderLogic:
         It checks CrewCapacity vs CrewRequired for ships with crew-heavy components.
         """
         # Add a component that requires crew (e.g., bridge)
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
+        self.ship.add_component(create_component('bridge', registries=self.registries), LayerType.CORE)
         self.ship.recalculate_stats()
 
         # Check if crew requirements are met
@@ -79,7 +80,7 @@ class TestBuilderLogic:
 
     def test_invalid_layer_addition_fallback(self):
         """Verify add_component returns False for invalid layers."""
-        engine = create_component('standard_engine')
+        engine = create_component('standard_engine', registries=self.registries)
         # Engine only allowed in INNER, OUTER
         res = self.ship.add_component(engine, LayerType.ARMOR)
         assert not res
@@ -92,7 +93,7 @@ class TestBuilderLogic:
         The validator now checks CrewCapacity/CrewRequired abilities directly.
         """
         # Use a "Fighter (Small)" specifically
-        fighter = Ship("Flyer", 0, 0, (255,255,255), ship_class="Fighter (Small)")
+        fighter = Ship("Flyer", 0, 0, (255,255,255), ship_class="Fighter (Small)", registries=self.registries)
         fighter.recalculate_stats()
         missing = fighter.get_missing_requirements()
 

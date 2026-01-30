@@ -24,7 +24,7 @@ class TestBuilderStateManager:
         return ship
 
     @pytest.fixture
-    def sample_component(self):
+    def sample_component(self, fresh_registries):
         """Create a sample component."""
         comp_data = {
             "id": "test_weapon",
@@ -34,7 +34,7 @@ class TestBuilderStateManager:
             "hp": 100,
             "modifiers": []
         }
-        return Component(comp_data)
+        return Component(comp_data, registries=fresh_registries)
 
     @pytest.fixture
     def state_manager(self, mock_ship):
@@ -68,7 +68,7 @@ class TestBuilderStateManager:
         assert state_manager.selected_components == []
         assert state_manager.selected_component is None
 
-    def test_append_selection(self, state_manager, sample_component):
+    def test_append_selection(self, state_manager, sample_component, fresh_registries):
         """Appending adds to existing selection."""
         comp_data = {
             "id": "test_weapon",
@@ -78,7 +78,7 @@ class TestBuilderStateManager:
             "hp": 100,
             "modifiers": []
         }
-        comp2 = Component(comp_data)
+        comp2 = Component(comp_data, registries=fresh_registries)
 
         state_manager.on_selection_changed(sample_component, append=False)
         state_manager.on_selection_changed(comp2, append=True)
@@ -92,7 +92,7 @@ class TestBuilderStateManager:
 
         assert state_manager.selected_components == []
 
-    def test_toggle_selection_on(self, state_manager, sample_component):
+    def test_toggle_selection_on(self, state_manager, sample_component, fresh_registries):
         """Toggle adds component if not selected."""
         comp_data = {
             "id": "test_weapon",
@@ -102,14 +102,14 @@ class TestBuilderStateManager:
             "hp": 100,
             "modifiers": []
         }
-        comp2 = Component(comp_data)
+        comp2 = Component(comp_data, registries=fresh_registries)
 
         state_manager.on_selection_changed(sample_component, append=False)
         state_manager.on_selection_changed(comp2, append=True, toggle=True)
 
         assert len(state_manager.selected_components) == 2
 
-    def test_homogeneous_selection_enforcement(self, state_manager, sample_component):
+    def test_homogeneous_selection_enforcement(self, state_manager, sample_component, fresh_registries):
         """Selection only allows components with same definition ID."""
         # Same type
         comp_same = Component({
@@ -119,7 +119,7 @@ class TestBuilderStateManager:
             "mass": 10,
             "hp": 100,
             "modifiers": []
-        })
+        }, registries=fresh_registries)
 
         # Different type
         comp_different = Component({
@@ -129,7 +129,7 @@ class TestBuilderStateManager:
             "mass": 5,
             "hp": 50,
             "modifiers": []
-        })
+        }, registries=fresh_registries)
 
         state_manager.on_selection_changed(sample_component, append=False)
         state_manager.on_selection_changed(comp_same, append=True)
@@ -141,12 +141,12 @@ class TestBuilderStateManager:
         assert len(state_manager.selected_components) == 1
         assert state_manager.selected_components[0][2].id == "other_component"
 
-    def test_list_selection(self, state_manager):
+    def test_list_selection(self, state_manager, fresh_registries):
         """Can select multiple components at once via list."""
         comps = [
-            Component({"id": "w1", "name": "W1", "type": "Weapon", "mass": 5, "hp": 50, "modifiers": []}),
-            Component({"id": "w1", "name": "W2", "type": "Weapon", "mass": 5, "hp": 50, "modifiers": []}),
-            Component({"id": "w1", "name": "W3", "type": "Weapon", "mass": 5, "hp": 50, "modifiers": []}),
+            Component({"id": "w1", "name": "W1", "type": "Weapon", "mass": 5, "hp": 50, "modifiers": []}, registries=fresh_registries),
+            Component({"id": "w1", "name": "W2", "type": "Weapon", "mass": 5, "hp": 50, "modifiers": []}, registries=fresh_registries),
+            Component({"id": "w1", "name": "W3", "type": "Weapon", "mass": 5, "hp": 50, "modifiers": []}, registries=fresh_registries),
         ]
 
         state_manager.on_selection_changed(comps, append=False)

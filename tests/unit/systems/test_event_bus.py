@@ -172,7 +172,7 @@ class TestEventBusErrorHandling:
         bus.subscribe("CONTINUE", failing_handler)
         bus.subscribe("CONTINUE", succeeding_handler)
 
-        with patch('ui.builder.event_bus.log_error'):
+        with patch('game.ui.screens.builder.event_bus.log_error'):
             bus.emit("CONTINUE", "value")
 
         assert results == ["value"]

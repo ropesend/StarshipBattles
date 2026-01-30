@@ -8,7 +8,7 @@ from game.simulation.components.component import Component
 
 class TestSelectionRefinements:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         # Initialize display for pygame_gui
         pygame.display.set_mode((800, 600), flags=pygame.HIDDEN)
@@ -44,9 +44,9 @@ class TestSelectionRefinements:
             "modifiers": []
         }
 
-        self.comp_a1 = Component(self.comp_data_a)
-        self.comp_a2 = Component(self.comp_data_a)
-        self.comp_b1 = Component(self.comp_data_b)
+        self.comp_a1 = Component(self.comp_data_a, registries=fresh_registries)
+        self.comp_a2 = Component(self.comp_data_a, registries=fresh_registries)
+        self.comp_b1 = Component(self.comp_data_b, registries=fresh_registries)
 
         # Setup selected_components list manually if needed, or rely on methods
         self.builder.selected_components = []

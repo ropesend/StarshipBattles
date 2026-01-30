@@ -188,8 +188,9 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=registries)
         selection = (LayerType.ARMOR, 0, comp)
 
         # Select
@@ -206,9 +207,10 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        armor = create_component('armor_plate')
-        engine = create_component('standard_engine')
+        armor = create_component('armor_plate', registries=registries)
+        engine = create_component('standard_engine', registries=registries)
 
         viewmodel.select_component((LayerType.ARMOR, 0, armor))
         # Trying to append different type should replace
@@ -223,8 +225,9 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=registries)
         viewmodel.select_component((LayerType.ARMOR, 0, comp))
         assert len(viewmodel.selected_components) == 1
 
@@ -237,9 +240,10 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        comp1 = create_component('armor_plate')
-        comp2 = create_component('armor_plate')
+        comp1 = create_component('armor_plate', registries=registries)
+        comp2 = create_component('armor_plate', registries=registries)
 
         viewmodel.select_component((LayerType.ARMOR, 0, comp1))
         viewmodel.select_component((LayerType.ARMOR, 1, comp2), append=True)
@@ -254,10 +258,11 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
         event_bus.clear()
 
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=registries)
         viewmodel.select_component((LayerType.ARMOR, 0, comp))
 
         events = event_bus.get_events('SELECTION_CHANGED')
@@ -273,10 +278,11 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
         event_bus.clear()
 
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=registries)
         viewmodel.dragged_item = comp
 
         events = event_bus.get_events('DRAG_STATE_CHANGED')
@@ -293,13 +299,14 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
-        ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
+        ship.add_component(create_component('armor_plate', registries=registries), LayerType.ARMOR)
 
         # Add engine only if INNER layer exists
         if LayerType.INNER in ship.layers:
-            ship.add_component(create_component('standard_engine'), LayerType.INNER)
+            ship.add_component(create_component('standard_engine', registries=registries), LayerType.INNER)
 
         viewmodel._ship = ship
 
@@ -325,8 +332,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Original Name", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Original Name", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel._ship = ship
         event_bus.clear()
 
@@ -342,8 +350,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Same Name", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Same Name", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel._ship = ship
         event_bus.clear()
 
@@ -359,8 +368,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel._ship = ship
         event_bus.clear()
 
@@ -376,8 +386,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", theme_id="Federation")
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", theme_id="Federation", registries=registries)
         viewmodel._ship = ship
         event_bus.clear()
 
@@ -393,8 +404,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         ship.ai_strategy = "standard_ranged"  # Set initial value
         viewmodel._ship = ship
         event_bus.clear()
@@ -410,9 +422,10 @@ class TestBuilderViewModel:
         from game.simulation.entities.ship import Ship
 
         event_bus = viewmodel_setup['event_bus']
+        registries = viewmodel_setup['registries']
         viewmodel = viewmodel_setup['viewmodel']
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         ship.ai_strategy = "standard_ranged"
         viewmodel._ship = ship
         event_bus.clear()

@@ -15,7 +15,7 @@ from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 
 
 @pytest.fixture
-def movement_ai_setup():
+def movement_ai_setup(fresh_registries):
     pygame.init()
     # Initialize vehicle class definitions FIRST (required for layer configs)
     initialize_ship_data()
@@ -42,11 +42,12 @@ def movement_ai_setup():
         strategy_file="test_combat_strategies.json"
     )
     manager._loaded = True
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser")
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser", registries=fresh_registries)
 
     yield {
         'ship': ship,
-        'mod_path': mod_path_str
+        'mod_path': mod_path_str,
+        'registries': fresh_registries
     }
 
     pygame.quit()
@@ -68,10 +69,11 @@ class TestMovementAndAI:
         Regression Test: Ensure AI can target enemies at very long range.
         """
         attacker = movement_ai_setup['ship']
+        registries = movement_ai_setup['registries']
         attacker.ai_strategy = "max_weapons_range"
         attacker.position = pygame.math.Vector2(0, 0)
 
-        target = Ship("Target", 50000, 0, (255, 0, 0), 1)
+        target = Ship("Target", 50000, 0, (255, 0, 0), 1, registries=registries)
         target.ship_class = "Escort"
         target.mass = 1000
 

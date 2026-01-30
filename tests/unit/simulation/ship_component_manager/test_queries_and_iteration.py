@@ -25,12 +25,12 @@ class TestGetAllComponents:
         all_comps = manager.get_all_components()
         assert all_comps == []
 
-    def test_get_all_components_returns_all(self, engine_component, weapon_component):
+    def test_get_all_components_returns_all(self, engine_component, weapon_component, fresh_registries):
         """get_all_components returns components from all layers."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -44,12 +44,12 @@ class TestGetAllComponents:
         assert engine_component in all_comps
         assert weapon_component in all_comps
 
-    def test_get_all_components_returns_fresh_list(self, engine_component):
+    def test_get_all_components_returns_fresh_list(self, engine_component, fresh_registries):
         """get_all_components returns a new list each call."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -65,12 +65,12 @@ class TestGetAllComponents:
 class TestIterComponents:
     """Tests for iter_components method."""
 
-    def test_iter_components_yields_layer_and_component(self, engine_component):
+    def test_iter_components_yields_layer_and_component(self, engine_component, fresh_registries):
         """iter_components yields (layer_type, component) tuples."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -105,12 +105,12 @@ class TestIterComponents:
 class TestGetComponentsByAbility:
     """Tests for get_components_by_ability method."""
 
-    def test_get_components_by_ability_finds_matching(self, weapon_component):
+    def test_get_components_by_ability_finds_matching(self, weapon_component, fresh_registries):
         """get_components_by_ability returns components with specified ability."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -123,12 +123,12 @@ class TestGetComponentsByAbility:
 
         assert weapon_component in result
 
-    def test_get_components_by_ability_excludes_non_operational(self, weapon_component):
+    def test_get_components_by_ability_excludes_non_operational(self, weapon_component, fresh_registries):
         """get_components_by_ability excludes non-operational components by default."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -140,12 +140,12 @@ class TestGetComponentsByAbility:
 
         assert weapon_component not in result
 
-    def test_get_components_by_ability_includes_non_operational_when_flag_false(self, weapon_component):
+    def test_get_components_by_ability_includes_non_operational_when_flag_false(self, weapon_component, fresh_registries):
         """get_components_by_ability includes non-operational when operational_only=False."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -161,12 +161,12 @@ class TestGetComponentsByAbility:
 class TestGetComponentsByLayer:
     """Tests for get_components_by_layer method."""
 
-    def test_get_components_by_layer_returns_correct_layer(self, engine_component):
+    def test_get_components_by_layer_returns_correct_layer(self, engine_component, fresh_registries):
         """get_components_by_layer returns components from specified layer."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -190,12 +190,12 @@ class TestGetComponentsByLayer:
 
         assert result == []
 
-    def test_get_components_by_layer_returns_fresh_list(self, engine_component):
+    def test_get_components_by_layer_returns_fresh_list(self, engine_component, fresh_registries):
         """get_components_by_layer returns a new list each call."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -222,12 +222,12 @@ class TestHasComponents:
 
         assert manager.has_components() is False
 
-    def test_has_components_returns_true_when_has_components(self, engine_component):
+    def test_has_components_returns_true_when_has_components(self, engine_component, fresh_registries):
         """has_components returns True when components exist."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -239,12 +239,12 @@ class TestHasComponents:
 class TestFindComponentWithIndex:
     """Tests for find_component_with_index method."""
 
-    def test_find_component_with_index_finds_matching(self, engine_component, weapon_component):
+    def test_find_component_with_index_finds_matching(self, engine_component, weapon_component, fresh_registries):
         """find_component_with_index returns matching component with location."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -259,12 +259,12 @@ class TestFindComponentWithIndex:
         assert idx == 1
         assert comp is weapon_component
 
-    def test_find_component_with_index_returns_none_if_not_found(self, engine_component):
+    def test_find_component_with_index_returns_none_if_not_found(self, engine_component, fresh_registries):
         """find_component_with_index returns None when no match."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers

@@ -1,5 +1,7 @@
 """
 Shared fixtures for fleet combat tests.
+
+PROJ-50: Updated to use fresh_registries for strict DI.
 """
 
 import pytest
@@ -16,7 +18,7 @@ def battle_service():
 
 
 @pytest.fixture
-def two_ship_teams():
+def two_ship_teams(fresh_registries):
     """Create two teams of ships for battle testing.
 
     Ships are positioned close enough for weapons to engage (within ~2000 units).
@@ -30,6 +32,7 @@ def two_ship_teams():
             add_bridge=True,
             add_engine=True,
             add_weapons=2,
+            registries=fresh_registries,
         )
     ]
     team2 = [
@@ -41,13 +44,14 @@ def two_ship_teams():
             add_bridge=True,
             add_engine=True,
             add_weapons=2,
+            registries=fresh_registries,
         )
     ]
     return team1, team2
 
 
 @pytest.fixture
-def fleet_battle_teams():
+def fleet_battle_teams(fresh_registries):
     """Create multi-ship fleets for larger scale testing.
 
     Ships are positioned close enough for weapons to engage.
@@ -62,6 +66,7 @@ def fleet_battle_teams():
             add_engine=True,
             add_weapons=1,
             add_shields=1,
+            registries=fresh_registries,
         )
         for i in range(3)
     ]
@@ -75,6 +80,7 @@ def fleet_battle_teams():
             add_engine=True,
             add_weapons=1,
             add_shields=1,
+            registries=fresh_registries,
         )
         for i in range(3)
     ]

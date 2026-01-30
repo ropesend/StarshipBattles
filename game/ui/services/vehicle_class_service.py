@@ -13,7 +13,7 @@ The service encapsulates:
 """
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 
-from game.core.registry import get_default_registries
+from game.core.registry import get_default_registry_provider
 from game.core.protocols import IRegistryProvider
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class VehicleClassService:
     def _get_provider(self) -> IRegistryProvider:
         """Get the registry provider, using default if not injected."""
         if self._provider is None:
-            self._provider = get_default_registries()
+            self._provider = get_default_registry_provider()
         return self._provider
 
     def get_all_classes(self) -> Dict[str, Any]:

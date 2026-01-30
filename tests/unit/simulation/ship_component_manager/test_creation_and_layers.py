@@ -88,12 +88,12 @@ class TestLayerInitialization:
 class TestAddComponent:
     """Tests for add_component method."""
 
-    def test_add_component_to_valid_layer(self, engine_component):
+    def test_add_component_to_valid_layer(self, engine_component, fresh_registries):
         """add_component adds component to specified layer."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         # Set layers on ship for validator
@@ -104,12 +104,12 @@ class TestAddComponent:
         assert result is True
         assert engine_component in manager.layers[LayerType.OUTER]['components']
 
-    def test_add_component_sets_layer_assigned(self, engine_component):
+    def test_add_component_sets_layer_assigned(self, engine_component, fresh_registries):
         """add_component sets layer_assigned on component."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -118,12 +118,12 @@ class TestAddComponent:
 
         assert engine_component.layer_assigned == LayerType.OUTER
 
-    def test_add_component_sets_ship_reference(self, engine_component):
+    def test_add_component_sets_ship_reference(self, engine_component, fresh_registries):
         """add_component sets ship reference on component."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -132,12 +132,12 @@ class TestAddComponent:
 
         assert engine_component.ship is ship
 
-    def test_add_component_rejects_none(self):
+    def test_add_component_rejects_none(self, fresh_registries):
         """add_component returns False for None component."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -146,12 +146,12 @@ class TestAddComponent:
 
         assert result is False
 
-    def test_add_component_triggers_recalculate_stats(self, engine_component):
+    def test_add_component_triggers_recalculate_stats(self, engine_component, fresh_registries):
         """add_component triggers recalculate_stats on ship."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -165,12 +165,12 @@ class TestAddComponent:
 class TestRemoveComponent:
     """Tests for remove_component method."""
 
-    def test_remove_component_by_index(self, engine_component):
+    def test_remove_component_by_index(self, engine_component, fresh_registries):
         """remove_component removes component at specified index."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -181,12 +181,12 @@ class TestRemoveComponent:
         assert removed is engine_component
         assert engine_component not in manager.layers[LayerType.OUTER]['components']
 
-    def test_remove_component_invalid_index_returns_none(self):
+    def test_remove_component_invalid_index_returns_none(self, fresh_registries):
         """remove_component returns None for invalid index."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -195,12 +195,12 @@ class TestRemoveComponent:
 
         assert removed is None
 
-    def test_remove_component_triggers_recalculate_stats(self, engine_component):
+    def test_remove_component_triggers_recalculate_stats(self, engine_component, fresh_registries):
         """remove_component triggers recalculate_stats on ship."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -215,12 +215,12 @@ class TestRemoveComponent:
 class TestClearNonHullComponents:
     """Tests for clear_non_hull_components method."""
 
-    def test_clear_non_hull_components_removes_all_except_hull(self, engine_component, weapon_component):
+    def test_clear_non_hull_components_removes_all_except_hull(self, engine_component, weapon_component, fresh_registries):
         """clear_non_hull_components removes components from all layers except HULL."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -232,12 +232,12 @@ class TestClearNonHullComponents:
 
         assert manager.layers[LayerType.OUTER]['components'] == []
 
-    def test_clear_non_hull_components_preserves_hull(self):
+    def test_clear_non_hull_components_preserves_hull(self, fresh_registries):
         """clear_non_hull_components preserves HULL layer components."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -255,12 +255,12 @@ class TestClearNonHullComponents:
 class TestAddComponentsBulk:
     """Tests for add_components_bulk method."""
 
-    def test_add_components_bulk_adds_multiple_copies(self, engine_component):
+    def test_add_components_bulk_adds_multiple_copies(self, engine_component, fresh_registries):
         """add_components_bulk adds multiple cloned copies."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
@@ -270,12 +270,12 @@ class TestAddComponentsBulk:
         assert count == 3
         assert len(manager.layers[LayerType.OUTER]['components']) == 3
 
-    def test_add_components_bulk_returns_count_added(self, engine_component):
+    def test_add_components_bulk_returns_count_added(self, engine_component, fresh_registries):
         """add_components_bulk returns number successfully added."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers

@@ -45,15 +45,15 @@ def spatial_grid():
 
 
 @pytest.fixture
-def create_test_ship():
+def create_test_ship(fresh_registries):
     """Factory to create test ships with components."""
     def _create(name, x, y, team_id, ship_class="TestM_4L"):
-        ship = Ship(name, x, y, (0, 255, 0), team_id=team_id, ship_class=ship_class)
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-        ship.add_component(create_component('thruster'), LayerType.INNER)
+        ship = Ship(name, x, y, (0, 255, 0), team_id=team_id, ship_class=ship_class, registries=fresh_registries)
+        ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+        ship.add_component(create_component('thruster', registries=fresh_registries), LayerType.INNER)
         ship.recalculate_stats()
         return ship
     return _create

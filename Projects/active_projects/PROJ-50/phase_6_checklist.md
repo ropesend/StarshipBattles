@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (70% complete)
+**Status:** In Progress (85% complete)
 **Objective:** Make registries required in Component and Ship constructors
 
 **WARNING:** This is the most impactful phase - many callers will need updates.
@@ -101,20 +101,27 @@
 ### Task 6.7: Update Test Files [Ongoing]
 Many test files create Ship/Component without registries. Need to update:
 
-**Updated:**
+**Updated (53 files total):**
 - [x] `tests/fixtures/ships.py` - All fixtures now use fresh_registries
+- [x] `tests/fixtures/components.py` - Factory functions require registries
+- [x] `tests/fixtures/battle.py` - Battle fixtures use fresh_registries
 - [x] `tests/unit/entities/test_component_di.py` - Strict DI tests
 - [x] `tests/unit/entities/test_ship_di.py` - Strict DI tests
 - [x] `tests/unit/entities/test_ship_serialization_di.py` - Strict DI tests
+- [x] `tests/unit/entities/test_component*.py` - ~15 files DONE
+- [x] `tests/unit/entities/test_ship*.py` - ~10 files DONE
+- [x] `tests/unit/entities/ship_helpers/*.py` - ~5 files DONE
+- [x] `tests/unit/combat/*.py` - ~10 files DONE
+- [x] `tests/unit/builder/*.py` - builder viewmodel DONE
+- [x] `tests/unit/ui/*.py` - battle scene, stats, visibility tests DONE
+- [x] `tests/unit/services/*.py` - battle service DONE
+- [x] `tests/unit/fixtures/*.py` - fixture tests DONE
 
 **Still Need Updates:**
-- [ ] `tests/unit/entities/test_component*.py` - ~15 files
-- [ ] `tests/unit/entities/test_ship*.py` - ~10 files
-- [ ] `tests/unit/entities/ship_helpers/*.py` - ~5 files
-- [ ] `tests/unit/combat/*.py` - ~10 files
-- [ ] `tests/unit/services/*.py` - ~5 files
-- [ ] `tests/unit/builder/*.py` - ~5 files
+- [ ] `tests/unit/systems/*.py` - ~5 files
+- [ ] `tests/unit/strategy/*.py` - ~10 files
 - [ ] `tests/integration/*.py` - ~10 files
+- [ ] Remaining scattered files with Ship/Component calls
 
 **Pattern for Updates:**
 1. Add `fresh_registries` fixture parameter to test functions
