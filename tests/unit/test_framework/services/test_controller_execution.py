@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock
 from test_framework.services.test_lab_controller import TestLabUIController
-from tests.test_framework.services.conftest import create_test_metadata
+from tests.unit.test_framework.services.conftest import create_test_metadata
 
 
 class TestHandleRunHeadless:

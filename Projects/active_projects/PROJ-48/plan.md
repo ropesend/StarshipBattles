@@ -18,25 +18,26 @@
 | 3. Test File Splitting | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Weak Assertion Fixes | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Naming Convention Standardization | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Directory Structure Reorganization | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Directory Structure Reorganization | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Mock Pattern Standardization | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Test Quality Improvements | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 5 COMPLETE - Naming Convention Standardization
-**Last Action:** Phase 5 Complete - Renamed files, converted tests, documented conventions
-**Next Action:** Start Phase 6 - Directory Structure Reorganization
+**Active Phase:** Phase 6 COMPLETE - Directory Structure Reorganization
+**Last Action:** Phase 6 Complete - Reorganized test directories, consolidated duplicates
+**Next Action:** Start Phase 7 - Mock Pattern Standardization
 **Blockers:** None
 
-**Phase 5 Summary:**
-- Task 5.1 Complete: Renamed repro_bug_05_deep.py -> test_bug_05_deep_repro.py
-- Task 5.1 Complete: Moved 5 non-test scripts to scripts/ directory
-- Task 5.1 Complete: Added docstring to benchmark_planet_list.py
-- Task 5.2 Complete: Converted test_lead.py to pytest format (5 tests)
-- Task 5.2 Complete: Converted test_ccd.py to pytest format (7 tests)
-- Task 5.3 Complete: Verified all mocks use Mock* prefix (60+ classes)
-- Task 5.4 Complete: Added Naming Conventions section to tests/README.md
+**Phase 6 Summary:**
+- Task 6.1 Complete: Created 6 new test directories (assets, simulation/managers, simulation/services, research/data, research/systems, research/ui)
+- Task 6.2 Complete: Moved tests/strategy/ -> tests/integration/strategy/ (249 tests)
+- Task 6.2 Complete: Moved tests/ui/ -> tests/integration/ui/ (115 tests)
+- Task 6.2 Complete: Moved tests/test_framework/ -> tests/unit/test_framework/ (137 tests)
+- Task 6.2 Complete: Fixed 3 import paths in test_framework files
+- Task 6.3 Complete: No duplicate - test_logger.py is utility module not test file
+- Task 6.4 Complete: pytest.ini unchanged (no hardcoded paths)
+- Task 6.5 Complete: Updated tests/README.md with new directory structure
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.

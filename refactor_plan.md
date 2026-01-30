@@ -8,23 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 5 COMPLETE (Naming Convention Standardization)
+**Last Completed:** PROJ-48 Phase 6 COMPLETE (Directory Structure Reorganization)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
-**Current Phase:** Phase 5 Complete, Phase 6 Next (Directory Structure Reorganization)
+**Current Phase:** Phase 6 Complete, Phase 7 Next (Mock Pattern Standardization)
 **Test Status:** 5746 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-48 Phase 5 COMPLETE - Naming Convention Standardization
-  - Task 5.1 Complete: Renamed repro_bug_05_deep.py -> test_bug_05_deep_repro.py (with xfail markers)
-  - Task 5.1 Complete: Moved 5 non-test scripts to scripts/ (repro_energy_stats, repro_shield, reproduce_cycling, verify_determinism_current, verify_themes)
-  - Task 5.1 Complete: Added docstring to benchmark_planet_list.py
-  - Task 5.2 Complete: Converted test_lead.py to proper pytest tests (5 new tests)
-  - Task 5.2 Complete: Converted test_ccd.py to proper pytest tests (7 new tests)
-  - Task 5.3 Complete: Verified all mock classes use Mock* prefix (60+ compliant)
-  - Task 5.4 Complete: Added Naming Conventions section to tests/README.md
-- Next: Start Phase 6 - Directory Structure Reorganization
+- PROJ-48 Phase 6 COMPLETE - Directory Structure Reorganization
+  - Task 6.1 Complete: Created 6 new test directories (assets, simulation/managers, simulation/services, research/data, research/systems, research/ui)
+  - Task 6.2 Complete: Moved tests/strategy/ -> tests/integration/strategy/ (249 tests)
+  - Task 6.2 Complete: Moved tests/ui/ -> tests/integration/ui/ (115 tests)
+  - Task 6.2 Complete: Moved tests/test_framework/ -> tests/unit/test_framework/ (137 tests)
+  - Task 6.2 Complete: Fixed 3 import paths in test_framework files
+  - Task 6.3 Complete: No duplicate - test_logger.py is utility module not test file
+  - Task 6.4 Complete: pytest.ini unchanged (no hardcoded paths)
+  - Task 6.5 Complete: Updated tests/README.md with new directory structure
+- Next: Start Phase 7 - Mock Pattern Standardization
 
 ---
 
@@ -116,6 +117,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 6 COMPLETE | Complete | 5746 passed | 0fe70fc4 | Dir reorg: moved strategy/ui/test_framework, created 6 dirs |
 | 2026-01-30 | PROJ-48 | Phase 5 COMPLETE | Complete | 5746 passed | 7ba8f5af | Naming: renamed files, converted tests, added conventions docs |
 | 2026-01-30 | PROJ-48 | Phase 4 COMPLETE | Complete | 5734 passed | c141cdec | Weak assertion fixes: 18 success, 48+ bool, helpers added |
 | 2026-01-30 | PROJ-48 | Phase 3 COMPLETE | Complete | 78 passed | 5d569aa2 | Split test_colonization+test_ship_combat_engine+test_adapter -> 8 files, Phase 3 done |

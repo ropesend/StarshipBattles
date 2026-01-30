@@ -8,7 +8,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch, mock_open
 from test_framework.services.scenario_data_service import ScenarioDataService
-from tests.test_framework.services.conftest import create_test_metadata
+from tests.unit.test_framework.services.conftest import create_test_metadata
 from game.core.json_utils import save_json
 
 

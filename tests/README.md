@@ -21,21 +21,42 @@ tests/
 │   ├── battle.py            # Battle engine fixtures
 │   ├── ai.py                # AI fixtures
 │   └── test_scenarios.py    # Combat Lab scenario mocks
-├── unit/                    # Unit tests
+├── unit/                    # Unit tests (mirrors game/ structure)
 │   ├── conftest.py          # Unit test configuration
 │   ├── ai/                  # AI system tests
+│   ├── assets/              # Asset manager tests (mirrors game/assets/)
 │   ├── builder/             # Ship builder UI tests
 │   ├── combat/              # Combat system tests
+│   ├── core/                # Core module tests (mirrors game/core/)
 │   ├── entities/            # Entity tests (Ship, Component)
 │   ├── fixtures/            # Fixture tests
 │   ├── quickstart/          # Quickstart system tests
-│   ├── research/            # Research system tests
+│   ├── research/            # Research system tests (mirrors game/research/)
+│   │   ├── data/            # Research data tests
+│   │   ├── systems/         # Research systems tests
+│   │   └── ui/              # Research UI tests
+│   ├── simulation/          # Simulation tests (mirrors game/simulation/)
+│   │   ├── managers/        # Simulation manager tests
+│   │   └── services/        # Simulation service tests
 │   ├── strategy/            # Strategy map tests
 │   ├── systems/             # Core system tests
+│   ├── test_framework/      # Test framework tests (Combat Lab)
+│   │   └── services/        # Combat Lab service tests
 │   └── ui/                  # UI panel/rendering tests
 ├── integration/             # Integration tests
-├── test_framework/          # Test framework tests
-│   └── services/            # Combat Lab service tests
+│   ├── ai_strategy/         # AI strategy integration
+│   ├── colonization/        # Colonization workflow tests
+│   ├── fleet_combat/        # Fleet combat tests
+│   ├── gameplay_loop/       # Full gameplay loop tests
+│   ├── research_workflow/   # Research workflow tests
+│   ├── resource_system/     # Resource system tests
+│   ├── save_load/           # Save/load integration tests
+│   ├── strategy/            # Strategy map integration tests
+│   │   ├── facade/          # Facade pattern tests
+│   │   ├── production/      # Production system tests
+│   │   └── turn_engine/     # Turn engine tests
+│   └── ui/                  # UI integration tests
+│       └── build_queue_screen/  # Build queue tests
 └── infrastructure/          # Test infrastructure
     └── session_cache.py     # Session-scoped registry cache
 ```
@@ -111,7 +132,7 @@ conftest.py (project root)
             ├── pytest_configure_node() - Worker verification
             └── pygame_display_reset [autouse, function] - Display setup/reset
 
-    └── tests/test_framework/services/conftest.py
+    └── tests/unit/test_framework/services/conftest.py
         ├── mock_battle_engine [function]
         ├── mock_battle_screen [function]
         ├── mock_game [function]
