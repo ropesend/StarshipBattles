@@ -61,9 +61,9 @@ class TestMainIntegration:
             assert hasattr(game.battle_scene.engine, 'logger')
 
             # Verify BATTLE_LOG is NOT a property of the battle module anymore
-            from game.ui.screens import battle_scene
-            assert not hasattr(battle_scene, 'BATTLE_LOG'), \
-                "battle_scene module should not export global BATTLE_LOG"
+            from game.ui.screens import battle_screen
+            assert not hasattr(battle_screen, 'BATTLE_LOG'), \
+                "battle_screen module should not export global BATTLE_LOG"
 
         except ImportError as e:
             pytest.fail(f"Game instantiation failed due to ImportError: {e}")

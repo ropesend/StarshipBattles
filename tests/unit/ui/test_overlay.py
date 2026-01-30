@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 from game.core.constants import GameState
-from game.core.input_handler import InputHandler
+from game.ui.screens.battle_input_handler import BattleInputHandler
 
 
 class MockGame:
@@ -40,11 +40,11 @@ class TestOverlay:
         self.game.battle_scene.show_overlay = False
 
         event_o = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_o)
-        InputHandler.handle_keydown(self.game, event_o)
+        BattleInputHandler.handle_keydown(self.game, event_o)
 
         assert self.game.battle_scene.show_overlay is True, "Overlay should toggle ON"
 
-        InputHandler.handle_keydown(self.game, event_o)
+        BattleInputHandler.handle_keydown(self.game, event_o)
         assert self.game.battle_scene.show_overlay is False, "Overlay should toggle OFF"
 
     def test_toggle_pause(self):
@@ -53,9 +53,9 @@ class TestOverlay:
         self.game.battle_scene.sim_paused = False
 
         event_space = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE)
-        InputHandler.handle_keydown(self.game, event_space)
+        BattleInputHandler.handle_keydown(self.game, event_space)
 
         assert self.game.battle_scene.sim_paused is True, "Pause should toggle ON"
 
-        InputHandler.handle_keydown(self.game, event_space)
+        BattleInputHandler.handle_keydown(self.game, event_space)
         assert self.game.battle_scene.sim_paused is False, "Pause should toggle OFF"

@@ -8,47 +8,31 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-51 Phase 2 Complete
-**Current Status:** PROJ-51 Phase 2 Complete - Ready for Phase 3
+**Last Completed:** PROJ-51 Phase 3 Complete
+**Current Status:** PROJ-51 Phase 3 Complete - Ready for Phase 4
 **Current Project:** PROJ-51
-**Current Phase:** Phase 3 (InputHandler Rename)
-**Test Status:** 42 passed (Phase 2 specific tests), 715 UI tests passed (7 pre-existing failures)
+**Current Phase:** Phase 4 (Stats Service Location)
+**Test Status:** 524 core/UI tests passed, 5530 total passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-51 Phase 2 Complete (UI File Naming):
-  - ✅ Renamed BattleInterface -> BattleUI in battle_ui.py
-  - ✅ Renamed StrategyInterface -> StrategyUI in strategy_ui.py
-  - ✅ Renamed battle_scene.py -> battle_screen.py (BattleScreen class)
-  - ✅ Renamed strategy_scene.py -> strategy_screen.py (StrategyScreen class)
-  - ✅ Renamed test_lab_scene.py -> test_lab_screen.py (TestLabScreen class)
-  - ✅ Renamed test files: test_battle_scene.py -> test_battle_screen.py
-  - ✅ Updated game/ui/__init__.py exports
-  - ✅ Updated tests/unit/ui/conftest.py pre-imports
-  - ✅ Updated all import paths in 19 files
+- PROJ-51 Phase 3 Complete (InputHandler Rename):
+  - ✅ Created game/ui/screens/battle_input_handler.py with BattleInputHandler class
+  - ✅ Updated docstring to clarify battle-specific purpose
+  - ✅ Updated game/app.py import and call site
+  - ✅ Verified game/core/__init__.py doesn't export InputHandler (no change needed)
+  - ✅ Updated tests/unit/ui/test_overlay.py import
+  - ✅ Fixed tests/unit/systems/test_main_integration.py (Phase 2 residual: battle_scene -> battle_screen)
+  - ✅ Deleted game/core/input_handler.py
 
 - Files Modified:
-  - game/ui/screens/battle_ui.py (renamed from battle_screen.py)
-  - game/ui/screens/strategy_ui.py (renamed from strategy_screen.py)
-  - game/ui/screens/battle_screen.py (renamed from battle_scene.py)
-  - game/ui/screens/strategy_screen.py (renamed from strategy_scene.py)
-  - game/ui/screens/test_lab_screen.py (renamed from test_lab_scene.py)
-  - game/ui/__init__.py
-  - game/app.py
-  - tests/unit/ui/conftest.py
-  - tests/unit/ui/test_battle_screen.py (renamed)
-  - tests/unit/ui/test_battle_screen_extended.py (renamed)
-  - tests/unit/ui/test_star_color_mapping.py
-  - tests/unit/ui/test_empire_asset_loading.py
-  - tests/unit/combat/test_pdc.py
-  - tests/unit/combat/test_battle_setup_logic.py
-  - tests/unit/ai/test_movement_and_ai.py
-  - tests/integration/ui/test_strategy_buttons.py
-  - tests/repro_issues/test_bug_16_raw_data_button.py
-  - scripts/verify_determinism_current.py
-  - scripts/verify_star_scale.py
+  - game/ui/screens/battle_input_handler.py (NEW)
+  - game/app.py (import updated)
+  - tests/unit/ui/test_overlay.py (import updated)
+  - tests/unit/systems/test_main_integration.py (Phase 2 residual fix)
+  - game/core/input_handler.py (DELETED)
 
-- NEXT: Phase 3 - Rename InputHandler to BattleInputHandler
+- NEXT: Phase 4 - Move stats.py from systems/ to services/
 
 ---
 
@@ -129,7 +113,7 @@
 ---
 
 - [/] **PROJ-51: Naming Consistency Remediation**
-  - **Phases:** 5 | **Status:** In Progress (Phase 2/5 Complete) | **Priority:** Medium
+  - **Phases:** 5 | **Status:** In Progress (Phase 3/5 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-51/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-51/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -140,6 +124,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-51 | Phase 3 | Complete | 524 passed | acf4629c | InputHandler -> BattleInputHandler, moved to ui/screens/ |
 | 2026-01-30 | PROJ-51 | Phase 2 | Complete | 42 passed | 90de9948 | *_scene.py -> *_screen.py, *Interface -> *UI, 19 files |
 | 2026-01-30 | PROJ-51 | Phase 1 | Complete | 69 passed | 1e371358 | ship_validator.py moved to validation/, 18 files updated |
 | 2026-01-30 | PROJ-50 | Audit Cycle 1 | PASSED | 536+ verified | 3ce74e28 | All success metrics met, documented exceptions OK |

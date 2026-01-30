@@ -45,7 +45,7 @@ BG_COLOR = (10, 10, 20)
 
 # Scene States
 from game.core.constants import GameState
-from game.core.input_handler import InputHandler
+from game.ui.screens.battle_input_handler import BattleInputHandler
 
 
 # Initialize fonts
@@ -562,7 +562,7 @@ class Game:
 
     def _handle_keydown(self, event):
         """Handle key press events."""
-        InputHandler.handle_keydown(self, event)
+        BattleInputHandler.handle_keydown(self, event)
 
     def _handle_click(self, event):
         """Handle mouse click events."""

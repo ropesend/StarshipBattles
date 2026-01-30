@@ -1,7 +1,7 @@
 """
-Input handling for game state-specific keyboard commands.
+Battle input handling for keyboard commands.
 
-Provides centralized keyboard input routing based on current GameState.
+Provides centralized keyboard input routing for battle mode.
 Decouples input logic from the main Game class for testability.
 """
 import pygame
@@ -16,12 +16,14 @@ NORMAL_SPEED = 1.0                 # 1x - real-time simulation speed
 UI_PAUSE_SPEED = 100.0             # 100x - instant updates when UI is paused (menu open, etc.)
 
 
-class InputHandler:
+class BattleInputHandler:
     """
-    Handles input events for the Game class.
-    Decouples input logic from the main application to allow for isolated testing.
+    Handles keyboard input for Battle mode.
+
+    Provides static methods for routing keyboard events during battle simulation.
+    Manages speed control, pause, and overlay toggles.
     """
-    
+
     @staticmethod
     def handle_keydown(game, event):
         """
@@ -35,7 +37,7 @@ class InputHandler:
             event: pygame.KEYDOWN event to process
         """
         if game.state == GameState.BATTLE:
-            InputHandler._handle_battle_keydown(game, event)
+            BattleInputHandler._handle_battle_keydown(game, event)
 
     @staticmethod
     def _handle_battle_keydown(game, event):
@@ -56,7 +58,7 @@ class InputHandler:
         """
         scene = game.battle_scene
         key = event.key
-        
+
         if key == pygame.K_o:
             scene.show_overlay = not scene.show_overlay
         elif key == pygame.K_SPACE:
