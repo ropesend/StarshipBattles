@@ -8,22 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-44 Phase 7 Complete
-**Current Status:** PROJ-44 Phase 7 complete, Phase 8 next
+**Last Completed:** PROJ-44 Phase 8 Complete
+**Current Status:** PROJ-44 Phase 8 complete, Phase 9 next
 **Current Project:** PROJ-44
-**Current Phase:** Phase 8 (pending)
-**Test Status:** 5658 passed, 3 skipped
+**Current Phase:** Phase 9 (pending)
+**Test Status:** 5687 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 7 complete: All UI god classes decomposed
-- Task 7.4: FleetReportWindow refactored using FleetListViewModel and ColumnManager
-- Created: game/ui/screens/fleet_report_view_model.py (193 lines)
-- Created: game/ui/screens/column_manager.py (161 lines)
-- Added image scaling utilities to game/ui/utils.py
-- FleetReportWindow reduced from 1035 to 844 lines (-191 lines, ~18% reduction)
-- 5658 tests pass (+34 new tests)
-- Next: Start Phase 8 - Long Method Refactoring
+- Phase 8 complete: Long methods refactored
+- Task 8.1: ShipStatsCalculator.calculate() split into 6 helper methods
+  - _reset_base_stats(), _check_damage_and_gather_resources(), _allocate_crew_and_life_support()
+  - _aggregate_component_stats(), _apply_physics_limits(), _calculate_combat_stats()
+  - calculate() now ~25 line orchestrator (from ~320 lines)
+- Task 8.2: LayerRestrictionDefinitionRule.validate() refactored
+  - Extracted _check_block_rules() and _check_allow_rules() helpers
+- Created: tests/unit/simulation/systems/test_ship_stats_calculator_phases.py (15 tests)
+- Created: tests/unit/simulation/test_layer_restriction_rule_refactor.py (14 tests)
+- 5687 tests pass (+29 new tests)
+- Next: Start Phase 9 - Minor Cleanup
 
 ---
 
@@ -99,6 +102,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-44 | Phase 8 Complete | Complete | 5687 passed | 4d6c1b9e | ShipStatsCalculator/LayerRestrictionRule refactored, +29 tests |
+| 2026-01-30 | PROJ-44 | Phase 7 Complete | Complete | 5658 passed | f494ac92 | FleetListViewModel/ColumnManager, FleetReportWindow -191 lines, +34 tests |
 | 2026-01-30 | PROJ-44 | Phase 7 Task 7.3 | Complete | 5624 passed | b29eb62f | Extracted BuilderStateManager, BuilderSceneGUI -14 lines |
 | 2026-01-30 | PROJ-44 | Phase 7 Task 7.2 | Complete | 5602 passed | ac38f6d1 | Extracted FormationRenderer/InputHandler, FormationEditor -216 lines |
 | 2026-01-30 | PROJ-44 | Phase 7 Task 7.1 | Complete | 5565 passed | 66cd264f | Extracted RaceSummaryPanel, RaceSetupScreen -370 lines |

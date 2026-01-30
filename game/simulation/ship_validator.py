@@ -134,9 +134,15 @@ class MountDependencyRule(AdditionValidationRule):
 
 
 class LayerRestrictionDefinitionRule(AdditionValidationRule):
-    """Validates layer-specific restrictions (block/allow rules)."""
+    """Validates layer-specific restrictions (block/allow rules).
+
+    The validation is split into two phases:
+    1. Block rules (blacklist) - checked first
+    2. Allow rules (whitelist) - if any exist, component must match at least one
+    """
 
     def _do_validate(self, ship, component: Optional[Component], layer_type: Optional[LayerType]) -> ValidationResult:
+        """Orchestrates block and allow rule validation."""
         result = ValidationResult(True)
 
         # Guard clause: Skip validation if layer doesn't exist on ship
@@ -151,7 +157,23 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
                 result.add_error(f"Layer {layer_type.name} only allows Hull components.")
                 return result
 
-        # 1. Process "Block" Rules (Blacklist)
+        # Phase 1: Check block rules (blacklist)
+        self._check_block_rules(component, restrictions, result)
+
+        # Phase 2: Check allow rules (whitelist)
+        self._check_allow_rules(component, restrictions, result)
+
+        return result
+
+    def _check_block_rules(
+        self, component: Component, restrictions: List[str], result: ValidationResult
+    ) -> None:
+        """
+        Process block rules (blacklist).
+
+        Checks block_classification, block_id, and deny_ability restrictions.
+        Adds errors to result for any blocked component.
+        """
         for r in restrictions:
             blocked_class = _parse_restriction(r, RestrictionPrefixes.BLOCK_CLASSIFICATION)
             if blocked_class:
@@ -170,39 +192,44 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
                 if component.has_ability(denied_ability):
                     result.add_error(f"Ability '{denied_ability}' blocked in this layer")
 
-        # 2. Process "Allow" Rules (Whitelist)
-        # Logic: If ANY allow rule exists, the component MUST match at least one of them.
-        # If NO allow rules exist, everything is allowed (unless blocked above).
+    def _check_allow_rules(
+        self, component: Component, restrictions: List[str], result: ValidationResult
+    ) -> None:
+        """
+        Process allow rules (whitelist).
 
+        If any allow rule exists, the component MUST match at least one.
+        If no allow rules exist, everything is allowed (unless blocked).
+        """
         allow_rules = [r for r in restrictions if r.startswith(RestrictionPrefixes.ALLOW)]
 
-        if allow_rules:
-            allowed = False
-            for r in allow_rules:
-                target = _parse_restriction(r, RestrictionPrefixes.ALLOW_CLASSIFICATION)
-                if target:
-                    if component.data.get('major_classification') == target:
-                        allowed = True
-                        break
-                    continue
+        if not allow_rules:
+            return  # No whitelist means everything allowed
 
-                target = _parse_restriction(r, RestrictionPrefixes.ALLOW_ID)
-                if target:
-                    if component.id == target:
-                        allowed = True
-                        break
-                    continue
+        allowed = False
+        for r in allow_rules:
+            target = _parse_restriction(r, RestrictionPrefixes.ALLOW_CLASSIFICATION)
+            if target:
+                if component.data.get('major_classification') == target:
+                    allowed = True
+                    break
+                continue
 
-                target_ability = _parse_restriction(r, RestrictionPrefixes.ALLOW_ABILITY)
-                if target_ability:
-                    if component.has_ability(target_ability):
-                        allowed = True
-                        break
+            target = _parse_restriction(r, RestrictionPrefixes.ALLOW_ID)
+            if target:
+                if component.id == target:
+                    allowed = True
+                    break
+                continue
 
-            if not allowed:
-                result.add_error(f"Layer restricts components to specific types/classes only.")
+            target_ability = _parse_restriction(r, RestrictionPrefixes.ALLOW_ABILITY)
+            if target_ability:
+                if component.has_ability(target_ability):
+                    allowed = True
+                    break
 
-        return result
+        if not allowed:
+            result.add_error(f"Layer restricts components to specific types/classes only.")
 
 
 class MassBudgetRule(DesignValidationRule):
