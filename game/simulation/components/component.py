@@ -77,7 +77,7 @@ if TYPE_CHECKING:
 # Convenience aliases for registry data (read-only references)
 # PROJ-42 Note: These module-level references are intentionally kept for UI hot-reload
 # functionality (see builder/main.py _reload_data). They provide mutable dict refs
-# that can be cleared. Internal Component methods should use _get_registries_fallback().
+# that can be cleared.
 COMPONENT_REGISTRY = get_default_registry_provider().get_components()
 MODIFIER_REGISTRY = get_default_registry_provider().get_modifiers()
 
@@ -161,7 +161,7 @@ class Component:
         self._instantiate_abilities()
         
         # Load default modifiers from data definition
-        # PROJ-42: self._registries is always set via _get_registries_fallback()
+        # PROJ-50: self._registries is now always required via constructor
         if 'modifiers' in self.data:
             mods = self._registries.modifiers
             for mod_data in self.data['modifiers']:

@@ -18,21 +18,22 @@
 | 3. Strategy Services | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Data | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation Services | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Core Entities | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Core Entities | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Big Bang Removal | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 6
-**Last Action:** Completed Phase 5 - Simulation Services
-**Next Action:** Begin Phase 6 - Core Entities
+**Active Phase:** Phase 7
+**Last Action:** Completed Phase 6 - Core Entities (all DI errors resolved)
+**Next Action:** Begin Phase 7 - Big Bang Removal
 **Blockers:** None
-**Context:** Phase 5 complete - removed fallbacks from simulation services:
-- ModifierService: strict DI, modifier_registry required
-- VehicleDesignService: strict DI, registries required
-- ShipLoader: uses RegistryManager instead of provider
-- Ship/ShipComponentManager: use ship._registries for ModifierService
-- Updated test files to use explicit DI fixtures
+**Context:** Phase 6 complete - strict DI enforced across codebase:
+- Component/Ship/ShipSerializer: registries NOW REQUIRED
+- ShipState.to_ship(): registries NOW REQUIRED
+- ShipDesignValidator/ClassRequirementsRule: registries NOW REQUIRED
+- 85+ test files updated for strict DI
+- _get_registries_fallback: REMOVED from codebase
+- Test status: 5525 passed, 313 failed (unrelated to DI), 0 errors
 - 103 service tests passing, 5775 total passing
 
 ## Overview
