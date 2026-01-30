@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Quick Wins (DRY, Magic Numbers) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Registry & Service Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Ship Helper Methods | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Ship Helper Methods | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Decomposition | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. ShipCombatEngine Decomposition | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. BattleController Mode Handlers | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 3 - Ship Helper Methods (next)
-**Last Action:** Phase 2 complete - Refactored BuilderSceneGUI to use WorkshopDataLoader, verified ShipFactory already in use
-**Next Action:** Start Phase 3 - Ship Helper Methods
+**Active Phase:** Phase 4 - Component Decomposition (next)
+**Last Action:** Phase 3 complete - Replaced direct layer access patterns with Ship helper methods in BuilderSceneGUI and panels.py
+**Next Action:** Start Phase 4 - Component Decomposition
 **Blockers:** None
 
 ## Overview

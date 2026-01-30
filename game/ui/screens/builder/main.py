@@ -637,9 +637,9 @@ class BuilderSceneGUI:
                 
                 self.pending_action = ('change_class', new_class)
                 
-                # Check if ship has components
-                has_components = sum(len(l['components']) for l in self.ship.layers.values()) > 0
-                
+                # Check if ship has components (PROJ-44: use Ship helper method)
+                has_components = self.ship.has_components()
+
                 if has_components:
                     msg = f"Change class to {new_class}?<br><br>Warning: This will attempt to refit existing components.<br>Some items may be resized or lost if they don't fit."
                     self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),
@@ -661,9 +661,9 @@ class BuilderSceneGUI:
                 
                 self.pending_action = ('change_type', target_class)
                 
-                # Check if ship has components
-                has_components = sum(len(l['components']) for l in self.ship.layers.values()) > 0
-                
+                # Check if ship has components (PROJ-44: use Ship helper method)
+                has_components = self.ship.has_components()
+
                 if has_components:
                     msg = f"Change type to {new_type}?<br><br><b>WARNING: This will CLEAR the current design.</b>"
                     self.confirm_dialog = UIConfirmationDialog(pygame.Rect((self.width-400)//2, (self.height-200)//2, 400, 200),

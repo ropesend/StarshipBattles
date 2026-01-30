@@ -363,7 +363,8 @@ class ShipStatsPanel(BattlePanel):
         base_height = 146
         if ship.max_shields > 0:
             base_height += 16
-        comp_count = sum(len(l['components']) for l in ship.layers.values())
+        # PROJ-44: Use Ship helper method instead of direct layer access
+        comp_count = len(ship.get_all_components())
         comp_height = comp_count * 14
         return base_height + comp_height + 5
 
