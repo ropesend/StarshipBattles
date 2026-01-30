@@ -61,8 +61,7 @@ while ($iteration -lt $MAX_ITERATIONS) {
             --dangerously-skip-permissions `
             --system-prompt-file WORKER.md `
             --verbose `
-            --print `
-            -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit."
+            -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. Be brief but visible in your progress."
             
         if ($LASTEXITCODE -ne 0) {
             throw "Claude CLI exited with error code $LASTEXITCODE"
