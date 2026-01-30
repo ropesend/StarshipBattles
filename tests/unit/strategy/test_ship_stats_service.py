@@ -2,10 +2,26 @@
 Tests for ShipStatsService - dynamic stat calculation from components.
 
 PROJ-07: Strategy Layer Stats Calculation Refactor
+PROJ-42: Updated to instance-only method patterns (removed static calling support)
 """
 
 import pytest
 from unittest.mock import MagicMock, patch
+
+from game.core.registry import GameRegistries
+
+
+def create_mock_registries(components=None, modifiers=None):
+    """Create a mock GameRegistries for testing.
+
+    PROJ-42: Tests now use instance methods with injected registries.
+    """
+    return GameRegistries(
+        components=components or {},
+        modifiers=modifiers or {},
+        vehicle_classes={},
+        resources={}
+    )
 
 
 class MockComponent:
@@ -44,7 +60,9 @@ class TestShipStatsServiceBasics:
         from game.strategy.services.ship_stats_service import ShipStatsService
 
         design_data = {'layers': {}}
-        stats = ShipStatsService.calculate_stats(design_data)
+        registries = create_mock_registries()
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data)
 
         assert stats['max_hp'] == 0
         assert stats['mass'] == 0
@@ -68,10 +86,9 @@ class TestShipStatsServiceBasics:
         from game.strategy.services.ship_stats_service import ShipStatsService
 
         design_data = make_design_data({'CORE': ['nonexistent_component']})
-
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {}  # Empty registry
-            stats = ShipStatsService.calculate_stats(design_data)
+        registries = create_mock_registries(components={})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data)
 
         assert stats['max_hp'] == 0
         assert stats['mass'] == 0
@@ -188,20 +205,20 @@ class TestWarpCapability:
 
         design_data = make_design_data({'OUTER': ['warp_drive']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'warp_drive': warp_comp}
+        registries = create_mock_registries(components={'warp_drive': warp_comp})
+        service = ShipStatsService(registries=registries)
 
-            # Undamaged - has warp capability
-            stats_ok = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_ok['warp_max_tonnage'] == 5000
-            assert stats_ok['warp_resource_costs'].get('energy', 0) == 500
+        # Undamaged - has warp capability
+        stats_ok = service.calculate_stats(design_data, {})
+        assert stats_ok['warp_max_tonnage'] == 5000
+        assert stats_ok['warp_resource_costs'].get('energy', 0) == 500
 
-            # Damaged - no warp capability
-            stats_damaged = ShipStatsService.calculate_stats(
-                design_data, {'warp_drive': 99}
-            )
-            assert stats_damaged['warp_max_tonnage'] == 0
-            assert stats_damaged['warp_resource_costs'].get('energy', 0) == 0
+        # Damaged - no warp capability
+        stats_damaged = service.calculate_stats(
+            design_data, {'warp_drive': 99}
+        )
+        assert stats_damaged['warp_max_tonnage'] == 0
+        assert stats_damaged['warp_resource_costs'].get('energy', 0) == 0
 
     def test_multiple_warp_drives_largest_tonnage(self):
         """With multiple warp drives, use largest tonnage."""
@@ -224,15 +241,15 @@ class TestWarpCapability:
 
         design_data = make_design_data({'OUTER': ['warp_small', 'warp_large']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'warp_small': warp1, 'warp_large': warp2}
+        registries = create_mock_registries(components={'warp_small': warp1, 'warp_large': warp2})
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        stats = service.calculate_stats(design_data, {})
 
-            # Tonnage = max of drives (10000)
-            assert stats['warp_max_tonnage'] == 10000
-            # Energy = sum of drives (200 + 800)
-            assert stats['warp_resource_costs'].get('energy', 0) == 1000
+        # Tonnage = max of drives (10000)
+        assert stats['warp_max_tonnage'] == 10000
+        # Energy = sum of drives (200 + 800)
+        assert stats['warp_resource_costs'].get('energy', 0) == 1000
 
     def test_one_damaged_warp_drive_reduces_capability(self):
         """If one of two warp drives is damaged, only undamaged contributes."""
@@ -255,16 +272,16 @@ class TestWarpCapability:
 
         design_data = make_design_data({'OUTER': ['warp_small', 'warp_large']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'warp_small': warp1, 'warp_large': warp2}
+        registries = create_mock_registries(components={'warp_small': warp1, 'warp_large': warp2})
+        service = ShipStatsService(registries=registries)
 
-            # Large warp damaged - only small works
-            stats = ShipStatsService.calculate_stats(
-                design_data, {'warp_large': 99}
-            )
+        # Large warp damaged - only small works
+        stats = service.calculate_stats(
+            design_data, {'warp_large': 99}
+        )
 
-            assert stats['warp_max_tonnage'] == 2000
-            assert stats['warp_resource_costs'].get('energy', 0) == 200
+        assert stats['warp_max_tonnage'] == 2000
+        assert stats['warp_resource_costs'].get('energy', 0) == 200
 
 
 class TestStatAggregation:
@@ -277,15 +294,15 @@ class TestStatAggregation:
         comp = MockComponent('heavy_part', mass=500, max_hp=100)
         design_data = make_design_data({'CORE': ['heavy_part']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'heavy_part': comp}
+        registries = create_mock_registries(components={'heavy_part': comp})
+        service = ShipStatsService(registries=registries)
 
-            # Even with damaged component
-            stats = ShipStatsService.calculate_stats(
-                design_data, {'heavy_part': 1}  # 1% HP
-            )
+        # Even with damaged component
+        stats = service.calculate_stats(
+            design_data, {'heavy_part': 1}  # 1% HP
+        )
 
-            assert stats['mass'] == 500  # Full mass
+        assert stats['mass'] == 500  # Full mass
 
     def test_hp_degrades_with_damage(self):
         """HP contribution should degrade with damage."""
@@ -294,20 +311,20 @@ class TestStatAggregation:
         comp = MockComponent('hull', mass=100, max_hp=200, damage_threshold=0.3)
         design_data = make_design_data({'CORE': ['hull']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'hull': comp}
+        registries = create_mock_registries(components={'hull': comp})
+        service = ShipStatsService(registries=registries)
 
-            # Full HP
-            stats_full = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_full['max_hp'] == 200
+        # Full HP
+        stats_full = service.calculate_stats(design_data, {})
+        assert stats_full['max_hp'] == 200
 
-            # At 130 current HP out of 200 = 65% HP
-            # effectiveness = (0.65 - 0.3) / (1.0 - 0.3) = 0.35/0.7 = 0.5
-            # HP contribution = 200 * 0.5 = 100
-            stats_half = ShipStatsService.calculate_stats(
-                design_data, {'hull': 130}  # 130/200 = 65% HP
-            )
-            assert stats_half['max_hp'] == 100
+        # At 130 current HP out of 200 = 65% HP
+        # effectiveness = (0.65 - 0.3) / (1.0 - 0.3) = 0.35/0.7 = 0.5
+        # HP contribution = 200 * 0.5 = 100
+        stats_half = service.calculate_stats(
+            design_data, {'hull': 130}  # 130/200 = 65% HP
+        )
+        assert stats_half['max_hp'] == 100
 
     def test_strategic_movement_aggregation(self):
         """Strategic movement should sum across engines, degraded by damage."""
@@ -319,18 +336,18 @@ class TestStatAggregation:
         )
         design_data = make_design_data({'OUTER': ['engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine}
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsService(registries=registries)
 
-            # Full HP
-            stats = ShipStatsService.calculate_stats(design_data, {})
-            assert stats['strategic_movement'] == 100
+        # Full HP
+        stats = service.calculate_stats(design_data, {})
+        assert stats['strategic_movement'] == 100
 
-            # Damaged (65% HP = 50% effectiveness)
-            stats_damaged = ShipStatsService.calculate_stats(
-                design_data, {'engine': 65}
-            )
-            assert abs(stats_damaged['strategic_movement'] - 50) < 1
+        # Damaged (65% HP = 50% effectiveness)
+        stats_damaged = service.calculate_stats(
+            design_data, {'engine': 65}
+        )
+        assert abs(stats_damaged['strategic_movement'] - 50) < 1
 
     def test_fuel_storage_aggregation(self):
         """Fuel storage should sum, degraded by damage."""
@@ -342,11 +359,11 @@ class TestStatAggregation:
         )
         design_data = make_design_data({'OUTER': ['fuel_tank']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'fuel_tank': tank}
+        registries = create_mock_registries(components={'fuel_tank': tank})
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
-            assert stats['resource_storage']['fuel'] == 10000
+        stats = service.calculate_stats(design_data, {})
+        assert stats['resource_storage']['fuel'] == 10000
 
     def test_strategic_fuel_consumption(self):
         """Strategic fuel per hex should sum across engines."""
@@ -362,11 +379,11 @@ class TestStatAggregation:
         )
         design_data = make_design_data({'OUTER': ['engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine}
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
-            assert stats['resource_consumption_per_hex']['fuel'] == 100
+        stats = service.calculate_stats(design_data, {})
+        assert stats['resource_consumption_per_hex']['fuel'] == 100
 
 
 class TestComponentIdMatching:
@@ -439,23 +456,23 @@ class TestIntegrationScenarios:
             'OUTER': ['engine', 'warp_drive', 'fuel_tank']
         })
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={
-                'bridge': bridge,
-                'engine': engine,
-                'warp_drive': warp,
-                'fuel_tank': tank
-            }
+        registries = create_mock_registries(components={
+            'bridge': bridge,
+            'engine': engine,
+            'warp_drive': warp,
+            'fuel_tank': tank
+        })
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        stats = service.calculate_stats(design_data, {})
 
-            assert stats['mass'] == 50 + 80 + 40 + 30  # 200
-            assert stats['max_hp'] == 200 + 100 + 60 + 50  # 410
-            assert stats['resource_storage']['fuel'] == 50000
-            assert stats['strategic_movement'] == 100
-            assert stats['resource_consumption_per_hex']['fuel'] == 100
-            assert stats['warp_max_tonnage'] == 2000
-            assert stats['warp_resource_costs'].get('energy', 0) == 500
+        assert stats['mass'] == 50 + 80 + 40 + 30  # 200
+        assert stats['max_hp'] == 200 + 100 + 60 + 50  # 410
+        assert stats['resource_storage']['fuel'] == 50000
+        assert stats['strategic_movement'] == 100
+        assert stats['resource_consumption_per_hex']['fuel'] == 100
+        assert stats['warp_max_tonnage'] == 2000
+        assert stats['warp_resource_costs'].get('energy', 0) == 500
 
     def test_damaged_escort_loses_warp(self):
         """Escort with damaged warp drive loses warp capability."""
@@ -475,18 +492,18 @@ class TestIntegrationScenarios:
 
         design_data = make_design_data({'OUTER': ['engine', 'warp_drive']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine, 'warp_drive': warp}
+        registries = create_mock_registries(components={'engine': engine, 'warp_drive': warp})
+        service = ShipStatsService(registries=registries)
 
-            # Warp drive at 99% HP - disabled
-            stats = ShipStatsService.calculate_stats(
-                design_data, {'warp_drive': 59}  # Just under 100%
-            )
+        # Warp drive at 99% HP - disabled
+        stats = service.calculate_stats(
+            design_data, {'warp_drive': 59}  # Just under 100%
+        )
 
-            assert stats['warp_max_tonnage'] == 0
-            assert stats['warp_resource_costs'].get('energy', 0) == 0
-            # Engine still works (100% HP)
-            assert stats['strategic_movement'] == 100
+        assert stats['warp_max_tonnage'] == 0
+        assert stats['warp_resource_costs'].get('energy', 0) == 0
+        # Engine still works (100% HP)
+        assert stats['strategic_movement'] == 100
 
 
 # =============================================================================
@@ -512,9 +529,9 @@ class TestGenericDictAccumulators:
         )
         design_data = make_design_data({'OUTER': ['multi_tank']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'multi_tank': tank}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'multi_tank': tank})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['resource_storage'], dict)
         assert stats['resource_storage']['fuel'] == 5000
@@ -535,9 +552,9 @@ class TestGenericDictAccumulators:
         )
         design_data = make_design_data({'OUTER': ['advanced_engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'advanced_engine': engine}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'advanced_engine': engine})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['resource_consumption_per_hex'], dict)
         assert stats['resource_consumption_per_hex']['fuel'] == 100
@@ -558,9 +575,9 @@ class TestGenericDictAccumulators:
         )
         design_data = make_design_data({'CORE': ['life_support']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'life_support': life_support}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'life_support': life_support})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['resource_consumption_per_turn'], dict)
         assert stats['resource_consumption_per_turn']['oxygen'] == 5
@@ -582,9 +599,9 @@ class TestGenericDictAccumulators:
         )
         design_data = make_design_data({'OUTER': ['warp_drive']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'warp_drive': warp_drive}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'warp_drive': warp_drive})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert isinstance(stats['warp_resource_costs'], dict)
         assert stats['warp_resource_costs']['energy'] == 500
@@ -612,9 +629,9 @@ class TestGenericDictAccumulators:
         )
         design_data = make_design_data({'OUTER': ['fuel_tank', 'fuel_tank_2']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'fuel_tank': tank1, 'fuel_tank_2': tank2}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'fuel_tank': tank1, 'fuel_tank_2': tank2})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Should accumulate: 3000 + 2000 = 5000
         assert stats['resource_storage']['fuel'] == 5000
@@ -633,11 +650,11 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine}
-            stats = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={'engine': False}
-            )
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(
+            design_data, {}, component_toggles={'engine': False}
+        )
 
         assert stats['mass'] == 200  # Mass still counted
 
@@ -648,18 +665,18 @@ class TestComponentToggles:
         hull = MockComponent('hull', mass=100, max_hp=500)
         design_data = make_design_data({'CORE': ['hull']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'hull': hull}
+        registries = create_mock_registries(components={'hull': hull})
+        service = ShipStatsService(registries=registries)
 
-            # Enabled
-            stats_on = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_on['max_hp'] == 500
+        # Enabled
+        stats_on = service.calculate_stats(design_data, {})
+        assert stats_on['max_hp'] == 500
 
-            # Disabled
-            stats_off = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={'hull': False}
-            )
-            assert stats_off['max_hp'] == 0
+        # Disabled
+        stats_off = service.calculate_stats(
+            design_data, {}, component_toggles={'hull': False}
+        )
+        assert stats_off['max_hp'] == 0
 
     def test_toggled_off_component_no_strategic_movement(self):
         """Toggled off engines should not contribute strategic movement."""
@@ -671,16 +688,16 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine}
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsService(registries=registries)
 
-            stats_on = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_on['strategic_movement'] == 150
+        stats_on = service.calculate_stats(design_data, {})
+        assert stats_on['strategic_movement'] == 150
 
-            stats_off = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={'engine': False}
-            )
-            assert stats_off['strategic_movement'] == 0
+        stats_off = service.calculate_stats(
+            design_data, {}, component_toggles={'engine': False}
+        )
+        assert stats_off['strategic_movement'] == 0
 
     def test_toggled_off_warp_drive_no_warp_capability(self):
         """Toggled off warp drive should contribute no warp capability."""
@@ -692,16 +709,16 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['warp_drive']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'warp_drive': warp}
+        registries = create_mock_registries(components={'warp_drive': warp})
+        service = ShipStatsService(registries=registries)
 
-            stats_on = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_on['warp_max_tonnage'] == 8000
+        stats_on = service.calculate_stats(design_data, {})
+        assert stats_on['warp_max_tonnage'] == 8000
 
-            stats_off = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={'warp_drive': False}
-            )
-            assert stats_off['warp_max_tonnage'] == 0
+        stats_off = service.calculate_stats(
+            design_data, {}, component_toggles={'warp_drive': False}
+        )
+        assert stats_off['warp_max_tonnage'] == 0
 
     def test_toggled_off_resource_storage_not_counted(self):
         """Toggled off storage components should not contribute storage capacity."""
@@ -713,16 +730,16 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['fuel_tank']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'fuel_tank': tank}
+        registries = create_mock_registries(components={'fuel_tank': tank})
+        service = ShipStatsService(registries=registries)
 
-            stats_on = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_on['resource_storage']['fuel'] == 10000
+        stats_on = service.calculate_stats(design_data, {})
+        assert stats_on['resource_storage']['fuel'] == 10000
 
-            stats_off = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={'fuel_tank': False}
-            )
-            assert stats_off['resource_storage'].get('fuel', 0) == 0
+        stats_off = service.calculate_stats(
+            design_data, {}, component_toggles={'fuel_tank': False}
+        )
+        assert stats_off['resource_storage'].get('fuel', 0) == 0
 
     def test_mixed_enabled_disabled_components(self):
         """Mix of enabled and disabled components should calculate correctly."""
@@ -738,13 +755,13 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['engine_a', 'engine_b']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine_a': engine1, 'engine_b': engine2}
+        registries = create_mock_registries(components={'engine_a': engine1, 'engine_b': engine2})
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(
-                design_data, {},
-                component_toggles={'engine_a': True, 'engine_b': False}
-            )
+        stats = service.calculate_stats(
+            design_data, {},
+            component_toggles={'engine_a': True, 'engine_b': False}
+        )
 
         # Mass from both (80 + 80 = 160)
         assert stats['mass'] == 160
@@ -763,13 +780,13 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine}
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsService(registries=registries)
 
-            # Pass empty toggle dict - should default to enabled
-            stats = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={}
-            )
+        # Pass empty toggle dict - should default to enabled
+        stats = service.calculate_stats(
+            design_data, {}, component_toggles={}
+        )
 
         assert stats['strategic_movement'] == 100
         assert stats['max_hp'] == 100
@@ -790,19 +807,19 @@ class TestComponentToggles:
         )
         design_data = make_design_data({'OUTER': ['advanced_engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'advanced_engine': engine}
+        registries = create_mock_registries(components={'advanced_engine': engine})
+        service = ShipStatsService(registries=registries)
 
-            stats_on = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_on['resource_consumption_per_hex']['fuel'] == 200
-            assert stats_on['resource_consumption_per_turn']['coolant'] == 50
+        stats_on = service.calculate_stats(design_data, {})
+        assert stats_on['resource_consumption_per_hex']['fuel'] == 200
+        assert stats_on['resource_consumption_per_turn']['coolant'] == 50
 
-            stats_off = ShipStatsService.calculate_stats(
-                design_data, {}, component_toggles={'advanced_engine': False}
-            )
-            # Should be empty dicts or not have the keys
-            assert stats_off['resource_consumption_per_hex'].get('fuel', 0) == 0
-            assert stats_off['resource_consumption_per_turn'].get('coolant', 0) == 0
+        stats_off = service.calculate_stats(
+            design_data, {}, component_toggles={'advanced_engine': False}
+        )
+        # Should be empty dicts or not have the keys
+        assert stats_off['resource_consumption_per_hex'].get('fuel', 0) == 0
+        assert stats_off['resource_consumption_per_turn'].get('coolant', 0) == 0
 
 
 class TestTriggerTypes:
@@ -830,9 +847,9 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'OUTER': ['engine_1', 'engine_2']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine_1': engine1, 'engine_2': engine2}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'engine_1': engine1, 'engine_2': engine2})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_hex']['fuel'] == 100
 
@@ -858,9 +875,9 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'CORE': ['ls_1', 'ls_2']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'ls_1': life_support_1, 'ls_2': life_support_2}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'ls_1': life_support_1, 'ls_2': life_support_2})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_turn']['oxygen'] == 25
 
@@ -888,9 +905,9 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'OUTER': ['warp_1', 'warp_2']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'warp_1': warp1, 'warp_2': warp2}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'warp_1': warp1, 'warp_2': warp2})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Energy costs accumulate
         assert stats['warp_resource_costs']['energy'] == 500
@@ -912,9 +929,9 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'CORE': ['multi']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'multi': multi_consumer}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'multi': multi_consumer})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Each should be in its own bucket, not mixed
         assert stats['resource_consumption_per_hex']['fuel'] == 100
@@ -935,18 +952,18 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'CORE': ['life_support']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'life_support': life_support}
+        registries = create_mock_registries(components={'life_support': life_support})
+        service = ShipStatsService(registries=registries)
 
-            # Full HP
-            stats_full = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_full['resource_consumption_per_turn']['oxygen'] == 100
+        # Full HP
+        stats_full = service.calculate_stats(design_data, {})
+        assert stats_full['resource_consumption_per_turn']['oxygen'] == 100
 
-            # At 65% HP (50% effectiveness)
-            stats_damaged = ShipStatsService.calculate_stats(
-                design_data, {'life_support': 65}
-            )
-            assert abs(stats_damaged['resource_consumption_per_turn']['oxygen'] - 50) < 1
+        # At 65% HP (50% effectiveness)
+        stats_damaged = service.calculate_stats(
+            design_data, {'life_support': 65}
+        )
+        assert abs(stats_damaged['resource_consumption_per_turn']['oxygen'] - 50) < 1
 
     def test_trigger_warp_jump_requires_full_hp(self):
         """warp_jump consumption requires full HP (warp resource costs are 0 if damaged)."""
@@ -965,22 +982,22 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'OUTER': ['warp']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'warp': warp}
+        registries = create_mock_registries(components={'warp': warp})
+        service = ShipStatsService(registries=registries)
 
-            # Full HP - warp works
-            stats_full = ShipStatsService.calculate_stats(design_data, {})
-            assert stats_full['warp_max_tonnage'] == 5000
-            assert stats_full['warp_resource_costs']['energy'] == 500
+        # Full HP - warp works
+        stats_full = service.calculate_stats(design_data, {})
+        assert stats_full['warp_max_tonnage'] == 5000
+        assert stats_full['warp_resource_costs']['energy'] == 500
 
-            # 99% HP - warp drive disabled (0 tonnage)
-            # warp_resource_costs should also be 0 (no warp = no cost)
-            stats_damaged = ShipStatsService.calculate_stats(
-                design_data, {'warp': 99}
-            )
-            assert stats_damaged['warp_max_tonnage'] == 0
-            # When warp is disabled, warp_resource_costs should be empty or 0
-            assert stats_damaged['warp_resource_costs'].get('energy', 0) == 0
+        # 99% HP - warp drive disabled (0 tonnage)
+        # warp_resource_costs should also be 0 (no warp = no cost)
+        stats_damaged = service.calculate_stats(
+            design_data, {'warp': 99}
+        )
+        assert stats_damaged['warp_max_tonnage'] == 0
+        # When warp is disabled, warp_resource_costs should be empty or 0
+        assert stats_damaged['warp_resource_costs'].get('energy', 0) == 0
 
     def test_trigger_unknown_type_ignored(self):
         """Unknown trigger types should be ignored (no error)."""
@@ -996,9 +1013,9 @@ class TestTriggerTypes:
         )
         design_data = make_design_data({'CORE': ['strange']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'strange': comp}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'strange': comp})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Should not appear in any bucket
         assert stats['resource_consumption_per_hex'].get('mystery', 0) == 0
@@ -1023,9 +1040,9 @@ class TestCustomResources:
         )
         design_data = make_design_data({'OUTER': ['plasma_tank']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'plasma_tank': tank}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'plasma_tank': tank})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_storage']['plasma'] == 2500
 
@@ -1043,9 +1060,9 @@ class TestCustomResources:
         )
         design_data = make_design_data({'OUTER': ['plasma_drive']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'plasma_drive': drive}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'plasma_drive': drive})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_hex']['plasma'] == 75
 
@@ -1063,9 +1080,9 @@ class TestCustomResources:
         )
         design_data = make_design_data({'CORE': ['fusion_reactor']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'fusion_reactor': reactor}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'fusion_reactor': reactor})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert stats['resource_consumption_per_turn']['deuterium'] == 5
 
@@ -1084,9 +1101,9 @@ class TestCustomResources:
         )
         design_data = make_design_data({'OUTER': ['exotic_warp']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'exotic_warp': warp}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'exotic_warp': warp})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         assert stats['warp_resource_costs']['exotic_matter'] == 50
 
@@ -1108,9 +1125,9 @@ class TestCustomResources:
         )
         design_data = make_design_data({'CORE': ['multi_resource']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'multi_resource': multi_tank}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'multi_resource': multi_tank})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         storage = stats['resource_storage']
         assert storage['fuel'] == 1000
@@ -1142,9 +1159,9 @@ class TestBugDocumentation:
         )
         design_data = make_design_data({'OUTER': ['buggy_tank']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'buggy_tank': buggy_tank}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'buggy_tank': buggy_tank})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # BUG: Empty string creates '' key - this documents current behavior
         # The service does check `if resource_type:` so empty should NOT be added
@@ -1164,9 +1181,9 @@ class TestBugDocumentation:
         )
         design_data = make_design_data({'OUTER': ['buggy_engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'buggy_engine': buggy_engine}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'buggy_engine': buggy_engine})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Empty string key will be created (current behavior - no validation)
         # This test documents the actual behavior and verifies the value is correct
@@ -1189,10 +1206,10 @@ class TestBugDocumentation:
         )
         design_data = make_design_data({'OUTER': ['bad_tank']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'bad_tank': bad_tank}
-            # Should not raise an exception
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'bad_tank': bad_tank})
+        service = ShipStatsService(registries=registries)
+        # Should not raise an exception
+        stats = service.calculate_stats(design_data, {})
 
         # Missing resource key defaults to '' via .get('resource', '')
         # The `if resource_type:` check prevents adding to dict
@@ -1217,16 +1234,16 @@ class TestIntegrationProj08:
         )
         design_data = make_design_data({'OUTER': ['engine']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'engine': engine}
+        registries = create_mock_registries(components={'engine': engine})
+        service = ShipStatsService(registries=registries)
 
-            # Damaged engine at 50% HP (about 29% effectiveness)
-            # But then toggled off - should get mass but no stats
-            stats = ShipStatsService.calculate_stats(
-                design_data,
-                {'engine': 50},  # Damaged
-                component_toggles={'engine': False}  # Toggled off
-            )
+        # Damaged engine at 50% HP (about 29% effectiveness)
+        # But then toggled off - should get mass but no stats
+        stats = service.calculate_stats(
+            design_data,
+            {'engine': 50},  # Damaged
+            component_toggles={'engine': False}  # Toggled off
+        )
 
         # Mass still counts (toggle off still contributes mass)
         assert stats['mass'] == 100
@@ -1257,9 +1274,9 @@ class TestIntegrationProj08:
         )
         design_data = make_design_data({'CORE': ['super']})
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value ={'super': super_component}
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={'super': super_component})
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Verify all fields populated correctly
         assert stats['resource_storage']['fuel'] == 10000
@@ -1289,9 +1306,9 @@ class TestIntegrationProj08:
             }
         }
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {}  # Empty registry forces fallback
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        registries = create_mock_registries(components={})  # Empty registry forces fallback
+        service = ShipStatsService(registries=registries)
+        stats = service.calculate_stats(design_data, {})
 
         # Should use expected_stats values
         assert stats['max_hp'] == 500
@@ -1547,11 +1564,13 @@ class TestModifierApplication:
             }
         }
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'battery': battery}
-            mock_provider.return_value.get_modifiers.return_value = {'simple_size_mount': size_modifier}
+        registries = create_mock_registries(
+            components={'battery': battery},
+            modifiers={'simple_size_mount': size_modifier}
+        )
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        stats = service.calculate_stats(design_data, {})
 
         # Base battery: 2000 energy, size 20 = 40000 energy
         assert stats['resource_storage'].get('energy', 0) == 40000.0
@@ -1602,15 +1621,17 @@ class TestModifierApplication:
             }
         }
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'battery': battery}
-            mock_provider.return_value.get_modifiers.return_value = {'simple_size_mount': size_modifier}
+        registries = create_mock_registries(
+            components={'battery': battery},
+            modifiers={'simple_size_mount': size_modifier}
+        )
+        service = ShipStatsService(registries=registries)
 
-            stats_small = ShipStatsService.calculate_stats(design_small, {})
-            stats_large = ShipStatsService.calculate_stats(design_large, {})
+        stats_small = service.calculate_stats(design_small, {})
+        stats_large = service.calculate_stats(design_large, {})
 
-        # 10 × 2000 × 1 = 20000
-        # 1 × 2000 × 10 = 20000
+        # 10 x 2000 x 1 = 20000
+        # 1 x 2000 x 10 = 20000
         assert stats_small['resource_storage']['energy'] == stats_large['resource_storage']['energy']
         assert stats_small['resource_storage']['energy'] == 20000.0
 
@@ -1666,11 +1687,13 @@ class TestModifierApplication:
             }
         }
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'battery': battery, 'warp_drive': warp_drive}
-            mock_provider.return_value.get_modifiers.return_value = {'simple_size_mount': size_modifier}
+        registries = create_mock_registries(
+            components={'battery': battery, 'warp_drive': warp_drive},
+            modifiers={'simple_size_mount': size_modifier}
+        )
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        stats = service.calculate_stats(design_data, {})
 
         # Warp energy cost: 3175
         # Scaled battery: 2000 * 20 = 40000 energy
@@ -1702,11 +1725,10 @@ class TestModifierApplication:
             }
         }
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'battery': battery}
-            mock_provider.return_value.get_modifiers.return_value = {}
+        registries = create_mock_registries(components={'battery': battery})
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        stats = service.calculate_stats(design_data, {})
 
         # Base battery: 2000 energy, no modifiers
         assert stats['resource_storage'].get('energy', 0) == 2000.0
@@ -1741,11 +1763,13 @@ class TestModifierApplication:
             }
         }
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {'test_comp': component}
-            mock_provider.return_value.get_modifiers.return_value = {'simple_size_mount': size_modifier}
+        registries = create_mock_registries(
+            components={'test_comp': component},
+            modifiers={'simple_size_mount': size_modifier}
+        )
+        service = ShipStatsService(registries=registries)
 
-            stats = ShipStatsService.calculate_stats(design_data, {})
+        stats = service.calculate_stats(design_data, {})
 
         # Base mass: 100, size 5 = 500 mass
         assert stats['mass'] == 500.0

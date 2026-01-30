@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 2 Complete
-**Current Status:** Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-42 Phase 3 Complete
+**Current Status:** Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-42
-**Current Phase:** Phase 3 - Eliminate Dual Static/Instance Patterns
-**Test Status:** 925 passed (focused tests)
+**Current Phase:** Phase 4 - Clean Up Serialization & Format Support
+**Test Status:** 5360 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 completed: All tasks verified as already complete from prior PROJ-38 work
-- Task 2.6: UI layer files already have `_get_*` helper methods with registries → provider fallback
-- Task 2.7: Remaining files already have PROJ-38 pattern or are data loaders using global state correctly
-- Task 2.8: Deprecated module-level functions already removed; updated outdated docstrings in registry.py and ship_stats.py
-- 925 tests passed (core, services, simulation, workshop)
-- Next: Phase 3 - Eliminate dual static/instance method patterns
+- Phase 3 completed: Eliminated all dual static/instance patterns
+- ShipStatsService.calculate_stats() now instance-only method
+- ModifierService methods all now instance-only (is_modifier_allowed, get_mandatory_modifiers, etc.)
+- Updated all callers: Ship.py, ShipComponentManager, ShipInstance, ui/builder/modifier_logic.py
+- Updated tests: test_ship_stats_service.py, test_modifier_service.py, test_service_injection.py, test_modifier_service_di.py
+- All 5360 tests passing
+- Next: Phase 4 - Clean Up Serialization & Format Support
 
 ---
 
@@ -97,6 +98,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 3 Complete | Complete | 5360 passed | 225159d | Eliminated dual static/instance patterns in services |
 | 2026-01-29 | PROJ-42 | Phase 2 Complete | Complete | 925 passed | 2ed3fa1 | Tasks 2.6-2.8 verified complete, updated docstrings |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.5 | Complete | 98 testmon | 8c33d1f | Updated VehicleDesignService to GameRegistries only |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.4 | Complete | 115 testmon | 336bf48 | Updated Component with _get_registries_fallback() pattern |

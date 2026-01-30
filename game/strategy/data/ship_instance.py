@@ -190,7 +190,9 @@ class ShipInstance:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_service import ShipStatsService
-            self._cached_stats = ShipStatsService.calculate_stats(
+            # PROJ-42: Use instance pattern (no more static calling)
+            service = ShipStatsService()
+            self._cached_stats = service.calculate_stats(
                 self.design_data,
                 self.component_damage,
                 self.component_toggles

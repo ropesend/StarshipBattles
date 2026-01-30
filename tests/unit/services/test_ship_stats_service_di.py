@@ -131,43 +131,24 @@ class TestShipStatsServiceInstanceMethods:
 
 
 # =============================================================================
-# Test: Backward Compatibility - Static Method Interface
+# Test: Static Utility Methods (PROJ-42)
 # =============================================================================
 
-class TestShipStatsServiceBackwardCompatibility:
-    """Tests ensuring backward compatibility with static method interface."""
+class TestShipStatsServiceStaticMethods:
+    """Tests for ShipStatsService static utility methods.
 
-    def test_static_method_calculate_stats_still_works(self, simple_design):
-        """Existing static method calls should continue to work."""
-        result = ShipStatsService.calculate_stats(simple_design)
+    PROJ-42: After removing dual static/instance patterns, only pure utility
+    methods like get_component_effectiveness remain as static methods.
+    """
 
-        assert isinstance(result, dict)
-        assert 'max_hp' in result
-
-    def test_static_method_with_registry_param_still_works(self, mock_registries, simple_design):
-        """Existing static method calls with registry param should still work."""
-        from game.core.registry import get_default_registry_provider
-
-        # Get the default registry provider
-        provider = get_default_registry_provider()
-
-        result = ShipStatsService.calculate_stats(simple_design, None, None, registry=provider)
-
-        assert isinstance(result, dict)
-        assert 'max_hp' in result
-
-    def test_get_component_effectiveness_works_both_ways(self, mock_registries):
-        """get_component_effectiveness should work both as static and instance method."""
+    def test_get_component_effectiveness_is_static(self, mock_registries):
+        """get_component_effectiveness should work as a static method."""
         from game.simulation.components.component import create_component
 
         comp = create_component('bridge')
 
-        # Static call
-        static_result = ShipStatsService.get_component_effectiveness('bridge_0', comp, {})
+        # Static call (no instance needed)
+        result = ShipStatsService.get_component_effectiveness('bridge_0', comp, {})
 
-        # Instance call
-        service = ShipStatsService(registries=mock_registries)
-        instance_result = service.get_component_effectiveness('bridge_0', comp, {})
-
-        # Both should return same effectiveness
-        assert static_result == instance_result
+        assert isinstance(result, float)
+        assert 0.0 <= result <= 1.0

@@ -859,6 +859,7 @@ class TestComponentToggleIntegration:
     def test_disabled_component_not_consumed_per_turn(self):
         """Verify disabled components don't contribute to per-turn consumption."""
         from game.strategy.services.ship_stats_service import ShipStatsService
+        from game.core.registry import GameRegistries
 
         # Create design with a component that has per-turn consumption
         design_data = {
@@ -880,31 +881,34 @@ class TestComponentToggleIntegration:
             mass=10
         )
 
-        # Create a mock registry object that returns our mock_comp_def
-        mock_registry_obj = MagicMock()
-        mock_registry_obj.get = MagicMock(return_value=mock_comp_def)
+        # PROJ-42: Create mock registries and use instance pattern
+        registries = GameRegistries(
+            components={'energy_consumer': mock_comp_def},
+            modifiers={},
+            vehicle_classes={},
+            resources={}
+        )
+        service = ShipStatsService(registries=registries)
 
-        with patch('game.strategy.services.ship_stats_service.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = mock_registry_obj
-            # Component enabled - should have consumption
-            enabled_stats = ShipStatsService.calculate_stats(
-                design_data,
-                component_damage={},
-                component_toggles={'energy_consumer': True}
-            )
+        # Component enabled - should have consumption
+        enabled_stats = service.calculate_stats(
+            design_data,
+            component_damage={},
+            component_toggles={'energy_consumer': True}
+        )
 
-            # Component disabled - should not have consumption
-            disabled_stats = ShipStatsService.calculate_stats(
-                design_data,
-                component_damage={},
-                component_toggles={'energy_consumer': False}
-            )
+        # Component disabled - should not have consumption
+        disabled_stats = service.calculate_stats(
+            design_data,
+            component_damage={},
+            component_toggles={'energy_consumer': False}
+        )
 
-            # Enabled should have the per-turn cost
-            assert enabled_stats['resource_consumption_per_turn'].get('energy', 0) == 20.0
+        # Enabled should have the per-turn cost
+        assert enabled_stats['resource_consumption_per_turn'].get('energy', 0) == 20.0
 
-            # Disabled should have zero per-turn cost
-            assert disabled_stats['resource_consumption_per_turn'].get('energy', 0) == 0.0
+        # Disabled should have zero per-turn cost
+        assert disabled_stats['resource_consumption_per_turn'].get('energy', 0) == 0.0
 
     def test_auto_disabled_component_reenabled_via_manual_toggle(self):
         """Verify manually re-enabling an auto-disabled component works."""

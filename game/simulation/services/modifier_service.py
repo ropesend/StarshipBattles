@@ -16,19 +16,16 @@ if TYPE_CHECKING:
 class ModifierService:
     """Service for component modifier operations.
 
-    PROJ-38: Supports constructor-based dependency injection.
+    PROJ-42: Simplified to instance-only methods (removed static calling patterns).
 
     Usage:
-        # New DI pattern (preferred)
+        # With explicit DI (preferred)
         service = ModifierService(modifier_registry=registries.modifiers)
         service.is_modifier_allowed('turret_mount', component)
 
-        # Transitional pattern (uses default registries)
+        # With default registries (uses fallback)
         service = ModifierService()
         service.is_modifier_allowed('turret_mount', component)
-
-        # Legacy static pattern (backward compatible)
-        ModifierService.is_modifier_allowed('turret_mount', component)
     """
 
     # Modifiers that cannot be removed by the user
@@ -58,51 +55,24 @@ class ModifierService:
         except RuntimeError:
             return get_default_registry_provider().get_modifiers()
 
-    def is_modifier_allowed(
-        self_or_mod_id,
-        mod_id_or_component,
-        component_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
-    ) -> bool:
+    def is_modifier_allowed(self, mod_id: str, component) -> bool:
         """
         Check if a modifier is allowed for the given component.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
-        Instance usage (preferred):
+        Usage:
             service = ModifierService(modifier_registry=...)
             service.is_modifier_allowed('mod_id', component)
-
-        Static usage (legacy, backward compatible):
-            ModifierService.is_modifier_allowed('mod_id', component)
-            ModifierService.is_modifier_allowed('mod_id', component, registry=provider)
 
         Args:
             mod_id: The modifier ID to check
             component: The component to check against
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             True if the modifier is allowed for this component
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_mod_id, ModifierService):
-            # Instance method call: service.is_modifier_allowed(mod_id, component)
-            self = self_or_mod_id
-            mod_id = mod_id_or_component
-            component = component_or_registry
-            modifier_registry = self._modifiers
-        else:
-            # Static-style call: ModifierService.is_modifier_allowed(mod_id, component, ...)
-            mod_id = self_or_mod_id
-            component = mod_id_or_component
-            # PROJ-42: Use injected registry if provided, else use fallback
-            if component_or_registry is not None and hasattr(component_or_registry, 'get_modifiers'):
-                modifier_registry = component_or_registry.get_modifiers()
-            elif registry is not None:
-                modifier_registry = registry.get_modifiers()
-            else:
-                modifier_registry = ModifierService._get_modifiers_fallback()
+        modifier_registry = self._modifiers
 
         if mod_id not in modifier_registry:
             return False
@@ -131,36 +101,19 @@ class ModifierService:
 
         return True
 
-    def get_mandatory_modifiers(
-        self_or_component,
-        component_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
-    ) -> list:
+    def get_mandatory_modifiers(self, component) -> list:
         """
         Returns a list of modifier IDs that are mandatory for this component.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
         Args:
             component: The component to check
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             List of mandatory modifier IDs for this component
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_component, ModifierService):
-            # Instance method call: service.get_mandatory_modifiers(component)
-            self = self_or_component
-            component = component_or_registry
-            # For recursive is_modifier_allowed calls, use self
-            check_allowed = lambda mod_id: self.is_modifier_allowed(mod_id, component)
-        else:
-            # Static-style call: ModifierService.get_mandatory_modifiers(component, registry)
-            component = self_or_component
-            reg = component_or_registry if component_or_registry is not None else registry
-            # For recursive is_modifier_allowed calls, use static pattern
-            check_allowed = lambda mod_id: ModifierService.is_modifier_allowed(mod_id, component, reg)
+        check_allowed = lambda mod_id: self.is_modifier_allowed(mod_id, component)
 
         mandatory = ['simple_size_mount']  # Everyone gets size
 
@@ -215,78 +168,35 @@ class ModifierService:
 
         return mandatory
 
-    def is_modifier_mandatory(
-        self_or_mod_id,
-        mod_id_or_component,
-        component_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
-    ) -> bool:
+    def is_modifier_mandatory(self, mod_id: str, component) -> bool:
         """
         Check if a specific modifier is mandatory for this component.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
         Args:
             mod_id: The modifier ID to check
             component: The component to check
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             True if the modifier is mandatory for this component
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_mod_id, ModifierService):
-            # Instance method call: service.is_modifier_mandatory(mod_id, component)
-            self = self_or_mod_id
-            mod_id = mod_id_or_component
-            component = component_or_registry
-            return mod_id in self.get_mandatory_modifiers(component)
-        else:
-            # Static-style call: ModifierService.is_modifier_mandatory(mod_id, component, ...)
-            mod_id = self_or_mod_id
-            component = mod_id_or_component
-            reg = component_or_registry if component_or_registry is not None else registry
-            return mod_id in ModifierService.get_mandatory_modifiers(component, reg)
+        return mod_id in self.get_mandatory_modifiers(component)
 
-    def get_initial_value(
-        self_or_mod_id,
-        mod_id_or_component,
-        component_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
-    ) -> float:
+    def get_initial_value(self, mod_id: str, component) -> float:
         """
         Get the initial value for a newly applied modifier.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
         Args:
             mod_id: The modifier ID
             component: The component the modifier is being applied to
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             The initial value for the modifier
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_mod_id, ModifierService):
-            # Instance method call: service.get_initial_value(mod_id, component)
-            self = self_or_mod_id
-            mod_id = mod_id_or_component
-            component = component_or_registry
-            modifier_registry = self._modifiers
-        else:
-            # Static-style call: ModifierService.get_initial_value(mod_id, component, ...)
-            mod_id = self_or_mod_id
-            component = mod_id_or_component
-            # PROJ-42: Use injected registry if provided, else use fallback
-            if component_or_registry is not None and hasattr(component_or_registry, 'get_modifiers'):
-                modifier_registry = component_or_registry.get_modifiers()
-            elif registry is not None:
-                modifier_registry = registry.get_modifiers()
-            else:
-                modifier_registry = ModifierService._get_modifiers_fallback()
-
-        mod_def = modifier_registry.get(mod_id)
+        mod_def = self._modifiers.get(mod_id)
         if not mod_def:
             return 0
 
@@ -319,83 +229,37 @@ class ModifierService:
 
         return mod_def.default_val
 
-    def ensure_mandatory_modifiers(
-        self_or_component,
-        component_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
-    ) -> None:
+    def ensure_mandatory_modifiers(self, component) -> None:
         """
         Ensures all mandatory modifiers are present on the component.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
         Args:
             component: The component to ensure modifiers on
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_component, ModifierService):
-            # Instance method call: service.ensure_mandatory_modifiers(component)
-            self = self_or_component
-            component = component_or_registry
-            mandatory = self.get_mandatory_modifiers(component)
-            for mod_id in mandatory:
-                if not component.get_modifier(mod_id):
-                    component.add_modifier(mod_id)
-                    m = component.get_modifier(mod_id)
-                    if m:
-                        m.value = self.get_initial_value(mod_id, component)
-        else:
-            # Static-style call: ModifierService.ensure_mandatory_modifiers(component, registry)
-            component = self_or_component
-            reg = component_or_registry if component_or_registry is not None else registry
-            mandatory = ModifierService.get_mandatory_modifiers(component, reg)
-            for mod_id in mandatory:
-                if not component.get_modifier(mod_id):
-                    component.add_modifier(mod_id)
-                    m = component.get_modifier(mod_id)
-                    if m:
-                        m.value = ModifierService.get_initial_value(mod_id, component, reg)
+        mandatory = self.get_mandatory_modifiers(component)
+        for mod_id in mandatory:
+            if not component.get_modifier(mod_id):
+                component.add_modifier(mod_id)
+                m = component.get_modifier(mod_id)
+                if m:
+                    m.value = self.get_initial_value(mod_id, component)
 
-    def get_local_min_max(
-        self_or_mod_id,
-        mod_id_or_component,
-        component_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
-    ) -> tuple:
+    def get_local_min_max(self, mod_id: str, component) -> tuple:
         """
         Returns (min, max) for a modifier, accounting for component-specific constraints.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
         Args:
             mod_id: The modifier ID
             component: The component context
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             Tuple of (min_value, max_value) for this modifier
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_mod_id, ModifierService):
-            # Instance method call: service.get_local_min_max(mod_id, component)
-            self = self_or_mod_id
-            mod_id = mod_id_or_component
-            component = component_or_registry
-            modifier_registry = self._modifiers
-        else:
-            # Static-style call: ModifierService.get_local_min_max(mod_id, component, ...)
-            mod_id = self_or_mod_id
-            component = mod_id_or_component
-            # PROJ-42: Use injected registry if provided, else use fallback
-            if component_or_registry is not None and hasattr(component_or_registry, 'get_modifiers'):
-                modifier_registry = component_or_registry.get_modifiers()
-            elif registry is not None:
-                modifier_registry = registry.get_modifiers()
-            else:
-                modifier_registry = ModifierService._get_modifiers_fallback()
-
-        mod_def = modifier_registry.get(mod_id)
+        mod_def = self._modifiers.get(mod_id)
         if not mod_def:
             return (0, 100)
 

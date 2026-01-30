@@ -160,7 +160,9 @@ class ShipComponentManager:
 
         # Apply mandatory modifiers (e.g., size mount) immediately upon addition
         from game.simulation.services.modifier_service import ModifierService
-        ModifierService.ensure_mandatory_modifiers(component)
+        # PROJ-42: Use instance pattern (no more static calling)
+        modifier_service = ModifierService()
+        modifier_service.ensure_mandatory_modifiers(component)
 
         # Invalidate ship's cached summary
         if hasattr(self._ship, '_cached_summary'):
@@ -206,7 +208,9 @@ class ShipComponentManager:
             new_comp.layer_assigned = layer_type
             new_comp.ship = self._ship
             new_comp.recalculate_stats()
-            ModifierService.ensure_mandatory_modifiers(new_comp)
+            # PROJ-42: Use instance pattern (no more static calling)
+            modifier_service = ModifierService()
+            modifier_service.ensure_mandatory_modifiers(new_comp)
             added_count += 1
 
         if added_count > 0:

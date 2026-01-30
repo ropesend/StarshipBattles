@@ -41,19 +41,16 @@ class ShipStatsService:
     """
     Service for calculating ship statistics from component definitions.
 
-    PROJ-38: Supports constructor-based dependency injection.
+    PROJ-42: Simplified to instance-only methods (removed static calling patterns).
 
     Usage:
-        # New DI pattern (preferred)
+        # With explicit DI (preferred)
         service = ShipStatsService(registries=game_registries)
         stats = service.calculate_stats(design_data)
 
-        # Transitional pattern (uses default registries)
+        # With default registries (uses fallback)
         service = ShipStatsService()
         stats = service.calculate_stats(design_data)
-
-        # Legacy static pattern (backward compatible)
-        stats = ShipStatsService.calculate_stats(design_data)
 
     This replaces reading from expected_stats with dynamic calculation
     that respects component damage state.
@@ -90,29 +87,20 @@ class ShipStatsService:
             )
 
     def calculate_stats(
-        self_or_design,
-        design_or_damage=None,
-        component_damage_or_toggles=None,
-        component_toggles_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None,
-        *,
+        self,
+        design_data: Dict[str, Any],
         component_damage: Optional[Dict[str, int]] = None,
         component_toggles: Optional[Dict[str, bool]] = None
     ) -> Dict[str, Any]:
         """
         Calculate all ship stats from design data and component damage.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method (removed static calling pattern).
 
-        Instance usage (preferred):
+        Usage:
             service = ShipStatsService(registries=...)
             stats = service.calculate_stats(design_data)
             stats = service.calculate_stats(design_data, component_damage={}, component_toggles={})
-
-        Static usage (legacy, backward compatible):
-            stats = ShipStatsService.calculate_stats(design_data)
-            stats = ShipStatsService.calculate_stats(design_data, {}, component_toggles={})
-            stats = ShipStatsService.calculate_stats(design_data, {}, {}, registry=provider)
 
         Args:
             design_data: Serialized ship design containing 'layers' dict
@@ -120,7 +108,6 @@ class ShipStatsService:
                              If None, assumes all components undamaged
             component_toggles: Optional dict of component_id -> enabled
                               If None, assumes all components enabled
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             Dict with calculated stats including:
@@ -133,47 +120,14 @@ class ShipStatsService:
             - strategic_movement: Movement points for strategic map
             - warp_max_tonnage: Max ship mass for warp (0 if damaged)
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_design, ShipStatsService):
-            # Instance method call: service.calculate_stats(design, ...)
-            self = self_or_design
-            design_data = design_or_damage
-            # Use keyword args if provided, else positional args
-            _component_damage = component_damage if component_damage is not None else (
-                component_damage_or_toggles if component_damage_or_toggles is not None else {}
-            )
-            _component_toggles = component_toggles if component_toggles is not None else (
-                component_toggles_or_registry if component_toggles_or_registry is not None else {}
-            )
-            # Use instance registries
-            vehicle_classes = self._registries.vehicle_classes
-            modifier_registry = self._registries.modifiers
-            iterate_components = lambda d: self._iterate_design_components(d)
-        else:
-            # Static-style call: ShipStatsService.calculate_stats(design, damage, toggles, registry)
-            design_data = self_or_design
-            # Use keyword args if provided, else positional args
-            _component_damage = component_damage if component_damage is not None else (
-                design_or_damage if design_or_damage is not None else {}
-            )
-            _component_toggles = component_toggles if component_toggles is not None else (
-                component_damage_or_toggles if component_damage_or_toggles is not None else {}
-            )
-            reg = component_toggles_or_registry if component_toggles_or_registry is not None else registry
-            # PROJ-42: Use injected registry if provided, else use fallback
-            if reg is not None and hasattr(reg, 'get_vehicle_classes'):
-                vehicle_classes = reg.get_vehicle_classes()
-                modifier_registry = reg.get_modifiers()
-                iterate_components = lambda d: ShipStatsService._iterate_design_components(d, reg)
-            else:
-                fallback = ShipStatsService._get_registries_fallback()
-                vehicle_classes = fallback.vehicle_classes
-                modifier_registry = fallback.modifiers
-                iterate_components = lambda d: ShipStatsService._iterate_design_components_with_registries(d, fallback)
+        # PROJ-42: Clean instance method - use instance registries directly
+        if component_damage is None:
+            component_damage = {}
+        if component_toggles is None:
+            component_toggles = {}
 
-        # Use the resolved values
-        component_damage = _component_damage
-        component_toggles = _component_toggles
+        vehicle_classes = self._registries.vehicle_classes
+        modifier_registry = self._registries.modifiers
 
         # Initialize accumulators - ALL generic dicts
         total_mass = 0.0
@@ -195,7 +149,7 @@ class ShipStatsService:
                 formula_context['ship_class_mass'] = class_data.get('max_mass', 1000)
 
         # Iterate through all components in design
-        components_found = iterate_components(design_data)
+        components_found = self._iterate_design_components(design_data)
 
         # Fallback to expected_stats if no components found in layers
         # This handles test fixtures and designs without component registry entries
@@ -352,17 +306,16 @@ class ShipStatsService:
             'warp_max_tonnage': warp_max_tonnage,
         }
 
+    @staticmethod
     def get_component_effectiveness(
-        self_or_comp_id,
-        comp_id_or_def,
-        comp_def_or_damage,
+        comp_id: str,
+        comp_def: Any,
         component_damage: Optional[Dict[str, int]] = None
     ) -> float:
         """
         Calculate component effectiveness based on damage state.
 
-        PROJ-38: Supports both instance and static calling patterns.
-        Note: This method doesn't need registries, but supports both patterns for API consistency.
+        PROJ-42: Simplified to static method (no registries needed).
 
         Damage model:
         - Above 30% HP: Gradual degradation (linear from 100% to 0%)
@@ -377,17 +330,8 @@ class ShipStatsService:
         Returns:
             Float from 0.0 to 1.0 representing effectiveness
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_comp_id, ShipStatsService):
-            # Instance method call: service.get_component_effectiveness(comp_id, comp_def, damage)
-            comp_id = comp_id_or_def
-            comp_def = comp_def_or_damage
-            damage = component_damage if component_damage is not None else {}
-        else:
-            # Static-style call: ShipStatsService.get_component_effectiveness(comp_id, comp_def, damage)
-            comp_id = self_or_comp_id
-            comp_def = comp_id_or_def
-            damage = comp_def_or_damage if comp_def_or_damage is not None else {}
+        if component_damage is None:
+            component_damage = {}
 
         # Check if this is armor (never degrades)
         comp_type = getattr(comp_def, 'type_str', '')
@@ -405,7 +349,7 @@ class ShipStatsService:
             return 1.0  # No HP means always active
 
         # Get current HP - check both indexed and base forms
-        current_hp = ShipStatsService._get_current_hp(comp_id, max_hp, damage)
+        current_hp = ShipStatsService._get_current_hp(comp_id, max_hp, component_damage)
 
         # Calculate HP percentage
         hp_pct = current_hp / max_hp
@@ -445,75 +389,27 @@ class ShipStatsService:
         return 0.0
 
     def _iterate_design_components(
-        self_or_design,
-        design_or_registry=None,
-        registry: Optional['IRegistryProvider'] = None
+        self,
+        design_data: Dict[str, Any]
     ) -> List[Tuple[str, Dict[str, Any], Any]]:
         """
         Iterate through all components in a design.
 
-        PROJ-38: Supports both instance and static calling patterns.
+        PROJ-42: Simplified to instance-only method.
 
         Args:
             design_data: Serialized ship design containing 'layers' dict
-            registry: Optional IRegistryProvider for dependency injection (legacy pattern)
 
         Returns:
             List of tuples (layer_name, component_entry, component_def)
             where component_def is the registry definition or None if not found
         """
-        # PROJ-38: Detect calling pattern - instance vs static
-        if isinstance(self_or_design, ShipStatsService):
-            # Instance method call: service._iterate_design_components(design)
-            self = self_or_design
-            design_data = design_or_registry
-            component_registry = self._registries.components
-        else:
-            # Static-style call: ShipStatsService._iterate_design_components(design, registry)
-            design_data = self_or_design
-            reg = design_or_registry if design_or_registry is not None else registry
-            # PROJ-42: Use injected registry if provided, else use fallback
-            if reg is not None and hasattr(reg, 'get_components'):
-                component_registry = reg.get_components()
-            else:
-                component_registry = ShipStatsService._get_registries_fallback().components
-
         result = []
         layers = design_data.get('layers', {})
+        component_registry = self._registries.components
 
         for layer_name, layer_components in layers.items():
             # Direct list format: layers[layer_name] = [comp1, comp2, ...]
-            if not isinstance(layer_components, list):
-                continue
-            components = layer_components
-
-            for comp_entry in components:
-                comp_id = comp_entry.get('id', '')
-                comp_def = component_registry.get(comp_id)
-
-                if comp_def is None:
-                    log_warning(f"Component '{comp_id}' not found in registry, skipping")
-                    continue
-
-                result.append((layer_name, comp_entry, comp_def))
-
-        return result
-
-    @staticmethod
-    def _iterate_design_components_with_registries(
-        design_data: Dict[str, Any],
-        registries: GameRegistries
-    ) -> List[Tuple[str, Dict[str, Any], Any]]:
-        """
-        Iterate through components using GameRegistries (PROJ-42).
-
-        Clean path for static calls when no legacy IRegistryProvider is available.
-        """
-        result = []
-        layers = design_data.get('layers', {})
-        component_registry = registries.components
-
-        for layer_name, layer_components in layers.items():
             if not isinstance(layer_components, list):
                 continue
 

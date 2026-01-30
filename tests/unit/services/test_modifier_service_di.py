@@ -176,34 +176,33 @@ class TestModifierServiceInstanceMethods:
 
 
 # =============================================================================
-# Test: Backward Compatibility - Static Method Interface
+# Test: Instance Methods Work With Default Registry
 # =============================================================================
 
-class TestModifierServiceBackwardCompatibility:
-    """Tests ensuring backward compatibility with static method interface."""
+class TestModifierServiceDefaultRegistry:
+    """Tests verifying instance methods work with default registry fallback.
 
-    def test_static_methods_still_work(self, weapon_component):
-        """Existing static method calls should continue to work."""
-        # These should work without any instantiation
-        result = ModifierService.is_modifier_allowed('simple_size_mount', weapon_component)
+    PROJ-42: After removing dual static/instance patterns, all methods
+    require an instance, but can use default registry if none provided.
+    """
+
+    def test_instance_with_default_registry_works(self, weapon_component):
+        """Instance with default registry should work."""
+        service = ModifierService()  # Uses default registry
+        result = service.is_modifier_allowed('simple_size_mount', weapon_component)
         assert result is True
 
-    def test_static_methods_with_registry_param_still_work(self, weapon_component):
-        """Existing static method calls with registry param should still work."""
-        # The old IRegistryProvider interface should still be honored
-        result = ModifierService.is_modifier_allowed('simple_size_mount', weapon_component, registry=None)
-        assert result is True
+    def test_get_mandatory_modifiers_with_default_and_injected(self, weapon_component):
+        """get_mandatory_modifiers should work with both default and injected registries."""
+        # Instance with default
+        default_service = ModifierService()
+        default_result = default_service.get_mandatory_modifiers(weapon_component)
 
-    def test_get_mandatory_modifiers_works_both_ways(self, weapon_component):
-        """get_mandatory_modifiers should work both as static and instance method."""
-        # Static call
-        static_result = ModifierService.get_mandatory_modifiers(weapon_component)
-
-        # Instance call (with real modifiers)
+        # Instance call (with explicit real modifiers)
         from game.simulation.components.component import load_modifiers_data
         real_modifiers = load_modifiers_data()
-        service = ModifierService(modifier_registry=real_modifiers)
-        instance_result = service.get_mandatory_modifiers(weapon_component)
+        injected_service = ModifierService(modifier_registry=real_modifiers)
+        injected_result = injected_service.get_mandatory_modifiers(weapon_component)
 
         # Both should return same mandatory modifiers
-        assert set(static_result) == set(instance_result)
+        assert set(default_result) == set(injected_result)
