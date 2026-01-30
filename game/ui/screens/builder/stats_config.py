@@ -4,10 +4,8 @@ Defines stat definitions, formatters, and validators for ship statistics display
 
 Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer stat organization
-- ship_stats: Runtime - stat calculation constants/defaults
 """
 from game.core.constants import LayerType  # Canonical location for LayerType
-import game.simulation.systems.stats as ship_stats  # Needed for accessing defaults/constants if any
 
 
 class StatDefinition:

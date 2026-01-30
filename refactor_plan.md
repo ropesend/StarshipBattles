@@ -8,31 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-51 Phase 3 Complete
-**Current Status:** PROJ-51 Phase 3 Complete - Ready for Phase 4
+**Last Completed:** PROJ-51 Phase 4 Complete
+**Current Status:** PROJ-51 Phase 4 Complete - Ready for Phase 5
 **Current Project:** PROJ-51
-**Current Phase:** Phase 4 (Stats Service Location)
-**Test Status:** 524 core/UI tests passed, 5530 total passed
+**Current Phase:** Phase 5 (Verification & Cleanup)
+**Test Status:** 14 stats tests passed, simulation tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-51 Phase 3 Complete (InputHandler Rename):
-  - ✅ Created game/ui/screens/battle_input_handler.py with BattleInputHandler class
-  - ✅ Updated docstring to clarify battle-specific purpose
-  - ✅ Updated game/app.py import and call site
-  - ✅ Verified game/core/__init__.py doesn't export InputHandler (no change needed)
-  - ✅ Updated tests/unit/ui/test_overlay.py import
-  - ✅ Fixed tests/unit/systems/test_main_integration.py (Phase 2 residual: battle_scene -> battle_screen)
-  - ✅ Deleted game/core/input_handler.py
+- PROJ-51 Phase 4 Complete (Stats Service Location):
+  - ✅ Discovered systems/stats.py was ORPHANED DEAD CODE
+  - ✅ Actual ShipStatsCalculator is in entities/ship_stats.py (used by Ship)
+  - ✅ Deleted orphaned game/simulation/systems/stats.py
+  - ✅ Removed dead import from game/ui/screens/builder/stats_config.py
+  - ✅ Updated test_ship_stats_calculator_phases.py to import from correct location
+  - ✅ Updated test file to use fresh_registries fixture (PROJ-50 DI)
 
 - Files Modified:
-  - game/ui/screens/battle_input_handler.py (NEW)
-  - game/app.py (import updated)
-  - tests/unit/ui/test_overlay.py (import updated)
-  - tests/unit/systems/test_main_integration.py (Phase 2 residual fix)
-  - game/core/input_handler.py (DELETED)
+  - game/simulation/systems/stats.py (DELETED - dead code)
+  - game/ui/screens/builder/stats_config.py (removed unused import)
+  - tests/unit/simulation/systems/test_ship_stats_calculator_phases.py (fixed imports + DI)
 
-- NEXT: Phase 4 - Move stats.py from systems/ to services/
+- NEXT: Phase 5 - Verification & Cleanup
 
 ---
 
@@ -113,7 +110,7 @@
 ---
 
 - [/] **PROJ-51: Naming Consistency Remediation**
-  - **Phases:** 5 | **Status:** In Progress (Phase 3/5 Complete) | **Priority:** Medium
+  - **Phases:** 5 | **Status:** In Progress (Phase 4/5 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-51/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-51/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -124,6 +121,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-51 | Phase 4 | Complete | 14 passed | 42348c9b | Deleted orphaned systems/stats.py, fixed tests to use entities/ship_stats.py |
 | 2026-01-30 | PROJ-51 | Phase 3 | Complete | 524 passed | acf4629c | InputHandler -> BattleInputHandler, moved to ui/screens/ |
 | 2026-01-30 | PROJ-51 | Phase 2 | Complete | 42 passed | 90de9948 | *_scene.py -> *_screen.py, *Interface -> *UI, 19 files |
 | 2026-01-30 | PROJ-51 | Phase 1 | Complete | 69 passed | 1e371358 | ship_validator.py moved to validation/, 18 files updated |

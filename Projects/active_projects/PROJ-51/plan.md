@@ -16,14 +16,14 @@
 | 1. Validation Consolidation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. UI File Naming | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. InputHandler Rename | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Stats Service Location | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Stats Service Location | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 3 Complete - Ready for Phase 4
-**Last Action:** Renamed InputHandler -> BattleInputHandler, moved to game/ui/screens/
-**Next Action:** Begin Phase 4 - Stats Service Location (stats.py -> services/)
+**Active Phase:** Phase 4 Complete - Ready for Phase 5
+**Last Action:** Deleted orphaned systems/stats.py (dead code), updated tests to use entities/ship_stats.py
+**Next Action:** Begin Phase 5 - Verification & Cleanup
 **Blockers:** None
 
 ## Overview
