@@ -430,7 +430,7 @@ class TestFormationIntegrityWithAdapter:
         assert mock_ship not in mock_master.formation_members, \
             "Ship should be removed from formation_members when breaking formation"
         # Verify formation state was cleared
-        assert mock_ship.in_formation == False
+        assert mock_ship.in_formation is False
 
     def test_formation_member_not_removed_when_undamaged(self, mock_grid):
         """When ship is undamaged, it should stay in formation."""
@@ -463,4 +463,4 @@ class TestFormationIntegrityWithAdapter:
 
         # Ship should still be in formation
         assert mock_ship in mock_master.formation_members
-        assert mock_ship.in_formation == True
+        assert mock_ship.in_formation is True

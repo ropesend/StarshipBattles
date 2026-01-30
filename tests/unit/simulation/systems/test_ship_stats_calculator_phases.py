@@ -107,7 +107,7 @@ class TestShipStatsCalculatorPhases:
 
         # Component should be marked as damaged/inactive
         from game.simulation.components.component_constants import ComponentStatus
-        assert comp.is_active == False
+        assert comp.is_active is False
         assert comp.status == ComponentStatus.DAMAGED
 
     def test_damage_check_phase_keeps_healthy_components_active(self):
@@ -128,7 +128,7 @@ class TestShipStatsCalculatorPhases:
         calculator.calculate(ship)
 
         from game.simulation.components.component_constants import ComponentStatus
-        assert comp.is_active == True
+        assert comp.is_active is True
         assert comp.status == ComponentStatus.ACTIVE
 
     def test_crew_allocation_phase_deactivates_uncrewed_components(self):
@@ -156,7 +156,7 @@ class TestShipStatsCalculatorPhases:
         calculator.calculate(ship)
 
         from game.simulation.components.component_constants import ComponentStatus
-        assert weapon.is_active == False
+        assert weapon.is_active is False
         assert weapon.status == ComponentStatus.NO_CREW
 
     def test_crew_allocation_phase_activates_crewed_components(self):
@@ -197,7 +197,7 @@ class TestShipStatsCalculatorPhases:
         calculator.calculate(ship)
 
         from game.simulation.components.component_constants import ComponentStatus
-        assert weapon.is_active == True
+        assert weapon.is_active is True
         assert weapon.status == ComponentStatus.ACTIVE
 
     def test_satellite_ignores_crew_requirements(self):
@@ -224,7 +224,7 @@ class TestShipStatsCalculatorPhases:
         calculator.calculate(ship)
 
         from game.simulation.components.component_constants import ComponentStatus
-        assert weapon.is_active == True
+        assert weapon.is_active is True
         assert weapon.status == ComponentStatus.ACTIVE
 
     def test_stats_aggregation_phase_sums_thrust(self):

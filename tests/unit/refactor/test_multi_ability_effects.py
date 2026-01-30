@@ -29,7 +29,7 @@ class TestTargetedEffectEvaluation:
         )
 
         assert effect.target_ability == 'WeaponAbility'
-        assert effect.is_targeted() == True
+        assert effect.is_targeted() is True
 
     def test_effect_without_target_is_not_targeted(self):
         """Effect with target_ability=None should not be targeted."""
@@ -46,7 +46,7 @@ class TestTargetedEffectEvaluation:
             param_value=1.0
         )
 
-        assert effect.is_targeted() == False
+        assert effect.is_targeted() is False
 
     def test_evaluator_parses_target_ability_from_effect(self):
         """ModifierEffectEvaluator should parse target_ability from effect definition."""

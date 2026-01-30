@@ -127,7 +127,7 @@ class TestInitialization:
 
     def test_initial_frozen_false(self, registry):
         """New registry should have _frozen=False."""
-        assert registry._frozen == False
+        assert registry._frozen is False
 
 
 # =============================================================================

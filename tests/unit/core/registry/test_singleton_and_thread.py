@@ -182,7 +182,7 @@ class TestIsolation:
         assert len(r2.vehicle_classes) == 0
         assert len(r2.resources) == 0
         assert r2._validator is None
-        assert r2._frozen == False
+        assert r2._frozen is False
 
     def test_clear_provides_clean_state_without_reset(self, registry):
         """clear() should empty all data without destroying instance."""

@@ -160,7 +160,7 @@ class TestInitialization:
 
     def test_initial_active_is_false(self, profiler):
         """New profiler should have active=False."""
-        assert profiler.active == False
+        assert profiler.active is False
 
     def test_initial_records_is_empty(self, profiler):
         """New profiler should have empty records."""

@@ -279,8 +279,8 @@ class TestSaveSelectionWindowButtons:
 
         # Create a save first
         session = MockGameSession(turn_number=1)
-        success, _, save_path = SaveGameService.save_game(session, "TestSave")
-        assert success
+        success, message, save_path = SaveGameService.save_game(session, "TestSave")
+        assert success, f"Save failed: {message}"
 
         # Create window
         load_callback = MagicMock()

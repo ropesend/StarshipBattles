@@ -104,10 +104,10 @@ class TestGlobalFunctions:
         from game.core.logger import set_logging, _logger
 
         set_logging(False)
-        assert _logger.enabled == False
+        assert _logger.enabled is False
 
         set_logging(True)
-        assert _logger.enabled == True
+        assert _logger.enabled is True
 
 
 class TestEdgeCases:

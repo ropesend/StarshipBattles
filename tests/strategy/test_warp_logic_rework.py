@@ -80,11 +80,11 @@ class TestWarpLogicRework:
         # Target at 10 degrees (very close)
         # 10 degrees in radians ~ 0.17
         angle_fail = 0.1
-        assert galaxy._is_angle_clear(center, angle_fail, threshold_deg=30) == False
+        assert galaxy._is_angle_clear(center, angle_fail, threshold_deg=30) is False
         
         # Target at 90 degrees (clear)
         angle_pass = math.pi / 2
-        assert galaxy._is_angle_clear(center, angle_pass, threshold_deg=30) == True
+        assert galaxy._is_angle_clear(center, angle_pass, threshold_deg=30) is True
 
     def test_min_distance_constraint(self, galaxy):
         """Verify warp points respect minimum distance regardless of star size."""

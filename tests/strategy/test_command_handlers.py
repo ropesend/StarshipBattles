@@ -68,7 +68,7 @@ def test_handle_move_command():
         
         result = session.handle_command(cmd)
         
-        assert result.is_valid == True
+        assert result.is_valid is True
         assert len(fleet.orders) == 1
         assert fleet.orders[0].type == OrderType.MOVE
         assert fleet.orders[0].target == target_hex
@@ -81,7 +81,7 @@ def test_handle_move_command_invalid_fleet():
     
     result = session.handle_command(cmd)
     
-    assert result.is_valid == False
+    assert result.is_valid is False
     assert "Fleet not found" in result.message
 
 def test_handle_build_ship_command():
@@ -103,7 +103,7 @@ def test_handle_build_ship_command():
     
     result = session.handle_command(cmd)
     
-    assert result.is_valid == True
+    assert result.is_valid is True
     # Verify planet lookup used proper ID
     session.galaxy.get_planet_by_id.assert_called_with(42)
     # Depending on implementation (calling add_production vs direct append)

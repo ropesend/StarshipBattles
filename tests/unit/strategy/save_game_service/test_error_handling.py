@@ -91,7 +91,7 @@ class TestSaveGameServiceNoDesignMigration:
 
         success, message, save_path = SaveGameService.save_game(session, "NewGame")
 
-        assert success
+        assert success, f"Save failed: {message}"
 
         # Check that the designs folder for empire 0 is EMPTY
         empire_designs = os.path.join(save_path, "designs", "empire_0")
@@ -362,8 +362,8 @@ class TestSaveGameServiceExceptionHandling:
     def test_delete_permission_denied_returns_clear_message(self, setup_tmpdir):
         """Delete permission error should return clear message."""
         session = MockGameSession()
-        success, _, save_path = SaveGameService.save_game(session, "TestGame")
-        assert success
+        success, message, save_path = SaveGameService.save_game(session, "TestGame")
+        assert success, f"Save failed: {message}"
 
         # Mock shutil.rmtree to raise PermissionError
         with patch('shutil.rmtree', side_effect=PermissionError("Access denied")):
@@ -384,8 +384,8 @@ class TestSaveGameServiceExceptionHandling:
     def test_list_turns_handles_directory_error_gracefully(self, setup_tmpdir):
         """list_turns should handle directory errors gracefully."""
         session = MockGameSession()
-        success, _, save_path = SaveGameService.save_game(session, "TestGame")
-        assert success
+        success, message, save_path = SaveGameService.save_game(session, "TestGame")
+        assert success, f"Save failed: {message}"
 
         # Mock os.listdir to raise error
         with patch('os.listdir', side_effect=PermissionError("Cannot list directory")):

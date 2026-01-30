@@ -60,15 +60,15 @@ class TestAutoSave:
         """Processing turn automatically saves new turn file."""
         # Create initial save at turn 1
         session = MockGameSession(turn_number=1)
-        success, _, save_path = SaveGameService.save_game(session, "AutoSaveTest")
-        assert success
+        success, message, save_path = SaveGameService.save_game(session, "AutoSaveTest")
+        assert success, f"Initial save failed: {message}"
         session.save_path = save_path
 
         # Simulate turn processing: increment turn and save
         session.turn_number = 2
         success, message, _ = SaveGameService.save_game(session)
 
-        assert success
+        assert success, f"Auto-save failed: {message}"
 
         # Verify turn_2.json was created
         turn_file = os.path.join(save_path, "turns", "turn_2.json")
@@ -144,7 +144,7 @@ class TestAutoSave:
 
         success, message, save_path = SaveGameService.save_game(session, "NewAutoSave")
 
-        assert success
+        assert success, f"Save failed: {message}"
         assert save_path is not None
         assert os.path.exists(save_path)
 
@@ -188,8 +188,8 @@ class TestAutoSaveIntegration:
         session = GameSession(config=config)
 
         # Initial save
-        success, _, save_path = SaveGameService.save_game(session, "ProcessTurnTest")
-        assert success
+        success, message, save_path = SaveGameService.save_game(session, "ProcessTurnTest")
+        assert success, f"Initial save failed: {message}"
         session.save_path = save_path
 
         # Process turn (increments turn_number)

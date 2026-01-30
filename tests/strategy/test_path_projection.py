@@ -44,7 +44,7 @@ def test_project_simple_path():
     assert segments[3]['turn'] == 1
     assert segments[4]['turn'] == 2
     assert segments[5]['turn'] == 2
-    assert segments[0]['is_warp'] == False
+    assert segments[0]['is_warp'] is False
 
 def test_project_chained_orders():
     """Test projecting across multiple queued orders."""

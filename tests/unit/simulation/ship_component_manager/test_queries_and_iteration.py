@@ -86,7 +86,7 @@ class TestIterComponents:
                 assert layer_type == LayerType.OUTER
                 found = True
                 break
-        assert found
+        assert found, "Engine component should be found in iteration"
 
     def test_iter_components_empty_ship(self):
         """iter_components yields nothing for empty ship."""

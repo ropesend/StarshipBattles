@@ -311,6 +311,33 @@ class TestClass:
             instance.method(invalid_input)
 ```
 
+### Assertion Helpers (tests/conftest.py)
+
+PROJ-48 added assertion helper functions for better error messages:
+
+**`assert_success(success, message)`**
+- Use for save/load operations that return (success, message) tuples
+- Provides better error messages than bare `assert success`
+
+```python
+from tests.conftest import assert_success
+
+success, message = SaveGameService.save_game(session, "TestGame")
+assert_success(success, message)
+```
+
+**`assert_list_length(items, expected_length, description)`**
+- Use for assertions about list/collection lengths
+- Provides better error messages than bare `assert len(items) == N`
+
+```python
+from tests.conftest import assert_list_length
+
+assert_list_length(events, 1, "events after selection")
+```
+
+---
+
 ### Best Practices
 
 1. **Isolation**: Each test should be independent. The `reset_game_state` fixture handles cleanup automatically.

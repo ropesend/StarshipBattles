@@ -66,7 +66,7 @@ def test_generator_without_crew_is_inactive():
         calc.calculate(ship)
         
         # Generator should be INACTIVE due to missing crew
-        assert generator.is_active == False, "Generator should be INACTIVE without crew"
+        assert generator.is_active is False, "Generator should be INACTIVE without crew"
         
         # Energy generation rate should be 0 (because component is inactive)
         energy_resource = ship.resources.get_resource('energy')
@@ -116,7 +116,7 @@ def test_generator_with_crew_is_active():
         calc.calculate(ship)
         
         # Generator should be ACTIVE with crew available
-        assert generator.is_active == True, f"Generator should be ACTIVE with crew. Status: {generator.status}"
+        assert generator.is_active is True, f"Generator should be ACTIVE with crew. Status: {generator.status}"
         
         # Energy generation rate should be 25/s
         energy_resource = ship.resources.get_resource('energy')

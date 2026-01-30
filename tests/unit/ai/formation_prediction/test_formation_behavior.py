@@ -20,7 +20,7 @@ class TestFormationBasic:
 
         formation_behavior.update(None, {})
 
-        assert mock_ship.in_formation == False
+        assert mock_ship.in_formation is False
 
     def test_dead_master_exits_formation(self, formation_behavior, mock_ship, mock_master):
         """Ship should exit formation if master is dead."""
@@ -28,7 +28,7 @@ class TestFormationBasic:
 
         formation_behavior.update(None, {})
 
-        assert mock_ship.in_formation == False
+        assert mock_ship.in_formation is False
 
     def test_derelict_master_exits_formation(self, formation_behavior, mock_ship, mock_master):
         """Ship should exit formation if master is derelict."""
@@ -36,7 +36,7 @@ class TestFormationBasic:
 
         formation_behavior.update(None, {})
 
-        assert mock_ship.in_formation == False
+        assert mock_ship.in_formation is False
 
 
 class TestOffsetCalculations:
@@ -378,7 +378,7 @@ class TestFormationIntegrity:
         controller._check_formation_integrity()
 
         # Should exit formation and be removed from formation_members
-        assert mock_ship.in_formation == False
+        assert mock_ship.in_formation is False
         assert mock_ship not in formation_members  # Ship should be removed from master's list
         assert mock_ship.formation_master is None  # Master reference should be cleared
 

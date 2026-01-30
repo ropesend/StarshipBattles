@@ -29,11 +29,11 @@ class TestClearMethod:
     def test_clear_preserves_active_state(self, profiler):
         """clear() should preserve active state."""
         profiler.start()
-        assert profiler.active == True
+        assert profiler.active is True
 
         profiler.clear()
 
-        assert profiler.active == True
+        assert profiler.active is True
 
 
 class TestRecordingMetadata:
@@ -85,42 +85,42 @@ class TestStartStopBehavior:
 
     def test_start_sets_active_true(self, profiler):
         """start() should set active to True."""
-        assert profiler.active == False
+        assert profiler.active is False
 
         profiler.start()
 
-        assert profiler.active == True
+        assert profiler.active is True
 
     def test_stop_sets_active_false(self, profiler):
         """stop() should set active to False."""
         profiler.start()
-        assert profiler.active == True
+        assert profiler.active is True
 
         profiler.stop()
 
-        assert profiler.active == False
+        assert profiler.active is False
 
     def test_toggle_switches_state(self, profiler):
         """toggle() should switch between active states."""
-        assert profiler.active == False
+        assert profiler.active is False
 
         result1 = profiler.toggle()
-        assert result1 == True
-        assert profiler.active == True
+        assert result1 is True
+        assert profiler.active is True
 
         result2 = profiler.toggle()
-        assert result2 == False
-        assert profiler.active == False
+        assert result2 is False
+        assert profiler.active is False
 
     def test_is_active_returns_current_state(self, profiler):
         """is_active() should return current active state."""
-        assert profiler.is_active() == False
+        assert profiler.is_active() is False
 
         profiler.start()
-        assert profiler.is_active() == True
+        assert profiler.is_active() is True
 
         profiler.stop()
-        assert profiler.is_active() == False
+        assert profiler.is_active() is False
 
     def test_start_sets_start_time(self, profiler):
         """start() should set start_time."""

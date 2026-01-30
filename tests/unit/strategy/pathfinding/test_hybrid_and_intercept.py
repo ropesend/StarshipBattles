@@ -404,7 +404,7 @@ class TestInterceptCalculation:
                 fleet_arg = call_args.kwargs.get('fleet') or call_args[1].get('fleet')
                 if fleet_arg:
                     # Check the fleet-like object has correct warp capability
-                    assert fleet_arg.can_use_warp() == False
+                    assert fleet_arg.can_use_warp() is False
 
     def test_navigation_state_uses_location_and_speed(self, mock_galaxy):
         """NavigationState location and speed are used correctly."""

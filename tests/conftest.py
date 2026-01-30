@@ -155,6 +155,53 @@ def minimal_registries() -> 'GameRegistries':
 
 
 # =============================================================================
+# PROJ-48: Assertion Helper Functions
+# =============================================================================
+
+def assert_success(success: bool, message: str = "") -> None:
+    """
+    Assert that an operation succeeded with context message.
+
+    PROJ-48: Use this helper for save/load operations that return (success, message) tuples.
+    Provides better error messages than bare `assert success`.
+
+    Args:
+        success: The success boolean to check
+        message: Error message from the operation (displayed on failure)
+
+    Raises:
+        AssertionError: If success is False
+
+    Example:
+        success, message = SaveGameService.save_game(session, "TestGame")
+        assert_success(success, message)
+    """
+    assert success, f"Operation failed: {message}"
+
+
+def assert_list_length(items, expected_length: int, description: str = "") -> None:
+    """
+    Assert list length with context.
+
+    PROJ-48: Use this helper for assertions about list/collection lengths.
+    Provides better error messages than bare `assert len(items) == N`.
+
+    Args:
+        items: The list/collection to check
+        expected_length: Expected number of items
+        description: Description of what the list contains (for error message)
+
+    Raises:
+        AssertionError: If length doesn't match
+
+    Example:
+        assert_list_length(events, 1, "events after selection")
+    """
+    assert len(items) == expected_length, \
+        f"{description}: Expected {expected_length} items, got {len(items)}"
+
+
+# =============================================================================
 # PROJ-40: Shared Test Helpers
 # =============================================================================
 

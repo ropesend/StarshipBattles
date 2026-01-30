@@ -254,7 +254,7 @@ def test_add_ship_to_queue_with_shipyard(build_queue_screen):
     build_queue_screen.planet.facilities.append(shipyard)
 
     # Verify has_space_shipyard returns True
-    assert build_queue_screen.planet.has_space_shipyard == True, \
+    assert build_queue_screen.planet.has_space_shipyard is True, \
         "has_space_shipyard should return True when shipyard facility exists"
 
     # Try to add a ship
@@ -273,7 +273,7 @@ def test_add_ship_fails_without_shipyard(build_queue_screen):
     """Test that ships cannot be added without a shipyard facility."""
     # Ensure no shipyard exists
     build_queue_screen.planet.facilities = []
-    assert build_queue_screen.planet.has_space_shipyard == False
+    assert build_queue_screen.planet.has_space_shipyard is False
 
     # Try to add a ship
     initial_queue_len = len(build_queue_screen.planet.construction_queue)

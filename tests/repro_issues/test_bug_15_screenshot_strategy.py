@@ -211,7 +211,7 @@ class TestScreenshotInputHandler:
 
         mock_sm.capture_strategy_layer.assert_called_once()
         args, kwargs = mock_sm.capture_strategy_layer.call_args
-        assert kwargs.get('include_ui') == True
+        assert kwargs.get('include_ui') is True
 
     @patch('game.ui.screens.strategy_input_handler.ScreenshotManager')
     def test_f11_triggers_viewport_screenshot(self, mock_sm_class):
@@ -232,7 +232,7 @@ class TestScreenshotInputHandler:
 
         mock_sm.capture_strategy_layer.assert_called_once()
         args, kwargs = mock_sm.capture_strategy_layer.call_args
-        assert kwargs.get('include_ui') == False
+        assert kwargs.get('include_ui') is False
 
 
 class TestBuildQueueScreenshotSupport:

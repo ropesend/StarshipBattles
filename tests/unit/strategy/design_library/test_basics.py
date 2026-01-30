@@ -92,7 +92,7 @@ class TestDesignLibrary:
 
         success, message = library.save_design(ship, "Test Ship", set())
 
-        assert success
+        assert success, f"Save failed: {message}"
         assert "Saved" in message
         # Check file was created
         assert os.path.exists(os.path.join(designs_folder, "Test_Ship.json"))
@@ -144,7 +144,7 @@ class TestDesignLibrary:
         # Update (not in built set)
         success, message = library.save_design(ship, "Unbuilt Ship", set())
 
-        assert success
+        assert success, f"Update failed: {message}"
 
     def test_mark_obsolete(self, setup_library):
         """Can mark design as obsolete"""
@@ -161,7 +161,7 @@ class TestDesignLibrary:
         # Mark obsolete
         success, message = library.mark_obsolete("old", True)
 
-        assert success
+        assert success, f"Mark obsolete failed: {message}"
 
         # Verify file updated
         from game.core.json_utils import load_json_required
@@ -295,7 +295,7 @@ class TestDesignLibrary:
         # Increment
         success = library.increment_built_count("buildable")
 
-        assert success
+        assert success, "Increment built count failed"
 
         # Verify
         from game.core.json_utils import load_json_required

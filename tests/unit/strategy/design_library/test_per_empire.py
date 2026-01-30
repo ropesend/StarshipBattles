@@ -99,7 +99,7 @@ class TestDesignLibraryPerEmpire:
         # Save design
         success, message = library.save_design(ship, "Test Ship", set())
 
-        assert success
+        assert success, f"Save failed: {message}"
 
         # Verify file is in empire_1 folder
         expected_file = os.path.join(tmpdir, "designs", "empire_1", "Test_Ship.json")

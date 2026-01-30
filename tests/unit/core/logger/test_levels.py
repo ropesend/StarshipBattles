@@ -75,7 +75,7 @@ class TestLoggerSetup:
     def test_setup_initializes_enabled_true(self, fresh_logger):
         """Setup should initialize enabled to True."""
         # Fresh logger after reset should have enabled=True after setup
-        assert fresh_logger.enabled == True
+        assert fresh_logger.enabled is True
 
 
 class TestFormatterOutput:

@@ -14,9 +14,9 @@ class TestProfilerProxy:
         Profiler.reset()
 
         # Access through proxy
-        assert PROFILER.active == False
+        assert PROFILER.active is False
         PROFILER.start()
-        assert PROFILER.active == True
+        assert PROFILER.active is True
 
     def test_proxy_delegates_setattr(self):
         """PROFILER proxy should delegate attribute setting."""
@@ -26,10 +26,10 @@ class TestProfilerProxy:
         instance = Profiler.instance()
 
         PROFILER.active = True
-        assert instance.active == True
+        assert instance.active is True
 
         PROFILER.active = False
-        assert instance.active == False
+        assert instance.active is False
 
     def test_proxy_works_with_methods(self):
         """PROFILER proxy should work with method calls."""

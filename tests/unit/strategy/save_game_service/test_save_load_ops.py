@@ -70,7 +70,7 @@ class TestSaveGameServiceFolderStructure:
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        assert success
+        assert success, f"Save failed: {message}"
         turns_folder = os.path.join(save_path, "turns")
         assert os.path.exists(turns_folder), "turns/ folder should be created"
 
@@ -87,7 +87,7 @@ class TestSaveGameServiceFolderStructure:
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        assert success
+        assert success, f"Save failed: {message}"
         designs_folder = os.path.join(save_path, "designs")
         assert os.path.exists(designs_folder)
 
@@ -102,7 +102,7 @@ class TestSaveGameServiceFolderStructure:
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        assert success
+        assert success, f"Save failed: {message}"
         turn_file = os.path.join(save_path, "turns", "turn_5.json")
         assert os.path.exists(turn_file), f"Turn file should exist at turns/turn_5.json"
 
@@ -112,7 +112,7 @@ class TestSaveGameServiceFolderStructure:
 
         success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        assert success
+        assert success, f"Save failed: {message}"
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 
@@ -158,9 +158,9 @@ class TestSaveGameServiceVersion:
         """New saves use version 2.0.0"""
         session = MockGameSession()
 
-        success, _, save_path = SaveGameService.save_game(session, "TestGame")
+        success, message, save_path = SaveGameService.save_game(session, "TestGame")
 
-        assert success
+        assert success, f"Save failed: {message}"
         metadata_path = os.path.join(save_path, "save_metadata.json")
         metadata = load_json(metadata_path)
 

@@ -104,7 +104,7 @@ class TestModifierRow:
 
         result = row.handle_event(event)
 
-        assert result
+        assert result, "Event should be handled and return True"
         row._show_json_popup.assert_called_once()
 
     def test_value_change_callback(self):
@@ -130,7 +130,7 @@ class TestModifierRow:
 
         result = row.handle_event(event)
 
-        assert result
+        assert result, "Slider event should be handled and return True"
         callback.assert_called_once_with('value_change', 'test_mod', 75.0)
 
 

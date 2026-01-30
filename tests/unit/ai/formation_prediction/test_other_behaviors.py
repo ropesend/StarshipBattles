@@ -33,7 +33,7 @@ class TestOtherBehaviors:
         behavior.update(target, {'fire_while_retreating': False})
 
         # Should set trigger to false when not firing while retreating
-        assert mock_ship.comp_trigger_pulled == False
+        assert mock_ship.comp_trigger_pulled is False
 
         # Should navigate away
         mock_controller.navigate_to.assert_called_once()
@@ -118,7 +118,7 @@ class TestSpecialBehaviors:
         behavior = DoNothingBehavior(mock_controller)
         behavior.update(None, {})
 
-        assert mock_ship.comp_trigger_pulled == False
+        assert mock_ship.comp_trigger_pulled is False
 
     def test_stationary_fire_allows_firing(self, mock_controller):
         """StationaryFireBehavior should allow firing."""
@@ -132,7 +132,7 @@ class TestSpecialBehaviors:
         behavior.update(None, {})
 
         # Should not change trigger state
-        assert mock_ship.comp_trigger_pulled == True
+        assert mock_ship.comp_trigger_pulled is True
 
     def test_straight_line_thrusts_forward(self, mock_controller):
         """StraightLineBehavior should thrust forward."""

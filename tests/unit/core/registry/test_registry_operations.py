@@ -151,11 +151,11 @@ class TestFreezeFunctionality:
 
     def test_freeze_sets_frozen_flag(self, registry):
         """freeze() should set _frozen to True."""
-        assert registry._frozen == False
+        assert registry._frozen is False
 
         registry.freeze()
 
-        assert registry._frozen == True
+        assert registry._frozen is True
 
     def test_set_validator_raises_when_frozen(self, registry):
         """set_validator() should raise FrozenStateException when frozen."""
@@ -190,7 +190,7 @@ class TestFreezeFunctionality:
 
     def test_initial_frozen_is_false(self, registry):
         """New registry should have _frozen=False."""
-        assert registry._frozen == False
+        assert registry._frozen is False
 
 
 # =============================================================================

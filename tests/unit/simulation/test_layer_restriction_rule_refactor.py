@@ -73,7 +73,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert any("blocked" in err.lower() for err in result.errors)
 
     def test_block_classification_rule_allows_non_matching_component(self):
@@ -85,7 +85,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_block_id_rule_blocks_matching_component(self):
         """Verify block_id rule blocks components with matching ID."""
@@ -96,7 +96,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert any("blocked" in err.lower() for err in result.errors)
 
     def test_deny_ability_rule_blocks_component_with_ability(self):
@@ -108,7 +108,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == False
+        assert result.is_valid is False
         assert any("blocked" in err.lower() for err in result.errors)
 
     def test_allow_classification_accepts_matching_component(self):
@@ -120,7 +120,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_allow_classification_rejects_non_matching_component(self):
         """Verify allow_classification rule rejects non-matching components."""
@@ -131,7 +131,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     def test_allow_id_accepts_matching_component(self):
         """Verify allow_id rule accepts matching components."""
@@ -142,7 +142,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_allow_ability_accepts_component_with_ability(self):
         """Verify allow_ability rule accepts components with the ability."""
@@ -153,7 +153,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_hull_only_restriction_accepts_hull_components(self):
         """Verify HullOnly restriction accepts hull_ prefixed components."""
@@ -164,7 +164,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_hull_only_restriction_rejects_non_hull_components(self):
         """Verify HullOnly restriction rejects non-hull components."""
@@ -175,7 +175,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == False
+        assert result.is_valid is False
 
     def test_no_restrictions_allows_all_components(self):
         """Verify no restrictions means all components are allowed."""
@@ -186,7 +186,7 @@ class TestLayerRestrictionRuleRefactor:
         rule = self.LayerRestrictionDefinitionRule()
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
-        assert result.is_valid == True
+        assert result.is_valid is True
 
     def test_combined_block_and_allow_rules(self):
         """Verify block rules take precedence over allow rules."""
@@ -201,4 +201,4 @@ class TestLayerRestrictionRuleRefactor:
         result = rule.validate(ship, comp, self.LayerType.CORE)
 
         # Should be blocked even though classification is allowed
-        assert result.is_valid == False
+        assert result.is_valid is False

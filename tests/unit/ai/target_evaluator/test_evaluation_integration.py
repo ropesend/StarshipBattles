@@ -162,7 +162,7 @@ class TestDefaultStatHelpers:
 
         result = TargetEvaluator._default_is_in_pdc_arc(ship, target)
 
-        assert result == False
+        assert result is False
 
 
 # =============================================================================
