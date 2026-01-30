@@ -97,24 +97,26 @@ class TestWorkshopViewModel:
     # Ship Property Tests
     # ─────────────────────────────────────────────────────────────────
 
-    def test_ship_property_emits_event(self, viewmodel_setup):
+    def test_ship_property_emits_event(self, viewmodel_setup, mock_registries):
         """Setting ship property emits SHIP_UPDATED event."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        # PROJ-50: Ship requires registries parameter
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
         viewmodel.ship = ship
 
         events = event_bus.get_events('SHIP_UPDATED')
         assert len(events) == 1
         assert events[0][1] is ship
 
-    def test_notify_ship_changed_recalculates_and_emits(self, viewmodel_setup):
+    def test_notify_ship_changed_recalculates_and_emits(self, viewmodel_setup, mock_registries):
         """notify_ship_changed recalculates stats and emits event."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        # PROJ-50: Ship requires registries parameter
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
         viewmodel._ship = ship  # Set directly to avoid initial event
         event_bus.clear()
 
@@ -136,16 +138,17 @@ class TestWorkshopViewModel:
     # Selection Tests
     # ─────────────────────────────────────────────────────────────────
 
-    def test_select_component_single(self, viewmodel_setup):
+    def test_select_component_single(self, viewmodel_setup, mock_registries):
         """Single selection replaces existing selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import create_component
 
-        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
+        # PROJ-50: Ship and create_component require registries
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
         viewmodel._ship = ship
 
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=mock_registries)
         selection = (LayerType.ARMOR, 0, comp)
 
         viewmodel.select_component(selection)
@@ -153,30 +156,32 @@ class TestWorkshopViewModel:
         assert len(viewmodel.selected_components) == 1
         assert viewmodel.selected_components[0][2] is comp
 
-    def test_select_component_append(self, viewmodel_setup):
+    def test_select_component_append(self, viewmodel_setup, mock_registries):
         """Append selection adds to existing selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import create_component
 
-        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
+        # PROJ-50: Ship and create_component require registries
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
         viewmodel._ship = ship
 
-        comp1 = create_component('armor_plate')
-        comp2 = create_component('armor_plate')
+        comp1 = create_component('armor_plate', registries=mock_registries)
+        comp2 = create_component('armor_plate', registries=mock_registries)
 
         viewmodel.select_component((LayerType.ARMOR, 0, comp1))
         viewmodel.select_component((LayerType.ARMOR, 1, comp2), append=True)
 
         assert len(viewmodel.selected_components) == 2
 
-    def test_select_component_toggle(self, viewmodel_setup):
+    def test_select_component_toggle(self, viewmodel_setup, mock_registries):
         """Toggle deselects already selected component."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
         from game.simulation.components.component import create_component
 
-        comp = create_component('armor_plate')
+        # PROJ-50: create_component requires registries
+        comp = create_component('armor_plate', registries=mock_registries)
         selection = (LayerType.ARMOR, 0, comp)
 
         # Select
@@ -187,14 +192,15 @@ class TestWorkshopViewModel:
         viewmodel.select_component(selection, append=True, toggle=True)
         assert len(viewmodel.selected_components) == 0
 
-    def test_select_component_homogeneity_enforced(self, viewmodel_setup):
+    def test_select_component_homogeneity_enforced(self, viewmodel_setup, mock_registries):
         """Selecting different component type replaces selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
         from game.simulation.components.component import create_component
 
-        armor = create_component('armor_plate')
-        engine = create_component('standard_engine')
+        # PROJ-50: create_component requires registries
+        armor = create_component('armor_plate', registries=mock_registries)
+        engine = create_component('standard_engine', registries=mock_registries)
 
         viewmodel.select_component((LayerType.ARMOR, 0, armor))
         # Trying to append different type should replace
@@ -203,27 +209,29 @@ class TestWorkshopViewModel:
         assert len(viewmodel.selected_components) == 1
         assert viewmodel.selected_components[0][2] is engine
 
-    def test_select_none_clears_selection(self, viewmodel_setup):
+    def test_select_none_clears_selection(self, viewmodel_setup, mock_registries):
         """Selecting None clears the selection."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
         from game.simulation.components.component import create_component
 
-        comp = create_component('armor_plate')
+        # PROJ-50: create_component requires registries
+        comp = create_component('armor_plate', registries=mock_registries)
         viewmodel.select_component((LayerType.ARMOR, 0, comp))
         assert len(viewmodel.selected_components) == 1
 
         viewmodel.select_component(None)
         assert len(viewmodel.selected_components) == 0
 
-    def test_primary_selection_returns_last(self, viewmodel_setup):
+    def test_primary_selection_returns_last(self, viewmodel_setup, mock_registries):
         """primary_selection returns last selected component."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
         from game.simulation.components.component import create_component
 
-        comp1 = create_component('armor_plate')
-        comp2 = create_component('armor_plate')
+        # PROJ-50: create_component requires registries
+        comp1 = create_component('armor_plate', registries=mock_registries)
+        comp2 = create_component('armor_plate', registries=mock_registries)
 
         viewmodel.select_component((LayerType.ARMOR, 0, comp1))
         viewmodel.select_component((LayerType.ARMOR, 1, comp2), append=True)
@@ -231,7 +239,7 @@ class TestWorkshopViewModel:
         primary = viewmodel.primary_selection
         assert primary[2] is comp2
 
-    def test_selection_emits_event(self, viewmodel_setup):
+    def test_selection_emits_event(self, viewmodel_setup, mock_registries):
         """Selection changes emit SELECTION_CHANGED event."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import LayerType
@@ -239,7 +247,8 @@ class TestWorkshopViewModel:
 
         event_bus.clear()
 
-        comp = create_component('armor_plate')
+        # PROJ-50: create_component requires registries
+        comp = create_component('armor_plate', registries=mock_registries)
         viewmodel.select_component((LayerType.ARMOR, 0, comp))
 
         events = event_bus.get_events('SELECTION_CHANGED')
@@ -249,14 +258,15 @@ class TestWorkshopViewModel:
     # Drag State Tests
     # ─────────────────────────────────────────────────────────────────
 
-    def test_dragged_item_setter_emits_event(self, viewmodel_setup):
+    def test_dragged_item_setter_emits_event(self, viewmodel_setup, mock_registries):
         """Setting dragged_item emits DRAG_STATE_CHANGED event."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.components.component import create_component
 
         event_bus.clear()
 
-        comp = create_component('armor_plate')
+        # PROJ-50: create_component requires registries
+        comp = create_component('armor_plate', registries=mock_registries)
         viewmodel.dragged_item = comp
 
         events = event_bus.get_events('DRAG_STATE_CHANGED')
@@ -267,18 +277,19 @@ class TestWorkshopViewModel:
     # Ship Operations Tests
     # ─────────────────────────────────────────────────────────────────
 
-    def test_clear_design_preserves_hull(self, viewmodel_setup):
+    def test_clear_design_preserves_hull(self, viewmodel_setup, mock_registries):
         """clear_design removes components but preserves hull layer."""
         viewmodel, event_bus = viewmodel_setup
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import create_component
 
-        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
-        ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        # PROJ-50: Ship and create_component require registries
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=mock_registries)
+        ship.add_component(create_component('armor_plate', registries=mock_registries), LayerType.ARMOR)
 
         # Add engine only if INNER layer exists
         if LayerType.INNER in ship.layers:
-            ship.add_component(create_component('standard_engine'), LayerType.INNER)
+            ship.add_component(create_component('standard_engine', registries=mock_registries), LayerType.INNER)
 
         viewmodel._ship = ship
 

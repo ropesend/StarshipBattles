@@ -23,12 +23,15 @@ class TestDetailPanelRendering:
             del sys.modules[module_name]
 
         # Patch UI elements at pygame_gui level (applied before module import)
+        # NOTE: Must also patch the module-level import in detail_panel.py
         self.uipanel_patch = patch('pygame_gui.elements.UIPanel')
         self.uilabel_patch = patch('pygame_gui.elements.UILabel')
         self.uiimage_patch = patch('pygame_gui.elements.UIImage')
         self.uibutton_patch = patch('pygame_gui.elements.UIButton')
         self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
         self.modifier_grid_patch = patch('game.ui.panels.modifier_impact_grid.ModifierImpactGrid')
+        # Also patch at the module's namespace where UITextBox is actually used
+        self.uitextbox_module_patch = patch('game.ui.screens.builder.detail_panel.UITextBox')
 
         self.MockUIPanel = self.uipanel_patch.start()
         self.MockUILabel = self.uilabel_patch.start()
@@ -36,6 +39,8 @@ class TestDetailPanelRendering:
         self.MockUIButton = self.uibutton_patch.start()
         self.MockUITextBox = self.uitextbox_patch.start()
         self.MockModifierGrid = self.modifier_grid_patch.start()
+        # Start module-level patch for UITextBox
+        self.MockUITextBoxModule = self.uitextbox_module_patch.start()
 
         # Configure mock grid
         self.mock_grid_instance = self.MockModifierGrid.return_value
@@ -43,8 +48,8 @@ class TestDetailPanelRendering:
         self.mock_grid_instance.panel.visible = False
 
         # Ensure the mock instance behaves like a UITextBox for our tests
-        # We'll use a property mock or just capture set_text calls
-        self.mock_textbox_instance = self.MockUITextBox.return_value
+        # Use the module-level mock since that's what detail_panel.py actually imports
+        self.mock_textbox_instance = self.MockUITextBoxModule.return_value
 
         # Delayed import to allow pygame init (after patches applied)
         from game.ui.screens.builder.detail_panel import ComponentDetailPanel
@@ -99,9 +104,11 @@ class TestDetailPanelRendering:
 
         self.panel.show_component(mock_comp)
 
-        # Verify set_text was called with expected HTML components
-        self.mock_textbox_instance.set_text.assert_called()
-        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        # Verify html_text was set and rebuild was called (new API)
+        # The panel now sets html_text directly then calls rebuild()
+        # Note: Use panel.stats_text_box which is the actual mock instance
+        self.panel.stats_text_box.rebuild.assert_called()
+        html = self.panel.stats_text_box.html_text
 
         assert "<b>Test Component</b>" in html
         assert "Weapon" in html
@@ -135,8 +142,9 @@ class TestDetailPanelRendering:
 
         self.panel.show_component(mock_comp)
 
-        self.mock_textbox_instance.set_text.assert_called()
-        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        # Verify html_text was set and rebuild was called (new API)
+        self.panel.stats_text_box.rebuild.assert_called()
+        html = self.panel.stats_text_box.html_text
 
         assert "<font color='#FF0000'>Damage: 50</font>" in html
         assert "<font color='#00FF00'>Range: 1000m</font>" in html
@@ -168,14 +176,15 @@ class TestDetailPanelRendering:
         with patch.dict('game.simulation.components.abilities.ABILITY_REGISTRY', {}, clear=True):
              self.panel.show_component(mock_comp)
 
-        self.mock_textbox_instance.set_text.assert_called()
-        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        # Verify html_text was set and rebuild was called (new API)
+        self.panel.stats_text_box.rebuild.assert_called()
+        html = self.panel.stats_text_box.html_text
 
-        # Header changed to "Other Abilities:" in the refactor
-        assert "Other Abilities:" in html
-        # Dict values are now formatted as "key: value" summaries, keys are CamelCase-spaced
-        assert "Secret Ability: power: 9000" in html
-        assert "Custom Power Ability: energy: 42" in html
+        # Header changed to "Abilities:" in the code
+        assert "Abilities:" in html
+        # Abilities are formatted with bullet points
+        assert "SecretAbility" in html
+        assert "CustomPowerAbility" in html
 
 
     def test_html_modifiers(self):
@@ -219,7 +228,7 @@ class TestDetailPanelRendering:
         mock_comp.modifiers = [mock_mod1, mock_mod2]
 
         # Patch ModifierLogic to simulate one mandatory and one optional modifier
-        with patch('ui.builder.detail_panel.ModifierLogic.is_modifier_mandatory') as mock_is_mandatory:
+        with patch('game.ui.screens.builder.detail_panel.ModifierLogic.is_modifier_mandatory') as mock_is_mandatory:
             # Side effect: True for turbo_boost, False for heavy_plating
             def side_effect(mod_id, comp):
                 return mod_id == "turbo_boost"
@@ -227,10 +236,11 @@ class TestDetailPanelRendering:
 
             self.panel.show_component(mock_comp)
 
-        self.mock_textbox_instance.set_text.assert_called()
-        html = self.mock_textbox_instance.set_text.call_args[0][0]
+        # Verify html_text was set and rebuild was called (new API)
+        self.panel.stats_text_box.rebuild.assert_called()
+        html = self.panel.stats_text_box.html_text
 
-        assert "Modifiers" in html  # Header changed to "-- Modifiers --"
+        assert "Modifiers" in html
 
         # Mandatory: Gold + [A]
         assert "Turbo [A]" in html

@@ -8,28 +8,33 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-51 Phase 4 Complete
-**Current Status:** PROJ-51 Phase 4 Complete - Ready for Phase 5
+**Last Completed:** PROJ-51 Phase 5 Complete - All phases done
+**Current Status:** PROJ-51 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-51
-**Current Phase:** Phase 5 (Verification & Cleanup)
-**Test Status:** 14 stats tests passed, simulation tests passing
+**Current Phase:** Ready for Audit Cycle 1
+**Test Status:** 273 failed, 5566 passed (net +28 from baseline)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-51 Phase 4 Complete (Stats Service Location):
-  - ✅ Discovered systems/stats.py was ORPHANED DEAD CODE
-  - ✅ Actual ShipStatsCalculator is in entities/ship_stats.py (used by Ship)
-  - ✅ Deleted orphaned game/simulation/systems/stats.py
-  - ✅ Removed dead import from game/ui/screens/builder/stats_config.py
-  - ✅ Updated test_ship_stats_calculator_phases.py to import from correct location
-  - ✅ Updated test file to use fresh_registries fixture (PROJ-50 DI)
+- PROJ-51 Phase 5 Complete (Verification & Cleanup):
+  - ✅ Fixed vehicle_design_service.py create_component() missing registries (PROJ-50 DI)
+  - ✅ Fixed test_workshop_viewmodel.py Ship/create_component DI (PROJ-50)
+  - ✅ Fixed test_detail_panel_rendering.py mock assertions (set_text->html_text/rebuild)
+  - ✅ Fixed test_physics.py import from deleted systems/stats to entities/ship_stats
+  - ✅ Fixed test_ui_dynamic_update.py import path (ui.builder->game.ui.screens.builder)
+  - ✅ Fixed test_ship_stats_calculator_di.py create_component DI
+  - ✅ Updated plan.md Key Files table for deleted systems/stats.py
+  - ✅ UI-007 decision already documented in design.md
 
 - Files Modified:
-  - game/simulation/systems/stats.py (DELETED - dead code)
-  - game/ui/screens/builder/stats_config.py (removed unused import)
-  - tests/unit/simulation/systems/test_ship_stats_calculator_phases.py (fixed imports + DI)
+  - game/simulation/services/vehicle_design_service.py (PROJ-50 DI fix)
+  - tests/unit/workshop/test_workshop_viewmodel.py (PROJ-50 DI fix)
+  - tests/unit/ui/test_detail_panel_rendering.py (mock API update)
+  - tests/unit/systems/test_physics.py (import path fix)
+  - tests/unit/ui/test_ui_dynamic_update.py (import path fix)
+  - tests/unit/services/test_ship_stats_calculator_di.py (PROJ-50 DI fix)
 
-- NEXT: Phase 5 - Verification & Cleanup
+- NEXT: Audit Cycle 1
 
 ---
 

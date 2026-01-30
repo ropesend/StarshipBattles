@@ -140,7 +140,8 @@ class TestShipStatsCalculatorStaticMethods:
         """get_component_effectiveness should work as a static method."""
         from game.simulation.components.component import create_component
 
-        comp = create_component('bridge')
+        # PROJ-50: create_component requires registries
+        comp = create_component('bridge', registries=mock_registries)
 
         # Static call (no instance needed)
         result = ShipStatsCalculator.get_component_effectiveness('bridge_0', comp, {})

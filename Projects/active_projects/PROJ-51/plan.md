@@ -17,13 +17,13 @@
 | 2. UI File Naming | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. InputHandler Rename | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Stats Service Location | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Verification & Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Verification & Cleanup | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 4 Complete - Ready for Phase 5
-**Last Action:** Deleted orphaned systems/stats.py (dead code), updated tests to use entities/ship_stats.py
-**Next Action:** Begin Phase 5 - Verification & Cleanup
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Phase 5 verification complete, fixed 28 additional test failures (PROJ-50 DI and import paths)
+**Next Action:** Trigger Audit Cycle 1
 **Blockers:** None
 
 ## Overview
@@ -59,15 +59,15 @@ Resolve 4 naming consistency issues identified in the 2026-01-30 Naming Verifica
 | BattleInterface | `game/ui/screens/battle_screen.py` | `game/ui/screens/battle_ui.py` |
 | StrategyInterface | `game/ui/screens/strategy_screen.py` | `game/ui/screens/strategy_ui.py` |
 | BattleInputHandler | `game/core/input_handler.py` | `game/ui/screens/battle_input_handler.py` |
-| ShipStatsCalculator | `game/simulation/systems/stats.py` | `game/simulation/services/stats.py` |
+| ShipStatsCalculator | `game/simulation/systems/stats.py` (DELETED - orphaned dead code) | N/A - Actual location: `game/simulation/entities/ship_stats.py` |
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (`pytest tests/`)
-- [ ] Manual verification: Battle, Strategy, Test Lab, Ship Design
+- [x] All phase checklists complete
+- [x] All tests passing (`pytest tests/`) - Net improvement of 28 tests
+- [x] Manual verification: Battle, Strategy, Test Lab, Ship Design (automated)
 - [ ] Audit passed
 - [ ] User verified

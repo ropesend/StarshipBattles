@@ -145,8 +145,8 @@ class VehicleDesignService:
         """
         errors = []
 
-        # Create the component
-        component = create_component(component_id)
+        # Create the component - PROJ-50: Pass registries for DI
+        component = create_component(component_id, registries=self._registries)
         if component is None:
             errors.append(f"Component '{component_id}' not found in registry")
             return DesignResult(success=False, errors=errors)
@@ -217,8 +217,8 @@ class VehicleDesignService:
         errors = []
         warnings = []
 
-        # Create the base component
-        component = create_component(component_id)
+        # Create the base component - PROJ-50: Pass registries for DI
+        component = create_component(component_id, registries=self._registries)
         if component is None:
             errors.append(f"Component '{component_id}' not found in registry")
             return DesignResult(success=False, errors=errors)
@@ -371,7 +371,8 @@ class VehicleDesignService:
         validator = get_or_create_validator()
 
         for comp_id in self._registries.components.keys():
-            component = create_component(comp_id)
+            # PROJ-50: Pass registries for DI
+            component = create_component(comp_id, registries=self._registries)
             if component is None:
                 continue
 

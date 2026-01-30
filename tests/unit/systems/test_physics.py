@@ -214,9 +214,14 @@ class TestPhysicsConstantsConsolidation:
     """Test that physics constants are centralized - PHYS-01 regression test."""
 
     def test_stats_uses_physics_constants_module(self, pygame_init):
-        """Verify stats.py imports K_SPEED, K_THRUST, K_TURN from physics_constants.py."""
+        """Verify ship_stats.py imports K_SPEED, K_THRUST, K_TURN from physics_constants.py.
+
+        PROJ-51 Phase 4: The old systems/stats.py was orphaned dead code and deleted.
+        The actual stats calculator is in entities/ship_stats.py.
+        """
         from game.simulation import physics_constants
-        import game.simulation.systems.stats as stats_module
+        # PROJ-51: Use the actual ship_stats module (not the deleted systems/stats)
+        from game.simulation.entities import ship_stats as stats_module
 
         # Verify the constants are imported into stats module (not defined locally)
         # If the fix is correct, stats_module should reference physics_constants values

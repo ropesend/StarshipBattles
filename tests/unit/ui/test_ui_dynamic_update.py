@@ -50,11 +50,12 @@ class TestUIDynamicUpdate:
     def test_dynamic_row_addition(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
         """Test that adding a resource triggers a UI rebuild to show the new row."""
 
-        import ui.builder.right_panel
+        # PROJ-46/51: Import path updated from ui.builder.right_panel
+        import game.ui.screens.builder.right_panel
         import importlib
         import sys
-        if 'ui.builder.right_panel' in sys.modules:
-            importlib.reload(sys.modules['ui.builder.right_panel'])
+        if 'game.ui.screens.builder.right_panel' in sys.modules:
+            importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
         # 1. Create Panel with NO resources (ensure ship is empty initially)
         self.builder.ship.resources.reset_stats()
