@@ -12,22 +12,22 @@
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
-**Test Status:** 153 passed (split files this session)
+**Test Status:** 115 passed (split files this session)
 **Active Blockers:** None
 
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
   - Task 3.2 Complete: All 20 severe monoliths split
-  - Task 3.3 In Progress: 20/26+ moderate monoliths split (4 this session):
-    - test_battle_coordinator.py (622 LOC) -> battle_coordinator/ (3 files, 40 tests)
-    - test_left_panel.py (620 LOC) -> left_panel/ (3 files, 39 tests)
-    - test_ship_helpers.py (618 LOC) -> ship_helpers/ (2 files, 50 tests)
-    - test_service_methods.py (605 LOC) -> 2 files (24 tests)
+  - Task 3.3 In Progress: 24/26+ moderate monoliths split (4 this session):
+    - test_fleet_movement_engine.py (598 LOC) -> fleet_movement_engine/ (3 files, 29 tests)
+    - test_production.py (581 LOC) -> production/ (2 files, 16 tests)
+    - test_tech_tree.py (579 LOC) -> tech_tree/ (2 files, 35 tests)
+    - test_research_workflow.py (566 LOC) -> research_workflow/ (2 files, 35 tests)
 - Remaining Phase 3 work:
-  - Task 3.3 remaining: ~15 files still >500 LOC
+  - Task 3.3 remaining: ~11 files still >500 LOC
 - Next: Continue Task 3.3 - Split remaining moderate monoliths
-- Total: 1471 tests moved to new files across 40 monoliths split so far
+- Total: 1586 tests moved to new files across 44 monoliths split so far
 
 ---
 
@@ -119,6 +119,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 115 passed | 4de9a5bf | Split fleet_movement_engine+production+tech_tree+research_workflow -> 9 files |
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 153 passed | f29b36f3 | Split battle_coordinator+left_panel+ship_helpers+service_methods -> 10 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 207 passed | b9c11e42 | Split ship_instance+fleet resources+component_manager+controller -> 9 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 172 passed | 7473ce72 | Split profiling+research_controls+math_utils+save_load -> 13 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 5734 passed | ae8665c8 | Split battle_ui_service+armor_mechanics+schematic_view+save_game_service -> 8 files |

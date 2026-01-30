@@ -1,118 +1,15 @@
+"""
+Production completion tests.
+
+Tests ship and complex spawning when production completes.
+"""
+
 import pytest
-import tempfile
-import os
-import json
-import shutil
-from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
-from game.strategy.data.hex_math import HexCoord
-from game.strategy.engine.turn_engine import TurnEngine
-from game.strategy.data.empire import Empire
+from game.strategy.data.planet import PlanetaryFacility
 
 
-@pytest.fixture
-def production_setup():
-    """Create temporary directory and test objects for production tests."""
-    # Create temporary directory for test designs
-    # DesignLibrary expects designs in empire-specific subfolder: designs/empire_N/
-    # Empire ID 0 is used (Empire(0, "Terran", ...))
-    temp_dir = tempfile.mkdtemp()
-    designs_dir = os.path.join(temp_dir, "designs", "empire_0")
-    os.makedirs(designs_dir, exist_ok=True)
-
-    # Create a test ship design
-    test_design = {
-        "name": "Test Ship",
-        "ship_class": "Frigate",
-        "vehicle_type": "Ship",
-        "layers": {"CORE": [], "INNER": [], "OUTER": [], "ARMOR": []},
-        "resources": {"fuel": 0.0, "energy": 0.0, "ammo": 0.0},
-        "expected_stats": {
-            "max_hp": 100,
-            "max_speed": 10,
-            "mass": 100.0
-        },
-        "_metadata": {
-            "is_obsolete": False,
-            "times_built": 0
-        }
-    }
-
-    # Write test design files
-    for design_id in ["test_ship", "test_ship_0", "test_ship_1", "test_ship_2"]:
-        design_path = os.path.join(designs_dir, f"{design_id}.json")
-        with open(design_path, 'w') as f:
-            json.dump(test_design, f)
-
-    # Create a valid planet manually to satisfy the dataclass
-    planet = Planet(
-        name="Terran Prime",
-        location=HexCoord(0, 0),
-        orbit_distance=3,
-        mass=5.97e24,
-        radius=6371000,
-        surface_area=5.1e14,
-        density=5515,
-        surface_gravity=9.81,
-        surface_pressure=101325,
-        surface_temperature=288,
-        surface_water=0.7,
-        tectonic_activity=0.1,
-        magnetic_field=1.0,
-        atmosphere={'N2': 78000.0, 'O2': 21000.0},
-        planet_type=PlanetType.TERRESTRIAL
-    )
-    planet.owner_id = 0
-
-    empire = Empire(0, "Terran", (0, 0, 255))
-    empire.savegame_path = temp_dir  # Use temp directory for designs
-    empire.add_colony(planet)
-
-    engine = TurnEngine()
-    empires = [empire]
-
-    yield {
-        'temp_dir': temp_dir,
-        'designs_dir': designs_dir,
-        'planet': planet,
-        'empire': empire,
-        'engine': engine,
-        'empires': empires
-    }
-
-    # Cleanup
-    if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
-
-
-class TestProduction:
-
-    def test_add_to_queue(self, production_setup):
-        """Verify adding an item to the queue works."""
-        planet = production_setup['planet']
-        # Item: "Colony Ship", Turns: 1
-        planet.add_production("Colony Ship", 1)
-        assert len(planet.construction_queue) == 1
-        item = planet.construction_queue[0]
-        assert item["design_id"] == "Colony Ship"
-        assert item["type"] == "ship"
-        assert item["turns_remaining"] == 1
-
-    def test_production_progress(self, production_setup):
-        """Verify turns decrement and items complete."""
-        planet = production_setup['planet']
-        planet.add_production("Colony Ship", 1)
-
-        # Process Turn 1 (Should complete it)
-        # Note: TurnEngine needs to process production now.
-        # We need a dummy 'galaxy' or just pass None if not needed yet,
-        # but spawning a fleet might require Galaxy context for location?
-        # For now, let's assume Fleet spawn location is just planet global location.
-        # But Planet lacks global location context in isolation.
-        # We might need to mock Galaxy or pass global offset.
-
-        # Workaround: Manually handle spawn logic in Engine or Mock it?
-        # Let's see how TurnEngine handles it.
-        pass
+class TestProductionCompletion:
+    """Tests for production completing and spawning entities."""
 
     def test_production_completion(self, production_setup):
         """Verify ship spawns when production completes."""
@@ -150,23 +47,9 @@ class TestProduction:
         assert len(planet.construction_queue) == 0
         assert len(empire.fleets) == initial_fleet_count + 1
 
-    def test_build_queue_dict_format(self, production_setup):
-        """Verify new queue format with type/design_id/turns."""
-        planet = production_setup['planet']
-        queue_item = {
-            "design_id": "mining_complex_mk1",
-            "type": "complex",
-            "turns_remaining": 5
-        }
 
-        planet.construction_queue.append(queue_item)
-
-        assert len(planet.construction_queue) == 1
-        item = planet.construction_queue[0]
-        assert isinstance(item, dict)
-        assert item["design_id"] == "mining_complex_mk1"
-        assert item["type"] == "complex"
-        assert item["turns_remaining"] == 5
+class TestComplexSpawning:
+    """Tests for complex spawning."""
 
     def test_build_complex_adds_to_facilities(self, production_setup):
         """Verify complex completes and appears in planet.facilities."""
@@ -245,6 +128,32 @@ class TestProduction:
             # UUID format check (basic)
             assert "-" in facility.instance_id
 
+    def test_complex_builds_in_1_turn(self, production_setup):
+        """Test that complexes complete after 1 turn."""
+        planet = production_setup['planet']
+        engine = production_setup['engine']
+        empires = production_setup['empires']
+        temp_dir = production_setup['temp_dir']
+
+        queue_item = {
+            "design_id": "test_complex",
+            "type": "complex",
+            "turns_remaining": 1
+        }
+        planet.construction_queue.append(queue_item)
+
+        # Process one turn
+        engine.process_production(empires, save_path=temp_dir)
+
+        # Should complete and remove from queue
+        assert len(planet.construction_queue) == 0
+        # Should create facility
+        assert len(planet.facilities) > 0
+
+
+class TestShipSpawning:
+    """Tests for ship spawning."""
+
     def test_process_production_ship_spawns(self, production_setup):
         """Verify ship spawns as fleet when production completes."""
         planet = production_setup['planet']
@@ -284,28 +193,6 @@ class TestProduction:
         # Should spawn fleet
         assert len(planet.construction_queue) == 0
         assert len(empire.fleets) == initial_fleet_count + 1
-
-    def test_complex_builds_in_1_turn(self, production_setup):
-        """Test that complexes complete after 1 turn."""
-        planet = production_setup['planet']
-        engine = production_setup['engine']
-        empires = production_setup['empires']
-        temp_dir = production_setup['temp_dir']
-
-        queue_item = {
-            "design_id": "test_complex",
-            "type": "complex",
-            "turns_remaining": 1
-        }
-        planet.construction_queue.append(queue_item)
-
-        # Process one turn
-        engine.process_production(empires, save_path=temp_dir)
-
-        # Should complete and remove from queue
-        assert len(planet.construction_queue) == 0
-        # Should create facility
-        assert len(planet.facilities) > 0
 
     def test_ship_builds_in_1_turn(self, production_setup):
         """Test that ships complete after 1 turn."""
@@ -347,112 +234,6 @@ class TestProduction:
         assert len(planet.construction_queue) == 0
         # Should spawn fleet
         assert len(empire.fleets) == initial_fleet_count + 1
-
-    def test_ship_build_pauses_without_shipyard(self, production_setup):
-        """Test that ship builds don't progress if shipyard is missing."""
-        planet = production_setup['planet']
-        engine = production_setup['engine']
-        empires = production_setup['empires']
-        temp_dir = production_setup['temp_dir']
-
-        # Add ship to queue
-        queue_item = {
-            "design_id": "test_ship",
-            "type": "ship",
-            "turns_remaining": 2
-        }
-        planet.construction_queue.append(queue_item)
-
-        # Add a shipyard facility first
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
-        planet.facilities.append(shipyard)
-
-        # Process turn - should work with shipyard
-        engine.process_production(empires, save_path=temp_dir)
-        assert planet.construction_queue[0]["turns_remaining"] == 1
-
-        # Remove shipyard facility
-        planet.facilities.clear()
-
-        # Process turn - should NOT progress
-        engine.process_production(empires, save_path=temp_dir)
-        assert planet.construction_queue[0]["turns_remaining"] == 1  # Still 1
-
-    def test_ship_build_resumes_with_shipyard(self, production_setup):
-        """Test that paused ship builds resume when shipyard added."""
-        planet = production_setup['planet']
-        engine = production_setup['engine']
-        empires = production_setup['empires']
-        temp_dir = production_setup['temp_dir']
-
-        # Add ship to queue without shipyard
-        queue_item = {
-            "design_id": "test_ship",
-            "type": "ship",
-            "turns_remaining": 2
-        }
-        planet.construction_queue.append(queue_item)
-
-        # Process turn - should NOT progress without shipyard
-        engine.process_production(empires, save_path=temp_dir)
-        assert planet.construction_queue[0]["turns_remaining"] == 2  # No change
-
-        # Add shipyard facility
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
-        planet.facilities.append(shipyard)
-
-        # Process turn - should now progress
-        engine.process_production(empires, save_path=temp_dir)
-        assert planet.construction_queue[0]["turns_remaining"] == 1  # Decremented
-
-    def test_complex_builds_without_shipyard(self, production_setup):
-        """Test that complexes build even without shipyard."""
-        planet = production_setup['planet']
-        engine = production_setup['engine']
-        empires = production_setup['empires']
-        temp_dir = production_setup['temp_dir']
-
-        queue_item = {
-            "design_id": "mining_complex",
-            "type": "complex",
-            "turns_remaining": 1
-        }
-        planet.construction_queue.append(queue_item)
-
-        # No shipyard on planet
-        assert len(planet.facilities) == 0
-
-        # Process turn - complex should complete
-        initial_facility_count = len(planet.facilities)
-        engine.process_production(empires, save_path=temp_dir)
-
-        # Should complete and add facility
-        assert len(planet.construction_queue) == 0
-        assert len(planet.facilities) > initial_facility_count
 
     def test_ship_spawns_as_ship_instance(self, production_setup):
         """Test that completed ships create ShipInstance (not string)."""
