@@ -54,6 +54,8 @@ def teardown_test_state():
     pygame.quit()
     RegistryManager.instance().clear()
 
+
+@pytest.mark.xfail(reason="Bug #5: Energy consumption rows not yet implemented in logistics UI")
 def test_shield_regen_consumption():
     """
     Verify Shield Regen (using EnergyConsumption alias) 
@@ -101,6 +103,8 @@ def test_shield_regen_consumption():
     finally:
         teardown_test_state()
 
+
+@pytest.mark.xfail(reason="Bug #5: Energy consumption rows not yet implemented in logistics UI")
 def test_laser_cannon_consumption():
     """
     Verify Laser Cannon (Active Consumption)

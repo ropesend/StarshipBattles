@@ -354,6 +354,33 @@ assert_list_length(events, 1, "events after selection")
 
 ---
 
+## Naming Conventions
+
+### Test Files
+- All test files must follow `test_*.py` naming pattern
+- Benchmark/utility scripts go in `scripts/`, not `tests/`
+- Exception: `conftest.py` for pytest fixture configuration
+
+### Test Classes
+- Name: `Test<SourceClassName>` or `Test<Feature>`
+- One test class per source class when possible
+- Example: `TestShip` for `Ship` class tests
+- Example: `TestContinuousCollisionDetection` for CCD feature tests
+
+### Test Methods
+- Pattern: `test_<what>_<condition>` or `test_<feature>_<expected_result>`
+- Example: `test_add_component_invalid_layer_raises_error`
+- Example: `test_static_target_direct_shot`
+- Keep names descriptive but not excessively long
+
+### Mock Classes
+- Test doubles should be named `Mock<OriginalClassName>`
+- Example: `MockBattleEngine`, `MockShip`, `MockComponent`
+- Use `Mock*` prefix consistently (not Stub or Fake)
+- For interfaces: `MockMovementEngine` for `IMovementEngine`
+
+---
+
 ## Adding New Fixtures
 
 1. **Module-specific**: Add to module's conftest.py

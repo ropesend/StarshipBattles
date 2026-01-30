@@ -1,3 +1,12 @@
+"""
+Performance benchmark script for PlanetListWindow.
+
+NOTE: This is a benchmark script, not a pytest test file.
+Run directly with: python tests/performance/benchmark_planet_list.py
+
+It measures initialization, refresh, and update performance of PlanetListWindow
+with large numbers of planets (500+).
+"""
 
 import time
 import pytest

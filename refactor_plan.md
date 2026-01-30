@@ -8,22 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 4 COMPLETE (Weak Assertion Fixes)
+**Last Completed:** PROJ-48 Phase 5 COMPLETE (Naming Convention Standardization)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
-**Current Phase:** Phase 4 Complete, Phase 5 Next (Naming Convention Standardization)
-**Test Status:** 5734 passed (full suite)
+**Current Phase:** Phase 5 Complete, Phase 6 Next (Directory Structure Reorganization)
+**Test Status:** 5746 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-48 Phase 4 COMPLETE - Weak Assertion Fixes
-  - Task 4.1 Complete: Fixed 18 `assert success` patterns -> `assert success, f"Save failed: {message}"`
-  - Task 4.2 Complete: Reviewed length assertions, test names provide context
-  - Task 4.3 Complete: Fixed 48+ `== True/False` -> `is True/is False` patterns across 20+ files
-  - Task 4.4 Complete: Added assert_success() and assert_list_length() helpers to tests/conftest.py
-  - Task 4.5 Complete: 0 remaining bare `assert success`, 0 remaining `== True/False`
-- Documented helpers in tests/README.md
-- Next: Start Phase 5 - Naming Convention Standardization
+- PROJ-48 Phase 5 COMPLETE - Naming Convention Standardization
+  - Task 5.1 Complete: Renamed repro_bug_05_deep.py -> test_bug_05_deep_repro.py (with xfail markers)
+  - Task 5.1 Complete: Moved 5 non-test scripts to scripts/ (repro_energy_stats, repro_shield, reproduce_cycling, verify_determinism_current, verify_themes)
+  - Task 5.1 Complete: Added docstring to benchmark_planet_list.py
+  - Task 5.2 Complete: Converted test_lead.py to proper pytest tests (5 new tests)
+  - Task 5.2 Complete: Converted test_ccd.py to proper pytest tests (7 new tests)
+  - Task 5.3 Complete: Verified all mock classes use Mock* prefix (60+ compliant)
+  - Task 5.4 Complete: Added Naming Conventions section to tests/README.md
+- Next: Start Phase 6 - Directory Structure Reorganization
 
 ---
 
@@ -115,6 +116,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 5 COMPLETE | Complete | 5746 passed | 7ba8f5af | Naming: renamed files, converted tests, added conventions docs |
 | 2026-01-30 | PROJ-48 | Phase 4 COMPLETE | Complete | 5734 passed | c141cdec | Weak assertion fixes: 18 success, 48+ bool, helpers added |
 | 2026-01-30 | PROJ-48 | Phase 3 COMPLETE | Complete | 78 passed | 5d569aa2 | Split test_colonization+test_ship_combat_engine+test_adapter -> 8 files, Phase 3 done |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.3 partial | Complete | 238 passed | 313a5211 | Split test_utilities+test_diff_logic+test_logger+test_production_engine -> 12 files |

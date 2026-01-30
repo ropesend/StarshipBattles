@@ -17,24 +17,26 @@
 | 2. Conftest Consolidation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Test File Splitting | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Weak Assertion Fixes | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Naming Convention Standardization | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Naming Convention Standardization | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Directory Structure Reorganization | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Mock Pattern Standardization | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. Test Quality Improvements | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 4 COMPLETE - Weak Assertion Fixes
-**Last Action:** Phase 4 Complete - Fixed all weak assertions, added assertion helpers
-**Next Action:** Start Phase 5 - Naming Convention Standardization
+**Active Phase:** Phase 5 COMPLETE - Naming Convention Standardization
+**Last Action:** Phase 5 Complete - Renamed files, converted tests, documented conventions
+**Next Action:** Start Phase 6 - Directory Structure Reorganization
 **Blockers:** None
 
-**Phase 4 Summary:**
-- Task 4.1 Complete: Fixed 18 `assert success` patterns across 6 files
-- Task 4.2 Complete: Reviewed length assertions, no changes needed
-- Task 4.3 Complete: Fixed 48+ `assert x == True/False` patterns to use `is`
-- Task 4.4 Complete: Added assertion helpers to tests/conftest.py
-- Task 4.5 Complete: Verified no remaining weak assertions
+**Phase 5 Summary:**
+- Task 5.1 Complete: Renamed repro_bug_05_deep.py -> test_bug_05_deep_repro.py
+- Task 5.1 Complete: Moved 5 non-test scripts to scripts/ directory
+- Task 5.1 Complete: Added docstring to benchmark_planet_list.py
+- Task 5.2 Complete: Converted test_lead.py to pytest format (5 tests)
+- Task 5.2 Complete: Converted test_ccd.py to pytest format (7 tests)
+- Task 5.3 Complete: Verified all mocks use Mock* prefix (60+ classes)
+- Task 5.4 Complete: Added Naming Conventions section to tests/README.md
 
 ## Overview
 This project addresses 36 identified issues in the testing infrastructure, covering critical fixes, conftest consolidation, aggressive splitting of 50 test files over 500 LOC, weak assertion fixes, naming standardization, directory reorganization, mock pattern standardization, and test quality improvements. The goal is to create a maintainable, well-organized test suite with consistent patterns.
