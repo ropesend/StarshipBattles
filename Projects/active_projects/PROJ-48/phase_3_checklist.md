@@ -107,9 +107,9 @@
 - [x] `test_collision_edge_cases.py` (949 LOC) -> 3 files (32 tests)
 - [x] `test_turn_engine_strategy.py` (932 LOC) -> 3 files (27 tests)
 - [x] `test_modifier_ability_snapshots.py` (907 LOC) -> 2 files (70 tests)
-- [ ] `test_fleet_navigation_service.py` (852 LOC) -> 2 files
-- [ ] `test_resources_registry.py` (838 LOC) -> 2 files
-- [ ] `test_gameplay_loop.py` (824 LOC) -> 2-3 files
+- [x] `test_fleet_navigation_service.py` (852 LOC) -> 2 files (36 tests)
+- [x] `test_resources_registry.py` (838 LOC) -> 2 files (39 tests)
+- [x] `test_gameplay_loop.py` (824 LOC) -> 3 files (27 tests)
 - [ ] `test_test_lab_scene.py` (789 LOC) -> 2 files
 - [ ] `test_controllable_interface.py` (788 LOC) -> 2 files
 - [ ] `test_projectile_guidance.py` (780 LOC) -> 2 files

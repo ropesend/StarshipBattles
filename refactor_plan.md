@@ -8,7 +8,7 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (6 of 20 files split)
+**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (9 of 20 files split)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
@@ -18,15 +18,18 @@
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
-  - Task 3.2 In Progress: Split 6 of 20 severe monoliths
+  - Task 3.2 In Progress: Split 9 of 20 severe monoliths
     - test_pathfinding.py (996 LOC) -> 3 files (55 tests)
     - test_registry.py (973 LOC) -> 3 files (69 tests)
     - test_research_scene.py (954 LOC) -> 3 files (30 tests)
     - test_collision_edge_cases.py (949 LOC) -> 3 files (32 tests)
     - test_turn_engine_strategy.py (932 LOC) -> 3 files (27 tests)
     - test_modifier_ability_snapshots.py (907 LOC) -> 2 files (70 tests)
+    - test_fleet_navigation_service.py (852 LOC) -> 2 files (36 tests)
+    - test_resources_registry.py (838 LOC) -> 2 files (39 tests)
+    - test_gameplay_loop.py (824 LOC) -> 3 files (27 tests)
 - Remaining Phase 3 work:
-  - Task 3.2: 14 more severe monoliths (700-1000 LOC)
+  - Task 3.2: 11 more severe monoliths (700-1000 LOC)
   - Task 3.3: 26 moderate monoliths (500-700 LOC)
 - Next: Continue Task 3.2 - Split more severe monoliths
 - Note: 46 failures + 12 errors are pre-existing (same as before changes)
@@ -121,6 +124,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 96c19ed4 | Split fleet_navigation + resources_registry + gameplay_loop -> 7 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 0c504e8e | Split turn_engine_strategy + modifier_snapshots -> 5 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 884224ed | Split research_scene + collision -> 6 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 4f070184 | Split pathfinding + registry -> 6 files |
