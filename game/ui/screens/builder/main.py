@@ -158,6 +158,17 @@ class BuilderScreen:
         self._create_ui()
         
     def _create_ui(self):
+        """Initialize all UI panels for the ship builder screen.
+
+        Creates and lays out:
+        - Left panel: Component/hull selection list
+        - Right panel: Ship stats and portrait
+        - Layer panel: Component slots by layer
+        - Detail panel: Selected component details
+        - Bottom bar: Save/load/exit buttons
+        - Modifier panel: Modifier controls for selected component
+        - Weapons report: Weapon summary table
+        """
         base_path = os.path.dirname(os.path.abspath(__file__))
         
         # New Layout Dimensions

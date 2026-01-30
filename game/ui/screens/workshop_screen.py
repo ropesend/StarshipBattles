@@ -163,6 +163,17 @@ class DesignWorkshopScreen:
         return get_default_registry_provider().get_vehicle_classes()
 
     def _create_ui(self):
+        """Initialize all UI panels for the workshop screen.
+
+        Creates and lays out:
+        - Left panel: Design library / component selection
+        - Right panel: Ship stats display and portrait
+        - Layer panel: Component slots organized by layer type
+        - Detail panel: Selected component or design details
+        - Bottom bar: Action buttons (new, save, load, exit)
+        - Modifier panel: Modifier controls for selected component
+        - Weapons report: Weapon loadout summary
+        """
         # Use shared height calculation for bottom panels
         self.bottom_panel_height = calculate_bottom_panel_height(self.height)
         self.modifier_panel_height = self.bottom_panel_height

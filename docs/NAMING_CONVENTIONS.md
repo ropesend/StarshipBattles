@@ -120,6 +120,49 @@ Import abilities from the package, not individual files:
 from game.simulation.components.abilities import CombatPropulsion, WeaponAbility
 ```
 
+## MVVM Pattern - ViewModel Naming
+
+Complex screens use the MVVM (Model-View-ViewModel) pattern for clean separation of concerns:
+
+| Suffix | Purpose | Example |
+|--------|---------|---------|
+| `*_viewmodel.py` | Holds screen state, emits events, no pygame code | `workshop_viewmodel.py` |
+| `*_context.py` | Shared data context between panels | `workshop_context.py` |
+| `*_event_router.py` | Routes events between UI components | `workshop_event_router.py` |
+| `*_data_loader.py` | Handles data loading and initialization | `workshop_data_loader.py` |
+
+### ViewModel Conventions
+
+- **File naming:** `{screen_name}_viewmodel.py`
+- **Class naming:** `{ScreenName}ViewModel`
+- **Example:** `workshop_viewmodel.py` contains `WorkshopViewModel`
+
+### ViewModel Responsibilities
+
+1. **State management** - Holds all screen state (selected items, filters, etc.)
+2. **Event emission** - Notifies views when state changes
+3. **Business logic** - Validation, transformations, calculations
+4. **No pygame code** - Pure Python, easily testable
+
+### When to Create a ViewModel
+
+Use the MVVM pattern when:
+- Screen has multiple panels sharing state
+- Complex user interactions with state dependencies
+- Need to unit test screen logic without pygame
+- State changes need to propagate to multiple views
+
+### Example Structure
+
+```
+game/ui/screens/workshop/
+├── workshop_screen.py       # Main screen (View)
+├── workshop_viewmodel.py    # State and logic (ViewModel)
+├── workshop_context.py      # Shared context
+├── workshop_event_router.py # Event routing
+└── workshop_data_loader.py  # Data loading
+```
+
 ## Related Documentation
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Layer structure and dependencies

@@ -116,7 +116,14 @@ class BattleInterface:
             pygame.draw.line(screen, grid_color, p1, p2, 1)
 
     def draw_debug_overlay(self, screen):
-        """Draw debug information overlay."""
+        """Draw debug information overlay for battle visualization.
+
+        Renders the following debug elements for each ship:
+        - Target lines: Blue lines from ship to current target
+        - Weapon range circles: Red circles showing maximum weapon range
+        - Aim points: Green crosses at predicted intercept positions
+        - Firing arcs: Yellow arc lines showing turret rotation limits
+        """
         camera = self.scene.camera
         for s in self.scene.ships:
             if not s.is_alive: continue

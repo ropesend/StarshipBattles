@@ -162,6 +162,43 @@ damage_mult = self.get_effective_stat('damage_mult', default=1.0)
 # Then global component.stats
 ```
 
+### Stat Resolution Order
+
+When `get_effective_stat()` is called, values are resolved in this priority:
+
+1. **Targeted ability stats:** `component.ability_stats[ClassName][stat_key]`
+2. **Global component stats:** `component.stats[stat_key]`
+3. **Default value:** Based on stat type:
+   - `*_mult` stats → `1.0`
+   - `*_add` stats → `0.0`
+   - Other stats → `None` (or explicit default)
+
+**Example with defaults:**
+```python
+def recalculate(self):
+    # Multiplicative stats default to 1.0 (no change)
+    damage_mult = self.get_effective_stat('damage_mult', 1.0)
+
+    # Additive stats default to 0.0 (no change)
+    arc_add = self.get_effective_stat('arc_add', 0.0)
+
+    # Apply modifications
+    self.damage = self._base_damage * damage_mult
+    self.firing_arc = self._base_arc + arc_add
+```
+
+**Targeted vs Global Effects:**
+- **Targeted:** `target_ability: "WeaponAbility"` only affects that ability class
+- **Global:** No `target_ability` affects all abilities on the component
+
+```python
+# Modifier targets only ProjectileWeaponAbility
+{"stat": "damage_mult", "formula": "1.5", "target_ability": "ProjectileWeaponAbility"}
+
+# Modifier affects ALL abilities on the component
+{"stat": "damage_mult", "formula": "1.2"}
+```
+
 ## Step 6: Implement UI Methods
 
 ### get_ui_rows()
@@ -202,6 +239,74 @@ def get_effect_summary(self):
         },
         # ... more stats ...
     ]
+```
+
+## Working with Ship Layers
+
+Ships organize components into layers. Understanding this structure helps when abilities need to query other components.
+
+### Layer Structure
+
+```python
+ship.layers = {
+    LayerType.HULL: {'components': [hull_component]},
+    LayerType.INTERNAL: {'components': [engine, reactor, ...]},
+    LayerType.EXTERNAL: {'components': [armor, sensor, ...]},
+    LayerType.WEAPONS: {'components': [turret1, turret2, ...]}
+}
+```
+
+### LayerType Reference
+
+| LayerType | Contents |
+|-----------|----------|
+| `HULL` | Ship hull (exactly one) |
+| `INTERNAL` | Engines, reactors, crew quarters, storage |
+| `EXTERNAL` | Armor, shields, sensors |
+| `WEAPONS` | Turrets, missile launchers, point defense |
+
+### Common Iteration Patterns
+
+**Get all components with a specific ability:**
+```python
+# Get all operational weapons
+weapons = ship.get_components_by_ability('WeaponAbility', operational_only=True)
+
+# Get all thrusters (including damaged)
+thrusters = ship.get_components_by_ability('CombatPropulsion', operational_only=False)
+```
+
+**Iterate over a specific layer:**
+```python
+from game.simulation.entities.layer_type import LayerType
+
+for comp in ship.layers[LayerType.WEAPONS]['components']:
+    if comp.is_operational():
+        weapon = comp.get_ability('WeaponAbility')
+        # Process weapon...
+```
+
+**Sum values across all components with an ability:**
+```python
+total_thrust = sum(
+    comp.get_ability('CombatPropulsion').get_primary_value()
+    for comp in ship.get_components_by_ability('CombatPropulsion', operational_only=True)
+)
+```
+
+### Ability Access Methods
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `comp.has_ability('Name')` | `bool` | Check if ability exists |
+| `comp.get_ability('Name')` | `Ability` or `None` | Get ability instance |
+| `comp.get_abilities()` | `List[Ability]` | All abilities on component |
+
+```python
+# Safe ability access
+if comp.has_ability('ShieldProjection'):
+    shield = comp.get_ability('ShieldProjection')
+    shield_strength = shield.get_primary_value()
 ```
 
 ## Step 7: Write Tests
@@ -297,3 +402,74 @@ class CommandControlAbility(Ability):
 - [ ] Unit tests for STAT_BINDINGS
 - [ ] Integration tests for modifier interaction
 - [ ] All tests pass
+
+## Common Errors and Solutions
+
+### Missing STAT_BINDINGS
+
+**Symptom:** Modifiers have no effect on ability stats.
+
+**Cause:** Ability class has no STAT_BINDINGS defined or is empty.
+
+**Solution:**
+```python
+class MyAbility(Ability):
+    STAT_BINDINGS = [
+        AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', 'multiply', '_base_damage'),
+    ]
+```
+
+### Invalid StatKey
+
+**Symptom:** `KeyError` when applying modifiers.
+
+**Cause:** Using string instead of StatKey enum, or using an undefined stat key.
+
+**Solution:** Always use `StatKey` enum values:
+```python
+# Wrong
+AbilityStatBinding('damage_mult', 'damage', ...)
+
+# Correct
+AbilityStatBinding(StatKey.DAMAGE_MULT, 'damage', ...)
+```
+
+### Missing Base Attribute
+
+**Symptom:** `AttributeError: '_base_damage'` in recalculate().
+
+**Cause:** STAT_BINDINGS references a `_base_*` attribute that wasn't set in `__init__()`.
+
+**Solution:** Store base values when parsing component data:
+```python
+def __init__(self, component, data):
+    super().__init__(component, data)
+    self.damage = data.get('damage', 10)
+    self._base_damage = self.damage  # Store base value
+```
+
+### Ability Not Found
+
+**Symptom:** `KeyError` when loading component from JSON.
+
+**Cause:** Ability class not registered in ABILITY_REGISTRY.
+
+**Solution:** Add to `game/simulation/components/abilities/__init__.py`:
+```python
+ABILITY_REGISTRY = {
+    'MyAbility': MyAbility,
+    'My': MyAbility,  # Optional short alias
+}
+```
+
+### recalculate() Not Called
+
+**Symptom:** Stats don't update when modifiers change.
+
+**Cause:** `recalculate()` method doesn't call `apply_stat_bindings()`.
+
+**Solution:** Always call the base class method:
+```python
+def recalculate(self):
+    self.apply_stat_bindings()  # This applies all STAT_BINDINGS
+    # Additional custom calculations here

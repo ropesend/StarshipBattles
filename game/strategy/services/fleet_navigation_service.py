@@ -6,6 +6,36 @@ PROJ-35: Unify Fleet Movement Logic
 This service consolidates navigation logic from FleetMovementSimulator and
 FleetMovementEngine to ensure UI path projection always matches actual turn execution.
 
+Migration Guide (from deprecated FleetMovementSimulator)
+--------------------------------------------------------
+FleetMovementSimulator was deprecated in PROJ-35 and removed in PROJ-42.
+Use FleetNavigationService instead:
+
+Before (deprecated):
+    from game.strategy.engine.fleet_movement import FleetMovementSimulator
+    simulator = FleetMovementSimulator()
+    path = simulator.project_path(fleet, galaxy)
+    next_hex = simulator.calculate_next_hex(fleet, galaxy)
+
+After (current):
+    from game.strategy.services.fleet_navigation_service import FleetNavigationService
+    nav_service = FleetNavigationService()
+    path = nav_service.project_path(fleet, galaxy)
+    next_hex = nav_service.calculate_fleet_next_hex(fleet, galaxy)
+
+API Mapping:
+    | Old (FleetMovementSimulator)   | New (FleetNavigationService)        | Notes                    |
+    |--------------------------------|-------------------------------------|--------------------------|
+    | project_path()                 | project_path()                      | Same signature           |
+    | calculate_path()               | compute_path()                      | Uses NavigationState     |
+    | calculate_next_hex()           | calculate_fleet_next_hex()          | Same behavior            |
+    | FleetState                     | NavigationState                     | Immutable (frozen)       |
+
+Key Differences:
+- NavigationState is immutable (frozen dataclass) - use NavigationState.from_fleet()
+- NavigationState includes can_warp field - eliminates fake fleet object hack
+- Methods are pure functions - no side effects on fleet object
+
 Key design decisions:
 - NavigationState is immutable (frozen dataclass) for pure function calculations
 - Core methods are stateless/pure (no side effects)

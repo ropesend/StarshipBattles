@@ -181,3 +181,101 @@ Applied modifiers are saved as:
 ```
 
 On load, effects are re-evaluated from the current modifier definitions.
+
+## API Reference
+
+### ModifierEffectEvaluator
+
+```python
+class ModifierEffectEvaluator:
+    @staticmethod
+    def evaluate_modifier(mod_def: dict, param_value: float) -> List[ModifierEffect]:
+        """Evaluate all effects in a modifier definition at a given parameter value.
+
+        Args:
+            mod_def: Modifier definition dict with 'effects' key
+            param_value: The parameter value to evaluate formulas with
+
+        Returns:
+            List of ModifierEffect instances with evaluated values
+        """
+
+    @staticmethod
+    def validate_formula(formula: str) -> List[str]:
+        """Validate a formula string for syntax and allowed variables.
+
+        Args:
+            formula: Formula string (e.g., "param ^ 2", "1.0 + param * 0.5")
+
+        Returns:
+            Empty list if valid, list of error messages if invalid
+        """
+```
+
+### ModifierEffect
+
+```python
+@dataclass
+class ModifierEffect:
+    stat_key: str           # Target stat (e.g., "damage_mult", "hp_mult")
+    value: float            # Evaluated numeric value
+    operation: str          # "multiply", "add", or "set"
+    target_ability: str     # Optional: ability class name for targeted effects
+    source_modifier_id: str # ID of the source modifier definition
+    formula_str: str        # Original formula string for UI display
+    param_value: float      # Parameter value used in evaluation
+```
+
+### ModifierIntrospection
+
+```python
+class ModifierIntrospection:
+    @staticmethod
+    def get_modifier_affects(mod_def: dict, component: Component, param_value: float) -> dict:
+        """Get a preview of how a modifier would affect a component.
+
+        Returns:
+            Dict with 'global_effects' and 'ability_effects' keys
+        """
+
+    @staticmethod
+    def get_component_modifier_summary(component: Component) -> dict:
+        """Get summary of all modifiers applied to a component.
+
+        Returns:
+            Dict with 'modifiers' list and 'total_effects' aggregation
+        """
+
+    @staticmethod
+    def generate_ability_stats_display(ability: Ability) -> List[dict]:
+        """Generate stat display data showing base vs current values.
+
+        Returns:
+            List of dicts with 'name', 'base', 'current', 'formatted' keys
+        """
+
+    @staticmethod
+    def generate_modifier_tooltip(mod_def: dict, param_value: float, component: Component) -> str:
+        """Generate a human-readable tooltip for a modifier.
+
+        Returns:
+            Formatted string describing modifier effects at given param value
+        """
+```
+
+### apply_modifier_effects
+
+```python
+def apply_modifier_effects(
+    component: Component,
+    effects: List[ModifierEffect],
+    reset_first: bool = True
+) -> None:
+    """Apply a list of modifier effects to a component's stats.
+
+    Args:
+        component: Target component to modify
+        effects: List of ModifierEffect instances to apply
+        reset_first: If True, reset stats to defaults before applying
+    """
+```
