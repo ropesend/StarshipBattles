@@ -15,7 +15,7 @@
 |-------|--------|-----------|
 | 1. Test Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. UI Layer Strictness | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Strategy Services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Strategy Services | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Data | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation Services | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Core Entities | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
@@ -23,11 +23,11 @@
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 3
-**Last Action:** Completed Phase 2 - UI Layer Strictness
-**Next Action:** Begin Phase 3 - Strategy Services
+**Active Phase:** Phase 4
+**Last Action:** Completed Phase 3 - Strategy Services
+**Next Action:** Begin Phase 4 - Strategy Data
 **Blockers:** None
-**Context:** UI layer updated for strict DI. Removed get_default_registry_provider imports from builder_widgets.py, workshop_screen.py, workshop_event_router.py, workshop_data_loader.py. Made registries parameter required. Updated 4 test files. 5782 tests passing (baseline preserved). 46 pre-existing failures unrelated to DI.
+**Context:** Strategy services updated for strict DI. Removed get_default_registry_provider from ship_stats_calculator.py, resource_management_engine.py. Made registries required. Updated TurnEngine to pass registries. Updated ShipInstance with fallback for tests. Updated 5 test files. 838 strategy tests passing. Pre-existing failures unrelated to DI.
 
 ## Overview
 Eliminate the "Service Locator" anti-pattern by removing `get_default_registry_provider()` and `_get_registries_fallback()`. Enforce mandatory `GameRegistries` injection in all core entities.

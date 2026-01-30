@@ -190,8 +190,20 @@ class ShipInstance:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-            # PROJ-42: Use instance pattern (no more static calling)
-            service = ShipStatsCalculator()
+            from game.core.registry import get_default_registries, RegistryManager, GameRegistries
+            # PROJ-50: Get registries with fallback for tests
+            try:
+                registries = get_default_registries()
+            except Exception:
+                # Fallback for tests that don't set up default registries
+                mgr = RegistryManager.instance()
+                registries = GameRegistries(
+                    components=mgr.components,
+                    modifiers=mgr.modifiers,
+                    vehicle_classes=mgr.vehicle_classes,
+                    resources={}
+                )
+            service = ShipStatsCalculator(registries=registries)
             self._cached_stats = service.calculate_stats(
                 self.design_data,
                 self.component_damage,

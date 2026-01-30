@@ -41,6 +41,7 @@ Example:
     )
 """
 from game.core.validation import ValidationResult
+from game.core.registry import GameRegistries, get_default_registries, RegistryManager
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -83,6 +84,7 @@ class TurnEngine:
         self,
         battle_resolver: Optional['IBattleResolver'] = None,
         *,
+        registries: Optional[GameRegistries] = None,
         movement_engine: Optional['IMovementEngine'] = None,
         production_engine: Optional['IProductionEngine'] = None,
         order_processor: Optional['IOrderProcessor'] = None,
@@ -93,10 +95,13 @@ class TurnEngine:
         Initialize the turn engine.
 
         PROJ-43 Phase 4: All engines can be injected for testing.
+        PROJ-50: Added registries parameter for DI to sub-engines.
 
         Args:
             battle_resolver: Optional battle resolver implementation.
                            If None, defaults to SimulationBattleResolver.
+            registries: Optional GameRegistries for DI. Falls back to
+                       get_default_registries() if None.
             movement_engine: Optional movement engine (IMovementEngine).
                            If None, creates FleetMovementEngine.
             production_engine: Optional production engine (IProductionEngine).
@@ -114,6 +119,23 @@ class TurnEngine:
             self._battle_resolver = SimulationBattleResolver()
         else:
             self._battle_resolver = battle_resolver
+
+        # PROJ-50: Store registries for passing to sub-engines
+        # Use get_default_registries() with fallback to RegistryManager for tests
+        if registries is not None:
+            self._registries = registries
+        else:
+            try:
+                self._registries = get_default_registries()
+            except Exception:
+                # Fallback for tests that don't set up default registries
+                mgr = RegistryManager.instance()
+                self._registries = GameRegistries(
+                    components=mgr.components,
+                    modifiers=mgr.modifiers,
+                    vehicle_classes=mgr.vehicle_classes,
+                    resources={}
+                )
 
         # PROJ-43 Phase 4: Store injected engines or None for lazy init
         self._movement_engine: Optional['IMovementEngine'] = movement_engine
@@ -159,7 +181,8 @@ class TurnEngine:
         """Return resource engine, lazily creating default if not injected."""
         if self._resource_engine is None:
             from game.strategy.engine.resource_management_engine import ResourceManagementEngine
-            self._resource_engine = ResourceManagementEngine()
+            # PROJ-50: Pass registries for strict DI
+            self._resource_engine = ResourceManagementEngine(registries=self._registries)
         return self._resource_engine
 
     def process_turn(self, empires, galaxy, save_path=None):

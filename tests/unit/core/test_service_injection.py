@@ -116,21 +116,14 @@ class TestShipStatsCalculatorInjection:
         assert isinstance(result, dict)
         assert 'max_hp' in result
 
-    def test_calculate_stats_uses_default_registries(self):
-        """calculate_stats() should use default registries when none provided."""
+    def test_constructor_requires_registries(self):
+        """ShipStatsCalculator should require registries (strict DI)."""
         from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
-        # Create service without explicit registries
-        service = ShipStatsCalculator()
-
-        design_data = {
-            "ship_class": "Escort",
-            "layers": {}
-        }
-
-        # Should work using default registries
-        result = service.calculate_stats(design_data)
-        assert isinstance(result, dict)
+        # PROJ-50: Should raise TypeError when registries is None
+        with pytest.raises(TypeError) as exc_info:
+            ShipStatsCalculator(registries=None)
+        assert "registries is required" in str(exc_info.value)
 
     def test_calculate_stats_uses_injected_vehicle_class_data(self):
         """Verify calculate_stats actually uses injected registry values."""

@@ -14,11 +14,8 @@ from dataclasses import dataclass
 from typing import List, Optional, TYPE_CHECKING
 
 from game.core.logger import log_info
-from game.core.registry import get_default_registry_provider
+from game.core.registry import GameRegistries
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-
-if TYPE_CHECKING:
-    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -42,14 +39,19 @@ class ResourceManagementEngine:
     - Auto-disabling components when resources run out
     """
 
-    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+    def __init__(self, *, registries: GameRegistries):
         """Initialize the resource management engine.
 
-        PROJ-38: Added registries parameter for DI.
+        PROJ-50: Made registries required (strict DI).
 
         Args:
-            registries: Optional GameRegistries for DI. Falls back to global functions if None.
+            registries: GameRegistries container. Required - no fallback.
+
+        Raises:
+            TypeError: If registries is None.
         """
+        if registries is None:
+            raise TypeError("registries is required for ResourceManagementEngine")
         self._registries = registries
 
     def process_per_turn_consumption(self, tick: int, empires) -> List[ResourceDepletion]:
@@ -110,11 +112,8 @@ class ResourceManagementEngine:
             List of component IDs that were disabled
         """
         disabled_components = []
-        # PROJ-38: Use injected registries or fallback to provider
-        if self._registries is not None:
-            registry = self._registries.components
-        else:
-            registry = get_default_registry_provider().get_components()
+        # PROJ-50: Use injected registries (strict DI)
+        registry = self._registries.components
         layers = ship.design_data.get('layers', {})
 
         for layer_name, components in layers.items():

@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 2 - UI Layer Strictness
+**Last Completed:** PROJ-50 Phase 3 - Strategy Services
 **Current Status:** PROJ-50 In Progress
 **Current Project:** PROJ-50
-**Current Phase:** Phase 3
-**Test Status:** 5782 passed (baseline preserved)
+**Current Phase:** Phase 4
+**Test Status:** 838 strategy passed, 5775+ total (baseline preserved)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 2 COMPLETE - UI Layer Strictness
-  - Removed get_default_registry_provider imports from 4 UI files
-  - Made registries parameter required in builder_widgets.py, workshop_data_loader.py
-  - Updated _get_vehicle_classes() methods to strict DI
-  - Updated callers: workshop_screen.py, builder/main.py
-  - Updated 4 test files to pass registries
-- Files modified: builder_widgets.py, workshop_screen.py, workshop_event_router.py, workshop_data_loader.py, builder/main.py, 4 test files
-- Test baseline: 5782 passed, 46 pre-existing failures
-- Next: Phase 3 - Strategy Services
+- PROJ-50 Phase 3 COMPLETE - Strategy Services
+  - Removed get_default_registry_provider from ShipStatsCalculator, ResourceManagementEngine
+  - Made registries parameter required (strict DI)
+  - Removed _get_registries_fallback() method from ShipStatsCalculator
+  - Updated TurnEngine to accept registries parameter and pass to ResourceManagementEngine
+  - Updated ShipInstance.get_calculated_stats() with fallback for tests
+  - Updated test files: test_service_injection.py, resource_management_engine/ (conftest, consumption, auto_disable, initialization)
+- Files modified: ship_stats_calculator.py, resource_management_engine.py, turn_engine.py, ship_instance.py, 5 test files
+- Next: Phase 4 - Strategy Data
 
 ---
 
@@ -116,6 +116,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-50 | Phase 3 | Complete | 838 strategy | 5a72ce16 | Strategy services: strict DI, 5 test files |
 | 2026-01-30 | PROJ-50 | Phase 2 | Complete | 5782 passed | 62044ecc | UI strictness: 4 files, registries required, 4 tests |
 | 2026-01-30 | PROJ-50 | Phase 1 | Complete | 5782 passed | 1752ae60 | Test infrastructure: mock_registries, ships.py, 8 repro tests |
 | 2026-01-30 | PROJ-49 | Audit Cycle 1 | PASSED | 5782 passed | pending | All 6 phases verified, project complete |

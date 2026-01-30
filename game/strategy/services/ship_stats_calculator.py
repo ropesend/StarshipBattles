@@ -16,9 +16,7 @@ Key design decisions:
 """
 
 from typing import Dict, Any, Optional, List, Tuple, TYPE_CHECKING
-from game.core.registry import (
-    get_default_registry_provider, get_default_registries, GameRegistries
-)
+from game.core.registry import GameRegistries
 from game.core.logger import log_warning
 
 if TYPE_CHECKING:
@@ -45,49 +43,30 @@ class ShipStatsCalculator:
     PROJ-42: Simplified to instance-only methods (removed static calling patterns).
 
     Usage:
-        # With explicit DI (preferred)
+        # With explicit DI (required)
         service = ShipStatsCalculator(registries=game_registries)
-        stats = service.calculate_stats(design_data)
-
-        # With default registries (uses fallback)
-        service = ShipStatsCalculator()
         stats = service.calculate_stats(design_data)
 
     This replaces reading from expected_stats with dynamic calculation
     that respects component damage state.
     """
 
-    def __init__(self, registries: Optional[GameRegistries] = None):
+    def __init__(self, registries: GameRegistries):
         """
-        Initialize ShipStatsCalculator with optional GameRegistries.
+        Initialize ShipStatsCalculator with required GameRegistries.
+
+        PROJ-50: Made registries parameter required (strict DI).
 
         Args:
             registries: GameRegistries container with components, modifiers,
-                       vehicle_classes. If None, uses fallback registries.
-        """
-        # PROJ-42: Simplified DI pattern with fallback
-        self._registries = registries if registries is not None else ShipStatsCalculator._get_registries_fallback()
+                       vehicle_classes. Required - no fallback.
 
-    @staticmethod
-    def _get_registries_fallback() -> GameRegistries:
+        Raises:
+            TypeError: If registries is None.
         """
-        Get registries for when none are explicitly provided.
-
-        PROJ-42: Tries get_default_registries() first, falls back to provider
-        (which shares mutable dict refs) for backward compatibility.
-        PROJ-45: Also catches StateException for new exception hierarchy.
-        """
-        from game.core.exceptions import StateException
-        try:
-            return get_default_registries()
-        except (RuntimeError, StateException):
-            provider = get_default_registry_provider()
-            return GameRegistries(
-                components=provider.get_components(),
-                modifiers=provider.get_modifiers(),
-                vehicle_classes=provider.get_vehicle_classes(),
-                resources={}
-            )
+        if registries is None:
+            raise TypeError("registries is required for ShipStatsCalculator")
+        self._registries = registries
 
     def calculate_stats(
         self,

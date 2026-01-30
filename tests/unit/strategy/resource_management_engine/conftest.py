@@ -1,9 +1,23 @@
 """
 Shared fixtures for ResourceManagementEngine tests.
+
+PROJ-50: Added mock_registries fixture for strict DI.
 """
 
 import pytest
 from unittest.mock import MagicMock
+from game.core.registry import GameRegistries
+
+
+@pytest.fixture
+def mock_registries():
+    """Create minimal registries for testing."""
+    return GameRegistries(
+        components={},
+        modifiers={},
+        vehicle_classes={},
+        resources={}
+    )
 
 
 @pytest.fixture

@@ -1,30 +1,43 @@
 """
 Tests for ResourceManagementEngine initialization and ResourceDepletion dataclass.
+
+PROJ-50: Updated to use strict DI (registries required).
 """
 
 import pytest
+from game.core.registry import GameRegistries
+
+
+@pytest.fixture
+def mock_registries():
+    """Create minimal registries for testing."""
+    return GameRegistries(
+        components={},
+        modifiers={},
+        vehicle_classes={},
+        resources={}
+    )
 
 
 class TestResourceManagementEngineInit:
     """Tests for ResourceManagementEngine initialization."""
 
-    def test_engine_can_be_created(self):
-        """ResourceManagementEngine can be instantiated."""
+    def test_engine_can_be_created(self, mock_registries):
+        """ResourceManagementEngine can be instantiated with registries."""
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
-        engine = ResourceManagementEngine()
+        engine = ResourceManagementEngine(registries=mock_registries)
 
         assert engine is not None
 
-    def test_engine_is_stateless(self):
-        """ResourceManagementEngine should be stateless."""
+    def test_engine_requires_registries(self):
+        """ResourceManagementEngine should require registries (strict DI)."""
         from game.strategy.engine.resource_management_engine import ResourceManagementEngine
 
-        engine = ResourceManagementEngine()
-
-        # Engine should have no significant state
-        # (no instance variables beyond methods)
-        assert not hasattr(engine, '_state') or engine._state is None
+        # PROJ-50: Should raise TypeError when registries is None
+        with pytest.raises(TypeError) as exc_info:
+            ResourceManagementEngine(registries=None)
+        assert "registries is required" in str(exc_info.value)
 
 
 class TestResourceDepletion:
