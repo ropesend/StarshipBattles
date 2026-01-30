@@ -273,7 +273,19 @@ def project_fleet_path(fleet, galaxy, max_turns=10):
     return service.project_path_as_dicts(fleet, galaxy, max_turns)
 
 class _ChaserProxy:
-    """Proxy object for find_hybrid_path that respects warp capability."""
+    """Adapter for find_hybrid_path that provides fleet-like interface.
+
+    This adapter normalizes Fleet and NavigationState objects to provide
+    the minimal interface needed by find_hybrid_path():
+    - id: Fleet identifier for logging
+    - can_use_warp(): Warp capability check
+
+    This is an intentional adapter pattern (not legacy compatibility) that
+    allows pure NavigationState objects to be used with pathfinding functions
+    that expect Fleet-like objects.
+
+    PROJ-42: Reviewed and kept as proper adapter pattern.
+    """
 
     def __init__(self, can_warp: bool, fleet_id):
         self._can_warp = can_warp

@@ -601,6 +601,13 @@ class Fleet:
                 fleet.path.append(p)
 
         # Restore orders
+        # Note: Multiple formats supported for save file compatibility:
+        # 1. {'q': x, 'r': y} - HexCoord.to_dict() format
+        # 2. {'type': 'coord', 'value': [x, y]} - Tuple coordinate format
+        # 3. {'type': 'fleet_ref', 'id': xxx} - Fleet reference for MOVE_TO_FLEET orders
+        # 4. {'type': 'raw', 'value': str} - Fallback string representation
+        # All formats are valid outputs from FleetOrder.to_dict() and must be preserved
+        # for backward compatibility with existing save files. (PROJ-42)
         for order_data in data.get('orders', []):
             order_type = OrderType[order_data['type']]
             target = None
@@ -609,15 +616,16 @@ class Fleet:
             if target_data is not None:
                 if isinstance(target_data, dict):
                     if 'q' in target_data and 'r' in target_data:
-                        # HexCoord
+                        # HexCoord.to_dict() format
                         target = HexCoord(target_data['q'], target_data['r'])
                     elif target_data.get('type') == 'coord':
-                        # Tuple-style coord
+                        # Tuple-style coord format
                         target = HexCoord(target_data['value'][0], target_data['value'][1])
                     elif target_data.get('type') == 'fleet_ref':
                         # Fleet reference - store ID for later resolution
                         target = {'_fleet_ref': target_data['id']}
                     elif target_data.get('type') == 'raw':
+                        # Raw string fallback
                         target = target_data['value']
 
             fleet.orders.append(FleetOrder(order_type, target))

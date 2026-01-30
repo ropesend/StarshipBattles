@@ -255,7 +255,17 @@ class BattleEngine:
             team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
             self.ai_controllers = team1_controllers + team2_controllers
         else:
-            # Legacy path: create controllers internally (backward compatibility)
+            # Legacy path: create controllers internally
+            # DEPRECATED: Use ai_controllers parameter or ai_factory for proper layer separation.
+            # This path exists for backward compatibility with tests and simple scenarios.
+            # Production code should use BattleOrchestrator to create controllers.
+            import warnings
+            warnings.warn(
+                "BattleEngine.start() without ai_controllers or ai_factory is deprecated. "
+                "Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).",
+                DeprecationWarning,
+                stacklevel=2
+            )
             from game.ai.controller import AIController
             from game.ai.interfaces import ShipControllableAdapter
 
@@ -318,6 +328,14 @@ class BattleEngine:
             self.ai_controllers.append(ai)
         else:
             # Legacy path: create controller internally
+            # DEPRECATED: Use ai_controller parameter or ai_factory for proper layer separation.
+            import warnings
+            warnings.warn(
+                "add_ship_mid_battle() without ai_controller or ai_factory is deprecated. "
+                "Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).",
+                DeprecationWarning,
+                stacklevel=2
+            )
             from game.ai.controller import AIController
             from game.ai.interfaces import ShipControllableAdapter
             enemy_team = 1 if team_id == 0 else 0
@@ -473,7 +491,10 @@ class BattleEngine:
                     ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
                     self.ai_controllers.append(ai)
                 else:
-                    # Legacy path: create controller internally
+                    # Legacy path: create controller internally for fighter launch
+                    # Note: This is acceptable for fighter launches since they happen
+                    # during battle when BattleOrchestrator is not available.
+                    # Consider passing ai_factory to BattleEngine for cleaner separation.
                     from game.ai.controller import AIController
                     from game.ai.interfaces import ShipControllableAdapter
                     self.ai_controllers.append(AIController(ShipControllableAdapter(new_ship), self.grid, enemy_team))

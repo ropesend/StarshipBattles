@@ -8,22 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 4 Complete
-**Current Status:** Phase 4 complete, ready for Phase 5
+**Last Completed:** PROJ-42 Phase 5 Complete
+**Current Status:** Phase 5 complete, ready for Phase 6
 **Current Project:** PROJ-42
-**Current Phase:** Phase 5 - BattleEngine & Scattered Compat Cleanup
+**Current Phase:** Phase 6 - Test Updates & Final Verification
 **Test Status:** 5360 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 4 completed: Standardized serialization formats
-- Removed legacy string format support in ship_serialization.py (dict-only now)
-- Added `_format_version: "2.0"` to serialized ships
-- Removed legacy list format support in formation_editor.py
-- Documented stats mismatch verification (not a compat issue)
-- Cleaned up getattr: vehicle_type direct access, strategic stats keep getattr (set in recalculate)
-- All 5360 tests passing
-- Next: Phase 5 - BattleEngine & Scattered Compat Cleanup
+- Phase 5 completed: BattleEngine & Scattered Compat Cleanup
+- Added deprecation warnings to BattleEngine legacy controller paths (start(), add_ship_mid_battle())
+- Documented fighter launch legacy path as acceptable (no orchestrator during battle)
+- Documented PathSegment 'hex' field as internal API consistency (used by pathfinding.py)
+- Documented _ChaserProxy as proper adapter pattern (not legacy compat)
+- Documented fleet order format deserializer for save file compatibility
+- Removed _get_legacy_crew_requirement() - no components use negative CrewCapacity
+- All 5360 tests passing (with expected deprecation warnings)
+- Next: Phase 6 - Test Updates & Final Verification
 
 ---
 
@@ -99,6 +100,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 5 Complete | Complete | 5360 passed | 1bdec33 | Deprecation warnings, documented patterns, removed legacy crew func |
 | 2026-01-29 | PROJ-42 | Phase 4 Complete | Complete | 5360 passed | a059f80 | Standardized serialization: dict-only, format version |
 | 2026-01-29 | PROJ-42 | Phase 3 Complete | Complete | 5360 passed | 225159d | Eliminated dual static/instance patterns in services |
 | 2026-01-29 | PROJ-42 | Phase 2 Complete | Complete | 925 passed | 2ed3fa1 | Tasks 2.6-2.8 verified complete, updated docstrings |

@@ -81,13 +81,18 @@ class PathSegment:
     is_warp: bool
 
     def to_dict(self) -> dict:
-        """Convert to dict for serialization and backward compatibility."""
+        """Convert to dict for serialization.
+
+        Note: The 'hex' field duplicates 'end' for consistency with internal
+        path projection code in pathfinding.py that accesses pt['hex'].
+        This is not external backward compatibility - it's internal API consistency.
+        """
         return {
             'start': self.start,
             'end': self.end,
             'turn': self.turn,
             'is_warp': self.is_warp,
-            'hex': self.end  # Legacy field for backward compatibility
+            'hex': self.end  # Alias for 'end', used by pathfinding.py intercept calculation
         }
 
 

@@ -64,23 +64,13 @@ def fmt_score(val):
     return f"+{val:.1f}" if val >= 0 else f"{val:.1f}"
 
 # --- Helpers ---
-def _get_legacy_crew_requirement(ship):
-    """Get crew requirement from negative CrewCapacity values (legacy pattern).
-
-    Some older components use negative CrewCapacity to indicate crew requirements
-    instead of the newer CrewRequired ability. This helper extracts that value.
-
-    Returns 0 if CrewCapacity is non-negative.
-    """
-    crew_capacity = ship.get_ability_total('CrewCapacity')
-    if crew_capacity < 0:
-        return abs(crew_capacity)
-    return 0
-
-
 def _get_total_crew_requirement(ship):
-    """Get total crew requirement from both CrewRequired and legacy patterns."""
-    return ship.get_ability_total('CrewRequired') + _get_legacy_crew_requirement(ship)
+    """Get total crew requirement from CrewRequired ability.
+
+    Note: Legacy pattern using negative CrewCapacity was removed in PROJ-42
+    as no components in components.json use that pattern.
+    """
+    return ship.get_ability_total('CrewRequired')
 
 
 # --- Validators ---

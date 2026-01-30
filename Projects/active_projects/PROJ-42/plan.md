@@ -17,14 +17,14 @@
 | 2. Complete PROJ-38 Registry Migration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Eliminate Dual Static/Instance Patterns | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Clean Up Serialization & Format Support | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. BattleEngine & Scattered Compat Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. BattleEngine & Scattered Compat Cleanup | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Test Updates & Final Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-29
-**Active Phase:** Phase 4 Complete
-**Last Action:** Completed Phase 4 - Removed legacy format support, added format versioning
-**Next Action:** Phase 5 - BattleEngine & Scattered Compat Cleanup
+**Active Phase:** Phase 5 Complete
+**Last Action:** Completed Phase 5 - Added deprecation warnings to legacy paths, documented patterns, removed unused legacy crew function
+**Next Action:** Phase 6 - Test Updates & Final Verification
 **Blockers:** None
 
 ## Overview
