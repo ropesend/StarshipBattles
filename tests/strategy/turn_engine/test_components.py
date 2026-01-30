@@ -1,0 +1,314 @@
+"""Turn engine component tests - auto-disable logic and toggle integration."""
+import pytest
+import logging
+from game.strategy.engine.turn_engine import TurnEngine
+from unittest.mock import MagicMock, patch
+
+from .conftest import create_mock_ship_instance, create_mock_component_def
+
+
+class TestAutoDisableLogic:
+    """Group 5.3: Auto-Disable Logic Tests"""
+
+    def test_auto_disable_finds_components_with_per_turn_trigger(self):
+        """Verify auto-disable finds and disables components with per_turn trigger."""
+        engine = TurnEngine()
+
+        # Create ship with a component that has per_turn energy consumption
+        ship = create_mock_ship_instance(
+            design_data={
+                'name': 'TestShip',
+                'layers': {
+                    'CORE': [{'id': 'shield_generator'}]
+                }
+            }
+        )
+        ship.set_component_enabled = MagicMock()
+
+        # Mock registry to return component with per_turn ability
+        mock_comp_def = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'energy',
+                    'amount': 10
+                }
+            }
+        )
+
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
+
+            ship.set_component_enabled.assert_called_once_with('shield_generator', False)
+
+    def test_auto_disable_multiple_components_same_resource(self):
+        """Verify multiple components using same resource are all disabled."""
+        engine = TurnEngine()
+
+        ship = create_mock_ship_instance(
+            design_data={
+                'name': 'TestShip',
+                'layers': {
+                    'CORE': [{'id': 'comp_a'}, {'id': 'comp_b'}, {'id': 'comp_c'}]
+                }
+            }
+        )
+        ship.set_component_enabled = MagicMock()
+
+        # Two components use energy, one uses fuel
+        mock_energy_comp = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'energy',
+                    'amount': 5
+                }
+            }
+        )
+        mock_fuel_comp = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'fuel',
+                    'amount': 5
+                }
+            }
+        )
+
+        def get_mock_comp(comp_id):
+            if comp_id in ['comp_a', 'comp_b']:
+                return mock_energy_comp
+            return mock_fuel_comp
+
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = get_mock_comp
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
+
+            # Should disable comp_a and comp_b (energy), not comp_c (fuel)
+            calls = ship.set_component_enabled.call_args_list
+            assert len(calls) == 2
+            disabled_ids = [call[0][0] for call in calls]
+            assert 'comp_a' in disabled_ids
+            assert 'comp_b' in disabled_ids
+            assert 'comp_c' not in disabled_ids
+
+    def test_auto_disable_skips_unregistered_components(self):
+        """Verify unregistered components don't cause errors."""
+        engine = TurnEngine()
+
+        ship = create_mock_ship_instance(
+            design_data={
+                'name': 'TestShip',
+                'layers': {
+                    'CORE': [{'id': 'unknown_component'}]
+                }
+            }
+        )
+        ship.set_component_enabled = MagicMock()
+
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=None)
+            # Should not raise exception
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
+            ship.set_component_enabled.assert_not_called()
+
+    def test_auto_disable_handles_layer_formats(self):
+        """Verify auto-disable handles both list and dict layer formats."""
+        engine = TurnEngine()
+
+        # Mixed layer formats
+        ship = create_mock_ship_instance(
+            design_data={
+                'name': 'TestShip',
+                'layers': {
+                    'CORE': [{'id': 'comp_list'}],
+                    'INNER': {'components': [{'id': 'comp_dict'}]}
+                }
+            }
+        )
+        ship.set_component_enabled = MagicMock()
+
+        mock_comp_def = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'energy',
+                    'amount': 10
+                }
+            }
+        )
+
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
+
+            # Both formats should be handled
+            calls = ship.set_component_enabled.call_args_list
+            assert len(calls) == 2
+            disabled_ids = [call[0][0] for call in calls]
+            assert 'comp_list' in disabled_ids
+            assert 'comp_dict' in disabled_ids
+
+    def test_auto_disable_invalidates_stats_cache(self):
+        """Verify auto-disable invalidates the ship's stats cache."""
+        engine = TurnEngine()
+
+        ship = create_mock_ship_instance(
+            design_data={
+                'name': 'TestShip',
+                'layers': {
+                    'CORE': [{'id': 'test_comp'}]
+                }
+            }
+        )
+
+        # Track if invalidate was called via set_component_enabled
+        invalidate_called = []
+        original_set = ship.set_component_enabled
+        def tracking_set(comp_id, enabled):
+            ship.component_toggles[comp_id] = enabled
+            ship._cached_stats = None  # This is what set_component_enabled does
+            invalidate_called.append(comp_id)
+        ship.set_component_enabled = tracking_set
+
+        mock_comp_def = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'energy',
+                    'amount': 10
+                }
+            }
+        )
+
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
+            # Populate cache first
+            ship._cached_stats = {'some': 'cached_data'}
+
+            engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
+
+            # Cache should be invalidated
+            assert ship._cached_stats is None
+            assert len(invalidate_called) == 1
+
+    def test_auto_disable_logs_info_message(self, caplog):
+        """Verify auto-disable logs an info message for each disabled component."""
+        engine = TurnEngine()
+
+        ship = create_mock_ship_instance(
+            name="TestCruiser",
+            design_data={
+                'name': 'TestCruiser',
+                'layers': {
+                    'CORE': [{'id': 'shield_gen'}]
+                }
+            }
+        )
+        ship.set_component_enabled = MagicMock()
+
+        mock_comp_def = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'energy',
+                    'amount': 10
+                }
+            }
+        )
+
+        with patch('game.strategy.engine.resource_management_engine.get_default_registry_provider') as mock_provider:
+            mock_provider.return_value.get_components.return_value.get = MagicMock(return_value=mock_comp_def)
+            with caplog.at_level(logging.INFO):
+                engine.resource_engine._auto_disable_components_for_resource(ship, 'energy')
+
+                # Check that appropriate log message was created
+                assert any('TestCruiser' in record.message and
+                          'shield_gen' in record.message and
+                          'energy' in record.message
+                          for record in caplog.records)
+
+
+class TestComponentToggleIntegration:
+    """Group 5.6: Component Toggle Integration Tests"""
+
+    def test_disabled_component_not_consumed_per_turn(self):
+        """Verify disabled components don't contribute to per-turn consumption."""
+        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+        from game.core.registry import GameRegistries
+
+        # Create design with a component that has per-turn consumption
+        design_data = {
+            'name': 'TestShip',
+            'layers': {
+                'CORE': [{'id': 'energy_consumer'}]
+            }
+        }
+
+        mock_comp_def = create_mock_component_def(
+            abilities={
+                'ResourceConsumption': {
+                    'trigger': 'per_turn',
+                    'resource': 'energy',
+                    'amount': 20
+                }
+            },
+            max_hp=100,
+            mass=10
+        )
+
+        # PROJ-42: Create mock registries and use instance pattern
+        registries = GameRegistries(
+            components={'energy_consumer': mock_comp_def},
+            modifiers={},
+            vehicle_classes={},
+            resources={}
+        )
+        service = ShipStatsCalculator(registries=registries)
+
+        # Component enabled - should have consumption
+        enabled_stats = service.calculate_stats(
+            design_data,
+            component_damage={},
+            component_toggles={'energy_consumer': True}
+        )
+
+        # Component disabled - should not have consumption
+        disabled_stats = service.calculate_stats(
+            design_data,
+            component_damage={},
+            component_toggles={'energy_consumer': False}
+        )
+
+        # Enabled should have the per-turn cost
+        assert enabled_stats['resource_consumption_per_turn'].get('energy', 0) == 20.0
+
+        # Disabled should have zero per-turn cost
+        assert disabled_stats['resource_consumption_per_turn'].get('energy', 0) == 0.0
+
+    def test_auto_disabled_component_reenabled_via_manual_toggle(self):
+        """Verify manually re-enabling an auto-disabled component works."""
+        from game.strategy.data.ship_instance import ShipInstance
+
+        ship = ShipInstance(
+            instance_id='test-1',
+            design_id='TestShip',
+            name='TestShip',
+            owner_id=0,
+            design_data={
+                'name': 'TestShip',
+                'layers': {'CORE': [{'id': 'shield_gen'}]}
+            }
+        )
+
+        # Simulate auto-disable
+        ship.set_component_enabled('shield_gen', False)
+        assert ship.is_component_enabled('shield_gen') is False
+
+        # Manual re-enable
+        ship.set_component_enabled('shield_gen', True)
+        assert ship.is_component_enabled('shield_gen') is True
+
+        # Verify toggles dict state
+        assert ship.component_toggles.get('shield_gen') is True

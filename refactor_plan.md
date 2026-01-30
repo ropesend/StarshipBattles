@@ -8,7 +8,7 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (4 of 20 files split)
+**Last Completed:** PROJ-48 Phase 3 Task 3.2 partial (6 of 20 files split)
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
@@ -18,13 +18,15 @@
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
-  - Task 3.2 In Progress: Split 4 of 20 severe monoliths
+  - Task 3.2 In Progress: Split 6 of 20 severe monoliths
     - test_pathfinding.py (996 LOC) -> 3 files (55 tests)
     - test_registry.py (973 LOC) -> 3 files (69 tests)
     - test_research_scene.py (954 LOC) -> 3 files (30 tests)
     - test_collision_edge_cases.py (949 LOC) -> 3 files (32 tests)
+    - test_turn_engine_strategy.py (932 LOC) -> 3 files (27 tests)
+    - test_modifier_ability_snapshots.py (907 LOC) -> 2 files (70 tests)
 - Remaining Phase 3 work:
-  - Task 3.2: 16 more severe monoliths (700-1000 LOC)
+  - Task 3.2: 14 more severe monoliths (700-1000 LOC)
   - Task 3.3: 26 moderate monoliths (500-700 LOC)
 - Next: Continue Task 3.2 - Split more severe monoliths
 - Note: 46 failures + 12 errors are pre-existing (same as before changes)
@@ -119,6 +121,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 0c504e8e | Split turn_engine_strategy + modifier_snapshots -> 5 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 884224ed | Split research_scene + collision -> 6 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.2 partial | Complete | 5734 passed | 4f070184 | Split pathfinding + registry -> 6 files |
 | 2026-01-30 | PROJ-48 | Phase 3 Task 3.1.4 | Complete | 70 passed | d5094c2e | Split test_fleet.py -> 3 files |
