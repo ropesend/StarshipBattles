@@ -61,7 +61,7 @@ import math
 import threading
 from game.simulation.formula_system import evaluate_math_formula
 from typing import Optional, TYPE_CHECKING
-from game.core.registry import get_default_registry_provider, get_default_registries
+from game.core.registry import get_default_registry_provider, get_default_registries, GameRegistries
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
@@ -77,6 +77,26 @@ MODIFIER_REGISTRY = get_default_registry_provider().get_modifiers()
 
 
 class Component:
+
+    @staticmethod
+    def _get_default_registries() -> 'GameRegistries':
+        """
+        Get default registries for Component operations.
+
+        PROJ-42: Tries get_default_registries() first, falls back to provider
+        for backward compatibility during the transition period.
+        """
+        try:
+            return get_default_registries()
+        except RuntimeError:
+            provider = get_default_registry_provider()
+            return GameRegistries(
+                components=provider.get_components(),
+                modifiers=provider.get_modifiers(),
+                vehicle_classes=provider.get_vehicle_classes(),
+                resources={}
+            )
+
     def __init__(self, data, *, registries: Optional['GameRegistries'] = None):
         """
         Initialize Component with data and optional registries.
@@ -91,15 +111,8 @@ class Component:
         import copy
         self.data = copy.deepcopy(data) # Store raw data for reference/cloning
 
-        # PROJ-38: Store registries for modifier operations
-        if registries is not None:
-            self._registries = registries
-        else:
-            try:
-                self._registries = get_default_registries()
-            except RuntimeError:
-                # Default registries not set yet - will use legacy pattern in methods
-                self._registries = None
+        # PROJ-42: Use DI pattern - either explicit or default registries
+        self._registries = registries if registries is not None else Component._get_default_registries()
         self.id = data['id']
         self.name = data['name']
         self.base_mass = data['mass']
@@ -148,12 +161,9 @@ class Component:
         self._instantiate_abilities()
         
         # Load default modifiers from data definition
-        # PROJ-38: Use injected registries if available
+        # PROJ-42: Use injected registries
         if 'modifiers' in self.data:
-            if self._registries is not None:
-                mods = self._registries.modifiers
-            else:
-                mods = get_default_registry_provider().get_modifiers()
+            mods = self._registries.modifiers
             for mod_data in self.data['modifiers']:
                 mod_id = mod_data['id']
                 val = mod_data.get('value', None)
@@ -411,11 +421,8 @@ class Component:
         return result
 
     def add_modifier(self, mod_id, value=None):
-        # PROJ-38: Use injected registries if available, else provider fallback
-        if self._registries is not None:
-            mods = self._registries.modifiers
-        else:
-            mods = get_default_registry_provider().get_modifiers()
+        # PROJ-42: Use injected registries
+        mods = self._registries.modifiers
         if mod_id not in mods: return False
 
         # Check restrictions
@@ -854,11 +861,11 @@ def create_component(component_id, *, registries: Optional['GameRegistries'] = N
     Returns:
         Component clone or None if not found
     """
-    # PROJ-38: Use injected registries if provided, else provider
+    # PROJ-42: Use injected registries if provided, else default registries
     if registries is not None:
         comps = registries.components
     else:
-        comps = get_default_registry_provider().get_components()
+        comps = Component._get_default_registries().components
 
     if component_id in comps:
         clone = comps[component_id].clone()
@@ -871,5 +878,5 @@ def create_component(component_id, *, registries: Optional['GameRegistries'] = N
 
 def get_all_components():
     """Get a list of all components in the registry."""
-    return list(get_default_registry_provider().get_components().values())
+    return list(Component._get_default_registries().components.values())
 

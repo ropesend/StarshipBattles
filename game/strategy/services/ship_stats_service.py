@@ -65,23 +65,30 @@ class ShipStatsService:
 
         Args:
             registries: GameRegistries container with components, modifiers,
-                       vehicle_classes. If None, falls back to get_default_registries().
+                       vehicle_classes. If None, uses get_default_registries().
         """
-        if registries is not None:
-            self._registries = registries
-        else:
-            # Transitional fallback to default registries
-            try:
-                self._registries = get_default_registries()
-            except RuntimeError:
-                # Default registries not set yet - create from provider
-                provider = get_default_registry_provider()
-                self._registries = GameRegistries(
-                    components=provider.get_components(),
-                    modifiers=provider.get_modifiers(),
-                    vehicle_classes=provider.get_vehicle_classes(),
-                    resources={}
-                )
+        # PROJ-42: Use DI pattern - either explicit or default registries
+        self._registries = registries if registries is not None else get_default_registries()
+
+    @staticmethod
+    def _get_registries_for_static_call() -> GameRegistries:
+        """
+        Get registries for static method calls.
+
+        PROJ-42: Tries get_default_registries() first, falls back to provider
+        for backward compatibility during the transition period.
+        """
+        try:
+            return get_default_registries()
+        except RuntimeError:
+            # Fallback for backward compat when default registries not set
+            provider = get_default_registry_provider()
+            return GameRegistries(
+                components=provider.get_components(),
+                modifiers=provider.get_modifiers(),
+                vehicle_classes=provider.get_vehicle_classes(),
+                resources={}
+            )
 
     def calculate_stats(
         self_or_design,
@@ -155,14 +162,18 @@ class ShipStatsService:
             )
             reg = component_toggles_or_registry if component_toggles_or_registry is not None else registry
             # PROJ-27: Use injected registry if provided, else use provider
+            # PROJ-42: Use GameRegistries for static calls
             if reg is not None and hasattr(reg, 'get_vehicle_classes'):
+                # Legacy IRegistryProvider support
                 vehicle_classes = reg.get_vehicle_classes()
                 modifier_registry = reg.get_modifiers()
+                iterate_components = lambda d: ShipStatsService._iterate_design_components(d, reg)
             else:
-                provider = get_default_registry_provider()
-                vehicle_classes = provider.get_vehicle_classes()
-                modifier_registry = provider.get_modifiers()
-            iterate_components = lambda d: ShipStatsService._iterate_design_components(d, reg)
+                # Use default registries, fall back to provider for backward compat
+                default_regs = ShipStatsService._get_registries_for_static_call()
+                vehicle_classes = default_regs.vehicle_classes
+                modifier_registry = default_regs.modifiers
+                iterate_components = lambda d: ShipStatsService._iterate_design_components_from_registries(d, default_regs)
 
         # Use the resolved values
         component_damage = _component_damage
@@ -465,11 +476,11 @@ class ShipStatsService:
             # Static-style call: ShipStatsService._iterate_design_components(design, registry)
             design_data = self_or_design
             reg = design_or_registry if design_or_registry is not None else registry
-            # PROJ-27: Use injected registry if provided, else use provider
+            # PROJ-42: Use injected registry if provided, else use default registries
             if reg is not None and hasattr(reg, 'get_components'):
                 component_registry = reg.get_components()
             else:
-                component_registry = get_default_registry_provider().get_components()
+                component_registry = ShipStatsService._get_registries_for_static_call().components
 
         result = []
         layers = design_data.get('layers', {})
@@ -481,6 +492,44 @@ class ShipStatsService:
             components = layer_components
 
             for comp_entry in components:
+                comp_id = comp_entry.get('id', '')
+                comp_def = component_registry.get(comp_id)
+
+                if comp_def is None:
+                    log_warning(f"Component '{comp_id}' not found in registry, skipping")
+                    continue
+
+                result.append((layer_name, comp_entry, comp_def))
+
+        return result
+
+    @staticmethod
+    def _iterate_design_components_from_registries(
+        design_data: Dict[str, Any],
+        registries: GameRegistries
+    ) -> List[Tuple[str, Dict[str, Any], Any]]:
+        """
+        Iterate through all components in a design using GameRegistries.
+
+        PROJ-42: New method for static calls using GameRegistries instead of provider.
+
+        Args:
+            design_data: Serialized ship design containing 'layers' dict
+            registries: GameRegistries with component definitions
+
+        Returns:
+            List of tuples (layer_name, component_entry, component_def)
+            where component_def is the registry definition or None if not found
+        """
+        result = []
+        layers = design_data.get('layers', {})
+        component_registry = registries.components
+
+        for layer_name, layer_components in layers.items():
+            if not isinstance(layer_components, list):
+                continue
+
+            for comp_entry in layer_components:
                 comp_id = comp_entry.get('id', '')
                 comp_def = component_registry.get(comp_id)
 
