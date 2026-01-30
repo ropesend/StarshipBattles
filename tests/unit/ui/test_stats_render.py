@@ -67,10 +67,10 @@ class TestStatsRender:
         pygame_gui.elements.UIScrollingContainer = MagicMock()
 
         try:
-            if 'ui.builder.right_panel' in sys.modules:
-                importlib.reload(sys.modules['ui.builder.right_panel'])
+            if 'game.ui.screens.builder.right_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
-            from ui.builder.right_panel import BuilderRightPanel
+            from game.ui.screens.builder.right_panel import BuilderRightPanel
 
             # Create Panel
             panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
@@ -143,7 +143,7 @@ class TestStatsRender:
              if 'ui.builder.right_panel' in sys.modules:
                  importlib.reload(sys.modules['ui.builder.right_panel'])
 
-             from ui.builder.right_panel import BuilderRightPanel
+             from game.ui.screens.builder.right_panel import BuilderRightPanel
 
              # Register resources...
              self.builder.ship.resources.register_storage('fuel', 100)

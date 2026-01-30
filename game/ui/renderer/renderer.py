@@ -45,7 +45,7 @@ def draw_ship(surface, ship, camera):
     from game.ui.assets import ShipThemeManager
     theme_mgr = ShipThemeManager.instance()
     theme_id = getattr(ship, 'theme_id', 'Federation')
-    ship_img = theme_mgr.get_image(theme_id, ship.ship_class)
+    ship_img = theme_mgr.load_image(theme_id, ship.ship_class)
     
     drawn_image = False
     

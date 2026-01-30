@@ -10,9 +10,9 @@ from typing import Optional, TYPE_CHECKING
 from game.core.registry import get_default_registry_provider
 from game.core.logger import log_info, log_debug
 
-from ui.builder.modifier_logic import ModifierLogic
-from ui.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
-from ui.builder.modifier_row import ModifierControlRow
+from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.screens.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
+from game.ui.screens.builder.modifier_row import ModifierControlRow
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries

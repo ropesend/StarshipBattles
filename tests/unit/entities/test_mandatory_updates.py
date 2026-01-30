@@ -4,7 +4,7 @@ from unittest.mock import patch
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import Modifier
 from game.core.registry import RegistryManager
-from ui.builder.modifier_logic import ModifierLogic
+from game.ui.screens.builder.modifier_logic import ModifierLogic
 
 
 class TestMandatoryUpdates:

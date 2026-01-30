@@ -16,7 +16,7 @@ class AssetManager:
 
     Usage:
         manager = AssetManager.instance()
-        image = manager.get_image("category", "key")
+        image = manager.load_image("category", "key")
 
     Testing:
         - Use reset() to destroy instance completely
@@ -85,8 +85,8 @@ class AssetManager:
         else:
             log_error(f"Failed to load asset manifest from {self.manifest_path}")
 
-    def get_image(self, category, key):
-        """Get a single image. Loads if not cached."""
+    def load_image(self, category, key):
+        """Load a single image from the manifest. Returns cached copy if available."""
         # Check cache
         cache_key = f"{category}.{key}"
         if cache_key in self.assets:
@@ -110,8 +110,8 @@ class AssetManager:
             log_error(f"Failed to load image {file_path} (pygame error): {e}")
             return self.get_missing_texture()
 
-    def get_group(self, category, group_key):
-        """Get a list of images (e.g., planet variations)."""
+    def load_group(self, category, group_key):
+        """Load a group of images (e.g., planet variations). Returns cached copy if available."""
         cache_key = f"{category}.{group_key}"
         if cache_key in self.assets:
             return self.assets[cache_key]
@@ -138,7 +138,7 @@ class AssetManager:
         
     def get_random_from_group(self, category, group_key, seed_id=None):
         """Get a specific item from a group deterministically using an ID."""
-        group = self.get_group(category, group_key)
+        group = self.load_group(category, group_key)
         if not group:
             return self.get_missing_texture()
 

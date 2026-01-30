@@ -10,7 +10,7 @@ os.environ['SDL_VIDEODRIVER'] = 'dummy'
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, load_modifiers, get_all_components
-from ui.builder.left_panel import BuilderLeftPanel
+from game.ui.screens.builder.left_panel import BuilderLeftPanel
 
 
 @pytest.fixture(scope="module")

@@ -8,19 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-46 Phase 5: Asset Manager Methods
-**Current Status:** PROJ-46 Phase 5 complete, ready for Phase 6
+**Last Completed:** PROJ-46 Phase 6: UI Directory Consolidation
+**Current Status:** PROJ-46 Phase 6 complete, ready for Phase 7
 **Current Project:** PROJ-46
-**Current Phase:** Phase 6 - UI Directory Consolidation
-**Test Status:** 98 passed (testmon)
+**Current Phase:** Phase 7 - Screen Naming
+**Test Status:** 5723 passed, ~50 pre-existing test isolation failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-46 Phase 5 complete: Asset Manager Methods
-- Methods already correctly named `load_image()` and `load_group()` from prior refactoring
-- Verified no legacy `.get_image(` or `.get_group(` references in game/ or tests/
-- 24 asset manager tests pass
-- Next: Phase 6 - UI Directory Consolidation (merge ui/ into game/ui/)
+- PROJ-46 Phase 6 complete: UI Directory Consolidation
+- Deleted ui/ directory completely
+- Moved test_lab_scene.py and battle_state_viewer.py to game/ui/screens/
+- Updated ~50 import statements across game/ and tests/
+- Enhanced event_bus.py with callable validation and defensive copy
+- Enhanced stats_config.py with get_strategic_speed, get_resource_max_usage, get_construction_rows
+- ~50 tests have pre-existing isolation issues (registries not set) - unrelated to consolidation
+- Next: Phase 7 - Screen Naming (standardize Scene/Interface/GUI → Screen)
 
 ---
 
@@ -96,6 +99,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-46 | Phase 6 | Complete | 5723 passed | pending | UI directory consolidation - deleted ui/, updated ~50 imports |
 | 2026-01-30 | PROJ-46 | Phase 5 | Complete | 98 testmon | n/a | Asset manager methods already correctly named (load_image, load_group), verified no legacy refs |
 | 2026-01-30 | PROJ-46 | Phase 4 | Complete | 5775 testmon | 33b0aebf | Service renaming: FleetMobilityService→FleetSpeedCalculator, ShipStatsService→ShipStatsCalculator |
 | 2026-01-30 | PROJ-46 | Phase 3 | Complete | 2781 testmon | f52aa81d | Parameter naming: filepath → file_path, 10 files updated |

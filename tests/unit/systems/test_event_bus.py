@@ -1,7 +1,7 @@
 """Tests for the EventBus class."""
 import pytest
 from unittest.mock import patch, MagicMock
-from ui.builder.event_bus import EventBus
+from game.ui.screens.builder.event_bus import EventBus
 
 
 class TestEventBus:
@@ -131,7 +131,7 @@ class TestEventBusMultipleSubscribers:
 class TestEventBusErrorHandling:
     """Tests for error handling in event handlers."""
 
-    @patch('ui.builder.event_bus.log_error')
+    @patch('game.ui.screens.builder.event_bus.log_error')
     def test_error_in_handler_uses_logger(self, mock_log_error):
         """Handler exceptions are logged, not printed."""
         bus = EventBus()

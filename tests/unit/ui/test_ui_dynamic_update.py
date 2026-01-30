@@ -8,7 +8,7 @@ import sys
 
 
 from game.simulation.entities.ship import Ship
-from ui.builder.right_panel import BuilderRightPanel
+from game.ui.screens.builder.right_panel import BuilderRightPanel
 
 
 class TestUIDynamicUpdate:

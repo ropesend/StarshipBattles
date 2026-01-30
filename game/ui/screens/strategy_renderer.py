@@ -301,7 +301,7 @@ class StrategyRenderer:
 
                     from game.assets.asset_manager import get_asset_manager
                     am = get_asset_manager()
-                    star_img = am.get_image('stars', asset_key)
+                    star_img = am.load_image('stars', asset_key)
 
                     screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
 

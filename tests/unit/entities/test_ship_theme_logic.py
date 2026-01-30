@@ -47,15 +47,15 @@ class TestShipThemeLogic:
         assert isinstance(fallback, pygame.Surface)
         assert fallback.get_size() == (100, 100)
 
-    def test_get_image_fallback_behavior(self):
-        """Test get_image returns fallback when not loaded or theme missing."""
+    def test_load_image_fallback_behavior(self):
+        """Test load_image returns fallback when not loaded or theme missing."""
         # Not loaded yet
-        img = self.manager.get_image("AnyTheme", "AnyClass")
+        img = self.manager.load_image("AnyTheme", "AnyClass")
         assert img.get_size() == (100, 100)
 
         # Pretend loaded but theme missing
         self.manager.loaded = True
-        img = self.manager.get_image("NonExistentTheme", "AnyClass")
+        img = self.manager.load_image("NonExistentTheme", "AnyClass")
         assert img.get_size() == (100, 100)
 
     @patch('game.ui.assets.ship_theme_manager.log_error')

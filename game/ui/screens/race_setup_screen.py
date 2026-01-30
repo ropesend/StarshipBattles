@@ -405,7 +405,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self._ship_preview_elements.append(label)
 
             # Get top-down (skin) image
-            skin_surf = theme_manager.get_image(theme_id, ship_class)
+            skin_surf = theme_manager.load_image(theme_id, ship_class)
             log_debug(f"Ship {ship_class}: skin_surf={skin_surf is not None}")
             if skin_surf:
                 # Scale to preview size

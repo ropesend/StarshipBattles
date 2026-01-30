@@ -5,3 +5,5 @@ from .components import ComponentListItem
 from .layer_panel import LayerPanel
 from .component_ref import ComponentRef
 from .state_manager import BuilderStateManager
+from .detail_panel import ComponentDetailPanel
+from .modifier_logic import ModifierLogic

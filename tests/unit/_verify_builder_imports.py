@@ -9,7 +9,7 @@ sys.path.append(os.getcwd())
 
 try:
     # Attempt to import the modified modules
-    from ui.builder import BuilderLeftPanel, ComponentListItem
+    from game.ui.screens.builder import BuilderLeftPanel, ComponentListItem
     from game.ui.screens.builder.main import BuilderSceneGUI
     print("Imports successful.")
 except Exception as e:

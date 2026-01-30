@@ -16,7 +16,7 @@ class ShipThemeManager:
 
     Usage:
         manager = ShipThemeManager.instance()
-        surface = manager.get_image("Federation", "Escort")
+        surface = manager.load_image("Federation", "Escort")
 
     Testing:
         - Use reset() to destroy instance completely
@@ -154,8 +154,8 @@ class ShipThemeManager:
         except (KeyError, TypeError, ValueError) as e:
             log_error(f"Failed to discover theme {theme_dir}: {e}")
 
-    def get_image(self, theme_name, ship_class):
-        """Get the image surface for a specific theme and class."""
+    def load_image(self, theme_name, ship_class):
+        """Load the image surface for a specific theme and class. Returns cached copy if available."""
         if not self.discovery_complete:
             return self._create_fallback_image(ship_class)
             
@@ -215,8 +215,8 @@ class ShipThemeManager:
             if theme_name in self.image_metrics and ship_class in self.image_metrics[theme_name]:
                 return self.image_metrics[theme_name][ship_class]
 
-        # Call get_image (which handles locking internally and calculates metrics if successful)
-        surf = self.get_image(theme_name, ship_class)
+        # Call load_image (which handles locking internally and calculates metrics if successful)
+        surf = self.load_image(theme_name, ship_class)
         
         # Re-check cache with lock
         with self._io_lock:

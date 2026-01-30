@@ -194,7 +194,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
 
         # Ship preview (top-down view)
         if race.theme_id:
-            ship_surf = theme_manager.get_image(race.theme_id, "Cruiser")
+            ship_surf = theme_manager.load_image(race.theme_id, "Cruiser")
             if ship_surf:
                 # Scale to preview size
                 w, h = ship_surf.get_size()

@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
-from ui.builder.layer_panel import LayerComponentItem, IndividualComponentItem
+from game.ui.screens.builder.layer_panel import LayerComponentItem, IndividualComponentItem
 from game.ui.screens.workshop_screen import DesignWorkshopGUI
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship

@@ -79,7 +79,7 @@ class TestNewThemes:
     def test_klingon_theme_loads(self):
         """Verify Klingon theme loads and has images."""
         # Note: JSON key is "Battle Cruiser" with space
-        img = self.manager.get_image("Klingons", "Battle Cruiser")
+        img = self.manager.load_image("Klingons", "Battle Cruiser")
         assert img is not None
         # Verify it's not the fallback (100x100)
         assert img.get_size() != (100, 100), "Should not be fallback image"
@@ -87,7 +87,7 @@ class TestNewThemes:
     def test_romulan_theme_loads(self):
         """Verify Romulan theme loads and has images."""
         # Note: JSON key is "Battle Cruiser" with space
-        img = self.manager.get_image("Romulans", "Battle Cruiser")
+        img = self.manager.load_image("Romulans", "Battle Cruiser")
         assert img is not None
         # Verify it's not the fallback (100x100)
         assert img.get_size() != (100, 100), "Should not be fallback image"

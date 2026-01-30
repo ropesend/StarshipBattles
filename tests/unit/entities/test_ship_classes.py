@@ -61,7 +61,7 @@ class TestShipClasses:
         for theme in themes:
             for ship_class in classes:
                 # Get image directly
-                img = self.theme_manager.get_image(theme, ship_class)
+                img = self.theme_manager.load_image(theme, ship_class)
 
                 assert img is not None, f"Failed to load image for {theme} / {ship_class}"
                 assert isinstance(img, pygame.Surface)

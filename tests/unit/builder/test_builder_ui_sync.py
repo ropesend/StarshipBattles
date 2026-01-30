@@ -60,8 +60,8 @@ class TestBuilderUISync:
 
         # Mock image loading to avoid file IO errors during refresh_controls -> update_portrait_image
         with patch('pygame.image.load'):
-            with patch('ui.builder.right_panel.BuilderRightPanel.update_portrait_image'):
-                from ui.builder.right_panel import BuilderRightPanel
+            with patch('game.ui.screens.builder.right_panel.BuilderRightPanel.update_portrait_image'):
+                from game.ui.screens.builder.right_panel import BuilderRightPanel
                 panel = BuilderRightPanel(mock_builder, manager, pygame.Rect(0, 0, 300, 600))
 
         # Store for use in tests

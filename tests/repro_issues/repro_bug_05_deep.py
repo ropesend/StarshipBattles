@@ -7,7 +7,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, load_components, load_modifiers
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.core.registry import RegistryManager
-from ui.builder.stats_config import get_logistics_rows
+from game.ui.screens.builder.stats_config import get_logistics_rows
 
 # Mock Data simulating components.json entries
 MOCK_SHIELD_REGEN_DATA = {

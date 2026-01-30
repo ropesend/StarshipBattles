@@ -592,7 +592,7 @@ class FleetReportWindow(UIWindow):
             else:
                 result = self._create_placeholder(target_size)
         elif image_type == 'topdown':
-            raw_surf = theme_mgr.get_image(theme_id, ship_class)
+            raw_surf = theme_mgr.load_image(theme_id, ship_class)
             # Use visible-portion scaling for top-down images
             if raw_surf:
                 result = scale_image_by_visible_portion(raw_surf, target_height)

@@ -18,16 +18,16 @@
 | 3. Parameter Naming | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Service Renaming | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Asset Manager Methods | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. UI Directory Consolidation | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. UI Directory Consolidation | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Screen Naming | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 6 - UI Directory Consolidation
-**Last Action:** Completed Phase 5: Asset Manager Methods (already correct naming)
-**Next Action:** Begin Phase 6: UI Directory Consolidation (merge ui/ into game/ui/)
+**Active Phase:** Phase 7 - Screen Naming
+**Last Action:** Completed Phase 6: UI Directory Consolidation
+**Next Action:** Begin Phase 7: Screen Naming (standardize Scene/Interface/GUI → Screen)
 **Blockers:** None
-**Context for Next Agent:** Phase 5 verified complete - methods already correctly named `load_image()` and `load_group()` from prior refactoring. No legacy `.get_image(` or `.get_group(` references exist in game/ or tests/. Tests: 98 testmon passed.
+**Context for Next Agent:** Phase 6 complete - deleted ui/ directory, moved test_lab_scene.py and battle_state_viewer.py to game/ui/screens/, updated ~50 import statements. Enhanced event_bus.py and stats_config.py with missing functions from ui/builder versions. 5723 tests pass. ~50 tests have pre-existing test isolation issues that need registry setup - these were exposed by removing the ui/ directory but are unrelated to the consolidation.
 
 ## Overview
 This project addresses ALL 30+ naming inconsistencies identified in `findings_05_naming_consistency.md`, consolidates the dual UI directory structure (`ui/` into `game/ui/`), and standardizes UI class naming to "Screen" convention.

@@ -16,12 +16,18 @@ class TestDetailPanelRendering:
         # Do NOT call pygame.init() or set_mode() here as it interferes with
         # parallel test execution.
 
-        # Patch UI elements in the TARGET namespace to ensure they are used
-        self.uipanel_patch = patch('ui.builder.detail_panel.UIPanel')
-        self.uilabel_patch = patch('ui.builder.detail_panel.UILabel')
-        self.uiimage_patch = patch('ui.builder.detail_panel.UIImage')
-        self.uibutton_patch = patch('ui.builder.detail_panel.UIButton')
-        self.uitextbox_patch = patch('ui.builder.detail_panel.UITextBox')
+        # Clear module from cache to ensure patches take effect
+        import importlib
+        module_name = 'game.ui.screens.builder.detail_panel'
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+
+        # Patch UI elements at pygame_gui level (applied before module import)
+        self.uipanel_patch = patch('pygame_gui.elements.UIPanel')
+        self.uilabel_patch = patch('pygame_gui.elements.UILabel')
+        self.uiimage_patch = patch('pygame_gui.elements.UIImage')
+        self.uibutton_patch = patch('pygame_gui.elements.UIButton')
+        self.uitextbox_patch = patch('pygame_gui.elements.UITextBox')
         self.modifier_grid_patch = patch('game.ui.panels.modifier_impact_grid.ModifierImpactGrid')
 
         self.MockUIPanel = self.uipanel_patch.start()
@@ -40,8 +46,8 @@ class TestDetailPanelRendering:
         # We'll use a property mock or just capture set_text calls
         self.mock_textbox_instance = self.MockUITextBox.return_value
 
-        # Delayed import to allow pygame init
-        from ui.builder.detail_panel import ComponentDetailPanel
+        # Delayed import to allow pygame init (after patches applied)
+        from game.ui.screens.builder.detail_panel import ComponentDetailPanel
         self.ComponentDetailPanel = ComponentDetailPanel
 
         # Mock Pygame and UI Manager

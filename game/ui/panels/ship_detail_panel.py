@@ -202,7 +202,7 @@ class ShipDetailPanel:
 
         # Top-down image (right)
         topdown_surf = self._get_scaled_image(
-            theme_mgr.get_image(theme_id, ship_class),
+            theme_mgr.load_image(theme_id, ship_class),
             image_size
         )
         topdown_img = UIImage(

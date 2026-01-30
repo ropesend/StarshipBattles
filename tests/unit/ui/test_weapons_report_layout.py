@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 # Add project root to path
 
 
-from ui.builder.weapons_panel import WeaponsReportPanel
+from game.ui.screens.builder.weapons_panel import WeaponsReportPanel
 
 
 class TestWeaponsReportLayout:

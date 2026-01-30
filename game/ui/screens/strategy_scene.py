@@ -488,7 +488,7 @@ class StrategyScene:
 
         if is_star(obj):
             asset_key = am.get_star_color_key(obj.color)
-            return am.get_image('stars', asset_key)
+            return am.load_image('stars', asset_key)
 
         elif is_planet(obj):
             p_type_name = obj.planet_type.name.lower()

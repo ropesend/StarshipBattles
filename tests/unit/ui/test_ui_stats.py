@@ -3,7 +3,7 @@ import sys
 
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
-from ui.builder.stats_config import StatDefinition, get_logistics_rows
+from game.ui.screens.builder.stats_config import StatDefinition, get_logistics_rows
 from tests.fixtures.paths import get_project_root
 
 
@@ -29,7 +29,7 @@ class TestStatsConfig:
         # It doesn't have a 'StatsConfig' class that manages logic, it's a data loader.
         # So likely we will ADD a function `get_logistics_rows(ship)` that returns the list including dynamic ones.
 
-        from ui.builder.stats_config import get_logistics_rows
+        from game.ui.screens.builder.stats_config import get_logistics_rows
 
         rows = get_logistics_rows(ship)
 
@@ -66,7 +66,7 @@ class TestStatsConfig:
         ship.layers[LayerType.CORE]['components'].append(comp)
         comp.ship = ship
 
-        from ui.builder.stats_config import get_logistics_rows
+        from game.ui.screens.builder.stats_config import get_logistics_rows
         rows = get_logistics_rows(ship)
 
         # Find Endurance Row

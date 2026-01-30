@@ -153,7 +153,7 @@ class RaceThemeGallery:
             # Load small preview images of a couple ships
             ship_surfs = {}
             for ship_class in ["Escort", "Battleship"]:
-                surf = theme_manager.get_image(theme_id, ship_class)
+                surf = theme_manager.load_image(theme_id, ship_class)
                 if surf:
                     # Scale to thumbnail size
                     scaled = pygame.transform.scale(surf, (40, 40))

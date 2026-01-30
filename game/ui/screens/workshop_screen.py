@@ -20,11 +20,11 @@ from game.core.registry import get_default_registry_provider
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
-from ui.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
+from game.ui.screens.builder import BuilderLeftPanel, BuilderRightPanel, WeaponsReportPanel, LayerPanel
 from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPanel
-from ui.builder.schematic_view import SchematicView
-from ui.builder.interaction_controller import InteractionController
-from ui.builder.event_bus import EventBus
+from game.ui.screens.builder.schematic_view import SchematicView
+from game.ui.screens.builder.interaction_controller import InteractionController
+from game.ui.screens.builder.event_bus import EventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
@@ -56,7 +56,7 @@ PANEL_BG = '#14181f'
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
 
-from ui.builder.detail_panel import ComponentDetailPanel
+from game.ui.screens.builder.detail_panel import ComponentDetailPanel
 
 
 

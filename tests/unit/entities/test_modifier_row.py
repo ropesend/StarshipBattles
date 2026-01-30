@@ -16,7 +16,7 @@ class TestModifierRow:
 
     def test_build_ui_creates_elements(self):
         """Test that build_ui creates the expected UI elements for compact layout."""
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {
             'control_type': 'linear_stepped',
@@ -38,7 +38,7 @@ class TestModifierRow:
 
     def test_update_state(self):
         """Test that update correctly sets active state and value."""
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {'control_type': 'linear'}
         row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
@@ -62,7 +62,7 @@ class TestModifierRow:
 
     def test_readonly_disables_controls(self):
         """Test that readonly mode disables all controls."""
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {'control_type': 'linear'}
         row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
@@ -83,7 +83,7 @@ class TestModifierRow:
 
     def test_json_button_event(self):
         """Test that clicking JSON button triggers popup."""
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {'control_type': 'linear'}
         row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
@@ -109,7 +109,7 @@ class TestModifierRow:
 
     def test_value_change_callback(self):
         """Test that slider changes trigger callback."""
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {'control_type': 'linear'}
         callback = MagicMock()
@@ -146,7 +146,7 @@ class TestModifierRowErrorLogging:
     def test_tooltip_generation_failure_logs_warning(self, caplog):
         """Tooltip generation failure should log warning with modifier details (ERR-012)."""
         import logging
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         from game.simulation.components.component_constants import Modifier
         from unittest.mock import patch
 
@@ -183,7 +183,7 @@ class TestModifierRowErrorLogging:
     def test_tooltip_generation_success_no_warning(self, caplog):
         """Successful tooltip generation should not produce warnings."""
         import logging
-        from ui.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
         from game.simulation.components.component_constants import Modifier
 
         mod_def = Modifier({

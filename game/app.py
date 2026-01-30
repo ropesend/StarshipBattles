@@ -27,7 +27,7 @@ from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_scene import StrategyScene
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from Tools.formation_editor import FormationEditorScene
-from ui.test_lab_scene import TestLabScene
+from game.ui.screens.test_lab_scene import TestLabScene
 from game.core.profiling import PROFILER, profile_action
 from game.battle_coordinator import (
     update_battle_headless, update_battle_visual,

@@ -26,7 +26,7 @@ class TestNewThemes(unittest.TestCase):
     def test_klingon_theme_loads(self):
         """Verify Klingon theme loads and has images."""
         self.assertIn("Klingons", self.manager.get_available_themes())
-        img = self.manager.get_image("Klingons", "Battlecruiser")
+        img = self.manager.load_image("Klingons", "Battlecruiser")
         self.assertIsNotNone(img)
         # Verify it's not the fallback (100x100)
         self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")
@@ -34,7 +34,7 @@ class TestNewThemes(unittest.TestCase):
     def test_romulan_theme_loads(self):
         """Verify Romulan theme loads and has images."""
         self.assertIn("Romulans", self.manager.get_available_themes())
-        img = self.manager.get_image("Romulans", "Battlecruiser")
+        img = self.manager.load_image("Romulans", "Battlecruiser")
         self.assertIsNotNone(img)
         # Verify it's not the fallback (100x100)
         self.assertNotEqual(img.get_size(), (100, 100), "Should not be fallback image")

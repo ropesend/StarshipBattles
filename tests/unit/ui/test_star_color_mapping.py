@@ -19,13 +19,13 @@ def mock_asset_manager():
     """Create a mock AssetManager that returns identifiable surfaces."""
     am = MagicMock()
 
-    def get_image_side_effect(category, key):
+    def load_image_side_effect(category, key):
         """Return a mock surface tagged with the requested key."""
         surface = MagicMock()
         surface.star_color_key = key  # Tag the surface so we can verify which was returned
         return surface
 
-    am.get_image.side_effect = get_image_side_effect
+    am.load_image.side_effect = load_image_side_effect
 
     # Map RGB tuples to expected color keys based on manifest thresholds
     def get_star_color_key_side_effect(color):
@@ -91,7 +91,7 @@ class TestStarColorMapping:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # Verify the asset manager was called with 'stars' and 'red'
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'red')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'red')
         assert result.star_color_key == 'red'
 
     def test_blue_star_maps_correctly(self, mock_asset_manager, star_factory):
@@ -107,7 +107,7 @@ class TestStarColorMapping:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'blue')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'blue')
         assert result.star_color_key == 'blue'
 
     def test_white_star_maps_correctly(self, mock_asset_manager, star_factory):
@@ -123,7 +123,7 @@ class TestStarColorMapping:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'white')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'white')
         assert result.star_color_key == 'white'
 
     def test_orange_star_maps_correctly(self, mock_asset_manager, star_factory):
@@ -139,7 +139,7 @@ class TestStarColorMapping:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'orange')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'orange')
         assert result.star_color_key == 'orange'
 
     def test_yellow_default_for_unknown(self, mock_asset_manager, star_factory):
@@ -156,7 +156,7 @@ class TestStarColorMapping:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'yellow')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'yellow')
         assert result.star_color_key == 'yellow'
 
 
@@ -180,7 +180,7 @@ class TestStarColorThresholdBoundaries:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'red')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'red')
         assert result.star_color_key == 'red'
 
     def test_threshold_boundary_red_fails_below(self, mock_asset_manager, star_factory):
@@ -198,7 +198,7 @@ class TestStarColorThresholdBoundaries:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # Should fall through to yellow (default)
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'yellow')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'yellow')
         assert result.star_color_key == 'yellow'
 
     def test_threshold_boundary_blue_at_limit(self, mock_asset_manager, star_factory):
@@ -215,7 +215,7 @@ class TestStarColorThresholdBoundaries:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'blue')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'blue')
         assert result.star_color_key == 'blue'
 
     def test_threshold_boundary_blue_fails_at_red_limit(self, mock_asset_manager, star_factory):
@@ -233,7 +233,7 @@ class TestStarColorThresholdBoundaries:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # Should fall through to yellow (default)
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'yellow')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'yellow')
         assert result.star_color_key == 'yellow'
 
     def test_threshold_boundary_orange_at_limit(self, mock_asset_manager, star_factory):
@@ -250,7 +250,7 @@ class TestStarColorThresholdBoundaries:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'orange')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'orange')
         assert result.star_color_key == 'orange'
 
     def test_threshold_boundary_orange_fails_below_green(self, mock_asset_manager, star_factory):
@@ -268,7 +268,7 @@ class TestStarColorThresholdBoundaries:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # Should fall through to yellow (default)
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'yellow')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'yellow')
         assert result.star_color_key == 'yellow'
 
 
@@ -302,7 +302,7 @@ class TestStarColorPriorityOrder:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # White should be checked before orange
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'white')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'white')
         assert result.star_color_key == 'white'
 
     def test_cyan_classifies_as_blue(self, mock_asset_manager, star_factory):
@@ -323,7 +323,7 @@ class TestStarColorPriorityOrder:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # This actually matches blue: b > 200 and r < 100
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'blue')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'blue')
         assert result.star_color_key == 'blue'
 
     def test_magenta_classifies_as_red(self, mock_asset_manager, star_factory):
@@ -344,7 +344,7 @@ class TestStarColorPriorityOrder:
                 result = StrategyScene._get_object_asset(scene, star)
 
         # Matches red: r > 200 and g < 100
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'red')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'red')
         assert result.star_color_key == 'red'
 
     def test_green_falls_to_yellow(self, mock_asset_manager, star_factory):
@@ -367,5 +367,5 @@ class TestStarColorPriorityOrder:
 
                 result = StrategyScene._get_object_asset(scene, star)
 
-        mock_asset_manager.get_image.assert_called_once_with('stars', 'yellow')
+        mock_asset_manager.load_image.assert_called_once_with('stars', 'yellow')
         assert result.star_color_key == 'yellow'

@@ -471,7 +471,7 @@ class RaceSummaryPanel:
 
         for ship_class, category_name in ship_categories:
             # Get top-down skin
-            skin_surf = theme_manager.get_image(self.race_config.theme_id, ship_class)
+            skin_surf = theme_manager.load_image(self.race_config.theme_id, ship_class)
             # Get portrait
             portrait_surf = theme_manager.get_portrait_image(self.race_config.theme_id, ship_class)
 

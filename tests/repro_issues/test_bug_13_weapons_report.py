@@ -4,7 +4,7 @@ import pygame_gui
 import pytest
 from unittest.mock import MagicMock, patch
 
-from ui.builder.weapons_panel import WeaponsReportPanel
+from game.ui.screens.builder.weapons_panel import WeaponsReportPanel
 
 
 class TestBug13Fix:

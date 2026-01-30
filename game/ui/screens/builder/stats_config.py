@@ -121,6 +121,22 @@ def get_armor_hp(ship):
 def get_maneuver_points(ship):
     return getattr(ship, 'total_maneuver_points', 0)
 
+def get_strategic_speed(ship):
+    """Calculate strategic speed (hexes per turn) from movement points and mass."""
+    # Uses same formula as FleetSpeedCalculator
+    K_STRATEGIC = 25
+    MAX_HEXES = 10
+    MIN_HEXES = 0
+
+    mass = getattr(ship, 'mass', 0)
+    movement_points = getattr(ship, 'total_strategic_movement', 0)
+
+    if mass <= 0 or movement_points <= 0:
+        return 0
+
+    raw_hexes = (movement_points * K_STRATEGIC) / mass
+    return max(MIN_HEXES, min(MAX_HEXES, int(raw_hexes)))
+
 def get_zero(ship):
     return 0
 
@@ -191,6 +207,32 @@ def get_resource_replenish(ship, res_name):
         return float('inf')
     return capacity / regen
 
+def get_resource_max_usage(ship, res_name):
+    """
+    Get maximum resource usage (constant + max activation rate).
+    Uses 'potential' stats to ensure UI shows component load even if currently inactive (e.g. no crew).
+    """
+    attr_map = {
+        'fuel': 'potential_fuel_consumption',
+        'ammo': 'potential_ammo_consumption',
+        'energy': 'potential_energy_consumption'
+    }
+    attr = attr_map.get(res_name)
+    if attr and hasattr(ship, attr):
+        return getattr(ship, attr, 0)
+
+    # Fallback to standard consumption if potential not calculated
+    fallback_map = {
+        'fuel': 'fuel_consumption',
+        'ammo': 'ammo_consumption',
+        'energy': 'energy_consumption'
+    }
+    attr = fallback_map.get(res_name)
+    if attr:
+         return getattr(ship, attr, 0)
+
+    return 0
+
 # --- Config Groups ---
 
 
@@ -206,8 +248,9 @@ GETTERS = {
     # New
     'get_armor_hp': get_armor_hp,
     'get_maneuver_points': get_maneuver_points,
+    'get_strategic_speed': get_strategic_speed,
     'get_zero': get_zero,
-    
+
     # Generic Resource Getters
     'get_resource_storage': get_resource_storage,
     'get_resource_current': get_resource_current,
@@ -215,7 +258,8 @@ GETTERS = {
     'get_resource_consumption': get_resource_consumption,
     'get_resource_endurance': get_resource_endurance,
     'get_resource_replenish': get_resource_replenish,
-    
+    'get_resource_max_usage': get_resource_max_usage,
+
     # Legacy (Mapped to Generics or Keep implementations?)
     # Kept for compatibility if JSON not fully migrated yet
     'get_fuel_recharge': get_fuel_recharge,
@@ -402,7 +446,30 @@ def get_logistics_rows(ship):
         # Merge: Base (Mass) -> Dynamic -> Base (Others?)
         # Usually Mass is first.
         return base_rows + dynamic_rows
-        
+
     return base_rows
 
 
+def get_construction_rows(ship):
+    """
+    Generate the list of stat rows for the Construction section.
+    """
+    from game.core.constants import PLANET_RESOURCES
+    rows = []
+
+    # Construction costs from ship.construction_cost
+    for res in PLANET_RESOURCES:
+        # Use a closure to capture res
+        def res_getter(ship, r=res):
+            return ship.construction_cost.get(r, 0) if hasattr(ship, 'construction_cost') else 0
+
+        row = StatDefinition(
+            id=f"cost_{res.lower()}",
+            label=f"{res}",
+            getter=res_getter,
+            formatter="{:.0f}",
+            unit=""
+        )
+        rows.append(row)
+
+    return rows

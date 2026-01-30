@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType, Modifier
-from ui.builder.stats_config import get_crew_required
+from game.ui.screens.builder.stats_config import get_crew_required
 
 class TestBug01CrewDelay:
     

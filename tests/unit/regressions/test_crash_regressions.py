@@ -2,7 +2,7 @@ import pytest
 import pygame
 import pygame_gui
 from unittest.mock import MagicMock, patch
-from ui.builder.weapons_panel import WeaponsReportPanel
+from game.ui.screens.builder.weapons_panel import WeaponsReportPanel
 from game.core.registry import RegistryManager
 import os
 

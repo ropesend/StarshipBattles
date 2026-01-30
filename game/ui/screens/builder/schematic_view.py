@@ -65,7 +65,7 @@ class SchematicView:
         
         # Draw Theme Image
         theme_id = getattr(ship, 'theme_id', 'Federation')
-        ship_img = self.theme_manager.get_image(theme_id, ship.ship_class)
+        ship_img = self.theme_manager.load_image(theme_id, ship.ship_class)
         
         if ship_img:
             # Get visible metrics to ignore transparent padding

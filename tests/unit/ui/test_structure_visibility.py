@@ -11,8 +11,8 @@ os.environ['SDL_VIDEODRIVER'] = 'dummy'
 
 
 from game.simulation.entities.ship import Ship, LayerType
-from ui.builder.layer_panel import LayerPanel
-from ui.builder.structure_list_items import LayerHeaderItem, LayerComponentItem, IndividualComponentItem
+from game.ui.screens.builder.layer_panel import LayerPanel
+from game.ui.screens.builder.structure_list_items import LayerHeaderItem, LayerComponentItem, IndividualComponentItem
 
 
 class TestStructureVisibility:

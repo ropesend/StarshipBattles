@@ -33,19 +33,19 @@ class TestBug04Display:
         """
         # All patches applied inside the test to avoid circular import at decorator time
         # The circular import chain is: ui.builder -> game.ui -> builder_screen -> ui.builder
-        with patch('ui.builder.right_panel.UIPanel'), \
-             patch('ui.builder.right_panel.UILabel'), \
-             patch('ui.builder.right_panel.UITextEntryLine'), \
-             patch('ui.builder.right_panel.UIDropDownMenu'), \
-             patch('ui.builder.right_panel.UITextBox'), \
-             patch('ui.builder.right_panel.UIImage'), \
-             patch('ui.builder.right_panel.pygame_gui.elements.UIScrollingContainer'), \
-             patch('ui.builder.stats_config.get_logistics_rows') as mock_get_inv, \
-             patch('ui.builder.stats_config.STATS_CONFIG', new={}), \
-             patch('ui.builder.right_panel.BuilderRightPanel.update_portrait_image'):
+        with patch('game.ui.screens.builder.right_panel.UIPanel'), \
+             patch('game.ui.screens.builder.right_panel.UILabel'), \
+             patch('game.ui.screens.builder.right_panel.UITextEntryLine'), \
+             patch('game.ui.screens.builder.right_panel.UIDropDownMenu'), \
+             patch('game.ui.screens.builder.right_panel.UITextBox'), \
+             patch('game.ui.screens.builder.right_panel.UIImage'), \
+             patch('game.ui.screens.builder.right_panel.pygame_gui.elements.UIScrollingContainer'), \
+             patch('game.ui.screens.builder.stats_config.get_logistics_rows') as mock_get_inv, \
+             patch('game.ui.screens.builder.stats_config.STATS_CONFIG', new={}), \
+             patch('game.ui.screens.builder.right_panel.BuilderRightPanel.update_portrait_image'):
 
             # Import here to avoid circular import at collection time
-            from ui.builder.right_panel import BuilderRightPanel
+            from game.ui.screens.builder.right_panel import BuilderRightPanel
 
             # Setup
             manager = MagicMock()

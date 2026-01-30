@@ -58,18 +58,18 @@ class TestRegressions:
         # Just use it.
 
         # 1. Test invalid theme -> Should fallback to Default (Federation) if Escort exists
-        img = manager.get_image("NonExistentTheme", "Escort")
+        img = manager.load_image("NonExistentTheme", "Escort")
         assert isinstance(img, pygame.Surface)
         # If Federation/Escort exists, it won't be 100x100.
         # But we know "NonExistentClass" shouldn't exist in any theme.
 
         # 2. Test valid theme, invalid class -> Should be fallback 100x100
-        img2 = manager.get_image("Federation", "NonExistentClass")
+        img2 = manager.load_image("Federation", "NonExistentClass")
         assert isinstance(img2, pygame.Surface)
         assert img2.get_width() == 100
 
         # 3. Test invalid theme AND invalid class -> Should be fallback 100x100
-        img3 = manager.get_image("NonExistentTheme", "NonExistentClass")
+        img3 = manager.load_image("NonExistentTheme", "NonExistentClass")
         assert isinstance(img3, pygame.Surface)
         assert img3.get_width() == 100
 
