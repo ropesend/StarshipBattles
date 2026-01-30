@@ -22,7 +22,10 @@ Available fixtures:
     - fully_equipped_ship: Ship with all common component types
 """
 import pytest
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import create_component
@@ -63,6 +66,8 @@ def create_test_ship(
     add_weapons: int = 0,
     add_shields: int = 0,
     add_crew: bool = True,
+    *,
+    registries: 'GameRegistries | None' = None,
 ) -> Ship:
     """
     Create a test ship with customizable configuration.
@@ -70,6 +75,9 @@ def create_test_ship(
     This factory function creates ships for testing purposes. By default,
     it creates a minimal ship with only the hull. Use parameters to add
     additional components.
+
+    PROJ-50: Supports strict dependency injection via registries parameter.
+    Pass fresh_registries fixture to avoid relying on global state.
 
     Components are placed in appropriate layers based on game rules:
     - Crew (quarters + life support) → CORE (required for other components to be active)
@@ -91,26 +99,28 @@ def create_test_ship(
         add_shields: Number of shield components to add
         add_crew: If True (default), add crew_quarters and life_support
                   (required for components to be active)
+        registries: GameRegistries for DI (keyword-only). If None, uses global.
 
     Returns:
         Configured Ship instance
 
     Example:
-        # Create armed ship
+        # Create armed ship with DI
         ship = create_test_ship(
             name="Attacker",
             add_bridge=True,
             add_engine=True,
-            add_weapons=2
+            add_weapons=2,
+            registries=fresh_registries
         )
     """
-    ship = Ship(name=name, x=x, y=y, color=color, ship_class=ship_class)
+    ship = Ship(name=name, x=x, y=y, color=color, ship_class=ship_class, registries=registries)
     ship.team_id = team_id
 
     # Crew support components go in CORE - required for other components to be active
     if add_crew:
-        crew_quarters = create_component(CREW_QUARTERS_ID)
-        life_support = create_component(LIFE_SUPPORT_ID)
+        crew_quarters = create_component(CREW_QUARTERS_ID, registries=registries)
+        life_support = create_component(LIFE_SUPPORT_ID, registries=registries)
         if crew_quarters:
             ship.add_component(crew_quarters, LayerType.CORE)
         if life_support:
@@ -118,25 +128,25 @@ def create_test_ship(
 
     # Bridge goes in CORE (Crewsupport classification, not blocked)
     if add_bridge:
-        bridge = create_component(BRIDGE_ID)
+        bridge = create_component(BRIDGE_ID, registries=registries)
         if bridge:
             ship.add_component(bridge, LayerType.CORE)
 
     # Engine goes in OUTER (Engines classification blocked in CORE)
     if add_engine:
-        engine = create_component(ENGINE_ID)
+        engine = create_component(ENGINE_ID, registries=registries)
         if engine:
             ship.add_component(engine, LayerType.OUTER)
 
     # Weapons go in OUTER (Weapons classification blocked in CORE and INNER)
     for _ in range(add_weapons):
-        weapon = create_component(WEAPON_ID)
+        weapon = create_component(WEAPON_ID, registries=registries)
         if weapon:
             ship.add_component(weapon, LayerType.OUTER)
 
     # Shields go in OUTER (safest choice - INNER may not exist for all ship classes)
     for _ in range(add_shields):
-        shield = create_component(SHIELD_ID)
+        shield = create_component(SHIELD_ID, registries=registries)
         if shield:
             ship.add_component(shield, LayerType.OUTER)
 

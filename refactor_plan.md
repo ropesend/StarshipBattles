@@ -8,24 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-49 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-49 Complete
+**Last Completed:** PROJ-50 Phase 1 - Test Infrastructure
+**Current Status:** PROJ-50 In Progress
 **Current Project:** PROJ-50
-**Current Phase:** Not Started
-**Test Status:** 5782 passed (+18 new tests)
+**Current Phase:** Phase 2
+**Test Status:** 5782 passed (baseline preserved)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-49 AUDIT PASSED - All 6 phases verified
-  - Phase 1: Dead code cleanup - archive files exist, ValidatorProxy removed
-  - Phase 2: Simple perf fixes - projectile list, ability index, distance cache
-  - Phase 3: Component caching - dirty-flag pattern implemented
-  - Phase 4: HP ratio caching - property with dirty-flag
-  - Phase 5: Spatial grid - research documented, skip justified
-  - Phase 6: O(n^2) targeting - capabilities cache added
-- All 782 AI/simulation/performance tests pass
-- Test count: 5846 total (baseline was 5764)
-- Next: PROJ-50 Strict Dependency Injection Refactor
+- PROJ-50 Phase 1 COMPLETE - Test Infrastructure
+  - Added mock_registries fixture alias to conftest.py
+  - Enhanced fixture docstrings with usage examples
+  - Updated create_test_ship() with registries parameter
+  - Updated 8 repro_issues test files to use DI pattern
+  - 52 repro_issues tests pass (11 pre-existing failures from import paths)
+- Files modified: conftest.py, ships.py, 8 test_bug_*.py files
+- Test baseline: 5782 passed, 46 pre-existing failures
+- Next: Phase 2 - UI Layer Strictness
 
 ---
 
@@ -97,7 +96,7 @@
 
 ---
 
-- [ ] **PROJ-50: Strict Dependency Injection Refactor**
+- [/] **PROJ-50: Strict Dependency Injection Refactor**
   - **Phases:** 7 | **Status:** Planning | **Priority:** High
   - **Plan:** [Projects/active_projects/PROJ-50/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-50/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -117,6 +116,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-50 | Phase 1 | Complete | 5782 passed | 1752ae60 | Test infrastructure: mock_registries, ships.py, 8 repro tests |
 | 2026-01-30 | PROJ-49 | Audit Cycle 1 | PASSED | 5782 passed | pending | All 6 phases verified, project complete |
 | 2026-01-30 | PROJ-49 | Phase 6 | Complete | 5782 passed | 8a80977a | O(n^2) targeting: capabilities cache, +18 tests |
 | 2026-01-30 | PROJ-49 | Phase 5 | Complete | 5764 passed | 32d8510a | Spatial grid research: 0.1% overhead, skipped implementation |

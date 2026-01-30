@@ -1,23 +1,28 @@
+"""
+Reproduction test for BUG-07: Crash when adding component with ToHit modifier.
 
+PROJ-50: Updated to use fresh_registries for DI.
+"""
 import pytest
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
 from game.simulation.components.abilities import create_ability, ToHitAttackModifier
 
+
 class TestBug07Crash:
-    def test_crash_adding_component_with_tohit_modifier(self):
+    """PROJ-50: Updated to use fresh_registries for DI."""
+
+    def test_crash_adding_component_with_tohit_modifier(self, fresh_registries):
         """
         Reproduction for BUG-07: AttributeError: 'ToHitAttackModifier' object has no attribute 'value'
         when calling ship.get_total_sensor_score().
+
+        PROJ-50: Updated to use DI via fresh_registries fixture.
         """
-        # 1. Create Ship
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        
-        # 2. Create Component with ToHitAttackModifier
-        # We need a component that registers this ability.
-        # We can use a raw component and manually attach the ability or use a definition.
-        
+        # 1. Create Ship with DI
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
+
         # 2. Create Component with ToHitAttackModifier
         # Component expects a dictionary
         comp_data = {
@@ -28,7 +33,7 @@ class TestBug07Crash:
             "type": "Sensor",
             "cost": 10
         }
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=fresh_registries)
         
         # Manually create the ability and attach it
         ability_data = {"value": 2.0} 

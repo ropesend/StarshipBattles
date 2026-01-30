@@ -8,16 +8,22 @@ from game.simulation.components.component import Component
 
 
 class TestBug03Validation:
+    """PROJ-50: Updated to use fresh_registries for DI."""
+
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
+        """Setup test with DI registries. PROJ-50: Uses fresh_registries fixture."""
         if not pygame.get_init():
             pygame.init()
-        # Ensure 'Cruiser' exists
-        classes = RegistryManager.instance().vehicle_classes
-        if "Cruiser" not in classes:
-            classes["Cruiser"] = {"max_mass": 16000, "default_hull_id": "hull_cruiser"}
 
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        # Store registries for use in helper methods
+        self.registries = fresh_registries
+
+        # Ensure 'Cruiser' exists in our registries
+        if "Cruiser" not in fresh_registries.vehicle_classes:
+            fresh_registries.vehicle_classes["Cruiser"] = {"max_mass": 16000, "default_hull_id": "hull_cruiser"}
+
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
 
         self.base_data = {
             "id": "test_comp",
@@ -33,12 +39,12 @@ class TestBug03Validation:
         yield
 
         pygame.quit()
-        RegistryManager.instance().clear()
 
     def create_comp(self, **kwargs):
+        """Create component with DI registries. PROJ-50."""
         data = self.base_data.copy()
         data.update(kwargs)
-        return Component(data)
+        return Component(data, registries=self.registries)
 
     def test_fuel_warning_persistence_with_wrong_resource(self):
         """

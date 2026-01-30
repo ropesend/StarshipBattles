@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Test Infrastructure | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Test Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. UI Layer Strictness | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Strategy Services | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Data | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,12 +22,12 @@
 | 7. Big Bang Removal | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-01-30 (Planning Complete)
-**Active Phase:** Planning
-**Last Action:** Completed swarm review with 6 agents, wrote design.md
-**Next Action:** User approval, then begin Phase 1
+**Last Updated:** 2026-01-30
+**Active Phase:** Phase 2
+**Last Action:** Completed Phase 1 - Test Infrastructure
+**Next Action:** Begin Phase 2 - UI Layer Strictness
 **Blockers:** None
-**Context:** Test baseline has 46 pre-existing failures from another project. Establish fresh baseline at implementation start.
+**Context:** Test infrastructure updated for DI. 8 repro_issues files updated. 5782 tests passing (baseline preserved). 46 pre-existing failures unrelated to DI.
 
 ## Overview
 Eliminate the "Service Locator" anti-pattern by removing `get_default_registry_provider()` and `_get_registries_fallback()`. Enforce mandatory `GameRegistries` injection in all core entities.

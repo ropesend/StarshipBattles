@@ -2,6 +2,8 @@
 Reproduction test for BUG-11: Hull Not Updated When Switching Ship/Class Type.
 This test verifies that changing a ship's class also updates its hull component
 to the default_hull_id of the new class.
+
+PROJ-50: Updated to use mock_registries for DI instead of RegistryManager.
 """
 import pytest
 from game.simulation.entities.ship import Ship
@@ -9,14 +11,12 @@ from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType
 from game.core.registry import RegistryManager
 
+
 @pytest.fixture
-def dual_class_registry():
-    """Setup registry with two classes and their respective hulls."""
-    mgr = RegistryManager.instance()
-    mgr.clear()
-    
-    # Define classes
-    mgr.vehicle_classes.update({
+def dual_class_registry(mock_registries):
+    """Setup registries with two classes and their respective hulls. PROJ-50: Uses mock_registries."""
+    # Define classes in our mock registries
+    mock_registries.vehicle_classes.update({
         "Escort": {
             "type": "Ship",
             "max_mass": 1000,
@@ -34,23 +34,24 @@ def dual_class_registry():
             ]
         }
     })
-    
-    mgr.components.update({
+
+    # Define hull components as Component instances (create_component clones these)
+    mock_registries.components.update({
         "hull_escort": Component({
             "id": "hull_escort", "name": "Escort Hull", "type": "Hull", "mass": 50, "hp": 100
-        }),
+        }, registries=mock_registries),
         "hull_frigate": Component({
             "id": "hull_frigate", "name": "Frigate Hull", "type": "Hull", "mass": 100, "hp": 200
-        })
+        }, registries=mock_registries)
     })
-    
-    yield mgr
-    mgr.clear()
+
+    return mock_registries
+
 
 @pytest.mark.use_custom_data
 def test_hull_updates_on_class_change_no_migrate(dual_class_registry):
-    """Verify hull updates when changing class (migrate_components=False)."""
-    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort")
+    """Verify hull updates when changing class (migrate_components=False). PROJ-50: Uses DI."""
+    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort", registries=dual_class_registry)
     
     # Initial check
     hull_comps = ship.layers[LayerType.HULL]['components']
@@ -66,8 +67,8 @@ def test_hull_updates_on_class_change_no_migrate(dual_class_registry):
 
 @pytest.mark.use_custom_data
 def test_hull_updates_on_class_change_with_migrate(dual_class_registry):
-    """Verify hull updates when changing class (migrate_components=True)."""
-    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort")
+    """Verify hull updates when changing class (migrate_components=True). PROJ-50: Uses DI."""
+    ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort", registries=dual_class_registry)
     
     # Change class with migration
     ship.change_class("Frigate", migrate_components=True)

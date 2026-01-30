@@ -109,13 +109,23 @@ def session_registries() -> 'GameRegistries':
 @pytest.fixture
 def fresh_registries(session_registries) -> 'GameRegistries':
     """
-    Function-scoped GameRegistries with deep-copied data.
+    Function-scoped GameRegistries with deep-copied production data.
 
     PROJ-38: This fixture provides a fresh copy of registries for each test.
-    Use this when your test modifies registry data and needs isolation.
+    Use this when your test needs real component/modifier data with isolation.
+
+    PROJ-50: Primary fixture for strict DI tests. Pass to constructors:
+        - Component(data, registries=fresh_registries)
+        - Ship(..., registries=fresh_registries)
+        - create_component(id, registries=fresh_registries)
 
     The deep copy ensures modifications don't affect other tests or the
     session-scoped cache.
+
+    Usage:
+        def test_with_real_data(fresh_registries):
+            ship = Ship("Test", 0, 0, (255,255,255), registries=fresh_registries)
+            comp = create_component("laser_cannon", registries=fresh_registries)
 
     Args:
         session_registries: The session-scoped registries to copy from
@@ -141,6 +151,12 @@ def minimal_registries() -> 'GameRegistries':
     PROJ-38: This fixture provides completely empty registries for tests
     that need full control over their test data. Add only what your test needs.
 
+    Usage:
+        def test_something(minimal_registries):
+            # Start with empty registries
+            minimal_registries.components["my_comp"] = {...}
+            component = Component(data, registries=minimal_registries)
+
     Returns:
         GameRegistries: Empty container with empty dictionaries
     """
@@ -152,6 +168,25 @@ def minimal_registries() -> 'GameRegistries':
         vehicle_classes={},
         resources={}
     )
+
+
+@pytest.fixture
+def mock_registries(minimal_registries) -> 'GameRegistries':
+    """
+    Alias for minimal_registries - empty GameRegistries for mocking.
+
+    PROJ-50: Added for clarity when writing DI-focused tests.
+    Use this when you want to emphasize you're mocking registry data.
+
+    Usage:
+        def test_with_mocked_data(mock_registries):
+            mock_registries.components["test_comp"] = {"id": "test_comp", ...}
+            component = Component(data, registries=mock_registries)
+
+    Returns:
+        GameRegistries: Empty container (same as minimal_registries)
+    """
+    return minimal_registries
 
 
 # =============================================================================

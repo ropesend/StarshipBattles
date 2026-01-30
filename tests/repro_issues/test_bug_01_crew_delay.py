@@ -6,16 +6,19 @@ from game.simulation.components.component_constants import LayerType, Modifier
 from game.ui.screens.builder.stats_config import get_crew_required
 
 class TestBug01CrewDelay:
-    
-    @pytest.fixture
-    def ship(self):
-        return Ship("Test Ship", 0, 0, (255, 255, 255))
 
-    def test_crew_stat_update_on_modifier_change(self, ship):
+    @pytest.fixture
+    def ship(self, fresh_registries):
+        """Create test ship using DI. PROJ-50: Uses fresh_registries fixture."""
+        return Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
+
+    def test_crew_stat_update_on_modifier_change(self, ship, fresh_registries):
         """
         Reproduction test for BUG-01: Crew required stat update delay.
-        We verify that changing a modifier (Mount Size) immediately updates the 
+        We verify that changing a modifier (Mount Size) immediately updates the
         CrewRequired ability total after recalculation.
+
+        PROJ-50: Updated to use DI via fresh_registries fixture.
         """
         # 1. Setup a component with CrewRequired
         # Component expects a dictionary
@@ -30,9 +33,9 @@ class TestBug01CrewDelay:
             },
             "allowed_layers": ["OUTER", "INNER"] # Needed if we validated, but Component might ignore
         }
-        
-        # Create Component
-        comp = Component(comp_data)
+
+        # Create Component with DI
+        comp = Component(comp_data, registries=fresh_registries)
         
         # Add to ship
         ship.add_component(comp, LayerType.OUTER)

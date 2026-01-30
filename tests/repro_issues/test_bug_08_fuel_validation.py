@@ -1,3 +1,8 @@
+"""
+Reproduction test for BUG-08: Fuel validation issues.
+
+PROJ-50: Updated to use fresh_registries for DI.
+"""
 import pygame
 import pytest
 
@@ -9,29 +14,29 @@ from game.simulation.components.component import load_components, create_compone
 
 
 class TestBug08FuelValidation:
+    """PROJ-50: Updated to use fresh_registries for DI."""
+
     @pytest.fixture(autouse=True)
     def setup(self):
+        """Setup pygame for test."""
         if not pygame.get_init():
             pygame.init()
 
-        # Load REAL components
-        load_components(COMPONENTS_FILE)
-        # Load REAL vehicle classes
-        load_vehicle_classes(VEHICLE_CLASSES_FILE)
-
-    def test_class_requirements_fuel_storage_failure(self):
+    def test_class_requirements_fuel_storage_failure(self, fresh_registries):
         """
         Validation test: Verify ResourceStorage ability is correctly aggregated.
 
         Note: Post-Phase 5, 'requirements' has been removed from vehicleclasses.json.
         This test verifies the ability aggregation mechanism works correctly.
         Fuel tanks use 'ResourceStorage' ability, not 'FuelStorage'.
+
+        PROJ-50: Updated to use DI via fresh_registries fixture.
         """
         # Create a Cruiser (has enough mass budget for fuel tank)
-        ship = Ship("Test Cruiser", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        ship = Ship("Test Cruiser", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
 
         # Add Fuel Tank (provides 'ResourceStorage' ability for 'fuel')
-        tank = create_component("fuel_tank")
+        tank = create_component("fuel_tank", registries=fresh_registries)
         assert tank is not None, "Failed to create 'fuel_tank'"
 
         # Use INNER layer which is appropriate for fuel tanks

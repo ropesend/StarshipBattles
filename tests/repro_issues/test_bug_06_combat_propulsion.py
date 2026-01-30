@@ -1,10 +1,12 @@
 """
 Reproduction test for BUG-06: Combat Propulsion Validation Error.
 Uses 'Manual Headless Assembly' pattern to avoid state pollution from registry reloads.
+
+PROJ-50: Updated to use fresh_registries for DI instead of RegistryManager manipulation.
 """
 import pytest
 from game.simulation.entities.ship import Ship, LayerType
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
 from game.simulation.components.component import Component
 from game.simulation.components.abilities import (
     CombatPropulsion, CommandAndControl, ResourceStorage
@@ -16,18 +18,23 @@ from game.simulation.ship_validator import ShipDesignValidator
 class TestBug06CombatPropulsion:
     """
     Reproduction test for BUG-06: Combat Propulsion Validation Error.
-    
+
     Root Cause (Fixed): ShipStatsCalculator ignored CombatPropulsion abilities,
     and ShipDesignValidator didn't include candidate components during addition checks.
-    
+
     This test verifies the fix WITHOUT using importlib.reload() which causes
     Enum identity collisions in subsequent tests.
+
+    PROJ-50: Refactored to use DI via fresh_registries fixture.
     """
 
     @pytest.fixture(autouse=True)
-    def setup_test_data(self):
-        """Set up minimal test data without modifying global registries."""
-        # Use a minimal vehicle classes dict for testing
+    def setup_test_data(self, fresh_registries):
+        """Set up test data using DI registries. PROJ-50: Uses fresh_registries fixture."""
+        # Store registries for use in helper methods
+        self.registries = fresh_registries
+
+        # Configure test vehicle class in our registries
         self.vehicle_classes = {
             "TestClass": {
                 "default_hull_id": "hull_escort",
@@ -41,44 +48,39 @@ class TestBug06CombatPropulsion:
                 ]
             }
         }
-        self.calculator = ShipStatsCalculator(self.vehicle_classes)
-        self.validator = ShipDesignValidator()
+        # Add test class to our registries
+        fresh_registries.vehicle_classes["TestClass"] = self.vehicle_classes["TestClass"]
+
+        self.calculator = ShipStatsCalculator(fresh_registries.vehicle_classes)
+        self.validator = ShipDesignValidator(registries=fresh_registries)
 
     def _create_ship_with_layers(self, ship_class="TestClass"):
-        """Create a ship with properly initialized layers."""
-        # Temporarily update vehicle_classes for Ship initialization
-        classes = RegistryManager.instance().vehicle_classes
-        original_classes = dict(classes)
-        classes.clear()
-        classes.update(self.vehicle_classes)
-        
-        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 255, 255), ship_class=ship_class)
-        
-        # Restore original classes
-        classes = RegistryManager.instance().vehicle_classes
-        classes.clear()
-        classes.update(original_classes)
-        
-        return ship
+        """Create a ship with properly initialized layers using DI. PROJ-50."""
+        return Ship(
+            name="Test Ship", x=0, y=0, color=(255, 255, 255),
+            ship_class=ship_class, registries=self.registries
+        )
 
     def test_combat_propulsion_validation(self):
         """
         Test that CombatPropulsion abilities are correctly detected by validation.
-        
-        Expected: No "Needs Combat Propulsion" error when an engine with 
+
+        Expected: No "Needs Combat Propulsion" error when an engine with
         CombatPropulsion ability is present.
+
+        PROJ-50: Updated to use DI via self.registries.
         """
         # 1. Create ship
         ship = self._create_ship_with_layers()
-        
+
         # 2. Create engine component with CombatPropulsion ability (Manual Assembly)
         engine_data = {"id": "test_engine", "name": "Test Engine", "mass": 10, "hp": 50, "type": "Internal"}
-        engine = Component(engine_data)
+        engine = Component(engine_data, registries=self.registries)
         engine.ability_instances = [CombatPropulsion(engine, 1500)]  # 1500 thrust
-        
+
         # 3. Create bridge with CommandAndControl
         bridge_data = {"id": "test_bridge", "name": "Test Bridge", "mass": 5, "hp": 30, "type": "Internal"}
-        bridge = Component(bridge_data)
+        bridge = Component(bridge_data, registries=self.registries)
         bridge.ability_instances = [CommandAndControl(bridge, 1)]
         
         # 4. Add components using robust layer lookup (handles Enum identity mismatch)
@@ -117,12 +119,15 @@ class TestBug06CombatPropulsion:
         assert has_command_control, f"CommandAndControl not detected. Abilities: {ability_totals}"
 
     def test_thrust_value_is_correct(self):
-        """Test that the thrust value from CombatPropulsion is correctly aggregated."""
+        """Test that the thrust value from CombatPropulsion is correctly aggregated.
+
+        PROJ-50: Updated to use DI via self.registries.
+        """
         ship = self._create_ship_with_layers()
-        
+
         # Create engine with known thrust
         engine_data = {"id": "test_engine", "name": "Test Engine", "mass": 10, "hp": 50, "type": "Internal"}
-        engine = Component(engine_data)
+        engine = Component(engine_data, registries=self.registries)
         engine.ability_instances = [CombatPropulsion(engine, 2000)]  # 2000 thrust
         
         # Add to ship

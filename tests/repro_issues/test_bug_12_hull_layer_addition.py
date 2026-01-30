@@ -1,3 +1,8 @@
+"""
+Reproduction test for BUG-12: Component Addition to Hull Layer.
+
+PROJ-50: Updated to use fresh_registries for DI.
+"""
 import pytest
 import pygame
 from game.simulation.entities.ship import Ship, LayerType
@@ -9,24 +14,25 @@ from tests.fixtures.paths import get_project_root
 
 
 class TestBug12HullAddition:
-    """Reproduction test for BUG-12: Component Addition to Hull Layer."""
+    """Reproduction test for BUG-12: Component Addition to Hull Layer.
+
+    PROJ-50: Updated to use fresh_registries for DI.
+    """
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
+        """Setup test with DI registries. PROJ-50."""
         pygame.init()
-        # Set up registry and data
-        initialize_ship_data(str(get_project_root()))
-        load_components(COMPONENTS_FILE)
-        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+        self.registries = fresh_registries
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         yield ship
         pygame.quit()
-        RegistryManager.instance().clear()
 
     def test_prevent_non_hull_addition_to_hull_layer(self, setup):
-        """Verify that non-hull components cannot be added to the HULL layer."""
+        """Verify that non-hull components cannot be added to the HULL layer. PROJ-50: Uses DI."""
         ship = setup
         # 'armor_plate' is definitely not a hull component
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=self.registries)
         assert comp is not None
 
         # This SHOULD return False and not add the component
@@ -37,10 +43,10 @@ class TestBug12HullAddition:
             "Component should not be present in HULL layer list"
 
     def test_prevent_any_addition_to_hull_layer_in_builder(self, setup):
-        """Verify that even 'bridge' or 'engine' cannot be added to HULL layer."""
+        """Verify that even 'bridge' or 'engine' cannot be added to HULL layer. PROJ-50: Uses DI."""
         ship = setup
         for comp_id in ['bridge', 'standard_engine']:
-            comp = create_component(comp_id)
+            comp = create_component(comp_id, registries=self.registries)
             res = ship.add_component(comp, LayerType.HULL)
             assert res is False, f"Should NOT be able to add {comp_id} to HULL layer"
             assert comp not in ship.layers[LayerType.HULL]['components']
