@@ -28,6 +28,10 @@ from game.simulation.managers.retreat_manager import (
     RetreatMethod,
 )
 from game.simulation.managers.battle_state_manager import BattleStateManager
+from game.simulation.combat.battle_mode_handler import (
+    BattleModeHandler,
+    get_handler_for_mode,
+)
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.constants import SimulationConstants
 
@@ -110,6 +114,9 @@ class BattleController:
         self._retreat_manager: Optional[RetreatManager] = None
         self._state_manager: BattleStateManager = BattleStateManager()
 
+        # Mode handler (Strategy pattern for mode-specific behavior)
+        self._mode_handler: Optional[BattleModeHandler] = None
+
         # Callbacks
         self._on_battle_complete: Optional[Callable[['BattleResults'], None]] = None
         self._on_ship_destroyed: Optional[Callable[['Ship'], None]] = None
@@ -131,6 +138,10 @@ class BattleController:
         self._ship_id_map.clear()
         self._initial_state = None
         self._is_started = False
+
+        # Initialize mode handler (Strategy pattern)
+        self._mode_handler = get_handler_for_mode(config.mode)
+        self._mode_handler.configure(self, config)
 
         # Initialize retreat manager with map bounds from config
         self._retreat_manager = RetreatManager(map_bounds=config.map_bounds)
@@ -249,8 +260,8 @@ class BattleController:
         if not self._is_started:
             return BattleResult(success=False, errors=["Battle not started"])
 
-        # Update retreat states
-        if self._config.allow_retreat:
+        # Update retreat states (use mode handler or config for backward compat)
+        if self._retreat_allowed():
             self._update_retreats()
 
         # Run one tick
@@ -282,8 +293,8 @@ class BattleController:
         max_ticks = self._config.max_ticks
 
         while not self.is_battle_over():
-            # Update retreat states
-            if self._config.allow_retreat:
+            # Update retreat states (use mode handler or config for backward compat)
+            if self._retreat_allowed():
                 self._update_retreats()
 
             # Run one tick
@@ -318,7 +329,8 @@ class BattleController:
             if self.is_battle_over():
                 break
 
-            if self._config.allow_retreat:
+            # Use mode handler or config for backward compat
+            if self._retreat_allowed():
                 self._update_retreats()
 
             self._service.update()
@@ -338,7 +350,7 @@ class BattleController:
         Returns:
             BattleResult indicating success/failure
         """
-        if not self._config.allow_retreat:
+        if not self._retreat_allowed():
             return BattleResult(success=False, errors=["Retreat not allowed in this battle"])
 
         # Convert string method to enum
@@ -378,7 +390,7 @@ class BattleController:
         Returns:
             BattleResult indicating success/failure
         """
-        if not self._config.allow_reinforcements:
+        if not self._reinforcements_allowed():
             return BattleResult(success=False, errors=["Reinforcements not allowed"])
 
         if not self._is_started:
@@ -434,6 +446,26 @@ class BattleController:
     def _at_map_edge(self, ship: 'Ship', threshold: float = 500) -> bool:
         """Check if ship is at map edge (delegates to RetreatManager)."""
         return self._retreat_manager.at_map_edge(ship, threshold)
+
+    def _retreat_allowed(self) -> bool:
+        """
+        Check if retreat is allowed in current battle.
+
+        Uses mode handler if available, falls back to config for backward compat.
+        """
+        if self._mode_handler:
+            return self._mode_handler.can_retreat() or (self._config and self._config.allow_retreat)
+        return self._config.allow_retreat if self._config else False
+
+    def _reinforcements_allowed(self) -> bool:
+        """
+        Check if reinforcements are allowed in current battle.
+
+        Uses mode handler if available, falls back to config for backward compat.
+        """
+        if self._mode_handler:
+            return self._mode_handler.can_reinforce() or (self._config and self._config.allow_reinforcements)
+        return self._config.allow_reinforcements if self._config else False
 
     # === State Management ===
 
@@ -557,6 +589,11 @@ class BattleController:
         return self._service
 
     @property
+    def mode_handler(self) -> Optional[BattleModeHandler]:
+        """Get the current mode handler."""
+        return self._mode_handler
+
+    @property
     def _retreating_ships(self) -> Dict[str, RetreatState]:
         """Backward compatibility: delegate to retreat manager."""
         if self._retreat_manager:
@@ -628,10 +665,18 @@ class BattleController:
         For strategy mode: Write battle results back to source fleets.
 
         Updates ship states, removes destroyed ships, handles escapes.
+        Delegates to mode handler for actual implementation.
         """
         if not self._config or self._config.mode != BattleMode.STRATEGY:
             raise ValueError("apply_results_to_fleets only valid in STRATEGY mode")
 
+        # Delegate to mode handler
+        if self._mode_handler:
+            self._mode_handler.apply_results(self, results)
+            log_info(f"Battle results applied to fleets via mode handler")
+            return
+
+        # Legacy fallback (should not normally reach here)
         if not self._config.source_fleets:
             raise ValueError("No source fleets configured")
 
@@ -701,6 +746,7 @@ class BattleController:
         self._is_configured = False
         self._is_started = False
         self._ship_id_map.clear()
+        self._mode_handler = None
         if self._retreat_manager:
             self._retreat_manager.reset()
 
