@@ -7,6 +7,14 @@ validation, and registry management.
 Public API
 ==========
 
+Exceptions (game.core.exceptions):
+    GameException, StateException, FrozenStateException, ValidationException,
+    ResourceException, MissingResourceException, PersistenceException,
+    SimulationException, ComponentException, FormulaException
+
+Error Codes (game.core.error_codes):
+    ErrorCode
+
 Math utilities (game.core.math):
     Vector2, clamp, lerp, angle_diff
 
@@ -34,6 +42,23 @@ Protocols (game.core.protocols):
     IRegistryProvider, IFleet, IPlanet, ICombatant,
     is_fleet, is_planet, is_combatant
 """
+
+# Exceptions (PROJ-45)
+from game.core.exceptions import (
+    GameException,
+    StateException,
+    FrozenStateException,
+    ValidationException,
+    ResourceException,
+    MissingResourceException,
+    PersistenceException,
+    SimulationException,
+    ComponentException,
+    FormulaException,
+)
+
+# Error Codes (PROJ-45)
+from game.core.error_codes import ErrorCode
 
 # Math utilities
 from game.core.math import Vector2, clamp, lerp, angle_diff
@@ -96,6 +121,12 @@ from game.core.protocols import (
 
 
 __all__ = [
+    # Exceptions (PROJ-45)
+    'GameException', 'StateException', 'FrozenStateException', 'ValidationException',
+    'ResourceException', 'MissingResourceException', 'PersistenceException',
+    'SimulationException', 'ComponentException', 'FormulaException',
+    # Error Codes (PROJ-45)
+    'ErrorCode',
     # Math
     'Vector2', 'clamp', 'lerp', 'angle_diff',
     # Registry and DI

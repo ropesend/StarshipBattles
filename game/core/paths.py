@@ -7,13 +7,24 @@ Usage:
     data_path = Paths.DATA_DIR
     components = Paths.COMPONENTS_FILE
     data_path = Paths.get_data_dir()  # Returns pathlib.Path
+
+Exceptions:
+    ResourceException: If project root cannot be found during module load
 """
 import os
 from pathlib import Path
 
+from game.core.exceptions import ResourceException
+from game.core.error_codes import ErrorCode
+
 
 def _find_project_root() -> Path:
-    """Find project root by looking for game/ and data/ directories."""
+    """Find project root by looking for game/ and data/ directories.
+
+    Raises:
+        ResourceException: If project root cannot be found after searching
+            up to 10 parent directories.
+    """
     current = Path(__file__).resolve().parent
     for _ in range(10):
         if (current / "game").is_dir() and (current / "data").is_dir():
@@ -22,7 +33,11 @@ def _find_project_root() -> Path:
         if parent == current:
             break
         current = parent
-    raise RuntimeError("Could not find project root.")
+    raise ResourceException(
+        "Could not find project root (looking for game/ and data/ directories)",
+        code=ErrorCode.RESOURCE_NOT_FOUND.value,
+        context={"start_path": str(Path(__file__).resolve().parent)}
+    )
 
 
 _PROJECT_ROOT: Path = _find_project_root()

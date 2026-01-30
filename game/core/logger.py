@@ -91,6 +91,18 @@ def set_event_handler(handler):
     _event_handler = handler
 
 def log_event(event_type, **kwargs):
-    """Log a structured event if a handler is registered."""
+    """Log a structured event if a handler is registered.
+
+    Handler exceptions are caught and logged to prevent test or simulation
+    code from crashing due to event handler bugs.
+
+    Args:
+        event_type: The type of event (e.g., "damage", "movement", "turn_start")
+        **kwargs: Event-specific data to pass to the handler
+    """
     if _event_handler:
-        _event_handler(event_type, **kwargs)
+        try:
+            _event_handler(event_type, **kwargs)
+        except Exception as e:
+            # Log handler errors but don't propagate - handlers shouldn't crash callers
+            _logger.error(f"Event handler error for {event_type}: {e}")

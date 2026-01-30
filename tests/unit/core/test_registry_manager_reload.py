@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from game.core.registry import RegistryManager
+from game.core.exceptions import FrozenStateException
 
 
 @pytest.fixture
@@ -98,12 +99,12 @@ class TestReloadAllFromDirectory:
         assert result is False
 
     def test_reload_raises_when_frozen(self, fresh_registry):
-        """reload_all_from_directory() should raise RuntimeError when frozen."""
+        """reload_all_from_directory() should raise FrozenStateException when frozen."""
         fresh_registry.freeze()
         test_dir = Path(os.getcwd()) / "tests" / "unit" / "data"
 
         try:
-            with pytest.raises(RuntimeError, match="frozen"):
+            with pytest.raises(FrozenStateException, match="frozen"):
                 fresh_registry.reload_all_from_directory(test_dir)
         finally:
             # Clean up: unfreeze by resetting (registry fixture will restore)

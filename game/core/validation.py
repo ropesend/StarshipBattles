@@ -11,9 +11,13 @@ PROJ-21 Phase 1: Consolidated from 5 duplicate implementations:
 - game/ui/screens/race_validator.py
 
 PROJ-43 Phase 11: Added IValidationRule protocol for cross-layer contracts.
+PROJ-45 Phase 2: Added ErrorCode enum support.
 """
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Optional, Union, Any, Protocol, runtime_checkable
+
+from game.core.error_codes import ErrorCode
 
 
 @runtime_checkable
@@ -123,18 +127,20 @@ class ValidationResult:
         """
         return self.errors[0] if self.errors else ""
 
-    def add_error(self, error: str, code: Optional[str] = None) -> None:
+    def add_error(self, error: str, code: Optional[Union[str, ErrorCode]] = None) -> None:
         """Add an error and mark result as invalid.
 
         Args:
             error: Error message describing the validation failure.
-            code: Optional error code for programmatic handling.
-                  Only sets error_code if not already set (first code wins).
+            code: Optional error code for programmatic handling. Can be a string
+                  or an ErrorCode enum value. Only sets error_code if not already
+                  set (first code wins).
         """
         self.errors.append(error)
         self.is_valid = False
         if code and not self.error_code:
-            self.error_code = code
+            # Convert ErrorCode enum to string value if needed
+            self.error_code = code.value if isinstance(code, ErrorCode) else code
 
     def add_warning(self, warning: str) -> None:
         """Add a warning (does not affect validity).

@@ -49,10 +49,12 @@ class ModifierService:
 
         PROJ-42: Tries get_default_registries() first, falls back to provider
         (which shares mutable dict refs) for backward compatibility.
+        PROJ-45: Also catches StateException for new exception hierarchy.
         """
+        from game.core.exceptions import StateException
         try:
             return get_default_registries().modifiers
-        except RuntimeError:
+        except (RuntimeError, StateException):
             return get_default_registry_provider().get_modifiers()
 
     def is_modifier_allowed(self, mod_id: str, component) -> bool:

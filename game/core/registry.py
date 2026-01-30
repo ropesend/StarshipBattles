@@ -44,6 +44,9 @@ from dataclasses import dataclass
 from typing import Dict, Any, Optional
 import threading
 
+from game.core.exceptions import StateException, FrozenStateException
+from game.core.error_codes import ErrorCode
+
 
 # =============================================================================
 # GameRegistries Container (PROJ-38)
@@ -96,17 +99,19 @@ def get_default_registries() -> GameRegistries:
     Get the default GameRegistries instance.
 
     PROJ-38: Returns the default GameRegistries instance set by the
-    composition root. Raises RuntimeError if not set.
+    composition root. Raises StateException if not set.
 
     Returns:
         The default GameRegistries instance
 
     Raises:
-        RuntimeError: If set_default_registries() has not been called
+        StateException: If set_default_registries() has not been called
     """
     if _default_registries is None:
-        raise RuntimeError(
-            "Default registries not set. Call set_default_registries() first."
+        raise StateException(
+            "Default registries not set. Call set_default_registries() first.",
+            code=ErrorCode.NOT_INITIALIZED.value,
+            context={"operation": "get_default_registries"}
         )
     return _default_registries
 
@@ -152,12 +157,16 @@ class RegistryManager:
     def __init__(self):
         """
         Initialize the RegistryManager.
-        
+
         Raises:
-            RuntimeError: If called directly instead of via instance()
+            StateException: If called directly instead of via instance()
         """
         if RegistryManager._instance is not None:
-             raise RuntimeError("RegistryManager is a singleton. Use RegistryManager.instance()")
+             raise StateException(
+                 "RegistryManager is a singleton. Use RegistryManager.instance()",
+                 code=ErrorCode.INVALID_STATE.value,
+                 context={"class": "RegistryManager"}
+             )
         
         self.components: Dict[str, Any] = {}
         self.modifiers: Dict[str, Any] = {}
@@ -220,10 +229,14 @@ class RegistryManager:
             resources_data: Optional pre-loaded resource definitions
 
         Raises:
-            RuntimeError: If the registry is frozen
+            FrozenStateException: If the registry is frozen
         """
         if self._frozen:
-            raise RuntimeError("Cannot hydrate a frozen RegistryManager")
+            raise FrozenStateException(
+                "Cannot hydrate a frozen RegistryManager",
+                code=ErrorCode.STATE_FROZEN.value,
+                context={"operation": "hydrate"}
+            )
 
         # NOTE: We update dictionaries in-place rather than replacing them.
         # This ensures any code holding references to these dicts sees the updates.
@@ -243,15 +256,19 @@ class RegistryManager:
     def clear(self):
         """
         Clear all registries to empty state.
-        
+
         Used by test fixtures to ensure clean state between tests.
         Preserves dict identity, only empties contents.
-        
+
         Raises:
-            RuntimeError: If the registry is frozen
+            FrozenStateException: If the registry is frozen
         """
         if self._frozen:
-             raise RuntimeError("Cannot clear a frozen RegistryManager (Tests must unfreeze or reset if absolutely necessary)")
+             raise FrozenStateException(
+                 "Cannot clear a frozen RegistryManager (Tests must unfreeze or reset if absolutely necessary)",
+                 code=ErrorCode.STATE_FROZEN.value,
+                 context={"operation": "clear"}
+             )
         self.components.clear()
         self.modifiers.clear()
         self.vehicle_classes.clear()
@@ -265,12 +282,12 @@ class RegistryManager:
     def set_validator(self, validator):
         """
         Set the ship design validator.
-        
+
         Args:
             validator: ShipDesignValidator instance
-            
+
         Raises:
-            RuntimeError: If the registry is frozen
+            FrozenStateException: If the registry is frozen
         """
         self._check_frozen()
         self._validator = validator
@@ -278,7 +295,11 @@ class RegistryManager:
     def _check_frozen(self):
         """Helper to raise error if modifications are attempted while frozen."""
         if self._frozen:
-            raise RuntimeError("RegistryManager is frozen and cannot be modified")
+            raise FrozenStateException(
+                "RegistryManager is frozen and cannot be modified",
+                code=ErrorCode.STATE_FROZEN.value,
+                context={"operation": "modify"}
+            )
 
     def reload_all_from_directory(self, data_dir) -> bool:
         """
@@ -299,7 +320,7 @@ class RegistryManager:
             True if directory exists (even if some files missing), False if directory invalid.
 
         Raises:
-            RuntimeError: If the registry is frozen.
+            FrozenStateException: If the registry is frozen.
         """
         import os
         import logging
@@ -395,7 +416,7 @@ def set_validator(validator) -> None:
         validator: ShipDesignValidator instance
 
     Raises:
-        RuntimeError: If the registry is frozen
+        FrozenStateException: If the registry is frozen
     """
     RegistryManager.instance().set_validator(validator)
 
@@ -407,7 +428,7 @@ def clear_registry() -> None:
     Preserves dict identity, only empties contents.
 
     Raises:
-        RuntimeError: If the registry is frozen
+        FrozenStateException: If the registry is frozen
     """
     RegistryManager.instance().clear()
 

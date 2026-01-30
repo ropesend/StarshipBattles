@@ -75,10 +75,12 @@ class ShipStatsService:
 
         PROJ-42: Tries get_default_registries() first, falls back to provider
         (which shares mutable dict refs) for backward compatibility.
+        PROJ-45: Also catches StateException for new exception hierarchy.
         """
+        from game.core.exceptions import StateException
         try:
             return get_default_registries()
-        except RuntimeError:
+        except (RuntimeError, StateException):
             provider = get_default_registry_provider()
             return GameRegistries(
                 components=provider.get_components(),

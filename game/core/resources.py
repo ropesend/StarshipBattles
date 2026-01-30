@@ -2,8 +2,15 @@
 Resource Registry Loading
 
 Loads resource type definitions from data/resources.json into the RegistryManager.
+
+Exceptions:
+    FileNotFoundError: File not found (handled with fallback to defaults)
+    json.JSONDecodeError: Invalid JSON (handled with fallback to defaults)
+    PermissionError: Cannot read file (handled with fallback to defaults)
+    TypeError: Malformed data structure (handled with fallback to defaults)
 """
 
+import json
 import os
 from game.core.registry import RegistryManager
 from game.core.json_utils import load_json_required
@@ -74,8 +81,18 @@ def load_resources_data(filepath: str = "data/resources.json") -> dict:
 
         return result
 
-    except Exception:
-        # Fall back to defaults on error
+    except FileNotFoundError:
+        log_warning(f"Resources file not found: {resolved_path}, using defaults")
+        return copy.deepcopy(_get_default_resources())
+    except json.JSONDecodeError as e:
+        log_warning(f"Invalid JSON in resources file {resolved_path}: {e}, using defaults")
+        return copy.deepcopy(_get_default_resources())
+    except (PermissionError, OSError) as e:
+        log_warning(f"Cannot read resources file {resolved_path}: {e}, using defaults")
+        return copy.deepcopy(_get_default_resources())
+    except (TypeError, AttributeError) as e:
+        # Malformed data structure (e.g., resources is not a list)
+        log_warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
         return copy.deepcopy(_get_default_resources())
 
 
@@ -108,6 +125,16 @@ def load_resources(filepath: str = "data/resources.json") -> None:
 
         log_info(f"Loaded {len(resources)} resource types")
 
-    except Exception as e:
-        log_warning(f"Failed to load resources from {filepath}: {e}")
+    except FileNotFoundError:
+        log_warning(f"Resources file not found: {resolved_path}, using defaults")
+        resources.update(_get_default_resources())
+    except json.JSONDecodeError as e:
+        log_warning(f"Invalid JSON in resources file {resolved_path}: {e}, using defaults")
+        resources.update(_get_default_resources())
+    except (PermissionError, OSError) as e:
+        log_warning(f"Cannot read resources file {resolved_path}: {e}, using defaults")
+        resources.update(_get_default_resources())
+    except (TypeError, AttributeError) as e:
+        # Malformed data structure (e.g., resources is not a list)
+        log_warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
         resources.update(_get_default_resources())

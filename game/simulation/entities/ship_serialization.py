@@ -135,10 +135,12 @@ class ShipSerializer:
         # Version check is informational - the dict check in component loading is the actual enforcement
 
         # PROJ-38: Resolve registries for component/modifier operations
+        # PROJ-45: Also catches StateException for new exception hierarchy
         if registries is None:
+            from game.core.exceptions import StateException
             try:
                 registries = get_default_registries()
-            except RuntimeError:
+            except (RuntimeError, StateException):
                 # Default registries not set - will use legacy functions below
                 pass
 

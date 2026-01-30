@@ -72,11 +72,13 @@ class WorkshopContext:
         """
         if self.registries is None:
             from game.core.registry import get_default_registries, GameRegistries
+            from game.core.exceptions import StateException
             try:
                 # Try to get default registries first
                 object.__setattr__(self, 'registries', get_default_registries())
-            except RuntimeError:
+            except (RuntimeError, StateException):
                 # Default registries not set - try to create from loaded data
+                # PROJ-45: Also catches StateException for new exception hierarchy
                 try:
                     from game.simulation.components.component import (
                         load_components_data, load_modifiers_data

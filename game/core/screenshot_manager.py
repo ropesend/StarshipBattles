@@ -112,8 +112,8 @@ class ScreenshotManager:
             log_info(f"Screenshot saved: {abs_path}")
             self._copy_to_clipboard(abs_path)
 
-        except Exception as e:
-            log_error(f"Error saving screenshot: {e}")
+        except (pygame.error, IOError, OSError) as e:
+            log_error(f"Error saving screenshot to {filepath}: {e}")
 
     def _copy_to_clipboard(self, text: str) -> None:
         """Copy text to clipboard using Tkinter or Windows clip.
@@ -213,5 +213,5 @@ class ScreenshotManager:
                 else:
                     log_warning("Cannot capture viewport: invalid dimensions")
 
-        except Exception as e:
+        except (pygame.error, IOError, OSError, AttributeError) as e:
             log_error(f"Error capturing strategy layer: {e}")

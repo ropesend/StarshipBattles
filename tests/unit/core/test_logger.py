@@ -440,7 +440,12 @@ class TestEdgeCases:
         fresh_logger.log((1, 2, 3))
 
     def test_event_handler_exception_handling(self):
-        """Exception in event handler should not crash log_event."""
+        """Exception in event handler should not crash log_event.
+
+        PROJ-45: Handler exceptions are caught and logged - they should NOT
+        propagate to callers. This prevents buggy handlers from crashing
+        simulation code.
+        """
         from game.core.logger import set_event_handler, log_event
 
         def bad_handler(event_type, **kwargs):
@@ -448,10 +453,8 @@ class TestEdgeCases:
 
         set_event_handler(bad_handler)
 
-        # This will raise because log_event doesn't catch exceptions
-        # This is expected behavior - handler errors should propagate
-        with pytest.raises(ValueError):
-            log_event("test_event")
+        # Should NOT raise - handler exceptions are caught and logged
+        log_event("test_event")  # No exception expected
 
     def test_log_unicode_characters(self, fresh_logger):
         """Logging unicode should not crash."""

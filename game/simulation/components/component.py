@@ -92,12 +92,14 @@ def _get_registries_fallback() -> 'GameRegistries':
         GameRegistries instance
     """
     from game.core.registry import GameRegistries
+    from game.core.exceptions import StateException
     try:
         return get_default_registries()
-    except RuntimeError:
+    except (RuntimeError, StateException):
         # Fall back to provider - wrap in GameRegistries for consistent interface
         # Note: Provider only has components/modifiers/vehicle_classes.
         # Resources is set to empty dict since this module doesn't use it.
+        # PROJ-45: Also catch StateException (new exception type for uninitialized state)
         provider = get_default_registry_provider()
         return GameRegistries(
             components=provider.get_components(),

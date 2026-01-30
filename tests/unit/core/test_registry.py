@@ -16,6 +16,7 @@ import threading
 from unittest.mock import MagicMock
 
 from game.core.registry import RegistryManager
+from game.core.exceptions import StateException, FrozenStateException
 
 
 # =============================================================================
@@ -341,10 +342,10 @@ class TestClearMethod:
         assert id(registry.modifiers) == modifiers_id
 
     def test_clear_raises_when_frozen(self, registry):
-        """clear() should raise RuntimeError when frozen."""
+        """clear() should raise FrozenStateException when frozen."""
         registry.freeze()
 
-        with pytest.raises(RuntimeError, match="frozen"):
+        with pytest.raises(FrozenStateException, match="frozen"):
             registry.clear()
 
 
@@ -364,10 +365,10 @@ class TestFreezeFunctionality:
         assert registry._frozen == True
 
     def test_set_validator_raises_when_frozen(self, registry):
-        """set_validator() should raise when frozen."""
+        """set_validator() should raise FrozenStateException when frozen."""
         registry.freeze()
 
-        with pytest.raises(RuntimeError, match="frozen"):
+        with pytest.raises(FrozenStateException, match="frozen"):
             registry.set_validator(MagicMock())
 
     def test_freeze_allows_reads(self, registry):
@@ -489,10 +490,10 @@ class TestHydrateMethod:
         assert id(registry.components) == components_id
 
     def test_hydrate_raises_when_frozen(self, registry):
-        """hydrate() should raise RuntimeError when frozen."""
+        """hydrate() should raise FrozenStateException when frozen."""
         registry.freeze()
 
-        with pytest.raises(RuntimeError, match="frozen"):
+        with pytest.raises(FrozenStateException, match="frozen"):
             registry.hydrate({}, {}, {})
 
 
@@ -901,14 +902,14 @@ class TestDefaultRegistries:
     """
 
     def test_get_default_registries_raises_when_not_set(self):
-        """get_default_registries() should raise RuntimeError when not set."""
+        """get_default_registries() should raise StateException when not set."""
         from game.core.registry import get_default_registries, GameRegistries
         import game.core.registry as registry_module
 
         # Ensure default is not set
         registry_module._default_registries = None
 
-        with pytest.raises(RuntimeError, match="not set"):
+        with pytest.raises(StateException, match="not set"):
             get_default_registries()
 
     def test_set_default_registries_stores_instance(self):

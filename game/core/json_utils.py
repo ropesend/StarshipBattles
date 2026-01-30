@@ -15,6 +15,13 @@ Usage:
 
     # Saving
     success = save_json("output.json", data)
+
+Exceptions:
+    load_json_required raises:
+        FileNotFoundError: If file doesn't exist
+        json.JSONDecodeError: If JSON is invalid
+
+    load_json and save_json return defaults/False on error (no exceptions raised)
 """
 import json
 from pathlib import Path

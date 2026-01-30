@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-45 Phase 1 Complete
-**Current Status:** PROJ-45 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-45 Phase 2 Complete
+**Current Status:** PROJ-45 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-45
-**Current Phase:** Phase 2 - Core Layer - Fix Core Module Error Handling
+**Current Phase:** Phase 3 - Simulation Layer - Components & Formulas
 **Test Status:** 5740 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: Exception hierarchy and error codes created
-- Created game/core/exceptions.py with 10 exception classes (GameException hierarchy)
-- Created game/core/error_codes.py with 29 error codes across 6 categories
-- Created tests/unit/core/test_exceptions.py (29 tests)
-- Created tests/unit/core/test_error_codes.py (24 tests)
-- +53 new tests, 5740 total tests passing
-- Next: Phase 2 - Fix Core Module Error Handling
+- Phase 2 complete: Core module error handling updated
+- Updated 8 core modules: json_utils, resources, registry, validation, screenshot_manager, logger, paths, __init__
+- Changed registry exceptions from RuntimeError to StateException/FrozenStateException
+- Updated 7 fallback patterns to catch StateException (component, ship, services)
+- Added ErrorCode enum support to ValidationResult
+- Exported all exceptions and ErrorCode from game.core
+- All 516 core tests passing, 5740 total tests passing
+- Next: Phase 3 - Simulation Layer Components & Formulas
 
 ---
 
@@ -98,6 +99,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-45 | Phase 2 Complete | Complete | 5740 passed | 6e9302d6 | Core module error handling, StateException, fallback updates |
 | 2026-01-30 | PROJ-45 | Phase 1 Complete | Complete | 5740 passed | 4471874f | Exception hierarchy + error codes, +53 tests |
 | 2026-01-30 | PROJ-44 | Audit Cycle 1 | PASSED | 5687 passed | 17e58d44 | Fixed 2 hardcoded damage threshold constants, project complete |
 | 2026-01-30 | PROJ-44 | Phase 9 Complete | Complete | 5687 passed | f239462d | Minor cleanup: dead code, naming, ComponentItemContext dataclass |
