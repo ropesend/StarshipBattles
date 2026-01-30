@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 3 Complete
-**Current Status:** Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-42 Phase 4 Complete
+**Current Status:** Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-42
-**Current Phase:** Phase 4 - Clean Up Serialization & Format Support
+**Current Phase:** Phase 5 - BattleEngine & Scattered Compat Cleanup
 **Test Status:** 5360 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 3 completed: Eliminated all dual static/instance patterns
-- ShipStatsService.calculate_stats() now instance-only method
-- ModifierService methods all now instance-only (is_modifier_allowed, get_mandatory_modifiers, etc.)
-- Updated all callers: Ship.py, ShipComponentManager, ShipInstance, ui/builder/modifier_logic.py
-- Updated tests: test_ship_stats_service.py, test_modifier_service.py, test_service_injection.py, test_modifier_service_di.py
+- Phase 4 completed: Standardized serialization formats
+- Removed legacy string format support in ship_serialization.py (dict-only now)
+- Added `_format_version: "2.0"` to serialized ships
+- Removed legacy list format support in formation_editor.py
+- Documented stats mismatch verification (not a compat issue)
+- Cleaned up getattr: vehicle_type direct access, strategic stats keep getattr (set in recalculate)
 - All 5360 tests passing
-- Next: Phase 4 - Clean Up Serialization & Format Support
+- Next: Phase 5 - BattleEngine & Scattered Compat Cleanup
 
 ---
 
@@ -98,6 +99,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 4 Complete | Complete | 5360 passed | a059f80 | Standardized serialization: dict-only, format version |
 | 2026-01-29 | PROJ-42 | Phase 3 Complete | Complete | 5360 passed | 225159d | Eliminated dual static/instance patterns in services |
 | 2026-01-29 | PROJ-42 | Phase 2 Complete | Complete | 925 passed | 2ed3fa1 | Tasks 2.6-2.8 verified complete, updated docstrings |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.5 | Complete | 98 testmon | 8c33d1f | Updated VehicleDesignService to GameRegistries only |

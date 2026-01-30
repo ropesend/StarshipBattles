@@ -36,9 +36,10 @@ class ShipSerializer:
             log_debug(f"ShipSerializer.to_dict starting for ship: {ship.name}")
 
             data = {
+                "_format_version": "2.0",  # PROJ-42 Phase 4: Explicit format version
                 "name": ship.name,
                 "ship_class": ship.ship_class,
-                "vehicle_type": getattr(ship, 'vehicle_type', 'Ship'),  # ADDED: Save vehicle_type for design filtering
+                "vehicle_type": ship.vehicle_type,  # Always set in Ship.__init__
                 "theme_id": ship.theme_id,
                 "team_id": ship.team_id,
                 "color": ship.color,
@@ -58,6 +59,8 @@ class ShipSerializer:
                     "acceleration_rate": ship.acceleration_rate,
                     "turn_speed": ship.turn_speed,
                     "total_thrust": ship.total_thrust,
+                    # PROJ-42 Phase 4: Strategic stats use getattr because they're set during
+                    # recalculate_stats(), not in __init__. Default 0 is correct for uncalculated ships.
                     "strategic_movement": getattr(ship, 'total_strategic_movement', 0),
                     "mass": ship.mass,
                     "armor_hp_pool": ship.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in ship.layers else 0,
@@ -126,6 +129,11 @@ class ShipSerializer:
         # Import here to avoid circular dependency
         from game.simulation.entities.ship import Ship
 
+        # PROJ-42 Phase 4: Check format version (v1.x had string component format, no longer supported)
+        version = data.get("_format_version", "1.0")
+        # Allow v1.x data that happens to use dict format (graceful migration)
+        # Version check is informational - the dict check in component loading is the actual enforcement
+
         # PROJ-38: Resolve registries for component/modifier operations
         if registries is None:
             try:
@@ -162,14 +170,13 @@ class ShipSerializer:
                 continue
             
             for c_entry in comps_list:
-                comp_id = ""
-                modifiers_data = []
+                # PROJ-42 Phase 4: Removed legacy string format support
+                # Components must be dict format: {"id": "...", "modifiers": [...]}
+                if not isinstance(c_entry, dict):
+                    raise ValueError(f"Component entry must be dict, got {type(c_entry).__name__}")
 
-                if isinstance(c_entry, str):
-                    comp_id = c_entry
-                elif isinstance(c_entry, dict):
-                    comp_id = c_entry.get("id", "")
-                    modifiers_data = c_entry.get("modifiers", [])
+                comp_id = c_entry.get("id", "")
+                modifiers_data = c_entry.get("modifiers", [])
 
                 # PROJ-38: Use injected registries if available, else provider
                 if registries is not None:
@@ -207,6 +214,9 @@ class ShipSerializer:
                     s.resources.set_value(resource_name, value)
         
         # Verify loaded stats match expected stats (if saved)
+        # PROJ-42 Phase 4: This is intentional data integrity verification, NOT a backward
+        # compatibility fallback. Warnings indicate component definitions or formulas changed
+        # since the ship was saved. The _loading_warnings attribute helps debugging.
         expected = data.get('expected_stats', {})
         if expected:
             mismatches = []

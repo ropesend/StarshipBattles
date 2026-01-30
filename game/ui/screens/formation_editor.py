@@ -201,15 +201,15 @@ class FormationCore:
                     self.arrows = []
                     self.arrow_attrs = []
                     for item in raw_arrows:
-                        if isinstance(item, list): # Legacy
-                            self.arrows.append(item)
-                            self.arrow_attrs.append({'rotation_mode': 'relative'})
-                        elif isinstance(item, dict):
-                            self.arrows.append(item.get('pos', [0,0]))
-                            self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
-                    
+                        # PROJ-42 Phase 4: Removed legacy list format support
+                        # Arrows must be dict format: {"pos": [x, y], "rotation_mode": "..."}
+                        if not isinstance(item, dict):
+                            raise ValueError(f"Arrow must be dict format, got {type(item).__name__}")
+                        self.arrows.append(item.get('pos', [0, 0]))
+                        self.arrow_attrs.append({'rotation_mode': item.get('rotation_mode', 'relative')})
+
                     self.selected_indices = set()
-        except (OSError, IOError, json.JSONDecodeError, KeyError) as e:
+        except (OSError, IOError, json.JSONDecodeError, KeyError, ValueError) as e:
             print(f"Error loading formation: {e}")
 
 class FormationEditorScene:
