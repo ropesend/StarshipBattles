@@ -18,13 +18,14 @@ Every session follows this exact sequence:
 
 1. **Read** `refactor_plan.md`
 2. **Check** Agent Context for current state
-3. **Identify** next incomplete project (first `[ ]`)
+3. **Identify** next work item (prioritize `[/]`, then `[ ]`)
 4. **Load** project plan and phase checklist
-5. **Execute** work (phase or audit)
-6. **Test** - all tests must pass
-7. **Update** all plan files
-8. **Commit** changes to git
-9. **EXIT** immediately
+5. **Mark** project `[/]` in Master Task List if starting new
+6. **Execute** work (phase or audit)
+7. **Test** - all tests must pass
+8. **Update** all plan files
+9. **Commit** changes to git
+10. **EXIT** immediately
 
 ### 3. Work Execution Rules
 
@@ -36,6 +37,7 @@ Every session follows this exact sequence:
 - Then EXIT
 
 **Never:**
+- Leave a project in `[ ]` status after starting work (mark `[/]`)
 - Continue to next phase after completing one
 - Skip ahead to other projects
 - Ask for clarification

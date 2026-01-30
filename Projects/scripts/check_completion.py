@@ -28,7 +28,7 @@ def check_completion(plan_file: Path) -> bool:
     # Find all checkbox items in the Master Task List section
     # New format: - [ ] **PROJ-XX: Title**
     # Pattern matches: - [ ] or - [x] or - [~] (complete with issues)
-    checkbox_pattern = r'^- \[([x~/ ])\]\s+\*\*PROJ-\d+:'
+    checkbox_pattern = r'^- \[([xX~/ ])\]\s+\*\*PROJ-\d+:'
     
     # Extract Master Task List section (stops at next ## header, not ###)
     task_list_match = re.search(

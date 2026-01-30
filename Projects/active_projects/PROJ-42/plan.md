@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Quick Wins & Deprecated Module Removal | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Complete PROJ-38 Registry Migration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Complete PROJ-38 Registry Migration | In Progress | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Eliminate Dual Static/Instance Patterns | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Clean Up Serialization & Format Support | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. BattleEngine & Scattered Compat Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-01-29
-**Active Phase:** Phase 1 Complete
-**Last Action:** Completed Phase 1 - Removed FleetMovementSimulator, GameState aliases, _migrate_temp_designs
-**Next Action:** Begin Phase 2: Complete PROJ-38 Registry Migration
+**Active Phase:** Phase 2 - Task 2.1 Complete
+**Last Action:** Completed Task 2.1 - Updated ShipStatsService with _get_registries_fallback() pattern
+**Next Action:** Task 2.2 - Update ModifierService to GameRegistries
 **Blockers:** None
 
 ## Overview

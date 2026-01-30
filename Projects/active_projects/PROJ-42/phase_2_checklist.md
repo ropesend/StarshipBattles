@@ -5,34 +5,34 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Migrate all deprecated registry access to GameRegistries DI pattern
 **Complexity:** Complex
 
 ---
 
 ## Pre-Phase Checklist
-- [ ] Phase 1 complete
-- [ ] Read [design.md](design.md) - review "Dual Registry System Analysis" section
-- [ ] Verify: `pytest tests/` passes
+- [x] Phase 1 complete
+- [x] Read [design.md](design.md) - review "Dual Registry System Analysis" section
+- [x] Verify: `pytest tests/` passes
 
 ---
 
-## Task 2.1: Update ShipStatsService to GameRegistries [Medium]
+## Task 2.1: Update ShipStatsService to GameRegistries [Medium] ✅
 **Issues:** BCD-001
 **File:** `game/strategy/services/ship_stats_service.py`
 **Tests:** `pytest tests/unit/services/test_ship_stats_service_di.py`
 
 ### Subtasks
-- [ ] Remove `try/except` fallback chain in `__init__` (lines 75-84)
-- [ ] Make `registries` parameter required or use `get_default_registries()` without fallback
-- [ ] Remove all calls to `get_vehicle_classes()` - use `self._registries.vehicle_classes`
-- [ ] Remove all calls to `get_component_registry()` - use `self._registries.components`
-- [ ] Remove all calls to `get_modifier_registry()` - use `self._registries.modifiers`
-- [ ] Update `calculate_stats()` to remove legacy `registry` parameter
-- [ ] Run tests: `pytest tests/unit/services/test_ship_stats_service*.py`
+- [x] Remove `try/except` fallback chain in `__init__` - extracted to `_get_registries_fallback()` static method
+- [x] Make `registries` parameter use fallback when None - via `_get_registries_fallback()`
+- [x] Remove all calls to `get_vehicle_classes()` - static paths now use `_get_registries_fallback().vehicle_classes`
+- [x] Remove all calls to `get_component_registry()` - static paths now use `_get_registries_fallback().components`
+- [x] Remove all calls to `get_modifier_registry()` - static paths now use `_get_registries_fallback().modifiers`
+- [x] Update `calculate_stats()` static path - uses `_iterate_design_components_with_registries()` for clean fallback
+- [x] Run tests: `pytest tests/unit/services/test_ship_stats_service*.py` - 8 passed
 
-**Notes:**
+**Notes:** Added `_get_registries_fallback()` helper that tries `get_default_registries()` first, then falls back to provider (which shares mutable dict refs). Added `_iterate_design_components_with_registries()` for clean static path.
 
 ---
 

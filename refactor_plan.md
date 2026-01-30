@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 1
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-42 Phase 2 Task 2.1
+**Current Status:** Phase 2 in progress, Task 2.1 complete
 **Current Project:** PROJ-42
-**Current Phase:** Phase 2 (next)
+**Current Phase:** Phase 2 - Task 2.2 next
 **Test Status:** 5366 passed, 3 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 completed: Removed FleetMovementSimulator (331 LOC), GameState aliases in app.py, _migrate_temp_designs dead method
-- Updated test_lab.py to use GameState.MENU/BATTLE directly
-- Updated all app.py usages to GameState.X pattern
-- V1 modifier detection kept (is validation, not handling)
-- Next: Phase 2 - Complete PROJ-38 Registry Migration
+- Task 2.1 completed: Updated ShipStatsService with `_get_registries_fallback()` pattern
+- Added `_iterate_design_components_with_registries()` for static path
+- Pattern: Try `get_default_registries()` first, fallback creates `GameRegistries` from provider (shares mutable dict refs)
+- Also reverted problematic commit 0e9a1fd that broke 5 multi-ability tests
+- Next: Task 2.2 - Update ModifierService using same pattern
 
 ---
 
@@ -96,6 +96,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 2 Task 2.1 | Complete | 5366 passed | 01d4ca5 | Updated ShipStatsService with _get_registries_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 1 | Complete | 5366 passed | 56a68ab | Removed FleetMovementSimulator, GameState aliases, dead migration code |
 
 ---

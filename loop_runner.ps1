@@ -44,7 +44,8 @@ while ($iteration -lt $MAX_ITERATIONS) {
             Write-Success "Total iterations: $iteration"
             exit 0
         }
-    } catch {
+    }
+    catch {
         Write-Warning "Check completion script failed to run properly"
     }
 
@@ -54,17 +55,20 @@ while ($iteration -lt $MAX_ITERATIONS) {
 
     # Run Claude CLI
     try {
-        # Using cmd /c ensuring proper execution of the claude.cmd batch file if present
-        # and handling the arguments correctly
+        # --print: Non-interactive mode (outputs work immediately)
+        # --verbose: Show detailed progress information
         claude `
             --dangerously-skip-user-approval `
             --system-prompt-file WORKER.md `
+            --verbose `
+            --print `
             -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit."
             
         if ($LASTEXITCODE -ne 0) {
             throw "Claude CLI exited with error code $LASTEXITCODE"
         }
-    } catch {
+    }
+    catch {
         Write-ErrorLog "Claude CLI failed: $_"
         Write-Warning "Check output above for errors"
         Write-Info "You can manually fix issues and restart"
@@ -78,7 +82,8 @@ while ($iteration -lt $MAX_ITERATIONS) {
     $gitStatus = git diff --quiet HEAD
     if ($LASTEXITCODE -ne 0) {
         Write-Success "Changes detected in git"
-    } else {
+    }
+    else {
         Write-Warning "No changes detected - this might indicate an issue or purely metadata update"
         Write-Info "Checking plan file for updates..."
     }
