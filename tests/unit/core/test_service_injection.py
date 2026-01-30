@@ -318,30 +318,37 @@ class TestModifierServiceInjection:
 # =============================================================================
 
 class TestVehicleDesignServiceInjection:
-    """Tests for VehicleDesignService registry injection."""
+    """Tests for VehicleDesignService registry injection.
 
-    def test_constructor_accepts_registry_parameter(self):
-        """VehicleDesignService constructor should accept optional registry."""
+    PROJ-42: Updated to use GameRegistries instead of IRegistryProvider.
+    """
+
+    def test_constructor_accepts_registries_parameter(self):
+        """VehicleDesignService constructor should accept optional registries."""
         from game.simulation.services.vehicle_design_service import VehicleDesignService
-        from game.core.registry import TestRegistryProvider
         import inspect
 
         sig = inspect.signature(VehicleDesignService.__init__)
         param_names = list(sig.parameters.keys())
-        assert 'registry' in param_names
+        assert 'registries' in param_names
 
-    def test_create_ship_uses_injected_registry(self):
-        """create_ship() should use injected registry for class validation."""
+    def test_create_ship_uses_injected_registries(self):
+        """create_ship() should use injected registries for class validation."""
         from game.simulation.services.vehicle_design_service import VehicleDesignService
-        from game.core.registry import TestRegistryProvider
+        from game.core.registry import GameRegistries
 
-        # Create test registry with custom vehicle class
+        # Create test registries with custom vehicle class
         test_classes = {
             "CustomClass": {"max_mass": 1000, "name": "CustomClass"}
         }
-        provider = TestRegistryProvider(vehicle_classes=test_classes)
+        registries = GameRegistries(
+            components={},
+            modifiers={},
+            vehicle_classes=test_classes,
+            resources={}
+        )
 
-        service = VehicleDesignService(registry=provider)
+        service = VehicleDesignService(registries=registries)
 
         # Should recognize our custom class without warning
         result = service.create_ship(
@@ -354,14 +361,19 @@ class TestVehicleDesignServiceInjection:
         assert len(unknown_warnings) == 0
 
     def test_create_ship_warns_for_unknown_class(self):
-        """create_ship() should warn for class not in injected registry."""
+        """create_ship() should warn for class not in injected registries."""
         from game.simulation.services.vehicle_design_service import VehicleDesignService
-        from game.core.registry import TestRegistryProvider
+        from game.core.registry import GameRegistries
 
-        # Empty registry
-        provider = TestRegistryProvider(vehicle_classes={})
+        # Empty registries
+        registries = GameRegistries(
+            components={},
+            modifiers={},
+            vehicle_classes={},
+            resources={}
+        )
 
-        service = VehicleDesignService(registry=provider)
+        service = VehicleDesignService(registries=registries)
 
         result = service.create_ship(
             name="TestShip",
@@ -372,23 +384,24 @@ class TestVehicleDesignServiceInjection:
         unknown_warnings = [w for w in result.warnings if "Unknown ship class" in w]
         assert len(unknown_warnings) > 0
 
-    def test_default_constructor_uses_singleton(self):
-        """VehicleDesignService() should work without registry parameter."""
+    def test_default_constructor_uses_fallback(self):
+        """VehicleDesignService() should work without registries parameter."""
         from game.simulation.services.vehicle_design_service import VehicleDesignService
 
         # Should not raise
         service = VehicleDesignService()
         assert service is not None
+        assert service._registries is not None
 
-    def test_get_available_components_uses_injected_registry(self):
-        """get_available_components() should use injected registry, not singleton."""
+    def test_get_available_components_uses_injected_registries(self):
+        """get_available_components() should use injected registries, not singleton."""
         from game.simulation.services.vehicle_design_service import VehicleDesignService
-        from game.core.registry import TestRegistryProvider, RegistryManager
+        from game.core.registry import GameRegistries
         from game.simulation.entities.ship import Ship
         from game.simulation.components.component_constants import LayerType
         from unittest.mock import MagicMock, patch
 
-        # Create provider with a custom component
+        # Create registries with a custom component
         custom_components = {
             "injected_test_comp": {
                 "id": "injected_test_comp",
@@ -397,12 +410,14 @@ class TestVehicleDesignServiceInjection:
                 "max_hp": 50
             }
         }
-        provider = TestRegistryProvider(
+        registries = GameRegistries(
             components=custom_components,
-            vehicle_classes={"Escort": {"max_mass": 1000}}
+            modifiers={},
+            vehicle_classes={"Escort": {"max_mass": 1000}},
+            resources={}
         )
 
-        service = VehicleDesignService(registry=provider)
+        service = VehicleDesignService(registries=registries)
 
         # Create a mock ship
         ship = MagicMock(spec=Ship)
@@ -427,6 +442,7 @@ class TestVehicleDesignServiceInjection:
         assert "injected_test_comp" in available
 
         # Verify singleton was NOT consulted (our component shouldn't be in singleton)
+        from game.core.registry import RegistryManager
         assert "injected_test_comp" not in RegistryManager.instance().components
 
 

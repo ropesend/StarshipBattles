@@ -1,10 +1,11 @@
 """
-Tests for VehicleDesignService dependency injection (PROJ-38).
+Tests for VehicleDesignService dependency injection (PROJ-38, PROJ-42).
 
 These tests verify that VehicleDesignService:
 1. Accepts GameRegistries via constructor
 2. Works with injected registries (no global state needed)
 3. Has transitional fallback to get_default_registries()
+4. PROJ-42: IRegistryProvider support removed - only GameRegistries now
 """
 import pytest
 
@@ -63,15 +64,18 @@ class TestVehicleDesignServiceConstructor:
         assert service._registries is not None
         assert service._registries.components is not None
 
-    def test_legacy_registry_param_still_works(self):
-        """Legacy registry parameter should still work for backward compatibility."""
-        from game.core.registry import get_default_registry_provider
+    def test_fallback_uses_provider_when_no_default_registries(self):
+        """When default registries not set, should fall back to provider."""
+        # Clear default registries to force fallback
+        import game.core.registry as registry_module
+        registry_module._default_registries = None
 
-        provider = get_default_registry_provider()
-        service = VehicleDesignService(registry=provider)
+        # Service should still work via provider fallback
+        service = VehicleDesignService()
 
-        # Should have internal state set (exact attribute depends on implementation)
-        assert service is not None
+        # Should have registries set via fallback
+        assert service._registries is not None
+        assert service._registries.components is not None
 
 
 # =============================================================================

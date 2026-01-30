@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 2 Task 2.4
-**Current Status:** Phase 2 in progress, Task 2.4 complete
+**Last Completed:** PROJ-42 Phase 2 Task 2.5
+**Current Status:** Phase 2 in progress, Task 2.5 complete
 **Current Project:** PROJ-42
-**Current Phase:** Phase 2 - Task 2.5 next
-**Test Status:** 115 testmon passed
+**Current Phase:** Phase 2 - Task 2.6 next
+**Test Status:** 98 testmon passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 2.4 completed: Updated Component to GameRegistries with `_get_registries_fallback()` pattern
-- Added `_get_registries_fallback()` function - tries `get_default_registries()` first, wraps provider in GameRegistries
-- Updated Component `__init__` to use fallback, simplified modifier loading and `add_modifier()` to use `self._registries` directly
-- Updated module-level functions (`load_components`, `load_modifiers`, `create_component`, `get_all_components`)
-- Kept module-level COMPONENT_REGISTRY/MODIFIER_REGISTRY for UI hot-reload (documented)
-- 9 component tests pass
-- Next: Task 2.5 - Update VehicleDesignService
+- Task 2.5 completed: Updated VehicleDesignService to GameRegistries only (removed IRegistryProvider)
+- Removed `registry: Optional['IRegistryProvider']` parameter entirely
+- Added `_get_registries_fallback()` static method (consistent with other services)
+- Simplified constructor to use fallback when registries is None
+- Removed helper methods `_get_vehicle_classes()` and `_get_components()` - now use `self._registries` directly
+- Updated tests in test_vehicle_design_service_di.py and test_service_injection.py
+- 29 VehicleDesignService tests pass
+- Next: Task 2.6 - Update UI Layer Files
 
 ---
 
@@ -98,6 +99,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 2 Task 2.5 | Complete | 98 testmon | 8c33d1f | Updated VehicleDesignService to GameRegistries only |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.4 | Complete | 115 testmon | 336bf48 | Updated Component with _get_registries_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.2 | Complete | 796 testmon | 6f26551 | Updated ModifierService with _get_modifiers_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.1 | Complete | 5366 passed | 01d4ca5 | Updated ShipStatsService with _get_registries_fallback() pattern |

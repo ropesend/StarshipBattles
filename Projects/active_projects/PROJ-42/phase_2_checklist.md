@@ -93,20 +93,20 @@
 
 ---
 
-## Task 2.5: Update VehicleDesignService [Medium]
+## Task 2.5: Update VehicleDesignService [Medium] ✅
 **Issues:** BCD-001
 **File:** `game/simulation/services/vehicle_design_service.py`
 **Tests:** `pytest tests/unit/services/test_vehicle_design_service_di.py`
 
 ### Subtasks
-- [ ] Remove dual constructor support (lines 56-86)
-- [ ] Remove `registry: Optional['IRegistryProvider']` parameter
-- [ ] Keep only `registries: Optional[GameRegistries]` parameter
-- [ ] Remove fallback to `get_default_registry_provider()`
-- [ ] Update all internal methods to use `self._registries`
-- [ ] Run tests: `pytest tests/unit/services/test_vehicle_design_service*.py`
+- [x] Remove dual constructor support (lines 56-86) - simplified to `_get_registries_fallback()` pattern
+- [x] Remove `registry: Optional['IRegistryProvider']` parameter
+- [x] Keep only `registries: Optional[GameRegistries]` parameter
+- [x] Remove fallback to `get_default_registry_provider()` - now uses `_get_registries_fallback()` static method
+- [x] Update all internal methods to use `self._registries` - removed `_get_vehicle_classes()` and `_get_components()` helpers
+- [x] Run tests: `pytest tests/unit/services/test_vehicle_design_service*.py` - 29 passed
 
-**Notes:**
+**Notes:** Removed IRegistryProvider support entirely. Added `_get_registries_fallback()` static method consistent with other services. Updated tests in `test_vehicle_design_service_di.py` and `test_service_injection.py` to use GameRegistries instead of TestRegistryProvider.
 
 ---
 
