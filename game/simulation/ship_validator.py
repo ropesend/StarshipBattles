@@ -9,7 +9,6 @@ from typing import List, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
-from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.error_codes import ErrorCode
 
 # Import base classes from validation module (Phase 12 refactoring)
@@ -267,17 +266,22 @@ class MassBudgetRule(DesignValidationRule):
 class ClassRequirementsRule(DesignValidationRule):
     """Validates class-specific requirements (crew, life support, etc.).
 
-    PROJ-38: Added registries parameter for dependency injection.
+    PROJ-50: Strict DI - registries is required.
     """
 
-    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+    def __init__(self, *, registries: 'GameRegistries'):
         """Initialize the rule.
 
-        PROJ-38: Added registries parameter for DI.
+        PROJ-50: Strict DI - registries is required.
 
         Args:
-            registries: Optional GameRegistries for DI. Falls back to global function if None.
+            registries: GameRegistries for DI (required).
+
+        Raises:
+            TypeError: If registries is None
         """
+        if registries is None:
+            raise TypeError("registries is required for ClassRequirementsRule")
         super().__init__()
         self._registries = registries
 
@@ -286,11 +290,8 @@ class ClassRequirementsRule(DesignValidationRule):
 
         from game.simulation.entities.ship_stats import ShipStatsCalculator
 
-        # PROJ-38: Use injected registries or fallback to provider
-        if self._registries is not None:
-            classes = self._registries.vehicle_classes
-        else:
-            classes = get_default_registry_provider().get_vehicle_classes()
+        # PROJ-50: Use registries directly (strict DI)
+        classes = self._registries.vehicle_classes
 
         class_def = classes.get(ship.ship_class, {})
 
@@ -392,17 +393,22 @@ class ResourceDependencyRule(DesignValidationRule):
 class ShipDesignValidator:
     """Validates ship designs using a set of rules.
 
-    PROJ-38: Added registries parameter for dependency injection.
+    PROJ-50: Strict DI - registries is required.
     """
 
-    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+    def __init__(self, *, registries: 'GameRegistries'):
         """Initialize the validator.
 
-        PROJ-38: Added registries parameter for DI.
+        PROJ-50: Strict DI - registries is required.
 
         Args:
-            registries: Optional GameRegistries for DI. Passed to ClassRequirementsRule.
+            registries: GameRegistries for DI (required). Passed to ClassRequirementsRule.
+
+        Raises:
+            TypeError: If registries is None
         """
+        if registries is None:
+            raise TypeError("registries is required for ShipDesignValidator")
         self.addition_rules: List[ValidationRule] = [
             LayerConstraintRule(),
             UniqueComponentRule(),

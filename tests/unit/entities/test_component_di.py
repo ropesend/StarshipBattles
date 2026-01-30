@@ -1,10 +1,10 @@
 """
-Tests for Component dependency injection (PROJ-38).
+Tests for Component dependency injection (PROJ-50).
 
 These tests verify that Component and related functions:
-1. Accept GameRegistries via constructor/parameter
-2. Work with injected registries (no global state needed)
-3. Have transitional fallback to get_default_registries()
+1. Accept GameRegistries via constructor/parameter (required)
+2. Raise TypeError when registries is None
+3. Work with injected registries for all operations
 """
 import pytest
 
@@ -55,11 +55,11 @@ def minimal_component_data():
 
 
 # =============================================================================
-# Test: Component Constructor with Registries
+# Test: Component Constructor with Registries (PROJ-50 Strict DI)
 # =============================================================================
 
 class TestComponentConstructor:
-    """Tests for Component constructor with registries injection."""
+    """Tests for Component constructor with strict registries injection."""
 
     def test_accepts_registries_in_constructor(self, mock_registries, minimal_component_data):
         """Component should accept GameRegistries in constructor."""
@@ -68,23 +68,17 @@ class TestComponentConstructor:
         assert hasattr(component, '_registries')
         assert component._registries is mock_registries
 
-    def test_constructor_with_none_uses_default(self, mock_registries, minimal_component_data):
-        """Component with None registries should fall back to default registries."""
-        set_default_registries(mock_registries)
+    def test_constructor_with_none_raises_typeerror(self, minimal_component_data):
+        """Component with None registries should raise TypeError (PROJ-50 strict DI)."""
+        with pytest.raises(TypeError, match="registries is required"):
+            Component(minimal_component_data, registries=None)
 
-        component = Component(minimal_component_data, registries=None)
+    def test_constructor_stores_registries(self, mock_registries, minimal_component_data):
+        """Component constructor should store registries for later use."""
+        component = Component(minimal_component_data, registries=mock_registries)
 
-        assert component._registries is not None
+        assert component._registries is mock_registries
         assert component._registries.modifiers is not None
-
-    def test_constructor_without_registries_uses_default(self, mock_registries, minimal_component_data):
-        """Component without registries arg should fall back to default registries."""
-        set_default_registries(mock_registries)
-
-        # Legacy pattern - no registries argument
-        component = Component(minimal_component_data)
-
-        assert component._registries is not None
 
 
 # =============================================================================
@@ -123,11 +117,11 @@ class TestComponentAddModifier:
 
 
 # =============================================================================
-# Test: create_component Function with Registries
+# Test: create_component Function with Registries (PROJ-50 Strict DI)
 # =============================================================================
 
 class TestCreateComponentFunction:
-    """Tests for create_component function with registries parameter."""
+    """Tests for create_component function with strict registries parameter."""
 
     def test_create_component_accepts_registries(self, mock_registries):
         """create_component should accept registries parameter."""
@@ -144,41 +138,35 @@ class TestCreateComponentFunction:
         assert component is not None
         assert component._registries is mock_registries
 
-    def test_create_component_without_registries_uses_default(self, mock_registries):
-        """create_component without registries should use default registries."""
-        set_default_registries(mock_registries)
-
-        component = create_component('bridge')
-
-        assert component is not None
+    def test_create_component_without_registries_raises_typeerror(self):
+        """create_component without registries should raise TypeError (PROJ-50 strict DI)."""
+        with pytest.raises(TypeError, match="registries is required"):
+            create_component('bridge', registries=None)
 
 
 # =============================================================================
-# Test: Backward Compatibility
+# Test: Strict DI Enforcement (PROJ-50)
 # =============================================================================
 
-class TestComponentBackwardCompatibility:
-    """Tests ensuring backward compatibility with legacy interface."""
+class TestStrictDIEnforcement:
+    """Tests ensuring strict DI is enforced (no backward compatibility with None)."""
 
-    def test_component_works_without_registries_arg(self, minimal_component_data):
-        """Component should work without registries argument (legacy pattern)."""
-        component = Component(minimal_component_data)
+    def test_component_requires_registries_parameter(self, minimal_component_data, mock_registries):
+        """Component must receive valid registries (PROJ-50)."""
+        # Valid: with registries
+        component = Component(minimal_component_data, registries=mock_registries)
+        assert component._registries is mock_registries
 
+        # Invalid: with None
+        with pytest.raises(TypeError, match="registries is required"):
+            Component(minimal_component_data, registries=None)
+
+    def test_create_component_requires_registries_parameter(self, mock_registries):
+        """create_component must receive valid registries (PROJ-50)."""
+        # Valid: with registries
+        component = create_component('bridge', registries=mock_registries)
         assert component is not None
-        assert component.id == 'test_component'
 
-    def test_create_component_works_without_registries_arg(self):
-        """create_component should work without registries argument."""
-        component = create_component('bridge')
-
-        assert component is not None
-        assert component.id == 'bridge'
-
-    def test_add_modifier_works_without_explicit_registries(self, minimal_component_data):
-        """add_modifier should work on component created without explicit registries."""
-        component = Component(minimal_component_data)
-
-        # Should use default registry
-        result = component.add_modifier('simple_size_mount', 2.0)
-
-        assert result is True
+        # Invalid: with None
+        with pytest.raises(TypeError, match="registries is required"):
+            create_component('bridge', registries=None)

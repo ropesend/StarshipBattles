@@ -62,7 +62,7 @@ import math
 import threading
 from game.simulation.formula_system import safe_evaluate_math_formula
 from typing import Optional, TYPE_CHECKING
-from game.core.registry import get_default_registry_provider, get_default_registries
+from game.core.registry import get_default_registry_provider
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_error
 from game.core.constants import CombatConstants
@@ -82,58 +82,30 @@ COMPONENT_REGISTRY = get_default_registry_provider().get_components()
 MODIFIER_REGISTRY = get_default_registry_provider().get_modifiers()
 
 
-def _get_registries_fallback() -> 'GameRegistries':
-    """Get registries with fallback to legacy provider.
-
-    PROJ-42: Helper for static paths and module-level functions.
-    Tries get_default_registries() first (preferred), falls back to provider.
-    Wraps provider in GameRegistries for consistent attribute access.
-
-    Returns:
-        GameRegistries instance
-    """
-    from game.core.registry import GameRegistries
-    from game.core.exceptions import StateException
-    try:
-        return get_default_registries()
-    except (RuntimeError, StateException):
-        # Fall back to provider - wrap in GameRegistries for consistent interface
-        # Note: Provider only has components/modifiers/vehicle_classes.
-        # Resources is set to empty dict since this module doesn't use it.
-        # PROJ-45: Also catch StateException (new exception type for uninitialized state)
-        provider = get_default_registry_provider()
-        return GameRegistries(
-            components=provider.get_components(),
-            modifiers=provider.get_modifiers(),
-            vehicle_classes=provider.get_vehicle_classes(),
-            resources={}
-        )
-
-
 class Component:
-    def __init__(self, data, *, registries: Optional['GameRegistries'] = None):
+    def __init__(self, data, *, registries: 'GameRegistries'):
         """
-        Initialize Component with data and optional registries.
+        Initialize Component with data and registries.
 
-        PROJ-38: Supports constructor-based dependency injection.
+        PROJ-50: Strict DI - registries is required.
 
         Args:
             data: Component definition dictionary
-            registries: Optional GameRegistries for DI. If None, falls back to
-                       get_default_registries() or legacy get_modifier_registry().
+            registries: GameRegistries for DI (required).
+
+        Raises:
+            TypeError: If registries is None
         """
+        if registries is None:
+            raise TypeError("registries is required for Component initialization")
         import copy
         # PERF-ANALYSIS: deepcopy required - data contains nested mutable structures
         # (abilities dict with lists and sub-dicts). Shallow copy would cause shared
         # references, breaking clone() and modifier isolation.
         self.data = copy.deepcopy(data)
 
-        # PROJ-38/PROJ-42: Store registries for modifier operations
-        # Uses _get_registries_fallback() pattern for consistent DI behavior
-        if registries is not None:
-            self._registries = registries
-        else:
-            self._registries = _get_registries_fallback()
+        # PROJ-50: Store registries for modifier operations (strict DI)
+        self._registries = registries
         self.id = data['id']
         self.name = data['name']
         self.base_mass = data['mass']
@@ -534,20 +506,27 @@ def reset_component_caches():
     """
     ComponentCacheManager.reset()
 
-def load_components_data(file_path: str = "data/components.json") -> dict:
+def load_components_data(
+    file_path: str = "data/components.json",
+    *,
+    registries: Optional['GameRegistries'] = None
+) -> dict:
     """
     Pure function to load components from JSON file.
 
-    PROJ-38: Returns a dictionary of Component objects keyed by ID without
-    modifying any global state. Use this for DI patterns.
+    PROJ-50: Accepts registries parameter for strict DI. If not provided,
+    creates a minimal registries from provider for bootstrap loading.
 
     Args:
         file_path: Path to the components JSON file
+        registries: Optional GameRegistries for DI. If None, creates minimal
+                   registries from provider for component loading (bootstrap).
 
     Returns:
         Dict[str, Component]: Component objects keyed by their ID
     """
     import os
+    from game.core.registry import GameRegistries
 
     # Try absolute path based on this file if CWD fails
     if not os.path.exists(file_path):
@@ -559,6 +538,17 @@ def load_components_data(file_path: str = "data/components.json") -> dict:
             log_error(f"components file not found at {abs_path}")
             return {}
 
+    # PROJ-50: Create bootstrap registries if not provided
+    # This is used during initial loading when full registries isn't available yet
+    if registries is None:
+        provider = get_default_registry_provider()
+        registries = GameRegistries(
+            components=provider.get_components(),
+            modifiers=provider.get_modifiers(),
+            vehicle_classes=provider.get_vehicle_classes(),
+            resources={}
+        )
+
     try:
         data = load_json_required(file_path)
 
@@ -567,7 +557,8 @@ def load_components_data(file_path: str = "data/components.json") -> dict:
         for comp_def in data['components']:
             comp_id = comp_def.get('id', 'unknown')
             try:
-                obj = Component(comp_def)
+                # PROJ-50: Pass registries to Component
+                obj = Component(comp_def, registries=registries)
                 result[comp_id] = obj
             except (KeyError, TypeError, ValueError) as e:
                 # Schema/data issues - log and continue (collect errors)
@@ -605,8 +596,8 @@ def load_components(file_path="data/components.json"):
     import copy
 
     cache_mgr = ComponentCacheManager.instance()
-    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
-    comps = _get_registries_fallback().components
+    # PROJ-50: Use provider directly (module-level initialization path)
+    comps = get_default_registry_provider().get_components()
 
     # If cache exists and matches file_path, hydrate Registry from cache (Fast Path)
     if cache_mgr.component_cache is not None and cache_mgr.last_component_file == file_path:
@@ -698,8 +689,8 @@ def load_modifiers(file_path="data/modifiers.json"):
     import copy
 
     cache_mgr = ComponentCacheManager.instance()
-    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
-    mods = _get_registries_fallback().modifiers
+    # PROJ-50: Use provider directly (module-level initialization path)
+    mods = get_default_registry_provider().get_modifiers()
 
     # Fast Path
     if cache_mgr.modifier_cache is not None and cache_mgr.last_modifier_file == file_path:
@@ -718,36 +709,48 @@ def load_modifiers(file_path="data/modifiers.json"):
     for m_id, mod in cache_mgr.modifier_cache.items():
         mods[m_id] = copy.deepcopy(mod)
 
-def create_component(component_id, *, registries: Optional['GameRegistries'] = None):
+def create_component(component_id, *, registries: 'GameRegistries'):
     """Create a clone of a component from the registry by ID.
 
-    PROJ-38/PROJ-42: Accepts optional registries parameter for DI.
+    PROJ-50: Strict DI - registries is required.
 
     Args:
         component_id: The ID of the component to create
-        registries: Optional GameRegistries for DI. If provided, uses
-                   registries.components instead of global registry.
+        registries: GameRegistries for DI (required).
 
     Returns:
         Component clone or None if not found
+
+    Raises:
+        TypeError: If registries is None
     """
-    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
-    if registries is not None:
-        regs = registries
-    else:
-        regs = _get_registries_fallback()
-    comps = regs.components
+    if registries is None:
+        raise TypeError("registries is required for create_component")
+    comps = registries.components
 
     if component_id in comps:
         clone = comps[component_id].clone()
-        # PROJ-42: Ensure clone has correct registries
-        clone._registries = regs
+        # PROJ-50: Ensure clone has correct registries
+        clone._registries = registries
         return clone
     log_error(f"Component ID {component_id} not found in registry.")
     return None
 
-def get_all_components():
-    """Get a list of all components in the registry."""
-    # PROJ-42: Use _get_registries_fallback() for consistent DI behavior
-    return list(_get_registries_fallback().components.values())
+def get_all_components(*, registries: 'GameRegistries'):
+    """Get a list of all components in the registry.
+
+    PROJ-50: Strict DI - registries is required.
+
+    Args:
+        registries: GameRegistries for DI (required).
+
+    Returns:
+        List of all Component instances in the registry.
+
+    Raises:
+        TypeError: If registries is None
+    """
+    if registries is None:
+        raise TypeError("registries is required for get_all_components")
+    return list(registries.components.values())
 

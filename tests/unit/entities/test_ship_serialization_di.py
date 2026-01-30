@@ -1,10 +1,10 @@
 """
-Tests for ShipSerializer dependency injection (PROJ-38).
+Tests for ShipSerializer dependency injection (PROJ-50).
 
 These tests verify that ShipSerializer.from_dict():
-1. Accepts GameRegistries via parameter
-2. Works with injected registries (no global state needed)
-3. Has transitional fallback to get_default_registries()
+1. Accepts GameRegistries via parameter (required)
+2. Raises TypeError when registries is None
+3. Works with injected registries for all operations
 """
 import pytest
 
@@ -53,11 +53,11 @@ def ship_dict_data():
 
 
 # =============================================================================
-# Test: from_dict with Registries
+# Test: from_dict with Registries (PROJ-50 Strict DI)
 # =============================================================================
 
 class TestShipSerializerFromDict:
-    """Tests for ShipSerializer.from_dict with registries parameter."""
+    """Tests for ShipSerializer.from_dict with strict registries parameter."""
 
     def test_from_dict_accepts_registries(self, mock_registries, ship_dict_data):
         """from_dict should accept registries parameter."""
@@ -66,6 +66,11 @@ class TestShipSerializerFromDict:
         assert ship is not None
         assert ship.name == "Test Ship"
         assert ship._registries is mock_registries
+
+    def test_from_dict_with_none_raises_typeerror(self, ship_dict_data):
+        """from_dict with None registries should raise TypeError (PROJ-50 strict DI)."""
+        with pytest.raises(TypeError, match="registries is required"):
+            ShipSerializer.from_dict(ship_dict_data, registries=None)
 
     def test_from_dict_creates_components_with_registries(self, mock_registries, ship_dict_data):
         """from_dict should create components using injected registries."""
@@ -97,18 +102,11 @@ class TestShipSerializerFromDict:
 
 
 # =============================================================================
-# Test: Backward Compatibility
+# Test: Strict DI Enforcement (PROJ-50)
 # =============================================================================
 
-class TestShipSerializerBackwardCompatibility:
-    """Tests ensuring backward compatibility with legacy interface."""
-
-    def test_from_dict_works_without_registries_arg(self, ship_dict_data):
-        """from_dict should work without registries argument."""
-        ship = ShipSerializer.from_dict(ship_dict_data)
-
-        assert ship is not None
-        assert ship.name == "Test Ship"
+class TestStrictDIEnforcement:
+    """Tests ensuring strict DI is enforced (no backward compatibility with None)."""
 
     def test_to_dict_still_works(self, mock_registries):
         """to_dict should still work (doesn't need registries)."""

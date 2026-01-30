@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Any, Iterator, Tuple, Ca
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_default_registry_provider
 from game.core.constants import LayerDefaults
 
 if TYPE_CHECKING:
@@ -53,17 +52,10 @@ class ShipComponentManager:
         a HULL layer, then adds layers specified in the class definition.
         Calculates layer radii based on mass capacity percentages.
 
-        PROJ-38: Uses ship's registries if available, else legacy function.
+        PROJ-50: Uses ship's registries (strict DI).
         """
-        # PROJ-38: Use ship's registries if available
-        # Note: Check for vehicle_classes attribute to avoid issues with MagicMock in tests
-        if (hasattr(self._ship, '_registries')
-            and self._ship._registries is not None
-            and hasattr(self._ship._registries, 'vehicle_classes')
-            and isinstance(self._ship._registries.vehicle_classes, dict)):
-            class_def = self._ship._registries.vehicle_classes.get(self._ship.ship_class, {})
-        else:
-            class_def = get_default_registry_provider().get_vehicle_classes().get(self._ship.ship_class, {})
+        # PROJ-50: Use ship's registries (strict DI)
+        class_def = self._ship._registries.vehicle_classes.get(self._ship.ship_class, {})
         self.layers = {}
         layer_defs = class_def.get('layers', [])
 

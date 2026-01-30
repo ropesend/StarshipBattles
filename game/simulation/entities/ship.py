@@ -7,7 +7,7 @@ from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_default_registry_provider, get_default_registries, GameRegistries
+from game.core.registry import get_default_registry_provider, GameRegistries
 from game.core.constants import LayerDefaults, CombatConstants
 
 if TYPE_CHECKING:
@@ -29,34 +29,13 @@ VEHICLE_CLASSES = get_default_registry_provider().get_vehicle_classes()
 
 class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
 
-    @staticmethod
-    def _get_registries_fallback() -> GameRegistries:
-        """
-        Get registries for when none are explicitly provided.
-
-        PROJ-42: Tries get_default_registries() first, falls back to provider
-        (which shares mutable dict refs) for backward compatibility.
-        PROJ-45: Also catches StateException for new exception hierarchy.
-        """
-        from game.core.exceptions import StateException
-        try:
-            return get_default_registries()
-        except (RuntimeError, StateException):
-            provider = get_default_registry_provider()
-            return GameRegistries(
-                components=provider.get_components(),
-                modifiers=provider.get_modifiers(),
-                vehicle_classes=provider.get_vehicle_classes(),
-                resources={}
-            )
-
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
                  team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation",
-                 *, registries: Optional[GameRegistries] = None):
+                 *, registries: GameRegistries):
         """
-        Initialize Ship with properties and optional registries.
+        Initialize Ship with properties and registries.
 
-        PROJ-38: Supports constructor-based dependency injection.
+        PROJ-50: Strict DI - registries is required.
 
         Args:
             name: Ship name
@@ -65,9 +44,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
             team_id: Team identifier
             ship_class: Vehicle class name (e.g., "frigate", "cruiser")
             theme_id: Visual theme identifier
-            registries: Optional GameRegistries for DI. If None, falls back to
-                       get_default_registries() or legacy provider.
+            registries: GameRegistries for DI (required).
+
+        Raises:
+            TypeError: If registries is None
         """
+        if registries is None:
+            raise TypeError("registries is required for Ship initialization")
         super().__init__(x, y)
         self.name: str = name
         self.color: Union[Tuple[int, int, int], List[int]] = color
@@ -78,8 +61,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.ship_class: str = ship_class
         self.theme_id: str = theme_id
 
-        # PROJ-42: Simplified DI pattern with fallback
-        self._registries = registries if registries is not None else Ship._get_registries_fallback()
+        # PROJ-50: Store registries (strict DI)
+        self._registries = registries
 
         # Get class definition using registries
         class_def = self._registries.vehicle_classes.get(self.ship_class, {})

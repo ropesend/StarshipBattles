@@ -17,7 +17,6 @@ import uuid
 
 from game.core.constants import LayerType
 from game.core.logger import log_debug, log_warning
-from game.core.registry import get_default_registry_provider
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -227,29 +226,32 @@ class ShipState:
             current_target_id=current_target_id,
         )
 
-    def to_ship(self, *, registries: Optional['GameRegistries'] = None) -> 'Ship':
+    def to_ship(self, *, registries: 'GameRegistries') -> 'Ship':
         """
         Create a simulation Ship from this state.
 
-        PROJ-38: Added registries parameter for dependency injection.
+        PROJ-50: Strict DI - registries is required.
 
         Args:
-            registries: Optional GameRegistries for DI. Falls back to global functions if None.
+            registries: GameRegistries for DI (required).
+
+        Returns:
+            Ship instance with the stored state applied.
+
+        Raises:
+            TypeError: If registries is None
 
         Note: This creates a new Ship with the stored state applied.
         Component damage and resource levels are restored.
         """
+        if registries is None:
+            raise TypeError("registries is required for ShipState.to_ship")
         from game.simulation.entities.ship import Ship
         from game.core.math import Vector2
 
-        # PROJ-38: Use injected registries or fallback to provider
-        if registries is not None:
-            comp_registry = registries.components
-            mod_registry = registries.modifiers
-        else:
-            provider = get_default_registry_provider()
-            comp_registry = provider.get_components()
-            mod_registry = provider.get_modifiers()
+        # PROJ-50: Use registries directly (strict DI)
+        comp_registry = registries.components
+        mod_registry = registries.modifiers
 
         # Create base ship - PROJ-38: Pass registries to Ship constructor
         ship = Ship(

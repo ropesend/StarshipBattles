@@ -15,10 +15,21 @@ from game.core.paths import Paths
 
 
 def get_or_create_validator():
-    """Get the ship design validator, creating it if necessary."""
+    """Get the ship design validator, creating it if necessary.
+
+    PROJ-50: Creates validator with GameRegistries from RegistryManager.
+    """
     val = RegistryManager.instance().get_validator()
     if not val:
-        val = ShipDesignValidator()
+        from game.core.registry import GameRegistries
+        mgr = RegistryManager.instance()
+        registries = GameRegistries(
+            components=mgr.components,
+            modifiers=mgr.modifiers,
+            vehicle_classes=mgr.vehicle_classes,
+            resources=mgr.resources
+        )
+        val = ShipDesignValidator(registries=registries)
         set_validator(val)
     return val
 

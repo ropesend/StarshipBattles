@@ -8,26 +8,46 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 5 - Simulation Services
-**Current Status:** PROJ-50 In Progress
+**Last Completed:** PROJ-50 Phase 6 Core Changes (Tasks 6.1-6.6)
+**Current Status:** PROJ-50 In Progress - Phase 6 (70% complete)
 **Current Project:** PROJ-50
-**Current Phase:** Phase 6
-**Test Status:** 103 services passed, 5775 total passing
+**Current Phase:** Phase 6 - Test Updates (Task 6.7)
+**Test Status:** DI tests passing (23), ~100 other tests need registry updates
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 5 COMPLETE - Simulation Services
-  - ModifierService: strict DI, modifier_registry required, TypeError if None
-  - VehicleDesignService: strict DI, registries required, TypeError if None
-  - ShipLoader: uses RegistryManager.instance().vehicle_classes instead of provider
-  - Ship.add_component/add_components_bulk: use self._registries.modifiers for ModifierService
-  - ShipComponentManager: use self._ship._registries.modifiers for ModifierService
-  - Updated test files: test_modifier_service.py, test_modifier_service_di.py,
-    test_vehicle_design_service.py, test_vehicle_design_service_di.py,
-    test_ship_stats_calculator_di.py, test_service_injection.py
-- Files modified: modifier_service.py, vehicle_design_service.py, ship_loader.py,
-  ship.py, ship_component_manager.py, 6 test files
-- Next: Phase 6 - Core Entities
+- PROJ-50 Phase 6 - Core Entity Updates PARTIAL COMPLETE
+- COMPLETED Tasks 6.1-6.6 (all core code changes):
+  - Component: registries now REQUIRED, TypeError if None
+  - Ship: registries now REQUIRED, TypeError if None
+  - ShipSerializer.from_dict(): registries now REQUIRED
+  - ShipState.to_ship(): registries now REQUIRED
+  - ShipDesignValidator/ClassRequirementsRule: registries now REQUIRED
+  - ShipComponentManager: uses ship._registries directly
+  - ship_loader.get_or_create_validator(): creates GameRegistries from RegistryManager
+  - load_components_data(): accepts optional registries for bootstrap (creates from provider if None)
+
+- REMAINING: Task 6.7 - Update ~60 test files to pass fresh_registries
+  - Pattern: Add `fresh_registries` fixture, pass `registries=fresh_registries`
+  - Updated: tests/fixtures/ships.py, test_component_di.py, test_ship_di.py,
+    test_ship_serialization_di.py
+  - Still need: test_component*.py, test_ship*.py, ship_helpers/, combat/,
+    services/, builder/, integration/
+
+- Files modified this session:
+  - game/simulation/components/component.py
+  - game/simulation/entities/ship.py
+  - game/simulation/entities/ship_serialization.py
+  - game/simulation/entities/ship_component_manager.py
+  - game/simulation/entities/ship_loader.py
+  - game/simulation/battle_state.py
+  - game/simulation/ship_validator.py
+  - tests/fixtures/ships.py
+  - tests/unit/entities/test_component_di.py
+  - tests/unit/entities/test_ship_di.py
+  - tests/unit/entities/test_ship_serialization_di.py
+
+- Next: Continue Task 6.7 - Update remaining test files
 
 ---
 

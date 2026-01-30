@@ -8,7 +8,6 @@ from typing import Dict, Any, Optional, TYPE_CHECKING
 
 from game.simulation.components.component import create_component
 from game.core.constants import LayerType
-from game.core.registry import get_default_registry_provider, get_default_registries
 from game.core.logger import log_warning
 
 if TYPE_CHECKING:
@@ -113,19 +112,24 @@ class ShipSerializer:
             raise
 
     @staticmethod
-    def from_dict(data: Dict[str, Any], *, registries: Optional['GameRegistries'] = None) -> 'Ship':
+    def from_dict(data: Dict[str, Any], *, registries: 'GameRegistries') -> 'Ship':
         """
         Create ship from dictionary.
 
-        PROJ-38: Supports dependency injection via registries parameter.
+        PROJ-50: Strict DI - registries is required.
 
         Args:
             data: Dictionary containing ship data
-            registries: Optional GameRegistries for DI. If None, uses default registries.
+            registries: GameRegistries for DI (required).
 
         Returns:
             New Ship instance populated from the dictionary
+
+        Raises:
+            TypeError: If registries is None
         """
+        if registries is None:
+            raise TypeError("registries is required for ShipSerializer.from_dict")
         # Import here to avoid circular dependency
         from game.simulation.entities.ship import Ship
 
@@ -133,16 +137,6 @@ class ShipSerializer:
         version = data.get("_format_version", "1.0")
         # Allow v1.x data that happens to use dict format (graceful migration)
         # Version check is informational - the dict check in component loading is the actual enforcement
-
-        # PROJ-38: Resolve registries for component/modifier operations
-        # PROJ-45: Also catches StateException for new exception hierarchy
-        if registries is None:
-            from game.core.exceptions import StateException
-            try:
-                registries = get_default_registries()
-            except (RuntimeError, StateException):
-                # Default registries not set - will use legacy functions below
-                pass
 
         name = data.get("name", "Unnamed")
         color_val = data.get("color", (200, 200, 200))
@@ -180,20 +174,14 @@ class ShipSerializer:
                 comp_id = c_entry.get("id", "")
                 modifiers_data = c_entry.get("modifiers", [])
 
-                # PROJ-38: Use injected registries if available, else provider
-                if registries is not None:
-                    comps = registries.components
-                    mods = registries.modifiers
-                else:
-                    provider = get_default_registry_provider()
-                    comps = provider.get_components()
-                    mods = provider.get_modifiers()
+                # PROJ-50: Use registries directly (strict DI)
+                comps = registries.components
+                mods = registries.modifiers
 
                 if comp_id in comps:
-                    # PROJ-38: Clone component and ensure it has registries
+                    # PROJ-50: Clone component and ensure it has registries
                     new_comp = comps[comp_id].clone()
-                    if registries is not None:
-                        new_comp._registries = registries
+                    new_comp._registries = registries
 
                     # Apply Modifiers
                     for m_dat in modifiers_data:

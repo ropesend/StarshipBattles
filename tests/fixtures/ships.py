@@ -9,10 +9,10 @@ Usage in tests:
         # basic_ship is automatically provided by pytest
         assert basic_ship.max_hp > 0
 
-    def test_with_factory():
+    def test_with_factory(fresh_registries):
         # Or use factory directly for custom ships
         from tests.fixtures.ships import create_test_ship
-        ship = create_test_ship(name="MyShip", x=100, y=200)
+        ship = create_test_ship(name="MyShip", x=100, y=200, registries=fresh_registries)
 
 Available fixtures:
     - empty_ship: Ship with only auto-equipped hull
@@ -20,6 +20,8 @@ Available fixtures:
     - armed_ship: Ship with weapons
     - shielded_ship: Ship with shields
     - fully_equipped_ship: Ship with all common component types
+
+PROJ-50: All fixtures require fresh_registries for strict DI compliance.
 """
 import pytest
 from typing import Tuple, TYPE_CHECKING
@@ -67,7 +69,7 @@ def create_test_ship(
     add_shields: int = 0,
     add_crew: bool = True,
     *,
-    registries: 'GameRegistries | None' = None,
+    registries: 'GameRegistries',
 ) -> Ship:
     """
     Create a test ship with customizable configuration.
@@ -76,8 +78,7 @@ def create_test_ship(
     it creates a minimal ship with only the hull. Use parameters to add
     additional components.
 
-    PROJ-50: Supports strict dependency injection via registries parameter.
-    Pass fresh_registries fixture to avoid relying on global state.
+    PROJ-50: Strict DI - registries is required. Pass fresh_registries fixture.
 
     Components are placed in appropriate layers based on game rules:
     - Crew (quarters + life support) → CORE (required for other components to be active)
@@ -99,10 +100,13 @@ def create_test_ship(
         add_shields: Number of shield components to add
         add_crew: If True (default), add crew_quarters and life_support
                   (required for components to be active)
-        registries: GameRegistries for DI (keyword-only). If None, uses global.
+        registries: GameRegistries for DI (required keyword-only).
 
     Returns:
         Configured Ship instance
+
+    Raises:
+        TypeError: If registries is None
 
     Example:
         # Create armed ship with DI
@@ -114,6 +118,8 @@ def create_test_ship(
             registries=fresh_registries
         )
     """
+    if registries is None:
+        raise TypeError("registries is required for create_test_ship")
     ship = Ship(name=name, x=x, y=y, color=color, ship_class=ship_class, registries=registries)
     ship.team_id = team_id
 
@@ -155,40 +161,43 @@ def create_test_ship(
 
 
 # =============================================================================
-# Pytest Fixtures
+# Pytest Fixtures (PROJ-50: All require fresh_registries)
 # =============================================================================
 
 @pytest.fixture
-def empty_ship():
+def empty_ship(fresh_registries):
     """
     Create a ship with only the auto-equipped hull (no other components).
 
     This fixture provides the most minimal ship possible - just the hull
     that is automatically equipped when a ship is created.
 
-    Note: This fixture uses production registry data. For tests using
-    custom data, use the use_custom_data marker and create ships manually.
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
-    return Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class=DEFAULT_SHIP_CLASS)
+    return Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255),
+                ship_class=DEFAULT_SHIP_CLASS, registries=fresh_registries)
 
 
 @pytest.fixture
-def basic_ship():
+def basic_ship(fresh_registries):
     """
     Create a ship with bridge and engine in CORE layer.
 
     This fixture provides a ship with the minimum components needed
     for basic operation - a bridge (for command) and an engine (for movement).
+
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
     return create_test_ship(
         name="BasicShip",
         add_bridge=True,
-        add_engine=True
+        add_engine=True,
+        registries=fresh_registries
     )
 
 
 @pytest.fixture
-def armed_ship():
+def armed_ship(fresh_registries):
     """
     Create a ship with weapons, shields, and components across multiple layers.
 
@@ -196,17 +205,20 @@ def armed_ship():
     - Bridge in CORE
     - Engine, shield, 2 weapons in OUTER
     - Armor in ARMOR layer
+
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
     ship = create_test_ship(
         name="ArmedShip",
         add_bridge=True,
         add_engine=True,
         add_weapons=2,
-        add_shields=1
+        add_shields=1,
+        registries=fresh_registries
     )
 
     # Add armor to ARMOR layer
-    armor = create_component(ARMOR_ID)
+    armor = create_component(ARMOR_ID, registries=fresh_registries)
     if armor:
         ship.add_component(armor, LayerType.ARMOR)
 
@@ -215,24 +227,27 @@ def armed_ship():
 
 
 @pytest.fixture
-def shielded_ship():
+def shielded_ship(fresh_registries):
     """
     Create a ship with shields but no weapons.
 
     This fixture provides a defensive ship with:
     - Bridge in CORE
     - Engine and shield in OUTER
+
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
     return create_test_ship(
         name="ShieldedShip",
         add_bridge=True,
         add_engine=True,
-        add_shields=1
+        add_shields=1,
+        registries=fresh_registries
     )
 
 
 @pytest.fixture
-def fully_equipped_ship():
+def fully_equipped_ship(fresh_registries):
     """
     Create a ship with all common component types.
 
@@ -240,17 +255,20 @@ def fully_equipped_ship():
     - Bridge in CORE
     - Engine, shield, weapons in OUTER
     - Armor in ARMOR layer
+
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
     ship = create_test_ship(
         name="FullyEquippedShip",
         add_bridge=True,
         add_engine=True,
         add_weapons=2,
-        add_shields=1
+        add_shields=1,
+        registries=fresh_registries
     )
 
     # Add armor to ARMOR layer
-    armor = create_component(ARMOR_ID)
+    armor = create_component(ARMOR_ID, registries=fresh_registries)
     if armor:
         ship.add_component(armor, LayerType.ARMOR)
 
@@ -259,7 +277,7 @@ def fully_equipped_ship():
 
 
 @pytest.fixture
-def two_opposing_ships():
+def two_opposing_ships(fresh_registries):
     """
     Create two ships on opposing teams.
 
@@ -268,6 +286,8 @@ def two_opposing_ships():
     - ship2 is on team 1, positioned at (700, 400)
 
     Both ships are armed with basic weapons.
+
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
     ship1 = create_test_ship(
         name="Ship1",
@@ -276,7 +296,8 @@ def two_opposing_ships():
         team_id=0,
         add_bridge=True,
         add_engine=True,
-        add_weapons=1
+        add_weapons=1,
+        registries=fresh_registries
     )
 
     ship2 = create_test_ship(
@@ -286,7 +307,8 @@ def two_opposing_ships():
         team_id=1,
         add_bridge=True,
         add_engine=True,
-        add_weapons=1
+        add_weapons=1,
+        registries=fresh_registries
     )
 
     return ship1, ship2
@@ -297,32 +319,32 @@ def two_opposing_ships():
 # =============================================================================
 
 @pytest.fixture
-def basic_cruiser_ship(initialized_ship_data):
+def basic_cruiser_ship(fresh_registries):
     """
     Create a basic Cruiser ship for testing.
 
     The Cruiser class has 4 layers (CORE, INNER, OUTER, ARMOR) which makes
     it suitable for testing features that require the INNER layer.
 
-    Requires initialized_ship_data fixture to hydrate the registry.
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
-    _ = initialized_ship_data  # Ensure ship data is loaded
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser",
+                registries=fresh_registries)
     ship.recalculate_stats()
     return ship
 
 
 @pytest.fixture
-def basic_escort_ship(initialized_ship_data):
+def basic_escort_ship(fresh_registries):
     """
     Create a basic Escort ship for testing.
 
     The Escort class has 3 layers (CORE, OUTER, ARMOR) and is a smaller
     ship class suitable for basic testing.
 
-    Requires initialized_ship_data fixture to hydrate the registry.
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
-    _ = initialized_ship_data  # Ensure ship data is loaded
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort",
+                registries=fresh_registries)
     ship.recalculate_stats()
     return ship

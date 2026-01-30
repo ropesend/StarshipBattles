@@ -1,10 +1,10 @@
 """
-Tests for Ship dependency injection (PROJ-38).
+Tests for Ship dependency injection (PROJ-50).
 
 These tests verify that Ship:
-1. Accepts GameRegistries via constructor
-2. Works with injected registries (no global state needed)
-3. Has transitional fallback to get_default_registries()
+1. Accepts GameRegistries via constructor (required)
+2. Raises TypeError when registries is None
+3. Works with injected registries for all operations
 """
 import pytest
 
@@ -40,11 +40,11 @@ def mock_registries():
 
 
 # =============================================================================
-# Test: Ship Constructor with Registries
+# Test: Ship Constructor with Registries (PROJ-50 Strict DI)
 # =============================================================================
 
 class TestShipConstructor:
-    """Tests for Ship constructor with registries injection."""
+    """Tests for Ship constructor with strict registries injection."""
 
     def test_accepts_registries_in_constructor(self, mock_registries):
         """Ship should accept GameRegistries in constructor."""
@@ -60,35 +60,31 @@ class TestShipConstructor:
         assert hasattr(ship, '_registries')
         assert ship._registries is mock_registries
 
-    def test_constructor_with_none_uses_default(self, mock_registries):
-        """Ship with None registries should fall back to default registries."""
-        set_default_registries(mock_registries)
+    def test_constructor_with_none_raises_typeerror(self, mock_registries):
+        """Ship with None registries should raise TypeError (PROJ-50 strict DI)."""
+        with pytest.raises(TypeError, match="registries is required"):
+            Ship(
+                name="Test Ship",
+                x=0, y=0,
+                color=(255, 0, 0),
+                team_id=0,
+                ship_class="frigate",
+                registries=None
+            )
 
+    def test_constructor_stores_registries(self, mock_registries):
+        """Ship constructor should store registries for later use."""
         ship = Ship(
             name="Test Ship",
             x=0, y=0,
             color=(255, 0, 0),
             team_id=0,
             ship_class="frigate",
-            registries=None
+            registries=mock_registries
         )
 
-        assert ship._registries is not None
-
-    def test_constructor_without_registries_uses_default(self, mock_registries):
-        """Ship without registries arg should fall back to default registries."""
-        set_default_registries(mock_registries)
-
-        # Legacy pattern - no registries argument
-        ship = Ship(
-            name="Test Ship",
-            x=0, y=0,
-            color=(255, 0, 0),
-            team_id=0,
-            ship_class="frigate"
-        )
-
-        assert ship._registries is not None
+        assert ship._registries is mock_registries
+        assert ship._registries.vehicle_classes is not None
 
 
 # =============================================================================
@@ -138,28 +134,36 @@ class TestShipMethodsWithRegistries:
 
 
 # =============================================================================
-# Test: Backward Compatibility
+# Test: Strict DI Enforcement (PROJ-50)
 # =============================================================================
 
-class TestShipBackwardCompatibility:
-    """Tests ensuring backward compatibility with legacy interface."""
+class TestStrictDIEnforcement:
+    """Tests ensuring strict DI is enforced (no backward compatibility with None)."""
 
-    def test_ship_works_without_registries_arg(self):
-        """Ship should work without registries argument (legacy pattern)."""
+    def test_ship_requires_registries_parameter(self, mock_registries):
+        """Ship must receive valid registries (PROJ-50)."""
+        # Valid: with registries
         ship = Ship(
             name="Test Ship",
             x=0, y=0,
             color=(255, 0, 0),
             team_id=0,
-            ship_class="frigate"
+            ship_class="frigate",
+            registries=mock_registries
         )
+        assert ship._registries is mock_registries
 
-        assert ship is not None
-        assert ship.name == "Test Ship"
-        assert ship.ship_class == "frigate"
+        # Invalid: with None
+        with pytest.raises(TypeError, match="registries is required"):
+            Ship(
+                name="Test Ship",
+                x=0, y=0,
+                color=(255, 0, 0),
+                registries=None
+            )
 
-    def test_add_component_works_without_explicit_registries(self):
-        """add_component should work on ship created without explicit registries."""
+    def test_components_share_registries(self, mock_registries):
+        """Components added to ship should use the same registries."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import LayerType
 
@@ -168,12 +172,12 @@ class TestShipBackwardCompatibility:
             x=0, y=0,
             color=(255, 0, 0),
             team_id=0,
-            ship_class="frigate"
+            ship_class="frigate",
+            registries=mock_registries
         )
 
-        component = create_component('bridge')
-        assert component is not None
+        component = create_component('bridge', registries=mock_registries)
+        ship.add_component(component, LayerType.CORE)
 
-        result = ship.add_component(component, LayerType.CORE)
-
-        assert result is True
+        # Component should have the same registries
+        assert component._registries is mock_registries
