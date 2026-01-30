@@ -15,7 +15,7 @@ from pygame_gui.elements import UIDropDownMenu
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.profiling import profile_block
-from game.core.registry import get_default_registry_provider
+# PROJ-50: Removed get_default_registry_provider - using strict DI
 from game.core.constants import LayerType  # Canonical location for LayerType
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
@@ -37,10 +37,8 @@ class WorkshopEventRouter:
         self.gui = gui
 
     def _get_vehicle_classes(self):
-        """PROJ-38: Get vehicle_classes from context registries or provider fallback."""
-        if self.gui.context.registries is not None:
-            return self.gui.context.registries.vehicle_classes
-        return get_default_registry_provider().get_vehicle_classes()
+        """PROJ-50: Get vehicle_classes from context registries (required)."""
+        return self.gui.context.registries.vehicle_classes
 
     def handle_event(self, event) -> bool:
         """Route events to appropriate handlers.

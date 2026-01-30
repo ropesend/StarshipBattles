@@ -59,7 +59,9 @@ class TestWorkshopDataLoader:
         custom_dir, default_dir = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=RegistryManager.instance())
         path, is_fallback = loader.find_file("components.json")
 
         assert path is not None
@@ -72,7 +74,9 @@ class TestWorkshopDataLoader:
         custom_dir, default_dir = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=RegistryManager.instance())
         # modifiers.json doesn't exist directly, but test_modifiers.json does
         path, is_fallback = loader.find_file("modifiers.json")
 
@@ -85,7 +89,9 @@ class TestWorkshopDataLoader:
         custom_dir, default_dir = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=RegistryManager.instance())
         # vehicleclasses.json only exists in default_dir
         path, is_fallback = loader.find_file("vehicleclasses.json")
 
@@ -98,7 +104,9 @@ class TestWorkshopDataLoader:
         custom_dir, default_dir = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=RegistryManager.instance())
         path, is_fallback = loader.find_file("nonexistent_file.json", allow_default=True)
 
         assert path is None
@@ -109,7 +117,9 @@ class TestWorkshopDataLoader:
         custom_dir, default_dir = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(custom_dir, default_data_dir=default_dir,
+                                   registries=RegistryManager.instance())
         # Try multiple names, first should match
         path, _ = loader.find_file(["components.json", "test_components.json"])
 
@@ -121,7 +131,8 @@ class TestWorkshopDataLoader:
         custom_dir, default_dir = data_loader_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(custom_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(custom_dir, registries=RegistryManager.instance())
 
         # Use mock to verify clear was called
         with patch.object(RegistryManager.instance(), 'clear') as mock_clear:
@@ -155,7 +166,8 @@ class TestWorkshopDataLoaderIntegration:
         data_dir = integration_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(data_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(data_dir, registries=RegistryManager.instance())
         result = loader.load_all()
 
         assert result.success, f"Load failed with errors: {result.errors}"
@@ -172,7 +184,8 @@ class TestWorkshopDataLoaderIntegration:
         data_dir = integration_setup
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 
-        loader = WorkshopDataLoader(data_dir)
+        # PROJ-50: Pass registries (required)
+        loader = WorkshopDataLoader(data_dir, registries=RegistryManager.instance())
         result = loader.load_all()
 
         # Primary assertion: load succeeded

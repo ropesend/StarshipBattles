@@ -58,7 +58,9 @@ class TestBuilderDataLoader:
         """find_file returns direct path when file exists in custom directory."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
+                                  registries=RegistryManager.instance())
         path, is_fallback = loader.find_file("components.json")
 
         assert path is not None
@@ -70,7 +72,9 @@ class TestBuilderDataLoader:
         """find_file tries test_ prefixed filenames when direct match fails."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
+                                  registries=RegistryManager.instance())
         # modifiers.json doesn't exist directly, but test_modifiers.json does
         path, is_fallback = loader.find_file("modifiers.json")
 
@@ -82,7 +86,9 @@ class TestBuilderDataLoader:
         """find_file falls back to default data directory when custom fails."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
+                                  registries=RegistryManager.instance())
         # vehicleclasses.json only exists in default_dir
         path, is_fallback = loader.find_file("vehicleclasses.json")
 
@@ -94,7 +100,9 @@ class TestBuilderDataLoader:
         """find_file returns None when no file found anywhere."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
+                                  registries=RegistryManager.instance())
         path, is_fallback = loader.find_file("nonexistent_file.json", allow_default=True)
 
         assert path is None
@@ -104,7 +112,9 @@ class TestBuilderDataLoader:
         """find_file accepts list of alternative filenames."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"])
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], default_data_dir=temp_test_dirs["default_dir"],
+                                  registries=RegistryManager.instance())
         # Try multiple names, first should match
         path, _ = loader.find_file(["components.json", "test_components.json"])
 
@@ -115,7 +125,8 @@ class TestBuilderDataLoader:
         """clear_registries calls RegistryManager.clear()."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(temp_test_dirs["custom_dir"])
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(temp_test_dirs["custom_dir"], registries=RegistryManager.instance())
 
         # Use mock to verify clear was called
         with patch.object(RegistryManager.instance(), 'clear') as mock_clear:
@@ -144,7 +155,8 @@ class TestBuilderDataLoaderIntegration:
         """load_all successfully loads from real data directory."""
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(self.data_dir)
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(self.data_dir, registries=RegistryManager.instance())
         result = loader.load_all()
 
         assert result.success, f"Load failed with errors: {result.errors}"
@@ -160,7 +172,8 @@ class TestBuilderDataLoaderIntegration:
         """
         from game.ui.screens.workshop_data_loader import WorkshopDataLoader as BuilderDataLoader
 
-        loader = BuilderDataLoader(self.data_dir)
+        # PROJ-50: Pass registries (required)
+        loader = BuilderDataLoader(self.data_dir, registries=RegistryManager.instance())
         result = loader.load_all()
 
         # Primary assertion: load succeeded

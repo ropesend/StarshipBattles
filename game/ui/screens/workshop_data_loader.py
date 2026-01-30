@@ -10,7 +10,8 @@ from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Union, TYPE_CHECKING
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
-from game.core.registry import get_default_registry_provider, clear_registry
+# PROJ-50: Removed get_default_registry_provider - using strict DI
+from game.core.registry import clear_registry
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -36,16 +37,17 @@ class WorkshopDataLoader:
     """
     
     def __init__(self, directory: str, default_data_dir: Optional[str] = None,
-                 *, registries: Optional['GameRegistries'] = None):
+                 *, registries: 'GameRegistries'):
         """
         Initialize the data loader.
 
         PROJ-38: Added registries parameter for DI support.
+        PROJ-50: Made registries mandatory, removed fallback.
 
         Args:
             directory: Primary directory to load data from
             default_data_dir: Fallback directory (defaults to cwd/data)
-            registries: Optional GameRegistries for DI. Used for _get_default_class()
+            registries: GameRegistries instance (required for _get_default_class)
         """
         self.directory = directory
         self.default_data_dir = default_data_dir or os.path.join(os.getcwd(), "data")
@@ -200,13 +202,12 @@ class WorkshopDataLoader:
             log_warning("No vehicleclasses.json found")
     
     def _get_default_class(self) -> str:
-        """Determine the default ship class after loading."""
+        """Determine the default ship class after loading.
+
+        PROJ-50: Uses injected registries (required).
+        """
         default_class = "Escort"
-        # PROJ-38: Use injected registries if available, else provider
-        if self._registries is not None:
-            classes = self._registries.vehicle_classes
-        else:
-            classes = get_default_registry_provider().get_vehicle_classes()
+        classes = self._registries.vehicle_classes
 
         if default_class not in classes and classes:
             # Pick first available class

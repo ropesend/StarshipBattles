@@ -864,10 +864,14 @@ class BuilderScreen:
         PROJ-44: Refactored to use WorkshopDataLoader instead of direct
         registry manipulation. This centralizes data loading logic and
         reduces cross-layer coupling.
+
+        PROJ-50: Pass registries to loader (uses global singleton since
+        legacy builder doesn't use context DI pattern).
         """
+        from game.core.registry import RegistryManager
         try:
             # 1. Load all data via WorkshopDataLoader
-            loader = WorkshopDataLoader(directory)
+            loader = WorkshopDataLoader(directory, registries=RegistryManager.instance())
             result = loader.load_all()
 
             if not result.success:

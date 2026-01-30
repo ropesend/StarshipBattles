@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-50 Phase 1 - Test Infrastructure
+**Last Completed:** PROJ-50 Phase 2 - UI Layer Strictness
 **Current Status:** PROJ-50 In Progress
 **Current Project:** PROJ-50
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 5782 passed (baseline preserved)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-50 Phase 1 COMPLETE - Test Infrastructure
-  - Added mock_registries fixture alias to conftest.py
-  - Enhanced fixture docstrings with usage examples
-  - Updated create_test_ship() with registries parameter
-  - Updated 8 repro_issues test files to use DI pattern
-  - 52 repro_issues tests pass (11 pre-existing failures from import paths)
-- Files modified: conftest.py, ships.py, 8 test_bug_*.py files
+- PROJ-50 Phase 2 COMPLETE - UI Layer Strictness
+  - Removed get_default_registry_provider imports from 4 UI files
+  - Made registries parameter required in builder_widgets.py, workshop_data_loader.py
+  - Updated _get_vehicle_classes() methods to strict DI
+  - Updated callers: workshop_screen.py, builder/main.py
+  - Updated 4 test files to pass registries
+- Files modified: builder_widgets.py, workshop_screen.py, workshop_event_router.py, workshop_data_loader.py, builder/main.py, 4 test files
 - Test baseline: 5782 passed, 46 pre-existing failures
-- Next: Phase 2 - UI Layer Strictness
+- Next: Phase 3 - Strategy Services
 
 ---
 
@@ -116,6 +116,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-50 | Phase 2 | Complete | 5782 passed | 62044ecc | UI strictness: 4 files, registries required, 4 tests |
 | 2026-01-30 | PROJ-50 | Phase 1 | Complete | 5782 passed | 1752ae60 | Test infrastructure: mock_registries, ships.py, 8 repro tests |
 | 2026-01-30 | PROJ-49 | Audit Cycle 1 | PASSED | 5782 passed | pending | All 6 phases verified, project complete |
 | 2026-01-30 | PROJ-49 | Phase 6 | Complete | 5782 passed | 8a80977a | O(n^2) targeting: capabilities cache, +18 tests |

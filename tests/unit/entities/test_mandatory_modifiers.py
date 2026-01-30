@@ -61,7 +61,9 @@ def _setup_mock_comp(type_str):
 
 class TestMandatoryModifiers:
     def test_auto_apply_turret(self, pygame_env):
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         mock_comp, mods = _setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45  # Base arc
         mock_comp.data['firing_arc'] = 45
@@ -79,7 +81,9 @@ class TestMandatoryModifiers:
 
     def test_turret_min_constraint_updates(self, pygame_env):
         # Ensure buttons respect the base firing arc constraint
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         mock_comp, mods = _setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45
         mock_comp.data['firing_arc'] = 45
@@ -147,7 +151,9 @@ class TestMandatoryModifiers:
 
     def test_range_limit_seeker(self, pygame_env):
         # Range should NOT apply to Seeker
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         mock_comp, mods = _setup_mock_comp('SeekerWeapon')
 
         test_registry = {
@@ -162,7 +168,9 @@ class TestMandatoryModifiers:
         assert 'range_mount' not in mods
 
     def test_auto_apply_size(self, pygame_env):
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         mock_comp, mods = _setup_mock_comp('reactor')
         # Ensure registry has simple_size_mount
         with patch.dict(RegistryManager.instance().modifiers, {'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})}, clear=True):
@@ -173,7 +181,9 @@ class TestMandatoryModifiers:
         assert 'simple_size_mount' in mods
 
     def test_auto_apply_range_weapon(self, pygame_env):
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         # USE CORRECT TYPE STRING
         mock_comp, mods = _setup_mock_comp('ProjectileWeapon')
 
@@ -200,7 +210,9 @@ class TestMandatoryModifiers:
         assert 'facing' in mods
 
     def test_no_auto_apply_range_non_weapon(self, pygame_env):
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         mock_comp, mods = _setup_mock_comp('Reactor')  # PascalCase for non-weapon too likely
 
         test_registry = {
@@ -219,7 +231,9 @@ class TestMandatoryModifiers:
         assert 'simple_size_mount' in mods
 
     def test_prevent_removal(self, pygame_env):
-        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock())
+        # PROJ-50: Pass registries (required)
+        panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
+                                   registries=RegistryManager.instance())
         mock_comp, mods = _setup_mock_comp('Reactor')
 
         # Pre-add

@@ -15,7 +15,7 @@ from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 from game.ui.utils import create_centered_rect
 from game.core.constants import LayerType
-from game.core.registry import get_default_registry_provider
+# PROJ-50: Removed get_default_registry_provider import - using strict DI
 # PROJ-43: Removed direct simulation imports - using adapters instead
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.panels.builder_widgets import ModifierEditorPanel
@@ -157,10 +157,8 @@ class DesignWorkshopScreen:
         self._create_ui()
 
     def _get_vehicle_classes(self):
-        """PROJ-38: Get vehicle_classes from context registries or provider fallback."""
-        if self.context.registries is not None:
-            return self.context.registries.vehicle_classes
-        return get_default_registry_provider().get_vehicle_classes()
+        """PROJ-50: Get vehicle_classes from context registries (required)."""
+        return self.context.registries.vehicle_classes
 
     def _create_ui(self):
         """Initialize all UI panels for the workshop screen.
@@ -584,8 +582,8 @@ class DesignWorkshopScreen:
         UI refresh logic remains in this class.
         """
         try:
-            # 1. Load data via dedicated loader
-            loader = WorkshopDataLoader(directory)
+            # 1. Load data via dedicated loader (PROJ-50: pass registries)
+            loader = WorkshopDataLoader(directory, registries=self.context.registries)
             result = loader.load_all()
             
             if not result.success:

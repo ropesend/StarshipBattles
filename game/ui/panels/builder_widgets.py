@@ -2,12 +2,12 @@
 Builder Widgets - UI components for the Design Workshop.
 
 PROJ-38: Added registries parameter for dependency injection.
+PROJ-50: Made registries mandatory, removed fallback pattern.
 """
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UIScrollingContainer
-from typing import Optional, TYPE_CHECKING
-from game.core.registry import get_default_registry_provider
+from typing import TYPE_CHECKING
 from game.core.logger import log_info, log_debug
 
 from game.ui.screens.builder.modifier_logic import ModifierLogic
@@ -26,18 +26,19 @@ class ModifierEditorPanel:
     """
 
     def __init__(self, manager, container, width, on_change_callback,
-                 *, registries: Optional['GameRegistries'] = None):
+                 *, registries: 'GameRegistries'):
         """
         Initialize the ModifierEditorPanel.
 
         PROJ-38: Added registries parameter for DI.
+        PROJ-50: Made registries mandatory, removed fallback.
 
         Args:
             manager: pygame_gui UIManager
             container: Parent container
             width: Panel width
             on_change_callback: Callback when modifier changes
-            registries: Optional GameRegistries for DI
+            registries: GameRegistries instance (required)
         """
         self.manager = manager
         self.container = container
@@ -57,10 +58,8 @@ class ModifierEditorPanel:
         self._cached_scroll_position = 0  # Preserve scroll on rebuild
 
     def _get_modifiers(self):
-        """PROJ-38: Get modifiers from registries or provider fallback."""
-        if self._registries is not None:
-            return self._registries.modifiers
-        return get_default_registry_provider().get_modifiers()
+        """PROJ-50: Get modifiers from injected registries."""
+        return self._registries.modifiers
 
     def rebuild(self, editing_component, is_readonly=False):
         """Rebuild/Update the modifier UI based on current state."""
