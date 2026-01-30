@@ -123,13 +123,14 @@ class RegistryManager:
         - For cross-registry transactions, external synchronization is required
     
     Usage:
-        # Preferred: Use utility functions (easier to mock)
-        from game.core.registry import get_component_registry, get_modifier_registry
-        
-        components = get_component_registry()
-        modifiers = get_modifier_registry()
-        classes = get_vehicle_classes()
-        
+        # Preferred: Use GameRegistries via DI (PROJ-38)
+        from game.core.registry import get_default_registries
+
+        registries = get_default_registries()
+        components = registries.components
+        modifiers = registries.modifiers
+        classes = registries.vehicle_classes
+
         # Alternative: Direct access (when needed for special operations)
         mgr = RegistryManager.instance()
         mgr.clear()  # For test isolation

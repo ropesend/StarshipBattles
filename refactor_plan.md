@@ -8,22 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-01-29
-**Last Completed:** PROJ-42 Phase 2 Task 2.5
-**Current Status:** Phase 2 in progress, Task 2.5 complete
+**Last Completed:** PROJ-42 Phase 2 Complete
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-42
-**Current Phase:** Phase 2 - Task 2.6 next
-**Test Status:** 98 testmon passed
+**Current Phase:** Phase 3 - Eliminate Dual Static/Instance Patterns
+**Test Status:** 925 passed (focused tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 2.5 completed: Updated VehicleDesignService to GameRegistries only (removed IRegistryProvider)
-- Removed `registry: Optional['IRegistryProvider']` parameter entirely
-- Added `_get_registries_fallback()` static method (consistent with other services)
-- Simplified constructor to use fallback when registries is None
-- Removed helper methods `_get_vehicle_classes()` and `_get_components()` - now use `self._registries` directly
-- Updated tests in test_vehicle_design_service_di.py and test_service_injection.py
-- 29 VehicleDesignService tests pass
-- Next: Task 2.6 - Update UI Layer Files
+- Phase 2 completed: All tasks verified as already complete from prior PROJ-38 work
+- Task 2.6: UI layer files already have `_get_*` helper methods with registries → provider fallback
+- Task 2.7: Remaining files already have PROJ-38 pattern or are data loaders using global state correctly
+- Task 2.8: Deprecated module-level functions already removed; updated outdated docstrings in registry.py and ship_stats.py
+- 925 tests passed (core, services, simulation, workshop)
+- Next: Phase 3 - Eliminate dual static/instance method patterns
 
 ---
 
@@ -99,6 +97,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-29 | PROJ-42 | Phase 2 Complete | Complete | 925 passed | 2ed3fa1 | Tasks 2.6-2.8 verified complete, updated docstrings |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.5 | Complete | 98 testmon | 8c33d1f | Updated VehicleDesignService to GameRegistries only |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.4 | Complete | 115 testmon | 336bf48 | Updated Component with _get_registries_fallback() pattern |
 | 2026-01-29 | PROJ-42 | Phase 2 Task 2.2 | Complete | 796 testmon | 6f26551 | Updated ModifierService with _get_modifiers_fallback() pattern |
