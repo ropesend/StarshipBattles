@@ -12,22 +12,22 @@
 **Current Status:** PROJ-48 In Progress
 **Current Project:** PROJ-48
 **Current Phase:** Phase 3 (Test File Splitting) - In Progress
-**Test Status:** 207 passed (split files this session)
+**Test Status:** 153 passed (split files this session)
 **Active Blockers:** None
 
 **Handoff Notes:**
 - PROJ-48 Phase 3 In Progress - Test File Splitting
   - Task 3.1 Complete: All 4 critical monoliths split
   - Task 3.2 Complete: All 20 severe monoliths split
-  - Task 3.3 In Progress: 16/26+ moderate monoliths split (4 this session):
-    - test_resources.py (ship_instance, 680 LOC) -> 3 files (36 tests)
-    - test_resources.py (fleet, 640 LOC) -> 2 files (37 tests)
-    - test_ship_component_manager.py (626 LOC) -> ship_component_manager/ (34 tests)
-    - test_test_lab_controller.py (625 LOC) -> 2 files (32 tests)
+  - Task 3.3 In Progress: 20/26+ moderate monoliths split (4 this session):
+    - test_battle_coordinator.py (622 LOC) -> battle_coordinator/ (3 files, 40 tests)
+    - test_left_panel.py (620 LOC) -> left_panel/ (3 files, 39 tests)
+    - test_ship_helpers.py (618 LOC) -> ship_helpers/ (2 files, 50 tests)
+    - test_service_methods.py (605 LOC) -> 2 files (24 tests)
 - Remaining Phase 3 work:
-  - Task 3.3 remaining: ~14 moderate monoliths (500-700 LOC)
+  - Task 3.3 remaining: ~15 files still >500 LOC
 - Next: Continue Task 3.3 - Split remaining moderate monoliths
-- Total: 1318 tests moved to new files across 36 monoliths split so far
+- Total: 1471 tests moved to new files across 40 monoliths split so far
 
 ---
 
