@@ -14,7 +14,7 @@ from game.ui.screens.builder.right_panel import BuilderRightPanel
 class TestUIDynamicUpdate:
 
     @pytest.fixture(autouse=True)
-    def setup_builder(self):
+    def setup_builder(self, fresh_registries):
         """Setup builder and manager for each test."""
         # Note: pygame and registry initialization handled by conftest fixtures
         # pygame.init() and pygame.display are managed at session scope
@@ -23,7 +23,7 @@ class TestUIDynamicUpdate:
         builder.theme_manager.get_available_themes.return_value = ["Federation"]
 
         # Use real Ship (no reload)
-        test_ship = Ship("Test Ship", 0, 0, (255,255,255))
+        test_ship = Ship("Test Ship", 0, 0, (255,255,255), registries=fresh_registries)
         builder.ship = test_ship
 
         # MVVM: viewmodel must return the same ship for refactored panels

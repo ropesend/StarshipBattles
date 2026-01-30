@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock
 import sys
 
@@ -11,9 +12,9 @@ class TestStatsConfig:
     def setup_method(self):
         initialize_ship_data(str(get_project_root()))
 
-    def test_dynamic_resource_rows(self):
+    def test_dynamic_resource_rows(self, fresh_registries):
         # Create a ship and register standard + custom resources
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
 
         # Manually register to simulate a ship component setup
         ship.resources.register_storage("fuel", 100)
@@ -48,15 +49,15 @@ class TestStatsConfig:
         assert biomass_row is not None, "Should find dynamic row for Biomass"
         assert biomass_row.get_value(ship) == 50
 
-    def test_resource_endurance_rows(self):
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+    def test_resource_endurance_rows(self, fresh_registries):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
         ship.resources.register_storage("fuel", 100)
 
         # Add a component with consumption
         from game.simulation.components.component import Component
         from game.simulation.entities.ship import LayerType
 
-        comp = Component({'id': 'test_engine', 'name': 'Test Engine', 'type': 'Engine', 'mass': 10, 'hp': 10})
+        comp = Component({'id': 'test_engine', 'name': 'Test Engine', 'type': 'Engine', 'mass': 10, 'hp': 10}, registries=fresh_registries)
         # Inject ability data
         comp.abilities['ResourceConsumption'] = [{'resource': 'fuel', 'amount': 10, 'trigger': 'constant'}]
         # Must instantiate abilities for the system to see them

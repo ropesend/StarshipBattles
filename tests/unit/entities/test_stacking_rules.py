@@ -7,13 +7,14 @@ from game.simulation.entities.ship_stats import ShipStatsCalculator
 
 
 @pytest.fixture
-def ship_with_layers():
+def ship_with_layers(fresh_registries):
     """Create a ship with mock layers for testing."""
-    ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
+    ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
     # Mock layers
     ship.layers[LayerType.OUTER] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
     ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
     ship.layers[LayerType.INNER] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
+    ship._fresh_registries = fresh_registries  # Store for component creation
     return ship
 
 
@@ -52,8 +53,9 @@ class TestStackingRules:
     def test_sensor_stacking(self, ship_with_layers, component_data):
         """Sensors should PROVIDE REDUNDANCY (Max), not stack (Multiply/Sum)"""
         # Sensor 1 (2.0) + Sensor 2 (1.5) -> Max is 2.0.
-        c1 = Component(component_data['sensor'])
-        c2 = Component(component_data['mini_sensor'])
+        regs = ship_with_layers._fresh_registries
+        c1 = Component(component_data['sensor'], registries=regs)
+        c2 = Component(component_data['mini_sensor'], registries=regs)
         ship_with_layers.add_component(c1, LayerType.OUTER)
         ship_with_layers.add_component(c2, LayerType.OUTER)
 
@@ -63,8 +65,9 @@ class TestStackingRules:
     def test_ecm_redundancy(self, ship_with_layers, component_data):
         """ECM should PROVIDE REDUNDANCY (Max)"""
         # ECM (2.0) + Mini ECM (1.2) -> Max is 2.0.
-        c1 = Component(component_data['ecm'])
-        c2 = Component(component_data['mini_ecm'])
+        regs = ship_with_layers._fresh_registries
+        c1 = Component(component_data['ecm'], registries=regs)
+        c2 = Component(component_data['mini_ecm'], registries=regs)
         ship_with_layers.add_component(c1, LayerType.OUTER)
         ship_with_layers.add_component(c2, LayerType.OUTER)
 
@@ -78,8 +81,9 @@ class TestStackingRules:
     def test_ecm_and_scattering_stacking(self, ship_with_layers, component_data):
         """ECM and Scattering should STACK (Multiply)"""
         # ECM (2.0) [Group ECM] + Scattering (1.5) [Group Scattering] -> 2.0 * 1.5 = 3.0
-        c1 = Component(component_data['ecm'])
-        c2 = Component(component_data['scattering'])
+        regs = ship_with_layers._fresh_registries
+        c1 = Component(component_data['ecm'], registries=regs)
+        c2 = Component(component_data['scattering'], registries=regs)
         ship_with_layers.add_component(c1, LayerType.OUTER)
         ship_with_layers.add_component(c2, LayerType.ARMOR)
 
@@ -88,8 +92,9 @@ class TestStackingRules:
 
     def test_normal_stacking(self, ship_with_layers, component_data):
         """Crew Quarters should stack normally (Sum)"""
-        c1 = Component(component_data['crew_quarters'])
-        c2 = Component(component_data['crew_quarters'])
+        regs = ship_with_layers._fresh_registries
+        c1 = Component(component_data['crew_quarters'], registries=regs)
+        c2 = Component(component_data['crew_quarters'], registries=regs)
         ship_with_layers.add_component(c1, LayerType.INNER)
         ship_with_layers.add_component(c2, LayerType.INNER)
 

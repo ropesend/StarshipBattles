@@ -20,20 +20,20 @@ class TestStructureVisibility:
     # setUpClass / tearDownClass removed
 
     @pytest.fixture(autouse=True)
-    def setup_mocks(self):
+    def setup_mocks(self, fresh_registries):
         """Setup mocks and teardown for each test."""
         # Note: pygame and registry initialization is handled by conftest fixtures
         # (enforce_headless, pygame_display_reset, and reset_game_state)
 
         # Patch UI elements in the structure_list_items namespace
-        with patch('ui.builder.structure_list_items.UIPanel') as item_uipanel_patch, \
-             patch('ui.builder.structure_list_items.UILabel') as item_uilabel_patch, \
-             patch('ui.builder.structure_list_items.UIImage') as item_uiimage_patch, \
-             patch('ui.builder.structure_list_items.UIButton') as item_uibutton_patch, \
-             patch('ui.builder.layer_panel.UIPanel') as panel_uipanel_patch, \
-             patch('ui.builder.layer_panel.UILabel') as panel_uilabel_patch, \
-             patch('ui.builder.layer_panel.UIScrollingContainer') as panel_uiscroll_patch, \
-             patch('ui.builder.layer_panel.UIDropDownMenu') as panel_uidropdown_patch:
+        with patch('game.ui.screens.builder.structure_list_items.UIPanel') as item_uipanel_patch, \
+             patch('game.ui.screens.builder.structure_list_items.UILabel') as item_uilabel_patch, \
+             patch('game.ui.screens.builder.structure_list_items.UIImage') as item_uiimage_patch, \
+             patch('game.ui.screens.builder.structure_list_items.UIButton') as item_uibutton_patch, \
+             patch('game.ui.screens.builder.layer_panel.UIPanel') as panel_uipanel_patch, \
+             patch('game.ui.screens.builder.layer_panel.UILabel') as panel_uilabel_patch, \
+             patch('game.ui.screens.builder.layer_panel.UIScrollingContainer') as panel_uiscroll_patch, \
+             patch('game.ui.screens.builder.layer_panel.UIDropDownMenu') as panel_uidropdown_patch:
 
             # Mock UIManager
             mock_manager = MagicMock(spec=pygame_gui.UIManager)
@@ -46,7 +46,7 @@ class TestStructureVisibility:
 
             # Mock Builder
             mock_builder = MagicMock()
-            ship = Ship("Test Escort", 0, 0, (255, 255, 255), ship_class="Escort")
+            ship = Ship("Test Escort", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
             mock_builder.ship = ship
 
             # MVVM: viewmodel must return the same ship/selected_components for refactored panels

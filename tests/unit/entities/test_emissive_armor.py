@@ -6,9 +6,10 @@ from game.simulation.entities.ship_combat import ShipCombatMixin
 
 class TestEmissiveArmor:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
+        self.registries = fresh_registries
         # Create a dummy ship
-        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Escort")
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Escort", registries=fresh_registries)
         # Create an Emissive Armor component
         # We need to mock the component definition since we haven't loaded json yet in this test context,
         # or we rely on the registry. simpler to mock.
@@ -28,15 +29,12 @@ class TestEmissiveArmor:
                 "EmissiveArmor": { "value": "=15 * (ship_class_mass / 1000)**(1/3)", "stack_group": "Emissive" }
             }
         }
-        # Register it so it can be cloned if needed, or just use it directly
-        from game.core.registry import RegistryManager
-        from game.simulation.components.component import Component
 
         # Ensure ship has mass budget for formula eval when added
         self.ship.max_mass_budget = 1000
 
-        c = Component(self.armor_data)
-        RegistryManager.instance().components["emissive_armor"] = c
+        c = Component(self.armor_data, registries=fresh_registries)
+        fresh_registries.components["emissive_armor"] = c
 
         # Add to ship
         self.emissive_comp = c.clone()

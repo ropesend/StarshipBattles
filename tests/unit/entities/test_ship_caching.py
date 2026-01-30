@@ -10,13 +10,13 @@ from game.core.registry import RegistryManager
 
 class TestShipCaching:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         # Create a basic ship
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255))
+        self.registries = fresh_registries
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
 
         yield
 
-        RegistryManager.instance().clear()
         patch.stopall()
 
     def test_cached_summary_empty_initially(self):
@@ -34,7 +34,7 @@ class TestShipCaching:
                 "WeaponAbility": {"damage": 10, "reload": 1.0, "range": 1000}
             }
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
 
         # Add to ship - use CORE layer (not HULL, which only accepts hull components)
         self.ship.add_component(weapon, LayerType.CORE)
@@ -62,14 +62,14 @@ class TestShipCaching:
                 "WeaponAbility": {"damage": 10, "reload": 2.0, "range": 500}
             }
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         summary = self.ship.cached_summary
         assert summary['dps'] == 5.0
 
         # Add another identical weapon
-        weapon2 = Component(weapon_data)
+        weapon2 = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon2, LayerType.CORE)
 
         summary = self.ship.cached_summary
@@ -82,10 +82,10 @@ class TestComponentCacheInvalidation:
     """PROJ-49 Phase 3: Tests for component list caching."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255))
+    def setup(self, fresh_registries):
+        self.registries = fresh_registries
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
         yield
-        RegistryManager.instance().clear()
         patch.stopall()
 
     def test_cache_starts_dirty(self):
@@ -126,7 +126,7 @@ class TestComponentCacheInvalidation:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         # Cache should be refreshed (not dirty) and include new component
@@ -146,7 +146,7 @@ class TestComponentCacheInvalidation:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         # Populate cache and record count
@@ -177,7 +177,7 @@ class TestComponentCacheInvalidation:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         # Get new components - should have one more
@@ -203,10 +203,10 @@ class TestWeaponCachePerTick:
     """PROJ-49 Phase 3: Tests for per-tick weapon component caching."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255))
+    def setup(self, fresh_registries):
+        self.registries = fresh_registries
+        self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
         yield
-        RegistryManager.instance().clear()
         patch.stopall()
 
     def test_weapon_cache_starts_empty(self):
@@ -225,7 +225,7 @@ class TestWeaponCachePerTick:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         # Call with tick 0
@@ -246,7 +246,7 @@ class TestWeaponCachePerTick:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         first_call = self.ship.get_weapon_components_cached(5)
@@ -266,7 +266,7 @@ class TestWeaponCachePerTick:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon = Component(weapon_data)
+        weapon = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon, LayerType.CORE)
 
         tick_5_weapons = self.ship.get_weapon_components_cached(5)
@@ -287,8 +287,8 @@ class TestWeaponCachePerTick:
             "hp": 50,
             "abilities": {"WeaponAbility": {"damage": 10, "reload": 1.0, "range": 500}}
         }
-        weapon1 = Component(weapon_data)
-        weapon2 = Component(weapon_data)
+        weapon1 = Component(weapon_data, registries=self.registries)
+        weapon2 = Component(weapon_data, registries=self.registries)
         self.ship.add_component(weapon1, LayerType.CORE)
         self.ship.add_component(weapon2, LayerType.CORE)
 
@@ -307,7 +307,7 @@ class TestComponentHpRatioCaching:
     """PROJ-49 Phase 4: Tests for HP ratio caching in Component."""
 
     @pytest.fixture
-    def component(self):
+    def component(self, fresh_registries):
         """Create a basic component for testing."""
         data = {
             "id": "TestComponent",
@@ -317,7 +317,7 @@ class TestComponentHpRatioCaching:
             "hp": 100,
             "abilities": {}
         }
-        return Component(data)
+        return Component(data, registries=fresh_registries)
 
     def test_hp_ratio_cache_starts_dirty(self, component):
         """New components should have dirty HP ratio cache."""

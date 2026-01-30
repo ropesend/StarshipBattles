@@ -18,7 +18,7 @@ def service():
 
 
 @pytest.fixture
-def team1_ship():
+def team1_ship(fresh_registries):
     """Create a ship for team 1."""
     ship = Ship(
         name="Team1 Ship",
@@ -26,14 +26,15 @@ def team1_ship():
         y=100,
         color=(255, 0, 0),
         team_id=0,
-        ship_class="Escort"
+        ship_class="Escort",
+        registries=fresh_registries
     )
     ship.recalculate_stats()
     return ship
 
 
 @pytest.fixture
-def team2_ship():
+def team2_ship(fresh_registries):
     """Create a ship for team 2."""
     ship = Ship(
         name="Team2 Ship",
@@ -41,7 +42,8 @@ def team2_ship():
         y=100,
         color=(0, 0, 255),
         team_id=1,
-        ship_class="Escort"
+        ship_class="Escort",
+        registries=fresh_registries
     )
     ship.recalculate_stats()
     return ship

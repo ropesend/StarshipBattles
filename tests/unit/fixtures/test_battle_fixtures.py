@@ -127,10 +127,10 @@ class TestBattleFactory:
         # Clean up
         engine.logger.close()
 
-    def test_create_battle_engine_with_ships(self):
+    def test_create_battle_engine_with_ships(self, fresh_registries):
         """Factory creates battle engine with ships."""
         from tests.fixtures.battle import create_battle_engine_with_ships
-        engine = create_battle_engine_with_ships()
+        engine = create_battle_engine_with_ships(registries=fresh_registries)
         assert isinstance(engine, BattleEngine)
         assert len(engine.ships) >= 2
 

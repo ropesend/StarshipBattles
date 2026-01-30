@@ -10,25 +10,19 @@ from tests.fixtures.paths import get_unit_test_data_dir
 
 
 @pytest.fixture
-def validator_with_test_data():
+def validator_with_test_data(fresh_registries):
     """Load test vehicle classes and set up validator."""
     test_data_path = str(get_unit_test_data_dir() / "test_vehicleclasses.json")
     with open(test_data_path, "r") as f:
         vehicle_data = json.load(f)["classes"]
 
-    # Mock global vehicle_classes with our test data for the scope of this test
-    classes = RegistryManager.instance().vehicle_classes
-    original_vehicle_classes = classes.copy()
-    classes.clear()
-    classes.update(vehicle_data)
+    # Update fresh_registries with test data
+    fresh_registries.vehicle_classes.clear()
+    fresh_registries.vehicle_classes.update(vehicle_data)
 
-    validator = ShipDesignValidator()
+    validator = ShipDesignValidator(registries=fresh_registries)
 
     yield validator
-
-    # Restore global vehicle_classes
-    classes.clear()
-    classes.update(original_vehicle_classes)
 
 
 class TestBridgeRequirementRemoval:

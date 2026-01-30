@@ -12,17 +12,18 @@ class TestDamageLayerLogic:
     """Test damage distribution through ship layers."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         # Save random state and set deterministic seed for reproducible tests
         # State is restored after test to prevent pollution of other tests
         saved_random_state = random.getstate()
         random.seed(42)
 
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
-        self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        self.registries = fresh_registries
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('armor_plate', registries=fresh_registries), LayerType.ARMOR)
 
         # Ensure TestShip class exists in RegistryManager with correct layers
         # Note: Post-Phase 5, hull_mass is removed; Hull component provides mass
@@ -36,10 +37,10 @@ class TestDamageLayerLogic:
         }
         self.ship._initialize_layers()
         # Re-add components because _initialize_layers clears them
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
-        self.ship.add_component(create_component('armor_plate'), LayerType.ARMOR)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('armor_plate', registries=fresh_registries), LayerType.ARMOR)
 
         self.ship.recalculate_stats()
 
@@ -80,7 +81,7 @@ class TestDamageLayerLogic:
     def test_shield_absorbs_before_armor(self):
         """Shield should absorb damage before armor."""
         # Add shield (correct component ID is 'shield_generator')
-        self.ship.add_component(create_component('shield_generator'), LayerType.CORE)
+        self.ship.add_component(create_component('shield_generator', registries=self.registries), LayerType.CORE)
         self.ship.recalculate_stats()
 
         initial_shields = self.ship.current_shields
@@ -114,7 +115,7 @@ class TestDamageLayerLogic:
 
         # Add a hull component to require command and control
         # Without this, the ship has no requirements and won't become derelict
-        hull = create_component('hull_escort')
+        hull = create_component('hull_escort', registries=self.registries)
         self.ship.add_component(hull, LayerType.CORE)
 
         # Remove armor first to make bridge accessible
@@ -151,13 +152,13 @@ class TestEnergyRegeneration:
     """Test energy and shield regeneration mechanics."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser")
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
-        self.ship.add_component(create_component('battery'), LayerType.INNER)
-        self.ship.add_component(create_component('generator'), LayerType.INNER)
+    def setup(self, fresh_registries):
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('battery', registries=fresh_registries), LayerType.INNER)
+        self.ship.add_component(create_component('generator', registries=fresh_registries), LayerType.INNER)
         self.ship.recalculate_stats()
 
     def test_energy_regenerates_per_tick(self):
@@ -196,13 +197,13 @@ class TestWeaponCooldowns:
     """Test weapon cooldown mechanics."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        self.ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
+    def setup(self, fresh_registries):
+        self.ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
         # Use laser_cannon which is a BeamWeapon that can go in OUTER
-        self.ship.add_component(create_component('laser_cannon'), LayerType.OUTER)
+        self.ship.add_component(create_component('laser_cannon', registries=fresh_registries), LayerType.OUTER)
         self.ship.recalculate_stats()
 
     def test_weapon_cooldown_decreases(self):
@@ -263,13 +264,13 @@ class TestCombatFlow:
         t = ship.solve_lead(ship.position, ship.velocity, target_pos, target_vel, proj_speed)
         assert abs(t - 10.0) < 0.1
 
-    def test_fire_weapons_creates_projectiles(self):
+    def test_fire_weapons_creates_projectiles(self, fresh_registries):
         """Test that fire_weapons returns correct projectile objects."""
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import Component
         from game.core.constants import AttackType
 
-        ship = Ship("Shooter", 0,0, (255,255,255))
+        ship = Ship("Shooter", 0,0, (255,255,255), registries=fresh_registries)
 
         # Add a weapon component manually to ensure it has no cost issues
         # Component needs to be 'active'
@@ -283,7 +284,7 @@ class TestCombatFlow:
                 "WeaponAbility": {"range": 1000, "fire_rate": 1, "cooldown": 0},
                 "ProjectileWeaponAbility": {"projectile_speed": 100, "damage": 10, "range": 1000}
             }
-        })
+        }, registries=fresh_registries)
         ship.add_component(weapon, LayerType.OUTER)
         ship.recalculate_stats() # Activate component
 
@@ -306,17 +307,17 @@ class TestCombatFlow:
         assert attacks[0].type == AttackType.PROJECTILE  # proj_type -> type
         assert attacks[0].owner == ship
 
-    def test_special_armor_interactions(self):
+    def test_special_armor_interactions(self, fresh_registries):
         """Test Emissive and Crystalline Armor logic."""
         from game.simulation.entities.ship import Ship
-        ship = Ship("Tank", 0,0, (255,255,255))
+        ship = Ship("Tank", 0,0, (255,255,255), registries=fresh_registries)
 
         # 1. Emissive Armor (Flat Reduction)
         ship.emissive_armor = 5
         ship.is_alive = True
 
         # Add a dummy component to take damage
-        c = create_component('bridge')
+        c = create_component('bridge', registries=fresh_registries)
         ship.add_component(c, LayerType.CORE)
         ship.recalculate_stats()
         ship.emissive_armor = 5

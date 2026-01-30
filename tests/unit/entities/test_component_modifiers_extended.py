@@ -11,11 +11,9 @@ from tests.fixtures.paths import get_data_dir
 
 
 @pytest.fixture
-def loaded_data():
-    """Load components and modifiers from data files."""
-    data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
-    load_modifiers(str(data_dir / "modifiers.json"))
+def loaded_data(fresh_registries):
+    """Provide fresh_registries for tests."""
+    return fresh_registries
 
 
 class TestModifierStackingIntegration:
@@ -24,11 +22,11 @@ class TestModifierStackingIntegration:
     def test_range_mount_increases_component_mass(self, loaded_data):
         """Range mount modifier should increase component mass."""
         # Create base railgun
-        railgun_base = create_component('railgun')
+        railgun_base = create_component('railgun', registries=loaded_data)
         base_mass = railgun_base.mass
 
         # Create railgun with range modifier
-        railgun_range = create_component('railgun')
+        railgun_range = create_component('railgun', registries=loaded_data)
         railgun_range.add_modifier('range_mount', 1)
         railgun_range.recalculate_stats()
 
@@ -38,12 +36,12 @@ class TestModifierStackingIntegration:
     def test_multiple_modifiers_order_independent(self, loaded_data):
         """Adding modifiers in different order should give same result."""
         # Create two weapons, add modifiers in different order
-        w1 = create_component('railgun')
+        w1 = create_component('railgun', registries=loaded_data)
         w1.add_modifier('size_mount', 2)
         w1.add_modifier('range_mount', 1)
         w1.recalculate_stats()
 
-        w2 = create_component('railgun')
+        w2 = create_component('railgun', registries=loaded_data)
         w2.add_modifier('range_mount', 1)
         w2.add_modifier('size_mount', 2)
         w2.recalculate_stats()

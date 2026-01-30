@@ -14,29 +14,27 @@ class TestShipResources:
     """Test resource initialization, capacity, life support, and crew logic."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
         pygame.init()
-        initialize_ship_data(str(get_project_root()))
-        load_components(str(get_data_dir() / "components.json"))
-        self.ship = Ship("ResourceTest", 0, 0, (255, 255, 255), ship_class="Cruiser")
+        self.registries = fresh_registries
+        self.ship = Ship("ResourceTest", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
         # Add minimal functional core
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
         self.ship.recalculate_stats()
 
         yield
 
-        RegistryManager.instance().clear()
         if pygame.get_init():
             pygame.quit()
 
     def test_resource_initialization(self):
         """Resources should be auto-filled only on first initialization with capacity."""
         # Add components that provide capacity
-        self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
-        self.ship.add_component(create_component('ordnance_tank'), LayerType.INNER)
-        self.ship.add_component(create_component('battery'), LayerType.INNER)
+        self.ship.add_component(create_component('fuel_tank', registries=self.registries), LayerType.INNER)
+        self.ship.add_component(create_component('ordnance_tank', registries=self.registries), LayerType.INNER)
+        self.ship.add_component(create_component('battery', registries=self.registries), LayerType.INNER)
 
         # Trigger first initialization
         self.ship.recalculate_stats()
@@ -55,14 +53,14 @@ class TestShipResources:
 
     def test_capacity_increase_refill(self):
         """Increasing capacity should only add the difference to current resources."""
-        self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
+        self.ship.add_component(create_component('fuel_tank', registries=self.registries), LayerType.INNER)
         self.ship.recalculate_stats()
 
         max1 = self.ship.resources.get_max_value("fuel")
         self.ship.resources.get_resource("fuel").current_value = 50
 
         # Add another tank
-        self.ship.add_component(create_component('fuel_tank'), LayerType.INNER)
+        self.ship.add_component(create_component('fuel_tank', registries=self.registries), LayerType.INNER)
         self.ship.recalculate_stats()
 
         max2 = self.ship.resources.get_max_value("fuel")
@@ -72,7 +70,7 @@ class TestShipResources:
     def test_crew_requirement_failure(self):
         """Components should deactivate if there is insufficient crew."""
         # Add a weapon that requires crew
-        weapon = create_component('railgun')  # Usually requires 5 crew
+        weapon = create_component('railgun', registries=self.registries)  # Usually requires 5 crew
         self.ship.add_component(weapon, LayerType.OUTER)
 
         # Setup: 1 Bridge (5 housing), 1 Crew Quarters (20 housing), 1 Life Support (25 capacity)
@@ -97,9 +95,9 @@ class TestShipResources:
         # Since LS is 5, effective crew is 5. Bridge gets it first. Railgun starves.
 
         # Reset ship
-        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=self.registries)
+        self.ship.add_component(create_component('bridge', registries=self.registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=self.registries), LayerType.CORE)
 
         # Add a custom mock life support component with low capacity or just find a small one
         # Actually, let's just use a very small life support or none.
@@ -114,11 +112,11 @@ class TestShipResources:
 
     def test_satellite_ignores_crew(self):
         """Satellites should ignore crew requirements."""
-        self.ship = Ship("SatResource", 0, 0, (255, 255, 255), ship_class="Satellite (Small)")
+        self.ship = Ship("SatResource", 0, 0, (255, 255, 255), ship_class="Satellite (Small)", registries=self.registries)
         # Satellite Core (Bridge) usually needs crew?
         # Actually in ship.py:280, satellites ignore crew.
 
-        core = create_component('satellite_core')
+        core = create_component('satellite_core', registries=self.registries)
         self.ship.add_component(core, LayerType.CORE)
 
         # No crew quarters or life support added

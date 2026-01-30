@@ -10,39 +10,33 @@ from tests.fixtures.paths import get_project_root, get_data_dir
 
 
 @pytest.fixture
-def ship_with_engine():
+def ship_with_engine(fresh_registries):
     """Create a ship with engine and fuel for thrust tests."""
     pygame.init()
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
-    ship.add_component(create_component('bridge'), LayerType.CORE)
-    ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-    ship.add_component(create_component('life_support'), LayerType.CORE)
-    ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-    ship.add_component(create_component('fuel_tank'), LayerType.CORE)
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
+    ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+    ship.add_component(create_component('fuel_tank', registries=fresh_registries), LayerType.CORE)
     ship.recalculate_stats()
     yield ship
-    RegistryManager.instance().clear()
     if pygame.get_init():
         pygame.quit()
 
 
 @pytest.fixture
-def ship_with_thruster():
+def ship_with_thruster(fresh_registries):
     """Create a ship with thruster for rotation tests."""
     pygame.init()
-    initialize_ship_data(str(get_project_root()))
-    load_components(str(get_data_dir() / "components.json"))
-    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort")
-    ship.add_component(create_component('bridge'), LayerType.CORE)
-    ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-    ship.add_component(create_component('life_support'), LayerType.CORE)
-    ship.add_component(create_component('standard_engine'), LayerType.OUTER)
-    ship.add_component(create_component('thruster'), LayerType.OUTER)
+    ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
+    ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+    ship.add_component(create_component('thruster', registries=fresh_registries), LayerType.OUTER)
     ship.recalculate_stats()
     yield ship
-    RegistryManager.instance().clear()
     if pygame.get_init():
         pygame.quit()
 

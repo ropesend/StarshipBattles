@@ -5,27 +5,27 @@ from game.core.registry import RegistryManager
 
 
 class TestComponents:
-    def test_load_components(self):
+    def test_load_components(self, fresh_registries):
         """Verify components.json is loaded correctly."""
-        comps = get_all_components()
+        comps = get_all_components(registries=fresh_registries)
         assert len(comps) > 0, "No components loaded"
 
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=fresh_registries)
         assert bridge is not None
         # Recalculate stats to resolve formulas (uses default context k=1000)
         bridge.recalculate_stats()
         assert bridge.name == "Bridge"
         assert bridge.mass == 50
 
-    def test_create_component_types(self):
-        railgun = create_component('railgun')
+    def test_create_component_types(self, fresh_registries):
+        railgun = create_component('railgun', registries=fresh_registries)
         # Phase 7: Check weapon has ability, not legacy class
         assert railgun.has_ability('WeaponAbility') is True
         weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
         assert weapon_ab is not None
         assert weapon_ab.damage == 40
 
-        tank = create_component('fuel_tank')
+        tank = create_component('fuel_tank', registries=fresh_registries)
 
         # Verify ResourceStorage ability exists
         from game.simulation.systems.resource_manager import ResourceStorage
@@ -40,27 +40,27 @@ class TestComponents:
 class TestModifierStacking:
     """Test that modifiers stack multiplicatively, not override each other."""
 
-    def test_single_size_modifier(self):
+    def test_single_size_modifier(self, fresh_registries):
         """Size mount 2x should double mass."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass  # 100
 
         railgun.add_modifier('simple_size_mount', 2.0)
 
         assert railgun.mass == pytest.approx(base_mass * 2.0, abs=0.01)
 
-    def test_single_range_modifier(self):
+    def test_single_range_modifier(self, fresh_registries):
         """Range mount level 1 should increase mass by 3.5x."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass  # 100
 
         railgun.add_modifier('range_mount', 1.0)  # Level 1 = 3.5x mass
 
         assert railgun.mass == pytest.approx(base_mass * 3.5, abs=0.01)
 
-    def test_multiplicative_stacking_size_and_range(self):
+    def test_multiplicative_stacking_size_and_range(self, fresh_registries):
         """Size 2x + Range level 1 (3.5x) should give 7x total mass."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass  # 100
 
         railgun.add_modifier('simple_size_mount', 2.0)
@@ -70,9 +70,9 @@ class TestModifierStacking:
         assert railgun.mass == pytest.approx(expected_mass, abs=0.01), \
             f"Expected {expected_mass}, got {railgun.mass}. Modifiers should stack multiplicatively!"
 
-    def test_multiplicative_stacking_size_and_hardened(self):
+    def test_multiplicative_stacking_size_and_hardened(self, fresh_registries):
         """Size 2x + Hardened_mount 1.25x = 2.5x total mass."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass  # 100
 
         railgun.add_modifier('simple_size_mount', 2.0)
@@ -82,9 +82,9 @@ class TestModifierStacking:
         assert railgun.mass == pytest.approx(expected_mass, abs=0.01), \
             f"Expected {expected_mass}, got {railgun.mass}. Modifiers should stack multiplicatively!"
 
-    def test_triple_modifier_stacking(self):
+    def test_triple_modifier_stacking(self, fresh_registries):
         """Size 2x + Range level 1 (3.5x) + Hardened_mount (1.25x) = 8.75x mass."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass  # 100
 
         railgun.add_modifier('simple_size_mount', 2.0)
@@ -95,9 +95,9 @@ class TestModifierStacking:
         assert railgun.mass == pytest.approx(expected_mass, abs=0.01), \
             f"Expected {expected_mass}, got {railgun.mass}. Triple stacking failed!"
 
-    def test_hp_stacking(self):
+    def test_hp_stacking(self, fresh_registries):
         """Size 2x HP + Hardened_mount (4x HP) = 8x HP."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_hp = railgun.base_max_hp  # 150
 
         railgun.add_modifier('simple_size_mount', 2.0)  # 2x HP
@@ -107,9 +107,9 @@ class TestModifierStacking:
         assert railgun.max_hp == pytest.approx(expected_hp, abs=1), \
             f"Expected HP {expected_hp}, got {railgun.max_hp}"
 
-    def test_range_stacking(self):
+    def test_range_stacking(self, fresh_registries):
         """Range mount level 2 should give 4x range."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         # Phase 7: Get range from ability
         weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
         base_range = weapon_ab.range  # 2400
@@ -125,15 +125,15 @@ class TestModifierStacking:
 class TestModifierOrder:
     """Ensure modifier application order doesn't affect final result."""
 
-    def test_order_independence(self):
+    def test_order_independence(self, fresh_registries):
         """Adding modifiers in different order should give same result."""
         # Order A: size first, then range
-        railgun_a = create_component('railgun')
+        railgun_a = create_component('railgun', registries=fresh_registries)
         railgun_a.add_modifier('simple_size_mount', 2.0)
         railgun_a.add_modifier('range_mount', 1.0)
 
         # Order B: range first, then size
-        railgun_b = create_component('railgun')
+        railgun_b = create_component('railgun', registries=fresh_registries)
         railgun_b.add_modifier('range_mount', 1.0)
         railgun_b.add_modifier('simple_size_mount', 2.0)
 
@@ -146,22 +146,22 @@ class TestModifierOrder:
 class TestTurretMount:
     """Test turret mount logarithmic diminishing returns."""
 
-    def test_turret_0_degrees_no_change(self):
+    def test_turret_0_degrees_no_change(self, fresh_registries):
         """0 degree turret should not increase mass."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass
 
         railgun.add_modifier('turret_mount', 0)
 
         assert railgun.mass == pytest.approx(base_mass, abs=0.01)
 
-    def test_turret_diminishing_returns(self):
+    def test_turret_diminishing_returns(self, fresh_registries):
         """Mass increase should diminish as arc increases."""
         import math
 
-        railgun_45 = create_component('railgun')
-        railgun_90 = create_component('railgun')
-        railgun_180 = create_component('railgun')
+        railgun_45 = create_component('railgun', registries=fresh_registries)
+        railgun_90 = create_component('railgun', registries=fresh_registries)
+        railgun_180 = create_component('railgun', registries=fresh_registries)
         base_mass = railgun_45.base_mass
 
         railgun_45.add_modifier('turret_mount', 45)
@@ -180,10 +180,10 @@ class TestTurretMount:
         assert cost_0_to_45 > cost_90_to_180, \
             "First 45 degrees should cost more than 90-180 degrees!"
 
-    def test_turret_180_only_slightly_more_than_90(self):
+    def test_turret_180_only_slightly_more_than_90(self, fresh_registries):
         """180 degree turret should only cost slightly more than 90."""
-        railgun_90 = create_component('railgun')
-        railgun_180 = create_component('railgun')
+        railgun_90 = create_component('railgun', registries=fresh_registries)
+        railgun_180 = create_component('railgun', registries=fresh_registries)
         base_mass = railgun_90.base_mass
 
         railgun_90.add_modifier('turret_mount', 90)
@@ -194,9 +194,9 @@ class TestTurretMount:
         assert ratio < 1.20, \
             f"180 degrees should be <20% more than 90 degrees, got {ratio:.2%}"
 
-    def test_turret_stacks_with_size(self):
+    def test_turret_stacks_with_size(self, fresh_registries):
         """Turret mount should stack multiplicatively with size mount."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass
 
         railgun.add_modifier('simple_size_mount', 2.0)  # 2x
@@ -213,9 +213,9 @@ class TestTurretMount:
 class TestModifierDataMethods:
     """Test the new modifier data methods: get_all_modifier_effects, get_modifier_stat_summary."""
 
-    def test_get_all_modifier_effects_no_modifiers(self):
+    def test_get_all_modifier_effects_no_modifiers(self, fresh_registries):
         """Component with no modifiers returns empty list."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         # Remove any default modifiers
         railgun.modifiers = []
         railgun.recalculate_stats()
@@ -225,9 +225,9 @@ class TestModifierDataMethods:
         assert isinstance(effects, list)
         assert len(effects) == 0
 
-    def test_get_all_modifier_effects_single_modifier(self):
+    def test_get_all_modifier_effects_single_modifier(self, fresh_registries):
         """Single modifier returns its evaluated effects."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         railgun.add_modifier('simple_size_mount', 2.0)
 
@@ -243,9 +243,9 @@ class TestModifierDataMethods:
             assert hasattr(effect, 'operation')
             assert hasattr(effect, 'source_modifier_id')
 
-    def test_get_all_modifier_effects_multiple_modifiers(self):
+    def test_get_all_modifier_effects_multiple_modifiers(self, fresh_registries):
         """Multiple modifiers return all their effects combined."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         railgun.add_modifier('simple_size_mount', 2.0)
         railgun.add_modifier('hardened_mount', 1.5)
@@ -257,11 +257,11 @@ class TestModifierDataMethods:
         assert 'simple_size_mount' in source_ids
         assert 'hardened_mount' in source_ids
 
-    def test_get_all_modifier_effects_returns_modifier_effect_objects(self):
+    def test_get_all_modifier_effects_returns_modifier_effect_objects(self, fresh_registries):
         """Effects should be ModifierEffect dataclass instances."""
         from game.simulation.components.modifier_effects import ModifierEffect
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         railgun.add_modifier('simple_size_mount', 2.0)
 
@@ -270,9 +270,9 @@ class TestModifierDataMethods:
         for effect in effects:
             assert isinstance(effect, ModifierEffect)
 
-    def test_get_modifier_stat_summary_no_modifiers(self):
+    def test_get_modifier_stat_summary_no_modifiers(self, fresh_registries):
         """Component with no modifiers returns empty/default summary."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         railgun.recalculate_stats()
 
@@ -281,9 +281,9 @@ class TestModifierDataMethods:
         assert isinstance(summary, dict)
         # Should have empty or default values
 
-    def test_get_modifier_stat_summary_single_modifier(self):
+    def test_get_modifier_stat_summary_single_modifier(self, fresh_registries):
         """Single modifier returns correct stat summary grouped by stat."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         railgun.add_modifier('simple_size_mount', 2.0)  # 2x mass_mult, 2x hp_mult
 
@@ -299,9 +299,9 @@ class TestModifierDataMethods:
         assert 'contributors' in mass_entry
         assert 'operation' in mass_entry
 
-    def test_get_modifier_stat_summary_multiple_modifiers_same_stat(self):
+    def test_get_modifier_stat_summary_multiple_modifiers_same_stat(self, fresh_registries):
         """Multiple modifiers affecting same stat show correct net value."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         railgun.add_modifier('simple_size_mount', 2.0)  # 2x mass_mult
         railgun.add_modifier('hardened_mount', 1.5)  # 1.5x mass_mult
@@ -316,9 +316,9 @@ class TestModifierDataMethods:
         contributors = mass_entry.get('contributors', [])
         assert len(contributors) == 2
 
-    def test_get_modifier_stat_summary_add_operations(self):
+    def test_get_modifier_stat_summary_add_operations(self, fresh_registries):
         """Addition operations should sum values correctly."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.modifiers = []
         # Turret mount uses arc_add
         railgun.add_modifier('turret_mount', 90)

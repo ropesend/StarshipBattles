@@ -40,7 +40,7 @@ class TestHasComponents:
 
     def test_truly_empty_ship_returns_false(self, registry_with_components):
         """Ship with all layers emptied returns False."""
-        ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
+        ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_components)
         # Clear all layers including hull
         for layer_data in ship.layers.values():
             layer_data['components'] = []
@@ -79,7 +79,7 @@ class TestFindComponentWithIndex:
 
     def test_returns_none_on_empty_ship(self, registry_with_components):
         """Returns None when ship has no components at all."""
-        ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
+        ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_components)
         # Clear all layers including hull
         for layer_data in ship.layers.values():
             layer_data['components'] = []

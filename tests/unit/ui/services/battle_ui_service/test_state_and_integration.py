@@ -109,17 +109,17 @@ class TestBattleUIServiceRealShipIntegration:
     """Integration tests using real Ship domain objects."""
 
     @pytest.fixture
-    def real_ship(self):
+    def real_ship(self, fresh_registries):
         """Create a real Ship domain object for integration testing."""
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import create_component
 
-        ship = Ship("Integration Test Ship", 100, 200, (0, 0, 255))
+        ship = Ship("Integration Test Ship", 100, 200, (0, 0, 255), registries=fresh_registries)
         # Add minimal components for a functional ship
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
-        ship.add_component(create_component('standard_engine'), LayerType.OUTER)
+        ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
         ship.recalculate_stats()
         return ship
 
@@ -205,27 +205,27 @@ class TestBattleUIServiceRealProjectileIntegration:
     """Integration tests using real projectile scenarios."""
 
     @pytest.fixture
-    def battle_with_ships_and_weapon(self):
+    def battle_with_ships_and_weapon(self, fresh_registries):
         """Create a battle with armed ships that can fire projectiles."""
         from game.simulation.entities.ship import Ship, LayerType
         from game.simulation.components.component import create_component
         from game.simulation.services import BattleService
 
         # Create attacker with weapon
-        attacker = Ship("Attacker", 0, 0, (0, 0, 255))
-        attacker.add_component(create_component('bridge'), LayerType.CORE)
-        attacker.add_component(create_component('crew_quarters'), LayerType.CORE)
-        attacker.add_component(create_component('life_support'), LayerType.CORE)
-        attacker.add_component(create_component('standard_engine'), LayerType.OUTER)
-        attacker.add_component(create_component('railgun'), LayerType.OUTER)
+        attacker = Ship("Attacker", 0, 0, (0, 0, 255), registries=fresh_registries)
+        attacker.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        attacker.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        attacker.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        attacker.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
+        attacker.add_component(create_component('railgun', registries=fresh_registries), LayerType.OUTER)
         attacker.recalculate_stats()
 
         # Create target
-        target = Ship("Target", 500, 0, (255, 0, 0))
-        target.add_component(create_component('bridge'), LayerType.CORE)
-        target.add_component(create_component('crew_quarters'), LayerType.CORE)
-        target.add_component(create_component('life_support'), LayerType.CORE)
-        target.add_component(create_component('standard_engine'), LayerType.OUTER)
+        target = Ship("Target", 500, 0, (255, 0, 0), registries=fresh_registries)
+        target.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        target.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        target.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+        target.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
         target.recalculate_stats()
 
         battle_service = BattleService()

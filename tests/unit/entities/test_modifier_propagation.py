@@ -8,9 +8,9 @@ import pygame
 
 # Mocking builder logic
 class MockBuilder:
-    def __init__(self):
+    def __init__(self, registries):
         self.selected_components = []
-        self.ship = Ship("Test Ship", 0, 0, (0,0,0))
+        self.ship = Ship("Test Ship", 0, 0, (0,0,0), registries=registries)
 
     def propagate_group_modifiers(self, leader_comp):
         if not self.selected_components: return
@@ -32,11 +32,11 @@ class MockBuilder:
 
 
 @pytest.fixture
-def builder_with_components():
+def builder_with_components(fresh_registries):
     # Load modifiers to ensure registry is populated
     load_modifiers(str(get_data_dir() / 'modifiers.json'))
 
-    builder = MockBuilder()
+    builder = MockBuilder(fresh_registries)
 
     # Create 3 identical components
     base_data = {
@@ -50,9 +50,9 @@ def builder_with_components():
         "cost": 100
     }
 
-    comp1 = Component(base_data)
-    comp2 = Component(base_data)
-    comp3 = Component(base_data)
+    comp1 = Component(base_data, registries=fresh_registries)
+    comp2 = Component(base_data, registries=fresh_registries)
+    comp3 = Component(base_data, registries=fresh_registries)
 
     # Setup Group (Simulating selection)
     # Tuples: (layer, index, comp)

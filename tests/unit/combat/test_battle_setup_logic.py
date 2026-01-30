@@ -62,12 +62,12 @@ class TestBattleSetupLogic:
         assert obj3 in res
         assert obj4 not in res
 
-    def test_battle_scene_start_assignment(self):
+    def test_battle_scene_start_assignment(self, fresh_registries):
         """Verify BattleScreen.start assigns teams and creates AI controllers."""
         scene = BattleScreen(1000, 1000)
 
-        ship1 = Ship("T1-1", 0, 0, (255,0,0), team_id=0)
-        ship2 = Ship("T2-1", 1000, 1000, (0,0,255), team_id=1)
+        ship1 = Ship("T1-1", 0, 0, (255,0,0), team_id=0, registries=fresh_registries)
+        ship2 = Ship("T2-1", 1000, 1000, (0,0,255), team_id=1, registries=fresh_registries)
 
         scene.start([ship1], [ship2])
 
@@ -87,14 +87,14 @@ class TestBattleSetupLogic:
         assert ai1.enemy_team_id == 1
         assert ai2.enemy_team_id == 0
 
-    def test_battle_scene_clear_state(self):
+    def test_battle_scene_clear_state(self, fresh_registries):
         """Verify BattleScreen clears state between starts."""
         scene = BattleScreen(1000, 1000)
-        ship1 = Ship("S1", 0, 0, (255,255,255))
+        ship1 = Ship("S1", 0, 0, (255,255,255), registries=fresh_registries)
         scene.start([ship1], [])
         assert len(scene.ships) == 1
 
-        ship2 = Ship("S2", 0, 0, (255,255,255))
+        ship2 = Ship("S2", 0, 0, (255,255,255), registries=fresh_registries)
         scene.start([ship2], [])
         assert len(scene.ships) == 1
         assert scene.ships[0] == ship2

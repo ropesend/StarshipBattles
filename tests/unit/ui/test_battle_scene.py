@@ -17,7 +17,7 @@ from game.core.registry import RegistryManager
 class TestBattleScreen:
 
     @pytest.fixture(autouse=True)
-    def setup_scene_and_ships(self):
+    def setup_scene_and_ships(self, fresh_registries):
         """Setup scene and ships for each test."""
         # Note: pygame, registry, and data loading handled by conftest fixtures
         # initialize_ship_data() and load_components() are patched to be no-ops
@@ -29,18 +29,18 @@ class TestBattleScreen:
             scene.ui.show_overlay = False
 
             # Create basic ships
-            ship1 = Ship("Hero", 0, 0, (0, 0, 255))
-            ship1.add_component(create_component('bridge'), LayerType.CORE)
-            ship1.add_component(create_component('crew_quarters'), LayerType.CORE)
-            ship1.add_component(create_component('life_support'), LayerType.CORE)
-            ship1.add_component(create_component('standard_engine'), LayerType.OUTER)  # Add engine
+            ship1 = Ship("Hero", 0, 0, (0, 0, 255), registries=fresh_registries)
+            ship1.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+            ship1.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+            ship1.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+            ship1.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)  # Add engine
             ship1.recalculate_stats()
 
-            ship2 = Ship("Villain", 1000, 0, (255, 0, 0))
-            ship2.add_component(create_component('bridge'), LayerType.CORE)
-            ship2.add_component(create_component('crew_quarters'), LayerType.CORE)
-            ship2.add_component(create_component('life_support'), LayerType.CORE)
-            ship2.add_component(create_component('standard_engine'), LayerType.OUTER)  # Add engine
+            ship2 = Ship("Villain", 1000, 0, (255, 0, 0), registries=fresh_registries)
+            ship2.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+            ship2.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+            ship2.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+            ship2.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)  # Add engine
             ship2.recalculate_stats()
 
             self.scene = scene

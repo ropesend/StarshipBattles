@@ -2,7 +2,7 @@ import pytest
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, load_modifiers, get_all_components
+from game.simulation.components.component import load_components, load_modifiers, get_all_components, create_component
 from game.core.registry import RegistryManager
 
 
@@ -10,12 +10,10 @@ class TestPlanetaryComplex:
     """Test Planetary Complex implementation."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        initialize_ship_data()
-        load_components()
-        load_modifiers()
+    def setup(self, fresh_registries):
+        self.fresh_registries = fresh_registries
 
-        classes = RegistryManager.instance().vehicle_classes
+        classes = fresh_registries.vehicle_classes
         for i in range(1, 12):
             class_name = f"Planetary Complex (Tier {i})"
             assert class_name in classes, f"{class_name} missing"
@@ -35,18 +33,13 @@ class TestPlanetaryComplex:
             if actual_mass == expected_mass:
                 vehicle_def['max_mass'] += 2000
 
-        yield
-
-        # Teardown
-        RegistryManager.instance().clear()
-
     def test_add_central_command(self):
         """Verify Central Complex Command can be added."""
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
-                          ship_class="Planetary Complex (Tier 1)")
+                          ship_class="Planetary Complex (Tier 1)",
+                          registries=self.fresh_registries)
 
-        comps = RegistryManager.instance().components
-        command = comps["central_complex_command"].clone()
+        command = create_component("central_complex_command", registries=self.fresh_registries)
         result = complex_ship.add_component(command, LayerType.CORE)
         assert result, "Should accept Central Complex Command"
 
@@ -57,55 +50,55 @@ class TestPlanetaryComplex:
     def test_accepts_ship_components(self):
         """Verify it accepts standard ship weapons and sensors."""
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
-                          ship_class="Planetary Complex (Tier 1)")
+                          ship_class="Planetary Complex (Tier 1)",
+                          registries=self.fresh_registries)
 
         # Weapons
-        comps = RegistryManager.instance().components
-        railgun = comps["railgun"].clone()
+        railgun = create_component("railgun", registries=self.fresh_registries)
         result = complex_ship.add_component(railgun, LayerType.OUTER)
         assert result, "Should accept Railgun"
 
         # Sensors
-        sensor = comps["combat_sensor"].clone()
+        sensor = create_component("combat_sensor", registries=self.fresh_registries)
         result = complex_ship.add_component(sensor, LayerType.OUTER)
         assert result, "Should accept Combat Sensor"
 
         # Shields
-        shield = comps["shield_generator"].clone()
+        shield = create_component("shield_generator", registries=self.fresh_registries)
         result = complex_ship.add_component(shield, LayerType.INNER)
         assert result, "Should accept Shield Generator"
 
     def test_rejects_propulsion(self):
         """Verify it rejects engines and thrusters."""
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
-                          ship_class="Planetary Complex (Tier 1)")
+                          ship_class="Planetary Complex (Tier 1)",
+                          registries=self.fresh_registries)
 
-        comps = RegistryManager.instance().components
-        engine = comps["standard_engine"].clone()
+        engine = create_component("standard_engine", registries=self.fresh_registries)
         result = complex_ship.add_component(engine, LayerType.INNER)
         assert not result, "Should REJECT Standard Engine"
 
-        thruster = comps["thruster"].clone()
+        thruster = create_component("thruster", registries=self.fresh_registries)
         result = complex_ship.add_component(thruster, LayerType.OUTER)
         assert not result, "Should REJECT Thruster"
 
     def test_rejects_ship_bridge(self):
         """Verify it rejects standard Ship Bridge."""
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
-                          ship_class="Planetary Complex (Tier 1)")
+                          ship_class="Planetary Complex (Tier 1)",
+                          registries=self.fresh_registries)
 
-        comps = RegistryManager.instance().components
-        bridge = comps["bridge"].clone()
+        bridge = create_component("bridge", registries=self.fresh_registries)
         result = complex_ship.add_component(bridge, LayerType.CORE)
         assert not result, "Should REJECT standard Ship Bridge"
 
     def test_movement_capabilities(self):
         """Verify it has zero movement capabilities."""
         complex_ship = Ship("Test Complex", 0, 0, (255, 255, 255),
-                          ship_class="Planetary Complex (Tier 1)")
+                          ship_class="Planetary Complex (Tier 1)",
+                          registries=self.fresh_registries)
 
-        comps = RegistryManager.instance().components
-        command = comps["central_complex_command"].clone()
+        command = create_component("central_complex_command", registries=self.fresh_registries)
         complex_ship.add_component(command, LayerType.CORE)
         complex_ship.recalculate_stats()
 

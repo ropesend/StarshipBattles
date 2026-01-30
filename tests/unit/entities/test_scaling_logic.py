@@ -7,19 +7,15 @@ from tests.fixtures.paths import get_data_dir
 
 
 @pytest.fixture
-def loaded_data():
-    """Load components and modifiers from data files."""
-    data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
-    load_modifiers(str(data_dir / "modifiers.json"))
-    yield
-    RegistryManager.instance().clear()
+def loaded_data(fresh_registries):
+    """Provide fresh_registries for tests."""
+    return fresh_registries
 
 
 class TestScalingLogic:
     def test_consumption_scaling_linear(self, loaded_data):
         """Test linear consumption scaling."""
-        engine = create_component('standard_engine')
+        engine = create_component('standard_engine', registries=loaded_data)
 
         # Get base consumption
         base_cons = 0
@@ -41,7 +37,7 @@ class TestScalingLogic:
         assert new_cons == pytest.approx(base_cons * 0.8), "Fuel cost should scale linearly with size"
 
         # 2. Railgun - Ammo Cost
-        rg = create_component("railgun")
+        rg = create_component("railgun", registries=loaded_data)
         base_ammo = 0
         for ab in rg.ability_instances:
             if isinstance(ab, ResourceConsumption) and ab.resource_name == 'ammo':
@@ -60,7 +56,7 @@ class TestScalingLogic:
         assert new_ammo == pytest.approx(base_ammo * 2), "Ammo cost should scale linearly with size"
 
         # 3. Laser Cannon - Energy Cost
-        lc = create_component("laser_cannon")
+        lc = create_component("laser_cannon", registries=loaded_data)
         base_energy = 0
         for ab in lc.ability_instances:
             if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
@@ -89,7 +85,7 @@ class TestScalingLogic:
         Size Mount x4 -> Mass x4 -> Sqrt(4) = 2x Crew Req.
         """
         # Railgun has CrewRequired: 5
-        rg = create_component("railgun")
+        rg = create_component("railgun", registries=loaded_data)
         base_crew = self._get_crew_req(rg)
         assert base_crew == 5, "Base Railgun Crew Req should be 5"
 
@@ -108,7 +104,7 @@ class TestScalingLogic:
         Range Mount Level 1 -> Mass x3.5 -> Sqrt(3.5).
         """
         # Railgun CrewReq: 5
-        rg = create_component("railgun")
+        rg = create_component("railgun", registries=loaded_data)
         base_crew = self._get_crew_req(rg)
 
         rg.add_modifier("range_mount", 1.0)
@@ -125,7 +121,7 @@ class TestScalingLogic:
         Verify scaling works if multiple modifiers affect mass.
         """
         # Use simple size x2 and Range Mount x1
-        rg = create_component("railgun")
+        rg = create_component("railgun", registries=loaded_data)
         base_crew = self._get_crew_req(rg)
 
         rg.add_modifier("simple_size_mount", 2.0)

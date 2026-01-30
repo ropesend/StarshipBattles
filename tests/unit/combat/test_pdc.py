@@ -12,7 +12,7 @@ from game.core.constants import AttackType
 
 
 class MockPDC(Component):
-    def __init__(self):
+    def __init__(self, registries=None):
         # Use proper Component initialization with abilities dict
         # This ensures abilities survive recalculate_stats()
         data = {
@@ -33,7 +33,7 @@ class MockPDC(Component):
                 }
             }
         }
-        super().__init__(data)
+        super().__init__(data, registries=registries)
         self.cooldown_timer = 0  # Start ready to fire
 
     def update(self):
@@ -56,7 +56,7 @@ class MockPDC(Component):
 
 class TestPDC:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         # Initialize vehicle classes and components so registry works
         from game.simulation.entities.ship_loader import initialize_ship_data
@@ -64,16 +64,17 @@ class TestPDC:
         from game.simulation.components.component import load_components
         load_components()
 
+        self.registries = fresh_registries
         self.scene = BattleScreen(100, 100)
 
         # Ship with PDC - Use Satellite to avoid engine/crew requirements
-        self.ship = Ship("Defender", 0, 0, (255, 255, 255), team_id=0, ship_class="Satellite (Small)")
+        self.ship = Ship("Defender", 0, 0, (255, 255, 255), team_id=0, ship_class="Satellite (Small)", registries=fresh_registries)
 
         # ADD A BRIDGE so it's not derelict
         from game.simulation.components.component import create_component, Component  # Phase 7: Removed Bridge import
-        bridge = create_component('satellite_core')  # Specific for satellites
+        bridge = create_component('satellite_core', registries=fresh_registries)  # Specific for satellites
         if not bridge:
-            bridge = create_component('bridge')
+            bridge = create_component('bridge', registries=fresh_registries)
 
         if bridge:
             self.ship.add_component(bridge, LayerType.CORE)
@@ -83,19 +84,19 @@ class TestPDC:
                 'id': 'bridge', 'name': 'Bridge', 'type': 'Bridge', 'mass': 10, 'hp': 10,
                 'allowed_layers': ['CORE'],
                 'abilities': {'CommandAndControl': True, 'CrewRequired': 0}
-            })
+            }, registries=fresh_registries)
             mock_bridge.type_str = "Bridge"
             self.ship.add_component(mock_bridge, LayerType.CORE)
 
         self.ship.resources.set_max_value('energy', 1000)
         self.ship.resources.set_value('energy', 1000)
         self.ship.resources.set_max_value('energy', 1000)
-        self.pdc = MockPDC()
+        self.pdc = MockPDC(registries=fresh_registries)
         self.ship.layers[LayerType.OUTER]['components'] = [self.pdc]
 
         # Enemy Missile
         self.missile = Projectile(
-            owner=Ship("Attacker", 1000, 0, (255, 0, 0), team_id=1),  # Enemy team
+            owner=Ship("Attacker", 1000, 0, (255, 0, 0), team_id=1, registries=fresh_registries),  # Enemy team
             position=pygame.math.Vector2(500, 0),  # Within 1000 range
             velocity=pygame.math.Vector2(-10, 0),  # Incoming
             damage=100,

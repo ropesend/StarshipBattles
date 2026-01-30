@@ -78,37 +78,37 @@ class TestBridgeComponentFixture:
 class TestComponentFactory:
     """Tests for component factory function."""
 
-    def test_create_weapon(self):
+    def test_create_weapon(self, fresh_registries):
         """Factory creates weapon component."""
         from tests.fixtures.components import create_weapon
-        weapon = create_weapon()
+        weapon = create_weapon(registries=fresh_registries)
         assert isinstance(weapon, Component)
         assert weapon.has_ability('WeaponAbility')
 
-    def test_create_engine(self):
+    def test_create_engine(self, fresh_registries):
         """Factory creates engine component."""
         from tests.fixtures.components import create_engine
-        engine = create_engine()
+        engine = create_engine(registries=fresh_registries)
         assert isinstance(engine, Component)
         assert engine.has_ability('CombatPropulsion')
 
-    def test_create_shield(self):
+    def test_create_shield(self, fresh_registries):
         """Factory creates shield component."""
         from tests.fixtures.components import create_shield
-        shield = create_shield()
+        shield = create_shield(registries=fresh_registries)
         assert isinstance(shield, Component)
         assert shield.has_ability('ShieldProjection')
 
-    def test_create_armor(self):
+    def test_create_armor(self, fresh_registries):
         """Factory creates armor component."""
         from tests.fixtures.components import create_armor
-        armor = create_armor()
+        armor = create_armor(registries=fresh_registries)
         assert isinstance(armor, Component)
         assert armor.max_hp > 0
 
-    def test_create_bridge(self):
+    def test_create_bridge(self, fresh_registries):
         """Factory creates bridge component."""
         from tests.fixtures.components import create_bridge
-        bridge = create_bridge()
+        bridge = create_bridge(registries=fresh_registries)
         assert isinstance(bridge, Component)
         assert bridge.has_ability('CommandAndControl')

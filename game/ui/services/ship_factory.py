@@ -10,6 +10,9 @@ The factory encapsulates:
 - Ship property configuration (position, angle, team, etc.)
 - Formation setup and linking
 - Radius calculation without full ship instantiation
+
+PROJ-50: Supports optional registries parameter for strict DI compliance.
+When registries is not provided, uses global RegistryManager (legacy behavior).
 """
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
@@ -17,6 +20,7 @@ import pygame
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.core.registry import GameRegistries
 
 
 class ShipFactory:
@@ -27,12 +31,22 @@ class ShipFactory:
 
     Usage:
         factory = ShipFactory()
-        ship = factory.create_from_design(design_data)
+        ship = factory.create_from_design(design_data, registries=fresh_registries)
         factory.configure_ship(ship, position, angle, team_id, ai_strategy, source_file)
+
+    PROJ-50: Methods accept optional registries parameter for strict DI.
     """
 
-    def create_from_design(self, design_data: Dict[str, Any]) -> 'Ship':
+    def create_from_design(
+        self,
+        design_data: Dict[str, Any],
+        *,
+        registries: Optional['GameRegistries'] = None
+    ) -> 'Ship':
         """Create a Ship instance from design dictionary data.
+
+        PROJ-50: Supports optional registries parameter for strict DI.
+        When registries is None, falls back to global RegistryManager.
 
         Args:
             design_data: Dictionary containing ship design data with keys:
@@ -41,6 +55,8 @@ class ShipFactory:
                 - theme_id: Visual theme identifier
                 - color: RGB color tuple
                 - layers: Component layer definitions
+            registries: Optional GameRegistries for DI (keyword-only).
+                       If None, uses global RegistryManager.
 
         Returns:
             A new Ship instance created from the design data.
@@ -50,23 +66,37 @@ class ShipFactory:
             ValueError: If component or modifier IDs are invalid.
         """
         from game.simulation.entities.ship import Ship
-        return Ship.from_dict(design_data)
+        if registries is not None:
+            return Ship.from_dict(design_data, registries=registries)
+        else:
+            # Legacy fallback: use global RegistryManager
+            from game.core.registry import RegistryManager
+            global_registries = RegistryManager.instance().registries
+            return Ship.from_dict(design_data, registries=global_registries)
 
-    def get_ship_radius(self, design_data: Dict[str, Any]) -> float:
+    def get_ship_radius(
+        self,
+        design_data: Dict[str, Any],
+        *,
+        registries: Optional['GameRegistries'] = None
+    ) -> float:
         """Get the radius a ship would have based on design data.
 
         Creates a temporary ship from the design and returns its radius
         after recalculating stats. This is useful for formation spacing
         calculations where only the radius is needed.
 
+        PROJ-50: Supports optional registries parameter for strict DI.
+
         Args:
             design_data: Dictionary containing ship design data.
+            registries: Optional GameRegistries for DI (keyword-only).
+                       If None, uses global RegistryManager.
 
         Returns:
             The calculated radius of the ship in world units.
         """
-        from game.simulation.entities.ship import Ship
-        temp_ship = Ship.from_dict(design_data)
+        temp_ship = self.create_from_design(design_data, registries=registries)
         temp_ship.recalculate_stats()
         return temp_ship.radius
 

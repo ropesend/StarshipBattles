@@ -13,13 +13,13 @@ class TestProjectileBasics:
     """Test basic projectile initialization and properties."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
         # Create a simple owner ship
-        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
-        self.owner.add_component(create_component('bridge'), LayerType.CORE)
+        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0, registries=fresh_registries)
+        self.owner.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.owner.recalculate_stats()
 
     def test_projectile_initialization(self):
@@ -63,12 +63,12 @@ class TestProjectileMovement:
     """Test projectile movement and lifecycle."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
-        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
-        self.owner.add_component(create_component('bridge'), LayerType.CORE)
+        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0, registries=fresh_registries)
+        self.owner.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.owner.recalculate_stats()
 
     def test_projectile_update_moves_position(self):
@@ -141,12 +141,12 @@ class TestProjectileDamage:
     """Test projectile damage mechanics (for PDC interception)."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
-        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
-        self.owner.add_component(create_component('bridge'), LayerType.CORE)
+        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0, registries=fresh_registries)
+        self.owner.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.owner.recalculate_stats()
 
     def test_projectile_take_damage(self):
@@ -199,16 +199,16 @@ class TestMissileGuidance:
     """Test guided missile tracking behavior."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         pygame.init()
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
-        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0)
-        self.owner.add_component(create_component('bridge'), LayerType.CORE)
+        self.owner = Ship("Shooter", 0, 0, (255, 255, 255), team_id=0, registries=fresh_registries)
+        self.owner.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.owner.recalculate_stats()
 
-        self.target = Ship("Target", 1000, 0, (255, 0, 0), team_id=1)
-        self.target.add_component(create_component('bridge'), LayerType.CORE)
+        self.target = Ship("Target", 1000, 0, (255, 0, 0), team_id=1, registries=fresh_registries)
+        self.target.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.target.recalculate_stats()
 
     def test_missile_guidance_tracks_target(self):

@@ -84,21 +84,8 @@ class TestShipComponentManagerWithRegistries:
 
 
 # =============================================================================
-# Test: Backward Compatibility
+# Note: Backward Compatibility test removed (PROJ-50: strict DI enforcement)
+# The old test_initialize_layers_works_without_registries tested legacy behavior
+# where Ship() could be called without registries parameter. This is no longer
+# supported as registries is now a required keyword-only argument.
 # =============================================================================
-
-class TestShipComponentManagerBackwardCompatibility:
-    """Tests ensuring backward compatibility with legacy interface."""
-
-    def test_initialize_layers_works_without_registries(self):
-        """initialize_layers should work when ship has no explicit registries."""
-        ship = Ship(
-            name="Test Ship",
-            x=0, y=0,
-            color=(255, 0, 0),
-            team_id=0,
-            ship_class="frigate"
-        )
-
-        # Should have layers
-        assert len(ship.layers) > 0

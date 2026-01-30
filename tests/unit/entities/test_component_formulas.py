@@ -11,7 +11,7 @@ class MockShip:
 
 class TestComponentFormulas:
 
-    def test_mass_formula(self):
+    def test_mass_formula(self, fresh_registries):
         # Formula: M = 50 * sqrt(ClassMass / 1000)
         # 1000 -> 50 * 1 = 50
         # 4000 -> 50 * 2 = 100
@@ -26,7 +26,7 @@ class TestComponentFormulas:
             "allowed_vehicle_types": ["Ship"]
         }
 
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
 
         # Test Default Context (1000)
         comp.recalculate_stats()
@@ -43,7 +43,7 @@ class TestComponentFormulas:
         comp.recalculate_stats()
         assert comp.mass == pytest.approx(200.0)
 
-    def test_hp_formula(self):
+    def test_hp_formula(self, fresh_registries):
         # Formula: HP = floor(mass * 0.5) + 10
         # Let's say mass is 50 -> 25 + 10 = 35
         # Mass is 100 -> 50 + 10 = 60
@@ -61,7 +61,7 @@ class TestComponentFormulas:
             "allowed_vehicle_types": ["Ship"]
         }
 
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
         ship = MockShip(500)
         comp.ship = ship
 

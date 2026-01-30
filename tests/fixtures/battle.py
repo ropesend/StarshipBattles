@@ -22,7 +22,11 @@ Available fixtures:
 """
 import os
 import pytest
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
+
+if TYPE_CHECKING:
+    from game.core.registry import GameRegistries
 
 from game.core.paths import Paths
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
@@ -54,14 +58,19 @@ def create_battle_engine_with_ships(
     team1_count: int = 1,
     team2_count: int = 1,
     enable_logging: bool = False,
+    *,
+    registries: 'GameRegistries',
 ) -> BattleEngine:
     """
     Create a battle engine with ships already added.
+
+    PROJ-50: Strict DI - registries is required keyword-only argument.
 
     Args:
         team1_count: Number of ships for team 0
         team2_count: Number of ships for team 1
         enable_logging: If True, enable battle logging
+        registries: GameRegistries for DI (required keyword-only)
 
     Returns:
         BattleEngine with ships configured
@@ -79,6 +88,7 @@ def create_battle_engine_with_ships(
             add_bridge=True,
             add_engine=True,
             add_weapons=1,
+            registries=registries,
         )
         team1_ships.append(ship)
 
@@ -93,6 +103,7 @@ def create_battle_engine_with_ships(
             add_bridge=True,
             add_engine=True,
             add_weapons=1,
+            registries=registries,
         )
         team2_ships.append(ship)
 
@@ -168,13 +179,15 @@ def battle_engine():
 
 
 @pytest.fixture
-def battle_engine_with_ships():
+def battle_engine_with_ships(fresh_registries):
     """
     Create a battle engine with two opposing ships.
 
     Returns a BattleEngine with one ship per team, ready for combat simulation.
+
+    PROJ-50: Uses fresh_registries for strict DI compliance.
     """
-    return create_battle_engine_with_ships()
+    return create_battle_engine_with_ships(registries=fresh_registries)
 
 
 @pytest.fixture

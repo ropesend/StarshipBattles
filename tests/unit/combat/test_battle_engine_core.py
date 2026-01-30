@@ -12,14 +12,14 @@ from game.core.constants import AttackType
 
 
 @pytest.fixture
-def engine_with_ships():
+def engine_with_ships(fresh_registries):
     """Create a BattleEngine with two test ships."""
     mock_logger = MagicMock()
     engine = BattleEngine(logger=mock_logger)
 
     # Create dummy ships
-    ship1 = Ship("TestShip1", 0, 0, (255, 0, 0), team_id=0)
-    ship2 = Ship("TestShip2", 200, 0, (0, 0, 255), team_id=1)
+    ship1 = Ship("TestShip1", 0, 0, (255, 0, 0), team_id=0, registries=fresh_registries)
+    ship2 = Ship("TestShip2", 200, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
 
     # Override some ship properties for stable testing
     ship1.radius = 20
@@ -51,7 +51,7 @@ def engine_with_ships():
 
 
 class TestBattleEngineCore:
-    def test_spatial_grid_integration(self, engine_with_ships):
+    def test_spatial_grid_integration(self, engine_with_ships, fresh_registries):
         """
         Test engine.update() to verify that ships and projectiles are correctly inserted into the grid every tick.
         Test object removal from the grid when is_alive becomes False.
@@ -59,7 +59,7 @@ class TestBattleEngineCore:
         engine, ship1, ship2 = engine_with_ships
 
         # Add a backup ship to Team 0
-        ship3 = Ship("BackupShip", -100, 0, (0, 255, 0), team_id=0)
+        ship3 = Ship("BackupShip", -100, 0, (0, 255, 0), team_id=0, registries=fresh_registries)
         ship3.radius = 20
         ship3.is_alive = True
         engine.ships.append(ship3)
@@ -128,7 +128,7 @@ class TestBattleEngineCore:
 
             mock_beam.assert_called()
 
-    def test_remove_ship_removes_ai_controller(self):
+    def test_remove_ship_removes_ai_controller(self, fresh_registries):
         """
         Test that remove_ship() removes both the ship and its AI controller.
 
@@ -140,8 +140,8 @@ class TestBattleEngineCore:
         engine = BattleEngine(logger=mock_logger)
 
         # Create test ships
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), team_id=0)
-        ship2 = Ship("Ship2", 200, 0, (0, 0, 255), team_id=1)
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), team_id=0, registries=fresh_registries)
+        ship2 = Ship("Ship2", 200, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
 
         # Start battle - this creates AI controllers with adapters
         engine.start([ship1], [ship2])
@@ -178,7 +178,7 @@ class TestBattleEngineCore:
 class TestBattleEngineAIControllerInjection:
     """Tests for PROJ-17: ai_controllers parameter in start() and add_ship_mid_battle()."""
 
-    def test_start_with_precreated_ai_controllers(self):
+    def test_start_with_precreated_ai_controllers(self, fresh_registries):
         """Verify start() accepts and uses pre-created AI controllers."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -190,8 +190,8 @@ class TestBattleEngineAIControllerInjection:
         engine = BattleEngine(logger=mock_logger)
 
         # Create test ships
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
 
         # Use orchestrator to create AI controllers (proper layer usage)
         orchestrator = BattleOrchestrator(engine.grid)
@@ -204,7 +204,7 @@ class TestBattleEngineAIControllerInjection:
         assert len(engine.ai_controllers) == 2
         assert engine.ai_controllers == ai_controllers
 
-    def test_start_without_ai_controllers_uses_legacy_path(self):
+    def test_start_without_ai_controllers_uses_legacy_path(self, fresh_registries):
         """Verify start() creates AI controllers internally when not provided (backward compat)."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -212,8 +212,8 @@ class TestBattleEngineAIControllerInjection:
         mock_logger = MagicMock()
         engine = BattleEngine(logger=mock_logger)
 
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
 
         # Start without ai_controllers parameter
         engine.start([ship1], [ship2])
@@ -224,7 +224,7 @@ class TestBattleEngineAIControllerInjection:
         assert ship1.team_id == 0
         assert ship2.team_id == 1
 
-    def test_add_ship_mid_battle_with_precreated_controller(self):
+    def test_add_ship_mid_battle_with_precreated_controller(self, fresh_registries):
         """Verify add_ship_mid_battle() accepts pre-created AI controller."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -233,14 +233,14 @@ class TestBattleEngineAIControllerInjection:
         mock_logger = MagicMock()
         engine = BattleEngine(logger=mock_logger)
 
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
         engine.start([ship1], [ship2])
 
         initial_count = len(engine.ai_controllers)
 
         # Create reinforcement with pre-created controller
-        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0))
+        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0), registries=fresh_registries)
         orchestrator = BattleOrchestrator(engine.grid)
         ai_controller = orchestrator.create_ai_for_ship(reinforcement, enemy_team_id=1)
 
@@ -252,7 +252,7 @@ class TestBattleEngineAIControllerInjection:
         assert reinforcement in engine.ships
         assert reinforcement.team_id == 0
 
-    def test_add_ship_mid_battle_without_controller_uses_legacy_path(self):
+    def test_add_ship_mid_battle_without_controller_uses_legacy_path(self, fresh_registries):
         """Verify add_ship_mid_battle() creates controller internally when not provided."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -260,14 +260,14 @@ class TestBattleEngineAIControllerInjection:
         mock_logger = MagicMock()
         engine = BattleEngine(logger=mock_logger)
 
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
         engine.start([ship1], [ship2])
 
         initial_count = len(engine.ai_controllers)
 
         # Add reinforcement without pre-created controller
-        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0))
+        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0), registries=fresh_registries)
         engine.add_ship_mid_battle(reinforcement, team_id=0)
 
         # Verify controller was created internally
@@ -279,7 +279,7 @@ class TestBattleEngineAIControllerInjection:
 class TestBattleEngineAIFactory:
     """Tests for PROJ-43: ai_factory parameter for decoupled AI creation."""
 
-    def test_engine_with_ai_factory_creates_controllers_on_start(self):
+    def test_engine_with_ai_factory_creates_controllers_on_start(self, fresh_registries):
         """Verify start() uses ai_factory to create controllers when provided."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -292,8 +292,8 @@ class TestBattleEngineAIFactory:
         factory = AIControllerFactory(engine.grid)
         engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
 
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
 
         # Start without explicit ai_controllers - should use factory
         engine_with_factory.start([ship1], [ship2])
@@ -303,7 +303,7 @@ class TestBattleEngineAIFactory:
         assert ship1.team_id == 0
         assert ship2.team_id == 1
 
-    def test_engine_with_ai_factory_creates_controller_for_mid_battle_ship(self):
+    def test_engine_with_ai_factory_creates_controller_for_mid_battle_ship(self, fresh_registries):
         """Verify add_ship_mid_battle() uses ai_factory when no controller provided."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -316,14 +316,14 @@ class TestBattleEngineAIFactory:
         factory = AIControllerFactory(engine.grid)
         engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
 
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
         engine_with_factory.start([ship1], [ship2])
 
         initial_count = len(engine_with_factory.ai_controllers)
 
         # Add reinforcement without explicit controller
-        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0))
+        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0), registries=fresh_registries)
         engine_with_factory.add_ship_mid_battle(reinforcement, team_id=0)
 
         # Verify controller was created via factory
@@ -331,7 +331,7 @@ class TestBattleEngineAIFactory:
         assert reinforcement in engine_with_factory.ships
         assert reinforcement.team_id == 0
 
-    def test_explicit_ai_controllers_take_precedence_over_factory(self):
+    def test_explicit_ai_controllers_take_precedence_over_factory(self, fresh_registries):
         """Verify explicit ai_controllers parameter overrides factory."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
@@ -345,8 +345,8 @@ class TestBattleEngineAIFactory:
         factory = AIControllerFactory(engine.grid)
         engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
 
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0))
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255))
+        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
+        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
 
         # Create controllers explicitly via orchestrator
         orchestrator = BattleOrchestrator(engine_with_factory.grid)

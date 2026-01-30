@@ -1,16 +1,28 @@
 import pytest
 
 from game.simulation.components.component import load_components, load_modifiers, create_component
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, TestRegistryProvider
 from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.services.component_service import ComponentService
 
 
 class TestModifierDefaultsRobustness:
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        load_modifiers()
-        load_components()
+    def setup(self, fresh_registries):
+        self.fresh_registries = fresh_registries
+
+        # Setup ModifierLogic with a proper service using default registries
+        default_provider = TestRegistryProvider(
+            components=fresh_registries.components,
+            modifiers=fresh_registries.modifiers,
+            vehicle_classes=fresh_registries.vehicle_classes
+        )
+        ModifierLogic.set_service(ComponentService(registry_provider=default_provider))
+
+        yield
+
+        ModifierLogic.set_service(None)
 
     def test_railgun_defaults_robustness(self):
         """
@@ -18,10 +30,10 @@ class TestModifierDefaultsRobustness:
         even if the component's runtime firing_arc has been modified/corrupted.
         """
         # 1. Get a Railgun
-        if 'railgun' not in RegistryManager.instance().components:
+        if 'railgun' not in self.fresh_registries.components:
             pytest.skip("Railgun not found in registry")
 
-        comp = create_component('railgun')
+        comp = create_component('railgun', registries=self.fresh_registries)
 
         # Base value check - Phase 6: firing_arc now in ability dict
         base_arc = comp.data.get('firing_arc')
@@ -47,10 +59,10 @@ class TestModifierDefaultsRobustness:
         """
         Verify PDC defaults (180) are robust against runtime changes.
         """
-        if 'point_defence_cannon' not in RegistryManager.instance().components:
+        if 'point_defence_cannon' not in self.fresh_registries.components:
             pytest.skip("PDC not found")
 
-        comp = create_component('point_defence_cannon')
+        comp = create_component('point_defence_cannon', registries=self.fresh_registries)
 
         # Phase 6: firing_arc now in ability dict
         base_arc = comp.data.get('firing_arc')
@@ -73,7 +85,7 @@ class TestModifierDefaultsRobustness:
         """
         Verify PDC minimum constraint respects the base hull limit (180).
         """
-        comp = create_component('point_defence_cannon')
+        comp = create_component('point_defence_cannon', registries=self.fresh_registries)
 
         # Simulate corruption
         comp.firing_arc = 90

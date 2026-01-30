@@ -13,7 +13,7 @@ def mock_ship():
 
 class TestComponentComposition:
 
-    def test_generic_engine_construction(self, mock_ship):
+    def test_generic_engine_construction(self, mock_ship, fresh_registries):
         # A generic component that acts as an engine via composition
         data = {
             "id": "gen_eng_1",
@@ -28,7 +28,7 @@ class TestComponentComposition:
             }
         }
 
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
         comp.ship = mock_ship
 
         # Verify Abilities exist
@@ -53,7 +53,7 @@ class TestComponentComposition:
         comp.update()
         assert not comp.is_operational, "Component should be non-operational if constant resource consumption fails"
 
-    def test_generic_weapon_composition(self):
+    def test_generic_weapon_composition(self, fresh_registries):
         data = {
             "id": "gen_wep_1",
             "name": "Generic Gun",
@@ -69,7 +69,7 @@ class TestComponentComposition:
             }
         }
 
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
 
         wep = comp.get_ability("WeaponAbility") # Polymorphic lookup
         assert wep is not None
@@ -81,7 +81,7 @@ class TestComponentComposition:
         assert proj is not None
         assert proj == wep
 
-    def test_get_ui_rows_aggregation(self):
+    def test_get_ui_rows_aggregation(self, fresh_registries):
         """Test that Component.get_ui_rows() aggregates from all abilities."""
         data = {
             "id": "test_ui",
@@ -95,7 +95,7 @@ class TestComponentComposition:
             }
         }
 
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
         rows = comp.get_ui_rows()
 
         # Should have rows from both abilities

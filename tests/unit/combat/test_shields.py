@@ -10,28 +10,28 @@ class TestShields:
     """Tests for shield projection, regeneration, and damage absorption."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         # Minimal init
         pygame.init()
         # Load components for crew support
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
 
-        self.ship = Ship("TestShip", 0, 0, (255, 0, 0))
+        self.ship = Ship("TestShip", 0, 0, (255, 0, 0), registries=fresh_registries)
         self.ship.ship_class = "Escort"
         self.ship.max_mass_budget = 1000
 
         # Add crew infrastructure first so shield components are active
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
 
         # Shield Proj: 100 Capacity
         shield_data = {
             'id': 's1', 'name': 'Shield', 'type': 'Shield',
             'mass': 10, 'hp': 10, 'allowed_layers': ['CORE'], 'abilities': {'ShieldProjection': 100}
         }
-        self.shield = Component(shield_data)
+        self.shield = Component(shield_data, registries=fresh_registries)
 
         # Shield Regen: 60/sec (1/tick) for math simplicity, Cost 30/sec (0.5/tick)
         regen_data = {
@@ -39,7 +39,7 @@ class TestShields:
             'mass': 10, 'hp': 10, 'allowed_layers': ['CORE'],
             'abilities': {'ShieldRegeneration': 60.0, 'EnergyConsumption': 30.0}
         }
-        self.regenerator = Component(regen_data)
+        self.regenerator = Component(regen_data, registries=fresh_registries)
 
         self.ship.add_component(self.shield, LayerType.CORE)
         self.ship.add_component(self.regenerator, LayerType.CORE)

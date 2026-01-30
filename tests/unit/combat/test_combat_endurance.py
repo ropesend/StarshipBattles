@@ -19,13 +19,15 @@ def setup_game_data():
 
 
 @pytest.fixture
-def base_ship():
+def base_ship(fresh_registries):
     """Create a base ship with standard crew support components."""
-    ship = Ship("EnduranceTest", 0, 0, (255, 255, 255), ship_class="Cruiser")
+    ship = Ship("EnduranceTest", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=fresh_registries)
     # Add basic crew support
-    ship.add_component(create_component('bridge'), LayerType.CORE)
-    ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-    ship.add_component(create_component('life_support'), LayerType.CORE)
+    ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+    ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+    # Store registries for later use in tests
+    ship._test_registries = fresh_registries
     return ship
 
 
@@ -33,8 +35,9 @@ class TestCombatEndurance:
 
     def test_fuel_endurance(self, base_ship):
         ship = base_ship
+        registries = ship._test_registries
         # Add Fuel Tank: 1000 capacity
-        tank = create_component('fuel_tank')
+        tank = create_component('fuel_tank', registries=registries)
         # Deepcopy data to avoid registry pollution and enable persistence
         tank.data = copy.deepcopy(tank.data)
         # Update DATA for persistence
@@ -51,7 +54,7 @@ class TestCombatEndurance:
         ship.add_component(tank, LayerType.INNER)
 
         # Add Engine: standard_engine cost 0.5 default
-        engine = create_component('standard_engine')
+        engine = create_component('standard_engine', registries=registries)
         engine.data = copy.deepcopy(engine.data)
         if 'abilities' not in engine.data: engine.data['abilities'] = {}
         # Update ability for consumption in DATA
@@ -75,8 +78,9 @@ class TestCombatEndurance:
 
     def test_ordnance_endurance(self, base_ship):
         ship = base_ship
+        registries = ship._test_registries
         # Add Ammo Tank: 500 capacity
-        tank = create_component('ordnance_tank')
+        tank = create_component('ordnance_tank', registries=registries)
         tank.data = copy.deepcopy(tank.data)
         if 'abilities' not in tank.data: tank.data['abilities'] = {}
         tank.data['abilities']['ResourceStorage'] = [{
@@ -89,7 +93,7 @@ class TestCombatEndurance:
         ship.add_component(tank, LayerType.INNER)
 
         # Add Weapon: railgun
-        weapon = create_component('railgun')
+        weapon = create_component('railgun', registries=registries)
         weapon.data['reload'] = 2.0
         # Abilities for consumption (activation)
         # Note: ShipStatsCalculator calculates "ammo_consumption" (burn rate) typically for constant users?
@@ -128,8 +132,9 @@ class TestCombatEndurance:
 
     def test_energy_endurance_drain(self, base_ship):
         ship = base_ship
+        registries = ship._test_registries
         # Add Generator: generator (25/s)
-        gen = create_component('generator')
+        gen = create_component('generator', registries=registries)
         gen.data = copy.deepcopy(gen.data)
         if 'abilities' not in gen.data: gen.data['abilities'] = {}
         # Clear base ResourceGeneration to ensure exact value
@@ -145,7 +150,7 @@ class TestCombatEndurance:
         ship.add_component(gen, LayerType.INNER)
 
         # Add Battery: 1000 capacity
-        bat = create_component('battery')
+        bat = create_component('battery', registries=registries)
         bat.data = copy.deepcopy(bat.data)
         if 'abilities' not in bat.data: bat.data['abilities'] = {}
         # Override ResourceStorage to 1000 (was 2000 in file)
@@ -161,7 +166,7 @@ class TestCombatEndurance:
         ship.add_component(bat, LayerType.INNER)
 
         # Add Beam Weapon: laser_cannon
-        beam = create_component('laser_cannon')
+        beam = create_component('laser_cannon', registries=registries)
         # Simulate constant firing for endurance test
         # Cost 100, Reload 1.0 = 100/s
         beam.data = copy.deepcopy(beam.data)
@@ -185,8 +190,9 @@ class TestCombatEndurance:
 
     def test_energy_recharge(self, base_ship):
         ship = base_ship
+        registries = ship._test_registries
         # Add Generator: generator
-        gen = create_component('generator')
+        gen = create_component('generator', registries=registries)
         gen.data = copy.deepcopy(gen.data)
         if 'abilities' not in gen.data: gen.data['abilities'] = {}
         if 'ResourceGeneration' in gen.data['abilities']:
@@ -200,7 +206,7 @@ class TestCombatEndurance:
         ship.add_component(gen, LayerType.INNER)
 
         # Add Battery: 2000 capacity
-        bat = create_component('battery')
+        bat = create_component('battery', registries=registries)
         bat.data = copy.deepcopy(bat.data)
         if 'abilities' not in bat.data: bat.data['abilities'] = {}
         if 'ResourceStorage' in bat.data['abilities']:
@@ -220,10 +226,11 @@ class TestCombatEndurance:
     def test_standard_components_defaults(self, base_ship):
         """Verify standard components (Laser, Generator) work without manual data tweaking."""
         ship = base_ship
+        registries = ship._test_registries
         # Add Generator (25 gen)
-        ship.add_component(create_component('generator'), LayerType.INNER)
+        ship.add_component(create_component('generator', registries=registries), LayerType.INNER)
         # Add Battery
-        ship.add_component(create_component('battery'), LayerType.INNER)
+        ship.add_component(create_component('battery', registries=registries), LayerType.INNER)
 
         # Add Laser (5 cost, 0.2 reload -> 25 cost/sec)
         # NOTE: Standard laser is ACTIVATION based (trigger='activation').
@@ -239,7 +246,7 @@ class TestCombatEndurance:
         # OR Update component to force constant for this 'static analysis' test.
         # Let's assume we want to test "Firing State" equivalence.
 
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=registries)
         laser.data = copy.deepcopy(laser.data)
         # Force constant for test stats
         cost = laser.data.get('energy_cost', 0)  # 5 (Check ResourceConsumption in abilities)

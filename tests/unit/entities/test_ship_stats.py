@@ -12,7 +12,7 @@ class TestShipStatsBaseline:
     """Baseline tests for ShipStatsCalculator to verify before/after Phase 3."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
         """Load test data once."""
         # Use patch.dict for safe sys.modules mocking
         self.modules_patcher = patch.dict(sys.modules, {
@@ -29,12 +29,9 @@ class TestShipStatsBaseline:
 
         self.Component = Component
         self.ShipStatsCalculator = ShipStatsCalculator
-        self.vehicle_classes = RegistryManager.instance().vehicle_classes
+        self.registries = fresh_registries
+        self.vehicle_classes = fresh_registries.vehicle_classes
         self.RegistryManager = RegistryManager
-
-        # Load components and modifiers
-        load_components()
-        load_modifiers()
 
         yield
 
@@ -44,8 +41,6 @@ class TestShipStatsBaseline:
         import pygame
         if 'pygame' in sys.modules:
             pygame.quit()
-
-        RegistryManager.instance().clear()
 
     def _create_mock_ship(self, components):
         """Create a mock ship with the given components."""
@@ -106,7 +101,7 @@ class TestShipStatsBaseline:
                 'ResourceConsumption': {'resource': 'fuel', 'amount': 10, 'trigger': 'constant'}
             }
         }
-        engine = self.Component(engine_data)
+        engine = self.Component(engine_data, registries=self.registries)
 
         ship = self._create_mock_ship([engine])
         calculator = self.ShipStatsCalculator(self.vehicle_classes)
@@ -131,7 +126,7 @@ class TestShipStatsBaseline:
                 'ManeuveringThruster': {'value': 45.0}
             }
         }
-        thruster = self.Component(thruster_data)
+        thruster = self.Component(thruster_data, registries=self.registries)
 
         ship = self._create_mock_ship([thruster])
         calculator = self.ShipStatsCalculator(self.vehicle_classes)
@@ -170,8 +165,8 @@ class TestShipStatsBaseline:
             }
         }
 
-        shield = self.Component(shield_data)
-        regen = self.Component(regen_data)
+        shield = self.Component(shield_data, registries=self.registries)
+        regen = self.Component(regen_data, registries=self.registries)
 
         ship = self._create_mock_ship([shield, regen])
         calculator = self.ShipStatsCalculator(self.vehicle_classes)
@@ -201,7 +196,7 @@ class TestShipStatsBaseline:
                 'CombatPropulsion': {'value': 2000}
             }
         }
-        engine = self.Component(engine_data)
+        engine = self.Component(engine_data, registries=self.registries)
 
         # Phase 7: Legacy attributes no longer exist on Component
         # All stats are now accessed via abilities
@@ -232,8 +227,8 @@ class TestShipStatsBaseline:
             }
         }
 
-        engine1 = self.Component(engine1_data)
-        engine2 = self.Component(engine2_data)
+        engine1 = self.Component(engine1_data, registries=self.registries)
+        engine2 = self.Component(engine2_data, registries=self.registries)
 
         ship = self._create_mock_ship([engine1, engine2])
         calculator = self.ShipStatsCalculator(self.vehicle_classes)
@@ -246,7 +241,7 @@ class TestAbilityModifierSync:
     """Test that modifiers correctly update ability values."""
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self, fresh_registries):
         """Load test data once."""
         # Use patch.dict for safe sys.modules mocking
         self.modules_patcher = patch.dict(sys.modules, {
@@ -260,11 +255,9 @@ class TestAbilityModifierSync:
         from game.core.registry import RegistryManager
 
         self.Component = Component
-        self.modifiers = RegistryManager.instance().modifiers
+        self.registries = fresh_registries
+        self.modifiers = fresh_registries.modifiers
         self.RegistryManager = RegistryManager
-
-        load_components()
-        load_modifiers()
 
         yield
 
@@ -274,8 +267,6 @@ class TestAbilityModifierSync:
         import pygame
         if 'pygame' in sys.modules:
             pygame.quit()
-
-        RegistryManager.instance().clear()
 
     def test_thrust_modifier_updates_ability(self):
         """Verify thrust modifiers update CombatPropulsion ability value."""
@@ -289,7 +280,7 @@ class TestAbilityModifierSync:
                 'CombatPropulsion': {'value': 1000}
             }
         }
-        engine = self.Component(engine_data)
+        engine = self.Component(engine_data, registries=self.registries)
 
         # Before modifier
         ab = engine.get_ability('CombatPropulsion')

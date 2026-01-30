@@ -15,13 +15,14 @@ class TestWeaponBasics:
     """Tests for weapon component initialization and basic properties."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
+        self.registries = fresh_registries
 
     def test_weapon_initialization(self):
         """Weapon should initialize with correct stats via ability."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=self.registries)
 
         # Phase 7: Use ability-based access
         weapon_ab = railgun.get_ability('ProjectileWeaponAbility')
@@ -33,7 +34,7 @@ class TestWeaponBasics:
 
     def test_weapon_cooldown(self):
         """Weapon should respect cooldown timer via ability."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=self.registries)
 
         # Phase 7: Use ability-based access
         weapon_ab = railgun.get_ability('ProjectileWeaponAbility') or railgun.get_ability('WeaponAbility')
@@ -59,7 +60,7 @@ class TestWeaponBasics:
 
     def test_beam_weapon_accuracy(self):
         """Beam weapon accuracy should fall off with distance (via ability)."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=self.registries)
 
         # Phase 7: Use ability-based access
         beam_ab = laser.get_ability('BeamWeaponAbility')
@@ -76,7 +77,7 @@ class TestWeaponBasics:
 
     def test_beam_accuracy_clamped(self):
         """Beam accuracy should be clamped between 0 and 1 (via ability)."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=self.registries)
 
         # Phase 7: Use ability-based access
         beam_ab = laser.get_ability('BeamWeaponAbility')
@@ -97,21 +98,22 @@ class TestWeaponFiring:
     """Tests for weapon firing mechanics and target selection."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
+        self.registries = fresh_registries
         # Create ship with weapons
-        self.ship = Ship("Gunship", 0, 0, (255, 255, 255), team_id=0, ship_class="Cruiser")
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
-        self.ship.add_component(create_component('railgun'), LayerType.OUTER)
-        self.ship.add_component(create_component('ordnance_tank'), LayerType.INNER)
+        self.ship = Ship("Gunship", 0, 0, (255, 255, 255), team_id=0, ship_class="Cruiser", registries=fresh_registries)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        self.ship.add_component(create_component('railgun', registries=fresh_registries), LayerType.OUTER)
+        self.ship.add_component(create_component('ordnance_tank', registries=fresh_registries), LayerType.INNER)
         self.ship.recalculate_stats()
         self.ship.resources.set_max_value('ammo', 100)
         self.ship.resources.set_value('ammo', 100)
 
         # Create target
-        self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1)
-        self.target.add_component(create_component('bridge'), LayerType.CORE)
+        self.target = Ship("Target", 500, 0, (255, 0, 0), team_id=1, registries=fresh_registries)
+        self.target.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.target.recalculate_stats()
 
     def test_fire_weapons_returns_attacks(self):
@@ -163,11 +165,12 @@ class TestLeadCalculation:
     """Tests for projectile lead calculation and targeting prediction."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         initialize_ship_data(str(get_project_root()))
         load_components(str(get_data_dir() / "components.json"))
-        self.ship = Ship("Shooter", 0, 0, (255, 255, 255))
-        self.ship.add_component(create_component('bridge'), LayerType.CORE)
+        self.registries = fresh_registries
+        self.ship = Ship("Shooter", 0, 0, (255, 255, 255), registries=fresh_registries)
+        self.ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
         self.ship.recalculate_stats()
 
     def test_solve_lead_stationary_target(self):

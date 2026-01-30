@@ -9,7 +9,7 @@ class MockShip:
 
 
 class TestComponentCapabilities:
-    def test_fuel_ability(self):
+    def test_fuel_ability(self, fresh_registries):
         # TEST REFACTOR: Using strict ability definition instead of legacy 'fuel_cost'
         data = {
             "id": "test_engine",
@@ -23,7 +23,7 @@ class TestComponentCapabilities:
                 ]
             }
         }
-        c = Component(data)
+        c = Component(data, registries=fresh_registries)
 
         # Check if ResourceConsumption ability was created
         assert len(c.ability_instances) > 0
@@ -35,7 +35,7 @@ class TestComponentCapabilities:
                     found = True
         assert found, "Fuel Ability failed to instantiate"
 
-    def test_storage_capacity_modifier(self):
+    def test_storage_capacity_modifier(self, fresh_registries):
         # TEST COMPONENT MODIFIER SCALING for ResourceStorage
         data = {
             "id": "test_tank",
@@ -49,7 +49,7 @@ class TestComponentCapabilities:
                 ]
             }
         }
-        c = Component(data)
+        c = Component(data, registries=fresh_registries)
 
         # Initial Check
         from game.simulation.systems.resource_manager import ResourceStorage
@@ -75,7 +75,7 @@ class TestComponentCapabilities:
 
         assert storage.max_amount == 200.0, "Capacity modifier failed to scale ResourceStorage ability"
 
-    def test_energy_activation_ability(self):
+    def test_energy_activation_ability(self, fresh_registries):
         # TEST REFACTOR: Using strict ability definition
         data = {
             "id": "test_laser",
@@ -89,7 +89,7 @@ class TestComponentCapabilities:
                 ]
             }
         }
-        c = Component(data)
+        c = Component(data, registries=fresh_registries)
 
         found = False
         for ab in c.ability_instances:
@@ -100,7 +100,7 @@ class TestComponentCapabilities:
 
 
 class TestComponentOperation:
-    def test_operational_status(self):
+    def test_operational_status(self, fresh_registries):
         # TEST REFACTOR: Using strict ability definition
         data = {
             "id": "test_engine",
@@ -114,7 +114,7 @@ class TestComponentOperation:
                 ]
             }
         }
-        c = Component(data)
+        c = Component(data, registries=fresh_registries)
         ship = MockShip()
         ship.resources.register_storage("fuel", 100)
         ship.resources.get_resource("fuel").current_value = 20.000001

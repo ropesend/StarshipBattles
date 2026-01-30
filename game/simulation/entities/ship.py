@@ -858,12 +858,20 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         return ShipSerializer.to_dict(self)
 
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'Ship':
+    def from_dict(
+        data: Dict[str, Any],
+        *,
+        registries: Optional['GameRegistries'] = None
+    ) -> 'Ship':
         """Create ship from dictionary.
+
+        PROJ-50: Supports optional registries parameter for strict DI.
 
         Args:
             data: Dictionary containing serialized ship data including name,
                   ship_class, theme_id, layers, and component definitions.
+            registries: Optional GameRegistries for DI (keyword-only).
+                       Required for strict DI mode.
 
         Returns:
             Reconstructed Ship instance with all components and stats.
@@ -875,7 +883,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """
         # INTENTIONAL LATE IMPORT: Bidirectional dependency (Ship ↔ ShipSerializer)
         from .ship_serialization import ShipSerializer
-        return ShipSerializer.from_dict(data)
+        return ShipSerializer.from_dict(data, registries=registries)
 
 
 

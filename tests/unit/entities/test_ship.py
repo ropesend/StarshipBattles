@@ -8,6 +8,7 @@ import pygame
 
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.entities.ship_serialization import ShipSerializer
 from game.simulation.components.component import Component, load_components, create_component
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir
@@ -34,38 +35,38 @@ class TestShip:
         if pygame.get_init():
             pygame.quit()
 
-    def test_add_component_constraints(self):
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+    def test_add_component_constraints(self, fresh_registries):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
 
         # Bridge is allowed in CORE
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=fresh_registries)
         ship.add_component(bridge, LayerType.CORE)
         assert bridge in ship.layers[LayerType.CORE]['components']
 
         # Railgun allowed in OUTER. Try adding to CORE (should fail or be allowed if logic checks?)
         # Ship.add_component definition:
         # if not layer_type in component.allowed_layers: return False
-        railgun = create_component('railgun') # allowed: OUTER
+        railgun = create_component('railgun', registries=fresh_registries) # allowed: OUTER
         result = ship.add_component(railgun, LayerType.CORE)
         assert result is False, "Should not allow Railgun in CORE"
 
         result_ok = ship.add_component(railgun, LayerType.OUTER)
         assert result_ok is True
 
-    def test_mass_calculation(self):
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+    def test_mass_calculation(self, fresh_registries):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
         # Initial mass: Ships now auto-equip Hull component (50 mass for Escort)
         # Hull is added in __init__ but current_mass not updated until recalculate_stats
         ship.recalculate_stats()  # Trigger calculation
         assert ship.current_mass == 50  # Hull mass
 
-        bridge = create_component('bridge') # 50
+        bridge = create_component('bridge', registries=fresh_registries) # 50
         ship.add_component(bridge, LayerType.CORE)
         assert ship.current_mass == 100  # Hull (50) + Bridge (50)
 
-    def test_damage_armor_absorption(self):
+    def test_damage_armor_absorption(self, fresh_registries):
         # Inject TestShip definition strictly
-        RegistryManager.instance().vehicle_classes["TestShip"] = {
+        fresh_registries.vehicle_classes["TestShip"] = {
             "default_hull_id": "hull_escort", "max_mass": 1000,
             "layers": [
                 {"type": "CORE", "radius_pct": 0.5, "max_mass_pct": 0.5},
@@ -73,20 +74,20 @@ class TestShip:
             ]
         }
 
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
         # ship._initialize_layers() # Ship init calls this, and it sees the new class def logic
 
         # Add Armor Plate (250 HP) to ARMOR layer
-        armor = create_component('armor_plate')
+        armor = create_component('armor_plate', registries=fresh_registries)
         ship.add_component(armor, LayerType.ARMOR)
 
         # Add Bridge (200 HP) to CORE - requires crew to be active
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=fresh_registries)
         ship.add_component(bridge, LayerType.CORE)
 
         # Add crew support so bridge is active and can receive damage
-        ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        ship.add_component(create_component('life_support'), LayerType.CORE)
+        ship.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
 
         ship.recalculate_stats()
         assert bridge.is_active is True, "Bridge should be active with crew support"
@@ -113,11 +114,11 @@ class TestShip:
         assert core_hp_lost >= 40, f"At least 40 HP should be lost in CORE (got {core_hp_lost})"
         assert core_hp_lost <= 50, f"At most 50 HP should be lost in CORE (got {core_hp_lost})"
 
-    def test_serialization(self):
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+    def test_serialization(self, fresh_registries):
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
         # Add components (Hull is auto-equipped already)
-        ship.add_component(create_component('bridge'), LayerType.CORE)
-        ship.add_component(create_component('railgun'), LayerType.OUTER)
+        ship.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+        ship.add_component(create_component('railgun', registries=fresh_registries), LayerType.OUTER)
 
         data = ship.to_dict()
 
@@ -127,7 +128,7 @@ class TestShip:
         assert len(data["layers"]["CORE"]) > 0
 
         # Reconstruct
-        new_ship = Ship.from_dict(data)
+        new_ship = ShipSerializer.from_dict(data, registries=fresh_registries)
 
         assert new_ship.name == "TestShip"
         # HULL: Hull (auto-equipped) = 1 component
@@ -158,7 +159,8 @@ class TestShipClassMutation:
             fresh_registries.vehicle_classes
         )
 
-        self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate")
+        self.registries = fresh_registries
+        self.ship = Ship("Mutation Test", 0, 0, (255, 255, 255), ship_class="Frigate", registries=fresh_registries)
         yield
 
         # Note: reset_singletons fixture in conftest.py handles cleanup
@@ -168,10 +170,10 @@ class TestShipClassMutation:
     def test_change_class_migration(self):
         """Verify components migrate or are removed during class change."""
         # Add components to Frigate
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=self.registries)
         self.ship.add_component(bridge, LayerType.CORE)
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=self.registries)
         self.ship.add_component(railgun, LayerType.OUTER)
 
         # Change to "Destroyer" with migration
@@ -203,12 +205,12 @@ class TestShipClassMutation:
         assert requires_command > 0, "Frigate hull should require CommandAndControl"
 
         # Add bridge to provide CommandAndControl
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=self.registries)
         self.ship.add_component(bridge, LayerType.CORE)
 
         # Add crew support to keep bridge operational
-        self.ship.add_component(create_component('crew_quarters'), LayerType.CORE)
-        self.ship.add_component(create_component('life_support'), LayerType.CORE)
+        self.ship.add_component(create_component('crew_quarters', registries=self.registries), LayerType.CORE)
+        self.ship.add_component(create_component('life_support', registries=self.registries), LayerType.CORE)
 
         # Recalculate and verify ship is operational
         self.ship.recalculate_stats()
@@ -238,16 +240,13 @@ class TestShipClassMutation:
 # --- Pytest-style Tests (merged from test_ship_core.py) ---
 
 @pytest.fixture
-def registry_with_hull():
+def registry_with_hull(minimal_registries):
     """
-    Populate RegistryManager with Escort class and its hull_escort component.
-    Uses use_custom_data marker to skip production hydration.
+    Populate GameRegistries with Escort class and its hull_escort component.
+    Uses minimal_registries as a base for test isolation.
     """
-    mgr = RegistryManager.instance()
-    mgr.clear()  # Ensure clean state before populating
-
     # Vehicle class with default_hull_id
-    mgr.vehicle_classes.update({
+    minimal_registries.vehicle_classes.update({
         "Escort": {
             "type": "Ship",
             "max_mass": 1000,
@@ -271,17 +270,16 @@ def registry_with_hull():
             "RequiresCommandAndControl": True
         }
     }
-    hull_component = Component(hull_data)
-    mgr.components["hull_escort"] = hull_component
+    hull_component = Component(hull_data, registries=minimal_registries)
+    minimal_registries.components["hull_escort"] = hull_component
 
-    yield mgr
-    mgr.clear()  # Clean up after test
+    return minimal_registries
 
 
 @pytest.fixture
 def ship_with_components(registry_with_hull):
     """Create a Ship with known components for mass/HP verification."""
-    mgr = registry_with_hull
+    registries = registry_with_hull
 
     # Add a simple Armor component
     armor_data = {
@@ -292,13 +290,13 @@ def ship_with_components(registry_with_hull):
         "hp": 50,
         "abilities": {}
     }
-    armor_component = Component(armor_data)
-    mgr.components["test_armor"] = armor_component
+    armor_component = Component(armor_data, registries=registries)
+    registries.components["test_armor"] = armor_component
 
-    ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
+    ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registries)
 
     # Add armor component to OUTER layer
-    armor = create_component("test_armor")
+    armor = create_component("test_armor", registries=registries)
     if armor:
         ship.add_component(armor, LayerType.OUTER)
 
@@ -311,7 +309,7 @@ class TestHullAutoEquip:
 
     def test_hull_auto_equip(self, registry_with_hull):
         """Verify Ship auto-equips default_hull_id from vehicle class."""
-        ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="Escort")
+        ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_hull)
 
         hull_comps = ship.layers[LayerType.HULL]['components']
         assert len(hull_comps) >= 1, "Expected at least 1 component in HULL layer"
@@ -383,12 +381,12 @@ class TestChangeClassInvalidInput:
         if pygame.get_init():
             pygame.quit()
 
-    def test_change_class_invalid_class_name_does_not_raise(self):
+    def test_change_class_invalid_class_name_does_not_raise(self, fresh_registries):
         """Verify change_class() with invalid class name handles error gracefully.
 
         Prior to fix, this would raise UnboundLocalError due to local import shadowing.
         """
-        ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="Frigate")
+        ship = Ship("Test", 0, 0, (255, 255, 255), ship_class="Frigate", registries=fresh_registries)
         original_class = ship.ship_class
 
         # This should NOT raise UnboundLocalError - just log error and return
@@ -414,7 +412,7 @@ class TestTotalDefenseScoreInitialization:
         if pygame.get_init():
             pygame.quit()
 
-    def test_total_defense_score_initial_value_is_one(self):
+    def test_total_defense_score_initial_value_is_one(self, fresh_registries):
         """Verify total_defense_score is initialized to 1.0 (not 0.0).
 
         NEW-SIM-001: The attribute was previously initialized twice:
@@ -426,16 +424,16 @@ class TestTotalDefenseScoreInitialization:
         - It represents a baseline "neutral" defense before stats calculation
         - The actual value is computed by ShipStatsCalculator.calculate()
         """
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
 
         # The initial value should be 1.0 (baseline defense score)
         assert ship.total_defense_score == 1.0, (
             f"total_defense_score should be initialized to 1.0, got {ship.total_defense_score}"
         )
 
-    def test_total_defense_score_is_recalculated_by_stats(self):
+    def test_total_defense_score_is_recalculated_by_stats(self, fresh_registries):
         """Verify total_defense_score is updated when stats are recalculated."""
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
 
         ship.recalculate_stats()
 

@@ -14,8 +14,9 @@ class TestStackingIntegration:
     """Test that ship helper methods correctly use stack_group rules."""
 
     @pytest.fixture(autouse=True)
-    def setup(self):
-        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
+    def setup(self, fresh_registries):
+        self.registries = fresh_registries
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
         # Mock layers
         self.ship.layers[LayerType.OUTER] = {
             'components': [], 'radius_pct': 1.0, 'restrictions': [],
@@ -27,7 +28,7 @@ class TestStackingIntegration:
         }
 
     def _make_comp(self, data):
-        return Component(data)
+        return Component(data, registries=self.registries)
 
     # =========================================================================
     # ToHitAttackModifier (Sensors) Tests

@@ -13,12 +13,14 @@ from game.simulation.entities.ship_combat import ShipCombatMixin
 class TestCrystallineArmor:
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         # Initialize ship data (vehicle classes, etc.)
         initialize_ship_data()
 
+        self.registries = fresh_registries
+
         # Create a dummy ship (use Cruiser for sufficient layers)
-        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser")
+        self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
 
         # Define Crystalline Armor Data
         self.armor_data = {
@@ -39,13 +41,11 @@ class TestCrystallineArmor:
             }
         }
 
-        # Mock Registry
-        from game.core.registry import RegistryManager
-        from game.simulation.components.component import Component
+        # Setup component in registries
         self.ship.max_mass_budget = 1000
 
-        c = Component(self.armor_data)
-        RegistryManager.instance().components["crystalline_armor"] = c
+        c = Component(self.armor_data, registries=fresh_registries)
+        fresh_registries.components["crystalline_armor"] = c
 
         # Add Armor Layer
         if LayerType.ARMOR not in self.ship.layers:
@@ -62,8 +62,7 @@ class TestCrystallineArmor:
         # add_armor() will add components.
 
     def add_armor(self):
-        from game.core.registry import RegistryManager
-        c = RegistryManager.instance().components["crystalline_armor"].clone()
+        c = self.registries.components["crystalline_armor"].clone()
         self.ship.layers[LayerType.ARMOR]['components'].append(c)
 
         # Also need a shield generator so max_shields > 0
@@ -76,9 +75,8 @@ class TestCrystallineArmor:
             "sprite_index": 0,
             "abilities": { "ShieldProjection": 100 }
         }
-        # Create ad-hoc component instance (cannot use registry if not registered)
-        from game.simulation.components.component import Component
-        s_comp = Component(shield_data)
+        # Create ad-hoc component instance
+        s_comp = Component(shield_data, registries=self.registries)
         self.ship.layers[LayerType.ARMOR]['components'].append(s_comp)
 
         self.ship.recalculate_stats()
@@ -143,8 +141,7 @@ class TestCrystallineArmor:
                 "CrystallineArmor": 5  # No group -> stacks
             }
         }
-        from game.simulation.components.component import Component
-        c = Component(other_data)
+        c = Component(other_data, registries=self.registries)
         self.ship.layers[LayerType.ARMOR]['components'].append(c)
         self.ship.recalculate_stats()
 

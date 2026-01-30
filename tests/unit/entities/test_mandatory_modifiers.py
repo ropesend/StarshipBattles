@@ -5,12 +5,14 @@ import pygame_gui
 from unittest.mock import MagicMock, patch
 
 from game.ui.panels.builder_widgets import ModifierEditorPanel
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, TestRegistryProvider
 from game.simulation.components.component_constants import Modifier
+from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.services.component_service import ComponentService
 
 
 @pytest.fixture
-def pygame_env():
+def pygame_env(fresh_registries):
     """Set up pygame environment for testing."""
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
     pygame.init()
@@ -18,18 +20,18 @@ def pygame_env():
     manager = pygame_gui.UIManager((800, 600))
     container = pygame_gui.elements.UIPanel(pygame.Rect(0, 0, 100, 100), manager=manager)
 
-    # Ensure registry has our mods
-    mods = RegistryManager.instance().modifiers
-    if 'simple_size' not in mods:
-        mods['simple_size'] = Modifier({'id': 'simple_size', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})
-    if 'range_mount' not in mods:
-        mods['range_mount'] = Modifier({'id': 'range_mount', 'name': 'Range', 'type': 'linear', 'min_val': 0, 'max_val': 10})
-    if 'facing' not in mods:
-        mods['facing'] = Modifier({'id': 'facing', 'name': 'Facing', 'type': 'linear', 'min_val': 0, 'max_val': 360})
+    # Setup ModifierLogic with a proper service using fresh registries
+    test_provider = TestRegistryProvider(
+        components=fresh_registries.components,
+        modifiers=fresh_registries.modifiers,
+        vehicle_classes=fresh_registries.vehicle_classes
+    )
+    ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
 
-    yield {'manager': manager, 'container': container}
+    yield {'manager': manager, 'container': container, 'registries': fresh_registries}
 
     # Cleanup
+    ModifierLogic.set_service(None)
     patch.stopall()
     pygame.quit()
 
@@ -63,7 +65,7 @@ class TestMandatoryModifiers:
     def test_auto_apply_turret(self, pygame_env):
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         mock_comp, mods = _setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45  # Base arc
         mock_comp.data['firing_arc'] = 45
@@ -72,9 +74,12 @@ class TestMandatoryModifiers:
             'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
         }
 
-        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+        # Update the test provider with our test registry
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
+
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
         assert 'turret_mount' in mods
         assert mods['turret_mount'].value == 45  # Should default to base
@@ -83,7 +88,7 @@ class TestMandatoryModifiers:
         # Ensure buttons respect the base firing arc constraint
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         mock_comp, mods = _setup_mock_comp('ProjectileWeapon')
         mock_comp.firing_arc = 45
         mock_comp.data['firing_arc'] = 45
@@ -92,68 +97,71 @@ class TestMandatoryModifiers:
             'turret_mount': Modifier({'id': 'turret_mount', 'name': 'Turret', 'type': 'linear', 'min_val': 0, 'max_val': 360, 'restrictions': {'allow_types': ['ProjectileWeapon']}})
         }
 
-        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+        # Update the test provider with our test registry
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
 
-            # Locate row
-            assert 'turret_mount' in panel.modifier_rows, "Row not found"
-            row = panel.modifier_rows['turret_mount']
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
-            # Locate a decrement button in the row
-            # We need to find the button that does snap_floor 15.
-            # Row stores buttons in self.buttons dict: element -> action
-            target_btn = None
-            for btn, action in row.buttons.items():
-                if action['action'] == 'snap_floor' and action['value'] == 15:
-                    target_btn = btn
-                    break
+        # Locate row
+        assert 'turret_mount' in panel.modifier_rows, "Row not found"
+        row = panel.modifier_rows['turret_mount']
 
-            assert target_btn is not None, "Decrement button not found in row"
+        # Locate a decrement button in the row
+        # We need to find the button that does snap_floor 15.
+        # Row stores buttons in self.buttons dict: element -> action
+        target_btn = None
+        for btn, action in row.buttons.items():
+            if action['action'] == 'snap_floor' and action['value'] == 15:
+                target_btn = btn
+                break
 
-            # Mock the slider in the row to return current value
-            row.slider = MagicMock()
-            row.slider.get_current_value.return_value = 45.0
+        assert target_btn is not None, "Decrement button not found in row"
 
-            # Trigger event
-            event = MagicMock()
-            event.type = pygame_gui.UI_BUTTON_PRESSED
-            event.ui_element = target_btn
+        # Mock the slider in the row to return current value
+        row.slider = MagicMock()
+        row.slider.get_current_value.return_value = 45.0
 
-            # Handle event
-            panel.handle_event(event)
+        # Trigger event
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = target_btn
 
-            # Test explicit set attempt to violate constraint
-            # Using 'set_value' mode button if we had one, or manual injection.
-            # Let's inject a fake button into the row for testing 'set_value'
-            mock_btn = MagicMock()
-            row.buttons[mock_btn] = {'action': 'set_value', 'value': 40}
+        # Handle event
+        panel.handle_event(event)
 
-            event.ui_element = mock_btn
-            panel.handle_event(event)
+        # Test explicit set attempt to violate constraint
+        # Using 'set_value' mode button if we had one, or manual injection.
+        # Let's inject a fake button into the row for testing 'set_value'
+        mock_btn = MagicMock()
+        row.buttons[mock_btn] = {'action': 'set_value', 'value': 40}
 
-            # Should be clamped to 45.
-            # 45 -> 45. No change.
+        event.ui_element = mock_btn
+        panel.handle_event(event)
 
-            # Try setting current to 60, then decrement to 45 (allowed), then decrement to 30 (blocked)
-            row.current_value = 60.0
-            # Decrement 15 -> 45
-            event.ui_element = target_btn
+        # Should be clamped to 45.
+        # 45 -> 45. No change.
 
-            # We need to mock the callback because Row calls it
-            mock_cb = MagicMock()
-            row.on_change_callback = mock_cb
+        # Try setting current to 60, then decrement to 45 (allowed), then decrement to 30 (blocked)
+        row.current_value = 60.0
+        # Decrement 15 -> 45
+        event.ui_element = target_btn
 
-            panel.handle_event(event)
+        # We need to mock the callback because Row calls it
+        mock_cb = MagicMock()
+        row.on_change_callback = mock_cb
 
-            # Should have called callback with 45
-            mock_cb.assert_called_with('value_change', 'turret_mount', 45.0)
+        panel.handle_event(event)
+
+        # Should have called callback with 45
+        mock_cb.assert_called_with('value_change', 'turret_mount', 45.0)
 
     def test_range_limit_seeker(self, pygame_env):
         # Range should NOT apply to Seeker
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         mock_comp, mods = _setup_mock_comp('SeekerWeapon')
 
         test_registry = {
@@ -161,29 +169,35 @@ class TestMandatoryModifiers:
             # Note: Seeker NOT in allow_types (mimicking modifiers.json update)
         }
 
-        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+        # Update the test provider with our test registry
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
+
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
         assert 'range_mount' not in mods
 
     def test_auto_apply_size(self, pygame_env):
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         mock_comp, mods = _setup_mock_comp('reactor')
-        # Ensure registry has simple_size_mount
-        with patch.dict(RegistryManager.instance().modifiers, {'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})}, clear=True):
-            # Run layout
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+
+        test_registry = {'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})}
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
+
+        # Run layout
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
         assert 'simple_size_mount' in mods
 
     def test_auto_apply_range_weapon(self, pygame_env):
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         # USE CORRECT TYPE STRING
         mock_comp, mods = _setup_mock_comp('ProjectileWeapon')
 
@@ -200,10 +214,13 @@ class TestMandatoryModifiers:
             })
         }
 
-        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
-            # Run layout
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+        # Update the test provider with our test registry
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
+
+        # Run layout
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
         assert 'range_mount' in mods
         assert 'simple_size_mount' in mods
@@ -212,7 +229,7 @@ class TestMandatoryModifiers:
     def test_no_auto_apply_range_non_weapon(self, pygame_env):
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         mock_comp, mods = _setup_mock_comp('Reactor')  # PascalCase for non-weapon too likely
 
         test_registry = {
@@ -223,9 +240,12 @@ class TestMandatoryModifiers:
             })
         }
 
-        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+        # Update the test provider with our test registry
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
+
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
         assert 'range_mount' not in mods
         assert 'simple_size_mount' in mods
@@ -233,7 +253,7 @@ class TestMandatoryModifiers:
     def test_prevent_removal(self, pygame_env):
         # PROJ-50: Pass registries (required)
         panel = ModifierEditorPanel(pygame_env['manager'], pygame_env['container'], 400, MagicMock(),
-                                   registries=RegistryManager.instance())
+                                   registries=pygame_env['registries'])
         mock_comp, mods = _setup_mock_comp('Reactor')
 
         # Pre-add
@@ -245,21 +265,24 @@ class TestMandatoryModifiers:
             'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100})
         }
 
-        with patch.dict(RegistryManager.instance().modifiers, test_registry, clear=True):
-            panel.rebuild(mock_comp, {})
-            panel.layout(10)
+        # Update the test provider with our test registry
+        test_provider = TestRegistryProvider(modifiers=test_registry)
+        ModifierLogic.set_service(ComponentService(registry_provider=test_provider))
 
-            # Find button - New Structure uses modifier_rows
-            assert 'simple_size_mount' in panel.modifier_rows, "simple_size_mount row not created"
+        panel.rebuild(mock_comp, {})
+        panel.layout(10)
 
-            row = panel.modifier_rows['simple_size_mount']
-            btn = row.name_label
+        # Find button - New Structure uses modifier_rows
+        assert 'simple_size_mount' in panel.modifier_rows, "simple_size_mount row not created"
 
-            event = MagicMock()
-            event.type = pygame_gui.UI_BUTTON_PRESSED
-            event.ui_element = btn
+        row = panel.modifier_rows['simple_size_mount']
+        btn = row.name_label
 
-            panel.handle_event(event)
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = btn
+
+        panel.handle_event(event)
 
         # Verify NOT removed
         assert 'simple_size_mount' in mods

@@ -156,7 +156,7 @@ class TestAbilities:
         # Range should be auto-calculated: speed * endurance * 0.8 (maneuvering efficiency)
         assert ab.range == 4000  # 500 * 10 * 0.8
 
-    def test_get_abilities_polymorphism(self):
+    def test_get_abilities_polymorphism(self, fresh_registries):
         """Test that get_abilities() finds abilities by parent class."""
         from game.simulation.components.component import Component
         data = {
@@ -169,7 +169,7 @@ class TestAbilities:
                 "BeamWeaponAbility": {"damage": 20, "range": 1000, "reload": 1.0}
             }
         }
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
 
         # Should find via polymorphic lookup (BeamWeaponAbility IS-A WeaponAbility)
         weapons = comp.get_abilities("WeaponAbility")
@@ -180,7 +180,7 @@ class TestAbilities:
         assert len(beams) == 1
         assert weapons[0] == beams[0]
 
-    def test_has_pdc_ability(self):
+    def test_has_pdc_ability(self, fresh_registries):
         """Test has_pdc_ability() with tag-based detection."""
         from game.simulation.components.component import Component
         # Component with 'pdc' tag
@@ -194,7 +194,7 @@ class TestAbilities:
                 "ProjectileWeaponAbility": {"damage": 5, "range": 500, "reload": 0.1, "tags": ["pdc"]}
             }
         }
-        comp = Component(data)
+        comp = Component(data, registries=fresh_registries)
         assert comp.has_pdc_ability() is True
 
         # Component without 'pdc' tag
@@ -208,7 +208,7 @@ class TestAbilities:
                 "ProjectileWeaponAbility": {"damage": 10, "range": 1000, "reload": 1.0}
             }
         }
-        comp2 = Component(data2)
+        comp2 = Component(data2, registries=fresh_registries)
         assert comp2.has_pdc_ability() is False
 
 

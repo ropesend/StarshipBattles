@@ -3,14 +3,17 @@ from unittest.mock import patch
 
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import Modifier
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, TestRegistryProvider
 from game.ui.screens.builder.modifier_logic import ModifierLogic
+from game.ui.services.component_service import ComponentService
 
 
 class TestMandatoryUpdates:
 
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
+        # Store registries for use in tests
+        self.fresh_registries = fresh_registries
         # Setup Mock Registry with necessary mods
         self.test_registry = {
             'simple_size_mount': Modifier({'id': 'simple_size_mount', 'name': 'Size', 'type': 'linear', 'min_val': 1, 'max_val': 100}),
@@ -23,45 +26,62 @@ class TestMandatoryUpdates:
             # Add others if needed
         }
 
+        yield
+
+        # Cleanup: Reset ModifierLogic service
+        ModifierLogic.set_service(None)
+
     def test_automation_mandatory(self):
         # Mock Component with CrewRequired and WeaponAbility
         comp_data = {'id': 'test', 'name': 'Test', 'type': 'Weapon', 'hp':10, 'mass':10,
                      'abilities': {'CrewRequired': 5, 'WeaponAbility': {'damage': 10, 'range': 1000}}}
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=self.fresh_registries)
 
-        with patch.dict(RegistryManager.instance().modifiers, self.test_registry, clear=True):
-            mandatory = ModifierLogic.get_mandatory_modifiers(comp)
+        # Use TestRegistryProvider with our mock modifiers
+        test_provider = TestRegistryProvider(modifiers=self.test_registry)
+        test_service = ComponentService(registry_provider=test_provider)
+        ModifierLogic.set_service(test_service)
 
-            assert 'automation' in mandatory
-            assert 'rapid_fire' in mandatory  # Weapon
-            assert 'simple_size_mount' in mandatory
+        mandatory = ModifierLogic.get_mandatory_modifiers(comp)
+
+        assert 'automation' in mandatory
+        assert 'rapid_fire' in mandatory  # Weapon
+        assert 'simple_size_mount' in mandatory
 
     def test_automation_not_mandatory_no_crew(self):
         # Mock Component without CrewRequired but with WeaponAbility
         comp_data = {'id': 'test', 'name': 'Test', 'type': 'Weapon', 'hp':10, 'mass':10,
                      'abilities': {'WeaponAbility': {'damage': 10, 'range': 1000}}}
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=self.fresh_registries)
 
-        with patch.dict(RegistryManager.instance().modifiers, self.test_registry, clear=True):
-            mandatory = ModifierLogic.get_mandatory_modifiers(comp)
+        # Use TestRegistryProvider with our mock modifiers
+        test_provider = TestRegistryProvider(modifiers=self.test_registry)
+        test_service = ComponentService(registry_provider=test_provider)
+        ModifierLogic.set_service(test_service)
 
-            assert 'automation' not in mandatory
-            assert 'rapid_fire' in mandatory
+        mandatory = ModifierLogic.get_mandatory_modifiers(comp)
 
-            # Verify strict allow_abilities check
-            assert not ModifierLogic.is_modifier_allowed('automation', comp), \
-                "Automation should be disallowed for component with no crew req"
+        assert 'automation' not in mandatory
+        assert 'rapid_fire' in mandatory
+
+        # Verify strict allow_abilities check
+        assert not ModifierLogic.is_modifier_allowed('automation', comp), \
+            "Automation should be disallowed for component with no crew req"
 
     def test_seeker_mandatory(self):
         # Mock Component with SeekerWeaponAbility (which is a subclass of WeaponAbility)
         comp_data = {'id': 'seeker', 'name': 'Seeker', 'type': 'SeekerWeapon', 'hp':10, 'mass':10,
                      'abilities': {'SeekerWeaponAbility': {'damage': 50, 'range': 2000, 'endurance': 5}}}
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=self.fresh_registries)
 
-        with patch.dict(RegistryManager.instance().modifiers, self.test_registry, clear=True):
-            mandatory = ModifierLogic.get_mandatory_modifiers(comp)
+        # Use TestRegistryProvider with our mock modifiers
+        test_provider = TestRegistryProvider(modifiers=self.test_registry)
+        test_service = ComponentService(registry_provider=test_provider)
+        ModifierLogic.set_service(test_service)
 
-            assert 'seeker_endurance' in mandatory
-            assert 'rapid_fire' in mandatory
-            # Should NOT have range_mount if registry restricts it (mock registry restricts to ProjectileWeapon)
-            assert 'range_mount' not in mandatory
+        mandatory = ModifierLogic.get_mandatory_modifiers(comp)
+
+        assert 'seeker_endurance' in mandatory
+        assert 'rapid_fire' in mandatory
+        # Should NOT have range_mount if registry restricts it (mock registry restricts to ProjectileWeapon)
+        assert 'range_mount' not in mandatory

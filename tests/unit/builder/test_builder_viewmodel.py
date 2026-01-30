@@ -72,10 +72,11 @@ def mock_registries(pygame_and_data):
 
 
 @pytest.fixture
-def viewmodel_setup(pygame_and_data, mock_registries):
+def viewmodel_setup(pygame_and_data, mock_registries, fresh_registries):
     """Per-test fixture to create a fresh viewmodel.
 
     PROJ-40: Updated to use DI with WorkshopContext.
+    PROJ-50: Includes fresh_registries for Ship/Component creation.
     """
     event_bus = MockEventBus()
     context = WorkshopContext(
@@ -85,7 +86,7 @@ def viewmodel_setup(pygame_and_data, mock_registries):
     from game.ui.screens.workshop_viewmodel import WorkshopViewModel as BuilderViewModel
     viewmodel = BuilderViewModel(event_bus, 1280, 720, context=context)
 
-    yield {'event_bus': event_bus, 'viewmodel': viewmodel}
+    yield {'event_bus': event_bus, 'viewmodel': viewmodel, 'registries': fresh_registries}
 
     patch.stopall()
 
@@ -103,8 +104,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel.ship = ship
 
         events = event_bus.get_events('SHIP_UPDATED')
@@ -117,8 +119,9 @@ class TestBuilderViewModel:
 
         event_bus = viewmodel_setup['event_bus']
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test Ship", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel._ship = ship  # Set directly to avoid initial event
         event_bus.clear()
 
@@ -147,11 +150,12 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel._ship = ship
 
-        comp = create_component('armor_plate')
+        comp = create_component('armor_plate', registries=registries)
         selection = (LayerType.ARMOR, 0, comp)
 
         viewmodel.select_component(selection)
@@ -165,12 +169,13 @@ class TestBuilderViewModel:
         from game.simulation.components.component import create_component
 
         viewmodel = viewmodel_setup['viewmodel']
+        registries = viewmodel_setup['registries']
 
-        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort")
+        ship = Ship("Test", 640, 360, (255, 255, 255), ship_class="Escort", registries=registries)
         viewmodel._ship = ship
 
-        comp1 = create_component('armor_plate')
-        comp2 = create_component('armor_plate')
+        comp1 = create_component('armor_plate', registries=registries)
+        comp2 = create_component('armor_plate', registries=registries)
 
         viewmodel.select_component((LayerType.ARMOR, 0, comp1))
         viewmodel.select_component((LayerType.ARMOR, 1, comp2), append=True)

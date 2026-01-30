@@ -39,19 +39,19 @@ class TestBattleScreenExtended:
         # Cleanup: AI Strategy Manager should still be cleared
         StrategyManager.instance().clear()
 
-    def test_is_battle_over_victory(self):
+    def test_is_battle_over_victory(self, fresh_registries):
         """Verify is_battle_over identifies when one team is eliminated."""
         scene = BattleScreen(1000, 1000)
 
-        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort")
-        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort")
+        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort", registries=fresh_registries)
+        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort", registries=fresh_registries)
 
         # Ensure they are fully equipped ships
         for s in [ship1, ship2]:
-            s.add_component(create_component('bridge'), LayerType.CORE)
-            s.add_component(create_component('crew_quarters'), LayerType.CORE)
-            s.add_component(create_component('life_support'), LayerType.CORE)
-            s.add_component(create_component('standard_engine'), LayerType.OUTER)
+            s.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+            s.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+            s.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+            s.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
             s.recalculate_stats()
 
         scene.start([ship1], [ship2])
@@ -62,16 +62,16 @@ class TestBattleScreenExtended:
         assert scene.is_battle_over()
         assert scene.get_winner() == 0
 
-    def test_update_loop_tick_counter(self):
+    def test_update_loop_tick_counter(self, fresh_registries):
         """Verify update loop increments sim_tick_counter."""
         scene = BattleScreen(1000, 1000)
-        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort")
-        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort")
+        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort", registries=fresh_registries)
+        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort", registries=fresh_registries)
         for s in [ship1, ship2]:
-            s.add_component(create_component('bridge'), LayerType.CORE)
-            s.add_component(create_component('crew_quarters'), LayerType.CORE)
-            s.add_component(create_component('life_support'), LayerType.CORE)
-            s.add_component(create_component('standard_engine'), LayerType.OUTER)
+            s.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
+            s.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
+            s.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
+            s.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
             s.recalculate_stats()
 
         scene.start([ship1], [ship2])
@@ -92,10 +92,10 @@ class TestBattleScreenExtended:
 
         scene.camera.fit_objects.assert_not_called()
 
-    def test_process_beam_attack_logic(self):
+    def test_process_beam_attack_logic(self, fresh_registries):
         """Verify _process_beam_attack applies damage to target."""
         scene = BattleScreen(1000, 1000)
-        ship = Ship("Target", 0, 0, (255,255,255), team_id=1)
+        ship = Ship("Target", 0, 0, (255,255,255), team_id=1, registries=fresh_registries)
         ship.radius = 20
         # Mock take_damage
         ship.take_damage = MagicMock()
