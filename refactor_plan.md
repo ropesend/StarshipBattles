@@ -8,25 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-01-30
-**Last Completed:** PROJ-49 Phase 1 - Dead Code Cleanup
-**Current Status:** PROJ-49 Phase 1 Complete
+**Last Completed:** PROJ-49 Phase 2 - Simple Performance Fixes
+**Current Status:** PROJ-49 Phase 2 Complete
 **Current Project:** PROJ-49
-**Current Phase:** Phase 2 - Simple Performance Fixes
+**Current Phase:** Phase 3 - Component Caching
 **Test Status:** 5745 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-49 Phase 1 COMPLETE - Dead Code Cleanup
-  - Archived 4 dead files to _marked_for_deletion_2026-01-28/:
-    - projectile_manager_systems.py (duplicate ProjectileManager)
-    - setup_screen_old.py (dead BattleSetupScreen)
-    - hud_battle.py (dead battle screen)
-    - hud_panels.py (dead duplicate panels)
-  - Removed _ValidatorProxy from ship.py (dead code)
-  - Deleted old _marked_for_deletion_2026-01-27/ archive
-  - .gitignore already correctly configured
-  - Test suite: 5745 passed (46 failures + 12 errors pre-existing)
-- Next: Phase 2 - Simple Performance Fixes
+- PROJ-49 Phase 2 COMPLETE - Simple Performance Fixes
+  - Task 2.1: Projectile list reconstruction - in-place mark-and-sweep algorithm
+  - Task 2.2: Ability index caching - O(1) lookup with MRO for polymorphism
+  - Task 2.3: Distance pre-calculation - cache for AI targeting rules
+  - Task 2.4: Deepcopy analysis - documented as required for correctness
+- Files modified:
+  - game/simulation/projectile_manager.py
+  - game/simulation/components/component.py
+  - game/ai/target_evaluator.py
+  - game/ai/controller.py
+- Test suite: 5745 passed (46 failures + 12 errors pre-existing)
+- Next: Phase 3 - Component Caching
 
 ---
 
@@ -118,6 +119,7 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-01-30 | PROJ-49 | Phase 2 | Complete | 5745 passed | d24b4a7f | Simple perf fixes: projectile list, ability index, distance cache, deepcopy analysis |
 | 2026-01-30 | PROJ-49 | Phase 1 | Complete | 5745 passed | ecec7ecd | Dead code cleanup: archived 4 files, removed _ValidatorProxy, cleaned old archive |
 | 2026-01-30 | PROJ-48 | Audit Cycle 1 | PASSED | 5745 passed | 6b0b2e5d | All phases verified, no issues found, project complete |
 | 2026-01-30 | PROJ-48 | Phase 8 COMPLETE | Complete | 5745 passed | b5f3e950 | Test quality: print removal, docstrings, skip docs |

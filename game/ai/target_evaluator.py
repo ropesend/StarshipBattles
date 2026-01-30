@@ -136,7 +136,7 @@ class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
 
     @staticmethod
-    def evaluate(ship, candidate, rules, stat_helpers=None):
+    def evaluate(ship, candidate, rules, stat_helpers=None, distance_cache=None):
         """Evaluate a candidate target based on targeting rules.
 
         Args:
@@ -145,6 +145,8 @@ class TargetEvaluator:
             rules: List of targeting rules from strategy
             stat_helpers: Optional dict with 'get_hp_percent' and 'is_in_pdc_arc' functions
                          If not provided, uses default implementations
+            distance_cache: Optional dict mapping candidate to pre-calculated distance.
+                           PERF: Avoids redundant distance calculations across rules.
 
         Returns:
             Score for this target (higher is better), or -inf if required rule fails
@@ -168,7 +170,11 @@ class TargetEvaluator:
             match = True
 
             if r_type == 'nearest':
-                dist = _safe_distance(ship, candidate)
+                # PERF: Use cached distance if available
+                if distance_cache and candidate in distance_cache:
+                    dist = distance_cache[candidate]
+                else:
+                    dist = _safe_distance(ship, candidate)
                 # 'nearest' usually implies closer is better (higher score).
                 # Existing logic: score -= dist * weight.
                 # If we use weight > 0, we can do score -= dist * weight
@@ -179,7 +185,11 @@ class TargetEvaluator:
                     val = dist * factor
 
             elif r_type == 'farthest':
-                dist = _safe_distance(ship, candidate)
+                # PERF: Use cached distance if available
+                if distance_cache and candidate in distance_cache:
+                    dist = distance_cache[candidate]
+                else:
+                    dist = _safe_distance(ship, candidate)
                 if weight > 0:
                     val = dist * weight
                 else:
@@ -187,7 +197,11 @@ class TargetEvaluator:
 
             elif r_type == 'distance':
                 # Generic distance rule
-                dist = _safe_distance(ship, candidate)
+                # PERF: Use cached distance if available
+                if distance_cache and candidate in distance_cache:
+                    dist = distance_cache[candidate]
+                else:
+                    dist = _safe_distance(ship, candidate)
                 val = dist * factor
 
             elif r_type == 'mass' or r_type == 'largest':

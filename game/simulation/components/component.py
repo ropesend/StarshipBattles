@@ -123,7 +123,10 @@ class Component:
                        get_default_registries() or legacy get_modifier_registry().
         """
         import copy
-        self.data = copy.deepcopy(data) # Store raw data for reference/cloning
+        # PERF-ANALYSIS: deepcopy required - data contains nested mutable structures
+        # (abilities dict with lists and sub-dicts). Shallow copy would cause shared
+        # references, breaking clone() and modifier isolation.
+        self.data = copy.deepcopy(data)
 
         # PROJ-38/PROJ-42: Store registries for modifier operations
         # Uses _get_registries_fallback() pattern for consistent DI behavior
@@ -163,6 +166,9 @@ class Component:
 
 
         
+        # PERF-ANALYSIS: deepcopy required - abilities dict has nested mutable values
+        # (ResourceConsumption lists, ability config dicts). Used to restore original
+        # state after runtime modifications.
         self.base_abilities = copy.deepcopy(self.abilities)
         
         self.ship = None # Container reference
@@ -173,8 +179,9 @@ class Component:
 
         # Ability Instances (New System)
         self.ability_instances = []
+        self._ability_index = {}  # PERF: Fast lookup by ability class name
         self._is_operational = True # Tracks if component has resources to operate
-        
+
         # Instantiate Abilities
         self._instantiate_abilities()
         
@@ -213,16 +220,32 @@ class Component:
         Get all abilities of a specific type (by registry name).
         Supports polymorphism if the registry entry is a class.
 
-        Delegates to AbilityManager for consistency.
+        PERF: Uses indexed lookup when available, falls back to AbilityManager.
         """
+        # Fast path: use pre-built index (includes MRO for polymorphism)
+        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+            return list(self._ability_index[ability_name])  # Return copy
+
+        # Fallback: delegate to AbilityManager (for edge cases)
         return AbilityManager.get_abilities(ability_name, self.ability_instances)
 
     def get_ability(self, ability_name: str):
-        """Get first ability of type. Delegates to AbilityManager."""
+        """Get first ability of type. Uses indexed lookup when available."""
+        # Fast path: use pre-built index
+        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+            abilities = self._ability_index[ability_name]
+            return abilities[0] if abilities else None
+
+        # Fallback: delegate to AbilityManager
         return AbilityManager.get_ability(ability_name, self.ability_instances)
 
     def has_ability(self, ability_name: str):
-        """Check if component has ability. Delegates to AbilityManager."""
+        """Check if component has ability. Uses indexed lookup when available."""
+        # Fast path: use pre-built index
+        if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+            return len(self._ability_index[ability_name]) > 0
+
+        # Fallback: delegate to AbilityManager
         return AbilityManager.has_ability(ability_name, self.ability_instances, self.abilities)
 
     def has_pdc_ability(self) -> bool:
@@ -260,13 +283,24 @@ class Component:
         """Instantiate or Sync Ability objects from self.abilities dict.
 
         Preserves existing instances to maintain runtime state (cooldowns, energy).
-        Delegates to AbilityManager.
+        Delegates to AbilityManager. Also builds index for fast lookup.
         """
         self.ability_instances = AbilityManager.instantiate_abilities(
             self.abilities,
             self.ability_instances,
             self
         )
+        # PERF: Build ability index for O(1) lookup by class name
+        self._ability_index = {}
+        for ab in self.ability_instances:
+            # Index by class name and all parent class names (for polymorphism)
+            for cls in ab.__class__.mro():
+                cls_name = cls.__name__
+                if cls_name == 'object':
+                    break
+                if cls_name not in self._ability_index:
+                    self._ability_index[cls_name] = []
+                self._ability_index[cls_name].append(ab)
             
     def update(self):
         """Update component state for one tick (resource consumption, cooldowns)."""

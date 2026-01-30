@@ -134,5 +134,11 @@ class ProjectileManager:
                     p.source_weapon.shots_hit += 1
                 projectiles_to_remove.add(idx)
         
+        # In-place mark-and-sweep removal (avoids list reconstruction)
         if projectiles_to_remove:
-            self.projectiles = [p for i, p in enumerate(self.projectiles) if i not in projectiles_to_remove]
+            write_idx = 0
+            for read_idx, p in enumerate(self.projectiles):
+                if read_idx not in projectiles_to_remove:
+                    self.projectiles[write_idx] = p
+                    write_idx += 1
+            del self.projectiles[write_idx:]

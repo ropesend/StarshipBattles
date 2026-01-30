@@ -149,9 +149,21 @@ class AIController:
         scored_enemies = []
         ship_id = getattr(self.ship, 'id', getattr(self.ship, 'name', str(id(self.ship))))
 
+        # PERF: Pre-calculate distances once for all candidates
+        # Avoids redundant distance calculations in TargetEvaluator
+        ship_pos = self.ship.get_position()
+        distance_cache = {}
         for e in enemies:
             try:
-                score = TargetEvaluator.evaluate(self.ship, e, rules)
+                e_pos = getattr(e, 'position', None)
+                if e_pos is not None:
+                    distance_cache[e] = ship_pos.distance_to(e_pos)
+            except (AttributeError, TypeError):
+                pass  # Will fall back to _safe_distance in evaluate()
+
+        for e in enemies:
+            try:
+                score = TargetEvaluator.evaluate(self.ship, e, rules, distance_cache=distance_cache)
                 if score > -float('inf'):
                     scored_enemies.append((score, e))
             except (AttributeError, TypeError) as err:

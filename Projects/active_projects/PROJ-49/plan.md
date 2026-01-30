@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Dead Code Cleanup | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Simple Performance Fixes | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Simple Performance Fixes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Component Caching | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. HP Ratio Caching | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Spatial Grid Optimization | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-01-30
-**Active Phase:** Phase 2 - Simple Performance Fixes
-**Last Action:** Phase 1 complete - archived 4 dead files (projectile_manager, setup.py, hud/battle.py, hud/panels.py), removed _ValidatorProxy, deleted old archive
-**Next Action:** Begin Phase 2 - Simple Performance Fixes
+**Active Phase:** Phase 3 - Component Caching
+**Last Action:** Phase 2 complete - projectile list in-place removal, ability index caching, distance pre-calculation, deepcopy analysis
+**Next Action:** Begin Phase 3 - Component Caching
 **Blockers:** None
 
 ## Overview
