@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Break down large UI screens into focused components.
 
 ---
@@ -73,24 +73,31 @@
 
 ---
 
-### Task 7.4: Refactor FleetReportWindow [Medium]
+### Task 7.4: Refactor FleetReportWindow [Medium] - COMPLETE
 **File:** `game/ui/screens/fleet_report_window.py`
 **Issue:** UI-004 - 1034 lines, image scaling in UI
 **Tests:** `pytest tests/unit/ui/`
 
-- [ ] Extract `FleetListViewModel` for filtering/sorting/pagination
-- [ ] Use image scaling utility from Task 1.3
-- [ ] Extract `ColumnManager` for column configuration
-- [ ] Verify: Fleet report displays correctly
+- [x] Extract `FleetListViewModel` for filtering/sorting/pagination
+- [x] Use image scaling utility from Task 1.3
+- [x] Extract `ColumnManager` for column configuration
+- [x] Verify: Fleet report displays correctly
 
 **Notes:**
+- Created game/ui/screens/fleet_report_view_model.py (193 lines)
+- Created game/ui/screens/column_manager.py (161 lines)
+- Created tests/unit/ui/test_fleet_list_view_model.py (17 tests)
+- Created tests/unit/ui/test_column_manager.py (17 tests)
+- Added image scaling utilities to game/ui/utils.py
+- FleetReportWindow reduced from 1035 to 844 lines (-191 lines, ~18% reduction)
+- All 5658 tests pass (+34 new tests)
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - all tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

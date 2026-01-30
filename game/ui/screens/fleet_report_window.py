@@ -2,13 +2,16 @@
 Fleet Report Window - Displays detailed fleet information, ship lists, and individual ship reports.
 
 PROJ-03: Fleet Report Window feature implementation.
+PROJ-44: Refactored to use FleetListViewModel, ColumnManager, and image scaling utilities.
 """
 import pygame
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UIVerticalScrollBar, UIImage
+from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIVerticalScrollBar, UIImage
 
 from game.core.config import UIConfig
-from game.core.logger import log_info
-from game.ui.screens.fleet_report_filters import calculate_fleet_stats, filter_ships, sort_ships
+from game.ui.screens.fleet_report_filters import calculate_fleet_stats
+from game.ui.screens.fleet_report_view_model import FleetListViewModel
+from game.ui.screens.column_manager import ColumnManager
+from game.ui.utils import scale_image_by_visible_portion, scale_image_to_fit
 from game.ui.panels.ship_detail_panel import ShipDetailPanel
 from game.ui.assets import ShipThemeManager
 
@@ -47,33 +50,12 @@ class FleetReportWindow(UIWindow):
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
-        # --- State ---
+        # --- State Managers ---
+        self.view_model = FleetListViewModel(fleet.ships)
+        self.column_manager = ColumnManager()
+
+        # Selection state
         self.selected_ship = None
-        self.filtered_ships = []
-
-        # Filter State
-        self.filter_show_damaged = True
-        self.filter_show_undamaged = True
-        self.filter_show_derelict = True
-        self.filter_show_destroyed = False
-        self.filter_show_warp_capable = True
-        self.filter_show_not_warp_capable = True
-
-        # Sort State
-        self.sort_column_id = 'serial'
-        self.sort_descending = False
-
-        # Column Configuration
-        # ID, Width, Title, Visible
-        self.columns = [
-            {'id': 'portrait', 'width': 44, 'title': '', 'type': 'image', 'visible': True},
-            {'id': 'topdown', 'width': 60, 'title': '', 'type': 'image', 'visible': True},  # Larger for top-down view
-            {'id': 'serial', 'width': 130, 'title': 'Serial ID', 'visible': True},
-            {'id': 'design', 'width': 100, 'title': 'Design', 'visible': True},
-            {'id': 'name', 'width': 120, 'title': 'Name', 'visible': True},
-            {'id': 'hp_pct', 'width': 80, 'title': 'HP %', 'visible': True},
-            {'id': 'status', 'width': 100, 'title': 'Status', 'visible': True},
-        ]
 
         # Image cache for ship portraits and top-down sprites
         self._image_cache = {}  # {(ship_id, image_type): pygame.Surface}
@@ -259,13 +241,14 @@ class FleetReportWindow(UIWindow):
         # Status filter checkboxes
         self.filter_buttons = {}
         filter_configs = [
-            ('damaged', 'Damaged', self.filter_show_damaged),
-            ('undamaged', 'Undamaged', self.filter_show_undamaged),
-            ('derelict', 'Derelict', self.filter_show_derelict),
-            ('destroyed', 'Destroyed', self.filter_show_destroyed),
+            ('damaged', 'Damaged'),
+            ('undamaged', 'Undamaged'),
+            ('derelict', 'Derelict'),
+            ('destroyed', 'Destroyed'),
         ]
 
-        for filter_id, label, is_on in filter_configs:
+        for filter_id, label in filter_configs:
+            is_on = self.view_model.is_filter_enabled(filter_id)
             btn_text = f"[{label}]" if is_on else label
             btn = UIButton(
                 relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
@@ -291,11 +274,12 @@ class FleetReportWindow(UIWindow):
         y += 28
 
         warp_filter_configs = [
-            ('warp_capable', 'Warp Capable', self.filter_show_warp_capable),
-            ('not_warp_capable', 'Not Warp Capable', self.filter_show_not_warp_capable),
+            ('warp_capable', 'Warp Capable'),
+            ('not_warp_capable', 'Not Warp Capable'),
         ]
 
-        for filter_id, label, is_on in warp_filter_configs:
+        for filter_id, label in warp_filter_configs:
+            is_on = self.view_model.is_filter_enabled(filter_id)
             btn_text = f"[{label}]" if is_on else label
             btn = UIButton(
                 relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
@@ -322,14 +306,9 @@ class FleetReportWindow(UIWindow):
 
         # Column visibility toggles
         self.column_buttons = {}
-        for col in self.columns:
+        for col in self.column_manager.get_toggleable_columns():
             col_id = col['id']
             title = col['title'] or col_id
-
-            # Skip image columns (always visible, no title)
-            if col.get('type') == 'image':
-                continue
-
             is_visible = col.get('visible', True)
             btn_text = f"[x] {title}" if is_visible else f"[ ] {title}"
             btn = UIButton(
@@ -402,7 +381,8 @@ class FleetReportWindow(UIWindow):
         self.header_widgets = []
 
         # Get visible columns with their indices
-        visible_cols = [(i, col) for i, col in enumerate(self.columns) if col.get('visible', True)]
+        visible_cols = [(i, col) for i, col in enumerate(self.column_manager.get_columns())
+                        if col.get('visible', True)]
         arrow_w = 20
 
         x = 0
@@ -424,8 +404,8 @@ class FleetReportWindow(UIWindow):
 
             # Sort indicator
             sort_indicator = ""
-            if col['id'] == self.sort_column_id:
-                sort_indicator = " ▼" if self.sort_descending else " ▲"
+            if col['id'] == self.view_model.sort_column_id:
+                sort_indicator = " ▼" if self.view_model.sort_descending else " ▲"
 
             # Title button (sortable)
             btn = UIButton(
@@ -454,12 +434,7 @@ class FleetReportWindow(UIWindow):
 
     def _swap_columns(self, col, direction):
         """Swap a column with its neighbor in the given direction."""
-        idx = self.columns.index(col)
-        new_idx = idx + direction
-
-        if 0 <= new_idx < len(self.columns):
-            # Swap in the columns list
-            self.columns[idx], self.columns[new_idx] = self.columns[new_idx], self.columns[idx]
+        if self.column_manager.swap_column(col, direction):
             # Rebuild UI
             self._rebuild_headers()
             self._rebuild_row_pool()
@@ -492,14 +467,14 @@ class FleetReportWindow(UIWindow):
             # Create widgets for each visible column
             widgets = []
             x = 0
-            for col in self.columns:
+            for col in self.column_manager.get_columns():
                 if not col.get('visible', True):
                     continue
 
                 width = col['width']
                 col_id = col['id']
 
-                if col.get('type') == 'image':
+                if self.column_manager.is_image_column(col):
                     # Use UIImage for portrait/topdown columns
                     # Create placeholder surface
                     placeholder = pygame.Surface((width - 4, self.row_height - 4))
@@ -529,13 +504,15 @@ class FleetReportWindow(UIWindow):
 
     def _update_visible_rows(self):
         """Update visible rows based on scroll position."""
-        if not self.filtered_ships:
+        filtered_ships = self.view_model.get_filtered_ships()
+
+        if not filtered_ships:
             # Hide all rows
             for row in self.row_pool:
                 row['bg'].hide()
             return
 
-        total_height = len(self.filtered_ships) * self.row_height
+        total_height = len(filtered_ships) * self.row_height
         panel_rect = self.list_view_panel.get_relative_rect()
 
         # Calculate scroll offset
@@ -549,8 +526,8 @@ class FleetReportWindow(UIWindow):
         for i, row in enumerate(self.row_pool):
             ship_index = first_visible + i
 
-            if 0 <= ship_index < len(self.filtered_ships):
-                ship = self.filtered_ships[ship_index]
+            if 0 <= ship_index < len(filtered_ships):
+                ship = filtered_ships[ship_index]
                 row['ship_index'] = ship_index
 
                 # Position the row
@@ -567,7 +544,7 @@ class FleetReportWindow(UIWindow):
     def _update_row_data(self, row, ship):
         """Update a single row with ship data."""
         widget_idx = 0
-        for col in self.columns:
+        for col in self.column_manager.get_columns():
             if not col.get('visible', True):
                 continue
 
@@ -577,14 +554,14 @@ class FleetReportWindow(UIWindow):
             widget = row['widgets'][widget_idx]
             col_id = col['id']
 
-            if col.get('type') == 'image':
+            if self.column_manager.is_image_column(col):
                 # Handle image columns
                 image_surf = self._get_ship_image(ship, col_id)
                 if image_surf and hasattr(widget, 'set_image'):
                     widget.set_image(image_surf)
             else:
-                # Handle text columns
-                value = self._get_column_value(ship, col)
+                # Handle text columns using ColumnManager
+                value = self.column_manager.get_column_value(ship, col)
                 if hasattr(widget, 'set_text'):
                     widget.set_text(str(value))
 
@@ -607,183 +584,51 @@ class FleetReportWindow(UIWindow):
         target_height = self.row_height - 4  # Match portrait height
 
         if image_type == 'portrait':
-            target_size = (40, target_height)  # Standard portrait size
-            raw_surf = theme_mgr.get_portrait_image(theme_id, ship_class)
-            use_visible_sizing = False
-        elif image_type == 'topdown':
-            target_size = (80, target_height)  # Wider for top-down view
-            raw_surf = theme_mgr.get_image(theme_id, ship_class)
-            use_visible_sizing = True  # Size based on visible portion
-        else:
             target_size = (40, target_height)
-            raw_surf = None
-            use_visible_sizing = False
-
-        if raw_surf:
-            if use_visible_sizing:
-                # For top-down images, size based on visible (non-transparent) portion
-                result = self._scale_by_visible_portion(raw_surf, target_height)
+            raw_surf = theme_mgr.get_portrait_image(theme_id, ship_class)
+            # Use standard fit scaling for portraits
+            if raw_surf:
+                result = scale_image_to_fit(raw_surf, target_size)
             else:
-                # For portraits, scale normally
-                w, h = raw_surf.get_size()
-                scale = min(target_size[0] / w, target_size[1] / h)
-                new_w, new_h = int(w * scale), int(h * scale)
-                scaled = pygame.transform.smoothscale(raw_surf, (new_w, new_h))
-
-                # Center on target surface
-                result = pygame.Surface(target_size, pygame.SRCALPHA)
-                result.fill((30, 30, 30))
-                x_off = (target_size[0] - new_w) // 2
-                y_off = (target_size[1] - new_h) // 2
-                result.blit(scaled, (x_off, y_off))
+                result = self._create_placeholder(target_size)
+        elif image_type == 'topdown':
+            raw_surf = theme_mgr.get_image(theme_id, ship_class)
+            # Use visible-portion scaling for top-down images
+            if raw_surf:
+                result = scale_image_by_visible_portion(raw_surf, target_height)
+            else:
+                result = self._create_placeholder((80, target_height))
         else:
-            # Create placeholder
-            result = pygame.Surface(target_size)
-            result.fill((50, 50, 50))
-            # Draw a simple ship silhouette placeholder
-            pygame.draw.rect(result, (80, 80, 80), (5, 10, 30, 20), 1)
+            result = self._create_placeholder((40, target_height))
 
         # Cache the result
         self._image_cache[cache_key] = result
         return result
 
-    def _scale_by_visible_portion(self, surface: pygame.Surface, target_height: int) -> pygame.Surface:
-        """
-        Scale an image based on its visible (non-transparent) portion.
-
-        The visible height will match target_height, and the entire image scales
-        proportionally to maintain the original aspect ratio.
-
-        Args:
-            surface: Source surface with alpha channel
-            target_height: Target height for the visible portion
-
-        Returns:
-            Scaled surface maintaining original aspect ratio
-        """
-        # Find visible bounding box
-        bbox = self._get_visible_bounding_box(surface)
-        if bbox is None:
-            # Fully transparent - return placeholder
-            placeholder = pygame.Surface((40, target_height), pygame.SRCALPHA)
-            placeholder.fill((50, 50, 50))
-            return placeholder
-
-        min_x, min_y, max_x, max_y = bbox
-        visible_width = max_x - min_x
-        visible_height = max_y - min_y
-
-        if visible_height <= 0 or visible_width <= 0:
-            placeholder = pygame.Surface((40, target_height), pygame.SRCALPHA)
-            placeholder.fill((50, 50, 50))
-            return placeholder
-
-        # Calculate scale to make visible height match target_height
-        scale = target_height / visible_height
-        new_width = int(surface.get_width() * scale)
-        new_height = int(surface.get_height() * scale)
-
-        # Scale the full image (maintains original aspect ratio)
-        scaled_img = pygame.transform.smoothscale(surface, (new_width, new_height))
-
-        return scaled_img
-
-    def _get_visible_bounding_box(self, surface: pygame.Surface):
-        """
-        Find the bounding box of the visible (non-transparent) area of a surface.
-
-        Args:
-            surface: pygame.Surface with alpha channel
-
-        Returns:
-            Tuple (min_x, min_y, max_x, max_y) or None if fully transparent
-        """
-        width = surface.get_width()
-        height = surface.get_height()
-
-        min_x, min_y = width, height
-        max_x, max_y = 0, 0
-
-        # Check each pixel for non-transparent content
-        for y in range(height):
-            for x in range(width):
-                pixel = surface.get_at((x, y))
-                if pixel[3] > 10:  # Alpha > 10 (not fully transparent)
-                    min_x = min(min_x, x)
-                    min_y = min(min_y, y)
-                    max_x = max(max_x, x)
-                    max_y = max(max_y, y)
-
-        if max_x <= min_x or max_y <= min_y:
-            return None
-
-        return (min_x, min_y, max_x + 1, max_y + 1)
-
-    def _get_column_value(self, ship, col):
-        """Get the display value for a column."""
-        col_id = col['id']
-
-        if col_id in ('portrait', 'topdown'):
-            return ""  # Images handled separately
-        elif col_id == 'serial':
-            display_id = ship.get_display_id()
-            return display_id if display_id else ship.instance_id[:8]
-        elif col_id == 'design':
-            return ship.design_data.get('name', ship.design_id)
-        elif col_id == 'name':
-            return ship.name
-        elif col_id == 'hp_pct':
-            return f"{ship.get_hp_percentage() * 100:.0f}%"
-        elif col_id == 'status':
-            if ship.is_destroyed:
-                return "DESTROYED"
-            elif ship.is_derelict:
-                return "DERELICT"
-            elif ship.is_damaged():
-                return "DAMAGED"
-            else:
-                return "OK"
-        else:
-            return ""
+    def _create_placeholder(self, size):
+        """Create a placeholder surface for missing images."""
+        result = pygame.Surface(size)
+        result.fill((50, 50, 50))
+        pygame.draw.rect(result, (80, 80, 80), (5, 10, 30, 20), 1)
+        return result
 
     def refresh_list(self):
         """Refresh the ship list with current fleet data."""
-        # Get ships from fleet
-        ships = self.fleet.ships
-
-        # Apply filters
-        self.filtered_ships = self._apply_filters(ships)
-
-        # Apply sort
-        self.filtered_ships = self._apply_sort(self.filtered_ships)
+        # Update view model with current fleet ships
+        self.view_model.update_ships(self.fleet.ships)
 
         # Update summary
         self._update_summary()
 
         # Update scroll bar
-        total_height = len(self.filtered_ships) * self.row_height
+        filtered_ships = self.view_model.get_filtered_ships()
+        total_height = len(filtered_ships) * self.row_height
         panel_rect = self.list_view_panel.get_relative_rect()
         visible_pct = min(1.0, panel_rect.height / max(1, total_height))
         self.scroll_bar.set_visible_percentage(visible_pct)
 
         # Update visible rows
         self._update_visible_rows()
-
-    def _apply_filters(self, ships):
-        """Apply current filter state to ship list using filter_ships."""
-        filter_state = {
-            'show_damaged': self.filter_show_damaged,
-            'show_undamaged': self.filter_show_undamaged,
-            'show_derelict': self.filter_show_derelict,
-            'show_destroyed': self.filter_show_destroyed,
-            'show_warp_capable': self.filter_show_warp_capable,
-            'show_not_warp_capable': self.filter_show_not_warp_capable,
-        }
-        return filter_ships(ships, filter_state)
-
-    def _apply_sort(self, ships):
-        """Apply current sort to ship list using sort_ships."""
-        return sort_ships(ships, self.sort_column_id, self.sort_descending)
 
     def _update_summary(self):
         """Update the fleet summary labels using calculate_fleet_stats."""
@@ -892,6 +737,7 @@ class FleetReportWindow(UIWindow):
             return False
 
         # Find which row was clicked
+        filtered_ships = self.view_model.get_filtered_ships()
         for row in self.row_pool:
             if not row['bg'].visible:
                 continue
@@ -899,8 +745,8 @@ class FleetReportWindow(UIWindow):
             row_rect = row['bg'].get_abs_rect()
             if row_rect.collidepoint(pos):
                 ship_index = row.get('ship_index', -1)
-                if 0 <= ship_index < len(self.filtered_ships):
-                    ship = self.filtered_ships[ship_index]
+                if 0 <= ship_index < len(filtered_ships):
+                    ship = filtered_ships[ship_index]
                     self.select_ship(ship)
                     return True
 
@@ -908,14 +754,7 @@ class FleetReportWindow(UIWindow):
 
     def _handle_header_click(self, col_id):
         """Handle clicking on a column header for sorting."""
-        if self.sort_column_id == col_id:
-            # Toggle direction
-            self.sort_descending = not self.sort_descending
-        else:
-            # New column, default to ascending
-            self.sort_column_id = col_id
-            self.sort_descending = False
-
+        self.view_model.set_sort(col_id)
         self._rebuild_headers()
         self.refresh_list()
 
@@ -952,43 +791,15 @@ class FleetReportWindow(UIWindow):
                     elif hasattr(el, 'sort_col_ref'):
                         # Sort Column
                         col = el.sort_col_ref
-                        if self.sort_column_id == col['id']:
-                            self.sort_descending = not self.sort_descending
-                        else:
-                            self.sort_column_id = col['id']
-                            self.sort_descending = False
+                        self.view_model.set_sort(col['id'])
                         self._rebuild_headers()
                         self.refresh_list()
 
     def _toggle_filter(self, filter_id: str):
         """Toggle a filter state and update UI."""
-        # Toggle the state
-        if filter_id == 'damaged':
-            self.filter_show_damaged = not self.filter_show_damaged
-            new_state = self.filter_show_damaged
-            label = 'Damaged'
-        elif filter_id == 'undamaged':
-            self.filter_show_undamaged = not self.filter_show_undamaged
-            new_state = self.filter_show_undamaged
-            label = 'Undamaged'
-        elif filter_id == 'derelict':
-            self.filter_show_derelict = not self.filter_show_derelict
-            new_state = self.filter_show_derelict
-            label = 'Derelict'
-        elif filter_id == 'destroyed':
-            self.filter_show_destroyed = not self.filter_show_destroyed
-            new_state = self.filter_show_destroyed
-            label = 'Destroyed'
-        elif filter_id == 'warp_capable':
-            self.filter_show_warp_capable = not self.filter_show_warp_capable
-            new_state = self.filter_show_warp_capable
-            label = 'Warp Capable'
-        elif filter_id == 'not_warp_capable':
-            self.filter_show_not_warp_capable = not self.filter_show_not_warp_capable
-            new_state = self.filter_show_not_warp_capable
-            label = 'Not Warp Capable'
-        else:
-            return
+        # Toggle the state via view model
+        new_state = self.view_model.toggle_filter(filter_id)
+        label = self.view_model.get_filter_label(filter_id)
 
         # Update button appearance
         btn = self.filter_buttons[filter_id]
@@ -1007,9 +818,8 @@ class FleetReportWindow(UIWindow):
         btn = self.column_buttons[col_id]
         col = btn.col_ref
 
-        # Toggle visibility
-        col['visible'] = not col['visible']
-        is_visible = col['visible']
+        # Toggle visibility via ColumnManager
+        is_visible = self.column_manager.toggle_column(col_id)
         title = col['title'] or col_id
 
         # Update button text
