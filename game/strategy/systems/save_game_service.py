@@ -11,7 +11,6 @@ Save Format Version 2.0.0:
 """
 import os
 import shutil
-import tempfile
 import traceback
 from datetime import datetime
 from typing import Optional, Tuple, List
@@ -71,11 +70,6 @@ class SaveGameService:
                 empire_designs_folder = os.path.join(designs_folder, f"empire_{empire.id}")
                 os.makedirs(empire_designs_folder, exist_ok=True)
 
-            # BUG-29 FIX: Do NOT migrate designs from temp folder
-            # New games should start with empty design libraries
-            # The temp folder migration was causing designs from other games to appear
-            # SaveGameService._migrate_temp_designs(game_session, designs_folder)
-
             # Update game session's save_path
             game_session.save_path = save_path
 
@@ -109,41 +103,6 @@ class SaveGameService:
         except Exception as e:
             log_error(f"SaveGameService: Save failed - {e}\n{traceback.format_exc()}")
             return False, f"Save failed: {str(e)}", None
-
-    @staticmethod
-    def _migrate_temp_designs(game_session, target_designs_folder: str):
-        """
-        Migrate ship designs from temp folder to save folder.
-
-        Migrates to per-empire subfolders (designs/empire_N/).
-        """
-        try:
-            temp_base = os.path.join(tempfile.gettempdir(), "starship_battles_temp_designs")
-
-            # Migrate all empire designs
-            for empire in game_session.empires:
-                empire_id = empire.id
-                temp_empire_folder = os.path.join(temp_base, f"empire_{empire_id}")
-                target_empire_folder = os.path.join(target_designs_folder, f"empire_{empire_id}")
-
-                os.makedirs(target_empire_folder, exist_ok=True)
-
-                if os.path.exists(temp_empire_folder):
-                    design_files = [f for f in os.listdir(temp_empire_folder) if f.endswith('.json')]
-
-                    if design_files:
-                        log_info(f"Migrating {len(design_files)} designs for empire {empire_id}")
-
-                        for filename in design_files:
-                            src_path = os.path.join(temp_empire_folder, filename)
-                            dst_path = os.path.join(target_empire_folder, filename)
-
-                            # Copy design file (don't move, in case save fails)
-                            shutil.copy2(src_path, dst_path)
-                            log_debug(f"  Migrated design: {filename}")
-
-        except Exception as e:
-            log_error(f"Failed to migrate temp designs: {e}")
 
     @staticmethod
     def load_game(save_path: str, turn_number: Optional[int] = None) -> Tuple[Optional[object], str]:

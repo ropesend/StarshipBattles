@@ -76,6 +76,15 @@ This is well-designed DTO, not legacy code.
 
 ---
 
+### LPH-020: _ProfilerProxy
+**Status:** KEEP
+**Reason:** Thread-safe lazy initialization pattern. Already documented above in "Patterns Explicitly KEPT".
+
+---
+
 ## Decisions Made During Implementation
 
-(Add entries here as implementation proceeds)
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-01-29 | Phase 1 cleanup complete | Removed FleetMovementSimulator (331 LOC), GameState aliases, dead _migrate_temp_designs method |
+| 2026-01-29 | V1 modifier format detection kept | The detection code in modifier_schema.py is validation, not handling - returns False for V1 |

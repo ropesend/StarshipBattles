@@ -46,16 +46,6 @@ BG_COLOR = (10, 10, 20)
 from game.core.constants import GameState
 from game.core.input_handler import InputHandler
 
-# Scene States (Aliased for compatibility)
-MENU = GameState.MENU
-BUILDER = GameState.BUILDER
-BATTLE = GameState.BATTLE
-BATTLE_SETUP = GameState.BATTLE_SETUP
-FORMATION = GameState.FORMATION
-TEST_LAB = GameState.TEST_LAB
-STRATEGY = GameState.STRATEGY
-RACE_SETUP = GameState.RACE_SETUP
-RESEARCH_TREE = GameState.RESEARCH_TREE
 
 # Initialize fonts
 pygame.font.init()
@@ -103,7 +93,7 @@ class Game:
         self.showing_load_menu = False
         self.showing_race_setup = False
         self.race_setup_window = None
-        self.state = MENU
+        self.state = GameState.MENU
 
         # Load game data
         load_components(Paths.COMPONENTS_FILE)
@@ -179,7 +169,7 @@ class Game:
             return_to: State to return to (MENU or STRATEGY)
             context: Optional WorkshopContext for integrated mode
         """
-        self.state = BUILDER
+        self.state = GameState.BUILDER
         self.builder_return_state = return_to
         # Use provided context or create default standalone context
         if context is None:
@@ -193,19 +183,19 @@ class Game:
         if hasattr(self, 'builder_scene') and hasattr(self.builder_scene, 'cleanup'):
             self.builder_scene.cleanup()
 
-        if self.builder_return_state == STRATEGY:
-            self.state = STRATEGY
+        if self.builder_return_state == GameState.STRATEGY:
+            self.state = GameState.STRATEGY
             if hasattr(self.strategy_scene, 'handle_resize'):
                 self.strategy_scene.handle_resize(WIDTH, HEIGHT)
         else:
-            self.state = MENU
+            self.state = GameState.MENU
         self.builder_return_state = None
 
     @profile_action("App: Start Battle Setup")
     def start_battle_setup(self, preserve_teams=False):
         """Enter battle setup screen."""
-        self.state = BATTLE_SETUP
-        self.return_state = BATTLE_SETUP
+        self.state = GameState.BATTLE_SETUP
+        self.return_state = GameState.BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
 
     def start_strategy_layer(self):
@@ -257,7 +247,7 @@ class Game:
 
             # Create strategy scene with new session
             self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
-            self.state = STRATEGY
+            self.state = GameState.STRATEGY
             self.showing_new_game_setup = False
         else:
             log_error(f"Failed to create initial save: {message}")
@@ -298,7 +288,7 @@ class Game:
             QuickstartBuilder.copy_quickstart_designs(save_path, [0])
 
             self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
-            self.state = STRATEGY
+            self.state = GameState.STRATEGY
         else:
             log_error(f"Quickstart 1P failed: {message}")
 
@@ -323,7 +313,7 @@ class Game:
             QuickstartBuilder.copy_quickstart_designs(save_path, [0, 1])
 
             self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=session)
-            self.state = STRATEGY
+            self.state = GameState.STRATEGY
         else:
             log_error(f"Quickstart 2P failed: {message}")
 
@@ -370,7 +360,7 @@ class Game:
         if game_session:
             # Create new strategy scene with loaded session
             self.strategy_scene = StrategyScene(WIDTH, HEIGHT, session=game_session)
-            self.state = STRATEGY
+            self.state = GameState.STRATEGY
             self.showing_load_menu = False
             log_info(f"Game loaded successfully: {message}")
         else:
@@ -394,24 +384,24 @@ class Game:
     @profile_action("App: Start Formation Editor")
     def start_formation_editor(self):
         """Enter formation editor."""
-        self.state = FORMATION
+        self.state = GameState.FORMATION
         self.formation_scene.handle_resize(WIDTH, HEIGHT)
 
     def on_formation_return(self):
         """Return from formation editor."""
-        self.state = MENU
+        self.state = GameState.MENU
 
     def start_test_lab(self):
         """Enter Combat Lab."""
-        self.state = TEST_LAB
-        self.return_state = TEST_LAB
+        self.state = GameState.TEST_LAB
+        self.return_state = GameState.TEST_LAB
 
     def start_research_tree(self):
         """Enter Research Tree sandbox."""
         from game.research.ui.research_scene import ResearchTreeScene
 
         log_info("Starting Research Tree sandbox")
-        self.state = RESEARCH_TREE
+        self.state = GameState.RESEARCH_TREE
         self.research_tree_scene = ResearchTreeScene(
             WIDTH, HEIGHT,
             on_close_callback=self.on_research_tree_return
@@ -419,7 +409,7 @@ class Game:
 
     def on_research_tree_return(self):
         """Return from Research Tree to menu."""
-        self.state = MENU
+        self.state = GameState.MENU
         self.research_tree_scene = None
 
     def start_race_setup(self):
@@ -468,7 +458,7 @@ class Game:
 
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
-        self.state = BATTLE
+        self.state = GameState.BATTLE
         if self.battle_scene.screen_width != WIDTH or self.battle_scene.screen_height != HEIGHT:
             self.battle_scene.handle_resize(WIDTH, HEIGHT)
         self.battle_scene.start(team1_ships, team2_ships, headless=headless)
@@ -548,24 +538,24 @@ class Game:
             self.menu_ui_manager.process_events(event)
             return
 
-        if self.state == MENU:
+        if self.state == GameState.MENU:
             self.menu_ui_manager.process_events(event)
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 callback = self._menu_button_callbacks.get(event.ui_element)
                 if callback:
                     callback()
                     return  # Event consumed
-        elif self.state == BUILDER:
+        elif self.state == GameState.BUILDER:
             self.builder_scene.handle_event(event)
-        elif self.state == BATTLE_SETUP:
+        elif self.state == GameState.BATTLE_SETUP:
             self.battle_setup.update([event], self.screen.get_size())
-        elif self.state == FORMATION:
+        elif self.state == GameState.FORMATION:
             self.formation_scene.handle_event(event)
-        elif self.state == STRATEGY:
+        elif self.state == GameState.STRATEGY:
             self.strategy_scene.handle_event(event)
-        elif self.state == TEST_LAB:
+        elif self.state == GameState.TEST_LAB:
             self.test_lab_scene.handle_input([event])
-        elif self.state == RESEARCH_TREE:
+        elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
                 self.research_tree_scene.handle_event(event)
 
@@ -578,20 +568,20 @@ class Game:
         # Update menu UIManager resolution
         self.menu_ui_manager.set_window_resolution((WIDTH, HEIGHT))
 
-        if self.state == MENU:
+        if self.state == GameState.MENU:
             self.update_menu_buttons()
-        elif self.state == BATTLE:
+        elif self.state == GameState.BATTLE:
             self.battle_scene.handle_resize(w, h)
-        elif self.state == BUILDER:
+        elif self.state == GameState.BUILDER:
             if hasattr(self.builder_scene, 'handle_resize'):
                 self.builder_scene.handle_resize(w, h)
-        elif self.state == FORMATION:
+        elif self.state == GameState.FORMATION:
             self.formation_scene.handle_resize(w, h)
-        elif self.state == TEST_LAB:
+        elif self.state == GameState.TEST_LAB:
             self.test_lab_scene._create_ui()
-        elif self.state == STRATEGY:
+        elif self.state == GameState.STRATEGY:
             self.strategy_scene.handle_resize(w, h)
-        elif self.state == RESEARCH_TREE:
+        elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
                 self.research_tree_scene.handle_resize(w, h)
 
@@ -603,10 +593,10 @@ class Game:
         """Handle mouse click events."""
         mx, my = event.pos
 
-        if self.state == BATTLE:
+        if self.state == GameState.BATTLE:
             if self.battle_scene.handle_click(mx, my, event.button, self.screen.get_size()):
                 self._handle_battle_actions()
-        elif self.state == STRATEGY:
+        elif self.state == GameState.STRATEGY:
             self.strategy_scene.handle_click(mx, my, event.button)
 
     def _handle_battle_actions(self):
@@ -620,36 +610,36 @@ class Game:
         elif self.battle_scene.action_return_to_setup:
             log_debug("Returning to battle setup")
             self.battle_scene.action_return_to_setup = False
-            if hasattr(self, 'return_state') and self.return_state == TEST_LAB:
+            if hasattr(self, 'return_state') and self.return_state == GameState.TEST_LAB:
                 self.start_test_lab()
             else:
                 self.start_battle_setup(preserve_teams=True)
 
     def _handle_scroll(self, event):
         """Handle mouse wheel events."""
-        if self.state == BATTLE:
+        if self.state == GameState.BATTLE:
             mx, my = pygame.mouse.get_pos()
             sw = self.screen.get_size()[0]
             if mx >= sw - self.battle_scene.stats_panel_width or mx < self.battle_scene.ui.seeker_panel.rect.width:
                 self.battle_scene.handle_scroll(event.y, self.screen.get_size()[1])
-        elif self.state == STRATEGY and hasattr(self.strategy_scene, 'handle_scroll'):
+        elif self.state == GameState.STRATEGY and hasattr(self.strategy_scene, 'handle_scroll'):
             self.strategy_scene.handle_scroll(event.y, self.screen.get_size()[1])
 
     def _update_and_draw(self, frame_time, events):
         """Update logic and draw current scene."""
-        if self.state == MENU:
+        if self.state == GameState.MENU:
             self._draw_menu()
-        elif self.state == BUILDER:
+        elif self.state == GameState.BUILDER:
             self.builder_scene.update(frame_time)
             self.builder_scene.draw(self.screen)
-        elif self.state == BATTLE_SETUP:
+        elif self.state == GameState.BATTLE_SETUP:
             self._update_battle_setup()
-        elif self.state == BATTLE:
+        elif self.state == GameState.BATTLE:
             self._update_battle(frame_time, events)
-        elif self.state == FORMATION:
+        elif self.state == GameState.FORMATION:
             self.formation_scene.update(frame_time)
             self.formation_scene.draw(self.screen)
-        elif self.state == STRATEGY:
+        elif self.state == GameState.STRATEGY:
             self.strategy_scene.update_input(frame_time, events)
             self.strategy_scene.update(frame_time)
             self.strategy_scene.draw(self.screen)
@@ -690,11 +680,11 @@ class Game:
                     # Clean up context data
                     self.strategy_scene.workshop_context_data = None
 
-                self.start_builder(return_to=STRATEGY, context=context)
-        elif self.state == TEST_LAB:
+                self.start_builder(return_to=GameState.STRATEGY, context=context)
+        elif self.state == GameState.TEST_LAB:
             self.test_lab_scene.update()
             self.test_lab_scene.draw(self.screen)
-        elif self.state == RESEARCH_TREE:
+        elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
                 self.research_tree_scene.handle_input(frame_time, events)
                 self.research_tree_scene.update(frame_time)
@@ -729,7 +719,7 @@ class Game:
             self.start_battle(team1, team2, headless=True)
         elif self.battle_setup.action_return_to_menu:
             self.battle_setup.action_return_to_menu = False
-            self.state = MENU
+            self.state = GameState.MENU
 
     def _update_battle(self, frame_time, events):
         """Update and draw battle scene."""

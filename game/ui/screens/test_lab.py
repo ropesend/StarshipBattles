@@ -6,8 +6,7 @@ import importlib
 import sys
 from pathlib import Path
 
-from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
-from game.app import MENU, BATTLE
+from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN, GameState
 from game.ui.widgets import Button
 from test_framework.runner import TestRunner
 from test_framework.scenario import CombatScenario
@@ -83,7 +82,7 @@ class TestLabScene:
         self.list_y = 100
         
     def _on_back(self):
-        self.game.state = MENU
+        self.game.state = GameState.MENU
         
         # Checking for menu_screen usage in existing code... 
         # game.app.Game doesn't have 'menu_screen' attribute visible in my read of app.py?
@@ -125,7 +124,7 @@ class TestLabScene:
                 # Start
                 
                 # So we just switch state.
-                self.game.state = BATTLE
+                self.game.state = GameState.BATTLE
                 
                 # Ensure battle scene knows it is not headless?
                 self.game.battle_scene.headless_mode = False
