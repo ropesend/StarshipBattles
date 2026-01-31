@@ -33,7 +33,12 @@ class PlanetListWindow(UIWindow):
         
         # Filter States
         self.filter_name = ""
-        self.filter_types = {'Terran': True, 'Gas': True, 'Ice': True, 'Desert': True, 'Moon': True}
+        self.filter_types = {
+            'Continental': True, 'Arid': True, 'Pelagic': True, 
+            'Magma': True, 'Cryoplanet': True, 'Barren': True, 
+            'Jovian': True, 'Ice Giant': True, 'Chthonian': True, 
+            'Ice Dwarf': True, 'Planetoid': True
+        }
         self.filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
 
         # Compute dynamic filter ranges from actual planet data
@@ -270,7 +275,10 @@ class PlanetListWindow(UIWindow):
         y_off += 30
         
         # Grid of checkboxes
-        types = ['Terran', 'Gas', 'Ice', 'Desert', 'Moon']
+        types = [
+            'Continental', 'Arid', 'Pelagic', 'Magma', 'Cryoplanet', 
+            'Barren', 'Jovian', 'Ice Giant', 'Chthonian', 'Ice Dwarf', 'Planetoid'
+        ]
         self.ui_filters['types'] = {}
         
         x_start = 10

@@ -8,13 +8,17 @@ class PlanetType(Enum):
     Broad classification of planetary bodies.
     Derived from physical properties.
     """
-    GAS_GIANT = auto()
-    ICE_GIANT = auto()
-    TERRESTRIAL = auto() # Earth-like, Mars-like, Venus-like
-    BARREN = auto() # Moon-like, Mercury-like
-    ICE_WORLD = auto() # Europa, Pluto
-    LAVA = auto() # Hot, molten surface
-    ASTEROID = auto() # Small bodies
+    CONTINENTAL = auto() # Earth-like
+    ARID = auto()        # Desert
+    PELAGIC = auto()     # Ocean World
+    MAGMA = auto()       # Volcanic / Lava
+    CRYOPLANET = auto()  # Ice Surface
+    BARREN = auto()      # Rock / Scorched
+    JOVIAN = auto()      # Gas Giant
+    ICE_GIANT = auto()   # Uranus/Neptune type
+    CHTHONIAN = auto()   # Stripped Giant Core
+    ICE_DWARF = auto()   # Pluto type
+    PLANETOID = auto()   # Ceres / Large Asteroid
 
 @dataclass
 class PlanetaryFacility:

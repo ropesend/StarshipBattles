@@ -283,29 +283,73 @@ class PlanetGenerator:
         """
         Determine planet type based on physical properties.
         """
-        p_atm = pressure / ATM_TO_PA
-
-        if mass > MASS_NEPTUNE * 0.8:
-            return PlanetType.GAS_GIANT
-        if mass > MASS_EARTH * 8:
+        # Gas Giants & Ice Giants (> 10 Earth Masses approx)
+        if mass > 6.0e24:
+            # Chthonian: Large stripped core. High Temp OR Low Pressure (stripped)
+            # Relaxed: Mass > Super Earth, Hot, Low Pressure relative to mass
+            if temp > 600 and pressure < 10000:
+                return PlanetType.CHTHONIAN
+            
+            if mass > 1.0e26:
+                return PlanetType.JOVIAN
+                
             return PlanetType.ICE_GIANT
 
-        if p_atm < 0.01:
+        # Dwarf Planets & Planetoids (< Mercury Mass approx)
+        if mass < 2.0e23:
+            # If it's cold, it's an Ice Dwarf (Pluto/Eris)
+            if temp < 170:
+                return PlanetType.ICE_DWARF
+            # If it's hot/warm, it's a rocky Planetoid (Ceres/Vesta)
+            return PlanetType.PLANETOID
+
+
+        # Terrestrial / Rocky range (Mercury sized to Super-Earth)
+        
+        # 1. Extreme Heat / Magma
+        if temp > 700 or (temp > 350 and activity > 0.7):
+            return PlanetType.MAGMA
+
+        # 2. Barren / Dead Worlds
+        # Low pressure (vacuum)
+        if pressure < 500:
+            # If it's cold, it could still be barren rock if no ice, 
+            # but usually cold + no atm = ice surface (unless stripped).
+            # Let's say if temp < 200 it's Cryo (Ice covered rock), else Barren (Rock)
+            if temp < 200:
+                return PlanetType.CRYOPLANET
             return PlanetType.BARREN
 
-        if temp > 1000 or (temp > 400 and activity > 0.8):
-            return PlanetType.LAVA
+        # 3. Water / Ice
+        
+        # Frozen?
+        if temp < 255:
+            return PlanetType.CRYOPLANET
+            
+        # Liquid Water Heavy?
+        if water > 0.85:
+            return PlanetType.PELAGIC
+            
+        # Arid? (Low water OR High Pressure Greenhouse Desert)
+        if water < 0.20:
+             # If pressure is HUGE and Hot -> Venus-like (Arid/Barren distinction?)
+             # Venus is arguably "Volcanic/Barren" or "Super-Arid". 
+             # Let's map Venus (High Pressure, Hot) to Arid if not Magma.
+             return PlanetType.ARID
 
-        if 'H2O' in atmosphere and water > 0 and 260 < temp < 340:
-            return PlanetType.TERRESTRIAL
+        # Continental
+        # Moderate water, habitable-ish zone temps (liquids exist)
+        if 255 <= temp <= 330 and pressure > 5000:
+             return PlanetType.CONTINENTAL
+             
+        # Catch-all for habitable-adjacent
+        if temp < 350 and water > 0.1:
+             return PlanetType.CONTINENTAL
 
-        if water > 0.5 and temp < 250:
-            return PlanetType.ICE_WORLD
+        if temp >= 350:
+             return PlanetType.ARID
 
-        if temp > 700:
-            return PlanetType.LAVA
-
-        return PlanetType.TERRESTRIAL
+        return PlanetType.BARREN
 
     def _generate_resources(self, mass: float) -> dict:
         """
