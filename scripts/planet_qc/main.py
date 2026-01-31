@@ -16,6 +16,7 @@ NEEDS_REPRO_DIR = Path(r"C:\Developer\StarshipBattles\assets\Images\Stellar Obje
 STATUS_FILE = Path(r"C:\Developer\StarshipBattles\scripts\planet_qc\qc_status.json")
 
 CLASSIFICATIONS = {
+    "good": Path(r"C:\Developer\StarshipBattles\assets\Images\Stellar Objects\Planets\Planets_V3"),
     "repro": NEEDS_REPRO_DIR,
     "jupiter": Path(r"C:\Developer\StarshipBattles\assets\Images\Stellar Objects\Planets\Jupiter"),
     "neptune": Path(r"C:\Developer\StarshipBattles\assets\Images\Stellar Objects\Planets\Neptune"),

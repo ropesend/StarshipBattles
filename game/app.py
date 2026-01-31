@@ -28,6 +28,7 @@ from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from Tools.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab_screen import TestLabScreen
+from game.ui.screens.galaxy_test_screen import GalaxyTestScreen
 from game.core.profiling import PROFILER, profile_action
 from game.battle_coordinator import (
     update_battle_headless, update_battle_visual,
@@ -150,6 +151,7 @@ class Game:
             ("Formation Editor", self.start_formation_editor),
             ("Combat Lab", self.start_test_lab),
             ("Research Tree", self.start_research_tree),
+            ("Galaxy Test", self.start_galaxy_test),
         ]
 
         for i, (text, callback) in enumerate(button_data):
@@ -394,6 +396,20 @@ class Game:
         self.state = GameState.MENU
         self.research_tree_scene = None
 
+    def start_galaxy_test(self):
+        """Enter Galaxy Test screen."""
+        log_info("Starting Galaxy Test screen")
+        self.state = GameState.GALAXY_TEST
+        self.galaxy_test_scene = GalaxyTestScreen(
+            WIDTH, HEIGHT,
+            on_close_callback=self.on_galaxy_test_return
+        )
+
+    def on_galaxy_test_return(self):
+        """Return from Galaxy Test to menu."""
+        self.state = GameState.MENU
+        self.galaxy_test_scene = None
+
     def start_race_setup(self):
         """Open race setup wizard."""
         import pygame_gui
@@ -533,6 +549,9 @@ class Game:
         elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
                 self.research_tree_scene.handle_event(event)
+        elif self.state == GameState.GALAXY_TEST:
+            if hasattr(self, 'galaxy_test_scene') and self.galaxy_test_scene:
+                self.galaxy_test_scene.handle_event(event)
 
     def _handle_resize(self, w, h):
         """Handle window resize."""
@@ -559,6 +578,9 @@ class Game:
         elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
                 self.research_tree_scene.handle_resize(w, h)
+        elif self.state == GameState.GALAXY_TEST:
+            if hasattr(self, 'galaxy_test_scene') and self.galaxy_test_scene:
+                self.galaxy_test_scene.handle_resize(w, h)
 
     def _handle_keydown(self, event):
         """Handle key press events."""
@@ -664,6 +686,11 @@ class Game:
                 self.research_tree_scene.handle_input(frame_time, events)
                 self.research_tree_scene.update(frame_time)
                 self.research_tree_scene.draw(self.screen)
+        elif self.state == GameState.GALAXY_TEST:
+            if hasattr(self, 'galaxy_test_scene') and self.galaxy_test_scene:
+                self.galaxy_test_scene.handle_input(frame_time, events)
+                self.galaxy_test_scene.update(frame_time)
+                self.galaxy_test_scene.draw(self.screen)
 
         if self.show_exit_dialog:
             draw_exit_dialog(self.screen, font_large, font_med)

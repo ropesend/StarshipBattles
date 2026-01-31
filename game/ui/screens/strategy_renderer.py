@@ -29,6 +29,20 @@ class StrategyRenderer:
         """
         self.scene = scene
 
+        # Cache asset manager reference
+        from game.assets.asset_manager import get_asset_manager
+        self._asset_manager = get_asset_manager()
+
+        # Cache commonly used fonts
+        self._font_cache = {}
+
+    def _get_font(self, size, bold=False):
+        """Get a cached font by size and style."""
+        key = (size, bold)
+        if key not in self._font_cache:
+            self._font_cache[key] = pygame.font.SysFont("arial", size, bold=bold)
+        return self._font_cache[key]
+
     # --- Property Accessors (delegate to scene) ---
     @property
     def camera(self):
@@ -211,13 +225,22 @@ class StrategyRenderer:
 
     def _draw_warp_lanes(self, screen):
         """Draw warp lane connections between systems."""
+        # Viewport culling bounds with margin
+        margin = 100
+        screen_w = self.screen_width
+        screen_h = self.screen_height
+
+        def is_on_screen(scr_pos):
+            """Check if a screen position is within the visible area."""
+            return -margin <= scr_pos.x <= screen_w + margin and -margin <= scr_pos.y <= screen_h + margin
+
         drawn_pairs = set()
         for sys in self.galaxy.systems.values():
             sx, sy = hex_to_pixel(sys.global_location, self.hex_size)
 
             for wp in sys.warp_points:
                 target_id = wp.destination_id
-                target_sys = next((s for s in self.galaxy.systems.values() if s.name == target_id), None)
+                target_sys = self.galaxy.get_system_by_name(target_id)
 
                 if target_sys:
                     reciprocal_wp = next((w for w in target_sys.warp_points if w.destination_id == sys.name), None)
@@ -232,6 +255,10 @@ class StrategyRenderer:
 
                         scr_a = self.camera.world_to_screen(world_a)
                         scr_b = self.camera.world_to_screen(world_b)
+
+                        # Viewport culling: skip if both endpoints are off-screen
+                        if not is_on_screen(scr_a) and not is_on_screen(scr_b):
+                            continue
 
                         pair_key = tuple(sorted((f"{sys.name}_{wp.location}", f"{target_sys.name}_{reciprocal_wp.location}")))
                         if pair_key in drawn_pairs:
@@ -248,6 +275,11 @@ class StrategyRenderer:
 
                         scr_a = self.camera.world_to_screen(world_a)
                         scr_b = self.camera.world_to_screen(world_b)
+
+                        # Viewport culling: skip if both endpoints are off-screen
+                        if not is_on_screen(scr_a) and not is_on_screen(scr_b):
+                            continue
+
                         pygame.draw.line(screen, (50, 50, 100), scr_a, scr_b, 1)
 
     def _draw_systems(self, screen):
@@ -299,9 +331,7 @@ class StrategyRenderer:
                     elif color[0] > 200 and color[1] > 150:
                         asset_key = 'orange'
 
-                    from game.assets.asset_manager import get_asset_manager
-                    am = get_asset_manager()
-                    star_img = am.load_image('stars', asset_key)
+                    star_img = self._asset_manager.load_image('stars', asset_key)
 
                     screen_star_r = max(3, int(star.diameter_hexes * self.hex_size * self.camera.zoom))
 
@@ -317,7 +347,7 @@ class StrategyRenderer:
 
                     if self.camera.zoom >= 0.5:
                         font_size = 12 if star == primary else 10
-                        font = pygame.font.SysFont("arial", font_size)
+                        font = self._get_font(font_size)
                         text = font.render(star.name if star != primary else sys.name, True, (200, 200, 200))
                         screen.blit(text, (star_screen_pos.x + 10, star_screen_pos.y))
 
@@ -429,9 +459,7 @@ class StrategyRenderer:
             if self.scene.selected_object == wp:
                 pygame.draw.circle(screen, (255, 255, 255), w_screen, max(12, int(12 * self.camera.zoom)), 1)
 
-            from game.assets.asset_manager import get_asset_manager
-            am = get_asset_manager()
-            img = am.get_random_from_group('warp_points', 'default', seed_id=hash(wp))
+            img = self._asset_manager.get_random_from_group('warp_points', 'default', seed_id=hash(wp))
 
             if img:
                 size = int(12 * self.camera.zoom)
@@ -452,10 +480,7 @@ class StrategyRenderer:
         elif 'desert' in p_type_name or 'hot' in p_type_name:
             cat = 'venus'
 
-        from game.assets.asset_manager import get_asset_manager
-        am = get_asset_manager()
-
-        img = am.get_random_from_group('planets', cat, seed_id=id(planet))
+        img = self._asset_manager.get_random_from_group('planets', cat, seed_id=id(planet))
         if img:
             scaled = pygame.transform.smoothscale(img, (size * 2, size * 2))
             dest = scaled.get_rect(center=(int(center_pos.x), int(center_pos.y)))
@@ -559,7 +584,7 @@ class StrategyRenderer:
         start_screen = fleet_screen_pos
         font = None
         if segments and self.camera.zoom >= 0.5:
-            font = pygame.font.SysFont("arial", 18, bold=True)
+            font = self._get_font(18, bold=True)
 
         for seg in segments:
             end_hex = seg['end']
@@ -597,7 +622,7 @@ class StrategyRenderer:
         overlay.fill((0, 0, 0, 150))
         screen.blit(overlay, (0, 0))
 
-        font = pygame.font.SysFont("arial", 48, bold=True)
+        font = self._get_font(48, bold=True)
         text = font.render("PROCESSING TURN...", True, (255, 200, 0))
         rect = text.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
         screen.blit(text, rect)

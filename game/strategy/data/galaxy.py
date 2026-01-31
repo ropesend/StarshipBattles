@@ -1,6 +1,7 @@
 import random
 import math
 from enum import Enum, auto
+from typing import List, Optional, TYPE_CHECKING
 from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
 from game.strategy.data.naming import NameRegistry
 import os
@@ -8,6 +9,9 @@ import os
 from game.strategy.data.stars import StarGenerator, Star, StarType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
+
+if TYPE_CHECKING:
+    from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
 
 # Planet and PlanetType moved to game.strategy.data.planet
 
@@ -195,44 +199,61 @@ class Galaxy:
         for planet in system.planets:
             self.register_planet(system, planet)
 
-    def generate_systems(self, count, min_dist=10):
+    def generate_systems(
+        self,
+        count: int,
+        min_dist: int = 10,
+        placement_strategy: Optional['ISystemPlacementStrategy'] = None,
+        rng: Optional[random.Random] = None
+    ) -> List['StarSystem']:
         """
-        Generate random systems ensuring minimum distance and assigning Star Types.
+        Generate star systems ensuring minimum distance and assigning Star Types.
+
+        Args:
+            count: Number of systems to generate
+            min_dist: Minimum distance between systems in hex units
+            placement_strategy: Strategy for placing systems. If None, uses
+                RandomPlacementStrategy for uniform random placement.
+            rng: Random number generator for deterministic generation.
+                If None, uses global random state.
+
+        Returns:
+            List of generated StarSystem objects
         """
-        generated = []
-        attempts = 0
-        max_attempts = count * 1000 
-        
-        while len(generated) < count and attempts < max_attempts:
-            attempts += 1
-            
-            q = random.randint(-self.radius, self.radius)
-            r1 = max(-self.radius, -q - self.radius)
-            r2 = min(self.radius, -q + self.radius)
-            r = random.randint(r1, r2)
-            
-            coord = HexCoord(q, r)
-            
-            if coord in self.systems:
+        # Import here to avoid circular dependency
+        from game.strategy.generation.placement_strategies import RandomPlacementStrategy
+
+        if placement_strategy is None:
+            placement_strategy = RandomPlacementStrategy()
+
+        generated: List[StarSystem] = []
+        max_attempts = count * 1000
+
+        for _ in range(max_attempts):
+            if len(generated) >= count:
+                break
+
+            # Use strategy to sample a valid location
+            existing_coords = set(self.systems.keys())
+            coord = placement_strategy.sample_location(
+                radius=self.radius,
+                existing_systems=existing_coords,
+                min_dist=min_dist,
+                rng=rng
+            )
+
+            if coord is None:
                 continue
-                
-            valid = True
-            for other_c in self.systems:
-                if hex_distance(coord, other_c) < min_dist:
-                    valid = False
-                    break
-            
-            if valid:
-                name = self.naming.get_system_name()
-                
-                # New Star Generation
-                stars = self.star_generator.generate_system_stars(name)
-                
-                sys = StarSystem(name, coord, stars=stars)
-                self.generate_planets(sys)
-                self.add_system(sys)
-                generated.append(sys)
-                
+
+            # Create the system
+            name = self.naming.get_system_name()
+            stars = self.star_generator.generate_system_stars(name)
+
+            sys = StarSystem(name, coord, stars=stars)
+            self.generate_planets(sys)
+            self.add_system(sys)
+            generated.append(sys)
+
         return generated
 
     def _calculate_warp_distance(self, system):
@@ -315,20 +336,50 @@ class Galaxy:
         sys_a.add_warp_point(sys_b.name, loc_a)
         sys_b.add_warp_point(sys_a.name, loc_b)
 
-    def generate_warp_lanes(self):
+    def generate_warp_lanes(self, k_neighbors: int = 20):
         """
         Generate warp lanes ensuring connectivity (MST) and adding density.
+
+        Uses spatial indexing with k-nearest neighbors for O(n*k) performance
+        instead of O(n²) all-pairs computation.
+
+        Args:
+            k_neighbors: Number of nearest neighbors to consider per system.
+                         Higher values = more edges to consider, slower but
+                         potentially better connectivity. Default 20.
         """
+        from game.strategy.data.spatial_index import SpatialIndex
+
         systems = list(self.systems.values())
         if len(systems) < 2:
             return
 
-        # 1. Compute all possible edges with weights (distance)
+        # Build spatial index for efficient neighbor lookup
+        spatial_index = SpatialIndex(cell_size=500)
+        system_to_idx = {}
+        for i, sys in enumerate(systems):
+            spatial_index.add(sys.global_location, i)
+            system_to_idx[sys.global_location] = i
+
+        # 1. Compute edges using k-nearest neighbors (O(n*k) instead of O(n²))
+        edge_set = set()  # Avoid duplicates
+        for i, sys in enumerate(systems):
+            neighbors = spatial_index.get_k_nearest(
+                sys.global_location,
+                k=k_neighbors,
+                exclude_coord=sys.global_location
+            )
+            for neighbor_coord, j in neighbors:
+                if i < j:
+                    edge_set.add((i, j))
+                else:
+                    edge_set.add((j, i))
+
+        # Convert to edge list with distances
         edges = []
-        for i in range(len(systems)):
-            for j in range(i + 1, len(systems)):
-                dist = hex_distance(systems[i].global_location, systems[j].global_location)
-                edges.append((dist, i, j))
+        for i, j in edge_set:
+            dist = hex_distance(systems[i].global_location, systems[j].global_location)
+            edges.append((dist, i, j))
 
         # Sort by distance (asc)
         edges.sort(key=lambda x: x[0])

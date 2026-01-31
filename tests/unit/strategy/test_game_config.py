@@ -190,3 +190,89 @@ class TestGameConfigThemeDefaults:
         for theme, color in THEME_DEFAULTS:
             assert isinstance(color, tuple)
             assert len(color) == 3
+
+
+class TestGameConfigGalaxyGeneration:
+    """Tests for galaxy generation settings in GameConfig"""
+
+    def test_default_galaxy_type_is_random(self):
+        """Default galaxy_type should be 'random'"""
+        config = GameConfig()
+        assert config.galaxy_type == "random"
+
+    def test_default_galaxy_seed_is_none(self):
+        """Default galaxy_seed should be None"""
+        config = GameConfig()
+        assert config.galaxy_seed is None
+
+    def test_galaxy_type_accepts_valid_types(self):
+        """galaxy_type should accept all valid layout types"""
+        valid_types = ["random", "cluster", "spiral", "barred_spiral",
+                       "ring", "irregular", "diamond", "uniform"]
+
+        for gtype in valid_types:
+            config = GameConfig(galaxy_type=gtype)
+            assert config.galaxy_type == gtype
+
+    def test_galaxy_type_rejects_invalid_type(self):
+        """galaxy_type should reject invalid types"""
+        with pytest.raises(ValueError) as exc_info:
+            GameConfig(galaxy_type="invalid_galaxy")
+
+        assert "galaxy_type" in str(exc_info.value).lower()
+
+    def test_galaxy_seed_accepts_integer(self):
+        """galaxy_seed should accept integer values"""
+        config = GameConfig(galaxy_seed=12345)
+        assert config.galaxy_seed == 12345
+
+    def test_galaxy_seed_accepts_zero(self):
+        """galaxy_seed should accept zero"""
+        config = GameConfig(galaxy_seed=0)
+        assert config.galaxy_seed == 0
+
+    def test_galaxy_seed_accepts_large_values(self):
+        """galaxy_seed should accept large integer values"""
+        config = GameConfig(galaxy_seed=2**31 - 1)
+        assert config.galaxy_seed == 2**31 - 1
+
+    def test_galaxy_type_serialization(self):
+        """galaxy_type should round-trip through serialization"""
+        original = GameConfig(galaxy_type="spiral", galaxy_seed=42)
+
+        data = original.to_dict()
+        assert data['galaxy_type'] == "spiral"
+        assert data['galaxy_seed'] == 42
+
+        restored = GameConfig.from_dict(data)
+        assert restored.galaxy_type == "spiral"
+        assert restored.galaxy_seed == 42
+
+    def test_galaxy_settings_default_on_missing_keys(self):
+        """from_dict should use defaults for missing galaxy_type/seed"""
+        data = {
+            'galaxy_radius': 4000,
+            'system_count': 25,
+            'players': []
+        }
+
+        # Should not raise - uses defaults
+        config = GameConfig.from_dict(data)
+        assert config.galaxy_type == "random"
+        assert config.galaxy_seed is None
+
+    def test_galaxy_type_combined_with_other_settings(self):
+        """galaxy_type works with other config settings"""
+        config = GameConfig(
+            galaxy_type="ring",
+            galaxy_seed=999,
+            galaxy_radius=8000,
+            system_count=100,
+            save_name="TestGalaxy"
+        )
+
+        assert config.galaxy_type == "ring"
+        assert config.galaxy_seed == 999
+        assert config.galaxy_radius == 8000
+        assert config.system_count == 100
+        assert config.save_name == "TestGalaxy"

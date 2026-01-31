@@ -199,8 +199,9 @@ class DensityMap:
             # Extract weight (default 1.0)
             weight = prim_config.get('weight', 1.0)
 
-            # Build kwargs for primitive, excluding 'type' and 'weight'
-            kwargs = {k: v for k, v in prim_config.items() if k not in ('type', 'weight')}
+            # Build kwargs for primitive, excluding 'type', 'weight', and underscore-prefixed keys (comments)
+            kwargs = {k: v for k, v in prim_config.items()
+                      if k not in ('type', 'weight') and not k.startswith('_')}
 
             # Create primitive instance
             primitive_class = PRIMITIVE_REGISTRY[primitive_type]
