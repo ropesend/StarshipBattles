@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-52 | Galaxy Generation Refactor | Planning | 2026-01-31 | 2026-01-31 |
 | PROJ-51 | Naming Consistency Remediation | Planning | 2026-01-30 | 2026-01-30 |
 | PROJ-50 | Strict Dependency Injection Refactor | Revision | 2026-01-30 | 2026-01-30 |
 | PROJ-49 | Performance & Dead Code Cleanup | Planning | 2026-01-28 | 2026-01-28 |
@@ -150,4 +151,4 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-52
+## Next Project ID: PROJ-53
