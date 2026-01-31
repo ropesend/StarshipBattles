@@ -117,6 +117,11 @@ class LayerPanel(DropTarget):
         content_width = container_rect.width
         
         layer_order = [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
+
+        # Include HULL layer when visibility toggle is enabled
+        if self.viewmodel.show_hull_layer:
+            layer_order = [LayerType.HULL] + layer_order
+
         ship = self.builder.ship
         
         # 1. Generate Logical List of Items needed

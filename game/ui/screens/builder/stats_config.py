@@ -42,7 +42,7 @@ class StatDefinition:
 
 # --- Formatters ---
 def fmt_time(val):
-    if val == float('inf') or val > 99999:
+    if val == float('inf') or val > 999999:  # ~277 hours before showing "Infinite"
         return "Infinite"
     if val <= 0:
         return "0.0s"
@@ -174,9 +174,18 @@ def get_resource_generation(ship, res_name):
 
 def get_resource_consumption(ship, res_name):
     """
-    Calculate constant consumption for a resource across all components.
-    This aggregates 'ResourceConsumption' abilities with trigger='constant'.
+    Get total consumption for a resource.
+    First checks ship attributes (set by combat_endurance.py), then falls back to
+    calculating constant consumption from component abilities.
     """
+    # First check ship-level consumption attribute (includes activation-based consumption)
+    attr_name = f'{res_name}_consumption'
+    if hasattr(ship, attr_name):
+        val = getattr(ship, attr_name, 0)
+        if val > 0:
+            return val
+
+    # Fallback: Calculate constant consumption from component abilities
     from game.simulation.systems.resource_manager import ResourceConsumption
     total = 0
     # Iterate all components in all layers
@@ -382,45 +391,57 @@ def get_logistics_rows(ship):
     
     if hasattr(ship, 'resources'):
         # Get all resource names from registry
-        # We need access to the private dict or iterate keys. 
-        # ResourceRegistry doesn't expose keys directly in this version?
-        # Let's peek resources.py... it has _resources dict.
-        # Ideally we add a public method `get_resource_names()` to ResourceRegistry.
-        # But for now, we can iterate _resources.
-        res_names = list(ship.resources._resources.keys())
-        
+        res_names = set(ship.resources._resources.keys())
+
+        # Also discover resources from consumption/generation attributes
+        # This handles the case where a weapon consumes a resource but no storage exists
+        for attr_suffix in ['_consumption', '_generation']:
+            for res in resource_order:
+                if hasattr(ship, f'{res}{attr_suffix}'):
+                    val = getattr(ship, f'{res}{attr_suffix}', 0)
+                    if val > 0:
+                        res_names.add(res)
+
+        res_names = list(res_names)
+
         # Sort based on preferred order
         def sort_key(name):
             if name in resource_order:
                 return resource_order.index(name)
             return 999 # Others at end
-            
+
         res_names.sort(key=sort_key)
         
         dynamic_rows = []
         for r_name in res_names:
             r = ship.resources.get_resource(r_name)
-            if not r or r.max_value <= 0: continue
-            
-            # Capitalize name
-            label_base = r_name.title()
-            
-            # 1. Capacity Row
-            # ID collision avoidance: key = "max_" + r_name
-            cap_row = StatDefinition(
-                id=f"max_{r_name}",
-                label=f"{label_base} Capacity",
-                getter=lambda s, n=r_name: get_resource_storage(s, n),
-                formatter="{:.0f}",
-                unit=""
-            )
-            dynamic_rows.append(cap_row)
-            
-            # 2. Endurance/Recharge Row (if applicable)
-            # Logic: If it has consumption -> Endurance. If it has Gen but no consumption -> Recharge?
+            max_value = r.max_value if r else 0
+
+            # Check consumption and generation to determine if resource is used
             consumption = get_resource_consumption(ship, r_name)
             generation = get_resource_generation(ship, r_name)
-            
+
+            # Skip only if NO storage AND NO consumption AND NO generation (truly unused)
+            if max_value <= 0 and consumption <= 0 and generation <= 0:
+                continue
+
+            # Capitalize name
+            label_base = r_name.title()
+
+            # 1. Capacity Row (only if storage exists)
+            if max_value > 0:
+                # ID collision avoidance: key = "max_" + r_name
+                cap_row = StatDefinition(
+                    id=f"max_{r_name}",
+                    label=f"{label_base} Capacity",
+                    getter=lambda s, n=r_name: get_resource_storage(s, n),
+                    formatter="{:.0f}",
+                    unit=""
+                )
+                dynamic_rows.append(cap_row)
+
+            # 2. Endurance/Recharge Row (if applicable)
+            # Logic: If it has consumption -> Endurance. If it has Gen but no consumption -> Recharge?
             if consumption > 0:
                 end_row = StatDefinition(
                     id=f"{r_name}_endurance",

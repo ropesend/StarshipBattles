@@ -254,13 +254,15 @@ class BuilderLeftPanel:
         # 1. Filter by Vehicle Type (Implicit)
         v_type = getattr(self.builder.ship, 'vehicle_type', "Ship")
         filtered = [c for c in self.builder.available_components if v_type in c.allowed_vehicle_types]
-        
-        # 2. Filter by Component Type
+
+        # 2. Filter out Hull components (managed by ship class, not user-selectable)
+        filtered = [c for c in filtered if c.type_str != "Hull"]
+
+        # 3. Filter by Component Type
         if self.current_type_filter != "All Types":
             filtered = [c for c in filtered if c.type_str == self.current_type_filter]
-            
-        # 3. Filter by Layer
-        # 3. Filter by Layer
+
+        # 4. Filter by Layer
         
         # Refresh options map based on current ship layers
         current_ship_layers = [l.name for l in self.builder.ship.layers.keys()]
@@ -311,7 +313,7 @@ class BuilderLeftPanel:
                  if any(restriction_rule.validate(self.builder.ship, c, l_type).is_valid for l_type in valid_layer_types)
              ]
         
-        # 4. Sort
+        # 5. Sort
         if self.current_sort == "Default (JSON Order)":
             filtered.sort(key=lambda c: self.component_order_map.get(c.id, 9999))
         elif self.current_sort == "Classification":

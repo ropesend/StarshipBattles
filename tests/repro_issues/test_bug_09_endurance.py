@@ -46,7 +46,7 @@ class TestBug09Endurance:
         print(f"[DEBUG] Fuel Endurance (Ship Prop): {ship.fuel_endurance}")
 
         # 5. Inspect UI Logic (Stats Config)
-        import ui.builder.stats_config as stats_config
+        from game.ui.screens.builder import stats_config
         ui_consumption = stats_config.get_resource_consumption(ship, 'fuel')
         print(f"[DEBUG] Fuel Consumption (UI Getter): {ui_consumption}")
 
