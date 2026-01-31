@@ -1,5 +1,5 @@
 """
-Propulsion Test Scenarios (PROP-001 to PROP-004)
+Propulsion Test Scenarios (PROP-001 to PROP-006)
 
 These tests validate the core propulsion physics for engines and thrusters.
 Propulsion is foundational for all combat tests, so these are high priority.
@@ -7,8 +7,16 @@ Propulsion is foundational for all combat tests, so these are high priority.
 Physics Constants (from game.simulation.physics_constants):
 - K_SPEED = 25 (speed multiplier)
 - K_THRUST = 2500 (thrust constant for acceleration)
+- K_TURN = 25000 (turn rate constant)
 - Formula: max_speed = (thrust * K_SPEED) / mass
 - Formula: acceleration = (thrust * K_THRUST) / mass²
+- Formula: turn_speed = (raw_turn_rate * K_TURN) / mass^1.5
+
+Expected Values Architecture:
+- Each test defines EXPECTED values that must match the actual .json data
+- Pre-run validation compares expected vs actual BEFORE test execution
+- Tests cannot run if data mismatches are detected
+- This ensures tests stay in sync with ship/component data files
 """
 
 import pygame
@@ -16,35 +24,110 @@ from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from simulation_tests.scenarios import TestScenario, TestMetadata
 from simulation_tests.scenarios.templates import PropulsionScenario
 from simulation_tests.scenarios.validation import ExactMatchRule, DeterministicMatchRule
+from simulation_tests.scenarios.prerun_validation import (
+    DataExpectation, CalculatedExpectation, SetupCondition, PassCriterion
+)
 
 
-# Expected values for propulsion tests (calculated from physics formulas)
-# Low mass ship: mass=40, thrust=500
-LOW_MASS = 40
-LOW_MASS_THRUST = 500
-LOW_MASS_MAX_SPEED = (LOW_MASS_THRUST * K_SPEED) / LOW_MASS  # 312.5
+# =============================================================================
+# EXPECTED VALUES FOR PROPULSION TESTS
+# =============================================================================
+# These values MUST match the actual .json ship/component data files.
+# If a mismatch is detected, the test will be blocked from running.
+#
+# Data source: simulation_tests/data/ships/*.json
+#              simulation_tests/data/components.json
+# =============================================================================
 
-# Medium mass ship: mass=2220, thrust=500
-MED_MASS = 2220
-MED_MASS_THRUST = 500
-MED_MASS_MAX_SPEED = (MED_MASS_THRUST * K_SPEED) / MED_MASS  # ~5.63
+# -----------------------------------------------------------------------------
+# PROP-001: Low Mass Engine Ship (Test_Engine_1x_LowMass.json)
+# Hull: hull_test_s (mass=400), Engine: test_engine_no_fuel (thrust=500, mass=0)
+# -----------------------------------------------------------------------------
+PROP001_SHIP_FILE = "Test_Engine_1x_LowMass.json"
+PROP001_HULL_MASS = 400       # hull_test_s mass from components.json
+PROP001_ENGINE_MASS = 0       # Zero-mass component architecture
+PROP001_TOTAL_MASS = PROP001_HULL_MASS + PROP001_ENGINE_MASS  # 400
+PROP001_ENGINE_THRUST = 500   # test_engine_no_fuel thrust
 
-# High mass ship: mass=10220, thrust=500
-HIGH_MASS = 10220
-HIGH_MASS_THRUST = 500
-HIGH_MASS_MAX_SPEED = (HIGH_MASS_THRUST * K_SPEED) / HIGH_MASS  # ~1.22
+# Calculated values using physics formulas
+PROP001_MAX_SPEED = (PROP001_ENGINE_THRUST * K_SPEED) / PROP001_TOTAL_MASS  # 31.25
+PROP001_ACCELERATION = (PROP001_ENGINE_THRUST * K_THRUST) / (PROP001_TOTAL_MASS ** 2)  # 7.8125
 
-# Thruster ship: mass=45, raw_turn_rate=5.0
-THRUSTER_MASS = 45
-THRUSTER_RAW_TURN_RATE = 5.0
-THRUSTER_EXPECTED_TURN_SPEED = (THRUSTER_RAW_TURN_RATE * K_TURN) / (THRUSTER_MASS ** 1.5)
+# -----------------------------------------------------------------------------
+# PROP-002: Multi-ship mass comparison
+# From actual ship files: Low=400, Med=3000, High=11000
+# -----------------------------------------------------------------------------
+PROP002_LOW_SHIP_FILE = "Test_Engine_1x_LowMass.json"
+PROP002_MED_SHIP_FILE = "Test_Engine_1x_MedMass.json"
+PROP002_HIGH_SHIP_FILE = "Test_Engine_1x_HighMass.json"
 
-# No engine ship: mass=20
-NO_ENGINE_MASS = 20
+PROP002_LOW_MASS = 400        # hull_test_s(400)
+PROP002_MED_MASS = 3000       # hull_test_m(1000) + 2×mass_sim_1k
+PROP002_HIGH_MASS = 11000     # hull_test_m(1000) + 10×mass_sim_1k
+PROP002_THRUST = 500          # All ships have same engine
 
-# Thruster-only ship: mass=25
-THRUSTER_ONLY_MASS = 25
-THRUSTER_ONLY_TURN_SPEED = (THRUSTER_RAW_TURN_RATE * K_TURN) / (THRUSTER_ONLY_MASS ** 1.5)
+PROP002_LOW_MAX_SPEED = (PROP002_THRUST * K_SPEED) / PROP002_LOW_MASS    # 31.25
+PROP002_MED_MAX_SPEED = (PROP002_THRUST * K_SPEED) / PROP002_MED_MASS    # 4.1667
+PROP002_HIGH_MAX_SPEED = (PROP002_THRUST * K_SPEED) / PROP002_HIGH_MASS  # 1.1364
+
+# -----------------------------------------------------------------------------
+# PROP-003 & PROP-004: Thruster ship (Test_Thruster_Simple.json)
+# Hull: hull_test_s (mass=400), Engine: test_engine_no_fuel, Thruster: test_thruster_std
+# Expected turn_speed from JSON: 15.625
+# -----------------------------------------------------------------------------
+PROP003_SHIP_FILE = "Test_Thruster_Simple.json"
+PROP003_TOTAL_MASS = 400      # hull only (zero-mass components)
+PROP003_THRUST = 500          # test_engine_no_fuel
+PROP003_RAW_TURN_RATE = 5.0   # test_thruster_std turn_rate
+PROP003_MAX_SPEED = 31.25     # (500 * 25) / 400
+PROP003_TURN_SPEED = 15.625   # (5.0 * 25000) / 400^1.5 = 15.625
+
+# -----------------------------------------------------------------------------
+# PROP-001b: No Engine ship (Test_No_Engine.json)
+# Hull: hull_test_s (mass=400), no engine, no thruster
+# -----------------------------------------------------------------------------
+PROP001B_SHIP_FILE = "Test_No_Engine.json"
+PROP001B_TOTAL_MASS = 400     # hull only
+PROP001B_THRUST = 0           # No engine
+PROP001B_MAX_SPEED = 0        # Cannot move
+PROP001B_TURN_SPEED = 0       # No thruster
+
+# -----------------------------------------------------------------------------
+# PROP-003b: Thruster Only ship (Test_Thruster_Only.json)
+# Hull: hull_test_s (mass=400), thruster only, no engine
+# Expected turn_speed from JSON: 15.625
+# -----------------------------------------------------------------------------
+PROP003B_SHIP_FILE = "Test_Thruster_Only.json"
+PROP003B_TOTAL_MASS = 400     # hull only
+PROP003B_THRUST = 0           # No engine
+PROP003B_RAW_TURN_RATE = 5.0  # test_thruster_std
+PROP003B_MAX_SPEED = 0        # No engine
+PROP003B_TURN_SPEED = 15.625  # (5.0 * 25000) / 400^1.5 = 15.625
+
+# =============================================================================
+# LEGACY ALIASES (for backward compatibility during transition)
+# These are used by other scenarios until they are updated to use PROP*_ prefixed constants
+# =============================================================================
+LOW_MASS = PROP001_TOTAL_MASS           # 400
+LOW_MASS_THRUST = PROP001_ENGINE_THRUST  # 500
+LOW_MASS_MAX_SPEED = PROP001_MAX_SPEED   # 31.25
+
+MED_MASS = PROP002_MED_MASS              # 3000
+MED_MASS_THRUST = PROP002_THRUST         # 500
+MED_MASS_MAX_SPEED = PROP002_MED_MAX_SPEED  # 4.1667
+
+HIGH_MASS = PROP002_HIGH_MASS            # 11000
+HIGH_MASS_THRUST = PROP002_THRUST        # 500
+HIGH_MASS_MAX_SPEED = PROP002_HIGH_MAX_SPEED  # 1.1364
+
+THRUSTER_MASS = PROP003_TOTAL_MASS       # 400
+THRUSTER_RAW_TURN_RATE = PROP003_RAW_TURN_RATE  # 5.0
+THRUSTER_EXPECTED_TURN_SPEED = PROP003_TURN_SPEED  # 15.625
+
+NO_ENGINE_MASS = PROP001B_TOTAL_MASS     # 400
+
+THRUSTER_ONLY_MASS = PROP003B_TOTAL_MASS  # 400
+THRUSTER_ONLY_TURN_SPEED = PROP003B_TURN_SPEED  # 15.625
 
 
 class PropEngineAccelerationScenario(PropulsionScenario):
@@ -54,6 +137,11 @@ class PropEngineAccelerationScenario(PropulsionScenario):
     Tests that an engine component provides thrust value and that a ship
     with an engine accelerates from rest. This is the most fundamental
     propulsion test.
+
+    Pre-Run Validation:
+    - Data values from .json files are validated against expected values
+    - Calculated physics values are validated against formulas
+    - Test will not run if any validation fails
     """
 
     metadata = TestMetadata(
@@ -63,12 +151,14 @@ class PropEngineAccelerationScenario(PropulsionScenario):
         name="Engine provides thrust - ship accelerates",
         summary="Validates that engine component provides thrust and ship accelerates from rest over time",
         conditions=[
-            "Ship: Test_Engine_1x_LowMass (1 engine, no ballast)",
-            "Engine thrust: 500",
-            "Ship mass: 40 (hull 20 + engine 20)",
+            # These are now generated from data_expectations and setup_conditions
+            # Kept for backward compatibility but will be replaced by structured data
+            f"Ship: {PROP001_SHIP_FILE}",
+            f"Engine thrust: {PROP001_ENGINE_THRUST}",
+            f"Ship mass: {PROP001_TOTAL_MASS} (hull {PROP001_HULL_MASS} + engine {PROP001_ENGINE_MASS})",
             "Initial velocity: 0",
-            "Expected max_speed: 312.5 px/s",
-            "Expected acceleration_rate: 781.25 px/s²",
+            f"Expected max_speed: {PROP001_MAX_SPEED} px/s",
+            f"Expected acceleration_rate: {PROP001_ACCELERATION} px/s²",
             "Test duration: 100 ticks"
         ],
         edge_cases=[
@@ -80,27 +170,27 @@ class PropEngineAccelerationScenario(PropulsionScenario):
         pass_criteria="final_velocity > initial_velocity AND final_velocity > 0",
         max_ticks=100,
         seed=42,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=10,
         tags=["propulsion", "engine", "acceleration", "foundational"],
         validation_rules=[
-            # Ship configuration validation
+            # Ship configuration validation (using updated constants)
             ExactMatchRule(
                 name='Ship Mass',
                 path='ship.mass',
-                expected=LOW_MASS
+                expected=PROP001_TOTAL_MASS
             ),
             ExactMatchRule(
                 name='Engine Thrust',
                 path='ship.total_thrust',
-                expected=LOW_MASS_THRUST
+                expected=PROP001_ENGINE_THRUST
             ),
             # Physics formula validation
             DeterministicMatchRule(
                 name='Max Speed (Formula)',
                 path='ship.max_speed',
-                expected=LOW_MASS_MAX_SPEED,
-                description='max_speed = (thrust * K_SPEED) / mass = (500 * 25) / 40 = 312.5'
+                expected=PROP001_MAX_SPEED,
+                description=f'max_speed = (thrust × K_SPEED) / mass = ({PROP001_ENGINE_THRUST} × {K_SPEED}) / {PROP001_TOTAL_MASS} = {PROP001_MAX_SPEED}'
             ),
             # Test outcome validation
             DeterministicMatchRule(
@@ -113,25 +203,127 @@ class PropEngineAccelerationScenario(PropulsionScenario):
     )
 
     # Configuration attributes
-    ship_file = "Test_Engine_1x_LowMass.json"
+    ship_file = PROP001_SHIP_FILE
     thrust_forward = True
 
+    # =========================================================================
+    # PRE-RUN VALIDATION: Data Expectations
+    # These values are checked against actual .json data BEFORE test runs
+    # =========================================================================
+    data_expectations = [
+        DataExpectation(
+            name='Ship Mass',
+            source='ship.mass',
+            expected=PROP001_TOTAL_MASS,
+            json_file=PROP001_SHIP_FILE
+        ),
+        DataExpectation(
+            name='Engine Thrust',
+            source='ship.total_thrust',
+            expected=PROP001_ENGINE_THRUST,
+            json_file=PROP001_SHIP_FILE
+        ),
+    ]
+
+    # =========================================================================
+    # PRE-RUN VALIDATION: Calculated Expectations
+    # Physics formulas with expected results - shows formula and values
+    # =========================================================================
+    calculated_expectations = [
+        CalculatedExpectation(
+            name='Max Speed',
+            formula='(thrust × K_SPEED) / mass',
+            formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
+            expected=PROP001_MAX_SPEED,
+            variables={
+                'thrust': PROP001_ENGINE_THRUST,
+                'K_SPEED': K_SPEED,
+                'mass': PROP001_TOTAL_MASS
+            }
+        ),
+        CalculatedExpectation(
+            name='Acceleration Rate',
+            formula='(thrust × K_THRUST) / mass²',
+            formula_expr=lambda thrust, K_THRUST, mass: (thrust * K_THRUST) / (mass ** 2),
+            expected=PROP001_ACCELERATION,
+            variables={
+                'thrust': PROP001_ENGINE_THRUST,
+                'K_THRUST': K_THRUST,
+                'mass': PROP001_TOTAL_MASS
+            }
+        ),
+    ]
+
+    # =========================================================================
+    # SETUP CONDITIONS: Test configuration (not validated, just displayed)
+    # =========================================================================
+    setup_conditions = [
+        SetupCondition(
+            name='Initial Position',
+            value='(0, 0)',
+            description='Ship starts at origin'
+        ),
+        SetupCondition(
+            name='Initial Velocity',
+            value='(0, 0)',
+            description='Ship starts at rest'
+        ),
+        SetupCondition(
+            name='Initial Angle',
+            value='0°',
+            description='Ship faces right (+X direction)'
+        ),
+        SetupCondition(
+            name='Test Duration',
+            value='100 ticks',
+            description='Simulation runs for 100 physics ticks'
+        ),
+        SetupCondition(
+            name='Thrust Command',
+            value='Forward (each tick)',
+            description='thrust_forward() called every tick'
+        ),
+    ]
+
+    # =========================================================================
+    # PASS CRITERIA: Numeric criteria for test success
+    # =========================================================================
+    pass_criteria = [
+        PassCriterion(
+            description='final_velocity > initial_velocity (0)',
+            expression=lambda r: r.get('final_velocity', 0) > r.get('initial_velocity', 0),
+            numeric_threshold=0.0
+        ),
+        PassCriterion(
+            description='final_velocity > 0',
+            expression=lambda r: r.get('final_velocity', 0) > 0,
+            numeric_threshold=0.0
+        ),
+    ]
+
     def custom_setup(self, battle_engine):
-        """Verify ship stats match expectations."""
-        # Template already loaded ship, positioned it, and started battle
-        # Template already stored: self.start_position, self.start_velocity, self.start_angle
-        # Template already calculated: self.expected_max_speed, self.expected_acceleration_rate
+        """
+        Validate ship data matches expectations before test runs.
 
-        expected_thrust = 500
-        expected_mass = 40
-        expected_max_speed = (expected_thrust * K_SPEED) / expected_mass  # 312.5
+        This performs pre-run validation to ensure the loaded ship
+        matches our expected values from the .json files.
+        """
+        from simulation_tests.scenarios.prerun_validation import PreRunValidator
 
-        assert abs(self.ship.total_thrust - expected_thrust) < 0.1, \
-            f"Expected thrust {expected_thrust}, got {self.ship.total_thrust}"
-        assert abs(self.ship.mass - expected_mass) < 0.1, \
-            f"Expected mass {expected_mass}, got {self.ship.mass}"
-        assert abs(self.ship.max_speed - expected_max_speed) < 0.1, \
-            f"Expected max_speed {expected_max_speed}, got {self.ship.max_speed}"
+        # Build validation context
+        context = {'ship': self.ship}
+
+        # Run pre-run validation
+        validator = PreRunValidator()
+        self.prerun_validation = validator.validate_scenario(self, context)
+
+        # Store validation results for UI display
+        self.results['prerun_validation'] = self.prerun_validation.to_dict()
+
+        # Block test if validation failed
+        if not self.prerun_validation.can_run:
+            error_msg = "Pre-run validation failed:\n" + "\n".join(self.prerun_validation.blocking_errors)
+            raise ValueError(error_msg)
 
     def verify(self, battle_engine) -> bool:
         """Check if the test passed."""
@@ -152,10 +344,18 @@ class PropEngineAccelerationScenario(PropulsionScenario):
         # Add scenario-specific result fields
         self.results['thrust'] = self.ship.total_thrust
         self.results['mass'] = self.ship.mass
+        self.results['max_speed'] = self.ship.max_speed
         self.results['accelerated'] = final_velocity > initial_velocity and final_velocity > 0
 
+        # Evaluate pass criteria
+        all_criteria_passed = all(
+            criterion.evaluate(self.results)
+            for criterion in self.pass_criteria
+        )
+        self.results['all_criteria_passed'] = all_criteria_passed
+
         # Return pass/fail logic
-        return self.results['accelerated']
+        return self.results['accelerated'] and all_criteria_passed
 
 
 class PropThrustMassRatioScenario(TestScenario):

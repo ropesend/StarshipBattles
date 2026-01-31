@@ -111,6 +111,7 @@ class SimulationConstants:
 
     # Battle limits
     DEFAULT_MAX_TICKS = 100000        # Maximum ticks before battle timeout
+    ABSOLUTE_MAX_TICKS = 1_000_000    # Hard ceiling to prevent infinite loops (safety net)
 
 
 # Resource Types

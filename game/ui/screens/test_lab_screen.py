@@ -16,6 +16,23 @@ from simulation_tests.logging_config import get_logger
 logger = get_logger(__name__)
 
 
+def get_test_data_dir():
+    """
+    Get the path to simulation_tests/data directory.
+
+    This function provides a single source of truth for locating test data files,
+    avoiding incorrect relative path construction from different modules.
+
+    Returns:
+        str: Absolute path to simulation_tests/data directory
+    """
+    # Navigate from game/ui/screens/ to project root (3 levels up)
+    # Then into simulation_tests/data
+    current_dir = os.path.dirname(__file__)  # game/ui/screens
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))  # project root
+    return os.path.join(project_root, 'simulation_tests', 'data')
+
+
 class JSONPopup:
     """Popup window for displaying JSON data."""
 
@@ -1812,9 +1829,7 @@ class TestLabScreen:
 
                 # Load ship JSON file
                 ship_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    'simulation_tests',
-                    'data',
+                    get_test_data_dir(),
                     'ships',
                     filename
                 )
@@ -1848,9 +1863,7 @@ class TestLabScreen:
             if hasattr(scenario_cls, 'ship_file') and scenario_cls.ship_file:
                 filename = scenario_cls.ship_file
                 ship_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    'simulation_tests',
-                    'data',
+                    get_test_data_dir(),
                     'ships',
                     filename
                 )
@@ -1881,9 +1894,7 @@ class TestLabScreen:
             ]
             for role, filename in multi_ship_files:
                 ship_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    'simulation_tests',
-                    'data',
+                    get_test_data_dir(),
                     'ships',
                     filename
                 )
@@ -2038,9 +2049,7 @@ class TestLabScreen:
         # Load and cache components.json on first call
         if self._components_cache is None:
             components_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                'simulation_tests',
-                'data',
+                get_test_data_dir(),
                 'components.json'
             )
 
@@ -2601,9 +2610,17 @@ class TestLabScreen:
             logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
 
             # Fit camera to ships
-            if self.game.battle_scene.engine.ships:
-                self.game.battle_scene.camera.fit_objects(self.game.battle_scene.engine.ships)
-                logger.debug(f" Camera fitted to ships")
+            ships = self.game.battle_scene.engine.ships
+            logger.debug(f" Ships in engine: {len(ships) if ships else 0}")
+            if ships:
+                for i, ship in enumerate(ships):
+                    logger.debug(f"   Ship {i}: {ship.name if hasattr(ship, 'name') else 'unknown'} at {ship.position}, alive={ship.is_alive}")
+                self.game.battle_scene.camera.fit_objects(ships)
+                # Also sync target_zoom to prevent animation overriding the fit
+                self.game.battle_scene.camera.target_zoom = self.game.battle_scene.camera.zoom
+                logger.debug(f" Camera fitted: pos={self.game.battle_scene.camera.position}, zoom={self.game.battle_scene.camera.zoom}")
+            else:
+                logger.warning(" No ships in engine after scenario setup!")
 
             # Switch to battle state
             from game.core.constants import GameState
@@ -2613,6 +2630,7 @@ class TestLabScreen:
             self.output_log.append(f"Started test {self.selected_test_id}")
 
         except Exception as e:
+            logger.error(f"Error running visual test: {e}", exc_info=True)
             self.output_log.append(f"ERROR: {e}")
 
     def _on_run_headless(self):
@@ -4060,7 +4078,7 @@ class TestLabScreen:
                     ship_files.append(filename)
 
         # Load ship JSON files
-        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'simulation_tests', 'data', 'ships')
+        data_dir = os.path.join(get_test_data_dir(), 'ships')
 
         for ship_file in ship_files:
             ship_path = os.path.join(data_dir, ship_file)
@@ -4078,8 +4096,7 @@ class TestLabScreen:
     def _show_components_json(self):
         """Show JSON for all components in the test data."""
         # Load components.json from test data
-        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'simulation_tests', 'data')
-        components_path = os.path.join(data_dir, 'components.json')
+        components_path = os.path.join(get_test_data_dir(), 'components.json')
 
         components_data = load_json(components_path)
         if components_data is not None:
