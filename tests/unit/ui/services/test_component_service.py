@@ -173,11 +173,11 @@ class TestComponentService:
         assert result is False
 
     def test_service_uses_default_registries_when_none_provided(self):
-        """Test service falls back to default registries when none injected."""
-        with patch('game.ui.services.component_service.get_default_registries') as mock_get:
-            mock_registries = MagicMock()
-            mock_registries.get_components.return_value = {}
-            mock_get.return_value = mock_registries
+        """Test service falls back to default registry provider when none injected."""
+        with patch('game.ui.services.component_service.get_default_registry_provider') as mock_get:
+            mock_provider = MagicMock()
+            mock_provider.get_components.return_value = {}
+            mock_get.return_value = mock_provider
 
             service = ComponentService()
             service.get_all_components()

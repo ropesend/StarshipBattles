@@ -1,12 +1,11 @@
-import pytest
-import sys
-import json
-import pygame
+"""
+Deep reproduction tests for BUG-05: Energy consumption rows in logistics UI.
 
+Updated for PROJ-50 (Strict DI) - uses fresh_registries fixture.
+"""
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.components.component import Component, load_components, load_modifiers
+from game.simulation.components.component import Component
 from game.simulation.entities.ship_stats import ShipStatsCalculator
-from game.core.registry import RegistryManager
 from game.ui.screens.builder.stats_config import get_logistics_rows
 
 # Mock Data simulating components.json entries
@@ -40,132 +39,108 @@ MOCK_LASER_DATA = {
             }
         ],
         "BeamWeaponAbility": {
-            "reload": 0.2, # Rate = 5 / 0.2 = 25/s
+            "reload": 0.2,  # Rate = 5 / 0.2 = 25/s
             "damage": 10
         }
     }
 }
 
-def setup_test_state():
-    pygame.init()
-    RegistryManager.instance().clear()
 
-def teardown_test_state():
-    pygame.quit()
-    RegistryManager.instance().clear()
-
-
-@pytest.mark.xfail(reason="Bug #5: Energy consumption rows not yet implemented in logistics UI")
-def test_shield_regen_consumption():
+def test_shield_regen_consumption(fresh_registries):
     """
-    Verify Shield Regen (using EnergyConsumption alias) 
+    Verify Shield Regen (using EnergyConsumption alias)
     1. Registers Energy resource
     2. Calculates correctly in ship.energy_consumption
     3. Shows up in Logistics Rows
     """
-    setup_test_state()
-    try:
-        ship = Ship(name="TestShipSC", x=0, y=0, color=(255, 255, 255))
-        ship.ship_class = "TestClass"
-        vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
-        
-        # Inject mock vehicle class into registry
-        RegistryManager.instance().vehicle_classes.update(vehicle_classes)
-        # Re-init layers since we changed class data
-        ship._initialize_layers()
-        
-        # Create Component from Dict (simulating load_components)
-        comp = Component(MOCK_SHIELD_REGEN_DATA)
-        ship.layers[LayerType.INNER]['components'].append(comp)
-        
-        calc = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
-        calc.calculate(ship)
-        
-        # Check 1: Energy Registered?
-        assert 'energy' in ship.resources._resources, "Energy not registered in ship resources"
-        
-        # Check 2: Consumption Calculation
-        print(f"Energy Consumption: {ship.energy_consumption}")
-        assert ship.energy_consumption > 0, "Energy Consumption is 0, should be at least 2.0"
-        
-        # Check 3: Rows
-        rows = get_logistics_rows(ship)
-        row_keys = [r.key for r in rows]
-        print(f"Row Keys: {row_keys}")
-        
-        assert "energy_max_usage" in row_keys, "Energy Max Usage row missing"
-        
-        # Check Values
-        max_use_row = next(r for r in rows if r.key == 'energy_max_usage')
-        val = max_use_row.get_value(ship)
-        print(f"Max Usage Row Value: {val}")
-        assert val == ship.energy_consumption
-    finally:
-        teardown_test_state()
+    # Setup test vehicle class
+    fresh_registries.vehicle_classes["TestClass"] = {'max_mass': 1000, 'type': 'Ship'}
+
+    ship = Ship(
+        name="TestShipSC",
+        x=0, y=0,
+        color=(255, 255, 255),
+        ship_class="TestClass",
+        registries=fresh_registries
+    )
+
+    # Create Component from Dict (simulating load_components)
+    comp = Component(MOCK_SHIELD_REGEN_DATA, registries=fresh_registries)
+    ship.layers[LayerType.INNER]['components'].append(comp)
+
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc.calculate(ship)
+
+    # Check 1: Energy Registered?
+    assert 'energy' in ship.resources._resources, "Energy not registered in ship resources"
+
+    # Check 2: Consumption Calculation
+    print(f"Energy Consumption: {ship.energy_consumption}")
+    assert ship.energy_consumption > 0, "Energy Consumption is 0, should be at least 2.0"
+
+    # Check 3: Rows
+    rows = get_logistics_rows(ship)
+    row_keys = [r.key for r in rows]
+    print(f"Row Keys: {row_keys}")
+
+    assert "energy_max_usage" in row_keys, f"Energy Max Usage row missing. Found: {row_keys}"
+
+    # Check Values
+    max_use_row = next(r for r in rows if r.key == 'energy_max_usage')
+    val = max_use_row.get_value(ship)
+    print(f"Max Usage Row Value: {val}")
+    assert val == ship.energy_consumption
 
 
-@pytest.mark.xfail(reason="Bug #5: Energy consumption rows not yet implemented in logistics UI")
-def test_laser_cannon_consumption():
+def test_laser_cannon_consumption(fresh_registries):
     """
     Verify Laser Cannon (Active Consumption)
     1. Registers Energy resource
     2. Calculates max usage (activation rate)
     3. Shows up in Logistics Rows
     """
-    setup_test_state()
-    try:
-        ship = Ship(name="TestShipLC", x=0, y=0, color=(255, 255, 255))
-        ship.ship_class = "TestClass"
-        vehicle_classes = {"TestClass": {'max_mass': 1000, 'type': 'Ship'}}
-        
-        RegistryManager.instance().vehicle_classes.update(vehicle_classes)
-        ship._initialize_layers()
-        
-        comp = Component(MOCK_LASER_DATA)
-        comp.debug_log = True
-        # Ensure correct instantiation of abilities
-        assert comp.has_ability('ResourceConsumption')
-        assert comp.has_ability('WeaponAbility') # BeamWeaponAbility inherits
-        
-        ship.layers[LayerType.INNER]['components'].append(comp)
-        
-        calc = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
-        calc.calculate(ship)
-        
-        # Check 1: Energy
-        assert 'energy' in ship.resources._resources
-        
-        # Check 2: Max Usage Calculation
-        # Cost 5, unit per shot. Reload 0.2s.
-        # Rate = 5 / 0.2 = 25.0 per sec.
-        print(f"Energy Consump: {ship.energy_consumption}")
-        assert ship.energy_consumption == 0.0, f"Expected 0.0 (inactive), got {ship.energy_consumption}"
+    # Setup test vehicle class
+    fresh_registries.vehicle_classes["TestClass"] = {'max_mass': 1000, 'type': 'Ship'}
 
-        # NEW CHECK: potential_energy_consumption should be 25.0
-        potential = getattr(ship, 'potential_energy_consumption', 0.0)
-        print(f"Potential Energy: {potential}")
-        assert potential == 25.0, f"Expected Potential 25.0, got {potential}"
-        
-        # Check 3: Rows
-        rows = get_logistics_rows(ship)
-        row_keys = [r.key for r in rows]
-        assert "energy_max_usage" in row_keys
+    ship = Ship(
+        name="TestShipLC",
+        x=0, y=0,
+        color=(255, 255, 255),
+        ship_class="TestClass",
+        registries=fresh_registries
+    )
 
-        # Check 4: Value from Row (Should use potential)
-        max_row = next(r for r in rows if r.key == "energy_max_usage")
-        val = max_row.get_value(ship)
-        assert val == 25.0, f"Row Value Expected 25.0, got {val}"
-    finally:
-        teardown_test_state()
+    comp = Component(MOCK_LASER_DATA, registries=fresh_registries)
+    comp.debug_log = True
+    # Ensure correct instantiation of abilities
+    assert comp.has_ability('ResourceConsumption')
+    assert comp.has_ability('WeaponAbility')  # BeamWeaponAbility inherits
 
-if __name__ == "__main__":
-    try:
-        print("Running tests...")
-        test_shield_regen_consumption()
-        print("test_shield_regen_consumption PASSED")
-        test_laser_cannon_consumption()
-        print("test_laser_cannon_consumption PASSED")
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    ship.layers[LayerType.INNER]['components'].append(comp)
+
+    calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
+    calc.calculate(ship)
+
+    # Check 1: Energy
+    assert 'energy' in ship.resources._resources
+
+    # Check 2: Max Usage Calculation
+    # Cost 5, unit per shot. Reload 0.2s.
+    # Rate = 5 / 0.2 = 25.0 per sec.
+    print(f"Energy Consump: {ship.energy_consumption}")
+    assert ship.energy_consumption == 0.0, f"Expected 0.0 (inactive), got {ship.energy_consumption}"
+
+    # NEW CHECK: potential_energy_consumption should be 25.0
+    potential = getattr(ship, 'potential_energy_consumption', 0.0)
+    print(f"Potential Energy: {potential}")
+    assert potential == 25.0, f"Expected Potential 25.0, got {potential}"
+
+    # Check 3: Rows
+    rows = get_logistics_rows(ship)
+    row_keys = [r.key for r in rows]
+    assert "energy_max_usage" in row_keys, f"Energy Max Usage row missing. Found: {row_keys}"
+
+    # Check 4: Value from Row (Should use potential)
+    max_row = next(r for r in rows if r.key == "energy_max_usage")
+    val = max_row.get_value(ship)
+    assert val == 25.0, f"Row Value Expected 25.0, got {val}"

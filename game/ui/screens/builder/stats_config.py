@@ -371,24 +371,61 @@ STATS_FIGHTER_SUPPORT = STATS_CONFIG.get('fightersupport', [])
 
 # --- Dynamic Row Generators ---
 
+def _get_constant_consumption(ship, res_name):
+    """Get constant consumption rate for a resource (excludes activation-based)."""
+    from game.simulation.systems.resource_manager import ResourceConsumption
+    total = 0
+    try:
+        for layer in ship.layers.values():
+            for comp in layer['components']:
+                if hasattr(comp, 'ability_instances'):
+                    for ability in comp.ability_instances:
+                        if isinstance(ability, ResourceConsumption):
+                            if ability.resource_name == res_name and ability.trigger == 'constant':
+                                total += ability.amount
+    except (TypeError, AttributeError):
+        # Handle mock objects or missing attributes
+        pass
+    return total
+
+
+def _get_max_endurance(ship, res_name):
+    """Calculate endurance at max usage rate (constant + all weapons firing)."""
+    try:
+        capacity = get_resource_storage(ship, res_name)
+        max_usage = get_resource_max_usage(ship, res_name)
+        if not isinstance(max_usage, (int, float)) or max_usage <= 0:
+            return float('inf')
+        if not isinstance(capacity, (int, float)):
+            return float('inf')
+        return capacity / max_usage
+    except (TypeError, AttributeError):
+        return float('inf')
+
+
 def get_logistics_rows(ship):
     """
     Generate the list of stat rows for the Logistics section.
     Combines static rows (mass, etc.) with dynamic resource rows.
+
+    BUG-05 Fix: Generates all 6 rows per resource:
+    1. Capacity (max_{resource})
+    2. Generation ({resource}_gen)
+    3. Constant Consumption ({resource}_constant)
+    4. Max Usage ({resource}_max_usage)
+    5. Endurance at constant ({resource}_endurance)
+    6. Endurance at max load ({resource}_max_endurance)
     """
     # 1. Start with static config (Mass, etc)
     # Filter out any hardcoded legacy resource rows if they exist in JSON
-    # (We assume "Fuel Capacity" etc are legacy)
     legacy_keys = ['max_fuel', 'max_energy', 'max_ammo', 'fuel_endurance', 'ammo_endurance', 'energy_endurance']
     base_rows = [r for r in STATS_LOGISTICS if r.key not in legacy_keys]
-    
+
     # 2. Add Dynamic Resource Rows
     # We want a specific order: Fuel, Energy, Ammo, [Others]
     resource_order = ['fuel', 'energy', 'ammo']
-    
-    # Identify all resources present on ship (Max > 0 for storage, or just exists?)
-    # Generally we care about Storage (Capacity) and Endurance
-    
+
+    # Identify all resources present on ship
     if hasattr(ship, 'resources'):
         # Get all resource names from registry
         res_names = set(ship.resources._resources.keys())
@@ -408,21 +445,34 @@ def get_logistics_rows(ship):
         def sort_key(name):
             if name in resource_order:
                 return resource_order.index(name)
-            return 999 # Others at end
+            return 999  # Others at end
 
         res_names.sort(key=sort_key)
-        
+
         dynamic_rows = []
         for r_name in res_names:
-            r = ship.resources.get_resource(r_name)
-            max_value = r.max_value if r else 0
+            try:
+                r = ship.resources.get_resource(r_name)
+                max_value = r.max_value if r else 0
+                if not isinstance(max_value, (int, float)):
+                    max_value = 0
 
-            # Check consumption and generation to determine if resource is used
-            consumption = get_resource_consumption(ship, r_name)
-            generation = get_resource_generation(ship, r_name)
+                # Check consumption and generation to determine if resource is used
+                const_consumption = _get_constant_consumption(ship, r_name)
+                if not isinstance(const_consumption, (int, float)):
+                    const_consumption = 0
+                max_usage = get_resource_max_usage(ship, r_name)
+                if not isinstance(max_usage, (int, float)):
+                    max_usage = 0
+                generation = get_resource_generation(ship, r_name)
+                if not isinstance(generation, (int, float)):
+                    generation = 0
 
-            # Skip only if NO storage AND NO consumption AND NO generation (truly unused)
-            if max_value <= 0 and consumption <= 0 and generation <= 0:
+                # Skip only if NO storage AND NO consumption AND NO generation (truly unused)
+                if max_value <= 0 and const_consumption <= 0 and max_usage <= 0 and generation <= 0:
+                    continue
+            except (TypeError, AttributeError):
+                # Skip resources that can't be processed (e.g., mock objects)
                 continue
 
             # Capitalize name
@@ -430,7 +480,6 @@ def get_logistics_rows(ship):
 
             # 1. Capacity Row (only if storage exists)
             if max_value > 0:
-                # ID collision avoidance: key = "max_" + r_name
                 cap_row = StatDefinition(
                     id=f"max_{r_name}",
                     label=f"{label_base} Capacity",
@@ -440,9 +489,41 @@ def get_logistics_rows(ship):
                 )
                 dynamic_rows.append(cap_row)
 
-            # 2. Endurance/Recharge Row (if applicable)
-            # Logic: If it has consumption -> Endurance. If it has Gen but no consumption -> Recharge?
-            if consumption > 0:
+            # 2. Generation Row (if generation exists)
+            if generation > 0:
+                gen_row = StatDefinition(
+                    id=f"{r_name}_gen",
+                    label=f"{label_base} Generation",
+                    getter=lambda s, n=r_name: get_resource_generation(s, n),
+                    formatter="{:.1f}",
+                    unit="/s"
+                )
+                dynamic_rows.append(gen_row)
+
+            # 3. Constant Consumption Row (if constant consumption exists)
+            if const_consumption > 0:
+                const_row = StatDefinition(
+                    id=f"{r_name}_constant",
+                    label=f"{label_base} Constant Use",
+                    getter=lambda s, n=r_name: _get_constant_consumption(s, n),
+                    formatter="{:.1f}",
+                    unit="/s"
+                )
+                dynamic_rows.append(const_row)
+
+            # 4. Max Usage Row (if max usage > constant, i.e. weapons exist)
+            if max_usage > 0:
+                max_use_row = StatDefinition(
+                    id=f"{r_name}_max_usage",
+                    label=f"{label_base} Max Usage",
+                    getter=lambda s, n=r_name: get_resource_max_usage(s, n),
+                    formatter="{:.1f}",
+                    unit="/s"
+                )
+                dynamic_rows.append(max_use_row)
+
+            # 5. Endurance at constant consumption (if has storage and consumption)
+            if max_value > 0 and const_consumption > 0:
                 end_row = StatDefinition(
                     id=f"{r_name}_endurance",
                     label=f"{label_base} Endurance",
@@ -451,19 +532,40 @@ def get_logistics_rows(ship):
                     unit=""
                 )
                 dynamic_rows.append(end_row)
-            elif generation > 0 and consumption <= 0:
-                 # Recharge time?
-                 rech_row = StatDefinition(
+            elif max_usage > 0:
+                # No constant consumption but has max usage - show endurance at max usage
+                end_row = StatDefinition(
+                    id=f"{r_name}_endurance",
+                    label=f"{label_base} Endurance",
+                    getter=lambda s, n=r_name: _get_max_endurance(s, n),
+                    formatter=fmt_time,
+                    unit=""
+                )
+                dynamic_rows.append(end_row)
+
+            # 6. Max Endurance Row (if max usage differs from constant)
+            if max_value > 0 and max_usage > const_consumption and const_consumption > 0:
+                max_end_row = StatDefinition(
+                    id=f"{r_name}_max_endurance",
+                    label=f"{label_base} Max Endurance",
+                    getter=lambda s, n=r_name: _get_max_endurance(s, n),
+                    formatter=fmt_time,
+                    unit=""
+                )
+                dynamic_rows.append(max_end_row)
+
+            # Recharge time (if generation exists but no consumption)
+            if generation > 0 and const_consumption <= 0 and max_usage <= 0 and max_value > 0:
+                rech_row = StatDefinition(
                     id=f"{r_name}_recharge",
                     label=f"{label_base} Recharge",
                     getter=lambda s, n=r_name: get_resource_replenish(s, n),
                     formatter=fmt_time,
                     unit=""
-                 )
-                 dynamic_rows.append(rech_row)
-        
-        # Merge: Base (Mass) -> Dynamic -> Base (Others?)
-        # Usually Mass is first.
+                )
+                dynamic_rows.append(rech_row)
+
+        # Merge: Base (Mass) -> Dynamic
         return base_rows + dynamic_rows
 
     return base_rows

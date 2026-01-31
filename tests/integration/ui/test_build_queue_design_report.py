@@ -12,6 +12,27 @@ from unittest.mock import MagicMock, patch
 from game.simulation.entities.ship import Ship
 
 
+class MockResource:
+    """Mock resource object with numeric values."""
+    def __init__(self, max_value=100, current_value=100, regen_rate=0):
+        self.max_value = max_value
+        self.current_value = current_value
+        self.regen_rate = regen_rate
+
+
+class MockResourceContainer:
+    """Mock resources container that returns proper resource objects."""
+    def __init__(self):
+        self._resources = {
+            'fuel': MockResource(max_value=1000, current_value=1000, regen_rate=0),
+            'ammo': MockResource(max_value=500, current_value=500, regen_rate=0),
+            'energy': MockResource(max_value=1000, current_value=1000, regen_rate=50),
+        }
+
+    def get_resource(self, name):
+        return self._resources.get(name)
+
+
 @pytest.fixture
 def mock_ship():
     """Create a mock Ship object with stats."""
@@ -27,6 +48,8 @@ def mock_ship():
     ship.max_hp = 500
     ship.max_energy = 1000
     ship.energy_generation = 50
+    ship.mass = 1000
+    ship.mass_limits_ok = True
 
     # Maneuvering
     ship.thrust = 100
@@ -34,6 +57,8 @@ def mock_ship():
     ship.top_speed = 50
     ship.maneuver_points = 10
     ship.turn_rate = 45
+    ship.total_maneuver_points = 10
+    ship.total_strategic_movement = 100
 
     # Shields
     ship.max_shields = 200
@@ -49,11 +74,33 @@ def mock_ship():
     ship.max_targets = 3
     ship.evasion_score = 15
     ship.targeting_score = 20
+    ship.target_profile = 10
+    ship.scan_strength = 15
 
     # Crew
     ship.crew_required = 50
     ship.crew_on_board = 50
     ship.life_support_capacity = 60
+    ship.get_ability_total = MagicMock(return_value=50)
+
+    # Resources (needed for dynamic logistics rows)
+    ship.resources = MockResourceContainer()
+
+    # Resource consumption/generation attributes
+    ship.fuel_consumption = 10
+    ship.ammo_consumption = 5
+    ship.energy_consumption = 20
+    ship.potential_fuel_consumption = 10
+    ship.potential_ammo_consumption = 5
+    ship.potential_energy_consumption = 20
+
+    # Layers (needed for layer status section)
+    ship.layers = {}
+    ship.layer_status = {}
+
+    # Fighter support
+    ship.fighter_capacity = 0
+    ship.fighters_per_wave = 0
 
     # Construction cost
     ship.construction_cost = {
