@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planet QC Tool</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --good-color: #4caf50;
+            --repro-color: #f44336;
+            --special-color: #9c27b0;
+            --unreviewed-color: #2196f3;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stats span {
+            margin-left: 15px;
+            font-weight: bold;
+        }
+
+        .filters a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-right: 15px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: #333;
+        }
+
+        .filters a.active {
+            background: var(--unreviewed-color);
+        }
+
+        .grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid transparent;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .card.status-good {
+            border-color: var(--good-color);
+        }
+
+        .card.status-repro {
+            border-color: var(--repro-color);
+        }
+
+        .card.status-jupiter,
+        .card.status-neptune,
+        .card.status-earth,
+        .card.status-mars,
+        .card.status-moon,
+        .card.status-pluto {
+            border-color: var(--special-color);
+        }
+
+        .card-content {
+            flex-grow: 1;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .image-rows {
+            display: flex;
+            gap: 15px;
+        }
+
+        .img-container {
+            flex: 1;
+            text-align: center;
+        }
+
+        .img-container span {
+            display: block;
+            font-size: 0.8em;
+            margin-bottom: 8px;
+            color: #888;
+        }
+
+        img {
+            width: 256px;
+            height: 256px;
+            object-fit: contain;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+
+        .bg-white {
+            background-color: white;
+        }
+
+        .bg-black {
+            background-color: black;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 120px;
+            padding-top: 35px;
+            /* Alignment with image row */
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.75em;
+            text-transform: uppercase;
+        }
+
+        .btn-good {
+            background: var(--good-color);
+            color: white;
+        }
+
+        .btn-repro {
+            background: var(--repro-color);
+            color: white;
+        }
+
+        .btn-special {
+            background: var(--special-color);
+            color: white;
+        }
+
+        .btn-reset {
+            background: #555;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <h1>Planet QC Tool</h1>
+            <div class="stats">
+                <span>Total: {{ stats.total }}</span>
+                <span style="color: var(--good-color)">Good: {{ stats.good }}</span>
+                <span style="color: var(--repro-color)">Repro: {{ stats.repro }}</span>
+                <span style="color: var(--special-color)">Type-Flagged: {{ stats.special }}</span>
+            </div>
+        </div>
+        <div class="filters">
+            <a href="/?filter=all" class="{{ 'active' if filter == 'all' }}">All</a>
+            <a href="/?filter=good" class="{{ 'active' if filter == 'good' }}">Good</a>
+            <a href="/?filter=repro" class="{{ 'active' if filter == 'repro' }}">Repro</a>
+            <a href="/?filter=jupiter" class="{{ 'active' if filter == 'jupiter' }}">Jupiter</a>
+            <a href="/?filter=neptune" class="{{ 'active' if filter == 'neptune' }}">Neptune</a>
+            <a href="/?filter=earth" class="{{ 'active' if filter == 'earth' }}">Earth</a>
+            <a href="/?filter=mars" class="{{ 'active' if filter == 'mars' }}">Mars</a>
+            <a href="/?filter=moon" class="{{ 'active' if filter == 'moon' }}">Moon</a>
+            <a href="/?filter=pluto" class="{{ 'active' if filter == 'pluto' }}">Pluto</a>
+        </div>
+    </header>
+
+    <div class="grid">
+        {% for img in images %}
+        <div class="card status-{{ img.status }}" id="card-{{ loop.index }}">
+            <div class="card-content">
+                <div class="card-header">
+                    <strong>{{ img.name }}</strong>
+                    <span id="status-label-{{ loop.index }}" style="font-size: 0.8em; opacity: 0.8">{{ img.status|upper
+                        }}</span>
+                </div>
+                <div class="image-rows">
+                    <div class="img-container">
+                        <span>Original</span>
+                        <img src="/original/{{ img.name }}" alt="Original">
+                    </div>
+                    <div class="img-container">
+                        <span>Processed (Black)</span>
+                        <img src="/processed/{{ img.name }}" class="bg-black" alt="Processed Black">
+                    </div>
+                    <div class="img-container">
+                        <span>Processed (White)</span>
+                        <img src="/processed/{{ img.name }}" class="bg-white" alt="Processed White">
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn-good"
+                    onclick="updateStatus('{{ img.name }}', 'good', {{ loop.index }})">Good</button>
+                <button class="btn-repro"
+                    onclick="updateStatus('{{ img.name }}', 'repro', {{ loop.index }})">Repro</button>
+                <button class="btn-special"
+                    onclick="updateStatus('{{ img.name }}', 'jupiter', {{ loop.index }})">Jupiter</button>
+                <button class="btn-special"
+                    onclick="updateStatus('{{ img.name }}', 'neptune', {{ loop.index }})">Neptune</button>
+                <button class="btn-special"
+                    onclick="updateStatus('{{ img.name }}', 'earth', {{ loop.index }})">Earth</button>
+                <button class="btn-special"
+                    onclick="updateStatus('{{ img.name }}', 'mars', {{ loop.index }})">Mars</button>
+                <button class="btn-special"
+                    onclick="updateStatus('{{ img.name }}', 'moon', {{ loop.index }})">Moon</button>
+                <button class="btn-special"
+                    onclick="updateStatus('{{ img.name }}', 'pluto', {{ loop.index }})">Pluto</button>
+                <button class="btn-reset"
+                    onclick="updateStatus('{{ img.name }}', 'good', {{ loop.index }})">Reset</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        async function updateStatus(filename, action, index) {
+            const formData = new FormData();
+            formData.append('filename', filename);
+            formData.append('action', action);
+
+            const response = await fetch('/update', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const card = document.getElementById(`card-${index}`);
+                const label = document.getElementById(`status-label-${index}`);
+
+                card.className = `card status-${action}`;
+                label.innerText = action.toUpperCase();
+            }
+        }
+    </script>
+</body>
+
+</html>
