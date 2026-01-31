@@ -277,3 +277,19 @@ class ComponentDetailPanel:
         self.panel.set_position(pos)
         self.rect.topleft = pos
 
+    def handle_event(self, event):
+        """Handle events for the detail panel.
+        
+        Most events are handled by the UI Manager or the Router's button handler,
+        but this satisfies the panel interface expected by WorkshopEventRouter.
+        """
+        return False
+
+    def draw(self, screen):
+        """Draw the panel.
+        
+        Currently all elements are handled by pygame_gui, so this is a placeholder
+        to satisfy the WorkshopScreen interface.
+        """
+        pass
+

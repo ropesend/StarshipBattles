@@ -12,7 +12,7 @@ The service encapsulates:
 """
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from game.core.registry import get_default_registries
+from game.core.registry import get_default_registry_provider
 from game.core.protocols import IRegistryProvider
 
 if TYPE_CHECKING:
@@ -36,14 +36,14 @@ class ComponentService:
 
         Args:
             registry_provider: Optional registry provider for dependency injection.
-                If None, uses get_default_registries().
+                If None, uses get_default_registry_provider().
         """
         self._provider = registry_provider
 
     def _get_provider(self) -> IRegistryProvider:
         """Get the registry provider, using default if not injected."""
         if self._provider is None:
-            self._provider = get_default_registries()
+            self._provider = get_default_registry_provider()
         return self._provider
 
     def get_all_components(self) -> List[Any]:
