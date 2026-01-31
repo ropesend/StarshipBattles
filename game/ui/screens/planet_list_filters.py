@@ -31,17 +31,8 @@ def gather_planets(galaxy, empire):
                 p._cached_name_lower = p.name.lower()
 
                 # Pre-compute type category
-                tn = p.planet_type.name.lower()
-                if 'gas' in tn:
-                    p._cached_type_category = 'Gas'
-                elif 'ice' in tn:
-                    p._cached_type_category = 'Ice'
-                elif 'desert' in tn or 'hot' in tn:
-                    p._cached_type_category = 'Desert'
-                elif 'moon' in tn:
-                    p._cached_type_category = 'Moon'
-                else:
-                    p._cached_type_category = 'Terran'
+                # Use title case of the enum name (e.g. "Ice Giant", "Continental")
+                p._cached_type_category = p.planet_type.name.title().replace('_', ' ')
 
                 planets.append(p)
     return planets

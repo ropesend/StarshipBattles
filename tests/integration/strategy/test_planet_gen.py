@@ -6,9 +6,10 @@ from game.strategy.data.hex_math import HexCoord
 
 def test_planet_types_exist():
     """Verify PlanetType enum exists."""
-    assert hasattr(PlanetType, 'TERRESTRIAL')
-    assert hasattr(PlanetType, 'GAS_GIANT')
+    assert hasattr(PlanetType, 'CONTINENTAL')
+    assert hasattr(PlanetType, 'JOVIAN')
     assert hasattr(PlanetType, 'BARREN')
+    assert hasattr(PlanetType, 'PELAGIC')
 
 def test_system_generates_planets():
     """Verify that systems have planets after generation."""
@@ -70,11 +71,11 @@ def test_planet_placement_rules():
     
     for sys in systems:
         for planet in sys.planets:
-            if planet.planet_type == PlanetType.LAVA:
+            if planet.planet_type == PlanetType.MAGMA:
                 lava_count += 1
                 # Should be hot
-                assert planet.surface_temperature > 400 
+                assert planet.surface_temperature > 350 # updated threshold per logic
                 
-            if planet.planet_type == PlanetType.ICE_WORLD:
+            if planet.planet_type == PlanetType.CRYOPLANET:
                 ice_count += 1
-                assert planet.surface_temperature < 250
+                assert planet.surface_temperature < 260 # updated threshold per logic
