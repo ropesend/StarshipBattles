@@ -23,7 +23,7 @@ class TestPropulsionModifierRegression:
 
     def test_standard_engine_no_modifiers(self, setup_registries):
         """Baseline: Standard engine with no modifiers."""
-        engine = create_component('standard_engine')
+        engine = create_component('standard_engine', registries=setup_registries)
         engine.recalculate_stats()
 
         snapshot = snapshot_full_component(engine)
@@ -39,7 +39,7 @@ class TestPropulsionModifierRegression:
     @pytest.mark.parametrize("scale", [1, 2, 4, 8, 16])
     def test_standard_engine_simple_size(self, setup_registries, scale):
         """Standard engine with simple_size_mount at different scales."""
-        engine = create_component('standard_engine')
+        engine = create_component('standard_engine', registries=setup_registries)
         if scale > 1:
             engine.add_modifier('simple_size_mount', scale)
         engine.recalculate_stats()
@@ -57,7 +57,7 @@ class TestPropulsionModifierRegression:
 
     def test_thruster_no_modifiers(self, setup_registries):
         """Baseline: Thruster with no modifiers."""
-        thruster = create_component('thruster')
+        thruster = create_component('thruster', registries=setup_registries)
         thruster.recalculate_stats()
 
         snapshot = snapshot_full_component(thruster)
@@ -76,7 +76,7 @@ class TestFacingModifierRegression:
 
     def test_railgun_no_facing(self, setup_registries):
         """Baseline: Railgun with no facing modifier (default forward)."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=setup_registries)
         railgun.recalculate_stats()
 
         snapshot = snapshot_full_component(railgun)
@@ -92,7 +92,7 @@ class TestFacingModifierRegression:
     @pytest.mark.parametrize("angle", [0, 45, 90, 180, 270])
     def test_railgun_facing_angles(self, setup_registries, angle):
         """Railgun with facing modifier at different angles."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=setup_registries)
         if angle > 0:
             railgun.add_modifier('facing', angle)
         railgun.recalculate_stats()
@@ -110,7 +110,7 @@ class TestFacingModifierRegression:
 
     def test_laser_cannon_facing(self, setup_registries):
         """Laser cannon with facing modifier."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=setup_registries)
         laser.add_modifier('facing', 90)
         laser.recalculate_stats()
 
@@ -131,7 +131,7 @@ class TestUtilityModifierRegression:
     @pytest.mark.parametrize("reduction", [0.0, 0.25, 0.5, 0.75, 0.99])
     def test_crew_quarters_automation(self, setup_registries, reduction):
         """Crew quarters with automation at different reduction levels."""
-        quarters = create_component('crew_quarters')
+        quarters = create_component('crew_quarters', registries=setup_registries)
         if reduction > 0.0:
             quarters.add_modifier('automation', reduction)
         quarters.recalculate_stats()
@@ -150,7 +150,7 @@ class TestUtilityModifierRegression:
     @pytest.mark.parametrize("resource_mult", [1.0, 0.5, 0.25, 0.1])
     def test_generator_efficiency_mount(self, setup_registries, resource_mult):
         """Generator with efficiency_mount at different resource multipliers."""
-        generator = create_component('generator')
+        generator = create_component('generator', registries=setup_registries)
         if resource_mult < 1.0:
             generator.add_modifier('efficiency_mount', resource_mult)
         generator.recalculate_stats()
@@ -175,12 +175,12 @@ class TestModifierFormulaVerification:
 
     def test_hardened_mount_formula(self, setup_registries):
         """Verify hardened_mount: HP = mass^2"""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=setup_registries)
         base_mass = railgun.base_mass
         base_hp = railgun.base_max_hp
 
         for mass_mult in [1.0, 2.0, 3.0, 5.0]:
-            railgun = create_component('railgun')
+            railgun = create_component('railgun', registries=setup_registries)
             if mass_mult > 1.0:
                 railgun.add_modifier('hardened_mount', mass_mult)
             railgun.recalculate_stats()
@@ -195,13 +195,13 @@ class TestModifierFormulaVerification:
 
     def test_range_mount_formula(self, setup_registries):
         """Verify range_mount: range = 2^level, mass = 3.5^level"""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=setup_registries)
         base_mass = railgun.base_mass
         weapon = railgun.get_ability('ProjectileWeaponAbility')
         base_range = weapon._base_range if hasattr(weapon, '_base_range') else weapon.range
 
         for level in [0, 1, 2, 3]:
-            railgun = create_component('railgun')
+            railgun = create_component('railgun', registries=setup_registries)
             if level > 0:
                 railgun.add_modifier('range_mount', level)
             railgun.recalculate_stats()
@@ -220,11 +220,11 @@ class TestModifierFormulaVerification:
 
     def test_turret_mount_formula(self, setup_registries):
         """Verify turret_mount: mass_mult = 1.0 + 0.514 * ln(1 + arc/30)"""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=setup_registries)
         base_mass = railgun.base_mass
 
         for arc in [0, 30, 45, 90, 180]:
-            railgun = create_component('railgun')
+            railgun = create_component('railgun', registries=setup_registries)
             if arc > 0:
                 railgun.add_modifier('turret_mount', arc)
             railgun.recalculate_stats()
@@ -245,13 +245,13 @@ class TestModifierFormulaVerification:
 
     def test_rapid_fire_formula(self, setup_registries):
         """Verify rapid_fire: reload = 1/rate, mass += (rate-1)*2"""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=setup_registries)
         base_mass = railgun.base_mass
         weapon = railgun.get_ability('ProjectileWeaponAbility')
         base_reload = weapon._base_reload if hasattr(weapon, '_base_reload') else weapon.reload_time
 
         for rate in [1.0, 2.0, 3.0, 5.0]:
-            railgun = create_component('railgun')
+            railgun = create_component('railgun', registries=setup_registries)
             if rate > 1.0:
                 railgun.add_modifier('rapid_fire', rate)
             railgun.recalculate_stats()

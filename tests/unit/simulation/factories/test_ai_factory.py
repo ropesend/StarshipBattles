@@ -26,14 +26,14 @@ class TestAIControllerFactory:
         from game.simulation.factories.ai_factory import AIControllerFactory
         assert hasattr(AIControllerFactory, 'create_for_ships')
 
-    def test_create_for_ship_returns_ai_controller(self):
+    def test_create_for_ship_returns_ai_controller(self, fresh_registries):
         """create_for_ship should return an AIController."""
         from game.simulation.factories.ai_factory import AIControllerFactory
         from game.simulation.entities.ship import Ship
         from game.engine.spatial import SpatialGrid
         from game.core.config import PhysicsConfig
 
-        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 0, 0))
+        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 0, 0), registries=fresh_registries)
         grid = SpatialGrid(cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE)
 
         factory = AIControllerFactory(grid)
@@ -43,7 +43,7 @@ class TestAIControllerFactory:
         assert hasattr(controller, 'update')
         assert hasattr(controller, 'ship')
 
-    def test_create_for_ships_returns_list(self):
+    def test_create_for_ships_returns_list(self, fresh_registries):
         """create_for_ships should return a list of controllers."""
         from game.simulation.factories.ai_factory import AIControllerFactory
         from game.simulation.entities.ship import Ship
@@ -51,8 +51,8 @@ class TestAIControllerFactory:
         from game.core.config import PhysicsConfig
 
         ships = [
-            Ship(name="Ship 1", x=0, y=0, color=(255, 0, 0), team_id=0),
-            Ship(name="Ship 2", x=100, y=0, color=(0, 255, 0), team_id=0),
+            Ship(name="Ship 1", x=0, y=0, color=(255, 0, 0), team_id=0, registries=fresh_registries),
+            Ship(name="Ship 2", x=100, y=0, color=(0, 255, 0), team_id=0, registries=fresh_registries),
         ]
         grid = SpatialGrid(cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE)
 
@@ -64,14 +64,14 @@ class TestAIControllerFactory:
             assert hasattr(ctrl, 'update')
             assert hasattr(ctrl, 'ship')
 
-    def test_factory_creates_controller_with_correct_enemy_team(self):
+    def test_factory_creates_controller_with_correct_enemy_team(self, fresh_registries):
         """Controllers should have the correct enemy team ID."""
         from game.simulation.factories.ai_factory import AIControllerFactory
         from game.simulation.entities.ship import Ship
         from game.engine.spatial import SpatialGrid
         from game.core.config import PhysicsConfig
 
-        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 0, 0), team_id=0)
+        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 0, 0), team_id=0, registries=fresh_registries)
         grid = SpatialGrid(cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE)
 
         factory = AIControllerFactory(grid)
@@ -80,7 +80,7 @@ class TestAIControllerFactory:
         # Verify enemy team is set (AIController stores this)
         assert controller.enemy_team_id == 1
 
-    def test_factory_wraps_ship_in_adapter(self):
+    def test_factory_wraps_ship_in_adapter(self, fresh_registries):
         """Factory should wrap Ship in ShipControllableAdapter."""
         from game.simulation.factories.ai_factory import AIControllerFactory
         from game.simulation.entities.ship import Ship
@@ -88,7 +88,7 @@ class TestAIControllerFactory:
         from game.core.config import PhysicsConfig
         from game.ai.interfaces import ShipControllableAdapter
 
-        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 0, 0))
+        ship = Ship(name="Test Ship", x=0, y=0, color=(255, 0, 0), registries=fresh_registries)
         grid = SpatialGrid(cell_size=PhysicsConfig.SPATIAL_GRID_CELL_SIZE)
 
         factory = AIControllerFactory(grid)
@@ -108,7 +108,7 @@ class TestAIControllerFactory:
 class TestAIControllerFactoryIntegration:
     """Integration tests for AIControllerFactory with BattleEngine."""
 
-    def test_factory_controllers_work_with_battle_engine(self):
+    def test_factory_controllers_work_with_battle_engine(self, fresh_registries):
         """Controllers from factory should work with BattleEngine."""
         from game.simulation.factories.ai_factory import AIControllerFactory
         from game.simulation.systems.battle_engine import BattleEngine
@@ -117,8 +117,8 @@ class TestAIControllerFactoryIntegration:
         from game.core.config import PhysicsConfig
 
         # Create ships
-        ship1 = Ship(name="Player Ship", x=0, y=0, color=(255, 0, 0), team_id=0)
-        ship2 = Ship(name="Enemy Ship", x=500, y=0, color=(0, 255, 0), team_id=1)
+        ship1 = Ship(name="Player Ship", x=0, y=0, color=(255, 0, 0), team_id=0, registries=fresh_registries)
+        ship2 = Ship(name="Enemy Ship", x=500, y=0, color=(0, 255, 0), team_id=1, registries=fresh_registries)
 
         # Create engine with its own grid
         engine = BattleEngine()

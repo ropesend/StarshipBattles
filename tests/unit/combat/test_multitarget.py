@@ -95,7 +95,7 @@ class TestMultitarget:
 
         assert ship.max_targets == 10
 
-    def test_secondary_target_acquisition(self, base_ship, grid):
+    def test_secondary_target_acquisition(self, base_ship, grid, fresh_registries):
         ship = base_ship
         # Add Multiplex
         comps = RegistryManager.instance().components
@@ -107,9 +107,9 @@ class TestMultitarget:
         ship.recalculate_stats()
 
         # Create Enemies
-        e1 = Ship("Enemy1", 1100, 1000, (255, 0, 0), team_id=1)  # Dist 100
-        e2 = Ship("Enemy2", 1200, 1000, (255, 0, 0), team_id=1)  # Dist 200
-        e3 = Ship("Enemy3", 1300, 1000, (255, 0, 0), team_id=1)  # Dist 300
+        e1 = Ship("Enemy1", 1100, 1000, (255, 0, 0), team_id=1, registries=fresh_registries)  # Dist 100
+        e2 = Ship("Enemy2", 1200, 1000, (255, 0, 0), team_id=1, registries=fresh_registries)  # Dist 200
+        e3 = Ship("Enemy3", 1300, 1000, (255, 0, 0), team_id=1, registries=fresh_registries)  # Dist 300
 
         grid.insert(e1)
         grid.insert(e2)
@@ -220,20 +220,20 @@ class TestMultitarget:
 class TestMaxTargetsDefault:
     """Tests for CombatConstants.DEFAULT_MAX_TARGETS usage."""
 
-    def test_ship_default_max_targets_equals_constant(self):
+    def test_ship_default_max_targets_equals_constant(self, fresh_registries):
         """Ship's default max_targets should equal CombatConstants.DEFAULT_MAX_TARGETS."""
         from game.core.constants import CombatConstants
 
-        ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort", registries=fresh_registries)
         assert ship.max_targets == CombatConstants.DEFAULT_MAX_TARGETS
 
-    def test_stats_reset_uses_default_constant(self):
+    def test_stats_reset_uses_default_constant(self, fresh_registries):
         """ShipStatsCalculator reset should use CombatConstants.DEFAULT_MAX_TARGETS."""
         from game.core.constants import CombatConstants
         from game.simulation.entities.ship_stats import ShipStatsCalculator
         from game.core.registry import get_default_registry_provider
 
-        ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort")
+        ship = Ship("TestShip", 0, 0, (255, 0, 0), team_id=0, ship_class="Escort", registries=fresh_registries)
         # Manually set max_targets to a different value
         ship.max_targets = 99
 

@@ -8,40 +8,14 @@ from unittest.mock import MagicMock
 os.environ['SDL_VIDEODRIVER'] = 'dummy'
 
 from game.simulation.entities.ship import Ship
-from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, load_modifiers, get_all_components
+from game.simulation.components.component import get_all_components
 from game.ui.screens.builder.left_panel import BuilderLeftPanel
-
-
-@pytest.fixture(scope="module")
-def pygame_initialized():
-    """Initialize pygame and registries once for all tests in this module."""
-    pygame.init()
-    # Initialize registries
-    initialize_ship_data()
-    load_components()
-    load_modifiers()
-    yield
-    # No teardown needed at module level - individual tests handle their cleanup
-
-
-@pytest.fixture
-def test_registries():
-    """Provide fresh registries for DI compliance."""
-    from game.core.registry import GameRegistries, RegistryManager
-
-    mgr = RegistryManager.instance()
-    return GameRegistries(
-        components=dict(mgr.components),
-        modifiers=dict(mgr.modifiers),
-        vehicle_classes=dict(mgr.vehicle_classes),
-        resources={}
-    )
 
 
 class TestBug09Reproduction:
     @pytest.fixture(autouse=True)
-    def setup(self, pygame_initialized, test_registries):
+    def setup(self, fresh_registries):
+        pygame.init()
         self.window_surface = pygame.display.set_mode((800, 600))
         self.ui_manager = pygame_gui.UIManager((800, 600))
 
@@ -49,13 +23,13 @@ class TestBug09Reproduction:
         self.mock_builder = MagicMock()
         # Escort class has 'hull_escort' as default hull
         self.ship = Ship("Test Escort", 0, 0, (255, 255, 255), ship_class="Escort",
-                         registries=test_registries)
+                         registries=fresh_registries)
         self.mock_builder.ship = self.ship
 
         # Mock sprite manager
         dummy_surf = pygame.Surface((32, 32))
         self.mock_builder.sprite_mgr.get_sprite.return_value = dummy_surf
-        self.mock_builder.available_components = get_all_components(registries=test_registries)
+        self.mock_builder.available_components = get_all_components(registries=fresh_registries)
 
         # Create BuilderLeftPanel
         self.panel_rect = pygame.Rect(0, 0, 300, 600)

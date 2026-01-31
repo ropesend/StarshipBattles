@@ -1,37 +1,16 @@
 import pytest
 import pygame
 from game.simulation.entities.ship import Ship
-from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
 from game.core.constants import AttackType
-from game.ai.strategy_manager import StrategyManager
-from tests.fixtures.paths import get_unit_test_data_dir
-
-
-@pytest.fixture(autouse=True)
-def setup_game_data():
-    """Initialize game data before each test."""
-    initialize_ship_data()
-    load_components()
-    pygame.init()
-    manager = StrategyManager.instance()
-    manager.load_data(
-         str(get_unit_test_data_dir()),
-         targeting_file="test_targeting_policies.json",
-         movement_file="test_movement_policies.json",
-         strategy_file="test_combat_strategies.json"
-    )
-    manager._loaded = True
 
 
 class TestFighterLaunch:
 
-    def test_hangar_initialization(self):
+    def test_hangar_initialization(self, fresh_registries):
         """Test Hangar component loads correctly."""
-        hangar = RegistryManager.instance().components.get("fighter_launch_bay")
+        hangar = fresh_registries.components.get("fighter_launch_bay")
         assert hangar is not None
         assert hangar.type_str == "Hangar"
 
@@ -41,10 +20,11 @@ class TestFighterLaunch:
         assert vl.data.get('max_launch_mass', 0) == 50
         assert vl.cycle_time == 5.0
 
-    def test_launch_logic(self):
+    def test_launch_logic(self, fresh_registries, strategy_manager_with_test_data):
         """Test launching mechanism on a ship."""
-        ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser")
-        comps = RegistryManager.instance().components
+        pygame.init()
+        ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
+        comps = fresh_registries.components
         hangar = comps["fighter_launch_bay"].clone()
         # Add Bridge to prevent derelict status
         bridge = comps["bridge"].clone()
@@ -53,7 +33,7 @@ class TestFighterLaunch:
         bridge.current_hp = bridge.max_hp # Fix 0 HP initialization due to formula
 
         # Add Engine to prevent derelict status (Thrust > 0)
-        ship_engine = RegistryManager.instance().components["standard_engine"].clone()
+        ship_engine = comps["standard_engine"].clone()
         ship.add_component(ship_engine, LayerType.INNER)
 
         # Remove crew requirement for test
@@ -73,7 +53,7 @@ class TestFighterLaunch:
         assert vl.cooldown <= 0
 
         # Simulate Combat
-        ship.current_target = Ship("Enemy", 1000, 0, (0, 0, 255))
+        ship.current_target = Ship("Enemy", 1000, 0, (0, 0, 255), registries=fresh_registries)
 
         # Fire weapons (triggers launch)
         attacks = ship.fire_weapons()
@@ -86,21 +66,22 @@ class TestFighterLaunch:
         assert vl.cooldown > 0
         assert vl.cooldown == pytest.approx(vl.cycle_time)
 
-    def test_battle_engine_launch_processing(self):
+    def test_battle_engine_launch_processing(self, fresh_registries, strategy_manager_with_test_data):
         """Test BattleEngine processes launch events and creates ships."""
+        pygame.init()
         engine = BattleEngine()
 
-        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser")
+        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser", registries=fresh_registries)
 
         # Add Bridge
-        bridge = RegistryManager.instance().components["bridge"].clone()
+        comps = fresh_registries.components
+        bridge = comps["bridge"].clone()
         bridge.abilities.pop("CrewRequired", None)
         carrier.add_component(bridge, LayerType.CORE)
         bridge.current_hp = bridge.max_hp # Fix 0 HP initialization
 
 
         # Add Engine
-        comps = RegistryManager.instance().components
         ship_engine = comps["standard_engine"].clone()
         carrier.add_component(ship_engine, LayerType.INNER)
 
@@ -111,7 +92,7 @@ class TestFighterLaunch:
         carrier.add_component(hangar, LayerType.INNER)
         carrier.recalculate_stats()
 
-        enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1)
+        enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
 
         engine.start([carrier], [enemy])
 
@@ -135,10 +116,10 @@ class TestFighterLaunch:
         assert new_ship.team_id == 0
         assert new_ship.ship_class == "Fighter (Small)"
 
-    def test_stats_aggregation(self):
+    def test_stats_aggregation(self, fresh_registries):
         """Test ShipStatsCalculator aggregates Hangar stats."""
-        ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser")
-        comps = RegistryManager.instance().components
+        ship = Ship("Carrier", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
+        comps = fresh_registries.components
         hangar = comps["fighter_launch_bay"].clone()
 
         # Add Bridge & Engine for validity (optional for stats but good practice)
@@ -164,20 +145,21 @@ class TestFighterLaunch:
         assert getattr(ship, 'fighter_size_cap', 0) == 50
         assert getattr(ship, 'launch_cycle', 0) == 5.0
 
-    def test_fighter_launch_speed_uses_config(self):
+    def test_fighter_launch_speed_uses_config(self, fresh_registries, strategy_manager_with_test_data):
         """Test launched fighters receive BattleConfig.FIGHTER_LAUNCH_SPEED velocity boost."""
         from game.core.config import BattleConfig
         from game.core.math import Vector2
 
+        pygame.init()
         engine = BattleEngine()
 
         # Create stationary carrier at origin facing right (angle=0)
-        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser")
+        carrier = Ship("Carrier", 0, 0, (255, 0, 0), team_id=0, ship_class="Cruiser", registries=fresh_registries)
         carrier.velocity = Vector2(0, 0)
         carrier.angle = 0  # Facing right
 
         # Add Bridge
-        comps = RegistryManager.instance().components
+        comps = fresh_registries.components
         bridge = comps["bridge"].clone()
         bridge.abilities.pop("CrewRequired", None)
         carrier.add_component(bridge, LayerType.CORE)
@@ -193,7 +175,7 @@ class TestFighterLaunch:
         carrier.add_component(hangar, LayerType.INNER)
         carrier.recalculate_stats()
 
-        enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1)
+        enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
 
         engine.start([carrier], [enemy])
 

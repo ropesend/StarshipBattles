@@ -3,6 +3,8 @@
 PROJ-43: Updated to use mock ComponentService instead of patching MODIFIER_REGISTRY.
 """
 import pytest
+import pygame
+import pygame_gui
 from unittest.mock import MagicMock, patch
 
 
@@ -25,30 +27,26 @@ def mock_component_service():
 
 
 @pytest.fixture
-def mocked_pygame_modules():
-    """Patch pygame modules for isolated testing."""
-    with patch.dict('sys.modules', {
-        'pygame': MagicMock(),
-        'pygame_gui': MagicMock(),
-        'pygame_gui.elements': MagicMock(),
-        'pygame_gui.core': MagicMock(),
-        'pygame_gui.windows': MagicMock()
-    }):
-        # Import module with mocked dependencies
-        import game.ui.screens.builder.legacy_components as builder_components
-        yield builder_components
+def pygame_setup():
+    """Initialize pygame and pygame_gui for testing."""
+    pygame.init()
+    pygame.display.set_mode((800, 600))
+    manager = pygame_gui.UIManager((800, 600))
+    container = pygame_gui.elements.UIPanel(
+        pygame.Rect(0, 0, 400, 300),
+        manager=manager
+    )
+    yield manager, container
+    pygame.quit()
 
 
 class TestSliderIncrement:
-    def test_range_mount_increment(self, mocked_pygame_modules, mock_component_service):
+    def test_range_mount_increment(self, pygame_setup, mock_component_service):
         """Test that the Range Mount slider is initialized with 0.1 increment."""
-        module = mocked_pygame_modules
-        manager = MagicMock()
-        container = MagicMock()
-        preset_manager = MagicMock()
+        from game.ui.screens.builder.legacy_components import ModifierEditorPanel
 
-        # Access class from imported module
-        ModifierEditorPanel = module.ModifierEditorPanel
+        manager, container = pygame_setup
+        preset_manager = MagicMock()
 
         # PROJ-43: Pass mock service via constructor instead of patching global
         panel = ModifierEditorPanel(
@@ -60,6 +58,10 @@ class TestSliderIncrement:
         template_modifiers = {'range_mount': 0}
 
         with patch('game.ui.screens.builder.modifier_row.UIHorizontalSlider') as MockSlider:
+            # Mock the slider to avoid pygame_gui validation errors
+            mock_slider_instance = MagicMock()
+            MockSlider.return_value = mock_slider_instance
+
             panel.rebuild(None, template_modifiers)
             panel.layout(0)
 

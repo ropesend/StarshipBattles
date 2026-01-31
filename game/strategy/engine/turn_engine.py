@@ -173,7 +173,10 @@ class TurnEngine:
         """Return conflict engine, lazily creating default if not injected."""
         if self._conflict_engine is None:
             from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
-            self._conflict_engine = ConflictResolutionEngine(self._battle_resolver)
+            # PROJ-50: Pass registries for strict DI compliance
+            self._conflict_engine = ConflictResolutionEngine(
+                self._battle_resolver, registries=self._registries
+            )
         return self._conflict_engine
 
     @property

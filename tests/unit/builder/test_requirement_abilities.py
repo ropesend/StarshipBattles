@@ -1,29 +1,24 @@
 import pytest
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component import Component
+from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import RegistryManager
 from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+
 
 @pytest.fixture
 def registry_setup(fresh_registries):
     """Setup custom registry data for requirement ability testing."""
-    mgr = RegistryManager.instance()
-    mgr.clear()
-
     # Define a simple vehicle class
-    mgr.vehicle_classes.update({
-        "TestClass": {
-            "type": "Ship",
-            "max_mass": 1000,
-            "default_hull_id": "test_hull",
-            "layers": [
-                {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
-                {"type": "OUTER", "radius_pct": 0.5, "restrictions": []},
-            ]
-        }
-    })
+    fresh_registries.vehicle_classes["TestClass"] = {
+        "type": "Ship",
+        "max_mass": 1000,
+        "default_hull_id": "test_hull",
+        "layers": [
+            {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
+            {"type": "OUTER", "radius_pct": 0.5, "restrictions": []},
+        ]
+    }
 
     # Define Hull with requirements
     hull_data = {
@@ -37,7 +32,7 @@ def registry_setup(fresh_registries):
             "RequiresCombatMovement": True
         }
     }
-    mgr.components["test_hull"] = Component(hull_data, registries=fresh_registries)
+    fresh_registries.components["test_hull"] = Component(hull_data, registries=fresh_registries)
 
     # Define Bridge (provides C&C)
     bridge_data = {
@@ -48,7 +43,7 @@ def registry_setup(fresh_registries):
         "hp": 50,
         "abilities": {"CommandAndControl": True}
     }
-    mgr.components["test_bridge"] = Component(bridge_data, registries=fresh_registries)
+    fresh_registries.components["test_bridge"] = Component(bridge_data, registries=fresh_registries)
 
     # Define Engine (provides CombatPropulsion)
     engine_data = {
@@ -57,22 +52,19 @@ def registry_setup(fresh_registries):
         "type": "Engine",
         "mass": 20,
         "hp": 50,
-        "abilities": {"CombatPropulsion": 100} # Numeric value
+        "abilities": {"CombatPropulsion": 100}  # Numeric value
     }
-    mgr.components["test_engine"] = Component(engine_data, registries=fresh_registries)
+    fresh_registries.components["test_engine"] = Component(engine_data, registries=fresh_registries)
 
-    # Store registries for use in tests
-    mgr._fresh_registries = fresh_registries
+    return fresh_registries
 
-    yield mgr
-    mgr.clear()
 
 def test_marker_abilities_tallied_as_boolean(registry_setup):
     """Verify that ShipStatsCalculator tallies marker abilities (no numeric value) as True."""
-    registries = registry_setup._fresh_registries
+    registries = registry_setup
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass", registries=registries)
 
-    stats_calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+    stats_calculator = ShipStatsCalculator(registries.vehicle_classes)
     # Use helper method for iteration
     totals = stats_calculator.calculate_ability_totals(ship.get_all_components())
 
@@ -84,9 +76,10 @@ def test_marker_abilities_tallied_as_boolean(registry_setup):
     # Bridge isn't added yet, so it should be missing
     assert "CommandAndControl" not in totals
 
+
 def test_validation_fails_when_markers_unmet(registry_setup):
     """Verify that validator fails if markers are present but capabilities are missing."""
-    registries = registry_setup._fresh_registries
+    registries = registry_setup
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass", registries=registries)
     validator = ShipDesignValidator(registries=registries)
 
@@ -95,13 +88,13 @@ def test_validation_fails_when_markers_unmet(registry_setup):
     assert any("Needs Command capability" in e for e in result.errors)
     assert any("Needs Combat propulsion" in e for e in result.errors)
 
+
 def test_validation_passes_when_requirements_met(registry_setup):
     """Verify that validator passes when Bridge and Engine are added to satisfy hull markers."""
-    registries = registry_setup._fresh_registries
+    registries = registry_setup
     ship = Ship(name="TestShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass", registries=registries)
 
     # Add Bridge to CORE
-    from game.simulation.components.component import create_component
     bridge = create_component("test_bridge", registries=registries)
     ship.add_component(bridge, LayerType.CORE)
 
@@ -115,11 +108,11 @@ def test_validation_passes_when_requirements_met(registry_setup):
     # Should be valid now (Bridge provides C&C, Engine provides CombatPropulsion)
     assert result.is_valid, f"Validation failed unexpectedly: {result.errors}"
 
+
 def test_satellite_hull_requirements(registry_setup):
     """Verify marker validation for a Satellite (which only requires C&C)."""
-    registries = registry_setup._fresh_registries
-    mgr = RegistryManager.instance()
-    mgr.vehicle_classes["SatClass"] = {
+    registries = registry_setup
+    registries.vehicle_classes["SatClass"] = {
         "type": "Satellite",
         "max_mass": 100,
         "default_hull_id": "sat_hull",
@@ -134,7 +127,7 @@ def test_satellite_hull_requirements(registry_setup):
         "hp": 20,
         "abilities": {"RequiresCommandAndControl": True}
     }
-    mgr.components["sat_hull"] = Component(sat_hull_data, registries=registries)
+    registries.components["sat_hull"] = Component(sat_hull_data, registries=registries)
 
     ship = Ship(name="TestSat", x=0, y=0, color=(255, 255, 255), ship_class="SatClass", registries=registries)
     validator = ShipDesignValidator(registries=registries)
@@ -145,11 +138,11 @@ def test_satellite_hull_requirements(registry_setup):
     assert any("Needs Command capability" in e for e in result.errors)
     assert not any("Needs Combat propulsion" in e for e in result.errors)
 
+
 def test_redundant_requirements_satisfied(registry_setup):
     """Verify that multiple components providing the same capability satisfy the requirement."""
-    registries = registry_setup._fresh_registries
+    registries = registry_setup
     ship = Ship(name="RedundantShip", x=0, y=0, color=(255, 255, 255), ship_class="TestClass", registries=registries)
-    from game.simulation.components.component import create_component
 
     # Add TWO bridges
     ship.add_component(create_component("test_bridge", registries=registries), LayerType.CORE)
@@ -162,13 +155,13 @@ def test_redundant_requirements_satisfied(registry_setup):
     result = validator.validate_design(ship)
     assert result.is_valid
 
+
 def test_stats_calculator_direct_marker_check(registry_setup):
     """Directly test ShipStatsCalculator for marker ability tallying."""
-    registries = registry_setup._fresh_registries
-    from game.simulation.components.component import create_component
+    registries = registry_setup
     hull = create_component("test_hull", registries=registries)
 
-    stats_calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)
+    stats_calculator = ShipStatsCalculator(registries.vehicle_classes)
     totals = stats_calculator.calculate_ability_totals([hull])
 
     # Marker abilities (Requires...) should be True

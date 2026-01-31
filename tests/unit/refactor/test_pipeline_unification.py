@@ -10,17 +10,12 @@ import pytest
 class TestSingleRecalculatePath:
     """Tests verifying abilities recalculate correctly without duplicate code."""
 
-    def test_resource_consumption_recalculates_via_stat_bindings(self):
+    def test_resource_consumption_recalculates_via_stat_bindings(self, fresh_registries):
         """ResourceConsumption.recalculate() should apply consumption_mult correctly."""
-        from game.simulation.components.component import (
-            load_components, load_modifiers, create_component, reset_component_caches
-        )
-        reset_component_caches()
-        load_modifiers('data/modifiers.json')
-        load_components('data/components.json')
+        from game.simulation.components.component import create_component
 
         # Create a component with ResourceConsumption (railgun has energy consumption)
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.recalculate_stats()
 
         # Get the ResourceConsumption ability
@@ -36,17 +31,12 @@ class TestSingleRecalculatePath:
         # Verify consumption was reduced
         assert rc.amount == pytest.approx(base_amount * 0.5)
 
-    def test_resource_storage_recalculates_via_stat_bindings(self):
+    def test_resource_storage_recalculates_via_stat_bindings(self, fresh_registries):
         """ResourceStorage.recalculate() should apply capacity_mult correctly."""
-        from game.simulation.components.component import (
-            load_components, load_modifiers, create_component, reset_component_caches
-        )
-        reset_component_caches()
-        load_modifiers('data/modifiers.json')
-        load_components('data/components.json')
+        from game.simulation.components.component import create_component
 
         # Create a component with ResourceStorage
-        fuel_tank = create_component('fuel_tank')
+        fuel_tank = create_component('fuel_tank', registries=fresh_registries)
         if fuel_tank is None:
             pytest.skip("fuel_tank component not found")
 
@@ -65,17 +55,12 @@ class TestSingleRecalculatePath:
         # Verify capacity was scaled
         assert rs.max_amount == pytest.approx(base_max * 2.0)
 
-    def test_resource_generation_recalculates_via_stat_bindings(self):
+    def test_resource_generation_recalculates_via_stat_bindings(self, fresh_registries):
         """ResourceGeneration.recalculate() should apply energy_gen_mult correctly."""
-        from game.simulation.components.component import (
-            load_components, load_modifiers, create_component, reset_component_caches
-        )
-        reset_component_caches()
-        load_modifiers('data/modifiers.json')
-        load_components('data/components.json')
+        from game.simulation.components.component import create_component
 
         # Create a component with ResourceGeneration
-        generator = create_component('generator')
+        generator = create_component('generator', registries=fresh_registries)
         generator.recalculate_stats()
 
         # Get the ResourceGeneration ability
@@ -91,17 +76,12 @@ class TestSingleRecalculatePath:
         # Verify rate was scaled
         assert rg.rate == pytest.approx(base_rate * 2.0)
 
-    def test_all_abilities_recalculate_called(self):
+    def test_all_abilities_recalculate_called(self, fresh_registries):
         """All ability instances should have recalculate() called during stats recalc."""
-        from game.simulation.components.component import (
-            load_components, load_modifiers, create_component, reset_component_caches
-        )
-        reset_component_caches()
-        load_modifiers('data/modifiers.json')
-        load_components('data/components.json')
+        from game.simulation.components.component import create_component
 
         # Create a component with multiple abilities
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.recalculate_stats()
 
         # Every ability should have had recalculate() called
@@ -114,16 +94,11 @@ class TestSingleRecalculatePath:
 class TestNoManuaStatsApplication:
     """Tests verifying that abilities handle their own stat application."""
 
-    def test_weapon_damage_from_ability_recalculate(self):
+    def test_weapon_damage_from_ability_recalculate(self, fresh_registries):
         """WeaponAbility should apply damage_mult via its own recalculate()."""
-        from game.simulation.components.component import (
-            load_components, load_modifiers, create_component, reset_component_caches
-        )
-        reset_component_caches()
-        load_modifiers('data/modifiers.json')
-        load_components('data/components.json')
+        from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.recalculate_stats()
 
         weapon = railgun.get_ability('WeaponAbility')
@@ -138,16 +113,11 @@ class TestNoManuaStatsApplication:
         # Range should NOT be scaled by simple_size_mount (it doesn't affect range_mult)
         assert weapon.range == pytest.approx(base_range)
 
-    def test_propulsion_thrust_from_ability_recalculate(self):
+    def test_propulsion_thrust_from_ability_recalculate(self, fresh_registries):
         """CombatPropulsion should apply thrust_mult via its own recalculate()."""
-        from game.simulation.components.component import (
-            load_components, load_modifiers, create_component, reset_component_caches
-        )
-        reset_component_caches()
-        load_modifiers('data/modifiers.json')
-        load_components('data/components.json')
+        from game.simulation.components.component import create_component
 
-        engine = create_component('engine_basic')
+        engine = create_component('engine_basic', registries=fresh_registries)
         if engine is None:
             pytest.skip("engine_basic component not found")
 

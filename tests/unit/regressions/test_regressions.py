@@ -73,20 +73,20 @@ class TestRegressions:
         assert isinstance(img3, pygame.Surface)
         assert img3.get_width() == 100
 
-    def test_ship_theme_persistence(self, pygame_setup):
+    def test_ship_theme_persistence(self, pygame_setup, fresh_registries):
         """
         Regression Test for Theme Not Saving:
         Verify theme_id is saved and loaded correctly.
         """
-        s = Ship("TestShip", 0, 0, (255, 0, 0), theme_id="Atlantians")
+        s = Ship("TestShip", 0, 0, (255, 0, 0), theme_id="Atlantians", registries=fresh_registries)
 
         data = s.to_dict()
         assert data.get('theme_id') == "Atlantians"
 
-        s2 = Ship.from_dict(data)
+        s2 = Ship.from_dict(data, registries=fresh_registries)
         assert s2.theme_id == "Atlantians"
 
         # Test Default
-        s_def = Ship("DefShip", 0, 0, (255, 0, 0))  # defaults to Federation
+        s_def = Ship("DefShip", 0, 0, (255, 0, 0), registries=fresh_registries)  # defaults to Federation
         data_def = s_def.to_dict()
         assert data_def.get('theme_id') == "Federation"

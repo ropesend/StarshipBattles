@@ -5,9 +5,9 @@ from game.simulation.components.component_constants import LayerType, ComponentS
 
 class TestBulkAdd:
 
-    def test_bulk_add_success(self):
+    def test_bulk_add_success(self, fresh_registries):
         """Test adding multiple components in bulk."""
-        ship = Ship("Test Ship", 0, 0, (255, 255, 255))
+        ship = Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
         ship._initialize_layers()  # Ensure layers exist
 
         # Mock component
@@ -20,7 +20,7 @@ class TestBulkAdd:
             # allowed_layers removed
             "major_classification": "Armor"
         }
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=fresh_registries)
 
         count = 10
         ship.add_components_bulk(comp, LayerType.ARMOR, count)
@@ -28,9 +28,9 @@ class TestBulkAdd:
         assert len(ship.layers[LayerType.ARMOR]['components']) == 10
         assert ship.current_mass == 100  # 10 * 10
 
-    def test_bulk_add_with_limit(self):
+    def test_bulk_add_with_limit(self, fresh_registries):
         """Test bulk add with mass limit."""
-        ship = Ship("Test Ship", 0, 0, (255, 255, 255))
+        ship = Ship("Test Ship", 0, 0, (255, 255, 255), registries=fresh_registries)
         ship._initialize_layers()
 
         comp_data = {
@@ -41,7 +41,7 @@ class TestBulkAdd:
             "hp": 100,
             "major_classification": "Armor"
         }
-        comp = Component(comp_data)
+        comp = Component(comp_data, registries=fresh_registries)
 
         # Mock class limit to something small
         # Usually validation checks mass budget or unique limits.

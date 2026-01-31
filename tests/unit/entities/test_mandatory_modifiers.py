@@ -276,7 +276,7 @@ class TestMandatoryModifiers:
         assert 'simple_size_mount' in panel.modifier_rows, "simple_size_mount row not created"
 
         row = panel.modifier_rows['simple_size_mount']
-        btn = row.name_label
+        btn = row.toggle_btn
 
         event = MagicMock()
         event.type = pygame_gui.UI_BUTTON_PRESSED

@@ -5,18 +5,23 @@ Tests that ships in formation maintain proper positioning relative to their
 formation master during complex maneuvers including turns and course changes.
 
 PROJ-48: Converted from script format to pytest class format.
+PROJ-50: Added fresh_registries fixture for strict DI compliance.
 """
 import pytest
 import pygame
 import json
 import math
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine
 from game.simulation.entities.ship import Ship
 from game.ai.controller import AIController
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from tests.fixtures.paths import get_project_root
+
+if TYPE_CHECKING:
+    from game.core.registries.game_registries import GameRegistries
 
 
 # Maximum acceptable deviation from ideal formation position (in world units)
@@ -76,13 +81,18 @@ class CheckpointBehavior:
         self.ship.thrust_forward()
 
 
-def setup_formation_ships(design_data: dict, formation_data: dict) -> tuple:
+def setup_formation_ships(
+    design_data: dict,
+    formation_data: dict,
+    registries: 'GameRegistries'
+) -> tuple:
     """
     Create a formation of ships from design and formation data.
 
     Args:
         design_data: Ship design dictionary
         formation_data: Formation definition with arrows
+        registries: GameRegistries instance for DI
 
     Returns:
         Tuple of (all_ships, master_ship)
@@ -99,7 +109,7 @@ def setup_formation_ships(design_data: dict, formation_data: dict) -> tuple:
     center_y = (min_y + max_y) / 2
 
     # Scale factor
-    temp_ship = Ship.from_dict(design_data)
+    temp_ship = Ship.from_dict(design_data, registries=registries)
     temp_ship.recalculate_stats()
     diameter = temp_ship.radius * 2
     GRID_UNIT = 50.0
@@ -113,7 +123,7 @@ def setup_formation_ships(design_data: dict, formation_data: dict) -> tuple:
         world_x = (dx / GRID_UNIT) * diameter
         world_y = (dy / GRID_UNIT) * diameter
 
-        s = Ship.from_dict(design_data)
+        s = Ship.from_dict(design_data, registries=registries)
         s.position = pygame.math.Vector2(start_pos.x + world_x, start_pos.y + world_y)
         s.team_id = 0
         s.recalculate_stats()
@@ -135,7 +145,7 @@ def setup_formation_ships(design_data: dict, formation_data: dict) -> tuple:
         ships.append(s)
 
     # Add dummy enemy to prevent battle end
-    dummy = Ship.from_dict(design_data)
+    dummy = Ship.from_dict(design_data, registries=registries)
     dummy.position = pygame.math.Vector2(200000, 200000)
     dummy.team_id = 1
     ships.append(dummy)
@@ -205,7 +215,7 @@ class TestFormationFlight:
             return json.load(f)
 
     def test_formation_maintains_position_during_flight(
-        self, global_ship_data_with_modifiers, ship_design, formation_data
+        self, fresh_registries, global_ship_data_with_modifiers, ship_design, formation_data
     ):
         """
         Verify formation ships maintain relative positions during flight.
@@ -213,7 +223,7 @@ class TestFormationFlight:
         Ships should stay within acceptable deviation from their ideal
         formation positions while the master navigates through checkpoints.
         """
-        ships, master = setup_formation_ships(ship_design, formation_data)
+        ships, master = setup_formation_ships(ship_design, formation_data, fresh_registries)
 
         engine = BattleEngine()
         engine.ships = ships
@@ -261,7 +271,7 @@ class TestFormationFlight:
         )
 
     def test_formation_ships_stay_in_formation(
-        self, global_ship_data_with_modifiers, ship_design, formation_data
+        self, fresh_registries, global_ship_data_with_modifiers, ship_design, formation_data
     ):
         """
         Verify that no ships drop out of formation during normal flight.
@@ -269,7 +279,7 @@ class TestFormationFlight:
         The in_formation flag should remain True for all wing ships
         throughout the navigation sequence.
         """
-        ships, master = setup_formation_ships(ship_design, formation_data)
+        ships, master = setup_formation_ships(ship_design, formation_data, fresh_registries)
 
         engine = BattleEngine()
         engine.ships = ships

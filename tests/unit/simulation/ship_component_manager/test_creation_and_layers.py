@@ -37,12 +37,12 @@ class TestShipComponentManagerCreation:
 class TestLayerInitialization:
     """Tests for layer initialization and management."""
 
-    def test_initialize_layers_creates_hull_layer(self):
+    def test_initialize_layers_creates_hull_layer(self, fresh_registries):
         """initialize_layers creates HULL layer by default."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
+        from game.simulation.entities.ship import Ship
 
-        ship = MagicMock()
-        ship.ship_class = "Escort"
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
 
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
@@ -51,13 +51,13 @@ class TestLayerInitialization:
         assert 'components' in manager.layers[LayerType.HULL]
         assert manager.layers[LayerType.HULL]['components'] == []
 
-    def test_initialize_layers_creates_layers_from_class_def(self):
+    def test_initialize_layers_creates_layers_from_class_def(self, fresh_registries):
         """initialize_layers creates layers based on vehicle class definition."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
+        from game.simulation.entities.ship import Ship
 
-        ship = MagicMock()
-        ship.ship_class = "Escort"
-
+        # Use a real Ship with registries so initialize_layers can look up class def
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
 
@@ -67,12 +67,12 @@ class TestLayerInitialization:
         assert LayerType.OUTER in manager.layers
         assert LayerType.ARMOR in manager.layers
 
-    def test_initialize_layers_sets_layer_properties(self):
+    def test_initialize_layers_sets_layer_properties(self, fresh_registries):
         """initialize_layers sets radius_pct and restrictions for each layer."""
         from game.simulation.entities.ship_component_manager import ShipComponentManager
+        from game.simulation.entities.ship import Ship
 
-        ship = MagicMock()
-        ship.ship_class = "Escort"
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=fresh_registries)
 
         manager = ShipComponentManager(ship)
         manager.initialize_layers()

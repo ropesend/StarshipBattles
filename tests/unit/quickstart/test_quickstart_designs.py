@@ -4,6 +4,8 @@ Tests for quickstart ship design fixtures.
 These tests validate that the design fixtures used by quickstart buttons
 are valid, can be loaded correctly, and have correct stats. They also
 detect when code changes break the fixture format.
+
+PROJ-50 Phase 8: Updated to use fresh_registries for strict DI.
 """
 import pytest
 from pathlib import Path
@@ -69,15 +71,15 @@ class TestQuickstartDesignsValid:
         for field in required_fields:
             assert field in design_data, f"{design_name} missing required field: {field}"
 
-    def test_design_loads_as_valid_ship(self, design_name, design_data, quickstart_ship_data):
+    def test_design_loads_as_valid_ship(self, design_name, design_data, quickstart_ship_data, fresh_registries):
         """Each quickstart design should load as a valid Ship."""
-        ship = Ship.from_dict(design_data)
+        ship = Ship.from_dict(design_data, registries=fresh_registries)
         assert ship is not None
         assert ship.name, f"{design_name} must have a name"
 
-    def test_design_recalculates_stats(self, design_name, design_data, quickstart_ship_data):
+    def test_design_recalculates_stats(self, design_name, design_data, quickstart_ship_data, fresh_registries):
         """Each quickstart design should recalculate stats without error."""
-        ship = Ship.from_dict(design_data)
+        ship = Ship.from_dict(design_data, registries=fresh_registries)
         ship.recalculate_stats()
         assert ship.mass > 0, f"{design_name} should have positive mass"
         assert ship.max_hp > 0, f"{design_name} should have positive HP"
@@ -96,13 +98,13 @@ class TestQuickstartDesignsValid:
         assert "is_obsolete" in metadata
         assert "times_built" in metadata
 
-    def test_design_stats_match_expected(self, design_name, design_data, quickstart_ship_data):
+    def test_design_stats_match_expected(self, design_name, design_data, quickstart_ship_data, fresh_registries):
         """Design stats should match expected_stats within tolerance."""
         expected = design_data.get("expected_stats", {})
         if not expected:
             pytest.skip(f"{design_name} has no expected_stats")
 
-        ship = Ship.from_dict(design_data)
+        ship = Ship.from_dict(design_data, registries=fresh_registries)
         ship.recalculate_stats()
 
         # Check mass matches (within 5% tolerance due to formula variations)
@@ -121,55 +123,55 @@ class TestQuickstartDesignsValid:
 class TestQuickstartDesignSpecificContent:
     """Tests for specific expected content in quickstart designs."""
 
-    def test_escort_has_bridge(self, quickstart_designs_dir, quickstart_ship_data):
+    def test_escort_has_bridge(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
         """Escort design should have a bridge component."""
         data = load_json(str(quickstart_designs_dir / "qs_escort.json"))
-        ship = Ship.from_dict(data)
+        ship = Ship.from_dict(data, registries=fresh_registries)
 
         all_comps = ship.get_all_components()
         has_bridge = any(c.type_str == "Bridge" for c in all_comps)
         assert has_bridge, "Escort should have a bridge component"
 
-    def test_escort_has_engine(self, quickstart_designs_dir, quickstart_ship_data):
+    def test_escort_has_engine(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
         """Escort design should have an engine component."""
         data = load_json(str(quickstart_designs_dir / "qs_escort.json"))
-        ship = Ship.from_dict(data)
+        ship = Ship.from_dict(data, registries=fresh_registries)
 
         all_comps = ship.get_all_components()
         has_engine = any(c.has_ability("CombatPropulsion") for c in all_comps)
         assert has_engine, "Escort should have an engine component"
 
-    def test_escort_has_warp_drive(self, quickstart_designs_dir, quickstart_ship_data):
+    def test_escort_has_warp_drive(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
         """Escort design should have a warp drive component."""
         data = load_json(str(quickstart_designs_dir / "qs_escort.json"))
-        ship = Ship.from_dict(data)
+        ship = Ship.from_dict(data, registries=fresh_registries)
 
         all_comps = ship.get_all_components()
         has_warp = any(c.has_ability("WarpJump") for c in all_comps)
         assert has_warp, "Escort should have a warp drive component"
 
-    def test_escort_has_fuel_storage(self, quickstart_designs_dir, quickstart_ship_data):
+    def test_escort_has_fuel_storage(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
         """Escort design should have fuel storage."""
         data = load_json(str(quickstart_designs_dir / "qs_escort.json"))
-        ship = Ship.from_dict(data)
+        ship = Ship.from_dict(data, registries=fresh_registries)
         ship.recalculate_stats()
 
         max_fuel = ship.resources.get_max_value('fuel')
         assert max_fuel > 0, "Escort should have fuel storage"
 
-    def test_complex_has_command(self, quickstart_designs_dir, quickstart_ship_data):
+    def test_complex_has_command(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
         """Complex design should have a command component."""
         data = load_json(str(quickstart_designs_dir / "qs_complex.json"))
-        ship = Ship.from_dict(data)
+        ship = Ship.from_dict(data, registries=fresh_registries)
 
         all_comps = ship.get_all_components()
         has_command = any(c.has_ability("CommandAndControl") for c in all_comps)
         assert has_command, "Complex should have a command component"
 
-    def test_complex_has_shipyard(self, quickstart_designs_dir, quickstart_ship_data):
+    def test_complex_has_shipyard(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
         """Complex design should have a space shipyard component."""
         data = load_json(str(quickstart_designs_dir / "qs_complex.json"))
-        ship = Ship.from_dict(data)
+        ship = Ship.from_dict(data, registries=fresh_registries)
 
         all_comps = ship.get_all_components()
         has_shipyard = any(c.has_ability("SpaceShipyard") for c in all_comps)

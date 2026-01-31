@@ -17,6 +17,7 @@ from typing import List, Optional, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
+    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -64,7 +65,8 @@ class IBattleResolver(ABC):
         self,
         fleet1: 'Fleet',
         fleet2: 'Fleet',
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        registries: Optional['GameRegistries'] = None
     ) -> BattleResult:
         """
         Resolve a battle between two fleets.
@@ -73,6 +75,7 @@ class IBattleResolver(ABC):
             fleet1: First fleet (assigned to team 0)
             fleet2: Second fleet (assigned to team 1)
             seed: Optional random seed for deterministic battles
+            registries: Optional GameRegistries for DI (PROJ-50)
 
         Returns:
             BattleResult containing winner, tick count, and survivors

@@ -5,7 +5,7 @@
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
 | PROJ-51 | Naming Consistency Remediation | Planning | 2026-01-30 | 2026-01-30 |
-| PROJ-50 | Strict Dependency Injection Refactor | Planning | 2026-01-30 | 2026-01-30 |
+| PROJ-50 | Strict Dependency Injection Refactor | Revision | 2026-01-30 | 2026-01-30 |
 | PROJ-49 | Performance & Dead Code Cleanup | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-48 | Testing Infrastructure Overhaul | Planning | 2026-01-28 | 2026-01-28 |
 | PROJ-47 | Documentation Gaps Remediation | Planning | 2026-01-28 | 2026-01-28 |

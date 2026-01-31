@@ -98,11 +98,11 @@ class TestTargetedEffectEvaluation:
 class TestAbilitySpecificStats:
     """Tests for ability-specific stat dictionaries."""
 
-    def test_component_has_ability_stats_dict(self):
+    def test_component_has_ability_stats_dict(self, fresh_registries):
         """Component should have an ability_stats dict for targeted effects."""
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
 
         # Component should have ability_stats attribute (initialized in recalculate_stats)
         railgun.recalculate_stats()
@@ -110,13 +110,12 @@ class TestAbilitySpecificStats:
         assert hasattr(railgun, 'ability_stats')
         assert isinstance(railgun.ability_stats, dict)
 
-    def test_targeted_effect_goes_to_ability_stats(self):
+    def test_targeted_effect_goes_to_ability_stats(self, fresh_registries):
         """Effects with target_ability should populate ability_stats[ability_name]."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import RegistryManager
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
 
         # Create a test modifier with targeted effect
         test_mod_data = {
@@ -132,7 +131,7 @@ class TestAbilitySpecificStats:
         }
 
         # Register the test modifier
-        mod_registry = RegistryManager.instance().modifiers
+        mod_registry = fresh_registries.modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['test_targeted_mod'] = test_mod_def
 
@@ -144,13 +143,12 @@ class TestAbilitySpecificStats:
         assert 'damage_mult' in railgun.ability_stats['ProjectileWeaponAbility']
         assert railgun.ability_stats['ProjectileWeaponAbility']['damage_mult'] == pytest.approx(1.5)
 
-    def test_global_effect_stays_in_stats(self):
+    def test_global_effect_stays_in_stats(self, fresh_registries):
         """Effects without target_ability should stay in component.stats."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import RegistryManager
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
 
         # Create a test modifier with both targeted and global effects
         test_mod_data = {
@@ -170,7 +168,7 @@ class TestAbilitySpecificStats:
             ]
         }
 
-        mod_registry = RegistryManager.instance().modifiers
+        mod_registry = fresh_registries.modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['test_mixed_mod'] = test_mod_def
 
@@ -186,14 +184,13 @@ class TestAbilitySpecificStats:
 class TestAbilityRecalculateWithTargetedStats:
     """Tests for abilities reading from ability_stats."""
 
-    def test_ability_uses_targeted_stat_over_global(self):
+    def test_ability_uses_targeted_stat_over_global(self, fresh_registries):
         """Ability should use ability_stats[cls_name][stat] if present."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import RegistryManager
 
         # Use generator which has simpler formula (no range_to_target)
-        generator = create_component('generator')
+        generator = create_component('generator', registries=fresh_registries)
         if generator is None:
             pytest.skip("generator component not found")
 
@@ -218,7 +215,7 @@ class TestAbilityRecalculateWithTargetedStats:
             ]
         }
 
-        mod_registry = RegistryManager.instance().modifiers
+        mod_registry = fresh_registries.modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['gen_boost_targeted'] = test_mod_def
 
@@ -231,13 +228,12 @@ class TestAbilityRecalculateWithTargetedStats:
         assert generator.stats['energy_gen_mult'] == pytest.approx(1.0), \
             "Targeted effect should NOT affect global stats"
 
-    def test_multiple_abilities_same_stat_targeted_differently(self):
+    def test_multiple_abilities_same_stat_targeted_differently(self, fresh_registries):
         """Different abilities consuming same stat can be targeted independently."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import RegistryManager
 
-        generator = create_component('generator')
+        generator = create_component('generator', registries=fresh_registries)
         if generator is None:
             pytest.skip("generator component not found")
 
@@ -260,7 +256,7 @@ class TestAbilityRecalculateWithTargetedStats:
             ]
         }
 
-        mod_registry = RegistryManager.instance().modifiers
+        mod_registry = fresh_registries.modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['gen_boost'] = test_mod_def
 
@@ -273,13 +269,12 @@ class TestAbilityRecalculateWithTargetedStats:
 class TestMixedGlobalAndTargetedEffects:
     """Tests for modifiers with both global and targeted effects."""
 
-    def test_modifier_with_global_and_targeted_effects(self):
+    def test_modifier_with_global_and_targeted_effects(self, fresh_registries):
         """A modifier can have both global effects and ability-targeted effects."""
         from game.simulation.components.component import create_component
         from game.simulation.components.component_constants import Modifier
-        from game.core.registry import RegistryManager
 
-        generator = create_component('generator')
+        generator = create_component('generator', registries=fresh_registries)
         if generator is None:
             pytest.skip("generator component not found")
 
@@ -308,7 +303,7 @@ class TestMixedGlobalAndTargetedEffects:
             ]
         }
 
-        mod_registry = RegistryManager.instance().modifiers
+        mod_registry = fresh_registries.modifiers
         test_mod_def = Modifier(test_mod_data)
         mod_registry['heavy_gen_boost'] = test_mod_def
 

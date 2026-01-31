@@ -137,11 +137,11 @@ class TestAbilityIntrospection:
 class TestRealComponentIntrospection:
     """Integration tests using real components to verify introspection works."""
 
-    def test_weapon_get_effect_summary_with_range_mount(self):
+    def test_weapon_get_effect_summary_with_range_mount(self, fresh_registries):
         """WeaponAbility.get_effect_summary() should show range change with range_mount."""
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('range_mount', 2)  # Level 2 = 4x range
 
         weapon = railgun.get_ability('ProjectileWeaponAbility')
@@ -152,11 +152,11 @@ class TestRealComponentIntrospection:
         assert range_entry is not None
         assert range_entry['stat_value'] == pytest.approx(4.0)  # 2^2 = 4
 
-    def test_weapon_get_effect_summary_with_hardened_mount(self):
+    def test_weapon_get_effect_summary_with_hardened_mount(self, fresh_registries):
         """WeaponAbility.get_effect_summary() should show damage with hardened_mount."""
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('hardened_mount', 2.0)  # 2x mass, 4x HP
 
         weapon = railgun.get_ability('ProjectileWeaponAbility')
@@ -166,11 +166,11 @@ class TestRealComponentIntrospection:
         # Should have entries for stats that are actually modified
         assert isinstance(summary, list)
 
-    def test_effect_summary_empty_when_no_modifiers(self):
+    def test_effect_summary_empty_when_no_modifiers(self, fresh_registries):
         """get_effect_summary() should return empty list with no modifiers."""
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         # No modifiers applied
 
         weapon = railgun.get_ability('ProjectileWeaponAbility')

@@ -905,7 +905,10 @@ class WeaponsReportPanel:
             bar_y = row_y + self.BAR_Y_OFFSET
             weapon_range = getattr(weapon, 'range', 0)
             damage = getattr(weapon, 'damage', 0)
-            
+
+            # Default to 0 width when max_range is 0 (prevents UnboundLocalError)
+            weapon_bar_width = 0
+
             if self._max_range > 0 and weapon_range > 0:
                 weapon_bar_width = int((weapon_range / self._max_range) * bar_width)
                 

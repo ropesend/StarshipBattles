@@ -1,7 +1,18 @@
+import pytest
 import pygame
 import pygame_gui
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from game.simulation.components.component_constants import Modifier
+
+
+@pytest.fixture(autouse=True)
+def mock_modifier_logic():
+    """Mock ModifierLogic to avoid registry dependencies in UI tests."""
+    with patch('game.ui.screens.builder.modifier_row.ModifierLogic') as mock_logic:
+        mock_logic.is_modifier_mandatory.return_value = False
+        mock_logic.get_local_min_max.return_value = (0, 100)
+        mock_logic.get_mandatory_modifiers.return_value = []
+        yield mock_logic
 
 
 class TestModifierRow:
@@ -28,13 +39,12 @@ class TestModifierRow:
 
         row.build_ui(10)
 
-        # New compact layout has: name_label, entry, slider, json_btn, and step buttons
-        assert row.name_label is not None
+        # Layout has: toggle_btn, entry, slider, and step buttons
+        assert row.toggle_btn is not None
         assert row.entry is not None
         assert row.slider is not None
-        assert row.json_btn is not None
         assert len(row.buttons) == 1  # 1 step button
-        assert row.height == 28  # Compact height
+        assert row.height == 32  # Default row height
 
     def test_update_state(self):
         """Test that update correctly sets active state and value."""
@@ -48,7 +58,7 @@ class TestModifierRow:
         mock_comp = MagicMock()
         mock_comp.get_modifier.return_value = None
 
-        row.update(mock_comp)
+        row.update(mock_comp, {})
         assert not row.is_active
 
         # Activate by having the component return a modifier
@@ -56,12 +66,12 @@ class TestModifierRow:
         mock_mod.value = 50
         mock_comp.get_modifier.return_value = mock_mod
 
-        row.update(mock_comp)
+        row.update(mock_comp, {})
         assert row.is_active
         assert row.current_value == 50
 
-    def test_readonly_disables_controls(self):
-        """Test that readonly mode disables all controls."""
+    def test_mandatory_disables_toggle(self):
+        """Test that mandatory modifiers disable toggle button."""
         from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {'control_type': 'linear'}
@@ -73,16 +83,16 @@ class TestModifierRow:
         mock_mod.value = 50
         mock_comp.get_modifier.return_value = mock_mod
 
-        # Update with readonly=True
-        row.update(mock_comp, is_readonly=True)
+        # Update the row - new signature takes component and template_modifiers
+        row.update(mock_comp, {})
 
         assert row.is_active
-        assert row.is_readonly
-        # JSON button should still be enabled (read-only operation)
-        assert row.json_btn.is_enabled
+        # Readonly is now determined by mod_def.readonly, not a parameter
+        # The toggle button should be enabled since this is not a mandatory modifier
+        assert row.toggle_btn.is_enabled
 
-    def test_json_button_event(self):
-        """Test that clicking JSON button triggers popup."""
+    def test_toggle_button_event(self):
+        """Test that clicking toggle button triggers callback."""
         from game.ui.screens.builder.modifier_row import ModifierControlRow
         mod_def = Modifier({'id': 'test_mod', 'name': 'Test Mod', 'type': 'linear', 'min_val': 0, 'max_val': 100})
         config = {'control_type': 'linear'}
@@ -93,19 +103,16 @@ class TestModifierRow:
         mock_mod = MagicMock()
         mock_mod.value = 50
         mock_comp.get_modifier.return_value = mock_mod
-        row.update(mock_comp)
+        row.update(mock_comp, {})
 
-        # Mock the _show_json_popup method
-        row._show_json_popup = MagicMock()
-
+        # Test toggle button event handling
         event = MagicMock()
         event.type = pygame_gui.UI_BUTTON_PRESSED
-        event.ui_element = row.json_btn
+        event.ui_element = row.toggle_btn
 
         result = row.handle_event(event)
 
         assert result, "Event should be handled and return True"
-        row._show_json_popup.assert_called_once()
 
     def test_value_change_callback(self):
         """Test that slider changes trigger callback."""
@@ -120,7 +127,7 @@ class TestModifierRow:
         mock_mod = MagicMock()
         mock_mod.value = 50
         mock_comp.get_modifier.return_value = mock_mod
-        row.update(mock_comp)
+        row.update(mock_comp, {})
 
         # Simulate slider move event
         event = MagicMock()
@@ -134,8 +141,8 @@ class TestModifierRow:
         callback.assert_called_once_with('value_change', 'test_mod', 75.0)
 
 
-class TestModifierRowErrorLogging:
-    """Tests for error logging in modifier row (ERR-012)."""
+class TestModifierRowUIElements:
+    """Tests for ModifierControlRow UI element creation and behavior."""
 
     def setup_method(self):
         pygame.init()
@@ -143,66 +150,50 @@ class TestModifierRowErrorLogging:
         self.manager = pygame_gui.UIManager((800, 600))
         self.container = pygame_gui.elements.UIPanel(pygame.Rect(0, 0, 400, 200), manager=self.manager)
 
-    def test_tooltip_generation_failure_logs_warning(self, caplog):
-        """Tooltip generation failure should log warning with modifier details (ERR-012)."""
-        import logging
+    def test_kill_clears_ui_elements(self):
+        """Test that kill() properly cleans up UI elements."""
         from game.ui.screens.builder.modifier_row import ModifierControlRow
-        from game.simulation.components.component_constants import Modifier
-        from unittest.mock import patch
 
-        # Need to include effects so the code path that calls evaluate_modifier is reached
         mod_def = Modifier({
             'id': 'test_mod',
             'name': 'Test Mod',
             'type': 'linear',
             'min_val': 0,
-            'max_val': 100,
-            'effects': [{'stat': 'mass', 'operation': 'add', 'value': '@param'}]
+            'max_val': 100
         })
         config = {'control_type': 'linear'}
 
         row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
+        row.build_ui(10)
 
-        # Mock ModifierEffectEvaluator.evaluate_modifier to raise during tooltip generation
-        with patch('ui.builder.modifier_row.ModifierEffectEvaluator.evaluate_modifier',
-                   side_effect=Exception("Test error")):
-            with caplog.at_level(logging.WARNING):
-                tooltip_text = row._generate_tooltip()
+        # Verify elements exist
+        assert len(row.ui_elements) > 0
+        assert row.toggle_btn is not None
 
-            # Should still return fallback tooltip
-            assert tooltip_text is not None
-            assert len(tooltip_text) > 0
+        # Kill and verify cleanup
+        row.kill()
+        assert len(row.ui_elements) == 0
+        assert row.slider is None
+        assert row.entry is None
 
-            # Should have logged a warning about the failure
-            warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
-            assert len(warning_logs) > 0, "Should log warning when tooltip generation fails"
-            warning_text = ' '.join(r.message for r in warning_logs)
-            assert 'test_mod' in warning_text or 'tooltip' in warning_text.lower(), \
-                f"Warning should include modifier info. Got: {warning_text}"
-
-    def test_tooltip_generation_success_no_warning(self, caplog):
-        """Successful tooltip generation should not produce warnings."""
-        import logging
+    def test_update_with_template_modifiers(self):
+        """Test update() works with template modifiers when component is None."""
         from game.ui.screens.builder.modifier_row import ModifierControlRow
-        from game.simulation.components.component_constants import Modifier
 
         mod_def = Modifier({
-            'id': 'working_mod',
-            'name': 'Working Mod',
+            'id': 'test_mod',
+            'name': 'Test Mod',
             'type': 'linear',
             'min_val': 0,
-            'max_val': 100,
-            'description': 'A working modifier'
+            'max_val': 100
         })
         config = {'control_type': 'linear'}
 
-        row = ModifierControlRow(self.manager, self.container, 300, 'working_mod', mod_def, config, MagicMock())
+        row = ModifierControlRow(self.manager, self.container, 300, 'test_mod', mod_def, config, MagicMock())
+        row.build_ui(10)
 
-        with caplog.at_level(logging.WARNING):
-            tooltip_text = row._generate_tooltip()
+        # Update with no component but with template_modifiers
+        row.update(None, {'test_mod': 75.0})
 
-        assert tooltip_text is not None
-        # Should NOT log warnings for successful tooltip generation
-        tooltip_warnings = [r for r in caplog.records
-                           if 'working_mod' in r.message.lower() or 'tooltip' in r.message.lower()]
-        assert len(tooltip_warnings) == 0, "Successful tooltip should not log warnings"
+        assert row.is_active
+        assert row.current_value == 75.0

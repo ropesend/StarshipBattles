@@ -169,27 +169,27 @@ class TestShipFixtureIsolation:
 class TestShipFactory:
     """Tests for the ship factory function."""
 
-    def test_create_test_ship_returns_ship(self):
+    def test_create_test_ship_returns_ship(self, fresh_registries):
         """create_test_ship returns a Ship instance."""
         from tests.fixtures.ships import create_test_ship
-        ship = create_test_ship()
+        ship = create_test_ship(registries=fresh_registries)
         assert isinstance(ship, Ship)
 
-    def test_create_test_ship_with_custom_name(self):
+    def test_create_test_ship_with_custom_name(self, fresh_registries):
         """create_test_ship accepts custom name."""
         from tests.fixtures.ships import create_test_ship
-        ship = create_test_ship(name="CustomName")
+        ship = create_test_ship(name="CustomName", registries=fresh_registries)
         assert ship.name == "CustomName"
 
-    def test_create_test_ship_with_position(self):
+    def test_create_test_ship_with_position(self, fresh_registries):
         """create_test_ship accepts position."""
         from tests.fixtures.ships import create_test_ship
-        ship = create_test_ship(x=100, y=200)
+        ship = create_test_ship(x=100, y=200, registries=fresh_registries)
         assert ship.position.x == 100
         assert ship.position.y == 200
 
-    def test_create_test_ship_with_team_id(self):
+    def test_create_test_ship_with_team_id(self, fresh_registries):
         """create_test_ship accepts team_id."""
         from tests.fixtures.ships import create_test_ship
-        ship = create_test_ship(team_id=1)
+        ship = create_test_ship(team_id=1, registries=fresh_registries)
         assert ship.team_id == 1

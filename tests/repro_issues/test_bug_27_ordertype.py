@@ -27,9 +27,9 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
 class TestBug27OrderTypeImport:
     """Regression tests for BUG-27: OrderType import missing in strategy_screen."""
 
-    def test_ordertype_import_in_strategy_screen(self):
-        """Verify that OrderType is importable from strategy_screen module."""
-        from game.ui.screens.strategy_screen import StrategyInterface
+    def test_ordertype_import_in_strategy_ui(self):
+        """Verify that OrderType is importable from strategy_ui module."""
+        from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import OrderType, FleetOrder, Fleet
         # If we get here without ImportError, the module loads correctly
         assert OrderType.MOVE is not None
@@ -40,7 +40,7 @@ class TestBug27OrderTypeImport:
         pygame.init()
         pygame.display.set_mode((800, 600))
 
-        from game.ui.screens.strategy_screen import StrategyInterface
+        from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
         from game.strategy.data.empire import Empire
         from game.strategy.data.hex_math import HexCoord
@@ -53,7 +53,7 @@ class TestBug27OrderTypeImport:
         scene.turn_engine = MagicMock()
         scene.turn_engine.validate_colonize_order.return_value = MagicMock(is_valid=False)
 
-        ui = StrategyInterface(scene, 800, 600)
+        ui = StrategyUI(scene, 800, 600)
 
         # Create fleet with MOVE order
         fleet = Fleet(1, 1, HexCoord(0, 0))
@@ -74,7 +74,7 @@ class TestBug27OrderTypeImport:
         pygame.init()
         pygame.display.set_mode((800, 600))
 
-        from game.ui.screens.strategy_screen import StrategyInterface
+        from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
         from game.strategy.data.empire import Empire
         from game.strategy.data.hex_math import HexCoord
@@ -87,7 +87,7 @@ class TestBug27OrderTypeImport:
         scene.turn_engine = MagicMock()
         scene.turn_engine.validate_colonize_order.return_value = MagicMock(is_valid=False)
 
-        ui = StrategyInterface(scene, 800, 600)
+        ui = StrategyUI(scene, 800, 600)
 
         # Create a mock planet target
         mock_planet = MagicMock()

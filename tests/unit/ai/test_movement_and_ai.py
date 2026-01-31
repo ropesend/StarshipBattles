@@ -93,6 +93,7 @@ class TestMovementAndAI:
         Verify AI issues thrust commands when it has a valid target ahead.
         """
         attacker = movement_ai_setup['ship']
+        registries = movement_ai_setup['registries']
         # Build a valid ship with all required components
         # Bridge (CORE) - CommandAndControl
         bridge = get_component_clone("bridge")
@@ -124,7 +125,7 @@ class TestMovementAndAI:
 
         # Attacker is already configured as Cruiser in setUp
 
-        target = Ship("Test", 500, 0, (255, 0, 0), team_id=1, ship_class="Cruiser")
+        target = Ship("Test", 500, 0, (255, 0, 0), team_id=1, ship_class="Cruiser", registries=registries)
         target.mass = 100
 
         mock_grid = MagicMock()

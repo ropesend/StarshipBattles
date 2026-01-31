@@ -204,10 +204,17 @@ def save_snapshot(name: str, data: Dict):
 # =============================================================================
 
 @pytest.fixture(scope="module")
-def setup_registries():
-    """Load components and modifiers into registries."""
+def setup_registries(session_registries):
+    """
+    Provide registries for snapshot tests.
+
+    PROJ-50: Updated to use session_registries from root conftest.py for
+    strict DI compliance. Returns the registries so tests can pass them
+    to create_component().
+    """
+    # Still do a reset for legacy behavior during transition
     reset_component_caches()
     load_modifiers("data/modifiers.json")
     load_components("data/components.json")
-    yield
+    yield session_registries
     reset_component_caches()

@@ -114,11 +114,12 @@ class SimulationBattleResolver(IBattleResolver):
         log_info(f"Battle complete: winner={results.winner}, ticks={results.tick_count}")
 
         # Convert survivors
+        # PROJ-50: Pass registries for strict DI compliance
         team0_survivors = []
         team1_survivors = []
 
         for ship_state in results.surviving_ships:
-            ship = ship_state.to_ship()
+            ship = ship_state.to_ship(registries=registries)
             if ship_state.team_id == 0:
                 team0_survivors.append(ship)
             else:

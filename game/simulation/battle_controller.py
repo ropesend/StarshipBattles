@@ -903,14 +903,14 @@ def create_hypothetical_battle(
     cloned1 = []
     for ship in ships1:
         data = ShipSerializer.to_dict(ship)
-        cloned = ShipSerializer.from_dict(data)
+        cloned = ShipSerializer.from_dict(data, registries=ship._registries)
         cloned.x, cloned.y = ship.x, ship.y
         cloned1.append(cloned)
 
     cloned2 = []
     for ship in ships2:
         data = ShipSerializer.to_dict(ship)
-        cloned = ShipSerializer.from_dict(data)
+        cloned = ShipSerializer.from_dict(data, registries=ship._registries)
         cloned.x, cloned.y = ship.x, ship.y
         cloned2.append(cloned)
 

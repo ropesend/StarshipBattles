@@ -143,7 +143,7 @@ class ModifierEditorPanel:
                 if not hasattr(row, 'y') or row.y != row_y:
                     row.build_ui(row_y)
 
-                row.update(self.editing_component, is_readonly=self.is_readonly)
+                row.update(self.editing_component, {})
                 row_y += row.height + 2  # 2px gap
 
             # Remove stale rows
@@ -262,7 +262,7 @@ class ModifierEditorPanel:
 
         # Refresh row UI (enable/digits)
         if mod_id in self.modifier_rows:
-            self.modifier_rows[mod_id].update(self.editing_component, is_readonly=self.is_readonly)
+            self.modifier_rows[mod_id].update(self.editing_component, {})
 
     def handle_event(self, event):
         """Processes events."""

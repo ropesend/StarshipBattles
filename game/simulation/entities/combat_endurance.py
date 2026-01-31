@@ -99,8 +99,10 @@ def calculate_combat_endurance(ship, component_pool):
 
     # Use registry directly
     max_fuel = ship.resources.get_max_value('fuel')
-    # Endurance calculation uses ACTIVE consumption
-    ship.fuel_endurance = (max_fuel / fuel_consumption) if fuel_consumption > 0 else float('inf')
+    # Endurance calculation: use active consumption, fallback to potential if inactive
+    # This shows expected endurance even when components are deactivated (e.g., no crew)
+    effective_fuel = fuel_consumption if fuel_consumption > 0 else potential_fuel
+    ship.fuel_endurance = (max_fuel / effective_fuel) if effective_fuel > 0 else float('inf')
 
     max_ammo = ship.resources.get_max_value('ammo')
     ship.ammo_endurance = (max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')

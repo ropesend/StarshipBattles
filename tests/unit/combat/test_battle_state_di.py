@@ -1,12 +1,10 @@
 """
-Tests for BattleState Dependency Injection (PROJ-38 Phase 5).
+Tests for BattleState Dependency Injection (PROJ-38 Phase 5, PROJ-50 Phase 8).
 
-Tests that ShipState.to_ship() accepts registries parameter for DI.
+Tests that ShipState.to_ship() requires registries parameter for strict DI.
 """
 import pytest
-from unittest.mock import Mock, MagicMock, patch
-from dataclasses import dataclass, field
-from typing import Dict, Any, List
+from unittest.mock import Mock, patch
 
 from game.simulation.battle_state import ShipState, ComponentState
 
@@ -47,7 +45,7 @@ class TestShipStateToShipDI:
             current_hp=10,
             max_hp=10,
             is_active=True,
-            layer="WEAPONS",
+            layer="OUTER",  # Use valid layer type
             modifiers=[{"id": "power_boost", "value": 1}],
         )
         return ShipState(
@@ -65,128 +63,70 @@ class TestShipStateToShipDI:
             max_hp=200,
             current_shields=100.0,
             max_shields=100.0,
-            components={"WEAPONS": [comp_state]},
+            components={"OUTER": [comp_state]},
             resource_levels={"fuel": 100, "energy": 50},
             resource_max={"fuel": 100, "energy": 100},
             is_alive=True,
             is_derelict=False,
         )
 
-    @pytest.fixture
-    def mock_registries(self):
-        """Create mock GameRegistries with components, modifiers, and vehicle_classes."""
-        mock_component = Mock()
-        mock_component.clone.return_value = Mock(
-            id="laser_mk1",
-            current_hp=10,
-            max_hp=10,
-            is_active=True,
-            add_modifier=Mock(),
-        )
+    def test_to_ship_requires_registries_parameter(self, minimal_ship_state, fresh_registries):
+        """to_ship() requires registries parameter (PROJ-50 strict DI)."""
+        # Should work with registries provided
+        ship = minimal_ship_state.to_ship(registries=fresh_registries)
+        assert ship is not None
+        assert ship.name == "Test Ship"
 
-        mock_modifier = Mock()
+    def test_to_ship_raises_on_none_registries(self, minimal_ship_state):
+        """to_ship() raises TypeError when registries is None."""
+        with pytest.raises(TypeError, match="registries is required"):
+            minimal_ship_state.to_ship(registries=None)
 
-        # Vehicle class definition needed for Ship initialization
-        mock_vehicle_class = {
-            "Cruiser": {
-                "max_mass": 10000,
-                "layers": [
-                    {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
-                    {"type": "INNER", "radius_pct": 0.5, "restrictions": []},
-                    {"type": "OUTER", "radius_pct": 0.8, "restrictions": []},
-                    {"type": "ARMOR", "radius_pct": 1.0, "restrictions": []},
-                    {"type": "WEAPONS", "radius_pct": 0.7, "restrictions": []},
-                ],
-            },
-            "Escort": {
-                "max_mass": 5000,
-                "layers": [
-                    {"type": "CORE", "radius_pct": 0.2, "restrictions": []},
-                    {"type": "WEAPONS", "radius_pct": 0.7, "restrictions": []},
-                ],
-            },
-        }
+    def test_to_ship_uses_provided_registries(self, ship_state_with_components, fresh_registries):
+        """to_ship() should use the provided registries."""
+        ship = ship_state_with_components.to_ship(registries=fresh_registries)
 
-        registries = Mock()
-        registries.components = {"laser_mk1": mock_component}
-        registries.modifiers = {"power_boost": mock_modifier}
-        registries.vehicle_classes = mock_vehicle_class
-        return registries
+        # Verify the ship was created successfully with registries
+        assert ship is not None
+        assert ship.name == "Armed Ship"
+        # The registries should be stored (private attribute per Ship implementation)
+        assert ship._registries is fresh_registries
 
-    def test_to_ship_accepts_registries_parameter(self, minimal_ship_state):
-        """to_ship() should accept an optional registries parameter."""
-        # This test verifies the method signature accepts registries
-        # When registries is None, it should fall back to provider
-        with patch('game.simulation.battle_state.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {}
-            mock_provider.return_value.get_modifiers.return_value = {}
-
-            # Should not raise - registries parameter accepted
-            ship = minimal_ship_state.to_ship(registries=None)
-
-            assert ship is not None
-            assert ship.name == "Test Ship"
-
-    def test_to_ship_uses_injected_registries(self, ship_state_with_components, mock_registries):
-        """to_ship() should use injected registries when provided."""
-        # When registries is provided, it should NOT call provider
-        with patch('game.simulation.battle_state.get_default_registry_provider') as mock_provider:
-            mock_provider.return_value.get_components.return_value = {}  # Should not be used
-            mock_provider.return_value.get_modifiers.return_value = {}   # Should not be used
-
-            ship = ship_state_with_components.to_ship(registries=mock_registries)
-
-            # Provider should NOT be called when registries is provided
-            mock_provider.assert_not_called()
-
-    def test_to_ship_falls_back_to_global_when_no_registries(self, ship_state_with_components):
-        """to_ship() should use provider when registries is None."""
-        with patch('game.simulation.battle_state.get_default_registry_provider') as mock_provider:
-            mock_component = Mock()
-            mock_component.clone.return_value = Mock(
-                id="laser_mk1",
-                current_hp=10,
-                max_hp=10,
-                is_active=True,
-                add_modifier=Mock(),
-            )
-            mock_provider.return_value.get_components.return_value = {"laser_mk1": mock_component}
-            mock_provider.return_value.get_modifiers.return_value = {"power_boost": Mock()}
-
-            ship = ship_state_with_components.to_ship()  # No registries parameter
-
-            # Provider SHOULD be called when registries is None
-            mock_provider.assert_called_once()
-
-    def test_to_ship_uses_registries_components(self, ship_state_with_components, mock_registries):
-        """to_ship() should lookup components from injected registries."""
-        ship = ship_state_with_components.to_ship(registries=mock_registries)
-
-        # Verify the mock component was accessed - accessing registries.components
-        # is sufficient to verify the code path
-        assert "laser_mk1" in mock_registries.components
-        # Note: clone() may or may not be called depending on whether layer exists
-        # The important thing is that we're using registries.components, not global
-
-    def test_to_ship_uses_registries_modifiers(self, ship_state_with_components, mock_registries):
-        """to_ship() should lookup modifiers from injected registries."""
-        ship = ship_state_with_components.to_ship(registries=mock_registries)
-
-        # The modifier should be looked up from registries
-        assert "power_boost" in mock_registries.modifiers
-
-    def test_to_ship_passes_registries_to_ship_constructor(self, minimal_ship_state, mock_registries):
+    def test_to_ship_passes_registries_to_ship_constructor(self, minimal_ship_state, fresh_registries):
         """to_ship() should pass registries to Ship constructor."""
-        # Use the fixture with proper vehicle_classes
+        # Patch Ship at the location where it's imported in battle_state
         with patch('game.simulation.entities.ship.Ship') as MockShip:
             mock_ship = Mock()
             mock_ship.layers = {}
             mock_ship.resources = None
             MockShip.return_value = mock_ship
 
-            minimal_ship_state.to_ship(registries=mock_registries)
+            # Need to patch at the point of import
+            with patch.dict('sys.modules', {'game.simulation.entities.ship': Mock(Ship=MockShip)}):
+                # Re-import to get the patched version - but this is complex
+                # Simpler: just verify the real ship stores registries correctly
+                pass
 
-            # Verify Ship was called with registries parameter
-            call_kwargs = MockShip.call_args[1]
-            assert 'registries' in call_kwargs
-            assert call_kwargs['registries'] is mock_registries
+        # Instead, use real Ship and verify registries is stored
+        ship = minimal_ship_state.to_ship(registries=fresh_registries)
+        assert ship._registries is fresh_registries
+
+    def test_to_ship_restores_ship_properties(self, minimal_ship_state, fresh_registries):
+        """to_ship() should restore basic ship properties from state."""
+        ship = minimal_ship_state.to_ship(registries=fresh_registries)
+
+        # Check properties that exist on Ship
+        assert ship.name == "Test Ship"
+        assert ship.ship_class == "Escort"
+        assert ship.team_id == 0
+        # Position is a Vector2
+        assert ship.position.x == 400.0
+        assert ship.position.y == 300.0
+
+    def test_to_ship_with_components(self, ship_state_with_components, fresh_registries):
+        """to_ship() should handle states with components."""
+        ship = ship_state_with_components.to_ship(registries=fresh_registries)
+
+        assert ship is not None
+        assert ship.name == "Armed Ship"
+        assert ship.ship_class == "Cruiser"

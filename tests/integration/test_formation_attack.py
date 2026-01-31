@@ -5,6 +5,7 @@ Tests that ships in formation maintain proper positioning during attack runs
 against enemy targets, including approach, engagement, and retreat phases.
 
 PROJ-48: Converted from script format to pytest class format.
+PROJ-50: Updated for strict DI compliance with fresh_registries.
 """
 import pytest
 import pygame
@@ -25,13 +26,14 @@ from tests.fixtures.paths import get_project_root
 MAX_FORMATION_DEVIATION = 15000.0  # Higher tolerance during combat maneuvers
 
 
-def setup_attack_formation_ships(design_data: dict, formation_data: dict) -> tuple:
+def setup_attack_formation_ships(design_data: dict, formation_data: dict, registries) -> tuple:
     """
     Create a formation of ships positioned for an attack run.
 
     Args:
         design_data: Ship design dictionary
         formation_data: Formation definition with arrows
+        registries: GameRegistries instance for DI
 
     Returns:
         Tuple of (all_ships, master_ship)
@@ -40,7 +42,7 @@ def setup_attack_formation_ships(design_data: dict, formation_data: dict) -> tup
     arrows = formation_data['arrows']
 
     # Scale
-    temp_ship = Ship.from_dict(design_data)
+    temp_ship = Ship.from_dict(design_data, registries=registries)
     temp_ship.recalculate_stats()
     diameter = temp_ship.radius * 2
     GRID_UNIT = 50.0
@@ -63,7 +65,7 @@ def setup_attack_formation_ships(design_data: dict, formation_data: dict) -> tup
         world_x = (dx / GRID_UNIT) * diameter
         world_y = (dy / GRID_UNIT) * diameter
 
-        s = Ship.from_dict(design_data)
+        s = Ship.from_dict(design_data, registries=registries)
         s.position = pygame.math.Vector2(start_pos.x + world_x, start_pos.y + world_y)
         s.team_id = 0
         s.recalculate_stats()
@@ -85,17 +87,18 @@ def setup_attack_formation_ships(design_data: dict, formation_data: dict) -> tup
     return ships, master
 
 
-def create_target_dummy(design_data: dict) -> Ship:
+def create_target_dummy(design_data: dict, registries) -> Ship:
     """
     Create a stationary target ship for attack testing.
 
     Args:
         design_data: Ship design dictionary to use as base
+        registries: GameRegistries instance for DI
 
     Returns:
         Stationary target ship positioned far from attackers
     """
-    target = Ship.from_dict(design_data)
+    target = Ship.from_dict(design_data, registries=registries)
     target.name = "Target Dummy"
     target.team_id = 1
     target.position = pygame.math.Vector2(0, -10000)  # 20k distance from start
@@ -170,7 +173,7 @@ class TestFormationAttack:
             return json.load(f)
 
     def test_attack_run_maintains_formation(
-        self, global_ship_data_with_modifiers, ship_design, formation_data
+        self, fresh_registries, ship_design, formation_data
     ):
         """
         Verify formation ships maintain position during combat engagement.
@@ -178,10 +181,10 @@ class TestFormationAttack:
         Tests that ships in formation stay together while the master
         approaches an enemy target. Formation coherence is the key metric.
         """
-        ships, master = setup_attack_formation_ships(ship_design, formation_data)
+        ships, master = setup_attack_formation_ships(ship_design, formation_data, fresh_registries)
 
         # Create target
-        target = create_target_dummy(ship_design)
+        target = create_target_dummy(ship_design, fresh_registries)
         ships.append(target)
 
         engine = BattleEngine()
@@ -223,7 +226,7 @@ class TestFormationAttack:
         )
 
     def test_attack_formation_members_follow_master(
-        self, global_ship_data_with_modifiers, ship_design, formation_data
+        self, fresh_registries, ship_design, formation_data
     ):
         """
         Verify wing ships follow their master during attack approach.
@@ -231,10 +234,10 @@ class TestFormationAttack:
         The formation members should move with the master as it
         approaches the target, not wander off independently.
         """
-        ships, master = setup_attack_formation_ships(ship_design, formation_data)
+        ships, master = setup_attack_formation_ships(ship_design, formation_data, fresh_registries)
 
         # Create target
-        target = create_target_dummy(ship_design)
+        target = create_target_dummy(ship_design, fresh_registries)
         ships.append(target)
 
         engine = BattleEngine()
@@ -277,7 +280,7 @@ class TestFormationAttack:
             )
 
     def test_master_approaches_target(
-        self, global_ship_data_with_modifiers, ship_design, formation_data
+        self, fresh_registries, ship_design, formation_data
     ):
         """
         Verify the master ship moves toward the enemy target.
@@ -285,9 +288,9 @@ class TestFormationAttack:
         The AI should identify the target and approach it, reducing
         the distance over time.
         """
-        ships, master = setup_attack_formation_ships(ship_design, formation_data)
+        ships, master = setup_attack_formation_ships(ship_design, formation_data, fresh_registries)
 
-        target = create_target_dummy(ship_design)
+        target = create_target_dummy(ship_design, fresh_registries)
         ships.append(target)
 
         engine = BattleEngine()

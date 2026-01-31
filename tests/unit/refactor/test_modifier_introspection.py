@@ -14,12 +14,12 @@ import pytest
 class TestModifierIntrospectionGetModifierAffects:
     """Tests for ModifierIntrospection.get_modifier_affects()"""
 
-    def test_get_modifier_affects_returns_dict(self):
+    def test_get_modifier_affects_returns_dict(self, fresh_registries):
         """get_modifier_affects() should return a dictionary."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'test_mod',
             'name': 'Test Modifier',
@@ -32,12 +32,12 @@ class TestModifierIntrospectionGetModifierAffects:
 
         assert isinstance(result, dict)
 
-    def test_get_modifier_affects_returns_abilities(self):
+    def test_get_modifier_affects_returns_abilities(self, fresh_registries):
         """get_modifier_affects() should return affected ability names."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'damage_boost',
             'name': 'Damage Boost',
@@ -52,12 +52,12 @@ class TestModifierIntrospectionGetModifierAffects:
         # Should include abilities that consume damage_mult
         assert 'ProjectileWeaponAbility' in result['abilities']
 
-    def test_get_modifier_affects_returns_effects_preview(self):
+    def test_get_modifier_affects_returns_effects_preview(self, fresh_registries):
         """get_modifier_affects() should return effect descriptions."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'damage_boost',
             'name': 'Damage Boost',
@@ -73,12 +73,12 @@ class TestModifierIntrospectionGetModifierAffects:
         # Preview should contain stat info
         assert any('damage_mult' in preview for preview in result['effects_preview'])
 
-    def test_get_modifier_affects_with_targeted_effect(self):
+    def test_get_modifier_affects_with_targeted_effect(self, fresh_registries):
         """get_modifier_affects() should include targeted abilities."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'targeted_mod',
             'name': 'Targeted Modifier',
@@ -91,12 +91,12 @@ class TestModifierIntrospectionGetModifierAffects:
 
         assert 'ProjectileWeaponAbility' in result['abilities']
 
-    def test_get_modifier_affects_multiple_stats(self):
+    def test_get_modifier_affects_multiple_stats(self, fresh_registries):
         """get_modifier_affects() should list all affected abilities from multiple stats."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'multi_effect',
             'name': 'Multi Effect',
@@ -117,23 +117,23 @@ class TestModifierIntrospectionGetModifierAffects:
 class TestModifierIntrospectionGetComponentModifierSummary:
     """Tests for ModifierIntrospection.get_component_modifier_summary()"""
 
-    def test_get_component_modifier_summary_returns_dict(self):
+    def test_get_component_modifier_summary_returns_dict(self, fresh_registries):
         """get_component_modifier_summary() should return a dictionary."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
 
         result = ModifierIntrospection.get_component_modifier_summary(railgun)
 
         assert isinstance(result, dict)
 
-    def test_get_component_modifier_summary_lists_applied_modifiers(self):
+    def test_get_component_modifier_summary_lists_applied_modifiers(self, fresh_registries):
         """get_component_modifier_summary() should list all applied modifiers."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('hardened_mount', 2.0)
 
         result = ModifierIntrospection.get_component_modifier_summary(railgun)
@@ -145,12 +145,12 @@ class TestModifierIntrospectionGetComponentModifierSummary:
         modifier_ids = [m['id'] for m in result['applied_modifiers']]
         assert 'hardened_mount' in modifier_ids
 
-    def test_get_component_modifier_summary_includes_param_values(self):
+    def test_get_component_modifier_summary_includes_param_values(self, fresh_registries):
         """Summary should include parameter values for each modifier."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('hardened_mount', 3.0)
 
         result = ModifierIntrospection.get_component_modifier_summary(railgun)
@@ -159,12 +159,12 @@ class TestModifierIntrospectionGetComponentModifierSummary:
         assert 'param_value' in hardened
         assert hardened['param_value'] == pytest.approx(3.0)
 
-    def test_get_component_modifier_summary_no_modifiers(self):
+    def test_get_component_modifier_summary_no_modifiers(self, fresh_registries):
         """Summary should handle components with no modifiers gracefully."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         # Don't add any modifiers
 
         result = ModifierIntrospection.get_component_modifier_summary(railgun)
@@ -176,24 +176,24 @@ class TestModifierIntrospectionGetComponentModifierSummary:
 class TestModifierIntrospectionGetAbilityModifierSummary:
     """Tests for ModifierIntrospection.get_ability_modifier_summary()"""
 
-    def test_get_ability_modifier_summary_returns_dict(self):
+    def test_get_ability_modifier_summary_returns_dict(self, fresh_registries):
         """get_ability_modifier_summary() should return a dictionary."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
 
         result = ModifierIntrospection.get_ability_modifier_summary(weapon_ability)
 
         assert isinstance(result, dict)
 
-    def test_get_ability_modifier_summary_shows_base_vs_current(self):
+    def test_get_ability_modifier_summary_shows_base_vs_current(self, fresh_registries):
         """Summary should show base vs current values."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('hardened_mount', 2.0)
 
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
@@ -202,12 +202,12 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
         assert 'stats' in result
         # Should have base and current for at least some stats
 
-    def test_get_ability_modifier_summary_lists_affected_stats(self):
+    def test_get_ability_modifier_summary_lists_affected_stats(self, fresh_registries):
         """Summary should list which stats are affected by modifiers."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('range_mount', 2)  # Affects range_mult
 
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
@@ -220,12 +220,12 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
             stat_entry = result['stats'][0]
             assert 'attribute' in stat_entry or 'stat_key' in stat_entry
 
-    def test_get_ability_modifier_summary_no_modifiers(self):
+    def test_get_ability_modifier_summary_no_modifiers(self, fresh_registries):
         """Summary should handle unmodified abilities gracefully."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         # Don't add any modifiers
 
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
@@ -238,12 +238,12 @@ class TestModifierIntrospectionGetAbilityModifierSummary:
 class TestModifierIntrospectionGenerateTooltip:
     """Tests for UI-friendly tooltip generation."""
 
-    def test_generate_modifier_tooltip_returns_string(self):
+    def test_generate_modifier_tooltip_returns_string(self, fresh_registries):
         """generate_modifier_tooltip() should return a string."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'damage_boost',
             'name': 'Damage Boost',
@@ -257,12 +257,12 @@ class TestModifierIntrospectionGenerateTooltip:
         assert isinstance(result, str)
         assert len(result) > 0
 
-    def test_generate_modifier_tooltip_includes_modifier_name(self):
+    def test_generate_modifier_tooltip_includes_modifier_name(self, fresh_registries):
         """Tooltip should include the modifier name."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'damage_boost',
             'name': 'Damage Boost',
@@ -275,12 +275,12 @@ class TestModifierIntrospectionGenerateTooltip:
 
         assert 'Damage Boost' in result
 
-    def test_generate_modifier_tooltip_includes_effects(self):
+    def test_generate_modifier_tooltip_includes_effects(self, fresh_registries):
         """Tooltip should include effect information."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         mod_def = {
             'id': 'multi_mod',
             'name': 'Multi Modifier',
@@ -299,24 +299,24 @@ class TestModifierIntrospectionGenerateTooltip:
 class TestModifierIntrospectionGenerateAbilityStatsDisplay:
     """Tests for ability stats display generation."""
 
-    def test_generate_ability_stats_display_returns_list(self):
+    def test_generate_ability_stats_display_returns_list(self, fresh_registries):
         """generate_ability_stats_display() should return a list of display entries."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
 
         result = ModifierIntrospection.generate_ability_stats_display(weapon_ability)
 
         assert isinstance(result, list)
 
-    def test_generate_ability_stats_display_shows_modified_values(self):
+    def test_generate_ability_stats_display_shows_modified_values(self, fresh_registries):
         """Display should highlight modified values."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('range_mount', 2)  # 4x range
 
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')
@@ -325,12 +325,12 @@ class TestModifierIntrospectionGenerateAbilityStatsDisplay:
         # Should have entries with modification info
         assert len(result) >= 0  # May be empty if ability doesn't track all
 
-    def test_generate_ability_stats_display_format(self):
+    def test_generate_ability_stats_display_format(self, fresh_registries):
         """Display entries should have expected format."""
         from game.simulation.components.modifier_introspection import ModifierIntrospection
         from game.simulation.components.component import create_component
 
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('hardened_mount', 2.0)
 
         weapon_ability = railgun.get_ability('ProjectileWeaponAbility')

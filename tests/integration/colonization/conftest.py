@@ -19,9 +19,12 @@ GALAXY_SEED = 42
 
 
 @pytest.fixture
-def turn_engine():
-    """Create a standalone turn engine."""
-    return TurnEngine()
+def turn_engine(fresh_registries):
+    """Create a standalone turn engine with DI registries.
+
+    PROJ-50 Phase 8: Uses fresh_registries for strict DI compliance.
+    """
+    return TurnEngine(registries=fresh_registries)
 
 
 @pytest.fixture

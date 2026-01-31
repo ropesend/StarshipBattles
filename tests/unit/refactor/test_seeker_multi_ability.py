@@ -206,7 +206,7 @@ class TestSeekerUsesGetEffectiveStat:
 class TestMultipleSeekerTargetedEffects:
     """Tests for multiple SeekerWeaponAbility instances with targeted modifiers."""
 
-    def test_component_with_two_seekers_targeted_effects(self):
+    def test_component_with_two_seekers_targeted_effects(self, fresh_registries):
         """Component with 2 SeekerWeaponAbility instances should support targeted modifiers."""
         # This is an integration-level test to verify multi-ability targeting works
         # with SeekerWeaponAbility after the fix
@@ -218,7 +218,7 @@ class TestMultipleSeekerTargetedEffects:
         load_components("data/components.json")
 
         # Get a component with seeker ability
-        missile = create_component('capital_missile')
+        missile = create_component('capital_missile', registries=fresh_registries)
 
         # Verify it has SeekerWeaponAbility
         seeker_abilities = [

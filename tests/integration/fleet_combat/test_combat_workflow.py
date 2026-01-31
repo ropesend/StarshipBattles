@@ -85,7 +85,7 @@ class TestFleetCombatWorkflow:
         assert results.initial_state is not None
         assert results.final_state is not None
 
-    def test_battle_with_deterministic_seed(self, two_ship_teams):
+    def test_battle_with_deterministic_seed(self, two_ship_teams, fresh_registries):
         """Test that same seed produces same tick count (deterministic simulation)."""
         seed = 98765
         max_ticks = 500
@@ -100,6 +100,7 @@ class TestFleetCombatWorkflow:
                     name="Ship1",
                     x=500, y=400, team_id=0,
                     add_bridge=True, add_engine=True, add_weapons=2,
+                    registries=fresh_registries,
                 )
             ]
             fresh_team2 = [
@@ -107,6 +108,7 @@ class TestFleetCombatWorkflow:
                     name="Ship2",
                     x=2000, y=400, team_id=1,
                     add_bridge=True, add_engine=True, add_weapons=2,
+                    registries=fresh_registries,
                 )
             ]
 
@@ -157,13 +159,14 @@ class TestDamageAccumulation:
             assert ship.hp > 0
             assert ship.is_alive is True
 
-    def test_shield_components_provide_shield_stats(self):
+    def test_shield_components_provide_shield_stats(self, fresh_registries):
         """Test that shield components provide shield stats."""
         # Create ships with shields
         ship = create_test_ship(
             name="Shielded",
             x=500, y=400, team_id=0,
             add_bridge=True, add_engine=True, add_shields=2,
+            registries=fresh_registries,
         )
 
         # Ship should have shield attributes
@@ -324,15 +327,17 @@ class TestBattleOutcome:
 class TestBattleEdgeCases:
     """Tests for edge cases in battle system."""
 
-    def test_battle_with_one_ship_per_team(self):
+    def test_battle_with_one_ship_per_team(self, fresh_registries):
         """Test minimal battle: 1v1 setup works."""
         team1 = [create_test_ship(
             name="Solo1", x=500, y=400, team_id=0,
-            add_bridge=True, add_engine=True, add_weapons=1
+            add_bridge=True, add_engine=True, add_weapons=1,
+            registries=fresh_registries,
         )]
         team2 = [create_test_ship(
             name="Solo2", x=2000, y=400, team_id=1,
-            add_bridge=True, add_engine=True, add_weapons=1
+            add_bridge=True, add_engine=True, add_weapons=1,
+            registries=fresh_registries,
         )]
 
         controller = BattleController()
@@ -346,15 +351,17 @@ class TestBattleEdgeCases:
         controller.run_ticks(100)
         assert controller.get_tick_count() == 100
 
-    def test_battle_with_unarmed_ship(self):
+    def test_battle_with_unarmed_ship(self, fresh_registries):
         """Test battle setup where one ship has no weapons."""
         team1 = [create_test_ship(
             name="Armed", x=500, y=400, team_id=0,
-            add_bridge=True, add_engine=True, add_weapons=2
+            add_bridge=True, add_engine=True, add_weapons=2,
+            registries=fresh_registries,
         )]
         team2 = [create_test_ship(
             name="Unarmed", x=2000, y=400, team_id=1,
-            add_bridge=True, add_engine=True, add_weapons=0  # No weapons
+            add_bridge=True, add_engine=True, add_weapons=0,  # No weapons
+            registries=fresh_registries,
         )]
 
         controller = BattleController()
@@ -371,15 +378,17 @@ class TestBattleEdgeCases:
         controller.run_ticks(100)
         assert controller.get_tick_count() == 100
 
-    def test_battle_max_ticks_limit(self):
+    def test_battle_max_ticks_limit(self, fresh_registries):
         """Test that battle respects max_ticks limit."""
         team1 = [create_test_ship(
             name="Ship1", x=500, y=400, team_id=0,
-            add_bridge=True, add_engine=True, add_weapons=1, add_shields=3
+            add_bridge=True, add_engine=True, add_weapons=1, add_shields=3,
+            registries=fresh_registries,
         )]
         team2 = [create_test_ship(
             name="Ship2", x=2000, y=400, team_id=1,
-            add_bridge=True, add_engine=True, add_weapons=1, add_shields=3
+            add_bridge=True, add_engine=True, add_weapons=1, add_shields=3,
+            registries=fresh_registries,
         )]
 
         # Create controller with very short max_ticks

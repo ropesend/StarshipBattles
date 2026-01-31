@@ -1,11 +1,10 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import pygame
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
-from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root
 
 
@@ -43,7 +42,6 @@ class TestBuilderValidation:
         yield
 
         pygame.quit()
-        RegistryManager.instance().clear()
 
     def create_component(self, **kwargs):
         data = self.base_component_data.copy()
@@ -166,8 +164,11 @@ class TestBuilderValidation:
 
     def test_mass_validation(self):
         """Step 5a: Test complex mass addition boundary condition."""
-        from game.core.registry import RegistryManager
-        with patch.object(RegistryManager.instance(), 'vehicle_classes', {"Cruiser": {"max_mass": 100, "layers": []}}):
+        # Save original vehicle_classes and modify in-place
+        original_classes = dict(self.registries.vehicle_classes)
+        self.registries.vehicle_classes.clear()
+        self.registries.vehicle_classes.update({"Cruiser": {"max_mass": 100, "layers": []}})
+        try:
             # Re-init ship to pick up new class limit
             self.ship = Ship("Test Ship", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=self.registries)
             # Force explicit override just in case update overwrites it with 100
@@ -184,6 +185,10 @@ class TestBuilderValidation:
             # Add component of mass 1 (Total 101 > Limit)
             comp3 = self.create_component(mass=1)
             assert not self.ship.add_component(comp3, LayerType.INNER), "Should reject mass exceeding budget"
+        finally:
+            # Restore original vehicle_classes
+            self.registries.vehicle_classes.clear()
+            self.registries.vehicle_classes.update(original_classes)
 
     def test_ability_restrictions(self):
         """Step 6: Test ability-based restrictions (allow_ability/deny_ability)."""
@@ -261,8 +266,6 @@ class TestComplexRules:
         self.validator = ShipDesignValidator(registries=fresh_registries)
 
         yield
-
-        RegistryManager.instance().clear()
 
     def create_component_with_abilities(self, abilities: dict, name="Test Comp"):
         data = {

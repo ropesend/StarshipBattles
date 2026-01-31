@@ -9,7 +9,7 @@ from game.ui.screens.builder.weapons_panel import WeaponsReportPanel
 
 class TestBug13Fix:
     @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup(self, fresh_registries):
         os.environ['SDL_VIDEODRIVER'] = 'dummy'
         pygame.init()
         self.surface = pygame.display.set_mode((800, 600))
@@ -29,8 +29,7 @@ class TestBug13Fix:
         patch.stopall()
 
         pygame.quit()
-        from game.core.registry import RegistryManager
-        RegistryManager.instance().clear()
+        # fresh_registries fixture handles registry isolation - no manual clear needed
 
     def test_unified_drawing_structure(self):
         """Verify the unified drawing method exists and old ones are gone."""

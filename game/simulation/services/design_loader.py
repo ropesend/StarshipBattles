@@ -9,15 +9,19 @@ Previously, this functionality was incorrectly placed in DesignLibrary (strategy
 which violated the architectural boundary between strategy and simulation layers.
 
 PROJ-45: Added specific exception handling with exception chaining.
+PROJ-50: Added registries parameter for strict DI compliance.
 """
 import json
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required
 from game.core.logger import log_info, log_error
 from game.core.exceptions import PersistenceException, ValidationException
 from game.simulation.entities.ship import Ship
+
+if TYPE_CHECKING:
+    from game.core.registries import GameRegistries
 
 
 class SimulationDesignLoader:
@@ -30,7 +34,20 @@ class SimulationDesignLoader:
 
     Strategy layer code should use DesignLibrary.load_design_data() to get
     raw design data without creating Ship objects.
+
+    PROJ-50: Accepts registries for strict DI compliance.
     """
+
+    def __init__(self, *, registries: 'GameRegistries'):
+        """
+        Initialize the loader with registries.
+
+        Args:
+            registries: GameRegistries for DI (required).
+        """
+        if registries is None:
+            raise TypeError("registries is required for SimulationDesignLoader")
+        self._registries = registries
 
     def load_ship_from_design_data(
         self,
@@ -52,7 +69,7 @@ class SimulationDesignLoader:
         import pygame
 
         try:
-            ship = Ship.from_dict(design_data)
+            ship = Ship.from_dict(design_data, registries=self._registries)
             ship.position = pygame.math.Vector2(center_x, center_y)
             ship.recalculate_stats()
             return ship

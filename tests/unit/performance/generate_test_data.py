@@ -9,7 +9,7 @@ import sys
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, create_component
 from game.simulation.components.component_constants import LayerType
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
 from game.simulation.components.component import load_components
 from tests.fixtures.paths import get_project_root
 
@@ -17,22 +17,22 @@ def load_json_data(filepath):
     with open(filepath, 'r') as f:
         return json.load(f)
 
-def generate_test_ships():
+def generate_test_ships(registries: GameRegistries):
     # Ensure output dir exists
     output_dir = os.path.join(str(get_project_root()), "tests", "unit", "data", "ships")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     # 1. Create Attacker
-    attacker = Ship(name="Test Attacker", ship_class="TestShip_S_2L", x=0, y=0, color=(255, 0, 0))
-    attacker.add_component(create_component("test_bridge_basic"), LayerType.CORE)
-    attacker.add_component(create_component("test_engine_infinite"), LayerType.CORE)
-    attacker.add_component(create_component("test_weapon_proj_omni"), LayerType.CORE)
+    attacker = Ship(name="Test Attacker", ship_class="TestShip_S_2L", x=0, y=0, color=(255, 0, 0), registries=registries)
+    attacker.add_component(create_component("test_bridge_basic", registries=registries), LayerType.CORE)
+    attacker.add_component(create_component("test_engine_infinite", registries=registries), LayerType.CORE)
+    attacker.add_component(create_component("test_weapon_proj_omni", registries=registries), LayerType.CORE)
     for _ in range(5):
-        attacker.add_component(create_component("test_armor_std"), LayerType.ARMOR)
-    
+        attacker.add_component(create_component("test_armor_std", registries=registries), LayerType.ARMOR)
+
     attacker.recalculate_stats()
-    
+
     # Save Attacker
     attacker_path = os.path.join(output_dir, "Test_Attacker.json")
     with open(attacker_path, 'w') as f:
@@ -40,13 +40,13 @@ def generate_test_ships():
         print(f"Saved Test_Attacker.json to {output_dir}")
 
     # 2. Create Target
-    target = Ship(name="Test Target", ship_class="TestShip_L_4L", x=0, y=0, color=(0, 0, 255))
-    target.add_component(create_component("test_bridge_basic"), LayerType.CORE)
+    target = Ship(name="Test Target", ship_class="TestShip_L_4L", x=0, y=0, color=(0, 0, 255), registries=registries)
+    target.add_component(create_component("test_bridge_basic", registries=registries), LayerType.CORE)
     for _ in range(5):
-        target.add_component(create_component("test_armor_std"), LayerType.ARMOR)
-        
+        target.add_component(create_component("test_armor_std", registries=registries), LayerType.ARMOR)
+
     target.recalculate_stats()
-    
+
     # Save Target
     target_path = os.path.join(output_dir, "Test_Target.json")
     with open(target_path, 'w') as f:
@@ -56,7 +56,8 @@ def generate_test_ships():
 def run_generation():
     try:
         # Load test registry data
-        RegistryManager.instance().clear()
+        mgr = RegistryManager.instance()
+        mgr.clear()
 
         test_data_dir = os.path.join(str(get_project_root()), "tests", "unit", "data")
 
@@ -80,9 +81,17 @@ def run_generation():
             else:
                 classes = vehicle_classes_data
 
-            RegistryManager.instance().vehicle_classes.update(classes)
+            mgr.vehicle_classes.update(classes)
 
-        generate_test_ships()
+        # Create GameRegistries from RegistryManager data
+        registries = GameRegistries(
+            components=mgr.components,
+            modifiers=mgr.modifiers,
+            vehicle_classes=mgr.vehicle_classes,
+            resources=mgr.resources
+        )
+
+        generate_test_ships(registries)
     finally:
         RegistryManager.instance().clear()
 

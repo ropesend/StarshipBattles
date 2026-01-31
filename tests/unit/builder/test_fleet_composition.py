@@ -1,15 +1,38 @@
+"""Tests for fleet composition and ship loading.
+
+PROJ-43: Uses ShipFactory mocking instead of direct Ship mocking.
+PROJ-50: Added fresh_registries fixture for strict DI compliance.
+"""
 from unittest.mock import patch, MagicMock
 import os
+import pytest
 import pygame
 
 from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.setup_data_io import load_ships_from_entries, scan_ship_designs
 
 
+@pytest.fixture(autouse=True)
+def setup_default_registries(fresh_registries):
+    """Set up default registries for tests that use get_default_registries().
+
+    PROJ-50: This autouse fixture ensures that get_default_registries() works
+    for tests that exercise code paths using global registries (like ShipFactory).
+    """
+    from game.core.registry import set_default_registries
+    import game.core.registry as registry_module
+
+    original = registry_module._default_registries
+    set_default_registries(fresh_registries)
+    yield
+    registry_module._default_registries = original
+
+
 class TestFleetComposition:
     """Tests for fleet composition and ship loading.
 
     PROJ-43: Updated to use ShipFactory mocking instead of direct Ship mocking.
+    PROJ-50: Uses fresh_registries fixture via autouse setup_default_registries.
     """
 
     @patch('game.simulation.entities.ship.Ship.from_dict')

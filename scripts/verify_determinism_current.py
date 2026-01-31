@@ -12,7 +12,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.designs import create_interceptor, create_brick
 from game.simulation.components.component import load_components, load_modifiers
-from game.core.registry import RegistryManager
+from game.core.registry import RegistryManager, GameRegistries
 from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 from tests.fixtures.paths import get_project_root
 
@@ -28,10 +28,19 @@ def run_battle(seed, log_filename):
         initialize_ship_data(str(get_project_root()))
         load_components(COMPONENTS_FILE)
         load_modifiers(MODIFIERS_FILE)
-        
+
+        # Get registries for ship/component creation
+        mgr = RegistryManager.instance()
+        registries = GameRegistries(
+            components=mgr.components,
+            modifiers=mgr.modifiers,
+            vehicle_classes=mgr.vehicle_classes,
+            resources={}
+        )
+
         # Create Ships
-        t1 = [create_interceptor(x=float(i*100), y=100.0) for i in range(2)]
-        t2 = [create_interceptor(x=float(i*100), y=900.0) for i in range(2)]
+        t1 = [create_interceptor(x=float(i*100), y=100.0, registries=registries) for i in range(2)]
+        t2 = [create_interceptor(x=float(i*100), y=900.0, registries=registries) for i in range(2)]
         
         # Run Battle
         scene = BattleScreen(1000, 1000)

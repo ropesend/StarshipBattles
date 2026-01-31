@@ -2,13 +2,13 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 import pygame_gui
-from game.ui.screens.builder.layer_panel import LayerComponentItem, IndividualComponentItem
+from game.ui.screens.builder.structure_list_items import LayerComponentItem, IndividualComponentItem
+from game.ui.screens.builder.panel_layout_config import ComponentItemContext
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import ApplicationModifier
-from game.core.registry import RegistryManager
 
 
 @pytest.fixture
@@ -18,7 +18,6 @@ def pygame_manager():
     manager = pygame_gui.UIManager((800, 600))
     yield manager
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 @pytest.fixture
@@ -122,7 +121,6 @@ def builder_setup(fresh_registries):
     p2.stop()
 
     pygame.quit()
-    RegistryManager.instance().clear()
 
 
 class TestBuilderStructureFeatures:
@@ -149,9 +147,17 @@ class TestBuilderStructureFeatures:
         # Mock Event Handler
         event_handler = MagicMock()
 
+        # Create context object for new API
+        ctx = ComponentItemContext(
+            manager=manager,
+            container=container,
+            width=200,
+            sprite_mgr=sprite_mgr,
+            event_handler=event_handler
+        )
+
         item = IndividualComponentItem(
-            manager, container, component, 100, 0, 200, sprite_mgr,
-            event_handler, False
+            ctx, component, max_mass=100, y_pos=0, is_selected=False
         )
 
         # Check Label Alignment Style
@@ -189,9 +195,18 @@ class TestBuilderStructureFeatures:
 
         event_handler = MagicMock()
 
+        # Create context object for new API
+        ctx = ComponentItemContext(
+            manager=manager,
+            container=container,
+            width=200,
+            sprite_mgr=sprite_mgr,
+            event_handler=event_handler
+        )
+
         item = LayerComponentItem(
-            manager, container, component, 1, 10, 10.0, False,
-            "key", False, 0, 200, sprite_mgr, event_handler
+            ctx, component, count=1, total_mass=10, total_pct=10.0,
+            is_expanded=False, group_key="key", is_selected=False, y_pos=0
         )
 
         # Check Label

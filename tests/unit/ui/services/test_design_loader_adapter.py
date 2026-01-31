@@ -74,10 +74,14 @@ class TestDesignLoaderAdapter:
         assert ship is None
         assert "File not found" in message
 
-    def test_adapter_uses_real_loader_when_none_provided(self):
+    def test_adapter_uses_real_loader_when_none_provided(self, fresh_registries):
         """Test adapter falls back to real SimulationDesignLoader when none injected."""
         from game.ui.services.design_loader_adapter import DesignLoaderAdapter
         from game.simulation.services.design_loader import SimulationDesignLoader
+        from game.core.registry import set_default_registries
+
+        # Set default registries so adapter can create a real loader
+        set_default_registries(fresh_registries)
 
         adapter = DesignLoaderAdapter()
 

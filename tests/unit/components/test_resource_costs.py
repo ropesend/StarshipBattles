@@ -1,7 +1,7 @@
 import pytest
 import json
 import os
-from game.simulation.components.component import Component
+from game.simulation.components.component import Component, create_component
 from game.core.constants import PLANET_RESOURCES
 
 # Path to components.json
@@ -48,42 +48,32 @@ class TestComponentModifierCosts:
     TDD Phase 2: Verify modifiers affect resource costs correctly.
     """
 
-    @pytest.fixture(autouse=True)
-    def setup_registry(self):
-        """Ensure registries are loaded."""
-        from game.simulation.components.component import load_components, load_modifiers
-        load_components()
-        load_modifiers()
-
-    def test_get_resource_cost_base(self):
+    def test_get_resource_cost_base(self, fresh_registries):
         """Verify get_resource_cost returns base costs when no modifiers present."""
-        from game.simulation.components.component import create_component
-        comp = create_component('bridge')
-        
+        comp = create_component('bridge', registries=fresh_registries)
+
         # Base Metals cost for bridge is 80
         costs = comp.get_resource_cost()
         assert costs['Metals'] == 80
         assert costs['Organics'] == 20
 
-    def test_size_mount_multiplies_cost(self):
+    def test_size_mount_multiplies_cost(self, fresh_registries):
         """Verify simple_size_mount scales all costs linearly."""
-        from game.simulation.components.component import create_component
-        comp = create_component('railgun') # Base Metals: 150
-        
+        comp = create_component('railgun', registries=fresh_registries)  # Base Metals: 150
+
         # Add size modifier (2.0x)
         comp.add_modifier('simple_size_mount', 2.0)
-        
-        costs = comp.get_resource_cost()
-        assert costs['Metals'] == 300 # 150 * 2
 
-    def test_range_mount_exponential_cost(self):
+        costs = comp.get_resource_cost()
+        assert costs['Metals'] == 300  # 150 * 2
+
+    def test_range_mount_exponential_cost(self, fresh_registries):
         """Verify range_mount scales costs by 3.5^level."""
-        from game.simulation.components.component import create_component
-        comp = create_component('railgun') # Base Metals: 150
-        
+        comp = create_component('railgun', registries=fresh_registries)  # Base Metals: 150
+
         # Add range modifier (Level 1)
         comp.add_modifier('range_mount', 1.0)
-        
+
         costs = comp.get_resource_cost()
         # 150 * 3.5 = 525
         assert costs['Metals'] == 525

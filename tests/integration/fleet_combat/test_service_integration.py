@@ -138,9 +138,9 @@ class TestBattleEngineDirect:
 
         assert engine.tick_counter == initial_tick + 1
 
-    def test_engine_fixture_provides_ready_battle(self):
+    def test_engine_fixture_provides_ready_battle(self, fresh_registries):
         """Test that battle_engine_with_ships fixture works."""
-        engine = create_battle_engine_with_ships(team1_count=2, team2_count=2)
+        engine = create_battle_engine_with_ships(team1_count=2, team2_count=2, registries=fresh_registries)
 
         assert len(engine.ships) == 4
         team0_ships = [s for s in engine.ships if s.team_id == 0]

@@ -1,21 +1,11 @@
-import pytest
-
-from game.simulation.components.component import load_components, load_modifiers, get_all_components, create_component
-from tests.fixtures.paths import get_data_dir
-
-
-@pytest.fixture(autouse=True)
-def setup_components():
-    """Load components before each test."""
-    data_dir = get_data_dir()
-    load_components(str(data_dir / "components.json"))
+from game.simulation.components.component import create_component
 
 
 class TestSeekerRange:
 
-    def test_seeker_initial_range_is_80_percent(self):
+    def test_seeker_initial_range_is_80_percent(self, fresh_registries):
         """Test that seeker weapon range is 80% of speed * endurance (via ability)."""
-        missile = create_component('capital_missile')
+        missile = create_component('capital_missile', registries=fresh_registries)
 
         # Phase 7: Use ability-based access
         assert missile.has_ability('SeekerWeaponAbility')
@@ -28,16 +18,14 @@ class TestSeekerRange:
         assert seeker_ab.range == expected_range, \
             f"Range should be {expected_range} (80% of {expected_straight_range}), got {seeker_ab.range}"
 
-    def test_seeker_range_with_modifier(self):
+    def test_seeker_range_with_modifier(self, fresh_registries):
         """Test that range modifier works on top of 80% calculation.
 
         Note: Phase 7 aliased SeekerWeapon to Component, so the old
         _apply_custom_stats logic that recalculated range is gone.
         This test now verifies the modifier affects endurance_mult stat.
         """
-        missile = create_component('capital_missile')
-
-        load_modifiers(str(get_data_dir() / "modifiers.json"))
+        missile = create_component('capital_missile', registries=fresh_registries)
 
         # Get base values
         seeker_ab = missile.get_ability('SeekerWeaponAbility')

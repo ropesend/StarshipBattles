@@ -34,10 +34,10 @@ class TestComponentContextInjection:
         yield
         RegistryManager.instance().clear()
 
-    def test_component_get_resource_cost_with_context(self):
+    def test_component_get_resource_cost_with_context(self, fresh_registries):
         """Component.get_resource_cost() should work with context instead of ship reference."""
         # Create component without attaching to ship
-        component = create_component('standard_engine')
+        component = create_component('standard_engine', registries=fresh_registries)
         assert component is not None
         assert component.ship is None, "Component should not have ship reference initially"
 
@@ -50,10 +50,10 @@ class TestComponentContextInjection:
         # Verify cost was calculated (specific values depend on component data)
         assert isinstance(cost, dict), "get_resource_cost should return a dict"
 
-    def test_component_get_resource_cost_uses_ship_fallback(self):
+    def test_component_get_resource_cost_uses_ship_fallback(self, fresh_registries):
         """Component.get_resource_cost() should fall back to ship reference if no context."""
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
-        component = create_component('standard_engine')
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
+        component = create_component('standard_engine', registries=fresh_registries)
 
         # Attach to ship the old way - find appropriate layer
         from game.simulation.components.component_constants import LayerType
@@ -64,9 +64,9 @@ class TestComponentContextInjection:
         cost = component.get_resource_cost()
         assert isinstance(cost, dict)
 
-    def test_component_recalculate_stats_with_context(self):
+    def test_component_recalculate_stats_with_context(self, fresh_registries):
         """Component.recalculate_stats() should work with context for formula evaluation."""
-        component = create_component('standard_engine')
+        component = create_component('standard_engine', registries=fresh_registries)
         assert component.ship is None
 
         # Provide context for formula evaluation
@@ -79,9 +79,9 @@ class TestComponentContextInjection:
         assert component.mass >= 0, "Component should have valid mass after recalculate"
         assert component.max_hp > 0, "Component should have valid HP after recalculate"
 
-    def test_component_without_ship_can_be_cloned(self):
+    def test_component_without_ship_can_be_cloned(self, fresh_registries):
         """Components without ship reference should clone cleanly."""
-        component = create_component('bridge')
+        component = create_component('bridge', registries=fresh_registries)
         assert component.ship is None
 
         clone = component.clone()
@@ -101,10 +101,10 @@ class TestResourceConsumptionDecoupling:
         yield
         RegistryManager.instance().clear()
 
-    def test_resource_consumption_with_injected_registry(self):
+    def test_resource_consumption_with_injected_registry(self, fresh_registries):
         """ResourceConsumption should work with injected ResourceRegistry."""
         # Create a component with ResourceConsumption ability
-        component = create_component('standard_engine')
+        component = create_component('standard_engine', registries=fresh_registries)
         assert component is not None
 
         # Find the ResourceConsumption ability
@@ -125,9 +125,9 @@ class TestResourceConsumptionDecoupling:
         assert fuel is not None
         assert fuel.current_value < 1000, "Fuel should have been consumed"
 
-    def test_resource_consumption_check_available_with_injected_registry(self):
+    def test_resource_consumption_check_available_with_injected_registry(self, fresh_registries):
         """ResourceConsumption.check_available() should work with injected registry."""
-        component = create_component('standard_engine')
+        component = create_component('standard_engine', registries=fresh_registries)
         consumption_abilities = component.get_abilities('ResourceConsumption')
         if not consumption_abilities:
             pytest.skip("standard_engine doesn't have ResourceConsumption ability")
@@ -142,13 +142,13 @@ class TestResourceConsumptionDecoupling:
         resources_empty = create_resource_registry_with_fuel(0, 1000)
         assert ability.check_available(resources=resources_empty) is False
 
-    def test_resource_consumption_backwards_compatible_with_ship(self):
+    def test_resource_consumption_backwards_compatible_with_ship(self, fresh_registries):
         """ResourceConsumption should still work via component.ship.resources."""
-        ship = Ship("TestShip", 0, 0, (255, 255, 255))
+        ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=fresh_registries)
         ship.resources.register_storage('fuel', 1000)
         ship.resources.set_value('fuel', 1000)
 
-        component = create_component('standard_engine')
+        component = create_component('standard_engine', registries=fresh_registries)
 
         # Find layer that accepts this component
         from game.simulation.components.component_constants import LayerType
@@ -182,9 +182,9 @@ class TestComponentShipReferenceDeprecation:
         yield
         RegistryManager.instance().clear()
 
-    def test_component_works_without_ship_reference(self):
+    def test_component_works_without_ship_reference(self, fresh_registries):
         """Components should be fully functional without ship reference when context provided."""
-        component = create_component('railgun')
+        component = create_component('railgun', registries=fresh_registries)
         assert component is not None
         assert component.ship is None
 
@@ -208,10 +208,10 @@ class TestComponentShipReferenceDeprecation:
         clone = component.clone()
         assert clone.id == component.id
 
-    def test_component_formulas_evaluate_with_context(self):
+    def test_component_formulas_evaluate_with_context(self, fresh_registries):
         """Components with formulas should evaluate correctly with context."""
         # Find a component that uses formulas (mass or cost based on ship_class_mass)
-        component = create_component('bridge')
+        component = create_component('bridge', registries=fresh_registries)
 
         # Provide different contexts to verify formula evaluation
         context_small = {'ship_class_mass': 500}

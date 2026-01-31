@@ -69,10 +69,9 @@ class ShipFactory:
         if registries is not None:
             return Ship.from_dict(design_data, registries=registries)
         else:
-            # Legacy fallback: use global RegistryManager
-            from game.core.registry import RegistryManager
-            global_registries = RegistryManager.instance().registries
-            return Ship.from_dict(design_data, registries=global_registries)
+            # Legacy fallback: use get_default_registries
+            from game.core.registry import get_default_registries
+            return Ship.from_dict(design_data, registries=get_default_registries())
 
     def get_ship_radius(
         self,

@@ -27,7 +27,7 @@ class TestConflictResolutionEngineInit:
         from game.strategy.interfaces.battle_resolver import IBattleResolver, BattleResult
 
         class MockResolver(IBattleResolver):
-            def resolve_battle(self, fleet1, fleet2, seed=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
                 return BattleResult(winner=0, tick_count=0, team0_survivors=[], team1_survivors=[])
 
         resolver = MockResolver()
@@ -119,7 +119,7 @@ class TestBattleSeedGeneration:
             def __init__(self):
                 self.received_seeds = []
 
-            def resolve_battle(self, fleet1, fleet2, seed=None):
+            def resolve_battle(self, fleet1, fleet2, seed=None, registries=None):
                 self.received_seeds.append(seed)
                 # Return deterministic result based on seed
                 return BattleResult(

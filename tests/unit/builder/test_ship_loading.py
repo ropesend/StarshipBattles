@@ -9,28 +9,16 @@ import os
 import glob
 
 from game.simulation.entities.ship import Ship
-from game.simulation.entities.ship_loader import load_vehicle_classes
-from game.simulation.components.component import (
-    load_components, load_modifiers, create_component
-)
-from game.core.registry import RegistryManager
+from game.simulation.components.component import create_component
 from game.core.json_utils import load_json
-from tests.fixtures.paths import get_data_dir
 
 
 class TestModifierStacking:
     """Test that modifier stacking calculates HP correctly."""
 
-    @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
-        load_components(str(get_data_dir() / "components.json"))
-        load_modifiers(str(get_data_dir() / "modifiers.json"))
-        yield
-        RegistryManager.instance().clear()
-
-    def test_simple_size_mount_hp_multiplier(self):
+    def test_simple_size_mount_hp_multiplier(self, fresh_registries):
         """simple_size_mount should multiply HP by the scale value."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=fresh_registries)
         base_hp = laser.max_hp
 
         # Add 8x size mount
@@ -41,9 +29,9 @@ class TestModifierStacking:
         assert laser.max_hp == expected_hp, \
             f"Size mount 8x: expected {expected_hp}, got {laser.max_hp}"
 
-    def test_range_mount_hp_multiplier(self):
+    def test_range_mount_hp_multiplier(self, fresh_registries):
         """range_mount should multiply HP by 3.5^level."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=fresh_registries)
         base_hp = laser.max_hp
 
         # Add range mount level 2
@@ -55,9 +43,9 @@ class TestModifierStacking:
         assert laser.max_hp == expected_hp, \
             f"Range mount level 2: expected {expected_hp}, got {laser.max_hp}"
 
-    def test_stacked_modifiers_multiplicative(self):
+    def test_stacked_modifiers_multiplicative(self, fresh_registries):
         """Multiple modifiers should stack multiplicatively."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=fresh_registries)
         base_hp = laser.max_hp
 
         # Add both size_mount(8) and range_mount(2)
@@ -71,9 +59,9 @@ class TestModifierStacking:
         assert laser.max_hp == expected_hp, \
             f"Stacked modifiers: expected {expected_hp}, got {laser.max_hp}"
 
-    def test_turret_mount_no_hp_change(self):
+    def test_turret_mount_no_hp_change(self, fresh_registries):
         """turret_mount should not affect HP (only mass)."""
-        laser = create_component('laser_cannon')
+        laser = create_component('laser_cannon', registries=fresh_registries)
         base_hp = laser.max_hp
         base_mass = laser.mass
 
@@ -88,40 +76,21 @@ class TestModifierStacking:
 
 class TestShipExpectedStats:
     """Test that loaded ships match their expected_stats."""
-
-    @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
-        load_components(str(get_data_dir() / "components.json"))
-        load_modifiers(str(get_data_dir() / "modifiers.json"))
-        load_vehicle_classes()
-        yield
-        RegistryManager.instance().clear()
+    pass
 
 
 class TestAllShipDesigns:
     """Test all ship designs in the ships/ folder."""
 
-    @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
-        data_dir = get_data_dir()
-        load_components(str(data_dir / "components.json"))
-        load_modifiers(str(data_dir / "modifiers.json"))
-        from game.simulation.entities.ship_loader import load_vehicle_classes
-        load_vehicle_classes(str(data_dir / "vehicleclasses.json"))
-
+    def test_all_ships_match_expected_stats(self, fresh_registries):
+        """All ships should match their expected_stats if present."""
         # Find all ship JSON files in tests/unit/ships
         ships_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ships")
-        self.ship_files = glob.glob(os.path.join(ships_dir, "*.json"))
+        ship_files = glob.glob(os.path.join(ships_dir, "*.json"))
 
-        yield
-
-        RegistryManager.instance().clear()
-
-    def test_all_ships_match_expected_stats(self):
-        """All ships should match their expected_stats if present."""
         failures = []
 
-        for ship_path in self.ship_files:
+        for ship_path in ship_files:
             try:
                 data = load_json(ship_path)
                 if data is None:
@@ -132,7 +101,7 @@ class TestAllShipDesigns:
                 if not expected:
                     continue  # Skip ships without expected_stats
 
-                ship = Ship.from_dict(data)
+                ship = Ship.from_dict(data, registries=fresh_registries)
                 ship.recalculate_stats()
 
                 ship_name = data.get('name', os.path.basename(ship_path))

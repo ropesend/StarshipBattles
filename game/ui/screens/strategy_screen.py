@@ -350,6 +350,7 @@ class StrategyScreen:
                 from game.ui.screens.build_queue_screen import BuildQueueScreen
                 from game.strategy.systems.design_library import DesignLibrary
                 from game.simulation.services.design_loader import SimulationDesignLoader
+                from game.core.registry import get_default_registries
 
                 # Hide main UI
                 self.ui.hide_ui()
@@ -361,7 +362,7 @@ class StrategyScreen:
                 savegame_path = getattr(self.session, 'save_path', None)
                 empire_id = planet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = SimulationDesignLoader()
+                design_loader = SimulationDesignLoader(registries=get_default_registries())
 
                 # Create screen with injected dependencies
                 self.build_queue_screen = BuildQueueScreen(

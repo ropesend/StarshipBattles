@@ -18,6 +18,7 @@ from game.core.logger import log_debug, log_info
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
     from game.strategy.data.fleet import Fleet
+    from game.core.registry import GameRegistries
 
 
 @dataclass
@@ -39,16 +40,26 @@ class ConflictResolutionEngine:
     - Tracking combat results
     """
 
-    def __init__(self, battle_resolver: Optional['IBattleResolver'] = None):
+    def __init__(
+        self,
+        battle_resolver: Optional['IBattleResolver'] = None,
+        *,
+        registries: Optional['GameRegistries'] = None
+    ):
         """
         Initialize the conflict resolution engine.
 
         Args:
             battle_resolver: Optional battle resolver implementation.
                            If None, defaults to SimulationBattleResolver.
+            registries: Optional GameRegistries for DI. Required for strict DI
+                       compliance in PROJ-50.
         """
         # Battle seed counter for deterministic battles
         self._battle_seed_counter = 0
+
+        # PROJ-50: Store registries for passing to battle resolver
+        self._registries = registries
 
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -183,8 +194,11 @@ class ConflictResolutionEngine:
             The winning fleet
         """
         # Use the injected battle resolver
+        # PROJ-50: Pass registries for strict DI compliance
         seed = self._generate_battle_seed()
-        result = self._battle_resolver.resolve_battle(f1, f2, seed=seed)
+        result = self._battle_resolver.resolve_battle(
+            f1, f2, seed=seed, registries=self._registries
+        )
 
         # Apply results to fleets
         f1.update_from_battle_results(result.team0_survivors)

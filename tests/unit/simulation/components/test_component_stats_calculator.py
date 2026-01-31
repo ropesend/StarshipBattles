@@ -10,9 +10,9 @@ from game.simulation.components.component_stats_calculator import ComponentStats
 class TestComponentStatsCalculatorRecalculate:
     """Test stats recalculation."""
 
-    def test_recalculate_stats_applies_modifiers(self):
+    def test_recalculate_stats_applies_modifiers(self, fresh_registries):
         """recalculate_stats should apply modifier effects."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass
 
         railgun.add_modifier('simple_size_mount', 2.0)
@@ -20,9 +20,9 @@ class TestComponentStatsCalculatorRecalculate:
         # Mass should be doubled
         assert railgun.mass == pytest.approx(base_mass * 2.0, abs=0.01)
 
-    def test_recalculate_stats_multiplicative_stacking(self):
+    def test_recalculate_stats_multiplicative_stacking(self, fresh_registries):
         """recalculate_stats should stack modifiers multiplicatively."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         base_mass = railgun.base_mass
 
         railgun.add_modifier('simple_size_mount', 2.0)
@@ -31,9 +31,9 @@ class TestComponentStatsCalculatorRecalculate:
         expected = base_mass * 2.0 * 1.25
         assert railgun.mass == pytest.approx(expected, abs=0.01)
 
-    def test_recalculate_stats_with_context(self):
+    def test_recalculate_stats_with_context(self, fresh_registries):
         """recalculate_stats should use context for formula evaluation."""
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=fresh_registries)
 
         # Recalculate with different context
         bridge.recalculate_stats({'ship_class_mass': 2000})
@@ -46,9 +46,9 @@ class TestComponentStatsCalculatorRecalculate:
 class TestComponentStatsCalculatorFormulas:
     """Test formula evaluation."""
 
-    def test_evaluates_attribute_formulas(self):
+    def test_evaluates_attribute_formulas(self, fresh_registries):
         """Should evaluate formulas in attributes like mass/hp."""
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=fresh_registries)
 
         # Bridge has formula-based mass
         # Recalculate with context and verify it produces valid result
@@ -57,10 +57,10 @@ class TestComponentStatsCalculatorFormulas:
         # Should have positive mass (actual formula may differ)
         assert bridge.mass > 0
 
-    def test_evaluates_ability_formulas(self):
+    def test_evaluates_ability_formulas(self, fresh_registries):
         """Should evaluate formulas nested in abilities."""
         # Components with formula-based abilities should work
-        bridge = create_component('bridge')
+        bridge = create_component('bridge', registries=fresh_registries)
         bridge.recalculate_stats()
 
         # Just verify no crash and abilities are instantiated
@@ -70,15 +70,15 @@ class TestComponentStatsCalculatorFormulas:
 class TestComponentStatsCalculatorHPHandling:
     """Test HP handling during recalculation."""
 
-    def test_current_hp_preserved_when_undamaged(self):
+    def test_current_hp_preserved_when_undamaged(self, fresh_registries):
         """current_hp should equal max_hp when undamaged."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
 
         assert railgun.current_hp == railgun.max_hp
 
-    def test_current_hp_capped_after_modifier(self):
+    def test_current_hp_capped_after_modifier(self, fresh_registries):
         """current_hp should be capped to new max_hp after modifier."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         original_max = railgun.max_hp
 
         # Damage the component
@@ -97,9 +97,9 @@ class TestComponentStatsCalculatorHPHandling:
 class TestComponentStatsCalculatorStandalone:
     """Test ComponentStatsCalculator standalone methods."""
 
-    def test_calculate_modifier_stats(self):
+    def test_calculate_modifier_stats(self, fresh_registries):
         """ComponentStatsCalculator should calculate modifier stats."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         railgun.add_modifier('simple_size_mount', 2.0)
 
         stats = ComponentStatsCalculator.calculate_modifier_stats(
@@ -110,9 +110,9 @@ class TestComponentStatsCalculatorStandalone:
         assert 'mass_mult' in stats
         assert stats['mass_mult'] == pytest.approx(2.0, abs=0.01)
 
-    def test_apply_base_stats(self):
+    def test_apply_base_stats(self, fresh_registries):
         """ComponentStatsCalculator should apply base stats correctly."""
-        railgun = create_component('railgun')
+        railgun = create_component('railgun', registries=fresh_registries)
         old_max_hp = railgun.max_hp
 
         # Create stats dict manually

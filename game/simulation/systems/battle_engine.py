@@ -482,7 +482,8 @@ class BattleEngine:
                     color=source_ship.color,
                     team_id=source_ship.team_id,
                     ship_class=fighter_class,
-                    theme_id=source_ship.theme_id
+                    theme_id=source_ship.theme_id,
+                    registries=source_ship._registries,
                 )
                 
                 # Inherit some properties or init velocity
