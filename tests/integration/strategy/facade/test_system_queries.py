@@ -128,7 +128,7 @@ class TestGetPlanet:
         mock_planet.id = 42
         mock_planet.name = "Earth"
         mock_planet.planet_type = MagicMock()
-        mock_planet.planet_type.name = "TERRESTRIAL"
+        mock_planet.planet_type.name = "CONTINENTAL"
         mock_planet.location = HexCoord(1, 0)
         mock_planet.orbit_distance = 3
         mock_planet.owner_id = 0
@@ -181,7 +181,7 @@ class TestGetPlanet:
         mock_planet.id = 55
         mock_planet.name = "Mars"
         mock_planet.planet_type = MagicMock()
-        mock_planet.planet_type.name = "DESERT"
+        mock_planet.planet_type.name = "ARID"
         mock_planet.location = HexCoord(2, 0)
         mock_planet.orbit_distance = 4
         mock_planet.owner_id = None
@@ -225,7 +225,7 @@ class TestGetPlanetsAtHex:
         mock_planet1.id = 1
         mock_planet1.name = "Planet A"
         mock_planet1.planet_type = MagicMock()
-        mock_planet1.planet_type.name = "TERRESTRIAL"
+        mock_planet1.planet_type.name = "CONTINENTAL"
         mock_planet1.location = HexCoord(1, 0)
         mock_planet1.orbit_distance = 2
         mock_planet1.owner_id = None
@@ -235,7 +235,7 @@ class TestGetPlanetsAtHex:
         mock_planet2.id = 2
         mock_planet2.name = "Planet B"
         mock_planet2.planet_type = MagicMock()
-        mock_planet2.planet_type.name = "GAS_GIANT"
+        mock_planet2.planet_type.name = "JOVIAN"
         mock_planet2.location = HexCoord(2, 0)
         mock_planet2.orbit_distance = 5
         mock_planet2.owner_id = None

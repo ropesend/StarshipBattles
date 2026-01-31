@@ -61,7 +61,7 @@ def test_planet():
         surface_water=0.7,
         tectonic_activity=0.1,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 1
     planet.id = 100
@@ -210,7 +210,7 @@ def test_update_planet_changes_display(planet_report_panel, test_planet):
         surface_water=0.5,
         tectonic_activity=0.2,
         magnetic_field=0.8,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     new_planet.owner_id = 1
     new_planet.id = 200

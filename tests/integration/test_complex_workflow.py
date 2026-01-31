@@ -112,7 +112,7 @@ def empire_with_colony(test_savegame_dir):
         surface_water=0.7,
         tectonic_activity=0.1,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = empire.id
     planet.id = 100

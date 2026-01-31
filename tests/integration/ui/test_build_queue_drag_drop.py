@@ -67,7 +67,7 @@ def build_queue_screen(mock_design_library, mock_design_loader):
         surface_water=0.7,
         tectonic_activity=0.1,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 1
     planet.id = 100

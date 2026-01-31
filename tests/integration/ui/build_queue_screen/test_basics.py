@@ -174,7 +174,7 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
         tectonic_activity=0.1,
         magnetic_field=1.0,
         atmosphere={},
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 1
 

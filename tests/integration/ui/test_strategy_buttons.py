@@ -59,7 +59,7 @@ def create_dummy_planet(name, owner_id=None):
         surface_water=0.7,
         tectonic_activity=0.1,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     p.owner_id = owner_id
     return p

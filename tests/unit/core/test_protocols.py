@@ -89,7 +89,7 @@ class TestProtocolsWithRealClasses:
             surface_water=0.71,
             tectonic_activity=0.5,
             magnetic_field=1.0,
-            planet_type=PlanetType.TERRESTRIAL,
+            planet_type=PlanetType.CONTINENTAL,
         )
         assert isinstance(planet, IPlanet)
 

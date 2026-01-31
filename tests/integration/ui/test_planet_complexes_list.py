@@ -42,7 +42,7 @@ def mock_planet_with_complexes():
         surface_water=0.7,
         tectonic_activity=0.1,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 1
     planet.id = 100
@@ -240,7 +240,7 @@ def test_update_planet_refreshes_complexes_list():
         surface_water=0.0,
         tectonic_activity=0.0,
         magnetic_field=0.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet1.owner_id = 1
     planet1.id = 102
@@ -275,7 +275,7 @@ def test_update_planet_refreshes_complexes_list():
         surface_water=0.5,
         tectonic_activity=0.1,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet2.owner_id = 1
     planet2.id = 103
@@ -320,7 +320,7 @@ def test_complexes_list_is_scrollable():
         surface_water=0.3,
         tectonic_activity=0.2,
         magnetic_field=1.0,
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 1
     planet.id = 104

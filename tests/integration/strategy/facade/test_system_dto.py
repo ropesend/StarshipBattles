@@ -204,7 +204,7 @@ class TestSystemInfoFactory:
                 surface_water=0.7,
                 tectonic_activity=0.5,
                 magnetic_field=1.0,
-                planet_type=PlanetType.TERRESTRIAL,
+                planet_type=PlanetType.CONTINENTAL,
             )
             system.planets.append(planet)
 
@@ -239,7 +239,7 @@ class TestSystemInfoFactory:
                 surface_water=0.7,
                 tectonic_activity=0.5,
                 magnetic_field=1.0,
-                planet_type=PlanetType.TERRESTRIAL,
+                planet_type=PlanetType.CONTINENTAL,
             )
             if i < 2:  # First two colonized
                 planet.owner_id = 0
@@ -276,14 +276,14 @@ class TestPlanetInfo:
         planet = PlanetInfo(
             planet_id=42,
             name="Earth",
-            planet_type="TERRESTRIAL",
+            planet_type="CONTINENTAL",
             location=HexCoord(3, 0),
             orbit_distance=3,
         )
 
         assert planet.planet_id == 42
         assert planet.name == "Earth"
-        assert planet.planet_type == "TERRESTRIAL"
+        assert planet.planet_type == "CONTINENTAL"
         assert planet.location == HexCoord(3, 0)
         assert planet.orbit_distance == 3
         assert planet.owner_id is None
@@ -297,7 +297,7 @@ class TestPlanetInfo:
         planet = PlanetInfo(
             planet_id=1,
             name="Mars Colony",
-            planet_type="TERRESTRIAL",
+            planet_type="CONTINENTAL",
             location=HexCoord(4, 0),
             orbit_distance=4,
             owner_id=0,
@@ -316,7 +316,7 @@ class TestPlanetInfo:
         planet = PlanetInfo(
             planet_id=1,
             name="Venus",
-            planet_type="TERRESTRIAL",
+            planet_type="CONTINENTAL",
             location=HexCoord(2, 0),
             orbit_distance=2,
         )
@@ -347,7 +347,7 @@ class TestPlanetInfoFactory:
             surface_water=0.7,
             tectonic_activity=0.5,
             magnetic_field=1.0,
-            planet_type=PlanetType.TERRESTRIAL,
+            planet_type=PlanetType.CONTINENTAL,
         )
         planet.id = 42
 
@@ -355,7 +355,7 @@ class TestPlanetInfoFactory:
 
         assert info.planet_id == 42
         assert info.name == "Test Planet"
-        assert info.planet_type == "TERRESTRIAL"
+        assert info.planet_type == "CONTINENTAL"
         assert info.location == HexCoord(5, 0)
         assert info.orbit_distance == 5
         assert info.owner_id is None
@@ -380,7 +380,7 @@ class TestPlanetInfoFactory:
             surface_water=0.7,
             tectonic_activity=0.5,
             magnetic_field=1.0,
-            planet_type=PlanetType.TERRESTRIAL,
+            planet_type=PlanetType.CONTINENTAL,
         )
         planet.id = 1
         planet.owner_id = 0
@@ -409,7 +409,7 @@ class TestPlanetInfoFactory:
             surface_water=0.7,
             tectonic_activity=0.5,
             magnetic_field=1.0,
-            planet_type=PlanetType.TERRESTRIAL,
+            planet_type=PlanetType.CONTINENTAL,
         )
         planet.id = 1
         planet.owner_id = 0

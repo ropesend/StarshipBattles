@@ -205,7 +205,7 @@ class TestColonySummaryFactory:
             surface_water=0.7,
             tectonic_activity=0.5,
             magnetic_field=1.0,
-            planet_type=PlanetType.TERRESTRIAL,
+            planet_type=PlanetType.CONTINENTAL,
         )
         planet.id = 42
         planet.owner_id = 0
@@ -235,7 +235,7 @@ class TestColonySummaryFactory:
             surface_water=0.7,
             tectonic_activity=0.5,
             magnetic_field=1.0,
-            planet_type=PlanetType.TERRESTRIAL,
+            planet_type=PlanetType.CONTINENTAL,
         )
         planet.id = 1
         planet.owner_id = 0

@@ -63,7 +63,7 @@ def production_setup():
         tectonic_activity=0.1,
         magnetic_field=1.0,
         atmosphere={'N2': 78000.0, 'O2': 21000.0},
-        planet_type=PlanetType.TERRESTRIAL
+        planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 0
 
