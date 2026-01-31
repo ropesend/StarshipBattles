@@ -34,6 +34,12 @@ class WeaponsReportPanel:
     BREAKPOINTS_FULL = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]  # For projectile/seeker
     BREAKPOINTS_MID = [0.2, 0.4, 0.6, 0.8]  # For beam intermediate
     SCALE_MARKERS = [0.25, 0.5, 0.75]  # Background scale lines
+
+    # === Points of Interest ===
+    # Range percentage breakpoints for all weapon types
+    INTEREST_POINTS_RANGE = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    # Accuracy thresholds for beam weapons (will calculate range where these occur)
+    INTEREST_POINTS_ACCURACY = [0.99, 0.80, 0.60, 0.40, 0.20, 0.01]
     
     # === Color Gradients ===
     # Accuracy threshold colors (green to red for 99% down to 1%)
@@ -351,9 +357,111 @@ class WeaponsReportPanel:
                          range_for_threshold = max_range
                          
             results.append((threshold, range_for_threshold, damage))
-            
+
         return results
-    
+
+    def _get_points_of_interest(self, weapon, ship):
+        """
+        Generate unified points of interest for weapon bar visualization.
+
+        Returns a sorted list of dicts with:
+        - 'range': distance value in game units
+        - 'damage': damage at that range
+        - 'accuracy': hit chance at that range (beam only, None for others)
+        - 'type': 'range' (percentage breakpoint) or 'accuracy' (threshold crossing)
+        - 'priority': 0 = must show (endpoints), 1 = important, 2 = nice to have
+
+        Points are sorted by range for drawing left-to-right.
+        """
+        import math
+
+        points = []
+
+        ab = weapon.get_ability('WeaponAbility')
+        if not ab:
+            return points
+
+        weapon_range = ab.range
+        base_damage = ab.damage
+
+        is_beam = weapon.has_ability('BeamWeaponAbility')
+        is_seeker = weapon.has_ability('SeekerWeaponAbility')
+
+        # Get accuracy parameters for beam weapons
+        base_acc = getattr(ab, 'base_accuracy', 2.0) if is_beam else None
+        falloff = getattr(ab, 'accuracy_falloff', 0.001) if is_beam else None
+
+        # Get ship sensor score for accuracy calculation
+        attack_score = 0.0
+        if hasattr(ship, 'get_total_sensor_score'):
+            attack_score = ship.get_total_sensor_score()
+        defense_score = self.target_defense_mod
+
+        def calc_accuracy_at_range(r):
+            """Calculate sigmoid accuracy at given range."""
+            if not is_beam or base_acc is None or falloff is None:
+                return None
+            range_penalty = falloff * r
+            net_score = (base_acc + attack_score) - (range_penalty + defense_score)
+            clamped = max(-20.0, min(20.0, net_score))
+            return 1.0 / (1.0 + math.exp(-clamped))
+
+        def calc_damage_at_range(r):
+            """Get damage at given range (uses formula if available)."""
+            if hasattr(ab, 'get_damage'):
+                return ab.get_damage(r)
+            return base_damage
+
+        # 1. Add range percentage breakpoints (for all weapon types)
+        for i, pct in enumerate(self.INTEREST_POINTS_RANGE):
+            r = int(weapon_range * pct)
+            dmg = calc_damage_at_range(r)
+            acc = calc_accuracy_at_range(r)
+
+            # Priority: 0 for endpoints (0% and 100%), 2 for intermediates
+            priority = 0 if pct in [0.0, 1.0] else 2
+
+            points.append({
+                'range': r,
+                'damage': dmg,
+                'accuracy': acc,
+                'type': 'range',
+                'priority': priority,
+                'label_pct': pct  # For labeling as percentage
+            })
+
+        # 2. For beam weapons, add accuracy threshold crossings
+        if is_beam and falloff and falloff > 0:
+            net_starting_score = (base_acc + attack_score) - defense_score
+
+            for threshold in self.INTEREST_POINTS_ACCURACY:
+                # Avoid log(0) and log(infinity)
+                p = max(0.0001, min(0.9999, threshold))
+                logit_p = math.log(p / (1.0 - p))
+
+                # Range where accuracy equals threshold
+                r = (net_starting_score - logit_p) / falloff
+
+                # Only include if within weapon range and positive
+                if 0 < r < weapon_range:
+                    # Check we don't already have a very close point
+                    too_close = any(abs(pt['range'] - r) < weapon_range * 0.05 for pt in points)
+                    if not too_close:
+                        dmg = calc_damage_at_range(r)
+                        points.append({
+                            'range': int(r),
+                            'damage': dmg,
+                            'accuracy': threshold,
+                            'type': 'accuracy',
+                            'priority': 1,  # Important but not as critical as endpoints
+                            'label_acc': threshold  # For labeling as accuracy %
+                        })
+
+        # Sort by range
+        points.sort(key=lambda p: p['range'])
+
+        return points
+
     def update(self):
         """Update weapon list and calculations."""
         ship = self.builder.ship
@@ -653,116 +761,108 @@ class WeaponsReportPanel:
             scale_label = self.small_font.render(f"{int(self._max_range * pct)}", True, self.COLOR_SCALE_LABEL)
             screen.blit(scale_label, (scale_x - scale_label.get_width()//2, draw_start_y - self.SCALE_LABEL_OFFSET))
 
-    def _draw_beam_weapon_bar(self, screen, weapon, ship, bar_y, start_x, bar_width, weapon_bar_width, weapon_range, damage):
-        """Draw beam weapon range bar with accuracy and damage markers."""
-        pygame.draw.line(screen, self.BEAM_BAR_COLOR, (start_x, bar_y), (start_x + weapon_bar_width, bar_y), self.BAR_HEIGHT)
-        
-        # Calculate stats for start/end
-        # Sigmoid Logic for Start/End
-        import math
-        
-        # Scores
-        # Scores
-        ab = weapon.get_ability('WeaponAbility')
-        if not ab: return
-        
-        base_acc = getattr(ab, 'base_accuracy', 1.0)
-        falloff = getattr(ab, 'accuracy_falloff', 0.0)
-        
-        attack_score = 0.0
-        if hasattr(ship, 'get_total_sensor_score'):
-            attack_score = ship.get_total_sensor_score()
-            
-        defense_score = self.target_defense_mod
-        
-        # Chance at 0
-        net_at_0 = (base_acc + attack_score) - (0 * falloff + defense_score)
-        clamped_0 = max(-20.0, min(20.0, net_at_0))
-        chance_at_0 = 1.0 / (1.0 + math.exp(-clamped_0))
-        
-        # Chance at max
-        net_at_max = (base_acc + attack_score) - (weapon_range * falloff + defense_score)
-        clamped_max = max(-20.0, min(20.0, net_at_max))
-        chance_at_max = 1.0 / (1.0 + math.exp(-clamped_max))
-        
-        # Calculate damage at start/end
-        dmg_at_0 = dmg_at_max = damage
-        
-        # Draw Start: Accuracy ABOVE, Damage BELOW
-        # Draw Start: Accuracy ABOVE, Damage BELOW
-        start_label_color = self._get_accuracy_color(chance_at_0)
-        
-        s_acc_label = self.small_font.render(f"{int(chance_at_0 * 100)}%", True, start_label_color)
-        screen.blit(s_acc_label, (start_x - s_acc_label.get_width() - 5, bar_y - 10))
-        
-        s_dmg_label = self.small_font.render(f"D:{int(dmg_at_0)}", True, self.COLOR_DAMAGE_LABEL)
-        screen.blit(s_dmg_label, (start_x + 2, bar_y + self.LABEL_BELOW_OFFSET))
-        
-        # Draw End: Accuracy ABOVE, Damage BELOW, Range indicator
-        # Draw End: Accuracy ABOVE, Damage BELOW, Range indicator
-        end_label_color = self._get_accuracy_color(chance_at_max)
-        
-        end_x = start_x + weapon_bar_width
-        e_acc_label = self.small_font.render(f"{int(chance_at_max * 100)}%", True, end_label_color)
-        screen.blit(e_acc_label, (end_x + 5, bar_y - 10))
-        
-        e_dmg_label = self.small_font.render(f"D:{int(dmg_at_max)}", True, self.COLOR_DAMAGE_LABEL)
-        screen.blit(e_dmg_label, (end_x - e_dmg_label.get_width() - 2, bar_y + self.LABEL_BELOW_OFFSET))
-        
-        # Range indicator at max range
-        range_label = self.small_font.render(f"R:{int(weapon_range)}", True, self.COLOR_RANGE_LABEL)
-        screen.blit(range_label, (end_x + 5, bar_y + self.LABEL_BELOW_OFFSET))
-        
-        # Intermediate threshold markers
-        threshold_data = self._calculate_threshold_ranges(weapon, ship)
-        
-        for j, (threshold, range_val, dmg) in enumerate(threshold_data):
-            if range_val is not None and range_val > (weapon_range * 0.10) and range_val < (weapon_range * 0.90):
-                marker_x = start_x + int((range_val / self._max_range) * bar_width)
-                color = self.THRESHOLD_COLORS[j] if j < len(self.THRESHOLD_COLORS) else (150, 150, 150)
-                
-                pygame.draw.circle(screen, color, (marker_x, bar_y), self.MARKER_RADIUS)
-                
-                pct_text = f"{int(threshold * 100)}%"
-                pct_label = self.small_font.render(pct_text, True, color)
-                screen.blit(pct_label, (marker_x - pct_label.get_width()//2, bar_y - self.LABEL_ABOVE_OFFSET - 2))
-        
-        # Mid-range breakpoint labels
-        for bp_idx, bp_pct in enumerate(self.BREAKPOINTS_MID):
-            bp_range = int(weapon_range * bp_pct)
-            bp_x = start_x + int(bp_pct * weapon_bar_width)
-            
-            range_surf = self.small_font.render(f"{int(bp_range)}", True, self.COLOR_RANGE_SCALE)
-            screen.blit(range_surf, (bp_x - range_surf.get_width()//2, bar_y + self.LABEL_BELOW_RANGE_OFFSET))
-            
-            # Legacy shim removed - always use ability damage
-            bp_damage = damage
-            dmg_surf = self.small_font.render(f"D:{int(bp_damage)}", True, self.BEAM_MID_COLORS[bp_idx])
-            screen.blit(dmg_surf, (bp_x - dmg_surf.get_width()//2, bar_y + self.LABEL_BELOW_OFFSET))
+    def _draw_unified_weapon_bar(self, screen, weapon, ship, bar_y, start_x, bar_width, weapon_bar_width, weapon_range):
+        """
+        Unified weapon bar drawing using points of interest.
 
-    def _draw_projectile_weapon_bar(self, screen, weapon, bar_y, start_x, bar_width, weapon_bar_width, weapon_range, damage, is_seeker):
-        """Draw projectile/seeker weapon range bar with damage breakpoints."""
-        bar_color = self.SEEKER_BAR_COLOR if is_seeker else self.PROJECTILE_BAR_COLOR
+        Displays a horizontal bar from weapon name to max range, with markers at:
+        - Range breakpoints: 0%, 20%, 40%, 60%, 80%, 100% of weapon range
+        - For beams: accuracy threshold crossings (99%, 80%, 60%, 40%, 20%, 1%)
+
+        Each marker shows:
+        - Range value (in game units)
+        - Damage at that range
+        - Accuracy at that range (beam weapons only)
+        """
+        # Determine weapon type and bar color
+        is_beam = weapon.has_ability('BeamWeaponAbility')
+        is_seeker = weapon.has_ability('SeekerWeaponAbility')
+
+        if is_beam:
+            bar_color = self.BEAM_BAR_COLOR
+        elif is_seeker:
+            bar_color = self.SEEKER_BAR_COLOR
+        else:
+            bar_color = self.PROJECTILE_BAR_COLOR
+
+        # Draw base bar
         pygame.draw.line(screen, bar_color, (start_x, bar_y), (start_x + weapon_bar_width, bar_y), self.BAR_HEIGHT)
-        
-        # Draw damage at range breakpoints
-        for bp_idx, bp_pct in enumerate(self.BREAKPOINTS_FULL):
-            bp_range = int(weapon_range * bp_pct)
-            bp_damage = damage
-            
-            bp_x = start_x + int(bp_pct * weapon_bar_width)
-            bp_color = self.DAMAGE_GRADIENT_COLORS[bp_idx]
-            
-            pygame.draw.circle(screen, bp_color, (bp_x, bar_y), self.MARKER_RADIUS)
-            
-            dmg_surf = self.small_font.render(f"D:{int(bp_damage)}", True, bp_color)
-            screen.blit(dmg_surf, (bp_x - dmg_surf.get_width()//2, bar_y + self.LABEL_BELOW_OFFSET))
-            
-            if bp_pct > 0:
-                range_surf = self.small_font.render(f"{int(bp_range)}", True, self.COLOR_RANGE_SCALE)
-                screen.blit(range_surf, (bp_x - range_surf.get_width()//2, bar_y - self.LABEL_ABOVE_OFFSET))
-        
-        # Range end label
+
+        # Get points of interest
+        points = self._get_points_of_interest(weapon, ship)
+
+        if not points:
+            return
+
+        # Track drawn positions to avoid label collision
+        drawn_positions = []
+        MIN_LABEL_SPACING = 40  # Minimum pixels between labels
+
+        def can_draw_at(x, priority):
+            """Check if we can draw a label at x without collision."""
+            for pos, pri in drawn_positions:
+                if abs(x - pos) < MIN_LABEL_SPACING:
+                    # Allow higher priority (lower number) to override
+                    if priority >= pri:
+                        return False
+            return True
+
+        # Sort by priority (0 first) so critical points get drawn first
+        sorted_points = sorted(points, key=lambda p: (p['priority'], p['range']))
+
+        for pt in sorted_points:
+            r = pt['range']
+            dmg = pt['damage']
+            acc = pt['accuracy']
+            pt_type = pt['type']
+            priority = pt['priority']
+
+            # Calculate x position
+            if self._max_range > 0:
+                x = start_x + int((r / self._max_range) * bar_width)
+            else:
+                x = start_x
+
+            # Check for label collision (always draw priority 0)
+            if priority > 0 and not can_draw_at(x, priority):
+                continue
+
+            # Determine marker color based on type and position
+            if pt_type == 'accuracy' and acc is not None:
+                # Use accuracy color
+                color = self._get_accuracy_color(acc)
+            else:
+                # Use damage gradient based on range percentage
+                pct = r / weapon_range if weapon_range > 0 else 0
+                idx = min(int(pct * 5), 5)
+                color = self.DAMAGE_GRADIENT_COLORS[idx]
+
+            # Draw marker circle
+            pygame.draw.circle(screen, color, (x, bar_y), self.MARKER_RADIUS)
+
+            # Draw labels - for beam weapons show all 3 values (Range, Damage, Accuracy)
+            # Above bar: Always show range value
+            above_text = f"{int(r)}"
+            above_color = self.COLOR_RANGE_SCALE
+            above_surf = self.small_font.render(above_text, True, above_color)
+            screen.blit(above_surf, (x - above_surf.get_width() // 2, bar_y - self.LABEL_ABOVE_OFFSET))
+
+            # Below bar line 1: Damage value
+            dmg_text = f"D:{int(dmg)}"
+            dmg_surf = self.small_font.render(dmg_text, True, self.COLOR_DAMAGE_LABEL)
+            screen.blit(dmg_surf, (x - dmg_surf.get_width() // 2, bar_y + self.LABEL_BELOW_OFFSET))
+
+            # Below bar line 2: Accuracy (for beam weapons at all points)
+            if is_beam and acc is not None:
+                acc_text = f"{int(acc * 100)}%"
+                acc_color = self._get_accuracy_color(acc)
+                acc_surf = self.small_font.render(acc_text, True, acc_color)
+                screen.blit(acc_surf, (x - acc_surf.get_width() // 2, bar_y + self.LABEL_BELOW_RANGE_OFFSET))
+
+            # Track this position
+            drawn_positions.append((x, priority))
+
+        # Draw range indicator at end
         end_x = start_x + weapon_bar_width
         range_label = self.small_font.render(f"R:{int(weapon_range)}", True, self.COLOR_RANGE_LABEL)
         screen.blit(range_label, (end_x + 5, bar_y - 4))
@@ -903,24 +1003,19 @@ class WeaponsReportPanel:
 
             # Draw range bar
             bar_y = row_y + self.BAR_Y_OFFSET
-            weapon_range = getattr(weapon, 'range', 0)
-            damage = getattr(weapon, 'damage', 0)
+
+            # Get weapon range from ability (not component attribute)
+            ab = weapon.get_ability('WeaponAbility')
+            weapon_range = ab.range if ab else 0
 
             # Default to 0 width when max_range is 0 (prevents UnboundLocalError)
             weapon_bar_width = 0
 
             if self._max_range > 0 and weapon_range > 0:
                 weapon_bar_width = int((weapon_range / self._max_range) * bar_width)
-                
-                # Check weapon type to determine display style
-                is_beam = weapon.has_ability('BeamWeaponAbility')
-                is_seeker = weapon.has_ability('SeekerWeaponAbility')
-                is_projectile = weapon.has_ability('ProjectileWeaponAbility')
-                
-                if is_beam:
-                    self._draw_beam_weapon_bar(screen, weapon, ship, bar_y, start_x, bar_width, weapon_bar_width, weapon_range, damage)
-                else:
-                    self._draw_projectile_weapon_bar(screen, weapon, bar_y, start_x, bar_width, weapon_bar_width, weapon_range, damage, is_seeker)
+
+                # Use unified drawing method for all weapon types
+                self._draw_unified_weapon_bar(screen, weapon, ship, bar_y, start_x, bar_width, weapon_bar_width, weapon_range)
             
             # Check for weapon row hover (for firing arc display)
             weapon_row_rect = pygame.Rect(self.rect.x, row_y, self.rect.width - self.scroll_bar_width, self.WEAPON_ROW_HEIGHT)

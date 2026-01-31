@@ -137,7 +137,12 @@ class ResourceConsumption(Ability):
             color = '#C8C832'  # Dirty Yellow
 
         label_text = f"{self.resource_name.title()} {'Cost' if self.trigger != 'constant' else 'Use'}"
-        return [{'label': label_text, 'value': f"{self.amount:.1f}{trigger_str}", 'color_hint': color}]
+        # Handle both numeric and formula string amounts
+        if isinstance(self.amount, str):
+            value_str = f"{self.amount}{trigger_str}"
+        else:
+            value_str = f"{self.amount:.1f}{trigger_str}"
+        return [{'label': label_text, 'value': value_str, 'color_hint': color}]
 
     def get_primary_value(self) -> float:
         return self.amount
