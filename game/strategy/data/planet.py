@@ -84,6 +84,10 @@ class Planet:
     # Unique identifier assigned by Galaxy registry (default -1 means unregistered)
     id: int = -1
 
+    # Visual representation (assigned during generation, persisted in saves)
+    image_id: str = ""  # Filename from Planets_V3 (e.g., "planet_5_994_1769750020702.png")
+    image_rotation: float = 0.0  # Degrees (0.0 to 360.0) for visual variety
+
 
     def __eq__(self, other):
         if not isinstance(other, Planet):
@@ -177,7 +181,9 @@ class Planet:
                     'design_data': f.design_data,
                     'is_operational': f.is_operational
                 } for f in self.facilities
-            ]
+            ],
+            'image_id': self.image_id,
+            'image_rotation': self.image_rotation
         }
 
     @classmethod
@@ -227,5 +233,7 @@ class Planet:
             construction_queue=data.get('construction_queue', []),
             resources=data.get('resources', {}),
             facilities=facilities,
-            id=data.get('id', -1)
+            id=data.get('id', -1),
+            image_id=data.get('image_id', ''),
+            image_rotation=data.get('image_rotation', 0.0)
         )

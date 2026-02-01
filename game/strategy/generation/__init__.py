@@ -10,10 +10,12 @@ from game.strategy.generation.placement_strategies import (
     RandomPlacementStrategy,
     DensityBasedPlacementStrategy,
 )
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 __all__ = [
     'DensityMap',
     'ISystemPlacementStrategy',
     'RandomPlacementStrategy',
     'DensityBasedPlacementStrategy',
+    'PlanetImageRegistry',
 ]
