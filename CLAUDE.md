@@ -133,6 +133,30 @@ When faced with choices, prefer:
 
 **Minimize technical debt. Maximize maintainability.**
 
+### System Migration Policy (CRITICAL)
+
+**When a new system replaces an old one, ERADICATE the old system completely.**
+
+DO NOT:
+- Add "fallback" code paths to old systems
+- Keep backward compatibility layers "just in case"
+- Leave old code commented out or behind feature flags
+- Maintain parallel systems that do the same thing
+
+DO:
+- Delete the old system entirely
+- Update ALL call sites to use the new system
+- Remove old data files, configs, and dependencies
+- Fix any data that needs migration (saves, configs)
+
+**Rationale:** Backward compatibility layers create:
+- Confusion about which system is authoritative
+- Bugs from code paths that are rarely tested
+- Maintenance burden of supporting two systems
+- Technical debt that accumulates over time
+
+**If old data exists** (e.g., saves without new fields): either migrate the data programmatically or accept that old saves are incompatible. Do not pollute the codebase with compatibility shims.
+
 ---
 
 ## Architecture Principles

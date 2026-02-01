@@ -471,22 +471,19 @@ class StrategyRenderer:
 
     def _draw_planet_sprite(self, screen, planet, center_pos, size):
         """Draw a single planet sprite with colony marker if owned."""
-        p_type_name = planet.planet_type.name.lower()
-        cat = 'terran'
-        if 'gas' in p_type_name:
-            cat = 'gas'
-        elif 'ice' in p_type_name:
-            cat = 'ice'
-        elif 'desert' in p_type_name or 'hot' in p_type_name:
-            cat = 'venus'
+        img = None
 
-        img = self._asset_manager.get_random_from_group('planets', cat, seed_id=id(planet))
+        # Load planet image from Planets_V3 using image_id
+        if planet.image_id:
+            img = self._load_planet_v3_image(planet.image_id)
+
         if img:
             scaled = pygame.transform.smoothscale(img, (size * 2, size * 2))
             dest = scaled.get_rect(center=(int(center_pos.x), int(center_pos.y)))
             screen.blit(scaled, dest)
         else:
-            pygame.draw.circle(screen, planet.planet_type.color, (int(center_pos.x), int(center_pos.y)), size)
+            # Fallback: gray circle if no image_id (should not happen for new planets)
+            pygame.draw.circle(screen, (100, 100, 100), (int(center_pos.x), int(center_pos.y)), size)
 
         # Owner Marker (Colony Flag)
         if planet.owner_id is not None:
@@ -510,6 +507,33 @@ class StrategyRenderer:
                 else:
                     pygame.draw.circle(screen, owner_emp.color, marker_pos, max(3, int(size / 3)))
                     pygame.draw.circle(screen, (255, 255, 255), marker_pos, max(3, int(size / 3)) + 1, 1)
+
+    def _load_planet_v3_image(self, image_id):
+        """Load a planet image from the Planets_V3 directory.
+
+        Args:
+            image_id: Filename of the planet image (e.g., "planet_5_994_1769750020702.png")
+
+        Returns:
+            Pygame Surface or None if loading fails
+        """
+        import os
+        from game.core.paths import Paths
+
+        if not image_id:
+            return None
+
+        # Construct full path to the Planets_V3 image
+        full_path = os.path.join(Paths.PLANETS_V3_DIR, image_id)
+
+        # Use asset manager's external image loader (handles caching)
+        img = self._asset_manager.load_external_image(full_path)
+
+        # Check if we got the missing texture placeholder
+        if img is self._asset_manager.missing_texture:
+            return None
+
+        return img
 
     def _draw_fleets(self, screen):
         """Draw all fleets and their movement paths."""
