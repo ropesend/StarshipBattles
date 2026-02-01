@@ -1,0 +1,260 @@
+{
+    "version": "1.0",
+    "description": "Astrophysics parameters for planet classification, orbital zones, and atmospheric retention.",
+
+    "mass_distributions": {
+        "dwarf": {
+            "description": "Dwarf planets and planetoids (Ceres to Moon)",
+            "mu": 21.5,
+            "sigma": 0.8,
+            "min": 9.0e20,
+            "max": 2.0e23,
+            "unit": "kg"
+        },
+        "rocky": {
+            "description": "Rocky/terrestrial planets (Mars to Super-Earth)",
+            "mu": 24.5,
+            "sigma": 1.2,
+            "min": 2.0e23,
+            "max": 6.0e25,
+            "unit": "kg"
+        },
+        "ice_giant": {
+            "description": "Ice giants (Uranus/Neptune class)",
+            "mu": 25.8,
+            "sigma": 0.4,
+            "min": 1.0e25,
+            "max": 1.0e27,
+            "unit": "kg"
+        },
+        "gas_giant": {
+            "description": "Gas giants (Jupiter class)",
+            "mu": 27.2,
+            "sigma": 0.5,
+            "min": 1.0e26,
+            "max": 2.0e28,
+            "unit": "kg"
+        }
+    },
+
+    "orbit_zones": {
+        "hot": {
+            "description": "Inner zone where water cannot exist as liquid (too hot)",
+            "temp_min": 400,
+            "temp_max": 10000,
+            "flux_factor_min": 2.0,
+            "characteristics": ["no_liquid_water", "atmospheric_stripping", "tidally_locked_likely"]
+        },
+        "habitable": {
+            "description": "Goldilocks zone where liquid water can exist on surface",
+            "temp_min": 180,
+            "temp_max": 400,
+            "flux_factor_min": 0.36,
+            "flux_factor_max": 2.0,
+            "characteristics": ["liquid_water_possible", "moderate_radiation"]
+        },
+        "cold": {
+            "description": "Outer zone beyond habitable (frozen water)",
+            "temp_min": 80,
+            "temp_max": 180,
+            "flux_factor_max": 0.36,
+            "characteristics": ["frozen_water", "ice_surface"]
+        },
+        "outer": {
+            "description": "Distant outer zone (very cold, minimal stellar radiation)",
+            "temp_max": 80,
+            "flux_factor_max": 0.04,
+            "characteristics": ["minimal_radiation", "ice_dominated", "gas_giant_zone"]
+        }
+    },
+
+    "habitable_zone": {
+        "description": "Habitable zone boundaries relative to stellar luminosity. Distance = factor * sqrt(luminosity_solar)",
+        "inner_factor": 0.95,
+        "outer_factor": 1.37,
+        "conservative_inner": 0.99,
+        "conservative_outer": 1.00,
+        "optimistic_inner": 0.75,
+        "optimistic_outer": 1.77,
+        "units": "AU equivalent for L=1 solar"
+    },
+
+    "ice_line": {
+        "description": "Snow line where water ice becomes stable. Distance = factor * sqrt(luminosity_solar)",
+        "factor": 2.7,
+        "temperature_threshold": 170,
+        "units": "AU equivalent for L=1 solar"
+    },
+
+    "atmosphere_retention": {
+        "description": "Atmospheric retention based on escape velocity vs thermal velocity. A body retains a gas if v_escape > retention_factor * v_thermal",
+        "retention_factor": 6.0,
+        "temperature_factor": 1.5,
+        "formula": "v_escape > retention_factor * sqrt(3 * k * T / m_gas)",
+        "thresholds": {
+            "H2": {
+                "description": "Hydrogen - lightest, hardest to retain",
+                "molar_mass": 0.002,
+                "min_escape_velocity": 23000,
+                "notes": "Only gas giants and very cold massive worlds retain H2"
+            },
+            "He": {
+                "description": "Helium - second lightest",
+                "molar_mass": 0.004,
+                "min_escape_velocity": 16000
+            },
+            "H2O": {
+                "description": "Water vapor",
+                "molar_mass": 0.018,
+                "min_escape_velocity": 7500
+            },
+            "N2": {
+                "description": "Nitrogen - common in Earth-like atmospheres",
+                "molar_mass": 0.028,
+                "min_escape_velocity": 6000
+            },
+            "O2": {
+                "description": "Oxygen",
+                "molar_mass": 0.032,
+                "min_escape_velocity": 5500
+            },
+            "CO2": {
+                "description": "Carbon dioxide - common in dense atmospheres",
+                "molar_mass": 0.044,
+                "min_escape_velocity": 4500
+            }
+        }
+    },
+
+    "classification": {
+        "description": "Thresholds for planet type classification",
+
+        "mass_thresholds": {
+            "dwarf_max": 2.0e23,
+            "terrestrial_min": 2.0e23,
+            "terrestrial_max": 6.0e24,
+            "super_earth_max": 1.0e26,
+            "giant_min": 6.0e24,
+            "ice_giant_max": 1.0e27,
+            "gas_giant_min": 1.0e26,
+            "units": "kg"
+        },
+
+        "temperature_thresholds": {
+            "freezing": 273,
+            "cold_limit": 200,
+            "ice_dwarf_max": 170,
+            "cryo_max": 255,
+            "boiling": 373,
+            "hot_limit": 400,
+            "magma": 700,
+            "magma_activity": 350,
+            "continental_min": 255,
+            "continental_max": 330,
+            "extreme_heat": 1500,
+            "units": "K"
+        },
+
+        "pressure_thresholds": {
+            "vacuum": 500,
+            "chthonian_max": 10000,
+            "continental_min": 5000,
+            "thin": 10000,
+            "standard": 101325,
+            "dense": 1000000,
+            "extreme": 10000000,
+            "units": "Pa"
+        },
+
+        "water_coverage_thresholds": {
+            "arid": 0.20,
+            "normal": 0.50,
+            "ocean_world": 0.85,
+            "continental_min": 0.10,
+            "units": "fraction (0-1)"
+        },
+
+        "type_rules": {
+            "description": "Rules for determining planet type from physical properties",
+            "JOVIAN": {
+                "mass_min": 1.0e26,
+                "notes": "Large gas giants"
+            },
+            "ICE_GIANT": {
+                "mass_min": 6.0e24,
+                "mass_max": 1.0e27,
+                "notes": "Ice giants like Uranus/Neptune"
+            },
+            "CHTHONIAN": {
+                "mass_min": 6.0e24,
+                "temp_min": 600,
+                "pressure_max": 10000,
+                "notes": "Stripped gas giant core"
+            },
+            "ICE_DWARF": {
+                "mass_max": 2.0e23,
+                "temp_max": 170,
+                "notes": "Pluto-like icy dwarf planets"
+            },
+            "PLANETOID": {
+                "mass_max": 2.0e23,
+                "temp_min": 170,
+                "notes": "Small rocky bodies"
+            },
+            "MAGMA": {
+                "temp_min": 700,
+                "notes": "Volcanic/molten surface worlds"
+            },
+            "CRYOPLANET": {
+                "temp_max": 255,
+                "notes": "Frozen surface worlds"
+            },
+            "BARREN": {
+                "pressure_max": 500,
+                "temp_min": 200,
+                "notes": "Airless rocky worlds"
+            },
+            "PELAGIC": {
+                "water_min": 0.85,
+                "notes": "Ocean worlds"
+            },
+            "ARID": {
+                "water_max": 0.20,
+                "temp_min": 255,
+                "notes": "Desert worlds"
+            },
+            "CONTINENTAL": {
+                "water_min": 0.10,
+                "water_max": 0.85,
+                "temp_min": 255,
+                "temp_max": 350,
+                "pressure_min": 5000,
+                "notes": "Earth-like mixed terrain"
+            }
+        }
+    },
+
+    "density_models": {
+        "description": "Density ranges for different body compositions",
+        "iron_core": {
+            "min": 5000,
+            "max": 8000,
+            "units": "kg/m^3"
+        },
+        "rocky": {
+            "min": 3000,
+            "max": 5500,
+            "units": "kg/m^3"
+        },
+        "icy": {
+            "min": 1000,
+            "max": 2500,
+            "units": "kg/m^3"
+        },
+        "gas_giant": {
+            "min": 600,
+            "max": 1600,
+            "units": "kg/m^3"
+        }
+    }
+}

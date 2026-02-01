@@ -10,7 +10,8 @@ import logging
 import random
 from typing import Protocol, Set, Optional, runtime_checkable
 
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.strategy.data.hex_math import HexCoord
+from game.strategy.data.spatial_index import SpatialIndex
 from game.strategy.generation.density.density_map import DensityMap
 
 
@@ -32,7 +33,8 @@ class ISystemPlacementStrategy(Protocol):
         existing_systems: Set[HexCoord],
         min_dist: int,
         rng: Optional[random.Random] = None,
-        max_attempts: int = 1000
+        max_attempts: int = 1000,
+        spatial_index: Optional[SpatialIndex] = None
     ) -> Optional[HexCoord]:
         """Sample a valid location for a new star system.
 
@@ -42,6 +44,9 @@ class ISystemPlacementStrategy(Protocol):
             min_dist: Minimum distance from existing systems
             rng: Random number generator (uses global random if None)
             max_attempts: Maximum sampling attempts before giving up
+            spatial_index: Pre-built spatial index for distance checks.
+                If provided, avoids rebuilding index on each call.
+                Caller is responsible for keeping it in sync with existing_systems.
 
         Returns:
             HexCoord for new system, or None if no valid location found
@@ -63,7 +68,8 @@ class RandomPlacementStrategy:
         existing_systems: Set[HexCoord],
         min_dist: int,
         rng: Optional[random.Random] = None,
-        max_attempts: int = 1000
+        max_attempts: int = 1000,
+        spatial_index: Optional[SpatialIndex] = None
     ) -> Optional[HexCoord]:
         """Sample a random valid location for a new star system.
 
@@ -76,12 +82,20 @@ class RandomPlacementStrategy:
             min_dist: Minimum distance from existing systems
             rng: Random number generator (uses global random if None)
             max_attempts: Maximum sampling attempts before giving up
+            spatial_index: Pre-built spatial index for distance checks.
+                If provided, avoids rebuilding index on each call.
 
         Returns:
             HexCoord for new system, or None if no valid location found
         """
         if rng is None:
             rng = random.Random()
+
+        # Use provided spatial index or build one
+        if spatial_index is None:
+            spatial_index = SpatialIndex(cell_size=max(min_dist, 500))
+            for coord in existing_systems:
+                spatial_index.add(coord, None)
 
         for _ in range(max_attempts):
             # Generate random hex within radius (same logic as original)
@@ -96,15 +110,11 @@ class RandomPlacementStrategy:
             if coord in existing_systems:
                 continue
 
-            # Check minimum distance from all existing systems
-            valid = True
-            for other in existing_systems:
-                if hex_distance(coord, other) < min_dist:
-                    valid = False
-                    break
+            # Check minimum distance using spatial index (O(1) average case)
+            if spatial_index.has_neighbor_within_distance(coord, min_dist):
+                continue
 
-            if valid:
-                return coord
+            return coord
 
         log.debug(f"RandomPlacementStrategy failed after {max_attempts} attempts")
         return None
@@ -131,7 +141,8 @@ class DensityBasedPlacementStrategy:
         existing_systems: Set[HexCoord],
         min_dist: int,
         rng: Optional[random.Random] = None,
-        max_attempts: int = 1000
+        max_attempts: int = 1000,
+        spatial_index: Optional[SpatialIndex] = None
     ) -> Optional[HexCoord]:
         """Sample a density-weighted valid location for a new star system.
 
@@ -144,6 +155,8 @@ class DensityBasedPlacementStrategy:
             min_dist: Minimum distance from existing systems
             rng: Random number generator (uses global random if None)
             max_attempts: Maximum sampling attempts before giving up
+            spatial_index: Pre-built spatial index for distance checks.
+                If provided, avoids rebuilding index on each call.
 
         Returns:
             HexCoord for new system, or None if no valid location found
@@ -154,6 +167,15 @@ class DensityBasedPlacementStrategy:
         # Use the smaller of provided radius and density map radius
         effective_radius = min(radius, self._density_map.radius)
 
+        # Minimum density threshold for fast rejection of empty areas
+        density_threshold = 0.01
+
+        # Use provided spatial index or build one
+        if spatial_index is None:
+            spatial_index = SpatialIndex(cell_size=max(min_dist, 500))
+            for coord in existing_systems:
+                spatial_index.add(coord, None)
+
         for _ in range(max_attempts):
             # Generate random hex within radius
             q = rng.randint(-effective_radius, effective_radius)
@@ -163,26 +185,27 @@ class DensityBasedPlacementStrategy:
             if max(abs(q), abs(r), abs(q + r)) > effective_radius:
                 continue
 
+            # Check density FIRST (fast rejection for low-density areas)
+            density = self._density_map.evaluate(q, r)
+            if density < density_threshold:
+                continue
+
+            # Probabilistic acceptance based on density
+            # Higher density = higher chance of acceptance
+            if rng.random() > density:
+                continue
+
             coord = HexCoord(q, r)
 
             # Check not already occupied
             if coord in existing_systems:
                 continue
 
-            # Check minimum distance from all existing systems
-            valid = True
-            for other in existing_systems:
-                if hex_distance(coord, other) < min_dist:
-                    valid = False
-                    break
-
-            if not valid:
+            # Check minimum distance using spatial index (O(1) average case)
+            if spatial_index.has_neighbor_within_distance(coord, min_dist):
                 continue
 
-            # Accept/reject based on density (rejection sampling)
-            density = self._density_map.evaluate(q, r)
-            if rng.random() < density:
-                return coord
+            return coord
 
         log.debug(f"DensityBasedPlacementStrategy failed after {max_attempts} attempts")
         return None

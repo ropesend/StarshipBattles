@@ -4,33 +4,8 @@
 
   "layouts": {
     "cluster": {
-      "name": "Globular Cluster",
-      "description": "Dense central cluster with irregular edges",
-      "primitives": [
-        {
-          "type": "radial",
-          "center_q": 0,
-          "center_r": 0,
-          "sigma": 0.4,
-          "peak_density": 1.0,
-          "weight": 0.7,
-          "_note": "sigma is relative to radius, will be scaled"
-        },
-        {
-          "type": "noise",
-          "scale": 0.15,
-          "octaves": 3,
-          "persistence": 0.5,
-          "seed": 0,
-          "peak_density": 0.5,
-          "weight": 0.3
-        }
-      ]
-    },
-
-    "spiral": {
-      "name": "Spiral Galaxy",
-      "description": "Classic spiral with central bulge and two arms",
+      "name": "Multi-Cluster",
+      "description": "Multiple distinct star clusters spread across the galaxy",
       "primitives": [
         {
           "type": "radial",
@@ -38,7 +13,59 @@
           "center_r": 0,
           "sigma": 0.15,
           "peak_density": 1.0,
-          "weight": 0.3,
+          "weight": 0.22,
+          "_note": "Central cluster - slightly larger"
+        },
+        {
+          "type": "radial",
+          "center_q": 0.5,
+          "center_r": -0.3,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.2,
+          "_note": "Northeast cluster"
+        },
+        {
+          "type": "radial",
+          "center_q": -0.5,
+          "center_r": -0.25,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.2,
+          "_note": "Northwest cluster"
+        },
+        {
+          "type": "radial",
+          "center_q": -0.35,
+          "center_r": 0.55,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.19,
+          "_note": "Southwest cluster"
+        },
+        {
+          "type": "radial",
+          "center_q": 0.4,
+          "center_r": 0.45,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.19,
+          "_note": "Southeast cluster"
+        }
+      ]
+    },
+
+    "spiral": {
+      "name": "Spiral Galaxy",
+      "description": "Classic spiral with dense core and two distinct arms",
+      "primitives": [
+        {
+          "type": "radial",
+          "center_q": 0,
+          "center_r": 0,
+          "sigma": 0.15,
+          "peak_density": 1.0,
+          "weight": 0.25,
           "_note": "Central bulge"
         },
         {
@@ -46,21 +73,31 @@
           "center_q": 0,
           "center_r": 0,
           "arm_count": 2,
-          "pitch_angle": 25,
-          "arm_width": 0.1,
+          "pitch_angle": 22,
+          "arm_width": 0.08,
           "rotation": 0,
-          "peak_density": 0.9,
-          "weight": 0.5,
-          "_note": "arm_width is relative to radius"
-        },
+          "peak_density": 1.0,
+          "weight": 0.75,
+          "_note": "Spiral arms - wider for better coverage"
+        }
+      ]
+    },
+
+    "spiral_no_core": {
+      "name": "Spiral Galaxy (No Core)",
+      "description": "Spiral arms only, no central bulge",
+      "primitives": [
         {
-          "type": "noise",
-          "scale": 0.08,
-          "octaves": 2,
-          "persistence": 0.4,
-          "seed": 0,
-          "peak_density": 0.3,
-          "weight": 0.2
+          "type": "spiral_arm",
+          "center_q": 0,
+          "center_r": 0,
+          "arm_count": 2,
+          "pitch_angle": 25,
+          "arm_width": 0.08,
+          "rotation": 0,
+          "peak_density": 1.0,
+          "weight": 1.0,
+          "_note": "Pure spiral arms - wider for better coverage"
         }
       ]
     },

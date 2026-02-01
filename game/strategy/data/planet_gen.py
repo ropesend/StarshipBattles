@@ -28,24 +28,44 @@ class PlanetGenerator:
     def __init__(self):
         pass
 
-    def generate_system_bodies(self, system_name: str, stars: List[Star]) -> List[Planet]:
+    def generate_system_bodies(
+        self,
+        system_name: str,
+        stars: List[Star],
+        blueprint: Dict = None
+    ) -> List[Planet]:
         """
         Generate all planetary bodies for a system.
 
         Args:
             system_name: Name of the star system
             stars: List of stars in the system
+            blueprint: Optional blueprint dict with planet_count, planet_mass constraints
 
         Returns:
             List of Planet objects with assigned names
         """
         bodies = []
 
-        # Determine orbital slots and their masses
-        occupied_slots = self._generate_orbital_slots(stars)
+        # Determine orbital slots and their masses using blueprint constraints
+        occupied_slots = self._generate_orbital_slots(stars, blueprint)
 
         # Generate moons for each primary body
-        self._generate_moons(occupied_slots)
+        # If blueprint specifies max_planets, limit total body count
+        if blueprint:
+            planet_count_spec = blueprint.get("planet_count", {})
+            if isinstance(planet_count_spec, dict):
+                max_planets = planet_count_spec.get("max", 20)
+            elif isinstance(planet_count_spec, int):
+                max_planets = planet_count_spec
+            else:
+                max_planets = 20
+            # Only generate moons if we have room for more bodies
+            current_count = sum(len(masses) for masses in occupied_slots.values())
+            if current_count < max_planets:
+                self._generate_moons(occupied_slots, max_total=max_planets)
+        else:
+            self._generate_moons(occupied_slots)
 
         # Create Planet objects for each mass
         bodies = self._create_planet_objects(occupied_slots, stars)
@@ -55,9 +75,18 @@ class PlanetGenerator:
 
         return bodies
 
-    def _generate_orbital_slots(self, stars: List[Star]) -> Dict[HexCoord, List[float]]:
+    def _generate_orbital_slots(
+        self,
+        stars: List[Star],
+        blueprint: Dict = None
+    ) -> Dict[HexCoord, List[float]]:
         """
         Generate primary orbital slots with masses.
+
+        Args:
+            stars: List of stars in the system
+            blueprint: Optional blueprint dict with planet_count, planet_mass,
+                      orbital_spacing, and orbital_zones constraints
 
         Returns dict mapping location to list of masses at that location.
         """
@@ -65,33 +94,134 @@ class PlanetGenerator:
         safe_start = int(primary.diameter_hexes / 2) + 2
         max_dist = 20
 
-        # 3-10 occupied hexes (fewer locations, more bodies per location)
-        primary_count = random.randint(3, 10)
+        # Get planet count from blueprint or use default 3-10
+        if blueprint:
+            planet_count_spec = blueprint.get("planet_count", {})
+            if isinstance(planet_count_spec, int):
+                primary_count = planet_count_spec
+            elif isinstance(planet_count_spec, dict):
+                min_count = planet_count_spec.get("min", 3)
+                max_count = planet_count_spec.get("max", 10)
+                primary_count = random.randint(min_count, max_count)
+            else:
+                primary_count = random.randint(3, 10)
+
+            # Apply orbital spacing factor if specified
+            spacing_spec = blueprint.get("orbital_spacing", {})
+            if isinstance(spacing_spec, dict):
+                spacing_factor = spacing_spec.get("factor", 1.0)
+                max_dist = int(max_dist * spacing_factor)
+                max_dist = max(safe_start + 2, max_dist)  # Ensure room for at least some orbits
+        else:
+            primary_count = random.randint(3, 10)
+
+        # Handle 0 planet case
+        if primary_count == 0:
+            return {}
 
         occupied_locations = set()
         occupied_slots = {}
 
-        for _ in range(primary_count):
+        # Get mass constraints from blueprint
+        mass_spec = blueprint.get("planet_mass", {}) if blueprint else {}
+        mass_bias = mass_spec.get("bias", None)  # "small" or "large"
+        mass_min = mass_spec.get("min", MASS_CERES)
+        mass_max = mass_spec.get("max", MASS_JUPITER)
+
+        # Check if hot zone is required (hot_jupiter blueprint)
+        orbital_zones = blueprint.get("orbital_zones", {}) if blueprint else {}
+        hot_required = orbital_zones.get("hot_required", False)
+        hot_zone_placed = False
+
+        for i in range(primary_count):
             for attempt in range(20):
-                dist = random.randint(safe_start, max_dist)
+                # If hot zone required and not yet placed, force close orbit for first planet
+                if hot_required and not hot_zone_placed and i == 0:
+                    # Hot Jupiter: orbit distance 2-3 (very close to star)
+                    dist = random.randint(safe_start, safe_start + 1)
+                    dist = max(2, min(dist, 3))  # Ensure orbit 2-3
+                else:
+                    dist = random.randint(safe_start, max_dist)
+
                 ring_coords = hex_ring(dist)
                 if not ring_coords:
                     continue
                 loc = random.choice(ring_coords)
                 if loc not in occupied_locations:
                     occupied_locations.add(loc)
-                    mass = self._generate_mass(is_companion=False)
-                    occupied_slots[loc] = [mass]
+
+                    # For hot_jupiter first planet, force gas giant mass
+                    if hot_required and not hot_zone_placed and i == 0:
+                        # Force gas giant: 5e26 to 2e28 kg (Jupiter-like)
+                        hot_mass = 10 ** random.uniform(26.7, 28.0)
+                        occupied_slots[loc] = [hot_mass]
+                        hot_zone_placed = True
+                    else:
+                        mass = self._generate_mass_constrained(mass_min, mass_max, mass_bias)
+                        occupied_slots[loc] = [mass]
                     break
 
         return occupied_slots
 
-    def _generate_moons(self, occupied_slots: Dict[HexCoord, List[float]]) -> None:
+    def _generate_mass_constrained(
+        self,
+        mass_min: float,
+        mass_max: float,
+        bias: str = None
+    ) -> float:
+        """
+        Generate planet mass with constraints and optional bias.
+
+        Args:
+            mass_min: Minimum mass in kg
+            mass_max: Maximum mass in kg
+            bias: Optional bias - "small" for rocky planets, "large" for gas giants
+
+        Returns:
+            Mass in kg within constraints
+        """
+        # Determine log-normal parameters based on bias
+        if bias == "small":
+            # Bias towards smaller rocky planets (Mars to Super-Earth range)
+            # log10(Earth) ~ 24.77, log10(Mars) ~ 23.8
+            log_mu = 24.0
+            log_sigma = 0.8
+        elif bias == "large":
+            # Bias towards gas giants (Neptune to Jupiter range)
+            # log10(Neptune) ~ 26.0, log10(Jupiter) ~ 27.3
+            log_mu = 26.5
+            log_sigma = 0.8
+        else:
+            # Default distribution (weighted towards Mars - Super Earth)
+            log_mu = 24.5
+            log_sigma = 1.5
+
+        log_min = math.log10(mass_min)
+        log_max = math.log10(mass_max)
+
+        # Generate mass with bias, respecting constraints
+        for _ in range(100):
+            log_val = random.gauss(log_mu, log_sigma)
+            if log_min <= log_val <= log_max:
+                return 10 ** log_val
+
+        # Fallback: uniform in log space within constraints
+        return 10 ** random.uniform(log_min, log_max)
+
+    def _generate_moons(
+        self,
+        occupied_slots: Dict[HexCoord, List[float]],
+        max_total: int = None
+    ) -> None:
         """
         Generate moons/co-orbitals for each primary body.
 
         Larger primaries have higher chance of additional bodies.
         Moon mass is normally distributed around 10% of primary mass.
+
+        Args:
+            occupied_slots: Dict mapping location to list of masses
+            max_total: Optional maximum total body count across all slots
         """
         for loc, masses in occupied_slots.items():
             primary_mass = masses[0]
@@ -103,6 +233,12 @@ class PlanetGenerator:
             while random.random() < chance:
                 if len(masses) > 50:
                     break
+
+                # Check max_total constraint
+                if max_total is not None:
+                    current_total = sum(len(m) for m in occupied_slots.values())
+                    if current_total >= max_total:
+                        return  # Stop all moon generation
 
                 moon_mass = self._generate_moon_mass(primary_mass)
                 masses.append(moon_mass)
@@ -185,10 +321,18 @@ class PlanetGenerator:
         """
         Create a single Planet object with all physical properties.
         """
+        from game.strategy.data.planet_physics import validate_planet_parameters
+        from game.core.logger import log_warning
+
         # Physical properties
         radius, density = calculate_radius_density_from_mass(mass)
         gravity = calculate_surface_gravity(mass, radius)
         surface_area = calculate_surface_area(radius)
+
+        # Validate physical parameters
+        warnings = validate_planet_parameters(mass, radius, density)
+        for warning in warnings:
+            log_warning(f"Planet at orbit {orbit_dist}: {warning}")
 
         # Atmosphere
         escape_vel = calculate_escape_velocity(mass, radius)
@@ -282,72 +426,71 @@ class PlanetGenerator:
     ) -> PlanetType:
         """
         Determine planet type based on physical properties.
+
+        Classification thresholds are loaded from astrophysics.json via
+        ClassificationConfig for data-driven configuration.
         """
+        from game.strategy.data.classification_config import get_classification_config
+        cfg = get_classification_config()
+
         # Gas Giants & Ice Giants (> 10 Earth Masses approx)
-        if mass > 6.0e24:
+        if mass > cfg.giant_min:
             # Chthonian: Large stripped core. High Temp OR Low Pressure (stripped)
-            # Relaxed: Mass > Super Earth, Hot, Low Pressure relative to mass
-            if temp > 600 and pressure < 10000:
+            if temp > 600 and pressure < cfg.chthonian_max:
                 return PlanetType.CHTHONIAN
-            
-            if mass > 1.0e26:
+
+            if mass > cfg.gas_giant_min:
                 return PlanetType.JOVIAN
-                
+
             return PlanetType.ICE_GIANT
 
         # Dwarf Planets & Planetoids (< Mercury Mass approx)
-        if mass < 2.0e23:
+        if mass < cfg.dwarf_max:
             # If it's cold, it's an Ice Dwarf (Pluto/Eris)
-            if temp < 170:
+            if temp < cfg.ice_dwarf_max:
                 return PlanetType.ICE_DWARF
             # If it's hot/warm, it's a rocky Planetoid (Ceres/Vesta)
             return PlanetType.PLANETOID
 
-
         # Terrestrial / Rocky range (Mercury sized to Super-Earth)
-        
+
         # 1. Extreme Heat / Magma
-        if temp > 700 or (temp > 350 and activity > 0.7):
+        if temp > cfg.magma or (temp > cfg.magma_activity and activity > cfg.activity_magma_threshold):
             return PlanetType.MAGMA
 
         # 2. Barren / Dead Worlds
         # Low pressure (vacuum)
-        if pressure < 500:
-            # If it's cold, it could still be barren rock if no ice, 
-            # but usually cold + no atm = ice surface (unless stripped).
-            # Let's say if temp < 200 it's Cryo (Ice covered rock), else Barren (Rock)
-            if temp < 200:
+        if pressure < cfg.vacuum:
+            # If it's cold, ice surface; else barren rock
+            if temp < cfg.cold_limit:
                 return PlanetType.CRYOPLANET
             return PlanetType.BARREN
 
         # 3. Water / Ice
-        
+
         # Frozen?
-        if temp < 255:
+        if temp < cfg.cryo_max:
             return PlanetType.CRYOPLANET
-            
+
         # Liquid Water Heavy?
-        if water > 0.85:
+        if water > cfg.ocean_world:
             return PlanetType.PELAGIC
-            
-        # Arid? (Low water OR High Pressure Greenhouse Desert)
-        if water < 0.20:
-             # If pressure is HUGE and Hot -> Venus-like (Arid/Barren distinction?)
-             # Venus is arguably "Volcanic/Barren" or "Super-Arid". 
-             # Let's map Venus (High Pressure, Hot) to Arid if not Magma.
-             return PlanetType.ARID
+
+        # Arid? (Low water)
+        if water < cfg.arid:
+            return PlanetType.ARID
 
         # Continental
         # Moderate water, habitable-ish zone temps (liquids exist)
-        if 255 <= temp <= 330 and pressure > 5000:
-             return PlanetType.CONTINENTAL
-             
+        if cfg.continental_temp_min <= temp <= cfg.continental_temp_max and pressure > cfg.continental_pressure_min:
+            return PlanetType.CONTINENTAL
+
         # Catch-all for habitable-adjacent
-        if temp < 350 and water > 0.1:
-             return PlanetType.CONTINENTAL
+        if temp < 350 and water > cfg.continental_water_min:
+            return PlanetType.CONTINENTAL
 
         if temp >= 350:
-             return PlanetType.ARID
+            return PlanetType.ARID
 
         return PlanetType.BARREN
 

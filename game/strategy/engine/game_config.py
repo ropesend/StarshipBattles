@@ -33,8 +33,9 @@ THEME_DEFAULTS = [
 # Other types use density-based placement from galaxy_layouts.json
 VALID_GALAXY_TYPES = frozenset([
     "random",           # Original uniform random placement
-    "cluster",          # Globular cluster
-    "spiral",           # Classic spiral galaxy
+    "cluster",          # Multiple distinct star clusters
+    "spiral",           # Classic spiral with core and arms
+    "spiral_no_core",   # Spiral arms only, no central bulge
     "barred_spiral",    # Spiral with central bar
     "ring",             # Ring galaxy
     "irregular",        # Irregular/merger galaxy

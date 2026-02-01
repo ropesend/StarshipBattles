@@ -3,6 +3,65 @@ import pytest
 from game.strategy.data.planet import PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
 
+
+class TestClassificationConfigLoader:
+    """Tests for loading classification configuration from astrophysics.json."""
+
+    def test_load_classification_config(self):
+        """Verify classification config can be loaded from astrophysics.json."""
+        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
+
+        loader = AstrophysicsLoader()
+        data = loader.load()
+
+        assert "classification" in data
+        classification = data["classification"]
+
+        # Verify all required sections exist
+        assert "mass_thresholds" in classification
+        assert "temperature_thresholds" in classification
+        assert "pressure_thresholds" in classification
+        assert "water_coverage_thresholds" in classification
+
+    def test_mass_thresholds_match_existing_logic(self):
+        """Verify mass thresholds match the hardcoded values for backward compatibility."""
+        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
+
+        loader = AstrophysicsLoader()
+        data = loader.load()
+        thresholds = data["classification"]["mass_thresholds"]
+
+        # These values must match the hardcoded values in planet_gen.py
+        assert thresholds["dwarf_max"] == 2.0e23  # mass < 2.0e23 for dwarf planets
+        assert thresholds["giant_min"] == 6.0e24  # mass > 6.0e24 for giants
+        assert thresholds["gas_giant_min"] == 1.0e26  # mass > 1.0e26 for jovian
+
+    def test_temperature_thresholds_match_existing_logic(self):
+        """Verify temperature thresholds match the hardcoded values."""
+        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
+
+        loader = AstrophysicsLoader()
+        data = loader.load()
+        thresholds = data["classification"]["temperature_thresholds"]
+
+        # Key temperatures from planet_gen.py _determine_type
+        assert thresholds["magma"] == 700  # temp > 700 for magma
+        assert "cold_limit" in thresholds  # temp < 200 for cryo barren boundary
+
+    def test_all_planet_types_have_rules(self):
+        """Verify all 11 planet types have classification rules defined."""
+        from game.strategy.generation.loaders.astrophysics_loader import AstrophysicsLoader
+        from game.strategy.data.planet import PlanetType
+
+        loader = AstrophysicsLoader()
+        data = loader.load()
+        type_rules = data["classification"].get("type_rules", {})
+
+        # All PlanetType values should have rules
+        for ptype in PlanetType:
+            assert ptype.name in type_rules, f"Missing rule for {ptype.name}"
+
+
 class TestPlanetClassificationLogic:
     """Unit tests for planet classification rules in planet_gen.py."""
     
