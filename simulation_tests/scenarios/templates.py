@@ -552,6 +552,15 @@ class PropulsionScenario(TestScenario):
         self.results['expected_max_speed'] = self.expected_max_speed
         self.results['expected_acceleration_rate'] = self.expected_acceleration_rate
 
+        # For turn tests: calculate expected angle change from turn_speed
+        # turn_speed is in degrees per 100 ticks
+        if hasattr(self, 'ship') and self.ship.turn_speed > 0:
+            ticks_run = battle_engine.tick_counter
+            degrees_per_tick = self.ship.turn_speed / 100.0
+            expected_angle_change = degrees_per_tick * ticks_run
+            self.results['expected_angle_change'] = expected_angle_change
+            self.results['turn_speed_degrees_per_tick'] = degrees_per_tick
+
         # Run validation rules if defined in metadata
         # Note: run_validation() stores results internally as dictionaries
         if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:

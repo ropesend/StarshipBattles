@@ -92,6 +92,21 @@ Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard, `BEAMWEAPON-XXX-HT` 
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
 
+### Resource System Tests
+
+Test IDs follow the pattern: `RESOURCE-XXX`.
+
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Fuel** | 3 tests | Engine fuel consumption, depletion/starvation, regeneration (500 ticks) |
+| **Energy** | 3 tests | Beam energy consumption, depletion, regeneration (100 ticks) |
+| **Ammo** | 3 tests | Projectile/seeker ammo consumption, depletion (100 ticks) |
+
+Resource tests validate:
+- Predictable consumption rates (fuel/sec, energy/shot, ammo/shot)
+- Depletion behavior (engine stops, weapon stops firing)
+- Generator regeneration balances consumption
+
 ---
 
 ## Key Concepts

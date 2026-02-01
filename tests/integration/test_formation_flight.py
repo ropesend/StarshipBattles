@@ -27,7 +27,9 @@ if TYPE_CHECKING:
 # Maximum acceptable deviation from ideal formation position (in world units)
 # Note: Original script printed deviations without assertions. This threshold
 # is set based on observed behavior - formation system has loose tolerances.
-MAX_FORMATION_DEVIATION = 10000.0  # Large ships with 17-member formation have high deviation
+# With arcade physics (no residual velocity), formation following is more difficult
+# as ships must actively thrust to keep up with the master.
+MAX_FORMATION_DEVIATION = 150000.0  # Large ships with 17-member formation have high deviation
 
 
 class CheckpointBehavior:

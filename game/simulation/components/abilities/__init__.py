@@ -78,24 +78,11 @@ ABILITY_REGISTRY = {
     "StructuralIntegrity": StructuralIntegrity,
     "ResourceHarvester": ResourceHarvesterAbility,
     "SpaceShipyard": SpaceShipyardAbility,
-    # Primitive/Shortcut Factories
-    "FuelStorage": lambda c, d: ResourceStorage(c, {"resource": "fuel", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "fuel"}),
-    "EnergyStorage": lambda c, d: ResourceStorage(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
-    "AmmoStorage": lambda c, d: ResourceStorage(c, {"resource": "ammo", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "ammo"}),
-    "EnergyGeneration": lambda c, d: ResourceGeneration(c, {"resource": "energy", "amount": d} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
-    "EnergyConsumption": lambda c, d: ResourceConsumption(c, {"resource": "energy", "amount": d, "trigger": "constant"} if isinstance(d, (int, float)) else {**d, "resource": "energy"}),
-    "AmmoConsumption": lambda c, d: ResourceConsumption(c, {"resource": "ammo", "amount": d, "trigger": "activation"} if isinstance(d, (int, float)) else {**d, "resource": "ammo"})
 }
 
 # Map registry shortcut names to their actual class names for instance matching
-ABILITY_CLASS_MAP = {
-    "FuelStorage": "ResourceStorage",
-    "EnergyStorage": "ResourceStorage",
-    "AmmoStorage": "ResourceStorage",
-    "EnergyGeneration": "ResourceGeneration",
-    "EnergyConsumption": "ResourceConsumption",
-    "AmmoConsumption": "ResourceConsumption",
-}
+# (Legacy shortcuts removed - use ResourceStorage/ResourceConsumption/ResourceGeneration directly)
+ABILITY_CLASS_MAP = {}
 
 
 def create_ability(name: str, component, data: Any) -> Optional[Ability]:

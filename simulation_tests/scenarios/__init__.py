@@ -43,6 +43,17 @@ from simulation_tests.scenarios.validation import (
     ValidationResult,
     ValidationStatus
 )
+from simulation_tests.scenarios.resource_scenarios import (
+    EngineFuelConsumptionScenario,
+    EngineFuelDepletionScenario,
+    EngineFuelRegenerationScenario,
+    BeamEnergyConsumptionScenario,
+    BeamEnergyDepletionScenario,
+    BeamEnergyRegenerationScenario,
+    ProjectileAmmoConsumptionScenario,
+    ProjectileAmmoDepletionScenario,
+    SeekerAmmoConsumptionScenario
+)
 
 __all__ = [
     'TestScenario',
@@ -53,5 +64,15 @@ __all__ = [
     'StatisticalTestRule',
     'Validator',
     'ValidationResult',
-    'ValidationStatus'
+    'ValidationStatus',
+    # Resource scenarios
+    'EngineFuelConsumptionScenario',
+    'EngineFuelDepletionScenario',
+    'EngineFuelRegenerationScenario',
+    'BeamEnergyConsumptionScenario',
+    'BeamEnergyDepletionScenario',
+    'BeamEnergyRegenerationScenario',
+    'ProjectileAmmoConsumptionScenario',
+    'ProjectileAmmoDepletionScenario',
+    'SeekerAmmoConsumptionScenario'
 ]

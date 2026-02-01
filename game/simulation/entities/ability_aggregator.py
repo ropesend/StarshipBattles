@@ -113,15 +113,6 @@ def calculate_ability_totals(components):
 
                     ability_groups[ability_name][group_key].append(value)
 
-                    # Fix for BUG-08: Alias ResourceStorage(fuel) to FuelStorage for ClassRequirementsRule
-                    if ability_name == 'ResourceStorage' and getattr(ab, 'resource_type', '') == 'fuel':
-                        alias = 'FuelStorage'
-                        if alias not in ability_groups:
-                            ability_groups[alias] = {}
-                        if group_key not in ability_groups[alias]:
-                            ability_groups[alias][group_key] = []
-                        ability_groups[alias][group_key].append(value)
-
             # Handle Dict
             elif isinstance(comp.ability_instances, dict):
                 # ... (omitted for brevity, assume debug print sufficient in list block)
@@ -233,15 +224,6 @@ def calculate_ability_totals_for_layer(
                 ability_groups[ability_name][group_key] = []
 
             ability_groups[ability_name][group_key].append(value)
-
-            # Alias ResourceStorage(fuel) to FuelStorage for ClassRequirementsRule
-            if ability_name == 'ResourceStorage' and getattr(ab, 'resource_type', '') == 'fuel':
-                alias = 'FuelStorage'
-                if alias not in ability_groups:
-                    ability_groups[alias] = {}
-                if group_key not in ability_groups[alias]:
-                    ability_groups[alias][group_key] = []
-                ability_groups[alias][group_key].append(value)
 
     # Use shared aggregation helper
     return _aggregate_ability_groups(ability_groups)

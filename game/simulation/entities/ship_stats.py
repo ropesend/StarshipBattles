@@ -289,7 +289,7 @@ class ShipStatsCalculator:
             for ab in comp.get_abilities('ShieldRegeneration'):
                 total_shield_regen += ab.rate
             
-            # Shield energy cost from EnergyConsumption abilities on shield regen components
+            # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
             if comp.has_ability('ShieldRegeneration'):
                 for ab in comp.ability_instances:
                     if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == 'energy':
@@ -407,8 +407,9 @@ class ShipStatsCalculator:
         # Ship Repair (SumStacking)
         ship.repair_rate = self._get_ability_total(component_pool, 'ShipRepair')
         
-        # Ammo Generation (SumStacking)
-        ship.ammo_gen_rate = self._get_ability_total(component_pool, 'AmmoGeneration')
+        # Ammo Generation (SumStacking) - using value from ResourceGeneration(ammo)
+        ammo_res = ship.resources.get_resource('ammo')
+        ship.ammo_gen_rate = ammo_res.regen_rate if ammo_res else 0.0
 
         # Resource aggregation is handled by ability instances above
 

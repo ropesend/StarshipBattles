@@ -161,7 +161,7 @@ class TestShipStatsBaseline:
             'hp': 30,
             'abilities': {
                 'ShieldRegeneration': 25.0,
-                'EnergyConsumption': {'resource': 'energy', 'amount': 5, 'trigger': 'constant'}
+                'ResourceConsumption': [{'resource': 'energy', 'amount': 5, 'trigger': 'constant'}]
             }
         }
 

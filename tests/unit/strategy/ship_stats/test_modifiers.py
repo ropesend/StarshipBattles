@@ -212,7 +212,7 @@ class TestModifierApplication:
             'battery',
             mass=30,
             max_hp=50,
-            abilities={'EnergyStorage': 2000}
+            abilities={'ResourceStorage': [{'resource': 'energy', 'amount': 2000}]}
         )
 
         # Create size modifier that scales capacity
@@ -260,7 +260,7 @@ class TestModifierApplication:
             'battery',
             mass=30,
             max_hp=50,
-            abilities={'EnergyStorage': 2000}
+            abilities={'ResourceStorage': [{'resource': 'energy', 'amount': 2000}]}
         )
 
         size_modifier = Modifier({
@@ -320,7 +320,7 @@ class TestModifierApplication:
             'battery',
             mass=30,
             max_hp=50,
-            abilities={'EnergyStorage': 2000}
+            abilities={'ResourceStorage': [{'resource': 'energy', 'amount': 2000}]}
         )
 
         warp_drive = MockComponent(
@@ -388,7 +388,7 @@ class TestModifierApplication:
             'battery',
             mass=30,
             max_hp=50,
-            abilities={'EnergyStorage': 2000}
+            abilities={'ResourceStorage': [{'resource': 'energy', 'amount': 2000}]}
         )
 
         design_data = {

@@ -98,7 +98,7 @@ class TestComponentToggles:
 
         tank = MockComponent(
             'fuel_tank', mass=30, max_hp=50,
-            abilities={'FuelStorage': 10000}
+            abilities={'ResourceStorage': [{'resource': 'fuel', 'amount': 10000}]}
         )
         design_data = make_design_data({'OUTER': ['fuel_tank']})
 

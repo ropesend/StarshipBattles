@@ -302,11 +302,14 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
                 comp.update()
         
         # 3. Physics (Thrust calc handling operational engines)
+        # Note: update_physics_movement() handles all arcade physics:
+        # - Acceleration/deceleration toward target speed
+        # - Setting velocity from current_speed and heading
+        # - Updating position
+        # We don't call super().update() because it would apply drag and
+        # update position a second time, which breaks arcade physics.
         self.update_physics_movement()
-        
-        # PhysicsBody.update() (Applies velocity to position)
-        super().update(dt)
-        
+
         # 4. Combat Cooldowns (Shields/Repair/Custom Logic)
         self.update_combat_cooldowns()
 

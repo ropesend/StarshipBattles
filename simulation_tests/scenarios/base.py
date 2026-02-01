@@ -226,6 +226,9 @@ class TestScenario(CombatScenario):
         self.description = self.metadata.summary
         self.max_ticks = self.metadata.max_ticks
 
+        # Store test_id in results for UI display (e.g., propulsion test detection)
+        self.results['test_id'] = self.metadata.test_id
+
         # Set test data paths - use simulation_tests/data
         data_dir = self._get_test_data_dir()
         self.components_path = os.path.join(data_dir, 'components.json')

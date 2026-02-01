@@ -1130,6 +1130,94 @@ def calculate_defense_score(mass, acceleration, turn_speed, ecm_score):
 
 ---
 
+## Resource System Tests
+
+Resource tests validate fuel, energy, and ammo consumption, depletion, and regeneration.
+
+### Current Test Suite
+
+Test IDs follow the pattern: `RESOURCE-XXX`.
+
+#### Fuel Tests (500 ticks)
+
+| Test ID | Description | Pass Criteria |
+|---------|-------------|---------------|
+| **RESOURCE-001** | Engine Fuel Consumption | fuel consumed ≈ 5.0, ship moving |
+| **RESOURCE-002** | Engine Fuel Depletion/Starvation | fuel = 0, ship stopped mid-test |
+| **RESOURCE-003** | Fuel Regeneration Sustains Engine | fuel stable, ship moving |
+
+#### Energy Tests (100 ticks)
+
+| Test ID | Description | Pass Criteria |
+|---------|-------------|---------------|
+| **RESOURCE-004** | Beam Energy Consumption | 100 shots, energy consumed = 100 |
+| **RESOURCE-005** | Energy Depletion Stops Weapon | 25 shots, energy = 0 |
+| **RESOURCE-005a** | Energy Regeneration Sustains Weapon | 100 shots, energy stable |
+
+#### Ammo Tests (100 ticks)
+
+| Test ID | Description | Pass Criteria |
+|---------|-------------|---------------|
+| **RESOURCE-006** | Projectile Ammo Consumption | 100 shots, ammo consumed = 100 |
+| **RESOURCE-007** | Ammo Depletion Stops Projectile | 10 shots, ammo = 0 |
+| **RESOURCE-008** | Seeker Ammo Consumption | 100 launches (hits not tracked) |
+
+### Resource System Mechanics
+
+#### ResourceConsumption Ability
+
+Components consume resources via `ResourceConsumption` ability:
+
+```python
+# Constant consumption (engines)
+"ResourceConsumption": [
+    {"resource": "fuel", "amount": 1.0, "trigger": "constant"}
+]
+
+# Activation consumption (weapons)
+"ResourceConsumption": [
+    {"resource": "energy", "amount": 1, "trigger": "activation"}
+]
+```
+
+#### ResourceGeneration Ability
+
+Generators produce resources via `ResourceGeneration` ability:
+
+```python
+"ResourceGeneration": [
+    {"resource": "energy", "amount": 100}  # 100/sec = 1/tick
+]
+```
+
+#### Fuel Starvation Behavior
+
+When fuel runs out:
+1. `ResourceConsumption.update()` returns `False`
+2. `Component._is_operational` set to `False`
+3. Engine contributes 0 thrust (via `operational_only=True`)
+4. Ship decelerates to 0
+
+### UI Display for Resource Tests
+
+**TestRunCard (Brief)**:
+- Fuel: "Fuel: 1000 → 995 (-5.0), Velocity: 10.5 (moving)"
+- Energy: "Energy: 100 → 0 (depleted), Shots: 100"
+- Ammo: "Ammo: 100 → 0 (depleted), Shots: 100"
+
+**TestRunDetailsPanel (Detailed)**:
+```
+RESOURCE CONSUMPTION
+  Initial Fuel:     1000.0 units
+  Final Fuel:       995.0 units
+  Consumed:         5.0 units
+  Expected:         5.0 units
+  ✓ Within tolerance
+  Final Velocity:   10.5 (moving)
+```
+
+---
+
 ## Running Tests
 
 ### In Combat Lab UI

@@ -200,20 +200,6 @@ class ShipStatsCalculator:
                         resource_storage.get(resource_type, 0) + max_amount * effectiveness
                     )
 
-            # Also check shortcut abilities (FuelStorage, EnergyStorage, AmmoStorage)
-            if 'FuelStorage' in abilities:
-                val = ShipStatsCalculator._get_ability_value(abilities, 'FuelStorage', formula_context)
-                val *= capacity_mult
-                resource_storage['fuel'] = resource_storage.get('fuel', 0) + val * effectiveness
-            if 'EnergyStorage' in abilities:
-                val = ShipStatsCalculator._get_ability_value(abilities, 'EnergyStorage', formula_context)
-                val *= capacity_mult
-                resource_storage['energy'] = resource_storage.get('energy', 0) + val * effectiveness
-            if 'AmmoStorage' in abilities:
-                val = ShipStatsCalculator._get_ability_value(abilities, 'AmmoStorage', formula_context)
-                val *= capacity_mult
-                resource_storage['ammo'] = resource_storage.get('ammo', 0) + val * effectiveness
-
             # Strategic Movement - degrades with damage (with modifiers)
             if 'StrategicMovement' in abilities:
                 movement = ShipStatsCalculator._get_ability_value(abilities, 'StrategicMovement', formula_context)

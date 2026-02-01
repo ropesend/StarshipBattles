@@ -423,6 +423,61 @@ class MyBeamPointBlankHighTickTest(TestScenario):
 
 Apply the same pattern to projectiles, seekers, etc.
 
+### Create Resource System Tests
+
+Resource tests validate consumption, depletion, and regeneration:
+
+```python
+class MyFuelConsumptionTest(TestScenario):
+    """RESOURCE-XXX: Custom fuel consumption test."""
+
+    metadata = TestMetadata(
+        test_id="RESOURCE-XXX",
+        name="Custom Fuel Consumption Test",
+        category="Resource System",
+        subcategory="Fuel",
+        summary="Tests engine fuel consumption rate",
+        conditions=[
+            "Ship: Test_Engine_FuelConsumption.json",
+            "Fuel Consumption: 1.0 per second",
+            "Initial Fuel: 1000 units",
+            "Duration: 500 ticks (5 seconds)"
+        ],
+        expected_outcome="Fuel decreases by 5.0 units",
+        pass_criteria="final_fuel ≈ 995.0",
+        max_ticks=500,
+        seed=42,
+        battle_end_mode="time_based",
+        tags=["resource", "fuel", "consumption"]
+    )
+
+    def setup(self, battle_engine):
+        ship = self._load_ship("Test_Engine_FuelConsumption.json")
+        ship.position = pygame.math.Vector2(0, 0)
+        self.initial_fuel = ship.resources.get_value('fuel')
+
+        end_condition = self._create_end_condition()
+        battle_engine.start([ship], [], seed=self.metadata.seed,
+                           end_condition=end_condition)
+        ship.engine_throttle = 1.0
+        self.ship = ship
+
+    def verify(self, battle_engine) -> bool:
+        final_fuel = self.ship.resources.get_value('fuel')
+        fuel_consumed = self.initial_fuel - final_fuel
+
+        self.results['test_id'] = self.metadata.test_id
+        self.results['initial_fuel'] = self.initial_fuel
+        self.results['final_fuel'] = final_fuel
+        self.results['fuel_consumed'] = fuel_consumed
+        self.results['expected_fuel_consumed'] = 5.0  # 1.0/sec × 5 sec
+
+        # Pass if fuel consumed is close to expected
+        return abs(fuel_consumed - 5.0) < 0.5
+```
+
+See `simulation_tests/scenarios/resource_scenarios.py` for complete examples.
+
 ### Use Templates
 
 See `simulation_tests/scenarios/templates.py` for reusable base classes like `StaticTargetScenario`.
