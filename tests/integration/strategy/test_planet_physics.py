@@ -6,10 +6,12 @@ from game.strategy.data.planet_gen import (
     generate_atmosphere
 )
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 @pytest.fixture
 def generator():
-    return PlanetGenerator()
+    image_registry = PlanetImageRegistry()
+    return PlanetGenerator(image_registry)
 
 def test_mass_generation_ranges(generator):
     """Verify masses are within bounds."""

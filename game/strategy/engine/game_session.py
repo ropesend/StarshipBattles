@@ -44,13 +44,21 @@ Example:
     result = session.handle_command(cmd)
 """
 import os
+import random
 import warnings
+from typing import Optional
 from game.core.logger import log_info, log_debug, log_warning
 from game.core.validation import validation_result
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.empire import Empire
 from game.strategy.data.galaxy import Galaxy
+from game.strategy.generation.placement_strategies import (
+    RandomPlacementStrategy,
+    DensityBasedPlacementStrategy,
+)
+from game.strategy.generation.density.density_map import DensityMap
+from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
 
 class GameSession:
     """
@@ -124,9 +132,49 @@ class GameSession:
         self._setup_initial_scenario()
 
     def _initialize_galaxy(self, count):
-        log_info("GameSession: Generating Galaxy...")
-        self.systems = self.galaxy.generate_systems(count=count, min_dist=400)
+        """Initialize the galaxy with systems and warp lanes.
+
+        Uses the galaxy_type and galaxy_seed from config to determine
+        placement strategy. If galaxy_type is "random", uses uniform random
+        placement. Otherwise, loads the density-based layout from
+        galaxy_layouts.json.
+
+        Args:
+            count: Number of systems to generate
+        """
+        galaxy_type = self.config.galaxy_type
+        galaxy_seed = self.config.galaxy_seed
+
+        log_info(f"GameSession: Generating Galaxy (type={galaxy_type}, seed={galaxy_seed})...")
+
+        # Set up RNG for deterministic generation
+        rng: Optional[random.Random] = None
+        if galaxy_seed is not None:
+            rng = random.Random(galaxy_seed)
+            # Also seed global random for star/planet generation
+            random.seed(galaxy_seed)
+
+        # Create placement strategy based on galaxy type
+        if galaxy_type == "random":
+            strategy = RandomPlacementStrategy()
+        else:
+            # Load layout configuration
+            loader = GalaxyLayoutsLoader()
+            layout_config = loader.load_and_scale(galaxy_type, self.galaxy.radius)
+
+            # Create density map from config
+            density_map = DensityMap.from_config(layout_config, self.galaxy.radius)
+            strategy = DensityBasedPlacementStrategy(density_map)
+
+        # Generate systems using the strategy
+        self.systems = self.galaxy.generate_systems(
+            count=count,
+            min_dist=400,
+            placement_strategy=strategy,
+            rng=rng
+        )
         self.galaxy.generate_warp_lanes()
+
         log_info(f"GameSession: Generated {len(self.systems)} systems.")
 
     def _setup_initial_scenario(self):

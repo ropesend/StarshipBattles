@@ -19,7 +19,7 @@ from typing import Callable, Optional, Tuple, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info
 from game.core.paths import Paths
-from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
+from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS, VALID_GALAXY_TYPES
 from game.strategy.systems.race_library import RaceLibrary
 
 if TYPE_CHECKING:
@@ -52,6 +52,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         self.on_cancel_callback = on_cancel_callback
 
         self.player_count = 2  # Default
+        self.galaxy_type = "spiral"  # Default galaxy type
         self.empire_name_inputs = []  # List of UITextEntryLine
         self.theme_labels = []  # List of UILabel showing assigned theme
         self.num_labels = []  # List of UILabel for player numbers
@@ -105,6 +106,26 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             options_list=["1", "2", "3", "4"],
             starting_option="2",
             relative_rect=pygame.Rect(10, y_offset, 100, 35),
+            manager=self.ui_manager,
+            container=container
+        )
+        y_offset += 50
+
+        # Galaxy type label and dropdown
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, y_offset, 150, 25),
+            text="Galaxy Type:",
+            manager=self.ui_manager,
+            container=container
+        )
+        y_offset += 25
+
+        # Sort galaxy types for consistent display, with spiral first
+        galaxy_types = sorted(list(VALID_GALAXY_TYPES))
+        self.galaxy_type_dropdown = pygame_gui.elements.UIDropDownMenu(
+            options_list=galaxy_types,
+            starting_option=self.galaxy_type,
+            relative_rect=pygame.Rect(10, y_offset, 150, 35),
             manager=self.ui_manager,
             container=container
         )
@@ -300,6 +321,9 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 self.player_count = int(event.text)
                 self._update_empire_visibility()
                 handled = True
+            elif event.ui_element == self.galaxy_type_dropdown:
+                self.galaxy_type = event.text
+                handled = True
 
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_start:
@@ -435,7 +459,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 save_name,
                 self.player_count,
                 empire_names,
-                self.player_races[:self.player_count]
+                self.player_races[:self.player_count],
+                self.galaxy_type
             )
         except ValueError as e:
             self.error_label.set_text(str(e))
@@ -490,7 +515,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
     @staticmethod
     def build_game_config(save_name: str, player_count: int,
                           empire_names: List[str],
-                          race_configs: Optional[List[Optional[RaceConfig]]] = None) -> GameConfig:
+                          race_configs: Optional[List[Optional[RaceConfig]]] = None,
+                          galaxy_type: str = "spiral") -> GameConfig:
         """
         Build a GameConfig from setup screen values.
 
@@ -499,6 +525,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             player_count: Number of players (1-4)
             empire_names: List of empire names (may include empty strings)
             race_configs: Optional list of RaceConfig for each player (None = use defaults)
+            galaxy_type: Galaxy layout type (default: "spiral")
 
         Returns:
             Configured GameConfig
@@ -548,5 +575,6 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
 
         return GameConfig(
             save_name=save_name,
-            players=players
+            players=players,
+            galaxy_type=galaxy_type
         )

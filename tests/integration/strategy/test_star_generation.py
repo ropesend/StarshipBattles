@@ -1,10 +1,76 @@
 import pytest
+import random
 from game.strategy.data.stars import StarGenerator, StarType, Star
 
 
 @pytest.fixture
 def generator():
     return StarGenerator()
+
+
+class TestBlueprintGeneration:
+    """Tests for blueprint-based star system generation."""
+
+    @pytest.fixture
+    def loader(self):
+        """Load system blueprints."""
+        from game.strategy.generation.loaders.system_blueprints_loader import SystemBlueprintsLoader
+        return SystemBlueprintsLoader()
+
+    def test_generate_from_blueprint_solar_like(self, generator, loader):
+        """Test generating a solar-like system from blueprint."""
+        data = loader.load()
+        blueprint = loader.get_blueprint("solar_like", data)
+
+        random.seed(42)
+        stars = generator.generate_from_blueprint("Test", blueprint)
+
+        # Solar-like should have 1 star
+        assert len(stars) == 1
+        # Mass should be in G/K range (0.5-1.5 solar masses)
+        assert 0.5 <= stars[0].mass <= 1.5
+
+    def test_generate_from_blueprint_binary(self, generator, loader):
+        """Test generating a binary system from blueprint."""
+        data = loader.load()
+        blueprint = loader.get_blueprint("binary_no_planets", data)
+
+        random.seed(42)
+        stars = generator.generate_from_blueprint("Test", blueprint)
+
+        # Binary should have 2 stars
+        assert len(stars) == 2
+
+    def test_generate_from_blueprint_red_dwarf(self, generator, loader):
+        """Test generating a red dwarf system from blueprint."""
+        data = loader.load()
+        blueprint = loader.get_blueprint("red_dwarf_pack", data)
+
+        random.seed(42)
+        stars = generator.generate_from_blueprint("Test", blueprint)
+
+        # Should have 1 star
+        assert len(stars) == 1
+        # Mass should be in red dwarf range (0.08-0.5 solar masses)
+        assert 0.08 <= stars[0].mass <= 0.5
+
+    def test_generate_system_stars_with_blueprint(self, generator, loader):
+        """Test that generate_system_stars can accept a blueprint."""
+        data = loader.load()
+        blueprint = loader.get_blueprint("solar_like", data)
+
+        random.seed(42)
+        stars = generator.generate_system_stars("TestSys", blueprint=blueprint)
+
+        assert len(stars) == 1
+
+    def test_generate_system_stars_without_blueprint(self, generator):
+        """Test that generate_system_stars works without blueprint (backward compat)."""
+        random.seed(42)
+        stars = generator.generate_system_stars("TestSys")
+
+        # Should still work and generate 1-4 stars
+        assert 1 <= len(stars) <= 4
 
 
 class TestStarGeneration:

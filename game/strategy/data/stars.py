@@ -335,22 +335,73 @@ class StarGenerator:
             radio=jitter(s_radio)
         )
 
-    def generate_system_stars(self, system_name):
+    def generate_system_stars(self, system_name, blueprint=None):
+        """
+        Generate stars for a system.
+
+        Args:
+            system_name: Name of the star system.
+            blueprint: Optional blueprint dict from system_blueprints.json.
+                      If None, uses default random generation.
+
+        Returns:
+            List of Star objects.
+        """
+        if blueprint is not None:
+            return self.generate_from_blueprint(system_name, blueprint)
+
+        return self._generate_random_stars(system_name)
+
+    def generate_from_blueprint(self, system_name, blueprint):
+        """
+        Generate stars based on a system blueprint.
+
+        Args:
+            system_name: Name of the star system.
+            blueprint: Blueprint dict containing star_count and star_mass constraints.
+
+        Returns:
+            List of Star objects.
+        """
         stars = []
-        
-        # 1. Determine Count
-        roll = random.random()
-        if roll < 0.001: count = 4
-        elif roll < 0.011: count = 3
-        elif roll < 0.111: count = 2
-        else: count = 1
-        
-        # 2. Generate Primary
-        p_mass = self._generate_mass(is_primary=True)
+
+        # 1. Determine Count from blueprint
+        star_count_spec = blueprint.get("star_count", 1)
+        if isinstance(star_count_spec, int):
+            count = star_count_spec
+        elif isinstance(star_count_spec, dict):
+            if "min" in star_count_spec:
+                count = random.randint(star_count_spec["min"], star_count_spec.get("max", star_count_spec["min"]))
+            elif "distribution" in star_count_spec:
+                # Weighted distribution
+                dist = star_count_spec["distribution"]
+                total = sum(dist.values())
+                r = random.random() * total
+                cumulative = 0
+                count = 1
+                for k, v in dist.items():
+                    cumulative += v
+                    if r <= cumulative:
+                        count = int(k)
+                        break
+            else:
+                count = 1
+        else:
+            count = 1
+
+        count = max(1, min(4, count))
+
+        # 2. Get mass constraints from blueprint
+        mass_spec = blueprint.get("star_mass", {})
+        mass_min = mass_spec.get("min", 0.1)
+        mass_max = mass_spec.get("max", 100.0)
+
+        # 3. Generate Primary
+        p_mass = self._generate_mass_constrained(mass_min, mass_max)
         p_type, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
         p_hex = self._map_radius_to_hexes(p_rad, p_type)
         p_spec = self._generate_spectrum(p_temp, p_lum)
-        
+
         primary = Star(
             name=f"{system_name} A",
             mass=p_mass,
@@ -360,56 +411,152 @@ class StarGenerator:
             spectrum=p_spec,
             star_type=p_type,
             color=p_col,
-            age=random.uniform(0.1, 10.0) * 1e9, 
-            location=HexCoord(0, 0) # Primary always at center
+            age=random.uniform(0.1, 10.0) * 1e9,
+            location=HexCoord(0, 0)
         )
         stars.append(primary)
-        
+
+        # 4. Generate Companions
+        suffixes = ['B', 'C', 'D']
+        min_dist_hex = int(p_hex * 2) + 2
+        occupied_hexes = {HexCoord(0, 0)}
+
+        for i in range(count - 1):
+            # Companion mass constrained by blueprint and primary
+            c_mass_max = min(mass_max, p_mass * 0.99)
+            c_mass = self._generate_mass_constrained(mass_min, c_mass_max)
+            c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
+            c_hex = self._map_radius_to_hexes(c_rad, c_type)
+            c_spec = self._generate_spectrum(c_temp, c_lum)
+
+            target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
+            potential_coords = hex_ring(target_ring)
+
+            if not potential_coords:
+                loc = HexCoord(target_ring, 0)
+            else:
+                loc = random.choice(potential_coords)
+                while loc in occupied_hexes and len(occupied_hexes) < 100:
+                    target_ring += 1
+                    potential_coords = hex_ring(target_ring)
+                    loc = random.choice(potential_coords)
+
+            occupied_hexes.add(loc)
+
+            companion = Star(
+                name=f"{system_name} {suffixes[i]}",
+                mass=c_mass,
+                diameter_hexes=c_hex,
+                temperature=c_temp,
+                luminosity=c_lum,
+                spectrum=c_spec,
+                star_type=c_type,
+                color=c_col,
+                age=primary.age,
+                location=loc
+            )
+            stars.append(companion)
+
+        return stars
+
+    def _generate_random_stars(self, system_name):
+        """
+        Generate stars using default random probabilities.
+
+        This is the original generation logic for backward compatibility.
+        """
+        stars = []
+
+        # 1. Determine Count
+        roll = random.random()
+        if roll < 0.001: count = 4
+        elif roll < 0.011: count = 3
+        elif roll < 0.111: count = 2
+        else: count = 1
+
+        # 2. Generate Primary
+        p_mass = self._generate_mass(is_primary=True)
+        p_type, p_rad, p_temp, p_lum, p_col = self._determine_type_and_radius(p_mass)
+        p_hex = self._map_radius_to_hexes(p_rad, p_type)
+        p_spec = self._generate_spectrum(p_temp, p_lum)
+
+        primary = Star(
+            name=f"{system_name} A",
+            mass=p_mass,
+            diameter_hexes=p_hex,
+            temperature=p_temp,
+            luminosity=p_lum,
+            spectrum=p_spec,
+            star_type=p_type,
+            color=p_col,
+            age=random.uniform(0.1, 10.0) * 1e9,
+            location=HexCoord(0, 0)
+        )
+        stars.append(primary)
+
         # 3. Generate Companions
         suffixes = ['B', 'C', 'D']
-        min_dist_hex = int(p_hex * 2) + 2 
-        
+        min_dist_hex = int(p_hex * 2) + 2
+
         occupied_hexes = {HexCoord(0, 0)}
-        
+
         for i in range(count - 1):
             c_mass = self._generate_mass(is_primary=False, primary_mass=p_mass)
             c_type, c_rad, c_temp, c_lum, c_col = self._determine_type_and_radius(c_mass)
             c_hex = self._map_radius_to_hexes(c_rad, c_type)
             c_spec = self._generate_spectrum(c_temp, c_lum)
-            
-            # Use Hex Rings instead of arbitrary polar angle
-            # Ensure unique position
-            
+
             target_ring = min_dist_hex + (i * 10) + random.randint(2, 8)
             potential_coords = hex_ring(target_ring)
-            
+
             if not potential_coords:
-                 # Fallback if ring 0? Shouldn't happen.
-                 loc = HexCoord(target_ring, 0)
+                loc = HexCoord(target_ring, 0)
             else:
-                 # Pick random slot
-                 loc = random.choice(potential_coords)
-                 
-                 # Ensure not colliding with existing (unlikely at these distances but good practice)
-                 while loc in occupied_hexes and len(occupied_hexes) < 100:
-                     target_ring += 1
-                     potential_coords = hex_ring(target_ring)
-                     loc = random.choice(potential_coords)
-            
+                loc = random.choice(potential_coords)
+                while loc in occupied_hexes and len(occupied_hexes) < 100:
+                    target_ring += 1
+                    potential_coords = hex_ring(target_ring)
+                    loc = random.choice(potential_coords)
+
             occupied_hexes.add(loc)
-            
+
             companion = Star(
-                 name=f"{system_name} {suffixes[i]}",
-                 mass=c_mass,
-                 diameter_hexes=c_hex,
-                 temperature=c_temp,
-                 luminosity=c_lum,
-                 spectrum=c_spec,
-                 star_type=c_type,
-                 color=c_col,
-                 age=primary.age, 
-                 location=loc
+                name=f"{system_name} {suffixes[i]}",
+                mass=c_mass,
+                diameter_hexes=c_hex,
+                temperature=c_temp,
+                luminosity=c_lum,
+                spectrum=c_spec,
+                star_type=c_type,
+                color=c_col,
+                age=primary.age,
+                location=loc
             )
             stars.append(companion)
-            
+
         return stars
+
+    def _generate_mass_constrained(self, mass_min, mass_max):
+        """
+        Generate star mass within specified constraints.
+
+        Args:
+            mass_min: Minimum mass in solar masses.
+            mass_max: Maximum mass in solar masses.
+
+        Returns:
+            Mass in solar masses within the constraints.
+        """
+        # Use log-normal distribution centered in the constraint range
+        log_min = math.log(mass_min)
+        log_max = math.log(mass_max)
+        log_center = (log_min + log_max) / 2
+        log_sigma = (log_max - log_min) / 4  # ~95% within range
+
+        for _ in range(100):  # Max attempts
+            mass = random.lognormvariate(log_center, max(0.1, log_sigma))
+            if mass_min <= mass <= mass_max:
+                return mass
+
+        # Fallback to uniform in log space
+        return math.exp(random.uniform(log_min, log_max))

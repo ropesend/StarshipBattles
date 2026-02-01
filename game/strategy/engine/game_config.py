@@ -28,6 +28,22 @@ THEME_DEFAULTS = [
 ]
 
 
+# Valid galaxy types for generation
+# "random" uses the original uniform random placement
+# Other types use density-based placement from galaxy_layouts.json
+VALID_GALAXY_TYPES = frozenset([
+    "random",           # Original uniform random placement
+    "cluster",          # Multiple distinct star clusters
+    "spiral",           # Classic spiral with core and arms
+    "spiral_no_core",   # Spiral arms only, no central bulge
+    "barred_spiral",    # Spiral with central bar
+    "ring",             # Ring galaxy
+    "irregular",        # Irregular/merger galaxy
+    "diamond",          # Diamond-shaped distribution
+    "uniform",          # Uniform distribution
+])
+
+
 @dataclass
 class PlayerConfig:
     """
@@ -109,6 +125,8 @@ class GameConfig:
     # Galaxy generation
     galaxy_radius: int = 4000
     system_count: int = 25
+    galaxy_type: str = "random"
+    galaxy_seed: Optional[int] = None
 
     # Save game name (user-provided)
     save_name: str = ""
@@ -122,6 +140,11 @@ class GameConfig:
             raise ValueError("GameConfig requires at least 1 player")
         if len(self.players) > 4:
             raise ValueError("GameConfig supports at most 4 players")
+        if self.galaxy_type not in VALID_GALAXY_TYPES:
+            raise ValueError(
+                f"Invalid galaxy_type '{self.galaxy_type}'. "
+                f"Valid types: {sorted(VALID_GALAXY_TYPES)}"
+            )
 
     def get_player_theme_path(self, player_index: int) -> Optional[str]:
         """
@@ -143,6 +166,8 @@ class GameConfig:
             'asset_base_path': self.asset_base_path,
             'galaxy_radius': self.galaxy_radius,
             'system_count': self.system_count,
+            'galaxy_type': self.galaxy_type,
+            'galaxy_seed': self.galaxy_seed,
             'save_name': self.save_name,
             'players': [p.to_dict() for p in self.players]
         }
@@ -157,6 +182,8 @@ class GameConfig:
             asset_base_path=data.get('asset_base_path', _get_default_asset_path()),
             galaxy_radius=data.get('galaxy_radius', 4000),
             system_count=data.get('system_count', 25),
+            galaxy_type=data.get('galaxy_type', 'random'),
+            galaxy_seed=data.get('galaxy_seed'),
             save_name=data.get('save_name', ''),
             players=players
         )

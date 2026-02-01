@@ -1,0 +1,284 @@
+{
+  "_comment": "Galaxy layout configurations for data-driven generation",
+  "_version": "1.0.0",
+
+  "layouts": {
+    "cluster": {
+      "name": "Multi-Cluster",
+      "description": "Multiple distinct star clusters spread across the galaxy",
+      "primitives": [
+        {
+          "type": "radial",
+          "center_q": 0,
+          "center_r": 0,
+          "sigma": 0.15,
+          "peak_density": 1.0,
+          "weight": 0.22,
+          "_note": "Central cluster - slightly larger"
+        },
+        {
+          "type": "radial",
+          "center_q": 0.5,
+          "center_r": -0.3,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.2,
+          "_note": "Northeast cluster"
+        },
+        {
+          "type": "radial",
+          "center_q": -0.5,
+          "center_r": -0.25,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.2,
+          "_note": "Northwest cluster"
+        },
+        {
+          "type": "radial",
+          "center_q": -0.35,
+          "center_r": 0.55,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.19,
+          "_note": "Southwest cluster"
+        },
+        {
+          "type": "radial",
+          "center_q": 0.4,
+          "center_r": 0.45,
+          "sigma": 0.13,
+          "peak_density": 1.0,
+          "weight": 0.19,
+          "_note": "Southeast cluster"
+        }
+      ]
+    },
+
+    "spiral": {
+      "name": "Spiral Galaxy",
+      "description": "Classic spiral with dense core and two distinct arms",
+      "primitives": [
+        {
+          "type": "radial",
+          "center_q": 0,
+          "center_r": 0,
+          "sigma": 0.15,
+          "peak_density": 1.0,
+          "weight": 0.25,
+          "_note": "Central bulge"
+        },
+        {
+          "type": "spiral_arm",
+          "center_q": 0,
+          "center_r": 0,
+          "arm_count": 2,
+          "pitch_angle": 22,
+          "arm_width": 0.08,
+          "rotation": 0,
+          "peak_density": 1.0,
+          "weight": 0.75,
+          "_note": "Spiral arms - wider for better coverage"
+        }
+      ]
+    },
+
+    "spiral_no_core": {
+      "name": "Spiral Galaxy (No Core)",
+      "description": "Spiral arms only, no central bulge",
+      "primitives": [
+        {
+          "type": "spiral_arm",
+          "center_q": 0,
+          "center_r": 0,
+          "arm_count": 2,
+          "pitch_angle": 25,
+          "arm_width": 0.08,
+          "rotation": 0,
+          "peak_density": 1.0,
+          "weight": 1.0,
+          "_note": "Pure spiral arms - wider for better coverage"
+        }
+      ]
+    },
+
+    "barred_spiral": {
+      "name": "Barred Spiral Galaxy",
+      "description": "Spiral galaxy with a central bar",
+      "primitives": [
+        {
+          "type": "linear",
+          "center_q": 0,
+          "center_r": 0,
+          "length": 0.4,
+          "width": 0.08,
+          "rotation": 0.3,
+          "peak_density": 1.0,
+          "weight": 0.35,
+          "_note": "Central bar, length/width relative to radius"
+        },
+        {
+          "type": "spiral_arm",
+          "center_q": 0,
+          "center_r": 0,
+          "arm_count": 2,
+          "pitch_angle": 30,
+          "arm_width": 0.12,
+          "rotation": 0.3,
+          "peak_density": 0.85,
+          "weight": 0.45,
+          "_note": "Arms start at bar ends"
+        },
+        {
+          "type": "noise",
+          "scale": 0.1,
+          "octaves": 2,
+          "persistence": 0.35,
+          "seed": 0,
+          "peak_density": 0.25,
+          "weight": 0.2
+        }
+      ]
+    },
+
+    "ring": {
+      "name": "Ring Galaxy",
+      "description": "Hollow ring with faint central region",
+      "primitives": [
+        {
+          "type": "radial",
+          "center_q": 0,
+          "center_r": 0,
+          "sigma": 0.12,
+          "peak_density": 0.4,
+          "weight": 0.2,
+          "_note": "Faint central region"
+        },
+        {
+          "type": "ring",
+          "center_q": 0,
+          "center_r": 0,
+          "radius": 0.7,
+          "width": 0.15,
+          "peak_density": 1.0,
+          "weight": 0.6,
+          "_note": "Main ring, radius/width relative to galaxy radius"
+        },
+        {
+          "type": "noise",
+          "scale": 0.12,
+          "octaves": 2,
+          "persistence": 0.4,
+          "seed": 0,
+          "peak_density": 0.3,
+          "weight": 0.2
+        }
+      ]
+    },
+
+    "irregular": {
+      "name": "Irregular Galaxy",
+      "description": "Chaotic distribution from galaxy collision/merger",
+      "primitives": [
+        {
+          "type": "radial",
+          "center_q": -0.25,
+          "center_r": -0.15,
+          "sigma": 0.3,
+          "peak_density": 0.9,
+          "weight": 0.35,
+          "_note": "First galaxy core, offset position"
+        },
+        {
+          "type": "radial",
+          "center_q": 0.2,
+          "center_r": 0.2,
+          "sigma": 0.25,
+          "peak_density": 0.85,
+          "weight": 0.3,
+          "_note": "Second galaxy core, offset position"
+        },
+        {
+          "type": "noise",
+          "scale": 0.1,
+          "octaves": 4,
+          "persistence": 0.55,
+          "seed": 0,
+          "peak_density": 0.6,
+          "weight": 0.35,
+          "_note": "Chaotic debris field"
+        }
+      ]
+    },
+
+    "diamond": {
+      "name": "Diamond Galaxy",
+      "description": "Diamond-shaped distribution",
+      "primitives": [
+        {
+          "type": "geometric",
+          "center_q": 0,
+          "center_r": 0,
+          "sides": 4,
+          "radius": 0.85,
+          "rotation": 0.785,
+          "edge_falloff": 0.1,
+          "peak_density": 0.9,
+          "weight": 0.5,
+          "_note": "Diamond shape (rotated square), rotation ~45 degrees"
+        },
+        {
+          "type": "radial",
+          "center_q": 0,
+          "center_r": 0,
+          "sigma": 0.25,
+          "peak_density": 1.0,
+          "weight": 0.3,
+          "_note": "Dense center"
+        },
+        {
+          "type": "noise",
+          "scale": 0.1,
+          "octaves": 2,
+          "persistence": 0.4,
+          "seed": 0,
+          "peak_density": 0.3,
+          "weight": 0.2
+        }
+      ]
+    },
+
+    "uniform": {
+      "name": "Uniform Distribution",
+      "description": "Evenly distributed stars across the galaxy",
+      "primitives": [
+        {
+          "type": "radial",
+          "center_q": 0,
+          "center_r": 0,
+          "sigma": 2.0,
+          "peak_density": 0.7,
+          "weight": 0.7,
+          "_note": "Very large sigma for flat distribution"
+        },
+        {
+          "type": "noise",
+          "scale": 0.2,
+          "octaves": 2,
+          "persistence": 0.3,
+          "seed": 0,
+          "peak_density": 0.4,
+          "weight": 0.3,
+          "_note": "Subtle variation"
+        }
+      ]
+    }
+  },
+
+  "_scaling_notes": {
+    "description": "Values like sigma, radius, width, length are relative to galaxy radius",
+    "example": "sigma: 0.4 with galaxy_radius=1000 means sigma=400 hex units",
+    "scaling_fields": ["sigma", "radius", "width", "length", "arm_width", "edge_falloff"],
+    "position_fields": ["center_q", "center_r", "offset_q", "offset_r"]
+  }
+}

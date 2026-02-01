@@ -1,0 +1,152 @@
+{
+    "version": "1.0",
+    "description": "System blueprints for star system generation. Each blueprint defines a template for generating systems with specific characteristics.",
+    "blueprints": {
+        "binary_no_planets": {
+            "description": "Binary star system with no or minimal planets. Common for close binaries where planetary formation is disrupted.",
+            "weight": 10,
+            "star_count": {
+                "min": 2,
+                "max": 2
+            },
+            "planet_count": {
+                "min": 0,
+                "max": 1
+            },
+            "star_mass": {
+                "description": "Any mass range for binary stars",
+                "min": 0.1,
+                "max": 100.0
+            }
+        },
+        "solar_like": {
+            "description": "Solar system analog with single main sequence star and multiple planets. Most common template.",
+            "weight": 50,
+            "star_count": 1,
+            "planet_count": {
+                "min": 4,
+                "max": 8
+            },
+            "star_mass": {
+                "description": "G/K type star range",
+                "min": 0.5,
+                "max": 1.5
+            },
+            "planet_mass": {
+                "description": "Normal distribution across all ranges",
+                "distribution": "log_normal",
+                "mu": 24.5,
+                "sigma": 1.5
+            }
+        },
+        "red_dwarf_pack": {
+            "description": "Red dwarf with closely packed small planets. TRAPPIST-1 analog.",
+            "weight": 25,
+            "star_count": 1,
+            "planet_count": {
+                "min": 5,
+                "max": 10
+            },
+            "star_mass": {
+                "description": "Red dwarf mass range (0.08-0.5 solar masses)",
+                "min": 0.08,
+                "max": 0.5
+            },
+            "planet_mass": {
+                "description": "Bias towards smaller rocky planets",
+                "bias": "small",
+                "min": 1e21,
+                "max": 5e25
+            },
+            "orbital_spacing": {
+                "description": "Closer orbital spacing than normal",
+                "factor": 0.6
+            }
+        },
+        "empty_warp_hub": {
+            "description": "Barren system primarily used as transit point. Single star with minimal planetary bodies.",
+            "weight": 15,
+            "star_count": 1,
+            "planet_count": {
+                "min": 0,
+                "max": 1
+            },
+            "star_mass": {
+                "description": "Any mass range",
+                "min": 0.1,
+                "max": 10.0
+            }
+        },
+        "gas_giant_system": {
+            "description": "System dominated by gas giants and ice giants. Hot Jupiter and super-Jupiter systems.",
+            "weight": 15,
+            "star_count": 1,
+            "planet_count": {
+                "min": 2,
+                "max": 5
+            },
+            "star_mass": {
+                "description": "Larger stars more likely to form giants",
+                "min": 0.8,
+                "max": 3.0
+            },
+            "planet_mass": {
+                "description": "Bias towards gas giant range",
+                "bias": "large",
+                "min": 1e25,
+                "max": 2e28
+            }
+        },
+        "trinary_system": {
+            "description": "Rare trinary star system with limited planets.",
+            "weight": 3,
+            "star_count": 3,
+            "planet_count": {
+                "min": 0,
+                "max": 3
+            },
+            "star_mass": {
+                "description": "Any mass range",
+                "min": 0.1,
+                "max": 50.0
+            }
+        },
+        "quad_system": {
+            "description": "Very rare quadruple star system. Almost no stable planetary orbits.",
+            "weight": 1,
+            "star_count": 4,
+            "planet_count": {
+                "min": 0,
+                "max": 1
+            },
+            "star_mass": {
+                "description": "Any mass range",
+                "min": 0.1,
+                "max": 50.0
+            }
+        },
+        "hot_jupiter": {
+            "description": "System with a gas giant in very close orbit (hot Jupiter).",
+            "weight": 8,
+            "star_count": 1,
+            "planet_count": {
+                "min": 1,
+                "max": 3
+            },
+            "star_mass": {
+                "description": "F/G type stars",
+                "min": 0.8,
+                "max": 1.5
+            },
+            "planet_mass": {
+                "bias": "large",
+                "min": 5e26,
+                "max": 2e28
+            },
+            "orbital_zones": {
+                "description": "Force at least one planet in hot zone",
+                "hot_required": true
+            }
+        }
+    }
+}

@@ -63,16 +63,18 @@ class QuickstartBuilder:
     @staticmethod
     def build_1p_config(
         save_name_prefix: Optional[str] = None,
-        galaxy_radius: int = 3000,
-        system_count: int = 15
+        galaxy_radius: int = 8000,
+        system_count: int = 100,
+        galaxy_type: str = "spiral"
     ) -> GameConfig:
         """
         Create a single-player quickstart configuration.
 
         Args:
             save_name_prefix: Optional custom prefix (default: "Quickstart_1P")
-            galaxy_radius: Galaxy size (default: 3000)
-            system_count: Number of star systems (default: 15)
+            galaxy_radius: Galaxy size (default: 8000)
+            system_count: Number of star systems (default: 100)
+            galaxy_type: Galaxy layout type (default: "spiral")
 
         Returns:
             Configured GameConfig ready for game session creation
@@ -110,22 +112,25 @@ class QuickstartBuilder:
             save_name=save_name,
             players=[player],
             galaxy_radius=galaxy_radius,
-            system_count=system_count
+            system_count=system_count,
+            galaxy_type=galaxy_type
         )
 
     @staticmethod
     def build_2p_config(
         save_name_prefix: Optional[str] = None,
-        galaxy_radius: int = 3000,
-        system_count: int = 15
+        galaxy_radius: int = 8000,
+        system_count: int = 100,
+        galaxy_type: str = "spiral"
     ) -> GameConfig:
         """
         Create a two-player quickstart configuration.
 
         Args:
             save_name_prefix: Optional custom prefix (default: "Quickstart_2P")
-            galaxy_radius: Galaxy size (default: 3000)
-            system_count: Number of star systems (default: 15)
+            galaxy_radius: Galaxy size (default: 8000)
+            system_count: Number of star systems (default: 100)
+            galaxy_type: Galaxy layout type (default: "spiral")
 
         Returns:
             Configured GameConfig ready for game session creation
@@ -182,7 +187,8 @@ class QuickstartBuilder:
             save_name=save_name,
             players=players,
             galaxy_radius=galaxy_radius,
-            system_count=system_count
+            system_count=system_count,
+            galaxy_type=galaxy_type
         )
 
     @staticmethod

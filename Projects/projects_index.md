@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-52 | Galaxy Generation Refactor | Planning | 2026-01-31 | 2026-01-31 |
 | PROJ-53 | Eliminate Legacy Resource System | Audit Passed | 2026-01-31 | 2026-01-31 |
 
 ## Archived Projects

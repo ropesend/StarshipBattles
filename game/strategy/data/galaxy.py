@@ -1,6 +1,7 @@
 import random
 import math
 from enum import Enum, auto
+from typing import List, Optional, TYPE_CHECKING
 from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
 from game.strategy.data.naming import NameRegistry
 import os
@@ -8,6 +9,11 @@ import os
 from game.strategy.data.stars import StarGenerator, Star, StarType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
+
+if TYPE_CHECKING:
+    from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
+    from game.strategy.generation.region_classifier import RegionClassifier
 
 # Planet and PlanetType moved to game.strategy.data.planet
 
@@ -34,12 +40,13 @@ class WarpPoint:
         )
 
 class StarSystem:
-    def __init__(self, name, global_location, stars=None):
+    def __init__(self, name, global_location, stars=None, region_id=None):
         self.name = name
         self.global_location = global_location # HexCoord
         self.stars = stars if stars else []
         self.warp_points = []
         self.planets = [] # List[Planet]
+        self.region_id = region_id  # Optional[int] - which arm/cluster this belongs to
 
     @property
     def primary_star(self):
@@ -56,13 +63,16 @@ class StarSystem:
     def to_dict(self) -> dict:
         """Serialize StarSystem to dict."""
         from game.strategy.data.hex_math import hex_to_dict
-        return {
+        result = {
             'name': self.name,
             'global_location': hex_to_dict(self.global_location),
             'stars': [star.to_dict() for star in self.stars],
             'warp_points': [wp.to_dict() for wp in self.warp_points],
             'planets': [planet.to_dict() for planet in self.planets]
         }
+        if self.region_id is not None:
+            result['region_id'] = self.region_id
+        return result
 
     @classmethod
     def from_dict(cls, data: dict) -> 'StarSystem':
@@ -73,7 +83,8 @@ class StarSystem:
         system = cls(
             name=data['name'],
             global_location=hex_from_dict(data['global_location']),
-            stars=[Star.from_dict(s) for s in data.get('stars', [])]
+            stars=[Star.from_dict(s) for s in data.get('stars', [])],
+            region_id=data.get('region_id')
         )
 
         # Deserialize warp points
@@ -102,7 +113,8 @@ class Galaxy:
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
         self.naming = NameRegistry(data_path)
         self.star_generator = StarGenerator()
-        self.planet_generator = PlanetGenerator()
+        self.image_registry = PlanetImageRegistry()
+        self.planet_generator = PlanetGenerator(self.image_registry)
         
     def add_system(self, system):
         """Add a system to the galaxy map."""
@@ -195,44 +207,80 @@ class Galaxy:
         for planet in system.planets:
             self.register_planet(system, planet)
 
-    def generate_systems(self, count, min_dist=10):
+    def generate_systems(
+        self,
+        count: int,
+        min_dist: int = 10,
+        placement_strategy: Optional['ISystemPlacementStrategy'] = None,
+        rng: Optional[random.Random] = None
+    ) -> List['StarSystem']:
         """
-        Generate random systems ensuring minimum distance and assigning Star Types.
+        Generate star systems ensuring minimum distance and assigning Star Types.
+
+        Args:
+            count: Number of systems to generate
+            min_dist: Minimum distance between systems in hex units
+            placement_strategy: Strategy for placing systems. If None, uses
+                RandomPlacementStrategy for uniform random placement.
+            rng: Random number generator for deterministic generation.
+                If None, uses global random state.
+
+        Returns:
+            List of generated StarSystem objects
         """
-        generated = []
-        attempts = 0
-        max_attempts = count * 1000 
-        
-        while len(generated) < count and attempts < max_attempts:
-            attempts += 1
-            
-            q = random.randint(-self.radius, self.radius)
-            r1 = max(-self.radius, -q - self.radius)
-            r2 = min(self.radius, -q + self.radius)
-            r = random.randint(r1, r2)
-            
-            coord = HexCoord(q, r)
-            
-            if coord in self.systems:
-                continue
-                
-            valid = True
-            for other_c in self.systems:
-                if hex_distance(coord, other_c) < min_dist:
-                    valid = False
+        # Import here to avoid circular dependency
+        from game.strategy.generation.placement_strategies import RandomPlacementStrategy
+        from game.strategy.data.spatial_index import SpatialIndex
+
+        if placement_strategy is None:
+            placement_strategy = RandomPlacementStrategy()
+
+        generated: List[StarSystem] = []
+
+        # Build spatial index ONCE for efficient distance checks
+        # This avoids O(n²) complexity from rebuilding on every placement
+        spatial_index = SpatialIndex(cell_size=max(min_dist, 500))
+        existing_coords = set(self.systems.keys())
+        for coord in existing_coords:
+            spatial_index.add(coord, None)
+
+        # Track consecutive failures to detect saturation
+        consecutive_failures = 0
+        max_consecutive_failures = 10  # Stop after 10 consecutive failed placements
+
+        while len(generated) < count:
+            # Use strategy to sample a valid location
+            coord = placement_strategy.sample_location(
+                radius=self.radius,
+                existing_systems=existing_coords,
+                min_dist=min_dist,
+                rng=rng,
+                spatial_index=spatial_index
+            )
+
+            if coord is None:
+                consecutive_failures += 1
+                if consecutive_failures >= max_consecutive_failures:
+                    # Galaxy is saturated, can't place more systems
                     break
-            
-            if valid:
-                name = self.naming.get_system_name()
-                
-                # New Star Generation
-                stars = self.star_generator.generate_system_stars(name)
-                
-                sys = StarSystem(name, coord, stars=stars)
-                self.generate_planets(sys)
-                self.add_system(sys)
-                generated.append(sys)
-                
+                continue
+
+            # Reset failure counter on success
+            consecutive_failures = 0
+
+            # Create the system
+            name = self.naming.get_system_name()
+            stars = self.star_generator.generate_system_stars(name)
+
+            sys = StarSystem(name, coord, stars=stars)
+            self.generate_planets(sys)
+            self.add_system(sys)
+            generated.append(sys)
+
+            # Update spatial index and existing coords incrementally
+            spatial_index.add(coord, None)
+            existing_coords.add(coord)
+
         return generated
 
     def _calculate_warp_distance(self, system):
@@ -315,20 +363,62 @@ class Galaxy:
         sys_a.add_warp_point(sys_b.name, loc_a)
         sys_b.add_warp_point(sys_a.name, loc_b)
 
-    def generate_warp_lanes(self):
+    def generate_warp_lanes(
+        self,
+        k_neighbors: int = 20,
+        region_classifier: 'Optional[RegionClassifier]' = None,
+        inter_region_mode: str = 'normal'
+    ):
         """
         Generate warp lanes ensuring connectivity (MST) and adding density.
+
+        Uses spatial indexing with k-nearest neighbors for O(n*k) performance
+        instead of O(n²) all-pairs computation.
+
+        Args:
+            k_neighbors: Number of nearest neighbors to consider per system.
+                         Higher values = more edges to consider, slower but
+                         potentially better connectivity. Default 20.
+            region_classifier: Optional RegionClassifier for region-aware
+                         warp lane generation. If provided, inter-region
+                         connections are penalized based on inter_region_mode.
+            inter_region_mode: How to handle inter-region connections:
+                         - 'normal': No region restrictions (default)
+                         - 'limited': Allow 1-2 inter-region links per region pair
+                         - 'minimal': Only allow MST-required inter-region links
         """
+        from game.strategy.data.spatial_index import SpatialIndex
+
         systems = list(self.systems.values())
         if len(systems) < 2:
             return
 
-        # 1. Compute all possible edges with weights (distance)
+        # Build spatial index for efficient neighbor lookup
+        spatial_index = SpatialIndex(cell_size=500)
+        system_to_idx = {}
+        for i, sys in enumerate(systems):
+            spatial_index.add(sys.global_location, i)
+            system_to_idx[sys.global_location] = i
+
+        # 1. Compute edges using k-nearest neighbors (O(n*k) instead of O(n²))
+        edge_set = set()  # Avoid duplicates
+        for i, sys in enumerate(systems):
+            neighbors = spatial_index.get_k_nearest(
+                sys.global_location,
+                k=k_neighbors,
+                exclude_coord=sys.global_location
+            )
+            for neighbor_coord, j in neighbors:
+                if i < j:
+                    edge_set.add((i, j))
+                else:
+                    edge_set.add((j, i))
+
+        # Convert to edge list with distances
         edges = []
-        for i in range(len(systems)):
-            for j in range(i + 1, len(systems)):
-                dist = hex_distance(systems[i].global_location, systems[j].global_location)
-                edges.append((dist, i, j))
+        for i, j in edge_set:
+            dist = hex_distance(systems[i].global_location, systems[j].global_location)
+            edges.append((dist, i, j))
 
         # Sort by distance (asc)
         edges.sort(key=lambda x: x[0])
@@ -354,6 +444,9 @@ class Galaxy:
                 mst_edges.append((i, j))
                 self.create_vars_link(systems[i], systems[j])
 
+        # Track inter-region links for 'limited' mode
+        inter_region_links = {}  # (min_region, max_region) -> count
+
         # 3. Add additional random edges to meet density
         for dist, i, j in edges:
             # Skip if already linked (MST covered it)
@@ -369,6 +462,23 @@ class Galaxy:
 
             if deg_i >= 10 or deg_j >= 10:
                 continue
+
+            # Check region constraints
+            if region_classifier and inter_region_mode != 'normal':
+                region_i = s_i.region_id
+                region_j = s_j.region_id
+
+                if region_i is not None and region_j is not None and region_i != region_j:
+                    # This is an inter-region edge
+                    if inter_region_mode == 'minimal':
+                        # Only MST edges allowed between regions
+                        continue
+                    elif inter_region_mode == 'limited':
+                        # Allow limited inter-region links
+                        region_pair = (min(region_i, region_j), max(region_i, region_j))
+                        current_count = inter_region_links.get(region_pair, 0)
+                        if current_count >= 2:
+                            continue
 
             # Check Angle Preference
             # Calculate intended angle for both
@@ -402,6 +512,14 @@ class Galaxy:
 
             if random.random() < base_chance:
                 self.create_vars_link(s_i, s_j)
+
+                # Track inter-region link
+                if region_classifier and inter_region_mode == 'limited':
+                    region_i = s_i.region_id
+                    region_j = s_j.region_id
+                    if region_i is not None and region_j is not None and region_i != region_j:
+                        region_pair = (min(region_i, region_j), max(region_i, region_j))
+                        inter_region_links[region_pair] = inter_region_links.get(region_pair, 0) + 1
 
     def to_dict(self) -> dict:
         """Serialize Galaxy to dict."""
