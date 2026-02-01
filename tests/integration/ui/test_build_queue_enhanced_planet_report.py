@@ -300,3 +300,53 @@ def test_panel_integrates_with_container(test_planet, mock_design_library):
     assert panel.graph is not None
 
     pygame.quit()
+
+
+def test_portrait_surface_at_init(test_planet, mock_design_library):
+    """Test passing portrait_surface at initialization."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    # Create a test portrait surface
+    portrait = pygame.Surface((150, 150))
+    portrait.fill((100, 100, 200))
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 580, 350),
+        planet=test_planet,
+        portrait_surface=portrait
+    )
+
+    # Verify portrait was applied
+    assert panel.portrait_image is not None
+    # Verify no crash, panel created successfully
+    assert panel.planet == test_planet
+
+    pygame.quit()
+
+
+def test_show_complexes_false(test_planet, mock_design_library):
+    """Test panel with complexes list hidden."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 580, 350),
+        planet=test_planet,
+        show_complexes=False
+    )
+
+    # Verify complexes container is None
+    assert panel.complexes_container is None
+    assert panel.complex_items == []
+
+    # Verify panel still functions (info text wider)
+    assert panel.detail_text is not None
+
+    pygame.quit()

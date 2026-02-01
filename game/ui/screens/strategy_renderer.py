@@ -517,17 +517,12 @@ class StrategyRenderer:
         Returns:
             Pygame Surface or None if loading fails
         """
-        import os
-        from game.core.paths import Paths
-
         if not image_id:
             return None
 
-        # Construct full path to the Planets_V3 image
-        full_path = os.path.join(Paths.PLANETS_V3_DIR, image_id)
-
-        # Use asset manager's external image loader (handles caching)
-        img = self._asset_manager.load_external_image(full_path)
+        # Load planet image at 512px resolution (optimal for portraits)
+        # Uses resolution-aware loading with fallback chain (PROJ-54 Phase 10)
+        img = self._asset_manager.load_planet_image(image_id, requested_size=512)
 
         # Check if we got the missing texture placeholder
         if img is self._asset_manager.missing_texture:

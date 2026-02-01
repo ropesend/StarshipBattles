@@ -113,12 +113,9 @@ class BuildQueueScreen:
             manager=self.manager,
             rect=pygame.Rect(10, 10, planet_report_width, planet_report_height),
             planet=self.planet,
-            container=self.background
+            container=self.background,
+            portrait_surface=self.portrait_surface  # Pass portrait at init (cleaner)
         )
-
-        # Update with portrait surface if provided
-        if self.portrait_surface:
-            self.planet_report.update_planet(self.planet, self.portrait_surface)
 
     def _create_design_report_panel(self):
         """Create right column showing selected design information."""

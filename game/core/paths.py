@@ -71,6 +71,13 @@ class Paths:
     SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "ShipThemes")
     PLANETS_V3_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets", "Planets_V3")
 
+    # Resolution subdirectories within Planets_V3/ (PROJ-54 Phase 7)
+    PLANETS_V3_2048_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_2048")
+    PLANETS_V3_1024_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_1024")
+    PLANETS_V3_512_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_512")
+    PLANETS_V3_256_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_256")
+    PLANETS_V3_128_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_128")
+
     # === Core Data Files ===
     COMPONENTS_FILE: str = os.path.join(DATA_DIR, "components.json")
     MODIFIERS_FILE: str = os.path.join(DATA_DIR, "modifiers.json")

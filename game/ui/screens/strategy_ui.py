@@ -21,6 +21,7 @@ from game.core.constants import DATA_DIR
 from game.strategy.data.fleet import OrderType
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
+from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.screens.strategy_detail_fmt import (
     format_spectrum_html, format_atmosphere_raw, get_label_for_object
 )
@@ -38,7 +39,7 @@ class StrategyUI:
         self.fleet_orders_window = None  # active window instance
         self.planet_list_window = None   # planet list window instance (BUG-22)
         self.fleet_report_window = None  # fleet report window instance (PROJ-03)
-
+        self.planet_report_panel = None  # planet report panel instance (PROJ-54)
 
         # UI State
         theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
@@ -419,18 +420,26 @@ class StrategyUI:
     def show_detailed_report(self, obj, portrait_surface=None):
         """Update the detail report implementation."""
         self.current_selection = obj # UPDATE STATE
-        
+
         # Reset state
         self.btn_raw_data.hide()
         self.graph_image.hide()
-        
+
         # Default hidden, shown based on context below
         self.btn_colonize.hide()
         self.btn_build_yard.hide()
         self.btn_orders.hide()
         self.btn_fleet_report.hide()
         self.current_raw_data = ""
-        
+
+        # Clean up planet report panel if switching to non-planet object
+        if self.planet_report_panel is not None:
+            self.planet_report_panel.kill()
+            self.planet_report_panel = None
+            # Show the old widgets again for non-planet objects
+            self.portrait_image.show()
+            self.detail_text.show()
+
         # Determine Current Player (Local to UI or passed?) 
         # StrategyInterface doesn't know "Current Player" easily without accessing scene.
         # But scene.current_empire exists.
@@ -489,14 +498,34 @@ class StrategyUI:
             self.current_raw_data = self._format_spectrum(obj)
 
         elif is_planet(obj):
-            text = self.format_planet_info(obj)
-             
-            self.graph_image.show()
-            self.btn_raw_data.show()
-            surface = self.atmosphere_graph.render(obj, vertical=True)
-            surface = pygame.transform.rotate(surface, -90)
-            self.graph_image.set_image(surface)
-            self.current_raw_data = self._format_atmosphere_raw(obj)
+            # Hide old widgets - using PlanetReportPanel instead
+            self.portrait_image.hide()
+            self.detail_text.hide()
+            # graph_image already hidden at start of method
+
+            # Calculate available height for panel
+            # Constrain panel to not cover the Build Yard button (PROJ-54)
+            # Button is at a fixed position from initialization
+            detail_panel_height = self.detail_panel.rect.height
+            button_relative_y = self.btn_build_yard.relative_rect.y  # Button's Y position in detail panel
+            panel_max_height = min(detail_panel_height - 60, button_relative_y - 20)  # 20px margin above button
+
+            # Create planet report panel (NO complexes for strategy UI)
+            self.planet_report_panel = PlanetReportPanel(
+                manager=self.manager,
+                rect=pygame.Rect(10, 10, 580, panel_max_height),
+                planet=obj,
+                container=self.detail_panel,
+                portrait_surface=portrait_surface,
+                show_complexes=False  # Strategy UI doesn't show facility list
+            )
+
+            # Show Build Yard button for owned planets (PROJ-54)
+            if obj.owner_id == current_empire_id:
+                self.btn_build_yard.show()
+
+            # No text needed - panel handles all display
+            text = ""
 
         elif is_sector_environment(obj):
             # Calculate dynamic radiation
@@ -557,65 +586,7 @@ class StrategyUI:
              text += f"<b>Local Loc:</b> {obj.location}<br>"
              
         self.detail_text.html_text = text
-        self.detail_text.rebuild() 
-        
-    def format_planet_info(self, obj):
-        """Format HTML report for a planet."""
-        text = f"<b>Planet:</b> {obj.name}<br>"
-        text += f"<b>Type:</b> {obj.planet_type.name}<br>"
-        text += f"<b>Orbit:</b> Ring {obj.orbit_distance}<br>"
-        
-        # Mass formatting
-        m_earth = 5.97e24
-        m_jup = 1.89e27
-        if obj.mass >= m_jup:
-            m_str = f"{obj.mass/m_jup:.2f} M_Jup"
-        elif obj.mass >= m_earth:
-            m_str = f"{obj.mass/m_earth:.2f} M_Earth"
-        else:
-            m_str = f"{obj.mass/m_earth:.4f} M_Earth"
-            
-        text += f"<b>Mass:</b> {m_str}<br>"
-        text += f"<b>Radius:</b> {obj.radius/1000.0:.0f} km<br>"
-        text += f"<b>Gravity:</b> {obj.surface_gravity/9.81:.2f} g<br>"
-        text += f"<b>Temp:</b> {int(obj.surface_temperature)} K<br>"
-        text += f"<b>Water:</b> {obj.surface_water*100:.0f}%<br>"
-        text += f"<b>Pressure:</b> {obj.total_pressure_atm:.2f} atm<br>"
-
-        # Colony status and facilities (BUG-19 fix)
-        if hasattr(obj, 'owner_id') and obj.owner_id is not None:
-            text += f"<br><b>Colony Status:</b> Owned<br>"
-
-            # Show facilities/complexes list
-            facilities = getattr(obj, 'facilities', [])
-            if facilities:
-                text += "<b>Complexes:</b><br>"
-                for facility in facilities:
-                    f_name = getattr(facility, 'name', getattr(facility, 'design_id', 'Unknown'))
-                    text += f" - {f_name}<br>"
-            else:
-                text += "<b>Complexes:</b> None<br>"
-
-        if hasattr(obj, 'resources') and obj.resources:
-            text += "<br><b>Resources:</b><br>"
-            for r_name, r_data in obj.resources.items():
-                qty = r_data['quantity']
-                if qty >= 1000000: q_str = f"{qty/1000000:.1f}M"
-                elif qty >= 1000: q_str = f"{qty/1000:.0f}k"
-                else: q_str = str(qty)
-
-                qual = r_data['quality']
-                text += f" {r_name}: {q_str} (Q:{qual:.0f})<br>"
-
-        # Show Build Button if owned by current player
-        current_empire_id = -1
-        if hasattr(self.scene, 'current_empire'):
-            current_empire_id = self.scene.current_empire.id
-            
-        if hasattr(obj, 'owner_id') and obj.owner_id == current_empire_id:
-             self.btn_build_yard.show()
-             
-        return text
+        self.detail_text.rebuild()
 
     def _format_atmosphere_raw(self, planet):
         return format_atmosphere_raw(planet)
@@ -743,6 +714,11 @@ class StrategyUI:
                  if obj and is_fleet(obj):
                       self.open_fleet_report_window(obj)
 
+            elif event.ui_element == self.btn_build_yard:
+                # Open build queue for the currently displayed planet (PROJ-54)
+                if hasattr(self.scene, 'on_build_yard_click'):
+                    self.scene.on_build_yard_click()
+
             elif event.type == pygame_gui.UI_WINDOW_CLOSE:
                  if event.ui_element == self.fleet_orders_window:
                       self.fleet_orders_window = None
@@ -772,10 +748,10 @@ class StrategyUI:
         height = 500
         x = (self.width - width) / 2
         y = (self.height - height) / 2
-        
+
         rect = pygame.Rect(x, y, width, height)
-        # Use existing class
-        PlanetSelectionWindow(rect, self.manager, planets, on_select, self.format_planet_info)
+        # Use PlanetSelectionWindow (PROJ-54 - now uses PlanetReportPanel internally)
+        PlanetSelectionWindow(rect, self.manager, planets, on_select)
 
     def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
         """

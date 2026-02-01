@@ -1,20 +1,24 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel, UITextBox
+from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
 
 from game.core.logger import log_debug
+from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetSelectionWindow(UIWindow):
-    def __init__(self, rect, manager, planets, on_selection_callback, formatter_callback):
+    def __init__(self, rect, manager, planets, on_selection_callback):
         # Enforce minimum size if rect is too small
         if rect.width < 700: rect.width = 700
         if rect.height < 400: rect.height = 400
-        
+
         super().__init__(rect, manager, window_display_title="Select Planet to Colonize")
         self.planets = planets
         self.callback = on_selection_callback
-        self.formatter = formatter_callback
         self.current_selection_name = None
+
+        # Planet detail panel (PROJ-54)
+        self.planet_detail_panel = None  # Created when planet selected
+        self.selected_planet = None      # Track current selection
         
         # Left Side: List
         list_width = 300
@@ -43,13 +47,9 @@ class PlanetSelectionWindow(UIWindow):
              self.ui_manager,
              container=self
         )
-        
-        self.details_text = UITextBox(
-            html_text="Select a planet to view details.",
-            relative_rect=pygame.Rect(details_x, 45, details_w, rect.height - 120),
-            manager=self.ui_manager,
-            container=self
-        )
+
+        # Planet detail panel will be created dynamically on selection (PROJ-54)
+        # Details area dimensions: x=details_x (320), y=45, width=details_w, height=rect.height-120
         
         self.btn_select = UIButton(
             pygame.Rect(10, rect.height - 60, 120, 30),
@@ -67,20 +67,42 @@ class PlanetSelectionWindow(UIWindow):
         
     def update(self, time_delta):
         super().update(time_delta)
-        
-        # Check for selection change
+
+        # Check for selection change (PROJ-54)
         selected_name = self.selection_list.get_single_selection()
         if selected_name != self.current_selection_name:
             self.current_selection_name = selected_name
+
+            # Find planet object
+            planet = None
             if selected_name:
-                 planet = next((p for p in self.planets if p.name == selected_name), None)
-                 if planet:
-                     html = self.formatter(planet)
-                     self.details_text.html_text = html
-                     self.details_text.rebuild()
-            else:
-                 self.details_text.html_text = "Select a planet to view details."
-                 self.details_text.rebuild()
+                planet = next((p for p in self.planets if p.name == selected_name), None)
+
+            # Check if actual planet object changed
+            if planet != self.selected_planet:
+                # Kill old panel if exists
+                if self.planet_detail_panel:
+                    self.planet_detail_panel.kill()
+                    self.planet_detail_panel = None
+
+                if planet:
+                    # Create planet report panel
+                    list_width = 300
+                    details_x = list_width + 20
+                    details_y = 45
+                    details_width = self.rect.width - list_width - 30
+                    details_height = self.rect.height - 120
+
+                    self.planet_detail_panel = PlanetReportPanel(
+                        manager=self.ui_manager,
+                        rect=pygame.Rect(details_x, details_y, details_width, details_height),
+                        planet=planet,
+                        container=self,
+                        portrait_surface=None,  # Colonize window doesn't have asset resolver
+                        show_complexes=True     # Show full planet info
+                    )
+
+                self.selected_planet = planet
         
         if self.btn_select.check_pressed():
             selected_name = self.selection_list.get_single_selection()
@@ -99,3 +121,13 @@ class PlanetSelectionWindow(UIWindow):
             # "Any Planet" -> Return None to defer selection to arrival
             self.callback(None)
             self.kill()
+
+    def kill(self):
+        """Clean up resources when window is closed. (PROJ-54)"""
+        # Clean up planet detail panel
+        if self.planet_detail_panel:
+            self.planet_detail_panel.kill()
+            self.planet_detail_panel = None
+
+        # Call parent cleanup
+        super().kill()

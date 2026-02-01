@@ -5,6 +5,21 @@
 
 ---
 
+## ⛔ FORBIDDEN ACTIONS (Do NOT do these in this protocol)
+
+> [!CAUTION]
+> This is a PLANNING protocol. You are the Architect, NOT the Implementer.
+
+- **Do NOT** edit production code files (`*.py` in `game/`, `engine/`, `ui/`, etc.)
+- **Do NOT** run implementation commands or make code changes
+- **Do NOT** proceed to implementation tasks
+- **Do NOT** assume approval — wait for **explicit** user confirmation ("Plan Approved")
+
+**Your session ENDS when the user approves the plan or requests revisions.**  
+Implementation happens in a separate session using the "Continue Project" prompt.
+
+---
+
 ## CRITICAL: The PROJ-XX.md File Is The Single Source of Truth
 
 **The project file (`Projects/active_projects/PROJ-XX/plan.md`) must contain ALL context needed for any agent to pick up the work at any point.**
@@ -309,7 +324,16 @@ Create `Projects/active_projects/PROJ-XX/plan.md` with this structure:
 
 ## Termination
 
+> [!IMPORTANT]
+> ⛔ **STOP HERE** — Do NOT proceed to implementation in this session.
+
 After user approves the plan:
 1. Update `## Current State` to indicate plan is approved and ready for implementation
 2. Update `Projects/projects_index.md` with project entry
-3. Inform user: "Project PROJ-XX plan is approved and ready. Use 'Continue Project' prompt to begin implementation."
+3. Inform user: **"Project PROJ-XX plan is approved and ready. Use 'Continue Project' prompt to begin implementation."**
+
+**This protocol session is now COMPLETE. END your response here.**
+
+────────────────────────────────────────────────────────────────────────────────
+Implementation happens in a NEW session using the "Continue Project" prompt.
+────────────────────────────────────────────────────────────────────────────────

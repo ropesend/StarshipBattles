@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-55 | Data-Driven Planet-Specific Colonization System | Planning | 2026-02-01 | 2026-02-01 |
+| PROJ-54 | Universal Planet Report Component | Planning | 2026-02-01 | 2026-02-01 |
 | PROJ-52 | Galaxy Generation Refactor | Planning | 2026-01-31 | 2026-01-31 |
 | PROJ-53 | Eliminate Legacy Resource System | Audit Passed | 2026-01-31 | 2026-01-31 |
 
@@ -152,7 +154,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-54
+## Next Project ID: PROJ-56
 
 ---
 

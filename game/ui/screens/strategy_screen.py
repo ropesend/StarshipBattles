@@ -379,14 +379,18 @@ class StrategyScreen:
     def _on_build_queue_close(self):
         """Handle build queue screen closing."""
         self.build_queue_screen = None
-        
+
         # Show main UI again
         self.ui.show_ui()
-        
+
         # Refresh planet details to show updated queue/facilities
         if self.selected_object:
-            img = self._get_object_asset(self.selected_object)
-            self.ui.show_detailed_report(self.selected_object, img)
+            try:
+                img = self._get_object_asset(self.selected_object)
+                self.ui.show_detailed_report(self.selected_object, img)
+            except Exception as e:
+                log_warning(f"Could not refresh planet display after build queue close: {e}")
+                # Continue anyway - don't block the close operation
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Design Workshop."""
@@ -492,15 +496,20 @@ class StrategyScreen:
             return am.load_image('stars', asset_key)
 
         elif is_planet(obj):
-            p_type_name = obj.planet_type.name.lower()
-            cat = 'terran'
-            if 'gas' in p_type_name:
-                cat = 'gas'
-            elif 'ice' in p_type_name:
-                cat = 'ice'
-            elif 'desert' in p_type_name or 'hot' in p_type_name:
-                cat = 'venus'
-            return am.get_random_from_group('planets', cat, seed_id=id(obj))
+            if obj.image_id:
+                try:
+                    # Load planet image at 512px resolution (optimal for portraits)
+                    # AssetManager handles fallback chain and caching (PROJ-54 Phase 10)
+                    img = am.load_planet_image(obj.image_id, requested_size=512)
+                    if img and img != am.get_missing_texture():
+                        # Apply rotation for visual variety
+                        if obj.image_rotation and obj.image_rotation != 0.0:
+                            img = pygame.transform.rotate(img, obj.image_rotation)
+                        return img
+                except Exception as e:
+                    # Log error and fall through to None
+                    log_warning(f"Could not load planet image {obj.image_id}: {e}")
+            return None  # PlanetReportPanel will create gradient placeholder
 
         elif is_warp_point(obj):
             return am.get_random_from_group('warp_points', 'default', seed_id=id(obj))
