@@ -10,6 +10,7 @@ from typing import List, Dict
 
 from game.core.constants import PLANET_RESOURCES
 from game.strategy.data.planet import Planet, PlanetType
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 from game.strategy.data.hex_math import HexCoord, hex_ring
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star
@@ -348,6 +349,11 @@ class PlanetGenerator:
             mass, final_temp, pressure, water, atmosphere, activity
         )
 
+        # Assign persistent image from registry
+        registry = PlanetImageRegistry()
+        image_id = registry.get_random_image(p_type)
+        image_rotation = registry.get_random_rotation()
+
         return Planet(
             name="TEMP",  # Assigned later by naming pass
             location=loc,
@@ -364,7 +370,9 @@ class PlanetGenerator:
             surface_water=water,
             tectonic_activity=activity,
             magnetic_field=mag_field,
-            resources=self._generate_resources(mass)
+            resources=self._generate_resources(mass),
+            image_id=image_id,
+            image_rotation=image_rotation
         )
 
     def _generate_mass(self, is_companion=False, primary_mass=None) -> float:
