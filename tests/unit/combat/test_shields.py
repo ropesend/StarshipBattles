@@ -37,7 +37,10 @@ class TestShields:
         regen_data = {
             'id': 'r1', 'name': 'Regen', 'type': 'ShieldRegenerator',
             'mass': 10, 'hp': 10, 'allowed_layers': ['CORE'],
-            'abilities': {'ShieldRegeneration': 60.0, 'EnergyConsumption': 30.0}
+            'abilities': {
+                'ShieldRegeneration': 60.0,
+                'ResourceConsumption': [{"resource": "energy", "amount": 30.0, "trigger": "constant"}]
+            }
         }
         self.regenerator = Component(regen_data, registries=fresh_registries)
 

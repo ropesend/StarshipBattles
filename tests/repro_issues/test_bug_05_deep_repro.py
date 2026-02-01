@@ -18,7 +18,7 @@ MOCK_SHIELD_REGEN_DATA = {
     "allowed_vehicle_types": ["Ship"],
     "abilities": {
         "ShieldRegeneration": 5.0,
-        "EnergyConsumption": 2.0
+        "ResourceConsumption": [{"resource": "energy", "amount": 2.0, "trigger": "constant"}]
     }
 }
 
@@ -48,7 +48,7 @@ MOCK_LASER_DATA = {
 
 def test_shield_regen_consumption(fresh_registries):
     """
-    Verify Shield Regen (using EnergyConsumption alias)
+    Verify Shield Regen (using ResourceConsumption)
     1. Registers Energy resource
     2. Calculates correctly in ship.energy_consumption
     3. Shows up in Logistics Rows

@@ -8,15 +8,20 @@ Combat Lab is a comprehensive testing system for validating combat mechanics in 
 
 ## Quick Links
 
-### 🚀 Getting Started
-- **[Quick Start Guide](simulation_tests/QUICK_START_GUIDE.md)** - Create your first test in 10 minutes
+### Getting Started
+- **[Quick Start Guide](QUICK_START_GUIDE.md)** - Create your first test in 10 minutes
 
-### 📚 Core Documentation
-- **[Main Documentation](simulation_tests/COMBAT_LAB_DOCUMENTATION.md)** - Complete system overview (100+ pages)
-- **[Test Framework](test_framework/README.md)** - Architecture and design patterns
-- **[Validation System](simulation_tests/validation/README.md)** - TOST equivalence testing
-- **[Data Files](simulation_tests/data/README.md)** - Components and ship configurations
-- **[Test Scenarios](simulation_tests/scenarios/README.md)** - Beam weapon tests and examples
+### Core Documentation
+- **[Main Documentation](COMBAT_LAB_DOCUMENTATION.md)** - Complete system overview
+- **[Test Constants](test_constants.py)** - Centralized constants for tests
+
+### Key Files
+- **UI**: `game/ui/screens/test_lab_screen.py` - Combat Lab pygame interface
+- **Controller**: `test_framework/services/test_lab_controller.py` - UI coordinator
+- **Registry**: `test_framework/registry.py` - Auto-discovers test scenarios
+- **Runner**: `test_framework/runner.py` - Executes test scenarios
+- **Base Classes**: `simulation_tests/scenarios/base.py` - TestScenario, TestMetadata
+- **Validation**: `simulation_tests/scenarios/validation.py` - ValidationRule classes
 
 ---
 
@@ -24,18 +29,61 @@ Combat Lab is a comprehensive testing system for validating combat mechanics in 
 
 Combat Lab provides:
 
-✅ **Visual Test Runner** - UI for browsing and running tests
-✅ **Statistical Validation** - TOST (Two One-Sided Tests) equivalence testing
-✅ **Data Verification** - Automatic checking of component data
-✅ **Headless Execution** - Run tests without UI for CI/CD
-✅ **High-Precision Tests** - 100k tick tests with ±1% margins
-✅ **Self-Documenting** - Each test includes metadata explaining what it validates
+- **Visual Test Runner** - In-game UI for browsing and running tests
+- **Statistical Validation** - TOST (Two One-Sided Tests) equivalence testing
+- **Data Verification** - ExactMatchRules for component data validation
+- **Headless Execution** - Run tests without UI for CI/CD integration
+- **High-Precision Tests** - 100k tick tests with ±1% margins
+- **Self-Documenting** - Each test includes rich metadata explaining what it validates
+
+---
+
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Combat Lab UI                               │
+│                (game/ui/screens/test_lab_screen.py)                 │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────────┐
+│                     TestLabUIController                              │
+│          (test_framework/services/test_lab_controller.py)           │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        ▼                      ▼                      ▼
+┌───────────────┐  ┌─────────────────────┐  ┌────────────────┐
+│  TestRunner   │  │    TestRegistry     │  │   Services     │
+│  (runner.py)  │  │   (registry.py)     │  │ (services/)    │
+└───────┬───────┘  └──────────┬──────────┘  └────────────────┘
+        │                     │
+        └─────────┬───────────┘
+                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                         TestScenario                                 │
+│             (simulation_tests/scenarios/base.py)                     │
+│  - setup(engine): Initialize ships, positions                        │
+│  - update(engine): Per-tick logic (optional)                        │
+│  - verify(engine): Calculate results, run validation                │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────────┐
+│                       Validation System                              │
+│           (simulation_tests/scenarios/validation.py)                 │
+│  - ExactMatchRule: Zero-tolerance data verification                  │
+│  - DeterministicMatchRule: Physics with tiny tolerance               │
+│  - StatisticalTestRule: TOST equivalence testing                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Current Test Suite
 
-### Beam Weapon Tests (18 tests)
+### Beam Weapon Tests
+
+Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard, `BEAMWEAPON-XXX-HT` for high-tick.
 
 | Category | Tests | Description |
 |----------|-------|-------------|
@@ -44,44 +92,20 @@ Combat Lab provides:
 | **Boundary Tests** | 1 test | Out of range (deterministic) |
 | **High-Tick Precision** | 7 tests | Same as standard but 100k ticks, ±1% margin |
 
-**Total Coverage**: 11 test configurations × 2 variants (standard + high-tick) - 4 = **18 tests**
+### Resource System Tests
 
----
+Test IDs follow the pattern: `RESOURCE-XXX`.
 
-## Documentation Map
+| Category | Tests | Description |
+|----------|-------|-------------|
+| **Fuel** | 3 tests | Engine fuel consumption, depletion/starvation, regeneration (500 ticks) |
+| **Energy** | 3 tests | Beam energy consumption, depletion, regeneration (100 ticks) |
+| **Ammo** | 3 tests | Projectile/seeker ammo consumption, depletion (100 ticks) |
 
-### For New Users
-
-1. Start here: [Quick Start Guide](simulation_tests/QUICK_START_GUIDE.md)
-2. Read overview: [Main Documentation - Overview](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#overview)
-3. Try running a test in Combat Lab UI
-4. Create your first test following the Quick Start
-
-### For Test Authors
-
-1. [Quick Start Guide](simulation_tests/QUICK_START_GUIDE.md) - Step-by-step test creation
-2. [Creating New Tests](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#creating-new-tests) - Detailed guide
-3. [Test Framework](test_framework/README.md) - TestScenario lifecycle and patterns
-4. [Beam Scenarios](simulation_tests/scenarios/README.md) - Working examples
-
-### For System Architects
-
-1. [System Architecture](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#system-architecture) - Component relationships
-2. [Test Framework](test_framework/README.md) - Base classes and data flow
-3. [Validation System](simulation_tests/validation/README.md) - TOST mathematics and implementation
-
-### For Data Engineers
-
-1. [Data Files](simulation_tests/data/README.md) - Components, ships, modifiers
-2. [Ship Configurations](simulation_tests/data/README.md#ship-files-ships-directory) - Ship JSON structure
-3. [Component Registry](simulation_tests/data/README.md#data-loading-sequence) - Loading sequence
-
-### For Validation Specialists
-
-1. [Validation System](simulation_tests/validation/README.md) - Complete validation guide
-2. [TOST Explanation](simulation_tests/validation/README.md#tost-two-one-sided-tests) - Statistical testing
-3. [ExactMatchRule](simulation_tests/validation/README.md#exactmatchrule-data-verification) - Data verification
-4. [StatisticalTestRule](simulation_tests/validation/README.md#statisticaltestrule-tost-equivalence-testing) - Equivalence testing
+Resource tests validate:
+- Predictable consumption rates (fuel/sec, energy/shot, ammo/shot)
+- Depletion behavior (engine stops, weapon stops firing)
+- Generator regeneration balances consumption
 
 ---
 
@@ -93,56 +117,47 @@ Traditional hypothesis testing proves things are **different**.
 TOST proves things are **equivalent** within a margin.
 
 - **p < 0.05** = PASS (proven equivalent)
-- **p ≥ 0.05** = FAIL (not proven equivalent)
+- **p >= 0.05** = FAIL (not proven equivalent)
 
-**Example**: 50% hit rate weapon should hit 50% ± 6% of the time
-TOST proves the observed rate is statistically equivalent to 50% within that margin.
+### Surface Distance (CRITICAL)
 
-**See**: [Validation System - TOST](simulation_tests/validation/README.md#tost-two-one-sided-tests)
-
-### Surface Distance (CRITICAL for Beam Tests)
-
-Beam weapons use raycasting to find the intersection with the target's collision circle.
+Beam weapons measure distance to target **surface**, not center:
 
 ```python
-# WRONG - Using center distance
-distance = 50.0  # Center-to-center
-expected_hit_rate = calculate(..., 50.0, ...)  # FAILS!
+# Target radius from mass
+target_radius = 40 * (mass / 1000) ** (1/3)
 
-# CORRECT - Using surface distance
-target_radius = 40 * (mass/1000)**(1/3)  # e.g., 29.47px for mass=400
-surface_distance = 50.0 - 29.47  # 20.53px
-expected_hit_rate = calculate(..., 20.53, ...)  # PASSES!
+# Surface distance (what weapons use)
+surface_distance = center_distance - target_radius
+
+# Example: mass=400, center_distance=50
+# radius = 29.47px, surface_distance = 20.53px
 ```
 
-**See**: [Beam Tests - Surface Distance](simulation_tests/scenarios/README.md#surface-distance-calculation)
+### Defense Score (Logarithmic Formula)
+
+```python
+def calculate_defense_score(mass, acceleration=0.0, turn_speed=0.0, ecm_score=0.0):
+    # Radius calculation
+    radius = 40 * ((max(mass, 100) / 1000) ** (1/3))
+
+    # Size score (logarithmic)
+    diameter = radius * 2
+    d_ratio = max(0.1, diameter / 80.0)
+    size_score = -2.5 * math.log10(d_ratio)
+
+    # Maneuver score
+    maneuver_score = math.sqrt((acceleration / 20.0) + (turn_speed / 360.0))
+
+    return size_score + maneuver_score + ecm_score
+```
 
 ### Standard vs High-Tick Tests
 
 | Type | Ticks | Margin | Standard Error | Use Case |
 |------|-------|--------|----------------|----------|
 | **Standard** | 500 | ±6% | ~2.2% | Quick validation, development |
-| **High-Tick** | 100,000 | ±1% | ~0.16% | Precise validation, final verification |
-
-**See**: [Main Docs - Equivalence Margins](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#choosing-equivalence-margins)
-
-### Validation Rules
-
-Every test includes:
-
-**5 ExactMatchRules** (component data verification):
-- Beam Weapon Damage
-- Base Accuracy
-- Accuracy Falloff
-- Weapon Range
-- Target Mass
-
-**1 StatisticalTestRule** (hit rate validation):
-- Expected Probability (calculated from game formulas)
-- Equivalence Margin (±6% or ±1%)
-- TOST p-value < 0.05 = PASS
-
-**See**: [Validation System](simulation_tests/validation/README.md)
+| **High-Tick** | 100,000 | ±1% | ~0.16% | Precise validation, releases |
 
 ---
 
@@ -154,104 +169,22 @@ Every test includes:
 python main.py
 # Navigate to "Combat Lab"
 # Browse tests by category
-# Select test and click "Run Test"
+# Select test and click "Run Visual" or "Run Headless"
 ```
 
-### Headless (Command Line)
+### Headless (Python)
 
 ```python
-"""Run test headlessly."""
 from simulation_tests.scenarios.beam_scenarios import BeamLowAccuracyPointBlankScenario
-from game.simulation.systems.battle_engine import BattleEngine
 from test_framework.runner import TestRunner
 
-scenario = BeamLowAccuracyPointBlankScenario()
 runner = TestRunner()
-runner.load_data_for_scenario(scenario)
+scenario = runner.run_scenario(BeamLowAccuracyPointBlankScenario, headless=True)
 
-engine = BattleEngine()
-engine.start([], [])
-scenario.setup(engine)
-
-for _ in range(scenario.max_ticks):
-    scenario.update(engine)
-    engine.update()
-    if engine.is_battle_over():
-        break
-
-passed = scenario.verify(engine)
-print(f"Test {'PASSED' if passed else 'FAILED'}")
+print(f"Test: {scenario.metadata.test_id}")
+print(f"Result: {'PASSED' if scenario.passed else 'FAILED'}")
+print(f"Hit Rate: {scenario.results.get('hit_rate', 0):.2%}")
 ```
-
-**See**: [Running Tests](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#running-tests)
-
----
-
-## Example: Complete Test
-
-```python
-class MyTestScenario(TestScenario):
-    """Example beam weapon test."""
-
-    metadata = TestMetadata(
-        test_id="MY-TEST-001",
-        name="Medium Accuracy Beam - Mid Range",
-        category="My Tests",
-        subcategory="Beam Weapons",
-        summary="Tests medium accuracy beam at 400px",
-        tags=["beam", "accuracy", "mid-range"],
-        conditions=[
-            "Distance: 400px (370.53px to surface)",
-            "Weapon: 80% base, 0.1%/px falloff",
-            "Target: Stationary, Mass 400"
-        ],
-        validation_rules=[
-            ExactMatchRule(name='Damage', path='attacker.weapon.damage', expected=1),
-            StatisticalTestRule(
-                name='Hit Rate',
-                expected_probability=0.5323,  # Calculated
-                equivalence_margin=0.06,
-                trials_expr='ticks_run',
-                successes_expr='damage_dealt'
-            )
-        ]
-    )
-
-    def __init__(self):
-        super().__init__()
-        self.max_ticks = 500
-        self.expected_hit_chance = 0.5323
-
-    def setup(self, engine):
-        self.attacker = Ship.from_dict(load_ship_json('Test_Attacker_Beam360_Med.json'))
-        self.target = Ship.from_dict(load_ship_json('Test_Target_Stationary.json'))
-
-        self.attacker.position = pygame.Vector2(100, 100)
-        self.target.position = pygame.Vector2(500, 100)  # 400px away
-
-        self.attacker.current_target = self.target
-        engine.team1_ships = [self.attacker]
-        engine.team2_ships = [self.target]
-
-        self.initial_hp = self.target.hp
-
-    def update(self, engine):
-        # Keep attacker aimed at target
-        direction = (self.target.position - self.attacker.position).normalize()
-        self.attacker.direction = direction
-
-    def verify(self, engine):
-        damage_dealt = self.initial_hp - self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = engine.tick_count
-        self.results['hit_rate'] = damage_dealt / engine.tick_count
-
-        self.results['validation_results'] = self.run_validation()
-        self.passed = all(r['status'] == 'PASS' for r in self.results['validation_results'])
-        return self.passed
-```
-
-**See**: [Quick Start Guide](simulation_tests/QUICK_START_GUIDE.md) for complete walkthrough
 
 ---
 
@@ -259,65 +192,63 @@ class MyTestScenario(TestScenario):
 
 ```
 Starship Battles/
-├── COMBAT_LAB_README.md              # This file - documentation hub
+├── game/
+│   └── ui/screens/
+│       └── test_lab_screen.py      # Combat Lab UI
 │
-├── simulation_tests/
-│   ├── COMBAT_LAB_DOCUMENTATION.md   # Main documentation (100+ pages)
-│   ├── QUICK_START_GUIDE.md          # Create first test in 10 minutes
-│   │
-│   ├── data/                         # Test data
-│   │   ├── README.md                 # Data files documentation
-│   │   ├── components.json           # Component definitions
-│   │   ├── modifiers.json            # Stat modifiers
-│   │   ├── vehicleclasses.json       # Ship hull types
-│   │   └── ships/                    # Ship configurations
-│   │       ├── Test_Attacker_*.json
-│   │       └── Test_Target_*.json
-│   │
-│   ├── scenarios/                    # Test implementations
-│   │   ├── README.md                 # Scenario documentation
-│   │   └── beam_scenarios.py         # 18 beam weapon tests
-│   │
-│   └── validation/                   # Validation system
-│       ├── README.md                 # Validation documentation
-│       ├── rules.py                  # ExactMatchRule, StatisticalTestRule
-│       └── validators.py             # Validation execution
+├── test_framework/
+│   ├── registry.py                 # Test discovery
+│   ├── runner.py                   # Test execution
+│   └── services/
+│       └── test_lab_controller.py  # UI controller
 │
-└── test_framework/                   # Core framework
-    ├── README.md                     # Framework architecture
-    ├── base.py                       # TestScenario, TestMetadata
-    └── runner.py                     # TestRunner for headless execution
+└── simulation_tests/
+    ├── README.md                   # This file
+    ├── COMBAT_LAB_DOCUMENTATION.md # Full documentation
+    ├── QUICK_START_GUIDE.md        # Tutorial
+    ├── test_constants.py           # Centralized constants
+    │
+    ├── data/
+    │   ├── components.json         # Test components
+    │   ├── modifiers.json          # Stat modifiers
+    │   ├── vehicleclasses.json     # Ship hulls
+    │   └── ships/                  # Ship configurations
+    │
+    └── scenarios/
+        ├── base.py                 # TestScenario, TestMetadata
+        ├── validation.py           # ValidationRule classes
+        ├── templates.py            # Reusable templates
+        ├── beam_scenarios.py       # Beam weapon tests
+        ├── projectile_scenarios.py # Projectile tests
+        ├── seeker_scenarios.py     # Seeker/missile tests
+        ├── propulsion_scenarios.py # Movement tests
+        └── resource_scenarios.py   # Energy/ammo tests
 ```
 
 ---
 
 ## Common Tasks
 
-### I want to...
+| I want to... | See... |
+|--------------|--------|
+| Create a new test | [Quick Start Guide](QUICK_START_GUIDE.md) |
+| Understand TOST | [Main Docs - Validation System](COMBAT_LAB_DOCUMENTATION.md#validation-system) |
+| Calculate hit rates | [Main Docs - Beam Weapon Mechanics](COMBAT_LAB_DOCUMENTATION.md#beam-weapon-mechanics) |
+| Debug failing tests | [Main Docs - Troubleshooting](COMBAT_LAB_DOCUMENTATION.md#troubleshooting) |
+| Run tests headlessly | [Main Docs - Running Tests](COMBAT_LAB_DOCUMENTATION.md#running-tests) |
 
-**Create a new test**
-→ [Quick Start Guide](simulation_tests/QUICK_START_GUIDE.md)
+---
 
-**Understand TOST testing**
-→ [Validation System - TOST](simulation_tests/validation/README.md#tost-two-one-sided-tests)
+## Design Decisions
 
-**Calculate expected hit rates**
-→ [Beam Tests - Calculation Example](simulation_tests/scenarios/README.md#critical-implementation-details)
-
-**Add new components**
-→ [Data Files - Adding Components](simulation_tests/data/README.md#adding-new-test-components)
-
-**Create new ship configurations**
-→ [Data Files - Creating Ships](simulation_tests/data/README.md#creating-new-test-ships)
-
-**Debug failing tests**
-→ [Validation - Debugging](simulation_tests/validation/README.md#debugging-validation-failures)
-
-**Understand test lifecycle**
-→ [Test Framework - Lifecycle](test_framework/README.md#lifecycle)
-
-**Run tests headlessly**
-→ [Main Docs - Headless Execution](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#headless-execution)
+| Decision | Rationale |
+|----------|-----------|
+| **TOST validation** | Proves equivalence, not just "no difference detected" |
+| **Surface distance** | Beam raycasting hits target surface, not center |
+| **Logarithmic defense** | Better scaling across ship size range |
+| **Zero-mass components** | Isolates hull mass for predictable defense scores |
+| **1 billion HP targets** | Survives 100k ticks at 99% hit rate |
+| **Two test tiers** | Fast feedback (500) + precise validation (100k) |
 
 ---
 
@@ -325,55 +256,20 @@ Starship Battles/
 
 - Python 3.10+
 - pygame-ce 2.5+
-- numpy (for statistical tests)
 - scipy (for TOST calculations)
 
 ---
 
 ## Credits
 
-**Combat Lab System**: Designed and implemented by Claude Sonnet 4.5 + User
-**TOST Implementation**: Statistical equivalence testing for game mechanics
-**Beam Weapon Test Suite**: 18 comprehensive tests validating beam weapon mechanics
-
 **Created**: January 2026
-**Last Updated**: January 2026
-
----
-
-## Getting Help
-
-### Documentation Not Clear?
-
-All documentation files are markdown and can be searched with standard tools:
-
-```bash
-# Find all mentions of "surface distance"
-grep -r "surface distance" simulation_tests/
-
-# Find validation examples
-grep -r "StatisticalTestRule" simulation_tests/
-```
-
-### Test Failing Unexpectedly?
-
-1. Check expected value calculation - Most common issue
-2. Verify surface distance - Not center-to-center!
-3. Print debug info - Add print statements in setup()
-4. Run multiple times - 5% chance of random failure
-5. Consult troubleshooting: [Main Docs - Troubleshooting](simulation_tests/COMBAT_LAB_DOCUMENTATION.md#troubleshooting)
-
-### Need More Examples?
-
-See `simulation_tests/scenarios/beam_scenarios.py` for 18 complete working examples.
+**Combat Lab System**: Claude + User collaboration
 
 ---
 
 ## Next Steps
 
-1. **Read**: [Quick Start Guide](simulation_tests/QUICK_START_GUIDE.md)
+1. **Read**: [Quick Start Guide](QUICK_START_GUIDE.md)
 2. **Try**: Run a test in Combat Lab UI (`python main.py`)
 3. **Create**: Follow Quick Start to create your first test
-4. **Explore**: Read [Main Documentation](simulation_tests/COMBAT_LAB_DOCUMENTATION.md) for deep dive
-
-**Happy Testing!** 🚀
+4. **Explore**: Read [Main Documentation](COMBAT_LAB_DOCUMENTATION.md) for deep dive

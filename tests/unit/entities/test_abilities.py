@@ -31,7 +31,8 @@ class TestAbilities:
         assert isinstance(ab, CombatPropulsion)
         assert ab.thrust_force == 1500
 
-        ab = create_ability("FuelStorage", mock_component, 2000)
+        # Test ResourceStorage with modern format (PROJ-53: legacy FuelStorage removed)
+        ab = create_ability("ResourceStorage", mock_component, {"resource": "fuel", "amount": 2000})
         assert isinstance(ab, ResourceStorage)
         assert ab.resource_type == "fuel"
         assert ab.max_amount == 2000

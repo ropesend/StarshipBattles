@@ -15,6 +15,7 @@ venv/
 /component_presets.json
 /output/
 /simulation_tests/output/
+/simulation_tests/battle_states/
 collect_log*.txt
 .pytest_cache/
 

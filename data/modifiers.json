@@ -458,9 +458,7 @@
             ],
             "restrictions": {
                 "allow_abilities": [
-                    "ResourceConsumption",
-                    "EnergyConsumption",
-                    "AmmoConsumption"
+                    "ResourceConsumption"
                 ]
             }
         }

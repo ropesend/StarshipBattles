@@ -5,21 +5,22 @@
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
 | PROJ-52 | Galaxy Generation Refactor | Planning | 2026-01-31 | 2026-01-31 |
-| PROJ-51 | Naming Consistency Remediation | Planning | 2026-01-30 | 2026-01-30 |
-| PROJ-50 | Strict Dependency Injection Refactor | Revision | 2026-01-30 | 2026-01-30 |
-| PROJ-49 | Performance & Dead Code Cleanup | Planning | 2026-01-28 | 2026-01-28 |
-| PROJ-48 | Testing Infrastructure Overhaul | Planning | 2026-01-28 | 2026-01-28 |
-| PROJ-47 | Documentation Gaps Remediation | Planning | 2026-01-28 | 2026-01-28 |
-| PROJ-46 | Naming Consistency Standardization | Planning | 2026-01-28 | 2026-01-28 |
-| PROJ-45 | Error Handling and Exception Management Refactor | Ready | 2026-01-28 | 2026-01-28 |
-| PROJ-44 | Code Quality & God Classes Refactoring | Planning | 2026-01-28 | 2026-01-28 |
-| PROJ-42 | Backward Compatibility and Legacy Pattern Cleanup | Ready | 2026-01-28 | 2026-01-28 |
-| PROJ-41 | Documentation Health Remediation | Planning | 2026-01-27 | 2026-01-27 |
+| PROJ-53 | Eliminate Legacy Resource System | Audit Passed | 2026-01-31 | 2026-01-31 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-51 | Naming Consistency Remediation | Archived | 2026-01-30 | 2026-01-31 |
+| PROJ-48 | Testing Infrastructure Overhaul | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-45 | Error Handling and Exception Management Refactor | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-50 | Strict Dependency Injection Refactor | Archived | 2026-01-30 | 2026-01-31 |
+| PROJ-49 | Performance & Dead Code Cleanup | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-47 | Documentation Gaps Remediation | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-46 | Naming Consistency Standardization | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-44 | Code Quality & God Classes Refactoring | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-42 | Backward Compatibility and Legacy Pattern Cleanup | Archived | 2026-01-28 | 2026-01-31 |
+| PROJ-41 | Documentation Health Remediation | Archived | 2026-01-27 | 2026-01-31 |
 | PROJ-43 | Architecture Layer Violations Remediation | Archived | 2026-01-28 | 2026-01-29 |
 | PROJ-40 | Comprehensive Code Quality Remediation | Archived | 2026-01-27 | 2026-01-28 |
 | PROJ-38 | Registry DI Refactor | Archived | 2026-01-27 | 2026-01-28 |
@@ -151,4 +152,21 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-53
+## Next Project ID: PROJ-54
+
+---
+
+## Project Summaries (Continued)
+
+### PROJ-53: Eliminate Legacy Resource System
+**Scope:** Complete elimination of legacy resource patterns with NO backwards compatibility
+**Phases:** 6 (Remove Compatibility → Migrate JSON → Fix Production → Fix Strategic → Fix Tests → Verify)
+**Key Goals:**
+- Remove ALL legacy ability shortcuts (EnergyStorage, FuelStorage, AmmoStorage, etc.)
+- Remove compatibility lambda factories from abilities/__init__.py
+- Convert all JSON configs to ResourceConsumption/ResourceStorage/ResourceGeneration format
+- Fix all direct property access (ship.current_fuel → ship.resources.get_value('fuel'))
+- Update 50+ files, fix 25+ test files
+**Dependencies:** None - self-contained refactor
+**Source:** [Review 2026-01-31_general_resource-system-legacy-audit](../Reviews/results/2026-01-31_general_resource-system-legacy-audit/report.md)
+**Philosophy:** NO BACKWARDS COMPATIBILITY - breakage is intentional to surface all dependencies

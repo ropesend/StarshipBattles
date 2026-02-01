@@ -529,8 +529,15 @@ class BattleEngine:
             TIME_BASED: End after max_ticks reached
             HP_BASED: End when any team has 0 alive ships
             CAPABILITY_BASED: End when any team can't fight/move
-            MANUAL: Never end automatically
+            MANUAL: Never end automatically (but respects absolute ceiling)
+            ESCAPE_BASED: End when ships exceed escape_radius from origin
+
+        Note: All modes respect absolute_max_ticks as a safety ceiling.
         """
+
+        # ABSOLUTE CEILING: Always check first as safety net
+        if self.tick_counter >= self.end_condition.absolute_max_ticks:
+            return True
 
         # TIME_BASED: Check tick count
         if self.end_condition.mode == BattleEndMode.TIME_BASED:
@@ -538,7 +545,7 @@ class BattleEngine:
                 return self.tick_counter >= self.end_condition.max_ticks
             return False  # No max_ticks set, never end
 
-        # MANUAL: Never end automatically
+        # MANUAL: Never end automatically (but absolute ceiling still applies)
         if self.end_condition.mode == BattleEndMode.MANUAL:
             return False
 
@@ -562,8 +569,55 @@ class BattleEngine:
             team2_capable = self._team_has_combat_capability(1)
             return not team1_capable or not team2_capable
 
+        # ESCAPE_BASED: Check if ships have escaped beyond radius
+        if self.end_condition.mode == BattleEndMode.ESCAPE_BASED:
+            return self._check_escape_condition()
+
         # Fallback (should never reach here)
         return False
+
+    def _check_escape_condition(self) -> bool:
+        """
+        Check if escape condition is met.
+
+        Returns:
+            True if escape condition triggered, False otherwise
+
+        Logic:
+            - If escape_team is set, only check ships from that team
+            - If escape_all_ships is True, ALL alive ships must be outside radius
+            - If escape_all_ships is False, ANY alive ship outside radius triggers
+            - Dead ships are ignored
+            - Distance is Euclidean distance from origin (0, 0)
+        """
+        escape_radius = self.end_condition.escape_radius
+        if escape_radius is None:
+            return False  # No radius set, can't escape
+
+        escape_team = self.end_condition.escape_team
+        escape_all = self.end_condition.escape_all_ships
+
+        # Get ships to check (filtered by team if specified)
+        ships_to_check = [
+            s for s in self.ships
+            if s.is_alive and (escape_team is None or s.team_id == escape_team)
+        ]
+
+        if not ships_to_check:
+            return False  # No ships to check
+
+        if escape_all:
+            # All ships must be outside radius
+            return all(
+                s.position.length() > escape_radius
+                for s in ships_to_check
+            )
+        else:
+            # Any ship outside radius triggers escape
+            return any(
+                s.position.length() > escape_radius
+                for s in ships_to_check
+            )
 
     def _team_has_combat_capability(self, team_id: int) -> bool:
         """

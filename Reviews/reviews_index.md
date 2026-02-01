@@ -13,6 +13,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-01-31 | General Review | resource-system-legacy-audit | In Progress | [2026-01-31_general_resource-system-legacy-audit](results/2026-01-31_general_resource-system-legacy-audit/) |
 | 2026-01-28 | General Review | maintainability-extensibility | In Progress | [2026-01-28_general_maintainability-extensibility](results/2026-01-28_general_maintainability-extensibility/) |
 | 2026-01-28 | General Review | full-codebase-legacy-consistency-audit | In Progress | [2026-01-28_general_full-codebase-legacy-consistency-audit](results/2026-01-28_general_full-codebase-legacy-consistency-audit/) |
 | 2026-01-28 | Consistency Review | full-codebase-patterns | In Progress | [2026-01-28_consistency_full-codebase-patterns](results/2026-01-28_consistency_full-codebase-patterns/) |

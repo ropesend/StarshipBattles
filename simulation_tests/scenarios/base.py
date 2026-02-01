@@ -57,6 +57,7 @@ from test_framework.scenario import CombatScenario
 from game.simulation.entities.ship import Ship
 from simulation_tests.scenarios.validation import ValidationRule, Validator, ValidationResult
 from simulation_tests.logging_config import get_logger
+from game.core.constants import SimulationConstants
 
 # Get logger for this module
 logger = get_logger(__name__)
@@ -85,9 +86,13 @@ class TestMetadata:
         pass_criteria: How we verify success (e.g., "Hit rate > 90%")
         max_ticks: Maximum simulation ticks before timeout (default: 1000)
         seed: Random seed for reproducibility (default: 42)
-        battle_end_mode: Battle end condition mode - "time_based", "hp_based", "capability", "manual"
-                        (default: "time_based" for tests to run full duration)
+        battle_end_mode: Battle end condition mode - "time_based", "hp_based", "capability",
+                        "manual", "escape" (default: "time_based" for tests to run full duration)
         battle_end_check_derelict: Count derelict ships as defeated (for hp_based mode, default: False)
+        absolute_max_ticks: Hard ceiling to prevent infinite loops (safety net)
+        escape_radius: Distance from origin for "escape" mode
+        escape_team: Which team must escape (None = any, 0 or 1 = specific)
+        escape_all_ships: Require all ships to escape (default: False)
         ui_priority: Display priority in Combat Lab (0=normal, higher=more important)
         tags: Optional tags for filtering (e.g., ["accuracy", "close_range"])
         validation_rules: List of ValidationRule instances for automatic validation
@@ -106,6 +111,10 @@ class TestMetadata:
     seed: int = 42
     battle_end_mode: str = "time_based"  # Default: run for full duration
     battle_end_check_derelict: bool = False
+    absolute_max_ticks: int = field(default_factory=lambda: SimulationConstants.ABSOLUTE_MAX_TICKS)
+    escape_radius: Optional[float] = None
+    escape_team: Optional[int] = None
+    escape_all_ships: bool = False
     ui_priority: int = 0
     tags: List[str] = field(default_factory=list)
     validation_rules: List[ValidationRule] = field(default_factory=list)
@@ -127,6 +136,10 @@ class TestMetadata:
             'seed': self.seed,
             'battle_end_mode': self.battle_end_mode,
             'battle_end_check_derelict': self.battle_end_check_derelict,
+            'absolute_max_ticks': self.absolute_max_ticks,
+            'escape_radius': self.escape_radius,
+            'escape_team': self.escape_team,
+            'escape_all_ships': self.escape_all_ships,
             'ui_priority': self.ui_priority,
             'tags': self.tags,
             'validation_rules_count': len(self.validation_rules),
@@ -213,6 +226,9 @@ class TestScenario(CombatScenario):
         self.description = self.metadata.summary
         self.max_ticks = self.metadata.max_ticks
 
+        # Store test_id in results for UI display (e.g., propulsion test detection)
+        self.results['test_id'] = self.metadata.test_id
+
         # Set test data paths - use simulation_tests/data
         data_dir = self._get_test_data_dir()
         self.components_path = os.path.join(data_dir, 'components.json')
@@ -290,11 +306,13 @@ class TestScenario(CombatScenario):
         logger.debug(f"Loading ship from dict: {data.get('name', 'Unknown')}")
         logger.debug(f"Ship has {len(data.get('layers', {}).get('CORE', []))} CORE components")
 
-        from game.core.registry import RegistryManager
+        from game.core.registry import RegistryManager, get_default_registries
         reg = RegistryManager.instance()
         logger.debug(f"Registry frozen state before Ship.from_dict: {reg._frozen}")
 
-        ship = Ship.from_dict(data)
+        # Get registries for ship deserialization (PROJ-50 strict DI)
+        registries = get_default_registries()
+        ship = Ship.from_dict(data, registries=registries)
         logger.debug("Ship loaded successfully")
 
         # Ensure stats are calculated
@@ -452,7 +470,11 @@ class TestScenario(CombatScenario):
         return BattleEndCondition(
             mode=mode,
             max_ticks=self.metadata.max_ticks if mode == BattleEndMode.TIME_BASED else None,
-            check_derelict=self.metadata.battle_end_check_derelict
+            check_derelict=self.metadata.battle_end_check_derelict,
+            absolute_max_ticks=self.metadata.absolute_max_ticks,
+            escape_radius=self.metadata.escape_radius,
+            escape_team=self.metadata.escape_team,
+            escape_all_ships=self.metadata.escape_all_ships
         )
 
     def setup(self, battle_engine):

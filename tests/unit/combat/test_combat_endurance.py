@@ -140,8 +140,7 @@ class TestCombatEndurance:
         # Clear base ResourceGeneration to ensure exact value
         if 'ResourceGeneration' in gen.data['abilities']:
             del gen.data['abilities']['ResourceGeneration']
-        gen.data['abilities']['EnergyGeneration'] = 50  # Or use ResourceGeneration list
-        # Support fallback logic
+        gen.data['abilities']['ResourceGeneration'] = [{"resource": "energy", "amount": 50}]
 
         # REFRESH ABILITIES
         gen.abilities = gen.data['abilities']
@@ -197,7 +196,7 @@ class TestCombatEndurance:
         if 'abilities' not in gen.data: gen.data['abilities'] = {}
         if 'ResourceGeneration' in gen.data['abilities']:
             del gen.data['abilities']['ResourceGeneration']
-        gen.data['abilities']['EnergyGeneration'] = 100
+        gen.data['abilities']['ResourceGeneration'] = [{"resource": "energy", "amount": 100}]
 
         # REFRESH ABILITIES
         gen.abilities = gen.data['abilities']
@@ -211,7 +210,7 @@ class TestCombatEndurance:
         if 'abilities' not in bat.data: bat.data['abilities'] = {}
         if 'ResourceStorage' in bat.data['abilities']:
             del bat.data['abilities']['ResourceStorage']
-        bat.data['abilities']['EnergyStorage'] = 2000
+        bat.data['abilities']['ResourceStorage'] = [{"resource": "energy", "amount": 2000}]
 
         # REFRESH ABILITIES
         bat.abilities = bat.data['abilities']

@@ -3,13 +3,17 @@
 ## Table of Contents
 1. [Overview](#overview)
 2. [System Architecture](#system-architecture)
-3. [Test Framework](#test-framework)
-4. [Validation System](#validation-system)
-5. [Data Files](#data-files)
-6. [Creating New Tests](#creating-new-tests)
-7. [Beam Weapon Tests](#beam-weapon-tests)
-8. [Running Tests](#running-tests)
-9. [Troubleshooting](#troubleshooting)
+3. [Component Diagram](#component-diagram)
+4. [Test Framework](#test-framework)
+5. [Pre-Run Validation System](#pre-run-validation-system)
+6. [Battle End Conditions](#battle-end-conditions)
+7. [Validation System](#validation-system)
+8. [Data Files](#data-files)
+9. [Creating New Tests](#creating-new-tests)
+10. [Beam Weapon Tests](#beam-weapon-tests)
+11. [Running Tests](#running-tests)
+12. [Troubleshooting](#troubleshooting)
+13. [Design Decisions](#design-decisions)
 
 ---
 
@@ -17,19 +21,20 @@
 
 The **Combat Lab** is a comprehensive testing system for validating combat mechanics in the Starship Battles game. It provides:
 
-- **Visual test runner** - UI for browsing and running tests
+- **Visual test runner** - In-game UI for browsing and running tests
 - **Statistical validation** - TOST (Two One-Sided Tests) equivalence testing
 - **Data verification** - ExactMatchRules for component/ship data validation
-- **Headless execution** - Run tests without UI for CI/CD
+- **Headless execution** - Run tests without UI for CI/CD integration
 - **High-tick precision tests** - 100k+ tick tests for precise validation (±1% margins)
 - **Standard tests** - 500-tick tests for quick validation (±6% margins)
 
 ### Key Features
 
-✅ **Deterministic & Statistical Tests** - Test both exact outcomes and probabilistic behaviors
-✅ **Self-Documenting** - Each test includes metadata explaining what it validates
-✅ **Reproducible** - Fixed test scenarios with explicit expected outcomes
-✅ **Comprehensive** - Validates formulas, component data, and actual combat outcomes
+- **Deterministic & Statistical Tests** - Test both exact outcomes and probabilistic behaviors
+- **Self-Documenting** - Each test includes rich metadata explaining what it validates
+- **Reproducible** - Fixed test scenarios with explicit expected outcomes and seeds
+- **Comprehensive** - Validates formulas, component data, and actual combat outcomes
+- **Dual-Mode Execution** - Same tests run identically in visual UI and headless CLI
 
 ---
 
@@ -38,48 +43,188 @@ The **Combat Lab** is a comprehensive testing system for validating combat mecha
 ### Directory Structure
 
 ```
-simulation_tests/
-├── COMBAT_LAB_DOCUMENTATION.md    # This file
-├── data/                          # Test data files
-│   ├── components.json            # Component registry (armor, weapons, etc.)
-│   ├── modifiers.json             # Stat modifiers
-│   ├── vehicleclasses.json        # Ship hull types
-│   └── ships/                     # Ship definitions for tests
-│       ├── Test_Target_Stationary.json
-│       ├── Test_Target_Stationary_HighTick.json
-│       ├── Test_Target_Erratic_Small.json
-│       └── Test_Attacker_*.json
-├── scenarios/                     # Test scenario implementations
-│   ├── beam_scenarios.py          # All beam weapon tests
-│   └── (future: projectile_scenarios.py, etc.)
-├── validation/                    # Validation rule system
-│   ├── rules.py                   # ExactMatchRule, StatisticalTestRule
-│   └── validators.py              # Validation execution logic
-└── test_framework/                # Core framework
-    ├── base.py                    # TestScenario base class, TestMetadata
-    └── runner.py                  # TestRunner for headless execution
+Starship Battles/
+├── game/
+│   └── ui/
+│       └── screens/
+│           └── test_lab_screen.py      # Combat Lab UI (pygame)
+│
+├── test_framework/
+│   ├── registry.py                     # TestRegistry - scenario discovery
+│   ├── runner.py                       # TestRunner - execution engine
+│   ├── scenario.py                     # CombatScenario base class
+│   ├── test_history.py                 # Test execution history
+│   └── services/
+│       ├── test_lab_controller.py      # UI controller (coordinates services)
+│       ├── scenario_data_service.py    # Ship/component data loading
+│       ├── test_execution_service.py   # Test execution orchestration
+│       ├── test_results_service.py     # Results storage and retrieval
+│       ├── ui_state_service.py         # UI state management
+│       └── metadata_management_service.py  # Metadata validation
+│
+├── simulation_tests/
+│   ├── COMBAT_LAB_DOCUMENTATION.md     # This file
+│   ├── README.md                       # Documentation hub
+│   ├── QUICK_START_GUIDE.md            # 10-minute tutorial
+│   ├── test_constants.py               # Centralized test constants
+│   ├── logging_config.py               # Combat Lab logging
+│   │
+│   ├── data/                           # Test data files
+│   │   ├── components.json             # Component registry
+│   │   ├── modifiers.json              # Stat modifiers
+│   │   ├── vehicleclasses.json         # Ship hull types
+│   │   └── ships/                      # Ship definitions
+│   │       ├── Test_Target_Stationary.json
+│   │       ├── Test_Target_Stationary_HighTick.json
+│   │       ├── Test_Target_Erratic_Small.json
+│   │       └── Test_Attacker_*.json
+│   │
+│   └── scenarios/                      # Test scenario implementations
+│       ├── base.py                     # TestScenario, TestMetadata
+│       ├── validation.py               # ValidationRule classes
+│       ├── templates.py                # Reusable scenario templates
+│       ├── beam_scenarios.py           # Beam weapon tests
+│       ├── projectile_scenarios.py     # Projectile weapon tests
+│       ├── seeker_scenarios.py         # Seeker/missile tests
+│       ├── propulsion_scenarios.py     # Movement/physics tests
+│       └── resource_scenarios.py       # Energy/ammo tests
 ```
 
-### Component Relationships
+---
+
+## Component Diagram
+
+### High-Level Architecture
 
 ```
-┌─────────────────┐
-│   Combat Lab    │  UI for browsing/running tests
-│  (test_lab.py)  │
-└────────┬────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            COMBAT LAB UI                                     │
+│                    (game/ui/screens/test_lab_screen.py)                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Category   │  │    Test     │  │    Test     │  │   Results   │        │
+│  │   Browser   │  │   Browser   │  │   Details   │  │   Panel     │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘        │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────────────────┐
+│                       TestLabUIController                                    │
+│              (test_framework/services/test_lab_controller.py)               │
+│                                                                              │
+│  Responsibilities:                                                           │
+│  - Coordinate UI actions with business logic services                        │
+│  - Manage output logging                                                     │
+│  - Orchestrate test execution (visual/headless)                             │
+│  - Handle user interactions (category click, test selection, run)           │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+         ┌─────────────────────┼─────────────────────┐
+         ▼                     ▼                     ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────────┐
+│   TestRunner    │  │  TestRegistry   │  │          Services               │
+│  (runner.py)    │  │ (registry.py)   │  │                                 │
+│                 │  │                 │  │  - ScenarioDataService          │
+│  - Load data    │  │  - Auto-scan    │  │  - TestExecutionService         │
+│  - Run loop     │  │    scenarios/   │  │  - TestResultsService           │
+│  - Log results  │  │  - Filter by    │  │  - UIStateService               │
+│  - Handle       │  │    category/tag │  │  - MetadataManagementService    │
+│    errors       │  │  - Singleton    │  │                                 │
+└────────┬────────┘  └────────┬────────┘  └─────────────────────────────────┘
+         │                    │
+         └─────────┬──────────┘
+                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           TestScenario                                       │
+│                (simulation_tests/scenarios/base.py)                          │
+│                                                                              │
+│  Class Attributes:                                                           │
+│  - metadata: TestMetadata (rich test documentation)                          │
+│  - max_ticks: int (maximum simulation ticks)                                │
+│  - attacker/target: Ship instances                                          │
+│  - results: Dict (populated during execution)                               │
+│                                                                              │
+│  Methods:                                                                    │
+│  - setup(engine)    → Initialize ships, positions, expected values          │
+│  - update(engine)   → Per-tick logic (optional)                             │
+│  - verify(engine)   → Calculate results, run validation, return pass/fail   │
+│  - run_validation() → Execute ValidationRules                               │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────────────────┐
+│                        Validation System                                     │
+│              (simulation_tests/scenarios/validation.py)                      │
+│                                                                              │
+│  ┌─────────────────┐  ┌────────────────────┐  ┌──────────────────────────┐ │
+│  │ ExactMatchRule  │  │DeterministicMatch  │  │  StatisticalTestRule     │ │
+│  │                 │  │      Rule          │  │       (TOST)             │ │
+│  │ Zero-tolerance  │  │                    │  │                          │ │
+│  │ exact match     │  │ Tiny tolerance     │  │ p < 0.05 = PASS          │ │
+│  │ for component   │  │ (1e-9) for         │  │ (proven equivalent)      │ │
+│  │ data validation │  │ physics calcs      │  │                          │ │
+│  └─────────────────┘  └────────────────────┘  └──────────────────────────┘ │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                         Validator                                    │   │
+│  │  - Runs all rules, aggregates results                               │   │
+│  │  - has_failures(), has_warnings(), get_summary()                    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow
+
+```
+1. User selects test in UI
          │
-         ├──> TestRunner (loads data, runs scenarios)
+         ▼
+2. TestLabUIController.handle_test_click(test_id)
          │
-         ├──> TestScenario (base class for all tests)
-         │    ├─> setup()      - Initialize ships and engine
-         │    ├─> update()     - Run one tick of simulation
-         │    └─> verify()     - Check results against expectations
+         ├──> UIStateService.select_test(test_id)
          │
-         ├──> ValidationRules
-         │    ├─> ExactMatchRule       - Verify component data
-         │    └─> StatisticalTestRule  - TOST equivalence testing
+         ▼
+3. User clicks "Run Test"
          │
-         └──> Data Files (ships, components, modifiers)
+         ▼
+4. TestLabUIController.handle_run_headless() or handle_run_visual()
+         │
+         ├──> TestRegistry.get_by_id(test_id) → scenario_info
+         │
+         ├──> TestExecutionService.run_headless(scenario_info, engine)
+         │         │
+         │         ├──> TestRunner.load_data_for_scenario(scenario)
+         │         │         │
+         │         │         ├──> Clear RegistryManager
+         │         │         ├──> Load components.json
+         │         │         ├──> Load modifiers.json
+         │         │         └──> Load vehicleclasses.json
+         │         │
+         │         ├──> scenario.setup(engine)
+         │         │         │
+         │         │         ├──> Load attacker ship from JSON
+         │         │         ├──> Load target ship from JSON
+         │         │         ├──> Position ships
+         │         │         ├──> Calculate expected values
+         │         │         └──> Store initial state
+         │         │
+         │         ├──> SIMULATION LOOP (max_ticks iterations)
+         │         │         │
+         │         │         ├──> engine.update()
+         │         │         ├──> scenario.update(engine)
+         │         │         └──> Check battle end condition
+         │         │
+         │         └──> scenario.verify(engine)
+         │                   │
+         │                   ├──> Calculate damage_dealt, hit_rate, etc.
+         │                   ├──> scenario.run_validation(engine)
+         │                   │         │
+         │                   │         ├──> ExactMatchRules
+         │                   │         ├──> DeterministicMatchRules
+         │                   │         └──> StatisticalTestRules (TOST)
+         │                   │
+         │                   └──> Return passed = True/False
+         │
+         └──> TestResultsService.add_run(test_id, results)
+                   │
+                   └──> Update TestHistory, Registry
 ```
 
 ---
@@ -88,10 +233,10 @@ simulation_tests/
 
 ### TestScenario Base Class
 
-All tests inherit from `TestScenario` (`test_framework/base.py`):
+All tests inherit from `TestScenario` (`simulation_tests/scenarios/base.py`):
 
 ```python
-class TestScenario:
+class TestScenario(CombatScenario):
     """Base class for all test scenarios."""
 
     metadata: TestMetadata          # Test identification and description
@@ -100,6 +245,24 @@ class TestScenario:
     target: Ship                    # Target ship instance
     results: Dict[str, Any]         # Test results (populated during execution)
     passed: bool                    # Test outcome
+
+    def setup(self, battle_engine):
+        """Configure ships and initial state. MUST be implemented."""
+        raise NotImplementedError
+
+    def verify(self, battle_engine) -> bool:
+        """Check if test passed. MUST be implemented."""
+        raise NotImplementedError
+
+    def update(self, battle_engine):
+        """Optional per-tick update logic."""
+        pass
+
+    def _load_ship(self, filename: str) -> Ship:
+        """Helper to load ship from simulation_tests/data/ships/"""
+
+    def run_validation(self, battle_engine) -> List[ValidationResult]:
+        """Run all validation rules from metadata."""
 ```
 
 ### TestMetadata
@@ -107,25 +270,43 @@ class TestScenario:
 Every test has metadata describing what it tests:
 
 ```python
+from simulation_tests.scenarios.base import TestMetadata
+from simulation_tests.scenarios.validation import ExactMatchRule, StatisticalTestRule
+
 metadata = TestMetadata(
-    test_id="BEAM360-001",                    # Unique identifier
-    name="Low Accuracy Beam - Point Blank",   # Display name
-    category="Beam Weapons",                  # Category for grouping
-    subcategory="Accuracy Tests",             # Subcategory
+    test_id="BEAMWEAPON-001",              # Unique identifier
+    name="Low Accuracy Beam - Point Blank", # Display name
+    category="BeamWeaponAbility",           # Category for grouping
+    subcategory="Accuracy - Low",           # Subcategory
     summary="Tests beam hit chance at point-blank range",  # One-line summary
     tags=["beam", "accuracy", "point-blank"], # Searchable tags
 
     # Test conditions (shown in UI)
     conditions=[
-        "Distance: 50px center-to-center (16.26px to surface)",
-        "Weapon: Low Accuracy (base 50%, falloff 0.2%/px)",
+        "Distance: 50px center-to-center (20.53px to surface)",
+        "Weapon: Low Accuracy (base 0.5, falloff 0.002/px)",
         "Target: Stationary, Mass 400"
     ],
+
+    edge_cases=["Minimal range penalty at close range"],
+    expected_outcome="Hit rate ~53% with damage > 0",
+    pass_criteria="damage_dealt > 0",
+
+    max_ticks=500,           # Test duration
+    seed=42,                 # Random seed for reproducibility
+    battle_end_mode="time_based",  # Run full duration
 
     # Validation rules (checked after test runs)
     validation_rules=[
         ExactMatchRule(name='Beam Damage', path='attacker.weapon.damage', expected=1),
-        StatisticalTestRule(name='Hit Rate', expected_probability=0.5318, ...)
+        StatisticalTestRule(
+            name='Hit Rate',
+            test_type='binomial',
+            expected_probability=0.5318,
+            equivalence_margin=0.06,  # ±6% for 500-tick test
+            trials_expr='ticks_run',
+            successes_expr='damage_dealt'
+        )
     ]
 )
 ```
@@ -136,39 +317,356 @@ metadata = TestMetadata(
 1. TEST SELECTION (in UI or headless)
    ↓
 2. TestRunner.load_data_for_scenario()
+   - Unfreezes RegistryManager (if needed)
    - Clears registry
-   - Loads components.json
-   - Loads modifiers.json
-   - Loads vehicleclasses.json
+   - Loads components.json, modifiers.json, vehicleclasses.json
    ↓
 3. scenario.setup(engine)
    - Creates attacker and target ships from JSON files
-   - Positions ships
-   - Calculates expected outcomes
-   - Stores initial_hp
+   - Positions ships at specified distances
+   - Calculates expected outcomes (defense score, hit chance)
+   - Stores initial_hp for damage calculation
    ↓
 4. SIMULATION LOOP (up to max_ticks)
-   - scenario.update(engine)  # Test-specific logic
-   - engine.update()          # Run one tick of combat
-   - Check if battle is over
+   - engine.update()          # Run one tick of combat simulation
+   - scenario.update(engine)  # Test-specific per-tick logic
+   - Check if battle is over (time_based mode runs full duration)
    ↓
 5. scenario.verify(engine)
    - Calculate actual outcomes (damage_dealt, hit_rate, etc.)
    - Run ExactMatchRules (component data validation)
+   - Run DeterministicMatchRules (physics validation)
    - Run StatisticalTestRules (TOST equivalence tests)
+   - Store results in scenario.results
    - Set self.passed = True/False
    ↓
 6. RESULTS DISPLAY
-   - Show metrics (damage_dealt, hit_rate, etc.)
+   - Show metrics (damage_dealt, hit_rate, ticks_run)
    - Show validation results (PASS/FAIL for each rule)
    - Show p-values and confidence intervals
 ```
 
 ---
 
+## Pre-Run Validation System
+
+The Combat Lab includes a **pre-run validation system** that verifies test data BEFORE the test executes. This prevents tests from running with incorrect assumptions about ship/component data.
+
+### Why Pre-Run Validation?
+
+Tests often make assumptions about data values (ship mass, engine thrust, weapon damage). If these assumptions don't match the actual JSON data files, test results are meaningless. Pre-run validation:
+
+1. **Catches data drift** - When component data is modified, affected tests fail fast with clear errors
+2. **Documents expectations** - Each test explicitly states what values it expects from data files
+3. **Shows formulas** - Calculated values show their formulas with actual values substituted
+4. **Blocks invalid tests** - Tests cannot run if data mismatches are detected
+
+### Expectation Types
+
+#### 1. DataExpectation - JSON File Values
+
+Validates that test assumptions about JSON data match actual file values.
+
+```python
+from simulation_tests.scenarios.prerun_validation import DataExpectation
+
+DataExpectation(
+    name='Ship Mass',
+    source='ship.mass',           # Path in loaded object
+    expected=400,                 # What we expect
+    json_file='Test_Engine_1x.json',  # Source file (for display)
+    tolerance=0.001               # 0.1% tolerance for floats
+)
+```
+
+**Display Format:**
+```
+DATA VALUES (from JSON):
+  [✓] Ship Mass: 400 (expected 400) [Test_Engine_1x.json]
+  [✗] Engine Thrust: 500 (expected 600) [Test_Engine_1x.json]  ← BLOCKING
+```
+
+#### 2. CalculatedExpectation - Physics Formulas
+
+Validates calculated physics values and shows the formula with actual values.
+
+```python
+from simulation_tests.scenarios.prerun_validation import CalculatedExpectation
+
+CalculatedExpectation(
+    name='Max Speed',
+    formula='(thrust × K_SPEED) / mass',  # Human-readable formula
+    formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
+    expected=31.25,
+    variables={'thrust': 500, 'K_SPEED': 25, 'mass': 400},
+    tolerance=0.001
+)
+```
+
+**Display Format:**
+```
+CALCULATED VALUES:
+  [✓] Max Speed: 31.25 [= (500 × 25) / 400]
+      Actual ship value: 31.25
+  [✗] Acceleration: 7.8125 [= (500 × 2500) / 400²]  ← FORMULA MISMATCH
+```
+
+#### 3. SetupCondition - Test Parameters (Not Validated)
+
+Documents test setup parameters that are defined by the test itself, not from data files.
+
+```python
+from simulation_tests.scenarios.prerun_validation import SetupCondition
+
+SetupCondition(
+    name='Initial Position',
+    value='(0, 0)',
+    description='Ship starts at origin'
+)
+```
+
+**Display Format:**
+```
+SETUP CONDITIONS:
+  Initial Position: (0, 0) - Ship starts at origin
+  Test Duration: 100 ticks
+  Throttle Command: 100%
+```
+
+#### 4. PassCriterion - Success Criteria
+
+Defines what must be true for the test to pass.
+
+```python
+from simulation_tests.scenarios.prerun_validation import PassCriterion
+
+PassCriterion(
+    description='final_velocity > expected_velocity × 0.99',
+    numeric_threshold=30.94,  # 31.25 × 0.99
+    expression=lambda results: results['final_velocity'] > 30.94
+)
+```
+
+**Display Format:**
+```
+PASS CRITERIA:
+  ✓ final_velocity > 30.94
+  ✓ distance_traveled > 0
+```
+
+### Using Pre-Run Validation in a Test
+
+```python
+class PropulsionMaxSpeedTest(TestScenario):
+    """PROP-001: Test that ship reaches calculated max speed."""
+
+    # Define expectations as class attributes
+    data_expectations = [
+        DataExpectation(
+            name='Ship Mass',
+            source='ship.mass',
+            expected=400,
+            json_file='Test_Engine_1x_LowMass.json'
+        ),
+        DataExpectation(
+            name='Engine Thrust',
+            source='ship.total_thrust',
+            expected=500,
+            json_file='Test_Engine_1x_LowMass.json'
+        ),
+    ]
+
+    calculated_expectations = [
+        CalculatedExpectation(
+            name='Max Speed',
+            formula='(thrust × K_SPEED) / mass',
+            formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
+            expected=31.25,
+            variables={'thrust': 500, 'K_SPEED': 25, 'mass': 400}
+        ),
+    ]
+
+    setup_conditions = [
+        SetupCondition(name='Initial Position', value='(0, 0)'),
+        SetupCondition(name='Throttle', value='100%'),
+    ]
+
+    pass_criteria = [
+        PassCriterion(
+            description='final_velocity >= max_speed × 0.99',
+            numeric_threshold=30.94
+        ),
+    ]
+
+    def custom_setup(self, battle_engine):
+        """Called during setup to run pre-run validation."""
+        from simulation_tests.scenarios.prerun_validation import PreRunValidator
+
+        context = {'ship': self.ship}
+        validator = PreRunValidator()
+        self.prerun_validation = validator.validate_scenario(self, context)
+
+        # Store for UI display
+        self.results['prerun_validation'] = self.prerun_validation.to_dict()
+
+        # BLOCK execution if validation fails
+        if not self.prerun_validation.can_run:
+            error_msg = "Pre-run validation failed:\n" + "\n".join(
+                self.prerun_validation.blocking_errors
+            )
+            raise ValueError(error_msg)
+```
+
+### UI Display
+
+When pre-run validation is present, the Test Details panel shows:
+
+```
+┌─────────────────────────────────────────┐
+│ PROP-001: Low Mass Engine Ship          │
+├─────────────────────────────────────────┤
+│ DATA VALUES (from JSON):                │
+│   [✓] Ship Mass: 400                    │
+│   [✓] Engine Thrust: 500                │
+│                                         │
+│ CALCULATED VALUES:                      │
+│   [✓] Max Speed: 31.25                  │
+│       [= (500 × 25) / 400]              │
+│   [✓] Acceleration: 7.8125              │
+│       [= (500 × 2500) / 400²]           │
+│                                         │
+│ SETUP CONDITIONS:                       │
+│   Initial Position: (0, 0)              │
+│   Throttle: 100%                        │
+│   Duration: 100 ticks                   │
+│                                         │
+│ PASS CRITERIA:                          │
+│   • final_velocity >= 30.94             │
+│   • distance_traveled > 0               │
+└─────────────────────────────────────────┘
+```
+
+If validation fails:
+
+```
+┌─────────────────────────────────────────┐
+│ ⚠ VALIDATION FAILED - TEST BLOCKED     │
+├─────────────────────────────────────────┤
+│ DATA VALUES (from JSON):                │
+│   [✗] Ship Mass: 600 (expected 400)     │
+│       ↳ BLOCKING: Data mismatch         │
+│                                         │
+│ [Run Test] button is DISABLED           │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## Battle End Conditions
+
+Tests need to control when the simulation ends. The Combat Lab supports multiple end condition modes.
+
+### BattleEndMode Options
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `TIME_BASED` | End after `max_ticks` | Most tests - run for fixed duration |
+| `HP_BASED` | End when one team eliminated | Combat outcome tests |
+| `CAPABILITY_BASED` | End when team can't fight | Mission-kill scenarios |
+| `ESCAPE_BASED` | End when ships exceed distance | Retreat/escape tests |
+| `MANUAL` | Never end (except ceiling) | Interactive exploration |
+
+### Configuring End Conditions in TestMetadata
+
+```python
+metadata = TestMetadata(
+    test_id="PROP-001",
+    # ... other fields ...
+
+    # End condition settings
+    battle_end_mode="time_based",   # Most common for tests
+    max_ticks=100,                  # Run for exactly 100 ticks
+
+    # Safety ceiling (prevents infinite loops)
+    absolute_max_ticks=1_000_000,   # Default: 1 million
+
+    # For ESCAPE_BASED mode:
+    # battle_end_mode="escape",
+    # escape_radius=5000.0,         # Distance from origin
+    # escape_team=1,                # Which team (None=any)
+    # escape_all_ships=False,       # Any ship or all ships?
+
+    # For HP_BASED mode:
+    # battle_end_mode="hp_based",
+    # battle_end_check_derelict=True,  # Count derelict as defeated
+)
+```
+
+### Common Patterns
+
+#### Single-Ship Tests (Physics, Propulsion)
+
+Use `TIME_BASED` to avoid immediate "victory" when testing one ship:
+
+```python
+metadata = TestMetadata(
+    battle_end_mode="time_based",  # Don't end on victory
+    max_ticks=100,                 # Run exactly 100 ticks
+)
+```
+
+#### Combat Tests (Two Teams)
+
+Use `HP_BASED` for realistic combat or `TIME_BASED` for statistics:
+
+```python
+# For combat outcome tests
+metadata = TestMetadata(
+    battle_end_mode="hp_based",
+    max_ticks=10000,  # Safety timeout
+)
+
+# For hit rate statistics (need full duration)
+metadata = TestMetadata(
+    battle_end_mode="time_based",
+    max_ticks=500,
+)
+```
+
+#### Escape/Retreat Tests
+
+Use `ESCAPE_BASED` for testing ship movement away from battle:
+
+```python
+metadata = TestMetadata(
+    battle_end_mode="escape",
+    escape_radius=5000.0,
+    escape_team=0,        # End when team 0 escapes
+    escape_all_ships=True # All ships must escape
+)
+```
+
+### Safety Ceiling
+
+ALL modes respect `absolute_max_ticks` as a hard ceiling to prevent infinite loops:
+
+- Default: 1,000,000 ticks
+- Can be customized per-test
+- Even `MANUAL` mode will eventually end at this ceiling
+
+```python
+# Test will end at 100k ticks even if HP_BASED hasn't triggered
+metadata = TestMetadata(
+    battle_end_mode="hp_based",
+    absolute_max_ticks=100_000,
+)
+```
+
+---
+
 ## Validation System
 
-The Combat Lab uses two types of validation rules:
+The Combat Lab uses three types of validation rules:
 
 ### 1. ExactMatchRule - Data Verification
 
@@ -177,6 +675,8 @@ Validates that test metadata matches actual component data with **zero tolerance
 **Purpose**: Ensures test expectations accurately reflect component definitions.
 
 ```python
+from simulation_tests.scenarios.validation import ExactMatchRule
+
 ExactMatchRule(
     name='Beam Weapon Damage',          # Human-readable name
     path='attacker.weapon.damage',      # Dot-notation path to value
@@ -186,29 +686,38 @@ ExactMatchRule(
 
 **Common Paths**:
 - `attacker.weapon.damage` - Weapon damage value
-- `attacker.weapon.base_accuracy` - Base accuracy (0.0 to 1.0)
+- `attacker.weapon.base_accuracy` - Base accuracy
 - `attacker.weapon.accuracy_falloff` - Falloff per pixel
 - `attacker.weapon.range` - Maximum range
 - `target.mass` - Target ship mass
 
 **How It Works**:
-1. Parses dot-notation path to find the value on the scenario object
+1. Parses dot-notation path to find the value in validation context
 2. Compares actual value to expected value
-3. PASS if values match exactly (within floating-point tolerance)
-4. FAIL if values differ
+3. PASS if values match exactly
+4. FAIL if values differ (with detailed error message)
 
-**Example Output**:
+### 2. DeterministicMatchRule - Physics Validation
+
+Validates floating-point calculations with tiny tolerance (default 1e-9).
+
+**Purpose**: Validates deterministic physics calculations that should be exact.
+
+```python
+from simulation_tests.scenarios.validation import DeterministicMatchRule
+
+DeterministicMatchRule(
+    name='Expected Hit Chance',
+    path='results.expected_hit_chance',
+    expected=0.5318,
+    tolerance=1e-4,  # Allow for display rounding
+    description='P = 1/(1+e^-x) from sigmoid formula'
+)
 ```
-[PASS] Beam Weapon Damage
-  Expected: 1, Actual: 1, Difference: 0.0
 
-[FAIL] Base Accuracy
-  Expected: 0.5, Actual: 0.6, Difference: 0.1
-```
+### 3. StatisticalTestRule - TOST Equivalence Testing
 
-### 2. StatisticalTestRule - TOST Equivalence Testing
-
-Validates that observed outcomes are **statistically equivalent** to expected outcomes.
+Validates that measured outcomes are **statistically equivalent** to expected outcomes.
 
 **Purpose**: Proves that the combat system produces correct probabilistic outcomes.
 
@@ -218,23 +727,27 @@ Traditional hypothesis testing proves things are **different** (p < 0.05 = signi
 TOST proves things are **equivalent** (p < 0.05 = proven equivalent within margin).
 
 **The Logic**:
-- H₁: μ - θ > -ε (observed is not too low)
-- H₂: μ - θ < +ε (observed is not too high)
-- If BOTH tests have p < 0.05, then equivalence is proven
+- H0 (Null): Actual differs from expected by MORE than margin (system is broken)
+- H1 (Alternative): Actual is WITHIN margin of expected (system works)
+- Test 1: Is observed > lower_bound? (not too low)
+- Test 2: Is observed < upper_bound? (not too high)
+- p_value = max(p1, p2) - need BOTH tests to pass
 
 **Interpretation**:
 - **p < 0.05** = PASS (proven equivalent within margin)
 - **p ≥ 0.05** = FAIL (not proven equivalent, could be different)
 
 ```python
+from simulation_tests.scenarios.validation import StatisticalTestRule
+
 StatisticalTestRule(
     name='Hit Rate',
-    test_type='binomial',                    # Type of test (binomial for hit/miss)
-    expected_probability=0.5318,             # Expected hit rate (0.0 to 1.0)
-    equivalence_margin=0.06,                 # ±6% margin (0.06 for 500-tick, 0.01 for 100k-tick)
-    trials_expr='ticks_run',                 # Expression for number of trials
-    successes_expr='damage_dealt',           # Expression for number of successes
-    description='Each beam hit = 1 damage'   # Explanation
+    test_type='binomial',                    # Type of test
+    expected_probability=0.5318,             # Expected hit rate
+    equivalence_margin=0.06,                 # ±6% margin
+    trials_expr='ticks_run',                 # Expression for trial count
+    successes_expr='damage_dealt',           # Expression for success count
+    description='Each beam hit = 1 damage'
 )
 ```
 
@@ -245,35 +758,9 @@ The margin determines how "close" is "close enough" to call it equivalent:
 | Test Type | Ticks | Margin | Standard Error | Use Case |
 |-----------|-------|--------|----------------|----------|
 | **Standard** | 500 | ±6% | ~2.2% | Quick validation, development |
-| **High-Tick** | 100,000 | ±1% | ~0.16% | Precise validation, final verification |
+| **High-Tick** | 100,000 | ±1% | ~0.16% | Precise validation, releases |
 
-**Rule of Thumb**:
-- Margin should be ≥3× the standard error for reliable testing
-- SE ≈ 0.5/√n for binomial tests at p≈0.5
-
-#### Example: Beam Hit Rate Validation
-
-```python
-# Test runs 500 ticks, weapon deals 1 damage per hit
-# Expected hit rate: 53.18%
-# Observed: 260 damage = 260 hits = 52.00% hit rate
-
-StatisticalTestRule(
-    name='Hit Rate',
-    test_type='binomial',
-    expected_probability=0.5318,     # 53.18%
-    equivalence_margin=0.06,         # ±6% (47.18% to 59.18%)
-    trials_expr='ticks_run',         # 500 ticks
-    successes_expr='damage_dealt'    # 260 hits
-)
-
-# TOST Calculation:
-# H₁: 0.5200 - 0.5318 > -0.06  →  -0.0118 > -0.06  →  TRUE, p₁ = 0.0134
-# H₂: 0.5200 - 0.5318 < +0.06  →  -0.0118 < +0.06  →  TRUE, p₂ = 0.0134
-# max(p₁, p₂) = 0.0134 < 0.05  →  PASS (proven equivalent)
-```
-
-**Result**: The observed 52.00% hit rate is statistically equivalent to the expected 53.18% within ±6% margin.
+**Rule of Thumb**: Margin should be ≥3× the standard error for reliable testing.
 
 ---
 
@@ -283,7 +770,6 @@ StatisticalTestRule(
 
 Defines all components (weapons, armor, engines, etc.) used in tests.
 
-**Structure**:
 ```json
 {
     "components": [
@@ -291,9 +777,8 @@ Defines all components (weapons, armor, engines, etc.) used in tests.
             "id": "test_beam_low_acc_1dmg",
             "name": "Test Beam (Low Accuracy, 1 Damage)",
             "type": "BeamWeaponAbility",
-            "mass": 5,
+            "mass": 0,
             "hp": 20,
-            "sprite_index": 87,
             "abilities": {
                 "BeamWeaponAbility": {
                     "damage": 1,
@@ -308,56 +793,42 @@ Defines all components (weapons, armor, engines, etc.) used in tests.
 }
 ```
 
-**Key Test Components**:
+**Key Test Components** (defined in `test_constants.py`):
 
 | Component ID | Purpose | Stats |
 |--------------|---------|-------|
-| `test_beam_low_acc_1dmg` | Low accuracy beam | 50% base, 0.2%/px falloff, range 800 |
-| `test_beam_med_acc_1dmg` | Medium accuracy beam | 80% base, 0.1%/px falloff, range 800 |
-| `test_beam_high_acc_1dmg` | High accuracy beam | 99% base, 0.01%/px falloff, range 800 |
-| `test_armor_extreme_hp` | Indestructible armor | 1 billion HP, mass 0 |
-| `test_armor_small_extreme_hp` | Small indestructible | 1 billion HP, mass 0 |
+| `test_beam_low_acc_1dmg` | Low accuracy beam | base_accuracy=0.5, falloff=0.002, range=800 |
+| `test_beam_med_acc_1dmg` | Medium accuracy beam | base_accuracy=2.0, falloff=0.001, range=1000 |
+| `test_beam_high_acc_1dmg` | High accuracy beam | base_accuracy=5.0, falloff=0.0005, range=1200 |
+| `test_armor_extreme_hp` | Indestructible armor | 1 billion HP, mass=0 |
 
-**Zero-Mass Architecture**: All non-hull components have mass = 0. Ship mass comes only from hull components (e.g., `hull_test_s` = 400 mass).
+### Zero-Mass Component Architecture
+
+All non-hull components have **mass = 0**. Ship mass comes only from hull components.
+
+**Rationale**: This isolates mass calculations and ensures predictable defense scores in tests.
 
 ### Ship JSON Files (simulation_tests/data/ships/)
 
-Define ship configurations for test scenarios.
-
-**Example: Test_Target_Stationary.json**
 ```json
 {
     "name": "Test Target Stationary",
     "color": [0, 0, 255],
     "team_id": 2,
-    "ship_class": "TestS_2L",  // hull_test_s = mass 400
-    "theme_id": "Federation",
+    "ship_class": "TestS_2L",
     "ai_strategy": "test_do_nothing",
     "layers": {
         "CORE": [
-            {"id": "test_armor_extreme_hp"}  // mass 0
-        ],
-        "ARMOR": []
+            {"id": "test_armor_extreme_hp"}
+        ]
     },
-    "_test_notes": "Stationary target with extreme HP (1B) for beam testing",
+    "_test_notes": "Stationary target with extreme HP for beam testing",
     "expected_stats": {
-        "max_hp": 1000000100,  // hull HP (100) + armor HP (1B)
-        "mass": 400.0,         // hull_test_s only
-        "armor_hp_pool": 1000000000
+        "max_hp": 1000000100,
+        "mass": 400.0
     }
 }
 ```
-
-**Key Test Ships**:
-
-| Ship File | Mass | HP | Purpose |
-|-----------|------|-----|---------|
-| `Test_Target_Stationary.json` | 400 | 1B | Standard beam tests |
-| `Test_Target_Stationary_HighTick.json` | 400 | 1B | High-tick tests (same mass as standard) |
-| `Test_Target_Erratic_Small.json` | 400 | 1B | Moving target tests |
-| `Test_Attacker_Beam360_Low.json` | 400 | 120 | Low accuracy attacker |
-| `Test_Attacker_Beam360_Med.json` | 400 | 120 | Medium accuracy attacker |
-| `Test_Attacker_Beam360_High.json` | 400 | 120 | High accuracy attacker |
 
 **Why 1 Billion HP?**
 - Ensures targets NEVER die during tests (even 100k tick high-accuracy tests)
@@ -379,355 +850,242 @@ Examples:
 
 #### 2. Create Test Components (if needed)
 
-Add to `simulation_tests/data/components.json`:
+Add to `simulation_tests/data/components.json`.
 
-```json
-{
-    "id": "test_projectile_std",
-    "name": "Test Projectile (Standard)",
-    "type": "ProjectileWeaponAbility",
-    "mass": 5,
-    "hp": 20,
-    "abilities": {
-        "ProjectileWeaponAbility": {
-            "damage": 10,
-            "projectile_speed": 300,
-            "range": 800,
-            "reload": 1.0
-        }
-    }
-}
-```
+#### 3. Calculate Expected Outcomes
 
-#### 3. Create Test Ship (if needed)
+Use the formulas from the game engine:
 
-Create `simulation_tests/data/ships/Test_Attacker_Projectile.json`:
-
-```json
-{
-    "name": "Test Attacker Projectile",
-    "color": [255, 0, 0],
-    "team_id": 1,
-    "ship_class": "TestS_2L",
-    "ai_strategy": "test_do_nothing",
-    "layers": {
-        "CORE": [
-            {"id": "test_projectile_std"}
-        ]
-    },
-    "expected_stats": {
-        "mass": 25.0
-    }
-}
-```
-
-#### 4. Calculate Expected Outcomes
-
-**For Deterministic Tests** (exact outcomes):
-- Calculate exact damage, time to kill, etc.
-
-**For Probabilistic Tests** (hit rates):
-- Use game formulas to calculate expected probability
-- Account for all bonuses/penalties
-- **CRITICAL**: Use **surface distance**, not center-to-center distance
-
-**Example: Beam Hit Rate Calculation**
 ```python
-# Ship separation: 50px center-to-center
-# Target mass: 400 → radius = 40 × (400/1000)^(1/3) = 29.47px
-# Surface distance: 50 - 29.47 = 20.53px
+import math
 
-# Weapon: base_accuracy=0.8, falloff=0.001
-# Range penalty: 20.53 × 0.001 = 0.0205
+# Target radius from mass
+target_radius = 40 * ((mass / 1000) ** (1/3))
 
-# Target defense: calculate_defense_score(mass=400, accel=0, turn=0, ecm=0) = 0.3316
+# Surface distance (what weapons use)
+surface_distance = center_distance - target_radius
 
-# Net score: 0.8 - 0.0205 - 0.3316 = 0.4479
-# Sigmoid: 1/(1+e^-0.4479) = 0.6101 = 61.01% hit rate
-```
+# Defense score (logarithmic formula from ship_stats.py)
+def calculate_defense_score(mass, acceleration=0.0, turn_speed=0.0, ecm_score=0.0):
+    # Radius calculation
+    base_radius = 40
+    actual_mass = max(mass, 100)
+    radius = base_radius * ((actual_mass / 1000) ** (1/3))
 
-**Helper Functions** (see `beam_scenarios.py`):
-```python
-def calculate_defense_score(mass, acceleration, turn_speed, ecm_score):
-    """Calculate target defense score using game formulas."""
-    size_score = 0.5 * (1.0 - (mass / 1000.0))
-    maneuver_score = (acceleration / 1000.0) + (turn_speed / 500.0)
+    # Size score (logarithmic)
+    diameter = radius * 2
+    d_ratio = max(0.1, diameter / 80.0)
+    size_score = -2.5 * math.log10(d_ratio)
+
+    # Maneuver score
+    maneuver_score = math.sqrt((acceleration / 20.0) + (turn_speed / 360.0))
+
     return size_score + maneuver_score + ecm_score
 
-def calculate_expected_hit_chance(base_acc, falloff, distance, attack_bonus, defense_penalty):
-    """Calculate expected hit chance using sigmoid formula."""
+# Hit chance (sigmoid formula)
+def calculate_hit_chance(base_acc, falloff, distance, attack_bonus=0.0, defense_penalty=0.0):
     range_penalty = distance * falloff
     net_score = (base_acc + attack_bonus) - (range_penalty + defense_penalty)
-    return 1.0 / (1.0 + math.exp(-net_score))
+    clamped = max(-20.0, min(20.0, net_score))
+    return 1.0 / (1.0 + math.exp(-clamped))
 ```
 
-#### 5. Write Test Scenario Class
-
-Create in `simulation_tests/scenarios/your_scenarios.py`:
+#### 4. Write Test Scenario Class
 
 ```python
-from test_framework.base import TestScenario, TestMetadata
-from validation.rules import ExactMatchRule, StatisticalTestRule
+from simulation_tests.scenarios.base import TestScenario, TestMetadata
+from simulation_tests.scenarios.validation import ExactMatchRule, StatisticalTestRule
+from simulation_tests.test_constants import *
 
-class ProjectileBasicScenario(TestScenario):
-    """
-    PROJ-001: Basic Projectile Weapon Test
-
-    Tests that projectile weapons deal expected damage over time.
-    """
+class MyBeamTest(TestScenario):
+    """BEAMWEAPON-XXX: Description of test."""
 
     metadata = TestMetadata(
-        test_id="PROJ-001",
-        name="Projectile Basic Damage Test",
-        category="Projectile Weapons",
-        subcategory="Basic Mechanics",
-        summary="Validates projectile weapon damage output",
-        tags=["projectile", "damage"],
-
-        conditions=[
-            "Distance: 100px",
-            "Weapon: 10 damage, 1.0s reload, 300 speed",
-            "Target: Stationary",
-            "Expected: ~5 hits in 500 ticks (~8.3 seconds)"
-        ],
-
+        test_id="BEAMWEAPON-XXX",
+        category="BeamWeaponAbility",
+        subcategory="Accuracy - Low",
+        name="My Beam Test",
+        summary="Tests specific beam behavior",
+        conditions=["Distance: 50px", "Target: Mass 400"],
+        edge_cases=["Specific edge case"],
+        expected_outcome="Expected behavior",
+        pass_criteria="damage_dealt > 0",
+        max_ticks=STANDARD_TEST_TICKS,
+        seed=STANDARD_SEED,
         validation_rules=[
-            ExactMatchRule(
-                name='Projectile Damage',
-                path='attacker.weapon.damage',
-                expected=10
-            ),
-            ExactMatchRule(
-                name='Reload Time',
-                path='attacker.weapon.reload',
-                expected=1.0
-            ),
+            ExactMatchRule(name='Damage', path='attacker.weapon.damage', expected=1),
             StatisticalTestRule(
-                name='Damage Output',
+                name='Hit Rate',
                 test_type='binomial',
-                expected_probability=0.8,  # Expected hit rate
-                equivalence_margin=0.1,
-                trials_expr='shots_fired',
-                successes_expr='shots_hit',
-                description='Tracks hit rate of projectiles'
+                expected_probability=0.5318,
+                equivalence_margin=STANDARD_MARGIN,
+                trials_expr='ticks_run',
+                successes_expr='damage_dealt'
             )
         ]
     )
 
-    def __init__(self):
-        super().__init__()
-        self.max_ticks = 500
-        self.attacker = None
-        self.target = None
-        self.initial_hp = 0
-        self.shots_fired = 0
-        self.shots_hit = 0
-        self.expected_hit_rate = 0.8  # Calculate this!
+    def setup(self, battle_engine):
+        self.attacker = self._load_ship('Test_Attacker_Beam360_Low.json')
+        self.target = self._load_ship('Test_Target_Stationary.json')
 
-    def setup(self, engine):
-        """Initialize test scenario."""
-        # Load ships from JSON
-        from game.simulation.entities.ship import Ship
-        attacker_data = load_ship_json('Test_Attacker_Projectile.json')
-        target_data = load_ship_json('Test_Target_Stationary.json')
+        import pygame
+        self.attacker.position = pygame.math.Vector2(0, 0)
+        self.target.position = pygame.math.Vector2(50, 0)
 
-        self.attacker = Ship.from_dict(attacker_data, team_id=1)
-        self.target = Ship.from_dict(target_data, team_id=2)
-
-        # Position ships
-        self.attacker.position = pygame.Vector2(100, 100)
-        self.target.position = pygame.Vector2(200, 100)  # 100px away
-
-        # Add to engine
-        engine.team1_ships = [self.attacker]
-        engine.team2_ships = [self.target]
-
-        # Store initial state
+        battle_engine.start([self.attacker], [self.target], seed=self.metadata.seed)
         self.initial_hp = self.target.hp
 
-        # Calculate expected outcomes (example)
-        # ... your calculations here ...
+    def verify(self, battle_engine) -> bool:
+        self.damage_dealt = self.initial_hp - self.target.hp
+        self.results['damage_dealt'] = self.damage_dealt
+        self.results['ticks_run'] = battle_engine.tick_counter
+        self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
 
-    def update(self, engine):
-        """Update test state each tick."""
-        # Track projectile firing (implement as needed)
-        pass
-
-    def verify(self, engine):
-        """Verify test results."""
-        # Calculate actual outcomes
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['damage_dealt'] = damage_dealt
-        self.results['shots_fired'] = self.shots_fired
-        self.results['shots_hit'] = self.shots_hit
-        self.results['ticks_run'] = engine.tick_count
-
-        # Run validation
-        self.results['validation_results'] = self.run_validation()
-
-        # Determine pass/fail
-        self.passed = all(
-            r['status'] == 'PASS'
-            for r in self.results['validation_results']
-        )
-
-        return self.passed
+        self.run_validation(battle_engine)
+        return self.damage_dealt > 0
 ```
 
-#### 6. Register Test in Combat Lab
+#### 5. Add Pre-Run Validation (Recommended)
 
-The Combat Lab auto-discovers tests by scanning scenario files. Make sure:
-1. Your scenario file is in `simulation_tests/scenarios/`
-2. Your test class inherits from `TestScenario`
-3. Your test has a `metadata` attribute with a `test_id`
-
-#### 7. Test Your Test
-
-Create a quick validation script:
+For physics tests that depend on specific data values, add pre-run validation:
 
 ```python
-"""Quick validation for PROJ-001."""
-from simulation_tests.scenarios.projectile_scenarios import ProjectileBasicScenario
-from game.simulation.systems.battle_engine import BattleEngine
-from test_framework.runner import TestRunner
+from simulation_tests.scenarios.prerun_validation import (
+    DataExpectation, CalculatedExpectation, SetupCondition, PassCriterion
+)
 
-def validate():
-    scenario = ProjectileBasicScenario()
+class MyPropulsionTest(TestScenario):
+    """PROP-XXX: Description of test."""
 
-    runner = TestRunner()
-    runner.load_data_for_scenario(scenario)
+    # Expected values from JSON files - MUST match actual data
+    data_expectations = [
+        DataExpectation(
+            name='Ship Mass',
+            source='ship.mass',
+            expected=400,                         # What we expect
+            json_file='Test_Ship.json'            # Source file for reference
+        ),
+        DataExpectation(
+            name='Engine Thrust',
+            source='ship.total_thrust',
+            expected=500,
+            json_file='Test_Ship.json'
+        ),
+    ]
 
-    engine = BattleEngine()
-    engine.start([], [])
-    scenario.setup(engine)
+    # Calculated values - show formulas with actual values
+    calculated_expectations = [
+        CalculatedExpectation(
+            name='Max Speed',
+            formula='(thrust × K_SPEED) / mass',  # Human-readable
+            formula_expr=lambda thrust, K_SPEED, mass: (thrust * K_SPEED) / mass,
+            expected=31.25,
+            variables={'thrust': 500, 'K_SPEED': 25, 'mass': 400}
+        ),
+    ]
 
-    # Run test
-    for _ in range(scenario.max_ticks):
-        scenario.update(engine)
-        engine.update()
-        if engine.is_battle_over():
-            break
+    # Setup conditions (not validated, just displayed)
+    setup_conditions = [
+        SetupCondition(name='Initial Position', value='(0, 0)'),
+        SetupCondition(name='Throttle Command', value='100%'),
+    ]
 
-    # Verify
-    passed = scenario.verify(engine)
-    print(f"Test {'PASSED' if passed else 'FAILED'}")
+    # Pass criteria
+    pass_criteria = [
+        PassCriterion(
+            description='final_velocity >= expected × 0.99',
+            numeric_threshold=30.94
+        ),
+    ]
 
-    # Print results
-    for key, value in scenario.results.items():
-        print(f"  {key}: {value}")
+    def setup(self, battle_engine):
+        self.ship = self._load_ship('Test_Ship.json')
+        # ... position ship, etc ...
 
-if __name__ == "__main__":
-    validate()
+        # Run pre-run validation (blocks if data mismatch)
+        self._run_prerun_validation()
+
+        battle_engine.start([self.ship], [], seed=self.metadata.seed)
+
+    def _run_prerun_validation(self):
+        """Validate expectations before test runs."""
+        from simulation_tests.scenarios.prerun_validation import PreRunValidator
+
+        context = {'ship': self.ship}
+        validator = PreRunValidator()
+        self.prerun_validation = validator.validate_scenario(self, context)
+        self.results['prerun_validation'] = self.prerun_validation.to_dict()
+
+        if not self.prerun_validation.can_run:
+            errors = "\n".join(self.prerun_validation.blocking_errors)
+            raise ValueError(f"Pre-run validation failed:\n{errors}")
 ```
+
+#### 6. Test is Auto-Discovered
+
+The `TestRegistry` automatically scans `simulation_tests/scenarios/` and registers all `TestScenario` subclasses with metadata.
 
 ---
 
 ## Beam Weapon Tests
 
-### Current Test Suite (18 tests)
+### Current Test Suite
+
+Test IDs follow the pattern: `BEAMWEAPON-XXX` for standard tests, `BEAMWEAPON-XXX-HT` for high-tick variants.
 
 #### Standard Tests (500 ticks, ±6% margin)
 
 | Test ID | Description | Expected Hit Rate |
 |---------|-------------|-------------------|
-| **BEAM360-001** | Low Accuracy, Point Blank (50px) | 53.18% |
-| **BEAM360-002** | Low Accuracy, Mid Range (400px) | 36.06% |
-| **BEAM360-003** | Low Accuracy, Max Range (750px) | 21.86% |
-| **BEAM360-004** | Medium Accuracy, Point Blank (50px) | 83.86% |
-| **BEAM360-005** | Medium Accuracy, Mid Range (400px) | 78.55% |
-| **BEAM360-006** | Medium Accuracy, Max Range (750px) | 72.07% |
-| **BEAM360-007** | High Accuracy, Point Blank (50px) | 99.06% |
-| **BEAM360-008** | High Accuracy, Max Range (750px) | 98.66% |
-| **BEAM360-009** | vs Erratic Small, Mid Range | 4.84% |
-| **BEAM360-010** | vs Erratic Small, Max Range | 3.47% |
-| **BEAM360-011** | Out of Range (deterministic) | 0% (no hits) |
+| **BEAMWEAPON-001** | Low Accuracy, Point Blank (50px) | 53.18% |
+| **BEAMWEAPON-002** | Low Accuracy, Mid Range (400px) | varies |
+| **BEAMWEAPON-003** | Low Accuracy, Max Range (750px) | varies |
+| **BEAMWEAPON-004** | Medium Accuracy, Point Blank | varies |
+| **BEAMWEAPON-005** | Medium Accuracy, Mid Range | varies |
+| **BEAMWEAPON-006** | Medium Accuracy, Max Range | varies |
+| **BEAMWEAPON-007** | High Accuracy, Point Blank | ~99% |
+| **BEAMWEAPON-008** | High Accuracy, Max Range | varies |
+| **BEAMWEAPON-009** | vs Erratic Small Target | varies |
+| **BEAMWEAPON-010** | vs Erratic Small, Max Range | varies |
+| **BEAMWEAPON-011** | Out of Range (deterministic) | 0% |
 
 #### High-Tick Tests (100,000 ticks, ±1% margin)
 
-| Test ID | Description | Expected Hit Rate |
-|---------|-------------|-------------------|
-| **BEAM360-001-HT** | Low Accuracy, Point Blank | 57.02% |
-| **BEAM360-002-HT** | Low Accuracy, Mid Range | 39.71% |
-| **BEAM360-004-HT** | Medium Accuracy, Point Blank | 85.82% |
-| **BEAM360-005-HT** | Medium Accuracy, Mid Range | 80.98% |
-| **BEAM360-006-HT** | Medium Accuracy, Max Range | 75.00% |
-| **BEAM360-007-HT** | High Accuracy, Point Blank | 99.19% |
-| **BEAM360-008-HT** | High Accuracy, Max Range | 98.85% |
+| Test ID | Description |
+|---------|-------------|
+| **BEAMWEAPON-001-HT** | Low Accuracy, Point Blank |
+| **BEAMWEAPON-002-HT** | Low Accuracy, Mid Range |
+| **BEAMWEAPON-004-HT** | Medium Accuracy, Point Blank |
+| ... | ... |
 
 ### Beam Weapon Mechanics
 
-#### Raycasting Hit Detection
-
-Beam weapons use raycasting with **circular collision detection**:
-
-```python
-# From game/engine/collision.py
-def process_beam_attack(attack, recent_beams):
-    start_pos = attack['origin']
-    direction = attack['direction']
-    max_range = attack['range']
-    target = attack['target']
-
-    # Ray-sphere intersection
-    f = start_pos - target.position
-    a = direction.dot(direction)
-    b = 2 * f.dot(direction)
-    c = f.dot(f) - target.radius**2  # Uses target RADIUS for collision
-
-    discriminant = b*b - 4*a*c
-
-    if discriminant >= 0:
-        t1 = (-b - math.sqrt(discriminant)) / (2*a)
-        t2 = (-b + math.sqrt(discriminant)) / (2*a)
-
-        if 0 <= t1 <= max_range or 0 <= t2 <= max_range:
-            hit_dist = min([t for t in [t1, t2] if 0 <= t <= max_range])
-
-            # Calculate hit chance at SURFACE distance (hit_dist)
-            chance = beam_ability.calculate_hit_chance(hit_dist, attack_score, defense_score)
-
-            if random.random() < chance:
-                damage = beam_ability.get_damage(hit_dist)
-                target.take_damage(damage)
-```
-
-**CRITICAL**: The hit distance is to the target **SURFACE**, not center-to-center.
-
 #### Surface Distance Calculation
+
+Beam weapons measure distance to target **surface**, not center:
 
 ```python
 # Target radius formula
-target_radius = 40 × (mass / 1000) ^ (1/3)
+target_radius = 40 * (mass / 1000) ** (1/3)
 
 # Examples:
 # mass=400 → radius = 40 × (0.4)^(1/3) = 29.47px
 # mass=600 → radius = 40 × (0.6)^(1/3) = 33.74px
-# mass=65  → radius = 40 × (0.065)^(1/3) = 16.08px
 
 # Surface distance
 surface_distance = center_to_center_distance - target_radius
 ```
 
-**Test Expectations MUST use surface distance, not center distance.**
+**CRITICAL**: Test expectations MUST use surface distance, not center distance.
 
-#### Hit Chance Calculation
+#### Hit Chance Calculation (Sigmoid Formula)
 
 ```python
 def calculate_hit_chance(base_acc, falloff, distance, attack_bonus, defense_penalty):
     """
-    Calculate beam weapon hit chance using sigmoid formula.
-
-    Args:
-        base_acc: Base accuracy (0.0-1.0), e.g. 0.5 = 50%
-        falloff: Accuracy reduction per pixel, e.g. 0.002 = 0.2%/px
-        distance: Distance to TARGET SURFACE (not center!)
-        attack_bonus: Attacker's sensor score
-        defense_penalty: Target's total defense score
-
-    Returns:
-        Hit probability (0.0-1.0)
+    P = 1 / (1 + e^-x)
+    where x = (base_accuracy + attack_bonus) - (range_penalty + defense_penalty)
     """
     range_penalty = distance * falloff
     net_score = (base_acc + attack_bonus) - (range_penalty + defense_penalty)
@@ -741,92 +1099,122 @@ def calculate_hit_chance(base_acc, falloff, distance, attack_bonus, defense_pena
 - net_score > +4 → ~98%+ hit chance
 - net_score < -4 → ~2%- hit chance
 
-#### Defense Score Calculation
+#### Defense Score Calculation (Logarithmic Formula)
+
+The actual implementation uses a logarithmic formula based on ship diameter:
 
 ```python
 def calculate_defense_score(mass, acceleration, turn_speed, ecm_score):
     """
     Calculate target's total defense score.
 
-    Args:
-        mass: Ship mass in kg
-        acceleration: Ship acceleration rate
-        turn_speed: Ship turn speed in degrees/sec
-        ecm_score: ECM component bonus (if any)
-
-    Returns:
-        Total defense penalty applied to attacker
+    This matches the calculation in game/simulation/formulas/ship_stats.py
     """
-    # Size score: smaller = harder to hit
-    size_score = 0.5 * (1.0 - (mass / 1000.0))
+    # Radius calculation
+    base_radius = 40
+    ref_mass = 1000
+    actual_mass = max(mass, 100)
+    ratio = actual_mass / ref_mass
+    radius = base_radius * (ratio ** (1/3.0))
 
-    # Maneuverability score: faster/more agile = harder to hit
-    maneuver_score = (acceleration / 1000.0) + (turn_speed / 500.0)
+    # Size score (logarithmic - larger ships are easier to hit)
+    diameter = radius * 2
+    d_ratio = max(0.1, diameter / 80.0)
+    size_score = -2.5 * math.log10(d_ratio)
+
+    # Maneuver score (sqrt-based)
+    maneuver_score = math.sqrt((acceleration / 20.0) + (turn_speed / 360.0))
 
     return size_score + maneuver_score + ecm_score
 ```
 
-**Examples**:
-- Mass 400, stationary: defense = 0.5×(1-0.4) + 0 + 0 = 0.30
-- Mass 600, stationary: defense = 0.5×(1-0.6) + 0 + 0 = 0.20
-- Mass 65, agile (accel=295, turn=238): defense = 0.468 + 0.295 + 0.476 = 1.239
+---
 
-#### Complete Example: BEAM360-001
+## Resource System Tests
 
-**Test Setup**:
-- Distance: 50px center-to-center
-- Weapon: Low accuracy (base 50%, falloff 0.2%/px)
-- Target: Mass 400, stationary
+Resource tests validate fuel, energy, and ammo consumption, depletion, and regeneration.
 
-**Step-by-Step Calculation**:
+### Current Test Suite
+
+Test IDs follow the pattern: `RESOURCE-XXX`.
+
+#### Fuel Tests (500 ticks)
+
+| Test ID | Description | Pass Criteria |
+|---------|-------------|---------------|
+| **RESOURCE-001** | Engine Fuel Consumption | fuel consumed ≈ 5.0, ship moving |
+| **RESOURCE-002** | Engine Fuel Depletion/Starvation | fuel = 0, ship stopped mid-test |
+| **RESOURCE-003** | Fuel Regeneration Sustains Engine | fuel stable, ship moving |
+
+#### Energy Tests (100 ticks)
+
+| Test ID | Description | Pass Criteria |
+|---------|-------------|---------------|
+| **RESOURCE-004** | Beam Energy Consumption | 100 shots, energy consumed = 100 |
+| **RESOURCE-005** | Energy Depletion Stops Weapon | 25 shots, energy = 0 |
+| **RESOURCE-005a** | Energy Regeneration Sustains Weapon | 100 shots, energy stable |
+
+#### Ammo Tests (100 ticks)
+
+| Test ID | Description | Pass Criteria |
+|---------|-------------|---------------|
+| **RESOURCE-006** | Projectile Ammo Consumption | 100 shots, ammo consumed = 100 |
+| **RESOURCE-007** | Ammo Depletion Stops Projectile | 10 shots, ammo = 0 |
+| **RESOURCE-008** | Seeker Ammo Consumption | 100 launches (hits not tracked) |
+
+### Resource System Mechanics
+
+#### ResourceConsumption Ability
+
+Components consume resources via `ResourceConsumption` ability:
 
 ```python
-# 1. Calculate target radius
-target_mass = 400.0
-target_radius = 40 * ((target_mass / 1000) ** (1/3))
-# target_radius = 40 × (0.4)^(1/3) = 29.47px
+# Constant consumption (engines)
+"ResourceConsumption": [
+    {"resource": "fuel", "amount": 1.0, "trigger": "constant"}
+]
 
-# 2. Calculate surface distance
-center_distance = 50.0
-surface_distance = center_distance - target_radius
-# surface_distance = 50 - 29.47 = 20.53px
-
-# 3. Calculate target defense
-defense_score = calculate_defense_score(
-    mass=400.0,
-    acceleration=0.0,
-    turn_speed=0.0,
-    ecm_score=0.0
-)
-# defense_score = 0.5 × (1 - 0.4) + 0 + 0 = 0.30
-
-# 4. Calculate hit chance
-base_acc = 0.5
-falloff = 0.002
-attack_bonus = 0.0  # No sensors
-
-expected_hit_chance = calculate_expected_hit_chance(
-    base_acc=0.5,
-    falloff=0.002,
-    distance=20.53,  # SURFACE distance!
-    attack_bonus=0.0,
-    defense_penalty=0.30
-)
-
-# Step-by-step:
-# range_penalty = 20.53 × 0.002 = 0.0411
-# net_score = (0.5 + 0.0) - (0.0411 + 0.30) = 0.1589
-# sigmoid = 1 / (1 + e^-0.1589) = 0.5396 = 53.96%
-
-# (Actual value is 53.18% due to more precise calculations)
+# Activation consumption (weapons)
+"ResourceConsumption": [
+    {"resource": "energy", "amount": 1, "trigger": "activation"}
+]
 ```
 
-**Test Validation**:
-- Run 500 ticks
-- Each tick: 53.18% chance of 1 damage
-- Expected damage: ~266 HP
-- TOST margin: ±6% (47.18% to 59.18%)
-- Observed: 260 HP (52.00%) → PASS (within margin)
+#### ResourceGeneration Ability
+
+Generators produce resources via `ResourceGeneration` ability:
+
+```python
+"ResourceGeneration": [
+    {"resource": "energy", "amount": 100}  # 100/sec = 1/tick
+]
+```
+
+#### Fuel Starvation Behavior
+
+When fuel runs out:
+1. `ResourceConsumption.update()` returns `False`
+2. `Component._is_operational` set to `False`
+3. Engine contributes 0 thrust (via `operational_only=True`)
+4. Ship decelerates to 0
+
+### UI Display for Resource Tests
+
+**TestRunCard (Brief)**:
+- Fuel: "Fuel: 1000 → 995 (-5.0), Velocity: 10.5 (moving)"
+- Energy: "Energy: 100 → 0 (depleted), Shots: 100"
+- Ammo: "Ammo: 100 → 0 (depleted), Shots: 100"
+
+**TestRunDetailsPanel (Detailed)**:
+```
+RESOURCE CONSUMPTION
+  Initial Fuel:     1000.0 units
+  Final Fuel:       995.0 units
+  Consumed:         5.0 units
+  Expected:         5.0 units
+  ✓ Within tolerance
+  Final Velocity:   10.5 (moving)
+```
 
 ---
 
@@ -838,104 +1226,34 @@ expected_hit_chance = calculate_expected_hit_chance(
 2. Navigate to "Combat Lab" from main menu
 3. Browse tests by category in left panels
 4. Select test to view details (metadata, conditions, validation rules)
-5. Click "Run Test" to execute
+5. Click "Run Visual" or "Run Headless"
 6. View results:
-   - Metrics (damage dealt, hit rate, ticks run)
+   - Metrics (damage_dealt, hit_rate, ticks_run)
    - Validation results (PASS/FAIL for each rule)
    - P-values and statistical analysis
 
 ### Headless Execution
 
-For CI/CD or batch testing:
-
 ```python
 """Run test headlessly."""
 from simulation_tests.scenarios.beam_scenarios import BeamLowAccuracyPointBlankScenario
-from game.simulation.systems.battle_engine import BattleEngine
 from test_framework.runner import TestRunner
 
-# Create scenario
-scenario = BeamLowAccuracyPointBlankScenario()
-
-# Load data
+# Create and run
 runner = TestRunner()
-runner.load_data_for_scenario(scenario)
+scenario = runner.run_scenario(BeamLowAccuracyPointBlankScenario, headless=True)
 
-# Setup engine
-engine = BattleEngine()
-engine.start([], [])
-scenario.setup(engine)
-
-# Run simulation
-for tick in range(scenario.max_ticks):
-    scenario.update(engine)
-    engine.update()
-    if engine.is_battle_over():
-        break
-
-# Verify results
-passed = scenario.verify(engine)
-
-# Print results
+# Check results
 print(f"Test: {scenario.metadata.test_id}")
-print(f"Result: {'PASSED' if passed else 'FAILED'}")
+print(f"Result: {'PASSED' if scenario.passed else 'FAILED'}")
 print(f"Damage Dealt: {scenario.results['damage_dealt']}")
-print(f"Hit Rate: {scenario.results['hit_rate']:.2%}")
-
-# Validation details
-for result in scenario.results['validation_results']:
-    print(f"  [{result['status']}] {result['name']}: {result['message']}")
+print(f"Hit Rate: {scenario.results.get('hit_rate', 0):.2%}")
 ```
 
-### Batch Testing Script
+### Command Line
 
-```python
-"""Run all beam weapon tests."""
-from simulation_tests.scenarios import beam_scenarios
-from test_framework.runner import TestRunner
-from game.simulation.systems.battle_engine import BattleEngine
-import inspect
-
-# Find all test scenario classes
-test_classes = [
-    cls for name, cls in inspect.getmembers(beam_scenarios, inspect.isclass)
-    if issubclass(cls, TestScenario) and cls != TestScenario
-]
-
-results = []
-
-for test_class in test_classes:
-    print(f"\nRunning {test_class.metadata.test_id}...")
-
-    scenario = test_class()
-    runner = TestRunner()
-    runner.load_data_for_scenario(scenario)
-
-    engine = BattleEngine()
-    engine.start([], [])
-    scenario.setup(engine)
-
-    for _ in range(scenario.max_ticks):
-        scenario.update(engine)
-        engine.update()
-        if engine.is_battle_over():
-            break
-
-    passed = scenario.verify(engine)
-    results.append((scenario.metadata.test_id, passed))
-    print(f"  {'PASSED' if passed else 'FAILED'}")
-
-# Summary
-print("\n" + "="*60)
-print("SUMMARY")
-print("="*60)
-passed_count = sum(1 for _, passed in results if passed)
-total_count = len(results)
-print(f"Passed: {passed_count}/{total_count}")
-print("="*60)
-
-for test_id, passed in results:
-    print(f"  [{' PASS ' if passed else 'FAIL'}] {test_id}")
+```bash
+python -m test_framework.runner simulation_tests/scenarios/beam_scenarios.py --headless
 ```
 
 ---
@@ -944,199 +1262,176 @@ for test_id, passed in results:
 
 ### Common Issues
 
-#### Issue: Test fails with "Ship stats mismatch after loading"
+#### Test fails with "Ship stats mismatch after loading"
 
-**Cause**: Ship expected_stats don't match actual calculated stats.
+**Cause**: Ship `expected_stats` don't match actual calculated stats.
 
-**Solution**: Update expected_stats in ship JSON file or check component data.
+**Solution**: Update `expected_stats` in ship JSON file or check component data.
 
+#### Test fails with large deviation in hit rate
+
+**Cause**: Expected hit rate may be using center-to-center distance instead of surface distance.
+
+**Solution**: Recalculate using surface distance:
 ```python
-# Debug output example:
-WARNING: Ship 'Test Target' stats mismatch after loading!
-  - mass: got 600.0, expected 400.0
-
-# Fix: Check armor mass in components.json
-# If armor mass=400, total mass = 400 (armor) + 200 (other) = 600
-# Solution: Change armor mass to 200 or update expected mass to 600
+target_radius = 40 * ((mass / 1000) ** (1/3))
+surface_distance = center_distance - target_radius
 ```
 
-#### Issue: Test fails with large deviation in hit rate
+#### TOST test fails with p-value just above 0.05
 
-**Cause**: Expected hit rate calculation may be using center-to-center distance instead of surface distance.
-
-**Solution**: Recalculate expected hit rate using surface distance.
-
-```python
-# WRONG - uses center distance
-surface_distance = 50.0
-expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, 50.0, 0.0, 0.30)
-# Result: too low hit rate
-
-# CORRECT - uses surface distance
-target_radius = 40 * ((400 / 1000) ** (1/3))  # 29.47px
-surface_distance = 50.0 - target_radius        # 20.53px
-expected_hit_chance = calculate_expected_hit_chance(0.5, 0.002, 20.53, 0.0, 0.30)
-# Result: correct hit rate
-```
-
-#### Issue: ExactMatchRule fails for weapon data
-
-**Cause**: Path to weapon data may be incorrect.
-
-**Solution**: Check dot-notation path. For beam weapons:
-
-```python
-# Component is in attacker's CORE layer
-# Access pattern: attacker → components → find BeamWeaponAbility
-
-# Correct path in ExactMatchRule:
-path='attacker.weapon.damage'  # Uses property accessor
-
-# Internal implementation resolves to:
-# scenario.attacker.get_component_with_ability('BeamWeaponAbility').get_ability('BeamWeaponAbility').damage
-```
-
-#### Issue: TOST test fails with p-value just above 0.05
-
-**Cause**: Statistical variance in small sample sizes (500 ticks).
+**Cause**: Statistical variance in small sample sizes.
 
 **Solutions**:
-1. Run test multiple times to see if it's consistent failure
-2. Check if expected probability is correct
-3. Consider if margin is too tight (standard tests use ±6%)
-4. For critical tests, use high-tick version (100k ticks, ±1% margin)
+1. Run test multiple times to check consistency
+2. Verify expected probability calculation
+3. Use high-tick version for critical validation
 
-```python
-# Example: p=0.0531 (just above 0.05 threshold)
-# This could be:
-# a) Bad luck (5% chance of random failure)
-# b) Expected value is slightly off
-# c) Margin is too tight
+#### Target dies before test completes
 
-# Recommendations:
-# - If p is 0.05-0.10: Probably just variance, re-run
-# - If p is 0.10-0.20: Check expected value calculation
-# - If p is >0.20: Expected value is likely wrong
+**Cause**: Not enough HP for test duration.
+
+**Solution**: Use extreme HP armor (1 billion HP) for test targets.
+
+#### Pre-run validation fails with "Data mismatch"
+
+**Cause**: Test expectations don't match actual JSON data values.
+
+**Example Error**:
+```
+Pre-run validation failed:
+Data mismatch - Ship Mass: expected 400, got 600
 ```
 
-#### Issue: Target dies before test completes
+**Solutions**:
+1. Update the test's `data_expectations` to match current JSON values
+2. OR update the JSON file if the test's expectations are correct
+3. Check if component mass architecture changed (zero-mass components?)
 
-**Cause**: Not enough HP for the test duration.
+#### Pre-run validation fails with "path not found"
 
-**Solution**: Use extreme HP armor (1 billion HP).
+**Cause**: The `source` path in a DataExpectation doesn't match the object structure.
 
-```python
-# Standard armor: 10k HP
-# High-accuracy beam: 99% × 500 ticks = ~495 damage → OK
-
-# High-accuracy beam, 100k ticks: 99% × 100k = ~99k damage → DIES!
-
-# Solution: Use test_armor_extreme_hp (1 billion HP)
-# 99% × 100k = ~99k damage → 0.01% of 1B → OK
+**Example Error**:
+```
+Data error - Engine Thrust: Attribute 'thrust' not found on Ship
 ```
 
-### Debug Techniques
+**Solution**: Check the actual attribute names on the loaded object:
+- `ship.mass` not `ship.total_mass`
+- `ship.total_thrust` not `ship.thrust`
+- Use `dir(ship)` to see available attributes
 
-#### Enable Debug Logging
+#### Single-ship test ends immediately with "victory"
 
-Add debug output to scenarios:
+**Cause**: Using `hp_based` mode with only one team triggers immediate victory.
 
+**Solution**: Use `time_based` mode for single-ship tests:
 ```python
-def setup(self, engine):
-    # ... setup code ...
-
-    print(f"DEBUG: Target mass = {self.target.mass}")
-    print(f"DEBUG: Target radius = {target_radius:.2f}px")
-    print(f"DEBUG: Surface distance = {surface_distance:.2f}px")
-    print(f"DEBUG: Defense score = {defense_score:.4f}")
-    print(f"DEBUG: Expected hit chance = {self.expected_hit_chance:.4f}")
+metadata = TestMetadata(
+    battle_end_mode="time_based",
+    max_ticks=100,
+)
 ```
 
-#### Track Per-Tick Outcomes
+#### Test runs forever (or very long)
 
+**Cause**: Using `manual` mode without understanding the ceiling.
+
+**Solution**: Either:
+1. Set explicit `max_ticks` with `time_based` mode
+2. Or rely on `absolute_max_ticks` ceiling (default 1M ticks)
+3. For faster tests, set a lower `absolute_max_ticks`:
 ```python
-def update(self, engine):
-    # Track first hit
-    current_hp = self.target.hp
-    if current_hp < self.last_hp:
-        damage = self.last_hp - current_hp
-        print(f"DEBUG: Hit at tick {engine.tick_count}, damage={damage}")
-        print(f"DEBUG: Distance = {self.attacker.position.distance_to(self.target.position):.2f}px")
-    self.last_hp = current_hp
-```
-
-#### Validate Component Loading
-
-```python
-def setup(self, engine):
-    # ... setup code ...
-
-    # Verify weapon loaded correctly
-    weapon_comp = self.attacker.get_component_with_ability('BeamWeaponAbility')
-    weapon_ability = weapon_comp.get_ability('BeamWeaponAbility')
-
-    print(f"DEBUG: Weapon loaded:")
-    print(f"  damage = {weapon_ability.damage}")
-    print(f"  base_accuracy = {weapon_ability.base_accuracy}")
-    print(f"  accuracy_falloff = {weapon_ability.accuracy_falloff}")
-    print(f"  range = {weapon_ability.range}")
+metadata = TestMetadata(
+    battle_end_mode="manual",
+    absolute_max_ticks=10_000,
+)
 ```
 
 ---
 
-## Appendix: Statistical Formulas
+## Design Decisions
 
-### TOST (Two One-Sided Tests) for Binomial Proportions
+### Why Pre-Run Validation?
 
-Given:
-- `n` = number of trials (ticks)
-- `k` = number of successes (hits)
-- `p̂` = observed proportion = k/n
-- `θ` = expected proportion
-- `ε` = equivalence margin
+**Problem**: Tests make assumptions about JSON data (ship mass = 400, thrust = 500). If these assumptions drift from actual data, tests produce meaningless results.
 
-Test hypotheses:
-- H₁: p̂ - θ > -ε (not too low)
-- H₂: p̂ - θ < +ε (not too high)
+**Solution**: Validate assumptions BEFORE running. Tests explicitly declare their expectations, and execution is blocked if data doesn't match.
 
-Z-statistics:
+**Benefits**:
+- Catches data drift immediately
+- Documents what values the test depends on
+- Shows formulas with actual values for transparency
+- Prevents "false pass" tests that ran with wrong data
+
+### Why Show Formulas with Values?
+
+Instead of just showing `max_speed: 31.25`, we show:
 ```
-z₁ = (p̂ - θ + ε) / SE
-z₂ = (p̂ - θ - ε) / SE
-
-where SE = √(θ(1-θ)/n)
+max_speed: 31.25 [= (500 × 25) / 400]
 ```
 
-P-values:
-```
-p₁ = CDF(z₁)    # Lower tail
-p₂ = 1 - CDF(z₂) # Upper tail
-p_final = max(p₁, p₂)
-```
+This makes it obvious:
+1. What formula was used
+2. What values were plugged in
+3. Why the expected result is what it is
 
-Decision:
-- If p_final < 0.05: **PASS** (proven equivalent within margin)
-- If p_final ≥ 0.05: **FAIL** (not proven equivalent)
+If the formula is wrong, reviewers can spot it immediately.
 
-### Standard Error for Common Test Sizes
+### Why Block Tests on Data Mismatch?
 
-For binomial test at p ≈ 0.5:
+A test running with wrong assumptions is worse than no test:
+- It gives false confidence
+- Results can't be trusted
+- Debugging becomes harder (is the formula wrong or the data wrong?)
 
-```
-SE ≈ 0.5 / √n
+By blocking execution, we force the issue to be resolved first.
 
-n = 500    → SE ≈ 2.2%
-n = 1000   → SE ≈ 1.6%
-n = 10000  → SE ≈ 0.5%
-n = 100000 → SE ≈ 0.16%
-```
+### Why TOST Instead of Traditional Hypothesis Testing?
 
-Recommended margin = 3×SE for reliable testing:
+Traditional testing proves "difference" - it can only say "we found no significant difference."
+TOST proves "equivalence" - it actively proves the observed rate IS equivalent to expected.
 
-```
-n = 500    → margin ≥ 6.6% (use 6%)
-n = 100000 → margin ≥ 0.48% (use 1%)
-```
+**Implication**: p < 0.05 in TOST means PASS (proven equivalent), not FAIL.
+
+### Why Surface Distance?
+
+Beam weapons use raycasting that intersects with the target's collision circle. The hit calculation uses the distance to the first intersection point (the surface), not the center.
+
+### Why Zero-Mass Components?
+
+Isolates mass calculations to hull only. This ensures predictable defense scores and simplifies test setup.
+
+### Why Absolute Max Ticks Safety Ceiling?
+
+**Problem**: A misconfigured test (MANUAL mode with no explicit end condition) could run forever.
+
+**Solution**: All modes respect `absolute_max_ticks` (default 1,000,000) as a hard ceiling.
+
+**Trade-off**: Very long tests must explicitly set a higher ceiling, but infinite loops are prevented.
+
+### Why TIME_BASED for Single-Ship Tests?
+
+**Problem**: Single-ship tests (propulsion, physics) using HP_BASED mode report "victory" immediately because there's no enemy team.
+
+**Solution**: Use `TIME_BASED` mode which runs for exactly `max_ticks` regardless of team status.
+
+**Pattern**:
+- Single-ship physics tests: `TIME_BASED`
+- Combat outcome tests: `HP_BASED`
+- Hit rate statistics: `TIME_BASED` (need full duration)
+
+### Why 1 Billion HP?
+
+Prevents early battle termination. Even with 100k ticks at 99% hit rate, only ~99k damage is dealt (0.01% of 1B HP).
+
+### Why Two Test Tiers?
+
+- **Standard (500 ticks, ±6%)**: Fast feedback during development
+- **High-Tick (100k ticks, ±1%)**: Precise validation before releases
+
+The margin is chosen to be ≥3× the standard error for the sample size.
 
 ---
 
@@ -1145,20 +1440,15 @@ n = 100000 → margin ≥ 0.48% (use 1%)
 **Created**: January 2026
 **Last Updated**: January 2026
 
-**Combat Lab System Design**: Claude Sonnet 4.5 + User
-**TOST Implementation**: Statistical equivalence testing for game mechanics
-**Beam Weapon Test Suite**: 18 comprehensive tests validating beam weapon mechanics
+**Combat Lab System Design**: Claude + User collaboration
+**Key Components**:
+- TOST equivalence testing for probabilistic validation
+- Logarithmic defense score formula
+- Surface distance calculations for beam weapons
+- Comprehensive test metadata system
 
 **Key Learnings**:
 - Beam weapons use surface distance, not center-to-center distance
-- 1 billion HP armor ensures targets survive all tests
-- TOST proves equivalence (not just "no difference detected")
+- Defense score uses logarithmic formula based on diameter
+- TOST proves equivalence (p < 0.05 = PASS)
 - ±6% margin for 500-tick tests, ±1% for 100k-tick tests
-- Surface distance = center_distance - (40 × (mass/1000)^(1/3))
-
----
-
-**For questions or issues**, see:
-- This documentation
-- Inline code comments in `beam_scenarios.py`
-- Example test scripts: `test_tost.py`, `test_hightick_debug.py`

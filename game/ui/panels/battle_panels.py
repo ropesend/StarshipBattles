@@ -489,8 +489,17 @@ class BattleControlPanel(BattlePanel):
         team1_alive = sum(1 for s in ships if s.team_id == 0 and s.is_alive and not getattr(s, 'is_derelict', False))
         team2_alive = sum(1 for s in ships if s.team_id == 1 and s.is_alive and not getattr(s, 'is_derelict', False))
         sw, sh = screen.get_size()
-        
-        if team1_alive == 0 or team2_alive == 0:
+
+        # In test mode, defer to the engine's is_battle_over() which respects TIME_BASED mode
+        # This prevents showing victory screen for single-ship tests that need to run for N ticks
+        if hasattr(self.scene, 'test_mode') and self.scene.test_mode:
+            # Test mode - use engine's is_battle_over() which handles TIME_BASED correctly
+            is_over = self.scene.is_battle_over() if hasattr(self.scene, 'is_battle_over') else False
+        else:
+            # Normal battle - use HP-based check
+            is_over = team1_alive == 0 or team2_alive == 0
+
+        if is_over:
             # Battle Over
             if team1_alive > 0:
                 winner_text, winner_color = "TEAM 1 WINS!", (100, 200, 255)

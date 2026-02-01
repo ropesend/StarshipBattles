@@ -529,7 +529,7 @@
             "sprite_index": 18,
             "abilities": {
                 "ShieldRegeneration": 5.0,
-                "EnergyConsumption": 2.0
+                "ResourceConsumption": [{"resource": "energy", "amount": 2.0, "trigger": "constant"}]
             },
             "major_classification": "Shields",
             "resource_cost": {
@@ -1068,7 +1068,7 @@
                     "value": 0.5,
                     "stack_group": "MasterComputer"
                 },
-                "EnergyConsumption": 10.0
+                "ResourceConsumption": [{"resource": "energy", "amount": 10.0, "trigger": "constant"}]
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -1091,7 +1091,7 @@
             "abilities": {
                 "CrewCapacity": 10,
                 "LifeSupportCapacity": 10,
-                "EnergyConsumption": 5.0
+                "ResourceConsumption": [{"resource": "energy", "amount": 5.0, "trigger": "constant"}]
             },
             "major_classification": "Crewsupport",
             "resource_cost": {
@@ -1115,7 +1115,7 @@
             "abilities": {
                 "ShipRepair": 5.0,
                 "CrewRequired": 5,
-                "EnergyConsumption": 2.0
+                "ResourceConsumption": [{"resource": "energy", "amount": 2.0, "trigger": "constant"}]
             },
             "major_classification": "Infrastructure",
             "resource_cost": {
@@ -1137,9 +1137,9 @@
             ],
             "sprite_index": 19,
             "abilities": {
-                "AmmoGeneration": 2.0,
+                "ResourceGeneration": [{"resource": "ammo", "amount": 2.0}],
                 "CrewRequired": 5,
-                "EnergyConsumption": 15.0
+                "ResourceConsumption": [{"resource": "energy", "amount": 15.0, "trigger": "constant"}]
             },
             "major_classification": "Infrastructure",
             "resource_cost": {

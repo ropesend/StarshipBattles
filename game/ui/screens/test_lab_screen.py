@@ -16,6 +16,23 @@ from simulation_tests.logging_config import get_logger
 logger = get_logger(__name__)
 
 
+def get_test_data_dir():
+    """
+    Get the path to simulation_tests/data directory.
+
+    This function provides a single source of truth for locating test data files,
+    avoiding incorrect relative path construction from different modules.
+
+    Returns:
+        str: Absolute path to simulation_tests/data directory
+    """
+    # Navigate from game/ui/screens/ to project root (3 levels up)
+    # Then into simulation_tests/data
+    current_dir = os.path.dirname(__file__)  # game/ui/screens
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))  # project root
+    return os.path.join(project_root, 'simulation_tests', 'data')
+
+
 class JSONPopup:
     """Popup window for displaying JSON data."""
 
@@ -878,6 +895,18 @@ class TestRunCard:
         status_x = self.x + self.width - status_surf.get_width() - 10
         surface.blit(status_surf, (status_x, self.y + 10))
 
+        # Check if this is a propulsion test - show propulsion-specific metrics
+        metrics = self.run_record.metrics
+        test_id = metrics.get('test_id', '')
+        if test_id.startswith('PROP-'):
+            self._draw_propulsion_metrics(surface, metrics)
+            return  # Skip validation/hit_rate display for propulsion tests
+
+        # Check if this is a resource test - show resource-specific metrics
+        if test_id.startswith('RESOURCE-'):
+            self._draw_resource_metrics(surface, metrics)
+            return  # Skip validation/hit_rate display for resource tests
+
         # Show first key validation result (expected vs actual)
         key_validation_shown = False
         if self.run_record.validation_results:
@@ -980,6 +1009,159 @@ class TestRunCard:
             else:
                 return f"{value:.3f}"
         return str(value)
+
+    def _draw_propulsion_metrics(self, surface, metrics):
+        """Draw propulsion-specific metrics on the card."""
+        # Determine if this is a motion test or turn test
+        is_turn_test = (
+            metrics.get('angle_change', 0) > 0.01 and
+            metrics.get('turn_speed', 0) > 0
+        )
+        has_motion = metrics.get('final_velocity_magnitude', 0) > 0.1
+
+        if is_turn_test:
+            # Turn test: show angle data
+            start_angle = metrics.get('initial_angle', 0)
+            end_angle = metrics.get('final_angle', 0)
+            expected_change = metrics.get('expected_angle_change', 0)
+            actual_change = metrics.get('angle_change', 0)
+
+            # Angle line
+            angle_text = f"Angle: {start_angle:.1f}° → {end_angle:.1f}°"
+            angle_surf = self.body_font.render(angle_text, True, self.text_color)
+            surface.blit(angle_surf, (self.x + 10, self.y + 35))
+
+            # Expected vs Actual
+            if expected_change > 0:
+                angle_match = abs(actual_change - expected_change) < 0.5
+                act_color = self.pass_color if angle_match else self.fail_color
+                exp_text = f"Exp: {expected_change:.2f}°"
+                act_text = f"Act: {actual_change:.2f}°"
+                exp_surf = self.small_font.render(exp_text, True, (180, 200, 255))
+                act_surf = self.small_font.render(act_text, True, act_color)
+                surface.blit(exp_surf, (self.x + 10, self.y + 55))
+                surface.blit(act_surf, (self.x + 100, self.y + 55))
+
+        elif has_motion:
+            # Motion test: show velocity and distance
+            start_vel = metrics.get('initial_velocity_magnitude', 0)
+            end_vel = metrics.get('final_velocity_magnitude', 0)
+            max_speed = metrics.get('expected_max_speed', 0)
+            distance = metrics.get('distance_traveled', 0)
+
+            # Velocity line
+            vel_text = f"Velocity: {start_vel:.1f} → {end_vel:.2f}"
+            if max_speed > 0:
+                vel_text += f" (max: {max_speed:.1f})"
+            vel_surf = self.body_font.render(vel_text, True, self.text_color)
+            surface.blit(vel_surf, (self.x + 10, self.y + 35))
+
+            # Distance line
+            dist_text = f"Distance: {distance:.1f} px"
+            dist_surf = self.small_font.render(dist_text, True, (180, 180, 180))
+            surface.blit(dist_surf, (self.x + 10, self.y + 55))
+
+        else:
+            # Stationary test (no motion, no turn)
+            vel_text = "Velocity: 0 (no engine)"
+            vel_surf = self.body_font.render(vel_text, True, self.text_color)
+            surface.blit(vel_surf, (self.x + 10, self.y + 35))
+
+            distance = metrics.get('distance_traveled', 0)
+            dist_text = f"Distance: {distance:.1f} px"
+            dist_surf = self.small_font.render(dist_text, True, (180, 180, 180))
+            surface.blit(dist_surf, (self.x + 10, self.y + 55))
+
+        # Validation summary on bottom right
+        val_summary = self.run_record.validation_summary
+        if val_summary:
+            pass_count = val_summary.get('pass', 0)
+            fail_count = val_summary.get('fail', 0)
+            warn_count = val_summary.get('warn', 0)
+            summary_text = f"{pass_count}P {fail_count}F {warn_count}W"
+            summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
+            summary_x = self.x + self.width - summary_surf.get_width() - 10
+            surface.blit(summary_surf, (summary_x, self.y + 57))
+
+    def _draw_resource_metrics(self, surface, metrics):
+        """Draw resource-specific metrics on the card (brief display)."""
+        test_id = metrics.get('test_id', '')
+
+        # Determine resource type based on test ID
+        if 'RESOURCE-001' <= test_id <= 'RESOURCE-003':
+            # Fuel tests
+            initial_fuel = metrics.get('initial_fuel', 0)
+            final_fuel = metrics.get('final_fuel', 0)
+            fuel_consumed = initial_fuel - final_fuel
+
+            # Fuel line
+            fuel_text = f"Fuel: {initial_fuel:.0f} → {final_fuel:.1f} ({fuel_consumed:+.1f})"
+            fuel_surf = self.body_font.render(fuel_text, True, self.text_color)
+            surface.blit(fuel_surf, (self.x + 10, self.y + 35))
+
+            # Velocity/status line
+            final_velocity = metrics.get('final_velocity', 0)
+            if final_velocity > 0.1:
+                vel_text = f"Velocity: {final_velocity:.2f} (moving)"
+                vel_color = self.pass_color
+            else:
+                vel_text = "Velocity: 0 (stopped)"
+                vel_color = (255, 200, 100) if test_id == 'RESOURCE-002' else self.fail_color
+            vel_surf = self.small_font.render(vel_text, True, vel_color)
+            surface.blit(vel_surf, (self.x + 10, self.y + 55))
+
+        elif 'RESOURCE-004' <= test_id <= 'RESOURCE-005a':
+            # Energy tests
+            initial_energy = metrics.get('initial_energy', 0)
+            final_energy = metrics.get('final_energy', 0)
+            shots_fired = metrics.get('shots_fired', 0)
+            damage_dealt = metrics.get('damage_dealt', 0)
+
+            # Energy line
+            energy_text = f"Energy: {initial_energy:.0f} → {final_energy:.1f}"
+            if final_energy <= 0:
+                energy_text += " (depleted)"
+            energy_surf = self.body_font.render(energy_text, True, self.text_color)
+            surface.blit(energy_surf, (self.x + 10, self.y + 35))
+
+            # Shots/Hits line
+            shots_text = f"Shots: {shots_fired}, Damage: {damage_dealt:.0f}"
+            shots_surf = self.small_font.render(shots_text, True, (180, 180, 180))
+            surface.blit(shots_surf, (self.x + 10, self.y + 55))
+
+        else:
+            # Ammo tests (RESOURCE-006 to RESOURCE-008)
+            initial_ammo = metrics.get('initial_ammo', 0)
+            final_ammo = metrics.get('final_ammo', 0)
+            shots_fired = metrics.get('shots_fired', metrics.get('launches', 0))
+
+            # Ammo line
+            ammo_text = f"Ammo: {initial_ammo:.0f} → {final_ammo:.1f}"
+            if final_ammo <= 0:
+                ammo_text += " (depleted)"
+            ammo_surf = self.body_font.render(ammo_text, True, self.text_color)
+            surface.blit(ammo_surf, (self.x + 10, self.y + 35))
+
+            # Shots/damage line (for projectile/seeker)
+            if test_id == 'RESOURCE-008':
+                # Seeker test - show launches only
+                shots_text = f"Launches: {shots_fired}"
+            else:
+                damage_dealt = metrics.get('damage_dealt', 0)
+                shots_text = f"Shots: {shots_fired}, Damage: {damage_dealt:.0f}"
+            shots_surf = self.small_font.render(shots_text, True, (180, 180, 180))
+            surface.blit(shots_surf, (self.x + 10, self.y + 55))
+
+        # Validation summary on bottom right
+        val_summary = self.run_record.validation_summary
+        if val_summary:
+            pass_count = val_summary.get('pass', 0)
+            fail_count = val_summary.get('fail', 0)
+            warn_count = val_summary.get('warn', 0)
+            summary_text = f"{pass_count}P {fail_count}F {warn_count}W"
+            summary_surf = self.body_font.render(summary_text, True, (180, 180, 180))
+            summary_x = self.x + self.width - summary_surf.get_width() - 10
+            surface.blit(summary_surf, (summary_x, self.y + 57))
 
 
 class TestRunDetailsPanel:
@@ -1217,6 +1399,16 @@ class TestRunDetailsPanel:
 
         y_offset += 40
 
+        # TEST OUTCOMES section for propulsion tests
+        if self._is_propulsion_test(run_record):
+            y_offset = self._draw_propulsion_outcomes(surface, run_record, y_offset)
+            y_offset += 10
+
+        # RESOURCE CONSUMPTION section for resource tests
+        if self._is_resource_test(run_record):
+            y_offset = self._draw_resource_outcomes(surface, run_record, y_offset)
+            y_offset += 10
+
         # Metrics
         metrics_title = self.header_font.render("Test Metrics", True, self.header_color)
         surface.blit(metrics_title, (self.x + 10, y_offset))
@@ -1355,6 +1547,421 @@ class TestRunDetailsPanel:
         surface.set_clip(None)
         if self.max_scroll > 0:
             self._draw_scrollbar(surface)
+
+    def _is_propulsion_test(self, run_record):
+        """Check if this run record is from a propulsion test."""
+        test_id = run_record.metrics.get('test_id', '')
+        return test_id.startswith('PROP-')
+
+    def _is_resource_test(self, run_record):
+        """Check if this run record is from a resource test."""
+        test_id = run_record.metrics.get('test_id', '')
+        return test_id.startswith('RESOURCE-')
+
+    def _draw_resource_outcomes(self, surface, run_record, y_offset):
+        """Draw resource test outcomes section (detailed view)."""
+        metrics = run_record.metrics
+        test_id = metrics.get('test_id', '')
+
+        # Section header
+        outcomes_title = self.header_font.render("RESOURCE CONSUMPTION", True, self.header_color)
+        surface.blit(outcomes_title, (self.x + 10, y_offset))
+        y_offset += 25
+
+        # Draw separator line
+        pygame.draw.line(surface, (60, 60, 70),
+                        (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
+        y_offset += 8
+
+        # Define colors
+        label_color = (140, 140, 160)
+        value_color = (180, 200, 255)
+        highlight_color = (255, 220, 100)
+        indent = 15
+        label_width = 100
+
+        # Determine resource type and draw appropriate outcomes
+        if 'RESOURCE-001' <= test_id <= 'RESOURCE-003':
+            # Fuel tests
+            y_offset = self._draw_fuel_outcomes(surface, metrics, y_offset,
+                                                 label_color, value_color, highlight_color,
+                                                 indent, label_width)
+        elif 'RESOURCE-004' <= test_id <= 'RESOURCE-005a':
+            # Energy tests
+            y_offset = self._draw_energy_outcomes(surface, metrics, y_offset,
+                                                   label_color, value_color, highlight_color,
+                                                   indent, label_width)
+        else:
+            # Ammo tests (RESOURCE-006 to RESOURCE-008)
+            y_offset = self._draw_ammo_outcomes(surface, metrics, y_offset,
+                                                 label_color, value_color, highlight_color,
+                                                 indent, label_width, test_id)
+
+        return y_offset
+
+    def _draw_fuel_outcomes(self, surface, metrics, y_offset, label_color, value_color,
+                            highlight_color, indent, label_width):
+        """Draw fuel test outcomes."""
+        initial_fuel = metrics.get('initial_fuel', 0)
+        final_fuel = metrics.get('final_fuel', 0)
+        fuel_consumed = initial_fuel - final_fuel
+        expected_consumed = metrics.get('expected_fuel_consumed', fuel_consumed)
+
+        # Initial Fuel
+        label = self.small_font.render("Initial Fuel:", True, label_color)
+        value = self.small_font.render(f"{initial_fuel:.1f} units", True, value_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Final Fuel
+        label = self.small_font.render("Final Fuel:", True, label_color)
+        value = self.small_font.render(f"{final_fuel:.1f} units", True, value_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Consumed
+        label = self.small_font.render("Consumed:", True, label_color)
+        value = self.small_font.render(f"{fuel_consumed:.2f} units", True, highlight_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Expected
+        label = self.small_font.render("Expected:", True, label_color)
+        expected_text = f"{expected_consumed:.2f} units"
+        value = self.small_font.render(expected_text, True, value_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Tolerance check
+        tolerance = abs(fuel_consumed - expected_consumed)
+        if tolerance < 0.5:
+            status_text = "✓ Within tolerance"
+            status_color = self.pass_color
+        else:
+            status_text = f"✗ Difference: {tolerance:.2f}"
+            status_color = self.fail_color
+        status_surf = self.small_font.render(status_text, True, status_color)
+        surface.blit(status_surf, (self.x + indent, y_offset))
+        y_offset += 18
+
+        # Velocity status
+        final_velocity = metrics.get('final_velocity', 0)
+        label = self.small_font.render("Final Velocity:", True, label_color)
+        if final_velocity > 0.1:
+            vel_text = f"{final_velocity:.2f} (moving)"
+            vel_color = self.pass_color
+        else:
+            vel_text = "0 (stopped)"
+            vel_color = (255, 200, 100)
+        value = self.small_font.render(vel_text, True, vel_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        return y_offset
+
+    def _draw_energy_outcomes(self, surface, metrics, y_offset, label_color, value_color,
+                               highlight_color, indent, label_width):
+        """Draw energy test outcomes."""
+        initial_energy = metrics.get('initial_energy', 0)
+        final_energy = metrics.get('final_energy', 0)
+        energy_consumed = initial_energy - final_energy
+        shots_fired = metrics.get('shots_fired', 0)
+        damage_dealt = metrics.get('damage_dealt', 0)
+
+        # Initial Energy
+        label = self.small_font.render("Initial Energy:", True, label_color)
+        value = self.small_font.render(f"{initial_energy:.1f} units", True, value_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Final Energy
+        label = self.small_font.render("Final Energy:", True, label_color)
+        if final_energy <= 0:
+            energy_text = "0 (depleted)"
+            energy_color = (255, 200, 100)
+        else:
+            energy_text = f"{final_energy:.1f} units"
+            energy_color = value_color
+        value = self.small_font.render(energy_text, True, energy_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Energy Consumed
+        label = self.small_font.render("Consumed:", True, label_color)
+        value = self.small_font.render(f"{energy_consumed:.1f} units", True, highlight_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Shots Fired
+        label = self.small_font.render("Shots Fired:", True, label_color)
+        value = self.small_font.render(f"{shots_fired}", True, value_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Damage Dealt
+        label = self.small_font.render("Damage Dealt:", True, label_color)
+        value = self.small_font.render(f"{damage_dealt:.0f}", True, highlight_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Efficiency (energy per damage)
+        if damage_dealt > 0:
+            efficiency = energy_consumed / damage_dealt
+            label = self.small_font.render("Energy/Damage:", True, label_color)
+            value = self.small_font.render(f"{efficiency:.2f}", True, value_color)
+            surface.blit(label, (self.x + indent, y_offset))
+            surface.blit(value, (self.x + indent + label_width, y_offset))
+            y_offset += 18
+
+        return y_offset
+
+    def _draw_ammo_outcomes(self, surface, metrics, y_offset, label_color, value_color,
+                             highlight_color, indent, label_width, test_id):
+        """Draw ammo test outcomes."""
+        initial_ammo = metrics.get('initial_ammo', 0)
+        final_ammo = metrics.get('final_ammo', 0)
+        ammo_consumed = initial_ammo - final_ammo
+
+        is_seeker = test_id == 'RESOURCE-008'
+        shots_fired = metrics.get('launches' if is_seeker else 'shots_fired', 0)
+
+        # Initial Ammo
+        label = self.small_font.render("Initial Ammo:", True, label_color)
+        value = self.small_font.render(f"{initial_ammo:.0f} units", True, value_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Final Ammo
+        label = self.small_font.render("Final Ammo:", True, label_color)
+        if final_ammo <= 0:
+            ammo_text = "0 (depleted)"
+            ammo_color = (255, 200, 100)
+        else:
+            ammo_text = f"{final_ammo:.0f} units"
+            ammo_color = value_color
+        value = self.small_font.render(ammo_text, True, ammo_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Ammo Consumed
+        label = self.small_font.render("Consumed:", True, label_color)
+        value = self.small_font.render(f"{ammo_consumed:.0f} units", True, highlight_color)
+        surface.blit(label, (self.x + indent, y_offset))
+        surface.blit(value, (self.x + indent + label_width, y_offset))
+        y_offset += 18
+
+        # Shots/Launches
+        if is_seeker:
+            label = self.small_font.render("Launches:", True, label_color)
+            value = self.small_font.render(f"{shots_fired}", True, value_color)
+            surface.blit(label, (self.x + indent, y_offset))
+            surface.blit(value, (self.x + indent + label_width, y_offset))
+            y_offset += 18
+
+            # Note about seeker hits
+            note = self.small_font.render("(Hits not tracked - seekers in flight)", True, (120, 120, 140))
+            surface.blit(note, (self.x + indent, y_offset))
+            y_offset += 18
+        else:
+            # Shots Fired
+            label = self.small_font.render("Shots Fired:", True, label_color)
+            value = self.small_font.render(f"{shots_fired}", True, value_color)
+            surface.blit(label, (self.x + indent, y_offset))
+            surface.blit(value, (self.x + indent + label_width, y_offset))
+            y_offset += 18
+
+            # Damage Dealt
+            damage_dealt = metrics.get('damage_dealt', 0)
+            label = self.small_font.render("Damage Dealt:", True, label_color)
+            value = self.small_font.render(f"{damage_dealt:.0f}", True, highlight_color)
+            surface.blit(label, (self.x + indent, y_offset))
+            surface.blit(value, (self.x + indent + label_width, y_offset))
+            y_offset += 18
+
+        return y_offset
+
+    def _draw_propulsion_outcomes(self, surface, run_record, y_offset):
+        """Draw propulsion test outcomes section."""
+        metrics = run_record.metrics
+
+        # Section header
+        outcomes_title = self.header_font.render("TEST OUTCOMES", True, self.header_color)
+        surface.blit(outcomes_title, (self.x + 10, y_offset))
+        y_offset += 25
+
+        # Draw separator line
+        pygame.draw.line(surface, (60, 60, 70),
+                        (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
+        y_offset += 8
+
+        # Determine test type based on metrics
+        is_turn_test = (
+            metrics.get('angle_change', 0) > 0.01 and
+            metrics.get('turn_speed', 0) > 0
+        )
+        has_motion = metrics.get('final_velocity_magnitude', 0) > 0.1
+
+        # Define colors
+        label_color = (140, 140, 160)
+        value_color = (180, 200, 255)
+        highlight_color = (255, 220, 100)
+
+        if is_turn_test:
+            # Turn test outcomes
+            y_offset = self._draw_turn_outcomes(surface, metrics, y_offset,
+                                                label_color, value_color, highlight_color)
+        elif has_motion:
+            # Motion test outcomes
+            y_offset = self._draw_motion_outcomes(surface, metrics, y_offset,
+                                                   label_color, value_color, highlight_color)
+        else:
+            # Stationary test
+            y_offset = self._draw_stationary_outcomes(surface, metrics, y_offset,
+                                                       label_color, value_color)
+
+        return y_offset
+
+    def _draw_motion_outcomes(self, surface, metrics, y_offset, label_color, value_color, highlight_color):
+        """Draw motion test outcomes (velocity, position, distance)."""
+        indent = 15
+
+        # Velocity
+        start_vel = metrics.get('initial_velocity_magnitude', 0)
+        end_vel = metrics.get('final_velocity_magnitude', 0)
+        max_speed = metrics.get('expected_max_speed')
+
+        vel_label = self.small_font.render("Velocity:", True, label_color)
+        surface.blit(vel_label, (self.x + indent, y_offset))
+
+        vel_text = f"{start_vel:.1f} -> {end_vel:.2f}"
+        if max_speed is not None:
+            vel_text += f" (max: {max_speed:.2f})"
+        vel_surf = self.small_font.render(vel_text, True, value_color)
+        surface.blit(vel_surf, (self.x + indent + 75, y_offset))
+        y_offset += 18
+
+        # Position
+        start_pos = metrics.get('initial_position')
+        end_pos = metrics.get('final_position')
+        if start_pos and end_pos:
+            pos_label = self.small_font.render("Position:", True, label_color)
+            surface.blit(pos_label, (self.x + indent, y_offset))
+
+            start_str = f"({start_pos[0]:.1f}, {start_pos[1]:.1f})"
+            end_str = f"({end_pos[0]:.1f}, {end_pos[1]:.1f})"
+            pos_text = f"{start_str} -> {end_str}"
+            pos_surf = self.small_font.render(pos_text, True, value_color)
+            surface.blit(pos_surf, (self.x + indent + 75, y_offset))
+            y_offset += 18
+
+        # Distance
+        distance = metrics.get('distance_traveled')
+        if distance is not None:
+            dist_label = self.small_font.render("Distance:", True, label_color)
+            surface.blit(dist_label, (self.x + indent, y_offset))
+
+            dist_surf = self.small_font.render(f"{distance:.1f} px", True, highlight_color)
+            surface.blit(dist_surf, (self.x + indent + 75, y_offset))
+            y_offset += 18
+
+        return y_offset
+
+    def _draw_turn_outcomes(self, surface, metrics, y_offset, label_color, value_color, highlight_color):
+        """Draw turn test outcomes (angles, expected vs actual)."""
+        indent = 15
+
+        # Angle change
+        start_angle = metrics.get('initial_angle', 0)
+        end_angle = metrics.get('final_angle', 0)
+        angle_change = metrics.get('angle_change', 0)
+
+        angle_label = self.small_font.render("Angle:", True, label_color)
+        surface.blit(angle_label, (self.x + indent, y_offset))
+
+        angle_text = f"{start_angle:.1f} -> {end_angle:.1f} deg (change: {angle_change:.2f})"
+        angle_surf = self.small_font.render(angle_text, True, value_color)
+        surface.blit(angle_surf, (self.x + indent + 75, y_offset))
+        y_offset += 18
+
+        # Expected vs actual angle change
+        expected_angle = metrics.get('expected_angle_change')
+        if expected_angle is not None:
+            exp_label = self.small_font.render("Expected:", True, label_color)
+            surface.blit(exp_label, (self.x + indent, y_offset))
+
+            exp_text = f"{expected_angle:.2f} deg"
+            exp_surf = self.small_font.render(exp_text, True, value_color)
+            surface.blit(exp_surf, (self.x + indent + 75, y_offset))
+            y_offset += 18
+
+            act_label = self.small_font.render("Actual:", True, label_color)
+            surface.blit(act_label, (self.x + indent, y_offset))
+
+            # Color code based on accuracy
+            error = abs(angle_change - expected_angle)
+            actual_color = self.pass_color if error < 0.1 else self.fail_color
+            act_text = f"{angle_change:.2f} deg"
+            act_surf = self.small_font.render(act_text, True, actual_color)
+            surface.blit(act_surf, (self.x + indent + 75, y_offset))
+            y_offset += 18
+
+            # Show error
+            err_label = self.small_font.render("Error:", True, label_color)
+            surface.blit(err_label, (self.x + indent, y_offset))
+
+            err_text = f"{error:.4f} deg"
+            err_color = self.pass_color if error < 0.1 else self.fail_color
+            err_surf = self.small_font.render(err_text, True, err_color)
+            surface.blit(err_surf, (self.x + indent + 75, y_offset))
+            y_offset += 18
+
+        # Turn speed
+        turn_speed = metrics.get('turn_speed')
+        if turn_speed is not None:
+            ts_label = self.small_font.render("Turn Speed:", True, label_color)
+            surface.blit(ts_label, (self.x + indent, y_offset))
+
+            ts_text = f"{turn_speed:.4f} deg/100 ticks"
+            ts_surf = self.small_font.render(ts_text, True, highlight_color)
+            surface.blit(ts_surf, (self.x + indent + 75, y_offset))
+            y_offset += 18
+
+        return y_offset
+
+    def _draw_stationary_outcomes(self, surface, metrics, y_offset, label_color, value_color):
+        """Draw stationary test outcomes (no motion)."""
+        indent = 15
+
+        # Show that velocity is zero
+        vel_label = self.small_font.render("Velocity:", True, label_color)
+        surface.blit(vel_label, (self.x + indent, y_offset))
+
+        vel_surf = self.small_font.render("0.0 (stationary)", True, value_color)
+        surface.blit(vel_surf, (self.x + indent + 75, y_offset))
+        y_offset += 18
+
+        # Distance should be zero
+        distance = metrics.get('distance_traveled', 0)
+        dist_label = self.small_font.render("Distance:", True, label_color)
+        surface.blit(dist_label, (self.x + indent, y_offset))
+
+        dist_surf = self.small_font.render(f"{distance:.1f} px", True, value_color)
+        surface.blit(dist_surf, (self.x + indent + 75, y_offset))
+        y_offset += 18
+
+        return y_offset
 
     def _format_value(self, value):
         """Format a value for display."""
@@ -1812,9 +2419,7 @@ class TestLabScreen:
 
                 # Load ship JSON file
                 ship_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    'simulation_tests',
-                    'data',
+                    get_test_data_dir(),
                     'ships',
                     filename
                 )
@@ -1848,9 +2453,7 @@ class TestLabScreen:
             if hasattr(scenario_cls, 'ship_file') and scenario_cls.ship_file:
                 filename = scenario_cls.ship_file
                 ship_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    'simulation_tests',
-                    'data',
+                    get_test_data_dir(),
                     'ships',
                     filename
                 )
@@ -1881,9 +2484,7 @@ class TestLabScreen:
             ]
             for role, filename in multi_ship_files:
                 ship_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    'simulation_tests',
-                    'data',
+                    get_test_data_dir(),
                     'ships',
                     filename
                 )
@@ -2038,9 +2639,7 @@ class TestLabScreen:
         # Load and cache components.json on first call
         if self._components_cache is None:
             components_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                'simulation_tests',
-                'data',
+                get_test_data_dir(),
                 'components.json'
             )
 
@@ -2601,9 +3200,17 @@ class TestLabScreen:
             logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
 
             # Fit camera to ships
-            if self.game.battle_scene.engine.ships:
-                self.game.battle_scene.camera.fit_objects(self.game.battle_scene.engine.ships)
-                logger.debug(f" Camera fitted to ships")
+            ships = self.game.battle_scene.engine.ships
+            logger.debug(f" Ships in engine: {len(ships) if ships else 0}")
+            if ships:
+                for i, ship in enumerate(ships):
+                    logger.debug(f"   Ship {i}: {ship.name if hasattr(ship, 'name') else 'unknown'} at {ship.position}, alive={ship.is_alive}")
+                self.game.battle_scene.camera.fit_objects(ships)
+                # Also sync target_zoom to prevent animation overriding the fit
+                self.game.battle_scene.camera.target_zoom = self.game.battle_scene.camera.zoom
+                logger.debug(f" Camera fitted: pos={self.game.battle_scene.camera.position}, zoom={self.game.battle_scene.camera.zoom}")
+            else:
+                logger.warning(" No ships in engine after scenario setup!")
 
             # Switch to battle state
             from game.core.constants import GameState
@@ -2613,6 +3220,7 @@ class TestLabScreen:
             self.output_log.append(f"Started test {self.selected_test_id}")
 
         except Exception as e:
+            logger.error(f"Error running visual test: {e}", exc_info=True)
             self.output_log.append(f"ERROR: {e}")
 
     def _on_run_headless(self):
@@ -4060,7 +4668,7 @@ class TestLabScreen:
                     ship_files.append(filename)
 
         # Load ship JSON files
-        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'simulation_tests', 'data', 'ships')
+        data_dir = os.path.join(get_test_data_dir(), 'ships')
 
         for ship_file in ship_files:
             ship_path = os.path.join(data_dir, ship_file)
@@ -4078,8 +4686,7 @@ class TestLabScreen:
     def _show_components_json(self):
         """Show JSON for all components in the test data."""
         # Load components.json from test data
-        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'simulation_tests', 'data')
-        components_path = os.path.join(data_dir, 'components.json')
+        components_path = os.path.join(get_test_data_dir(), 'components.json')
 
         components_data = load_json(components_path)
         if components_data is not None:

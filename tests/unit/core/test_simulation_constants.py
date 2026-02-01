@@ -41,3 +41,16 @@ class TestSimulationConstants:
         from game.core import constants
 
         assert 'SimulationConstants' in constants.__all__
+
+    def test_absolute_max_ticks_exists(self):
+        """ABSOLUTE_MAX_TICKS should exist as safety ceiling."""
+        from game.core.constants import SimulationConstants
+
+        assert hasattr(SimulationConstants, 'ABSOLUTE_MAX_TICKS')
+        assert SimulationConstants.ABSOLUTE_MAX_TICKS == 1_000_000
+
+    def test_absolute_max_ticks_greater_than_default(self):
+        """ABSOLUTE_MAX_TICKS should be greater than DEFAULT_MAX_TICKS."""
+        from game.core.constants import SimulationConstants
+
+        assert SimulationConstants.ABSOLUTE_MAX_TICKS >= SimulationConstants.DEFAULT_MAX_TICKS
