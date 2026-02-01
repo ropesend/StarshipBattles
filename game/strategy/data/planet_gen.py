@@ -26,8 +26,13 @@ from game.strategy.data.planet_naming import assign_body_names
 class PlanetGenerator:
     """Generator for creating planetary bodies within star systems."""
 
-    def __init__(self):
-        pass
+    def __init__(self, image_registry: PlanetImageRegistry):
+        """Initialize PlanetGenerator with dependencies.
+
+        Args:
+            image_registry: Registry for assigning planet images based on type.
+        """
+        self._image_registry = image_registry
 
     def generate_system_bodies(
         self,
@@ -350,9 +355,8 @@ class PlanetGenerator:
         )
 
         # Assign persistent image from registry
-        registry = PlanetImageRegistry()
-        image_id = registry.get_random_image(p_type)
-        image_rotation = registry.get_random_rotation()
+        image_id = self._image_registry.get_random_image(p_type)
+        image_rotation = self._image_registry.get_random_rotation()
 
         return Planet(
             name="TEMP",  # Assigned later by naming pass

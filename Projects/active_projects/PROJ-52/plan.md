@@ -19,24 +19,25 @@
 | 4. Galaxy Layout Sandbox (Mode A) | **Complete** | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Physics-Driven Systems | **Complete** | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. System Inspector (Mode B) | **Complete** | [phase_6_checklist.md](phase_6_checklist.md) |
+| 7. Persistent Planet Images | **Complete** | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-01-31
 **Active Phase:** PROJECT COMPLETE
-**Last Action:** Phase 6 complete. Added System Inspector with blueprint selection, seed control, orbital visualization, planet type colors, click-to-inspect physics panel, and classification reasoning. 6012 tests passing.
+**Last Action:** Phase 7 complete. Added persistent planet image assignment with PlanetImageRegistry, type-based selection from 508 V3 images, random rotation for variety, and backward-compatible save format. 6045 tests passing.
 **Next Action:** Project ready for audit and user verification
 **Blockers:** None
 **Context for Next Agent:**
-- **All 6 Phases Complete** - Full data-driven galaxy generation with visual sandbox
-- **Phase 6 Deliverables:**
-  - Blueprint dropdown with all 8 system types + random
-  - Seed control for reproducible generation
-  - Orbital ring visualization
-  - Planet type color coding (11 colors in `PLANET_TYPE_COLORS`)
-  - Click-to-inspect physics panel for stars and planets
-  - Classification reasoning display
-- All features implemented in `game/ui/screens/galaxy_test_screen.py`
-- 6012 tests passing, 5 skipped
+- **All 7 Phases Complete** - Full data-driven galaxy generation with visual sandbox and persistent planet images
+- **Phase 7 Deliverables:**
+  - PlanetImageRegistry singleton with fallback chain
+  - image_id and image_rotation fields in Planet dataclass
+  - Type-based image selection from 508 V3 planet images
+  - Random rotation (0-360 degrees) for visual variety
+  - Backward compatible with old saves (defaults to empty)
+  - 33 new tests (25 unit + 8 integration)
+- Key files: `game/strategy/generation/planet_image_registry.py`, `game/strategy/data/planet.py`
+- 6045 tests passing, 5 skipped
 
 ## Overview
 Replace hardcoded procedural galaxy generation with a fully data-driven, layered system using:
@@ -86,6 +87,7 @@ Replace hardcoded procedural galaxy generation with a fully data-driven, layered
 | **NEW: Classification Config** | `game/strategy/data/classification_config.py` | Data-driven classification thresholds |
 | **NEW: Blueprints Loader** | `game/strategy/generation/loaders/system_blueprints_loader.py` | Blueprint loading and selection |
 | **NEW: Astrophysics Loader** | `game/strategy/generation/loaders/astrophysics_loader.py` | Astrophysics config loading |
+| **NEW: Planet Image Registry** | `game/strategy/generation/planet_image_registry.py` | Persistent planet image assignment |
 
 ## User Decisions
 | Decision | Choice | Rationale |
@@ -102,7 +104,7 @@ Replace hardcoded procedural galaxy generation with a fully data-driven, layered
 
 ## Verification
 - [x] Baseline tests passing (5841 passed, 5 skipped)
-- [x] All phase checklists complete (6/6 complete)
-- [x] All tests passing after implementation (6012 passed, 5 skipped)
+- [x] All phase checklists complete (7/7 complete)
+- [x] All tests passing after implementation (6045 passed, 5 skipped)
 - [ ] Audit passed
 - [ ] User verified

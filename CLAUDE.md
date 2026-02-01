@@ -129,6 +129,7 @@ When faced with choices, prefer:
 - Named constants over magic numbers
 - Specific exceptions over broad catches
 - Extract abstraction over copy-paste
+- Dependency injection over singletons
 
 **Minimize technical debt. Maximize maintainability.**
 

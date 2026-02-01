@@ -546,6 +546,7 @@ class GalaxyTestScreen:
         from game.strategy.data.galaxy import StarSystem
         from game.strategy.data.stars import StarGenerator
         from game.strategy.data.planet_gen import PlanetGenerator
+        from game.strategy.generation.planet_image_registry import PlanetImageRegistry
         from game.strategy.generation.loaders.system_blueprints_loader import SystemBlueprintsLoader
 
         # Get seed from input or generate random
@@ -591,7 +592,8 @@ class GalaxyTestScreen:
             self.test_system.stars.append(star)
 
         # Generate planets with blueprint constraints
-        planet_gen = PlanetGenerator()
+        image_registry = PlanetImageRegistry()
+        planet_gen = PlanetGenerator(image_registry)
         planets = planet_gen.generate_system_bodies(
             self.test_system.name,
             self.test_system.stars,

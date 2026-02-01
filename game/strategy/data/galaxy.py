@@ -9,6 +9,7 @@ import os
 from game.strategy.data.stars import StarGenerator, Star, StarType
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 if TYPE_CHECKING:
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
@@ -112,7 +113,8 @@ class Galaxy:
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
         self.naming = NameRegistry(data_path)
         self.star_generator = StarGenerator()
-        self.planet_generator = PlanetGenerator()
+        self.image_registry = PlanetImageRegistry()
+        self.planet_generator = PlanetGenerator(self.image_registry)
         
     def add_system(self, system):
         """Add a system to the galaxy map."""

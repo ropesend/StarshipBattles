@@ -2,6 +2,7 @@
 import pytest
 from game.strategy.data.planet import PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 
 class TestClassificationConfigLoader:
@@ -66,7 +67,8 @@ class TestPlanetClassificationLogic:
     """Unit tests for planet classification rules in planet_gen.py."""
     
     def setup_method(self):
-        self.gen = PlanetGenerator()
+        image_registry = PlanetImageRegistry()
+        self.gen = PlanetGenerator(image_registry)
 
     # (Classification, Mass(kg), Temp(K), Pressure(Pa), Water(0-1), Atmosphere, Activity)
     @pytest.mark.parametrize("expected_type, mass, temp, pressure, water, atmosphere, activity", [

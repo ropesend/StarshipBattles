@@ -17,6 +17,7 @@ from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.data.planet import PlanetType
 from game.strategy.data.planet_physics import MASS_EARTH, MASS_JUPITER
 from game.strategy.generation.loaders.system_blueprints_loader import SystemBlueprintsLoader
+from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 
 # Expected characteristics for each blueprint
@@ -85,7 +86,8 @@ def generate_system(blueprint_name: str, blueprint: dict, seed: int = None):
     stars = star_gen.generate_from_blueprint(system_name, blueprint)
 
     # Generate planets with blueprint constraints
-    planet_gen = PlanetGenerator()
+    image_registry = PlanetImageRegistry()
+    planet_gen = PlanetGenerator(image_registry)
     planets = planet_gen.generate_system_bodies(system_name, stars, blueprint)
 
     return {

@@ -26,28 +26,15 @@ class PlanetImageRegistry:
     """Registry for planet type to image mappings.
 
     Loads planet classifications from JSON and provides random image selection
-    for each planet type. Uses singleton pattern for efficient reuse.
+    for each planet type. Should be instantiated once and injected as a dependency.
     """
-
-    _instance: Optional['PlanetImageRegistry'] = None
-
-    def __new__(cls) -> 'PlanetImageRegistry':
-        """Singleton pattern - return existing instance if available."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
 
     def __init__(self) -> None:
         """Initialize the registry by loading classifications."""
-        if self._initialized:
-            return
-
         self._type_to_images: Dict[PlanetType, List[str]] = {
             ptype: [] for ptype in PlanetType
         }
         self._load_classifications()
-        self._initialized = True
 
     def _load_classifications(self) -> None:
         """Load planet classifications from JSON file."""
@@ -135,7 +122,3 @@ class PlanetImageRegistry:
         """
         return sum(len(imgs) for imgs in self._type_to_images.values())
 
-    @classmethod
-    def reset(cls) -> None:
-        """Reset the singleton instance (primarily for testing)."""
-        cls._instance = None
