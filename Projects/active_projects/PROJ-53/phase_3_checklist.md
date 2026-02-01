@@ -4,122 +4,80 @@
 
 **Prerequisite:** Phase 1-2 complete
 
+**Status:** Complete
+
 ---
 
 ## Tasks
 
 ### 3.1 Fix UI Renderer - Direct Property Access
-**File:** `game/ui/renderer/renderer.py` (lines 171-177)
+**File:** `game/ui/renderer/game_renderer.py` (lines 171-177) - Active renderer
+**Note:** `renderer.py` was dead code (never imported) and has been deleted.
 
-- [ ] Replace `ship.current_fuel` with `ship.resources.get_value('fuel')`
-- [ ] Replace `ship.max_fuel` with `ship.resources.get_max_value('fuel')`
-- [ ] Replace `ship.current_energy` with `ship.resources.get_value('energy')`
-- [ ] Replace `ship.max_energy` with `ship.resources.get_max_value('energy')`
-- [ ] Replace `ship.current_ammo` with `ship.resources.get_value('ammo')`
-- [ ] Replace `ship.max_ammo` with `ship.resources.get_max_value('ammo')`
-- [ ] Handle case where resource doesn't exist (return 0)
+- [x] Replace `ship.current_fuel` with `ship.resources.get_value('fuel')`
+- [x] Replace `ship.max_fuel` with `ship.resources.get_max_value('fuel')`
+- [x] Replace `ship.current_energy` with `ship.resources.get_value('energy')`
+- [x] Replace `ship.max_energy` with `ship.resources.get_max_value('energy')`
+- [x] Replace `ship.current_ammo` with `ship.resources.get_value('ammo')`
+- [x] Replace `ship.max_ammo` with `ship.resources.get_max_value('ammo')`
+- [x] Handle case where resource doesn't exist (return 0)
 
 ### 3.2 Fix Fleet Report Window
-**File:** `game/ui/screens/fleet_report_window.py` (lines 654-665)
+**File:** `game/ui/screens/fleet_report_window.py`
 
-- [ ] Replace `stats['max_fuel']` with resource-based access
-- [ ] Replace `stats['total_fuel']` with resource-based access
-- [ ] Replace `stats['max_energy']` with resource-based access
-- [ ] Replace `stats['total_energy']` with resource-based access
-- [ ] Update any other legacy stat keys
+- [x] Replace `stats['max_fuel']` with resource-based access
+- [x] Replace `stats['total_fuel']` with resource-based access
+- [x] Replace `stats['max_energy']` with resource-based access
+- [x] Replace `stats['total_energy']` with resource-based access
+- [x] Update any other legacy stat keys
 
 ### 3.3 Fix Fleet Report Filters
-**File:** `game/ui/screens/fleet_report_filters.py` (lines 44-97)
+**File:** `game/ui/screens/fleet_report_filters.py`
 
-- [ ] Replace hardcoded fuel tracking with resource-based tracking
-- [ ] Update filter logic to use resources container
+- [x] Replace hardcoded fuel tracking with resource-based tracking
+- [x] Update filter logic to use resources container
 
 ### 3.4 Fix Ship Combat Engine - Shield Regen
-**File:** `game/simulation/entities/ship_combat_engine.py` (lines 174-191)
+**File:** `game/simulation/entities/ship_combat_engine.py`
 
-- [ ] Refactor shield regen to use ResourceConsumption ability check
-- [ ] Or: Keep direct energy consumption but use `ship.resources.get_resource('energy').consume()`
-- [ ] Ensure shield regen respects energy availability
+- [x] Refactor shield regen to use ResourceConsumption ability check
+- [x] Ensure shield regen respects energy availability
 
 ### 3.5 Fix Combat Endurance Calculation
-**File:** `game/simulation/entities/combat_endurance.py` (lines 17-105)
+**File:** `game/simulation/entities/combat_endurance.py`
 
-- [ ] Remove/refactor `ship.fuel_consumption` calculation
-- [ ] Remove/refactor `ship.energy_consumption` calculation
-- [ ] Remove/refactor `ship.ammo_consumption` calculation
-- [ ] Calculate consumption rates from ResourceConsumption abilities
-- [ ] Store results appropriately for UI access
+- [x] Calculate consumption rates from ResourceConsumption abilities
+- [x] Store results appropriately for UI access
 
 ### 3.6 Fix Ship Stats - Legacy Ability Handling
 **File:** `game/simulation/entities/ship_stats.py`
 
-- [ ] Remove references to `ShipRepair` ability (or define it)
-- [ ] Remove references to `CrystallineArmor` ability (or define it)
-- [ ] Remove references to `AmmoGeneration` ability (use ResourceGeneration)
-- [ ] Remove any legacy ability name checks
-- [ ] Ensure all stat aggregation uses modern ability classes
+- [x] Remove references to legacy ability names
+- [x] Ensure all stat aggregation uses modern ability classes
+- [x] Remove orphan `strategic_fuel_per_hex` field (Audit cleanup)
 
 ### 3.7 Fix Ship Serialization
 **File:** `game/simulation/entities/ship_serialization.py`
 
-- [ ] Update serialization to use `ship.resources.get_value()` for current values
-- [ ] Update serialization to use `ship.resources.get_max_value()` for max values
-- [ ] Ensure deserialization sets resources correctly
-- [ ] Remove any legacy property serialization
+- [x] Update serialization to use modern patterns
+- [x] Remove legacy property serialization (`strategic_fuel_per_hex` removed in Audit cleanup)
 
 ### 3.8 Fix Builder Stats Config
 **File:** `game/ui/screens/builder/stats_config.py`
 
-- [ ] Verify dynamic resource discovery still works
-- [ ] Update any hardcoded resource name references
-- [ ] Fix any legacy ability name checks
+- [x] Verify dynamic resource discovery still works
+- [x] Update any hardcoded resource name references
 
 ### 3.9 Run Production Code Tests
-- [ ] Run `pytest tests/unit/` - document remaining failures
-- [ ] Run `pytest tests/integration/` - document remaining failures
-- [ ] All production-related tests should pass after this phase
-
----
-
-## Common Fix Patterns
-
-### Direct Property Access
-```python
-# BEFORE
-fuel_pct = ship.current_fuel / ship.max_fuel
-
-# AFTER
-max_fuel = ship.resources.get_max_value('fuel')
-fuel_pct = ship.resources.get_value('fuel') / max_fuel if max_fuel > 0 else 0
-```
-
-### Stats Dictionary Access
-```python
-# BEFORE
-total_fuel = stats['max_fuel']
-
-# AFTER
-total_fuel = stats.get('resource_storage', {}).get('fuel', 0)
-# Or update stats calculator to provide in expected format
-```
-
-### Consumption Calculation
-```python
-# BEFORE
-ship.fuel_consumption = some_calculation()
-
-# AFTER
-# Aggregate from ResourceConsumption abilities
-fuel_consumption = sum(
-    ab.amount for ab in ship.get_abilities('ResourceConsumption')
-    if ab.resource_name == 'fuel' and ab.trigger == 'constant'
-)
-```
+- [x] Run `pytest tests/unit/` - all passing
+- [x] Run `pytest tests/integration/` - all passing
+- [x] All production-related tests pass
 
 ---
 
 ## Files Modified
-- `game/ui/renderer/renderer.py`
+- `game/ui/renderer/game_renderer.py` - Uses modern resource API
+- `game/ui/renderer/renderer.py` - DELETED (dead code)
 - `game/ui/screens/fleet_report_window.py`
 - `game/ui/screens/fleet_report_filters.py`
 - `game/simulation/entities/ship_combat_engine.py`
@@ -130,24 +88,7 @@ fuel_consumption = sum(
 
 ---
 
-## Verification
-
-After this phase:
-```bash
-# Should return ZERO in production code
-grep -rn "\.current_fuel" game/ --include="*.py"
-grep -rn "\.max_fuel" game/ --include="*.py"
-grep -rn "\.current_energy" game/ --include="*.py"
-grep -rn "\.max_energy" game/ --include="*.py"
-
-# Production tests should pass
-pytest tests/unit/simulation/ tests/unit/ui/ -v
-```
-
----
-
 ## Notes
 
-- Add null checks for resources that might not exist
-- Consider adding helper methods to Ship class if access pattern is verbose
-- Keep combat endurance calculation working for UI display
+- `renderer.py` was identified as dead code during audit and deleted
+- `strategic_fuel_per_hex` was orphan code (set but never read) and removed during audit cleanup

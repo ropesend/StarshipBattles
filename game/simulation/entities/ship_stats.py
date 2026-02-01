@@ -219,7 +219,6 @@ class ShipStatsCalculator:
         total_shield_cost = 0
         warp_max_tonnage = 0  # Maximum tonnage for warp jump (largest drive wins)
         warp_energy_cost = 0  # Total energy cost per warp jump
-        total_strategic_fuel_cost = 0  # Fuel consumed per hex of strategic movement
 
         for comp in component_pool:
             if not comp.is_active: continue
@@ -265,11 +264,6 @@ class ShipStatsCalculator:
                     warp_max_tonnage = tonnage
                 # Accumulate energy costs from all warp drives
                 warp_energy_cost += getattr(ab, 'energy_cost', 0)
-
-            # Strategic fuel consumption (per-hex movement cost)
-            for ab in comp.get_abilities('ResourceConsumption'):
-                if getattr(ab, 'trigger', '') == 'strategic_per_hex' and getattr(ab, 'resource_name', '') == 'fuel':
-                    total_strategic_fuel_cost += getattr(ab, 'amount', 0)
 
             # Turn speed from ManeuveringThruster abilities
             for ab in comp.get_abilities('ManeuveringThruster'):
@@ -330,7 +324,6 @@ class ShipStatsCalculator:
         ship.shield_regen_cost = total_shield_cost
         ship.warp_max_tonnage = warp_max_tonnage
         ship.warp_energy_cost = warp_energy_cost
-        ship.strategic_fuel_per_hex = total_strategic_fuel_cost
 
         # 5. Phase 4: Physics & Limits
         # ----------------------------

@@ -65,7 +65,6 @@ class ShipSerializer:
                     "armor_hp_pool": ship.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in ship.layers else 0,
                     "warp_max_tonnage": getattr(ship, 'warp_max_tonnage', 0),
                     "warp_energy_cost": getattr(ship, 'warp_energy_cost', 0),
-                    "strategic_fuel_per_hex": getattr(ship, 'strategic_fuel_per_hex', 0),
                 }
             }
 
