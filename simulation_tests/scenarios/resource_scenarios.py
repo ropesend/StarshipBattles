@@ -254,13 +254,13 @@ class EngineFuelConsumptionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Fuel Capacity',
-            source='ship.resources.fuel',
+            source='initial_fuel',
             expected=RES001_INITIAL_FUEL,
             json_file=RES001_SHIP_FILE
         ),
         DataExpectation(
             name='Engine Thrust',
-            source='ship.total_thrust',
+            source='total_thrust',
             expected=RES001_ENGINE_THRUST,
             json_file=RES001_SHIP_FILE
         ),
@@ -349,8 +349,8 @@ class EngineFuelConsumptionScenario(TestScenario):
 
         context = {
             'ship': self.ship,
-            'ship.resources.fuel': self.ship.resources.get_value('fuel'),
-            'ship.total_thrust': self.ship.total_thrust,
+            'initial_fuel': self.ship.resources.get_value('fuel'),
+            'total_thrust': self.ship.total_thrust,
         }
 
         validator = PreRunValidator()
@@ -455,7 +455,7 @@ class EngineFuelDepletionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Fuel',
-            source='ship.resources.fuel',
+            source='initial_fuel',
             expected=RES002_INITIAL_FUEL,
             json_file=RES002_SHIP_FILE
         ),
@@ -593,7 +593,7 @@ class EngineFuelRegenerationScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Fuel',
-            source='ship.resources.fuel',
+            source='initial_fuel',
             expected=RES003_INITIAL_FUEL,
             json_file=RES003_SHIP_FILE
         ),
@@ -721,7 +721,7 @@ class BeamEnergyConsumptionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Energy',
-            source='attacker.resources.energy',
+            source='initial_energy',
             expected=RES004_INITIAL_ENERGY,
             json_file=RES004_SHIP_FILE
         ),
@@ -865,7 +865,7 @@ class BeamEnergyDepletionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Energy',
-            source='attacker.resources.energy',
+            source='initial_energy',
             expected=RES005_INITIAL_ENERGY,
             json_file=RES005_SHIP_FILE
         ),
@@ -1122,7 +1122,7 @@ class ProjectileAmmoConsumptionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Ammo',
-            source='attacker.resources.ammo',
+            source='initial_ammo',
             expected=RES006_INITIAL_AMMO,
             json_file=RES006_SHIP_FILE
         ),
@@ -1253,7 +1253,7 @@ class ProjectileAmmoDepletionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Ammo',
-            source='attacker.resources.ammo',
+            source='initial_ammo',
             expected=RES007_INITIAL_AMMO,
             json_file=RES007_SHIP_FILE
         ),
@@ -1387,7 +1387,7 @@ class SeekerAmmoConsumptionScenario(TestScenario):
     data_expectations = [
         DataExpectation(
             name='Initial Ammo',
-            source='attacker.resources.ammo',
+            source='initial_ammo',
             expected=RES008_INITIAL_AMMO,
             json_file=RES008_SHIP_FILE
         ),
