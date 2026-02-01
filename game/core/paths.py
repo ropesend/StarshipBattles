@@ -69,6 +69,7 @@ class Paths:
 
     # === Asset Subdirectories ===
     SHIP_THEMES_DIR: str = os.path.join(ASSET_DIR, "ShipThemes")
+    PLANETS_V3_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Planets", "Planets_V3")
 
     # === Core Data Files ===
     COMPONENTS_FILE: str = os.path.join(DATA_DIR, "components.json")
@@ -79,6 +80,7 @@ class Paths:
 
     # === Asset Files ===
     ASSET_MANIFEST_FILE: str = os.path.join(ASSET_DIR, "asset_manifest.json")
+    PLANET_CLASSIFICATIONS_FILE: str = os.path.join(PLANETS_V3_DIR, "planet_classifications.json")
 
     # === Log Files ===
     BATTLE_LOG: str = os.path.join(LOGS_DIR, "battle.log")
@@ -112,6 +114,10 @@ class Paths:
     @classmethod
     def get_logs_dir(cls) -> Path:
         return _PROJECT_ROOT / "output" / "logs"
+
+    @classmethod
+    def get_planets_v3_dir(cls) -> Path:
+        return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Planets" / "Planets_V3"
 
 
 # Backward compatibility exports - Deprecated in favor of Paths class access
