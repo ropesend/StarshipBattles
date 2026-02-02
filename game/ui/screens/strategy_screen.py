@@ -343,6 +343,11 @@ class StrategyScreen:
 
     def on_build_yard_click(self):
         """Open build queue screen for selected planet."""
+        # Guard against double-open - if build queue is already open, ignore
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            log_info("Build queue already open, ignoring click")
+            return
+
         from game.strategy.data.planet import Planet
         if isinstance(self.selected_object, Planet):
             planet = self.selected_object
@@ -378,19 +383,25 @@ class StrategyScreen:
 
     def _on_build_queue_close(self):
         """Handle build queue screen closing."""
+        log_info("_on_build_queue_close() CALLED")
+        log_info(f"  build_queue_screen before None: {self.build_queue_screen}")
         self.build_queue_screen = None
+        log_info(f"  build_queue_screen after None: {self.build_queue_screen}")
 
         # Show main UI again
+        log_info("  Calling self.ui.show_ui()")
         self.ui.show_ui()
 
         # Refresh planet details to show updated queue/facilities
         if self.selected_object:
             try:
+                log_info(f"  Refreshing display for selected_object: {self.selected_object}")
                 img = self._get_object_asset(self.selected_object)
                 self.ui.show_detailed_report(self.selected_object, img)
             except Exception as e:
                 log_warning(f"Could not refresh planet display after build queue close: {e}")
                 # Continue anyway - don't block the close operation
+        log_info("_on_build_queue_close() FINISHED")
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Design Workshop."""

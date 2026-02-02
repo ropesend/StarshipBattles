@@ -6,7 +6,7 @@ from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.assets.asset_manager import AssetManager
 from game.core.config import UIConfig
-from game.core.logger import log_info, log_warning
+from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
@@ -64,6 +64,7 @@ class PlanetListWindow(UIWindow):
         self.planet_detail_panel = None  # Created when planet selected
         self.selected_planet = None      # Track current selection
         self.btn_build_queue = None      # Build queue button (for owned planets)
+        self._debug_next_click = False   # Debug flag for click detection
 
         # Default Columns
         # ID, Width, Title, Attribute/Getter, Visible
@@ -759,18 +760,65 @@ class PlanetListWindow(UIWindow):
                     # 3. Call method on parent screen if reference exists
                 return True
 
+        # F9 key enables debug mode for next click
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
+            self._debug_next_click = True
+            log_info("=== PLANET LIST DEBUG MODE ENABLED - Click on a planet row now ===")
+            return True
+
+        # Debug: Log ALL events when debug mode is enabled
+        if self._debug_next_click:
+            log_info(f"DEBUG EVENT: type={event.type}, event={event}")
+
         # Handle planet row clicks (PROJ-54)
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
+        # Note: Using MOUSEBUTTONUP because MOUSEBUTTONDOWN is consumed by parent UIWindow
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
             mouse_pos = event.pos
-            # Check if click is within any visible row panel
-            for row_data in self.row_pool:
-                row_panel = row_data['bg']
-                if row_panel.visible and row_panel.rect.collidepoint(mouse_pos):
-                    if 'planet' in row_data and row_data['planet'] is not None:
-                        planet = row_data['planet']
-                        if planet != self.selected_planet:
-                            self._on_planet_selected(planet)
-                        break
+
+            # Debug logging if enabled
+            if self._debug_next_click:
+                log_info(f"DEBUG: Mouse click at {mouse_pos}")
+                log_info(f"DEBUG: Window rect: {self.rect}, abs_rect: {self.get_abs_rect()}")
+                log_info(f"DEBUG: main_panel abs_rect: {self.main_panel.get_abs_rect()}")
+                log_info(f"DEBUG: list_panel abs_rect: {self.list_panel.get_abs_rect()}")
+                log_info(f"DEBUG: filtered_planets count: {len(self.filtered_planets)}")
+                log_info(f"DEBUG: row_height: {self.row_height}")
+                log_info(f"DEBUG: scroll_bar.start_percentage: {self.scroll_bar.start_percentage}")
+
+            # Check if click is within the list panel area
+            list_abs_rect = self.list_panel.get_abs_rect()
+            if list_abs_rect.collidepoint(mouse_pos):
+                # Calculate which row was clicked based on scroll position
+                relative_y = mouse_pos[1] - list_abs_rect.top
+
+                # Account for scroll offset
+                scroll_pct = self.scroll_bar.start_percentage
+                total_h = len(self.filtered_planets) * self.row_height
+                scroll_y = scroll_pct * total_h
+
+                # Calculate the data index of the clicked row
+                absolute_y = relative_y + scroll_y
+                clicked_index = int(absolute_y // self.row_height)
+
+                if self._debug_next_click:
+                    log_info(f"DEBUG: Click IS inside list_panel!")
+                    log_info(f"DEBUG: relative_y={relative_y}, scroll_y={scroll_y:.1f}")
+                    log_info(f"DEBUG: absolute_y={absolute_y:.1f}, clicked_index={clicked_index}")
+                    self._debug_next_click = False  # Reset debug mode
+
+                if 0 <= clicked_index < len(self.filtered_planets):
+                    planet = self.filtered_planets[clicked_index]
+                    log_info(f"DEBUG: Would select planet: {planet.name}")
+                    if planet != self.selected_planet:
+                        log_debug(f"Selecting planet: {planet.name}")
+                        self._on_planet_selected(planet)
+                    return True  # Consume the event
+            else:
+                if self._debug_next_click:
+                    log_info(f"DEBUG: Click is OUTSIDE list_panel bounds!")
+                    log_info(f"DEBUG: list_abs_rect: {list_abs_rect}")
+                    log_info(f"DEBUG: mouse_pos: {mouse_pos}")
+                    self._debug_next_click = False  # Reset debug mode
 
         if event.type == UI_TEXT_ENTRY_FINISHED:
             # Check if it matches any of our range text boxes
@@ -1054,7 +1102,7 @@ class PlanetListWindow(UIWindow):
             planet=planet,
             container=self,  # Window is the container
             portrait_surface=portrait_surface,
-            show_complexes=True  # Planet list shows full details
+            show_complexes=False  # Match strategy UI - no separate complexes column
         )
 
         # Add Build Queue button if player owns planet

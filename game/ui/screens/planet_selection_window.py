@@ -2,14 +2,15 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel
 
+from game.assets.asset_manager import AssetManager
 from game.core.logger import log_debug
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetSelectionWindow(UIWindow):
     def __init__(self, rect, manager, planets, on_selection_callback):
-        # Enforce minimum size if rect is too small
-        if rect.width < 700: rect.width = 700
-        if rect.height < 400: rect.height = 400
+        # Enforce minimum size for full planet report display
+        if rect.width < 950: rect.width = 950
+        if rect.height < 650: rect.height = 650
 
         super().__init__(rect, manager, window_display_title="Select Planet to Colonize")
         self.planets = planets
@@ -91,15 +92,25 @@ class PlanetSelectionWindow(UIWindow):
                     details_x = list_width + 20
                     details_y = 45
                     details_width = self.rect.width - list_width - 30
-                    details_height = self.rect.height - 120
+                    # Leave room for buttons at bottom (buttons at rect.height - 60, so stop at -80)
+                    details_height = self.rect.height - 130
+
+                    # Load planet portrait image
+                    portrait_surface = None
+                    if hasattr(planet, 'image_id') and planet.image_id:
+                        am = AssetManager.instance()
+                        portrait_surface = am.load_planet_image(planet.image_id, requested_size=512)
+                        # Apply rotation if specified
+                        if portrait_surface and hasattr(planet, 'image_rotation') and planet.image_rotation:
+                            portrait_surface = pygame.transform.rotate(portrait_surface, planet.image_rotation)
 
                     self.planet_detail_panel = PlanetReportPanel(
                         manager=self.ui_manager,
                         rect=pygame.Rect(details_x, details_y, details_width, details_height),
                         planet=planet,
                         container=self,
-                        portrait_surface=None,  # Colonize window doesn't have asset resolver
-                        show_complexes=True     # Show full planet info
+                        portrait_surface=portrait_surface,
+                        show_complexes=False    # Match strategy UI - no separate complexes column
                     )
 
                 self.selected_planet = planet

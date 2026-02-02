@@ -714,10 +714,7 @@ class StrategyUI:
                  if obj and is_fleet(obj):
                       self.open_fleet_report_window(obj)
 
-            elif event.ui_element == self.btn_build_yard:
-                # Open build queue for the currently displayed planet (PROJ-54)
-                if hasattr(self.scene, 'on_build_yard_click'):
-                    self.scene.on_build_yard_click()
+            # NOTE: btn_build_yard is handled in strategy_input_handler.py - do not duplicate here
 
             elif event.type == pygame_gui.UI_WINDOW_CLOSE:
                  if event.ui_element == self.fleet_orders_window:
@@ -744,8 +741,9 @@ class StrategyUI:
         
     def prompt_planet_selection(self, planets, on_select):
         """Open a modal window to select a planet."""
-        width = 800 # Increased width for details
-        height = 500
+        # Large window to fit full planet report (matches strategy UI detail panel)
+        width = 950
+        height = 650
         x = (self.width - width) / 2
         y = (self.height - height) / 2
 
