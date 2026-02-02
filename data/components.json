@@ -1915,6 +1915,211 @@
                 "Radioactives": "=0.02 * (ship_class_mass ** (4/3))",
                 "Exotics": "=0.025 * (ship_class_mass ** (4/3))"
             }
+        },
+        {
+            "id": "continental_colony_pod",
+            "name": "Continental Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 210,
+            "abilities": {
+                "ColonizePlanet": "CONTINENTAL"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 300,
+                "Organics": 200,
+                "Vapors": 100
+            }
+        },
+        {
+            "id": "arid_colony_pod",
+            "name": "Arid Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 211,
+            "abilities": {
+                "ColonizePlanet": "ARID"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 300,
+                "Organics": 200,
+                "Vapors": 100
+            }
+        },
+        {
+            "id": "pelagic_colony_pod",
+            "name": "Pelagic Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 212,
+            "abilities": {
+                "ColonizePlanet": "PELAGIC"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 300,
+                "Organics": 200,
+                "Vapors": 100
+            }
+        },
+        {
+            "id": "magma_colony_pod",
+            "name": "Magma Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 213,
+            "abilities": {
+                "ColonizePlanet": "MAGMA"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 350,
+                "Organics": 150,
+                "Vapors": 150,
+                "Radioactives": 50
+            }
+        },
+        {
+            "id": "cryoplanet_colony_pod",
+            "name": "Cryoplanet Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 214,
+            "abilities": {
+                "ColonizePlanet": "CRYOPLANET"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 350,
+                "Organics": 150,
+                "Vapors": 150
+            }
+        },
+        {
+            "id": "barren_colony_pod",
+            "name": "Barren Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 215,
+            "abilities": {
+                "ColonizePlanet": "BARREN"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 400,
+                "Organics": 100,
+                "Vapors": 100
+            }
+        },
+        {
+            "id": "jovian_colony_pod",
+            "name": "Jovian Colony Pod",
+            "type": "Colony",
+            "mass": 800,
+            "hp": 400,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 216,
+            "abilities": {
+                "ColonizePlanet": "JOVIAN"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 500,
+                "Organics": 200,
+                "Vapors": 200,
+                "Radioactives": 100,
+                "Exotics": 50
+            }
+        },
+        {
+            "id": "ice_giant_colony_pod",
+            "name": "Ice Giant Colony Pod",
+            "type": "Colony",
+            "mass": 800,
+            "hp": 400,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 217,
+            "abilities": {
+                "ColonizePlanet": "ICE_GIANT"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 500,
+                "Organics": 200,
+                "Vapors": 200,
+                "Radioactives": 100,
+                "Exotics": 50
+            }
+        },
+        {
+            "id": "chthonian_colony_pod",
+            "name": "Chthonian Colony Pod",
+            "type": "Colony",
+            "mass": 800,
+            "hp": 400,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 218,
+            "abilities": {
+                "ColonizePlanet": "CHTHONIAN"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 600,
+                "Organics": 150,
+                "Vapors": 150,
+                "Radioactives": 150,
+                "Exotics": 100
+            }
+        },
+        {
+            "id": "ice_dwarf_colony_pod",
+            "name": "Ice Dwarf Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 219,
+            "abilities": {
+                "ColonizePlanet": "ICE_DWARF"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 350,
+                "Organics": 150,
+                "Vapors": 100
+            }
+        },
+        {
+            "id": "planetoid_colony_pod",
+            "name": "Planetoid Colony Pod",
+            "type": "Colony",
+            "mass": 500,
+            "hp": 300,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 220,
+            "abilities": {
+                "ColonizePlanet": "PLANETOID"
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 300,
+                "Organics": 100,
+                "Vapors": 100
+            }
         }
     ]
 }

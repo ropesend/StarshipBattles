@@ -494,3 +494,172 @@ class TestOrderResult:
 
         assert result.colonized is False
         assert result.planet_name is None
+
+
+# =============================================================================
+# Test: PROJ-55 Colony Ship Removal
+# =============================================================================
+
+class TestColonizeShipRemoval:
+    """Tests for PROJ-55: Colony ship removal instead of fleet removal."""
+
+    @pytest.fixture
+    def mock_ship_with_pod(self):
+        """Create a mock ship with colony pod."""
+        ship = MagicMock()
+        ship.name = "Colony Ship"
+        ship.design_data = {
+            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
+        }
+        return ship
+
+    @pytest.fixture
+    def mock_ship_combat(self):
+        """Create a mock combat ship without colony pod."""
+        ship = MagicMock()
+        ship.name = "Combat Ship"
+        ship.design_data = {
+            'layers': {'HULL': [{'id': 'laser_cannon'}]}
+        }
+        return ship
+
+    @pytest.fixture
+    def mock_component_registry(self):
+        """Component registry with colony pod definitions."""
+        return {
+            'ice_dwarf_colony_pod': {
+                'id': 'ice_dwarf_colony_pod',
+                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+            },
+            'laser_cannon': {
+                'id': 'laser_cannon',
+                'abilities': {}
+            },
+        }
+
+    @pytest.fixture
+    def mock_planet_ice_dwarf(self):
+        """Create a mock ICE_DWARF planet."""
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            ICE_DWARF = "ICE_DWARF"
+
+        planet = MagicMock()
+        planet.name = "Frostworld"
+        planet.owner_id = None
+        planet.planet_type = MockPlanetType.ICE_DWARF
+        return planet
+
+    def test_process_colonize_with_registry_removes_ship(
+        self, mock_fleet, mock_empire, mock_galaxy,
+        mock_ship_with_pod, mock_ship_combat,
+        mock_planet_ice_dwarf, mock_component_registry
+    ):
+        """With registry, colonize removes specific ship, not fleet."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        # Setup fleet with ships list
+        mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
+        mock_fleet.remove_ship = MagicMock()
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
+
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=mock_component_registry
+        )
+
+        assert result.colonized is True
+        mock_fleet.remove_ship.assert_called_with(mock_ship_with_pod)
+
+    def test_process_colonize_with_registry_removes_fleet_when_empty(
+        self, mock_fleet, mock_empire, mock_galaxy,
+        mock_ship_with_pod, mock_planet_ice_dwarf, mock_component_registry
+    ):
+        """With registry, removes fleet when ship removal leaves it empty."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        # Setup fleet with only one ship - will be empty after removal
+        mock_fleet.ships = [mock_ship_with_pod]
+
+        def remove_ship_effect(ship):
+            mock_fleet.ships.remove(ship)
+        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
+
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=mock_component_registry
+        )
+
+        assert result.colonized is True
+        mock_fleet.remove_ship.assert_called()
+        mock_empire.remove_fleet.assert_called_with(mock_fleet)
+
+    def test_process_colonize_with_registry_keeps_fleet_when_ships_remain(
+        self, mock_fleet, mock_empire, mock_galaxy,
+        mock_ship_with_pod, mock_ship_combat,
+        mock_planet_ice_dwarf, mock_component_registry
+    ):
+        """With registry, keeps fleet when other ships remain."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        # Setup fleet with two ships
+        mock_fleet.ships = [mock_ship_with_pod, mock_ship_combat]
+
+        def remove_ship_effect(ship):
+            mock_fleet.ships.remove(ship)
+        mock_fleet.remove_ship = MagicMock(side_effect=remove_ship_effect)
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
+
+        result = processor.process_colonize(
+            mock_fleet, mock_empire, mock_galaxy,
+            component_registry=mock_component_registry
+        )
+
+        assert result.colonized is True
+        mock_fleet.remove_ship.assert_called()
+        # Fleet should NOT be removed since combat ship remains
+        mock_empire.remove_fleet.assert_not_called()
+
+    def test_process_colonize_without_registry_removes_fleet(
+        self, mock_fleet, mock_empire, mock_galaxy, mock_planet_ice_dwarf
+    ):
+        """Without registry, colonize removes entire fleet (legacy behavior)."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        processor = FleetOrderProcessor()
+
+        mock_fleet.ships = []  # Doesn't matter without registry
+
+        order = FleetOrder(OrderType.COLONIZE, mock_planet_ice_dwarf)
+        mock_fleet.get_current_order.return_value = order
+        mock_fleet.location = HexCoord(5, 5)
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet_ice_dwarf]
+
+        result = processor.process_colonize(mock_fleet, mock_empire, mock_galaxy)
+
+        assert result.colonized is True
+        mock_empire.remove_fleet.assert_called_with(mock_fleet)

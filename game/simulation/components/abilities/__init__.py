@@ -10,6 +10,9 @@ from game.core.logger import log_warning
 # Base class
 from .base import Ability
 
+# Colonization abilities
+from .colonize import ColonizePlanet
+
 # Resource abilities
 from .resources import ResourceConsumption, ResourceStorage, ResourceGeneration
 
@@ -51,6 +54,7 @@ from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility
 # --- Registry ---
 
 ABILITY_REGISTRY = {
+    "ColonizePlanet": ColonizePlanet,
     "ResourceConsumption": ResourceConsumption,
     "ResourceStorage": ResourceStorage,
     "ResourceGeneration": ResourceGeneration,
@@ -102,6 +106,8 @@ def create_ability(name: str, component, data: Any) -> Optional[Ability]:
 __all__ = [
     # Base
     'Ability',
+    # Colonization
+    'ColonizePlanet',
     # Resources
     'ResourceConsumption',
     'ResourceStorage',

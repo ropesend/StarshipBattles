@@ -368,3 +368,47 @@ class StrategySessionFacade:
             return validation_result(False, "No path to target hex.")
 
         return validation_result(True, "Path exists.")
+
+    # --- Colony Pod Queries (PROJ-55) ---
+
+    def get_fleet_remaining_pods(self, fleet_id: int) -> dict:
+        """Get remaining colony pods for a fleet (available minus committed).
+
+        PROJ-55: Used by UI to filter colonizable planets by available pod types.
+
+        Args:
+            fleet_id: The fleet to check
+
+        Returns:
+            Dict mapping planet type string to count of remaining (uncommitted) pods.
+            Example: {"ICE_DWARF": 1, "CONTINENTAL": 0}
+            Returns empty dict if fleet not found.
+        """
+        from game.core.registry import get_default_registry_provider
+        from game.strategy.validation.colonize_validator import ColonizeValidator
+
+        fleet = self._find_fleet_by_id(fleet_id)
+        if fleet is None:
+            return {}
+
+        # Get component registry
+        try:
+            provider = get_default_registry_provider()
+            component_registry = provider.get_components()
+        except Exception:
+            # If no registry available, return empty (legacy behavior)
+            return {}
+
+        # Calculate available and committed pods
+        available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
+        committed = ColonizeValidator.get_committed_colony_pods(fleet)
+
+        # Calculate remaining
+        remaining = {}
+        for planet_type, count in available.items():
+            committed_count = committed.get(planet_type, 0)
+            remaining_count = count - committed_count
+            if remaining_count > 0:
+                remaining[planet_type] = remaining_count
+
+        return remaining
