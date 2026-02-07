@@ -192,6 +192,177 @@ class TestRaceConfigSerialization:
         assert config.theme_id == "Federation"  # Default
         assert config.gravity_ideal == 1.0  # Default
 
+    def test_to_dict_includes_all_new_fields(self):
+        """Test that to_dict includes all new identity, homeworld, water, and aptitude fields."""
+        config = RaceConfig(
+            faction_name="Test Faction",
+            race_name="Testlings",
+            race_name_plural="Testlings",
+            government_type="Empire",
+            government_organization="Autocracy",
+            leader_title="Emperor",
+            physical_type="Humanoid",
+            society_type="Explorers",
+            homeworld_type="CONTINENTAL",
+            water_ideal=0.6,
+            water_tolerance=0.25,
+            aptitude_strength=7,
+            aptitude_intelligence=8,
+        )
+
+        data = config.to_dict()
+
+        # Identity fields
+        assert data["faction_name"] == "Test Faction"
+        assert data["race_name"] == "Testlings"
+        assert data["race_name_plural"] == "Testlings"
+        assert data["government_type"] == "Empire"
+        assert data["government_organization"] == "Autocracy"
+        assert data["leader_title"] == "Emperor"
+        assert data["physical_type"] == "Humanoid"
+        assert data["society_type"] == "Explorers"
+
+        # Homeworld & water fields
+        assert data["homeworld_type"] == "CONTINENTAL"
+        assert data["water_ideal"] == 0.6
+        assert data["water_tolerance"] == 0.25
+
+        # Aptitude fields (all 9)
+        assert data["aptitude_strength"] == 7
+        assert data["aptitude_intelligence"] == 8
+        assert data["aptitude_constitution"] == 5
+        assert data["aptitude_dexterity"] == 5
+        assert data["aptitude_tolerance_other_species"] == 5
+        assert data["aptitude_cooperation"] == 5
+        assert data["aptitude_happiness"] == 5
+        assert data["aptitude_population_growth"] == 5
+        assert data["aptitude_conflict_tolerance"] == 5
+
+    def test_from_dict_with_all_new_fields(self):
+        """Test from_dict restores all new fields correctly."""
+        data = {
+            "name": "Test",
+            "faction_name": "Restored Faction",
+            "race_name": "Restorlings",
+            "race_name_plural": "Restorlings",
+            "government_type": "Federation",
+            "government_organization": "Democracy",
+            "leader_title": "President",
+            "physical_type": "Reptilian",
+            "society_type": "Diplomats",
+            "homeworld_type": "OCEANIC",
+            "water_ideal": 0.8,
+            "water_tolerance": 0.1,
+            "aptitude_strength": 3,
+            "aptitude_intelligence": 9,
+            "aptitude_constitution": 4,
+            "aptitude_dexterity": 6,
+            "aptitude_tolerance_other_species": 8,
+            "aptitude_cooperation": 7,
+            "aptitude_happiness": 6,
+            "aptitude_population_growth": 5,
+            "aptitude_conflict_tolerance": 2,
+        }
+
+        config = RaceConfig.from_dict(data)
+
+        assert config.faction_name == "Restored Faction"
+        assert config.race_name == "Restorlings"
+        assert config.government_type == "Federation"
+        assert config.homeworld_type == "OCEANIC"
+        assert config.water_ideal == 0.8
+        assert config.aptitude_strength == 3
+        assert config.aptitude_intelligence == 9
+
+    def test_from_dict_backward_compatible(self):
+        """Test that old race data (missing new fields) loads with defaults."""
+        # Simulating old format race file
+        old_data = {
+            "race_id": "old_race",
+            "name": "Old Race",
+            "flag_id": "flag_001",
+            "portrait_id": "portrait.jpg",
+            "theme_id": "Federation",
+            "gravity_ideal": 1.0,
+            "gravity_tolerance": 0.3,
+            "temperature_ideal": 293.0,
+            "temperature_tolerance": 50.0,
+            "atmosphere_preferences": {"Oxygen": 0.0},
+            "radiation_tolerance": 0.0,
+            "bio_description": "Old bio",
+            "socio_description": "Old socio",
+        }
+
+        config = RaceConfig.from_dict(old_data)
+
+        # Original fields preserved
+        assert config.name == "Old Race"
+        assert config.flag_id == "flag_001"
+
+        # New fields should get defaults
+        assert config.faction_name == ""
+        assert config.race_name == ""
+        assert config.government_type == ""
+        assert config.homeworld_type == ""
+        assert config.water_ideal == 0.5
+        assert config.water_tolerance == 0.2
+        assert config.aptitude_strength == 5
+        assert config.aptitude_intelligence == 5
+
+    def test_serialization_round_trip_complete(self):
+        """Test complete round-trip serialization preserves all fields."""
+        original = RaceConfig(
+            race_id="complete_test",
+            name="Complete Race",
+            faction_name="Complete Faction",
+            race_name="Completers",
+            race_name_plural="Completers",
+            government_type="Alliance",
+            government_organization="Republic",
+            leader_title="Chancellor",
+            physical_type="Avian",
+            society_type="Scientists",
+            flag_id="flag_complete",
+            portrait_id="complete.jpg",
+            theme_id="Romulans",
+            homeworld_type="ARID",
+            gravity_ideal=1.2,
+            gravity_tolerance=0.4,
+            temperature_ideal=310.0,
+            temperature_tolerance=45.0,
+            water_ideal=0.3,
+            water_tolerance=0.15,
+            radiation_tolerance=25.0,
+            aptitude_strength=6,
+            aptitude_intelligence=7,
+            aptitude_constitution=8,
+            aptitude_dexterity=4,
+            aptitude_tolerance_other_species=5,
+            aptitude_cooperation=6,
+            aptitude_happiness=7,
+            aptitude_population_growth=3,
+            aptitude_conflict_tolerance=9,
+            bio_description="Complete bio",
+            socio_description="Complete socio",
+        )
+
+        data = original.to_dict()
+        restored = RaceConfig.from_dict(data)
+
+        # All fields must match
+        assert restored.race_id == original.race_id
+        assert restored.name == original.name
+        assert restored.faction_name == original.faction_name
+        assert restored.race_name == original.race_name
+        assert restored.government_type == original.government_type
+        assert restored.homeworld_type == original.homeworld_type
+        assert restored.water_ideal == original.water_ideal
+        assert restored.water_tolerance == original.water_tolerance
+        assert restored.aptitude_strength == original.aptitude_strength
+        assert restored.aptitude_intelligence == original.aptitude_intelligence
+        assert restored.aptitude_constitution == original.aptitude_constitution
+        assert restored.aptitude_conflict_tolerance == original.aptitude_conflict_tolerance
+
 
 class TestRaceConfigFileIO:
     """RaceConfig file I/O tests."""
@@ -376,3 +547,294 @@ class TestRaceConfigValidation:
             theme_id="Federation",
         )
         assert complete.is_complete() is True
+
+    def test_validate_water_ideal_out_of_range(self):
+        """Test that water_ideal outside 0-1 fails validation."""
+        config = RaceConfig(
+            name="Test Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            water_ideal=1.5,  # Out of range
+        )
+        is_valid, message = config.validate()
+        assert is_valid is False
+        assert "water" in message.lower()
+
+    def test_validate_water_tolerance_out_of_range(self):
+        """Test that water_tolerance outside 0-1 fails validation."""
+        config = RaceConfig(
+            name="Test Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            water_tolerance=-0.1,  # Out of range
+        )
+        is_valid, message = config.validate()
+        assert is_valid is False
+        assert "water" in message.lower()
+
+    def test_validate_aptitude_below_minimum(self):
+        """Test that aptitude below 1 fails validation."""
+        config = RaceConfig(
+            name="Test Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            aptitude_strength=0,  # Below minimum
+        )
+        is_valid, message = config.validate()
+        assert is_valid is False
+        assert "aptitude" in message.lower()
+
+    def test_validate_aptitude_above_maximum(self):
+        """Test that aptitude above 10 fails validation."""
+        config = RaceConfig(
+            name="Test Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            aptitude_intelligence=11,  # Above maximum
+        )
+        is_valid, message = config.validate()
+        assert is_valid is False
+        assert "aptitude" in message.lower()
+
+    def test_validate_invalid_government_type(self):
+        """Test that invalid government type fails validation."""
+        config = RaceConfig(
+            name="Test Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            government_type="InvalidType",  # Not in list
+        )
+        is_valid, message = config.validate()
+        assert is_valid is False
+        assert "government" in message.lower()
+
+    def test_validate_invalid_homeworld_type(self):
+        """Test that invalid homeworld type fails validation."""
+        config = RaceConfig(
+            name="Test Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            homeworld_type="INVALID_PLANET",  # Not a valid PlanetType
+        )
+        is_valid, message = config.validate()
+        assert is_valid is False
+        assert "homeworld" in message.lower()
+
+    def test_validate_valid_race_with_all_new_fields(self):
+        """Test that a fully populated race with all new fields passes validation."""
+        from game.strategy.data.race_config import (
+            GOVERNMENT_TYPES, GOVERNMENT_ORGANIZATIONS, LEADER_TITLES,
+            PHYSICAL_TYPES, SOCIETY_TYPES
+        )
+        config = RaceConfig(
+            name="Complete Race",
+            flag_id="flag_complete",
+            portrait_id="complete.jpg",
+            theme_id="Federation",
+            faction_name="Complete Empire",
+            race_name="Completers",
+            race_name_plural="Completers",
+            government_type=GOVERNMENT_TYPES[0],  # Valid
+            government_organization=GOVERNMENT_ORGANIZATIONS[0],  # Valid
+            leader_title=LEADER_TITLES[0],  # Valid
+            physical_type=PHYSICAL_TYPES[0],  # Valid
+            society_type=SOCIETY_TYPES[0],  # Valid
+            homeworld_type="CONTINENTAL",  # Valid PlanetType
+            water_ideal=0.6,
+            water_tolerance=0.2,
+            aptitude_strength=7,
+            aptitude_intelligence=8,
+            aptitude_constitution=6,
+            aptitude_dexterity=5,
+            aptitude_tolerance_other_species=4,
+            aptitude_cooperation=5,
+            aptitude_happiness=6,
+            aptitude_population_growth=7,
+            aptitude_conflict_tolerance=5,
+        )
+        is_valid, message = config.validate()
+        assert is_valid is True
+        assert message == ""
+
+    def test_validate_empty_optional_fields_passes(self):
+        """Test that empty optional identity fields pass validation."""
+        config = RaceConfig(
+            name="Minimal Race",
+            flag_id="flag_001",
+            portrait_id="portrait.jpg",
+            theme_id="Federation",
+            # All identity fields empty - should pass
+            government_type="",
+            government_organization="",
+            leader_title="",
+            physical_type="",
+            society_type="",
+            homeworld_type="",
+        )
+        is_valid, message = config.validate()
+        assert is_valid is True
+
+
+class TestRaceConfigConstantLists:
+    """Tests for constant lists defined in race_config module."""
+
+    def test_government_types_list_has_14_items(self):
+        """Test GOVERNMENT_TYPES has all 14 types."""
+        from game.strategy.data.race_config import GOVERNMENT_TYPES
+        assert len(GOVERNMENT_TYPES) == 14
+        assert "Empire" in GOVERNMENT_TYPES
+        assert "Hegemony" in GOVERNMENT_TYPES
+        assert "Alliance" in GOVERNMENT_TYPES
+
+    def test_government_organizations_list_has_13_items(self):
+        """Test GOVERNMENT_ORGANIZATIONS has all 13 types."""
+        from game.strategy.data.race_config import GOVERNMENT_ORGANIZATIONS
+        assert len(GOVERNMENT_ORGANIZATIONS) == 13
+        assert "Anarchy" in GOVERNMENT_ORGANIZATIONS
+        assert "Democracy" in GOVERNMENT_ORGANIZATIONS
+
+    def test_leader_titles_list_has_27_items(self):
+        """Test LEADER_TITLES has all 27 titles."""
+        from game.strategy.data.race_config import LEADER_TITLES
+        assert len(LEADER_TITLES) == 27
+        assert "Central Speaker" in LEADER_TITLES
+        assert "Chairman" in LEADER_TITLES
+
+    def test_physical_types_list_has_14_items(self):
+        """Test PHYSICAL_TYPES has all 14 types."""
+        from game.strategy.data.race_config import PHYSICAL_TYPES
+        assert len(PHYSICAL_TYPES) == 14
+        assert "Felinoid" in PHYSICAL_TYPES
+        assert "Caninoid" in PHYSICAL_TYPES
+
+    def test_society_types_list_has_17_items(self):
+        """Test SOCIETY_TYPES has all 17 types."""
+        from game.strategy.data.race_config import SOCIETY_TYPES
+        assert len(SOCIETY_TYPES) == 17
+        assert "Artisans" in SOCIETY_TYPES
+        assert "Berserkers" in SOCIETY_TYPES
+
+    def test_aptitude_names_list_has_9_items(self):
+        """Test APTITUDE_NAMES has all 9 aptitudes."""
+        from game.strategy.data.race_config import APTITUDE_NAMES
+        assert len(APTITUDE_NAMES) == 9
+        assert "strength" in APTITUDE_NAMES
+        assert "intelligence" in APTITUDE_NAMES
+        assert "constitution" in APTITUDE_NAMES
+        assert "dexterity" in APTITUDE_NAMES
+        assert "tolerance_other_species" in APTITUDE_NAMES
+        assert "cooperation" in APTITUDE_NAMES
+        assert "happiness" in APTITUDE_NAMES
+        assert "population_growth" in APTITUDE_NAMES
+        assert "conflict_tolerance" in APTITUDE_NAMES
+
+
+class TestRaceConfigIdentityFields:
+    """Tests for identity fields added to RaceConfig."""
+
+    def test_create_race_with_identity_fields_defaults(self):
+        """Test that identity fields have correct defaults."""
+        config = RaceConfig()
+
+        assert config.faction_name == ""
+        assert config.race_name == ""
+        assert config.race_name_plural == ""
+        assert config.government_type == ""
+        assert config.government_organization == ""
+        assert config.leader_title == ""
+        assert config.physical_type == ""
+        assert config.society_type == ""
+
+    def test_create_race_with_custom_identity(self):
+        """Test creating a race with all identity fields set."""
+        config = RaceConfig(
+            faction_name="Rossarian Empire",
+            race_name="Rossarian",
+            race_name_plural="Rossarians",
+            government_type="Empire",
+            government_organization="Autocracy",
+            leader_title="Emperor",
+            physical_type="Felinoid",
+            society_type="Conquerors",
+        )
+
+        assert config.faction_name == "Rossarian Empire"
+        assert config.race_name == "Rossarian"
+        assert config.race_name_plural == "Rossarians"
+        assert config.government_type == "Empire"
+        assert config.government_organization == "Autocracy"
+        assert config.leader_title == "Emperor"
+        assert config.physical_type == "Felinoid"
+        assert config.society_type == "Conquerors"
+
+
+class TestRaceConfigHomeworldWaterFields:
+    """Tests for homeworld and water preference fields."""
+
+    def test_default_water_preferences(self):
+        """Test that water preferences have correct defaults."""
+        config = RaceConfig()
+
+        assert config.water_ideal == 0.5
+        assert config.water_tolerance == 0.2
+        assert config.homeworld_type == ""
+
+    def test_create_race_with_homeworld_type(self):
+        """Test setting homeworld type."""
+        config = RaceConfig(
+            homeworld_type="CONTINENTAL",
+            water_ideal=0.7,
+            water_tolerance=0.15,
+        )
+
+        assert config.homeworld_type == "CONTINENTAL"
+        assert config.water_ideal == 0.7
+        assert config.water_tolerance == 0.15
+
+
+class TestRaceConfigAptitudeFields:
+    """Tests for aptitude attribute fields."""
+
+    def test_default_aptitudes_are_5(self):
+        """Test that all aptitudes default to 5."""
+        config = RaceConfig()
+
+        assert config.aptitude_strength == 5
+        assert config.aptitude_intelligence == 5
+        assert config.aptitude_constitution == 5
+        assert config.aptitude_dexterity == 5
+        assert config.aptitude_tolerance_other_species == 5
+        assert config.aptitude_cooperation == 5
+        assert config.aptitude_happiness == 5
+        assert config.aptitude_population_growth == 5
+        assert config.aptitude_conflict_tolerance == 5
+
+    def test_create_race_with_custom_aptitudes(self):
+        """Test creating a race with custom aptitude values."""
+        config = RaceConfig(
+            aptitude_strength=8,
+            aptitude_intelligence=3,
+            aptitude_constitution=7,
+            aptitude_dexterity=4,
+            aptitude_tolerance_other_species=6,
+            aptitude_cooperation=2,
+            aptitude_happiness=9,
+            aptitude_population_growth=1,
+            aptitude_conflict_tolerance=10,
+        )
+
+        assert config.aptitude_strength == 8
+        assert config.aptitude_intelligence == 3
+        assert config.aptitude_constitution == 7
+        assert config.aptitude_dexterity == 4
+        assert config.aptitude_tolerance_other_species == 6
+        assert config.aptitude_cooperation == 2
+        assert config.aptitude_happiness == 9
+        assert config.aptitude_population_growth == 1
+        assert config.aptitude_conflict_tolerance == 10
