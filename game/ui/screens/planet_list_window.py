@@ -10,6 +10,7 @@ from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
+from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetListWindow(UIWindow):
@@ -102,7 +103,28 @@ class PlanetListWindow(UIWindow):
             anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'}
         )
         
-        self._init_sidebar()
+        # Build sidebar using extracted function
+        sidebar_widgets = build_sidebar(
+            manager=manager,
+            sidebar_panel=self.sidebar_panel,
+            sidebar_width=self.sidebar_width,
+            rect_height=rect.height,
+            planet_ranges=self._planet_ranges,
+            columns=self.columns,
+            preset_manager=self.preset_manager
+        )
+        # Unpack widget references needed by main window
+        self.sidebar_scroller = sidebar_widgets['sidebar_scroller']
+        self.txt_name_filter = sidebar_widgets['txt_name_filter']
+        self.btn_all_types = sidebar_widgets['btn_all_types']
+        self.btn_none_types = sidebar_widgets['btn_none_types']
+        self.btn_all_owners = sidebar_widgets['btn_all_owners']
+        self.btn_none_owners = sidebar_widgets['btn_none_owners']
+        self.btn_apply = sidebar_widgets['btn_apply']
+        self.btn_save_preset = sidebar_widgets['btn_save_preset']
+        self.txt_preset_name = sidebar_widgets['txt_preset_name']
+        self.dd_presets = sidebar_widgets['dd_presets']
+        self.ui_filters = sidebar_widgets['ui_filters']
 
         # 2. Main Content Area (Header + Scrollable List)
         # Reserve space for detail panel on right (PROJ-54)
@@ -248,219 +270,6 @@ class PlanetListWindow(UIWindow):
 
         return ranges
 
-    def _init_sidebar(self):
-        """Initialize Filter and Config controls."""
-        # Use a scrolling container for the sidebar because filters are tall
-        self.sidebar_scroller = UIScrollingContainer(
-            relative_rect=pygame.Rect(0, 0, self.sidebar_width, self.rect.height - 50),
-            manager=self.ui_manager,
-            container=self.sidebar_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-        content_container = self.sidebar_scroller.get_container()
-        
-        y_off = 10
-        width = self.sidebar_width - 30 # Account for scrollbar
-        
-        # Title
-        UILabel(pygame.Rect(10, y_off, width, 25), "FILTERS", self.ui_manager, container=content_container)
-        y_off += 30
-        
-        # Name Filter
-        self.txt_name_filter = UITextEntryLine(
-            relative_rect=pygame.Rect(10, y_off, width, 30),
-            manager=self.ui_manager,
-            container=content_container
-        )
-        self.txt_name_filter.set_text("Search Name...")
-        y_off += 40
-        
-        # --- Planet Type ---
-        UILabel(pygame.Rect(10, y_off, width, 20), "Planet Type:", self.ui_manager, container=content_container)
-
-        y_off += 25
-        
-        # All / None Buttons
-        self.btn_all_types = UIButton(pygame.Rect(10, y_off, 60, 25), "All", self.ui_manager, container=content_container)
-        self.btn_none_types = UIButton(pygame.Rect(80, y_off, 60, 25), "None", self.ui_manager, container=content_container)
-        y_off += 30
-        
-        # Grid of checkboxes
-        types = [
-            'Continental', 'Arid', 'Pelagic', 'Magma', 'Cryoplanet', 
-            'Barren', 'Jovian', 'Ice Giant', 'Chthonian', 'Ice Dwarf', 'Planetoid'
-        ]
-        self.ui_filters['types'] = {}
-        
-        x_start = 10
-        x = x_start
-        for t in types:
-            # Simple toggle button or checkbox? pygame_gui has specialized selection lists or just buttons.
-            # Using UIButton with toggle behavior is easiest for grid.
-            btn = UIButton(
-                relative_rect=pygame.Rect(x, y_off, 80, 30),
-                text=t,
-                manager=self.ui_manager,
-                container=content_container,
-                object_id='@filter_toggle_on' # Assume custom ID or manage style manually
-            )
-            # Hack: Store state in button? Or just map it.
-            # actually let's use a specialized check box if avail, but button is fine.
-            # We'll simple handle clicks to toggle state.
-            self.ui_filters['types'][t] = btn
-            
-            x += 90
-            if x > width - 80:
-                x = x_start
-                y_off += 35
-        if x != x_start: y_off += 35
-
-        # --- Owner Filter --- (BUG-27)
-        UILabel(pygame.Rect(10, y_off, width, 20), "Owner:", self.ui_manager, container=content_container)
-        y_off += 25
-
-        # All / None Buttons for owner
-        self.btn_all_owners = UIButton(pygame.Rect(10, y_off, 60, 25), "All", self.ui_manager, container=content_container)
-        self.btn_none_owners = UIButton(pygame.Rect(80, y_off, 60, 25), "None", self.ui_manager, container=content_container)
-        y_off += 30
-
-        # Owner toggle buttons
-        owners = ['Player', 'Enemy', 'Unowned']
-        self.ui_filters['owners'] = {}
-
-        x = x_start
-        for o in owners:
-            btn = UIButton(
-                relative_rect=pygame.Rect(x, y_off, 80, 30),
-                text=o,
-                manager=self.ui_manager,
-                container=content_container,
-                object_id='@filter_toggle_on'
-            )
-            self.ui_filters['owners'][o] = btn
-            x += 90
-            if x > width - 80:
-                x = x_start
-                y_off += 35
-        if x != x_start: y_off += 35
-
-        # --- Range Sliders ---
-        # Helper to add range
-        def add_range(label, key, min_limit, max_limit):
-            nonlocal y_off
-            UILabel(pygame.Rect(10, y_off, width, 20), label, self.ui_manager, container=content_container)
-            y_off += 20
-            
-            # Min Row
-            UILabel(pygame.Rect(10, y_off, 30, 24), "Min", self.ui_manager, container=content_container)
-            s_min = UIHorizontalSlider(
-                relative_rect=pygame.Rect(45, y_off, width - 105, 24),
-                start_value=min_limit,
-                value_range=(min_limit, max_limit),
-                manager=self.ui_manager,
-                container=content_container
-            )
-            t_min = UITextEntryLine(
-                relative_rect=pygame.Rect(width - 55, y_off, 55, 24),
-                manager=self.ui_manager,
-                container=content_container
-            )
-            t_min.set_text(f"{min_limit:.1f}")
-            y_off += 29
-            
-            # Max Row
-            UILabel(pygame.Rect(10, y_off, 30, 24), "Max", self.ui_manager, container=content_container)
-            s_max = UIHorizontalSlider(
-                relative_rect=pygame.Rect(45, y_off, width - 105, 24),
-                start_value=max_limit,
-                value_range=(min_limit, max_limit),
-                manager=self.ui_manager,
-                container=content_container
-            )
-            t_max = UITextEntryLine(
-                relative_rect=pygame.Rect(width - 55, y_off, 55, 24),
-                manager=self.ui_manager,
-                container=content_container
-            )
-            t_max.set_text(f"{max_limit:.1f}")
-            y_off += 35
-            
-            self.ui_filters[key] = {
-                'min': s_min, 'max': s_max,
-                'min_txt': t_min, 'max_txt': t_max,
-                'limits': (min_limit, max_limit)
-            }
-
-        # Use dynamic ranges computed from actual planet data
-        grav_range = self._planet_ranges['gravity']
-        temp_range = self._planet_ranges['temp']
-        mass_range = self._planet_ranges['mass']
-
-        add_range("Gravity (g)", 'gravity', grav_range[0], grav_range[1])
-        add_range("Temp (K)", 'temp', temp_range[0], temp_range[1])
-        add_range("Mass (Earths)", 'mass', mass_range[0], mass_range[1])
-        
-        # Button: Apply Filters
-        self.btn_apply = UIButton(
-            relative_rect=pygame.Rect(10, y_off, width, 30),
-            text="Apply Filters",
-            manager=self.ui_manager,
-            container=content_container
-        )
-        y_off += 40
-        
-        # --- Column Configuration ---
-        UILabel(pygame.Rect(10, y_off, width, 25), "COLUMNS", self.ui_manager, container=content_container)
-        y_off += 30
-        
-        self.ui_filters['columns'] = {}
-        for col in self.columns:
-            # Checkbox for visibility
-            # Use basic button with toggle logic or just click to toggle
-            # State is in 'visible'
-            t = f"[x] {col['title'] or col['id']}" if col['visible'] else f"[ ] {col['title'] or col['id']}"
-            btn = UIButton(
-                relative_rect=pygame.Rect(10, y_off, width, 30),
-                text=t,
-                manager=self.ui_manager,
-                container=content_container
-            )
-            btn.col_ref = col
-            self.ui_filters['columns'][col['id']] = btn
-            y_off += 35
-        
-        y_off += 20
-        UILabel(pygame.Rect(10, y_off, width, 25), "PRESETS", self.ui_manager, container=content_container)
-        y_off += 30
-
-        self.dd_presets = UIDropDownMenu(
-            options_list=self.preset_manager.get_preset_names(),
-            starting_option="Default",
-            relative_rect=pygame.Rect(10, y_off, width, 30),
-            manager=self.ui_manager,
-            container=content_container
-        )
-        y_off += 40
-        
-        # Save New
-        self.txt_preset_name = UITextEntryLine(
-            relative_rect=pygame.Rect(10, y_off, width - 60, 30),
-            manager=self.ui_manager,
-            container=content_container
-        )
-        self.txt_preset_name.set_text("New Preset Name")
-        
-        self.btn_save_preset = UIButton(
-            relative_rect=pygame.Rect(width - 50, y_off, 50, 30),
-            text="Save",
-            manager=self.ui_manager,
-            container=content_container
-        )
-        y_off += 40
-
-        # Update scrolling area
-        self.sidebar_scroller.set_scrollable_area_dimensions((width, y_off))
-        
     def _rebuild_headers(self):
         """Build header row based on current self.columns"""
         # Clear existing headers
