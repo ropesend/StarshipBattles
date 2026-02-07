@@ -517,6 +517,90 @@ class Fleet:
             'warp_fuel_cost': self.get_warp_fuel_cost(),
         }
 
+    # --- Cargo Methods ---
+
+    def get_fleet_cargo_capacity(self, cargo_type: str) -> int:
+        """
+        Get total fleet cargo capacity for a specific cargo type.
+
+        Args:
+            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
+
+        Returns:
+            Total capacity summed across all combat-capable ships.
+        """
+        total = 0
+        for ship in self.get_combat_capable_ships():
+            total += ship.get_cargo_capacity(cargo_type)
+        return total
+
+    def get_fleet_cargo_current(self, cargo_type: str) -> int:
+        """
+        Get total current cargo loaded in the fleet for a specific type.
+
+        Args:
+            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
+
+        Returns:
+            Total cargo amount summed across all ships.
+        """
+        total = 0
+        for ship in self.ships:
+            total += ship.get_current_cargo(cargo_type)
+        return total
+
+    def load_cargo_to_fleet(self, cargo_type: str, amount: int) -> int:
+        """
+        Load cargo to the fleet, distributing across ships with capacity.
+
+        Args:
+            cargo_type: Type of cargo to load
+            amount: Total amount to load
+
+        Returns:
+            Actual amount loaded (may be less than requested if capacity limited).
+        """
+        if amount <= 0:
+            return 0
+
+        remaining = amount
+        total_loaded = 0
+
+        for ship in self.get_combat_capable_ships():
+            if remaining <= 0:
+                break
+            loaded = ship.load_cargo(cargo_type, remaining)
+            total_loaded += loaded
+            remaining -= loaded
+
+        return total_loaded
+
+    def unload_cargo_from_fleet(self, cargo_type: str, amount: int) -> int:
+        """
+        Unload cargo from the fleet, collecting from ships.
+
+        Args:
+            cargo_type: Type of cargo to unload
+            amount: Total amount to unload
+
+        Returns:
+            Actual amount unloaded (may be less than requested if not enough cargo).
+        """
+        if amount <= 0:
+            return 0
+
+        remaining = amount
+        total_unloaded = 0
+
+        for ship in self.ships:
+            if remaining <= 0:
+                break
+            unloaded = ship.unload_cargo(cargo_type, remaining)
+            total_unloaded += unloaded
+            remaining -= unloaded
+
+        return total_unloaded
+
     def to_battle_ships(
         self,
         team_id: int,

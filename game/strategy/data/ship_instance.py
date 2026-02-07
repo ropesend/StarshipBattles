@@ -50,6 +50,9 @@ class ShipInstance:
     resource_levels: Dict[str, float] = field(default_factory=dict)  # resource_name -> current
     component_toggles: Dict[str, bool] = field(default_factory=dict)  # component_id -> enabled
 
+    # Cargo contents (cargo_type -> current amount)
+    cargo_contents: Dict[str, int] = field(default_factory=dict)
+
     # Status
     is_destroyed: bool = False
     is_derelict: bool = False
@@ -400,6 +403,98 @@ class ShipInstance:
         stats = self.get_calculated_stats()
         return stats.get('resource_consumption_per_turn', {})
 
+    # --- Cargo Methods ---
+
+    def get_cargo_capacity(self, cargo_type: str) -> int:
+        """
+        Get maximum cargo capacity for a specific cargo type.
+
+        Args:
+            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
+
+        Returns:
+            Maximum capacity for this cargo type, or 0 if not available.
+        """
+        stats = self.get_calculated_stats()
+        cargo_storage = stats.get('cargo_storage', {})
+        return int(cargo_storage.get(cargo_type, 0))
+
+    def get_current_cargo(self, cargo_type: str) -> int:
+        """
+        Get current amount of cargo loaded for a specific type.
+
+        Args:
+            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
+
+        Returns:
+            Current cargo amount, or 0 if none loaded.
+        """
+        return self.cargo_contents.get(cargo_type, 0)
+
+    def get_cargo_space_available(self, cargo_type: str) -> int:
+        """
+        Get available space for a specific cargo type.
+
+        Args:
+            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
+
+        Returns:
+            Available space (capacity - current).
+        """
+        capacity = self.get_cargo_capacity(cargo_type)
+        current = self.get_current_cargo(cargo_type)
+        return max(0, capacity - current)
+
+    def load_cargo(self, cargo_type: str, amount: int) -> int:
+        """
+        Load cargo onto this ship.
+
+        Args:
+            cargo_type: Type of cargo to load
+            amount: Amount to load (will be capped at available space)
+
+        Returns:
+            Actual amount loaded (may be less than requested if space limited).
+        """
+        if amount <= 0:
+            return 0
+
+        available_space = self.get_cargo_space_available(cargo_type)
+        actual_load = min(amount, available_space)
+
+        if actual_load > 0:
+            current = self.cargo_contents.get(cargo_type, 0)
+            self.cargo_contents[cargo_type] = current + actual_load
+
+        return actual_load
+
+    def unload_cargo(self, cargo_type: str, amount: int) -> int:
+        """
+        Unload cargo from this ship.
+
+        Args:
+            cargo_type: Type of cargo to unload
+            amount: Amount to unload (will be capped at current amount)
+
+        Returns:
+            Actual amount unloaded (may be less than requested if not enough cargo).
+        """
+        if amount <= 0:
+            return 0
+
+        current = self.cargo_contents.get(cargo_type, 0)
+        actual_unload = min(amount, current)
+
+        if actual_unload > 0:
+            new_amount = current - actual_unload
+            if new_amount <= 0:
+                # Remove zero entries to keep dict clean
+                self.cargo_contents.pop(cargo_type, None)
+            else:
+                self.cargo_contents[cargo_type] = new_amount
+
+        return actual_unload
+
     def get_warp_resource_costs(self) -> Dict[str, float]:
         """
         Get all resource costs for a warp jump.
@@ -738,7 +833,7 @@ class ShipInstance:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
-        return {
+        data = {
             'instance_id': self.instance_id,
             'design_id': self.design_id,
             'name': self.name,
@@ -755,6 +850,10 @@ class ShipInstance:
             'battles_survived': self.battles_survived,
             'serial': self.serial,
         }
+        # Only include cargo_contents if non-empty
+        if self.cargo_contents:
+            data['cargo_contents'] = self.cargo_contents
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ShipInstance':
@@ -769,6 +868,7 @@ class ShipInstance:
             component_damage=data.get('component_damage', {}),
             resource_levels=data.get('resource_levels', {}),
             component_toggles=data.get('component_toggles', {}),
+            cargo_contents=data.get('cargo_contents', {}),
             is_destroyed=data.get('is_destroyed', False),
             is_derelict=data.get('is_derelict', False),
             experience=data.get('experience', 0),
@@ -800,6 +900,7 @@ class ShipInstance:
             component_damage=copy.deepcopy(self.component_damage),
             resource_levels=copy.deepcopy(self.resource_levels),
             component_toggles=copy.deepcopy(self.component_toggles),
+            cargo_contents=copy.deepcopy(self.cargo_contents),
             is_destroyed=self.is_destroyed,
             is_derelict=self.is_derelict,
             experience=self.experience,
