@@ -32,7 +32,7 @@ When working in VS Code, you are a **helpful technical consultant**, not an auto
 - Python 3.x
 - Pygame for rendering
 - Pytest for testing (6246 tests baseline)
-- Test parallelization with pytest-xdist (4 workers)
+- Test parallelization with pytest-xdist
 
 ---
 
@@ -94,11 +94,11 @@ pytest tests/ --testmon
 # Targeted
 pytest tests/path/to/test.py
 
-# Full suite
-pytest tests/
+# Full suite (use -n 12 for xdist parallelism)
+pytest tests/ -n 12
 
 # With coverage
-pytest tests/ --cov=game
+pytest tests/ --cov=game -n 12
 ```
 
 ---
@@ -106,20 +106,10 @@ pytest tests/ --cov=game
 ## Key Conventions
 
 ### Code Quality
-- Follow existing patterns and conventions
 - Use type hints for function signatures
 - Add docstrings to public APIs
 - Keep functions focused and small (<50 lines preferred)
 - Avoid deep nesting (max 3 levels)
-- Use descriptive variable names
-
-### Testing
-- Test behavior, not implementation
-- Cover happy path and edge cases
-- Test error conditions
-- Use meaningful test names
-- Keep tests independent
-- Use fixtures for common setup
 
 ### Long-Term Quality
 When faced with choices, prefer:
@@ -130,6 +120,8 @@ When faced with choices, prefer:
 - Specific exceptions over broad catches
 - Extract abstraction over copy-paste
 - Dependency injection over singletons
+
+**Always prefer the clean-sheet design.** When choosing an approach, pick the one you'd choose if building from scratch. Don't compromise the design to make short-term tasks easier.
 
 **Minimize technical debt. Maximize maintainability.**
 
@@ -147,19 +139,16 @@ DO:
 - Delete the old system entirely
 - Update ALL call sites to use the new system
 - Remove old data files, configs, and dependencies
-- Fix any data that needs migration (saves, configs)
 
-**Rationale:** Backward compatibility layers create:
-- Confusion about which system is authoritative
-- Bugs from code paths that are rarely tested
-- Maintenance burden of supporting two systems
-- Technical debt that accumulates over time
+**Rationale:** Backward compatibility layers create confusion about which system is authoritative, bugs from rarely-tested code paths, and maintenance burden that accumulates over time.
 
-**If old data exists** (e.g., saves without new fields): either migrate the data programmatically or accept that old saves are incompatible. Do not pollute the codebase with compatibility shims.
+**Save files are disposable.** Old saves are not migrated — they are discarded. Do not write compatibility shims or migration code for save data.
 
 ---
 
 ## Architecture Principles
+
+For comprehensive architecture documentation, see [`docs/README.md`](docs/README.md).
 
 ### Layer Separation
 - **Core** - No dependencies on other layers
@@ -185,28 +174,14 @@ DO:
 4. Write tests in `tests/unit/simulation/components/abilities/`
 5. Update `components.json` with example usage
 
-### Fixing a Bug
-1. Write a failing test that reproduces the bug
-2. Fix the bug
-3. Verify test passes
-4. Run regression tests
-5. Document fix in commit message
-
-### Refactoring
-1. Ensure tests pass before starting
-2. Make incremental changes
-3. Run tests after each change
-4. Keep commits small and focused
-5. Update documentation as you go
-
 ---
 
 ## Testing Configuration
 
-- **Parallel workers:** 4 for CLI (`-n 4`)
+- **CLI parallel workers:** 12 (`-n 12`)
+- **VS Code Test Explorer:** Use 4 workers (higher breaks the integrated test panel)
 - **Test monitor:** `--testmon` for incremental runs
 - **Baseline:** 6246 passed, 0 skipped
-- **VS Code Test Explorer:** Use 4-8 workers for stability
 
 ---
 
@@ -217,23 +192,3 @@ DO:
 - Run full test suite before pushing
 - Keep commits focused on single changes
 
----
-
-## Getting Help
-
-### Documentation
-- Architecture docs in Knowledge Items
-- Protocol files in `Projects/protocols/`
-- Design decisions in project `decisions.md` files
-
-### When Stuck
-- Ask questions! I'm here to help
-- Suggest alternative approaches
-- Discuss trade-offs
-- Review existing patterns in codebase
-
----
-
-## Remember
-
-You're working **interactively** with a human developer. Be helpful, ask questions, explain your reasoning, and collaborate on solutions. This is not the automated loop - you can and should engage in discussion!
