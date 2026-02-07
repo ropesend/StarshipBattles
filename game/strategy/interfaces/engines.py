@@ -30,6 +30,7 @@ __all__ = [
     'IOrderProcessor',
     'IConflictEngine',
     'IResourceEngine',
+    'IPopulationEngine',
 ]
 
 
@@ -279,5 +280,38 @@ class IResourceEngine(ABC):
 
         Returns:
             List of ResourceDepletion events that occurred this tick
+        """
+        pass
+
+
+class IPopulationEngine(ABC):
+    """
+    Abstract interface for population growth processing.
+
+    Implementations handle:
+    - Logistic population growth per species per colony
+    - Habitability scoring affecting carrying capacity
+    - Happiness modifiers on growth rate
+    - Population decline when above carrying capacity
+
+    Example usage:
+        engine = PopulationEngine()  # or MockPopulationEngine for tests
+        engine.process_population_growth(empires)
+    """
+
+    @abstractmethod
+    def process_population_growth(
+        self,
+        empires: List
+    ) -> None:
+        """
+        Process population growth for all empires.
+
+        Iterates through all empires, colonies, and species populations,
+        applying logistic growth based on habitability, happiness, and
+        race aptitudes.
+
+        Args:
+            empires: List of Empire objects to process
         """
         pass

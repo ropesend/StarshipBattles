@@ -52,6 +52,7 @@ if TYPE_CHECKING:
         IOrderProcessor,
         IConflictEngine,
         IResourceEngine,
+        IPopulationEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -90,6 +91,7 @@ class TurnEngine:
         order_processor: Optional['IOrderProcessor'] = None,
         conflict_engine: Optional['IConflictEngine'] = None,
         resource_engine: Optional['IResourceEngine'] = None,
+        population_engine: Optional['IPopulationEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -112,6 +114,8 @@ class TurnEngine:
                            If None, creates ConflictResolutionEngine.
             resource_engine: Optional resource engine (IResourceEngine).
                            If None, creates ResourceManagementEngine.
+            population_engine: Optional population engine (IPopulationEngine).
+                           If None, creates PopulationEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -132,6 +136,7 @@ class TurnEngine:
         self._order_processor: Optional['IOrderProcessor'] = order_processor
         self._conflict_engine: Optional['IConflictEngine'] = conflict_engine
         self._resource_engine: Optional['IResourceEngine'] = resource_engine
+        self._population_engine: Optional['IPopulationEngine'] = population_engine
 
     @property
     def movement_engine(self) -> 'IMovementEngine':
@@ -177,6 +182,14 @@ class TurnEngine:
             self._resource_engine = ResourceManagementEngine(registries=self._registries)
         return self._resource_engine
 
+    @property
+    def population_engine(self) -> 'IPopulationEngine':
+        """Return population engine, lazily creating default if not injected."""
+        if self._population_engine is None:
+            from game.strategy.engine.population_engine import PopulationEngine
+            self._population_engine = PopulationEngine()
+        return self._population_engine
+
     def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (100 sub-ticks).
@@ -202,6 +215,9 @@ class TurnEngine:
 
         # 4. Fleet Production Phase (PROJ-67)
         self.production_engine.process_fleet_production(empires, galaxy, save_path)
+
+        # 5. Population Growth Phase (PROJ-68)
+        self.population_engine.process_population_growth(empires)
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
         """
