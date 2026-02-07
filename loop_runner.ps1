@@ -71,49 +71,49 @@ while ($iteration -lt $MAX_ITERATIONS) {
     # Run Claude CLI with retry logic for EPERM errors
     $retryCount = 0
     $success = $false
-    
+
     while (-not $success -and $retryCount -lt $MAX_RETRIES) {
-        try {
-            # Clean temp files before each attempt
-            if ($retryCount -gt 0) {
-                Write-Warning "Retry attempt $retryCount of $MAX_RETRIES..."
-                Clear-ClaudeTempFiles
-                Start-Sleep -Seconds 5
-            }
-            
-            claude `
-                --dangerously-skip-permissions `
-                --system-prompt-file refactor_loop/WORKER.md `
-                -p "Follow Protocol 08 (Automated Loop). Read refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress."
-                
-            if ($LASTEXITCODE -ne 0) {
-                throw "Claude CLI exited with error code $LASTEXITCODE"
-            }
-            
+        # Clean temp files before each attempt
+        if ($retryCount -gt 0) {
+            Write-Warning "Retry attempt $($retryCount + 1) of $MAX_RETRIES..."
+            Clear-ClaudeTempFiles
+            Start-Sleep -Seconds 5
+        }
+
+        # Capture output to check for EPERM in JSON error responses
+        $claudeOutput = claude `
+            --dangerously-skip-permissions `
+            --system-prompt-file refactor_loop/WORKER.md `
+            -p "Follow Protocol 08 (Automated Loop). Read refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress." 2>&1 | Out-String
+
+        $claudeExitCode = $LASTEXITCODE
+
+        # Display the output
+        if ($claudeOutput) {
+            Write-Host $claudeOutput
+        }
+
+        if ($claudeExitCode -eq 0) {
             $success = $true
         }
-        catch {
-            $errorMsg = $_.Exception.Message
-            
-            # Check if it's an EPERM error (transient file lock issue)
-            if ($errorMsg -match "EPERM" -or $errorMsg -match "operation not permitted") {
-                $retryCount++
-                Write-Warning "EPERM error detected (file lock issue). Cleaning up..."
-                Clear-ClaudeTempFiles
-            }
-            else {
-                # Non-EPERM error, fail immediately
-                Write-ErrorLog "Claude CLI failed: $_"
-                Write-Warning "Check output above for errors"
-                Write-Info "You can manually fix issues and restart"
-                exit 1
-            }
+        elseif ($claudeOutput -match "EPERM" -or $claudeOutput -match "operation not permitted" -or $claudeOutput -match "symlink") {
+            $retryCount++
+            Write-Warning "EPERM/symlink error detected (Windows file permission issue). Cleaning up..."
+            Clear-ClaudeTempFiles
+        }
+        else {
+            # Non-EPERM error, fail immediately
+            Write-ErrorLog "Claude CLI failed with exit code $claudeExitCode"
+            Write-Warning "Check output above for errors"
+            Write-Info "You can manually fix issues and restart"
+            exit 1
         }
     }
-    
+
     if (-not $success) {
         Write-ErrorLog "Failed after $MAX_RETRIES retries due to persistent EPERM errors"
-        Write-Info "Try running PowerShell as Administrator or enabling Windows Developer Mode"
+        Write-Info "Try enabling Windows Developer Mode (Settings > System > For developers)"
+        Write-Info "Or run PowerShell as Administrator"
         exit 1
     }
 
