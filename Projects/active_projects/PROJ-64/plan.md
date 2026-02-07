@@ -17,14 +17,14 @@
 | 2. Strategy Layer | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI Panels & Renderer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Screens (Part A) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. UI Screens (Part B) - Workshop, Test Lab, Strategy | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. UI Screens (Part B) - Workshop, Test Lab, Strategy | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Intentional Broad Catches - Document | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete - 16 sites processed across 11 files (builder, setup, race screens, design selector, battle screen, galaxy test)
-**Next Action:** Execute Phase 5 (UI Screens Part B - Workshop, Test Lab, Strategy)
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 complete - 4 sites narrowed across 3 files (workshop_data_loader, strategy_screen, strategy_input_handler). 4 files already clean or removed.
+**Next Action:** Execute Phase 6 (Document Intentional Broad Catches)
 **Blockers:** None
 
 ## Overview

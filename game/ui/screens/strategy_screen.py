@@ -398,7 +398,7 @@ class StrategyScreen:
                 log_info(f"  Refreshing display for selected_object: {self.selected_object}")
                 img = self._get_object_asset(self.selected_object)
                 self.ui.show_detailed_report(self.selected_object, img)
-            except Exception as e:
+            except (FileNotFoundError, OSError, pygame.error, AttributeError, KeyError) as e:
                 log_warning(f"Could not refresh planet display after build queue close: {e}")
                 # Continue anyway - don't block the close operation
         log_info("_on_build_queue_close() FINISHED")
@@ -517,7 +517,7 @@ class StrategyScreen:
                         if obj.image_rotation and obj.image_rotation != 0.0:
                             img = pygame.transform.rotate(img, obj.image_rotation)
                         return img
-                except Exception as e:
+                except (FileNotFoundError, OSError, pygame.error, AttributeError) as e:
                     # Log error and fall through to None
                     log_warning(f"Could not load planet image {obj.image_id}: {e}")
             return None  # PlanetReportPanel will create gradient placeholder

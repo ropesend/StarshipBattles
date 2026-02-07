@@ -37,4 +37,131 @@ Features to add:
  Storms
  
  Different System types
- 
+
+Space Yards 
+- I want to create a space yard component that can be added to a ship.
+- This should be a different component than the one for the complexes, but the system should treat then the same.
+- If a fleet has a space yard component then I should be able to add items to the build queue for the fleet.
+- Fleets that are building cannont move, they should be able to produce complexes if they are in the same sector as a planet, but if they are in a diifferent sector then they connot build complexes.  They should always be able to build other ships/vehicles. 
+- the code, and UI should use as much of the same code as possible as the complex space yards.
+- Please ask questions and make suggestions, create a plan to add this new aspect, break it up into phases, and substages - list all files that need to be edited, all tests that need to be added.
+- Plan to use TDD
+
+Race Setup
+ - We need to modify/add to the Race Setup screen to allow for the selection of a homeworld type.
+ - There are some simple additions that are needed:
+  - Entity Name: (if you have a better name for this, please suggest it) (for role playing purposes, no impact on gameplay)
+  - Government Type: (for role playing purposes, no impact on gameplay)
+    - Empire
+    - Hegemony
+    - Alliance
+    - Oligarchy
+    - Confederation
+    - Protectorate
+    - Consortium
+    - Federation
+    - Commonwealth
+    - Imperium
+    - Hive
+    - Clan
+    - Society
+    - Collective
+  - Government Type: Entity Name + Government Type examples: Kilingon Empire, Rossarian Commonwealth, Iridian Oligarchy
+  - Leader Title: (for role playing purposes, no impact on gameplay)
+    - Central Speaker
+    - Chairman
+    - Chairwoman
+    - Chancellor
+    - Czar
+    - Director
+    - Duke
+    - Duchess
+    - Emperor
+    - Empress
+    - Grand Admiral
+    - Grand Lord
+    - High Priest
+    - High Priestess
+    - High Regent
+    - Kaiser
+    - King
+    - Omnicron
+    - Praetor
+    - Premier
+    - President
+    - Prime Minister
+    - Prince
+    - Princess
+    - Queen
+    - Triumvir
+    - Warlord
+ - Race Name: ie: Klingons, Rossarians, Iridians, Humans, could be Humans as members of the Iridan commonwealth it does not need to be the same name as the government type
+ - Race Name Plural: ie: Klingons, Rossarians, Iridians, Humans (for role playing purposes, no impact on gameplay)
+ - Race Physical Types: (for role playing purposes, no impact on gameplay)
+    - Felinoid
+    - Caninoid
+    - Serpentoid
+    - Ornithoid
+    - Insectoid 
+    - Humanoid 
+    - Reptilian 
+    - Crystalline 
+    - Energy Being 
+    - Symbiotic 
+    - Gaseous
+    - Aquatic
+    - Mechanoid
+    - Techno-Organic
+- Government Organization: (will come with a bunch of strengths and weaknesses, will impact gameplay)
+    - Anarchy
+    - Democracy
+    - Dictatorship
+    - Monarchy
+    - Theocracy
+    - Oligarchy
+    - Republic
+    - Feudalism
+    - Communism
+    - Totalitarianism
+    - Corporate
+    - Hive Mind
+    - Collective
+- Scociety Types: (will come with a bunch of strengths and weaknesses, will impact gameplay)
+    - Artisans
+    - Berserkers
+    - Engineers
+    - Farmers
+    - Industrialists
+    - Mechanics
+    - Merchants
+    - Miners
+    - Neutral
+    - Politicians
+    - Refiners
+    - Schemers
+    - Scientists
+    - Suppliers
+    - Traders
+    - Warriors
+    - Xenophobes
+
+ - sliders for the environment should be initially set based on the homeworld type, but should be adjustable by the player.
+ - The homeworld type should be a new field in the race json file.
+ - WE also need to add water sliders to the race setup screen, and the race json file.
+ - The water sliders should be treated as another environmental factor that affects population growth/shrinkage.
+ - there needs to be tolerance sliders for each atmosphere preference.
+ - There also needs to be sliders for race aptitudes:
+  - Strength
+  - Intelligence
+  - Constitution
+  - Dexterity
+  - tolerance of other species
+  - cooperation within the species
+  - base line happyness
+  - base line population growth
+  - tollerance for conflict
+  - At setup there should be a certain amount of points to distribute among these aptitudes the points should be for all of the above as well as the environmental tolerance
+  - setting the center of the preferences does not cost any points, but the tolerance sliders do cost points
+  - increasing tolerance for a all sliders should come at an exponentially increasing cost.
+ - Please ask questions and make suggestions, create a plan to add this new aspect, break it up into phases, and substages - list all files that need to be edited, all tests that need to be added.
+- Plan to use TDD

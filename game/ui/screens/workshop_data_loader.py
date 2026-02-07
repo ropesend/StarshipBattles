@@ -5,6 +5,7 @@ Extracted from DesignWorkshopScreen._reload_data() for better testability and re
 
 PROJ-38: Added registries parameter for dependency injection support.
 """
+import json
 import os
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Union, TYPE_CHECKING
@@ -147,7 +148,7 @@ class WorkshopDataLoader:
             # 6. Determine default class
             result.default_class = self._get_default_class()
             
-        except Exception as e:
+        except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             log_error(f"Failed to load data: {e}")
             result.success = False
             result.errors.append(str(e))

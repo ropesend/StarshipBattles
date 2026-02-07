@@ -517,5 +517,5 @@ class StrategyInputHandler:
                 manager=self.scene.ui.manager,
                 window_title="Screenshot"
             )
-        except Exception as e:
+        except (OSError, RuntimeError, pygame.error) as e:
             log_warning(f"Failed to show screenshot toast notification: {e}")
