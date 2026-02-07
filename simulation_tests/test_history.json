@@ -97,6 +97,55 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-002_2026-01-31T22-03-37-243550_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-002_2026-01-31T22-03-37-243550_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:46.855433",
+      "ticks_run": 500,
+      "passed": false,
+      "metrics": {
+        "test_id": "RESOURCE-002",
+        "initial_fuel": 2.5,
+        "final_fuel": 9.017092628127443e-15,
+        "fuel_consumed": 2.499999999999991,
+        "final_velocity": 31.25,
+        "distance_traveled": 15578.125,
+        "ticks_run": 500,
+        "load_validation_errors": [
+          "Test_Engine_FuelDepletion.json: expected_stats.max_hp mismatch - JSON says 105, ship has 155 (diff: 50.000000)"
+        ],
+        "all_criteria_passed": false,
+        "duration_real": 0.904287576675415,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 1,
+        "fail": 1,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Final Fuel",
+          "status": "PASS",
+          "message": "Final Fuel: ✓ Expected 0.0, got 9.017092628127443e-15 - EXACT MATCH\n  Formula: Fuel fully depleted",
+          "expected": 0.0,
+          "actual": 9.017092628127443e-15,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Velocity",
+          "status": "FAIL",
+          "message": "Final Velocity: ✗ Expected 0.0, got 31.25 - MISMATCH (+3125.000000%)\n  Formula: Ship stopped after fuel starvation",
+          "expected": 0.0,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-002_2026-02-06T22-19-45-951146_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-002_2026-02-06T22-19-45-951146_final.json",
+      "seed": 478163327
     }
   ],
   "RESOURCE-003": [
@@ -176,6 +225,45 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-003_2026-01-31T22-03-37-969722_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-003_2026-01-31T22-03-37-969722_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:47.861116",
+      "ticks_run": 500,
+      "passed": false,
+      "metrics": {
+        "test_id": "RESOURCE-003",
+        "initial_fuel": 2.5,
+        "final_fuel": 9.017092628127443e-15,
+        "fuel_change": -2.499999999999991,
+        "final_velocity": 31.25,
+        "ticks_run": 500,
+        "load_validation_errors": [
+          "Test_Engine_FuelRegen.json: expected_stats.max_hp mismatch - JSON says 155, ship has 205 (diff: 50.000000)"
+        ],
+        "all_criteria_passed": false,
+        "duration_real": 0.9142975807189941,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 0,
+        "fail": 1,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Fuel Stable",
+          "status": "FAIL",
+          "message": "Fuel Stable: ✗ Expected 0.0, got -2.499999999999991 - MISMATCH (-250.000000%)\n  Formula: Generator matches consumption (net rate = 0)",
+          "expected": 0.0,
+          "actual": -2.499999999999991,
+          "p_value": null,
+          "tolerance": 0.5
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-003_2026-02-06T22-19-46-946818_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-003_2026-02-06T22-19-46-946818_final.json",
       "seed": 478163327
     }
   ],
@@ -271,6 +359,52 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-004_2026-01-31T22-03-38-643769_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-004_2026-01-31T22-03-38-643769_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:47.971256",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-004",
+        "initial_energy": 100000.0,
+        "final_energy": 99900.0,
+        "energy_consumed": 100.0,
+        "shots_fired": 100,
+        "damage_dealt": 99.0,
+        "ticks_run": 100,
+        "all_criteria_passed": true,
+        "duration_real": 0.02425408363342285,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 2,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Energy Consumed",
+          "status": "PASS",
+          "message": "Energy Consumed: ✓ Expected 100, got 100.0 - EXACT MATCH\n  Formula: 100 shots × 1 energy/shot",
+          "expected": 100,
+          "actual": 100.0,
+          "p_value": null,
+          "tolerance": 0.01
+        },
+        {
+          "name": "Final Energy",
+          "status": "PASS",
+          "message": "Final Energy: ✓ Expected 99900.0, got 99900.0 - EXACT MATCH\n  Formula: 100000.0 - 100 = 99900.0",
+          "expected": 99900.0,
+          "actual": 99900.0,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-004_2026-02-06T22-19-47-947002_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-004_2026-02-06T22-19-47-947002_final.json",
+      "seed": 478163327
     }
   ],
   "RESOURCE-005": [
@@ -365,6 +499,52 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005_2026-01-31T22-03-38-727130_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005_2026-01-31T22-03-38-727130_final.json",
       "seed": 63384488
+    },
+    {
+      "timestamp": "2026-02-06T22:19:48.078145",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-005",
+        "initial_energy": 25.0,
+        "final_energy": 0.0,
+        "energy_consumed": 25.0,
+        "shots_fired": 25,
+        "damage_dealt": 25.0,
+        "ticks_run": 100,
+        "all_criteria_passed": true,
+        "duration_real": 0.014937162399291992,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 2,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Final Energy",
+          "status": "PASS",
+          "message": "Final Energy: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Energy fully depleted",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Shots Fired",
+          "status": "PASS",
+          "message": "Shots Fired: ✓ Expected 25, got 25 - EXACT MATCH\n  Formula: 25.0 / 1 = 25 shots",
+          "expected": 25,
+          "actual": 25,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-005_2026-02-06T22-19-48-063208_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-005_2026-02-06T22-19-48-063208_final.json",
+      "seed": 63384488
     }
   ],
   "RESOURCE-005a": [
@@ -440,6 +620,43 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005a_2026-01-31T22-03-38-808979_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-005a_2026-01-31T22-03-38-808979_final.json",
+      "seed": 1589915144
+    },
+    {
+      "timestamp": "2026-02-06T22:19:48.189122",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-005a",
+        "initial_energy": 25.0,
+        "final_energy": 24.0,
+        "energy_change": -1.0,
+        "damage_dealt": 99.0,
+        "shots_fired": 99.0,
+        "ticks_run": 100,
+        "all_criteria_passed": true,
+        "duration_real": 0.02588057518005371,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 1,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Shots Fired",
+          "status": "PASS",
+          "message": "Shots Fired: ✓ Expected 100, got 99.0 - within tolerance\n  Formula: Generator sustains continuous firing",
+          "expected": 100,
+          "actual": 99.0,
+          "p_value": null,
+          "tolerance": 5
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-005a_2026-02-06T22-19-48-163241_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-005a_2026-02-06T22-19-48-163241_final.json",
       "seed": 1589915144
     }
   ],
@@ -535,6 +752,52 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-006_2026-01-31T22-03-38-893820_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-006_2026-01-31T22-03-38-893820_final.json",
       "seed": 63384488
+    },
+    {
+      "timestamp": "2026-02-06T22:19:48.310634",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-006",
+        "initial_ammo": 100000.0,
+        "final_ammo": 99900.0,
+        "ammo_consumed": 100.0,
+        "shots_fired": 100,
+        "damage_dealt": 100.0,
+        "ticks_run": 100,
+        "all_criteria_passed": true,
+        "duration_real": 0.030436038970947266,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 2,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Ammo Consumed",
+          "status": "PASS",
+          "message": "Ammo Consumed: ✓ Expected 100, got 100.0 - EXACT MATCH\n  Formula: 100 shots × 1 ammo/shot",
+          "expected": 100,
+          "actual": 100.0,
+          "p_value": null,
+          "tolerance": 0.01
+        },
+        {
+          "name": "Final Ammo",
+          "status": "PASS",
+          "message": "Final Ammo: ✓ Expected 99900.0, got 99900.0 - EXACT MATCH\n  Formula: 100000.0 - 100 = 99900.0",
+          "expected": 99900.0,
+          "actual": 99900.0,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-006_2026-02-06T22-19-48-280198_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-006_2026-02-06T22-19-48-280198_final.json",
+      "seed": 63384488
     }
   ],
   "RESOURCE-007": [
@@ -629,6 +892,52 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-007_2026-01-31T22-03-38-986302_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-007_2026-01-31T22-03-38-986302_final.json",
       "seed": 49310608
+    },
+    {
+      "timestamp": "2026-02-06T22:19:48.409359",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-007",
+        "initial_ammo": 10.0,
+        "final_ammo": 0.0,
+        "ammo_consumed": 10.0,
+        "shots_fired": 10,
+        "damage_dealt": 10.0,
+        "ticks_run": 100,
+        "all_criteria_passed": true,
+        "duration_real": 0.01215505599975586,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 2,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Final Ammo",
+          "status": "PASS",
+          "message": "Final Ammo: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ammo fully depleted",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Shots Fired",
+          "status": "PASS",
+          "message": "Shots Fired: ✓ Expected 10, got 10 - EXACT MATCH\n  Formula: 10.0 / 1 = 10 shots",
+          "expected": 10,
+          "actual": 10,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-007_2026-02-06T22-19-48-397205_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-007_2026-02-06T22-19-48-397205_final.json",
+      "seed": 49310608
     }
   ],
   "RESOURCE-008": [
@@ -720,6 +1029,51 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-008_2026-01-31T22-03-39-060345_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\RESOURCE-008_2026-01-31T22-03-39-060345_final.json",
+      "seed": 939042955
+    },
+    {
+      "timestamp": "2026-02-06T22:19:48.578358",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-008",
+        "initial_ammo": 100000.0,
+        "final_ammo": 99900.0,
+        "ammo_consumed": 100.0,
+        "launches": 100,
+        "ticks_run": 100,
+        "all_criteria_passed": true,
+        "duration_real": 0.08128070831298828,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 2,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Ammo Consumed",
+          "status": "PASS",
+          "message": "Ammo Consumed: ✓ Expected 100, got 100.0 - EXACT MATCH\n  Formula: 100 launches × 1 ammo/launch",
+          "expected": 100,
+          "actual": 100.0,
+          "p_value": null,
+          "tolerance": 0.01
+        },
+        {
+          "name": "Final Ammo",
+          "status": "PASS",
+          "message": "Final Ammo: ✓ Expected 99900.0, got 99900.0 - EXACT MATCH\n  Formula: 100000.0 - 100 = 99900.0",
+          "expected": 99900.0,
+          "actual": 99900.0,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-008_2026-02-06T22-19-48-497077_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-008_2026-02-06T22-19-48-497077_final.json",
       "seed": 939042955
     }
   ],
@@ -890,6 +1244,173 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-001_2026-01-31T22-07-13-045398_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-001_2026-01-31T22-07-13-045398_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:34.774202",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-001",
+        "prerun_validation": {
+          "data_expectations": [
+            {
+              "name": "Ship Mass",
+              "source": "ship.mass",
+              "expected": 400,
+              "actual": 400.0,
+              "json_file": "Test_Engine_1x_LowMass.json",
+              "status": "MATCH",
+              "error_message": ""
+            },
+            {
+              "name": "Engine Thrust",
+              "source": "ship.total_thrust",
+              "expected": 500,
+              "actual": 500.0,
+              "json_file": "Test_Engine_1x_LowMass.json",
+              "status": "MATCH",
+              "error_message": ""
+            }
+          ],
+          "calculated_expectations": [
+            {
+              "name": "Max Speed",
+              "formula": "(thrust × K_SPEED) / mass",
+              "formula_with_values": "(500 × 25) / 400 = 31.25",
+              "expected": 31.25,
+              "actual": 31.25,
+              "calculated_from_actual": 31.25,
+              "variables": {
+                "thrust": 500,
+                "K_SPEED": 25,
+                "mass": 400
+              },
+              "status": "MATCH",
+              "error_message": ""
+            },
+            {
+              "name": "Acceleration Rate",
+              "formula": "(thrust × K_THRUST) / mass²",
+              "formula_with_values": "(500 × 2500) / 400² = 7.8125",
+              "expected": 7.8125,
+              "actual": 7.8125,
+              "calculated_from_actual": 7.8125,
+              "variables": {
+                "thrust": 500,
+                "K_THRUST": 2500,
+                "mass": 400
+              },
+              "status": "MATCH",
+              "error_message": ""
+            }
+          ],
+          "setup_conditions": [
+            {
+              "name": "Initial Position",
+              "value": "(0, 0)",
+              "description": "Ship starts at origin"
+            },
+            {
+              "name": "Initial Velocity",
+              "value": "(0, 0)",
+              "description": "Ship starts at rest"
+            },
+            {
+              "name": "Initial Angle",
+              "value": "0°",
+              "description": "Ship faces right (+X direction)"
+            },
+            {
+              "name": "Test Duration",
+              "value": "100 ticks",
+              "description": "Simulation runs for 100 physics ticks"
+            },
+            {
+              "name": "Thrust Command",
+              "value": "Forward (each tick)",
+              "description": "thrust_forward() called every tick"
+            }
+          ],
+          "pass_criteria": [
+            {
+              "description": "Max Speed = 31.25",
+              "numeric_threshold": 31.25
+            },
+            {
+              "description": "Final Speed = 31.25",
+              "numeric_threshold": 31.25
+            },
+            {
+              "description": "Distance = 3078.12",
+              "numeric_threshold": 3078.125
+            }
+          ],
+          "can_run": true,
+          "blocking_errors": []
+        },
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          3078.125,
+          0.0
+        ],
+        "initial_velocity": 0.0,
+        "final_velocity": 31.25,
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 31.25,
+        "initial_angle": 0.0,
+        "final_angle": 0.0,
+        "distance_traveled": 3078.125,
+        "velocity_change": 31.25,
+        "angle_change": 0.0,
+        "ticks_run": 100,
+        "expected_max_speed": 31.25,
+        "expected_acceleration_rate": 7.8125,
+        "max_speed": 31.25,
+        "all_criteria_passed": true,
+        "duration_real": 0.18032026290893555,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 3,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Max Speed",
+          "status": "PASS",
+          "message": "Max Speed: ✓ Expected 31.25, got 31.25 - EXACT MATCH\n  Formula: max_speed = (thrust × K_SPEED) / mass = 31.25",
+          "expected": 31.25,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Speed",
+          "status": "PASS",
+          "message": "Final Speed: ✓ Expected 31.25, got 31.25 - EXACT MATCH\n  Formula: Ship reaches max_speed = 31.25",
+          "expected": 31.25,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Distance",
+          "status": "PASS",
+          "message": "Distance: ✓ Expected 3078.125, got 3078.125 - EXACT MATCH\n  Formula: Accel phase (4 ticks) + cruise phase (96 ticks) = 3078.12 px",
+          "expected": 3078.125,
+          "actual": 3078.125,
+          "p_value": null,
+          "tolerance": 0.1
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-001_2026-02-06T22-19-34-593881_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-001_2026-02-06T22-19-34-593881_final.json",
+      "seed": 515304951
     }
   ],
   "PROP-001b": [
@@ -982,6 +1503,96 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-001b_2026-01-31T22-07-13-241333_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-001b_2026-01-31T22-07-13-241333_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:35.035339",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-001b",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": 0.0,
+        "final_velocity": 0.0,
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "final_angle": 0.0,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "angle_change": 0.0,
+        "ticks_run": 100,
+        "expected_max_speed": 0.0,
+        "expected_acceleration_rate": 0.0,
+        "thrust": 0,
+        "mass": 400.0,
+        "max_speed": 0,
+        "remained_stationary": true,
+        "duration_real": 0.18036222457885742,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Ship Mass",
+          "status": "PASS",
+          "message": "Ship Mass: ✓ Expected 400, got 400.0",
+          "expected": 400,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Total Thrust (Should be 0)",
+          "status": "PASS",
+          "message": "Total Thrust (Should be 0): ✓ Expected 0, got 0",
+          "expected": 0,
+          "actual": 0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Max Speed (Should be 0)",
+          "status": "PASS",
+          "message": "Max Speed (Should be 0): ✓ Expected 0, got 0",
+          "expected": 0,
+          "actual": 0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Final Velocity",
+          "status": "PASS",
+          "message": "Final Velocity: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship without engine cannot accelerate",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Distance Traveled",
+          "status": "PASS",
+          "message": "Distance Traveled: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship should remain at initial position",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-001b_2026-02-06T22-19-34-854977_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-001b_2026-02-06T22-19-34-854977_final.json",
+      "seed": 478163327
     }
   ],
   "PROP-001c": [
@@ -1063,6 +1674,86 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-001c_2026-01-31T22-07-13-429174_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-001c_2026-01-31T22-07-13-429174_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:35.306759",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-001c",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          6156.25,
+          0.0
+        ],
+        "initial_velocity": 0.0,
+        "final_velocity": 62.5,
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 62.5,
+        "initial_angle": 0.0,
+        "final_angle": 0.0,
+        "distance_traveled": 6156.25,
+        "velocity_change": 62.5,
+        "angle_change": 0.0,
+        "ticks_run": 100,
+        "expected_max_speed": 62.5,
+        "expected_acceleration_rate": 15.625,
+        "max_speed": 62.5,
+        "total_thrust": 1000.0,
+        "all_criteria_passed": true,
+        "duration_real": 0.17914247512817383,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Max Speed",
+          "status": "PASS",
+          "message": "Max Speed: ✓ Expected 62.5, got 62.5 - EXACT MATCH\n  Formula: max_speed = (1000 × 25) / 400 = 62.5",
+          "expected": 62.5,
+          "actual": 62.5,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Speed",
+          "status": "PASS",
+          "message": "Final Speed: ✓ Expected 62.5, got 62.5 - EXACT MATCH\n  Formula: Ship reaches max_speed = 62.5",
+          "expected": 62.5,
+          "actual": 62.5,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Distance",
+          "status": "PASS",
+          "message": "Distance: ✓ Expected 6156.25, got 6156.25 - EXACT MATCH\n  Formula: Accel phase (4 ticks) + cruise phase (96 ticks) = 6156.25 px",
+          "expected": 6156.25,
+          "actual": 6156.25,
+          "p_value": null,
+          "tolerance": 0.1
+        },
+        {
+          "name": "Total Thrust",
+          "status": "PASS",
+          "message": "Total Thrust: ✓ Expected 1000, got 1000.0 - EXACT MATCH\n  Formula: 2 × 500 = 1000 (stacked)",
+          "expected": 1000,
+          "actual": 1000.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-001c_2026-02-06T22-19-35-127094_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-001c_2026-02-06T22-19-35-127094_final.json",
       "seed": 478163327
     }
   ],
@@ -1204,6 +1895,144 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-002_2026-01-31T22-07-13-628746_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-002_2026-01-31T22-07-13-628746_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:36.517163",
+      "ticks_run": 200,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-002",
+        "low_mass": {
+          "mass": 400.0,
+          "thrust": 500.0,
+          "max_speed": 31.25,
+          "final_velocity": 31.25,
+          "distance": 6203.125
+        },
+        "med_mass": {
+          "mass": 3000.0,
+          "thrust": 500.0,
+          "max_speed": 4.166666666666667,
+          "final_velocity": 4.166666666666667,
+          "distance": 772.9166666666653
+        },
+        "high_mass": {
+          "mass": 11000.0,
+          "thrust": 500.0,
+          "max_speed": 1.1363636363636365,
+          "final_velocity": 1.1363636363636365,
+          "distance": 165.340909090909
+        },
+        "speed_ratio_low_med": 7.499999999999999,
+        "expected_ratio": 7.5,
+        "ratio_error_percent": 1.1842378929335004e-14,
+        "speed_ordering_correct": true,
+        "ratio_matches": true,
+        "ticks_run": 200,
+        "duration_real": 1.1128966808319092,
+        "ticks": 200
+      },
+      "validation_summary": {
+        "pass": 10,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Low Mass Ship - Mass",
+          "status": "PASS",
+          "message": "Low Mass Ship - Mass: ✓ Expected 400, got 400.0",
+          "expected": 400,
+          "actual": 400.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Low Mass Ship - Thrust",
+          "status": "PASS",
+          "message": "Low Mass Ship - Thrust: ✓ Expected 500, got 500.0",
+          "expected": 500,
+          "actual": 500.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Low Mass Ship - Max Speed",
+          "status": "PASS",
+          "message": "Low Mass Ship - Max Speed: ✓ Expected 31.25, got 31.25 - EXACT MATCH\n  Formula: max_speed = (500 * 25) / 40 = 312.5",
+          "expected": 31.25,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Med Mass Ship - Mass",
+          "status": "PASS",
+          "message": "Med Mass Ship - Mass: ✓ Expected 3000, got 3000.0",
+          "expected": 3000,
+          "actual": 3000.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Med Mass Ship - Thrust",
+          "status": "PASS",
+          "message": "Med Mass Ship - Thrust: ✓ Expected 500, got 500.0",
+          "expected": 500,
+          "actual": 500.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "Med Mass Ship - Max Speed",
+          "status": "PASS",
+          "message": "Med Mass Ship - Max Speed: ✓ Expected 4.166666666666667, got 4.166666666666667 - EXACT MATCH\n  Formula: max_speed = (500 * 25) / 3000",
+          "expected": 4.166666666666667,
+          "actual": 4.166666666666667,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "High Mass Ship - Mass",
+          "status": "PASS",
+          "message": "High Mass Ship - Mass: ✓ Expected 11000, got 11000.0",
+          "expected": 11000,
+          "actual": 11000.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "High Mass Ship - Thrust",
+          "status": "PASS",
+          "message": "High Mass Ship - Thrust: ✓ Expected 500, got 500.0",
+          "expected": 500,
+          "actual": 500.0,
+          "p_value": null,
+          "tolerance": 0.0
+        },
+        {
+          "name": "High Mass Ship - Max Speed",
+          "status": "PASS",
+          "message": "High Mass Ship - Max Speed: ✓ Expected 1.1363636363636365, got 1.1363636363636365 - EXACT MATCH\n  Formula: max_speed = (500 * 25) / 11000",
+          "expected": 1.1363636363636365,
+          "actual": 1.1363636363636365,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Speed Ratio (Low/Med)",
+          "status": "PASS",
+          "message": "Speed Ratio (Low/Med): ✓ Expected 7.5, got 7.499999999999999 - EXACT MATCH\n  Formula: speed_ratio = low_speed / med_speed = med_mass / low_mass",
+          "expected": 7.5,
+          "actual": 7.499999999999999,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-002_2026-02-06T22-19-35-404266_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-002_2026-02-06T22-19-35-404266_final.json",
+      "seed": 478163327
     }
   ],
   "PROP-003": [
@@ -1287,6 +2116,88 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-003_2026-01-31T22-07-14-452288_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-003_2026-01-31T22-07-14-452288_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:36.698775",
+      "ticks_run": 50,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-003",
+        "mass": 400.0,
+        "raw_turn_rate": 5.0,
+        "expected_turn_speed": 15.625,
+        "actual_turn_speed": 15.625,
+        "starting_angle": 0.0,
+        "final_angle": 352.1875,
+        "angle_change": 352.1875,
+        "expected_angle_change": 7.8125,
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": [
+          0.0,
+          0.0
+        ],
+        "final_velocity": [
+          0.0,
+          -0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "ticks_run": 50,
+        "expected_max_speed": 31.25,
+        "expected_acceleration_rate": 7.8125,
+        "turn_speed_degrees_per_tick": 0.15625,
+        "all_criteria_passed": true,
+        "duration_real": 0.09451842308044434,
+        "ticks": 50
+      },
+      "validation_summary": {
+        "pass": 3,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Turn Speed",
+          "status": "PASS",
+          "message": "Turn Speed: ✓ Expected 15.625, got 15.625 - EXACT MATCH\n  Formula: turn_speed = (5.0 × 25000) / 400^1.5 = 15.625",
+          "expected": 15.625,
+          "actual": 15.625,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Starting Angle",
+          "status": "PASS",
+          "message": "Starting Angle: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship starts at 0.0°",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Angle",
+          "status": "PASS",
+          "message": "Final Angle: ✓ Expected 352.1875, got 352.1875 - EXACT MATCH\n  Formula: CCW rotation: 0° - 7.8125° = 352.1875° (wrapped)",
+          "expected": 352.1875,
+          "actual": 352.1875,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-003_2026-02-06T22-19-36-602697_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-003_2026-02-06T22-19-36-602697_final.json",
       "seed": 478163327
     }
   ],
@@ -1379,6 +2290,96 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-003b_2026-01-31T22-07-14-595662_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-003b_2026-01-31T22-07-14-595662_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:36.874519",
+      "ticks_run": 50,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-003b",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": [
+          0.0,
+          0.0
+        ],
+        "final_velocity": [
+          0.0,
+          -0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "final_angle": 352.1875,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "angle_change": 7.8125,
+        "ticks_run": 50,
+        "expected_max_speed": 0.0,
+        "expected_acceleration_rate": 0.0,
+        "expected_angle_change": 7.8125,
+        "turn_speed_degrees_per_tick": 0.15625,
+        "mass": 400.0,
+        "total_thrust": 0,
+        "expected_turn_speed": 15.625,
+        "actual_turn_speed": 15.625,
+        "all_criteria_passed": true,
+        "duration_real": 0.09368443489074707,
+        "ticks": 50
+      },
+      "validation_summary": {
+        "pass": 4,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Turn Speed",
+          "status": "PASS",
+          "message": "Turn Speed: ✓ Expected 15.625, got 15.625 - EXACT MATCH\n  Formula: turn_speed = (5.0 × 25000) / 400^1.5 = 15.625",
+          "expected": 15.625,
+          "actual": 15.625,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Starting Angle",
+          "status": "PASS",
+          "message": "Starting Angle: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship starts at 0.0°",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Angle",
+          "status": "PASS",
+          "message": "Final Angle: ✓ Expected 352.1875, got 352.1875 - EXACT MATCH\n  Formula: CCW rotation: 0° - 7.8125° = 352.1875° (wrapped)",
+          "expected": 352.1875,
+          "actual": 352.1875,
+          "p_value": null,
+          "tolerance": 0.01
+        },
+        {
+          "name": "Final Velocity",
+          "status": "PASS",
+          "message": "Final Velocity: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship without engine cannot translate",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-003b_2026-02-06T22-19-36-780835_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-003b_2026-02-06T22-19-36-780835_final.json",
       "seed": 478163327
     }
   ],
@@ -1473,6 +2474,97 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-004_2026-01-31T22-07-14-724854_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-004_2026-01-31T22-07-14-724854_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:37.141731",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-004",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": [
+          0.0,
+          0.0
+        ],
+        "final_velocity": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "final_angle": 15.625,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "angle_change": 15.625,
+        "ticks_run": 100,
+        "expected_max_speed": 31.25,
+        "expected_acceleration_rate": 7.8125,
+        "expected_angle_change": 15.625,
+        "turn_speed_degrees_per_tick": 0.15625,
+        "turn_speed": 15.625,
+        "angle_history_sample": [
+          0.0,
+          1.5625,
+          3.125,
+          4.6875,
+          6.25,
+          7.8125,
+          9.375,
+          10.9375,
+          12.5,
+          14.0625,
+          15.625
+        ],
+        "all_criteria_passed": true,
+        "duration_real": 0.17774486541748047,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 3,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Turn Speed",
+          "status": "PASS",
+          "message": "Turn Speed: ✓ Expected 15.625, got 15.625 - EXACT MATCH\n  Formula: turn_speed = (5.0 × 25000) / 400^1.5 = 15.625",
+          "expected": 15.625,
+          "actual": 15.625,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Starting Angle",
+          "status": "PASS",
+          "message": "Starting Angle: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship starts at 0.0°",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Angle",
+          "status": "PASS",
+          "message": "Final Angle: ✓ Expected 15.625, got 15.625 - EXACT MATCH\n  Formula: CW rotation: 0° + 15.625° = 15.625°",
+          "expected": 15.625,
+          "actual": 15.625,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-004_2026-02-06T22-19-36-963464_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-004_2026-02-06T22-19-36-963464_final.json",
+      "seed": 478163327
     }
   ],
   "PROP-004b": [
@@ -1565,6 +2657,97 @@
       ],
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-004b_2026-01-31T22-07-14-919705_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-004b_2026-01-31T22-07-14-919705_final.json",
+      "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:37.411233",
+      "ticks_run": 100,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-004b",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity": [
+          0.0,
+          0.0
+        ],
+        "final_velocity": [
+          0.0,
+          0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 0.0,
+        "initial_angle": 0.0,
+        "final_angle": 31.25,
+        "distance_traveled": 0.0,
+        "velocity_change": 0.0,
+        "angle_change": 31.25,
+        "ticks_run": 100,
+        "expected_max_speed": 31.25,
+        "expected_acceleration_rate": 7.8125,
+        "expected_angle_change": 31.25,
+        "turn_speed_degrees_per_tick": 0.3125,
+        "turn_speed": 31.25,
+        "angle_history_sample": [
+          0.0,
+          3.125,
+          6.25,
+          9.375,
+          12.5,
+          15.625,
+          18.75,
+          21.875,
+          25.0,
+          28.125,
+          31.25
+        ],
+        "all_criteria_passed": true,
+        "duration_real": 0.18052148818969727,
+        "ticks": 100
+      },
+      "validation_summary": {
+        "pass": 3,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Turn Speed",
+          "status": "PASS",
+          "message": "Turn Speed: ✓ Expected 31.25, got 31.25 - EXACT MATCH\n  Formula: turn_speed = (10.0 × 25000) / 400^1.5 = 31.25",
+          "expected": 31.25,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Starting Angle",
+          "status": "PASS",
+          "message": "Starting Angle: ✓ Expected 0.0, got 0.0 - EXACT MATCH\n  Formula: Ship starts at 0.0°",
+          "expected": 0.0,
+          "actual": 0.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Angle",
+          "status": "PASS",
+          "message": "Final Angle: ✓ Expected 31.25, got 31.25 - EXACT MATCH\n  Formula: CW rotation: 0° + 31.25° = 31.25°",
+          "expected": 31.25,
+          "actual": 31.25,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-004b_2026-02-06T22-19-37-230712_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-004b_2026-02-06T22-19-37-230712_final.json",
       "seed": 478163327
     }
   ],
@@ -1664,6 +2847,102 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-005_2026-01-31T22-07-15-116382_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROP-005_2026-01-31T22-07-15-116382_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:37.680325",
+      "ticks_run": 50,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROP-005",
+        "low_mass_turn_speed": 15.625,
+        "low_mass_final_angle": 7.8125,
+        "low_mass_start_angle": 0,
+        "high_mass_turn_speed": 0.7607257743127307,
+        "high_mass_final_angle": 0.3803628871563656,
+        "high_mass_start_angle": 0,
+        "low_mass_ship": {
+          "mass": 400.0,
+          "turn_speed": 15.625,
+          "expected_turn_speed": 15.625,
+          "raw_turn_rate": 5.0,
+          "start_angle": 0,
+          "final_angle": 7.8125,
+          "expected_final_angle": 7.8125,
+          "angle_change": 7.8125
+        },
+        "high_mass_ship": {
+          "mass": 3000.0,
+          "turn_speed": 0.7607257743127307,
+          "expected_turn_speed": 0.7607257743127307,
+          "raw_turn_rate": 5.0,
+          "start_angle": 0,
+          "final_angle": 0.3803628871563656,
+          "expected_final_angle": 0.38036288715636535,
+          "angle_change": 0.38036288715636535
+        },
+        "turn_speed_ratio": 20.53959590644373,
+        "expected_ratio": 20.53959590644373,
+        "all_criteria_passed": true,
+        "ticks_run": 50,
+        "duration_real": 0.18225479125976562,
+        "ticks": 50
+      },
+      "validation_summary": {
+        "pass": 5,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Low Mass - Turn Speed",
+          "status": "PASS",
+          "message": "Low Mass - Turn Speed: ✓ Expected 15.625, got 15.625 - EXACT MATCH\n  Formula: (5.0 × 25000) / 400^1.5 = 15.625",
+          "expected": 15.625,
+          "actual": 15.625,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Low Mass - Final Angle",
+          "status": "PASS",
+          "message": "Low Mass - Final Angle: ✓ Expected 7.8125, got 7.8125 - EXACT MATCH\n  Formula: CW: 0° + 7.8125° = 7.8125°",
+          "expected": 7.8125,
+          "actual": 7.8125,
+          "p_value": null,
+          "tolerance": 0.01
+        },
+        {
+          "name": "High Mass - Turn Speed",
+          "status": "PASS",
+          "message": "High Mass - Turn Speed: ✓ Expected 0.7607257743127307, got 0.7607257743127307 - EXACT MATCH\n  Formula: (5.0 × 25000) / 3000^1.5 = 0.7607",
+          "expected": 0.7607257743127307,
+          "actual": 0.7607257743127307,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "High Mass - Final Angle",
+          "status": "PASS",
+          "message": "High Mass - Final Angle: ✓ Expected 0.38036288715636535, got 0.3803628871563656 - EXACT MATCH\n  Formula: CW: 0° + 0.3804° = 0.3804°",
+          "expected": 0.38036288715636535,
+          "actual": 0.3803628871563656,
+          "p_value": null,
+          "tolerance": 0.001
+        },
+        {
+          "name": "Turn Speed Ratio",
+          "status": "PASS",
+          "message": "Turn Speed Ratio: ✓ Expected 20.53959590644373, got 20.53959590644373 - EXACT MATCH\n  Formula: low/high = (high_mass/low_mass)^1.5 = 20.54",
+          "expected": 20.53959590644373,
+          "actual": 20.53959590644373,
+          "p_value": null,
+          "tolerance": 1e-09
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-005_2026-02-06T22-19-37-498070_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROP-005_2026-02-06T22-19-37-498070_final.json",
+      "seed": 478163327
     }
   ],
   "PROJ360-001": [
@@ -1693,6 +2972,34 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-001_2026-01-31T22-07-25-454632_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-001_2026-01-31T22-07-25-454632_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:27.744209",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-001",
+        "initial_hp": 1000000100,
+        "final_hp": 999999850.0,
+        "damage_dealt": 250.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "travel_time_seconds": 0.13333333333333333,
+        "expected_damage_min": 150,
+        "weapon_type": "Projectile360",
+        "weapon_damage": 50,
+        "weapon_range": 1000,
+        "projectile_speed": 1500,
+        "reload_time": 1.0,
+        "duration_real": 0.03742051124572754,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-001_2026-02-06T22-19-27-706789_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-001_2026-02-06T22-19-27-706789_final.json",
+      "seed": 72285194
     }
   ],
   "PROJ360-002": [
@@ -1715,6 +3022,27 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-002_2026-01-31T22-07-25-549557_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-002_2026-01-31T22-07-25-549557_final.json",
       "seed": 373399426
+    },
+    {
+      "timestamp": "2026-02-06T22:19:27.863041",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-002",
+        "initial_hp": 750,
+        "final_hp": 500,
+        "damage_dealt": 250,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "duration_real": 0.038695573806762695,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-002_2026-02-06T22-19-27-824346_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-002_2026-02-06T22-19-27-824346_final.json",
+      "seed": 1611380640
     }
   ],
   "PROJ360-003": [
@@ -1737,6 +3065,27 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-003_2026-01-31T22-07-25-649274_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-003_2026-01-31T22-07-25-649274_final.json",
       "seed": 373399426
+    },
+    {
+      "timestamp": "2026-02-06T22:19:27.986780",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-003",
+        "initial_hp": 850,
+        "final_hp": 600.0,
+        "damage_dealt": 250.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "duration_real": 0.04215240478515625,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-003_2026-02-06T22-19-27-944627_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-003_2026-02-06T22-19-27-944627_final.json",
+      "seed": 527495505
     }
   ],
   "PROJ360-004": [
@@ -1759,6 +3108,26 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-004_2026-01-31T22-07-25-745261_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-004_2026-01-31T22-07-25-745261_final.json",
       "seed": 373399426
+    },
+    {
+      "timestamp": "2026-02-06T22:19:28.199452",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-004",
+        "initial_hp": 1000000170,
+        "final_hp": 1000000170,
+        "damage_dealt": 0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "duration_real": 0.11888766288757324,
+        "ticks": 1000
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-004_2026-02-06T22-19-28-080564_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-004_2026-02-06T22-19-28-080564_final.json",
+      "seed": 71209830
     }
   ],
   "PROJ360-005": [
@@ -1781,6 +3150,27 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-005_2026-01-31T22-07-25-889423_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-005_2026-01-31T22-07-25-889423_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:28.360489",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-005",
+        "initial_hp": 2270,
+        "final_hp": 1770.0,
+        "damage_dealt": 500.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "duration_real": 0.08100128173828125,
+        "ticks": 1000
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-005_2026-02-06T22-19-28-279488_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-005_2026-02-06T22-19-28-279488_final.json",
+      "seed": 1745831911
     }
   ],
   "PROJ360-006": [
@@ -1805,6 +3195,28 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-006_2026-01-31T22-07-26-021315_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-006_2026-01-31T22-07-26-021315_final.json",
       "seed": 113971123
+    },
+    {
+      "timestamp": "2026-02-06T22:19:28.506270",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-006",
+        "initial_hp": 1000000100,
+        "final_hp": 1000000100,
+        "damage_dealt": 0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "distance": 1200,
+        "weapon_max_range": 1000,
+        "duration_real": 0.05922675132751465,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-006_2026-02-06T22-19-28-447043_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-006_2026-02-06T22-19-28-447043_final.json",
+      "seed": 2052198718
     }
   ],
   "PROJ360-DMG-010": [
@@ -1829,6 +3241,29 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-DMG-010_2026-01-31T22-07-26-127372_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-DMG-010_2026-01-31T22-07-26-127372_final.json",
       "seed": 478163327
+    },
+    {
+      "timestamp": "2026-02-06T22:19:28.613457",
+      "ticks_run": 200,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-DMG-010",
+        "initial_hp": 1000000100,
+        "final_hp": 1000000000.0,
+        "damage_dealt": 100.0,
+        "ticks_run": 200,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "travel_time_seconds": 0.06666666666666667,
+        "damage_per_hit": 50,
+        "duration_real": 0.01622772216796875,
+        "ticks": 200
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-DMG-010_2026-02-06T22-19-28-597230_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-DMG-010_2026-02-06T22-19-28-597230_final.json",
+      "seed": 1829996871
     }
   ],
   "PROJ360-DMG-050": [
@@ -1853,6 +3288,29 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-DMG-050_2026-01-31T22-07-26-207896_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-DMG-050_2026-01-31T22-07-26-207896_final.json",
       "seed": 1181241943
+    },
+    {
+      "timestamp": "2026-02-06T22:19:28.720010",
+      "ticks_run": 300,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-DMG-050",
+        "initial_hp": 1000000100,
+        "final_hp": 999999950.0,
+        "damage_dealt": 150.0,
+        "ticks_run": 300,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "travel_time_seconds": 0.3333333333333333,
+        "damage_per_hit": 50,
+        "duration_real": 0.026121139526367188,
+        "ticks": 300
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-DMG-050_2026-02-06T22-19-28-693889_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-DMG-050_2026-02-06T22-19-28-693889_final.json",
+      "seed": 180632368
     }
   ],
   "PROJ360-DMG-090": [
@@ -1877,6 +3335,29 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-DMG-090_2026-01-31T22-07-26-295874_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\PROJ360-DMG-090_2026-01-31T22-07-26-295874_final.json",
       "seed": 958682846
+    },
+    {
+      "timestamp": "2026-02-06T22:19:28.835652",
+      "ticks_run": 400,
+      "passed": true,
+      "metrics": {
+        "test_id": "PROJ360-DMG-090",
+        "initial_hp": 1000000100,
+        "final_hp": 999999900.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 400,
+        "target_alive": true,
+        "hit_rate": 0.5,
+        "travel_time_seconds": 0.6,
+        "damage_per_hit": 50,
+        "duration_real": 0.03536367416381836,
+        "ticks": 400
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-DMG-090_2026-02-06T22-19-28-800288_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\PROJ360-DMG-090_2026-02-06T22-19-28-800288_final.json",
+      "seed": 1772545864
     }
   ],
   "BEAMWEAPON-001": [
@@ -3391,6 +4872,707 @@
       "initial_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-31T22-08-53-388285_initial.json",
       "final_state_file": "C:\\Dev\\Starship Battles\\simulation_tests\\battle_states\\BEAMWEAPON-011_2026-01-31T22-08-53-388285_final.json",
       "seed": 1473920533
+    }
+  ],
+  "MOD-001": [
+    {
+      "timestamp": "2026-02-06T22:19:05.863130",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-001",
+        "initial_hp": 3050,
+        "final_hp": 2372.0,
+        "damage_dealt": 678.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 1.356,
+        "base_damage": 1,
+        "damage_multiplier": 1.5,
+        "expected_beam_damage": 1.5,
+        "actual_beam_damage": 1.5,
+        "modifier_applied_correctly": true,
+        "duration_real": 0.17360305786132812,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-001_2026-02-06T22-19-05-689527_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-001_2026-02-06T22-19-05-689527_final.json",
+      "seed": 794437997
+    }
+  ],
+  "MOD-002": [
+    {
+      "timestamp": "2026-02-06T22:19:06.101147",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-002",
+        "initial_hp": 3050,
+        "final_hp": 2653.0,
+        "damage_dealt": 397.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.794,
+        "base_range": 800,
+        "expected_beam_range": 1600,
+        "actual_beam_range": 1600.0,
+        "modifier_applied_correctly": true,
+        "distance": 1200,
+        "duration_real": 0.1620924472808838,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-002_2026-02-06T22-19-05-939055_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-002_2026-02-06T22-19-05-939055_final.json",
+      "seed": 1858750495
+    }
+  ],
+  "MOD-003": [
+    {
+      "timestamp": "2026-02-06T22:19:06.349474",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-003",
+        "initial_hp": 3050,
+        "final_hp": 2369.0,
+        "damage_dealt": 681.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 1.362,
+        "actual_reload_time": 0.0,
+        "base_reload": 0.0,
+        "reload_modifier_note": "Base reload is 0.0; multiplier has no effect on zero",
+        "duration_real": 0.17310070991516113,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-003_2026-02-06T22-19-06-176374_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-003_2026-02-06T22-19-06-176374_final.json",
+      "seed": 1199929816
+    }
+  ],
+  "MOD-004": [
+    {
+      "timestamp": "2026-02-06T22:19:06.784947",
+      "ticks_run": 200,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-004",
+        "initial_position": [
+          0.0,
+          0.0
+        ],
+        "final_position": [
+          12406.25,
+          0.0
+        ],
+        "initial_velocity_magnitude": 0.0,
+        "final_velocity_magnitude": 62.5,
+        "distance_traveled": 12406.25,
+        "ticks_run": 200,
+        "expected_max_speed": 62.5,
+        "expected_acceleration_rate": 15.625,
+        "base_thrust": 500,
+        "thrust_multiplier": 2,
+        "expected_thrust": 1000,
+        "actual_thrust": 1000.0,
+        "actual_ability_thrust": 1000.0,
+        "modifier_applied_correctly": true,
+        "duration_real": 0.36151838302612305,
+        "ticks": 200
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-004_2026-02-06T22-19-06-422876_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-004_2026-02-06T22-19-06-422876_final.json",
+      "seed": 781301449
+    }
+  ],
+  "MOD-005": [
+    {
+      "timestamp": "2026-02-06T22:19:07.045628",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-005",
+        "initial_hp": 3050,
+        "final_hp": 2354.0,
+        "damage_dealt": 696.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 1.392,
+        "actual_base_accuracy": 2.0,
+        "base_accuracy": 2.0,
+        "note": "Uses damage boost ship; accuracy_boost ship not created",
+        "duration_real": 0.1757194995880127,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-005_2026-02-06T22-19-06-869909_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-005_2026-02-06T22-19-06-869909_final.json",
+      "seed": 478163327
+    }
+  ],
+  "MOD-006": [
+    {
+      "timestamp": "2026-02-06T22:19:07.310925",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "MOD-006",
+        "initial_hp": 3050,
+        "final_hp": 2586.0,
+        "damage_dealt": 464.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.928,
+        "base_arc": 360,
+        "expected_arc": 180,
+        "actual_firing_arc": 180.0,
+        "modifier_applied_correctly": true,
+        "duration_real": 0.18062734603881836,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-006_2026-02-06T22-19-07-130297_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\MOD-006_2026-02-06T22-19-07-130297_final.json",
+      "seed": 1539595631
+    }
+  ],
+  "RESOURCE-001": [
+    {
+      "timestamp": "2026-02-06T22:19:45.852623",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "RESOURCE-001",
+        "prerun_validation": {
+          "data_expectations": [
+            {
+              "name": "Initial Fuel Capacity",
+              "source": "initial_fuel",
+              "expected": 1000.0,
+              "actual": 1000.0,
+              "json_file": "Test_Engine_FuelConsumption.json",
+              "status": "MATCH",
+              "error_message": ""
+            },
+            {
+              "name": "Engine Thrust",
+              "source": "total_thrust",
+              "expected": 500,
+              "actual": 500.0,
+              "json_file": "Test_Engine_FuelConsumption.json",
+              "status": "MATCH",
+              "error_message": ""
+            }
+          ],
+          "calculated_expectations": [
+            {
+              "name": "Expected Fuel Consumed",
+              "formula": "consumption_rate × duration_seconds",
+              "formula_with_values": "consumption_1.0 × 5.0_seconds = 5.0",
+              "expected": 5.0,
+              "actual": null,
+              "calculated_from_actual": null,
+              "variables": {
+                "rate": 1.0,
+                "duration": 5.0
+              },
+              "status": "MATCH",
+              "error_message": ""
+            },
+            {
+              "name": "Expected Final Fuel",
+              "formula": "initial_fuel - fuel_consumed",
+              "formula_with_values": "1000.0_fuel - fuel_5.0 = 995.0",
+              "expected": 995.0,
+              "actual": null,
+              "calculated_from_actual": null,
+              "variables": {
+                "initial": 1000.0,
+                "consumed": 5.0
+              },
+              "status": "MATCH",
+              "error_message": ""
+            }
+          ],
+          "setup_conditions": [
+            {
+              "name": "Initial Position",
+              "value": "(0, 0)",
+              "description": "Ship starts at origin"
+            },
+            {
+              "name": "Initial Angle",
+              "value": "0°",
+              "description": "Ship faces right (+X)"
+            },
+            {
+              "name": "Test Duration",
+              "value": "500 ticks",
+              "description": "5.0 seconds"
+            },
+            {
+              "name": "Thrust Command",
+              "value": "Forward (each tick)",
+              "description": "thrust_forward() called every tick"
+            }
+          ],
+          "pass_criteria": [
+            {
+              "description": "Final Fuel = 995.0",
+              "numeric_threshold": 995.0
+            },
+            {
+              "description": "Fuel Consumed = 5.0",
+              "numeric_threshold": 5.0
+            },
+            {
+              "description": "Ship is moving (velocity > 0)",
+              "numeric_threshold": 0.0
+            }
+          ],
+          "can_run": true,
+          "blocking_errors": []
+        },
+        "initial_fuel": 1000.0,
+        "final_fuel": 995.0000000000045,
+        "fuel_consumed": 4.9999999999954525,
+        "expected_consumed": 5.0,
+        "expected_final_fuel": 995.0,
+        "final_velocity": 31.25,
+        "distance_traveled": 15578.125,
+        "ticks_run": 500,
+        "load_validation_errors": [
+          "Test_Engine_FuelConsumption.json: expected_stats.max_hp mismatch - JSON says 120, ship has 170 (diff: 50.000000)"
+        ],
+        "all_criteria_passed": true,
+        "duration_real": 0.9116294384002686,
+        "ticks": 500
+      },
+      "validation_summary": {
+        "pass": 3,
+        "fail": 0,
+        "warn": 0,
+        "info": 0
+      },
+      "validation_results": [
+        {
+          "name": "Initial Fuel",
+          "status": "PASS",
+          "message": "Initial Fuel: ✓ Expected 1000.0, got 1000.0 - EXACT MATCH\n  Formula: Ship starts with 1000.0 fuel",
+          "expected": 1000.0,
+          "actual": 1000.0,
+          "p_value": null,
+          "tolerance": 1e-09
+        },
+        {
+          "name": "Final Fuel",
+          "status": "PASS",
+          "message": "Final Fuel: ✓ Expected 995.0, got 995.0000000000045 - EXACT MATCH\n  Formula: 1000.0 - 5.0 = 995.0",
+          "expected": 995.0,
+          "actual": 995.0000000000045,
+          "p_value": null,
+          "tolerance": 0.01
+        },
+        {
+          "name": "Fuel Consumed",
+          "status": "PASS",
+          "message": "Fuel Consumed: ✓ Expected 5.0, got 4.9999999999954525 - EXACT MATCH\n  Formula: 1.0/sec × 5.0s = 5.0",
+          "expected": 5.0,
+          "actual": 4.9999999999954525,
+          "p_value": null,
+          "tolerance": 0.01
+        }
+      ],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-001_2026-02-06T22-19-44-940421_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\RESOURCE-001_2026-02-06T22-19-44-940421_final.json",
+      "seed": 478163327
+    }
+  ],
+  "SEEK360-001": [
+    {
+      "timestamp": "2026-02-06T22:19:52.873907",
+      "ticks_run": 600,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-001",
+        "initial_hp": 1000000100,
+        "final_hp": 999999900.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 600,
+        "target_alive": true,
+        "hit_rate": 0.3333333333333333,
+        "projectiles_remaining": 0,
+        "weapon_type": "Seeker360",
+        "missile_speed": 1000.0,
+        "missile_turn_rate": 90.0,
+        "missile_damage": 100.0,
+        "missile_endurance": 5.0,
+        "expected_travel_time_ticks": 50,
+        "duration_real": 0.04356670379638672,
+        "ticks": 600
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-001_2026-02-06T22-19-52-830341_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-001_2026-02-06T22-19-52-830341_final.json",
+      "seed": 1970753705
+    }
+  ],
+  "SEEK360-002": [
+    {
+      "timestamp": "2026-02-06T22:19:53.028118",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-002",
+        "initial_hp": 1000000100,
+        "final_hp": 999999900.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.25,
+        "projectiles_remaining": 0,
+        "duration_real": 0.06724357604980469,
+        "ticks": 800
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-002_2026-02-06T22-19-52-960875_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-002_2026-02-06T22-19-52-960875_final.json",
+      "seed": 490778932
+    }
+  ],
+  "SEEK360-003": [
+    {
+      "timestamp": "2026-02-06T22:19:53.179397",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-003",
+        "initial_hp": 1000000100,
+        "final_hp": 1000000000.0,
+        "damage_dealt": 100.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.125,
+        "projectiles_remaining": 1,
+        "duration_real": 0.06215476989746094,
+        "ticks": 800
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-003_2026-02-06T22-19-53-117242_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-003_2026-02-06T22-19-53-117242_final.json",
+      "seed": 292638708
+    }
+  ],
+  "SEEK360-004": [
+    {
+      "timestamp": "2026-02-06T22:19:53.329782",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-004",
+        "initial_hp": 1000000100,
+        "final_hp": 1000000000.0,
+        "damage_dealt": 100.0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "hit_rate": 0.125,
+        "projectiles_remaining": 1,
+        "duration_real": 0.06133580207824707,
+        "ticks": 800
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-004_2026-02-06T22-19-53-268446_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-004_2026-02-06T22-19-53-268446_final.json",
+      "seed": 640811928
+    }
+  ],
+  "SEEK360-TRACK-001": [
+    {
+      "timestamp": "2026-02-06T22:19:53.676196",
+      "ticks_run": 600,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-TRACK-001",
+        "initial_hp": 1000000100,
+        "final_hp": 999999900.0,
+        "damage_dealt": 200.0,
+        "ticks_run": 600,
+        "target_alive": true,
+        "hit_rate": 0.3333333333333333,
+        "duration_real": 0.0484156608581543,
+        "ticks": 600
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-001_2026-02-06T22-19-53-627780_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-001_2026-02-06T22-19-53-627780_final.json",
+      "seed": 1202094850
+    }
+  ],
+  "SEEK360-TRACK-002": [
+    {
+      "timestamp": "2026-02-06T22:19:53.802807",
+      "ticks_run": 600,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-TRACK-002",
+        "initial_hp": 750,
+        "final_hp": 550,
+        "damage_dealt": 200,
+        "ticks_run": 600,
+        "target_alive": true,
+        "hit_rate": 0.3333333333333333,
+        "duration_real": 0.047177791595458984,
+        "ticks": 600
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-002_2026-02-06T22-19-53-755630_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-002_2026-02-06T22-19-53-755630_final.json",
+      "seed": 1703249672
+    }
+  ],
+  "SEEK360-TRACK-003": [
+    {
+      "timestamp": "2026-02-06T22:19:53.967071",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-TRACK-003",
+        "initial_hp": 770,
+        "final_hp": 770,
+        "damage_dealt": 0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "duration_real": 0.07396507263183594,
+        "ticks": 800
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-003_2026-02-06T22-19-53-893106_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-003_2026-02-06T22-19-53-893106_final.json",
+      "seed": 1160831275
+    }
+  ],
+  "SEEK360-TRACK-004": [
+    {
+      "timestamp": "2026-02-06T22:19:54.129543",
+      "ticks_run": 800,
+      "passed": true,
+      "metrics": {
+        "test_id": "SEEK360-TRACK-004",
+        "initial_hp": 1000000170,
+        "final_hp": 1000000170,
+        "damage_dealt": 0,
+        "ticks_run": 800,
+        "target_alive": true,
+        "duration_real": 0.07525825500488281,
+        "ticks": 800
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-004_2026-02-06T22-19-54-054284_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SEEK360-TRACK-004_2026-02-06T22-19-54-054284_final.json",
+      "seed": 1229867230
+    }
+  ],
+  "ARMOR-001": [
+    {
+      "timestamp": "2026-02-06T22:22:59.651763",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "ARMOR-001",
+        "initial_hp": 1000000200,
+        "final_hp": 1000000200,
+        "damage_dealt": 0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "emissive_armor_value": 5.0,
+        "beam_damage_per_hit": 1,
+        "duration_real": 0.04832053184509277,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\ARMOR-001_2026-02-06T22-22-59-603443_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\ARMOR-001_2026-02-06T22-22-59-603443_final.json",
+      "seed": 1741933792
+    }
+  ],
+  "ARMOR-002": [
+    {
+      "timestamp": "2026-02-06T22:22:59.786886",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "ARMOR-002",
+        "initial_hp": 1000000200,
+        "final_hp": 1000000200,
+        "damage_dealt": 0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "emissive_armor_value": 5.0,
+        "beam_damage_per_hit": 5,
+        "duration_real": 0.050209760665893555,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\ARMOR-002_2026-02-06T22-22-59-736677_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\ARMOR-002_2026-02-06T22-22-59-736677_final.json",
+      "seed": 776575213
+    }
+  ],
+  "ECM-001": [
+    {
+      "timestamp": "2026-02-06T22:22:59.959213",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "ECM-001",
+        "initial_hp": 1000000200,
+        "final_hp": 999999926.0,
+        "damage_dealt": 274.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.548,
+        "ecm_defense_value": 1.0,
+        "target_defense_score": 1.3316166738933646,
+        "expected_hit_chance_with_ecm": 0.573918211556236,
+        "expected_hit_chance_baseline": 0.7854738591348314,
+        "hit_rate_reduction": 0.21155564757859535,
+        "duration_real": 0.08857250213623047,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\ECM-001_2026-02-06T22-22-59-870640_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\ECM-001_2026-02-06T22-22-59-870640_final.json",
+      "seed": 804076575
+    }
+  ],
+  "SENSOR-001": [
+    {
+      "timestamp": "2026-02-06T22:23:00.144888",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "SENSOR-001",
+        "initial_hp": 1000000100,
+        "final_hp": 999999640.0,
+        "damage_dealt": 460.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.92,
+        "sensor_attack_value": 1.0,
+        "attacker_attack_bonus": 1.0,
+        "expected_hit_chance_with_sensor": 0.9086992831024822,
+        "expected_hit_chance_baseline": 0.7854738591348314,
+        "hit_rate_improvement": 0.1232254239676508,
+        "duration_real": 0.09935522079467773,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SENSOR-001_2026-02-06T22-23-00-045532_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SENSOR-001_2026-02-06T22-23-00-045532_final.json",
+      "seed": 716536802
+    }
+  ],
+  "SHIELD-001": [
+    {
+      "timestamp": "2026-02-06T22:23:00.365507",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "SHIELD-001",
+        "initial_hp": 1000000150,
+        "final_hp": 999999938.0,
+        "damage_dealt": 212.0,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.424,
+        "initial_shields": 200,
+        "final_shields": 0.0,
+        "shield_damage_absorbed": 200.0,
+        "shield_held": false,
+        "duration_real": 0.13736629486083984,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SHIELD-001_2026-02-06T22-23-00-228141_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SHIELD-001_2026-02-06T22-23-00-228141_final.json",
+      "seed": 729357165
+    }
+  ],
+  "SHIELD-002": [
+    {
+      "timestamp": "2026-02-06T22:23:00.745417",
+      "ticks_run": 1000,
+      "passed": true,
+      "metrics": {
+        "test_id": "SHIELD-002",
+        "initial_hp": 1000000150,
+        "final_hp": 999999357.0,
+        "damage_dealt": 793.0,
+        "ticks_run": 1000,
+        "target_alive": true,
+        "hit_rate": 0.793,
+        "initial_shields": 200,
+        "final_shields": 0.0,
+        "shields_depleted": true,
+        "hull_damage": 593.0,
+        "duration_real": 0.2967400550842285,
+        "ticks": 1000
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SHIELD-002_2026-02-06T22-23-00-448677_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SHIELD-002_2026-02-06T22-23-00-448677_final.json",
+      "seed": 153646733
+    }
+  ],
+  "SHIELD-003": [
+    {
+      "timestamp": "2026-02-06T22:23:00.987006",
+      "ticks_run": 500,
+      "passed": true,
+      "metrics": {
+        "test_id": "SHIELD-003",
+        "initial_hp": 1000000200,
+        "final_hp": 1000000040.9000045,
+        "damage_dealt": 159.09999549388885,
+        "ticks_run": 500,
+        "target_alive": true,
+        "hit_rate": 0.31819999098777774,
+        "initial_shields": 200,
+        "final_shields": 0.0,
+        "shield_regen_rate": 10,
+        "shields_intact": false,
+        "duration_real": 0.15320467948913574,
+        "ticks": 500
+      },
+      "validation_summary": null,
+      "validation_results": [],
+      "initial_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SHIELD-003_2026-02-06T22-23-00-832300_initial.json",
+      "final_state_file": "C:\\Developer\\StarshipBattles\\simulation_tests\\battle_states\\SHIELD-003_2026-02-06T22-23-00-832300_final.json",
+      "seed": 227392006
     }
   ]
 }
