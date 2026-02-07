@@ -22,7 +22,9 @@ from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from Tools.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
+from game.ui.screens.menu_scene import MenuScene
 from game.core.profiling import PROFILER, profile_action
+from game.core.protocols import IScene
 # Note: battle_coordinator functions now internalized in BattleScreen (PROJ-65)
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel
@@ -81,10 +83,6 @@ class Game:
 
         pygame.display.set_caption(f"Starship Battles ({self.width}x{self.height})")
 
-        # pygame_gui UIManager for main menu buttons
-        self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
-        self._menu_button_callbacks = {}  # Maps UIButton -> callback function
-
         self.clock = pygame.time.Clock()
         self.running = True
         self.show_exit_dialog = False
@@ -116,8 +114,12 @@ class Game:
         sprite_mgr = SpriteManager.instance()
         sprite_mgr.load_sprites(Paths.ROOT_DIR)
 
-        # Menu UI
-        self.update_menu_buttons()
+        # Menu scene (PROJ-65: unified scene dispatch)
+        self._menu_scene = MenuScene(self.width, self.height, self._get_menu_button_config())
+        self.menu_ui_manager = self._menu_scene.get_ui_manager()
+
+        # Active scene for unified dispatch (PROJ-65)
+        self.active_scene: IScene = self._menu_scene
 
         # Scene objects
         context = WorkshopContext.standalone(tech_preset_name="default")
@@ -129,14 +131,9 @@ class Game:
         self.formation_scene = FormationEditorScreen(self.width, self.height, self.on_formation_return)
         self.test_lab_scene = TestLabScreen(self, scene_callback=self._handle_test_lab_action)
 
-    def update_menu_buttons(self):
-        # Clear old buttons if they exist
-        for btn in getattr(self, 'menu_buttons', []):
-            btn.kill()
-        self._menu_button_callbacks.clear()
-
-        self.menu_buttons = []
-        button_data = [
+    def _get_menu_button_config(self):
+        """Get button configuration for MenuScene."""
+        return [
             ("Quickstart 1P", self.start_quickstart_1p),
             ("Quickstart 2P", self.start_quickstart_2p),
             ("New Game", self.start_strategy_layer),
@@ -150,14 +147,10 @@ class Game:
             ("Galaxy Test", self.start_galaxy_test),
         ]
 
-        for i, (text, callback) in enumerate(button_data):
-            btn = UIButton(
-                relative_rect=pygame.Rect(self.width // 2 - 100, self.height // 2 - 320 + i * 70, 200, 50),
-                text=text,
-                manager=self.menu_ui_manager
-            )
-            self.menu_buttons.append(btn)
-            self._menu_button_callbacks[btn] = callback
+    def _switch_scene(self, state: GameState, scene: IScene) -> None:
+        """Switch to a new scene with unified dispatch (PROJ-65)."""
+        self.state = state
+        self.active_scene = scene
 
     @profile_action("App: Start Builder")
     def start_builder(self, return_to=None, context=None):
@@ -168,13 +161,13 @@ class Game:
             return_to: State to return to (MENU or STRATEGY)
             context: Optional WorkshopContext for integrated mode
         """
-        self.state = GameState.BUILDER
         self.builder_return_state = return_to
         # Use provided context or create default standalone context
         if context is None:
             context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = self.on_builder_return
         self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
+        self._switch_scene(GameState.BUILDER, self.builder_scene)
 
     def on_builder_return(self, custom_ship=None):
         """Return from design workshop to caller or main menu."""
@@ -183,19 +176,19 @@ class Game:
             self.builder_scene.cleanup()
 
         if self.builder_return_state == GameState.STRATEGY:
-            self.state = GameState.STRATEGY
             if hasattr(self.strategy_scene, 'handle_resize'):
                 self.strategy_scene.handle_resize(self.width, self.height)
+            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
         else:
-            self.state = GameState.MENU
+            self._switch_scene(GameState.MENU, self._menu_scene)
         self.builder_return_state = None
 
     @profile_action("App: Start Battle Setup")
     def start_battle_setup(self, preserve_teams=False):
         """Enter battle setup screen."""
-        self.state = GameState.BATTLE_SETUP
         self.return_state = GameState.BATTLE_SETUP
         self.battle_setup.start(preserve_teams=preserve_teams)
+        self._switch_scene(GameState.BATTLE_SETUP, self.battle_setup)
 
     def start_strategy_layer(self):
         """Show new game setup screen."""
@@ -239,7 +232,7 @@ class Game:
 
             # Create strategy scene with new session
             self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action)
-            self.state = GameState.STRATEGY
+            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_new_game_setup = False
         else:
             log_error(f"Failed to create initial save: {message}")
@@ -292,7 +285,7 @@ class Game:
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
             self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action)
-            self.state = GameState.STRATEGY
+            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
         else:
             log_error(f"Quickstart {player_count}P failed: {message}")
 
@@ -340,7 +333,7 @@ class Game:
         if game_session:
             # Create new strategy scene with loaded session
             self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session, scene_callback=self._handle_strategy_action)
-            self.state = GameState.STRATEGY
+            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_load_menu = False
             log_info(f"Game loaded successfully: {message}")
         else:
@@ -364,47 +357,47 @@ class Game:
     @profile_action("App: Start Formation Editor")
     def start_formation_editor(self):
         """Enter formation editor."""
-        self.state = GameState.FORMATION
         self.formation_scene.handle_resize(self.width, self.height)
+        self._switch_scene(GameState.FORMATION, self.formation_scene)
 
     def on_formation_return(self):
         """Return from formation editor."""
-        self.state = GameState.MENU
+        self._switch_scene(GameState.MENU, self._menu_scene)
 
     def start_test_lab(self):
         """Enter Combat Lab."""
-        self.state = GameState.TEST_LAB
         self.return_state = GameState.TEST_LAB
+        self._switch_scene(GameState.TEST_LAB, self.test_lab_scene)
 
     def start_research_tree(self):
         """Enter Research Tree sandbox."""
         from game.research.ui.research_scene import ResearchTreeScene
 
         log_info("Starting Research Tree sandbox")
-        self.state = GameState.RESEARCH_TREE
         self.research_tree_scene = ResearchTreeScene(
             self.width, self.height,
             on_close_callback=self.on_research_tree_return
         )
+        self._switch_scene(GameState.RESEARCH_TREE, self.research_tree_scene)
 
     def on_research_tree_return(self):
         """Return from Research Tree to menu."""
-        self.state = GameState.MENU
         self.research_tree_scene = None
+        self._switch_scene(GameState.MENU, self._menu_scene)
 
     def start_galaxy_test(self):
         """Enter Galaxy Test screen."""
         log_info("Starting Galaxy Test screen")
-        self.state = GameState.GALAXY_TEST
         self.galaxy_test_scene = GalaxyTestScreen(
             self.width, self.height,
             on_close_callback=self.on_galaxy_test_return
         )
+        self._switch_scene(GameState.GALAXY_TEST, self.galaxy_test_scene)
 
     def on_galaxy_test_return(self):
         """Return from Galaxy Test to menu."""
-        self.state = GameState.MENU
         self.galaxy_test_scene = None
+        self._switch_scene(GameState.MENU, self._menu_scene)
 
     def start_race_setup(self):
         """Open race setup wizard."""
@@ -445,10 +438,10 @@ class Game:
 
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
-        self.state = GameState.BATTLE
         if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
             self.battle_scene.handle_resize(self.width, self.height)
         self.battle_scene.start(team1_ships, team2_ships, headless=headless)
+        self._switch_scene(GameState.BATTLE, self.battle_scene)
 
     def run(self):
         """Main game loop."""
@@ -494,8 +487,6 @@ class Game:
                 log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
             elif event.type == pygame.VIDEORESIZE:
                 self._handle_resize(event.w, event.h)
-            elif event.type == pygame.KEYDOWN:
-                self._handle_keydown(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self._handle_click(event)
             elif event.type == pygame.MOUSEWHEEL:
@@ -509,84 +500,32 @@ class Game:
             self._forward_event_to_scene(event)
 
     def _forward_event_to_scene(self, event):
-        """Forward event to the current active scene."""
-        # Handle new game setup if showing
-        if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup and hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager.process_events(event)
-            return
-
-        # Handle load menu if showing
-        if self.showing_load_menu and hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager.process_events(event)
-            return
-
-        # Handle race setup if showing
-        if self.showing_race_setup and hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager.process_events(event)
-            return
-
+        """Forward event to the current active scene (PROJ-65: unified dispatch)."""
+        # Handle overlay dialogs on menu - these use the menu's ui_manager
         if self.state == GameState.MENU:
-            self.menu_ui_manager.process_events(event)
-            if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                callback = self._menu_button_callbacks.get(event.ui_element)
-                if callback:
-                    callback()
-                    return  # Event consumed
-        elif self.state == GameState.BUILDER:
-            self.builder_scene.handle_event(event)
-        elif self.state == GameState.BATTLE_SETUP:
-            self.battle_setup.handle_event(event)
-        elif self.state == GameState.BATTLE:
-            self.battle_scene.handle_event(event)
-        elif self.state == GameState.FORMATION:
-            self.formation_scene.handle_event(event)
-        elif self.state == GameState.STRATEGY:
-            self.strategy_scene.handle_event(event)
-        elif self.state == GameState.TEST_LAB:
-            self.test_lab_scene.handle_event(event)
-        elif self.state == GameState.RESEARCH_TREE:
-            if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
-                self.research_tree_scene.handle_event(event)
-        elif self.state == GameState.GALAXY_TEST:
-            if hasattr(self, 'galaxy_test_scene') and self.galaxy_test_scene:
-                self.galaxy_test_scene.handle_event(event)
+            if hasattr(self, 'showing_new_game_setup') and self.showing_new_game_setup:
+                self.menu_ui_manager.process_events(event)
+                return
+            if self.showing_load_menu:
+                self.menu_ui_manager.process_events(event)
+                return
+            if self.showing_race_setup:
+                self.menu_ui_manager.process_events(event)
+                return
+
+        # Unified dispatch to active scene
+        self.active_scene.handle_event(event)
 
     def _handle_resize(self, w, h):
-        """Handle window resize."""
+        """Handle window resize (PROJ-65: unified dispatch)."""
         self.width, self.height = w, h
         self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
 
-        # Update menu UIManager resolution
+        # Update menu UIManager resolution (needed for overlay dialogs)
         self.menu_ui_manager.set_window_resolution((self.width, self.height))
 
-        if self.state == GameState.MENU:
-            self.update_menu_buttons()
-        elif self.state == GameState.BATTLE:
-            self.battle_scene.handle_resize(w, h)
-        elif self.state == GameState.BATTLE_SETUP:
-            self.battle_setup.handle_resize(w, h)
-        elif self.state == GameState.BUILDER:
-            self.builder_scene.handle_resize(w, h)
-        elif self.state == GameState.FORMATION:
-            self.formation_scene.handle_resize(w, h)
-        elif self.state == GameState.TEST_LAB:
-            self.test_lab_scene.handle_resize(w, h)
-        elif self.state == GameState.STRATEGY:
-            self.strategy_scene.handle_resize(w, h)
-        elif self.state == GameState.RESEARCH_TREE:
-            if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
-                self.research_tree_scene.handle_resize(w, h)
-        elif self.state == GameState.GALAXY_TEST:
-            if hasattr(self, 'galaxy_test_scene') and self.galaxy_test_scene:
-                self.galaxy_test_scene.handle_resize(w, h)
-
-    def _handle_keydown(self, event):
-        """Handle key press events.
-
-        Note: Battle keyboard input is now handled via handle_event in BattleScreen.
-        """
-        # Keyboard events are now forwarded to scenes via _forward_event_to_scene
-        pass
+        # Unified dispatch to active scene
+        self.active_scene.handle_resize(w, h)
 
     def _handle_click(self, event):
         """Handle mouse click events.
@@ -652,26 +591,7 @@ class Game:
     def _handle_test_lab_action(self, action: str, **kwargs):
         """Handle scene actions from TestLabScreen."""
         if action == "return_to_menu":
-            self.state = GameState.MENU
-
-    def _handle_battle_actions(self):
-        """Handle action flags from battle scene.
-
-        DEPRECATED: Use _handle_battle_action callback instead.
-        """
-        if self.battle_scene.action_return_to_test_lab:
-            log_debug("Returning to Combat Lab from test")
-            self.battle_scene.action_return_to_test_lab = False
-            self.battle_scene.test_mode = False
-            self.test_lab_scene.reset_selection()
-            self.start_test_lab()
-        elif self.battle_scene.action_return_to_setup:
-            log_debug("Returning to battle setup")
-            self.battle_scene.action_return_to_setup = False
-            if hasattr(self, 'return_state') and self.return_state == GameState.TEST_LAB:
-                self.start_test_lab()
-            else:
-                self.start_battle_setup(preserve_teams=True)
+            self._switch_scene(GameState.MENU, self._menu_scene)
 
     def _handle_scroll(self, event):
         """Handle mouse wheel events.
@@ -683,49 +603,30 @@ class Game:
             self.strategy_scene.handle_scroll(event.y, self.screen.get_size()[1])
 
     def _update_and_draw(self, frame_time, events):
-        """Update logic and draw current scene."""
-        if self.state == GameState.MENU:
-            self._draw_menu()
-        elif self.state == GameState.BUILDER:
-            self.builder_scene.update(frame_time)
-            self.builder_scene.draw(self.screen)
-        elif self.state == GameState.BATTLE_SETUP:
-            self._update_battle_setup()
-        elif self.state == GameState.BATTLE:
-            self._update_battle(frame_time, events)
-        elif self.state == GameState.FORMATION:
-            self.formation_scene.update(frame_time)
-            self.formation_scene.draw(self.screen)
-        elif self.state == GameState.STRATEGY:
+        """Update logic and draw current scene (PROJ-65: unified dispatch)."""
+        # Handle input for scenes that have legacy input handling
+        # TODO: Fold these into handle_event() in respective scenes
+        if self.state == GameState.STRATEGY:
             self.strategy_scene.update_input(frame_time, events)
-            self.strategy_scene.update(frame_time)
-            self.strategy_scene.draw(self.screen)
-            # Note: action_open_design now handled via scene_callback (PROJ-65)
-        elif self.state == GameState.TEST_LAB:
-            self.test_lab_scene.update(frame_time)
-            self.test_lab_scene.draw(self.screen)
-        elif self.state == GameState.RESEARCH_TREE:
-            if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
-                self.research_tree_scene.handle_input(frame_time, events)
-                self.research_tree_scene.update(frame_time)
-                self.research_tree_scene.draw(self.screen)
-        elif self.state == GameState.GALAXY_TEST:
-            if hasattr(self, 'galaxy_test_scene') and self.galaxy_test_scene:
-                self.galaxy_test_scene.handle_input(frame_time, events)
-                self.galaxy_test_scene.update(frame_time)
-                self.galaxy_test_scene.draw(self.screen)
+        elif self.state == GameState.RESEARCH_TREE and hasattr(self.active_scene, 'handle_input'):
+            self.active_scene.handle_input(frame_time, events)
+        elif self.state == GameState.GALAXY_TEST and hasattr(self.active_scene, 'handle_input'):
+            self.active_scene.handle_input(frame_time, events)
+
+        # Unified update dispatch
+        self.active_scene.update(frame_time)
+
+        # Unified draw dispatch (some scenes have special draw logic)
+        if self.state == GameState.BATTLE:
+            # BattleScreen handles headless mode internally
+            if not self.battle_scene.headless_mode:
+                self.active_scene.draw(self.screen)
+                self.battle_scene.draw_hud(self.screen, self.font_med, PROFILER.is_active())
+        else:
+            self.active_scene.draw(self.screen)
 
         if self.show_exit_dialog:
             draw_exit_dialog(self.screen, self.font_large, self.font_med)
-
-    def _draw_menu(self):
-        """Draw main menu."""
-        self.screen.fill((20, 20, 30))
-
-        # Update and draw pygame_gui elements (menu buttons and dialogs)
-        frame_time = self.clock.get_time() / 1000.0
-        self.menu_ui_manager.update(frame_time)
-        self.menu_ui_manager.draw_ui(self.screen)
 
     def _handle_battle_setup_action(self, action: str, **kwargs):
         """Handle scene actions from BattleSetupScreen."""
@@ -738,21 +639,7 @@ class Game:
             log_info("Running simulation...")
             self.start_battle(team1, team2, headless=True)
         elif action == "return_to_menu":
-            self.state = GameState.MENU
-
-    def _update_battle_setup(self):
-        """Update and draw battle setup."""
-        self.battle_setup.update(0)  # dt not used by this screen
-        self.battle_setup.draw(self.screen)
-
-    def _update_battle(self, frame_time, events):
-        """Update and draw battle scene."""
-        # BattleScreen now handles headless vs visual internally
-        self.battle_scene.update(frame_time)
-
-        if not self.battle_scene.headless_mode:
-            self.battle_scene.draw(self.screen)
-            self.battle_scene.draw_hud(self.screen, self.font_med, PROFILER.is_active())
+            self._switch_scene(GameState.MENU, self._menu_scene)
 
 
 def main():

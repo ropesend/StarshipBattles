@@ -8,21 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-65 Phase 2
-**Current Status:** PROJ-65 Phase 2 complete, Phase 3 ready
+**Last Completed:** PROJ-65 Phase 3
+**Current Status:** PROJ-65 Phase 3 complete, Phase 4 ready
 **Current Project:** PROJ-65
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 6244 passed (2 pre-existing failures in bug_15 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-65 Phase 2 complete: Standardize Scene Interfaces
-- All 8 scene classes now implement IScene protocol (handle_event, update(dt), draw, handle_resize)
-- Added scene_callback pattern to BattleSetupScreen, BattleScreen, StrategyScreen, TestLabScreen
-- Internalized battle_coordinator logic into BattleScreen (accumulator, tick rate, HUD)
-- BattleInputHandler logic moved into BattleScreen._handle_keydown
-- Some legacy action flags kept for backward compatibility but callbacks are primary path
-- Next: Phase 3 - Extract MenuScene & create unified scene dispatch
+- PROJ-65 Phase 3 complete: Extract MenuScene & Scene Dispatch
+- Created MenuScene class implementing IScene protocol in game/ui/screens/menu_scene.py
+- Added self.active_scene attribute for unified scene dispatch
+- Replaced if/elif chains in _forward_event_to_scene and _handle_resize with active_scene dispatch
+- Added _switch_scene(state, scene) method, updated all start_* methods to use it
+- Removed deprecated methods: _handle_battle_actions, _handle_keydown, _draw_menu, _update_battle_setup, _update_battle
+- app.py reduced from 781 to 667 lines
+- Legacy handlers kept for Strategy scene (click, scroll) - TODO for future
+- Next: Phase 4 - Cleanup & Tests
 
 ---
 
@@ -79,7 +81,7 @@
 ---
 
 - [/] **PROJ-65: Game Class Scene Protocol Refactor**
-  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-65/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-65/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -141,6 +143,7 @@
 | 2026-02-07 | PROJ-64 | Audit 1 | PASSED | 6244 passed | pending | 12 intentional broad catches, all documented, 87% reduction |
 | 2026-02-07 | PROJ-65 | Phase 1 | Complete | 6235 passed | pending | IScene protocol, global WIDTH/HEIGHT eliminated, module-level effects moved |
 | 2026-02-07 | PROJ-65 | Phase 2 | Complete | 6244 passed | pending | All 8 scenes IScene-compliant, scene_callback pattern, battle coordinator internalized |
+| 2026-02-07 | PROJ-65 | Phase 3 | Complete | 6244 passed | pending | MenuScene created, active_scene dispatch, if/elif chains eliminated, 781->667 lines |
 
 ---
 

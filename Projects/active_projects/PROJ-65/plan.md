@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Foundation — IScene Protocol & WIDTH/HEIGHT | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Standardize Scene Interfaces | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Extract MenuScene & Scene Dispatch | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Extract MenuScene & Scene Dispatch | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cleanup & Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - All 8 scene classes now implement IScene protocol (handle_event, update(dt), draw, handle_resize). Added scene_callback pattern to BattleSetupScreen, BattleScreen, StrategyScreen, TestLabScreen. Internalized battle_coordinator logic into BattleScreen.
-**Next Action:** Begin Phase 3 — Extract MenuScene & create unified scene dispatch
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - Created MenuScene implementing IScene. Added self.active_scene for unified dispatch. Replaced if/elif chains in _forward_event_to_scene and _handle_resize with active_scene dispatch. Added _switch_scene method. Removed deprecated _handle_battle_actions and _handle_keydown. app.py reduced from 781 to 667 lines.
+**Next Action:** Begin Phase 4 — Cleanup & Tests
 **Blockers:** None
-**Context for Next Agent:** 6244 passed (2 pre-existing failures in bug_15 tests). BattleScreen now handles its own timing/accumulator. Some legacy action flags kept for backward compatibility but callbacks are primary path.
+**Context for Next Agent:** 6244 passed (2 pre-existing failures in bug_15 tests). Some legacy handlers kept for Strategy scene (click, scroll). _update_and_draw has minimal scene-specific logic for input handling.
 
 ## Overview
 Refactor `game/app.py` (759 lines, 43 methods) from a monolithic orchestrator with 5 if/elif chains (10 GameStates, ~45 branches) into a thin coordinator that dispatches to `self.active_scene` via a unified `IScene` protocol. This eliminates Open/Closed Principle violations, removes global WIDTH/HEIGHT state, extracts the menu into its own scene class, and decouples battle coordinator logic.
