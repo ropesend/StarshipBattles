@@ -3,6 +3,8 @@
 These tests verify full command execution through the facade with real
 GameSession instances. Fleets are manually created since GameSession
 doesn't generate starting fleets.
+
+PROJ-55: Updated to create fleets with colony pods for colonization tests.
 """
 import pytest
 from game.strategy.engine.game_session import GameSession
@@ -10,6 +12,31 @@ from game.strategy.engine.game_config import GameConfig
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
+    """Create a ship with a colony pod matching the planet's type.
+
+    PROJ-55: Ships now need colony pods to colonize specific planet types.
+    """
+    planet_type_str = planet.planet_type.name
+    pod_id = f"{planet_type_str.lower()}_colony_pod"
+
+    return ShipInstance(
+        instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
+        design_id=f"{planet_type_str}_colony_ship",
+        name=f"Colony Ship ({planet_type_str})",
+        owner_id=owner_id,
+        design_data={
+            'name': f"Colony Ship ({planet_type_str})",
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': pod_id}]
+            }
+        },
+    )
 
 
 class TestMoveCommandIntegration:
@@ -80,7 +107,10 @@ class TestColonizeCommandIntegration:
 
     @pytest.fixture
     def game_setup(self):
-        """Create a real game session with facade and fleet at uncolonized planet."""
+        """Create a real game session with facade and fleet at uncolonized planet.
+
+        PROJ-55: Fleet now includes a colony ship with the correct pod type.
+        """
         config = GameConfig(galaxy_radius=5000, system_count=10)
         session = GameSession(config=config)
 
@@ -97,8 +127,11 @@ class TestColonizeCommandIntegration:
                 break
 
         # Inject a fleet at the uncolonized planet's location
+        # PROJ-55: Add colony ship with correct pod type
         player_empire = session.empires[0]
         fleet = Fleet(fleet_id=102, owner_id=player_empire.id, location=target_hex or HexCoord(0, 0))
+        if uncolonized_planet:
+            fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
         player_empire.fleets.append(fleet)
 
         facade = StrategySessionFacade(session)

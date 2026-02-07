@@ -130,8 +130,9 @@ class MockOrderProcessor(IOrderProcessor):
         self.process_instant_orders_calls.append((empires,))
         return self.process_instant_orders_result
 
-    def process_end_turn_orders(self, fleet, empire, galaxy):
-        self.process_end_turn_orders_calls.append((fleet, empire, galaxy))
+    def process_end_turn_orders(self, fleet, empire, galaxy, component_registry=None):
+        # PROJ-55: Added component_registry parameter
+        self.process_end_turn_orders_calls.append((fleet, empire, galaxy, component_registry))
         return self.process_end_turn_orders_result
 
 

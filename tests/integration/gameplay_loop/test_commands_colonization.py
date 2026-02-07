@@ -2,6 +2,7 @@
 Integration tests for commands and colonization in the gameplay loop.
 
 Tests for command execution, battle resolution, and colonization workflow.
+PROJ-55: Updated to use ships with colony pods for colonization tests.
 """
 import pytest
 from unittest.mock import MagicMock
@@ -9,7 +10,32 @@ from unittest.mock import MagicMock
 from game.strategy.engine.commands import CommandType
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
+from game.strategy.data.ship_instance import ShipInstance
 from tests.conftest import make_mock_ship_instance
+
+
+def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
+    """Create a ship with a colony pod matching the planet's type.
+
+    PROJ-55: Ships now need colony pods to colonize specific planet types.
+    """
+    planet_type_str = planet.planet_type.name
+    pod_id = f"{planet_type_str.lower()}_colony_pod"
+
+    return ShipInstance(
+        instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
+        design_id=f"{planet_type_str}_colony_ship",
+        name=f"Colony Ship ({planet_type_str})",
+        owner_id=owner_id,
+        design_data={
+            'name': f"Colony Ship ({planet_type_str})",
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': pod_id}]
+            }
+        },
+    )
 
 
 # =============================================================================
@@ -195,8 +221,9 @@ class TestColonizationWorkflow:
             pytest.skip("No unowned planet available")
 
         # Create fleet at planet's GLOBAL location (system + local offset)
+        # PROJ-55: Use colony ship with correct pod type
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
-        fleet.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 
@@ -229,8 +256,9 @@ class TestColonizationWorkflow:
         if not target_planet:
             pytest.skip("No unowned planet available")
 
+        # PROJ-55: Use colony ship with correct pod type
         fleet = Fleet(1, empire1.id, global_loc, speed=10.0)
-        fleet.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire1.id)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet)
 

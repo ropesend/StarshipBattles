@@ -1,4 +1,9 @@
+"""
+Integration tests for commands.
 
+PROJ-55: Updated to include colony pod data in mock fleets for colonization tests.
+"""
+from enum import Enum
 from unittest.mock import MagicMock
 from game.strategy.engine.commands import IssueColonizeCommand, CommandType
 from game.strategy.engine.turn_engine import TurnEngine
@@ -8,18 +13,46 @@ from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.galaxy import Galaxy, StarSystem, Planet
 
 
+# PROJ-55: Mock planet type enum for tests
+class MockPlanetType(Enum):
+    CONTINENTAL = "CONTINENTAL"
+
+
+def create_mock_fleet_with_colony_pod(fleet_id, location, planet_type_str="CONTINENTAL"):
+    """Create a mock fleet with a ship that has a colony pod.
+
+    PROJ-55: Ships now need colony pods to colonize specific planet types.
+    """
+    # Create mock ship with design_data containing colony pod
+    mock_ship = MagicMock()
+    mock_ship.name = "Colony Ship"
+    mock_ship.design_data = {
+        'layers': {
+            'HULL': [{'id': f'{planet_type_str.lower()}_colony_pod'}]
+        }
+    }
+
+    fleet = MagicMock(spec=Fleet)
+    fleet.id = fleet_id
+    fleet.location = location
+    fleet.ships = [mock_ship]
+    fleet.orders = []
+    return fleet
+
+
 class TestCommands:
     def test_issue_colonize_command_validation_success(self):
         turn_engine = TurnEngine()
         galaxy = MagicMock(spec=Galaxy)
-        fleet = MagicMock(spec=Fleet)
-        fleet.id = 101
-        fleet.location = HexCoord(10, 10)
+
+        # PROJ-55: Use fleet with colony pod matching planet type
+        fleet = create_mock_fleet_with_colony_pod(101, HexCoord(10, 10), "CONTINENTAL")
 
         planet = MagicMock(spec=Planet)
         planet.name = "TestPlanet"
         planet.location = HexCoord(0, 0)
         planet.owner_id = None
+        planet.planet_type = MockPlanetType.CONTINENTAL  # PROJ-55: Add planet type
 
         # Mock System
         system = MagicMock(spec=StarSystem)
@@ -39,7 +72,7 @@ class TestCommands:
         galaxy.get_planets_at_global_hex = get_planets_at_global_hex
 
         # Setup: Fleet at planet location (Global System 10,10 + Planet Local 0,0 = 10,10)
-        # Fleet is there.
+        # Fleet is there with colony pod.
         # Planet is unowned.
 
         res = turn_engine.validate_colonize_order(galaxy, fleet, planet)

@@ -14,7 +14,7 @@ allowing the concrete implementations to be injected at construction time.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Optional, Tuple, Any, TYPE_CHECKING
+from typing import List, Optional, Tuple, Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -177,15 +177,20 @@ class IOrderProcessor(ABC):
         self,
         fleet: 'Fleet',
         empire: Any,
-        galaxy: Any
+        galaxy: Any,
+        component_registry: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
         Process static orders at end of turn (COLONIZE, JOIN_FLEET).
+
+        PROJ-55: Added component_registry for colony pod ship removal.
 
         Args:
             fleet: Fleet to process
             empire: Empire that owns the fleet
             galaxy: Galaxy for validation
+            component_registry: Optional component registry for colony pod lookup.
+                               When provided, only the colony ship is removed.
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise

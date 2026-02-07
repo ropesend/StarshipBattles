@@ -7,6 +7,8 @@
 | PROJ-56 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-55 | Test Lab Screen God Class Decomposition | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-54 | Combat Lab Quality Cleanup and Expansion | Planning | 2026-02-05 | 2026-02-05 |
+| PROJ-55 | Data-Driven Planet-Specific Colonization System | Planning | 2026-02-01 | 2026-02-01 |
+| PROJ-54 | Universal Planet Report Component | Planning | 2026-02-01 | 2026-02-01 |
 | PROJ-52 | Galaxy Generation Refactor | Planning | 2026-01-31 | 2026-01-31 |
 | PROJ-53 | Eliminate Legacy Resource System | Audit Passed | 2026-01-31 | 2026-01-31 |
 
@@ -155,7 +157,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-57
+## Next Project ID: PROJ-54
 
 ---
 

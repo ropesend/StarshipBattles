@@ -216,6 +216,7 @@ class TurnEngine:
         Validate if a fleet can colonize a specific planet (or 'Any' if target_planet is None).
 
         PROJ-36: Delegates to ColonizeValidator.
+        PROJ-55: Passes component_registry for planet-type validation.
 
         Args:
             galaxy: The Galaxy object
@@ -226,7 +227,9 @@ class TurnEngine:
             ValidationResult
         """
         from game.strategy.validation import ColonizeValidator
-        return ColonizeValidator.validate(galaxy, fleet, target_planet)
+        # PROJ-55: Pass component registry for colony pod validation
+        component_registry = getattr(self._registries, 'components', None)
+        return ColonizeValidator.validate(galaxy, fleet, target_planet, component_registry)
 
     def process_production(self, empires, galaxy=None, save_path=None):
         """Process construction queues for all colonies.
@@ -277,11 +280,16 @@ class TurnEngine:
         """Process static orders like COLONIZE.
 
         PROJ-12 Phase 3: Delegates to FleetOrderProcessor.
+        PROJ-55: Passes component_registry for colony pod ship removal.
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise.
         """
-        return self.order_processor.process_end_turn_orders(fleet, empire, galaxy)
+        # PROJ-55: Pass component registry for colony pod ship removal
+        component_registry = getattr(self._registries, 'components', None)
+        return self.order_processor.process_end_turn_orders(
+            fleet, empire, galaxy, component_registry=component_registry
+        )
 
 
 def create_default_turn_engine() -> TurnEngine:

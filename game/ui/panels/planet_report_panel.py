@@ -24,7 +24,7 @@ class PlanetReportPanel:
     - Complexes list (scrollable, right side)
     """
 
-    def __init__(self, manager, rect, planet, container=None):
+    def __init__(self, manager, rect, planet, container=None, portrait_surface=None, show_complexes=True):
         """
         Initialize planet report panel.
 
@@ -33,11 +33,16 @@ class PlanetReportPanel:
             rect: pygame.Rect for panel dimensions
             planet: Planet object to display
             container: Optional parent container
+            portrait_surface (pygame.Surface, optional): Pre-loaded portrait image.
+                If provided, will be used instead of generating placeholder.
+            show_complexes (bool, optional): Whether to show the complexes list.
+                Defaults to True. Set to False for contexts like Strategy UI.
         """
         self.manager = manager
         self.rect = rect
         self.planet = planet
         self.container = container
+        self._init_portrait_surface = portrait_surface
 
         # Create panel container
         self.panel = UIPanel(
@@ -58,8 +63,11 @@ class PlanetReportPanel:
         complexes_width = 200
         complexes_gap = 10
 
-        # Info text (170, 10, text_w, text_h) - adjusted to make room for complexes list
-        text_w = rect.width - 180 - complexes_width - complexes_gap
+        # Info text (170, 10, text_w, text_h) - width depends on whether complexes are shown
+        if show_complexes:
+            text_w = rect.width - 180 - complexes_width - complexes_gap  # Leave room for complexes list
+        else:
+            text_w = rect.width - 180  # Only leave room for portrait and graph
         text_h = rect.height - 20
         self.detail_text = UITextBox(
             html_text=format_planet_info(planet),
@@ -68,24 +76,29 @@ class PlanetReportPanel:
             container=self.panel
         )
 
-        # Complexes list (scrollable, right side)
-        complexes_x = rect.width - complexes_width - 10  # 10px margin from right edge
-        self.complexes_container = UIScrollingContainer(
-            relative_rect=pygame.Rect(complexes_x, 10, complexes_width, rect.height - 20),
-            manager=manager,
-            container=self.panel
-        )
+        # Complexes list (scrollable, right side) - only if show_complexes is True
+        if show_complexes:
+            complexes_x = rect.width - complexes_width - 10  # 10px margin from right edge
+            self.complexes_container = UIScrollingContainer(
+                relative_rect=pygame.Rect(complexes_x, 10, complexes_width, rect.height - 20),
+                manager=manager,
+                container=self.panel
+            )
 
-        # Complexes header
-        UILabel(
-            relative_rect=pygame.Rect(5, 5, complexes_width - 10, 25),
-            text="Built Complexes",
-            manager=manager,
-            container=self.complexes_container
-        )
+            # Complexes header
+            UILabel(
+                relative_rect=pygame.Rect(5, 5, complexes_width - 10, 25),
+                text="Built Complexes",
+                manager=manager,
+                container=self.complexes_container
+            )
 
-        # Track complex list items for updates
-        self.complex_items = []
+            # Track complex list items for updates
+            self.complex_items = []
+        else:
+            # No complexes list - set to None
+            self.complexes_container = None
+            self.complex_items = []
 
         # Atmosphere graph (10, 170, 150, graph_h)
         graph_y = 170
@@ -106,7 +119,7 @@ class PlanetReportPanel:
         self.graph = AtmosphereGraph(int(graph_h), 150)
 
         # Initial render
-        self._update_portrait()
+        self._update_portrait(portrait_surface)
         self._update_graph()
         self._update_complexes_list()
 
@@ -189,6 +202,10 @@ class PlanetReportPanel:
 
     def _update_complexes_list(self):
         """Update the list of built complexes on the planet."""
+        # Check if complexes list is enabled
+        if not self.complexes_container:
+            return  # Complexes list disabled, nothing to update
+
         # Clear existing items - copy list to avoid mutation during iteration (BUG-26)
         items_to_kill = list(self.complex_items)
         for item in items_to_kill:

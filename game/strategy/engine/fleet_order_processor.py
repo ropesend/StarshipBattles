@@ -13,7 +13,7 @@ Responsibilities:
 """
 
 from dataclasses import dataclass
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_warning, log_info
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
@@ -153,12 +153,15 @@ class FleetOrderProcessor:
         self,
         fleet: Fleet,
         empire,
-        galaxy
+        galaxy,
+        component_registry: Optional[Dict[str, Any]] = None
     ) -> ColonizeResult:
         """
         Process a COLONIZE order.
 
         PROJ-36: Uses ColonizeValidator for validation.
+        PROJ-55: When component_registry is provided, removes only the colony
+                 ship instead of the entire fleet.
 
         Claims a planet for the empire if valid.
 
@@ -166,6 +169,9 @@ class FleetOrderProcessor:
             fleet: Fleet with COLONIZE order
             empire: Empire that owns the fleet
             galaxy: Galaxy for planet lookup
+            component_registry: Optional component registry for pod lookup.
+                               When provided, only the colony ship is removed.
+                               When None, entire fleet is removed (legacy behavior).
 
         Returns:
             ColonizeResult with colonization status
@@ -196,7 +202,25 @@ class FleetOrderProcessor:
         # Execute colonization
         empire.add_colony(final_planet)
         fleet.pop_order()
-        empire.remove_fleet(fleet)
+
+        # PROJ-55: Remove only colony ship when registry is provided
+        if component_registry is not None:
+            planet_type_str = final_planet.planet_type.name
+            colony_ship = ColonizeValidator.find_ship_with_colony_pod(
+                fleet, planet_type_str, component_registry
+            )
+
+            if colony_ship is not None:
+                fleet.remove_ship(colony_ship)
+                log_debug(f"FleetOrderProcessor: Removed colony ship '{colony_ship.name}' from fleet")
+
+            # If fleet now empty, remove it
+            if len(fleet.ships) == 0:
+                empire.remove_fleet(fleet)
+                log_debug(f"FleetOrderProcessor: Fleet {fleet.id} removed (no ships remaining)")
+        else:
+            # Legacy behavior: remove entire fleet
+            empire.remove_fleet(fleet)
 
         log_info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
         return ColonizeResult(colonized=True, planet_name=final_planet.name)
@@ -205,15 +229,20 @@ class FleetOrderProcessor:
         self,
         fleet: Fleet,
         empire,
-        galaxy
+        galaxy,
+        component_registry: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
         Process static orders at end of turn (COLONIZE, JOIN_FLEET).
+
+        PROJ-55: Added component_registry for colony pod ship removal.
 
         Args:
             fleet: Fleet to process
             empire: Empire that owns the fleet
             galaxy: Galaxy for validation
+            component_registry: Optional component registry for colony pod lookup.
+                               When provided, only the colony ship is removed.
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise
@@ -223,7 +252,10 @@ class FleetOrderProcessor:
             return False
 
         if order.type == OrderType.COLONIZE:
-            result = self.process_colonize(fleet, empire, galaxy)
+            # PROJ-55: Pass component registry for ship removal
+            result = self.process_colonize(
+                fleet, empire, galaxy, component_registry=component_registry
+            )
             return result.colonized
 
         elif order.type == OrderType.JOIN_FLEET:

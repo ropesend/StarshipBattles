@@ -113,12 +113,10 @@ class BuildQueueScreen:
             manager=self.manager,
             rect=pygame.Rect(10, 10, planet_report_width, planet_report_height),
             planet=self.planet,
-            container=self.background
+            container=self.background,
+            portrait_surface=self.portrait_surface,  # Pass portrait at init (cleaner)
+            show_complexes=False  # Match strategy UI - no separate complexes column
         )
-
-        # Update with portrait surface if provided
-        if self.portrait_surface:
-            self.planet_report.update_planet(self.planet, self.portrait_surface)
 
     def _create_design_report_panel(self):
         """Create right column showing selected design information."""
@@ -667,8 +665,11 @@ class BuildQueueScreen:
 
     def _close(self):
         """Close the build queue screen."""
-        # Kill all UI elements
+        # Kill the background panel - this cascades to all children
         self.background.kill()
+
+        # Force UIManager to process the kill queue
+        self.manager.update(0)
 
         # Call close callback
         if self.on_close:

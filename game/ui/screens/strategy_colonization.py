@@ -49,6 +49,7 @@ class ColonizationSystem:
         Handle colonize button/key action.
 
         Validates colonizable planets at fleet's current location.
+        PROJ-55: Filters by available colony pods.
 
         Args:
             fleet: Fleet to issue colonize order to
@@ -58,6 +59,7 @@ class ColonizationSystem:
             - {'type': 'prompt', 'planets': list, 'fleet': Fleet} if multiple options
             - {'type': 'success', 'fleet': Fleet} if single planet colonized
             - {'type': 'error', 'message': str} on failure
+            - {'type': 'no_targets', 'message': str, 'remaining_pods': dict} when no pods
             - None if no fleet or no valid planets
         """
         if not fleet:
@@ -91,13 +93,42 @@ class ColonizationSystem:
             log_debug("No colonizable planets at fleet location (Validation Failed).")
             return None
 
-        if len(valid_planets) == 1:
-            return self.issue_colonize_order(fleet, valid_planets[0])
+        # PROJ-55: Filter by available colony pods
+        remaining_pods = self.facade.get_fleet_remaining_pods(fleet.id)
+
+        # If no remaining pods, return informative message
+        if not remaining_pods:
+            log_debug("No colony pods available in fleet.")
+            return {
+                'type': 'no_targets',
+                'message': 'No colony pods in fleet',
+                'remaining_pods': remaining_pods,
+            }
+
+        # Filter planets by available pod types
+        pod_filtered_planets = []
+        for p in valid_planets:
+            planet_type_str = p.planet_type.name
+            if planet_type_str in remaining_pods:
+                pod_filtered_planets.append(p)
+
+        # If no planets match available pods
+        if not pod_filtered_planets:
+            pod_types = ", ".join(remaining_pods.keys())
+            log_debug(f"No colonizable planets for available pods ({pod_types}).")
+            return {
+                'type': 'no_targets',
+                'message': f'No colonizable planets for available pods ({pod_types})',
+                'remaining_pods': remaining_pods,
+            }
+
+        if len(pod_filtered_planets) == 1:
+            return self.issue_colonize_order(fleet, pod_filtered_planets[0])
         else:
             # Return context for UI to prompt selection
             return {
                 'type': 'prompt',
-                'planets': valid_planets,
+                'planets': pod_filtered_planets,
                 'fleet': fleet,
             }
 

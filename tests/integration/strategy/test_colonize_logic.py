@@ -122,17 +122,241 @@ def test_colonize_any_fail_no_candidates(turn_engine, galaxy_setup):
 
 def test_colonize_specific_fail_owned(turn_engine, galaxy_setup):
     galaxy, system, pA, pB = galaxy_setup
-    
+
     # Planet A is already owned by Player 2 (ID: 2)
     pA.owner_id = 2
-    
+
     fleet = Fleet(1, 1, HexCoord(10, 10))
     fleet.orders.append(FleetOrder(OrderType.COLONIZE, pA))
-    
+
     empire = Empire(1, "Player 1", (255, 0, 0))
-    
+
     result = turn_engine._process_end_turn_orders(fleet, empire, galaxy)
-    
+
     assert result is False
     assert len(fleet.orders) == 0
     assert pA.owner_id == 2 # Unchanged
+
+
+# =============================================================================
+# PROJ-55: Colony Pod Ship Removal Tests
+# =============================================================================
+
+class MockShip:
+    """Mock ship with design_data for testing colony pod behavior."""
+
+    def __init__(self, name: str, design_data: dict):
+        self.name = name
+        self.design_data = design_data
+
+    def is_combat_capable(self):
+        return True
+
+    def get_calculated_stats(self):
+        """Return minimal stats for fleet speed calculation."""
+        return {'strategic_movement': 50}
+
+
+@pytest.fixture
+def mock_component_registry():
+    """Component registry with colony pod definitions."""
+    return {
+        'ice_dwarf_colony_pod': {
+            'id': 'ice_dwarf_colony_pod',
+            'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+        },
+        'continental_colony_pod': {
+            'id': 'continental_colony_pod',
+            'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+        },
+        'basic_engine': {
+            'id': 'basic_engine',
+            'abilities': {}
+        },
+        'laser_cannon': {
+            'id': 'laser_cannon',
+            'abilities': {}
+        },
+    }
+
+
+@pytest.fixture
+def galaxy_with_typed_planets():
+    """Galaxy with planets that have specific planet_type attributes."""
+    from enum import Enum
+
+    class MockPlanetType(Enum):
+        ICE_DWARF = "ICE_DWARF"
+        CONTINENTAL = "CONTINENTAL"
+
+    galaxy = MockGalaxy()
+
+    # System at (10, 10)
+    ice_planet = MockPlanet("Ice World", HexCoord(0, 0))
+    ice_planet.planet_type = MockPlanetType.ICE_DWARF
+
+    continental_planet = MockPlanet("Earth-like", HexCoord(1, 0))
+    continental_planet.planet_type = MockPlanetType.CONTINENTAL
+
+    system = MockSystem(HexCoord(10, 10), [ice_planet, continental_planet])
+    galaxy.systems[HexCoord(10, 10)] = system
+
+    return galaxy, ice_planet, continental_planet
+
+
+class TestColonizePodShipRemoval:
+    """Tests for PROJ-55: Colony ship removal instead of fleet removal."""
+
+    def test_colonize_removes_only_colony_ship_not_fleet(
+        self, galaxy_with_typed_planets, mock_component_registry
+    ):
+        """Colonization removes only the ship with colony pod, not entire fleet."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
+
+        # Create ships: one with ice dwarf pod, one combat ship
+        colony_ship = MockShip("Colony Ship", {
+            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
+        })
+        combat_ship = MockShip("Combat Ship", {
+            'layers': {'HULL': [{'id': 'laser_cannon'}]}
+        })
+
+        # Fleet at ice planet location (10, 10)
+        fleet = Fleet(1, 1, HexCoord(10, 10))
+        fleet.ships.append(colony_ship)
+        fleet.ships.append(combat_ship)
+        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+
+        empire = Empire(1, "Player 1", (255, 0, 0))
+        empire.fleets.append(fleet)
+
+        # Execute with component registry
+        processor = FleetOrderProcessor()
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=mock_component_registry
+        )
+
+        # Assert: Colonization succeeded
+        assert result.colonized is True
+        assert ice_planet.owner_id == 1
+
+        # Assert: Only colony ship was removed, combat ship remains
+        assert colony_ship not in fleet.ships
+        assert combat_ship in fleet.ships
+        assert len(fleet.ships) == 1
+
+        # Assert: Fleet still exists (has remaining ship)
+        assert fleet in empire.fleets
+
+    def test_colonize_removes_fleet_if_last_ship(
+        self, galaxy_with_typed_planets, mock_component_registry
+    ):
+        """Colonization removes fleet when colony ship is the last ship."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
+
+        # Fleet with only one ship (colony ship)
+        colony_ship = MockShip("Lone Colony Ship", {
+            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
+        })
+
+        fleet = Fleet(1, 1, HexCoord(10, 10))
+        fleet.ships.append(colony_ship)
+        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+
+        empire = Empire(1, "Player 1", (255, 0, 0))
+        empire.fleets.append(fleet)
+
+        # Execute with component registry
+        processor = FleetOrderProcessor()
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=mock_component_registry
+        )
+
+        # Assert: Colonization succeeded
+        assert result.colonized is True
+        assert ice_planet.owner_id == 1
+
+        # Assert: Ship was removed
+        assert len(fleet.ships) == 0
+
+        # Assert: Fleet was removed (no ships left)
+        assert fleet not in empire.fleets
+
+    def test_colonize_with_multiple_pod_types_removes_correct_ship(
+        self, galaxy_with_typed_planets, mock_component_registry
+    ):
+        """Colonizing Ice Dwarf removes ice pod ship, not continental pod ship."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
+
+        # Fleet with both types of colony pods
+        ice_colony_ship = MockShip("Ice Colony Ship", {
+            'layers': {'HULL': [{'id': 'ice_dwarf_colony_pod'}]}
+        })
+        continental_colony_ship = MockShip("Continental Colony Ship", {
+            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
+        })
+
+        fleet = Fleet(1, 1, HexCoord(10, 10))
+        fleet.ships.append(ice_colony_ship)
+        fleet.ships.append(continental_colony_ship)
+        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+
+        empire = Empire(1, "Player 1", (255, 0, 0))
+        empire.fleets.append(fleet)
+
+        # Execute
+        processor = FleetOrderProcessor()
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=mock_component_registry
+        )
+
+        # Assert: Colonization succeeded
+        assert result.colonized is True
+        assert ice_planet.owner_id == 1
+
+        # Assert: Only ice pod ship was removed
+        assert ice_colony_ship not in fleet.ships
+        assert continental_colony_ship in fleet.ships
+        assert len(fleet.ships) == 1
+
+        # Assert: Fleet still exists
+        assert fleet in empire.fleets
+
+    def test_colonize_backward_compatible_without_registry(
+        self, galaxy_with_typed_planets
+    ):
+        """Without registry, colonization removes entire fleet (old behavior)."""
+        from game.strategy.engine.fleet_order_processor import FleetOrderProcessor
+
+        galaxy, ice_planet, continental_planet = galaxy_with_typed_planets
+
+        # Fleet with ships
+        ship1 = MockShip("Ship 1", {'layers': {}})
+        ship2 = MockShip("Ship 2", {'layers': {}})
+
+        fleet = Fleet(1, 1, HexCoord(10, 10))
+        fleet.ships.append(ship1)
+        fleet.ships.append(ship2)
+        fleet.orders.append(FleetOrder(OrderType.COLONIZE, ice_planet))
+
+        empire = Empire(1, "Player 1", (255, 0, 0))
+        empire.fleets.append(fleet)
+
+        # Execute WITHOUT component registry (old behavior)
+        processor = FleetOrderProcessor()
+        result = processor.process_colonize(fleet, empire, galaxy)
+
+        # Assert: Colonization succeeded
+        assert result.colonized is True
+
+        # Assert: Entire fleet was removed (old behavior)
+        assert fleet not in empire.fleets

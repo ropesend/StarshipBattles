@@ -68,12 +68,28 @@ def test_build_button_visibility_owned_planet(strategy_ui):
     """Test that build button is visible for owned planets."""
     # Setup
     planet = create_dummy_planet("Test Planet", strategy_ui.scene.current_empire.id)
-    
+
+    # Debug: Verify empire IDs match
+    assert planet.owner_id == strategy_ui.scene.current_empire.id, (
+        f"Planet owner ({planet.owner_id}) should match current empire ({strategy_ui.scene.current_empire.id})"
+    )
+
     # Act
     strategy_ui.show_detailed_report(planet)
-    
+
     # Assert
     assert strategy_ui.btn_build_yard.visible == 1, "Build button should be visible for owned planet"
+
+    # NEW TEST (PROJ-54): Planet report panel should not cover the Build Yard button
+    assert strategy_ui.planet_report_panel is not None, "Planet report panel should exist for planets"
+
+    panel_bottom = strategy_ui.planet_report_panel.rect.bottom
+    button_top = strategy_ui.btn_build_yard.rect.top
+
+    # Panel should not cover the button (panel bottom should be above button top)
+    assert panel_bottom <= button_top, (
+        f"Panel bottom (y={panel_bottom}) should not cover button (top at y={button_top})"
+    )
 
 def test_build_button_visibility_unowned_planet(strategy_ui):
     """Test that build button is hidden for unowned planets."""

@@ -207,6 +207,84 @@ class AssetManager:
              log_error(f"Failed to load external image {path} (pygame error): {e}")
              return self.get_missing_texture()
 
+    def _get_planet_folder_for_size(self, size: int) -> str:
+        """
+        Map a resolution size to the corresponding Planets_V3 folder path.
+
+        Args:
+            size: Target resolution (128, 256, 512, 1024, or 2048)
+
+        Returns:
+            Full path to the resolution-specific folder
+
+        Raises:
+            ValueError: If size is not a valid resolution
+        """
+        size_to_path = {
+            128: Paths.PLANETS_V3_128_DIR,
+            256: Paths.PLANETS_V3_256_DIR,
+            512: Paths.PLANETS_V3_512_DIR,
+            1024: Paths.PLANETS_V3_1024_DIR,
+            2048: Paths.PLANETS_V3_2048_DIR,
+        }
+
+        if size not in size_to_path:
+            raise ValueError(f"Invalid planet image size: {size}. Must be one of {list(size_to_path.keys())}")
+
+        return size_to_path[size]
+
+    def load_planet_image(self, image_filename: str, requested_size: int = 512) -> pygame.Surface:
+        """
+        Load a planet image at the most appropriate resolution.
+
+        Implements fallback chain: requested size → higher resolutions → None
+
+        Args:
+            image_filename: The planet image filename (e.g., "planet_5_994_1769750020702.png")
+            requested_size: Target display size in pixels (default 512 for portraits)
+
+        Returns:
+            pygame.Surface with the loaded image, or missing texture if not found
+
+        Examples:
+            # Load for 150x150 portrait (will use 512px)
+            surface = manager.load_planet_image("planet_5_994.png", 512)
+
+            # Load for 40x40 icon (will use 128px)
+            surface = manager.load_planet_image("planet_5_994.png", 128)
+        """
+        # Resolution fallback chain (try requested size, then progressively higher)
+        size_chain = [128, 256, 512, 1024, 2048]
+        start_index = 0
+
+        # Find starting point in chain based on requested size
+        for i, size in enumerate(size_chain):
+            if requested_size <= size:
+                start_index = i
+                break
+
+        # Try each resolution in order
+        for size in size_chain[start_index:]:
+            try:
+                folder = self._get_planet_folder_for_size(size)
+                image_path = os.path.join(folder, image_filename)
+
+                # Try to load using existing load_external_image
+                img = self.load_external_image(image_path)
+
+                # If we got a real image (not missing texture), return it
+                if img and img != self.get_missing_texture():
+                    return img
+
+            except (FileNotFoundError, pygame.error, ValueError) as e:
+                # Log warning but continue to next resolution
+                log_warning(f"Could not load planet image {image_filename} at {size}px: {e}")
+                continue
+
+        # All resolutions failed - return missing texture
+        log_error(f"Could not load planet image {image_filename} at any resolution")
+        return self.get_missing_texture()
+
     def _load_image(self, cache_key, path):
         """Internal load helper."""
         if not os.path.exists(path):

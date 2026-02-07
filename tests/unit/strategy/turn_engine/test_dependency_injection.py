@@ -456,4 +456,10 @@ class TestMockEngines:
 
         assert result is True
         assert mock.process_end_turn_orders_called
-        assert mock.process_end_turn_orders_calls == [(mock_fleet, mock_empire, mock_galaxy)]
+        # PROJ-55: Now includes component_registry as 4th argument
+        assert len(mock.process_end_turn_orders_calls) == 1
+        call_args = mock.process_end_turn_orders_calls[0]
+        assert call_args[0] is mock_fleet
+        assert call_args[1] is mock_empire
+        assert call_args[2] is mock_galaxy
+        # 4th arg is component_registry (may be None or dict)

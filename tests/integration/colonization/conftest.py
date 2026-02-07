@@ -2,6 +2,7 @@
 Fixtures for colonization integration tests.
 
 PROJ-40/NEW-INT-001: Uses deterministic galaxy generation with fixed seed.
+PROJ-55: Updated to create ships with colony pods matching planet types.
 """
 
 import pytest
@@ -11,11 +12,42 @@ from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.galaxy import Galaxy
-from tests.conftest import make_mock_ship_instance
+from game.strategy.data.ship_instance import ShipInstance
 
 
 # Fixed seed for deterministic galaxy generation
 GALAXY_SEED = 42
+
+
+def make_colony_ship_for_planet(planet, owner_id: int) -> ShipInstance:
+    """Create a ship with a colony pod matching the planet's type.
+
+    PROJ-55: Ships now need colony pods to colonize specific planet types.
+
+    Args:
+        planet: Planet object with planet_type attribute
+        owner_id: Owner empire ID
+
+    Returns:
+        ShipInstance with appropriate colony pod in design_data
+    """
+    planet_type_str = planet.planet_type.name
+    pod_id = f"{planet_type_str.lower()}_colony_pod"
+
+    return ShipInstance(
+        instance_id=f"colony-ship-{planet_type_str.lower()}-{id(planet)}",
+        design_id=f"{planet_type_str}_colony_ship",
+        name=f"Colony Ship ({planet_type_str})",
+        owner_id=owner_id,
+        design_data={
+            'name': f"Colony Ship ({planet_type_str})",
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': pod_id}]
+            }
+        },
+    )
 
 
 @pytest.fixture
@@ -46,6 +78,7 @@ def empire_with_fleet(simple_galaxy):
     """Create empire with a colonization-capable fleet.
 
     PROJ-40/NEW-INT-001: Deterministic fixture that always finds a planet.
+    PROJ-55: Fleet now includes a colony ship with the correct pod type.
     The deterministic simple_galaxy fixture guarantees an unowned planet exists.
     """
     empire = Empire(0, "Colonizer Empire", (0, 100, 200))
@@ -66,6 +99,7 @@ def empire_with_fleet(simple_galaxy):
     assert target_planet is not None, "Deterministic galaxy should have an unowned planet"
 
     fleet = Fleet(1, empire.id, global_loc, speed=10.0)
-    fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
+    # PROJ-55: Create colony ship with pod matching planet type
+    fleet.ships = [make_colony_ship_for_planet(target_planet, empire.id)]
     empire.add_fleet(fleet)
     return empire, fleet, target_planet, simple_galaxy

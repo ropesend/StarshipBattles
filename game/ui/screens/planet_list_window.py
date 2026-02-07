@@ -2,13 +2,15 @@ import pygame
 import pygame_gui.windows
 from game.core.constants import PLANET_RESOURCES
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
-from pygame_gui import UI_TEXT_ENTRY_FINISHED
+from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
+from game.assets.asset_manager import AssetManager
 from game.core.config import UIConfig
-from game.core.logger import log_info, log_warning
+from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
+from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetListWindow(UIWindow):
     def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
@@ -23,6 +25,8 @@ class PlanetListWindow(UIWindow):
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
+        self.detail_panel_width = 600  # Width for right-side planet report panel (PROJ-54)
+        self.panel_margin = 20         # Margin between list and panel (PROJ-54)
         
         # --- State ---
         self.all_planets = gather_planets(galaxy, empire)
@@ -55,7 +59,13 @@ class PlanetListWindow(UIWindow):
         
         # UI References (for reading values)
         self.ui_filters = {}
-        
+
+        # Planet detail panel (PROJ-54)
+        self.planet_detail_panel = None  # Created when planet selected
+        self.selected_planet = None      # Track current selection
+        self.btn_build_queue = None      # Build queue button (for owned planets)
+        self._debug_next_click = False   # Debug flag for click detection
+
         # Default Columns
         # ID, Width, Title, Attribute/Getter, Visible
         self.columns = [
@@ -93,9 +103,10 @@ class PlanetListWindow(UIWindow):
         )
         
         self._init_sidebar()
-        
+
         # 2. Main Content Area (Header + Scrollable List)
-        main_w = rect.width - self.sidebar_width - 10
+        # Reserve space for detail panel on right (PROJ-54)
+        main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
         self.main_panel = UIPanel(
             relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
             manager=manager,
@@ -662,19 +673,21 @@ class PlanetListWindow(UIWindow):
         
         # Local refs for performance
         filtered_planets = self.filtered_planets
-        asset_resolver = self.asset_resolver
         icon_cache = self._icon_cache
         
         for i, row_data in enumerate(self.row_pool):
             data_index = start_index + i
-            
+
             row_panel = row_data['bg']
-            
+
             if data_index < len(filtered_planets):
                 planet = filtered_planets[data_index]
-                
+
+                # Store planet reference in row for selection tracking (PROJ-54)
+                row_data['planet'] = planet
+
                 y_pos = (i * self.row_height) - offset_y
-                
+
                 # Make visible and set position
                 row_panel.show()
                 row_panel.set_relative_position((0, y_pos))
@@ -689,30 +702,123 @@ class PlanetListWindow(UIWindow):
                         el.set_text(val)
                          
                     elif widget_data['type'] == 'image':
-                        # Get image via asset resolver
+                        # Load 128px planet image directly for 40x40 icons (PROJ-54 Phase 11)
+                        # This is much more efficient than loading 512px and scaling down
                         img = None
-                        if asset_resolver:
-                            img = asset_resolver(planet)
-                        elif hasattr(planet, 'image') and planet.image:
-                            img = planet.image
-                            
-                        if img:
-                            # Use cached scaled icon to avoid repeated smoothscale
-                            cache_key = id(img)
+                        if hasattr(planet, 'image_id') and planet.image_id:
+                            # Use cached icon if already loaded for this planet
+                            cache_key = f"icon_{planet.image_id}_{planet.image_rotation or 0}"
+
                             if cache_key not in icon_cache:
-                                icon_cache[cache_key] = pygame.transform.smoothscale(img, (40, 40))
-                            el.set_image(icon_cache[cache_key])
+                                # Load 128px version directly from AssetManager
+                                am = AssetManager.instance()
+                                img = am.load_planet_image(planet.image_id, requested_size=128)
+
+                                if img and img != am.get_missing_texture():
+                                    # Apply rotation if specified
+                                    if hasattr(planet, 'image_rotation') and planet.image_rotation and planet.image_rotation != 0.0:
+                                        img = pygame.transform.rotate(img, planet.image_rotation)
+
+                                    # Scale to 40x40 and cache
+                                    icon_cache[cache_key] = pygame.transform.smoothscale(img, (40, 40))
+                                else:
+                                    # Image load failed - use blank
+                                    img = None
+
+                            if cache_key in icon_cache:
+                                el.set_image(icon_cache[cache_key])
+                            else:
+                                # Fallback: blank surface
+                                if '_blank_icon' not in icon_cache:
+                                    icon_cache['_blank_icon'] = pygame.Surface((40, 40))
+                                el.set_image(icon_cache['_blank_icon'])
                         else:
-                            # Fallback: blank surface (cached as well)
+                            # No image_id - use blank surface
                             if '_blank_icon' not in icon_cache:
                                 icon_cache['_blank_icon'] = pygame.Surface((40, 40))
                             el.set_image(icon_cache['_blank_icon'])
             else:
                 # Scrolled past end
                 row_panel.hide()
+                row_data['planet'] = None  # Clear planet reference (PROJ-54)
             
     def process_event(self, event):
         handled = super().process_event(event)
+
+        # Handle Build Queue button click (PROJ-54)
+        if event.type == UI_BUTTON_PRESSED:
+            if event.ui_element == self.btn_build_queue:
+                if self.selected_planet:
+                    # Open build queue for selected planet
+                    # Note: Exact method may vary - need to determine how to trigger build queue
+                    # For now, we'll emit a log message as a placeholder
+                    log_info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
+                    # TODO: Implement actual build queue opening mechanism
+                    # Possible approaches:
+                    # 1. self.manager.close() then trigger build queue via callback
+                    # 2. Emit custom event that parent screen handles
+                    # 3. Call method on parent screen if reference exists
+                return True
+
+        # F9 key enables debug mode for next click
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
+            self._debug_next_click = True
+            log_info("=== PLANET LIST DEBUG MODE ENABLED - Click on a planet row now ===")
+            return True
+
+        # Debug: Log ALL events when debug mode is enabled
+        if self._debug_next_click:
+            log_info(f"DEBUG EVENT: type={event.type}, event={event}")
+
+        # Handle planet row clicks (PROJ-54)
+        # Note: Using MOUSEBUTTONUP because MOUSEBUTTONDOWN is consumed by parent UIWindow
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
+            mouse_pos = event.pos
+
+            # Debug logging if enabled
+            if self._debug_next_click:
+                log_info(f"DEBUG: Mouse click at {mouse_pos}")
+                log_info(f"DEBUG: Window rect: {self.rect}, abs_rect: {self.get_abs_rect()}")
+                log_info(f"DEBUG: main_panel abs_rect: {self.main_panel.get_abs_rect()}")
+                log_info(f"DEBUG: list_panel abs_rect: {self.list_panel.get_abs_rect()}")
+                log_info(f"DEBUG: filtered_planets count: {len(self.filtered_planets)}")
+                log_info(f"DEBUG: row_height: {self.row_height}")
+                log_info(f"DEBUG: scroll_bar.start_percentage: {self.scroll_bar.start_percentage}")
+
+            # Check if click is within the list panel area
+            list_abs_rect = self.list_panel.get_abs_rect()
+            if list_abs_rect.collidepoint(mouse_pos):
+                # Calculate which row was clicked based on scroll position
+                relative_y = mouse_pos[1] - list_abs_rect.top
+
+                # Account for scroll offset
+                scroll_pct = self.scroll_bar.start_percentage
+                total_h = len(self.filtered_planets) * self.row_height
+                scroll_y = scroll_pct * total_h
+
+                # Calculate the data index of the clicked row
+                absolute_y = relative_y + scroll_y
+                clicked_index = int(absolute_y // self.row_height)
+
+                if self._debug_next_click:
+                    log_info(f"DEBUG: Click IS inside list_panel!")
+                    log_info(f"DEBUG: relative_y={relative_y}, scroll_y={scroll_y:.1f}")
+                    log_info(f"DEBUG: absolute_y={absolute_y:.1f}, clicked_index={clicked_index}")
+                    self._debug_next_click = False  # Reset debug mode
+
+                if 0 <= clicked_index < len(self.filtered_planets):
+                    planet = self.filtered_planets[clicked_index]
+                    log_info(f"DEBUG: Would select planet: {planet.name}")
+                    if planet != self.selected_planet:
+                        log_debug(f"Selecting planet: {planet.name}")
+                        self._on_planet_selected(planet)
+                    return True  # Consume the event
+            else:
+                if self._debug_next_click:
+                    log_info(f"DEBUG: Click is OUTSIDE list_panel bounds!")
+                    log_info(f"DEBUG: list_abs_rect: {list_abs_rect}")
+                    log_info(f"DEBUG: mouse_pos: {mouse_pos}")
+                    self._debug_next_click = False  # Reset debug mode
 
         if event.type == UI_TEXT_ENTRY_FINISHED:
             # Check if it matches any of our range text boxes
@@ -790,7 +896,7 @@ class PlanetListWindow(UIWindow):
         # Check Scrollbar
         if self.scroll_bar.check_has_moved_recently():
              self._update_visible_rows()
-             
+
         # Future enhancement: Handle resize to update viewport/row count.
         # self.list_view_rect might need updating if window resizes.
             
@@ -963,7 +1069,67 @@ class PlanetListWindow(UIWindow):
         except Exception as e:
             log_warning(f"Failed to show screenshot toast: {e}")
 
+    def _on_planet_selected(self, planet):
+        """Handle planet selection - create/update detail panel. (PROJ-54)"""
+        # Kill old panel if exists
+        if self.planet_detail_panel:
+            self.planet_detail_panel.kill()
+            self.planet_detail_panel = None
+
+        # Kill old button if exists
+        if self.btn_build_queue:
+            self.btn_build_queue.kill()
+            self.btn_build_queue = None
+
+        if planet is None:
+            self.selected_planet = None
+            return
+
+        # Get portrait surface (use asset_resolver if available)
+        portrait_surface = None
+        if hasattr(self, 'asset_resolver') and self.asset_resolver:
+            portrait_surface = self.asset_resolver(planet)
+
+        # Calculate panel position (right side of window)
+        window_width = self.rect.width
+        panel_x = window_width - self.detail_panel_width - 10
+        panel_y = 60  # Below window header
+
+        # Create planet report panel
+        self.planet_detail_panel = PlanetReportPanel(
+            manager=self.ui_manager,
+            rect=pygame.Rect(panel_x, panel_y, self.detail_panel_width, 400),
+            planet=planet,
+            container=self,  # Window is the container
+            portrait_surface=portrait_surface,
+            show_complexes=False  # Match strategy UI - no separate complexes column
+        )
+
+        # Add Build Queue button if player owns planet
+        if planet.owner_id == self.empire.id:
+            panel_height = self.planet_detail_panel.get_height_required()
+            self.btn_build_queue = UIButton(
+                relative_rect=pygame.Rect(panel_x, panel_y + panel_height + 10, 200, 30),
+                text="Open Build Queue",
+                manager=self.ui_manager,
+                container=self,
+                object_id="#build_queue_btn_planet_list"
+            )
+
+        # Update selection tracking
+        self.selected_planet = planet
+
     def kill(self):
+        # Clean up planet detail panel (PROJ-54)
+        if self.planet_detail_panel:
+            self.planet_detail_panel.kill()
+            self.planet_detail_panel = None
+
+        # Clean up button (PROJ-54)
+        if self.btn_build_queue:
+            self.btn_build_queue.kill()
+            self.btn_build_queue = None
+
         if self.on_close_callback:
             self.on_close_callback()
         super().kill()
