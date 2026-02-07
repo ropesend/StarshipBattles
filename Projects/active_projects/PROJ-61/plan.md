@@ -3,16 +3,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Extract Ship I/O Handler | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Extract Ship I/O Handler | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Push Dropdown Logic into Right Panel | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract Data Reload Orchestration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Final Cleanup & Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-06
-**Active Phase:** Planning
-**Next Action:** User approval of plan
-**Test Baseline:** 6248 passed, 0 failed
+**Last Updated:** 2026-02-07
+**Active Phase:** Phase 2
+**Next Action:** Execute Phase 2 - Push dropdown logic into right_panel
+**Test Baseline:** 6246 passed, 0 failed
+**Line Count:** 759 lines (was 943)
 
 ## Overview
 Reduce `workshop_screen.py` from 943 lines to under 500 by extracting Ship I/O orchestration, pushing dropdown manipulation into the right panel, and extracting data reload UI coordination.
@@ -27,6 +28,7 @@ Reduce `workshop_screen.py` from 943 lines to under 500 by extracting Ship I/O o
 | Workshop Screen (target) | `game/ui/screens/workshop_screen.py` |
 | Event Router | `game/ui/screens/workshop_event_router.py` |
 | Right Panel | `game/ui/screens/builder/right_panel.py` |
+| Ship I/O Handler | `game/ui/screens/workshop_ship_io.py` |
 
 ## Decisions Log
 | Decision | Rationale |
@@ -34,7 +36,9 @@ Reduce `workshop_screen.py` from 943 lines to under 500 by extracting Ship I/O o
 | Keep draw/update in main class | Touch 10+ subsystems |
 | Extract Ship I/O as composition class | Follows EventRouter pattern |
 | Push dropdowns to right_panel | Already has refresh_controls() |
+| Use lambda for weapons_report_panel_ref | Allows deferred access during tests |
 
 ## Verification
-- [x] Baseline: 6248 passed
+- [x] Baseline: 6246 passed
+- [x] Phase 1: 759 lines, all tests pass
 - [ ] Final: under 500 lines, all tests pass
