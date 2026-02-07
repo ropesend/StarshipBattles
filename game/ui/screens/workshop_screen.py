@@ -367,12 +367,25 @@ class DesignWorkshopScreen:
         self.error_timer = 3.0
         
     def handle_event(self, event):
-        """Route events through the event router.
-        
+        """Route events through the event router (IScene protocol).
+
         All event handling logic has been extracted to WorkshopEventRouter
         for better maintainability.
         """
         return self.event_router.handle_event(event)
+
+    def handle_resize(self, width: int, height: int):
+        """Handle window resize (IScene protocol).
+
+        Note: Full resize requires recreating UI panels. For now, just update dimensions.
+        """
+        self.width = width
+        self.height = height
+        self.ui_manager.set_window_resolution((width, height))
+        # Recalculate dynamic widths
+        self.layer_panel_width = calculate_dynamic_layer_width(width)
+        # Note: Full panel recreation would require significant refactoring
+        # For now, the workshop handles resize gracefully but may need manual reload
 
     def _execute_pending_action(self):
         """Execute the action stored in self.pending_action."""

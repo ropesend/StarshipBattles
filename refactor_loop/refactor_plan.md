@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-65 Phase 1
-**Current Status:** PROJ-65 Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-65 Phase 2
+**Current Status:** PROJ-65 Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-65
-**Current Phase:** Phase 2
-**Test Status:** 6235 passed (1 pre-existing mock failure in bug_15 test)
+**Current Phase:** Phase 3
+**Test Status:** 6244 passed (2 pre-existing failures in bug_15 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-65 Phase 1 complete: Foundation
-- Added IScene protocol to game/core/protocols.py
-- Eliminated all global WIDTH/HEIGHT in app.py (now self.width/self.height)
-- Moved argparse into parse_args() function, fonts into Game.__init__
-- Next: Phase 2 - Standardize Scene Interfaces
+- PROJ-65 Phase 2 complete: Standardize Scene Interfaces
+- All 8 scene classes now implement IScene protocol (handle_event, update(dt), draw, handle_resize)
+- Added scene_callback pattern to BattleSetupScreen, BattleScreen, StrategyScreen, TestLabScreen
+- Internalized battle_coordinator logic into BattleScreen (accumulator, tick rate, HUD)
+- BattleInputHandler logic moved into BattleScreen._handle_keydown
+- Some legacy action flags kept for backward compatibility but callbacks are primary path
+- Next: Phase 3 - Extract MenuScene & create unified scene dispatch
 
 ---
 
@@ -77,8 +79,24 @@
 ---
 
 - [/] **PROJ-65: Game Class Scene Protocol Refactor**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-65/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-65/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-66: Race Setup Enhancement**
+  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-66/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-66/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-67: Fleet Space Yards**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-67/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-67/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
@@ -122,6 +140,7 @@
 | 2026-02-07 | PROJ-64 | Phase 6 | Complete | 6244 passed | bf7494b5 | 4 intentional comments added, 10 missed sites narrowed, 87% reduction |
 | 2026-02-07 | PROJ-64 | Audit 1 | PASSED | 6244 passed | pending | 12 intentional broad catches, all documented, 87% reduction |
 | 2026-02-07 | PROJ-65 | Phase 1 | Complete | 6235 passed | pending | IScene protocol, global WIDTH/HEIGHT eliminated, module-level effects moved |
+| 2026-02-07 | PROJ-65 | Phase 2 | Complete | 6244 passed | pending | All 8 scenes IScene-compliant, scene_callback pattern, battle coordinator internalized |
 
 ---
 

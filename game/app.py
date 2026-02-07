@@ -23,10 +23,7 @@ from Tools.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.core.profiling import PROFILER, profile_action
-from game.battle_coordinator import (
-    update_battle_headless, update_battle_visual,
-    draw_battle_hud, update_tick_rate
-)
+# Note: battle_coordinator functions now internalized in BattleScreen (PROJ-65)
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel
 )
@@ -38,7 +35,7 @@ BG_COLOR = (10, 10, 20)
 
 # Scene States
 from game.core.constants import GameState
-from game.ui.screens.battle_input_handler import BattleInputHandler
+# Note: BattleInputHandler now internalized in BattleScreen (PROJ-65)
 
 
 def parse_args():
@@ -126,11 +123,11 @@ class Game:
         context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = self.on_builder_return
         self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
-        self.battle_setup = BattleSetupScreen()
-        self.battle_scene = BattleScreen(self.width, self.height)
-        self.strategy_scene = StrategyScreen(self.width, self.height)
+        self.battle_setup = BattleSetupScreen(self.width, self.height, self._handle_battle_setup_action)
+        self.battle_scene = BattleScreen(self.width, self.height, self._handle_battle_action)
+        self.strategy_scene = StrategyScreen(self.width, self.height, scene_callback=self._handle_strategy_action)
         self.formation_scene = FormationEditorScreen(self.width, self.height, self.on_formation_return)
-        self.test_lab_scene = TestLabScreen(self)
+        self.test_lab_scene = TestLabScreen(self, scene_callback=self._handle_test_lab_action)
 
     def update_menu_buttons(self):
         # Clear old buttons if they exist
@@ -241,7 +238,7 @@ class Game:
             log_info(f"Initial save created: {save_path}")
 
             # Create strategy scene with new session
-            self.strategy_scene = StrategyScreen(self.width, self.height, session=session)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action)
             self.state = GameState.STRATEGY
             self.showing_new_game_setup = False
         else:
@@ -294,7 +291,7 @@ class Game:
             # Copy quickstart designs for empires
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
-            self.strategy_scene = StrategyScreen(self.width, self.height, session=session)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action)
             self.state = GameState.STRATEGY
         else:
             log_error(f"Quickstart {player_count}P failed: {message}")
@@ -342,7 +339,7 @@ class Game:
 
         if game_session:
             # Create new strategy scene with loaded session
-            self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session, scene_callback=self._handle_strategy_action)
             self.state = GameState.STRATEGY
             self.showing_load_menu = False
             log_info(f"Game loaded successfully: {message}")
@@ -538,13 +535,15 @@ class Game:
         elif self.state == GameState.BUILDER:
             self.builder_scene.handle_event(event)
         elif self.state == GameState.BATTLE_SETUP:
-            self.battle_setup.update([event], self.screen.get_size())
+            self.battle_setup.handle_event(event)
+        elif self.state == GameState.BATTLE:
+            self.battle_scene.handle_event(event)
         elif self.state == GameState.FORMATION:
             self.formation_scene.handle_event(event)
         elif self.state == GameState.STRATEGY:
             self.strategy_scene.handle_event(event)
         elif self.state == GameState.TEST_LAB:
-            self.test_lab_scene.handle_input([event])
+            self.test_lab_scene.handle_event(event)
         elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
                 self.research_tree_scene.handle_event(event)
@@ -564,13 +563,14 @@ class Game:
             self.update_menu_buttons()
         elif self.state == GameState.BATTLE:
             self.battle_scene.handle_resize(w, h)
+        elif self.state == GameState.BATTLE_SETUP:
+            self.battle_setup.handle_resize(w, h)
         elif self.state == GameState.BUILDER:
-            if hasattr(self.builder_scene, 'handle_resize'):
-                self.builder_scene.handle_resize(w, h)
+            self.builder_scene.handle_resize(w, h)
         elif self.state == GameState.FORMATION:
             self.formation_scene.handle_resize(w, h)
         elif self.state == GameState.TEST_LAB:
-            self.test_lab_scene._create_ui()
+            self.test_lab_scene.handle_resize(w, h)
         elif self.state == GameState.STRATEGY:
             self.strategy_scene.handle_resize(w, h)
         elif self.state == GameState.RESEARCH_TREE:
@@ -581,21 +581,84 @@ class Game:
                 self.galaxy_test_scene.handle_resize(w, h)
 
     def _handle_keydown(self, event):
-        """Handle key press events."""
-        BattleInputHandler.handle_keydown(self, event)
+        """Handle key press events.
+
+        Note: Battle keyboard input is now handled via handle_event in BattleScreen.
+        """
+        # Keyboard events are now forwarded to scenes via _forward_event_to_scene
+        pass
 
     def _handle_click(self, event):
-        """Handle mouse click events."""
+        """Handle mouse click events.
+
+        Note: Battle/setup clicks are now handled via handle_event.
+        """
         mx, my = event.pos
 
-        if self.state == GameState.BATTLE:
-            if self.battle_scene.handle_click(mx, my, event.button, self.screen.get_size()):
-                self._handle_battle_actions()
-        elif self.state == GameState.STRATEGY:
+        # Strategy still uses legacy click handler
+        if self.state == GameState.STRATEGY:
             self.strategy_scene.handle_click(mx, my, event.button)
 
+    def _handle_battle_action(self, action: str, **kwargs):
+        """Handle scene actions from BattleScreen."""
+        if action == "return_to_test_lab":
+            log_debug("Returning to Combat Lab from test")
+            self.battle_scene.test_mode = False
+            self.test_lab_scene.reset_selection()
+            self.start_test_lab()
+        elif action == "return_to_setup":
+            log_debug("Returning to battle setup")
+            if hasattr(self, 'return_state') and self.return_state == GameState.TEST_LAB:
+                self.start_test_lab()
+            else:
+                self.start_battle_setup(preserve_teams=True)
+
+    def _handle_strategy_action(self, action: str, **kwargs):
+        """Handle scene actions from StrategyScreen."""
+        if action == "open_builder":
+            context_data = kwargs.get("context_data", {})
+            context = self._create_workshop_context(context_data)
+            self.start_builder(return_to=GameState.STRATEGY, context=context)
+
+    def _create_workshop_context(self, context_data: dict):
+        """Create WorkshopContext from strategy scene context data."""
+        empire = context_data.get('empire')
+        game_session = context_data.get('game_session')
+
+        if not empire or not game_session:
+            return None
+
+        from game.ui.screens.workshop_context import WorkshopContext
+
+        # Get empire tech (placeholder for now - will be implemented when tech tree exists)
+        available_tech_ids = []  # TODO: Replace with empire.available_tech or similar
+
+        # Get savegame path (may be None for new games - that's OK!)
+        savegame_path = game_session.save_path if hasattr(game_session, 'save_path') else None
+
+        # Get empire theme
+        empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
+        log_debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
+
+        # Create integrated context regardless of save_path
+        return WorkshopContext.integrated(
+            empire_id=empire.id,
+            savegame_path=savegame_path,
+            available_tech_ids=available_tech_ids,
+            built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set(),
+            empire_theme_id=empire_theme_id
+        )
+
+    def _handle_test_lab_action(self, action: str, **kwargs):
+        """Handle scene actions from TestLabScreen."""
+        if action == "return_to_menu":
+            self.state = GameState.MENU
+
     def _handle_battle_actions(self):
-        """Handle action flags from battle scene."""
+        """Handle action flags from battle scene.
+
+        DEPRECATED: Use _handle_battle_action callback instead.
+        """
         if self.battle_scene.action_return_to_test_lab:
             log_debug("Returning to Combat Lab from test")
             self.battle_scene.action_return_to_test_lab = False
@@ -611,13 +674,12 @@ class Game:
                 self.start_battle_setup(preserve_teams=True)
 
     def _handle_scroll(self, event):
-        """Handle mouse wheel events."""
-        if self.state == GameState.BATTLE:
-            mx, my = pygame.mouse.get_pos()
-            sw = self.screen.get_size()[0]
-            if mx >= sw - self.battle_scene.stats_panel_width or mx < self.battle_scene.ui.seeker_panel.rect.width:
-                self.battle_scene.handle_scroll(event.y, self.screen.get_size()[1])
-        elif self.state == GameState.STRATEGY and hasattr(self.strategy_scene, 'handle_scroll'):
+        """Handle mouse wheel events.
+
+        Note: Battle scrolls are now handled via handle_event.
+        """
+        # Strategy still uses legacy scroll handler
+        if self.state == GameState.STRATEGY and hasattr(self.strategy_scene, 'handle_scroll'):
             self.strategy_scene.handle_scroll(event.y, self.screen.get_size()[1])
 
     def _update_and_draw(self, frame_time, events):
@@ -638,46 +700,9 @@ class Game:
             self.strategy_scene.update_input(frame_time, events)
             self.strategy_scene.update(frame_time)
             self.strategy_scene.draw(self.screen)
-            if self.strategy_scene.action_open_design:
-                self.strategy_scene.action_open_design = False
-
-                # Create integrated context if launching from strategy
-                context = None
-                if hasattr(self.strategy_scene, 'workshop_context_data') and self.strategy_scene.workshop_context_data:
-                    data = self.strategy_scene.workshop_context_data
-                    empire = data.get('empire')
-                    game_session = data.get('game_session')
-
-                    if empire and game_session:
-                        # Import here to avoid circular imports
-                        from game.ui.screens.workshop_context import WorkshopContext
-
-                        # Get empire tech (placeholder for now - will be implemented when tech tree exists)
-                        available_tech_ids = []  # TODO: Replace with empire.available_tech or similar
-
-                        # Get savegame path (may be None for new games - that's OK!)
-                        savegame_path = game_session.save_path if hasattr(game_session, 'save_path') else None
-
-                        # Get empire theme
-                        empire_theme_id = empire.empire_theme_id if hasattr(empire, 'empire_theme_id') else None
-                        log_debug(f"Creating WorkshopContext with empire_theme_id={empire_theme_id}")
-
-                        # Create integrated context regardless of save_path
-                        # If save_path is None, designs will use temp storage or in-memory
-                        context = WorkshopContext.integrated(
-                            empire_id=empire.id,
-                            savegame_path=savegame_path,  # Can be None
-                            available_tech_ids=available_tech_ids,
-                            built_designs=empire.built_ship_designs if hasattr(empire, 'built_ship_designs') else set(),
-                            empire_theme_id=empire_theme_id
-                        )
-
-                    # Clean up context data
-                    self.strategy_scene.workshop_context_data = None
-
-                self.start_builder(return_to=GameState.STRATEGY, context=context)
+            # Note: action_open_design now handled via scene_callback (PROJ-65)
         elif self.state == GameState.TEST_LAB:
-            self.test_lab_scene.update()
+            self.test_lab_scene.update(frame_time)
             self.test_lab_scene.draw(self.screen)
         elif self.state == GameState.RESEARCH_TREE:
             if hasattr(self, 'research_tree_scene') and self.research_tree_scene:
@@ -702,34 +727,32 @@ class Game:
         self.menu_ui_manager.update(frame_time)
         self.menu_ui_manager.draw_ui(self.screen)
 
-    def _update_battle_setup(self):
-        """Update and draw battle setup, handle actions."""
-        self.battle_setup.draw(self.screen)
-
-        if self.battle_setup.action_start_battle:
-            self.battle_setup.action_start_battle = False
-            team1, team2 = self.battle_setup.get_ships()
-            self.start_battle(team1, team2)
-        elif self.battle_setup.action_start_headless:
-            self.battle_setup.action_start_headless = False
-            team1, team2 = self.battle_setup.get_ships()
+    def _handle_battle_setup_action(self, action: str, **kwargs):
+        """Handle scene actions from BattleSetupScreen."""
+        if action == "start_battle":
+            self.start_battle(kwargs["team1"], kwargs["team2"])
+        elif action == "start_headless":
+            team1, team2 = kwargs["team1"], kwargs["team2"]
             log_info(f"Team 1: {len(team1)} ships ({sum(s.max_hp for s in team1):.0f} total HP)")
             log_info(f"Team 2: {len(team2)} ships ({sum(s.max_hp for s in team2):.0f} total HP)")
             log_info("Running simulation...")
             self.start_battle(team1, team2, headless=True)
-        elif self.battle_setup.action_return_to_menu:
-            self.battle_setup.action_return_to_menu = False
+        elif action == "return_to_menu":
             self.state = GameState.MENU
+
+    def _update_battle_setup(self):
+        """Update and draw battle setup."""
+        self.battle_setup.update(0)  # dt not used by this screen
+        self.battle_setup.draw(self.screen)
 
     def _update_battle(self, frame_time, events):
         """Update and draw battle scene."""
-        if self.battle_scene.headless_mode:
-            update_battle_headless(self, self.battle_scene)
-        else:
-            update_battle_visual(self, self.battle_scene, frame_time, events)
+        # BattleScreen now handles headless vs visual internally
+        self.battle_scene.update(frame_time)
+
+        if not self.battle_scene.headless_mode:
             self.battle_scene.draw(self.screen)
-            update_tick_rate(self.battle_scene, frame_time)
-            draw_battle_hud(self.screen, self.battle_scene, self.font_med, PROFILER.is_active())
+            self.battle_scene.draw_hud(self.screen, self.font_med, PROFILER.is_active())
 
 
 def main():

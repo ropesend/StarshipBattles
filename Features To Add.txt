@@ -144,7 +144,6 @@ Race Setup
     - Traders
     - Warriors
     - Xenophobes
-
  - sliders for the environment should be initially set based on the homeworld type, but should be adjustable by the player.
  - The homeworld type should be a new field in the race json file.
  - WE also need to add water sliders to the race setup screen, and the race json file.

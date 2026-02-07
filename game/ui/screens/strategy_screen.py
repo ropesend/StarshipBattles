@@ -40,13 +40,27 @@ from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 
 class StrategyScreen:
-    """Manages strategy layer simulation, rendering, and UI."""
+    """Manages strategy layer simulation, rendering, and UI.
+
+    Implements IScene protocol for standardized scene handling.
+    """
 
     TOP_BAR_HEIGHT = 50
 
-    def __init__(self, screen_width, screen_height, session=None):
+    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None):
+        """Initialize strategy screen.
+
+        Args:
+            screen_width: Screen width in pixels
+            screen_height: Screen height in pixels
+            session: Optional GameSession to use (creates new if None)
+            scene_callback: Callback function for scene transitions.
+                           Called with (action, **kwargs) where action is:
+                           - "open_builder": Open design workshop with context kwarg
+        """
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.scene_callback = scene_callback
 
         # Session Management
         if session:
@@ -408,11 +422,17 @@ class StrategyScreen:
         log_debug("Design button clicked - opening Design Workshop")
 
         # Gather context data for integrated mode
-        self.workshop_context_data = {
+        context_data = {
             'empire': self.session.player_empire if hasattr(self, 'session') else None,
             'game_session': self.session if hasattr(self, 'session') else None
         }
-        self.action_open_design = True
+
+        if self.scene_callback:
+            self.scene_callback("open_builder", context_data=context_data)
+        else:
+            # Fallback for legacy flag-based transition (deprecated)
+            self.workshop_context_data = context_data
+            self.action_open_design = True
 
     def on_save_game_click(self):
         """Handle 'Save Game' button click."""

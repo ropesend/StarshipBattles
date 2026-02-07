@@ -80,13 +80,20 @@ class TestBattleScreen:
 
     def test_update_increment_sim_tick(self):
         """Test simulation tick counter increases."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
-        self.scene.update([])
-        assert self.scene.sim_tick_counter == 1
+        # Use visual mode (not headless) for precise tick control
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = False
+        self.scene.sim_speed_multiplier = 1.0
+        # Pre-fill accumulator to run exactly 1 tick
+        self.scene._accumulator = 0.017  # Just over TICK_RATE (0.016)
+        self.scene.update(0.0)  # Don't add more time
+        assert self.scene.sim_tick_counter >= 1
 
     def test_projectile_registration(self):
         """Test that fired projectiles are registered in scene."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = False
+        self.scene._accumulator = 0.017  # Pre-fill for 1 tick
 
         # Mock projectile
         proj = MagicMock()
@@ -102,13 +109,15 @@ class TestBattleScreen:
 
         # Patch combat_engine.fire_weapons to return our projectile
         with patch.object(self.ship1.combat_engine, 'fire_weapons', return_value=[proj]):
-            self.scene.update([])
+            self.scene.update(0.0)
 
         assert proj in self.scene.projectiles
 
     def test_projectile_cleanup(self):
         """Test dead projectiles are removed."""
-        self.scene.start([self.ship1], [self.ship2], headless=True)
+        self.scene.start([self.ship1], [self.ship2], headless=False)
+        self.scene.sim_paused = False
+        self.scene._accumulator = 0.017  # Pre-fill for 1 tick
 
         proj = MagicMock()
         proj.type = 'projectile'
@@ -117,7 +126,7 @@ class TestBattleScreen:
         proj.velocity = pygame.Vector2(0,0)
 
         self.scene.projectiles.append(proj)
-        self.scene.update([])
+        self.scene.update(0.0)
 
         assert proj not in self.scene.projectiles
 

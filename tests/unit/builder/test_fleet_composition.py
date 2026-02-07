@@ -171,7 +171,7 @@ class TestFleetComposition:
         PROJ-43: Updated to use ShipFactory mocking - patching Ship.from_dict.
         """
         # Setup
-        setup_screen = BattleSetupScreen()
+        setup_screen = BattleSetupScreen(1920, 1080)
         setup_screen.available_ship_designs = [
             {'path': '/abs/path/to/ship.json', 'name': 'Test Ship', 'ai_strategy': 'test_strat'}
         ]

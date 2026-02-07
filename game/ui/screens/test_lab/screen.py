@@ -53,6 +53,8 @@ class TestLabScreen:
     """
     Combat Lab UI - Enhanced with TestRegistry and rich metadata display.
 
+    Implements IScene protocol for standardized scene handling.
+
     Layout:
     - Left: Category sidebar (220px wide)
     - Center: Test list (420px wide)
@@ -69,11 +71,23 @@ class TestLabScreen:
     HOVER_COLOR = (150, 150, 150)
     CATEGORY_BG = (35, 35, 40)
 
-    def __init__(self, game):
+    def __init__(self, game, scene_callback=None):
+        """Initialize test lab screen.
+
+        Args:
+            game: Game instance (for legacy compatibility, provides battle_scene access)
+            scene_callback: Callback function for scene transitions.
+                           Called with (action, **kwargs) where action is:
+                           - "start_test_battle": Start visual test battle with scenario kwarg
+                           - "return_to_menu": Return to main menu
+        """
         self.game = game
+        self.scene_callback = scene_callback
+        self.screen_width = game.screen.get_width() if hasattr(game, 'screen') else WIDTH
+        self.screen_height = game.screen.get_height() if hasattr(game, 'screen') else HEIGHT
 
         # pygame_gui UIManager for buttons
-        self.ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+        self.ui_manager = pygame_gui.UIManager((self.screen_width, self.screen_height))
         self._button_callbacks = {}  # Maps UIButton -> callback function
 
         # Fonts
@@ -1289,6 +1303,17 @@ class TestLabScreen:
         if self.batch_running:
             self._run_next_batch_test()
 
+    def handle_event(self, event):
+        """Handle a single pygame event (IScene protocol)."""
+        self.handle_input([event])
+
+    def handle_resize(self, width: int, height: int):
+        """Handle window resize (IScene protocol)."""
+        self.screen_width = width
+        self.screen_height = height
+        self.ui_manager.set_window_resolution((width, height))
+        self._create_ui()
+
     def handle_input(self, events):
         """Handle user input for category selection, test selection, and buttons."""
         for event in events:
@@ -1535,8 +1560,12 @@ class TestLabScreen:
             except ValueError:
                 self.output_log.append(f"Invalid seed value: {result}")
 
-    def update(self):
-        """Update UI state."""
+    def update(self, dt: float = 0):
+        """Update UI state (IScene protocol).
+
+        Args:
+            dt: Time since last frame in seconds (unused by this screen)
+        """
         # Update tabbed ship panel (hover states)
         if self.tabbed_ship_panel:
             self.tabbed_ship_panel.update()

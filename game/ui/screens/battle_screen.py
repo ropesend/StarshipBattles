@@ -16,7 +16,7 @@ import time
 from typing import Optional, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info, log_warning
-from game.core.config import UIConfig
+from game.core.config import UIConfig, PhysicsConfig
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_ui import BattleUI
@@ -29,8 +29,17 @@ if TYPE_CHECKING:
 
 
 
+# Speed multiplier constants for simulation time control (moved from battle_input_handler)
+MIN_SPEED_MULTIPLIER = 0.00390625  # 1/256 - minimum slow-motion speed
+MAX_SPEED_MULTIPLIER = 16.0        # 16x - maximum fast-forward speed
+NORMAL_SPEED = 1.0                 # 1x - real-time simulation speed
+UI_PAUSE_SPEED = 100.0             # 100x - instant updates when UI is paused
+
+
 class BattleScreen:
     """Manages battle simulation, rendering, and UI.
+
+    Implements IScene protocol for standardized scene handling.
 
     Uses BattleService for battle management, providing a cleaner abstraction
     between UI concerns and simulation logic.
@@ -39,9 +48,20 @@ class BattleScreen:
     across all battle modes (manual, test, strategy, hypothetical).
     """
 
-    def __init__(self, screen_width, screen_height):
+    def __init__(self, screen_width: int, screen_height: int, scene_callback=None):
+        """Initialize battle screen.
+
+        Args:
+            screen_width: Screen width in pixels
+            screen_height: Screen height in pixels
+            scene_callback: Callback function for scene transitions.
+                           Called with (action, **kwargs) where action is:
+                           - "return_to_setup": Return to battle setup (preserve teams)
+                           - "return_to_test_lab": Return to Combat Lab
+        """
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.scene_callback = scene_callback
 
         # Battle Service (abstraction layer over BattleEngine)
         self._battle_service = BattleService()
@@ -72,6 +92,9 @@ class BattleScreen:
         self.sim_paused = False
         self.sim_speed_multiplier = 1.0
 
+        # Accumulator for time-accurate simulation (moved from Game)
+        self._accumulator = 0.0
+
         # Headless mode
         self.headless_mode = False
         self.headless_start_time = None
@@ -82,9 +105,12 @@ class BattleScreen:
         self.test_tick_count = 0  # Track ticks for max_ticks limit
         self.test_completed = False  # Flag indicating test has finished
 
-        # Actions for Game class
+        # Actions for Game class (deprecated - use scene_callback)
         self.action_return_to_setup = False
         self.action_return_to_test_lab = False
+
+        # Font for HUD (passed in or created)
+        self._hud_font = None
 
     # === Controller Integration ===
 
@@ -279,12 +305,130 @@ class BattleScreen:
                 warn_msg = f"WARNING: {s.name} has LOW/NO TURN SPEED ({s.turn_speed:.4f})! Mass too high for thrusters?"
                 self.engine.logger.log(warn_msg)
                 log_warning(warn_msg)
-        
-    
-    def update(self, events):
+
+    def handle_event(self, event):
+        """Handle a single pygame event (IScene protocol)."""
+        if event.type == pygame.KEYDOWN:
+            self._handle_keydown(event)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mx, my = event.pos
+            result = self.ui.handle_click(mx, my, event.button)
+            if isinstance(result, tuple) and result[0] == "focus_ship":
+                self.camera.target = result[1]
+            elif result == "end_battle":
+                self._battle_service.reset()
+                self._trigger_return_to_setup()
+            elif not result and event.button == 1:
+                self.camera.target = None
+        elif event.type == pygame.MOUSEWHEEL:
+            self.ui.handle_scroll(event.y, self.screen_height)
+
+    def _handle_keydown(self, event):
+        """Handle keyboard shortcuts during battle."""
+        key = event.key
+
+        # Visual controls (from update_visuals)
+        if key == pygame.K_F3:
+            self.ui.show_overlay = not self.ui.show_overlay
+        elif key == pygame.K_LEFTBRACKET:
+            self._cycle_focus_ship(-1)
+        elif key == pygame.K_RIGHTBRACKET:
+            self._cycle_focus_ship(1)
+        # Speed/pause controls (from BattleInputHandler)
+        elif key == pygame.K_o:
+            self.show_overlay = not self.show_overlay
+        elif key == pygame.K_SPACE:
+            self.sim_paused = not self.sim_paused
+        elif key == pygame.K_COMMA:
+            self.sim_speed_multiplier = max(MIN_SPEED_MULTIPLIER, self.sim_speed_multiplier / 2.0)
+        elif key == pygame.K_PERIOD:
+            self.sim_speed_multiplier = min(MAX_SPEED_MULTIPLIER, self.sim_speed_multiplier * 2.0)
+        elif key == pygame.K_m:
+            self.sim_speed_multiplier = NORMAL_SPEED
+        elif key == pygame.K_SLASH:
+            self.sim_speed_multiplier = UI_PAUSE_SPEED
+
+    def update(self, dt: float):
+        """Update battle simulation (IScene protocol).
+
+        Args:
+            dt: Time since last frame in seconds
         """
-        Update battle simulation for one tick.
-        """
+        if self.headless_mode:
+            self._update_headless()
+        else:
+            self._update_visual(dt)
+
+    def _update_headless(self):
+        """Run headless battle simulation (fast mode without rendering)."""
+        for _ in range(1000):
+            self._run_single_tick()
+
+            tick_limit_reached = self.sim_tick_counter >= 3000000
+
+            if self.is_battle_over() or tick_limit_reached:
+                self.print_headless_summary()
+                self.engine.shutdown()
+                self.headless_mode = False
+
+                if self.test_mode:
+                    log_debug("Headless test complete, returning to Combat Lab")
+                    self._trigger_return_to_test_lab()
+                else:
+                    self._trigger_return_to_setup()
+                return
+
+        # Progress indicator
+        if self.sim_tick_counter % 10000 == 0:
+            t1 = sum(1 for s in self.ships if s.team_id == 0 and s.is_alive)
+            t2 = sum(1 for s in self.ships if s.team_id == 1 and s.is_alive)
+            log_debug(f"  Tick {self.sim_tick_counter}: Team1={t1}, Team2={t2}")
+
+    def _update_visual(self, dt: float):
+        """Update visual battle simulation with proper timing."""
+        # Update visuals (camera, beams) - always run once per frame
+        self._update_visual_effects(dt)
+
+        # Update simulation
+        if not self.sim_paused:
+            tick_dt = PhysicsConfig.TICK_RATE
+            speed_mult = self.sim_speed_multiplier
+
+            if speed_mult > 10.0:
+                # Max Speed / Turbo mode: Run fixed N ticks per frame
+                ticks_to_run = int(speed_mult)
+
+                t0 = time.time()
+                for _ in range(ticks_to_run):
+                    self._run_single_tick()
+                t1 = time.time()
+
+                elapsed = t1 - t0
+                if elapsed > 0.05:
+                    log_warning(f"Slow Frame: {ticks_to_run} ticks took {elapsed*1000:.1f}ms")
+
+                self.tick_rate_count += ticks_to_run
+            else:
+                # Time-accurate simulation (slow/normal/fast)
+                self._accumulator += dt * speed_mult
+
+                # Safety cap
+                if self._accumulator > 1.0:
+                    self._accumulator = 1.0
+
+                ticks_run_this_frame = 0
+                while self._accumulator >= tick_dt:
+                    self._run_single_tick()
+                    self._accumulator -= tick_dt
+                    ticks_run_this_frame += 1
+
+                self.tick_rate_count += ticks_run_this_frame
+
+        # Update tick rate for HUD
+        self._update_tick_rate(dt)
+
+    def _run_single_tick(self):
+        """Run a single simulation tick."""
         # Check if test scenario has completed
         if self.test_mode and self.test_scenario and not self.test_completed:
             self.test_tick_count += 1
@@ -321,7 +465,7 @@ class BattleScreen:
                 return  # Don't update engine anymore
 
         if not self.engine.is_battle_over():
-            self.sim_tick_counter = self.engine.tick_counter + 1 # Sync tick counter
+            self.sim_tick_counter = self.engine.tick_counter + 1  # Sync tick counter
             # Delegated Update
             self.engine.update()
 
@@ -330,29 +474,38 @@ class BattleScreen:
                 b_visual = b.copy()
                 b_visual['timer'] = 0.15
                 self.beams.append(b_visual)
-            
 
-    
-    def update_visuals(self, dt, events):
+    def _update_visual_effects(self, dt: float):
         """Update visual effects like beams and camera."""
-        # Process Visual-related Inputs (Keys)
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                 if event.key == pygame.K_F3:
-                     self.ui.show_overlay = not self.ui.show_overlay
-                 elif event.key == pygame.K_LEFTBRACKET:
-                     self._cycle_focus_ship(-1)
-                 elif event.key == pygame.K_RIGHTBRACKET:
-                     self._cycle_focus_ship(1)
-
         # Update Beams
         for b in self.beams:
             b['timer'] -= dt
         self.beams = [b for b in self.beams if b['timer'] > 0]
-        
+
         # Update Camera
         self.camera.update(dt)
-        self.camera.update_input(dt, events)
+
+    def _update_tick_rate(self, dt: float):
+        """Update tick rate calculation for HUD display."""
+        self.tick_rate_timer += dt
+        if self.tick_rate_timer >= 1.0:
+            self.current_tick_rate = self.tick_rate_count
+            self.tick_rate_count = 0
+            self.tick_rate_timer = 0.0
+
+    def _trigger_return_to_setup(self):
+        """Trigger return to setup via callback or flag."""
+        if self.scene_callback:
+            self.scene_callback("return_to_setup")
+        else:
+            self.action_return_to_setup = True
+
+    def _trigger_return_to_test_lab(self):
+        """Trigger return to Combat Lab via callback or flag."""
+        if self.scene_callback:
+            self.scene_callback("return_to_test_lab")
+        else:
+            self.action_return_to_test_lab = True
 
     def _cycle_focus_ship(self, direction):
         """Cycle camera focus through alive ships."""
@@ -426,7 +579,10 @@ class BattleScreen:
         self.ui.control_panel.draw(screen)
     
     def handle_click(self, mx, my, button, screen_size):
-        """Handle mouse clicks. Returns True if click was handled."""
+        """Handle mouse clicks. Returns True if click was handled.
+
+        DEPRECATED: Use handle_event() instead for IScene compliance.
+        """
         result = self.ui.handle_click(mx, my, button)
 
         if isinstance(result, tuple) and result[0] == "focus_ship":
@@ -435,7 +591,7 @@ class BattleScreen:
 
         if result == "end_battle":
             self._battle_service.reset()
-            self.action_return_to_setup = True
+            self._trigger_return_to_setup()
             return True
 
         # If UI didn't handle it and it's a left click, clear focus
@@ -443,11 +599,64 @@ class BattleScreen:
             self.camera.target = None
 
         return result
-    
+
     def handle_scroll(self, scroll_y, screen_height):
-        """Handle mouse wheel scrolling on stats panel."""
+        """Handle mouse wheel scrolling on stats panel.
+
+        DEPRECATED: Use handle_event() instead for IScene compliance.
+        """
         self.ui.handle_scroll(scroll_y, screen_height)
-    
+
+    def draw_hud(self, screen, font=None, profiler_active=False):
+        """Draw battle HUD elements (tick counters, speed indicator).
+
+        Args:
+            screen: Pygame screen surface
+            font: Font for rendering text (uses default if None)
+            profiler_active: Whether profiler is active
+        """
+        if font is None:
+            if self._hud_font is None:
+                self._hud_font = pygame.font.SysFont("arial", 20)
+            font = self._hud_font
+
+        width = screen.get_width()
+
+        # Tick counters
+        tick_text = f"Ticks: {self.sim_tick_counter:,}"
+        rate_text = f"TPS: {self.current_tick_rate:,}/s"
+        zoom_text = f"Zoom: {self.camera.zoom:.3f}x"
+
+        # Draw to the right of seeker panel
+        panel_offset = self.ui.seeker_panel.rect.width + 10
+        screen.blit(font.render(tick_text, True, (180, 180, 180)), (panel_offset, 10))
+        screen.blit(font.render(rate_text, True, (180, 180, 180)), (panel_offset, 35))
+        screen.blit(font.render(zoom_text, True, (150, 200, 255)), (panel_offset, 60))
+
+        # Speed indicator
+        if self.sim_speed_multiplier >= 10.0:
+            speed_val_text = "MAX SPEED"
+        else:
+            speed_val_text = f"{self.sim_speed_multiplier:.4g}x"
+
+        if self.sim_paused:
+            speed_text = f"PAUSED ({speed_val_text})"
+        else:
+            speed_text = f"Speed: {speed_val_text}"
+
+        speed_color = (255, 100, 100) if self.sim_paused else (200, 200, 200)
+        if self.sim_speed_multiplier < 1.0:
+            speed_color = (255, 200, 100)
+        elif self.sim_speed_multiplier > 1.0:
+            speed_color = (100, 255, 100)
+
+        screen.blit(font.render(speed_text, True, speed_color), (width // 2 - 50, 10))
+
+        # Profiler indicator
+        if profiler_active:
+            prof_text = font.render("PROFILING ACTIVE", True, (255, 50, 50))
+            screen.blit(prof_text, (width - 180, 10))
+
     def print_headless_summary(self):
         """Print summary of headless battle results."""
         # Skip summary for test mode - test framework handles results

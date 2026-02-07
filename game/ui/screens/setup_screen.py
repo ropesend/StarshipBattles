@@ -29,9 +29,27 @@ _ship_factory = ShipFactory()
 
 
 class BattleSetupScreen:
-    """Manages the battle setup screen for selecting teams and AI strategies."""
+    """Manages the battle setup screen for selecting teams and AI strategies.
 
-    def __init__(self):
+    Implements IScene protocol for standardized scene handling.
+    """
+
+    def __init__(self, width: int, height: int, scene_callback=None):
+        """Initialize battle setup screen.
+
+        Args:
+            width: Screen width in pixels
+            height: Screen height in pixels
+            scene_callback: Callback function for scene transitions.
+                           Called with (action, **kwargs) where action is:
+                           - "start_battle": Start visual battle with team1, team2 kwargs
+                           - "start_headless": Start headless battle with team1, team2 kwargs
+                           - "return_to_menu": Return to main menu
+        """
+        self.screen_width = width
+        self.screen_height = height
+        self.scene_callback = scene_callback
+
         self.available_ship_designs = []
         self.available_formations = []
         self.team1 = []
@@ -39,11 +57,6 @@ class BattleSetupScreen:
         self.scroll_offset = 0
         self.ai_dropdown_open = None
         self.ai_strategies = list(StrategyManager.instance().strategies.keys())
-
-        # Action flags for Game class to check
-        self.action_start_battle = False
-        self.action_start_headless = False
-        self.action_return_to_menu = False
 
     def start(self, preserve_teams=False):
         """Initialize or reset the setup screen."""
@@ -56,9 +69,6 @@ class BattleSetupScreen:
 
         self.scroll_offset = 0
         self.ai_dropdown_open = None
-        self.action_start_battle = False
-        self.action_start_headless = False
-        self.action_return_to_menu = False
 
     def get_ships(self):
         """Load and return ships for both teams."""
@@ -215,12 +225,21 @@ class BattleSetupScreen:
                 })
         return display_items
 
-    def update(self, events, screen_size):
-        """Handle input events."""
-        sw, sh = screen_size
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self._handle_click(event.pos[0], event.pos[1], event.button, sw, sh)
+    def handle_event(self, event):
+        """Handle a single pygame event (IScene protocol)."""
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self._handle_click(event.pos[0], event.pos[1], event.button,
+                               self.screen_width, self.screen_height)
+
+    def update(self, dt: float):
+        """Update scene logic (IScene protocol). dt is time since last frame."""
+        # BattleSetupScreen has no time-based updates
+        pass
+
+    def handle_resize(self, width: int, height: int):
+        """Handle window resize (IScene protocol)."""
+        self.screen_width = width
+        self.screen_height = height
 
     def _handle_click(self, mx, my, button, sw, sh):
         """Handle mouse click at position."""
@@ -278,15 +297,27 @@ class BattleSetupScreen:
         """Handle clicks on action buttons."""
         if sw // 2 - 100 <= mx < sw // 2 + 100 and btn_y <= my < btn_y + 50:
             if self.team1 and self.team2:
-                self.action_start_battle = True
+                self._trigger_start_battle(headless=False)
         elif sw // 2 + 120 <= mx < sw // 2 + 240 and btn_y <= my < btn_y + 50:
-            self.action_return_to_menu = True
+            self._trigger_return_to_menu()
         elif sw // 2 - 300 <= mx < sw // 2 - 180 and btn_y <= my < btn_y + 50:
             self.team1, self.team2 = [], []
             self.ai_dropdown_open = None
         elif sw // 2 + 260 <= mx < sw // 2 + 400 and btn_y <= my < btn_y + 50:
             if self.team1 and self.team2:
-                self.action_start_headless = True
+                self._trigger_start_battle(headless=True)
+
+    def _trigger_start_battle(self, headless: bool):
+        """Trigger battle start via callback."""
+        if self.scene_callback:
+            team1, team2 = self.get_ships()
+            action = "start_headless" if headless else "start_battle"
+            self.scene_callback(action, team1=team1, team2=team2)
+
+    def _trigger_return_to_menu(self):
+        """Trigger return to menu via callback."""
+        if self.scene_callback:
+            self.scene_callback("return_to_menu")
 
     def _handle_team_click(self, mx, my, col_x, team_list, team_idx):
         """Handle click on team column."""
