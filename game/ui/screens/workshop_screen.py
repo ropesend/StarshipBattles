@@ -1,23 +1,18 @@
 import math
-import tkinter
-from tkinter import simpledialog, filedialog
+from tkinter import filedialog
 import os
 
 import pygame
 import pygame_gui
 from pygame_gui.elements import (
-    UIPanel, UILabel, UIButton, UIDropDownMenu,
-    UITextEntryLine, UISelectionList, UIWindow
+    UIPanel, UIButton, UIDropDownMenu, UIWindow
 )
 from pygame_gui.windows import UIConfirmationDialog
 
-from game.core.logger import log_debug
-from game.core.profiling import profile_action, profile_block
-from game.ui.utils import create_centered_rect
+from game.core.logger import log_info
+from game.core.profiling import profile_block
 from game.core.constants import LayerType
 from game.core.paths import Paths
-# PROJ-50: Removed get_default_registry_provider import - using strict DI
-# PROJ-43: Removed direct simulation imports - using adapters instead
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.panels.builder_widgets import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
@@ -26,38 +21,22 @@ from game.ui.panels.component_modifier_grid_panel import ComponentModifierGridPa
 from game.ui.screens.builder.schematic_view import SchematicView
 from game.ui.screens.builder.interaction_controller import InteractionController
 from game.ui.screens.builder.event_bus import EventBus
-from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, MARGINS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
+from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
-from game.strategy.systems.design_library import DesignLibrary
-from game.ui.screens.design_selector_window import DesignSelectorWindow
-# PROJ-43: UI service adapters
 from game.ui.services.ship_io_adapter import ShipIOAdapter
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
-
-# Initialize Tkinter root and hide it (for simpledialog)
-try:
-    if os.environ.get("SDL_VIDEODRIVER") == "dummy":
-        tk_root = None
-    else:
-        tk_root = tkinter.Tk()
-        tk_root.withdraw()
-except (tkinter.TclError, RuntimeError):
-    tk_root = None
-
-
-# Colors
+from game.ui.screens.workshop_ship_io import WorkshopShipIO
 from game.ui.colors import COLORS
+from game.ui.screens.builder.detail_panel import ComponentDetailPanel
+from game.core.logger import log_debug, log_error, log_warning
+
 BG_COLOR = COLORS['bg_deep']
 PANEL_BG = '#14181f'
-
-from game.core.logger import log_error, log_info, log_warning, log_debug
-
-from game.ui.screens.builder.detail_panel import ComponentDetailPanel
 
 
 
@@ -156,6 +135,20 @@ class DesignWorkshopScreen:
         self.event_router = WorkshopEventRouter(self)
 
         self._create_ui()
+
+        # PROJ-61: Ship I/O handler (after _create_ui so weapons_report_panel exists)
+        self.ship_io = WorkshopShipIO(
+            context=self.context,
+            ui_manager=self.ui_manager,
+            screen_width=screen_width,
+            screen_height=screen_height,
+            ship_io_adapter=self._ship_io_adapter,
+            design_loader_adapter=self._design_loader_adapter,
+            viewmodel=self.viewmodel,
+            weapons_report_panel_ref=lambda: self.weapons_report_panel,
+            show_error_callback=self.show_error,
+            apply_loaded_ship_callback=self._apply_loaded_ship
+        )
 
     def _get_vehicle_classes(self):
         """PROJ-50: Get vehicle_classes from context registries (required)."""
@@ -401,20 +394,18 @@ class DesignWorkshopScreen:
             elif act == 'change_type':
                 # Clear and Change - use viewmodel which delegates to service
                 self.viewmodel.change_ship_class(data, migrate_components=False)
-                
-                # We also need to update the Class Dropdown options
+
+                # Update the Class Dropdown options via right_panel method
                 classes = self._get_vehicle_classes()
                 new_type = classes[data].get('type', 'Ship')
                 valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
                 valid_classes.sort(key=lambda x: x[1])
-                valid_class_names = [n for n, m in valid_classes]
-                if not valid_class_names: valid_class_names = ["Escort"]
-                
-                self.right_panel.class_dropdown.kill()
-                self.right_panel.class_dropdown = UIDropDownMenu(valid_class_names, data, 
-                                                   pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                                                   manager=self.ui_manager, container=self.right_panel.panel)
-                
+                valid_class_names = [n for n, _ in valid_classes]
+                if not valid_class_names:
+                    valid_class_names = ["Escort"]
+
+                self.right_panel.update_class_dropdown(data, valid_class_names)
+
                 self.update_stats()
                 self.right_panel.update_portrait_image()
                 self.left_panel.update_component_list()
@@ -623,39 +614,10 @@ class DesignWorkshopScreen:
         self.controller.selected_component = None
         self.viewmodel._selected_components = []
         
-        # Update Class Dropdown
+        # Update dropdowns via right_panel method
         classes = self._get_vehicle_classes()
-        valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items()]
-        valid_classes.sort(key=lambda x: x[1])
-        valid_class_names = [n for n, m in valid_classes]
-        if not valid_class_names: valid_class_names = ["Escort"]
-        
-        if hasattr(self.right_panel, 'class_dropdown'):
-            self.right_panel.class_dropdown.kill()
-            self.right_panel.class_dropdown = UIDropDownMenu(
-                valid_class_names, 
-                default_class,
-                pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                manager=self.ui_manager, 
-                container=self.right_panel.panel
-            )
-            
-        # Update Type Dropdown if it exists
-        if hasattr(self.right_panel, 'vehicle_type_dropdown'):
-            classes = self._get_vehicle_classes()
-            types = sorted(list(set(c.get('type', 'Ship') for c in classes.values())))
-            if not types: types = ["Ship"]
-            default_type = classes[default_class].get('type', 'Ship')
-            
-            self.right_panel.vehicle_type_dropdown.kill()
-            self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
-                 types,
-                 default_type,
-                 pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
-                 manager=self.ui_manager,
-                 container=self.right_panel.panel
-            )
-        
+        self.right_panel.update_dropdowns_for_data_reload(default_class, classes)
+
         self.update_stats()
         self.rebuild_modifier_ui()
         
@@ -665,127 +627,13 @@ class DesignWorkshopScreen:
     # Tooltip method removed
 
 
-    @profile_action("Builder: Save Ship")
     def _save_ship(self):
-        """Save ship design (context-aware)"""
-        if self.context.mode == WorkshopMode.STANDALONE:
-            # PROJ-43: Use adapter instead of direct ShipIO access
-            success, message = self._ship_io_adapter.save_ship(self.viewmodel.ship)
-            if success:
-                log_info(message)
-            elif message:
-                self.show_error(message)
-        else:
-            # Use integrated design library
-            log_info("Workshop: Initiating SAVE operation")
-            log_debug(f"  context.savegame_path: {self.context.savegame_path}")
-            log_debug(f"  context.empire_id: {self.context.empire_id}")
-            log_debug(f"  context.mode: {self.context.mode}")
+        """Save ship design (delegates to WorkshopShipIO)."""
+        self.ship_io.save_ship()
 
-            library = DesignLibrary(
-                self.context.savegame_path,
-                self.context.empire_id
-            )
-
-            log_debug(f"  library.designs_folder: {library.designs_folder}")
-
-            # Show save dialog to get design name
-            design_name = self._prompt_design_name(self.viewmodel.ship.name)
-            if not design_name:
-                log_info("Workshop Save: User cancelled design name prompt")
-                return  # Cancelled
-
-            log_info(f"Workshop Save: Saving design as '{design_name}'")
-
-            # Get built designs from context (will be set by strategy layer)
-            built_designs = getattr(self.context, 'built_designs', set())
-            log_debug(f"  built_designs count: {len(built_designs)}")
-
-            success, message = library.save_design(
-                self.viewmodel.ship,
-                design_name,
-                built_designs
-            )
-
-            if message:
-                if success:
-                    log_info(f"Workshop Save: SUCCESS - {message}")
-                else:
-                    log_error(f"Workshop Save: FAILED - {message}")
-                    self.show_error(message)
-
-    @profile_action("Builder: Load Ship")
     def _load_ship(self):
-        """Load ship design (context-aware)"""
-        if self.context.mode == WorkshopMode.STANDALONE:
-            # PROJ-43: Use adapter instead of direct ShipIO access
-            new_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
-            if new_ship:
-                self._apply_loaded_ship(new_ship, message)
-            elif message:
-                self.show_error(message)
-        else:
-            # Show design selector window
-            log_info("Workshop: Opening design selector for LOAD operation")
-            log_debug(f"  context.savegame_path: {self.context.savegame_path}")
-            log_debug(f"  context.empire_id: {self.context.empire_id}")
-            log_debug(f"  context.mode: {self.context.mode}")
-
-            library = DesignLibrary(
-                self.context.savegame_path,
-                self.context.empire_id
-            )
-
-            log_debug(f"  library.designs_folder: {library.designs_folder}")
-
-            # Immediate scan to diagnose
-            try:
-                designs = library.scan_designs()
-                log_info(f"Workshop Load: DesignLibrary scanned {len(designs)} designs")
-                if designs:
-                    for d in designs[:5]:  # Log first 5 designs
-                        log_debug(f"    - {d.name} (design_id={d.design_id})")
-                else:
-                    log_warning("Workshop Load: scan_designs() returned an empty list!")
-                    log_warning(f"  Checked folder: {library.designs_folder}")
-                    import os
-                    if os.path.exists(library.designs_folder):
-                        files = os.listdir(library.designs_folder)
-                        log_warning(f"  Folder exists with {len(files)} files: {files}")
-                    else:
-                        log_error(f"  Folder does not exist!")
-            except Exception as e:
-                log_error(f"Workshop Load: Exception during scan_designs(): {e}")
-                import traceback
-                log_error(traceback.format_exc())
-
-            def on_design_selected(design_id: str):
-                log_info(f"Workshop: User selected design_id='{design_id}'")
-                design_data = library.load_design_data(design_id)
-                if design_data:
-                    # PROJ-43: Use adapter instead of direct SimulationDesignLoader
-                    ship = self._design_loader_adapter.load_ship_from_design_data(
-                        design_data, self.width, self.height
-                    )
-                    if ship:
-                        log_info(f"Workshop: Successfully loaded design '{ship.name}'")
-                        self._apply_loaded_ship(ship, f"Loaded design: {ship.name}")
-                    else:
-                        log_error(f"Workshop: Failed to create ship from design '{design_id}'")
-                        self.show_error("Failed to create ship from design data")
-                else:
-                    log_error(f"Workshop: Failed to load design '{design_id}'")
-                    self.show_error(f"Design not found: {design_id}")
-
-            # Open design selector window
-            window_rect = create_centered_rect(1200, 800, self.width, self.height)
-            selector = DesignSelectorWindow(
-                rect=window_rect,
-                manager=self.ui_manager,
-                design_library=library,
-                mode="load",
-                on_select_callback=on_design_selected
-            )
+        """Load ship design (delegates to WorkshopShipIO)."""
+        self.ship_io.load_ship()
 
     def _apply_loaded_ship(self, new_ship, message):
         """Apply a loaded ship to the workshop"""
@@ -864,72 +712,8 @@ class DesignWorkshopScreen:
             self.weapons_report_panel.clear_target()
 
     def _on_select_target_pressed(self):
-        """Select target ship (context-aware)"""
-        if self.context.mode == WorkshopMode.STANDALONE:
-            # PROJ-43: Use adapter instead of direct ShipIO access
-            target_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
-            if target_ship:
-                self.weapons_report_panel.set_target(target_ship)
-                log_info(f"Selected target: {target_ship.name}")
-            elif message and "Cancelled" not in message:
-                self.show_error(message)
-        else:
-            # Use design selector with ALL designs (player + AI)
-            library = DesignLibrary(
-                self.context.savegame_path,
-                self.context.empire_id
-            )
-
-            def on_target_selected(design_id: str):
-                design_data = library.load_design_data(design_id)
-                if design_data:
-                    # PROJ-43: Use adapter instead of direct SimulationDesignLoader
-                    ship = self._design_loader_adapter.load_ship_from_design_data(
-                        design_data, self.width, self.height
-                    )
-                    if ship:
-                        self.weapons_report_panel.set_target(ship)
-                        log_info(f"Selected target: {ship.name}")
-                    else:
-                        self.show_error("Failed to create ship from design data")
-                else:
-                    self.show_error(f"Design not found: {design_id}")
-
-            # Open design selector window
-            window_rect = create_centered_rect(1200, 800, self.width, self.height)
-            _selector = DesignSelectorWindow(
-                rect=window_rect,
-                manager=self.ui_manager,
-                design_library=library,
-                mode="target",
-                on_select_callback=on_target_selected
-            )
-
-    def _prompt_design_name(self, default_name: str) -> str:
-        """
-        Prompt user for design name.
-
-        Args:
-            default_name: Default name to suggest
-
-        Returns:
-            Design name or empty string if cancelled
-        """
-        if tk_root is None:
-            # Fallback if tkinter not available
-            return default_name
-
-        try:
-            name = simpledialog.askstring(
-                "Save Design",
-                "Enter design name:",
-                initialvalue=default_name,
-                parent=tk_root
-            )
-            return name if name else ""
-        except Exception as e:
-            log_error(f"Failed to prompt for design name: {e}")
-            return default_name
+        """Select target ship (delegates to WorkshopShipIO)."""
+        self.ship_io.select_target()
 
     def cleanup(self):
         """

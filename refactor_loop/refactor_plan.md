@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-60 Phase 3 - Extract System Mode Module
-**Current Status:** Phase 3 complete, Phase 4 pending
-**Current Project:** PROJ-60
-**Current Phase:** Phase 4 - Slim Main Screen to Coordinator
+**Last Completed:** PROJ-61 Phase 2 Complete
+**Current Status:** Phase 2 complete, ready for Phase 3
+**Current Project:** PROJ-61
+**Current Phase:** Phase 3 (Extract Data Reload Orchestration)
 **Test Status:** 6246 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created `system_mode.py` with `SystemModeHelper` class (568 lines)
-- Moved all system inspection logic: UI creation, generation, drawing, click handling, formatting
-- screen.py now 281 lines (down from 794)
-- Removed unused imports (random, UITextEntryLine, UIDropDownMenu, hex_to_pixel, HexCoord, PlanetType, PLANET_TYPE_COLORS, HEX_SIZE)
+- Phase 2: Pushed dropdown logic into BuilderRightPanel
+- Added 3 methods to right_panel.py: update_class_dropdown, update_vehicle_type_dropdown, update_dropdowns_for_data_reload
+- workshop_screen.py: 759 -> 728 lines (-31 lines)
+- Simplified _execute_pending_action and _refresh_ui_after_data_reload
 - All 6246 tests passing
-- Next: Phase 4 - verify coordinator is slim, update __init__.py exports if needed
+- Next: Execute Phase 3 - Extract Data Reload Orchestration
 
 ---
 
@@ -37,16 +37,16 @@
 
 ---
 
-- [/] **PROJ-60: Break Down GalaxyTestScreen**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-60: Break Down GalaxyTestScreen**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-60/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-60/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
 
-- [ ] **PROJ-61: Workshop Screen Breakdown**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-61: Workshop Screen Breakdown**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-61/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-61/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -98,6 +98,10 @@
 | 2026-02-07 | PROJ-60 | Phase 1 | Complete | 6246 passed | pending | Created package, extracted constants |
 | 2026-02-07 | PROJ-60 | Phase 2 | Complete | 6246 passed | pending | Extracted GalaxyModeHelper (421 lines) |
 | 2026-02-07 | PROJ-60 | Phase 3 | Complete | 6246 passed | pending | Extracted SystemModeHelper (568 lines), screen.py now 281 lines |
+| 2026-02-07 | PROJ-60 | Phase 4 | Complete | 6246 passed | pending | Final verification, imports clean |
+| 2026-02-07 | PROJ-60 | Audit 1 | PASSED | 6246 passed | pending | No issues found |
+| 2026-02-07 | PROJ-61 | Phase 1 | Complete | 6246 passed | pending | Extracted WorkshopShipIO, 945->759 lines |
+| 2026-02-07 | PROJ-61 | Phase 2 | Complete | 6246 passed | pending | Pushed dropdown logic to right_panel, 759->728 lines |
 
 
 ---

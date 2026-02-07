@@ -497,6 +497,60 @@ class BuilderRightPanel:
             self.stats_scroll.kill()
         self.setup_stats()
 
+    def update_class_dropdown(self, new_class: str, valid_classes: list):
+        """Kill existing class dropdown and recreate with new options.
+
+        Args:
+            new_class: The class to set as selected
+            valid_classes: List of valid class names for the dropdown
+        """
+        class_rect = self.class_dropdown.relative_rect
+        self.class_dropdown.kill()
+        self.class_dropdown = UIDropDownMenu(
+            valid_classes, new_class, class_rect,
+            manager=self.manager, container=self.panel
+        )
+
+    def update_vehicle_type_dropdown(self, new_type: str, valid_types: list):
+        """Kill existing vehicle type dropdown and recreate with new options.
+
+        Args:
+            new_type: The vehicle type to set as selected
+            valid_types: List of valid vehicle types for the dropdown
+        """
+        type_rect = self.vehicle_type_dropdown.relative_rect
+        self.vehicle_type_dropdown.kill()
+        self.vehicle_type_dropdown = UIDropDownMenu(
+            valid_types, new_type, type_rect,
+            manager=self.manager, container=self.panel
+        )
+
+    def update_dropdowns_for_data_reload(self, default_class: str, vehicle_classes: dict):
+        """Update dropdowns after a data reload with new vehicle class data.
+
+        Args:
+            default_class: The default ship class to select
+            vehicle_classes: Dict of vehicle class definitions {name: {type, max_mass, ...}}
+        """
+        # Compute valid classes sorted by max_mass
+        valid_classes = [(n, vehicle_classes[n].get('max_mass', 0)) for n in vehicle_classes]
+        valid_classes.sort(key=lambda x: x[1])
+        valid_class_names = [n for n, _ in valid_classes]
+        if not valid_class_names:
+            valid_class_names = ["Escort"]
+
+        # Update class dropdown
+        self.update_class_dropdown(default_class, valid_class_names)
+
+        # Compute valid types
+        types = sorted(set(c.get('type', 'Ship') for c in vehicle_classes.values()))
+        if not types:
+            types = ["Ship"]
+        default_type = vehicle_classes.get(default_class, {}).get('type', 'Ship')
+
+        # Update type dropdown
+        self.update_vehicle_type_dropdown(default_type, types)
+
     def update_stats_display(self, s):
         """Update ship stats labels using Data-Driven Config."""
         
