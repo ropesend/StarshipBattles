@@ -294,6 +294,8 @@ class GameSession:
                 return self._handle_colonize_mission_command(command)
             elif cmd_name == 'ClearFleetOrdersCommand':
                 return self._handle_clear_orders_command(command)
+            elif cmd_name == 'IssueTransferCommand':
+                return self._handle_transfer_command(command)
 
         return None  # Warning/Error?
 
@@ -523,6 +525,54 @@ class GameSession:
 
         log_info(f"GameSession: Cleared orders for Fleet {fleet.id}")
         return validation_result(True, "Fleet orders cleared.")
+
+    def _handle_transfer_command(self, cmd):
+        """Handle IssueTransferCommand.
+
+        Creates a TRANSFER order for cargo operations between fleet and colony.
+        """
+        from game.strategy.data.fleet import FleetOrder, OrderType
+        from game.strategy.validation import TransferValidator
+
+        # 1. Resolve fleet
+        fleet = self._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Find owning empire
+        owning_empire = None
+        for emp in self.empires:
+            if fleet in emp.fleets:
+                owning_empire = emp
+                break
+
+        if not owning_empire:
+            return validation_result(False, "Fleet owner not found.")
+
+        # 3. Resolve planet
+        planet = self._get_planet_by_id(cmd.planet_id)
+        if not planet:
+            return validation_result(False, "Planet not found.")
+
+        # 4. Validate
+        result = TransferValidator.validate(
+            self.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount
+        )
+
+        # 5. Apply
+        if result.is_valid:
+            # Create TRANSFER order with params dict
+            transfer_params = {
+                'direction': cmd.direction,
+                'cargo_type': cmd.cargo_type,
+                'amount': cmd.amount,
+                'planet_id': cmd.planet_id
+            }
+            order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}")
+
+        return result
 
     def _get_fleet_by_id(self, fleet_id: int):
         """

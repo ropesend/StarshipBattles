@@ -14,6 +14,7 @@ class OrderType(Enum):
     MOVE_TO_FLEET = auto()
     JOIN_FLEET = auto()
     BUILD = auto()
+    TRANSFER = auto()
 
 
 class FleetOrder:
@@ -28,7 +29,10 @@ class FleetOrder:
         """Serialize for save game."""
         target_data = None
         if self.target is not None:
-            if hasattr(self.target, 'to_dict'):
+            if self.type == OrderType.TRANSFER:
+                # TRANSFER orders store a dict with direction, cargo_type, amount, planet_id
+                target_data = {'type': 'transfer', 'value': self.target}
+            elif hasattr(self.target, 'to_dict'):
                 target_data = self.target.to_dict()
             elif hasattr(self.target, 'id'):
                 # Fleet reference - store ID
@@ -783,6 +787,7 @@ class Fleet:
         # 2. {'type': 'coord', 'value': [x, y]} - Tuple coordinate format
         # 3. {'type': 'fleet_ref', 'id': xxx} - Fleet reference for MOVE_TO_FLEET orders
         # 4. {'type': 'raw', 'value': str} - Fallback string representation
+        # 5. {'type': 'transfer', 'value': {...}} - TRANSFER order params (PROJ-68)
         # All formats are valid outputs from FleetOrder.to_dict() and must be preserved
         # for backward compatibility with existing save files. (PROJ-42)
         for order_data in data.get('orders', []):
@@ -801,6 +806,9 @@ class Fleet:
                     elif target_data.get('type') == 'fleet_ref':
                         # Fleet reference - store ID for later resolution
                         target = {'_fleet_ref': target_data['id']}
+                    elif target_data.get('type') == 'transfer':
+                        # TRANSFER order params dict (PROJ-68)
+                        target = target_data['value']
                     elif target_data.get('type') == 'raw':
                         # Raw string fallback
                         target = target_data['value']

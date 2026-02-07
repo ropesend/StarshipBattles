@@ -37,6 +37,14 @@ class ColonizeResult:
     planet_name: Optional[str] = None
 
 
+@dataclass
+class TransferResult:
+    """Result of a TRANSFER operation."""
+    success: bool
+    amount_transferred: int = 0
+    message: str = ""
+
+
 class FleetOrderProcessor:
     """
     Processor for fleet order lifecycle management.
@@ -225,6 +233,155 @@ class FleetOrderProcessor:
         log_info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
         return ColonizeResult(colonized=True, planet_name=final_planet.name)
 
+    def process_transfer(
+        self,
+        fleet: Fleet,
+        empire,
+        galaxy
+    ) -> TransferResult:
+        """
+        Process a TRANSFER order.
+
+        PROJ-68: Transfers cargo between fleet and colony.
+
+        Args:
+            fleet: Fleet with TRANSFER order
+            empire: Empire that owns the fleet
+            galaxy: Galaxy for planet lookup
+
+        Returns:
+            TransferResult with transfer status
+        """
+        from game.strategy.validation import TransferValidator
+        from game.strategy.data.planet import SpeciesPopulation
+
+        order = fleet.get_current_order()
+        if not order or order.type != OrderType.TRANSFER:
+            return TransferResult(success=False, message="No TRANSFER order")
+
+        # Extract params from order target dict
+        params = order.target
+        if not isinstance(params, dict):
+            fleet.pop_order()
+            return TransferResult(success=False, message="Invalid transfer params")
+
+        direction = params.get('direction', '')
+        cargo_type = params.get('cargo_type', '')
+        amount = params.get('amount', 0)
+        planet_id = params.get('planet_id')
+
+        # Resolve planet
+        planet = galaxy.get_planet_by_id(planet_id) if planet_id else None
+
+        # Validate
+        validation = TransferValidator.validate(
+            galaxy, fleet, planet, cargo_type, direction, amount
+        )
+
+        if not validation.is_valid:
+            log_warning(f"FleetOrderProcessor: Transfer failed - {validation.message}")
+            fleet.pop_order()
+            return TransferResult(success=False, message=validation.message)
+
+        # Execute transfer
+        transferred = 0
+
+        if direction == "load":
+            transferred = self._execute_load(fleet, planet, cargo_type, amount, empire)
+        else:  # unload
+            transferred = self._execute_unload(fleet, planet, cargo_type, amount, empire)
+
+        fleet.pop_order()
+        log_info(f"FleetOrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
+        return TransferResult(success=True, amount_transferred=transferred)
+
+    def _execute_load(
+        self,
+        fleet: Fleet,
+        planet,
+        cargo_type: str,
+        amount: int,
+        empire
+    ) -> int:
+        """Execute a load operation (colony → fleet)."""
+        from game.strategy.data.planet import SpeciesPopulation
+
+        if cargo_type == "passengers":
+            # Determine how much to load
+            capacity = fleet.get_fleet_cargo_capacity("passengers")
+            current = fleet.get_fleet_cargo_current("passengers")
+            available_space = capacity - current
+
+            # If amount is 0, load as much as possible
+            to_load = amount if amount > 0 else available_space
+
+            # Cap by available space
+            to_load = min(to_load, available_space)
+
+            # Cap by colony population (use first species for now)
+            # TODO: Multi-species support - select which species to load
+            if planet.populations:
+                pop = planet.populations[0]
+                to_load = min(to_load, pop.count)
+
+                # Subtract from colony
+                pop.count -= to_load
+
+                # Add to fleet cargo
+                fleet.load_cargo_to_fleet("passengers", to_load)
+
+                return to_load
+
+        return 0
+
+    def _execute_unload(
+        self,
+        fleet: Fleet,
+        planet,
+        cargo_type: str,
+        amount: int,
+        empire
+    ) -> int:
+        """Execute an unload operation (fleet → colony)."""
+        from game.strategy.data.planet import SpeciesPopulation
+
+        if cargo_type == "passengers":
+            # Determine how much to unload
+            current_cargo = fleet.get_fleet_cargo_current("passengers")
+
+            # If amount is 0, unload all
+            to_unload = amount if amount > 0 else current_cargo
+
+            # Cap by what we actually have
+            to_unload = min(to_unload, current_cargo)
+
+            if to_unload <= 0:
+                return 0
+
+            # Unload from fleet
+            actual_unloaded = fleet.unload_cargo_from_fleet("passengers", to_unload)
+
+            # Add to colony population
+            # Use empire's race_id to determine which species
+            race_id = empire.race_config.race_id if empire.race_config else "default"
+
+            # Find or create SpeciesPopulation for this race
+            species_pop = None
+            for pop in planet.populations:
+                if pop.race_id == race_id:
+                    species_pop = pop
+                    break
+
+            if species_pop is None:
+                # Create new species population
+                species_pop = SpeciesPopulation(race_id=race_id, count=0, happiness=0.5)
+                planet.populations.append(species_pop)
+
+            species_pop.count += actual_unloaded
+            return actual_unloaded
+
+        return 0
+
     def process_end_turn_orders(
         self,
         fleet: Fleet,
@@ -233,9 +390,10 @@ class FleetOrderProcessor:
         component_registry: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
-        Process static orders at end of turn (COLONIZE, JOIN_FLEET).
+        Process static orders at end of turn (COLONIZE, JOIN_FLEET, TRANSFER).
 
         PROJ-55: Added component_registry for colony pod ship removal.
+        PROJ-68: Added TRANSFER order processing.
 
         Args:
             fleet: Fleet to process
@@ -271,6 +429,12 @@ class FleetOrderProcessor:
         elif order.type == OrderType.JOIN_FLEET:
             result = self.process_join_fleet(fleet, empire, galaxy)
             return result.merged
+
+        elif order.type == OrderType.TRANSFER:
+            # PROJ-68: Process cargo transfer
+            self.process_transfer(fleet, empire, galaxy)
+            # TRANSFER does not consume the fleet
+            return False
 
         return False
 

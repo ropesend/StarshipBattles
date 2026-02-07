@@ -106,3 +106,39 @@ class ClearFleetOrdersCommand(Command):
     def __init__(self, fleet_id: int):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
+
+
+@dataclass
+class IssueTransferCommand(Command):
+    """
+    Command to issue a TRANSFER order for cargo operations.
+
+    Transfers cargo (passengers, etc.) between a fleet and a colony.
+
+    Args:
+        fleet_id: The fleet to transfer cargo to/from
+        planet_id: The planet/colony to transfer cargo to/from
+        cargo_type: Type of cargo (e.g., 'passengers')
+        direction: 'load' (colony→fleet) or 'unload' (fleet→colony)
+        amount: Units to transfer (0 = transfer all available)
+    """
+    fleet_id: int
+    planet_id: int
+    cargo_type: str
+    direction: str  # "load" or "unload"
+    amount: int  # 0 = all
+
+    def __init__(
+        self,
+        fleet_id: int,
+        planet_id: int,
+        cargo_type: str,
+        direction: str,
+        amount: int = 0
+    ):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.planet_id = planet_id
+        self.cargo_type = cargo_type
+        self.direction = direction
+        self.amount = amount
