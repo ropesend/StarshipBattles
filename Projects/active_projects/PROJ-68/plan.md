@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Population Data Model | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Habitability Scoring | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Habitability Scoring | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Population Growth Engine | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cargo Ability Layer | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cargo State Tracking | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 2 — Habitability Scoring
-**Last Action:** Phase 1 complete — SpeciesPopulation dataclass, Planet populations, Empire.race_config
-**Next Action:** Begin Phase 2 — Habitability Scoring
+**Active Phase:** Phase 3 — Population Growth Engine
+**Last Action:** Phase 2 complete — Habitability scoring with 5 factor functions (gravity, temp, water, atmosphere, radiation) + weighted geometric mean
+**Next Action:** Begin Phase 3 — Population Growth Engine
 **Blockers:** None
 
 ## Overview
