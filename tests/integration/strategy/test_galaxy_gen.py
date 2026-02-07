@@ -208,7 +208,8 @@ class TestGameSessionGalaxyType:
         config = GameConfig(
             galaxy_type="random",
             galaxy_radius=500,
-            system_count=5
+            system_count=5,
+            galaxy_seed=42
         )
 
         session = GameSession(config=config)
