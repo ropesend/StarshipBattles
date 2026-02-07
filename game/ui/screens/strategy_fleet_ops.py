@@ -77,6 +77,11 @@ class FleetOperations:
         if not selected_fleet:
             return None
 
+        # PROJ-67: Block movement while fleet is building
+        if selected_fleet.is_building:
+            log_warning("Fleet is building - cancel BUILD order first to move.")
+            return {'type': 'error', 'message': 'Fleet is building - cancel BUILD order first'}
+
         world_pos = self.camera.screen_to_world((mx, my))
         target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.hex_size)
 

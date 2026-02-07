@@ -399,6 +399,13 @@ class StrategyScreen:
         """Handle build queue screen closing."""
         log_info("_on_build_queue_close() CALLED")
         log_info(f"  build_queue_screen before None: {self.build_queue_screen}")
+
+        # PROJ-67: Check if fleet build queue closed with items - auto-issue BUILD order
+        build_context = getattr(self.build_queue_screen, 'build_context', None)
+        if build_context and hasattr(build_context, 'context_type'):
+            if build_context.context_type == 'fleet':
+                self._handle_fleet_build_queue_close(build_context)
+
         self.build_queue_screen = None
         log_info(f"  build_queue_screen after None: {self.build_queue_screen}")
 
@@ -416,6 +423,68 @@ class StrategyScreen:
                 log_warning(f"Could not refresh planet display after build queue close: {e}")
                 # Continue anyway - don't block the close operation
         log_info("_on_build_queue_close() FINISHED")
+
+    def _handle_fleet_build_queue_close(self, fleet):
+        """Handle fleet build queue closing - auto-issue BUILD order if items in queue.
+
+        Args:
+            fleet: Fleet that was building
+        """
+        from game.strategy.data.fleet import FleetOrder, OrderType
+
+        if fleet.construction_queue:
+            # Check if fleet already has BUILD order
+            has_build_order = any(
+                order.type == OrderType.BUILD
+                for order in fleet.orders
+            )
+            if not has_build_order:
+                log_info(f"Auto-issuing BUILD order to fleet {fleet.id} ({len(fleet.construction_queue)} items in queue)")
+                fleet.orders.insert(0, FleetOrder(OrderType.BUILD))
+                fleet.path = []  # Clear movement path
+        else:
+            # Queue is empty - remove BUILD order if present
+            fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
+
+    def on_fleet_build_click(self):
+        """Open build queue screen for selected fleet (PROJ-67: Fleet Space Yards)."""
+        # Guard against double-open
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            log_info("Build queue already open, ignoring click")
+            return
+
+        from game.strategy.data.fleet import Fleet
+        if isinstance(self.selected_object, Fleet):
+            fleet = self.selected_object
+            if fleet.owner_id == self.current_empire.id and fleet.has_space_shipyard:
+                from game.ui.screens.build_queue_screen import BuildQueueScreen
+                from game.strategy.systems.design_library import DesignLibrary
+                from game.simulation.services.design_loader import SimulationDesignLoader
+                from game.core.registry import get_default_registries
+
+                # Hide main UI
+                self.ui.hide_ui()
+
+                # Get fleet portrait from asset system
+                portrait_surface = self._get_object_asset(fleet)
+
+                # Create dependencies for DI injection
+                savegame_path = getattr(self.session, 'save_path', None)
+                empire_id = fleet.owner_id
+                design_library = DesignLibrary(savegame_path, empire_id)
+                design_loader = SimulationDesignLoader(registries=get_default_registries())
+
+                # Create screen with fleet as build_context
+                self.build_queue_screen = BuildQueueScreen(
+                    self.ui.manager,
+                    fleet,  # Fleet as build_context
+                    self.session,
+                    on_close_callback=self._on_build_queue_close,
+                    portrait_surface=portrait_surface,
+                    design_library=design_library,
+                    design_loader=design_loader
+                )
+                log_info(f"Opened build queue for fleet {fleet.id}")
 
     def on_design_click(self):
         """Handle 'Design' button click - opens Design Workshop."""

@@ -17,14 +17,14 @@
 | 2. BUILD Order & Movement Blocking | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fleet Production Engine | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. BuildContext Abstraction & UI Generalization | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Strategy Screen Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Strategy Screen Integration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Save/Load & Edge Cases | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete - BuildContext protocol, Planet/Fleet compliance, BuildQueueScreen/Controller/DragHandler generalized
-**Next Action:** Begin Phase 5 - Strategy Screen Integration
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 complete - Fleet build button, BUILD order UI, move blocking
+**Next Action:** Begin Phase 6 - Save/Load & Edge Cases
 **Blockers:** None
 
 ## Overview

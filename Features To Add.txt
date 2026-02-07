@@ -1,21 +1,11 @@
 Features to add:
 
-1) Population
- - all colonies should have population - this population can be made up of multiple species, and each species should be treated somewhat independently.
- - The maximum population will depend on the surface area of the planet.
-	- population will grow or shrink everyturn based on a number of factors:
-	- How well the surface conditions of the planet match thoes of the race of population.
-	- A general base rate for the race as a whole - will need to be 
-	- A happyness modifyer
-	- System wide modifyers that may increase or decrease the rate.
- - The PlanetDetails window will need to be updated to show the population of each race on the planet.
-  - a passenger quarters component should be added to the components json file
-    - the passenger component will have a new ability - this ability will provide the capability to store a certain amount of population and load and unload population at colonies
-    - This ability should be somewhat generic, In the future I will introduce cargo storage, and possibly other items theat will need to be loaded and unloaded at colonies, or transfered between shiips/fleets.  It should be somewhat similar to the resource system
- - We will need a new order option for fleets to load/unload - and specify how much population to load and unload
- - for colonizing, we will generally want to use ship designs that have a passenger component, when an order is given to colonize a planet, the ship ship given the order should automatically attempt to load population into it's passenger quarters, then move after that.  When a ship is used to colonize a planet then the population in the ship is transfered to the new colony.
- - Please ask questions and make suggestions, create a plan to add this new aspect, break it up into phases, and substages - list all files that need to be edited, all tests that need to be added.
- - Plan to use TDD
+I want the warp point graphics to slowly rotate in teh sector on the strategy layer.
+
+There should be a separate button on the top for build queues.  This should open a window that shows all of the the various space yards in a list.
+It should be somewhat similar to the planet list window, it should show the portait of the planet/ship that the space yard is on, it should show the system, and sector
+columns should be configurtabel just like the planet list, and there should be a variety of filtering options.
+It should be posible to click on a single 
  
  
  Log System - lists all events
@@ -39,6 +29,24 @@ Features to add:
  Different System types
 
  // Already Added
+
+1) Population
+ - all colonies should have population - this population can be made up of multiple species, and each species should be treated somewhat independently.
+ - The maximum population will depend on the surface area of the planet.
+	- population will grow or shrink everyturn based on a number of factors:
+	- How well the surface conditions of the planet match thoes of the race of population.
+	- A general base rate for the race as a whole - will need to be 
+	- A happyness modifyer
+	- System wide modifyers that may increase or decrease the rate.
+ - The PlanetDetails window will need to be updated to show the population of each race on the planet.
+  - a passenger quarters component should be added to the components json file
+    - the passenger component will have a new ability - this ability will provide the capability to store a certain amount of population and load and unload population at colonies
+    - This ability should be somewhat generic, In the future I will introduce cargo storage, and possibly other items theat will need to be loaded and unloaded at colonies, or transfered between shiips/fleets.  It should be somewhat similar to the resource system
+ - We will need a new order option for fleets to load/unload - and specify how much population to load and unload
+ - for colonizing, we will generally want to use ship designs that have a passenger component, when an order is given to colonize a planet, the ship ship given the order should automatically attempt to load population into it's passenger quarters, then move after that.  When a ship is used to colonize a planet then the population in the ship is transfered to the new colony.
+ - Please ask questions and make suggestions, create a plan to add this new aspect, break it up into phases, and substages - list all files that need to be edited, all tests that need to be added.
+ - Plan to use TDD
+
 
 Space Yards 
 - I want to create a space yard component that can be added to a ship.

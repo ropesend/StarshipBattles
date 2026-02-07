@@ -154,6 +154,10 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         elif order.type == OrderType.JOIN_FLEET:
              f_id = order.target.id if hasattr(order.target, 'id') else "?"
              return f"JOIN Fleet {f_id}"
+        elif order.type == OrderType.BUILD:
+             # PROJ-67: Show queue size for BUILD orders
+             queue_size = len(self.fleet.construction_queue)
+             return f"BUILDING ({queue_size} items)"
         else:
              return f"{order.type.name}"
 

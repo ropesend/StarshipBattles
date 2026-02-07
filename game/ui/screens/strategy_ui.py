@@ -294,6 +294,15 @@ class StrategyUI:
             container=self.detail_panel,
             visible=0 # Hidden by default
         )
+
+        # Fleet build button (PROJ-67: Fleet Space Yards)
+        self.btn_build_fleet = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(340, rect_detail.height - 50, 120, 40),
+            text="Build",
+            manager=self.manager,
+            container=self.detail_panel,
+            visible=0  # Hidden by default
+        )
         
         self.panels = [
             self.top_bar,
@@ -430,6 +439,7 @@ class StrategyUI:
         self.btn_build_yard.hide()
         self.btn_orders.hide()
         self.btn_fleet_report.hide()
+        self.btn_build_fleet.hide()
         self.current_raw_data = ""
 
         # Clean up planet report panel if switching to non-planet object
@@ -562,6 +572,10 @@ class StrategyUI:
                          # target is Planet object
                          p_name = order.target.name if hasattr(order.target, 'name') else "Unknown"
                          text += f" {i+1}. COLONIZE {p_name}<br>"
+                    elif order.type == OrderType.BUILD:
+                         # PROJ-67: Show BUILD order with queue size
+                         queue_size = len(obj.construction_queue)
+                         text += f" {i+1}. BUILDING ({queue_size} items)<br>"
                     else:
                          text += f" {i+1}. {order.type.name}<br>"
             else:
@@ -571,6 +585,10 @@ class StrategyUI:
             if obj.owner_id == current_empire_id:
                  self.btn_orders.show()
                  self.btn_fleet_report.show()
+
+                 # PROJ-67: Show Build button for fleets with space shipyard
+                 if obj.has_space_shipyard:
+                     self.btn_build_fleet.show()
 
                  # Check if we can colonize (Ask Engine)
                  # We query for 'Any Planet' (target=None) to see if *something* is possible here.

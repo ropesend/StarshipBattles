@@ -62,6 +62,8 @@ class StrategyInputHandler:
             self.scene.on_colonize_click()
         elif event.ui_element == ui.btn_build_yard:
             self.scene.on_build_yard_click()
+        elif event.ui_element == ui.btn_build_fleet:
+            self.scene.on_fleet_build_click()
         # Navigation
         elif event.ui_element == ui.btn_prev_colony:
             self.scene.cycle_selection('colony', -1)

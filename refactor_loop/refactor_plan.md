@@ -8,25 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-67 Phase 4 - BuildContext Abstraction & UI Generalization
-**Current Status:** PROJ-67 Phase 4 Complete, Phase 5 Ready
+**Last Completed:** PROJ-67 Phase 5 - Strategy Screen Integration
+**Current Status:** PROJ-67 Phase 5 Complete, Phase 6 Ready
 **Current Project:** PROJ-67
-**Current Phase:** Phase 5
-**Test Status:** 516 passed with testmon (3 pre-existing failures in bug_15/logistics tests)
+**Current Phase:** Phase 6
+**Test Status:** 24 passed with testmon (3 pre-existing failures in bug_15/logistics tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-67 Phase 4 Complete:
-  - Created BuildContext Protocol (`game/strategy/data/build_context.py`)
-  - Added `context_type` and `can_build_type()` to Planet
-  - Added `name` and `context_type` properties to Fleet
-  - Generalized BuildQueueController to use `build_context` parameter
-  - Generalized BuildQueueScreen to accept Planet or Fleet
-  - Updated BuildQueueDragHandler to use `build_context` parameter
-  - Added fleet info panel for fleet build context
-  - 18 new tests in test_build_context.py, all existing tests pass
-- Commit: pending
-- Next: Phase 5 - Strategy Screen Integration
+- PROJ-67 Phase 5 Complete:
+  - Added `btn_build_fleet` button to StrategyUI for fleets with space shipyard
+  - Added `on_fleet_build_click()` handler in strategy_screen.py
+  - Button handler in strategy_input_handler.py routes to on_fleet_build_click()
+  - Added `_handle_fleet_build_queue_close()` to auto-issue BUILD order when queue has items
+  - Updated FleetOrdersWindow._get_order_description() for BUILD orders
+  - Updated show_detailed_report() fleet section for BUILD order display
+  - Added move blocking in strategy_fleet_ops.py for building fleets
+  - 7 new tests in test_fleet_build_button.py, all pass
+- Next: Phase 6 - Save/Load & Edge Cases
 
 ---
 
@@ -168,6 +167,7 @@
 | 2026-02-07 | PROJ-67 | Phase 2 | Complete | 6348 passed | 04616e8f | OrderType.BUILD, is_building, movement blocking, BUILD order processing, FleetInfo DTO |
 | 2026-02-07 | PROJ-67 | Phase 3 | Complete | 6361 passed | 0ad28b61 | Fleet production engine, ship/complex spawning, TurnEngine integration |
 | 2026-02-07 | PROJ-67 | Phase 4 | Complete | 516 testmon | pending | BuildContext protocol, Planet/Fleet compliance, UI generalization |
+| 2026-02-07 | PROJ-67 | Phase 5 | Complete | 24 testmon | pending | Fleet build button, BUILD order UI, move blocking, 7 new tests |
 
 ---
 
