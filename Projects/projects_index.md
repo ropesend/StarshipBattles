@@ -4,18 +4,17 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-56 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-55 | Test Lab Screen God Class Decomposition | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-54 | Combat Lab Quality Cleanup and Expansion | Planning | 2026-02-05 | 2026-02-05 |
-| PROJ-55 | Data-Driven Planet-Specific Colonization System | Planning | 2026-02-01 | 2026-02-01 |
-| PROJ-54 | Universal Planet Report Component | Planning | 2026-02-01 | 2026-02-01 |
-| PROJ-52 | Galaxy Generation Refactor | Planning | 2026-01-31 | 2026-01-31 |
-| PROJ-53 | Eliminate Legacy Resource System | Audit Passed | 2026-01-31 | 2026-01-31 |
+| PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-56 | Universal Planet Report Component | Archived | 2026-02-01 | 2026-02-06 |
+| PROJ-54 | Combat Lab Quality Cleanup and Expansion | Archived | 2026-02-05 | 2026-02-06 |
+| PROJ-55 | Data-Driven Planet-Specific Colonization System | Archived | 2026-02-01 | 2026-02-06 |
+| PROJ-53 | Eliminate Legacy Resource System | Archived | 2026-01-31 | 2026-02-06 |
+| PROJ-52 | Galaxy Generation Refactor | Archived | 2026-01-31 | 2026-02-06 |
 | PROJ-51 | Naming Consistency Remediation | Archived | 2026-01-30 | 2026-01-31 |
 | PROJ-48 | Testing Infrastructure Overhaul | Archived | 2026-01-28 | 2026-01-31 |
 | PROJ-45 | Error Handling and Exception Management Refactor | Archived | 2026-01-28 | 2026-01-31 |
@@ -157,7 +156,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-54
+## Next Project ID: PROJ-60
 
 ---
 

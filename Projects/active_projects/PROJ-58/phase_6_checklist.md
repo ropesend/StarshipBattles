@@ -1,102 +1,77 @@
-# Phase 6: Registry DI Fallback Migration [Complex]
+# Phase 6: BattleController & Collision Cleanup [Medium]
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-56 6`
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-58 6`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** Migrate all `get_default_registries()` callers to strict DI (constructor injection).
+**Objective:** Remove BattleController proxy properties, simplify fallback logic, remove collision hasattr chain.
 
 ---
 
-## Background
-`get_default_registries()` is a module-level fallback that returns a global `GameRegistries` instance. The strict DI pattern (PROJ-50) requires `registries: GameRegistries` as a constructor parameter. The fallback creates an implicit global dependency that makes testing harder and couples code to module state.
-
-## Migration Pattern
-```python
-# BEFORE (fallback pattern):
-class MyService:
-    def __init__(self, ...):
-        self._registries = get_default_registries()
-
-# AFTER (strict DI):
-class MyService:
-    def __init__(self, ..., *, registries: GameRegistries):
-        if registries is None:
-            raise TypeError("registries is required")
-        self._registries = registries
-```
-
-For callers that create these services, they must pass `registries=` from their own context.
-
 ## Tasks
 
-### Task 6.1: Audit All get_default_registries() Call Sites [Simple]
-**Tests:** Research only
-- [ ] Search for all `get_default_registries()` calls in production code
-- [ ] For each call site, identify: Who creates this object? Where do THEY get registries from?
-- [ ] Map the injection chain: app.py → screen → service → subsystem
-- [ ] Identify any sites where the caller genuinely has no access to registries
-- [ ] Document complete call chain in Notes
-**Notes:**
+### Task 6.1: Remove BattleController engine Property [Simple]
+**File:** `game/simulation/battle_controller.py`
+**Tests:** `pytest tests/unit/simulation/ -x`
+- [ ] Find all callers of `controller.engine` (expected: 2 test callers at `tests/fixtures/battle.py:154` and `tests/unit/simulation/battle_controller/test_utilities.py:73`)
+- [ ] Update test callers to use `controller._service.get_engine()` or appropriate alternative
+- [ ] Remove the `engine` property (~lines 589-592)
+- [ ] Run tests: `pytest tests/unit/simulation/ -x`
 
-### Task 6.2: Migrate UI Service Callers [Medium]
-**Files:** `game/ui/services/ship_factory.py`, `game/ui/services/design_loader_adapter.py`
-**Tests:** `pytest tests/unit/ui/ tests/integration/ui/ -x`
-- [ ] `ship_factory.py` (~line 74): Add `registries` parameter to constructor, remove fallback
-- [ ] Update all places that create ShipFactory to pass registries
-- [ ] `design_loader_adapter.py` (~line 44): Add `registries` parameter, remove fallback
-- [ ] Update all places that create DesignLoaderAdapter to pass registries
-- [ ] Run tests: `pytest tests/unit/ui/ tests/integration/ui/ -x`
-**Notes:**
+### Task 6.2: Remove _retreating_ships and _escaped_ships Properties [Simple]
+**File:** `game/simulation/battle_controller.py`
+**Tests:** `pytest tests/unit/simulation/ -x`
+- [ ] Find all callers of `_retreating_ships` (expected: 4 test callers)
+- [ ] Update to `controller._retreat_manager.retreating_ships` directly
+- [ ] Remove `_retreating_ships` property and setter (~lines 605-615)
+- [ ] Find all callers of `_escaped_ships` (expected: 3 test callers + 1 internal at line 659)
+- [ ] Update to `controller._retreat_manager.escaped_ships` directly
+- [ ] Remove `_escaped_ships` property and setter (~lines 617-628)
+- [ ] Run tests: `pytest tests/unit/simulation/ -x`
 
-### Task 6.3: Migrate Simulation/Strategy Callers [Medium]
-**Files:** `game/simulation/entities/ship_stats.py`, `game/strategy/engine/turn_engine.py`, `game/strategy/data/ship_instance.py`
-**Tests:** `pytest tests/unit/simulation/ tests/unit/strategy/ -x`
-- [ ] `ship_stats.py` (~line 48): Accept registries parameter, remove fallback
-- [ ] `turn_engine.py` (~line 129): Accept registries parameter, remove fallback
-- [ ] `ship_instance.py` (~line 197): Accept registries parameter, remove fallback
-- [ ] Update all callers of these classes to pass registries
-- [ ] Run tests: `pytest tests/unit/simulation/ tests/unit/strategy/ -x`
-**Notes:**
+### Task 6.3: Simplify Retreat/Reinforcement Fallback Logic [Medium]
+**File:** `game/simulation/battle_controller.py`
+**Tests:** `pytest tests/unit/simulation/ tests/integration/ -x`
+- [ ] Verify `_mode_handler` is always present after `configure()` is called (check all constructors)
+- [ ] In `_retreat_allowed()` (~line 454-462): Investigate the OR pattern `mode_handler.can_retreat() or config.allow_retreat`
+- [ ] If mode_handler is single source of truth: simplify to just `self._mode_handler.can_retreat()`
+- [ ] If both are needed: keep but remove "backward compat" comment, document why both are needed
+- [ ] Repeat for `_reinforcements_allowed()` (~line 464-472)
+- [ ] Run tests: `pytest tests/unit/simulation/ tests/integration/ -x`
+**Notes:** The OR logic may be intentional (config overrides mode handler). Investigate before simplifying.
 
-### Task 6.4: Migrate UI Screen Callers [Medium]
-**Files:** `game/ui/screens/workshop_context.py`, `game/ui/screens/strategy_screen.py`
-**Tests:** `pytest tests/unit/ui/ tests/integration/ui/ -x`
-- [ ] `workshop_context.py` (~line 78): Remove fallback, require registries in constructor
-- [ ] `strategy_screen.py` (~line 365): Remove fallback, require registries
-- [ ] Update all callers to pass registries from their context
-- [ ] Run tests: `pytest tests/unit/ui/ tests/integration/ui/ -x`
-**Notes:**
+### Task 6.4: Remove Collision Defense Score Fallback [Simple]
+**File:** `game/engine/collision.py`
+**Tests:** `pytest tests/unit/combat/ tests/unit/simulation/ -x`
+- [ ] Verify `total_defense_score` is always present on Ship (initialized to 1.0 at `ship.py:168`)
+- [ ] Verify all collision targets are Ship instances (check what objects enter the collision system)
+- [ ] Replace hasattr fallback chain (~lines 112-121) with direct access: `defense_score = target.total_defense_score`
+- [ ] Remove the `elif hasattr(target, 'get_total_ecm_score')` branch
+- [ ] Remove the `log_warning` for fallback
+- [ ] Run tests: `pytest tests/unit/combat/ tests/unit/simulation/ -x`
 
-### Task 6.5: Migrate Test Code Callers [Simple]
-**Files:** Multiple test files using `get_default_registries()`
-**Tests:** `pytest tests/ --testmon`
-- [ ] Search all test files for `get_default_registries()`
-- [ ] For each test: determine if registries come from a fixture or direct call
-- [ ] Update tests to use fixtures that provide registries, or pass registries explicitly
-- [ ] Run tests: `pytest tests/ --testmon`
-**Notes:** Test code may legitimately use the fallback for convenience. Evaluate case by case.
+### Task 6.5: Remove BattleScreen Backward Compat References [Simple]
+**File:** `game/ui/screens/battle_screen.py`
+**Tests:** `pytest tests/unit/ui/ -x`
+- [ ] Lines 48-49: Remove "backward compatibility" comment about initial battle/engine
+- [ ] Lines 161-162: Remove "backward compatibility" comment about engine access
+- [ ] Check if any actual compat code exists beyond comments
+- [ ] Run tests: `pytest tests/unit/ui/ -x`
 
-### Task 6.6: Remove or Restrict get_default_registries() [Simple]
-**File:** `game/core/registry.py`
-**Tests:** `pytest tests/ -x`
-- [ ] Verify zero production callers remain
-- [ ] If test-only callers remain: Keep function but add comment "Test utility only"
-- [ ] If zero callers: Remove `get_default_registries()` and `set_default_registries()` functions
-- [ ] Also remove the module-level `_default_registries` variable
-- [ ] Update `game/app.py` if it calls `set_default_registries()` - remove that call
-- [ ] Run full test suite: `pytest tests/ -x`
-**Notes:** This is the final cleanup. May need to keep for test infrastructure.
+### Task 6.6: Clean Up Remaining Comments [Simple]
+**File:** `game/simulation/battle_controller.py`, `game/simulation/systems/battle_engine.py`
+**Tests:** No test run needed (comment-only)
+- [ ] Remove all "backward compat" / "backward compatibility" comments that reference completed transitions
+- [ ] `battle_engine.py` lines 268-272: Keep the legacy controller creation path (out of scope) but remove/update the "backward compatibility" comment to explain its actual purpose
+- [ ] Keep `apply_results_to_fleets()` legacy fallback comment but update to reference PROJ-41 blocker
+- [ ] Search for any remaining "backward compat" comments in `game/simulation/`
 
 ---
 
 ## Phase Completion Checklist
-When all tasks above are done:
 - [ ] All task checkboxes above are checked
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
-- [ ] No remaining `get_default_registries()` calls in production code
-- [ ] All services use strict DI with `registries` parameter
+- [ ] Update plan.md Current State to point to Phase 7

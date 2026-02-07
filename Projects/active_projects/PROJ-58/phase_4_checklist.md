@@ -1,104 +1,104 @@
-# Phase 4: ShipCombatMixin Elimination [Complex]
+# Phase 4: Formation Delegation Removal [Medium]
 
 > **BEFORE MARKING THIS PHASE COMPLETE:**
-> 1. Run `python Projects/scripts/validate_phase.py PROJ-56 4`
+> 1. Run `python Projects/scripts/validate_phase.py PROJ-58 4`
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
 **Status:** Not Started
-**Objective:** Remove the ShipCombatMixin facade, redirect all callers to `ship.combat_engine.*`.
+**Objective:** Update all callers of formation delegation properties (10 prod + 6 adapter + 155 test), then remove 5 properties from Ship.
 
 ---
 
-## Background
-The ShipCombatMixin (`game/simulation/entities/ship_combat.py`) was created during PROJ-12 as a "thin facade" to maintain the `ship.method()` API while combat logic moved to ShipCombatEngine. Clean sheet approach: Ship is a data container, combat operations should go through `ship.combat_engine`.
-
-## Key Method Mapping
-| Mixin Method | Target | ShipCombatEngine Method |
-|-------------|--------|------------------------|
-| `ship.take_damage(damage, ...)` | Callers use engine | `ship.combat_engine.take_damage(damage, ...)` |
-| `ship.fire_weapons(context)` | Internal only | `ship.combat_engine.fire_weapons(context)` |
-| `ship.update_combat_cooldowns(dt)` | Internal only | `ship.combat_engine.update_combat_cooldowns(dt)` |
-| `ship.solve_lead(target, ...)` | Multiple callers | `ship.combat_engine.solve_lead(target, ...)` |
-| `ship._apply_repair(amount)` | Internal + tests | `ship.combat_engine._apply_repair(amount)` |
+## Property Mapping
+| Backward Compat Property | Direct Replacement |
+|--------------------------|-------------------|
+| `ship.formation_master` | `ship.formation.master` |
+| `ship.formation_offset` | `ship.formation.offset` |
+| `ship.formation_rotation_mode` | `ship.formation.rotation_mode` |
+| `ship.formation_members` | `ship.formation.members` |
+| `ship.in_formation` | `ship.formation.active` |
 
 ## Tasks
 
-### Task 4.1: Inventory All Mixin Method Callers [Simple]
-**Tests:** Research only
-- [ ] Search for all callers of `.take_damage(` in production code (excluding mixin definition)
-- [ ] Search for all callers of `.fire_weapons(` in production code
-- [ ] Search for all callers of `.update_combat_cooldowns(` in production code
-- [ ] Search for all callers of `.solve_lead(` in production code
-- [ ] Search for all callers of `._apply_repair(` in production code
-- [ ] Document complete caller list in Notes with file:line for each
-**Notes:**
+### Task 4.1: Update ShipControllableAdapter [Simple]
+**File:** `game/ai/interfaces/controllable.py`
+**Tests:** `pytest tests/unit/ai/ -x`
+- [ ] Line 423: `self._ship.formation_members` → `self._ship.formation.members`
+- [ ] Line 427: `self._ship.formation_master` → `self._ship.formation.master`
+- [ ] Line 431: `self._ship.in_formation` → `self._ship.formation.active`
+- [ ] Line 435: `self._ship.formation_offset` → `self._ship.formation.offset`
+- [ ] Line 439: `self._ship.in_formation = value` → `self._ship.formation.active = value`
+- [ ] Line 443: `self._ship.formation_master = master` → `self._ship.formation.master = master`
+- [ ] Run tests: `pytest tests/unit/ai/ -x`
 
-### Task 4.2: Update Production Callers of take_damage [Medium]
-**Files:** `game/engine/collision.py`, `game/simulation/projectile_manager.py`, `game/simulation/combat/damage_calculator.py`, `game/strategy/data/ship_instance.py`
-**Tests:** `pytest tests/unit/combat/ tests/unit/simulation/ -x`
-- [ ] `game/engine/collision.py` - Change `target.take_damage(...)` → `target.combat_engine.take_damage(...)`
-- [ ] `game/simulation/projectile_manager.py` - Change `s.take_damage(...)` → `s.combat_engine.take_damage(...)`
-- [ ] `game/simulation/combat/damage_calculator.py` - Change `target.take_damage(...)` → `target.combat_engine.take_damage(...)` (if present)
-- [ ] `game/strategy/data/ship_instance.py` - Change `ship.take_damage(...)` → `ship.combat_engine.take_damage(...)` (if present)
-- [ ] Any other callers found in Task 4.1
-- [ ] Run tests: `pytest tests/unit/combat/ tests/unit/simulation/ -x`
-**Notes:**
+### Task 4.2: Update Production Callers [Simple]
+**Files:** `game/ai/controller.py`, `game/ui/services/ship_factory.py`
+**Tests:** `pytest tests/unit/ai/ tests/unit/ui/services/ -x`
 
-### Task 4.3: Update Production Callers of solve_lead [Simple]
-**Files:** `game/simulation/entities/projectile.py`, `game/simulation/combat/targeting_system.py`
-**Tests:** `pytest tests/unit/combat/ tests/unit/simulation/ -x`
-- [ ] `game/simulation/entities/projectile.py` - Change `ship.solve_lead(...)` → `ship.combat_engine.solve_lead(...)`
-- [ ] `game/simulation/combat/targeting_system.py` - Change `ship.solve_lead(...)` → `ship.combat_engine.solve_lead(...)`
-- [ ] Any other callers found in Task 4.1
-- [ ] Run tests: `pytest tests/unit/combat/ -x`
-**Notes:**
+**controller.py:**
+- [ ] Line 369: `member.formation_offset` → `member.formation.offset`
+- [ ] Line 370: `member.formation_offset.length()` → `member.formation.offset.length()`
+- [ ] Line 387: `member.in_formation` → `member.formation.active`
+- [ ] Line 389: `member.formation_offset.rotate(...)` → `member.formation.offset.rotate(...)`
+- [ ] Line 419: `own_ship.formation_master.formation_members.remove(own_ship)` → `own_ship.formation.master.formation.members.remove(own_ship)`
 
-### Task 4.4: Update Ship.update() Internal Calls [Simple]
-**File:** `game/simulation/entities/ship.py`
-**Tests:** `pytest tests/unit/simulation/ tests/unit/combat/ -x`
-- [ ] In `Ship.update()` method (~line 314): Change `self.update_combat_cooldowns(dt)` → `self.combat_engine.update_combat_cooldowns(dt)`
-- [ ] In `Ship.update()` method (~line 318): Change `self.fire_weapons(context)` → `self.combat_engine.fire_weapons(context)`
-- [ ] Any internal `self._apply_repair()` calls → `self.combat_engine._apply_repair()`
-- [ ] Run tests: `pytest tests/unit/simulation/ tests/unit/combat/ -x`
-**Notes:**
+**ship_factory.py:**
+- [ ] Line 169: `ship.formation_master = master` → `ship.formation.master = master`
+- [ ] Line 170: `master.formation_members.append(ship)` → `master.formation.members.append(ship)`
+- [ ] Line 174: `ship.formation_rotation_mode = rotation_mode` → `ship.formation.rotation_mode = rotation_mode`
+- [ ] Line 177: `ship.formation_offset = diff` → `ship.formation.offset = diff`
+- [ ] Line 180: `ship.formation_offset = diff.rotate(...)` → `ship.formation.offset = diff.rotate(...)`
+- [ ] Run tests: `pytest tests/unit/ai/ tests/unit/ui/services/ -x`
 
-### Task 4.5: Update Test Callers [Medium]
-**Files:** Multiple test files
+### Task 4.3: Update Test Callers [Medium]
+**Files:** 20+ test files (155+ occurrences)
 **Tests:** `pytest tests/ --testmon`
-- [ ] Search all test files for `.take_damage(`, `.fire_weapons(`, `.solve_lead(`, `.update_combat_cooldowns(`, `._apply_repair(`
-- [ ] Update each test caller to use `.combat_engine.method()` pattern
-- [ ] Pay special attention to mock/patch targets - they need to point to ShipCombatEngine
-- [ ] Run tests: `pytest tests/ --testmon`
-**Notes:** Some tests may patch `Ship.take_damage` - these patches need to target `ShipCombatEngine.take_damage` instead.
 
-### Task 4.6: Move combat_engine Property to Ship Class [Simple]
+Apply the property mapping table above to all test files. Key files with heaviest usage:
+
+**Integration tests:**
+- [ ] `tests/integration/test_formation_flight.py` (~8 occurrences)
+- [ ] `tests/integration/test_formation_attack.py` (~7 occurrences)
+- [ ] `tests/integration/ai_strategy/test_response.py` (~6 occurrences)
+- [ ] `tests/integration/ai_strategy/test_evaluation.py` (~1 occurrence)
+
+**AI unit tests:**
+- [ ] `tests/unit/ai/test_ai_controller_interface.py` (~16 occurrences)
+- [ ] `tests/unit/ai/test_advanced_behaviors.py` (~5 occurrences)
+- [ ] `tests/unit/ai/test_ai_behaviors.py` (~8 occurrences)
+- [ ] `tests/unit/ai/formation_prediction/test_formation_behavior.py` (~30 occurrences)
+- [ ] `tests/unit/ai/formation_prediction/conftest.py` (~6 occurrences)
+- [ ] `tests/unit/ai/controllable_interface/test_adapter_methods.py` (~3 occurrences)
+- [ ] `tests/unit/ai/controllable_interface/test_adapter_basics.py` (~3 occurrences)
+- [ ] `tests/unit/ai/controllable_interface/conftest.py` (~4 occurrences)
+
+**Other unit tests:**
+- [ ] `tests/unit/builder/test_fleet_composition.py` (~4 occurrences)
+- [ ] `tests/unit/ui/services/test_ship_factory.py` (~5 occurrences)
+
+**Entity tests (backward compat tests to REWRITE/REMOVE):**
+- [ ] `tests/unit/entities/test_ship_formation.py` (~lines 152-208) - These tests explicitly test the backward compat delegation. Update to test `ship.formation.*` directly instead.
+
+- [ ] Run tests: `pytest tests/ --testmon`
+**Notes:** This is the highest-volume task. Use search-and-replace carefully. The `in_formation` → `formation.active` mapping is the trickiest since it changes semantics.
+
+### Task 4.4: Remove Formation Delegation Properties from Ship [Simple]
 **File:** `game/simulation/entities/ship.py`
 **Tests:** `pytest tests/ -x`
-- [ ] Copy the `combat_engine` property from `ship_combat.py` into the Ship class body in `ship.py`
-- [ ] Ensure the lazy initialization pattern is preserved
-- [ ] Verify import: `from game.simulation.entities.ship_combat_engine import ShipCombatEngine` stays lazy (inside property)
-- [ ] Run tests: `pytest tests/ -x`
-**Notes:** The property must be moved BEFORE the mixin is removed.
-
-### Task 4.7: Remove ShipCombatMixin [Medium]
-**File:** `game/simulation/entities/ship_combat.py`, `game/simulation/entities/ship.py`
-**Tests:** `pytest tests/ -x`
-- [ ] In `ship.py`: Remove `ShipCombatMixin` from Ship's parent class list
-- [ ] In `ship.py`: Remove `from game.simulation.entities.ship_combat import ShipCombatMixin` import
-- [ ] Verify `ship_combat.py` can be deleted (no other imports from it)
-- [ ] Delete `game/simulation/entities/ship_combat.py` entirely
+- [ ] Remove `formation_master` property and setter (~lines 219-226)
+- [ ] Remove `formation_offset` property and setter (~lines 228-235)
+- [ ] Remove `formation_rotation_mode` property and setter (~lines 237-244)
+- [ ] Remove `formation_members` property and setter (~lines 246-253)
+- [ ] Remove `in_formation` property and setter (~lines 255-262)
+- [ ] Remove section comment (~line 216)
 - [ ] Run full test suite: `pytest tests/ -x`
-**Notes:** This is the culmination of Phase 4. Only do after all callers are updated.
+**Notes:** Only do this AFTER Tasks 4.1-4.3 are complete.
 
 ---
 
 ## Phase Completion Checklist
-When all tasks above are done:
 - [ ] All task checkboxes above are checked
 - [ ] Update status at top of this file to `Complete`
 - [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
-- [ ] `ship_combat.py` is deleted
-- [ ] No remaining `ShipCombatMixin` references in codebase
-- [ ] All callers use `ship.combat_engine.*` pattern
+- [ ] Update plan.md Current State to point to Phase 5
