@@ -33,22 +33,22 @@ def test_build_queue_screen_initializes(build_queue_screen):
 def test_load_designs_by_category(build_queue_screen):
     """Test that designs are filtered by vehicle type."""
     # Test complex category
-    complexes = build_queue_screen._load_designs_by_category("complex")
+    complexes = build_queue_screen.controller.load_designs_by_category("complex")
     assert len(complexes) > 0
     assert all(d.vehicle_type == "Planetary Complex" for d in complexes)
 
     # Test ship category
-    ships = build_queue_screen._load_designs_by_category("ship")
+    ships = build_queue_screen.controller.load_designs_by_category("ship")
     assert len(ships) > 0
     assert all(d.vehicle_type == "Ship" for d in ships)
 
     # Test satellite category
-    satellites = build_queue_screen._load_designs_by_category("satellite")
+    satellites = build_queue_screen.controller.load_designs_by_category("satellite")
     assert len(satellites) > 0
     assert all(d.vehicle_type == "Satellite" for d in satellites)
 
     # Test fighter category
-    fighters = build_queue_screen._load_designs_by_category("fighter")
+    fighters = build_queue_screen.controller.load_designs_by_category("fighter")
     assert len(fighters) > 0
     assert all(d.vehicle_type == "Fighter" for d in fighters)
 
@@ -56,19 +56,19 @@ def test_load_designs_by_category(build_queue_screen):
 def test_switch_category_filter(build_queue_screen):
     """Test that category buttons filter correctly."""
     # Start with complex category
-    assert build_queue_screen.selected_category == "complex"
+    assert build_queue_screen.controller.selected_category == "complex"
 
     # Switch to ship
-    build_queue_screen._set_category("ship")
-    assert build_queue_screen.selected_category == "ship"
+    build_queue_screen.controller.set_category("ship")
+    assert build_queue_screen.controller.selected_category == "ship"
 
     # Switch to satellite
-    build_queue_screen._set_category("satellite")
-    assert build_queue_screen.selected_category == "satellite"
+    build_queue_screen.controller.set_category("satellite")
+    assert build_queue_screen.controller.selected_category == "satellite"
 
     # Switch to fighter
-    build_queue_screen._set_category("fighter")
-    assert build_queue_screen.selected_category == "fighter"
+    build_queue_screen.controller.set_category("fighter")
+    assert build_queue_screen.controller.selected_category == "fighter"
 
 
 def test_add_to_queue(build_queue_screen):
@@ -77,10 +77,10 @@ def test_add_to_queue(build_queue_screen):
 
     # Mock design selection
     build_queue_screen.drag_handler.selected_design = "mining_complex_mk1"
-    build_queue_screen.selected_category = "complex"
+    build_queue_screen.controller.selected_category = "complex"
 
     # Add to queue
-    build_queue_screen._add_to_queue("mining_complex_mk1", 5)
+    build_queue_screen.controller.add_to_queue("mining_complex_mk1", 5)
 
     # Verify queue updated
     assert len(build_queue_screen.planet.construction_queue) == initial_queue_length + 1
@@ -204,10 +204,10 @@ def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
     """Test that new items default to 1 turn build time."""
     # Mock design selection
     build_queue_screen.drag_handler.selected_design = "test_design"
-    build_queue_screen.selected_category = "complex"
+    build_queue_screen.controller.selected_category = "complex"
 
     # Add to queue without specifying turns (should use default)
-    build_queue_screen._add_to_queue("test_design")
+    build_queue_screen.controller.add_to_queue("test_design")
 
     # Verify item was added with 1 turn
     item = build_queue_screen.planet.construction_queue[-1]
@@ -259,8 +259,8 @@ def test_add_ship_to_queue_with_shipyard(build_queue_screen):
 
     # Try to add a ship
     initial_queue_len = len(build_queue_screen.planet.construction_queue)
-    build_queue_screen._set_category("ship")
-    build_queue_screen._add_to_queue("test_frigate", turns=1)
+    build_queue_screen.controller.set_category("ship")
+    build_queue_screen.controller.add_to_queue("test_frigate", turns=1)
 
     # Verify ship was added
     assert len(build_queue_screen.planet.construction_queue) == initial_queue_len + 1, \
@@ -277,8 +277,8 @@ def test_add_ship_fails_without_shipyard(build_queue_screen):
 
     # Try to add a ship
     initial_queue_len = len(build_queue_screen.planet.construction_queue)
-    build_queue_screen._set_category("ship")
-    build_queue_screen._add_to_queue("test_frigate", turns=1)
+    build_queue_screen.controller.set_category("ship")
+    build_queue_screen.controller.add_to_queue("test_frigate", turns=1)
 
     # Verify ship was NOT added
     assert len(build_queue_screen.planet.construction_queue) == initial_queue_len, \

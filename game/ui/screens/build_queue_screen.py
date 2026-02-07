@@ -16,6 +16,7 @@ from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.panels.design_report_panel import DesignReportPanel
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler
+from game.ui.panels.build_queue_controller import BuildQueueController
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
@@ -53,7 +54,6 @@ class BuildQueueScreen:
         self.session = session
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
-        self.selected_category = "complex"
         self.queue_items = []  # List of UI elements for queue display
         self.selected_queue_index = None  # Currently selected item in queue
 
@@ -63,15 +63,6 @@ class BuildQueueScreen:
 
         # PROJ-63: Portrait loading extracted to dedicated class
         self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
-
-        # PROJ-63: Drag-drop handling extracted to dedicated class
-        self.drag_handler = BuildQueueDragHandler(
-            portrait_loader=self.portrait_loader,
-            design_library=self.design_library,
-            on_add_to_queue=self._add_to_queue,
-            on_refresh_queue=self._refresh_queue_display,
-            on_refresh_design_report=self._refresh_design_report
-        )
 
         # Validate required attributes
         if not hasattr(planet, 'owner_id'):
@@ -96,6 +87,24 @@ class BuildQueueScreen:
         self._create_build_queue_panel()
         self._create_filter_panel()
         self._create_bottom_bar()
+
+        # PROJ-63: Controller for queue business logic (after design_report is created)
+        self.controller = BuildQueueController(
+            planet=self.planet,
+            design_library=self.design_library,
+            design_loader=self.design_loader,
+            design_report=self.design_report,
+            on_queue_changed=self._refresh_queue_display
+        )
+
+        # PROJ-63: Drag-drop handling extracted to dedicated class
+        self.drag_handler = BuildQueueDragHandler(
+            portrait_loader=self.portrait_loader,
+            design_library=self.design_library,
+            on_add_to_queue=self.controller.add_to_queue,
+            on_refresh_queue=self._refresh_queue_display,
+            on_refresh_design_report=self.controller.refresh_design_report
+        )
 
         # Load initial designs
         self._refresh_items_list()
@@ -322,40 +331,6 @@ class BuildQueueScreen:
             container=self.bottom_bar
         )
 
-    def _load_designs_by_category(self, category: str):
-        """
-        Load designs filtered by vehicle type.
-
-        Args:
-            category: One of "complex", "ship", "satellite", "fighter"
-
-        Returns:
-            List of design objects matching the category
-        """
-        from game.core.logger import log_debug
-
-        all_designs = self.design_library.scan_designs()
-        log_debug(f"BuildQueue: Scanned {len(all_designs)} total designs from {self.design_library.designs_folder}")
-
-        type_map = {
-            "complex": "Planetary Complex",
-            "ship": "Ship",
-            "satellite": "Satellite",
-            "fighter": "Fighter"
-        }
-
-        target_type = type_map.get(category, "Ship")
-        log_debug(f"BuildQueue: Filtering for category '{category}' (vehicle_type='{target_type}')")
-
-        filtered = [d for d in all_designs if d.vehicle_type == target_type]
-        log_debug(f"BuildQueue: Found {len(filtered)} designs matching category '{category}'")
-
-        if filtered:
-            for d in filtered:
-                log_debug(f"  - {d.name} (vehicle_type={d.vehicle_type}, design_id={d.design_id})")
-
-        return filtered
-
     def _refresh_items_list(self):
         """Refresh the items list based on selected category."""
         # Clear existing items - kill all children
@@ -364,8 +339,8 @@ class BuildQueueScreen:
         for element in elements_to_kill:
             element.kill()
 
-        # Load designs for current category
-        designs = self._load_designs_by_category(self.selected_category)
+        # Load designs for current category via controller
+        designs = self.controller.load_designs_by_category(self.controller.selected_category)
 
         # Create UI elements for each design with portrait icons
         y_offset = 0
@@ -478,98 +453,6 @@ class BuildQueueScreen:
                 container=self.queue_scrollable
             )
 
-    def _set_category(self, category: str):
-        """Set the active category filter."""
-        self.selected_category = category
-        self._refresh_items_list()
-        log_info(f"Build queue category changed to: {category}")
-
-    def _add_to_queue(self, design_id: str, turns: int = 1, category: str = None, index: int = None):
-        """
-        Add a design to the planet's construction queue.
-
-        Args:
-            design_id: ID of the design to build
-            turns: Number of turns to complete (default 5)
-            category: Design category (uses self.selected_category if None)
-            index: Optional insertion index
-        """
-        cat = category if category is not None else self.selected_category
-
-        # DIAGNOSTIC LOGGING for BUG-24 investigation
-        log_info(f"_add_to_queue called: design_id={design_id}, category={cat}")
-        log_info(f"  planet.has_space_shipyard = {self.planet.has_space_shipyard}")
-        log_info(f"  planet.facilities count = {len(self.planet.facilities)}")
-        for i, f in enumerate(self.planet.facilities):
-            log_info(f"    [{i}] {f.name} (operational={f.is_operational})")
-            log_info(f"        design_data layers: {list(f.design_data.get('layers', {}).keys())}")
-            # Show component IDs in each layer
-            for layer_name, layer_data in f.design_data.get('layers', {}).items():
-                if isinstance(layer_data, list):
-                    comp_ids = [c.get('id', 'unknown') for c in layer_data if isinstance(c, dict)]
-                    log_info(f"        {layer_name} components: {comp_ids}")
-
-        # Validate shipyard requirement for ships
-        if cat == "ship" and not self.planet.has_space_shipyard:
-            log_warning("Cannot build ships without a space shipyard")
-            return
-
-        # Prepare queue item
-        queue_item = {
-            "design_id": design_id,
-            "type": cat,
-            "turns_remaining": turns
-        }
-
-        # Add to queue
-        if index is not None:
-            self.planet.construction_queue.insert(index, queue_item)
-            log_info(f"Inserted {design_id} into build queue at position {index}")
-        else:
-            self.planet.construction_queue.append(queue_item)
-            log_info(f"Added {design_id} to build queue ({turns} turns)")
-
-        # Refresh display
-        self._refresh_queue_display()
-
-    def _refresh_design_report(self, design_id: str):
-        """
-        Update design report panel with selected design.
-
-        Args:
-            design_id: Design ID to load and display
-        """
-        try:
-            # Load design data using DesignLibrary (strategy layer)
-            design_data = self.design_library.load_design_data(design_id)
-
-            if design_data is None:
-                log_warning(f"Could not load design {design_id}: Design not found")
-                self.design_report.show_placeholder()
-                return
-
-            # PROJ-40: Use injected design_loader instead of creating new instance
-            ship = self.design_loader.load_ship_from_design_data(
-                design_data,
-                center_x=1920 // 2,
-                center_y=1080 // 2
-            )
-
-            if ship is None:
-                log_warning(f"Could not create ship from design {design_id}")
-                self.design_report.show_placeholder()
-                return
-
-            # Update design report panel with ship data
-            self.design_report.update_design(ship)
-            log_debug(f"Design report updated: {ship.name}")
-
-        except Exception as e:
-            log_error(f"Error loading design {design_id}: {e}")
-            import traceback
-            log_error(traceback.format_exc())
-            self.design_report.show_placeholder()
-
     def _close(self):
         """Close the build queue screen."""
         # Kill the background panel - this cascades to all children
@@ -599,24 +482,28 @@ class BuildQueueScreen:
         self.manager.process_events(event)
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Category buttons
+            # Category buttons - delegate to controller
             if event.ui_element == self.btn_category_complex:
-                self._set_category("complex")
+                self.controller.set_category("complex")
+                self._refresh_items_list()
             elif event.ui_element == self.btn_category_ship:
-                self._set_category("ship")
+                self.controller.set_category("ship")
+                self._refresh_items_list()
             elif event.ui_element == self.btn_category_satellite:
-                self._set_category("satellite")
+                self.controller.set_category("satellite")
+                self._refresh_items_list()
             elif event.ui_element == self.btn_category_fighter:
-                self._set_category("fighter")
+                self.controller.set_category("fighter")
+                self._refresh_items_list()
 
             # Close button
             elif event.ui_element == self.btn_close:
                 self._close()
 
-            # Add to queue button
+            # Add to queue button - delegate to controller
             elif event.ui_element == self.btn_add_to_queue:
                 if self.drag_handler.selected_design:
-                    self._add_to_queue(self.drag_handler.selected_design, turns=1)
+                    self.controller.add_to_queue(self.drag_handler.selected_design, turns=1)
 
             # Remove selected from queue button
             elif event.ui_element == self.btn_remove_from_queue:
@@ -634,7 +521,7 @@ class BuildQueueScreen:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.drag_handler.handle_mouse_down(
                 event, self.items_scrollable, self.queue_items,
-                self.planet, self.selected_category
+                self.planet, self.controller.selected_category
             )
 
         # Handle Mouse Motion for drag threshold check
