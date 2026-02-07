@@ -88,6 +88,12 @@ class TestIProductionEngineInterface:
         assert hasattr(IProductionEngine, 'process_production')
         assert getattr(IProductionEngine.process_production, '__isabstractmethod__', False)
 
+    def test_iproduction_engine_has_process_fleet_production_method(self):
+        """IProductionEngine should define process_fleet_production abstract method (PROJ-67)."""
+        from game.strategy.interfaces.engines import IProductionEngine
+        assert hasattr(IProductionEngine, 'process_fleet_production')
+        assert getattr(IProductionEngine.process_fleet_production, '__isabstractmethod__', False)
+
 
 # =============================================================================
 # IOrderProcessor Interface Tests
@@ -220,6 +226,10 @@ class TestConcreteImplementations:
 
         class MockProductionEngine(IProductionEngine):
             def process_production(self, empires, galaxy=None, save_path=None):
+                pass
+
+            def process_fleet_production(self, empires, galaxy=None, save_path=None):
+                """PROJ-67: Fleet production processing."""
                 pass
 
         engine = MockProductionEngine()

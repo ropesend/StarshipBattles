@@ -114,13 +114,15 @@ class IProductionEngine(ABC):
     Abstract interface for production/construction processing.
 
     Implementations handle:
-    - Construction queue processing
+    - Construction queue processing for colonies
+    - Construction queue processing for fleets with space yards
     - Ship spawning
     - Complex spawning
 
     Example usage:
         engine = ProductionEngine()  # or MockProductionEngine for tests
         engine.process_production(empires, galaxy, save_path)
+        engine.process_fleet_production(empires, galaxy, save_path)
     """
 
     @abstractmethod
@@ -136,6 +138,25 @@ class IProductionEngine(ABC):
         Args:
             empires: List of Empire objects to process
             galaxy: Galaxy object for fleet spawning
+            save_path: Path to savegame folder for loading designs
+        """
+        pass
+
+    @abstractmethod
+    def process_fleet_production(
+        self,
+        empires: List,
+        galaxy: Any = None,
+        save_path: Optional[str] = None
+    ) -> None:
+        """
+        Process construction queues for all fleets with space yards.
+
+        PROJ-67 Phase 3: Fleet-based production processing.
+
+        Args:
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for complex spawning (planet proximity check)
             save_path: Path to savegame folder for loading designs
         """
         pass

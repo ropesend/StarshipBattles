@@ -214,3 +214,30 @@ class TestEndTurnOrders:
 
         assert result is False
         mock_fleet.pop_order.assert_called()
+
+
+# =============================================================================
+# Test: Fleet Production Processing (PROJ-67)
+# =============================================================================
+
+
+class TestFleetProductionProcessing:
+    """Tests for fleet production during turn processing."""
+
+    @patch.object(TurnEngine, '_process_tick')
+    @patch.object(TurnEngine, '_process_end_turn_orders')
+    def test_process_turn_includes_fleet_production(
+        self, mock_end_turn, mock_tick, turn_engine, mock_empire, mock_galaxy
+    ):
+        """process_turn calls fleet production phase after colony production."""
+        mock_empire.fleets = []
+        mock_empire.colonies = []
+
+        # Spy on the production engine's process_fleet_production method
+        with patch.object(
+            turn_engine.production_engine, 'process_fleet_production'
+        ) as mock_fleet_prod:
+            turn_engine.process_turn([mock_empire], mock_galaxy, "/fake/save")
+
+            # Fleet production should be called
+            mock_fleet_prod.assert_called_once_with([mock_empire], mock_galaxy, "/fake/save")

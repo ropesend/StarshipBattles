@@ -41,6 +41,7 @@ def mock_fleet():
     """Create a mock fleet with colony pod ship.
 
     PROJ-55: Ships now need colony pods to colonize specific planet types.
+    PROJ-67: Added construction_queue and is_building for fleet yards.
     """
     fleet = MagicMock(spec=Fleet)
     fleet.id = 1
@@ -49,6 +50,10 @@ def mock_fleet():
     fleet.speed = 10.0
     fleet.orders = []
     fleet.path = []
+    # PROJ-67: Fleet production attributes
+    fleet.construction_queue = []
+    fleet.is_building = False
+    fleet.has_space_shipyard = False
     # Use mock ShipInstance with colony pod design data (PROJ-55)
     mock_ship = MagicMock(spec=ShipInstance)
     mock_ship.name = "Colony Ship"

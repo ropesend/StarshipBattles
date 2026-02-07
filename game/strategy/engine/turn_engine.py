@@ -197,8 +197,11 @@ class TurnEngine:
             for fleet in list(empire.fleets):
                 self._process_end_turn_orders(fleet, empire, galaxy)
 
-        # 3. Production Phase
+        # 3. Production Phase (Colonies)
         self.process_production(empires, galaxy, save_path)
+
+        # 4. Fleet Production Phase (PROJ-67)
+        self.production_engine.process_fleet_production(empires, galaxy, save_path)
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
         """
