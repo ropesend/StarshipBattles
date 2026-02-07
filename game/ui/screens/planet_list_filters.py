@@ -170,3 +170,141 @@ def get_column_value(planet, col):
             return fmt.format(obj)
         return str(obj)
     return ""
+
+
+def compute_planet_ranges(all_planets):
+    """Compute min/max ranges for filter sliders from actual planet data.
+
+    Args:
+        all_planets: List of all planets to compute ranges from
+
+    Returns:
+        Dict with 'gravity', 'temp', 'mass' keys, each containing (min, max) tuple
+    """
+    m_earth = 5.97e24
+
+    # Default fallbacks if no planets exist
+    ranges = {
+        'gravity': (0.0, 10.0),
+        'temp': (0, 2000),
+        'mass': (0.0, 500.0)
+    }
+
+    if not all_planets:
+        return ranges
+
+    gravities = []
+    temps = []
+    masses = []
+
+    for p in all_planets:
+        # Gravity in g (Earth = 9.81 m/s^2)
+        if hasattr(p, 'surface_gravity'):
+            gravities.append(p.surface_gravity / 9.81)
+        # Temperature in Kelvin
+        if hasattr(p, 'surface_temperature'):
+            temps.append(p.surface_temperature)
+        # Mass in Earth masses
+        if hasattr(p, 'mass'):
+            masses.append(p.mass / m_earth)
+
+    # Compute ranges with small padding
+    if gravities:
+        g_min, g_max = min(gravities), max(gravities)
+        # Add 5% padding and round nicely
+        g_range = g_max - g_min if g_max > g_min else 1.0
+        ranges['gravity'] = (max(0.0, g_min - g_range * 0.05), g_max + g_range * 0.05)
+
+    if temps:
+        t_min, t_max = min(temps), max(temps)
+        t_range = t_max - t_min if t_max > t_min else 100
+        ranges['temp'] = (max(0, int(t_min - t_range * 0.05)), int(t_max + t_range * 0.05))
+
+    if masses:
+        m_min, m_max = min(masses), max(masses)
+        m_range = m_max - m_min if m_max > m_min else 1.0
+        ranges['mass'] = (max(0.0, m_min - m_range * 0.05), m_max + m_range * 0.05)
+
+    return ranges
+
+
+def get_system_name(planet):
+    """Get the system name for a planet.
+
+    Args:
+        planet: Planet object with optional _temp_system_ref
+
+    Returns:
+        System name string or "?" if not available
+    """
+    if hasattr(planet, '_temp_system_ref'):
+        return planet._temp_system_ref.name
+    return "?"
+
+
+def get_owner_name(planet, galaxy, empire):
+    """Get the owner name for a planet, with proper empire lookup.
+
+    Args:
+        planet: Planet object
+        galaxy: Galaxy object containing empires list
+        empire: Current player's empire for context
+
+    Returns:
+        Owner name string with star indicator for player-owned planets
+    """
+    if planet.owner_id is None:
+        return "— None —"
+
+    # Try to get empire name from galaxy's empires list
+    if galaxy and hasattr(galaxy, 'empires'):
+        for emp in galaxy.empires:
+            if emp.id == planet.owner_id:
+                # Add indicator if it's the player's empire
+                if planet.owner_id == empire.id:
+                    return f"★ {emp.name}"
+                return emp.name
+
+    # Fallback to simple labels
+    if planet.owner_id == empire.id:
+        return "★ Player"
+    return "Enemy"
+
+
+def get_mass_earth(planet):
+    """Get the mass of a planet in Earth masses.
+
+    Args:
+        planet: Planet object with mass attribute
+
+    Returns:
+        Formatted string with mass in Earth masses
+    """
+    m_earth = 5.97e24
+    return f"{planet.mass/m_earth:.2f}"
+
+
+def get_resource_str(planet, resource_name):
+    """Get formatted resource string for a planet.
+
+    Args:
+        planet: Planet object with resources dict
+        resource_name: Name of the resource to get
+
+    Returns:
+        Formatted string like "100k (Q80)" or "-" if no resource
+    """
+    if hasattr(planet, 'resources') and resource_name in planet.resources:
+        resource = planet.resources[resource_name]
+        quantity = resource['quantity']
+        # Format k/M
+        if quantity >= 1000000:
+            quantity_str = f"{quantity/1000000:.1f}M"
+        elif quantity >= 1000:
+            quantity_str = f"{quantity/1000:.0f}k"
+        else:
+            quantity_str = str(quantity)
+
+        quality = resource['quality']
+        return f"{quantity_str} (Q{quality:.0f})"
+    return "-"

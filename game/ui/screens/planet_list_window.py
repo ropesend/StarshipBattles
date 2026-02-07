@@ -8,9 +8,13 @@ from game.assets.asset_manager import AssetManager
 from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
-from game.ui.screens.planet_list_filters import gather_planets, filter_planets, sort_planets, get_column_value
+from game.ui.screens.planet_list_filters import (
+    gather_planets, filter_planets, sort_planets, get_column_value,
+    compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str
+)
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 from game.ui.screens.planet_list_sidebar import build_sidebar
+from game.ui.screens.planet_list_columns import ColumnManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetListWindow(UIWindow):
@@ -47,16 +51,12 @@ class PlanetListWindow(UIWindow):
         self.filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
 
         # Compute dynamic filter ranges from actual planet data
-        self._planet_ranges = self._compute_planet_ranges()
+        self._planet_ranges = compute_planet_ranges(self.all_planets)
         self.filter_ranges = {
             'gravity': [self._planet_ranges['gravity'][0], self._planet_ranges['gravity'][1]],
             'temp': [self._planet_ranges['temp'][0], self._planet_ranges['temp'][1]],
             'mass': [self._planet_ranges['mass'][0], self._planet_ranges['mass'][1]]
         }
-        
-        # Sort State - default sort by owner name as per BUG-23
-        self.sort_column_id = 'owner'
-        self.sort_descending = False
         
         # UI References (for reading values)
         self.ui_filters = {}
@@ -69,13 +69,14 @@ class PlanetListWindow(UIWindow):
 
         # Default Columns
         # ID, Width, Title, Attribute/Getter, Visible
+        # Note: owner column uses a lambda to capture self.galaxy/empire references
         self.columns = [
             {'id': 'icon', 'width': 50, 'title': '', 'type': 'image', 'visible': True},
             {'id': 'name', 'width': 150, 'title': 'Name', 'attr': 'name', 'visible': True},
             {'id': 'type', 'width': 100, 'title': 'Type', 'attr': 'planet_type.name', 'visible': True},
-            {'id': 'system', 'width': 120, 'title': 'System', 'func': self._get_system_name, 'visible': True},
-            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': self._get_owner_name, 'visible': True},
-            {'id': 'mass', 'width': 100, 'title': 'Mass (M_E)', 'func': self._get_mass_earth, 'visible': True},
+            {'id': 'system', 'width': 120, 'title': 'System', 'func': get_system_name, 'visible': True},
+            {'id': 'owner', 'width': 140, 'title': 'Owner', 'func': lambda p: get_owner_name(p, self.galaxy, self.empire), 'visible': True},
+            {'id': 'mass', 'width': 100, 'title': 'Mass (M_E)', 'func': get_mass_earth, 'visible': True},
             {'id': 'grav', 'width': 90, 'title': 'Grav (g)', 'func': lambda p: f"{p.surface_gravity/9.81:.2f}", 'visible': True},
             {'id': 'temp', 'width': 90, 'title': 'Temp (K)', 'attr': 'surface_temperature', 'fmt': "{:.0f}", 'visible': True},
             {'id': 'water', 'width': 90, 'title': 'Water %', 'attr': 'surface_water', 'fmt': "{:.0%}", 'visible': False},
@@ -89,7 +90,7 @@ class PlanetListWindow(UIWindow):
                 'id': f'res_{res}',
                 'width': 110,
                 'title': res,
-                'func': lambda p, r=res: self._get_resource_str(p, r),
+                'func': lambda p, r=res: get_resource_str(p, r),
                 'visible': False # hidden by default
             })
         
@@ -143,7 +144,12 @@ class PlanetListWindow(UIWindow):
             container=self.main_panel,
             anchors={'left': 'left', 'right': 'right', 'top': 'top'}
         )
-        
+
+        # Column Manager - handles column ordering, sorting, and header UI
+        self.column_mgr = ColumnManager(
+            self.columns, manager, self.header_container, self.header_height
+        )
+
         # Virtual List Viewport
         # We use a panel that clips its contents.
         self.list_view_rect = pygame.Rect(0, self.header_height, main_w - 20, rect.height - 50 - self.header_height)
@@ -174,192 +180,10 @@ class PlanetListWindow(UIWindow):
         self._last_filtered_count = -1
         
         # --- Initial Population ---
-        self._rebuild_headers()
+        self.column_mgr.rebuild_headers()
         self._rebuild_row_pool()
         self.refresh_list()
-        
-    def _get_system_name(self, planet):
-        if hasattr(planet, '_temp_system_ref'):
-            return planet._temp_system_ref.name
-        return "?"
 
-    def _get_owner_name(self, planet):
-        """Get the owner name for a planet, with proper empire lookup."""
-        if planet.owner_id is None:
-            return "— None —"
-
-        # Try to get empire name from galaxy's empires list
-        if hasattr(self, 'galaxy') and hasattr(self.galaxy, 'empires'):
-            for empire in self.galaxy.empires:
-                if empire.id == planet.owner_id:
-                    # Add indicator if it's the player's empire
-                    if planet.owner_id == self.empire.id:
-                        return f"★ {empire.name}"
-                    return empire.name
-
-        # Fallback to simple labels
-        if planet.owner_id == self.empire.id:
-            return "★ Player"
-        return "Enemy"
-        
-    def _get_mass_earth(self, planet):
-         m_earth = 5.97e24
-         return f"{planet.mass/m_earth:.2f}"
-
-    def _get_resource_str(self, planet, resource_name):
-        if hasattr(planet, 'resources') and resource_name in planet.resources:
-            resource = planet.resources[resource_name]
-            quantity = resource['quantity']
-            # Format k/M
-            if quantity >= 1000000:
-                quantity_str = f"{quantity/1000000:.1f}M"
-            elif quantity >= 1000:
-                quantity_str = f"{quantity/1000:.0f}k"
-            else:
-                quantity_str = str(quantity)
-
-            quality = resource['quality']
-            return f"{quantity_str} (Q{quality:.0f})"
-        return "-"
-
-    def _compute_planet_ranges(self):
-        """Compute min/max ranges for filter sliders from actual planet data."""
-        m_earth = 5.97e24
-
-        # Default fallbacks if no planets exist
-        ranges = {
-            'gravity': (0.0, 10.0),
-            'temp': (0, 2000),
-            'mass': (0.0, 500.0)
-        }
-
-        if not self.all_planets:
-            return ranges
-
-        gravities = []
-        temps = []
-        masses = []
-
-        for p in self.all_planets:
-            # Gravity in g (Earth = 9.81 m/s^2)
-            if hasattr(p, 'surface_gravity'):
-                gravities.append(p.surface_gravity / 9.81)
-            # Temperature in Kelvin
-            if hasattr(p, 'surface_temperature'):
-                temps.append(p.surface_temperature)
-            # Mass in Earth masses
-            if hasattr(p, 'mass'):
-                masses.append(p.mass / m_earth)
-
-        # Compute ranges with small padding
-        if gravities:
-            g_min, g_max = min(gravities), max(gravities)
-            # Add 5% padding and round nicely
-            g_range = g_max - g_min if g_max > g_min else 1.0
-            ranges['gravity'] = (max(0.0, g_min - g_range * 0.05), g_max + g_range * 0.05)
-
-        if temps:
-            t_min, t_max = min(temps), max(temps)
-            t_range = t_max - t_min if t_max > t_min else 100
-            ranges['temp'] = (max(0, int(t_min - t_range * 0.05)), int(t_max + t_range * 0.05))
-
-        if masses:
-            m_min, m_max = min(masses), max(masses)
-            m_range = m_max - m_min if m_max > m_min else 1.0
-            ranges['mass'] = (max(0.0, m_min - m_range * 0.05), m_max + m_range * 0.05)
-
-        return ranges
-
-    def _rebuild_headers(self):
-        """Build header row based on current self.columns"""
-        # Clear existing headers
-        if hasattr(self, 'header_elements'):
-            for el in self.header_elements:
-                el.kill()
-        self.header_elements = []
-        
-        visible_cols = self._get_visible_columns()
-        
-        x_off = 0
-        for i, col in enumerate(visible_cols):
-            w = col['width']
-            
-            # Container for this header cell
-            # rect = pygame.Rect(x_off, 0, w, self.header_height)
-            
-            # Buttons: [<] [Title] [>]
-            # Size: 20px for arrows?
-            arrow_w = 20
-            title_w = w - (arrow_w * 2)
-            
-            # Left Arrow
-            if i > 0: # Can move left
-                btn_l = UIButton(
-                    relative_rect=pygame.Rect(x_off, 0, arrow_w, self.header_height),
-                    text="<",
-                    manager=self.ui_manager,
-                    container=self.header_container
-                )
-                self.header_elements.append(btn_l)
-                # Store index and direction in object or dynamic map?
-                btn_l.col_ref = col
-                btn_l.direction = -1
-            
-            # Title (Clickable for Sorting)
-            # visual indicator
-            t_str = col['title']
-            if self.sort_column_id == col['id']:
-                t_str += " v" if self.sort_descending else " ^"
-                
-            btn_title = UIButton(
-                relative_rect=pygame.Rect(x_off + arrow_w, 0, title_w, self.header_height),
-                text=t_str,
-                manager=self.ui_manager,
-                container=self.header_container
-            )
-            self.header_elements.append(btn_title)
-            btn_title.sort_col_ref = col
-            
-            # Right Arrow
-            if i < len(visible_cols) - 1: # Can move right
-                btn_r = UIButton(
-                    relative_rect=pygame.Rect(x_off + w - arrow_w, 0, arrow_w, self.header_height),
-                    text=">",
-                    manager=self.ui_manager,
-                    container=self.header_container
-                )
-                self.header_elements.append(btn_r)
-                btn_r.col_ref = col
-                btn_r.direction = 1
-            
-            x_off += w
-            
-    def _swap_columns(self, col_ref, direction):
-        """Swap col_ref (dict) with its visual neighbor."""
-        # Find index in MAIN list
-        try:
-            main_idx = self.columns.index(col_ref)
-        except ValueError:
-            return
-
-        visible_cols = self._get_visible_columns()
-        try:
-            vis_idx = visible_cols.index(col_ref)
-        except ValueError:
-            return
-            
-        target_vis_idx = vis_idx + direction
-        if 0 <= target_vis_idx < len(visible_cols):
-            target_col = visible_cols[target_vis_idx]
-            target_main_idx = self.columns.index(target_col)
-            
-            # Swap in main list
-            self.columns[main_idx], self.columns[target_main_idx] = self.columns[target_main_idx], self.columns[main_idx]
-            self._rebuild_headers()
-            self._rebuild_row_pool() # Columns changed, need to rebuild widget structure
-            self.refresh_list()
-
-            
     def refresh_list(self):
         """Filter and update scrollbar."""
         # 1. Update Filter State from UI (lazy sync)
@@ -383,7 +207,7 @@ class PlanetListWindow(UIWindow):
         )
 
         # 1b. Sort using extracted function
-        sort_planets(self.filtered_planets, self.sort_column_id, self.sort_descending, self.columns)
+        sort_planets(self.filtered_planets, self.column_mgr.sort_column_id, self.column_mgr.sort_descending, self.columns)
                 
         # 2. Update Scrollbar
         total_h = len(self.filtered_planets) * self.row_height
@@ -418,7 +242,7 @@ class PlanetListWindow(UIWindow):
         visible_h = self.list_view_rect.height
         count = int(visible_h / self.row_height) + 2 # buffer
         
-        visible_cols = self._get_visible_columns()
+        visible_cols = self.column_mgr.get_visible_columns()
         
         for i in range(count):
             # Create container for row? Or just absolute widgets?
@@ -775,36 +599,25 @@ class PlanetListWindow(UIWindow):
         for col_id, btn in self.ui_filters.get('columns', {}).items():
             if btn.check_pressed():
                 col = btn.col_ref
-                col['visible'] = not col['visible']
-                
+                self.column_mgr.toggle_visibility(col['id'])
+
                 # Update text
                 t = f"[x] {col['title'] or col['id']}" if col['visible'] else f"[ ] {col['title'] or col['id']}"
                 btn.set_text(t)
-                
+
                 # Rebuild
-                self._rebuild_headers()
-                self._rebuild_row_pool() # Rebuild pool to match new col visibility
+                self.column_mgr.rebuild_headers()
+                self._rebuild_row_pool()  # Rebuild pool to match new col visibility
                 self.refresh_list()
-                
+
         # Handle Header Arrows and Sort Clicks
-        if hasattr(self, 'header_elements'):
-            for el in self.header_elements:
-                if isinstance(el, UIButton):
-                    if hasattr(el, 'col_ref') and el.check_pressed():
-                         # Move Column
-                        self._swap_columns(el.col_ref, el.direction)
-                    elif hasattr(el, 'sort_col_ref') and el.check_pressed():
-                        # Sort Column
-                        col = el.sort_col_ref
-                        if self.sort_column_id == col['id']:
-                            self.sort_descending = not self.sort_descending
-                        else:
-                            self.sort_column_id = col['id']
-                            self.sort_descending = False
-                        
-                        self._rebuild_headers() # To update arrows
-                        self.refresh_list()
-                        
+        sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
+        if columns_changed:
+            self._rebuild_row_pool()
+            self.refresh_list()
+        elif sort_changed:
+            self.refresh_list()
+
         # Handle Presets
         # Lazy init tracker
         if not hasattr(self, 'last_preset_selection'):
@@ -849,13 +662,9 @@ class PlanetListWindow(UIWindow):
             state, self.columns, self.txt_name_filter,
             self.filter_types, self.ui_filters
         )
-        self._rebuild_headers()
+        self.column_mgr.rebuild_headers()
         self._rebuild_row_pool()
         self.refresh_list()
-            
-    def _get_visible_columns(self):
-        """Return list of currently visible columns."""
-        return [c for c in self.columns if c.get('visible', True)]
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the planet list."""
@@ -929,6 +738,10 @@ class PlanetListWindow(UIWindow):
         self.selected_planet = planet
 
     def kill(self):
+        # Clean up column manager
+        if hasattr(self, 'column_mgr'):
+            self.column_mgr.kill()
+
         # Clean up planet detail panel (PROJ-54)
         if self.planet_detail_panel:
             self.planet_detail_panel.kill()
