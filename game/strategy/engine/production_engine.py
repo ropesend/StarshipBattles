@@ -206,7 +206,17 @@ class ProductionEngine:
                 vehicle_type = item.get("type", "ship")
                 design_id = item["design_id"]
 
-                # Decrement turns
+                # PROJ-67 Phase 6: Complex items require fleet to be at planet
+                if vehicle_type == "complex":
+                    if galaxy is None:
+                        log_info(f"Fleet {fleet.id} complex production paused: no galaxy")
+                        continue
+                    planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
+                    if not planets_at_hex:
+                        log_info(f"Fleet {fleet.id} complex production paused: not at planet")
+                        continue  # Don't decrement turns - complex paused
+
+                # Decrement turns (only if we got here - passed all checks)
                 item["turns_remaining"] -= 1
                 turns_remaining = item["turns_remaining"]
 

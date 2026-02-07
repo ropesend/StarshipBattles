@@ -205,8 +205,8 @@ class TestFleetComplexSpawning:
         # Queue should be empty
         assert len(fleet.construction_queue) == 0
 
-    def test_complex_spawn_fails_gracefully_when_fleet_not_at_planet(self):
-        """Complex spawn should fail gracefully when fleet is not at planet hex."""
+    def test_complex_paused_when_fleet_not_at_planet(self):
+        """Complex production pauses when fleet is not at planet hex (PROJ-67 Phase 6)."""
         engine = ProductionEngine()
 
         fleet = Fleet(1, 0, HexCoord(5, 5))
@@ -224,18 +224,13 @@ class TestFleetComplexSpawning:
             empire.id = 0
             empire.fleets = [fleet]
 
-            mock_design = {"name": "Factory", "layers": {}}
+            # Should not raise, just pause production
+            engine.process_fleet_production([empire], mock_galaxy, "/fake/save/path")
 
-            with patch('game.strategy.engine.production_engine.DesignLibrary') as MockLib:
-                mock_lib_instance = MagicMock()
-                mock_lib_instance.load_design_data.return_value = mock_design
-                MockLib.return_value = mock_lib_instance
-
-                # Should not raise, just log warning
-                engine.process_fleet_production([empire], mock_galaxy, "/fake/save/path")
-
-        # Queue item should still be removed (failed spawn)
-        assert len(fleet.construction_queue) == 0
+        # Queue item should still be in queue (paused, not removed)
+        assert len(fleet.construction_queue) == 1
+        # Turns should not have been decremented
+        assert fleet.construction_queue[0]["turns_remaining"] == 1
 
 
 class TestFleetProductionEdgeCases:
@@ -317,3 +312,127 @@ class TestFleetProductionEdgeCases:
             engine.process_fleet_production([empire], None, None)
 
         assert fleet.construction_queue[0]["turns_remaining"] == 1
+
+    def test_production_resumes_when_new_yard_ship_joins_fleet(self):
+        """Production resumes when a new yard ship joins the fleet."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {"design_id": "destroyer_1", "type": "ship", "turns_remaining": 5}
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        empire = MagicMock()
+        empire.id = 0
+        empire.fleets = [fleet]
+
+        # First turn: no shipyard - production paused
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: False)):
+            engine.process_fleet_production([empire], None, None)
+            assert fleet.construction_queue[0]["turns_remaining"] == 5  # Not decremented
+
+        # Second turn: yard ship joined - production resumes
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            engine.process_fleet_production([empire], None, None)
+            assert fleet.construction_queue[0]["turns_remaining"] == 4  # Decremented
+
+
+class TestComplexPauseWhenFleetNotAtPlanet:
+    """Tests for complex production pausing when fleet moves away from planet (PROJ-67 Phase 6)."""
+
+    def test_complex_pauses_when_fleet_not_at_planet(self):
+        """Complex production pauses when fleet is not at a planet hex."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {"design_id": "factory_1", "type": "complex", "turns_remaining": 5}
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        # Galaxy with no planet at fleet's location
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            empire = MagicMock()
+            empire.id = 0
+            empire.fleets = [fleet]
+
+            engine.process_fleet_production([empire], mock_galaxy, None)
+
+        # Turns should NOT be decremented
+        assert fleet.construction_queue[0]["turns_remaining"] == 5
+
+    def test_ship_items_continue_even_when_not_at_planet(self):
+        """Ship production continues even when fleet is not at a planet."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {"design_id": "destroyer_1", "type": "ship", "turns_remaining": 5}
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        # Galaxy with no planet at fleet's location
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            empire = MagicMock()
+            empire.id = 0
+            empire.fleets = [fleet]
+
+            engine.process_fleet_production([empire], mock_galaxy, None)
+
+        # Turns SHOULD be decremented for ships
+        assert fleet.construction_queue[0]["turns_remaining"] == 4
+
+    def test_complex_resumes_when_fleet_returns_to_planet(self):
+        """Complex production resumes when fleet returns to planet hex."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {"design_id": "factory_1", "type": "complex", "turns_remaining": 5}
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        mock_galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 0
+        empire.fleets = [fleet]
+
+        # First turn: not at planet - paused
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            engine.process_fleet_production([empire], mock_galaxy, None)
+            assert fleet.construction_queue[0]["turns_remaining"] == 5
+
+        # Second turn: at planet - resumes
+        mock_planet = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            engine.process_fleet_production([empire], mock_galaxy, None)
+            assert fleet.construction_queue[0]["turns_remaining"] == 4
+
+    def test_complex_pauses_when_no_galaxy_provided(self):
+        """Complex production pauses when no galaxy is provided."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {"design_id": "factory_1", "type": "complex", "turns_remaining": 5}
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            empire = MagicMock()
+            empire.id = 0
+            empire.fleets = [fleet]
+
+            engine.process_fleet_production([empire], None, None)  # No galaxy
+
+        # Turns should NOT be decremented
+        assert fleet.construction_queue[0]["turns_remaining"] == 5

@@ -346,5 +346,83 @@ class TestCombatResolution:
             assert result == fleet1
 
 
+class TestBuildingFleetsCombat:
+    """Tests for building fleets participating in combat (PROJ-67 Phase 6)."""
+
+    def test_building_fleet_participates_in_combat(self):
+        """Building fleet can still be attacked (no special protection)."""
+        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+
+        engine = ConflictResolutionEngine()
+
+        # Building fleet (has BUILD order)
+        building_fleet = MagicMock(spec=Fleet)
+        building_fleet.location = HexCoord(5, 5)
+        building_fleet.owner_id = 0
+        building_fleet.id = 1
+        building_fleet.orders = [FleetOrder(OrderType.BUILD)]
+        building_fleet.construction_queue = [{"design_id": "ship", "turns_remaining": 5}]
+
+        # Attacker fleet
+        attacker_fleet = MagicMock(spec=Fleet)
+        attacker_fleet.location = HexCoord(5, 5)  # Same location
+        attacker_fleet.owner_id = 1
+        attacker_fleet.id = 2
+
+        empire1 = MagicMock()
+        empire1.id = 0
+        empire1.fleets = [building_fleet]
+
+        empire2 = MagicMock()
+        empire2.id = 1
+        empire2.fleets = [attacker_fleet]
+
+        # Conflict detection should still work
+        with patch.object(engine, '_resolve_combat_at_hex') as mock_resolve:
+            engine._resolve_conflicts([empire1, empire2])
+
+            # Combat should be triggered despite BUILD order
+            mock_resolve.assert_called_once()
+            call_args = mock_resolve.call_args[0][0]
+            fleet_ids = [f.id for _, f in call_args]
+            assert 1 in fleet_ids  # Building fleet participates
+            assert 2 in fleet_ids  # Attacker participates
+
+    def test_building_fleet_in_hex_collision_detection(self):
+        """Fleet with BUILD order is included in hex collision detection."""
+        from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
+        from game.strategy.data.fleet import OrderType
+
+        engine = ConflictResolutionEngine()
+
+        # Create building fleet
+        building_fleet = MagicMock()
+        building_fleet.location = HexCoord(10, 10)
+        building_fleet.owner_id = 0
+        building_fleet.id = "building_fleet"
+        building_fleet.orders = [MagicMock(type=OrderType.BUILD)]
+
+        # Enemy fleet at same location
+        enemy_fleet = MagicMock()
+        enemy_fleet.location = HexCoord(10, 10)
+        enemy_fleet.owner_id = 1
+        enemy_fleet.id = "enemy_fleet"
+
+        empire1 = MagicMock()
+        empire1.id = 0
+        empire1.fleets = [building_fleet]
+
+        empire2 = MagicMock()
+        empire2.id = 1
+        empire2.fleets = [enemy_fleet]
+
+        # Verify both fleets are mapped to the hex
+        with patch.object(engine, '_resolve_combat_at_hex') as mock_resolve:
+            engine._resolve_conflicts([empire1, empire2])
+
+            mock_resolve.assert_called_once()
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
