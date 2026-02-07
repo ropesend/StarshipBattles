@@ -104,7 +104,7 @@ class ShipSerializer:
             log_debug(f"ShipSerializer.to_dict completed successfully")
             return data
 
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: diagnostic logging before re-raise
             log_error(f"ShipSerializer.to_dict FAILED: {e}")
             import traceback
             log_error(traceback.format_exc())

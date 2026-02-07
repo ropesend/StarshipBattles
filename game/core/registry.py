@@ -42,6 +42,7 @@ __all__ = [
     'set_validator',
 ]
 from dataclasses import dataclass
+import json
 from typing import Dict, Any, Optional
 import threading
 
@@ -370,7 +371,7 @@ class RegistryManager:
                 from game.simulation.components.component import load_modifiers
                 load_modifiers(str(mod_path))
                 logger.info(f"RegistryManager: Loaded modifiers from {mod_path}")
-            except Exception as e:
+            except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
                 logger.error(f"RegistryManager: Failed to load modifiers: {e}")
 
         # Load components
@@ -380,7 +381,7 @@ class RegistryManager:
                 from game.simulation.components.component import load_components
                 load_components(str(comp_path))
                 logger.info(f"RegistryManager: Loaded components from {comp_path}")
-            except Exception as e:
+            except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
                 logger.error(f"RegistryManager: Failed to load components: {e}")
 
         # Load vehicle classes (check multiple possible names)
@@ -395,7 +396,7 @@ class RegistryManager:
                 else:
                     load_vehicle_classes(str(vclass_path))
                     logger.info(f"RegistryManager: Loaded classes from {vclass_path}")
-            except Exception as e:
+            except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
                 logger.error(f"RegistryManager: Failed to load vehicle classes: {e}")
 
         return True

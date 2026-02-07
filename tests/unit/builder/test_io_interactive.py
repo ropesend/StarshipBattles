@@ -74,7 +74,8 @@ class TestShipIOInteractive:
     def test_load_ship_corrupt(self, mock_makedirs, mock_load_json_required, mock_askopen):
         """Test loading a corrupt JSON file."""
         mock_askopen.return_value = "/path/to/corrupt.json"
-        mock_load_json_required.side_effect = Exception("JSON decode error")
+        import json
+        mock_load_json_required.side_effect = json.JSONDecodeError("JSON decode error", "", 0)
 
         ship, message = ShipIO.load_ship(800, 600)
 

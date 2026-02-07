@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-63 Audit Cycle 1
-**Current Status:** Audit PASSED, awaiting user verification
-**Current Project:** PROJ-63
-**Current Phase:** Audit Complete
-**Test Status:** 6246 passed
+**Last Completed:** PROJ-64 Phase 1
+**Current Status:** Phase 1 complete, ready for Phase 2
+**Current Project:** PROJ-64
+**Current Phase:** Phase 2
+**Test Status:** 6244 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-63 Phase 4 complete: Final verification
-- PROJ-63 Audit cycle 1: PASSED (no issues found)
-- build_queue_screen.py: 945→603 lines (36% reduction, -342 lines)
-- Extracted: portraits (166), drag_handler (302), controller (187 lines)
-- Next: User verification, then move to PROJ-64
+- PROJ-64 Phase 1 complete: Core & Simulation Layer exception narrowing
+- 15 `except Exception` sites processed across 10 files
+- 11 catches narrowed to specific types
+- 4 intentional broad catches documented with inline comments
+- 2 tests updated to use specific exception types (ValueError, json.JSONDecodeError)
+- 1 pre-existing flaky test (test_stats_render::test_logistics_section) - unrelated to this project
+- Next: Phase 2 (Strategy Layer - 12 sites across 8 files)
 
 ---
 
@@ -68,8 +70,8 @@
 
 ---
 
-- [ ] **PROJ-64: Narrow Exception Handling**
-  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-64: Narrow Exception Handling**
+  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-64/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-64/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -114,6 +116,7 @@
 | 2026-02-07 | PROJ-63 | Phase 3 | Complete | 6246 passed | pending | Extracted BuildQueueController, -114 lines |
 | 2026-02-07 | PROJ-63 | Phase 4 | Complete | 6246 passed | pending | Final verification complete |
 | 2026-02-07 | PROJ-63 | Audit 1 | PASSED | 6246 passed | pending | No issues found, 36% reduction achieved |
+| 2026-02-07 | PROJ-64 | Phase 1 | Complete | 6244 passed | pending | 15 sites in core/sim layer - 11 narrowed, 4 documented |
 
 ---
 

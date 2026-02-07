@@ -564,7 +564,7 @@ def load_components_data(
                 # Schema/data issues - log and continue (collect errors)
                 log_error(f"Component '{comp_id}': invalid data - {e}")
                 errors.append(comp_id)
-            except Exception as e:
+            except (AttributeError, ImportError) as e:
                 # Unexpected error - log with full context
                 log_error(f"Component '{comp_id}': unexpected error - {type(e).__name__}: {e}")
                 errors.append(comp_id)
@@ -580,7 +580,7 @@ def load_components_data(
     except json.JSONDecodeError as e:
         log_error(f"Invalid JSON in components file: {e}")
         return {}
-    except Exception as e:
+    except (FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
         log_error(f"loading/parsing components json: {type(e).__name__}: {e}")
         return {}
 
@@ -673,7 +673,7 @@ def load_modifiers_data(file_path: str = "data/modifiers.json") -> dict:
     except json.JSONDecodeError as e:
         log_error(f"Invalid JSON in modifiers file: {e}")
         return {}
-    except Exception as e:
+    except (FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
         log_error(f"loading modifiers: {type(e).__name__}: {e}")
         return {}
 

@@ -113,7 +113,7 @@ class TestBattleControllerAddShipsFromState:
         controller.configure(basic_config)
 
         mock_state = Mock()
-        mock_state.to_ship.side_effect = Exception("Conversion failed")
+        mock_state.to_ship.side_effect = ValueError("Conversion failed")
 
         result = controller.add_ships_from_state([mock_state], team_id=0)
 

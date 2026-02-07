@@ -131,7 +131,7 @@ class ScreenshotManager:
             r.clipboard_append(text)
             r.update()  # Required to finalize clipboard
             r.destroy()
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: Tkinter clipboard is platform-dependent
             log_warning(f"Clipboard copy failed (Tkinter): {e}")
             # Fallback to Windows clip using subprocess (safer than os.system)
             if os.name == 'nt':
@@ -143,7 +143,7 @@ class ScreenshotManager:
                         input=text.strip().encode('utf-8'),
                         check=False
                     )
-                except Exception as clip_err:
+                except Exception as clip_err:  # Intentional broad catch: subprocess clipboard fallback, platform-dependent
                     log_warning(f"Clipboard copy failed (clip): {clip_err}")
 
     def capture_step(self, step_name, surface=None):

@@ -77,7 +77,7 @@ class SimulationDesignLoader:
             # Data validation errors
             log_error(f"SimulationDesignLoader: Invalid design data - {type(e).__name__}: {e}")
             return None
-        except Exception as e:
+        except (AttributeError, ImportError, OSError) as e:
             # Unexpected errors - log with full context
             log_error(f"SimulationDesignLoader: Failed to create Ship from data - {type(e).__name__}: {e}")
             return None
@@ -128,7 +128,7 @@ class SimulationDesignLoader:
             # File I/O errors
             log_error(f"SimulationDesignLoader: I/O error loading {file_path}: {e}")
             return None, f"Failed to load design: {str(e)}"
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             # Unexpected errors - log with full context
             log_error(f"SimulationDesignLoader: Failed to load design from {file_path} - {type(e).__name__}: {e}")
             return None, f"Failed to load design: {str(e)}"

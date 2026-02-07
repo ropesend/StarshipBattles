@@ -17,7 +17,7 @@ except tkinter.TclError as e:
 except RuntimeError as e:
     log_warning(f"Tkinter runtime error, file dialogs will be unavailable: {e}")
     tk_root = None
-except Exception as e:
+except Exception as e:  # Intentional broad catch: Tkinter init is platform-dependent
     log_warning(f"Tkinter initialization failed, file dialogs will be unavailable: {e}")
     tk_root = None
 
@@ -66,7 +66,7 @@ class ShipIO:
         except (TypeError, ValueError) as e:
             log_error(f"ShipIO: Serialization error saving ship: {e}")
             return False, "Save failed: Invalid ship data"
-        except Exception as e:
+        except (OSError, PermissionError) as e:
             log_error(f"ShipIO: Unexpected error saving ship: {e}")
             return False, f"Save failed: {str(e)}"
 
@@ -113,6 +113,6 @@ class ShipIO:
         except OSError as e:
             log_error(f"ShipIO: OS error loading ship: {e}")
             return None, f"Load failed: {str(e)}"
-        except Exception as e:
+        except (OSError, PermissionError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             log_error(f"ShipIO: Unexpected error loading ship: {e}")
             return None, f"Load failed: {str(e)}"

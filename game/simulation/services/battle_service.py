@@ -73,7 +73,7 @@ class BattleService:
                 engine=self._engine
             )
 
-        except Exception as e:
+        except (TypeError, ValueError, AttributeError) as e:
             log_error(f"Failed to create battle: {e}")
             return BattleResult(
                 success=False,

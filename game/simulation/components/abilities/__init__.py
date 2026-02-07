@@ -96,7 +96,7 @@ def create_ability(name: str, component, data: Any) -> Optional[Ability]:
             # passed as 'data'. Constructor must handle it, or we normalize here.
             # Our constructors above handle `isinstance(data, (int, float))` checks.
             return ABILITY_REGISTRY[name](component, data)
-        except Exception as e:
+        except (TypeError, ValueError, KeyError, AttributeError) as e:
             log_warning(f"Failed to create ability '{name}': {e}")
             return None
     return None
