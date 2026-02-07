@@ -59,6 +59,7 @@ from game.strategy.generation.placement_strategies import (
 )
 from game.strategy.generation.density.density_map import DensityMap
 from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
+from game.strategy.data.planet import SpeciesPopulation
 
 class GameSession:
     """
@@ -211,6 +212,17 @@ class GameSession:
                     # Assign first planet as home colony
                     home_planet = home_sys.planets[0]
                     empire.add_colony(home_planet)
+
+                    # Seed initial population if empire has race_config
+                    if empire.race_config is not None:
+                        initial_pop = SpeciesPopulation(
+                            race_id=empire.race_config.race_id,
+                            count=10000,  # 10 million people
+                            happiness=0.7
+                        )
+                        home_planet.populations.append(initial_pop)
+                        log_info(f"GameSession: Seeded {initial_pop.count} population on {home_planet.name}")
+
                     log_info(f"GameSession: Empire '{empire.name}' home at system {home_indices[i]}")
 
     def process_turn(self):

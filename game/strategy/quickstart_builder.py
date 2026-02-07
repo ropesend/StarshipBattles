@@ -96,7 +96,8 @@ class QuickstartBuilder:
                 is_human=True,
                 race_id=race.race_id,
                 flag_id=race.flag_id,
-                portrait_id=race.portrait_id
+                portrait_id=race.portrait_id,
+                race_config=race
             )
         else:
             # Fallback if fixture not found
@@ -153,7 +154,8 @@ class QuickstartBuilder:
                 is_human=True,
                 race_id=race1.race_id,
                 flag_id=race1.flag_id,
-                portrait_id=race1.portrait_id
+                portrait_id=race1.portrait_id,
+                race_config=race1
             ))
         else:
             players.append(PlayerConfig(
@@ -173,7 +175,8 @@ class QuickstartBuilder:
                 is_human=True,
                 race_id=race2.race_id,
                 flag_id=race2.flag_id,
-                portrait_id=race2.portrait_id
+                portrait_id=race2.portrait_id,
+                race_config=race2
             ))
         else:
             players.append(PlayerConfig(
