@@ -1,20 +1,20 @@
 import pygame
 import pygame_gui.windows
 from game.core.constants import PLANET_RESOURCES
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIImage, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
-from game.assets.asset_manager import AssetManager
 from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import (
-    gather_planets, filter_planets, sort_planets, get_column_value,
+    gather_planets, filter_planets, sort_planets,
     compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str
 )
 from game.ui.screens.planet_list_presets import PresetManager, capture_planet_list_state, apply_planet_list_state
 from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.screens.planet_list_columns import ColumnManager
+from game.ui.screens.planet_list_renderer import VirtualListRenderer
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetListWindow(UIWindow):
@@ -169,19 +169,12 @@ class PlanetListWindow(UIWindow):
             anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
         )
         
-        # Row Pool
-        self.row_pool = [] # List of dicts: {'bg': panel, 'cols': [widgets]}
-        self.virtual_scroll_y = 0.0
-        
-        # Performance: Icon cache to avoid repeated smoothscale calls
-        self._icon_cache = {}
-        # Dirty tracking for row updates
-        self._last_scroll_pct = -1.0
-        self._last_filtered_count = -1
-        
+        # Virtual List Renderer - handles row pool and scrolling
+        self.renderer = VirtualListRenderer(self.list_panel, self.row_height, manager)
+
         # --- Initial Population ---
         self.column_mgr.rebuild_headers()
-        self._rebuild_row_pool()
+        self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
         self.refresh_list()
 
     def refresh_list(self):
@@ -224,157 +217,9 @@ class PlanetListWindow(UIWindow):
         self.scroll_bar.redraw_scrollbar()
         
         # 3. Update Visible Rows (force update by resetting dirty state)
-        self._last_scroll_pct = -1.0
-        self._update_visible_rows()
+        self.renderer.force_update()
+        self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
         
-    def _rebuild_row_pool(self):
-        """Create pool of reusable row widgets."""
-        # Clear existing
-        if hasattr(self, 'row_pool'):
-            for r in self.row_pool:
-                for w in r['widgets']:
-                    w['el'].kill()
-                if 'bg' in r: r['bg'].kill()
-        
-        self.row_pool = []
-        
-        # How many rows fit?
-        visible_h = self.list_view_rect.height
-        count = int(visible_h / self.row_height) + 2 # buffer
-        
-        visible_cols = self.column_mgr.get_visible_columns()
-        
-        for i in range(count):
-            # Create container for row? Or just absolute widgets?
-            # Absolute widgets for speed, but Panel makes background/click easier.
-            # Using Panel for row background
-            
-            # NOTE: We can't really set correct Y yet, so just 0
-            row_panel = UIPanel(
-                relative_rect=pygame.Rect(0, 0, self.list_view_rect.width, self.row_height),
-                manager=self.ui_manager,
-                container=self.list_panel,
-                object_id='#planet_list_row' # Style hook
-            )
-            # Remove panel border/bg usually
-            
-            widgets = []
-            x_off = 0
-            for col in visible_cols:
-                w = col['width']
-                rect = pygame.Rect(x_off, 0, w, self.row_height)
-                
-                # We need persistent widgets we can update.
-                # If it's an image, we use UIImage. If text, UILabel.
-                # Problem: 'icon' column switches between UIImage and Label("?") based on content.
-                # Solution: Create both, hide one? Or Just recreate that one slot?
-                # Optimization: Most planets have images.
-                
-                if col['id'] == 'icon':
-                    # Place holder image - use x_off for correct column position
-                    img = UIImage(relative_rect=pygame.Rect(x_off + 5, 5, 40, 40),
-                                  image_surface=pygame.Surface((40,40)),
-                                  manager=self.ui_manager,
-                                  container=row_panel)
-                    widgets.append({'type': 'image', 'el': img, 'col': col})
-                else:
-                    lbl = UILabel(rect, "", self.ui_manager, container=row_panel)
-                    widgets.append({'type': 'label', 'el': lbl, 'col': col})
-                
-                x_off += w
-            
-            self.row_pool.append({'bg': row_panel, 'widgets': widgets})
-            
-    def _update_visible_rows(self):
-        """Update content of row pool based on scroll position."""
-        # Dirty check: skip if nothing changed
-        current_pct = self.scroll_bar.start_percentage
-        current_count = len(self.filtered_planets)
-        
-        if (current_pct == self._last_scroll_pct and 
-            current_count == self._last_filtered_count):
-            return  # Nothing changed, skip update
-        
-        self._last_scroll_pct = current_pct
-        self._last_filtered_count = current_count
-        
-        # Use start_percentage for consistency with the percentage-based API
-        total_h = current_count * self.row_height
-        scroll_y = current_pct * total_h
-        start_index = int(scroll_y // self.row_height)
-        offset_y = scroll_y % self.row_height
-        
-        # Local refs for performance
-        filtered_planets = self.filtered_planets
-        icon_cache = self._icon_cache
-        
-        for i, row_data in enumerate(self.row_pool):
-            data_index = start_index + i
-
-            row_panel = row_data['bg']
-
-            if data_index < len(filtered_planets):
-                planet = filtered_planets[data_index]
-
-                # Store planet reference in row for selection tracking (PROJ-54)
-                row_data['planet'] = planet
-
-                y_pos = (i * self.row_height) - offset_y
-
-                # Make visible and set position
-                row_panel.show()
-                row_panel.set_relative_position((0, y_pos))
-                
-                # Update Content
-                for widget_data in row_data['widgets']:
-                    col = widget_data['col']
-                    el = widget_data['el']
-                    
-                    if widget_data['type'] == 'label':
-                        val = get_column_value(planet, col)
-                        el.set_text(val)
-                         
-                    elif widget_data['type'] == 'image':
-                        # Load 128px planet image directly for 40x40 icons (PROJ-54 Phase 11)
-                        # This is much more efficient than loading 512px and scaling down
-                        img = None
-                        if hasattr(planet, 'image_id') and planet.image_id:
-                            # Use cached icon if already loaded for this planet
-                            cache_key = f"icon_{planet.image_id}_{planet.image_rotation or 0}"
-
-                            if cache_key not in icon_cache:
-                                # Load 128px version directly from AssetManager
-                                am = AssetManager.instance()
-                                img = am.load_planet_image(planet.image_id, requested_size=128)
-
-                                if img and img != am.get_missing_texture():
-                                    # Apply rotation if specified
-                                    if hasattr(planet, 'image_rotation') and planet.image_rotation and planet.image_rotation != 0.0:
-                                        img = pygame.transform.rotate(img, planet.image_rotation)
-
-                                    # Scale to 40x40 and cache
-                                    icon_cache[cache_key] = pygame.transform.smoothscale(img, (40, 40))
-                                else:
-                                    # Image load failed - use blank
-                                    img = None
-
-                            if cache_key in icon_cache:
-                                el.set_image(icon_cache[cache_key])
-                            else:
-                                # Fallback: blank surface
-                                if '_blank_icon' not in icon_cache:
-                                    icon_cache['_blank_icon'] = pygame.Surface((40, 40))
-                                el.set_image(icon_cache['_blank_icon'])
-                        else:
-                            # No image_id - use blank surface
-                            if '_blank_icon' not in icon_cache:
-                                icon_cache['_blank_icon'] = pygame.Surface((40, 40))
-                            el.set_image(icon_cache['_blank_icon'])
-            else:
-                # Scrolled past end
-                row_panel.hide()
-                row_data['planet'] = None  # Clear planet reference (PROJ-54)
-            
     def process_event(self, event):
         handled = super().process_event(event)
 
@@ -407,51 +252,25 @@ class PlanetListWindow(UIWindow):
         # Note: Using MOUSEBUTTONUP because MOUSEBUTTONDOWN is consumed by parent UIWindow
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
             mouse_pos = event.pos
+            list_abs_rect = self.list_panel.get_abs_rect()
 
             # Debug logging if enabled
             if self._debug_next_click:
                 log_info(f"DEBUG: Mouse click at {mouse_pos}")
-                log_info(f"DEBUG: Window rect: {self.rect}, abs_rect: {self.get_abs_rect()}")
-                log_info(f"DEBUG: main_panel abs_rect: {self.main_panel.get_abs_rect()}")
-                log_info(f"DEBUG: list_panel abs_rect: {self.list_panel.get_abs_rect()}")
-                log_info(f"DEBUG: filtered_planets count: {len(self.filtered_planets)}")
-                log_info(f"DEBUG: row_height: {self.row_height}")
-                log_info(f"DEBUG: scroll_bar.start_percentage: {self.scroll_bar.start_percentage}")
+                log_info(f"DEBUG: list_panel abs_rect: {list_abs_rect}")
+                self._debug_next_click = False  # Reset debug mode
 
-            # Check if click is within the list panel area
-            list_abs_rect = self.list_panel.get_abs_rect()
-            if list_abs_rect.collidepoint(mouse_pos):
-                # Calculate which row was clicked based on scroll position
-                relative_y = mouse_pos[1] - list_abs_rect.top
+            # Use renderer to calculate clicked index
+            clicked_index = self.renderer.get_clicked_planet_index(
+                mouse_pos, list_abs_rect, self.scroll_bar, len(self.filtered_planets)
+            )
 
-                # Account for scroll offset
-                scroll_pct = self.scroll_bar.start_percentage
-                total_h = len(self.filtered_planets) * self.row_height
-                scroll_y = scroll_pct * total_h
-
-                # Calculate the data index of the clicked row
-                absolute_y = relative_y + scroll_y
-                clicked_index = int(absolute_y // self.row_height)
-
-                if self._debug_next_click:
-                    log_info(f"DEBUG: Click IS inside list_panel!")
-                    log_info(f"DEBUG: relative_y={relative_y}, scroll_y={scroll_y:.1f}")
-                    log_info(f"DEBUG: absolute_y={absolute_y:.1f}, clicked_index={clicked_index}")
-                    self._debug_next_click = False  # Reset debug mode
-
-                if 0 <= clicked_index < len(self.filtered_planets):
-                    planet = self.filtered_planets[clicked_index]
-                    log_info(f"DEBUG: Would select planet: {planet.name}")
-                    if planet != self.selected_planet:
-                        log_debug(f"Selecting planet: {planet.name}")
-                        self._on_planet_selected(planet)
-                    return True  # Consume the event
-            else:
-                if self._debug_next_click:
-                    log_info(f"DEBUG: Click is OUTSIDE list_panel bounds!")
-                    log_info(f"DEBUG: list_abs_rect: {list_abs_rect}")
-                    log_info(f"DEBUG: mouse_pos: {mouse_pos}")
-                    self._debug_next_click = False  # Reset debug mode
+            if clicked_index >= 0:
+                planet = self.filtered_planets[clicked_index]
+                if planet != self.selected_planet:
+                    log_debug(f"Selecting planet: {planet.name}")
+                    self._on_planet_selected(planet)
+                return True  # Consume the event
 
         if event.type == UI_TEXT_ENTRY_FINISHED:
             # Check if it matches any of our range text boxes
@@ -501,7 +320,7 @@ class PlanetListWindow(UIWindow):
                     new_pct = max(0.0, min(1.0 - self.scroll_bar.visible_percentage, new_pct))
                     # Apply using official method
                     self.scroll_bar.set_scroll_from_start_percentage(new_pct)
-                    self._update_visible_rows()
+                    self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
                 return True  # Consume event
 
         return handled
@@ -528,7 +347,7 @@ class PlanetListWindow(UIWindow):
             
         # Check Scrollbar
         if self.scroll_bar.check_has_moved_recently():
-             self._update_visible_rows()
+            self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
 
         # Future enhancement: Handle resize to update viewport/row count.
         # self.list_view_rect might need updating if window resizes.
@@ -607,13 +426,13 @@ class PlanetListWindow(UIWindow):
 
                 # Rebuild
                 self.column_mgr.rebuild_headers()
-                self._rebuild_row_pool()  # Rebuild pool to match new col visibility
+                self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())  # Rebuild pool to match new col visibility
                 self.refresh_list()
 
         # Handle Header Arrows and Sort Clicks
         sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
         if columns_changed:
-            self._rebuild_row_pool()
+            self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
             self.refresh_list()
         elif sort_changed:
             self.refresh_list()
@@ -663,7 +482,7 @@ class PlanetListWindow(UIWindow):
             self.filter_types, self.ui_filters
         )
         self.column_mgr.rebuild_headers()
-        self._rebuild_row_pool()
+        self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
         self.refresh_list()
 
     def _take_screenshot(self):
@@ -738,6 +557,10 @@ class PlanetListWindow(UIWindow):
         self.selected_planet = planet
 
     def kill(self):
+        # Clean up renderer
+        if hasattr(self, 'renderer'):
+            self.renderer.kill()
+
         # Clean up column manager
         if hasattr(self, 'column_mgr'):
             self.column_mgr.kill()
