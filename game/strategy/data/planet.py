@@ -29,6 +29,20 @@ class PlanetaryFacility:
     design_data: Dict[str, Any]  # Full complex design (from JSON)
     is_operational: bool = True
 
+
+@dataclass
+class SpeciesPopulation:
+    """
+    Represents a population of a single species on a planet.
+
+    Population is tracked in units of 1,000 people for manageable numbers.
+    Happiness affects growth rate and productivity.
+    """
+    race_id: str  # References RaceConfig.race_id
+    count: int = 0  # Population units (1 unit = 1,000 people)
+    happiness: float = 0.5  # 0.0 (miserable) to 1.0 (ecstatic)
+
+
 @dataclass
 class Planet:
     """
@@ -81,6 +95,9 @@ class Planet:
     # Planetary Facilities (built complexes)
     facilities: List['PlanetaryFacility'] = field(default_factory=list)
 
+    # Multi-species population tracking
+    populations: List['SpeciesPopulation'] = field(default_factory=list)
+
     # Unique identifier assigned by Galaxy registry (default -1 means unregistered)
     id: int = -1
 
@@ -106,6 +123,25 @@ class Planet:
     def total_pressure_atm(self) -> float:
         total_pa = sum(self.atmosphere.values())
         return total_pa / 101325.0
+
+    @property
+    def max_population(self) -> int:
+        """
+        Maximum population capacity based on surface area.
+
+        Formula: surface_area_m2 / 1_000_000 * 100 / 1000
+        - Convert m² to km² (divide by 1e6)
+        - Apply 100 pop per km² density
+        - Convert to units of 1000 people
+
+        Earth (~5.1e14 m²) → ~51 million units → ~51 billion people capacity.
+        """
+        return int(self.surface_area / 1_000_000 * 100 / 1000)
+
+    @property
+    def total_population(self) -> int:
+        """Total population across all species on this planet."""
+        return sum(p.count for p in self.populations)
 
     @property
     def has_space_shipyard(self) -> bool:
@@ -209,6 +245,13 @@ class Planet:
                     'is_operational': f.is_operational
                 } for f in self.facilities
             ],
+            'populations': [
+                {
+                    'race_id': p.race_id,
+                    'count': p.count,
+                    'happiness': p.happiness
+                } for p in self.populations
+            ],
             'image_id': self.image_id,
             'image_rotation': self.image_rotation
         }
@@ -239,6 +282,15 @@ class Planet:
             ) for f in data.get('facilities', [])
         ]
 
+        # Deserialize populations (default empty for backward compat)
+        populations = [
+            SpeciesPopulation(
+                race_id=p['race_id'],
+                count=p['count'],
+                happiness=p.get('happiness', 0.5)
+            ) for p in data.get('populations', [])
+        ]
+
         return cls(
             name=data['name'],
             location=location,
@@ -260,6 +312,7 @@ class Planet:
             construction_queue=data.get('construction_queue', []),
             resources=data.get('resources', {}),
             facilities=facilities,
+            populations=populations,
             id=data.get('id', -1),
             image_id=data.get('image_id', ''),
             image_rotation=data.get('image_rotation', 0.0)

@@ -110,7 +110,8 @@ class GameSession:
                 theme_path=theme_path,
                 empire_theme_id=player_cfg.theme,
                 flag_id=player_cfg.flag_id,
-                portrait_id=player_cfg.portrait_id
+                portrait_id=player_cfg.portrait_id,
+                race_config=player_cfg.race_config
             )
             self.empires.append(empire)
 

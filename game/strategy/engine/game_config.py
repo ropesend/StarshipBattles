@@ -4,7 +4,10 @@ Provides centralized configuration with sensible defaults.
 """
 import os
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.strategy.data.race_config import RaceConfig
 
 
 def _get_default_asset_path() -> str:
@@ -61,6 +64,8 @@ class PlayerConfig:
     race_id: Optional[str] = None
     flag_id: str = ""
     portrait_id: str = ""
+    # Full race configuration for habitability/growth calculations
+    race_config: Optional['RaceConfig'] = None
 
     def to_dict(self) -> dict:
         """Serialize PlayerConfig to dict."""
@@ -77,11 +82,20 @@ class PlayerConfig:
             data['flag_id'] = self.flag_id
         if self.portrait_id:
             data['portrait_id'] = self.portrait_id
+        if self.race_config is not None:
+            data['race_config'] = self.race_config.to_dict()
         return data
 
     @classmethod
     def from_dict(cls, data: dict) -> 'PlayerConfig':
         """Deserialize PlayerConfig from dict."""
+        from game.strategy.data.race_config import RaceConfig
+
+        # Deserialize race_config if present
+        race_config = None
+        if 'race_config' in data:
+            race_config = RaceConfig.from_dict(data['race_config'])
+
         return cls(
             name=data.get('name', 'Empire'),
             theme=data.get('theme', 'Federation'),
@@ -89,7 +103,8 @@ class PlayerConfig:
             is_human=data.get('is_human', True),
             race_id=data.get('race_id'),
             flag_id=data.get('flag_id', ''),
-            portrait_id=data.get('portrait_id', '')
+            portrait_id=data.get('portrait_id', ''),
+            race_config=race_config
         )
 
 

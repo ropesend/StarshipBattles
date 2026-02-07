@@ -3,7 +3,7 @@ class Empire:
     Represents a player or AI faction.
     """
     def __init__(self, empire_id, name, color, theme_path=None, empire_theme_id="Federation",
-                 flag_id: str = "", portrait_id: str = ""):
+                 flag_id: str = "", portrait_id: str = "", race_config=None):
         self.id = empire_id
         self.name = name
         self.color = color
@@ -12,6 +12,8 @@ class Empire:
         # Race visual identity (from RaceConfig selection during game setup)
         self.flag_id = flag_id  # Custom flag directory (e.g., "flag_2fl0bh2fl0bh2fl0")
         self.portrait_id = portrait_id  # Race portrait filename
+        # Full race configuration for habitability/growth calculations
+        self.race_config = race_config  # RaceConfig or None
 
         self.colonies = [] # List[Planet]
         self.fleets = [] # List[Fleet]
@@ -91,6 +93,9 @@ class Empire:
             data['flag_id'] = self.flag_id
         if self.portrait_id:
             data['portrait_id'] = self.portrait_id
+        # Include full race config if set
+        if self.race_config is not None:
+            data['race_config'] = self.race_config.to_dict()
         return data
 
     @classmethod
@@ -106,6 +111,12 @@ class Empire:
             Reconstructed Empire with colonies resolved
         """
         from game.strategy.data.fleet import Fleet
+        from game.strategy.data.race_config import RaceConfig
+
+        # Deserialize race_config if present
+        race_config = None
+        if 'race_config' in data:
+            race_config = RaceConfig.from_dict(data['race_config'])
 
         empire = cls(
             empire_id=data['id'],
@@ -114,7 +125,8 @@ class Empire:
             theme_path=data.get('theme_path'),
             empire_theme_id=data.get('empire_theme_id', 'Federation'),
             flag_id=data.get('flag_id', ''),
-            portrait_id=data.get('portrait_id', '')
+            portrait_id=data.get('portrait_id', ''),
+            race_config=race_config
         )
 
         # Restore built_ship_designs set
