@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-61 Phase 1 Complete
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-61 Phase 2 Complete
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-61
-**Current Phase:** Phase 2 (Push Dropdown Logic into Right Panel)
+**Current Phase:** Phase 3 (Extract Data Reload Orchestration)
 **Test Status:** 6246 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1: Extracted WorkshopShipIO class (~186 lines moved)
-- workshop_screen.py: 945 -> 759 lines
-- New file: game/ui/screens/workshop_ship_io.py
-- Updated test_builder_io_integration.py to test WorkshopShipIO directly
+- Phase 2: Pushed dropdown logic into BuilderRightPanel
+- Added 3 methods to right_panel.py: update_class_dropdown, update_vehicle_type_dropdown, update_dropdowns_for_data_reload
+- workshop_screen.py: 759 -> 728 lines (-31 lines)
+- Simplified _execute_pending_action and _refresh_ui_after_data_reload
 - All 6246 tests passing
-- Next: Execute Phase 2 - push dropdown logic into right_panel
+- Next: Execute Phase 3 - Extract Data Reload Orchestration
 
 ---
 
@@ -101,6 +101,7 @@
 | 2026-02-07 | PROJ-60 | Phase 4 | Complete | 6246 passed | pending | Final verification, imports clean |
 | 2026-02-07 | PROJ-60 | Audit 1 | PASSED | 6246 passed | pending | No issues found |
 | 2026-02-07 | PROJ-61 | Phase 1 | Complete | 6246 passed | pending | Extracted WorkshopShipIO, 945->759 lines |
+| 2026-02-07 | PROJ-61 | Phase 2 | Complete | 6246 passed | pending | Pushed dropdown logic to right_panel, 759->728 lines |
 
 
 ---

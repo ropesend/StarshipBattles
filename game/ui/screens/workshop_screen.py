@@ -394,20 +394,18 @@ class DesignWorkshopScreen:
             elif act == 'change_type':
                 # Clear and Change - use viewmodel which delegates to service
                 self.viewmodel.change_ship_class(data, migrate_components=False)
-                
-                # We also need to update the Class Dropdown options
+
+                # Update the Class Dropdown options via right_panel method
                 classes = self._get_vehicle_classes()
                 new_type = classes[data].get('type', 'Ship')
                 valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items() if c.get('type', 'Ship') == new_type]
                 valid_classes.sort(key=lambda x: x[1])
-                valid_class_names = [n for n, m in valid_classes]
-                if not valid_class_names: valid_class_names = ["Escort"]
-                
-                self.right_panel.class_dropdown.kill()
-                self.right_panel.class_dropdown = UIDropDownMenu(valid_class_names, data, 
-                                                   pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                                                   manager=self.ui_manager, container=self.right_panel.panel)
-                
+                valid_class_names = [n for n, _ in valid_classes]
+                if not valid_class_names:
+                    valid_class_names = ["Escort"]
+
+                self.right_panel.update_class_dropdown(data, valid_class_names)
+
                 self.update_stats()
                 self.right_panel.update_portrait_image()
                 self.left_panel.update_component_list()
@@ -616,39 +614,10 @@ class DesignWorkshopScreen:
         self.controller.selected_component = None
         self.viewmodel._selected_components = []
         
-        # Update Class Dropdown
+        # Update dropdowns via right_panel method
         classes = self._get_vehicle_classes()
-        valid_classes = [(n, classes[n].get('max_mass', 0)) for n, c in classes.items()]
-        valid_classes.sort(key=lambda x: x[1])
-        valid_class_names = [n for n, m in valid_classes]
-        if not valid_class_names: valid_class_names = ["Escort"]
-        
-        if hasattr(self.right_panel, 'class_dropdown'):
-            self.right_panel.class_dropdown.kill()
-            self.right_panel.class_dropdown = UIDropDownMenu(
-                valid_class_names, 
-                default_class,
-                pygame.Rect(70, self.right_panel.class_dropdown.relative_rect.y, 195, 30), 
-                manager=self.ui_manager, 
-                container=self.right_panel.panel
-            )
-            
-        # Update Type Dropdown if it exists
-        if hasattr(self.right_panel, 'vehicle_type_dropdown'):
-            classes = self._get_vehicle_classes()
-            types = sorted(list(set(c.get('type', 'Ship') for c in classes.values())))
-            if not types: types = ["Ship"]
-            default_type = classes[default_class].get('type', 'Ship')
-            
-            self.right_panel.vehicle_type_dropdown.kill()
-            self.right_panel.vehicle_type_dropdown = UIDropDownMenu(
-                 types,
-                 default_type,
-                 pygame.Rect(70, self.right_panel.vehicle_type_dropdown.relative_rect.y, 195, 30),
-                 manager=self.ui_manager,
-                 container=self.right_panel.panel
-            )
-        
+        self.right_panel.update_dropdowns_for_data_reload(default_class, classes)
+
         self.update_stats()
         self.rebuild_modifier_ui()
         
