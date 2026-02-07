@@ -8,24 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-66 Phase 1 (RaceConfig Enhancement)
-**Current Status:** PROJ-66 Phase 1 complete, Phase 2 next
+**Last Completed:** PROJ-66 Phase 2 (Homeworld Presets Data)
+**Current Status:** PROJ-66 Phase 2 complete, Phase 3 next
 **Current Project:** PROJ-66
-**Current Phase:** Phase 2 (Homeworld Presets Data)
+**Current Phase:** Phase 3 (Identity Tab UI)
 **Test Status:** 6222 passed (2 pre-existing failures in bug_15 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-66 Phase 1 COMPLETE
-- Added to race_config.py:
-  - 6 constant lists (GOVERNMENT_TYPES, GOVERNMENT_ORGANIZATIONS, LEADER_TITLES, PHYSICAL_TYPES, SOCIETY_TYPES, APTITUDE_NAMES)
-  - 8 identity fields (faction_name, race_name, race_name_plural, government_type, government_organization, leader_title, physical_type, society_type)
-  - 3 homeworld/water fields (homeworld_type, water_ideal, water_tolerance)
-  - 9 aptitude fields (strength, intelligence, constitution, dexterity, tolerance_other_species, cooperation, happiness, population_growth, conflict_tolerance)
-- Updated to_dict() and from_dict() with backward compatibility
-- Updated validate() for all new fields
-- 44 unit tests for RaceConfig, all passing
-- Next: Phase 2 - Create homeworld_presets.json
+- PROJ-66 Phase 2 COMPLETE
+- Created game/data/homeworld_presets.json with 11 planet type presets
+- Created game/strategy/data/homeworld_presets.py with:
+  - load_homeworld_presets() - loads JSON, caches result
+  - get_preset_for_planet_type() - returns preset for given type
+  - apply_preset_to_config() - applies preset to RaceConfig
+  - get_available_homeworld_names() - returns display names for dropdown
+  - get_preset_id_from_name() - converts display name to ID
+  - clear_cache() - testing utility
+- 14 unit tests for homeworld presets, all passing
+- Next: Phase 3 - Create RaceIdentityPanel for Identity tab
 
 ---
 
@@ -90,7 +91,7 @@
 ---
 
 - [/] **PROJ-66: Race Setup Enhancement**
-  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-66/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-66/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -148,6 +149,7 @@
 | 2026-02-07 | PROJ-65 | Phase 4 | Complete | 6222 passed | pending | Deleted dead code, added 13 IScene tests, 665 lines final |
 | 2026-02-07 | PROJ-65 | Audit 1 | PASSED | 6222 passed | 7bd59e7a | All goals met except 300-line target (acceptable) |
 | 2026-02-07 | PROJ-66 | Phase 1 | Complete | 6222 passed | pending | RaceConfig: +6 lists, +20 fields, serialization, validation |
+| 2026-02-07 | PROJ-66 | Phase 2 | Complete | 6222 passed | pending | Homeworld presets JSON + loader, 14 tests |
 
 ---
 

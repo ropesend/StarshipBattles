@@ -1,0 +1,224 @@
+{
+  "presets": [
+    {
+      "id": "CONTINENTAL",
+      "name": "Continental",
+      "description": "Earth-like world with varied terrain and temperate climate",
+      "gravity_ideal": 1.0,
+      "gravity_tolerance": 0.3,
+      "temperature_ideal": 293,
+      "temperature_tolerance": 50,
+      "water_ideal": 0.60,
+      "water_tolerance": 0.2,
+      "radiation_tolerance": 0,
+      "atmosphere_preferences": {
+        "Oxygen": 50,
+        "Nitrogen": 30,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "ARID",
+      "name": "Arid",
+      "description": "Hot desert world with minimal surface water",
+      "gravity_ideal": 1.0,
+      "gravity_tolerance": 0.3,
+      "temperature_ideal": 320,
+      "temperature_tolerance": 40,
+      "water_ideal": 0.10,
+      "water_tolerance": 0.15,
+      "radiation_tolerance": 20,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 20,
+        "Carbon Dioxide": 30,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "PELAGIC",
+      "name": "Pelagic",
+      "description": "Ocean world with minimal land masses",
+      "gravity_ideal": 0.9,
+      "gravity_tolerance": 0.25,
+      "temperature_ideal": 290,
+      "temperature_tolerance": 40,
+      "water_ideal": 0.95,
+      "water_tolerance": 0.05,
+      "radiation_tolerance": -10,
+      "atmosphere_preferences": {
+        "Oxygen": 50,
+        "Nitrogen": 30,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "MAGMA",
+      "name": "Magma",
+      "description": "Volcanic world with molten surface",
+      "gravity_ideal": 1.2,
+      "gravity_tolerance": 0.4,
+      "temperature_ideal": 800,
+      "temperature_tolerance": 100,
+      "water_ideal": 0.0,
+      "water_tolerance": 0.1,
+      "radiation_tolerance": 60,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 40,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "CRYOPLANET",
+      "name": "Cryoplanet",
+      "description": "Frozen world with ice-covered surface",
+      "gravity_ideal": 0.8,
+      "gravity_tolerance": 0.3,
+      "temperature_ideal": 200,
+      "temperature_tolerance": 50,
+      "water_ideal": 0.30,
+      "water_tolerance": 0.2,
+      "radiation_tolerance": 10,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 10,
+        "Carbon Dioxide": 20,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "BARREN",
+      "name": "Barren",
+      "description": "Lifeless rocky world with extreme conditions",
+      "gravity_ideal": 0.6,
+      "gravity_tolerance": 0.5,
+      "temperature_ideal": 350,
+      "temperature_tolerance": 80,
+      "water_ideal": 0.0,
+      "water_tolerance": 0.1,
+      "radiation_tolerance": 80,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "JOVIAN",
+      "name": "Jovian",
+      "description": "Gas giant with crushing gravity and hydrogen atmosphere",
+      "gravity_ideal": 2.5,
+      "gravity_tolerance": 0.5,
+      "temperature_ideal": 200,
+      "temperature_tolerance": 80,
+      "water_ideal": 0.0,
+      "water_tolerance": 0.1,
+      "radiation_tolerance": 40,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 80,
+        "Helium": 60
+      }
+    },
+    {
+      "id": "ICE_GIANT",
+      "name": "Ice Giant",
+      "description": "Cold gas giant with icy composition",
+      "gravity_ideal": 1.5,
+      "gravity_tolerance": 0.4,
+      "temperature_ideal": 100,
+      "temperature_tolerance": 60,
+      "water_ideal": 0.0,
+      "water_tolerance": 0.1,
+      "radiation_tolerance": 20,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 0,
+        "Methane": 30,
+        "Hydrogen": 50,
+        "Helium": 40
+      }
+    },
+    {
+      "id": "CHTHONIAN",
+      "name": "Chthonian",
+      "description": "Stripped gas giant core with extreme density",
+      "gravity_ideal": 2.0,
+      "gravity_tolerance": 0.6,
+      "temperature_ideal": 900,
+      "temperature_tolerance": 100,
+      "water_ideal": 0.0,
+      "water_tolerance": 0.05,
+      "radiation_tolerance": 90,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "ICE_DWARF",
+      "name": "Ice Dwarf",
+      "description": "Small icy body at the edge of a stellar system",
+      "gravity_ideal": 0.1,
+      "gravity_tolerance": 0.2,
+      "temperature_ideal": 100,
+      "temperature_tolerance": 50,
+      "water_ideal": 0.80,
+      "water_tolerance": 0.15,
+      "radiation_tolerance": 10,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    },
+    {
+      "id": "PLANETOID",
+      "name": "Planetoid",
+      "description": "Large asteroid or dwarf planet with minimal gravity",
+      "gravity_ideal": 0.05,
+      "gravity_tolerance": 0.15,
+      "temperature_ideal": 250,
+      "temperature_tolerance": 100,
+      "water_ideal": 0.0,
+      "water_tolerance": 0.1,
+      "radiation_tolerance": 50,
+      "atmosphere_preferences": {
+        "Oxygen": 0,
+        "Nitrogen": 0,
+        "Carbon Dioxide": 0,
+        "Methane": 0,
+        "Hydrogen": 0,
+        "Helium": 0
+      }
+    }
+  ]
+}
