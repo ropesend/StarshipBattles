@@ -15,17 +15,17 @@
 |-------|--------|-----------|
 | 1. Setup & Extract Leaf Nodes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract Composite Nodes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Extract Screen & Wire Up Package | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Extract Screen & Wire Up Package | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Update External References | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-06
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - Extracted composite nodes (ship_panels.py, results_panel.py)
-**Next Action:** Begin Phase 3 - Extract screen.py (TestLabScreen class) and update package __init__.py exports
+**Last Updated:** 2026-02-07
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - Extracted screen.py (TestLabScreen + get_test_data_dir), finalized __init__.py, deleted original test_lab_screen.py
+**Next Action:** Begin Phase 4 - Update external references (app.py, test files) to use new package path
 **Blockers:** None
-**Context for Next Agent:** 7 module files now in test_lab/: 5 leaf + 2 composite (ship_panels.py, results_panel.py). All imports verified. Tests: 6246 passed.
+**Context for Next Agent:** 9 module files in test_lab/: 8 modules + __init__.py. Package imports work. Tests in tests/unit/test_lab/ currently fail due to old import paths (ModuleNotFoundError) - Phase 4 fixes these.
 
 ## Overview
 Decompose `game/ui/screens/test_lab_screen.py` (4,703 lines, 11 classes) into a well-organized `game/ui/screens/test_lab/` package. This is the single largest file in the project and contains the entire Combat Lab UI. The decomposition follows existing `builder/` and `formation/` package precedents.
