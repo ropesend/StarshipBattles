@@ -8,30 +8,31 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-66 Phase 5 (Aptitudes Tab & Point-Buy System)
-**Current Status:** PROJ-66 Phase 5 complete, Phase 6 next
+**Last Completed:** PROJ-66 Phase 6 (Tab Reorganization & Summary Update)
+**Current Status:** PROJ-66 Phase 6 complete, Phase 7 next
 **Current Project:** PROJ-66
-**Current Phase:** Phase 6 (Tab Reorganization & Summary Update)
-**Test Status:** 6297 passed (3 pre-existing failures in bug_15/stats_render tests)
+**Current Phase:** Phase 7 (Validation, Fixtures & Integration)
+**Test Status:** 6210 passed (3 pre-existing failures in bug_15/stats_render tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-66 Phase 5 COMPLETE
-- Created game/strategy/data/race_point_budget.py with:
-  - RacePointBudget class with 100-point budget
-  - Linear aptitude costs (value - 5 per stat, can be negative)
-  - Exponential tolerance costs (2^n - 1 per tolerance level)
-  - calculate_aptitude_cost(), calculate_tolerance_cost(), calculate_total_cost()
-  - get_remaining_points(), is_within_budget()
-  - get_aptitude_breakdown(), get_tolerance_breakdown()
-- Created game/ui/panels/race_aptitudes_panel.py with:
-  - 9 aptitude sliders (Strength, Intelligence, etc.)
-  - Budget display "Points Remaining: X / 100"
-  - Tolerance cost display (read-only, reflects Environment tab)
-  - update_config(), set_from_config(), update_labels(), update_budget_display()
-- Added 25 tests to tests/unit/strategy/data/test_race_point_budget.py
-- Added 17 tests to tests/unit/ui/panels/test_race_aptitudes_panel.py
-- Next: Phase 6 - Reorganize tabs (5→7), integrate new panels
+- PROJ-66 Phase 6 COMPLETE
+- Updated race_setup_screen.py with:
+  - TAB constants expanded from 5 to 7 (Summary, Identity, Visuals, Ships, Environment, Aptitudes, Descriptions)
+  - TAB_NAMES updated to 7 items
+  - Imported and integrated RaceIdentityPanel and RaceAptitudesPanel
+  - Added _create_identity_panel_content() and _create_aptitudes_panel_content()
+  - Event routing updated for dropdowns, sliders, text entry
+  - _populate_ui_from_config() includes new panels
+  - _validate_for_save() syncs identity panel, aptitudes, checks budget
+- Updated race_environment_panel.py with:
+  - Added handle_dropdown_change() for homeworld dropdown
+- Updated race_summary_panel.py with:
+  - Column 1 now shows: Faction, Race, Government, Physical Type, Society Type
+  - Column 3 now shows: Homeworld, Gravity, Temp, Water, Radiation, Budget, Aptitudes
+  - Added formatters for all new fields
+- Updated test_race_summary_panel.py fixtures with new identity fields
+- Next: Phase 7 - Validation, Fixtures & Integration
 
 ---
 
@@ -158,6 +159,7 @@
 | 2026-02-07 | PROJ-66 | Phase 3 | Complete | 6243 passed | pending | RaceIdentityPanel, 21 tests |
 | 2026-02-07 | PROJ-66 | Phase 4 | Complete | 6255 passed | pending | Env panel: homeworld dropdown, water sliders, presets |
 | 2026-02-07 | PROJ-66 | Phase 5 | Complete | 6297 passed | pending | RacePointBudget + RaceAptitudesPanel, 42 new tests |
+| 2026-02-07 | PROJ-66 | Phase 6 | Complete | 6210 passed | pending | Tab reorg 5→7, Identity+Aptitudes integrated, Summary updated |
 
 ---
 

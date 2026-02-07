@@ -15,7 +15,10 @@ from unittest.mock import MagicMock, patch
 
 @pytest.fixture
 def mock_race_config():
-    """Create a mock RaceConfig with all properties for summary display."""
+    """Create a mock RaceConfig with all properties for summary display.
+
+    PROJ-66 Phase 6: Added identity, water, and aptitude fields.
+    """
     config = MagicMock()
     config.name = "Test Race"
     config.flag_id = "flag_01"
@@ -36,12 +39,35 @@ def mock_race_config():
     }
     config.bio_description = "Test biological description"
     config.socio_description = "Test sociological description"
+    # PROJ-66: New identity fields
+    config.faction_name = "Test Empire"
+    config.race_name = "Testarians"
+    config.government_type = "Empire"
+    config.government_organization = "Centralized"
+    config.physical_type = "Humanoid"
+    config.society_type = "Collectivist"
+    config.homeworld_type = "CONTINENTAL"
+    config.water_ideal = 50.0
+    config.water_tolerance = 30.0
+    # Aptitude values
+    config.aptitude_strength = 6
+    config.aptitude_intelligence = 7
+    config.aptitude_constitution = 5
+    config.aptitude_dexterity = 5
+    config.aptitude_tolerance_other_species = 5
+    config.aptitude_cooperation = 5
+    config.aptitude_happiness = 5
+    config.aptitude_population_growth = 5
+    config.aptitude_conflict_tolerance = 5
     return config
 
 
 @pytest.fixture
 def mock_race_config_empty():
-    """Create a mock RaceConfig with no values set (new race)."""
+    """Create a mock RaceConfig with no values set (new race).
+
+    PROJ-66 Phase 6: Added identity, water, and aptitude fields.
+    """
     config = MagicMock()
     config.name = None
     config.flag_id = None
@@ -55,6 +81,26 @@ def mock_race_config_empty():
     config.atmosphere_preferences = {}
     config.bio_description = ""
     config.socio_description = ""
+    # PROJ-66: New identity fields
+    config.faction_name = ""
+    config.race_name = ""
+    config.government_type = ""
+    config.government_organization = ""
+    config.physical_type = ""
+    config.society_type = ""
+    config.homeworld_type = ""
+    config.water_ideal = 50.0
+    config.water_tolerance = 30.0
+    # Aptitude defaults
+    config.aptitude_strength = 5
+    config.aptitude_intelligence = 5
+    config.aptitude_constitution = 5
+    config.aptitude_dexterity = 5
+    config.aptitude_tolerance_other_species = 5
+    config.aptitude_cooperation = 5
+    config.aptitude_happiness = 5
+    config.aptitude_population_growth = 5
+    config.aptitude_conflict_tolerance = 5
     return config
 
 
@@ -248,14 +294,17 @@ class TestSummaryDataFormatting:
 class TestRefreshSummary:
     """Tests for refreshing summary display."""
 
-    def test_refresh_updates_name_label(self, mock_race_config):
-        """refresh() updates name label from race_config."""
+    def test_refresh_updates_faction_label(self, mock_race_config):
+        """refresh() updates faction label from race_config.
+
+        PROJ-66 Phase 6: Changed from name_value to faction_value.
+        """
         from game.ui.panels.race_summary_panel import RaceSummaryPanel
 
         with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
             panel = RaceSummaryPanel.__new__(RaceSummaryPanel)
             panel.race_config = mock_race_config
-            panel.summary_labels = {'name_value': MagicMock()}
+            panel.summary_labels = {'faction_value': MagicMock()}
             panel.summary_flag_images = []
             panel.summary_portrait_image = None
             panel.summary_ship_images = []
@@ -267,7 +316,7 @@ class TestRefreshSummary:
 
             panel.refresh()
 
-            panel.summary_labels['name_value'].set_text.assert_called()
+            panel.summary_labels['faction_value'].set_text.assert_called()
 
     def test_refresh_updates_theme_label(self, mock_race_config):
         """refresh() updates theme label from race_config."""
@@ -344,8 +393,11 @@ class TestRefreshSummary:
 class TestPlaceholders:
     """Tests for placeholder text when values not set."""
 
-    def test_name_placeholder_when_not_set(self, mock_race_config_empty):
-        """Shows placeholder when race name not set."""
+    def test_faction_placeholder_when_not_set(self, mock_race_config_empty):
+        """Shows placeholder when faction name not set.
+
+        PROJ-66 Phase 6: Changed from name_value to faction_value.
+        """
         from game.ui.panels.race_summary_panel import RaceSummaryPanel
 
         with patch.object(RaceSummaryPanel, '__init__', lambda self, *args, **kwargs: None):
@@ -353,8 +405,8 @@ class TestPlaceholders:
             panel.race_config = mock_race_config_empty
 
             # Mock labels
-            name_label = MagicMock()
-            panel.summary_labels = {'name_value': name_label}
+            faction_label = MagicMock()
+            panel.summary_labels = {'faction_value': faction_label}
             panel.summary_flag_images = []
             panel.summary_portrait_image = None
             panel.summary_ship_images = []
@@ -367,8 +419,8 @@ class TestPlaceholders:
             panel.refresh()
 
             # Should show placeholder text
-            call_arg = name_label.set_text.call_args[0][0]
-            assert "Visuals" in call_arg or "set" in call_arg.lower()
+            call_arg = faction_label.set_text.call_args[0][0]
+            assert "Identity" in call_arg or "set" in call_arg.lower()
 
     def test_theme_placeholder_when_not_set(self, mock_race_config_empty):
         """Shows placeholder when theme not set."""

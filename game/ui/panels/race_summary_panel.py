@@ -122,38 +122,70 @@ class RaceSummaryPanel:
         )
 
     def _create_column1_content(self, x: int, y: int, col_width: int) -> int:
-        """Create column 1: Race Name and Flag."""
-        # Race Name (clickable to go to Visuals tab)
-        self.summary_labels['name_header'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, col_width, 30),
-            text="Race Name:",
+        """Create column 1: Identity and Flag.
+
+        PROJ-66 Phase 6: Updated to show faction name and identity fields.
+        """
+        # Faction Name (prominent at top)
+        self.summary_labels['faction_header'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y, col_width, 25),
+            text="Faction:",
             manager=self.ui_manager,
-            container=self.panel
+            container=self.panel,
+            object_id="#section_header"
         )
-        self.summary_labels['name_value'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y + 30, col_width, 30),
-            text="[Click Visuals tab to set]",
+        self.summary_labels['faction_value'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y + 25, col_width, 25),
+            text="[Click Identity tab to set]",
             manager=self.ui_manager,
             container=self.panel
         )
 
-        # Flag preview (larger)
+        # Race Name + Government
+        self.summary_labels['race_value'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y + 50, col_width, 22),
+            text="Race: --",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        self.summary_labels['gov_value'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y + 72, col_width, 22),
+            text="Government: --",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+
+        # Physical + Society Type
+        self.summary_labels['physical_value'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y + 94, col_width, 22),
+            text="Physical: --",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        self.summary_labels['society_value'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, y + 116, col_width, 22),
+            text="Society: --",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+
+        # Flag preview (smaller to make room)
         self.summary_labels['flag_header'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y + 70, col_width, 30),
+            relative_rect=pygame.Rect(x, y + 145, col_width, 25),
             text="Flag:",
             manager=self.ui_manager,
             container=self.panel
         )
 
-        flag_preview_size = 280
+        flag_preview_size = 220
         self.summary_flag_panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(x, y + 100, col_width, flag_preview_size),
+            relative_rect=pygame.Rect(x, y + 170, col_width, flag_preview_size),
             manager=self.ui_manager,
             container=self.panel,
             object_id="#summary_preview"
         )
 
-        return y + 100 + flag_preview_size
+        return y + 170 + flag_preview_size
 
     def _create_column2_content(self, x: int, y: int, col_width: int):
         """Create column 2: Portrait and Ship Theme."""
@@ -189,81 +221,114 @@ class RaceSummaryPanel:
         )
 
     def _create_column3_content(self, x: int, y: int, col_width: int):
-        """Create column 3: Environment and Descriptions."""
+        """Create column 3: Environment, Aptitudes, and Descriptions.
+
+        PROJ-66 Phase 6: Added homeworld, water, aptitudes, and budget display.
+        """
         # Environment header
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, col_width, 30),
-            text="Environmental Preferences:",
+            relative_rect=pygame.Rect(x, y, col_width, 25),
+            text="Environment:",
             manager=self.ui_manager,
             container=self.panel,
             object_id="#section_header"
         )
 
-        env_y = y + 35
+        env_y = y + 25
+
+        # Homeworld Type (NEW)
+        self.summary_labels['homeworld'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
+            text="Homeworld: Custom",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        env_y += 22
 
         # Gravity
         self.summary_labels['gravity'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
             text="Gravity: 1.0g +/- 0.30",
             manager=self.ui_manager,
             container=self.panel
         )
-        env_y += 30
+        env_y += 22
 
         # Temperature
         self.summary_labels['temperature'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
             text="Temperature: 293K +/- 50",
             manager=self.ui_manager,
             container=self.panel
         )
-        env_y += 30
+        env_y += 22
+
+        # Water (NEW)
+        self.summary_labels['water'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
+            text="Water: 50% +/- 30",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        env_y += 22
 
         # Radiation
         self.summary_labels['radiation'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
-            text="Radiation: 0 (Neutral)",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        env_y += 40
-
-        # Atmosphere summary
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
-            text="Atmosphere:",
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
+            text="Radiation: 0",
             manager=self.ui_manager,
             container=self.panel
         )
         env_y += 28
 
-        self.summary_labels['atmosphere'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 120),
-            text="All neutral (0)",
+        # Aptitudes section (NEW)
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, env_y, col_width, 25),
+            text="Aptitudes:",
+            manager=self.ui_manager,
+            container=self.panel,
+            object_id="#section_header"
+        )
+        env_y += 25
+
+        # Budget status (NEW)
+        self.summary_labels['budget'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
+            text="Budget: 0/100 used",
             manager=self.ui_manager,
             container=self.panel
         )
-        env_y += 130
+        env_y += 22
+
+        # Aptitude summary (compact format)
+        self.summary_labels['aptitudes'] = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(x, env_y, col_width, 66),
+            text="STR:5 INT:5 CON:5\nDEX:5 TOL:5 COO:5\nHAP:5 POP:5 CFT:5",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        env_y += 72
 
         # Descriptions summary
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
+            relative_rect=pygame.Rect(x, env_y, col_width, 25),
             text="Descriptions:",
             manager=self.ui_manager,
-            container=self.panel
+            container=self.panel,
+            object_id="#section_header"
         )
-        env_y += 28
+        env_y += 25
 
         self.summary_labels['bio_status'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
             text="Biological: 0 chars",
             manager=self.ui_manager,
             container=self.panel
         )
-        env_y += 28
+        env_y += 22
 
         self.summary_labels['socio_status'] = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, env_y, col_width, 28),
+            relative_rect=pygame.Rect(x, env_y, col_width, 22),
             text="Sociological: 0 chars",
             manager=self.ui_manager,
             container=self.panel
@@ -320,18 +385,95 @@ class RaceSummaryPanel:
         status = "Set" if socio_len > 0 else "Empty"
         return f"Sociological: {socio_len} chars ({status})"
 
+    def _format_faction_summary(self) -> str:
+        """Format faction name for display.
+
+        PROJ-66 Phase 6: New formatter for identity fields.
+        """
+        if self.race_config.faction_name:
+            return self.race_config.faction_name
+        return "[Click Identity tab to set]"
+
+    def _format_race_summary(self) -> str:
+        """Format race name display."""
+        race_name = self.race_config.race_name or self.race_config.name or "--"
+        return f"Race: {race_name}"
+
+    def _format_government_summary(self) -> str:
+        """Format government type and organization."""
+        parts = []
+        if self.race_config.government_type:
+            parts.append(self.race_config.government_type)
+        if self.race_config.government_organization:
+            parts.append(f"({self.race_config.government_organization})")
+        if parts:
+            return f"Government: {' '.join(parts)}"
+        return "Government: --"
+
+    def _format_physical_summary(self) -> str:
+        """Format physical type."""
+        if self.race_config.physical_type:
+            return f"Physical: {self.race_config.physical_type}"
+        return "Physical: --"
+
+    def _format_society_summary(self) -> str:
+        """Format society type."""
+        if self.race_config.society_type:
+            return f"Society: {self.race_config.society_type}"
+        return "Society: --"
+
+    def _format_homeworld_summary(self) -> str:
+        """Format homeworld type."""
+        if self.race_config.homeworld_type:
+            return f"Homeworld: {self.race_config.homeworld_type}"
+        return "Homeworld: Custom"
+
+    def _format_water_summary(self) -> str:
+        """Format water preferences."""
+        return f"Water: {self.race_config.water_ideal:.0f}% +/- {self.race_config.water_tolerance:.0f}"
+
+    def _format_budget_summary(self) -> str:
+        """Format point budget status."""
+        from game.strategy.data.race_point_budget import RacePointBudget
+        budget = RacePointBudget()
+        total_cost = budget.calculate_total_cost(self.race_config)
+        total = budget.total_budget
+        return f"Budget: {total_cost}/{total} used"
+
+    def _format_aptitudes_summary(self) -> str:
+        """Format aptitude values in compact 3-line format."""
+        rc = self.race_config
+        line1 = f"STR:{rc.aptitude_strength} INT:{rc.aptitude_intelligence} CON:{rc.aptitude_constitution}"
+        line2 = f"DEX:{rc.aptitude_dexterity} TOL:{rc.aptitude_tolerance_other_species} COO:{rc.aptitude_cooperation}"
+        line3 = f"HAP:{rc.aptitude_happiness} POP:{rc.aptitude_population_growth} CFT:{rc.aptitude_conflict_tolerance}"
+        return f"{line1}\n{line2}\n{line3}"
+
     # =========================================================================
     # Refresh Summary
     # =========================================================================
 
     def refresh(self):
-        """Refresh summary panel with current race_config data."""
+        """Refresh summary panel with current race_config data.
+
+        PROJ-66 Phase 6: Added identity, homeworld, water, aptitudes, budget.
+        """
         log_debug("Refreshing race summary panel")
 
-        # Update name
-        if 'name_value' in self.summary_labels:
-            name = self.race_config.name or "[Click Visuals tab to set]"
-            self.summary_labels['name_value'].set_text(name)
+        # PROJ-66: Update identity fields
+        if 'faction_value' in self.summary_labels:
+            self.summary_labels['faction_value'].set_text(self._format_faction_summary())
+
+        if 'race_value' in self.summary_labels:
+            self.summary_labels['race_value'].set_text(self._format_race_summary())
+
+        if 'gov_value' in self.summary_labels:
+            self.summary_labels['gov_value'].set_text(self._format_government_summary())
+
+        if 'physical_value' in self.summary_labels:
+            self.summary_labels['physical_value'].set_text(self._format_physical_summary())
+
+        if 'society_value' in self.summary_labels:
+            self.summary_labels['society_value'].set_text(self._format_society_summary())
 
         # Update theme
         if 'theme_value' in self.summary_labels:
@@ -347,6 +489,10 @@ class RaceSummaryPanel:
         # Update ship preview
         self._refresh_ship_preview()
 
+        # PROJ-66: Update homeworld
+        if 'homeworld' in self.summary_labels:
+            self.summary_labels['homeworld'].set_text(self._format_homeworld_summary())
+
         # Update gravity
         if 'gravity' in self.summary_labels:
             self.summary_labels['gravity'].set_text(self._format_gravity_summary())
@@ -355,13 +501,20 @@ class RaceSummaryPanel:
         if 'temperature' in self.summary_labels:
             self.summary_labels['temperature'].set_text(self._format_temperature_summary())
 
+        # PROJ-66: Update water
+        if 'water' in self.summary_labels:
+            self.summary_labels['water'].set_text(self._format_water_summary())
+
         # Update radiation
         if 'radiation' in self.summary_labels:
             self.summary_labels['radiation'].set_text(self._format_radiation_summary())
 
-        # Update atmosphere summary
-        if 'atmosphere' in self.summary_labels:
-            self.summary_labels['atmosphere'].set_text(self._format_atmosphere_summary())
+        # PROJ-66: Update aptitudes and budget
+        if 'budget' in self.summary_labels:
+            self.summary_labels['budget'].set_text(self._format_budget_summary())
+
+        if 'aptitudes' in self.summary_labels:
+            self.summary_labels['aptitudes'].set_text(self._format_aptitudes_summary())
 
         # Update description statuses
         if 'bio_status' in self.summary_labels:

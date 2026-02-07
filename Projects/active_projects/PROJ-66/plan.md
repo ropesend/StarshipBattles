@@ -18,14 +18,14 @@
 | 3. Identity Tab UI | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Environment Tab Enhancement | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Aptitudes Tab & Point-Buy System | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Tab Reorganization & Summary Update | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Tab Reorganization & Summary Update | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Validation, Fixtures & Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 complete - Created RacePointBudget (25 tests) and RaceAptitudesPanel (17 tests)
-**Next Action:** Start Phase 6 - Tab Reorganization & Summary Update
+**Active Phase:** Phase 7
+**Last Action:** Phase 6 complete - Tab reorganization (5→7 tabs), Identity+Aptitudes panels integrated, Summary panel updated
+**Next Action:** Start Phase 7 - Validation, Fixtures & Integration
 **Blockers:** None
 
 ## Overview

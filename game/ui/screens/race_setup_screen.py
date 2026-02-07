@@ -34,23 +34,30 @@ from game.ui.panels.race_flag_gallery import RaceFlagGallery
 from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 from game.ui.panels.race_theme_gallery import RaceThemeGallery
 from game.ui.panels.race_summary_panel import RaceSummaryPanel
+from game.ui.panels.race_identity_panel import RaceIdentityPanel
+from game.ui.panels.race_aptitudes_panel import RaceAptitudesPanel
 
 
 class RaceSetupScreen(pygame_gui.elements.UIWindow):
     """Tab-based window for race configuration."""
 
     # Tab constants (Summary is now first/landing page)
+    # PROJ-66 Phase 6: Expanded from 5 to 7 tabs
     TAB_SUMMARY = 0
-    TAB_VISUALS = 1
-    TAB_SHIPS = 2
-    TAB_ENVIRONMENT = 3
-    TAB_DESCRIPTIONS = 4
+    TAB_IDENTITY = 1      # NEW - Race identity fields
+    TAB_VISUALS = 2       # was 1
+    TAB_SHIPS = 3         # was 2
+    TAB_ENVIRONMENT = 4   # was 3
+    TAB_APTITUDES = 5     # NEW - Point-buy aptitudes
+    TAB_DESCRIPTIONS = 6  # was 4
 
     TAB_NAMES = [
         "Summary",
+        "Identity",
         "Visuals",
         "Ships",
         "Environment",
+        "Aptitudes",
         "Descriptions"
     ]
 
@@ -103,8 +110,11 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         # PROJ-12 Phase 4: Extracted panels
         # PROJ-44 Phase 7: Added RaceSummaryPanel
+        # PROJ-66 Phase 6: Added RaceIdentityPanel, RaceAptitudesPanel
         self._summary_panel = None
+        self._identity_panel = None
         self._environment_panel = None
+        self._aptitudes_panel = None
         self._description_panel = None
         self._flag_gallery = None
         self._portrait_gallery = None
@@ -170,7 +180,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.tab_buttons.append(btn)
 
     def _create_step_panels(self, container, width: int, top: int, height: int):
-        """Create panels for each tab."""
+        """Create panels for each tab.
+
+        PROJ-66 Phase 6: Expanded from 5 to 7 panels (added Identity and Aptitudes).
+        """
         panel_rect = pygame.Rect(10, top, width, height)
 
         # Panel 0: Summary (landing page)
@@ -183,7 +196,17 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._create_summary_panel_content(panel_summary)
         self.step_panels.append(panel_summary)
 
-        # Panel 1: Visuals (Flags and Portraits only)
+        # Panel 1: Identity (NEW - race name, government, faction)
+        panel_identity = pygame_gui.elements.UIPanel(
+            relative_rect=panel_rect,
+            manager=self.ui_manager,
+            container=container,
+            object_id="#panel_identity"
+        )
+        self._create_identity_panel_content(panel_identity)
+        self.step_panels.append(panel_identity)
+
+        # Panel 2: Visuals (Flags and Portraits only - was index 1)
         panel_visuals = pygame_gui.elements.UIPanel(
             relative_rect=panel_rect,
             manager=self.ui_manager,
@@ -193,7 +216,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._create_visuals_panel_content(panel_visuals)
         self.step_panels.append(panel_visuals)
 
-        # Panel 2: Ships (dedicated ship theme selection)
+        # Panel 3: Ships (dedicated ship theme selection - was index 2)
         panel_ships = pygame_gui.elements.UIPanel(
             relative_rect=panel_rect,
             manager=self.ui_manager,
@@ -203,7 +226,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._create_ships_panel_content(panel_ships)
         self.step_panels.append(panel_ships)
 
-        # Panel 3: Environment Preferences
+        # Panel 4: Environment Preferences (was index 3)
         panel_environment = pygame_gui.elements.UIPanel(
             relative_rect=panel_rect,
             manager=self.ui_manager,
@@ -213,7 +236,17 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         self._create_environment_panel_content(panel_environment)
         self.step_panels.append(panel_environment)
 
-        # Panel 4: Descriptions
+        # Panel 5: Aptitudes (NEW - point-buy aptitude system)
+        panel_aptitudes = pygame_gui.elements.UIPanel(
+            relative_rect=panel_rect,
+            manager=self.ui_manager,
+            container=container,
+            object_id="#panel_aptitudes"
+        )
+        self._create_aptitudes_panel_content(panel_aptitudes)
+        self.step_panels.append(panel_aptitudes)
+
+        # Panel 6: Descriptions (was index 4)
         panel_descriptions = pygame_gui.elements.UIPanel(
             relative_rect=panel_rect,
             manager=self.ui_manager,
@@ -225,31 +258,32 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
 
     # =========================================================================
+    # Identity Panel (NEW - PROJ-66 Phase 6)
+    # =========================================================================
+
+    def _create_identity_panel_content(self, panel):
+        """Create content for Identity tab using RaceIdentityPanel.
+
+        PROJ-66 Phase 6: New panel for race identity configuration.
+        """
+        self._identity_panel = RaceIdentityPanel(
+            panel=panel,
+            manager=self.ui_manager,
+            race_config=self.race_config
+        )
+
+    # =========================================================================
     # Visuals Panel (Flags and Portraits)
     # =========================================================================
 
     def _create_visuals_panel_content(self, panel):
-        """Create content for Visuals tab: Race name, Flags, and Portraits."""
+        """Create content for Visuals tab: Flags and Portraits.
+
+        PROJ-66 Phase 6: Race name moved to Identity tab.
+        """
         panel_width = panel.get_relative_rect().width - 20
         panel_height = panel.get_relative_rect().height
-        y = 5
-
-        # Race Name
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 120, 30),
-            text="Race Name:",
-            manager=self.ui_manager,
-            container=panel
-        )
-        self.name_input = pygame_gui.elements.UITextEntryLine(
-            relative_rect=pygame.Rect(130, y, 400, 35),
-            manager=self.ui_manager,
-            container=panel,
-            placeholder_text="Enter race name..."
-        )
-        if self.race_config.name:
-            self.name_input.set_text(self.race_config.name)
-        y += 50
+        y = 10
 
         # Create two columns: Flags and Portraits (larger now)
         col_width = (panel_width - 20) // 2
@@ -519,6 +553,21 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             return f"{value:.0f}"
 
     # =========================================================================
+    # Aptitudes Panel (NEW - PROJ-66 Phase 6)
+    # =========================================================================
+
+    def _create_aptitudes_panel_content(self, panel):
+        """Create content for Aptitudes tab using RaceAptitudesPanel.
+
+        PROJ-66 Phase 6: New panel for point-buy aptitude configuration.
+        """
+        self._aptitudes_panel = RaceAptitudesPanel(
+            panel=panel,
+            manager=self.ui_manager,
+            race_config=self.race_config
+        )
+
+    # =========================================================================
     # Descriptions Panel (PROJ-12 Phase 4: Delegates to RaceDescriptionPanel)
     # =========================================================================
 
@@ -606,8 +655,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         """
         Show the specified tab panel.
 
+        PROJ-66 Phase 6: Expanded to handle 7 tabs (0-6).
+
         Args:
-            step_num: Tab index to show (0-4)
+            step_num: Tab index to show (0-6)
         """
         # Clamp step number
         step_num = max(0, min(step_num, len(self.step_panels) - 1))
@@ -639,6 +690,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             # Refresh ship preview when Ships tab is shown
             if self.race_config.theme_id:
                 self._refresh_ship_preview(self.race_config.theme_id)
+        elif step_num == self.TAB_APTITUDES:
+            # PROJ-66: Refresh aptitudes budget when showing tab
+            if self._aptitudes_panel:
+                self._aptitudes_panel.update_budget_display()
 
     def _update_navigation_buttons(self):
         """Update navigation button visibility based on current tab."""
@@ -662,13 +717,29 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         Validate all required fields before saving.
 
         PROJ-12 Phase 4: Delegates to RaceValidator.
+        PROJ-66 Phase 6: Added identity sync and budget check.
 
         Returns:
             Tuple of (is_valid, error_message)
         """
-        # Update race name from input
-        if hasattr(self, 'name_input') and self.name_input:
-            self.race_config.name = self.name_input.get_text().strip()
+        # PROJ-66: Sync identity panel values to race_config
+        if self._identity_panel:
+            self._identity_panel.update_config()
+            # Use race_name as the primary name
+            if self.race_config.race_name:
+                self.race_config.name = self.race_config.race_name
+
+        # PROJ-66: Sync aptitudes panel values to race_config
+        if self._aptitudes_panel:
+            self._aptitudes_panel.update_config()
+
+        # PROJ-66: Check point budget
+        if self._aptitudes_panel:
+            from game.strategy.data.race_point_budget import RacePointBudget
+            budget = RacePointBudget()
+            if not budget.is_within_budget(self.race_config):
+                remaining = budget.get_remaining_points(self.race_config)
+                return False, f"Over budget by {-remaining} points (Aptitudes tab)"
 
         # PROJ-12: Use extracted RaceValidator
         validator = RaceValidator()
@@ -724,10 +795,13 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         log_debug("Race browser cancelled")
 
     def _populate_ui_from_config(self):
-        """Populate all UI elements from the current race_config."""
-        # Update name input
-        if hasattr(self, 'name_input') and self.name_input:
-            self.name_input.set_text(self.race_config.name or "")
+        """Populate all UI elements from the current race_config.
+
+        PROJ-66 Phase 6: Added identity and aptitudes panels.
+        """
+        # PROJ-66: Update identity panel (replaces old name_input)
+        if self._identity_panel:
+            self._identity_panel.set_from_config()
 
         # Update flag selection (PROJ-12 Phase 4: Delegate to RaceFlagGallery)
         if self._flag_gallery:
@@ -744,6 +818,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         # Update environment sliders (PROJ-12 Phase 4: Delegate to RaceEnvironmentPanel)
         if self._environment_panel:
             self._environment_panel.set_from_config()
+
+        # PROJ-66: Update aptitudes panel
+        if self._aptitudes_panel:
+            self._aptitudes_panel.set_from_config()
 
         # Update description text boxes (PROJ-12 Phase 4: Delegate to RaceDescriptionPanel)
         if self._description_panel:
@@ -778,7 +856,10 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             self.error_label.set_text(message)
 
     def process_event(self, event: pygame.event.Event) -> bool:
-        """Process pygame events."""
+        """Process pygame events.
+
+        PROJ-66 Phase 6: Added handling for identity panel dropdowns and aptitudes sliders.
+        """
         handled = super().process_event(event)
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -814,14 +895,36 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                         if self._theme_gallery and self._theme_gallery.handle_button_click(event.ui_element):
                             handled = True
 
+        # PROJ-66 Phase 6: Handle dropdown changes (identity panel)
+        elif event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
+            # Identity panel dropdowns
+            if self._identity_panel:
+                self._identity_panel.handle_event(event)
+                self._identity_panel.update_config()
+            # Environment panel homeworld dropdown
+            if self._environment_panel:
+                self._environment_panel.handle_dropdown_change(event)
+            handled = True
+
         # Handle slider changes
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
             self._update_env_labels()
             self._update_env_from_sliders()
+            # PROJ-66: Update aptitudes panel labels and budget when sliders move
+            if self._aptitudes_panel:
+                self._aptitudes_panel.update_config()
+                self._aptitudes_panel.update_labels()
+                self._aptitudes_panel.update_budget_display()
             handled = True
 
-        # Handle text entry changes (PROJ-12 Phase 4: Check description panel text boxes)
+        # Handle text entry changes
         elif event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
+            # PROJ-66: Identity panel text inputs
+            if self._identity_panel:
+                self._identity_panel.handle_event(event)
+                self._identity_panel.update_config()
+
+            # Description panel text boxes
             if self._description_panel:
                 desc_text_boxes = (
                     self._description_panel.bio_text_box,
@@ -830,6 +933,6 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 if event.ui_element in desc_text_boxes:
                     self._update_description_char_counts()
                     self._update_descriptions_from_text()
-                    handled = True
+            handled = True
 
         return handled

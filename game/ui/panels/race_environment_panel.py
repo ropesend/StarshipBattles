@@ -565,3 +565,27 @@ class RaceEnvironmentPanel:
 
         # Update all labels to reflect new values
         self.update_labels()
+
+    def handle_dropdown_change(self, event) -> bool:
+        """
+        Handle dropdown change events.
+
+        PROJ-66 Phase 6: Added to support centralized event routing.
+
+        Args:
+            event: pygame_gui UI_DROP_DOWN_MENU_CHANGED event
+
+        Returns:
+            True if event was handled
+        """
+        if hasattr(event, 'ui_element') and event.ui_element == self.homeworld_dropdown:
+            # Get selected option
+            selected = self.homeworld_dropdown.selected_option
+            if isinstance(selected, tuple):
+                selected = selected[0]
+
+            # Apply preset
+            self.apply_homeworld_preset(selected)
+            self.update_config()
+            return True
+        return False
