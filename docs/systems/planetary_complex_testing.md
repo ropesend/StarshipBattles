@@ -228,7 +228,7 @@ This guide walks through manual testing of the complete planetary complex buildi
 - Completed complex removed from queue
 - Next item (if any) now at top of queue
 - Planet facilities list in top panel shows new facility
-- Facility shows with checkmark (✓) indicating operational
+- Facility shows with checkmark indicating operational
 
 **Status:** ⬜ Pass / ⬜ Fail
 
@@ -241,7 +241,7 @@ This guide walks through manual testing of the complete planetary complex buildi
 
 **Expected Result:**
 - Planet details show "Facilities:" section
-- Lists "✓ Mining Complex Mk1" (or design name)
+- Lists "Mining Complex Mk1" (or design name) as operational
 
 **Status:** ⬜ Pass / ⬜ Fail
 
@@ -292,7 +292,7 @@ This guide walks through manual testing of the complete planetary complex buildi
 
 **Expected Result:**
 - Shipyard appears in facilities list
-- Planet detail shows "✓ Space Shipyard Mk1"
+- Planet detail shows "Space Shipyard Mk1"
 - Planet now has_space_shipyard property = True (internal)
 
 **Status:** ⬜ Pass / ⬜ Fail
@@ -425,7 +425,7 @@ This guide walks through manual testing of the complete planetary complex buildi
 **Expected Result:**
 - has_space_shipyard should return False
 - Ship building should fail validation (if implemented)
-- Facility shows with ✗ instead of ✓
+- Facility shows with X instead of checkmark
 
 **Status:** ⬜ Pass / ⬜ Fail / ⬜ N/A (manual edit)
 

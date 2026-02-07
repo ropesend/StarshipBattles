@@ -559,4 +559,4 @@ except AnotherException as e:
 - `game/core/exceptions.py` - Exception class definitions
 - `game/core/error_codes.py` - Error code enumeration
 - `game/core/json_utils.py` - Reference implementation
-- `docs/ERROR_HANDLING.md` - Original error handling doc (general patterns)
+- [ERROR_HANDLING.md](ERROR_HANDLING.md) - Quick reference for error handling

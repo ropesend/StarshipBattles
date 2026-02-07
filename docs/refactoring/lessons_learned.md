@@ -1,8 +1,34 @@
 # Lessons Learned & Technical Post-Mortems
 
-This document serves as the long-term memory for the AI agent. Before fixing a bug, check this file to see if a similar issue has been solved before.
+This document serves as the long-term memory for the AI agent. Before fixing a bug or starting a refactor, check this file to see if a similar issue has been solved before.
 
-## [Example] Game crash on startup (2025-12-26)
+---
+
+## Architecture & Refactoring
+
+### [Refactoring] Backward Compatibility via Wrapper Pattern (2026-01-17)
+**Context:** Renamed "Ship Builder" to "Design Workshop" across the codebase without breaking existing code.
+**Approach:** Created new workshop files with clean APIs, then made the old `BuilderSceneGUI` a thin wrapper that delegates to `DesignWorkshopGUI`. Old code works unchanged; new code uses the new API.
+**Lesson:** When renaming or replacing a major component, use a wrapper/proxy pattern rather than find-and-replace. This allows incremental migration and zero breaking changes. The wrapper can be removed later when all call sites are updated.
+
+### [Refactoring] Large File Extraction Strategy (2026-01-16)
+**Context:** Split `strategy_scene.py` (1,568 lines) into 6 focused modules (417 + 5 extracted modules).
+**Approach:** Extract one responsibility at a time, test after each extraction. Start with the most independent code (renderer), end with the most coupled (input handler).
+**Lesson:**
+- Extract modules in order of independence (least coupled first)
+- All extracted modules reference the parent scene, never each other (prevents circular imports)
+- Keep the original file as the coordinator/orchestrator
+- Selection state stays in the parent as single source of truth; sub-modules read but don't modify it
+
+### [Refactoring] Test-Driven Refactoring Prevents Regressions (2026-01-17)
+**Context:** Added 83 tests during Design Workshop refactoring (Phases 1-3), maintaining 100% pass rate.
+**Lesson:** Write tests BEFORE moving code. The test suite acts as a safety net - if a move breaks something, you know immediately. Batch renames across dozens of files are safe when you have comprehensive tests to verify nothing broke.
+
+---
+
+## UI & Selection State
+
+### [Syntax] Game crash on startup (2025-12-26)
 **Cause:** An `IndentationError` was introduced in `main.py` during a refactor of the initialization logic. Python is sensitive to mixed tabs/spaces or incorrect block levels.
 **Fix:** aligned the `try/except` block correctly.
 **Prevention:**
