@@ -1,5 +1,3 @@
-import math
-from tkinter import filedialog
 import os
 
 import pygame
@@ -24,16 +22,16 @@ from game.ui.screens.builder.event_bus import EventBus
 from game.ui.screens.builder_utils import PANEL_WIDTHS, PANEL_HEIGHTS, BuilderEvents, calculate_dynamic_layer_width, calculate_bottom_panel_height
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.screens.workshop_event_router import WorkshopEventRouter
-from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 from game.ui.screens.workshop_viewmodel import WorkshopViewModel
 from game.ui.screens.builder_selection import process_selection_change, get_primary_selection
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
 from game.ui.services.ship_io_adapter import ShipIOAdapter
 from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 from game.ui.screens.workshop_ship_io import WorkshopShipIO
+from game.ui.screens.workshop_data_reloader import WorkshopDataReloader
 from game.ui.colors import COLORS
 from game.ui.screens.builder.detail_panel import ComponentDetailPanel
-from game.core.logger import log_debug, log_error, log_warning
+from game.core.logger import log_debug
 
 BG_COLOR = COLORS['bg_deep']
 PANEL_BG = '#14181f'
@@ -148,6 +146,22 @@ class DesignWorkshopScreen:
             weapons_report_panel_ref=lambda: self.weapons_report_panel,
             show_error_callback=self.show_error,
             apply_loaded_ship_callback=self._apply_loaded_ship
+        )
+
+        # PROJ-61: Data reload orchestrator (after _create_ui so panels exist)
+        self.data_reloader = WorkshopDataReloader(
+            context=self.context,
+            ship_io_adapter=self._ship_io_adapter,
+            viewmodel=self.viewmodel,
+            show_error_callback=self.show_error,
+            get_vehicle_classes_callback=self._get_vehicle_classes,
+            event_bus=self.event_bus,
+            right_panel_ref=lambda: self.right_panel,
+            left_panel_ref=lambda: self.left_panel,
+            view_ref=lambda: self.view,
+            controller_ref=lambda: self.controller,
+            rebuild_modifier_ui_callback=self.rebuild_modifier_ui,
+            update_stats_callback=self.update_stats
         )
 
     def _get_vehicle_classes(self):
@@ -525,105 +539,6 @@ class DesignWorkshopScreen:
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))
 
-    def _on_select_data_pressed(self):
-        """Open dialog to select a data directory and reload game data."""
-        if not tk_root:
-            self.show_error("Tkinter not initialized, cannot open dialog")
-            return
-            
-        initial_dir = os.path.join(os.getcwd(), "data")
-        directory = filedialog.askdirectory(
-            initialdir=initial_dir,
-            title="Select Data Directory"
-        )
-        
-        if directory:
-            with profile_block(f"Builder: Reload Data from {os.path.basename(directory)}"):
-                self._reload_data(directory)
-
-    def _load_standard_data(self):
-        """Load standard data from 'data/' directory and set ship directory to 'ships/'."""
-        with profile_block("Builder: Load Standard Data"):
-            directory = os.path.join(os.getcwd(), "data")
-            self._reload_data(directory)
-            # PROJ-43: Use adapter instead of direct ShipIO access
-            self._ship_io_adapter.set_ships_folder("ships")
-            self.show_error("Loaded Standard Data • Ships: ships/")
-
-    def _load_test_data(self):
-        """Load test data from 'tests/data/' directory and set ship directory to 'tests/data/ships/'."""
-        with profile_block("Builder: Load Test Data"):
-            directory = os.path.join(os.getcwd(), "tests", "data")
-            self._reload_data(directory)
-            # PROJ-43: Use adapter instead of direct ShipIO access
-            self._ship_io_adapter.set_ships_folder(os.path.join("tests", "data", "ships"))
-            self.show_error("Loaded Test Data • Ships: tests/data/ships/")
-
-    def _reload_data(self, directory: str):
-        """Reload global game data from the specified directory.
-        
-        Data loading is delegated to WorkshopDataLoader for better testability.
-        UI refresh logic remains in this class.
-        """
-        try:
-            # 1. Load data via dedicated loader (PROJ-50: pass registries)
-            loader = WorkshopDataLoader(directory, registries=self.context.registries)
-            result = loader.load_all()
-            
-            if not result.success:
-                for error in result.errors:
-                    log_error(error)
-                self.show_error(f"Data loading failed: {result.errors[0] if result.errors else 'Unknown error'}")
-                return
-            
-            # 2. Refresh UI (stays in BuilderScreen)
-            self._refresh_ui_after_data_reload(result.default_class)
-            
-            # Show success
-            self.show_error(f"Reloaded data from {os.path.basename(directory)}")
-            
-        except Exception as e:
-            import traceback
-            log_error(f"Failed to reload data: {e}\n{traceback.format_exc()}")
-            self.show_error(f"Error reloading data: {e}")
-    
-    def _refresh_ui_after_data_reload(self, default_class: str):
-        """Refresh all UI panels after data reload.
-        
-        Extracted from _reload_data to separate data loading from UI concerns.
-        
-        Args:
-            default_class: The default ship class to use after reload
-        """
-        # Refresh UI panels
-        self.right_panel.refresh_controls()
-        self.left_panel.update_component_list()
-        self.rebuild_modifier_ui()
-
-        # Refresh Builder State (PROJ-43: Use viewmodel instead of direct get_all_components)
-        self.viewmodel.refresh_available_components()
-
-        # Reset Ship with new default class (using service layer via viewmodel)
-        self.viewmodel.ship = self.viewmodel.create_default_ship(ship_class=default_class)
-        
-        # Reset UI Panels
-        self.left_panel.update_component_list()
-        
-        # Center View
-        self.view.selected_component = None
-        self.controller.selected_component = None
-        self.viewmodel._selected_components = []
-        
-        # Update dropdowns via right_panel method
-        classes = self._get_vehicle_classes()
-        self.right_panel.update_dropdowns_for_data_reload(default_class, classes)
-
-        self.update_stats()
-        self.rebuild_modifier_ui()
-        
-        # Emit registry reload event for decoupled UI sync
-        self.event_bus.emit(BuilderEvents.REGISTRY_RELOADED, None)
-    
     # Tooltip method removed
 
 

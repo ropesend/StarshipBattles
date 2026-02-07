@@ -327,11 +327,11 @@ class WorkshopEventRouter:
         elif event.ui_element == gui.target_btn:
             gui._on_select_target_pressed()
         elif hasattr(gui, 'std_data_btn') and event.ui_element == gui.std_data_btn:
-            gui._load_standard_data()
+            gui.data_reloader.load_standard_data()
         elif hasattr(gui, 'test_data_btn') and event.ui_element == gui.test_data_btn:
-            gui._load_test_data()
+            gui.data_reloader.load_test_data()
         elif hasattr(gui, 'select_data_btn') and event.ui_element == gui.select_data_btn:
-            gui._on_select_data_pressed()
+            gui.data_reloader.on_select_data_pressed()
         elif hasattr(gui, 'verbose_btn') and event.ui_element == gui.verbose_btn:
             gui.weapons_report_panel.verbose_tooltip = not gui.weapons_report_panel.verbose_tooltip
         elif event.ui_element == gui.detail_panel.details_btn:
