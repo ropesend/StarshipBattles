@@ -5,7 +5,8 @@ import pygame
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
-from game.simulation.components.component_constants import LayerType, ComponentStatus
+from game.core.constants import LayerType
+from game.simulation.components.component_constants import ComponentStatus
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root, get_data_dir
 

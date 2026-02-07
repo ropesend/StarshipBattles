@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from game.core.math import Vector2
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 class TestFireWeapons:

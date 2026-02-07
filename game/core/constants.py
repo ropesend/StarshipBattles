@@ -10,15 +10,8 @@ __all__ = [
     'PLANET_RESOURCES',
     # Colors
     'WHITE', 'BLACK', 'BLUE', 'RED', 'GREEN',
-    # Screen dimensions (legacy re-exports)
-    'WIDTH', 'HEIGHT',
     # Font
     'FONT_MAIN',
-    # Directory paths (legacy re-exports)
-    'ROOT_DIR', 'GAME_DIR', 'CORE_DIR', 'ASSET_DIR', 'DATA_DIR',
-    'SHIPS_DIR', 'SCREENSHOT_DIR',
-    # Data file paths
-    'COMPONENTS_FILE', 'MODIFIERS_FILE', 'VEHICLE_CLASSES_FILE',
     # Debug flags
     'DEBUG_SCREENSHOTS',
 ]
@@ -50,32 +43,9 @@ BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 
-# Screen Dimensions
-# NOTE: These are re-exported from DisplayConfig for backward compatibility.
-# New code should use DisplayConfig.DEFAULT_WIDTH/DEFAULT_HEIGHT directly.
-from game.core.config import DisplayConfig
-WIDTH = DisplayConfig.DEFAULT_WIDTH
-HEIGHT = DisplayConfig.DEFAULT_HEIGHT
-
 # Fonts
 FONT_MAIN = "Arial"
 
-
-# Directory Paths - Import from centralized paths module
-from game.core.paths import Paths
-
-ROOT_DIR = Paths.ROOT_DIR
-GAME_DIR = Paths.GAME_DIR
-CORE_DIR = Paths.CORE_DIR
-ASSET_DIR = Paths.ASSET_DIR
-DATA_DIR = Paths.DATA_DIR
-SHIPS_DIR = Paths.SHIPS_DIR
-SCREENSHOT_DIR = Paths.SCREENSHOTS_DIR
-
-# Standard data file paths
-COMPONENTS_FILE = Paths.COMPONENTS_FILE
-MODIFIERS_FILE = Paths.MODIFIERS_FILE
-VEHICLE_CLASSES_FILE = Paths.VEHICLE_CLASSES_FILE
 
 # Debug Flags
 DEBUG_SCREENSHOTS = True

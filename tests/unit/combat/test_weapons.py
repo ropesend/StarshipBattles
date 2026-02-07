@@ -122,7 +122,7 @@ class TestWeaponFiring:
         self.ship.comp_trigger_pulled = True
         self.ship.angle = 0  # Facing target (target at x=500)
 
-        attacks = self.ship.fire_weapons()
+        attacks = self.ship.combat_engine.fire_weapons()
 
         # Should have fired at least one projectile
         assert isinstance(attacks, list)
@@ -135,7 +135,7 @@ class TestWeaponFiring:
         self.ship.comp_trigger_pulled = True
         self.ship.angle = 0
 
-        attacks = self.ship.fire_weapons()
+        attacks = self.ship.combat_engine.fire_weapons()
 
         if attacks:  # If weapon fired
             assert self.ship.resources.get_value('ammo') < initial_ammo
@@ -145,7 +145,7 @@ class TestWeaponFiring:
         self.ship.current_target = None
         self.ship.comp_trigger_pulled = True
 
-        attacks = self.ship.fire_weapons()
+        attacks = self.ship.combat_engine.fire_weapons()
 
         assert len(attacks) == 0
 
@@ -155,7 +155,7 @@ class TestWeaponFiring:
         self.ship.comp_trigger_pulled = True
         self.ship.angle = 180  # Facing away from target
 
-        attacks = self.ship.fire_weapons()
+        attacks = self.ship.combat_engine.fire_weapons()
 
         # Projectile weapons have narrow arc by default
         assert len(attacks) == 0
@@ -181,7 +181,7 @@ class TestLeadCalculation:
         t_vel = pygame.math.Vector2(0, 0)
         p_speed = 1000
 
-        t = self.ship.solve_lead(pos, vel, t_pos, t_vel, p_speed)
+        t = self.ship.combat_engine.solve_lead(pos, vel, t_pos, t_vel, p_speed)
 
         # Time to reach = distance / speed = 1000 / 1000 = 1.0
         assert t == pytest.approx(1.0, abs=0.01)
@@ -194,7 +194,7 @@ class TestLeadCalculation:
         t_vel = pygame.math.Vector2(0, 100)  # Moving perpendicular
         p_speed = 1000
 
-        t = self.ship.solve_lead(pos, vel, t_pos, t_vel, p_speed)
+        t = self.ship.combat_engine.solve_lead(pos, vel, t_pos, t_vel, p_speed)
 
         # Should find intercept time > 0
         assert t > 0
@@ -207,7 +207,7 @@ class TestLeadCalculation:
         t_vel = pygame.math.Vector2(2000, 0)  # Target faster than projectile, moving away
         p_speed = 100  # Slow projectile
 
-        t = self.ship.solve_lead(pos, vel, t_pos, t_vel, p_speed)
+        t = self.ship.combat_engine.solve_lead(pos, vel, t_pos, t_vel, p_speed)
 
         # Should return 0 (no solution)
         assert t == 0

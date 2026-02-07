@@ -123,8 +123,9 @@ class TestLeadCalculation:
     """Tests for lead/intercept calculation in guidance."""
 
     def test_lead_calculation_with_solve_lead(self, mock_owner, mock_target):
-        """Should use owner's solve_lead for lead calculation."""
-        mock_owner.solve_lead = MagicMock(return_value=0.5)  # 0.5 second lead
+        """Should use owner's combat_engine.solve_lead for lead calculation."""
+        mock_owner.combat_engine = MagicMock()
+        mock_owner.combat_engine.solve_lead = MagicMock(return_value=0.5)  # 0.5 second lead
         mock_target.position = pygame.math.Vector2(1000, 0)
         mock_target.velocity = pygame.math.Vector2(0, 100)  # Moving up
 
@@ -144,13 +145,13 @@ class TestLeadCalculation:
 
         proj.update()
 
-        # solve_lead should have been called
-        mock_owner.solve_lead.assert_called()
+        # solve_lead should have been called via combat_engine
+        mock_owner.combat_engine.solve_lead.assert_called()
 
     def test_lead_calculation_without_solve_lead(self, mock_owner, mock_target):
-        """Should handle owner without solve_lead method."""
-        # Remove solve_lead (default mock doesn't have it via hasattr check)
-        del mock_owner.solve_lead
+        """Should handle owner without combat_engine."""
+        # Remove combat_engine (guard checks hasattr(self.owner, 'combat_engine'))
+        del mock_owner.combat_engine
         mock_target.position = pygame.math.Vector2(1000, 0)
 
         proj = Projectile(
@@ -173,7 +174,8 @@ class TestLeadCalculation:
 
     def test_lead_zero_uses_direct_pursuit(self, mock_owner, mock_target):
         """When lead time is zero, should aim directly at target."""
-        mock_owner.solve_lead = MagicMock(return_value=0)  # No lead
+        mock_owner.combat_engine = MagicMock()
+        mock_owner.combat_engine.solve_lead = MagicMock(return_value=0)  # No lead
         mock_target.position = pygame.math.Vector2(1000, 0)
         mock_target.velocity = pygame.math.Vector2(0, 100)
 
@@ -199,7 +201,8 @@ class TestLeadCalculation:
 
     def test_lead_positive_aims_ahead(self, mock_owner, mock_target):
         """Positive lead time should aim ahead of target."""
-        mock_owner.solve_lead = MagicMock(return_value=1.0)  # 1 second lead
+        mock_owner.combat_engine = MagicMock()
+        mock_owner.combat_engine.solve_lead = MagicMock(return_value=1.0)  # 1 second lead
         mock_target.position = pygame.math.Vector2(1000, 0)
         mock_target.velocity = pygame.math.Vector2(0, 100)  # Moving up at 100/s
 

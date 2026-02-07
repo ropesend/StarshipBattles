@@ -25,7 +25,6 @@ from game.simulation.battle_state import BattleState, BattleResults, ShipState
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
 from game.simulation.managers.retreat_manager import (
     RetreatManager,
-    RetreatState,
     RetreatMethod,
 )
 from game.simulation.managers.battle_state_manager import BattleStateManager
@@ -77,9 +76,6 @@ class BattleConfig:
     map_bounds: Tuple[float, float, float, float] = (
         0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE
     )
-
-
-# RetreatState is imported directly from retreat_manager
 
 
 class BattleController:
@@ -260,7 +256,7 @@ class BattleController:
         if not self._is_started:
             return BattleResult(success=False, errors=["Battle not started"])
 
-        # Update retreat states (use mode handler or config for backward compat)
+        # Update retreat states if allowed by mode or config
         if self._retreat_allowed():
             self._update_retreats()
 
@@ -297,7 +293,7 @@ class BattleController:
         max_ticks = self._config.max_ticks
 
         while not self.is_battle_over():
-            # Update retreat states (use mode handler or config for backward compat)
+            # Update retreat states if allowed by mode or config
             if self._retreat_allowed():
                 self._update_retreats()
 
@@ -333,7 +329,7 @@ class BattleController:
             if self.is_battle_over():
                 break
 
-            # Use mode handler or config for backward compat
+            # Check retreat allowed by mode or config
             if self._retreat_allowed():
                 self._update_retreats()
 
@@ -455,7 +451,7 @@ class BattleController:
         """
         Check if retreat is allowed in current battle.
 
-        Uses mode handler if available, falls back to config for backward compat.
+        Mode handler provides defaults per mode; config.allow_retreat can override to enable.
         """
         if self._mode_handler:
             return self._mode_handler.can_retreat() or (self._config and self._config.allow_retreat)
@@ -465,7 +461,7 @@ class BattleController:
         """
         Check if reinforcements are allowed in current battle.
 
-        Uses mode handler if available, falls back to config for backward compat.
+        Mode handler provides defaults per mode; config.allow_reinforcements can override to enable.
         """
         if self._mode_handler:
             return self._mode_handler.can_reinforce() or (self._config and self._config.allow_reinforcements)
@@ -587,11 +583,6 @@ class BattleController:
         return self._config
 
     @property
-    def engine(self):
-        """Get underlying BattleEngine (for backward compatibility)."""
-        return self._service.get_engine()
-
-    @property
     def service(self) -> BattleService:
         """Get underlying BattleService."""
         return self._service
@@ -600,32 +591,6 @@ class BattleController:
     def mode_handler(self) -> Optional[BattleModeHandler]:
         """Get the current mode handler."""
         return self._mode_handler
-
-    @property
-    def _retreating_ships(self) -> Dict[str, RetreatState]:
-        """Backward compatibility: delegate to retreat manager."""
-        if self._retreat_manager:
-            return self._retreat_manager.retreating_ships
-        return {}
-
-    @_retreating_ships.setter
-    def _retreating_ships(self, value: Dict[str, RetreatState]) -> None:
-        """Backward compatibility: set retreat manager state directly."""
-        if self._retreat_manager:
-            self._retreat_manager.retreating_ships = value
-
-    @property
-    def _escaped_ships(self) -> List[str]:
-        """Backward compatibility: delegate to retreat manager."""
-        if self._retreat_manager:
-            return self._retreat_manager.escaped_ships
-        return []
-
-    @_escaped_ships.setter
-    def _escaped_ships(self, value: List[str]) -> None:
-        """Backward compatibility: set retreat manager state directly."""
-        if self._retreat_manager:
-            self._retreat_manager.escaped_ships = value
 
     # === Results ===
 

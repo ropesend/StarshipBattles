@@ -50,7 +50,6 @@ import random
 from typing import List, Dict, Any, TYPE_CHECKING
 
 from game.core.config import BattleConfig
-from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -109,16 +108,7 @@ class CollisionSystem:
                     if source_ship and hasattr(source_ship, 'get_total_sensor_score'):
                         attack_score = source_ship.get_total_sensor_score()
                         
-                    # PROJ-40/NEW-AI-008: Standardized defense scoring
-                    # Primary: total_defense_score (includes size, maneuver, ECM)
-                    # Fallback: get_total_ecm_score() for backward compatibility
-                    defense_score = 0.0
-                    if hasattr(target, 'total_defense_score'):
-                        defense_score = target.total_defense_score
-                    elif hasattr(target, 'get_total_ecm_score'):
-                        defense_score = target.get_total_ecm_score()
-                        log_warning(f"CollisionSystem: Using ECM fallback for defense score "
-                                   f"(target missing total_defense_score attribute)")
+                    defense_score = target.total_defense_score
                         
                     # Calculate Chance with Sigmoid Logic using ability
                     chance = beam_ab.calculate_hit_chance(hit_dist, attack_score, defense_score)
@@ -126,7 +116,7 @@ class CollisionSystem:
                     if random.random() < chance:
                         # Evaluate damage at hit distance using ability
                         damage = beam_ab.get_damage(hit_dist)
-                        target.take_damage(damage)
+                        target.combat_engine.take_damage(damage)
                         end_pos = start_pos + direction * hit_dist
         
         # Store for visualization
@@ -160,16 +150,16 @@ class CollisionSystem:
                 
                 msg = ""
                 if hp_rammer < hp_target:
-                    s.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
-                    target.take_damage(hp_rammer * BattleConfig.RAMMING_DAMAGE_FACTOR)
+                    s.combat_engine.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    target.combat_engine.take_damage(hp_rammer * BattleConfig.RAMMING_DAMAGE_FACTOR)
                     msg = f"Ramming: {s.name} destroyed by {target.name}!"
                 elif hp_target < hp_rammer:
-                    target.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
-                    s.take_damage(hp_target * BattleConfig.RAMMING_DAMAGE_FACTOR)
+                    target.combat_engine.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    s.combat_engine.take_damage(hp_target * BattleConfig.RAMMING_DAMAGE_FACTOR)
                     msg = f"Ramming: {target.name} destroyed by {s.name}!"
                 else:
-                    s.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
-                    target.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    s.combat_engine.take_damage(hp_rammer + BattleConfig.GUARANTEED_KILL_DAMAGE)
+                    target.combat_engine.take_damage(hp_target + BattleConfig.GUARANTEED_KILL_DAMAGE)
                     msg = f"Ramming: Mutual destruction!"
                 
                 if logger:

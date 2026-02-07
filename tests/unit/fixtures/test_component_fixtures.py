@@ -7,7 +7,7 @@ eliminating boilerplate and ensuring proper component configuration.
 import pytest
 
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 class TestWeaponComponentFixture:

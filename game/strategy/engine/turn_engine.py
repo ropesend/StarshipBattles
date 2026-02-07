@@ -41,7 +41,7 @@ Example:
     )
 """
 from game.core.validation import ValidationResult
-from game.core.registry import GameRegistries, get_default_registries, RegistryManager
+from game.core.registry import GameRegistries, get_default_registries
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -120,22 +120,11 @@ class TurnEngine:
         else:
             self._battle_resolver = battle_resolver
 
-        # PROJ-50: Store registries for passing to sub-engines
-        # Use get_default_registries() with fallback to RegistryManager for tests
+        # PROJ-50/PROJ-58: Store registries for passing to sub-engines
         if registries is not None:
             self._registries = registries
         else:
-            try:
-                self._registries = get_default_registries()
-            except Exception:
-                # Fallback for tests that don't set up default registries
-                mgr = RegistryManager.instance()
-                self._registries = GameRegistries(
-                    components=mgr.components,
-                    modifiers=mgr.modifiers,
-                    vehicle_classes=mgr.vehicle_classes,
-                    resources={}
-                )
+            self._registries = get_default_registries()
 
         # PROJ-43 Phase 4: Store injected engines or None for lazy init
         self._movement_engine: Optional['IMovementEngine'] = movement_engine

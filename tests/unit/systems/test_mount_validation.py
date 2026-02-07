@@ -15,7 +15,7 @@ import pytest
 from unittest.mock import Mock
 
 from game.simulation.validation.ship_validator import MountDependencyRule
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 class TestMountDependencyRuleComponentAddition:

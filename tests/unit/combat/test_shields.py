@@ -69,14 +69,14 @@ class TestShields:
 
     def test_damage_absorption(self):
         # 50 damage -> all absorbed by shields
-        self.ship.take_damage(50)
+        self.ship.combat_engine.take_damage(50)
         assert self.ship.current_shields == 50
         assert self.shield.current_hp == self.shield.max_hp
 
         # 60 damage -> 50 absorbed by shields, 10 bleed through to CORE
         # The 10 damage goes to a random CORE component:
         # - bridge (200 hp), crew_quarters (60 hp), life_support (40 hp), shield (10 hp), regen (10 hp)
-        self.ship.take_damage(60)
+        self.ship.combat_engine.take_damage(60)
         assert self.ship.current_shields == 0
         # Check that SOME damage was applied to CORE components
         core_components = self.ship.layers[LayerType.CORE]['components']
@@ -90,7 +90,7 @@ class TestShields:
         # Update 1 tick (dt=1.0)
         # Rate 60/s -> 0.6 per tick (60/100)
         # Cost 30/s -> 0.3 per tick (30/100)
-        self.ship.update_combat_cooldowns()
+        self.ship.combat_engine.update_combat_cooldowns()
 
         assert self.ship.current_shields == pytest.approx(0.6)
         # 100 energy - 0.3 cost = 99.7
@@ -98,12 +98,12 @@ class TestShields:
 
     def test_regen_capped(self):
         self.ship.current_shields = 99
-        self.ship.update_combat_cooldowns()
+        self.ship.combat_engine.update_combat_cooldowns()
         # 99 + 0.6 = 99.6. Not capped yet.
         assert self.ship.current_shields == pytest.approx(99.6)
 
     def test_energy_starvation(self):
         self.ship.current_shields = 0
         self.ship.resources.get_resource("energy").current_value = 0
-        self.ship.update_combat_cooldowns()
+        self.ship.combat_engine.update_combat_cooldowns()
         assert self.ship.current_shields == 0

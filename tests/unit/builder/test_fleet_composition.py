@@ -83,7 +83,7 @@ class TestFleetComposition:
         master_ship = MagicMock()
         master_ship.position = pygame.math.Vector2(0, 0)
         master_ship.angle = 0
-        master_ship.formation_members = []  # Initialize list as code appends to it
+        master_ship.formation.members = []  # Initialize list as code appends to it
 
         follower_ship = MagicMock()
         follower_ship.position = pygame.math.Vector2(0, 0)
@@ -114,8 +114,8 @@ class TestFleetComposition:
         assert len(ships) == 2
 
         # Follower checks (via factory.setup_formation)
-        assert follower_ship.formation_master == master_ship
-        assert follower_ship in master_ship.formation_members
+        assert follower_ship.formation.master == master_ship
+        assert follower_ship in master_ship.formation.members
 
         # Position checks (via factory.configure_ship)
         # Master: start_x + 0, start_y + 0 = 1000, 1000
@@ -125,8 +125,8 @@ class TestFleetComposition:
         assert follower_ship.position == pygame.math.Vector2(1010, 1010)
 
         # Check formation_offset calculation logic (via factory.setup_formation)
-        assert follower_ship.formation_offset == pygame.math.Vector2(10, 10)
-        assert follower_ship.formation_rotation_mode == 'fixed'
+        assert follower_ship.formation.offset == pygame.math.Vector2(10, 10)
+        assert follower_ship.formation.rotation_mode == 'fixed'
 
     @patch('game.ui.screens.setup_data_io.glob.glob')
     @patch('game.ui.screens.setup_data_io.load_json')

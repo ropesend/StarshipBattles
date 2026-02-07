@@ -6,7 +6,6 @@ from enum import Enum, auto
 
 __all__ = [
     'ComponentStatus',
-    'LayerType',  # Re-exported from game.core.constants for backward compatibility
     'Modifier',
     'ApplicationModifier',
 ]
@@ -20,10 +19,6 @@ class ComponentStatus(Enum):
     NO_FUEL = auto()
     NO_AMMO = auto()
 
-
-# Re-export LayerType from core for backward compatibility
-# PROJ-17: LayerType moved to game/core/constants.py for proper layer architecture
-from game.core.constants import LayerType
 
 
 class Modifier:

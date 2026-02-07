@@ -35,10 +35,10 @@ def mock_ship():
     ship.turn_throttle = 1.0
     ship.engine_throttle = 1.0
     ship.acceleration_rate = 100
-    ship.in_formation = True
-    ship.formation_offset = pygame.math.Vector2(50, 50)
-    ship.formation_rotation_mode = 'relative'
-    ship.formation_master = None
+    ship.formation.active = True
+    ship.formation.offset = pygame.math.Vector2(50, 50)
+    ship.formation.rotation_mode = 'relative'
+    ship.formation.master = None
 
     # Interface method mocks - use lambdas to dynamically return current values
     ship.get_position.side_effect = lambda: ship.position
@@ -47,12 +47,13 @@ def mock_ship():
     ship.get_max_speed.side_effect = lambda: ship.max_speed
     ship.get_turn_speed.side_effect = lambda: ship.turn_speed
     ship.get_acceleration_rate.return_value = ship.acceleration_rate
-    ship.get_formation_offset.side_effect = lambda: ship.formation_offset
-    ship.get_formation_master.side_effect = lambda: ship.formation_master
+    ship.get_formation_offset.side_effect = lambda: ship.formation.offset
+    ship.get_formation_rotation_mode.side_effect = lambda: ship.formation.rotation_mode
+    ship.get_formation_master.side_effect = lambda: ship.formation.master
 
     # Interface method setters should update attributes for assertion checking
     def set_in_formation(value):
-        ship.in_formation = value
+        ship.formation.active = value
     ship.set_in_formation.side_effect = set_in_formation
 
     def set_throttle(value):
@@ -92,7 +93,7 @@ def formation_behavior(mock_controller, mock_ship, mock_master):
     """Create a FormationBehavior with mocked components."""
     from game.ai.behaviors import FormationBehavior
 
-    mock_ship.formation_master = mock_master
+    mock_ship.formation.master = mock_master
     mock_ship.get_formation_master.return_value = mock_master
     mock_controller.ship = mock_ship
 

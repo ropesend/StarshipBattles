@@ -3,7 +3,7 @@
 Handles saving and loading of filter/column presets for the planet list window.
 """
 import os
-from game.core.constants import DATA_DIR
+from game.core.paths import Paths
 from game.core.json_utils import load_json, save_json
 from game.core.logger import log_info
 
@@ -18,12 +18,12 @@ class PresetManager:
 
     def _load_from_disk(self):
         """Load presets from disk."""
-        path = os.path.join(DATA_DIR, self.PRESET_FILENAME)
+        path = os.path.join(Paths.DATA_DIR, self.PRESET_FILENAME)
         return load_json(path, default={})
 
     def save_to_disk(self):
         """Save presets to disk."""
-        path = os.path.join(DATA_DIR, self.PRESET_FILENAME)
+        path = os.path.join(Paths.DATA_DIR, self.PRESET_FILENAME)
         save_json(path, self.presets)
 
     def get_preset_names(self):
@@ -58,10 +58,6 @@ class PresetManager:
             self.save_to_disk()
             return True
         return False
-
-    def add_preset(self, name, state):
-        """Alias for save_preset for backward compatibility."""
-        self.save_preset(name, state)
 
 
 def capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters):

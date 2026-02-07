@@ -3,7 +3,8 @@ import datetime
 import subprocess
 import pygame
 import threading
-from game.core.constants import ROOT_DIR, DEBUG_SCREENSHOTS, SCREENSHOT_DIR
+from game.core.constants import DEBUG_SCREENSHOTS
+from game.core.paths import Paths
 from game.core.logger import log_error, log_info, log_warning
 
 class ScreenshotManager:
@@ -58,7 +59,7 @@ class ScreenshotManager:
 
     def _setup(self):
         self.enabled = DEBUG_SCREENSHOTS
-        self.base_dir = SCREENSHOT_DIR
+        self.base_dir = Paths.SCREENSHOTS_DIR
         if self.enabled and not os.path.exists(self.base_dir):
             try:
                 os.makedirs(self.base_dir)

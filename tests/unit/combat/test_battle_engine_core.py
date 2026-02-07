@@ -123,7 +123,7 @@ class TestBattleEngineCore:
             beam_attack = {'type': AttackType.BEAM, 'damage': 10}
 
             ship1.comp_trigger_pulled = True
-            with patch.object(ship1, 'fire_weapons', return_value=[beam_attack]):
+            with patch.object(ship1.combat_engine, 'fire_weapons', return_value=[beam_attack]):
                 engine.update()
 
             mock_beam.assert_called()

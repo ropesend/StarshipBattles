@@ -6,13 +6,12 @@ import math
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import Component, load_components
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import AttackType, LayerType
 from game.core.registry import RegistryManager
 from game.ai.controller import AIController
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.entities.projectile import Projectile
-from game.core.constants import AttackType
 
 
 @pytest.fixture(autouse=True)
@@ -205,7 +204,7 @@ class TestMultitarget:
         # Ensure PDC is not on cooldown
         pdc.cooldown_timer = 0
 
-        fired = ship.fire_weapons(context)
+        fired = ship.combat_engine.fire_weapons(context)
 
         # Should fire 1 shot
         assert len(fired) > 0, "PDC should have fired at missile"

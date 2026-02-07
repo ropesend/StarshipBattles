@@ -9,7 +9,7 @@ PROJ-50: Updated to use strict DI - registries is now required.
 import pytest
 
 from game.simulation.services.vehicle_design_service import VehicleDesignService, DesignResult
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import GameRegistries
 
 

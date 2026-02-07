@@ -65,12 +65,12 @@ class TestBattleControllerQueryMethods:
 
         assert controller.config is basic_config
 
-    def test_engine_property(self, controller, mock_service):
-        """engine property returns underlying engine."""
+    def test_engine_access_via_service(self, controller, mock_service):
+        """Engine is accessible through service.get_engine()."""
         mock_engine = Mock()
         mock_service.get_engine.return_value = mock_engine
 
-        assert controller.engine is mock_engine
+        assert controller.service.get_engine() is mock_engine
 
     def test_service_property(self, controller, mock_service):
         """service property returns underlying service."""
@@ -131,14 +131,14 @@ class TestBattleControllerReset:
         """reset clears tracking dictionaries."""
         controller.configure(basic_config)
         controller._ship_id_map = {'some': 'data'}
-        controller._retreating_ships = {'some': Mock()}
-        controller._escaped_ships = ['some_ship']
+        controller._retreat_manager.retreating_ships = {'some': Mock()}
+        controller._retreat_manager.escaped_ships = ['some_ship']
 
         controller.reset()
 
         assert controller._ship_id_map == {}
-        assert controller._retreating_ships == {}
-        assert controller._escaped_ships == []
+        assert controller._retreat_manager.retreating_ships == {}
+        assert controller._retreat_manager.escaped_ships == []
 
 
 class TestFactoryFunctions:

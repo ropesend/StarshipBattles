@@ -24,14 +24,14 @@ class TestBuilderIOIntegration:
         """Verify GUI flow when save is successful."""
         # Mock 'self' with standalone context
         gui_mock = self._create_gui_mock_standalone()
-        gui_mock.ship = MagicMock()
+        gui_mock.viewmodel.ship = MagicMock()
         gui_mock._ship_io_adapter.save_ship.return_value = (True, "Saved successfully")
 
         # Call the method (we grab it from the class and bind it to our mock)
         DesignWorkshopScreen._save_ship(gui_mock)
 
         # Verify adapter save_ship called
-        gui_mock._ship_io_adapter.save_ship.assert_called_once_with(gui_mock.ship)
+        gui_mock._ship_io_adapter.save_ship.assert_called_once_with(gui_mock.viewmodel.ship)
 
         # Verify show_error NOT called (success prints to console in current impl,
         # or we could verify print via mock, but key is no error dialog)
@@ -40,7 +40,7 @@ class TestBuilderIOIntegration:
     def test_save_ship_failure_flow(self):
         """Verify GUI flow when save fails."""
         gui_mock = self._create_gui_mock_standalone()
-        gui_mock.ship = MagicMock()
+        gui_mock.viewmodel.ship = MagicMock()
         gui_mock._ship_io_adapter.save_ship.return_value = (False, "Permission Denied")
 
         DesignWorkshopScreen._save_ship(gui_mock)

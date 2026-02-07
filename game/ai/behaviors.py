@@ -32,7 +32,7 @@ Behavior Classes:
             - Triggered when HP below retreat_hp_threshold
 
         FormationBehavior: Follow formation master
-            - Maintain formation_offset relative to master
+            - Maintain formation.offset relative to master
             - Match master's heading (relative or fixed mode)
             - Apply correction forces to stay in position
             - Dropout detection if master dies or drifts too far
@@ -249,7 +249,7 @@ class FormationBehavior(AIBehavior):
         - Ship propulsion damaged → AIController triggers dropout
 
     Strategy Parameters:
-        (None directly - uses ship.formation_offset and ship.formation_rotation_mode)
+        (None directly - uses ship.formation.offset and ship.formation.rotation_mode)
     """
 
     DRIFT_THRESHOLD_FACTOR: float = AIConfig.FORMATION_DRIFT_THRESHOLD_FACTOR
@@ -273,11 +273,9 @@ class FormationBehavior(AIBehavior):
             return
 
         # Calculate target position
-        # formation_offset accessed via interface, master attributes accessed directly (raw Ship)
         formation_offset = ship.get_formation_offset()
-        # Access formation_rotation_mode via underlying ship to avoid deprecation warning
-        raw_ship = getattr(ship, '_ship', ship)
-        if getattr(raw_ship, 'formation_rotation_mode', 'relative') == 'fixed':
+        rotation_mode = ship.get_formation_rotation_mode()
+        if rotation_mode == 'fixed':
             current_rel_offset = formation_offset
         else:
             current_rel_offset = formation_offset.rotate(master.angle)
@@ -347,7 +345,7 @@ class FormationBehavior(AIBehavior):
             # master is raw Ship - access position directly
             future_master_pos = master.position  # No prediction needed if velocity matched
 
-            if getattr(raw_ship, 'formation_rotation_mode', 'relative') == 'fixed':
+            if rotation_mode == 'fixed':
                 future_offset = formation_offset
             else:
                 future_offset = formation_offset.rotate(master.angle)
@@ -381,7 +379,7 @@ class FormationBehavior(AIBehavior):
             prediction_ticks = self.PREDICTION_TICKS
             predicted_master_pos = master.position + (Vector2(0, -1).rotate(-master.angle) * master.current_speed * prediction_ticks * self.TICK_DURATION)
             # Re-calculate offset based on master's current angle
-            if getattr(ship, 'formation_rotation_mode', 'relative') == 'fixed':
+            if rotation_mode == 'fixed':
                 pred_offset = formation_offset
             else:
                 pred_offset = formation_offset.rotate(master.angle)

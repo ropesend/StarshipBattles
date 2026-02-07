@@ -19,8 +19,8 @@ class TestMultiSelectionLogic:
         # Mocking Builder with minimal dependencies
         context = WorkshopContext.standalone(tech_preset_name="default")
         self.builder = DesignWorkshopScreen(800, 600, context)
-        self.builder.ship = MagicMock()
-        self.builder.ship.layers = {}
+        self.builder.viewmodel._ship = MagicMock()
+        self.builder.viewmodel._ship.layers = {}
 
         # Mocks for panels to avoid errors during event handling/updates
         self.builder.left_panel = MagicMock()

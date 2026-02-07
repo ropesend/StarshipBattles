@@ -15,7 +15,7 @@ import pytest
 import pygame
 from unittest.mock import MagicMock
 from game.ai.target_evaluator import TargetEvaluator
-from game.core.constants import AttackType
+from game.core.constants import AttackType, LayerType
 
 
 # =============================================================================
@@ -426,8 +426,6 @@ class TestLeastArmorRule:
 
     def test_least_armor_lower_hp_scores_higher(self, ship):
         """Target with less armor HP should score higher."""
-        from game.simulation.components.component_constants import LayerType
-
         low_armor = MagicMock()
         low_armor.position = pygame.math.Vector2(100, 0)
         armor_comp1 = MagicMock()

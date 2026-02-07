@@ -100,10 +100,8 @@ class TestBattleScreen:
         # Configure ship to fire this projectile
         self.ship1.comp_trigger_pulled = True
 
-        # We must mock fire_weapons to return our projectile
-        # But Ship.fire_weapons is a method on the instance.
-        # We can patch it on the instance or class.
-        with patch.object(self.ship1, 'fire_weapons', return_value=[proj]):
+        # Patch combat_engine.fire_weapons to return our projectile
+        with patch.object(self.ship1.combat_engine, 'fire_weapons', return_value=[proj]):
             self.scene.update([])
 
         assert proj in self.scene.projectiles

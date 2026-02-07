@@ -462,8 +462,6 @@ class StarGenerator:
     def _generate_random_stars(self, system_name):
         """
         Generate stars using default random probabilities.
-
-        This is the original generation logic for backward compatibility.
         """
         stars = []
 

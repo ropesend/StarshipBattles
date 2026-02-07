@@ -107,7 +107,7 @@ class ProjectileManager:
                         if weapon_ab and hasattr(weapon_ab, 'get_damage'):
                             damage = weapon_ab.get_damage(hit_dist)
                     
-                    s.take_damage(damage)
+                    s.combat_engine.take_damage(damage)
                     hit_occurred = True
                     break
             

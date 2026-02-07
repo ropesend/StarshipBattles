@@ -4,7 +4,7 @@ import pygame
 import os
 from game.ui.assets import ShipThemeManager
 
-from game.core.constants import ASSET_DIR
+from game.core.paths import Paths
 
 
 class TestNewThemes:
@@ -24,8 +24,8 @@ class TestNewThemes:
         manager = ShipThemeManager.instance()
 
         # Verify resources exist
-        klingon_json = os.path.join(ASSET_DIR, "ShipThemes", "Klingons", "theme.json")
-        romulan_json = os.path.join(ASSET_DIR, "ShipThemes", "Romulans", "theme.json")
+        klingon_json = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Klingons", "theme.json")
+        romulan_json = os.path.join(Paths.ASSET_DIR, "ShipThemes", "Romulans", "theme.json")
 
         # Skip test if theme files are missing
         if not os.path.exists(klingon_json) or not os.path.exists(romulan_json):

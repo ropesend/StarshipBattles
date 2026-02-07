@@ -113,7 +113,7 @@ class TestBattleControllerGetResults:
         mock_service.get_winner.return_value = 0
 
         # Add escaped ship
-        controller._escaped_ships = ['escaped-ship-id']
+        controller._retreat_manager.escaped_ships = ['escaped-ship-id']
 
         # Patch BattleState in the manager module where it's actually called
         with patch('game.simulation.managers.battle_state_manager.BattleState') as MockState:

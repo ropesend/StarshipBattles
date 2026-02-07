@@ -7,7 +7,6 @@ pygame.init()
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.entities.ship_combat import ShipCombatMixin
 
 
 class TestCrystallineArmor:
@@ -97,7 +96,7 @@ class TestCrystallineArmor:
         # - Shields + 10 = 60
         # - Shields take 10 damage -> 50
 
-        self.ship.take_damage(20)
+        self.ship.combat_engine.take_damage(20)
 
         assert self.ship.current_shields == 50, "Shields should net same (50 + 10 - 10)"
         assert self.ship.hp == initial_hp, "HP should be untouched"
@@ -113,7 +112,7 @@ class TestCrystallineArmor:
         # - Net Damage = 0
         # - Shields + 5 = 55
 
-        self.ship.take_damage(5)
+        self.ship.combat_engine.take_damage(5)
 
         assert self.ship.current_shields == 55, "Shields should increase by 5"
         assert self.ship.hp == initial_hp, "HP should be untouched"

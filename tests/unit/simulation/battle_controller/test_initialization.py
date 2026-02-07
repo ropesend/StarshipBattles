@@ -30,8 +30,7 @@ class TestBattleControllerInit:
     def test_init_empty_tracking_dicts(self, controller):
         """Controller starts with empty tracking dictionaries."""
         assert controller._ship_id_map == {}
-        assert controller._retreating_ships == {}
-        assert controller._escaped_ships == []
+        assert controller._retreat_manager is None
 
     def test_init_callbacks_are_none(self, controller):
         """Controller starts with no callbacks."""
@@ -50,16 +49,19 @@ class TestBattleControllerConfigure:
 
     def test_configure_clears_tracking_state(self, controller, basic_config, mock_service):
         """Configure clears existing tracking state."""
-        # Add some state first
+        # Configure first to create retreat_manager
+        controller.configure(basic_config)
+        # Add some state
         controller._ship_id_map = {'old': 'data'}
-        controller._retreating_ships = {'old': Mock()}
-        controller._escaped_ships = ['old_ship']
+        controller._retreat_manager.retreating_ships = {'old': Mock()}
+        controller._retreat_manager.escaped_ships = ['old_ship']
 
+        # Reconfigure should clear everything
         controller.configure(basic_config)
 
         assert controller._ship_id_map == {}
-        assert controller._retreating_ships == {}
-        assert controller._escaped_ships == []
+        assert controller._retreat_manager.retreating_ships == {}
+        assert controller._retreat_manager.escaped_ships == []
 
     def test_configure_calls_service_create_battle(self, controller, basic_config, mock_service):
         """Configure calls service.create_battle with correct args."""

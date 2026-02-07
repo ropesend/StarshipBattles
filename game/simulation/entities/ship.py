@@ -6,6 +6,7 @@ from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Itera
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
+from game.core.math import Vector2
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import get_default_registry_provider, GameRegistries
 from game.core.constants import LayerDefaults, CombatConstants
@@ -14,7 +15,6 @@ if TYPE_CHECKING:
     pass  # GameRegistries imported above
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
-from .ship_combat import ShipCombatMixin
 from .ship_formation import ShipFormation
 from game.simulation.systems.resource_manager import ResourceRegistry
 
@@ -27,7 +27,7 @@ from .ship_loader import get_or_create_validator
 VEHICLE_CLASSES = get_default_registry_provider().get_vehicle_classes()
 
 
-class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
+class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def __init__(self, name: str, x: float, y: float, color: Union[Tuple[int, int, int], List[int]],
                  team_id: int = 0, ship_class: str = "Escort", theme_id: str = "Federation",
@@ -204,6 +204,30 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self._cached_hp = value
 
     # =========================================================================
+    # Combat Engine (PROJ-58: moved from ShipCombatMixin)
+    # =========================================================================
+
+    @property
+    def combat_engine(self):
+        """
+        Get or create the ShipCombatEngine for this ship.
+
+        Lazy initialization to avoid import cycles and ensure ship
+        is fully initialized before engine creation.
+        """
+        if not hasattr(self, '_combat_engine') or self._combat_engine is None:
+            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
+            self._combat_engine = ShipCombatEngine(self)
+        return self._combat_engine
+
+    def die(self) -> None:
+        """Handle ship destruction. Sets ship to dead state and resets velocity."""
+        log_info(f"{self.name} EXPLODED!")
+        self.is_alive = False
+        self.velocity = Vector2(0, 0)
+        self.recalculate_stats()
+
+    # =========================================================================
     # Component Cache Management (PROJ-49 Phase 3)
     # =========================================================================
 
@@ -211,55 +235,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         """Mark component cache as dirty for lazy recalculation."""
         self._components_dirty = True
         self._components_cache = None
-
-    # =========================================================================
-    # Formation Delegation Properties (backward compatibility)
-    # =========================================================================
-    
-    @property
-    def formation_master(self) -> Optional[Any]:
-        """Reference to formation leader (delegates to formation.master)."""
-        return self.formation.master
-    
-    @formation_master.setter
-    def formation_master(self, value: Optional[Any]) -> None:
-        self.formation.master = value
-    
-    @property
-    def formation_offset(self) -> Optional[Any]:
-        """Position offset relative to master (delegates to formation.offset)."""
-        return self.formation.offset
-    
-    @formation_offset.setter
-    def formation_offset(self, value: Optional[Any]) -> None:
-        self.formation.offset = value
-    
-    @property
-    def formation_rotation_mode(self) -> str:
-        """Rotation mode: 'relative' or 'fixed' (delegates to formation.rotation_mode)."""
-        return self.formation.rotation_mode
-    
-    @formation_rotation_mode.setter
-    def formation_rotation_mode(self, value: str) -> None:
-        self.formation.rotation_mode = value
-    
-    @property
-    def formation_members(self) -> List[Any]:
-        """List of followers (delegates to formation.members)."""
-        return self.formation.members
-    
-    @formation_members.setter
-    def formation_members(self, value: List[Any]) -> None:
-        self.formation.members = value
-    
-    @property
-    def in_formation(self) -> bool:
-        """Whether ship is holding formation (delegates to formation.active)."""
-        return self.formation.active
-    
-    @in_formation.setter
-    def in_formation(self, value: bool) -> None:
-        self.formation.active = value
 
     @property
     def max_weapon_range(self) -> float:
@@ -311,11 +286,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin, ShipCombatMixin):
         self.update_physics_movement()
 
         # 4. Combat Cooldowns (Shields/Repair/Custom Logic)
-        self.update_combat_cooldowns()
+        self.combat_engine.update_combat_cooldowns()
 
         # 5. Firing Logic (Link AI trigger to Combat System)
         if self.comp_trigger_pulled:
-            new_attacks = self.fire_weapons(context)
+            new_attacks = self.combat_engine.fire_weapons(context)
             if new_attacks:
                 self.just_fired_projectiles.extend(new_attacks)
 

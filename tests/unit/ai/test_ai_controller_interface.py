@@ -53,9 +53,9 @@ def mock_controllable():
     controllable.radius = 40.0
     controllable.turn_speed = 180.0
     controllable.current_target = None
-    controllable.formation_members = []
-    controllable.in_formation = False
-    controllable.formation_master = None
+    controllable.formation.members = []
+    controllable.formation.active = False
+    controllable.formation.master = None
     controllable.ai_strategy = 'standard_ranged'
     controllable.max_targets = 1
     controllable.secondary_targets = []
@@ -84,10 +84,10 @@ def mock_ship():
     ship.comp_trigger_pulled = False
     ship.current_target = None
     ship.secondary_targets = []
-    ship.formation_members = []
-    ship.formation_master = None
-    ship.in_formation = False
-    ship.formation_offset = None
+    ship.formation.members = []
+    ship.formation.master = None
+    ship.formation.active = False
+    ship.formation.offset = None
     ship.vehicle_type = 'Ship'
     ship.ai_strategy = 'standard_ranged'
     ship.max_targets = 1
@@ -242,8 +242,8 @@ class TestAIControllerUpdate:
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         mock_ship.is_alive = True
-        mock_ship.formation_members = []
-        mock_ship.in_formation = False
+        mock_ship.formation.members = []
+        mock_ship.formation.active = False
         mock_ship.current_target = None
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -269,13 +269,13 @@ class TestAIControllerFormation:
 
         member = MagicMock()
         member.is_alive = True
-        member.in_formation = True
-        member.formation_offset = Vector2(50, 0)
+        member.formation.active = True
+        member.formation.offset = Vector2(50, 0)
         member.position = Vector2(150, 200)
 
         mock_ship.is_alive = True
-        mock_ship.formation_members = [member]
-        mock_ship.in_formation = False
+        mock_ship.formation.members = [member]
+        mock_ship.formation.active = False
         mock_ship.radius = 40
 
         adapter = ShipControllableAdapter(mock_ship)
@@ -294,9 +294,9 @@ class TestAIControllerFormation:
         master.current_target = None
 
         mock_ship.is_alive = True
-        mock_ship.formation_members = []
-        mock_ship.in_formation = True
-        mock_ship.formation_master = master
+        mock_ship.formation.members = []
+        mock_ship.formation.active = True
+        mock_ship.formation.master = master
 
         adapter = ShipControllableAdapter(mock_ship)
         controller = AIController(adapter, mock_grid, enemy_team_id=2)
@@ -402,12 +402,12 @@ class TestFormationIntegrityWithAdapter:
         mock_ship.team_id = 1
         mock_ship.is_alive = True
         mock_ship.radius = 40
-        mock_ship.in_formation = True
+        mock_ship.formation.active = True
 
         # Create formation master with members list containing RAW ships (not adapters)
         mock_master = MagicMock()
-        mock_master.formation_members = [mock_ship]  # Raw ship in list
-        mock_ship.formation_master = mock_master
+        mock_master.formation.members = [mock_ship]  # Raw ship in list
+        mock_ship.formation.master = mock_master
 
         # Create a damaged propulsion component
         damaged_component = MagicMock()
@@ -420,17 +420,17 @@ class TestFormationIntegrityWithAdapter:
         adapter = ShipControllableAdapter(mock_ship)
         controller = AIController(adapter, mock_grid, enemy_team_id=2)
 
-        # Verify ship is in formation_members before
-        assert mock_ship in mock_master.formation_members
+        # Verify ship is in formation.members before
+        assert mock_ship in mock_master.formation.members
 
         # Call _check_formation_integrity which should detect damage and remove from formation
         controller._check_formation_integrity()
 
-        # Verify ship was removed from formation_members
-        assert mock_ship not in mock_master.formation_members, \
-            "Ship should be removed from formation_members when breaking formation"
+        # Verify ship was removed from formation.members
+        assert mock_ship not in mock_master.formation.members, \
+            "Ship should be removed from formation.members when breaking formation"
         # Verify formation state was cleared
-        assert mock_ship.in_formation is False
+        assert mock_ship.formation.active is False
 
     def test_formation_member_not_removed_when_undamaged(self, mock_grid):
         """When ship is undamaged, it should stay in formation."""
@@ -444,11 +444,11 @@ class TestFormationIntegrityWithAdapter:
         mock_ship.team_id = 1
         mock_ship.is_alive = True
         mock_ship.radius = 40
-        mock_ship.in_formation = True
+        mock_ship.formation.active = True
 
         mock_master = MagicMock()
-        mock_master.formation_members = [mock_ship]
-        mock_ship.formation_master = mock_master
+        mock_master.formation.members = [mock_ship]
+        mock_ship.formation.master = mock_master
 
         # Undamaged propulsion component
         undamaged_component = MagicMock()
@@ -462,5 +462,5 @@ class TestFormationIntegrityWithAdapter:
         controller._check_formation_integrity()
 
         # Ship should still be in formation
-        assert mock_ship in mock_master.formation_members
-        assert mock_ship.in_formation is True
+        assert mock_ship in mock_master.formation.members
+        assert mock_ship.formation.active is True

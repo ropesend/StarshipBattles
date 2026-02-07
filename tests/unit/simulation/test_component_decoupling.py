@@ -56,7 +56,7 @@ class TestComponentContextInjection:
         component = create_component('standard_engine', registries=fresh_registries)
 
         # Attach to ship the old way - find appropriate layer
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
         target_layer = LayerType.OUTER  # Thrusters go in OUTER typically
         ship.add_component(component, target_layer)
 
@@ -151,7 +151,7 @@ class TestResourceConsumptionDecoupling:
         component = create_component('standard_engine', registries=fresh_registries)
 
         # Find layer that accepts this component
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
         target_layer = LayerType.OUTER  # Thrusters typically go in OUTER
 
         ship.add_component(component, target_layer)

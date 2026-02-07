@@ -6,7 +6,7 @@ PROJ-50: Updated to use fresh_registries for DI.
 import pytest
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.simulation.components.abilities import create_ability, ToHitAttackModifier
 
 

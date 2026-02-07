@@ -30,7 +30,7 @@ This protocol defines how Claude CLI operates in automated loop mode, executing 
 
 1. **Read Master Plan**
    ```bash
-   # File: refactor_plan.md
+   # File: refactor_loop/refactor_plan.md
    ```
    - Check Agent Context for current state
    - Identify current project (or find next incomplete project)
@@ -114,7 +114,7 @@ If all project phases are complete:
 3. **Process Audit Results**
 
    **If Audit Passes:**
-   - Update refactor_plan.md:
+   - Update refactor_loop/refactor_plan.md:
      - Mark project `[x]` complete
      - Update Audit status: "Passed (Cycle N)"
      - Add entry to Execution Log
@@ -126,10 +126,10 @@ If all project phases are complete:
    - Exit (next iteration will start new project)
 
    **If Audit Fails:**
-   - Check audit cycle count in refactor_plan.md
+   - Check audit cycle count in refactor_loop/refactor_plan.md
    - If cycles < 5:
      - Add fix phases to project plan.md (Protocol 04, Phase 4)
-     - Update refactor_plan.md Audit status: "In Progress (Cycle N)"
+     - Update refactor_loop/refactor_plan.md Audit status: "In Progress (Cycle N)"
      - Update Agent Context to point to fix phases
      - Git commit:
        ```bash
@@ -137,7 +137,7 @@ If all project phases are complete:
        ```
      - Exit (next iteration will execute fixes)
    - If cycles >= 5:
-     - Update refactor_plan.md:
+     - Update refactor_loop/refactor_plan.md:
        - Mark project `[~]` (complete with issues)
        - Update Audit status: "Failed after 5 cycles"
        - Add detailed note about persistent issues
@@ -152,7 +152,7 @@ If all project phases are complete:
 
 ### Phase 3: Context Handoff
 
-**Before exiting, ALWAYS update Agent Context in refactor_plan.md:**
+**Before exiting, ALWAYS update Agent Context in refactor_loop/refactor_plan.md:**
 
 ```markdown
 ## Agent Context
@@ -186,7 +186,7 @@ Audit is triggered when:
 ### Audit Cycle Management
 
 **Cycle Tracking:**
-- Stored in refactor_plan.md: `**Audit:** [Status] | **Cycles:** N/5`
+- Stored in refactor_loop/refactor_plan.md: `**Audit:** [Status] | **Cycles:** N/5`
 - Incremented after each audit attempt
 - Maximum 5 cycles per project
 
@@ -291,7 +291,7 @@ Before completing any task:
 
 ## Loop Runner Integration
 
-The bash script `loop_runner.sh` orchestrates the loop:
+The loop runner scripts (`loop_runner.ps1` / `loop_runner.sh`) orchestrate the loop:
 
 1. Checks for incomplete projects
 2. Runs Claude CLI with this protocol

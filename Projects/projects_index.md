@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-65 | Game Class Scene Protocol Refactor | Planning | 2026-02-06 | 2026-02-06 |
+| PROJ-64 | Narrow Exception Handling | Planning | 2026-02-06 | 2026-02-06 |
+| PROJ-63 | Break Down build_queue_screen.py | Planning | 2026-02-06 | 2026-02-06 |
+| PROJ-62 | Planet List Window Breakdown | Planning | 2026-02-06 | 2026-02-06 |
+| PROJ-61 | Workshop Screen Breakdown | Planning | 2026-02-06 | 2026-02-06 |
+| PROJ-60 | Break Down GalaxyTestScreen | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 
 ## Archived Projects
@@ -156,7 +162,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-60
+## Next Project ID: PROJ-66
 
 ---
 

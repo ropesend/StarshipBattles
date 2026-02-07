@@ -3,7 +3,7 @@ import pygame
 
 from game.simulation.components.component import load_components, create_component, load_modifiers
 from game.core.registry import RegistryManager
-from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
+from game.core.paths import Paths
 
 
 @pytest.fixture
@@ -14,8 +14,8 @@ def component_environment():
     RegistryManager.instance().clear()
 
     # Load data using centralized paths
-    load_components(COMPONENTS_FILE)
-    load_modifiers(MODIFIERS_FILE)
+    load_components(Paths.COMPONENTS_FILE)
+    load_modifiers(Paths.MODIFIERS_FILE)
 
     yield
 

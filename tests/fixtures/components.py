@@ -24,7 +24,7 @@ Available fixtures:
 import pytest
 
 from game.simulation.components.component import create_component, Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 # =============================================================================

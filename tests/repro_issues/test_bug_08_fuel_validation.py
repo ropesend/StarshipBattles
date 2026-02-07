@@ -9,7 +9,6 @@ import pytest
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import load_vehicle_classes
 from game.core.registry import RegistryManager
-from game.core.constants import COMPONENTS_FILE, VEHICLE_CLASSES_FILE
 from game.simulation.components.component import load_components, create_component
 
 

@@ -14,7 +14,7 @@ import pygame_gui
 from typing import Callable, List, Optional, Tuple, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_error, log_warning
-from game.core.constants import ASSET_DIR
+from game.core.paths import Paths
 from game.ui.screens.race_asset_loader import RaceAssetLoader
 
 if TYPE_CHECKING:
@@ -129,7 +129,7 @@ class RaceFlagGallery:
             return self._flag_cache
 
         flags = []
-        flags_dir = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
+        flags_dir = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
 
         if not os.path.exists(flags_dir):
             log_warning(f"Flags directory not found: {flags_dir}")

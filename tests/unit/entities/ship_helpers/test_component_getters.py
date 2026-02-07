@@ -12,7 +12,7 @@ from typing import List, Tuple
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 @pytest.mark.use_custom_data

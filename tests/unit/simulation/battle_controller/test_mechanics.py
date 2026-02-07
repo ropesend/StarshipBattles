@@ -6,9 +6,8 @@ from game.simulation.battle_controller import (
     BattleController,
     BattleConfig,
     BattleMode,
-    RetreatState,
 )
-from game.simulation.managers.retreat_manager import RetreatMethod
+from game.simulation.managers.retreat_manager import RetreatMethod, RetreatState
 from game.simulation.services.battle_service import BattleResult
 
 
@@ -168,7 +167,7 @@ class TestBattleControllerRetreat:
 
         ship_id = "ship-id"
         controller._ship_id_map[id(mock_ship)] = ship_id
-        controller._retreating_ships[ship_id] = RetreatState(method="edge")
+        controller._retreat_manager.retreating_ships[ship_id] = RetreatState(method="edge")
 
         result = controller.request_retreat(mock_ship)
 
@@ -187,8 +186,8 @@ class TestBattleControllerRetreat:
         result = controller.request_retreat(mock_ship, method="edge")
 
         assert result.success is True
-        assert ship_id in controller._retreating_ships
-        assert controller._retreating_ships[ship_id].method == RetreatMethod.EDGE
+        assert ship_id in controller._retreat_manager.retreating_ships
+        assert controller._retreat_manager.retreating_ships[ship_id].method == RetreatMethod.EDGE
 
     def test_request_retreat_warp_creates_retreat_state(self, controller, mock_service, mock_ship):
         """request_retreat with warp method creates proper state."""
@@ -202,8 +201,8 @@ class TestBattleControllerRetreat:
         result = controller.request_retreat(mock_ship, method="warp")
 
         assert result.success is True
-        assert ship_id in controller._retreating_ships
-        state = controller._retreating_ships[ship_id]
+        assert ship_id in controller._retreat_manager.retreating_ships
+        state = controller._retreat_manager.retreating_ships[ship_id]
         assert state.method == RetreatMethod.WARP
         assert state.charge_ticks == 0
         assert state.required_ticks == 500
@@ -229,12 +228,12 @@ class TestBattleControllerRetreat:
 
         ship_id = "ship-id"
         controller._ship_id_map[id(mock_ship)] = ship_id
-        controller._retreating_ships[ship_id] = RetreatState(method="edge")
+        controller._retreat_manager.retreating_ships[ship_id] = RetreatState(method="edge")
 
         result = controller.cancel_retreat(mock_ship)
 
         assert result.success is True
-        assert ship_id not in controller._retreating_ships
+        assert ship_id not in controller._retreat_manager.retreating_ships
 
     def test_cancel_retreat_fails_when_not_retreating(self, controller, mock_service, mock_ship):
         """cancel_retreat fails when ship not retreating."""

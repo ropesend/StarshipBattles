@@ -1,6 +1,7 @@
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType, ComponentStatus
+from game.core.constants import LayerType
+from game.simulation.components.component_constants import ComponentStatus
 
 
 class TestBulkAdd:

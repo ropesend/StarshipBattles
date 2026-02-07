@@ -6,7 +6,7 @@ PROJ-48: Split from test_ship_component_manager.py
 import pytest
 from unittest.mock import MagicMock
 
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 class TestShipComponentManagerCreation:

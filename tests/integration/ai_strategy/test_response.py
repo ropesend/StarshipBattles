@@ -47,10 +47,10 @@ class TestAIResponse:
         spatial_grid.insert(enemy)
 
         # Set up formation with required offset
-        ship2.in_formation = True
-        ship2.formation_master = ship1
-        ship2.formation_offset = pygame.math.Vector2(100, 0)  # Required for formation behavior
-        ship1.formation_members = [ship2]
+        ship2.formation.active = True
+        ship2.formation.master = ship1
+        ship2.formation.offset = pygame.math.Vector2(100, 0)  # Required for formation behavior
+        ship1.formation.members = [ship2]
 
         ai_controller = AIController(ShipControllableAdapter(ship2), spatial_grid, enemy_team_id=1)
         ai_controller.update()
@@ -72,10 +72,10 @@ class TestAIResponse:
         spatial_grid.insert(enemy2)
 
         # Set up formation with leader targeting enemy2
-        follower.in_formation = True
-        follower.formation_master = leader
-        follower.formation_offset = pygame.math.Vector2(100, 0)  # Required for formation
-        leader.formation_members = [follower]
+        follower.formation.active = True
+        follower.formation.master = leader
+        follower.formation.offset = pygame.math.Vector2(100, 0)  # Required for formation
+        leader.formation.members = [follower]
         leader.current_target = enemy2
 
         ai_controller = AIController(ShipControllableAdapter(follower), spatial_grid, enemy_team_id=1)

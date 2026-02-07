@@ -51,10 +51,10 @@ class SessionRegistryCache:
 
                 # 3. Trigger Loaders (They populate Registry)
                 # Ensure we use absolute paths from constants
-                from game.core.constants import DATA_DIR
-                
-                comp_path = os.path.join(DATA_DIR, "components.json")
-                mod_path = os.path.join(DATA_DIR, "modifiers.json")
+                from game.core.paths import Paths
+
+                comp_path = os.path.join(Paths.DATA_DIR, "components.json")
+                mod_path = os.path.join(Paths.DATA_DIR, "modifiers.json")
                 
                 load_modifiers(mod_path)
                 load_components(comp_path)
@@ -64,7 +64,7 @@ class SessionRegistryCache:
                 from game.ai.strategy_manager import StrategyManager
                 strategy_mgr = StrategyManager.instance()
                 strategy_mgr.clear()
-                strategy_mgr.load_data(str(DATA_DIR))
+                strategy_mgr.load_data(str(Paths.DATA_DIR))
                 strategy_mgr._loaded = True
 
                 # 5. Capture State (Deep Copy for initial load, shallow copies on retrieval)

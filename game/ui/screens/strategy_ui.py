@@ -17,7 +17,7 @@ from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
-from game.core.constants import DATA_DIR
+from game.core.paths import Paths
 from game.strategy.data.fleet import OrderType
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -42,7 +42,7 @@ class StrategyUI:
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
 
         # UI State
-        theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
+        theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
         self.manager = pygame_gui.UIManager((screen_width, screen_height), theme_path=theme_path)
 
         # --- Right Sidebar Layout (Three Panels) ---

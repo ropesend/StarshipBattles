@@ -4,7 +4,7 @@ import threading
 from game.core.logger import log_info, log_error
 from game.core.json_utils import load_json
 from game.core.profiling import profile_block
-from game.core.constants import ASSET_DIR
+from game.core.paths import Paths
 from game.core.exceptions import StateException
 
 class ShipThemeManager:
@@ -97,9 +97,9 @@ class ShipThemeManager:
             if self.discovery_complete and self.theme_data:
                 return # Already initialized
                 
-            # base_path is now deprecated/ignored in favor of ASSET_DIR
+            # base_path is now deprecated/ignored in favor of Paths.ASSET_DIR
             self.base_path = base_path 
-            themes_dir = os.path.join(ASSET_DIR, "ShipThemes")
+            themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes")
             
             if not os.path.exists(themes_dir):
                 log_error(f"ShipThemes directory not found: {themes_dir}")
@@ -309,7 +309,7 @@ class ShipThemeManager:
                 theme_dir = os.path.dirname(os.path.dirname(any_path))
 
             if not theme_dir:
-                theme_dir = os.path.join(ASSET_DIR, "ShipThemes", theme_name)
+                theme_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes", theme_name)
 
             portrait_path = os.path.join(theme_dir, "Portraits", portrait_filename)
 

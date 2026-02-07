@@ -15,6 +15,7 @@ from game.core.logger import log_debug
 from game.core.profiling import profile_action, profile_block
 from game.ui.utils import create_centered_rect
 from game.core.constants import LayerType
+from game.core.paths import Paths
 # PROJ-50: Removed get_default_registry_provider import - using strict DI
 # PROJ-43: Removed direct simulation imports - using adapters instead
 from game.ui.renderer.sprites import SpriteManager
@@ -96,8 +97,8 @@ class DesignWorkshopScreen:
         self.viewmodel = WorkshopViewModel(self.event_bus, screen_width, screen_height, context=context)
         
         # UI Manager
-        from game.core.constants import ROOT_DIR, DATA_DIR, ASSET_DIR
-        theme_path = os.path.join(DATA_DIR, 'builder_theme.json')
+        from game.core.paths import Paths
+        theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
         with profile_block("Builder: Init UIManager"):
             self.ui_manager = pygame_gui.UIManager(
                 (screen_width, screen_height),
@@ -110,7 +111,7 @@ class DesignWorkshopScreen:
         # In integrated mode, set ship theme from empire
         if self.context.is_integrated() and self.context.empire_theme_id:
             self.viewmodel.set_ship_theme(self.context.empire_theme_id)
-            log_debug(f"Workshop set ship.theme_id to {self.ship.theme_id}")
+            log_debug(f"Workshop set ship.theme_id to {self.viewmodel.ship.theme_id}")
         else:
             log_debug(f"Workshop NOT setting theme - integrated={self.context.is_integrated()}, empire_theme_id={self.context.empire_theme_id}")
         
@@ -256,8 +257,7 @@ class DesignWorkshopScreen:
         avail_height = self.height - self.bottom_bar_height - self.weapons_report_height
         
         # Component Image Path
-        from game.core.constants import ASSET_DIR
-        comp_img_path = os.path.join(ASSET_DIR, "Images", "Components")
+        comp_img_path = os.path.join(Paths.ASSET_DIR, "Images", "Components")
         
         with profile_block("Builder: Init Detail Panel"):
             self.detail_panel = ComponentDetailPanel(
@@ -296,7 +296,7 @@ class DesignWorkshopScreen:
     def update_stats(self):
         # self.right_panel.update_stats_display(self.ship) # Now handled by event
         self.layer_panel.rebuild()
-        self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.ship)
+        self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.viewmodel.ship)
         
     def on_selection_changed(self, new_selection, append=False, toggle=False):
         """Handle selection changes.
@@ -308,13 +308,13 @@ class DesignWorkshopScreen:
         """
         # Use extracted selection logic
         new_list, _ = process_selection_change(
-            self.selected_components, new_selection, self.ship,
+            self.viewmodel.selected_components, new_selection, self.viewmodel.ship,
             append=append, toggle=toggle
         )
-        self.selected_components = new_list
+        self.viewmodel._selected_components = new_list
 
         # Update primary selection
-        self.selected_component = get_primary_selection(self.selected_components)
+        self.selected_component = get_primary_selection(self.viewmodel.selected_components)
 
         self.rebuild_modifier_ui()
         self.event_bus.emit(BuilderEvents.SELECTION_CHANGED, self.selected_component)
@@ -349,34 +349,27 @@ class DesignWorkshopScreen:
     @dragged_item.setter
     def dragged_item(self, value):
         self.controller.dragged_item = value
-    
-    # ─────────────────────────────────────────────────────────────────
-    # Backward-Compatible Proxy Properties (delegate to ViewModel)
-    # ─────────────────────────────────────────────────────────────────
-    
+
+    # --- Viewmodel delegation properties (used by builder sub-panels) ---
     @property
     def ship(self):
-        """Proxy property for backward compatibility - delegates to ViewModel."""
         return self.viewmodel.ship
-        
-    @ship.setter
-    def ship(self, value):
-        self.viewmodel.ship = value
-        
+
     @property
     def selected_components(self):
-        """Proxy property for backward compatibility - delegates to ViewModel."""
         return self.viewmodel.selected_components
-        
+
     @selected_components.setter
     def selected_components(self, value):
-        # Direct assignment to internal list for backward compat
         self.viewmodel._selected_components = value
-        
+
     @property
     def available_components(self):
-        """Proxy property for backward compatibility - delegates to ViewModel."""
         return self.viewmodel.available_components
+
+    @available_components.setter
+    def available_components(self, value):
+        self.viewmodel.available_components = value
 
     def show_error(self, msg):
         self.error_message = msg
@@ -487,7 +480,7 @@ class DesignWorkshopScreen:
         
         # Check name entry - use ViewModel to update name
         new_name = self.right_panel.name_entry.get_text()
-        if new_name != self.ship.name:
+        if new_name != self.viewmodel.ship.name:
             self.viewmodel.set_ship_name(new_name)
 
     def draw(self, screen):
@@ -508,7 +501,7 @@ class DesignWorkshopScreen:
             if self.weapons_report_panel.hovered_weapon:
                 hovered = self.weapons_report_panel.hovered_weapon
                      
-        self.view.draw(screen, self.ship, self.show_firing_arcs, self.controller.selected_component, hovered)
+        self.view.draw(screen, self.viewmodel.ship, self.show_firing_arcs, self.controller.selected_component, hovered)
         
         self.ui_manager.draw_ui(screen)
         self.left_panel.draw(screen)  # Draw hover highlights AFTER UI manager
@@ -618,11 +611,9 @@ class DesignWorkshopScreen:
 
         # Refresh Builder State (PROJ-43: Use viewmodel instead of direct get_all_components)
         self.viewmodel.refresh_available_components()
-        self.available_components = self.viewmodel.available_components
-        
+
         # Reset Ship with new default class (using service layer via viewmodel)
-        self.ship = self.viewmodel.create_default_ship(ship_class=default_class)
-        self.viewmodel.ship = self.ship  # Keep viewmodel in sync
+        self.viewmodel.ship = self.viewmodel.create_default_ship(ship_class=default_class)
         
         # Reset UI Panels
         self.left_panel.update_component_list()
@@ -630,7 +621,7 @@ class DesignWorkshopScreen:
         # Center View
         self.view.selected_component = None
         self.controller.selected_component = None
-        self.selected_components = []
+        self.viewmodel._selected_components = []
         
         # Update Class Dropdown
         classes = self._get_vehicle_classes()
@@ -679,7 +670,7 @@ class DesignWorkshopScreen:
         """Save ship design (context-aware)"""
         if self.context.mode == WorkshopMode.STANDALONE:
             # PROJ-43: Use adapter instead of direct ShipIO access
-            success, message = self._ship_io_adapter.save_ship(self.ship)
+            success, message = self._ship_io_adapter.save_ship(self.viewmodel.ship)
             if success:
                 log_info(message)
             elif message:
@@ -699,7 +690,7 @@ class DesignWorkshopScreen:
             log_debug(f"  library.designs_folder: {library.designs_folder}")
 
             # Show save dialog to get design name
-            design_name = self._prompt_design_name(self.ship.name)
+            design_name = self._prompt_design_name(self.viewmodel.ship.name)
             if not design_name:
                 log_info("Workshop Save: User cancelled design name prompt")
                 return  # Cancelled
@@ -711,7 +702,7 @@ class DesignWorkshopScreen:
             log_debug(f"  built_designs count: {len(built_designs)}")
 
             success, message = library.save_design(
-                self.ship,
+                self.viewmodel.ship,
                 design_name,
                 built_designs
             )
@@ -798,7 +789,7 @@ class DesignWorkshopScreen:
 
     def _apply_loaded_ship(self, new_ship, message):
         """Apply a loaded ship to the workshop"""
-        self.ship = new_ship
+        self.viewmodel.ship = new_ship
         # Fully refresh UI controls to match new ship state
         self.right_panel.refresh_controls()
 

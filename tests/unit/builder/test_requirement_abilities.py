@@ -1,7 +1,7 @@
 import pytest
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, create_component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.simulation.validation.ship_validator import ShipDesignValidator
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 

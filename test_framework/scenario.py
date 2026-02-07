@@ -96,7 +96,7 @@ class CombatScenario:
         # Add basic components if list provided
         if components:
             from game.simulation.components.component import create_component
-            from game.simulation.components.component_constants import LayerType
+            from game.core.constants import LayerType
             # Need a smarter way to install components to valid layers if "TestClass" isn't standard
             # Assume TestClass has a CORE or INNER
             

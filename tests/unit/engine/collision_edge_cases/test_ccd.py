@@ -43,7 +43,7 @@ class TestHighVelocityCollision:
         projectile_manager.update(mock_grid)
 
         # CCD should detect the collision
-        mock_target_ship.take_damage.assert_called()
+        mock_target_ship.combat_engine.take_damage.assert_called()
         assert proj.is_alive is False
         assert proj.status == 'hit'
 
@@ -68,7 +68,7 @@ class TestHighVelocityCollision:
         projectile_manager.update(mock_grid)
 
         # Should still hit (CCD prevents tunneling)
-        mock_target_ship.take_damage.assert_called()
+        mock_target_ship.combat_engine.take_damage.assert_called()
 
     def test_high_velocity_narrow_miss(self, projectile_manager, mock_grid, mock_target_ship):
         """High velocity projectile narrowly missing should not hit."""
@@ -95,7 +95,7 @@ class TestHighVelocityCollision:
         projectile_manager.update(mock_grid)
 
         # Should miss (y=25 > radius 20 + tolerance)
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()
 
 
 # =============================================================================
@@ -131,7 +131,7 @@ class TestStaticRelativeMotion:
         projectile_manager.update(mock_grid)
 
         # Distance (10) < radius (20) -> hit
-        mock_target_ship.take_damage.assert_called()
+        mock_target_ship.combat_engine.take_damage.assert_called()
 
     def test_zero_relative_velocity_outside_radius(self, projectile_manager, mock_grid, mock_target_ship):
         """Objects with zero relative velocity outside radius should miss."""
@@ -157,7 +157,7 @@ class TestStaticRelativeMotion:
         projectile_manager.update(mock_grid)
 
         # Distance (50) > radius (20) -> miss
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()
 
 
 # =============================================================================
@@ -192,7 +192,7 @@ class TestNearMissScenarios:
         projectile_manager.update(mock_grid)
 
         # With tolerance, this should hit
-        mock_target_ship.take_damage.assert_called()
+        mock_target_ship.combat_engine.take_damage.assert_called()
 
     def test_barely_miss(self, projectile_manager, mock_grid, mock_target_ship):
         """Projectile barely missing should not hit."""
@@ -217,7 +217,7 @@ class TestNearMissScenarios:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()
 
     def test_perpendicular_approach_miss(self, projectile_manager, mock_grid, mock_target_ship):
         """Perpendicular approach missing should not hit."""
@@ -242,7 +242,7 @@ class TestNearMissScenarios:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()
 
 
 # =============================================================================
@@ -276,7 +276,7 @@ class TestCCDTimeClamping:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.take_damage.assert_called()
+        mock_target_ship.combat_engine.take_damage.assert_called()
 
     def test_collision_at_end_of_frame(self, projectile_manager, mock_grid, mock_target_ship):
         """Collision at t=1 (end of frame) should be detected."""
@@ -301,7 +301,7 @@ class TestCCDTimeClamping:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.take_damage.assert_called()
+        mock_target_ship.combat_engine.take_damage.assert_called()
 
 
 # =============================================================================
@@ -333,7 +333,7 @@ class TestCollisionFiltering:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()
 
     def test_dead_ship_no_collision(self, projectile_manager, mock_grid, mock_target_ship):
         """Projectiles should not collide with dead ships."""
@@ -356,7 +356,7 @@ class TestCollisionFiltering:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()
 
     def test_dead_projectile_skipped(self, projectile_manager, mock_grid, mock_target_ship):
         """Dead projectiles should not be processed."""
@@ -373,4 +373,4 @@ class TestCollisionFiltering:
         projectile_manager.update(mock_grid)
 
         # Should skip collision check entirely
-        mock_target_ship.take_damage.assert_not_called()
+        mock_target_ship.combat_engine.take_damage.assert_not_called()

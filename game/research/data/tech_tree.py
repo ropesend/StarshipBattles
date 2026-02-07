@@ -6,7 +6,7 @@ import os
 import random
 
 from game.core.json_utils import load_json
-from game.core.constants import DATA_DIR
+from game.core.paths import Paths
 from game.core.logger import log_info
 from .tech_node import TechNode, TechRequirement
 
@@ -37,7 +37,7 @@ class TechTree:
             Populated TechTree instance
         """
         if file_path is None:
-            file_path = os.path.join(DATA_DIR, "techtree.json")
+            file_path = os.path.join(Paths.DATA_DIR, "techtree.json")
 
         tree = cls()
         data = load_json(file_path, default={"tech_tree": []})

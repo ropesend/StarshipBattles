@@ -126,15 +126,3 @@ class Paths:
     def get_planets_v3_dir(cls) -> Path:
         return _PROJECT_ROOT / "assets" / "Images" / "Stellar Objects" / "Planets" / "Planets_V3"
 
-
-# Backward compatibility exports - Deprecated in favor of Paths class access
-# New code should use: from game.core.paths import Paths; Paths.ROOT_DIR
-# These module-level exports will be removed in a future version.
-ROOT_DIR = Paths.ROOT_DIR
-DATA_DIR = Paths.DATA_DIR
-ASSET_DIR = Paths.ASSET_DIR
-SHIPS_DIR = Paths.SHIPS_DIR
-SCREENSHOT_DIR = Paths.SCREENSHOTS_DIR
-COMPONENTS_FILE = Paths.COMPONENTS_FILE
-MODIFIERS_FILE = Paths.MODIFIERS_FILE
-VEHICLE_CLASSES_FILE = Paths.VEHICLE_CLASSES_FILE

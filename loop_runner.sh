@@ -6,7 +6,7 @@
 set -e  # Exit on error
 
 # Configuration
-PLAN_FILE="refactor_plan.md"
+PLAN_FILE="refactor_loop/refactor_plan.md"
 WORKSPACE_DIR="C:/Dev/Starship Battles"
 SLEEP_DURATION=10
 MAX_ITERATIONS=1000  # Safety limit
@@ -70,20 +70,20 @@ while [ $iteration -lt $MAX_ITERATIONS ]; do
     log_info "Starting Claude CLI session..."
     echo ""
     
-    # Use --system-prompt-file to load WORKER.md instead of CLAUDE.md
+    # Use --system-prompt-file to load refactor_loop/WORKER.md instead of CLAUDE.md
     # This ensures the CLI agent is a "Worker Drone" (silent, obedient, rigid)
     # while VS Code sessions use CLAUDE.md as a "Consultant" (chatty, helpful)
     #
     # The prompt tells Claude to follow Protocol 08 for automated loop execution
     # This includes:
-    # - Reading refactor_plan.md
+    # - Reading refactor_loop/refactor_plan.md
     # - Finding next incomplete project
     # - Executing next phase OR running audit if project complete
     # - Updating plan and exiting
     claude \
         --dangerously-skip-user-approval \
-        --system-prompt-file WORKER.md \
-        -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit." \
+        --system-prompt-file refactor_loop/WORKER.md \
+        -p "Follow Protocol 08 (Automated Loop). Read refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit." \
         || {
             log_error "Claude CLI failed with exit code $?"
             log_warning "Check the output above for errors"
@@ -109,5 +109,5 @@ done
 
 log_error "Maximum iterations ($MAX_ITERATIONS) reached"
 log_warning "This might indicate an infinite loop or stuck task"
-log_info "Check refactor_plan.md Agent Context for details"
+log_info "Check refactor_loop/refactor_plan.md Agent Context for details"
 exit 1

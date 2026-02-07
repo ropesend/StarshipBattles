@@ -13,7 +13,6 @@ from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.designs import create_interceptor, create_brick
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager, GameRegistries
-from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
 from tests.fixtures.paths import get_project_root
 
 def run_battle(seed, log_filename):
@@ -26,8 +25,8 @@ def run_battle(seed, log_filename):
         RegistryManager.instance().clear()
 
         initialize_ship_data(str(get_project_root()))
-        load_components(COMPONENTS_FILE)
-        load_modifiers(MODIFIERS_FILE)
+        load_components(Paths.COMPONENTS_FILE)
+        load_modifiers(Paths.MODIFIERS_FILE)
 
         # Get registries for ship/component creation
         mgr = RegistryManager.instance()

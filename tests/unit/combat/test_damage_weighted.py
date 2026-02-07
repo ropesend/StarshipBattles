@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
 import pygame
-from game.simulation.entities.ship_combat import ShipCombatMixin
+from game.simulation.entities.ship_combat_engine import ShipCombatEngine
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType  # Phase 7: Removed Bridge import
+from game.core.constants import LayerType  # Phase 7: Removed Bridge import
 
 
 class MockComponent(Component):
@@ -31,7 +31,7 @@ class MockBridge(MockComponent):  # Phase 7: Changed from Bridge to MockComponen
         self.type_str = "Bridge"  # Set type_str for detection
 
 
-class MockShip(ShipCombatMixin):
+class MockShip:
     def __init__(self):
         self.position = pygame.math.Vector2(0, 0)
         self.velocity = pygame.math.Vector2(0, 0)
@@ -46,6 +46,13 @@ class MockShip(ShipCombatMixin):
             LayerType.INNER: {'components': [], 'radius_pct': 0.5},
             LayerType.CORE: {'components': [], 'radius_pct': 0.3}
         }
+        self._combat_engine = None
+
+    @property
+    def combat_engine(self):
+        if self._combat_engine is None:
+            self._combat_engine = ShipCombatEngine(self)
+        return self._combat_engine
 
     def die(self):
         self.is_alive = False
@@ -74,7 +81,7 @@ class TestDamageWeighted:
         mock_choices.side_effect = [[c1], [c2], [bridge]]
 
         # 50 damage: 10 to C1, 10 to C2, 30 to Bridge
-        ship.take_damage(50)
+        ship.combat_engine.take_damage(50)
 
         assert c1.current_hp == 0
         assert c2.current_hp == 0
@@ -87,7 +94,7 @@ class TestDamageWeighted:
         c2 = MockComponent("Healthy", 10, 10)
         ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
 
-        ship.take_damage(5)
+        ship.combat_engine.take_damage(5)
         assert c1.current_hp == 0
         assert c2.current_hp == 5
 
@@ -98,7 +105,7 @@ class TestDamageWeighted:
         ship.layers[LayerType.CORE]['components'] = [bridge]
 
         # 100 damage: all to bridge
-        ship.take_damage(100)
+        ship.combat_engine.take_damage(100)
 
         assert bridge.current_hp == 0
         assert bridge.current_hp == 0

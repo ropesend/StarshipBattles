@@ -8,7 +8,7 @@ import sys
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component, create_component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import RegistryManager, GameRegistries
 from game.simulation.components.component import load_components
 from tests.fixtures.paths import get_project_root

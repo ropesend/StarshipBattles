@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$PLAN_FILE = "refactor_plan.md"
+$PLAN_FILE = "refactor_loop/refactor_plan.md"
 $WORKSPACE_DIR = "C:/Dev/Starship Battles"
 $SLEEP_DURATION = 10
 $MAX_ITERATIONS = 1000
@@ -83,8 +83,8 @@ while ($iteration -lt $MAX_ITERATIONS) {
             
             claude `
                 --dangerously-skip-permissions `
-                --system-prompt-file WORKER.md `
-                -p "Follow Protocol 08 (Automated Loop). Read refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress."
+                --system-prompt-file refactor_loop/WORKER.md `
+                -p "Follow Protocol 08 (Automated Loop). Read refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress."
                 
             if ($LASTEXITCODE -ne 0) {
                 throw "Claude CLI exited with error code $LASTEXITCODE"

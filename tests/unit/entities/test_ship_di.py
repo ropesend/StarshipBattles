@@ -111,7 +111,7 @@ class TestShipMethodsWithRegistries:
     def test_add_component_with_injected_registries(self, mock_registries):
         """add_component should work with ship using injected registries."""
         from game.simulation.components.component import create_component
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
 
         ship = Ship(
             name="Test Ship",
@@ -165,7 +165,7 @@ class TestStrictDIEnforcement:
     def test_components_share_registries(self, mock_registries):
         """Components added to ship should use the same registries."""
         from game.simulation.components.component import create_component
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
 
         ship = Ship(
             name="Test Ship",

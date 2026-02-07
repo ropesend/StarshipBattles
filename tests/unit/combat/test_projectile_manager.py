@@ -70,7 +70,7 @@ class TestProjectileManager:
 
         manager.update(grid)
 
-        target_ship.take_damage.assert_called_with(20)
+        target_ship.combat_engine.take_damage.assert_called_with(20)
         assert proj.is_alive is False
         assert proj.status == 'hit'
 

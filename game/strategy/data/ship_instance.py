@@ -191,19 +191,8 @@ class ShipInstance:
             # INTENTIONAL LATE IMPORT: Lazy initialization pattern
             # See docs/ARCHITECTURE.md "Intentional Late Imports" section
             from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-            from game.core.registry import get_default_registries, RegistryManager, GameRegistries
-            # PROJ-50: Get registries with fallback for tests
-            try:
-                registries = get_default_registries()
-            except Exception:
-                # Fallback for tests that don't set up default registries
-                mgr = RegistryManager.instance()
-                registries = GameRegistries(
-                    components=mgr.components,
-                    modifiers=mgr.modifiers,
-                    vehicle_classes=mgr.vehicle_classes,
-                    resources={}
-                )
+            from game.core.registry import get_default_registries
+            registries = get_default_registries()
             service = ShipStatsCalculator(registries=registries)
             self._cached_stats = service.calculate_stats(
                 self.design_data,
@@ -638,7 +627,7 @@ class ShipInstance:
             if damage > 0:
                 log_debug(f"Ship {self.name} entering battle with {damage} damage pre-applied")
                 # Apply damage (this will distribute to components)
-                ship.take_damage(damage)
+                ship.combat_engine.take_damage(damage)
 
         # Apply component-specific damage
         for comp_id, target_hp in self.component_damage.items():

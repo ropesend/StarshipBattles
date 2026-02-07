@@ -130,12 +130,12 @@ class TestShipFactory:
 
         factory.setup_formation(ships, formation_data)
 
-        assert follower1.formation_master is master
-        assert follower2.formation_master is master
-        assert follower1 in master.formation_members
-        assert follower2 in master.formation_members
-        assert follower1.formation_rotation_mode == 'relative'
-        assert follower2.formation_rotation_mode == 'fixed'
+        assert follower1.formation.master is master
+        assert follower2.formation.master is master
+        assert follower1 in master.formation.members
+        assert follower2 in master.formation.members
+        assert follower1.formation.rotation_mode == 'relative'
+        assert follower2.formation.rotation_mode == 'fixed'
 
     def test_create_and_configure_combined(self, fresh_registries):
         """Test full workflow: create, configure, recalculate."""

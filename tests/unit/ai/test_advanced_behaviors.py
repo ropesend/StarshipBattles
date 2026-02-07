@@ -155,9 +155,9 @@ class TestAdvancedBehaviors:
         real_controller = AIController(ShipControllableAdapter(mock_ship), MagicMock(), 0)
 
         # Setup Ship with Ability-based Logic (access through underlying ship)
-        mock_ship.in_formation = True
-        mock_ship.formation_master = MagicMock()
-        mock_ship.formation_master.formation_members = [mock_ship]  # Raw ships in list
+        mock_ship.formation.active = True
+        mock_ship.formation.master = MagicMock()
+        mock_ship.formation.master.formation.members = [mock_ship]  # Raw ships in list
 
         # Case 1: Ability Healthy
         comp = MagicMock()
@@ -169,10 +169,10 @@ class TestAdvancedBehaviors:
         mock_ship.get_components_by_ability = MagicMock(return_value=[comp])
 
         real_controller._check_formation_integrity()
-        assert mock_ship.in_formation is True
+        assert mock_ship.formation.active is True
 
         # Case 2: Ability Damaged
         comp.current_hp = 50
 
         real_controller._check_formation_integrity()
-        assert mock_ship.in_formation is False
+        assert mock_ship.formation.active is False

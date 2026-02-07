@@ -15,12 +15,12 @@ class TestFormationBasic:
 
     def test_no_master_exits_formation(self, formation_behavior, mock_ship):
         """Ship should exit formation if master is None."""
-        mock_ship.formation_master = None
+        mock_ship.formation.master = None
         mock_ship.get_formation_master.return_value = None
 
         formation_behavior.update(None, {})
 
-        assert mock_ship.in_formation is False
+        assert mock_ship.formation.active is False
 
     def test_dead_master_exits_formation(self, formation_behavior, mock_ship, mock_master):
         """Ship should exit formation if master is dead."""
@@ -28,7 +28,7 @@ class TestFormationBasic:
 
         formation_behavior.update(None, {})
 
-        assert mock_ship.in_formation is False
+        assert mock_ship.formation.active is False
 
     def test_derelict_master_exits_formation(self, formation_behavior, mock_ship, mock_master):
         """Ship should exit formation if master is derelict."""
@@ -36,7 +36,7 @@ class TestFormationBasic:
 
         formation_behavior.update(None, {})
 
-        assert mock_ship.in_formation is False
+        assert mock_ship.formation.active is False
 
 
 class TestOffsetCalculations:
@@ -44,8 +44,8 @@ class TestOffsetCalculations:
 
     def test_relative_rotation_mode(self, formation_behavior, mock_ship, mock_master):
         """Offset should rotate with master angle in relative mode."""
-        mock_ship.formation_rotation_mode = 'relative'
-        mock_ship.formation_offset = pygame.math.Vector2(100, 0)
+        mock_ship.formation.rotation_mode = 'relative'
+        mock_ship.formation.offset = pygame.math.Vector2(100, 0)
         mock_master.angle = 90  # 90 degrees
 
         # Position ship far from target to trigger navigation
@@ -61,8 +61,8 @@ class TestOffsetCalculations:
 
     def test_fixed_rotation_mode(self, formation_behavior, mock_ship, mock_master):
         """Offset should NOT rotate with master angle in fixed mode."""
-        mock_ship.formation_rotation_mode = 'fixed'
-        mock_ship.formation_offset = pygame.math.Vector2(100, 0)
+        mock_ship.formation.rotation_mode = 'fixed'
+        mock_ship.formation.offset = pygame.math.Vector2(100, 0)
         mock_master.angle = 90
 
         # Position ship far from target
@@ -77,7 +77,7 @@ class TestOffsetCalculations:
 
     def test_zero_offset(self, formation_behavior, mock_ship, mock_master):
         """Zero offset should keep ship at master position."""
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(500, 500)  # Far away
 
         formation_behavior.update(None, {})
@@ -92,7 +92,7 @@ class TestDriftThreshold:
 
     def test_within_drift_threshold_no_navigation(self, formation_behavior, mock_ship, mock_master):
         """Ship within drift threshold should not navigate."""
-        mock_ship.formation_offset = pygame.math.Vector2(50, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(50, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
 
         # Position ship exactly at target position
@@ -106,7 +106,7 @@ class TestDriftThreshold:
 
     def test_outside_drift_threshold_triggers_navigation(self, formation_behavior, mock_ship, mock_master):
         """Ship outside drift threshold should navigate."""
-        mock_ship.formation_offset = pygame.math.Vector2(50, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(50, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
 
         # Position ship very far from target
@@ -130,7 +130,7 @@ class TestRotationMatching:
         mock_ship.turn_throttle = 1.0
 
         # Position ship at target to trigger drift mode
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         formation_behavior.update(None, {})
@@ -154,7 +154,7 @@ class TestRotationMatching:
         mock_ship.turn_throttle = 1.0
 
         # Position ship at target to trigger drift mode
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         formation_behavior.update(None, {})
@@ -173,7 +173,7 @@ class TestVelocitySync:
         mock_master.engine_throttle = 0.5  # 50% throttle
 
         mock_ship.max_speed = 500
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         formation_behavior.update(None, {})
@@ -186,7 +186,7 @@ class TestVelocitySync:
         mock_master.is_thrusting = False
 
         mock_ship.max_speed = 500
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         formation_behavior.update(None, {})
@@ -200,7 +200,7 @@ class TestPositionCorrection:
 
     def test_correction_within_deadband_ignored(self, formation_behavior, mock_ship, mock_master):
         """Position errors within deadband should not be corrected."""
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
 
         # Position ship with very small error (< deadband)
@@ -215,7 +215,7 @@ class TestPositionCorrection:
 
     def test_correction_applies_smoothing(self, formation_behavior, mock_ship, mock_master):
         """Position correction should be smoothed (not instant snap)."""
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
 
         # Position ship with significant error
@@ -242,7 +242,7 @@ class TestPrediction:
 
     def test_navigation_uses_predicted_position(self, formation_behavior, mock_ship, mock_master):
         """Navigation should use predicted master position."""
-        mock_ship.formation_offset = pygame.math.Vector2(50, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(50, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
         mock_master.current_speed = 100  # Moving forward
         mock_master.angle = 0
@@ -266,7 +266,7 @@ class TestEdgeCases:
     def test_zero_max_speed(self, formation_behavior, mock_ship, mock_master):
         """Ship with zero max speed should not crash."""
         mock_ship.max_speed = 0
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         # Should not raise
@@ -274,7 +274,7 @@ class TestEdgeCases:
 
     def test_very_large_offset(self, formation_behavior, mock_ship, mock_master):
         """Very large formation offset should work."""
-        mock_ship.formation_offset = pygame.math.Vector2(10000, 10000)
+        mock_ship.formation.offset = pygame.math.Vector2(10000, 10000)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         formation_behavior.update(None, {})
@@ -284,7 +284,7 @@ class TestEdgeCases:
 
     def test_negative_offset(self, formation_behavior, mock_ship, mock_master):
         """Negative formation offset should work."""
-        mock_ship.formation_offset = pygame.math.Vector2(-50, -50)
+        mock_ship.formation.offset = pygame.math.Vector2(-50, -50)
         mock_ship.position = pygame.math.Vector2(100, 100)
 
         formation_behavior.update(None, {})
@@ -294,7 +294,7 @@ class TestEdgeCases:
     def test_zero_turn_speed(self, formation_behavior, mock_ship, mock_master):
         """Ship with zero turn speed should not crash."""
         mock_ship.turn_speed = 0
-        mock_ship.formation_offset = pygame.math.Vector2(0, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(0, 0)
         mock_ship.position = pygame.math.Vector2(0, 0)
 
         # Should not raise
@@ -306,7 +306,7 @@ class TestBehaviorStates:
 
     def test_far_to_close_transition(self, formation_behavior, mock_ship, mock_master):
         """Transitioning from far to close should change behavior."""
-        mock_ship.formation_offset = pygame.math.Vector2(50, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(50, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
 
         # Start far (navigation mode)
@@ -322,7 +322,7 @@ class TestBehaviorStates:
 
     def test_close_to_far_transition(self, formation_behavior, mock_ship, mock_master):
         """Transitioning from close to far should trigger navigation."""
-        mock_ship.formation_offset = pygame.math.Vector2(50, 0)
+        mock_ship.formation.offset = pygame.math.Vector2(50, 0)
         mock_master.position = pygame.math.Vector2(0, 0)
 
         # Start close (drift mode)
@@ -350,11 +350,11 @@ class TestFormationIntegrity:
         mock_ship = MagicMock()
         mock_ship.team_id = 0
         mock_ship.is_alive = True
-        mock_ship.in_formation = True
-        mock_ship.formation_master = MagicMock()
+        mock_ship.formation.active = True
+        mock_ship.formation.master = MagicMock()
         # formation_members contains RAW ships (not adapters) - matches production
-        mock_ship.formation_master.formation_members = [mock_ship]
-        mock_ship.formation_members = []
+        mock_ship.formation.master.formation.members = [mock_ship]
+        mock_ship.formation.members = []
 
         # Mock propulsion component with damage (current_hp < max_hp)
         propulsion_comp = MagicMock()
@@ -371,16 +371,16 @@ class TestFormationIntegrity:
         mock_ship.get_components_by_ability = get_components
 
         # Save reference to formation_members before the call (formation_master gets set to None)
-        formation_members = mock_ship.formation_master.formation_members
+        formation_members = mock_ship.formation.master.formation.members
 
         # Use ShipControllableAdapter to match production behavior (battle_engine.py)
         controller = AIController(ShipControllableAdapter(mock_ship), mock_grid, enemy_team_id=1)
         controller._check_formation_integrity()
 
         # Should exit formation and be removed from formation_members
-        assert mock_ship.in_formation is False
+        assert mock_ship.formation.active is False
         assert mock_ship not in formation_members  # Ship should be removed from master's list
-        assert mock_ship.formation_master is None  # Master reference should be cleared
+        assert mock_ship.formation.master is None  # Master reference should be cleared
 
 
 if __name__ == '__main__':

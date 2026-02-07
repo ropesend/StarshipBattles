@@ -148,61 +148,54 @@ class TestShipFormationIntegration:
         assert hasattr(ship, 'formation')
         assert isinstance(ship.formation, ShipFormation)
 
-    def test_backward_compat_formation_master(self, pygame_init):
-        """ship.formation_master delegates to ship.formation.master."""
+    def test_formation_master_via_direct_api(self, pygame_init):
+        """ship.formation.master can be set and read directly."""
         registries = pygame_init
         master = Ship("MasterShip", 0, 0, (255, 255, 255), registries=registries)
         follower = Ship("FollowerShip", 100, 0, (200, 200, 200), registries=registries)
 
-        # Set via delegation property
-        follower.formation_master = master
+        # Set via direct formation API
+        follower.formation.master = master
 
         # Verify via formation object
         assert follower.formation.master is master
 
-        # Get via delegation property
-        assert follower.formation_master is master
-
-    def test_backward_compat_formation_offset(self, pygame_init):
-        """ship.formation_offset delegates to ship.formation.offset."""
+    def test_formation_offset_via_direct_api(self, pygame_init):
+        """ship.formation.offset can be set and read directly."""
         registries = pygame_init
         ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=registries)
         offset = pygame.math.Vector2(100, 50)
 
-        ship.formation_offset = offset
+        ship.formation.offset = offset
 
         assert ship.formation.offset == offset
-        assert ship.formation_offset == offset
 
-    def test_backward_compat_formation_rotation_mode(self, pygame_init):
-        """ship.formation_rotation_mode delegates to ship.formation.rotation_mode."""
+    def test_formation_rotation_mode_via_direct_api(self, pygame_init):
+        """ship.formation.rotation_mode can be set and read directly."""
         registries = pygame_init
         ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=registries)
 
-        ship.formation_rotation_mode = 'fixed'
+        ship.formation.rotation_mode = 'fixed'
 
         assert ship.formation.rotation_mode == 'fixed'
-        assert ship.formation_rotation_mode == 'fixed'
 
-    def test_backward_compat_formation_members(self, pygame_init):
-        """ship.formation_members delegates to ship.formation.members."""
+    def test_formation_members_via_direct_api(self, pygame_init):
+        """ship.formation.members can be appended to and read directly."""
         registries = pygame_init
         master = Ship("MasterShip", 0, 0, (255, 255, 255), registries=registries)
         follower = Ship("FollowerShip", 100, 0, (200, 200, 200), registries=registries)
 
-        master.formation_members.append(follower)
+        master.formation.members.append(follower)
 
         assert follower in master.formation.members
-        assert follower in master.formation_members
 
-    def test_backward_compat_in_formation(self, pygame_init):
-        """ship.in_formation delegates to ship.formation.active."""
+    def test_formation_active_via_direct_api(self, pygame_init):
+        """ship.formation.active can be set and read directly."""
         registries = pygame_init
         ship = Ship("TestShip", 0, 0, (255, 255, 255), registries=registries)
 
-        assert ship.in_formation is True
+        assert ship.formation.active is True
 
-        ship.in_formation = False
+        ship.formation.active = False
 
         assert ship.formation.active is False
-        assert ship.in_formation is False

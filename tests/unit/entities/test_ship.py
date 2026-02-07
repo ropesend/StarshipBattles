@@ -93,7 +93,7 @@ class TestShip:
         assert bridge.is_active is True, "Bridge should be active with crew support"
 
         # Apply 100 damage (Should be absorbed by Armor)
-        ship.take_damage(100)
+        ship.combat_engine.take_damage(100)
 
         assert armor.current_hp == 150
         assert bridge.current_hp == 200  # Bridge untouched
@@ -104,7 +104,7 @@ class TestShip:
         # Damage is dealt to a random component - if that component has less HP than
         # the damage, the remaining damage continues to next random component.
         # Note: With current damage mechanics, one component takes as much as it can absorb.
-        ship.take_damage(200)
+        ship.combat_engine.take_damage(200)
 
         assert armor.current_hp == 0
         assert armor.is_active is False

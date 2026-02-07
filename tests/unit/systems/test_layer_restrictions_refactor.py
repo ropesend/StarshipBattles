@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from game.simulation.validation.ship_validator import LayerRestrictionDefinitionRule
 from game.core.validation import ValidationResult
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 
 
 class TestLayerRestrictionsRefactor:

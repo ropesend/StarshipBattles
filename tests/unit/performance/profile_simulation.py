@@ -20,14 +20,14 @@ from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
-from game.core.constants import COMPONENTS_FILE, MODIFIERS_FILE
+from game.core.paths import Paths
 
 def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
     """Run a headless battle simulation for profiling."""
 
     # Load components
-    load_components(COMPONENTS_FILE)
-    load_modifiers(MODIFIERS_FILE)
+    load_components(Paths.COMPONENTS_FILE)
+    load_modifiers(Paths.MODIFIERS_FILE)
     
     # Create ships
     ships = []
@@ -141,7 +141,7 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
                         hit = True
                 
                 if hit:
-                    s.take_damage(p['damage'])
+                    s.combat_engine.take_damage(p['damage'])
                     hit_occurred = True
                     break
             

@@ -61,7 +61,7 @@ class TestShipComponentManagerWithRegistries:
     def test_add_component_works_with_ship_registries(self, mock_registries):
         """add_component should work when ship has injected registries."""
         from game.simulation.components.component import create_component
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
 
         ship = Ship(
             name="Test Ship",

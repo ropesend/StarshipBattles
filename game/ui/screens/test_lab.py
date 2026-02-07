@@ -6,7 +6,9 @@ import importlib
 import sys
 from pathlib import Path
 
-from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN, GameState
+from game.core.constants import WHITE, BLACK, BLUE, FONT_MAIN, GameState
+from game.core.config import DisplayConfig
+WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.ui.widgets import Button
 from test_framework.runner import TestRunner
 from test_framework.scenario import CombatScenario

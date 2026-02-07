@@ -30,12 +30,30 @@ class ShipFactory:
     without directly importing the Ship class from the simulation layer.
 
     Usage:
-        factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registries=fresh_registries)
+        factory = ShipFactory(registries=fresh_registries)
+        ship = factory.create_from_design(design_data)
         factory.configure_ship(ship, position, angle, team_id, ai_strategy, source_file)
 
-    PROJ-50: Methods accept optional registries parameter for strict DI.
+    PROJ-50/PROJ-58: Registries stored on instance; method-level override also supported.
     """
+
+    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+        """Initialize ShipFactory with optional registries.
+
+        Args:
+            registries: GameRegistries for DI. If None, uses get_default_registries()
+                       at method call time.
+        """
+        self._registries = registries
+
+    def _get_registries(self, registries: Optional['GameRegistries'] = None) -> 'GameRegistries':
+        """Resolve registries: explicit > stored > global default."""
+        if registries is not None:
+            return registries
+        if self._registries is not None:
+            return self._registries
+        from game.core.registry import get_default_registries
+        return get_default_registries()
 
     def create_from_design(
         self,
@@ -45,9 +63,6 @@ class ShipFactory:
     ) -> 'Ship':
         """Create a Ship instance from design dictionary data.
 
-        PROJ-50: Supports optional registries parameter for strict DI.
-        When registries is None, falls back to global RegistryManager.
-
         Args:
             design_data: Dictionary containing ship design data with keys:
                 - name: Ship name
@@ -55,8 +70,8 @@ class ShipFactory:
                 - theme_id: Visual theme identifier
                 - color: RGB color tuple
                 - layers: Component layer definitions
-            registries: Optional GameRegistries for DI (keyword-only).
-                       If None, uses global RegistryManager.
+            registries: Optional GameRegistries override (keyword-only).
+                       If None, uses stored registries or global default.
 
         Returns:
             A new Ship instance created from the design data.
@@ -66,12 +81,7 @@ class ShipFactory:
             ValueError: If component or modifier IDs are invalid.
         """
         from game.simulation.entities.ship import Ship
-        if registries is not None:
-            return Ship.from_dict(design_data, registries=registries)
-        else:
-            # Legacy fallback: use get_default_registries
-            from game.core.registry import get_default_registries
-            return Ship.from_dict(design_data, registries=get_default_registries())
+        return Ship.from_dict(design_data, registries=self._get_registries(registries))
 
     def get_ship_radius(
         self,
@@ -85,12 +95,10 @@ class ShipFactory:
         after recalculating stats. This is useful for formation spacing
         calculations where only the radius is needed.
 
-        PROJ-50: Supports optional registries parameter for strict DI.
-
         Args:
             design_data: Dictionary containing ship design data.
-            registries: Optional GameRegistries for DI (keyword-only).
-                       If None, uses global RegistryManager.
+            registries: Optional GameRegistries override (keyword-only).
+                       If None, uses stored registries or global default.
 
         Returns:
             The calculated radius of the ship in world units.
@@ -166,15 +174,15 @@ class ShipFactory:
             else:
                 # Subsequent ships are followers
                 master = formation_masters[formation_id]
-                ship.formation_master = master
-                master.formation_members.append(ship)
+                ship.formation.master = master
+                master.formation.members.append(ship)
 
                 # Calculate offset from master to follower
                 diff = ship.position - master.position
-                ship.formation_rotation_mode = rotation_mode
+                ship.formation.rotation_mode = rotation_mode
 
                 if rotation_mode == 'fixed':
-                    ship.formation_offset = diff
+                    ship.formation.offset = diff
                 else:
                     # Rotate into master's local space
-                    ship.formation_offset = diff.rotate(-master.angle)
+                    ship.formation.offset = diff.rotate(-master.angle)

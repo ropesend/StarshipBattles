@@ -366,8 +366,8 @@ class AIController:
         max_radius = 0
         # formation_members contains raw Ships, not adapters
         for member in self.ship.get_formation_members():
-            if member.formation_offset:
-                r = member.formation_offset.length()
+            if member.formation.offset:
+                r = member.formation.offset.length()
                 if r > max_radius:
                     max_radius = r
 
@@ -384,9 +384,9 @@ class AIController:
         slow_down = False
         # formation_members contains raw Ships, not adapters
         for member in self.ship.get_formation_members():
-            if not member.is_alive or not member.in_formation:
+            if not member.is_alive or not member.formation.active:
                 continue
-            rotated_offset = member.formation_offset.rotate(self.ship.get_rotation())
+            rotated_offset = member.formation.offset.rotate(self.ship.get_rotation())
             target_pos = self.ship.get_position() + rotated_offset
             d = member.position.distance_to(target_pos)
             if d > 0.5 * diam:
@@ -416,7 +416,7 @@ class AIController:
                 # Unwrap adapter if present: formation_members contains raw Ships,
                 # but self.ship may be a ShipControllableAdapter
                 own_ship = getattr(self.ship, 'ship', self.ship)
-                own_ship.formation_master.formation_members.remove(own_ship)
+                own_ship.formation.master.formation.members.remove(own_ship)
             except (AttributeError, ValueError) as e:
                 # Expected when formation structure is already broken
                 ship_id = getattr(self.ship, 'id', getattr(self.ship, 'name', str(id(self.ship))))

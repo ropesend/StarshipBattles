@@ -9,7 +9,6 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
-from game.core.constants import COMPONENTS_FILE
 from tests.fixtures.paths import get_project_root
 
 

@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 
 from game.core.logger import log_error, log_warning
 from game.assets.asset_manager import get_asset_manager
-from game.core.constants import ASSET_DIR
+from game.core.paths import Paths
 
 
 class RaceAssetLoader:
@@ -39,7 +39,7 @@ class RaceAssetLoader:
             List of [rectangle, shield, triangle] surfaces (original size, caller scales)
         """
         shapes = []
-        flags_dir = os.path.join(ASSET_DIR, "Images", "Flags", "Processed")
+        flags_dir = os.path.join(Paths.ASSET_DIR, "Images", "Flags", "Processed")
         flag_dir = os.path.join(flags_dir, flag_id)
 
         for shape in ["rectangle", "shield", "triangle"]:
@@ -76,7 +76,7 @@ class RaceAssetLoader:
         Returns:
             Surface (original size, caller scales as needed) or None
         """
-        portraits_dir = os.path.join(ASSET_DIR, "Images", "Race Portraits")
+        portraits_dir = os.path.join(Paths.ASSET_DIR, "Images", "Race Portraits")
         portrait_path = os.path.join(portraits_dir, portrait_id)
 
         if os.path.exists(portrait_path):
@@ -123,7 +123,7 @@ class RaceAssetLoader:
         if not portrait_id:
             return None
 
-        portraits_dir = os.path.join(ASSET_DIR, "RacePortraits")
+        portraits_dir = os.path.join(Paths.ASSET_DIR, "RacePortraits")
         portrait_path = os.path.join(portraits_dir, portrait_id)
 
         if not os.path.exists(portrait_path):
@@ -160,7 +160,7 @@ class RaceAssetLoader:
         if not flag_id:
             return None
 
-        flags_dir = os.path.join(ASSET_DIR, "RaceFlags")
+        flags_dir = os.path.join(Paths.ASSET_DIR, "RaceFlags")
         flag_path = os.path.join(flags_dir, flag_id)
 
         if not os.path.exists(flag_path):

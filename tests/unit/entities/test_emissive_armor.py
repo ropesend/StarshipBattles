@@ -1,7 +1,6 @@
 import pytest
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
-from game.simulation.entities.ship_combat import ShipCombatMixin
 
 
 class TestEmissiveArmor:
@@ -47,13 +46,13 @@ class TestEmissiveArmor:
     def test_damage_reduction_below_threshold(self):
         # Damage 10 < 15
         initial_hp = self.ship.hp
-        self.ship.take_damage(10)
+        self.ship.combat_engine.take_damage(10)
         assert self.ship.hp == initial_hp, "Damage should be completely ignored"
 
     def test_damage_reduction_above_threshold(self):
         # Damage 20 > 15. Should take 5 damage.
         initial_hp = self.ship.hp
-        self.ship.take_damage(20)
+        self.ship.combat_engine.take_damage(20)
         expected_hp = initial_hp - 5
         assert self.ship.hp == expected_hp, "Damage should be reduced by 15"
 
@@ -67,9 +66,9 @@ class TestEmissiveArmor:
         initial_hp = self.ship.hp
 
         # Damage 10 < 15 -> Ignored
-        self.ship.take_damage(10)
+        self.ship.combat_engine.take_damage(10)
         assert self.ship.hp == initial_hp, "Damage 10 < 15 should be ignored"
 
         # Damage 25 > 15 -> Take 10
-        self.ship.take_damage(25)
+        self.ship.combat_engine.take_damage(25)
         assert self.ship.hp == initial_hp - 10, "Damage 25 > 15 should take 10"

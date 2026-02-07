@@ -8,7 +8,7 @@ PROJ-50: Updated to use mock_registries for DI instead of RegistryManager.
 import pytest
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import RegistryManager
 
 

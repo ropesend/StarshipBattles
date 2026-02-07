@@ -134,15 +134,15 @@ def setup_formation_ships(
         if i == 0:
             master = s
             s.name = "Master"
-            s.formation_members = []
+            s.formation.members = []
         else:
             s.name = f"Wing-{i}"
-            s.formation_master = master
-            master.formation_members.append(s)
+            s.formation.master = master
+            master.formation.members.append(s)
 
             # Global offset relative to master (master at angle 0 initially)
             diff = s.position - master.position
-            s.formation_offset = diff
+            s.formation.offset = diff
 
         ships.append(s)
 
@@ -166,12 +166,12 @@ def measure_formation_deviation(master: Ship) -> float:
         Maximum deviation distance across all formation members
     """
     devs = []
-    for s in master.formation_members:
-        if not s.in_formation:
+    for s in master.formation.members:
+        if not s.formation.active:
             devs.append(9999)  # Dropped out marker
             continue
 
-        rotated_offset = s.formation_offset.rotate(master.angle)
+        rotated_offset = s.formation.offset.rotate(master.angle)
         ideal_pos = master.position + rotated_offset
         dist = s.position.distance_to(ideal_pos)
         devs.append(dist)
@@ -311,8 +311,8 @@ class TestFormationFlight:
             engine.update()
 
             # Check for ships that dropped formation
-            for s in master.formation_members:
-                if not s.in_formation and s.name not in dropped_ships:
+            for s in master.formation.members:
+                if not s.formation.active and s.name not in dropped_ships:
                     dropped_ships.append(s.name)
 
         assert len(dropped_ships) == 0, (

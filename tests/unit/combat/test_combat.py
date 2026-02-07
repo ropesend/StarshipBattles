@@ -55,7 +55,7 @@ class TestDamageLayerLogic:
         initial_armor_hp = armor.current_hp
 
         # Deal damage less than armor HP
-        self.ship.take_damage(50)
+        self.ship.combat_engine.take_damage(50)
 
         assert armor.current_hp < initial_armor_hp
         # Core components should be untouched
@@ -69,7 +69,7 @@ class TestDamageLayerLogic:
 
         # Deal more damage than armor can absorb
         overflow_damage = 50
-        self.ship.take_damage(armor_hp + overflow_damage)
+        self.ship.combat_engine.take_damage(armor_hp + overflow_damage)
 
         # Armor should be destroyed
         assert armor.current_hp == 0
@@ -91,7 +91,7 @@ class TestDamageLayerLogic:
         # Deal damage less than shields
         damage = min(initial_shields - 10, 50)
         if damage > 0:
-            self.ship.take_damage(damage)
+            self.ship.combat_engine.take_damage(damage)
 
             assert self.ship.current_shields < initial_shields
             assert armor.current_hp == initial_armor_hp
@@ -239,14 +239,13 @@ class TestCombatFlow:
 
     def test_firing_solution_lead(self):
         """Test lead calculation for moving targets."""
-        # Mixin logic requires a class instance
-        from game.simulation.entities.ship_combat import ShipCombatMixin
-        class MockCombatShip(ShipCombatMixin):
-            pass
+        from game.simulation.entities.ship_combat_engine import ShipCombatEngine
 
-        ship = MockCombatShip()
-        ship.position = pygame.math.Vector2(0,0)
-        ship.velocity = pygame.math.Vector2(0,0)
+        mock_ship = MagicMock()
+        mock_ship.position = pygame.math.Vector2(0, 0)
+        mock_ship.velocity = pygame.math.Vector2(0, 0)
+
+        engine = ShipCombatEngine(mock_ship)
 
         # Target moving right at 10 u/s at (100, 0)
         target_pos = pygame.math.Vector2(100, 0)
@@ -260,8 +259,7 @@ class TestCombatFlow:
         # (20t)^2 = (100 + 10t)^2
         # ... t = 10.0 (See calculation logic)
 
-        # ship.solve_lead(pos, vel, t_pos, t_vel, p_speed)
-        t = ship.solve_lead(ship.position, ship.velocity, target_pos, target_vel, proj_speed)
+        t = engine.solve_lead(mock_ship.position, mock_ship.velocity, target_pos, target_vel, proj_speed)
         assert abs(t - 10.0) < 0.1
 
     def test_fire_weapons_creates_projectiles(self, fresh_registries):
@@ -300,7 +298,7 @@ class TestCombatFlow:
         ship.current_target = target
 
         # Fire
-        attacks = ship.fire_weapons()
+        attacks = ship.combat_engine.fire_weapons()
 
         assert len(attacks) == 1
         assert attacks[0].damage == 10
@@ -339,14 +337,14 @@ class TestCombatFlow:
         ship.layers[LayerType.CORE]['components'] = [c]
 
         # Take 10 damage -> Reduced by 5 -> 5 damage
-        ship.take_damage(10)
+        ship.combat_engine.take_damage(10)
         assert c.current_hp == initial_hp - 5
 
         ship.emissive_armor = 5
 
         # Take 4 damage -> Reduced by 5 -> 0 damage
         prev_hp = c.current_hp
-        ship.take_damage(4)
+        ship.combat_engine.take_damage(4)
         assert c.current_hp == prev_hp
 
         # 2. Crystalline Armor (Absorb + Shield Recharge)
@@ -365,7 +363,7 @@ class TestCombatFlow:
         # Component HP untouched
 
         prev_hp = c.current_hp
-        ship.take_damage(20)
+        ship.combat_engine.take_damage(20)
 
         assert ship.current_shields == 50
         assert c.current_hp == prev_hp

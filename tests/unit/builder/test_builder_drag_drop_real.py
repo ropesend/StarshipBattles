@@ -71,8 +71,8 @@ class TestBuilderDragDropReal:
         builder.modifier_panel.handle_event.return_value = None
         builder.weapons_report_panel.handle_event.return_value = None
 
-        # Setup test ship
-        builder.ship = MagicMock()
+        # Setup test ship via viewmodel
+        builder.viewmodel._ship = MagicMock()
         builder.ship.layers = {
             LayerType.CORE: {'components': []},
             LayerType.INNER: {'components': []},

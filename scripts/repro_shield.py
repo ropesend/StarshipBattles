@@ -4,10 +4,10 @@ import pygame
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.core.registry import RegistryManager
-from game.core.constants import COMPONENTS_FILE
+from game.core.paths import Paths
 from tests.fixtures.paths import get_project_root
 
 
@@ -19,7 +19,7 @@ def ship_with_bridge():
     RegistryManager.instance().clear()
 
     initialize_ship_data(str(get_project_root()))
-    load_components(COMPONENTS_FILE)
+    load_components(Paths.COMPONENTS_FILE)
     ship = Ship("ShieldRepro", 0, 0, (255, 255, 255), ship_class="Cruiser")
     ship.add_component(create_component('bridge'), LayerType.CORE)
     calculator = ShipStatsCalculator(RegistryManager.instance().vehicle_classes)

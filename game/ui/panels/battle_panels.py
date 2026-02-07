@@ -28,11 +28,7 @@ class BattlePanel:
         draw_stat_bar(surface, x, y, width, height, pct, color)
 
     def _get_ships(self):
-        """Get ships from ui_service if available, otherwise fallback to scene.ships.
-
-        PROJ-43: Provides DTO-based access to ship data through ui_service,
-        with backward compatibility for tests that set scene.ships directly.
-        """
+        """Get ships from ui_service if available, otherwise fallback to scene.ships."""
         # Check if ui_service is explicitly set and has get_ships method
         ui_service = getattr(self.scene, 'ui_service', None)
         if ui_service is not None:
@@ -51,7 +47,7 @@ class ShipStatsPanel(BattlePanel):
     """Panel for displaying ship statistics (Right side).
 
     PROJ-43: Uses ui_service.get_ships() to access ship data through DTOs
-    when available, with fallback to scene.ships for backward compatibility.
+    when available, with fallback to scene.ships for direct access.
     Ship expansion state is tracked by ship ID (string) instead of object reference.
     """
     def __init__(self, scene, x, y, w, h):

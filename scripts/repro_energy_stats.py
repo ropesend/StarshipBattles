@@ -4,10 +4,10 @@ import pygame
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component, Component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship_stats import ShipStatsCalculator
-from game.core.constants import COMPONENTS_FILE
+from game.core.paths import Paths
 from tests.fixtures.paths import get_project_root
 
 
@@ -20,7 +20,7 @@ def energy_repro_setup():
 
     initialize_ship_data(str(get_project_root()))
     # Use standard components.json path
-    load_components(COMPONENTS_FILE)
+    load_components(Paths.COMPONENTS_FILE)
 
     yield
 

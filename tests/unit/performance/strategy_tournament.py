@@ -25,7 +25,8 @@ from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.engine.spatial import SpatialGrid
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.registry import RegistryManager
-from game.core.constants import AttackType, SHIPS_DIR, COMPONENTS_FILE, MODIFIERS_FILE
+from game.core.constants import AttackType
+from game.core.paths import Paths
 
 # Configuration
 SHIPS_PER_TEAM = 5
@@ -167,7 +168,7 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
                                     beam_comp = attack['component']
                                     chance = beam_comp.calculate_hit_chance(hit_dist)
                                     if random.random() < chance:
-                                        target.take_damage(attack['damage'])
+                                        target.combat_engine.take_damage(attack['damage'])
                         
                         s.just_fired_projectiles.remove(attack)
         
@@ -197,7 +198,7 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
                     dist = closest.distance_to(target_ship.position)
                 
                 if dist < target_ship.radius + 5:
-                    target_ship.take_damage(p['damage'])
+                    target_ship.combat_engine.take_damage(p['damage'])
                     hit_occurred = True
                     break
             
@@ -225,15 +226,15 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
 def run_tournament():
     """Run full tournament of all strategies vs all strategies."""
     try:
-        load_components(COMPONENTS_FILE)
-        load_modifiers(MODIFIERS_FILE)
+        load_components(Paths.COMPONENTS_FILE)
+        load_modifiers(Paths.MODIFIERS_FILE)
 
-        ship_json_path = os.path.join(SHIPS_DIR, "RailGun Frigate (FR).json")
+        ship_json_path = os.path.join(Paths.SHIPS_DIR, "RailGun Frigate (FR).json")
         if not os.path.exists(ship_json_path):
-             if os.path.exists(SHIPS_DIR):
-                 for f in os.listdir(SHIPS_DIR):
+             if os.path.exists(Paths.SHIPS_DIR):
+                 for f in os.listdir(Paths.SHIPS_DIR):
                      if f.endswith(".json"):
-                         ship_json_path = os.path.join(SHIPS_DIR, f)
+                         ship_json_path = os.path.join(Paths.SHIPS_DIR, f)
                          break
 
         if not os.path.exists(ship_json_path):

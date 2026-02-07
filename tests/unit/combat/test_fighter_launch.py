@@ -1,9 +1,8 @@
 import pytest
 import pygame
 from game.simulation.entities.ship import Ship
-from game.simulation.components.component_constants import LayerType
 from game.simulation.systems.battle_engine import BattleEngine
-from game.core.constants import AttackType
+from game.core.constants import AttackType, LayerType
 
 
 class TestFighterLaunch:
@@ -56,7 +55,7 @@ class TestFighterLaunch:
         ship.current_target = Ship("Enemy", 1000, 0, (0, 0, 255), registries=fresh_registries)
 
         # Fire weapons (triggers launch)
-        attacks = ship.fire_weapons()
+        attacks = ship.combat_engine.fire_weapons()
 
         # Check if launch event occurred
         launch_events = [a for a in attacks if isinstance(a, dict) and a.get('type') == AttackType.LAUNCH]

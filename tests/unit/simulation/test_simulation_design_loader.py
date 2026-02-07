@@ -193,7 +193,7 @@ class TestSimulationDesignLoaderIntegration:
         """Loaded ship has stats calculated correctly."""
         from game.simulation.services.design_loader import SimulationDesignLoader
         from game.simulation.components.component import create_component
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
         from game.simulation.entities.ship import Ship
 
         # Build a ship with known components

@@ -4,7 +4,7 @@ import pygame
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
-from game.simulation.components.component_constants import LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
+from game.core.constants import LayerType  # Phase 7: Removed Bridge, Armor, Weapon imports
 from tests.fixtures.paths import get_project_root
 
 

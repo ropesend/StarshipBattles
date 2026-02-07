@@ -136,8 +136,8 @@ class Projectile(PhysicsBody):
             
             # Let's try to use the owner's solver if available, else direct
             t = 0
-            if hasattr(self.owner, 'solve_lead'):
-                 t = self.owner.solve_lead(p_pos, Vector2(0,0), target.position, target.velocity, self.max_speed)
+            if hasattr(self.owner, 'combat_engine'):
+                 t = self.owner.combat_engine.solve_lead(p_pos, Vector2(0,0), target.position, target.velocity, self.max_speed)
             
             aim_pos = target.position
             if t > 0:

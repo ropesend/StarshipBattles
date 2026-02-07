@@ -1,6 +1,6 @@
 ---
 name: manage-refactor-plan
-description: Add, remove, update, or reorder projects in the master refactor_plan.md
+description: Add, remove, update, or reorder projects in the master refactor_loop/refactor_plan.md
 disable-model-invocation: true
 argument-hint: <ADD|REMOVE|UPDATE|REORDER> <project-number> [details]
 ---
@@ -13,7 +13,7 @@ Read and follow the full protocol file `Projects/protocols/10_manage_refactor_pl
 
 ## Execution
 
-Manage the projects in `refactor_plan.md`.
+Manage the projects in `refactor_loop/refactor_plan.md`.
 
 **Action requested:** $ARGUMENTS
 

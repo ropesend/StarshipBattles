@@ -229,6 +229,11 @@ class IControllable(ABC):
         pass
 
     @abstractmethod
+    def get_formation_rotation_mode(self) -> str:
+        """Get the formation rotation mode ('fixed' or 'relative')."""
+        pass
+
+    @abstractmethod
     def set_in_formation(self, value: bool) -> None:
         """Set whether the entity is in a formation."""
         pass
@@ -245,8 +250,6 @@ class ShipControllableAdapter(IControllable):
 
     This adapter pattern allows the existing Ship class to work with
     the new IControllable interface without modifying Ship directly.
-    During the transition period, it also provides backward-compatible
-    access to the underlying ship.
     """
 
     def __init__(self, ship: Any):
@@ -420,24 +423,28 @@ class ShipControllableAdapter(IControllable):
 
     def get_formation_members(self) -> List[Any]:
         """Get list of formation members."""
-        return self._ship.formation_members or []
+        return self._ship.formation.members or []
 
     def get_formation_master(self) -> Optional[Any]:
         """Get the formation master."""
-        return self._ship.formation_master
+        return self._ship.formation.master
 
     def is_in_formation(self) -> bool:
         """Check if the ship is part of a formation."""
-        return self._ship.in_formation
+        return self._ship.formation.active
 
     def get_formation_offset(self) -> Optional['Vector2']:
         """Get the formation offset relative to master."""
-        return self._ship.formation_offset
+        return self._ship.formation.offset
+
+    def get_formation_rotation_mode(self) -> str:
+        """Get the formation rotation mode ('fixed' or 'relative')."""
+        return self._ship.formation.rotation_mode
 
     def set_in_formation(self, value: bool) -> None:
         """Set whether the ship is in a formation."""
-        self._ship.in_formation = value
+        self._ship.formation.active = value
 
     def set_formation_master(self, master: Optional[Any]) -> None:
         """Set the formation master."""
-        self._ship.formation_master = master
+        self._ship.formation.master = master

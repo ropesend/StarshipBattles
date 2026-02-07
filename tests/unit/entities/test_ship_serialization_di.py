@@ -74,7 +74,7 @@ class TestShipSerializerFromDict:
 
     def test_from_dict_creates_components_with_registries(self, mock_registries, ship_dict_data):
         """from_dict should create components using injected registries."""
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
 
         ship = ShipSerializer.from_dict(ship_dict_data, registries=mock_registries)
 
@@ -88,7 +88,7 @@ class TestShipSerializerFromDict:
 
     def test_from_dict_applies_modifiers_with_registries(self, mock_registries, ship_dict_data):
         """from_dict should apply modifiers using injected registries."""
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
 
         ship = ShipSerializer.from_dict(ship_dict_data, registries=mock_registries)
 
@@ -128,7 +128,7 @@ class TestStrictDIEnforcement:
     def test_roundtrip_with_registries(self, mock_registries):
         """Ship should survive serialization roundtrip with registries."""
         from game.simulation.components.component import create_component
-        from game.simulation.components.component_constants import LayerType
+        from game.core.constants import LayerType
 
         # Create original ship
         ship = Ship(

@@ -142,7 +142,7 @@ def formation_setup():
     master = MagicMock()
 
     controller.ship = ship
-    ship.formation_master = master
+    ship.formation.master = master
 
     # Defaults
     ship.position = pygame.math.Vector2(100, 100)
@@ -153,8 +153,8 @@ def formation_setup():
     ship.turn_throttle = 1.0
     ship.max_speed = 100
     ship.engine_throttle = 1.0
-    ship.formation_offset = pygame.math.Vector2(50, 0)
-    ship.formation_rotation_mode = 'relative'
+    ship.formation.offset = pygame.math.Vector2(50, 0)
+    ship.formation.rotation_mode = 'relative'
 
     # Interface method mocks
     ship.get_position.return_value = ship.position
@@ -163,12 +163,13 @@ def formation_setup():
     ship.get_acceleration_rate.return_value = ship.acceleration_rate
     ship.get_turn_speed.return_value = ship.turn_speed
     ship.get_max_speed.return_value = ship.max_speed
-    ship.get_formation_offset.return_value = ship.formation_offset
+    ship.get_formation_offset.return_value = ship.formation.offset
+    ship.get_formation_rotation_mode.return_value = ship.formation.rotation_mode
     ship.get_formation_master.return_value = master
 
     # Interface setters that update mock attributes
     def set_in_formation(value):
-        ship.in_formation = value
+        ship.formation.active = value
     ship.set_in_formation.side_effect = set_in_formation
 
     def set_throttle(value):
@@ -210,12 +211,13 @@ class TestFormationBehavior:
         """Should set in_formation False if master dead or missing."""
         formation_setup['master'].is_alive = False
         formation_setup['behavior'].update(None, formation_setup['strategy'])
-        assert formation_setup['ship'].in_formation is False
+        assert formation_setup['ship'].formation.active is False
 
     def test_target_pos_fixed_rotation(self, formation_setup):
         """Verify target position calculation for fixed rotation."""
-        formation_setup['ship'].formation_rotation_mode = 'fixed'
-        formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 50)
+        formation_setup['ship'].formation.rotation_mode = 'fixed'
+        formation_setup['ship'].get_formation_rotation_mode.return_value = 'fixed'
+        formation_setup['ship'].formation.offset = pygame.math.Vector2(50, 50)
         formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 50)
         formation_setup['master'].position = pygame.math.Vector2(100, 100)
         formation_setup['master'].angle = 90  # Should ignore this for offset
@@ -239,9 +241,10 @@ class TestFormationBehavior:
 
     def test_target_pos_relative_rotation(self, formation_setup):
         """Verify target position calculation for relative rotation."""
-        formation_setup['ship'].formation_rotation_mode = 'relative'
+        formation_setup['ship'].formation.rotation_mode = 'relative'
+        formation_setup['ship'].get_formation_rotation_mode.return_value = 'relative'
         # Offset is (50, 0) relative to master.
-        formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 0)
+        formation_setup['ship'].formation.offset = pygame.math.Vector2(50, 0)
         formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 0)
         formation_setup['master'].position = pygame.math.Vector2(100, 100)
         formation_setup['master'].angle = 90  # Facing down
@@ -264,7 +267,7 @@ class TestFormationBehavior:
         # Set up scenario where we are CLOSE to target spot
         formation_setup['master'].position = pygame.math.Vector2(0, 0)
         formation_setup['master'].angle = 0
-        formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 0)
+        formation_setup['ship'].formation.offset = pygame.math.Vector2(50, 0)
         formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 0)
         # Target is (50,0). Ship is at (55, 0). Error 5.
         formation_setup['ship'].position = pygame.math.Vector2(55, 0)
@@ -295,7 +298,7 @@ class TestFormationBehavior:
         formation_setup['master'].position = pygame.math.Vector2(0, 0)
         formation_setup['ship'].position = pygame.math.Vector2(50, 0)  # Target spot
         formation_setup['ship'].get_position.return_value = pygame.math.Vector2(50, 0)
-        formation_setup['ship'].formation_offset = pygame.math.Vector2(50, 0)
+        formation_setup['ship'].formation.offset = pygame.math.Vector2(50, 0)
         formation_setup['ship'].get_formation_offset.return_value = pygame.math.Vector2(50, 0)
 
         # Master is moving

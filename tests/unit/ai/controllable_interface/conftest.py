@@ -26,10 +26,10 @@ def mock_ship():
     ship.comp_trigger_pulled = False
     ship.current_target = None
     ship.secondary_targets = []
-    ship.formation_members = []
-    ship.formation_master = None
-    ship.in_formation = False
-    ship.formation_offset = None
+    ship.formation.members = []
+    ship.formation.master = None
+    ship.formation.active = False
+    ship.formation.offset = None
     ship.vehicle_type = 'Ship'
     ship.ai_strategy = 'standard_ranged'
     ship.max_targets = 1

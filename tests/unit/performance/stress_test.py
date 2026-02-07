@@ -15,7 +15,8 @@ from game.simulation.designs import create_brick, create_interceptor
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.core.registry import RegistryManager
-from game.core.constants import AttackType, COMPONENTS_FILE, MODIFIERS_FILE
+from game.core.constants import AttackType
+from game.core.paths import Paths
 from tests.fixtures.paths import get_project_root
 
 def run_stress_test():
@@ -24,8 +25,8 @@ def run_stress_test():
         # Fallback display initialization for headless
         pygame.display.set_mode((100, 100))
 
-        load_components(COMPONENTS_FILE)
-        load_modifiers(MODIFIERS_FILE)
+        load_components(Paths.COMPONENTS_FILE)
+        load_modifiers(Paths.MODIFIERS_FILE)
         initialize_ship_data(str(get_project_root()))
         
         all_ships = []
@@ -90,7 +91,7 @@ def run_stress_test():
                                 if enemies: target = random.choice(enemies)
                             
                             if target:
-                                target.take_damage(attack['damage'] if is_dict else getattr(attack, 'damage'))
+                                target.combat_engine.take_damage(attack['damage'] if is_dict else getattr(attack, 'damage'))
                                 
                             s.just_fired_projectiles.remove(attack)
                         else:
@@ -108,7 +109,7 @@ def run_stress_test():
                     if target == p['owner'] or target.team_id == p['owner'].team_id: continue
                     
                     if p['pos'].distance_to(target.position) < target.radius + 5:
-                        target.take_damage(p['damage'])
+                        target.combat_engine.take_damage(p['damage'])
                         hit = True
                         break
                 

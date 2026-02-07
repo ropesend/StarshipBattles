@@ -44,7 +44,7 @@ class TestCollisionSystem:
 
         with patch('random.random', return_value=0.0):
             collision_system.process_beam_attack(attack_hit, recent_beams)
-            target.take_damage.assert_called_with(10)
+            target.combat_engine.take_damage.assert_called_with(10)
 
         # Verify beam recorded
         assert len(recent_beams) == 1
@@ -64,7 +64,7 @@ class TestCollisionSystem:
 
         with patch('random.random', return_value=0.0):
             collision_system.process_beam_attack(attack_miss, recent_beams)
-            target.take_damage.assert_not_called()
+            target.combat_engine.take_damage.assert_not_called()
 
         # Case 3: Range Limits
         target.reset_mock()
@@ -79,7 +79,7 @@ class TestCollisionSystem:
 
         with patch('random.random', return_value=0.0):
             collision_system.process_beam_attack(attack_range, recent_beams)
-            target.take_damage.assert_not_called()
+            target.combat_engine.take_damage.assert_not_called()
 
     def test_ramming_logic(self):
         """
@@ -112,8 +112,8 @@ class TestCollisionSystem:
         # Case A: Rammer HP (50) < Target HP (100)
         collision_system.process_ramming(ships, logger)
 
-        rammer.take_damage.assert_called_with(50 + 9999)
-        target.take_damage.assert_called_with(25.0)  # 50 * 0.5
+        rammer.combat_engine.take_damage.assert_called_with(50 + 9999)
+        target.combat_engine.take_damage.assert_called_with(25.0)  # 50 * 0.5
 
         # Case B: Rammer HP (100) > Target HP (50)
         rammer.reset_mock()
@@ -123,5 +123,5 @@ class TestCollisionSystem:
 
         collision_system.process_ramming(ships, logger)
 
-        target.take_damage.assert_called_with(50 + 9999)
-        rammer.take_damage.assert_called_with(25.0)
+        target.combat_engine.take_damage.assert_called_with(50 + 9999)
+        rammer.combat_engine.take_damage.assert_called_with(25.0)

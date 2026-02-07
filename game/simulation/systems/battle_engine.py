@@ -265,10 +265,9 @@ class BattleEngine:
             team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
             self.ai_controllers = team1_controllers + team2_controllers
         else:
-            # Legacy path: create controllers internally
-            # DEPRECATED: Use ai_controllers parameter or ai_factory for proper layer separation.
-            # This path exists for backward compatibility with tests and simple scenarios.
-            # Production code should use BattleOrchestrator to create controllers.
+            # Legacy path: create controllers internally (DEPRECATED)
+            # Use ai_controllers parameter or ai_factory for proper layer separation.
+            # Production code should use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).
             import warnings
             warnings.warn(
                 "BattleEngine.start() without ai_controllers or ai_factory is deprecated. "

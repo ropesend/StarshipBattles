@@ -6,8 +6,8 @@ from game.simulation.battle_controller import (
     BattleController,
     BattleConfig,
     BattleMode,
-    RetreatState,
 )
+from game.simulation.managers.retreat_manager import RetreatState
 from game.simulation.systems.battle_end_conditions import BattleEndMode
 
 

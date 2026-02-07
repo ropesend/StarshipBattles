@@ -127,7 +127,7 @@ class TestPDC:
         self.ship.current_target = self.missile
         self.ship.secondary_targets = [self.missile]
 
-        attacks = self.ship.fire_weapons(context)
+        attacks = self.ship.combat_engine.fire_weapons(context)
 
         assert len(attacks) > 0, "PDC should have fired."
         attack = attacks[0]
@@ -141,5 +141,5 @@ class TestPDC:
         self.ship.current_target = self.missile
         self.ship.secondary_targets = [self.missile]
 
-        attacks = self.ship.fire_weapons(context)
+        attacks = self.ship.combat_engine.fire_weapons(context)
         assert len(attacks) == 0, "PDC should not fire at friendly missile"

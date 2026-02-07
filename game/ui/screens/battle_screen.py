@@ -45,7 +45,7 @@ class BattleScreen:
 
         # Battle Service (abstraction layer over BattleEngine)
         self._battle_service = BattleService()
-        # Create initial battle for backward compatibility (engine must exist)
+        # Create initial battle so engine exists before start() is called
         self._battle_service.create_battle()
 
         # Battle UI Service (PROJ-43: Clean interface for UI to access battle state)
@@ -158,7 +158,7 @@ class BattleScreen:
 
     @property
     def engine(self):
-        """Access the underlying BattleEngine (for backward compatibility)."""
+        """Access the underlying BattleEngine."""
         return self._battle_service.get_engine()
 
     @property

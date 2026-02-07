@@ -9,7 +9,7 @@ from game.ai.controller import AIController
 from game.ai.strategy_manager import StrategyManager
 from game.ai.interfaces.controllable import ShipControllableAdapter
 from game.simulation.components.component import load_components, load_modifiers
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_data_dir, get_unit_test_data_dir
 

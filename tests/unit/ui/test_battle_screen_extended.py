@@ -6,7 +6,7 @@ from game.ui.screens.battle_screen import BattleScreen
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
-from game.simulation.components.component_constants import LayerType
+from game.core.constants import LayerType
 from unittest.mock import MagicMock
 from game.ai.strategy_manager import StrategyManager
 from game.core.registry import RegistryManager
@@ -97,8 +97,8 @@ class TestBattleScreenExtended:
         scene = BattleScreen(1000, 1000)
         ship = Ship("Target", 0, 0, (255,255,255), team_id=1, registries=fresh_registries)
         ship.radius = 20
-        # Mock take_damage
-        ship.take_damage = MagicMock()
+        # Mock take_damage on combat engine
+        ship.combat_engine.take_damage = MagicMock()
 
         # Mock the ability that will be returned by get_ability
         mock_ability = MagicMock()
@@ -121,4 +121,4 @@ class TestBattleScreenExtended:
         }
 
         scene.engine.collision_system.process_beam_attack(beam, scene.engine.recent_beams)
-        ship.take_damage.assert_called_with(25)
+        ship.combat_engine.take_damage.assert_called_with(25)

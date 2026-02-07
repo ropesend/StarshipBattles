@@ -96,7 +96,7 @@ def builder_setup(fresh_registries):
     builder_gui.weapons_report_panel = MagicMock()
     builder_gui.detail_panel = MagicMock()
 
-    builder_gui.ship = ship
+    builder_gui.viewmodel._ship = ship
 
     # Ensure panel mocks return False by default for handle_event so logic flows through
     builder_gui.left_panel.handle_event.return_value = False

@@ -134,7 +134,7 @@ class TestIControllableNewMethods:
 
         adapter.set_in_formation(True)
 
-        assert mock_ship.in_formation is True
+        assert mock_ship.formation.active is True
 
     def test_adapter_set_formation_master_sets_ship_formation_master(self, mock_ship):
         """set_formation_master sets the ship's formation_master."""
@@ -145,18 +145,18 @@ class TestIControllableNewMethods:
         adapter = ShipControllableAdapter(mock_ship)
         adapter.set_formation_master(master)
 
-        assert mock_ship.formation_master == master
+        assert mock_ship.formation.master == master
 
     def test_adapter_set_formation_master_to_none(self, mock_ship):
         """set_formation_master can set None."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
-        mock_ship.formation_master = MagicMock()
+        mock_ship.formation.master = MagicMock()
 
         adapter = ShipControllableAdapter(mock_ship)
         adapter.set_formation_master(None)
 
-        assert mock_ship.formation_master is None
+        assert mock_ship.formation.master is None
 
     def test_adapter_get_secondary_targets_returns_ship_secondary_targets(self, mock_ship):
         """get_secondary_targets returns the ship's secondary_targets."""

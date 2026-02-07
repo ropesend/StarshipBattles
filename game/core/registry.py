@@ -24,13 +24,6 @@ TIER 3 - Direct Singleton Access (for internal/low-level code):
     # Use sparingly - prefer DI for better testability
     RegistryManager.instance().components
 
-PROJ-38: Deprecation Timeline
------------------------------
-- v0.9.0: Deprecation warnings added to utility functions
-- v1.0.0 (Target): Remove deprecated utility functions (get_component_registry, etc.)
-- Migration: Replace get_component_registry() with GameRegistries via DI
-  - Use get_default_registry_provider() for production code
-  - Use TestRegistryProvider for test code with isolated data
 """
 
 __all__ = [
@@ -84,16 +77,16 @@ class GameRegistries:
     resources: Dict[str, Any]
 
 
-# Module-level default registries for transitional fallback
+# Module-level default registries (set by composition root at startup)
 _default_registries: Optional[GameRegistries] = None
 
 
 def set_default_registries(registries: GameRegistries) -> None:
     """
-    Set the default GameRegistries instance for transitional fallback.
+    Set the default GameRegistries instance.
 
-    PROJ-38: During incremental migration, consumers that haven't been
-    converted to DI can use get_default_registries() to access registries.
+    Called by composition roots (app.py at startup, conftest.py in tests)
+    to make registries available via get_default_registries().
 
     Args:
         registries: The GameRegistries instance to use as default
@@ -106,8 +99,11 @@ def get_default_registries() -> GameRegistries:
     """
     Get the default GameRegistries instance.
 
-    PROJ-38: Returns the default GameRegistries instance set by the
-    composition root. Raises StateException if not set.
+    Service locator for callers that cannot receive registries via
+    constructor injection (e.g., dataclass methods, lazy init).
+    Prefer constructor injection where possible.
+
+    Set by: app.py (production), conftest.py (tests)
 
     Returns:
         The default GameRegistries instance
@@ -450,8 +446,8 @@ class DefaultRegistryProvider:
     Default IRegistryProvider implementation backed by the RegistryManager singleton.
 
     PROJ-27: This class provides the production implementation of IRegistryProvider.
-    It delegates all registry access to the existing singleton, maintaining full
-    backward compatibility while enabling dependency injection.
+    It delegates all registry access to the existing singleton while enabling
+    dependency injection.
 
     Usage:
         provider = get_default_registry_provider()

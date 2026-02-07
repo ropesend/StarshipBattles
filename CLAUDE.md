@@ -2,7 +2,7 @@
 
 This file provides context for Claude Code when working on the Starship Battles project **in interactive mode** (VS Code plugin).
 
-> **Note:** For automated CLI loop execution, see `WORKER.md`. This file is for interactive sessions where you want explanations, questions, and collaborative problem-solving.
+> **Note:** For automated CLI loop execution, see `refactor_loop/WORKER.md`. This file is for interactive sessions where you want explanations, questions, and collaborative problem-solving.
 
 ---
 

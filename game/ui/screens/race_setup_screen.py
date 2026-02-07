@@ -19,7 +19,7 @@ import pygame_gui
 from typing import Callable, Optional, List, Tuple
 
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.constants import ASSET_DIR
+from game.core.paths import Paths
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.systems.race_library import RaceLibrary
 from game.ui.assets import ShipThemeManager
@@ -460,7 +460,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             portrait_name = parts[1] + parts[0]
 
         portrait_filename = f"{portrait_name}_Portrait.jpg"
-        portrait_path = os.path.join(ASSET_DIR, "ShipThemes", theme_id, "Portraits", portrait_filename)
+        portrait_path = os.path.join(Paths.ASSET_DIR, "ShipThemes", theme_id, "Portraits", portrait_filename)
 
         if os.path.exists(portrait_path):
             try:

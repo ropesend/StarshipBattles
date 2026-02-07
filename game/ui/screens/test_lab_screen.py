@@ -6,7 +6,9 @@ import sys
 import json
 import time
 
-from game.core.constants import WHITE, BLACK, BLUE, WIDTH, HEIGHT, FONT_MAIN
+from game.core.constants import WHITE, BLACK, BLUE, FONT_MAIN
+from game.core.config import DisplayConfig
+WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
 from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry

@@ -148,7 +148,7 @@ class TestShipControllableAdapterFormation:
 
         member1 = MagicMock()
         member2 = MagicMock()
-        mock_ship.formation_members = [member1, member2]
+        mock_ship.formation.members = [member1, member2]
 
         adapter = ShipControllableAdapter(mock_ship)
 
@@ -161,7 +161,7 @@ class TestShipControllableAdapterFormation:
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
         master = MagicMock()
-        mock_ship.formation_master = master
+        mock_ship.formation.master = master
 
         adapter = ShipControllableAdapter(mock_ship)
 
@@ -173,7 +173,7 @@ class TestShipControllableAdapterFormation:
         """is_in_formation returns the ship's in_formation status."""
         from game.ai.interfaces.controllable import ShipControllableAdapter
 
-        mock_ship.in_formation = True
+        mock_ship.formation.active = True
 
         adapter = ShipControllableAdapter(mock_ship)
 
