@@ -75,7 +75,7 @@ class TestVisualRunFlow:
 
     def _create_test_lab_screen(self, mock_game, mock_registry, mock_controller):
         """Helper to create a TestLabScreen with mocked dependencies."""
-        from game.ui.screens.test_lab_screen import TestLabScreen
+        from game.ui.screens.test_lab import TestLabScreen
         registry, _, _ = mock_registry
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
@@ -90,7 +90,7 @@ class TestVisualRunFlow:
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -101,7 +101,7 @@ class TestVisualRunFlow:
         """Visual run should set headless_mode to False (we want visuals!)."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -112,7 +112,7 @@ class TestVisualRunFlow:
         """Visual run should start with simulation paused."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -124,7 +124,7 @@ class TestVisualRunFlow:
         from game.core.constants import GameState
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -136,7 +136,7 @@ class TestVisualRunFlow:
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -148,7 +148,7 @@ class TestVisualRunFlow:
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -163,7 +163,7 @@ class TestVisualRunFlow:
         mock_ship = Mock()
         mock_game.battle_scene.engine.ships = [mock_ship]
 
-        with patch('game.ui.screens.test_lab_screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 

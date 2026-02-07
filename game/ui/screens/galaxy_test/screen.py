@@ -6,33 +6,18 @@ Provides two modes:
 2. System Inspector - Test single system generation with detailed physics inspection
 """
 import random
-import time
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMenu, UIHorizontalSlider
+from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMenu
 
 from game.core.logger import log_info
 from game.ui.renderer.camera import Camera
-from game.strategy.data.galaxy import Galaxy
 from game.strategy.data.hex_math import hex_to_pixel, HexCoord
-from game.strategy.engine.game_config import VALID_GALAXY_TYPES
 from game.strategy.data.planet import PlanetType
-
-
-# Planet type colors for visualization
-PLANET_TYPE_COLORS = {
-    PlanetType.CONTINENTAL: (70, 130, 70),   # Green-ish (Earth-like)
-    PlanetType.ARID: (180, 140, 80),         # Sandy brown
-    PlanetType.PELAGIC: (50, 80, 180),       # Deep blue (Ocean)
-    PlanetType.MAGMA: (200, 50, 30),         # Red-orange (Lava)
-    PlanetType.CRYOPLANET: (180, 200, 220),  # Ice white-blue
-    PlanetType.BARREN: (130, 130, 130),      # Grey (Rock)
-    PlanetType.JOVIAN: (200, 160, 100),      # Jupiter tan
-    PlanetType.ICE_GIANT: (100, 150, 200),   # Neptune blue
-    PlanetType.CHTHONIAN: (100, 80, 60),     # Dark brown
-    PlanetType.ICE_DWARF: (200, 210, 230),   # Light ice
-    PlanetType.PLANETOID: (90, 90, 90),      # Dark grey
-}
+from game.ui.screens.galaxy_test.constants import (
+    PLANET_TYPE_COLORS, SIDEBAR_WIDTH, HEX_SIZE
+)
+from game.ui.screens.galaxy_test.galaxy_mode import GalaxyModeHelper
 
 
 class GalaxyTestScreen:
@@ -49,10 +34,6 @@ class GalaxyTestScreen:
     MODE_MENU = "menu"
     MODE_GALAXY = "galaxy"
     MODE_SYSTEM = "system"
-
-    # Layout constants
-    SIDEBAR_WIDTH = 320
-    HEX_SIZE = 10.0
 
     def __init__(self, screen_width: int, screen_height: int, on_close_callback=None):
         """
@@ -85,13 +66,8 @@ class GalaxyTestScreen:
         # UI Manager
         self.ui_manager = pygame_gui.UIManager((screen_width, screen_height))
 
-        # Galaxy data (for GALAXY mode)
-        self.galaxy = None
-        self.generation_time = 0.0
-        self.system_count = 100
-        self.galaxy_radius = 4000  # Galaxy radius in hex units (matches GameConfig default)
-        self.galaxy_type = "spiral"
-        self.galaxy_seed = None
+        # Galaxy mode helper (for GALAXY mode)
+        self.galaxy_helper = GalaxyModeHelper(self)
 
         # Star system data (for SYSTEM mode)
         self.test_system = None
@@ -159,165 +135,14 @@ class GalaxyTestScreen:
     def _create_galaxy_ui(self):
         """Create UI for galaxy layout testing mode."""
         self._clear_ui()
-
-        # Update canvas width for sidebar
-        self.canvas_width = self.screen_width - self.SIDEBAR_WIDTH
-        self.camera.width = self.canvas_width
-
-        sidebar_x = self.canvas_width + 10
-        y = 10
-
-        # Title
-        title = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 30),
-            text="Galaxy Layout Test",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(title)
-        y += 40
-
-        # System count label
-        count_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, 150, 25),
-            text="System Count:",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(count_label)
-        y += 25
-
-        # System count slider
-        self.system_count_slider = UIHorizontalSlider(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 80, 25),
-            start_value=self.system_count,
-            value_range=(10, 2500),
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.system_count_slider)
-
-        # System count value label
-        self.system_count_value = UILabel(
-            relative_rect=pygame.Rect(sidebar_x + self.SIDEBAR_WIDTH - 70, y, 60, 25),
-            text=str(self.system_count),
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.system_count_value)
-        y += 35
-
-        # Galaxy radius label
-        radius_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, 150, 25),
-            text="Galaxy Radius (hexes):",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(radius_label)
-        y += 25
-
-        # Galaxy radius slider (star systems are ~101 hexes across, need spacing)
-        self.galaxy_radius_slider = UIHorizontalSlider(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 80, 25),
-            start_value=self.galaxy_radius,
-            value_range=(500, 100000),
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.galaxy_radius_slider)
-
-        # Galaxy radius value label
-        self.galaxy_radius_value = UILabel(
-            relative_rect=pygame.Rect(sidebar_x + self.SIDEBAR_WIDTH - 70, y, 60, 25),
-            text=str(self.galaxy_radius),
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.galaxy_radius_value)
-        y += 35
-
-        # Galaxy type label
-        type_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, 150, 25),
-            text="Galaxy Type:",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(type_label)
-        y += 25
-
-        # Galaxy type dropdown
-        galaxy_types = sorted(list(VALID_GALAXY_TYPES))
-        self.galaxy_type_dropdown = UIDropDownMenu(
-            options_list=galaxy_types,
-            starting_option=self.galaxy_type,
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 30),
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.galaxy_type_dropdown)
-        y += 40
-
-        # Seed label
-        seed_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, 150, 25),
-            text="Seed (blank=random):",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(seed_label)
-        y += 25
-
-        # Seed input
-        self.seed_input = UITextEntryLine(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 30),
-            manager=self.ui_manager,
-            placeholder_text="Random seed..."
-        )
-        self._ui_elements.append(self.seed_input)
-        y += 40
-
-        # Generate button
-        self.btn_generate = UIButton(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 40),
-            text="Generate Galaxy",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.btn_generate)
-        y += 50
-
-        # Stats section
-        stats_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, 150, 25),
-            text="Statistics:",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(stats_label)
-        y += 30
-
-        # Stats display
-        self.stats_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 120),
-            text="No galaxy generated yet",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.stats_label)
-        y += 130
-
-        # FPS display
-        self.fps_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 25),
-            text="FPS: --",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.fps_label)
-        y += 35
-
-        # Back button at bottom
-        self.btn_back = UIButton(
-            relative_rect=pygame.Rect(sidebar_x, self.screen_height - 50, self.SIDEBAR_WIDTH - 20, 40),
-            text="Back",
-            manager=self.ui_manager
-        )
-        self._ui_elements.append(self.btn_back)
+        self._ui_elements = self.galaxy_helper.create_ui()
 
     def _create_system_ui(self):
         """Create UI for System Inspector mode."""
         self._clear_ui()
 
         # Update canvas width for sidebar
-        self.canvas_width = self.screen_width - self.SIDEBAR_WIDTH
+        self.canvas_width = self.screen_width - SIDEBAR_WIDTH
         self.camera.width = self.canvas_width
 
         sidebar_x = self.canvas_width + 10
@@ -325,7 +150,7 @@ class GalaxyTestScreen:
 
         # Title
         title = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 30),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 30),
             text="System Inspector",
             manager=self.ui_manager
         )
@@ -346,7 +171,7 @@ class GalaxyTestScreen:
         self.blueprint_dropdown = UIDropDownMenu(
             options_list=blueprint_options,
             starting_option=self.selected_blueprint,
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 30),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 30),
             manager=self.ui_manager
         )
         self._ui_elements.append(self.blueprint_dropdown)
@@ -363,7 +188,7 @@ class GalaxyTestScreen:
 
         # Seed input
         self.system_seed_input = UITextEntryLine(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 30),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 30),
             manager=self.ui_manager,
             placeholder_text="Random seed..."
         )
@@ -372,7 +197,7 @@ class GalaxyTestScreen:
 
         # Generate button
         self.btn_generate_system = UIButton(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 40),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 40),
             text="Generate System",
             manager=self.ui_manager
         )
@@ -381,7 +206,7 @@ class GalaxyTestScreen:
 
         # Separator line (just a label)
         sep_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 5),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 5),
             text="─" * 30,
             manager=self.ui_manager
         )
@@ -399,7 +224,7 @@ class GalaxyTestScreen:
 
         # System info display
         self.system_info_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 100),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 100),
             text="Click 'Generate' to create a system",
             manager=self.ui_manager
         )
@@ -417,7 +242,7 @@ class GalaxyTestScreen:
 
         # Inspector panel (multi-line display for selected object)
         self.inspector_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 200),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 200),
             text="No object selected.\nClick a star or planet to inspect.",
             manager=self.ui_manager
         )
@@ -426,7 +251,7 @@ class GalaxyTestScreen:
 
         # FPS display
         self.fps_label = UILabel(
-            relative_rect=pygame.Rect(sidebar_x, y, self.SIDEBAR_WIDTH - 20, 25),
+            relative_rect=pygame.Rect(sidebar_x, y, SIDEBAR_WIDTH - 20, 25),
             text="FPS: --",
             manager=self.ui_manager
         )
@@ -434,7 +259,7 @@ class GalaxyTestScreen:
 
         # Back button at bottom
         self.btn_back = UIButton(
-            relative_rect=pygame.Rect(sidebar_x, self.screen_height - 50, self.SIDEBAR_WIDTH - 20, 40),
+            relative_rect=pygame.Rect(sidebar_x, self.screen_height - 50, SIDEBAR_WIDTH - 20, 40),
             text="Back",
             manager=self.ui_manager
         )
@@ -453,93 +278,6 @@ class GalaxyTestScreen:
             log_info(f"Failed to load blueprints: {e}")
             return ["random"]
 
-    def _generate_galaxy(self):
-        """Generate a new galaxy for testing."""
-        # Get seed
-        seed_text = self.seed_input.get_text().strip()
-        if seed_text:
-            try:
-                self.galaxy_seed = int(seed_text)
-            except ValueError:
-                self.galaxy_seed = hash(seed_text) % (2**31)
-        else:
-            self.galaxy_seed = random.randint(0, 2**31 - 1)
-
-        # Seed RNG
-        random.seed(self.galaxy_seed)
-
-        # Get settings
-        self.system_count = int(self.system_count_slider.get_current_value())
-        self.galaxy_radius = int(self.galaxy_radius_slider.get_current_value())
-        self.galaxy_type = self.galaxy_type_dropdown.selected_option[0]
-
-        log_info(f"Generating galaxy: type={self.galaxy_type}, count={self.system_count}, radius={self.galaxy_radius}, seed={self.galaxy_seed}")
-
-        # Create galaxy
-        start_time = time.perf_counter()
-
-        self.galaxy = Galaxy(radius=self.galaxy_radius)
-
-        # Get placement strategy based on type
-        from game.strategy.generation.placement_strategies import (
-            RandomPlacementStrategy,
-            DensityBasedPlacementStrategy
-        )
-        from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
-        from game.strategy.generation.density.density_map import DensityMap
-
-        rng = random.Random(self.galaxy_seed)
-
-        t1 = time.perf_counter()
-        if self.galaxy_type == "random":
-            strategy = RandomPlacementStrategy()
-        else:
-            # Use load_and_scale to properly scale density values for galaxy radius
-            loader = GalaxyLayoutsLoader()
-            scaled_config = loader.load_and_scale(self.galaxy_type, self.galaxy.radius)
-            density_map = DensityMap.from_config(scaled_config, self.galaxy.radius)
-            strategy = DensityBasedPlacementStrategy(density_map)
-        t2 = time.perf_counter()
-        log_info(f"  Strategy setup: {t2-t1:.3f}s")
-
-        # Generate systems (positions only, no stars/planets yet)
-        # min_dist=400 matches production GameSession (star systems are ~101 hexes across)
-        self.galaxy.generate_systems(
-            count=self.system_count,
-            min_dist=400,
-            placement_strategy=strategy,
-            rng=rng
-        )
-        t3 = time.perf_counter()
-        log_info(f"  System placement: {t3-t2:.3f}s")
-
-        # Generate warp lanes
-        self.galaxy.generate_warp_lanes()
-        t4 = time.perf_counter()
-        log_info(f"  Warp lane generation: {t4-t3:.3f}s")
-
-        self.generation_time = time.perf_counter() - start_time
-        log_info(f"  Total generation: {self.generation_time:.3f}s")
-
-        # Count warp connections
-        warp_count = sum(len(sys.warp_points) for sys in self.galaxy.systems.values()) // 2
-
-        # Update stats
-        self.stats_label.set_text(
-            f"Systems: {len(self.galaxy.systems)}\n"
-            f"Warp Lanes: {warp_count}\n"
-            f"Radius: {self.galaxy_radius} hexes\n"
-            f"Gen Time: {self.generation_time:.2f}s\n"
-            f"Seed: {self.galaxy_seed}"
-        )
-
-        # Center camera on galaxy
-        t5 = time.perf_counter()
-        self._center_camera_on_galaxy()
-        t6 = time.perf_counter()
-        log_info(f"  Camera centering: {t6-t5:.3f}s")
-
-        log_info(f"Galaxy generated: {len(self.galaxy.systems)} systems, {warp_count} warp lanes in {self.generation_time:.2f}s")
 
     def _generate_system(self):
         """Generate a new star system using selected blueprint and seed."""
@@ -637,7 +375,7 @@ class GalaxyTestScreen:
         min_y, max_y = float('inf'), float('-inf')
 
         for obj in all_objects:
-            px, py = hex_to_pixel(obj.location, self.HEX_SIZE)
+            px, py = hex_to_pixel(obj.location, HEX_SIZE)
             min_x = min(min_x, px)
             max_x = max(max_x, px)
             min_y = min(min_y, py)
@@ -659,37 +397,6 @@ class GalaxyTestScreen:
         self.camera.zoom = max(0.1, self.camera.zoom)  # Floor at 0.1x
         self.camera.target_zoom = self.camera.zoom
 
-    def _center_camera_on_galaxy(self):
-        """Center the camera on the generated galaxy."""
-        if not self.galaxy or not self.galaxy.systems:
-            return
-
-        # Find bounds
-        min_x, max_x = float('inf'), float('-inf')
-        min_y, max_y = float('inf'), float('-inf')
-
-        for sys in self.galaxy.systems.values():
-            px, py = hex_to_pixel(sys.global_location, self.HEX_SIZE)
-            min_x = min(min_x, px)
-            max_x = max(max_x, px)
-            min_y = min(min_y, py)
-            max_y = max(max_y, py)
-
-        # Center camera
-        center_x = (min_x + max_x) / 2
-        center_y = (min_y + max_y) / 2
-        self.camera.position = pygame.math.Vector2(center_x, center_y)
-
-        # Fit zoom
-        margin = 200
-        width = max_x - min_x + margin
-        height = max_y - min_y + margin
-
-        zoom_x = self.canvas_width / width if width > 0 else 1.0
-        zoom_y = self.canvas_height / height if height > 0 else 1.0
-        self.camera.zoom = min(zoom_x, zoom_y)
-        self.camera.target_zoom = self.camera.zoom
-        self.camera.zoom = max(self.camera.min_zoom, min(self.camera.max_zoom, self.camera.zoom))
 
     def _handle_system_click(self, mx: int, my: int):
         """Handle click in system view to select objects for inspection."""
@@ -703,12 +410,12 @@ class GalaxyTestScreen:
 
         # Check stars first (larger, higher priority)
         for star in self.test_system.stars:
-            px, py = hex_to_pixel(star.location, self.HEX_SIZE)
+            px, py = hex_to_pixel(star.location, HEX_SIZE)
             world_pos = pygame.math.Vector2(px, py)
             screen_pos = self.camera.world_to_screen(world_pos)
 
             dist = (click_pos - screen_pos).length()
-            star_radius = max(8, int(star.diameter_hexes * self.HEX_SIZE * self.camera.zoom * 0.5))
+            star_radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.camera.zoom * 0.5))
 
             if dist < star_radius + click_threshold and dist < best_dist:
                 best_match = star
@@ -716,7 +423,7 @@ class GalaxyTestScreen:
 
         # Check planets
         for planet in self.test_system.planets:
-            px, py = hex_to_pixel(planet.location, self.HEX_SIZE)
+            px, py = hex_to_pixel(planet.location, HEX_SIZE)
             world_pos = pygame.math.Vector2(px, py)
             screen_pos = self.camera.world_to_screen(world_pos)
 
@@ -863,12 +570,7 @@ class GalaxyTestScreen:
 
         # Update slider value displays
         if self.mode == self.MODE_GALAXY:
-            if hasattr(self, 'system_count_slider'):
-                current_val = int(self.system_count_slider.get_current_value())
-                self.system_count_value.set_text(str(current_val))
-            if hasattr(self, 'galaxy_radius_slider'):
-                current_val = int(self.galaxy_radius_slider.get_current_value())
-                self.galaxy_radius_value.set_text(str(current_val))
+            self.galaxy_helper.update_slider_displays()
 
     def draw(self, screen: pygame.Surface):
         """Draw the screen."""
@@ -882,86 +584,17 @@ class GalaxyTestScreen:
             # Just draw UI for menu
             pass
         elif self.mode == self.MODE_GALAXY:
-            self._draw_galaxy(screen)
+            self.galaxy_helper.draw(screen)
         elif self.mode == self.MODE_SYSTEM:
             self._draw_system(screen)
 
         # Draw sidebar background for non-menu modes
         if self.mode != self.MODE_MENU:
-            sidebar_rect = pygame.Rect(self.canvas_width, 0, self.SIDEBAR_WIDTH, self.screen_height)
+            sidebar_rect = pygame.Rect(self.canvas_width, 0, SIDEBAR_WIDTH, self.screen_height)
             pygame.draw.rect(screen, (30, 35, 45), sidebar_rect)
 
         # Draw UI
         self.ui_manager.draw_ui(screen)
-
-    def _draw_galaxy(self, screen: pygame.Surface):
-        """Draw the galaxy layout (dots and warp lanes only)."""
-        if not self.galaxy:
-            return
-
-        # Clip to canvas area
-        canvas_rect = pygame.Rect(0, 0, self.canvas_width, self.canvas_height)
-        screen.set_clip(canvas_rect)
-
-        # Draw warp lanes first (behind systems)
-        self._draw_warp_lanes(screen)
-
-        # Draw systems as dots
-        for sys in self.galaxy.systems.values():
-            px, py = hex_to_pixel(sys.global_location, self.HEX_SIZE)
-            world_pos = pygame.math.Vector2(px, py)
-            screen_pos = self.camera.world_to_screen(world_pos)
-
-            # Skip if off-screen
-            if not (0 <= screen_pos.x <= self.canvas_width and 0 <= screen_pos.y <= self.canvas_height):
-                continue
-
-            # Draw dot
-            radius = max(2, int(4 * self.camera.zoom))
-            pygame.draw.circle(screen, (200, 200, 100), (int(screen_pos.x), int(screen_pos.y)), radius)
-
-        # Remove clip
-        screen.set_clip(None)
-
-    def _draw_warp_lanes(self, screen: pygame.Surface):
-        """Draw warp lane connections."""
-        if not self.galaxy:
-            return
-
-        drawn_pairs = set()
-
-        for sys in self.galaxy.systems.values():
-            sx, sy = hex_to_pixel(sys.global_location, self.HEX_SIZE)
-
-            for wp in sys.warp_points:
-                target_sys = self.galaxy.get_system_by_name(wp.destination_id)
-                if not target_sys:
-                    continue
-
-                # Avoid drawing the same lane twice
-                pair_key = tuple(sorted([sys.name, target_sys.name]))
-                if pair_key in drawn_pairs:
-                    continue
-                drawn_pairs.add(pair_key)
-
-                # Get endpoints
-                tx, ty = hex_to_pixel(target_sys.global_location, self.HEX_SIZE)
-
-                scr_a = self.camera.world_to_screen(pygame.math.Vector2(sx, sy))
-                scr_b = self.camera.world_to_screen(pygame.math.Vector2(tx, ty))
-
-                # Viewport culling
-                margin = 50
-                if not ((-margin <= scr_a.x <= self.canvas_width + margin and
-                         -margin <= scr_a.y <= self.canvas_height + margin) or
-                        (-margin <= scr_b.x <= self.canvas_width + margin and
-                         -margin <= scr_b.y <= self.canvas_height + margin)):
-                    continue
-
-                # Draw line
-                pygame.draw.line(screen, (50, 50, 100),
-                               (int(scr_a.x), int(scr_a.y)),
-                               (int(scr_b.x), int(scr_b.y)), 1)
 
     def _draw_system(self, screen: pygame.Surface):
         """Draw the star system with orbital rings, stars, and planets."""
@@ -974,14 +607,14 @@ class GalaxyTestScreen:
 
         # Get system center (primary star location)
         center_hex = HexCoord(0, 0)
-        center_px, center_py = hex_to_pixel(center_hex, self.HEX_SIZE)
+        center_px, center_py = hex_to_pixel(center_hex, HEX_SIZE)
         center_screen = self.camera.world_to_screen(pygame.math.Vector2(center_px, center_py))
 
         # Draw orbital rings for each unique orbit distance
         orbit_distances = set(p.orbit_distance for p in self.test_system.planets)
         for orbit_dist in orbit_distances:
             # Orbit radius in pixels (orbit_distance is in hex rings)
-            orbit_radius = orbit_dist * self.HEX_SIZE * self.camera.zoom
+            orbit_radius = orbit_dist * HEX_SIZE * self.camera.zoom
             if orbit_radius > 5:  # Only draw if visible
                 pygame.draw.circle(
                     screen,
@@ -993,12 +626,12 @@ class GalaxyTestScreen:
 
         # Draw stars
         for star in self.test_system.stars:
-            px, py = hex_to_pixel(star.location, self.HEX_SIZE)
+            px, py = hex_to_pixel(star.location, HEX_SIZE)
             world_pos = pygame.math.Vector2(px, py)
             screen_pos = self.camera.world_to_screen(world_pos)
 
             # Star size based on diameter in hexes
-            radius = max(8, int(star.diameter_hexes * self.HEX_SIZE * self.camera.zoom * 0.5))
+            radius = max(8, int(star.diameter_hexes * HEX_SIZE * self.camera.zoom * 0.5))
 
             # Star color
             color = star.color if hasattr(star, 'color') else (255, 255, 200)
@@ -1020,7 +653,7 @@ class GalaxyTestScreen:
 
         # Draw planets
         for planet in self.test_system.planets:
-            px, py = hex_to_pixel(planet.location, self.HEX_SIZE)
+            px, py = hex_to_pixel(planet.location, HEX_SIZE)
             world_pos = pygame.math.Vector2(px, py)
             screen_pos = self.camera.world_to_screen(world_pos)
 
@@ -1094,10 +727,10 @@ class GalaxyTestScreen:
             self._go_to_system_mode()
         elif button == getattr(self, 'btn_close', None):
             self._on_close()
-        elif button == getattr(self, 'btn_back', None):
+        elif button == getattr(self, 'btn_back', None) or button == getattr(self.galaxy_helper, 'btn_back', None):
             self._go_to_menu()
-        elif button == getattr(self, 'btn_generate', None):
-            self._generate_galaxy()
+        elif button == getattr(self.galaxy_helper, 'btn_generate', None):
+            self.galaxy_helper.generate()
         elif button == getattr(self, 'btn_generate_system', None):
             self._generate_system()
 
@@ -1136,7 +769,7 @@ class GalaxyTestScreen:
         if self.mode == self.MODE_MENU:
             self.canvas_width = width
         else:
-            self.canvas_width = width - self.SIDEBAR_WIDTH
+            self.canvas_width = width - SIDEBAR_WIDTH
 
         self.canvas_height = height
         self.camera.width = self.canvas_width

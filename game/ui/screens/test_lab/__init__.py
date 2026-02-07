@@ -1,2 +1,21 @@
-# test_lab package - Combat Lab UI components
-# Phase 1: Package placeholder, will re-export TestLabScreen in Phase 3
+"""
+test_lab package - Combat Lab UI components
+
+This package contains the decomposed Combat Lab UI for viewing and running
+test scenarios. The original monolithic test_lab_screen.py has been split
+into focused modules for better maintainability.
+
+Modules:
+    screen.py           - TestLabScreen main orchestrator class
+    dialogs.py          - JSONPopup and ConfirmationDialog
+    json_viewer.py      - ScrollableJSONViewer for JSON display
+    component_dropdown.py - ComponentDropdown for component selection
+    ship_panels.py      - ShipPanel, TabbedShipPanel, ComponentPanel
+    test_run_card.py    - TestRunCard for test history display
+    test_run_details.py - TestRunDetailsPanel for detailed results
+    results_panel.py    - ResultsPanel for test run history
+"""
+
+from .screen import TestLabScreen
+
+__all__ = ['TestLabScreen']
