@@ -1,0 +1,103 @@
+[
+    {
+        "n": 1,
+        "duration": 367.4694859981537,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "eveloper\\StarshipBattles\\tests\\unit\\combat\\test_battle_engine_core.py:147: DeprecationWarning: BattleEngine.start() without ai_controllers or ai_factory is deprecated. Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).\n    engine.start([ship1], [ship2])\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n=============== 6248 passed, 209 warnings in 366.78s (0:06:06) ================\n"
+    },
+    {
+        "n": 2,
+        "duration": 174.992933511734,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "eveloper\\StarshipBattles\\tests\\unit\\combat\\test_battle_engine_core.py:147: DeprecationWarning: BattleEngine.start() without ai_controllers or ai_factory is deprecated. Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).\n    engine.start([ship1], [ship2])\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n=============== 6248 passed, 214 warnings in 174.26s (0:02:54) ================\n"
+    },
+    {
+        "n": 3,
+        "duration": 132.38367128372192,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "eveloper\\StarshipBattles\\tests\\unit\\combat\\test_battle_engine_core.py:147: DeprecationWarning: BattleEngine.start() without ai_controllers or ai_factory is deprecated. Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).\n    engine.start([ship1], [ship2])\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n=============== 6248 passed, 219 warnings in 131.48s (0:02:11) ================\n"
+    },
+    {
+        "n": 4,
+        "duration": 108.14798998832703,
+        "exit_code": 1,
+        "fails": [
+            "tests/integration/resource_system/test_fleet_operations.py::TestComponentToggleAffectsMovementAndWarp::test_component_toggle_affects_movement_and_warp",
+            "tests/integration/resource_system/test_fleet_operations.py::TestMovementWithMultiResourceConsumption::test_movement_with_multi_resource_consumption",
+            "tests/integration/resource_system/test_fleet_operations.py::TestWarpJumpUsesResourceConsumptionTrigger::test_warp_jump_uses_resource_consumption_trigger"
+        ],
+        "stdout_tail": "perations.py::TestWarpJumpUsesResourceConsumptionTrigger::test_warp_jump_uses_resource_consumption_trigger\nFAILED tests/integration/resource_system/test_fleet_operations.py::TestMovementWithMultiResourceConsumption::test_movement_with_multi_resource_consumption\nFAILED tests/integration/resource_system/test_fleet_operations.py::TestComponentToggleAffectsMovementAndWarp::test_component_toggle_affects_movement_and_warp\n========== 3 failed, 6245 passed, 224 warnings in 107.05s (0:01:47) ===========\n"
+    },
+    {
+        "n": 5,
+        "duration": 78.63965559005737,
+        "exit_code": 1,
+        "fails": [
+            "tests/integration/resource_system/test_fleet_operations.py::TestMovementWithMultiResourceConsumption::test_movement_with_multi_resource_consumption",
+            "tests/integration/resource_system/test_resource_pipeline.py::TestCustomResourceTypeFullPipeline::test_custom_resource_type_full_pipeline"
+        ],
+        "stdout_tail": "arshipBattles\\benchmark_results.xml ----\n=========================== short test summary info ===========================\nFAILED tests/integration/resource_system/test_fleet_operations.py::TestMovementWithMultiResourceConsumption::test_movement_with_multi_resource_consumption\nFAILED tests/integration/resource_system/test_resource_pipeline.py::TestCustomResourceTypeFullPipeline::test_custom_resource_type_full_pipeline\n=========== 2 failed, 6246 passed, 229 warnings in 77.67s (0:01:17) ===========\n"
+    },
+    {
+        "n": 6,
+        "duration": 72.98761105537415,
+        "exit_code": 1,
+        "fails": [
+            "tests/integration/resource_system/test_fleet_operations.py::TestMovementWithMultiResourceConsumption::test_movement_with_multi_resource_consumption",
+            "tests/integration/resource_system/test_resource_pipeline.py::TestAutoDisableComponentChainOnResourceDepletion::test_auto_disable_component_chain_on_resource_depletion",
+            "tests/integration/resource_system/test_resource_pipeline.py::TestCustomResourceTypeFullPipeline::test_custom_resource_type_full_pipeline"
+        ],
+        "stdout_tail": "perations.py::TestMovementWithMultiResourceConsumption::test_movement_with_multi_resource_consumption\nFAILED tests/integration/resource_system/test_resource_pipeline.py::TestCustomResourceTypeFullPipeline::test_custom_resource_type_full_pipeline\nFAILED tests/integration/resource_system/test_resource_pipeline.py::TestAutoDisableComponentChainOnResourceDepletion::test_auto_disable_component_chain_on_resource_depletion\n=========== 3 failed, 6245 passed, 234 warnings in 72.05s (0:01:12) ===========\n"
+    },
+    {
+        "n": 7,
+        "duration": 65.29277801513672,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "tarshipBattles\\tests\\integration\\fleet_combat\\test_service_integration.py:134: DeprecationWarning: BattleEngine.start() without ai_controllers or ai_factory is deprecated. Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).\n    engine.start(team1, team2)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n================ 6248 passed, 239 warnings in 64.34s (0:01:04) ================\n"
+    },
+    {
+        "n": 8,
+        "duration": 59.03888654708862,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "tarshipBattles\\tests\\integration\\fleet_combat\\test_service_integration.py:194: DeprecationWarning: BattleEngine.start() without ai_controllers or ai_factory is deprecated. Use BattleOrchestrator to create controllers (PROJ-17/PROJ-43).\n    engine.start(team1, team2)\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n===================== 6248 passed, 244 warnings in 58.06s =====================\n"
+    },
+    {
+        "n": 9,
+        "duration": 48.935200929641724,
+        "exit_code": 1,
+        "fails": [
+            "tests/integration/resource_system/test_resource_pipeline.py::TestCustomResourceTypeFullPipeline::test_custom_resource_type_full_pipeline",
+            "tests/integration/resource_system/test_resource_pipeline.py::TestPerTurnConsumptionAcrossFullTurn::test_per_turn_consumption_across_full_turn"
+        ],
+        "stdout_tail": "per\\StarshipBattles\\benchmark_results.xml ----\n=========================== short test summary info ===========================\nFAILED tests/integration/resource_system/test_resource_pipeline.py::TestCustomResourceTypeFullPipeline::test_custom_resource_type_full_pipeline\nFAILED tests/integration/resource_system/test_resource_pipeline.py::TestPerTurnConsumptionAcrossFullTurn::test_per_turn_consumption_across_full_turn\n================ 2 failed, 6246 passed, 249 warnings in 47.97s ================\n"
+    },
+    {
+        "n": 10,
+        "duration": 47.12748146057129,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "t_main_integration.py::TestMainIntegration::test_game_instantiation\n  C:\\Users\\rossr\\AppData\\Roaming\\Python\\Python311\\site-packages\\pygame_gui\\core\\drawable_shapes\\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n===================== 6248 passed, 254 warnings in 46.21s =====================\n"
+    },
+    {
+        "n": 11,
+        "duration": 50.37274241447449,
+        "exit_code": 1,
+        "fails": [
+            "tests/integration/resource_system/test_fleet_operations.py::TestComponentToggleAffectsMovementAndWarp::test_component_toggle_affects_movement_and_warp",
+            "tests/integration/resource_system/test_resource_pipeline.py::TestAutoDisableComponentChainOnResourceDepletion::test_auto_disable_component_chain_on_resource_depletion"
+        ],
+        "stdout_tail": "ml ----\n=========================== short test summary info ===========================\nFAILED tests/integration/resource_system/test_fleet_operations.py::TestComponentToggleAffectsMovementAndWarp::test_component_toggle_affects_movement_and_warp\nFAILED tests/integration/resource_system/test_resource_pipeline.py::TestAutoDisableComponentChainOnResourceDepletion::test_auto_disable_component_chain_on_resource_depletion\n================ 2 failed, 6246 passed, 259 warnings in 49.36s ================\n"
+    },
+    {
+        "n": 12,
+        "duration": 45.93573212623596,
+        "exit_code": 0,
+        "fails": [],
+        "stdout_tail": "builder_improvements.py::TestBuilderImprovements::test_loading_sync\n  C:\\Users\\rossr\\AppData\\Roaming\\Python\\Python311\\site-packages\\pygame_gui\\core\\drawable_shapes\\rounded_rect_drawable_shape.py:113: UserWarning: Clamping border_width of: 1, to: 0\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n--- generated xml file: C:\\Developer\\StarshipBattles\\benchmark_results.xml ----\n===================== 6248 passed, 264 warnings in 44.89s =====================\n"
+    }
+]

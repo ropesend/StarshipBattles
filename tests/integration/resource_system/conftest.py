@@ -11,30 +11,15 @@ from game.strategy.data.ship_instance import ShipInstance
 
 
 @pytest.fixture
-def registry_manager():
-    """Get a clean registry manager for each test."""
-    mgr = RegistryManager.instance()
-    # Store original state
-    orig_components = dict(mgr.components)
-    orig_resources = dict(mgr.resources)
-
-    yield mgr
-
-    # Restore original state
-    mgr.components.clear()
-    mgr.components.update(orig_components)
-    mgr.resources.clear()
-    mgr.resources.update(orig_resources)
-
-
-@pytest.fixture
-def loaded_registry(global_ship_data, registry_manager):
+def loaded_registry():
     """
     Registry with real component data loaded.
 
-    Uses the global_ship_data fixture to ensure components are loaded.
+    Relies on reset_game_state (autouse) for isolation.
+    That fixture clears, hydrates from SessionRegistryCache,
+    and cleans up after each test automatically.
     """
-    return registry_manager
+    return RegistryManager.instance()
 
 
 @dataclass
