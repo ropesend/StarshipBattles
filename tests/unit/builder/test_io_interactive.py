@@ -3,6 +3,7 @@ import os
 from game.simulation.systems.persistence import ShipIO
 
 
+@patch('game.simulation.systems.persistence.tk_root', True)
 class TestShipIOInteractive:
 
     @staticmethod

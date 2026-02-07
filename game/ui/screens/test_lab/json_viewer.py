@@ -1,0 +1,122 @@
+"""Scrollable JSON viewer component for Combat Lab UI.
+
+Displays formatted JSON data with scrolling support.
+"""
+
+import json
+import pygame
+
+from game.core.constants import FONT_MAIN
+
+
+class ScrollableJSONViewer:
+    """Scrollable panel for displaying formatted JSON with syntax highlighting."""
+
+    def __init__(self, x, y, width, height, title, json_data):
+        """
+        Initialize JSON viewer.
+
+        Args:
+            x, y: Top-left position
+            width, height: Panel dimensions
+            title: Panel title (e.g., "Ship: Attacker")
+            json_data: Dictionary to display as JSON
+        """
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.title = title
+
+        # Format JSON with 2-space indentation
+        self.json_text = json.dumps(json_data, indent=2) if json_data else "{}"
+        self.lines = self.json_text.split('\n')
+
+        # Scrolling state
+        self.scroll_offset = 0
+        self.line_height = 18
+        self.title_height = 30
+        self.content_height = height - self.title_height
+        self.visible_lines = max(1, self.content_height // self.line_height)
+        self.max_scroll = max(0, len(self.lines) - self.visible_lines)
+
+        # Fonts (match Test Details panel style)
+        self.body_font = pygame.font.SysFont(FONT_MAIN, 14)
+        self.title_font = pygame.font.SysFont(FONT_MAIN, 18)
+
+        # Colors
+        self.bg_color = (30, 30, 35)
+        self.title_bg_color = (45, 45, 50)
+        self.text_color = (220, 220, 220)
+        self.title_color = (255, 255, 255)
+        self.border_color = (100, 100, 120)
+
+    def update_json(self, json_data):
+        """Update displayed JSON data."""
+        self.json_text = json.dumps(json_data, indent=2) if json_data else "{}"
+        self.lines = self.json_text.split('\n')
+        self.max_scroll = max(0, len(self.lines) - self.visible_lines)
+        self.scroll_offset = min(self.scroll_offset, self.max_scroll)
+
+    def handle_scroll(self, event):
+        """Handle mouse wheel scrolling."""
+        if event.type == pygame.MOUSEWHEEL:
+            # Check if mouse is over this panel
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if (self.x <= mouse_x <= self.x + self.width and
+                self.y <= mouse_y <= self.y + self.height):
+
+                # Scroll up/down
+                self.scroll_offset -= event.y * 3  # 3 lines per wheel tick
+                self.scroll_offset = max(0, min(self.scroll_offset, self.max_scroll))
+                return True
+        return False
+
+    def draw(self, surface):
+        """Draw the JSON viewer panel."""
+        # Draw border
+        pygame.draw.rect(surface, self.border_color,
+                        (self.x, self.y, self.width, self.height), 2)
+
+        # Draw title bar
+        title_rect = (self.x + 2, self.y + 2, self.width - 4, self.title_height - 4)
+        pygame.draw.rect(surface, self.title_bg_color, title_rect)
+
+        title_surface = self.title_font.render(self.title, True, self.title_color)
+        title_x = self.x + 10
+        title_y = self.y + (self.title_height - title_surface.get_height()) // 2
+        surface.blit(title_surface, (title_x, title_y))
+
+        # Draw content background
+        content_rect = (self.x + 2, self.y + self.title_height,
+                       self.width - 4, self.content_height)
+        pygame.draw.rect(surface, self.bg_color, content_rect)
+
+        # Draw JSON lines (visible range only)
+        start_line = self.scroll_offset
+        end_line = min(start_line + self.visible_lines, len(self.lines))
+
+        for i in range(start_line, end_line):
+            line = self.lines[i]
+            text_surface = self.body_font.render(line, True, self.text_color)
+
+            text_x = self.x + 10
+            text_y = self.y + self.title_height + ((i - start_line) * self.line_height) + 5
+
+            surface.blit(text_surface, (text_x, text_y))
+
+        # Draw scrollbar if needed
+        if self.max_scroll > 0:
+            scrollbar_x = self.x + self.width - 15
+            scrollbar_y = self.y + self.title_height + 5
+            scrollbar_height = self.content_height - 10
+
+            # Scrollbar track
+            pygame.draw.rect(surface, (60, 60, 70),
+                           (scrollbar_x, scrollbar_y, 10, scrollbar_height))
+
+            # Scrollbar thumb
+            thumb_height = max(20, int(scrollbar_height * self.visible_lines / len(self.lines)))
+            thumb_y = scrollbar_y + int((scrollbar_height - thumb_height) * (self.scroll_offset / self.max_scroll))
+            pygame.draw.rect(surface, (120, 120, 140),
+                           (scrollbar_x, thumb_y, 10, thumb_height))

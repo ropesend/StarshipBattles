@@ -81,7 +81,7 @@ while [ $iteration -lt $MAX_ITERATIONS ]; do
     # - Executing next phase OR running audit if project complete
     # - Updating plan and exiting
     claude \
-        --dangerously-skip-user-approval \
+        --dangerously-skip-permissions \
         --system-prompt-file refactor_loop/WORKER.md \
         -p "Follow Protocol 08 (Automated Loop). Read refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit." \
         || {
