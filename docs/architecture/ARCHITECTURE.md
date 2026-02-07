@@ -214,6 +214,7 @@ from game.simulation.entities.ship_physics import ShipPhysicsMixin  # internal
 | `game.ui` | 7 modules | Renderer, screens, panels (module-level exports for race condition prevention) |
 | `game.engine` | 3 exports | PhysicsBody, CollisionSystem, SpatialGrid |
 | `game.ai` | 11 exports | AIController, behaviors, StrategyManager, TargetEvaluator |
+| `game.research` | - | Tech tree research system: fuzzy requirements, leaky bucket mechanics, tech tree visualization |
 
 ### Public vs. Private Modules
 
@@ -232,8 +233,10 @@ from game.simulation import ShipSerializer
 
 ## Related Documentation
 
-- [Component System](component_system.md) - Ship components, abilities, and modifiers
-- [Modifier System](modifier_system.md) - Detailed modifier documentation
-- [Error Handling](ERROR_HANDLING.md) - Exception hierarchy and error codes
-- [PROJ-11: Architecture Layer Separation](../Projects/archived_projects/PROJ-11/plan.md)
-- [PROJ-11 Design Document](../Projects/archived_projects/PROJ-11/design.md)
+- [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) - Naming patterns and conventions
+- [PATTERNS.md](PATTERNS.md) - Design patterns used in codebase
+- [SERVICES.md](SERVICES.md) - Service layer API documentation
+- [ERROR_HANDLING_GUIDELINES.md](ERROR_HANDLING_GUIDELINES.md) - Error handling patterns
+- [UI_STYLE_GUIDE.md](UI_STYLE_GUIDE.md) - UI color and theme guide
+- [Component System](../guides/component_system.md) - Ship components, abilities, and modifiers
+- [Modifier System](../guides/modifier_system.md) - Detailed modifier documentation

@@ -215,12 +215,11 @@ library.mark_obsolete("cruiser_mk1", True)
 
 ## Documentation Created
 
-1. **[test_baseline_results.md](test_baseline_results.md)** - Pre-refactoring baseline
-2. **[phase1_completion_report.md](phase1_completion_report.md)** - Phase 1 details
-3. **[phase2_completion_report.md](phase2_completion_report.md)** - Phase 2 details
-4. **[phase3_completion_report.md](phase3_completion_report.md)** - Phase 3 details
-5. **[PHASE_1_AND_2_SUMMARY.md](PHASE_1_AND_2_SUMMARY.md)** - Combined summary
-6. **[REFACTORING_COMPLETE.md](REFACTORING_COMPLETE.md)** - This document
+1. **[test_baseline.md](test_baseline.md)** - Pre-refactoring baseline
+2. **[originals/phase1_completion_report.md](originals/phase1_completion_report.md)** - Phase 1 details
+3. **[originals/phase2_completion_report.md](originals/phase2_completion_report.md)** - Phase 2 details
+4. **[originals/phase3_completion_report.md](originals/phase3_completion_report.md)** - Phase 3 details
+5. **REFACTORING_COMPLETE.md** - This document (summary)
 
 ## Migration Guide
 

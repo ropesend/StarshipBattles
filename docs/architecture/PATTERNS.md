@@ -16,7 +16,7 @@ This document describes the key design patterns used throughout the Starship Bat
 8. [Renderer Decomposition](#renderer-decomposition)
 9. [Surface Caching](#surface-caching)
 10. [Modal Window Tracking](#modal-window-tracking)
-11. [Naming Conventions](#naming-conventions)
+11. [Naming Conventions](#naming-conventions) *(see [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md))*
 12. [Validation System Limitations](#validation-system-limitations)
 
 ---
@@ -66,7 +66,7 @@ class StrategyManager:
 |-------|----------|---------|
 | `RegistryManager` | `game/core/registry.py` | Component/modifier definitions |
 | `StrategyManager` | `game/ai/controller.py` | AI combat strategies |
-| `ShipThemeManager` | `game/simulation/ship_theme.py` | Visual themes |
+| `ShipThemeManager` | `game/ui/assets/ship_theme_manager.py` | Visual themes |
 | `ScreenshotManager` | `game/core/screenshot_manager.py` | Screenshot handling |
 | `SpriteManager` | `game/ui/renderer/sprites.py` | Sprite caching |
 | `SessionRegistryCache` | `tests/infrastructure/session_cache.py` | Test data caching |
@@ -916,83 +916,7 @@ Event Flow:
 
 ## Naming Conventions
 
-### Purpose
-
-Consistent naming improves code readability and helps developers understand code intent at a glance.
-
-### Methods
-
-| Prefix | Usage | Example |
-|--------|-------|---------|
-| `_method` | Private implementation details | `_draw_grid()`, `_update_cache()` |
-| `get_*` | Retrieve a value (no side effects) | `get_components()`, `get_hp_percent()` |
-| `set_*` | Set a value (mutation) | `set_position()`, `set_target()` |
-| `calculate_*` | Compute and return a value | `calculate_damage()`, `calculate_ability_totals()` |
-| `is_*` / `has_*` | Boolean checks | `is_alive`, `has_component()` |
-| `on_*` | Event handlers | `on_click()`, `on_ship_updated()` |
-| `_on_*` | Private event handlers | `_on_component_added()` |
-| `find_*` | Search for something | `find_target()`, `find_path()` |
-| `create_*` | Factory methods | `create_component()`, `create_ship()` |
-
-### Properties/Attributes
-
-| Prefix | Usage | Example |
-|--------|-------|---------|
-| `current_*` | Present state value | `current_hp`, `current_target` |
-| `max_*` | Maximum allowed value | `max_hp`, `max_speed`, `max_targets` |
-| `base_*` | Value before modifiers | `base_damage`, `base_turn_speed` |
-| `total_*` | Aggregated/calculated total | `total_mass`, `total_thrust` |
-| `*_id` | Identifier | `team_id`, `ship_id` |
-| `*_type` | Type classification | `attack_type`, `vehicle_type` |
-
-### Classes
-
-| Convention | Usage | Example |
-|------------|-------|---------|
-| `*Manager` | Singleton that manages global state | `StrategyManager`, `RegistryManager` |
-| `*Service` | Stateless operations | `ShipStatsService`, `DataService` |
-| `*Mixin` | Composable behavior | `ShipCombatMixin`, `ShipPhysicsMixin` |
-| `*Rule` | Validation rule | `MassLimitRule`, `ClassRequirementsRule` |
-| `*Ability` | Component ability | `CombatPropulsion`, `ResourceStorage` |
-| `*Config` | Configuration dataclass | `AIConfig`, `BattleConfig` |
-| `*Panel` | UI panel widget | `LayerPanel`, `ComponentPalettePanel` |
-| `*Screen` | Full screen UI | `StrategyScreen`, `WorkshopScreen` |
-| `*Window` | Modal popup | `FleetOrdersWindow`, `PlanetListWindow` |
-| `*Renderer` | Drawing logic | `StrategyRenderer`, `ShipStatsRenderer` |
-
-### Constants
-
-```python
-# Module-level constants: SCREAMING_SNAKE_CASE
-MULTIPLICATIVE_ABILITIES = {'ToHitAttackModifier'}
-DEFAULT_MAX_TARGETS = 1
-
-# Class constants: Also SCREAMING_SNAKE_CASE
-class AIConfig:
-    FORMATION_ENGINE_THROTTLE = 0.7
-    MIN_SPACING = 50
-
-# Event constants
-class BuilderEvents:
-    SHIP_UPDATED = 'SHIP_UPDATED'
-    SELECTION_CHANGED = 'SELECTION_CHANGED'
-```
-
-### Files
-
-| Convention | Usage | Example |
-|------------|-------|---------|
-| `snake_case.py` | All Python files | `ability_aggregator.py`, `ship_combat.py` |
-| `test_*.py` | Test files | `test_ai.py`, `test_stacking_rules.py` |
-| `*_report.md` | Documentation reports | `dead_code_report.md` |
-
-### Guidelines
-
-1. **Be consistent** - Follow existing patterns in the module
-2. **Descriptive names** - Prefer `calculate_damage_reduction()` over `calc_dr()`
-3. **Avoid abbreviations** - Except common ones: `hp`, `id`, `config`, `pct`
-4. **Private means private** - Methods starting with `_` should not be called externally
-5. **Boolean names** - Use `is_` or `has_` prefix for boolean attributes
+> **See [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) for the comprehensive naming guide** covering methods, properties, classes, constants, files, and domain-specific conventions (Battle vs Combat, Builder vs Workshop, etc.).
 
 ---
 
@@ -1058,5 +982,5 @@ This is tracked as potential future enhancement.
 | Renderer Decomposition | Complex rendering with many object types | `StrategyRenderer` with `_draw_*` methods |
 | Surface Caching | Expensive rendering operations | `_header_cache` in GridPanel |
 | Modal Tracking | Managing multiple popup windows | `_has_modal_open()` in StrategyScreen |
-| Naming Conventions | Code readability and consistency | See [Naming Conventions](#naming-conventions) |
+| Naming Conventions | Code readability and consistency | See [NAMING_CONVENTIONS.md](NAMING_CONVENTIONS.md) |
 | Validation Limitations | Understanding design-time constraints | See [Validation System Limitations](#validation-system-limitations) |
