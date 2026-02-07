@@ -25,7 +25,6 @@ from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
 from game.core.profiling import PROFILER, profile_action
 from game.core.protocols import IScene
-# Note: battle_coordinator functions now internalized in BattleScreen (PROJ-65)
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel
 )
@@ -37,7 +36,6 @@ BG_COLOR = (10, 10, 20)
 
 # Scene States
 from game.core.constants import GameState
-# Note: BattleInputHandler now internalized in BattleScreen (PROJ-65)
 
 
 def parse_args():

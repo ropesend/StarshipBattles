@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-65 Phase 3
-**Current Status:** PROJ-65 Phase 3 complete, Phase 4 ready
+**Last Completed:** PROJ-65 Phase 4 (All Phases Complete)
+**Current Status:** PROJ-65 all phases complete, ready for audit
 **Current Project:** PROJ-65
-**Current Phase:** Phase 4
-**Test Status:** 6244 passed (2 pre-existing failures in bug_15 tests)
+**Current Phase:** Audit
+**Test Status:** 6222 passed (2 pre-existing failures in bug_15 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-65 Phase 3 complete: Extract MenuScene & Scene Dispatch
-- Created MenuScene class implementing IScene protocol in game/ui/screens/menu_scene.py
-- Added self.active_scene attribute for unified scene dispatch
-- Replaced if/elif chains in _forward_event_to_scene and _handle_resize with active_scene dispatch
-- Added _switch_scene(state, scene) method, updated all start_* methods to use it
-- Removed deprecated methods: _handle_battle_actions, _handle_keydown, _draw_menu, _update_battle_setup, _update_battle
-- app.py reduced from 781 to 667 lines
-- Legacy handlers kept for Strategy scene (click, scroll) - TODO for future
-- Next: Phase 4 - Cleanup & Tests
+- PROJ-65 Phase 4 complete: Cleanup & Tests
+- Deleted deprecated game/battle_coordinator.py and game/ui/screens/battle_input_handler.py
+- Deleted tests/unit/simulation/battle_coordinator/ test directory
+- Updated tests/unit/ui/test_overlay.py to not import deleted BattleInputHandler
+- Created tests/unit/ui/test_scene_protocol.py with 13 tests for IScene compliance
+- app.py at 665 lines (reduced from 781, 300-line target was too ambitious)
+- Zero global WIDTH/HEIGHT in codebase
+- Major if/elif chains eliminated via unified dispatch
+- Next: Run audit (Protocol 04)
 
 ---
 
@@ -144,6 +144,7 @@
 | 2026-02-07 | PROJ-65 | Phase 1 | Complete | 6235 passed | pending | IScene protocol, global WIDTH/HEIGHT eliminated, module-level effects moved |
 | 2026-02-07 | PROJ-65 | Phase 2 | Complete | 6244 passed | pending | All 8 scenes IScene-compliant, scene_callback pattern, battle coordinator internalized |
 | 2026-02-07 | PROJ-65 | Phase 3 | Complete | 6244 passed | pending | MenuScene created, active_scene dispatch, if/elif chains eliminated, 781->667 lines |
+| 2026-02-07 | PROJ-65 | Phase 4 | Complete | 6222 passed | pending | Deleted dead code, added 13 IScene tests, 665 lines final |
 
 ---
 

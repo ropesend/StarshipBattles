@@ -16,15 +16,15 @@
 | 1. Foundation — IScene Protocol & WIDTH/HEIGHT | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Standardize Scene Interfaces | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract MenuScene & Scene Dispatch | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Cleanup & Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Cleanup & Tests | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Created MenuScene implementing IScene. Added self.active_scene for unified dispatch. Replaced if/elif chains in _forward_event_to_scene and _handle_resize with active_scene dispatch. Added _switch_scene method. Removed deprecated _handle_battle_actions and _handle_keydown. app.py reduced from 781 to 667 lines.
-**Next Action:** Begin Phase 4 — Cleanup & Tests
+**Active Phase:** Complete - Ready for Audit
+**Last Action:** Phase 4 complete - Deleted deprecated battle_coordinator.py and battle_input_handler.py. Removed related test files. Updated test_overlay.py. Created test_scene_protocol.py with 13 tests for IScene compliance. app.py at 665 lines.
+**Next Action:** Run audit
 **Blockers:** None
-**Context for Next Agent:** 6244 passed (2 pre-existing failures in bug_15 tests). Some legacy handlers kept for Strategy scene (click, scroll). _update_and_draw has minimal scene-specific logic for input handling.
+**Context for Next Agent:** All 4 phases complete. 6222 tests passed (2 pre-existing failures in bug_15). Zero global WIDTH/HEIGHT. Major if/elif chains eliminated. 300-line target not met (665 lines) but significant cleanup done.
 
 ## Overview
 Refactor `game/app.py` (759 lines, 43 methods) from a monolithic orchestrator with 5 if/elif chains (10 GameStates, ~45 branches) into a thin coordinator that dispatches to `self.active_scene` via a unified `IScene` protocol. This eliminates Open/Closed Principle violations, removes global WIDTH/HEIGHT state, extracts the menu into its own scene class, and decouples battle coordinator logic.

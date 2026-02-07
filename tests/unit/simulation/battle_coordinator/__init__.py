@@ -1,1 +1,0 @@
-# Battle coordinator tests
