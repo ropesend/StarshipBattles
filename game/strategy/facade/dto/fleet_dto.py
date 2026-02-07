@@ -64,6 +64,9 @@ class FleetInfo:
         has_orders: Whether the fleet has any orders queued
         can_use_warp: Whether all ships in fleet can use warp points
         projected_path: Tuple of movement path coordinates (immutable)
+        is_building: Whether the fleet is currently executing a BUILD order
+        has_space_shipyard: Whether the fleet has an operational space shipyard
+        construction_queue_size: Number of items in the fleet's construction queue
     """
 
     fleet_id: int
@@ -76,6 +79,9 @@ class FleetInfo:
     has_orders: bool = False
     can_use_warp: bool = False
     projected_path: Tuple[HexCoord, ...] = field(default_factory=tuple)
+    is_building: bool = False
+    has_space_shipyard: bool = False
+    construction_queue_size: int = 0
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -146,4 +152,7 @@ class FleetInfo:
             has_orders=len(fleet.orders) > 0,
             can_use_warp=fleet.can_use_warp(),
             projected_path=tuple(fleet.path),
+            is_building=fleet.is_building,
+            has_space_shipyard=fleet.has_space_shipyard,
+            construction_queue_size=len(fleet.construction_queue),
         )

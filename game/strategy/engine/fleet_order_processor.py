@@ -251,7 +251,17 @@ class FleetOrderProcessor:
         if not order:
             return False
 
-        if order.type == OrderType.COLONIZE:
+        if order.type == OrderType.BUILD:
+            # BUILD order persists until construction_queue is empty
+            # It does not "complete" in the traditional sense - it auto-pops when queue empties
+            if not fleet.construction_queue:
+                # Queue is empty, auto-complete the BUILD order
+                fleet.pop_order()
+                log_debug(f"Fleet {fleet.id} BUILD order completed - queue empty")
+            # BUILD does not consume the fleet
+            return False
+
+        elif order.type == OrderType.COLONIZE:
             # PROJ-55: Pass component registry for ship removal
             result = self.process_colonize(
                 fleet, empire, galaxy, component_registry=component_registry

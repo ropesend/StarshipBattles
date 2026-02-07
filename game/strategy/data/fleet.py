@@ -13,6 +13,7 @@ class OrderType(Enum):
     COLONIZE = auto()
     MOVE_TO_FLEET = auto()
     JOIN_FLEET = auto()
+    BUILD = auto()
 
 
 class FleetOrder:
@@ -125,6 +126,16 @@ class Fleet:
                         if "SpaceShipyard" in comp.get("abilities", {}):
                             return True
         return False
+
+    @property
+    def is_building(self) -> bool:
+        """
+        Check if fleet is currently executing a BUILD order.
+
+        Returns True when the current (first) order is BUILD.
+        """
+        current = self.get_current_order()
+        return current is not None and current.type == OrderType.BUILD
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
         """

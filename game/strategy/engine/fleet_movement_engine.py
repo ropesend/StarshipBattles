@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_warning
-from game.strategy.data.fleet import Fleet
+from game.strategy.data.fleet import Fleet, OrderType
 from game.strategy.data.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
@@ -171,6 +171,11 @@ class FleetMovementEngine:
                     interval = 1  # Safety
 
                 if tick % interval == 0:
+                    # Skip fleets with BUILD order - they are stationary
+                    current_order = fleet.get_current_order()
+                    if current_order and current_order.type == OrderType.BUILD:
+                        continue
+
                     # Calculate next hex WITHOUT moving yet
                     next_hex = self.calculate_next_hex(fleet, galaxy)
                     if next_hex is not None:

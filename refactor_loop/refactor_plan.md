@@ -8,27 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-66 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-66 Audit Passed, Awaiting User Verification
-**Current Project:** PROJ-66
-**Current Phase:** Complete
-**Test Status:** 6290 passed (2 pre-existing failures in bug_15 tests)
+**Last Completed:** PROJ-67 Phase 2 - BUILD Order & Movement Blocking
+**Current Status:** PROJ-67 Phase 2 Complete, Phase 3 Ready
+**Current Project:** PROJ-67
+**Current Phase:** Phase 3
+**Test Status:** 6348 passed (2 pre-existing failures in bug_15 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-66 AUDIT PASSED
-- All 7 phases verified by audit agents:
-  - Phase 1: RaceConfig with all new fields + 6 constant lists (44 tests)
-  - Phase 2: Homeworld presets for all 11 planet types (14 tests)
-  - Phase 3: RaceIdentityPanel with auto-generation (21 tests)
-  - Phase 4: Environment panel with homeworld dropdown + water sliders (29 tests)
-  - Phase 5: RacePointBudget + RaceAptitudesPanel (42 tests)
-  - Phase 6: 7-tab structure, event routing, summary panel (integration verified)
-  - Phase 7: Validator, fixtures, NewGameSetupScreen display (17 tests)
-- No significant issues found
-- Total test count: 6290 passed
-- Project ready for user verification and closure
-- Next: PROJ-67 (Fleet Space Yards)
+- PROJ-67 Phase 2 Complete:
+  - Added OrderType.BUILD to fleet.py
+  - Added is_building property to Fleet
+  - Added BUILD order blocking in FleetMovementEngine.collect_movements()
+  - Added BUILD order processing in FleetOrderProcessor (auto-pops when queue empty)
+  - Added is_building, has_space_shipyard, construction_queue_size to FleetInfo DTO
+  - 33 new tests across 4 new test files
+- Commit: 04616e8f
+- Next: Phase 3 - Fleet Production Engine
 
 ---
 
@@ -100,8 +96,8 @@
 
 ---
 
-- [ ] **PROJ-67: Fleet Space Yards**
-  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-67: Fleet Space Yards**
+  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-67/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-67/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -158,6 +154,8 @@
 | 2026-02-07 | PROJ-66 | Phase 6 | Complete | 6210 passed | pending | Tab reorg 5→7, Identity+Aptitudes integrated, Summary updated |
 | 2026-02-07 | PROJ-66 | Phase 7 | Complete | 6290 passed | pending | Validator, fixtures, NewGameSetupScreen updated |
 | 2026-02-07 | PROJ-66 | Audit 1 | PASSED | 6290 passed | pending | No issues found, all 7 phases verified |
+| 2026-02-07 | PROJ-67 | Phase 1 | Complete | 6315 passed | 77c0e03d | fleet_space_yard component, construction_queue, has_space_shipyard, can_build_type() |
+| 2026-02-07 | PROJ-67 | Phase 2 | Complete | 6348 passed | 04616e8f | OrderType.BUILD, is_building, movement blocking, BUILD order processing, FleetInfo DTO |
 
 ---
 
