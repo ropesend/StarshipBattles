@@ -139,7 +139,7 @@ class BattleSetupScreen:
 
             design_entry = self._find_or_create_design(ship_path, ship_data)
             self._add_formation_entries(arrows, design_entry, diameter, formation['name'], team_idx)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, AttributeError) as e:
             log_error(f"Error adding formation: {e}")
 
     def _find_or_create_design(self, ship_path, ship_data):

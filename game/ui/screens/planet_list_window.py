@@ -415,7 +415,7 @@ class PlanetListWindow(UIWindow):
                 manager=self.ui_manager,
                 window_title="Screenshot"
             )
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: UI toast is purely informational, any failure is non-critical
             log_warning(f"Failed to show screenshot toast: {e}")
 
     def _on_planet_selected(self, planet):

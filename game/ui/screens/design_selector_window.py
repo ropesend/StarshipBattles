@@ -448,7 +448,7 @@ class DesignSelectorWindow(UIWindow):
                 try:
                     loaded_img = pygame.image.load(path)
                     return pygame.transform.smoothscale(loaded_img, (size, size))
-                except Exception as e:
+                except (FileNotFoundError, OSError, pygame.error) as e:
                     log_warning(f"Failed to load portrait '{path}' for design '{design.design_id}': {e}")
                     continue
 
@@ -520,7 +520,8 @@ class DesignSelectorWindow(UIWindow):
                 try:
                     loaded_img = pygame.image.load(path).convert_alpha()
                     break
-                except Exception:
+                except (FileNotFoundError, OSError, pygame.error):
+                    log_warning(f"Failed to load skin image: {path}")
                     continue
 
         if loaded_img is None:

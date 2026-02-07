@@ -3,6 +3,7 @@ System Mode Helper - Handles star system inspector functionality.
 
 Extracts system generation, inspection, rendering, and UI management from the main screen.
 """
+import json
 import random
 import pygame
 import pygame_gui
@@ -191,7 +192,7 @@ class SystemModeHelper:
             blueprints = list(data.get("blueprints", {}).keys())
             # Add "random" option at the start
             return ["random"] + sorted(blueprints)
-        except Exception as e:
+        except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
             log_info(f"Failed to load blueprints: {e}")
             return ["random"]
 
@@ -231,7 +232,7 @@ class SystemModeHelper:
                 loader = SystemBlueprintsLoader()
                 data = loader.load()
                 blueprint = loader.get_blueprint(self.selected_blueprint, data)
-            except Exception as e:
+            except (ImportError, FileNotFoundError, OSError, json.JSONDecodeError, KeyError) as e:
                 log_info(f"Failed to load blueprint '{self.selected_blueprint}': {e}")
 
         # Generate stars

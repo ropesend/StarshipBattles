@@ -58,7 +58,7 @@ class RaceAssetLoader:
                 try:
                     surf = pygame.image.load(shape_path).convert_alpha()
                     shapes.append(surf)
-                except Exception as e:
+                except (FileNotFoundError, OSError, pygame.error) as e:
                     log_error(f"Failed to load flag shape {shape_path}: {e}")
                     shapes.append(self.create_placeholder(256, 256))
             else:
@@ -83,7 +83,7 @@ class RaceAssetLoader:
             try:
                 surf = pygame.image.load(portrait_path).convert_alpha()
                 return surf
-            except Exception as e:
+            except (FileNotFoundError, OSError, pygame.error) as e:
                 log_error(f"Failed to load portrait {portrait_path}: {e}")
 
         return None
@@ -137,7 +137,7 @@ class RaceAssetLoader:
                     surf = pygame.image.load(img_path).convert_alpha()
                     # Scale to preview size
                     return pygame.transform.smoothscale(surf, (preview_size, preview_size))
-        except Exception as e:
+        except (FileNotFoundError, OSError, pygame.error) as e:
             log_warning(f"Failed to load portrait preview: {e}")
 
         return None
@@ -180,7 +180,7 @@ class RaceAssetLoader:
                     img_path = os.path.join(flag_path, fname)
                     surf = pygame.image.load(img_path).convert_alpha()
                     return pygame.transform.smoothscale(surf, (preview_size, preview_size))
-        except Exception as e:
+        except (FileNotFoundError, OSError, pygame.error) as e:
             log_warning(f"Failed to load flag preview: {e}")
 
         return None

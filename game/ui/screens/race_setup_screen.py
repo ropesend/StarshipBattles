@@ -468,7 +468,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
                 # Scale to preview size
                 scaled = pygame.transform.smoothscale(surf, (self.THEME_SHIP_SIZE, self.THEME_SHIP_SIZE))
                 return scaled
-            except Exception as e:
+            except (FileNotFoundError, OSError, pygame.error) as e:
                 log_error(f"Failed to load ship portrait {portrait_path}: {e}")
 
         return None

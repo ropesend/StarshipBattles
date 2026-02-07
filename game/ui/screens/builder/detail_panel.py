@@ -12,6 +12,7 @@ import os
 from pygame_gui.elements import UIPanel, UILabel, UIImage, UIButton, UIWindow, UITextBox
 from game.core.constants import LayerType  # Canonical location for LayerType
 import json
+from game.core.logger import log_warning
 from .modifier_logic import ModifierLogic
 from .component_ref import ComponentRef
 
@@ -248,8 +249,8 @@ class ComponentDetailPanel:
                     loaded = pygame.image.load(full_path).convert()
                     surf = pygame.transform.scale(loaded, (self.image_rect.width, self.image_rect.height))
                     self.portrait_cache[full_path] = surf
-                 except Exception as e:
-                     print(f"Failed to load portrait {full_path}: {e}")
+                 except (FileNotFoundError, OSError, pygame.error) as e:
+                     log_warning(f"Failed to load portrait {full_path}: {e}")
         
         if surf:
             self.image_element = UIImage(

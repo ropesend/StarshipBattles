@@ -8,6 +8,7 @@ PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 """
 import os
 import glob
+import json
 import pygame
 
 from game.core.logger import log_info, log_warning, log_error
@@ -46,7 +47,7 @@ def scan_ship_designs():
                     'ship_class': data.get('ship_class', 'Unknown'),
                     'ai_strategy': data.get('ai_strategy', 'standard_ranged')
                 })
-        except Exception as e:
+        except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             log_warning(f"Failed to load ship design from '{filepath}': {e}")
     return designs
 
@@ -74,7 +75,7 @@ def scan_formations():
                     'name': filename.replace('.json', ''),
                     'arrows': data['arrows']
                 })
-        except Exception as e:
+        except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
             log_warning(f"Failed to load formation from '{filepath}': {e}")
     return formations
 
@@ -227,6 +228,6 @@ def load_battle_setup(file_path, available_designs):
         log_info(f"Loaded setup from {file_path}")
         return new_team1, new_team2
 
-    except Exception as e:
+    except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
         log_error(f"Error loading setup: {e}")
         return None, None

@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-64 Phase 3
-**Current Status:** Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-64 Phase 4
+**Current Status:** Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-64
-**Current Phase:** Phase 4
-**Test Status:** 722 passed (unit/ui), 87 passed (testmon)
+**Current Phase:** Phase 5
+**Test Status:** 1021 passed (unit/ui/builder/integration), 175 passed (targeted)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-64 Phase 3 complete: UI Panels & Renderer exception narrowing
-- 7 `except Exception` sites processed across 4 files
-- sprites.py: 2 sites narrowed (FileNotFoundError, OSError, pygame.error)
-- design_report_panel.py: 3 sites narrowed (portrait loading + stat config/row creation)
-- race_portrait_gallery.py: 1 site narrowed
-- race_flag_gallery.py: 1 site narrowed
-- Remaining in panels/renderer: 2 sites in build_queue files (Phase 4 scope)
-- Next: Phase 4 (UI Screens Part A - 18 sites across 13 files)
+- PROJ-64 Phase 4 complete: UI Screens Part A exception narrowing
+- 16 sites processed across 11 files
+- builder/: detail_panel, event_bus (intentional), right_panel, stats_config
+- setup: setup_data_io (3), setup_screen (1)
+- race screens: race_asset_loader (4), race_setup_screen (1)
+- design_selector_window (2)
+- battle_screen (1), galaxy_test/system_mode (2), planet_list_window (1 intentional)
+- build_queue_screen.py already clean (no exception sites found)
+- 2 intentional broad catches documented: event_bus.py, planet_list_window.py
+- Next: Phase 5 (UI Screens Part B - Workshop, Test Lab, Strategy - 15 sites across 5 files)
 
 ---
 
@@ -120,6 +122,7 @@
 | 2026-02-07 | PROJ-64 | Phase 1 | Complete | 6244 passed | pending | 15 sites in core/sim layer - 11 narrowed, 4 documented |
 | 2026-02-07 | PROJ-64 | Phase 2 | Complete | 1639 passed | pending | 17 sites in strategy layer - all narrowed, 0 remaining |
 | 2026-02-07 | PROJ-64 | Phase 3 | Complete | 722 passed | pending | 7 sites in panels/renderer - all narrowed |
+| 2026-02-07 | PROJ-64 | Phase 4 | Complete | 1021 passed | pending | 16 sites in UI screens Part A - 14 narrowed, 2 intentional |
 
 ---
 

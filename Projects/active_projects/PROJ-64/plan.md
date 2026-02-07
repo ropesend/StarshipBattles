@@ -16,15 +16,15 @@
 | 1. Core & Simulation Layer | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Strategy Layer | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI Panels & Renderer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. UI Screens (Part A) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. UI Screens (Part A) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. UI Screens (Part B) - Workshop, Test Lab, Strategy | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Intentional Broad Catches - Document | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - 7 sites narrowed across 4 files (sprites.py, design_report_panel.py, race_portrait_gallery.py, race_flag_gallery.py)
-**Next Action:** Execute Phase 4 (UI Screens Part A)
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - 16 sites processed across 11 files (builder, setup, race screens, design selector, battle screen, galaxy test)
+**Next Action:** Execute Phase 5 (UI Screens Part B - Workshop, Test Lab, Strategy)
 **Blockers:** None
 
 ## Overview

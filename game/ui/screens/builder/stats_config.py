@@ -5,7 +5,9 @@ Defines stat definitions, formatters, and validators for ship statistics display
 Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer stat organization
 """
+import json
 from game.core.constants import LayerType  # Canonical location for LayerType
+from game.core.logger import log_warning
 
 
 class StatDefinition:
@@ -312,8 +314,8 @@ def load_stats_config():
     try:
         with open(path, 'r') as f:
             data = json.load(f)
-    except Exception as e:
-        print(f"Error loading stats config: {e}")
+    except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+        log_warning(f"Error loading stats config: {e}")
         return {}
         
     loaded_groups = {}

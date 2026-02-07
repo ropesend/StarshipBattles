@@ -52,5 +52,5 @@ class EventBus:
             for callback in handlers:
                 try:
                     callback(data)
-                except Exception as e:
+                except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers
                     log_error(f"Error in event handler for {event_type}: {e}")
