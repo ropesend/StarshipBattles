@@ -118,13 +118,13 @@ def test_drag_start(build_queue_screen):
     build_queue_screen.handle_event(event)
     
     # Check if drag started
-    assert build_queue_screen.dragged_item is not None
-    assert build_queue_screen.dragged_item['design_id'] == design_button.design_id
+    assert build_queue_screen.drag_handler.dragged_item is not None
+    assert build_queue_screen.drag_handler.dragged_item['design_id'] == design_button.design_id
 
 def test_drag_drop_success(build_queue_screen):
     """Test that dropping a dragged design into the queue works."""
     # Setup drag state manually
-    build_queue_screen.dragged_item = {
+    build_queue_screen.drag_handler.dragged_item = {
         'design_id': 'mining_complex_mk1',
         'name': 'Mining Complex',
         'category': 'complex'
@@ -144,11 +144,11 @@ def test_drag_drop_success(build_queue_screen):
     assert len(build_queue_screen.planet.construction_queue) == initial_queue_len + 1
     assert build_queue_screen.planet.construction_queue[-1]['design_id'] == 'mining_complex_mk1'
     # Verify drag cleared
-    assert build_queue_screen.dragged_item is None
+    assert build_queue_screen.drag_handler.dragged_item is None
 
 def test_drag_cancel(build_queue_screen):
     """Test that dropping outside the queue cancels the drag (or removes if from queue)."""
-    build_queue_screen.dragged_item = {
+    build_queue_screen.drag_handler.dragged_item = {
         'design_id': 'frigate_mk1',
         'name': 'Frigate',
         'category': 'ship'
@@ -167,7 +167,7 @@ def test_drag_cancel(build_queue_screen):
     # Verify nothing added
     assert len(build_queue_screen.planet.construction_queue) == initial_queue_len
     # Verify drag cleared
-    assert build_queue_screen.dragged_item is None
+    assert build_queue_screen.drag_handler.dragged_item is None
 
 def test_reorder_queue(build_queue_screen):
     """Test reordering items within the queue."""
@@ -201,7 +201,7 @@ def test_reorder_queue(build_queue_screen):
     })
     build_queue_screen.handle_event(event_motion)
 
-    assert build_queue_screen.dragged_item['design_id'] == "item_B"
+    assert build_queue_screen.drag_handler.dragged_item['design_id'] == "item_B"
     assert len(build_queue_screen.planet.construction_queue) == 1 # A is left
     
     # 2. Drop at top of queue panel
@@ -249,7 +249,7 @@ def test_remove_from_queue(build_queue_screen):
     build_queue_screen.handle_event(event_motion)
 
     # Verify drag started
-    assert build_queue_screen.dragged_item is not None
+    assert build_queue_screen.drag_handler.dragged_item is not None
 
     # 2. Drop outside (e.g. (0,0))
     event_up = pygame.event.Event(pygame.MOUSEBUTTONUP, {
@@ -260,4 +260,4 @@ def test_remove_from_queue(build_queue_screen):
     
     # 3. Verify queue is empty
     assert len(build_queue_screen.planet.construction_queue) == 0
-    assert build_queue_screen.dragged_item is None
+    assert build_queue_screen.drag_handler.dragged_item is None

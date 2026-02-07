@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Extract BuildQueuePortraitLoader | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Extract BuildQueueDragHandler | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Extract BuildQueueDragHandler | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract BuildQueueController | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cleanup & Final Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - extracted BuildQueuePortraitLoader (99 lines removed)
-**Next Action:** Begin Phase 2 - Extract BuildQueueDragHandler
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - extracted BuildQueueDragHandler (132 lines removed)
+**Next Action:** Begin Phase 3 - Extract BuildQueueController
 **Blockers:** None
 
 ## Overview

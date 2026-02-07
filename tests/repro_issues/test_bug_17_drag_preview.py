@@ -17,16 +17,17 @@ class TestDragPreviewIcon:
         THEN the dragged_item dict should include a 'portrait' key with a surface
 
         Rev 2: Drag should capture the icon for visual feedback.
+        PROJ-63: Drag logic extracted to BuildQueueDragHandler.
         """
         import inspect
-        from game.ui.screens import build_queue_screen
+        from game.ui.panels import build_queue_drag_handler
 
-        # Check handle_event code for portrait storage during drag
-        source = inspect.getsource(build_queue_screen.BuildQueueScreen.handle_event)
+        # Check handle_mouse_down code for portrait storage during drag
+        source = inspect.getsource(build_queue_drag_handler.BuildQueueDragHandler.handle_mouse_down)
 
         # The fix should store portrait in dragged_item
         assert "portrait" in source.lower(), \
-            "handle_event should store portrait in dragged_item during drag start"
+            "handle_mouse_down should store portrait in dragged_item during drag start"
 
     def test_draw_renders_icon_at_cursor(self):
         """
@@ -35,15 +36,16 @@ class TestDragPreviewIcon:
         THEN the portrait icon should be rendered at/near the cursor position
 
         Rev 2: Mouse cursor should carry the icon.
+        PROJ-63: Drag preview rendering extracted to BuildQueueDragHandler.
         """
         import inspect
-        from game.ui.screens import build_queue_screen
+        from game.ui.panels import build_queue_drag_handler
 
-        source = inspect.getsource(build_queue_screen.BuildQueueScreen.draw)
+        source = inspect.getsource(build_queue_drag_handler.BuildQueueDragHandler.draw_drag_preview)
 
         # The draw method should blit the portrait/icon
         assert "portrait" in source.lower(), \
-            "Draw method should render portrait icon during drag"
+            "draw_drag_preview method should render portrait icon during drag"
 
     def test_icon_size_appropriate(self):
         """

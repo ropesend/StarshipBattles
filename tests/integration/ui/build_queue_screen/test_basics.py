@@ -76,7 +76,7 @@ def test_add_to_queue(build_queue_screen):
     initial_queue_length = len(build_queue_screen.planet.construction_queue)
 
     # Mock design selection
-    build_queue_screen.selected_design = "mining_complex_mk1"
+    build_queue_screen.drag_handler.selected_design = "mining_complex_mk1"
     build_queue_screen.selected_category = "complex"
 
     # Add to queue
@@ -203,7 +203,7 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
 def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
     """Test that new items default to 1 turn build time."""
     # Mock design selection
-    build_queue_screen.selected_design = "test_design"
+    build_queue_screen.drag_handler.selected_design = "test_design"
     build_queue_screen.selected_category = "complex"
 
     # Add to queue without specifying turns (should use default)
@@ -217,7 +217,7 @@ def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
 def test_drag_item_uses_1_turn_default(build_queue_screen):
     """Test that dragged items default to 1 turn if no turns specified."""
     # Simulate dragging an item without 'turns' key
-    build_queue_screen.dragged_item = {
+    build_queue_screen.drag_handler.dragged_item = {
         'design_id': 'frigate_mk1',
         'name': 'Frigate',
         'category': 'ship',
@@ -226,7 +226,7 @@ def test_drag_item_uses_1_turn_default(build_queue_screen):
 
     # Simulate drop event - manually call _add_to_queue as drop would
     # The actual drop handling gets 'turns' from dragged_item with default
-    turns = build_queue_screen.dragged_item.get('turns', 1)  # Should be 1
+    turns = build_queue_screen.drag_handler.dragged_item.get('turns', 1)  # Should be 1
 
     # Verify default is 1
     assert turns == 1
