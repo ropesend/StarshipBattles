@@ -158,6 +158,15 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
              # PROJ-67: Show queue size for BUILD orders
              queue_size = len(self.fleet.construction_queue)
              return f"BUILDING ({queue_size} items)"
+        elif order.type == OrderType.TRANSFER:
+             # PROJ-68: Show TRANSFER order details
+             if isinstance(order.target, dict):
+                 direction = order.target.get('direction', '?')
+                 cargo_type = order.target.get('cargo_type', '?')
+                 amount = order.target.get('amount', '?')
+                 dir_str = "LOAD" if direction == "load" else "UNLOAD"
+                 return f"{dir_str} {amount} {cargo_type}"
+             return "TRANSFER"
         else:
              return f"{order.type.name}"
 

@@ -67,6 +67,8 @@ class FleetInfo:
         is_building: Whether the fleet is currently executing a BUILD order
         has_space_shipyard: Whether the fleet has an operational space shipyard
         construction_queue_size: Number of items in the fleet's construction queue
+        passenger_capacity: Total passenger cargo capacity across all ships
+        passengers_current: Current number of passengers loaded
     """
 
     fleet_id: int
@@ -82,6 +84,8 @@ class FleetInfo:
     is_building: bool = False
     has_space_shipyard: bool = False
     construction_queue_size: int = 0
+    passenger_capacity: int = 0
+    passengers_current: int = 0
 
     @classmethod
     def from_fleet(cls, fleet: 'Fleet') -> 'FleetInfo':
@@ -131,6 +135,19 @@ class FleetInfo:
                 if hasattr(order.target, "id"):
                     target_id = order.target.id
                     target_description = f"Fleet {order.target.id}"
+            elif order.type.name == "BUILD":
+                # BUILD order - fleet is constructing
+                target_description = f"Building ({len(fleet.construction_queue)} items)"
+            elif order.type.name == "TRANSFER":
+                # TRANSFER order - loading/unloading cargo
+                if isinstance(order.target, dict):
+                    direction = order.target.get('direction', '?')
+                    cargo_type = order.target.get('cargo_type', '?')
+                    amount = order.target.get('amount', '?')
+                    dir_str = "Load" if direction == "load" else "Unload"
+                    target_description = f"{dir_str} {amount} {cargo_type}"
+                else:
+                    target_description = "Transfer"
 
             order_infos.append(
                 FleetOrderInfo(
@@ -155,4 +172,6 @@ class FleetInfo:
             is_building=fleet.is_building,
             has_space_shipyard=fleet.has_space_shipyard,
             construction_queue_size=len(fleet.construction_queue),
+            passenger_capacity=fleet.get_fleet_cargo_capacity('passengers'),
+            passengers_current=fleet.get_fleet_cargo_current('passengers'),
         )

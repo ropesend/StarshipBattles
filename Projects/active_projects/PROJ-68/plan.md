@@ -20,14 +20,14 @@
 | 5. Cargo State Tracking | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. TRANSFER Order | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Colonization Integration | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. UI Updates | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
+| 8. UI Updates | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. Initial Population Seeding | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 8 — UI Updates
-**Last Action:** Phase 7 complete — Colonization transfers passengers as founding population, seeds 100 units minimum if no passengers, 7 new tests
-**Next Action:** Begin Phase 8 — UI Updates
+**Active Phase:** Phase 9 — Initial Population Seeding
+**Last Action:** Phase 8 complete — Added population fields to PlanetInfo DTO, cargo fields to FleetInfo DTO, population display in planet formatter, TRANSFER order display, 6 new tests
+**Next Action:** Begin Phase 9 — Initial Population Seeding
 **Blockers:** None
 
 ## Overview

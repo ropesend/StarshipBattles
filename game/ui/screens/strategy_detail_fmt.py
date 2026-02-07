@@ -90,6 +90,47 @@ def format_planet_info(planet) -> str:
     if hasattr(planet, 'owner_id') and planet.owner_id is not None:
         text += f"<br><b>Colony Status:</b> Owned<br>"
 
+        # Population section
+        populations = getattr(planet, 'populations', [])
+        total_pop = sum(p.count for p in populations) if populations else 0
+        max_pop = getattr(planet, 'max_population', 0)
+
+        if total_pop > 0 or max_pop > 0:
+            # Format population with K/M suffixes
+            if total_pop >= 1_000_000:
+                pop_str = f"{total_pop / 1_000_000:.1f}M"
+            elif total_pop >= 1_000:
+                pop_str = f"{total_pop / 1_000:.0f}K"
+            else:
+                pop_str = str(total_pop)
+
+            if max_pop >= 1_000_000:
+                max_str = f"{max_pop / 1_000_000:.1f}M"
+            elif max_pop >= 1_000:
+                max_str = f"{max_pop / 1_000:.0f}K"
+            else:
+                max_str = str(max_pop)
+
+            text += f"<br><b>Population:</b> {pop_str} / {max_str}<br>"
+
+            # Per-species breakdown
+            if len(populations) > 0:
+                for pop in populations:
+                    # Happiness indicator
+                    if pop.happiness >= 0.8:
+                        h_icon = "+"
+                    elif pop.happiness >= 0.4:
+                        h_icon = "~"
+                    else:
+                        h_icon = "-"
+
+                    if pop.count >= 1_000:
+                        cnt_str = f"{pop.count / 1_000:.0f}K"
+                    else:
+                        cnt_str = str(pop.count)
+
+                    text += f" - {pop.race_id}: {cnt_str} [{h_icon}]<br>"
+
         # Show facilities/complexes list
         facilities = getattr(planet, 'facilities', [])
         if facilities:

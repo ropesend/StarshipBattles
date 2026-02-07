@@ -2,8 +2,8 @@
 
 Immutable DTOs representing planet data for the UI layer.
 """
-from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import Optional, Tuple, TYPE_CHECKING
 
 from game.strategy.data.hex_math import HexCoord
 
@@ -24,6 +24,9 @@ class PlanetInfo:
         owner_id: Empire ID of the owner (None if unclaimed)
         is_colonized: Whether the planet has a colony
         has_space_shipyard: Whether the planet has an orbital shipyard
+        total_population: Total population units across all species
+        max_population: Maximum population capacity based on surface area
+        population_details: Tuple of (race_id, count, happiness) for each species
     """
 
     planet_id: int
@@ -34,6 +37,9 @@ class PlanetInfo:
     owner_id: Optional[int] = None
     is_colonized: bool = False
     has_space_shipyard: bool = False
+    total_population: int = 0
+    max_population: int = 0
+    population_details: Tuple[Tuple[str, int, float], ...] = field(default_factory=tuple)
 
     @classmethod
     def from_planet(cls, planet: 'Planet') -> 'PlanetInfo':
@@ -45,6 +51,12 @@ class PlanetInfo:
         Returns:
             An immutable PlanetInfo DTO
         """
+        # Build population details tuple
+        pop_details = tuple(
+            (p.race_id, p.count, p.happiness)
+            for p in planet.populations
+        )
+
         return cls(
             planet_id=planet.id,
             name=planet.name,
@@ -54,4 +66,7 @@ class PlanetInfo:
             owner_id=planet.owner_id,
             is_colonized=planet.owner_id is not None,
             has_space_shipyard=planet.has_space_shipyard,
+            total_population=planet.total_population,
+            max_population=planet.max_population,
+            population_details=pop_details,
         )
