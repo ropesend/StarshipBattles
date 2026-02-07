@@ -8,21 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-64 Phase 1
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-64 Phase 2
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-64
-**Current Phase:** Phase 2
-**Test Status:** 6244 passed
+**Current Phase:** Phase 3
+**Test Status:** 1639 passed (strategy/integration), 1025 passed (unit/strategy)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-64 Phase 1 complete: Core & Simulation Layer exception narrowing
-- 15 `except Exception` sites processed across 10 files
-- 11 catches narrowed to specific types
-- 4 intentional broad catches documented with inline comments
-- 2 tests updated to use specific exception types (ValueError, json.JSONDecodeError)
-- 1 pre-existing flaky test (test_stats_render::test_logistics_section) - unrelated to this project
-- Next: Phase 2 (Strategy Layer - 12 sites across 8 files)
+- PROJ-64 Phase 2 complete: Strategy Layer exception narrowing
+- 17 `except Exception` sites processed across 8 files
+- save_game_service.py: 5 sites narrowed (RuntimeError added for test mock compatibility)
+- design_library.py: 6 sites narrowed
+- race_library.py: 4 sites narrowed
+- classification_config.py: 1 site narrowed + logging added
+- naming.py: 1 site narrowed (yaml.YAMLError added)
+- quickstart_builder.py: 1 site narrowed
+- strategy_session_facade.py: 1 site narrowed
+- Checklist had 3 stale entries (ship_instance.py, turn_engine.py) - those files were already clean
+- `grep -rn "except Exception" game/strategy/` returns 0 results
+- Next: Phase 3 (UI Panels & Renderer - 7 sites across 5 files)
 
 ---
 
@@ -117,6 +122,7 @@
 | 2026-02-07 | PROJ-63 | Phase 4 | Complete | 6246 passed | pending | Final verification complete |
 | 2026-02-07 | PROJ-63 | Audit 1 | PASSED | 6246 passed | pending | No issues found, 36% reduction achieved |
 | 2026-02-07 | PROJ-64 | Phase 1 | Complete | 6244 passed | pending | 15 sites in core/sim layer - 11 narrowed, 4 documented |
+| 2026-02-07 | PROJ-64 | Phase 2 | Complete | 1639 passed | pending | 17 sites in strategy layer - all narrowed, 0 remaining |
 
 ---
 

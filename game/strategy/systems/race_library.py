@@ -112,7 +112,7 @@ class RaceLibrary:
             except (PermissionError, OSError) as e:
                 log_warning(f"Cannot read race file {filepath}: {e}")
                 continue
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError) as e:
                 log_warning(f"Unexpected error loading race from {filepath}: {e}")
                 continue
 
@@ -151,7 +151,7 @@ class RaceLibrary:
         except (PermissionError, OSError) as e:
             log_error(f"Cannot read race '{race_id}' from {filepath}: {e}")
             return None
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError) as e:
             log_error(f"Unexpected error loading race '{race_id}': {e}")
             return None
 
@@ -194,7 +194,7 @@ class RaceLibrary:
         except (TypeError, ValueError) as e:
             log_error(f"Serialization error saving race '{config.race_id}': {e}")
             return False, "Error saving race: Invalid race data"
-        except Exception as e:
+        except (AttributeError, KeyError) as e:
             log_error(f"Unexpected error saving race '{config.race_id}': {e}")
             return False, f"Error saving race: {str(e)}"
 
@@ -224,7 +224,7 @@ class RaceLibrary:
         except OSError as e:
             log_error(f"OS error deleting race '{race_id}' at {filepath}: {e}")
             return False
-        except Exception as e:
+        except (RuntimeError, IOError) as e:
             log_error(f"Unexpected error deleting race '{race_id}': {e}")
             return False
 

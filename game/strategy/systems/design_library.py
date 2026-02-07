@@ -99,7 +99,7 @@ class DesignLibrary:
             except (PermissionError, OSError) as e:
                 log_error(f"scan_designs: Cannot read design file {filepath}: {e}")
                 continue
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError) as e:
                 # Log unexpected errors but continue scanning
                 log_error(f"scan_designs: Unexpected error loading design from {filepath}: {e}")
                 import traceback
@@ -189,7 +189,7 @@ class DesignLibrary:
             import traceback
             log_error(traceback.format_exc())
             return False, f"Failed to save design: Invalid design data"
-        except Exception as e:
+        except (AttributeError, KeyError) as e:
             log_error(f"Unexpected error saving design '{design_name}': {e}")
             import traceback
             log_error(traceback.format_exc())
@@ -226,7 +226,7 @@ class DesignLibrary:
             from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Cannot read design '{design_id}' from '{filepath}': {e}")
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, AttributeError) as e:
             from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Unexpected error loading design '{design_id}' from '{filepath}': {e}")
             return None
@@ -266,7 +266,7 @@ class DesignLibrary:
             return False, f"Design file is corrupted"
         except (PermissionError, OSError) as e:
             return False, f"Failed to update design: {str(e)}"
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, AttributeError) as e:
             from game.core.logger import log_error
             log_error(f"DesignLibrary: Unexpected error marking design '{design_id}' obsolete: {e}")
             return False, f"Failed to update design: {str(e)}"
@@ -310,7 +310,7 @@ class DesignLibrary:
             from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Cannot update design '{design_id}': {e}")
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, AttributeError) as e:
             from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Unexpected error incrementing built count for '{design_id}': {e}")
             return False
@@ -398,7 +398,7 @@ class DesignLibrary:
             return False, f"Failed to delete design: Permission denied"
         except OSError as e:
             return False, f"Failed to delete design: {str(e)}"
-        except Exception as e:
+        except (RuntimeError, IOError) as e:
             from game.core.logger import log_error
             log_error(f"DesignLibrary: Unexpected error deleting design '{design_id}': {e}")
             return False, f"Failed to delete design: {str(e)}"

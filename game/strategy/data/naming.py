@@ -30,7 +30,7 @@ class NameRegistry:
             else:
                 log_warning(f"Invalid format in {file_path}: 'names' list missing.")
                 
-        except Exception as e:
+        except (FileNotFoundError, OSError, yaml.YAMLError, KeyError, TypeError, UnicodeDecodeError) as e:
             log_error(f"Failed to load name data: {e}")
 
     def get_system_name(self):

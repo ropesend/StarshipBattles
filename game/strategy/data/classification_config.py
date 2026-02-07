@@ -137,6 +137,8 @@ def get_classification_config() -> ClassificationConfig:
         loader = AstrophysicsLoader()
         data = loader.load()
         return ClassificationConfig(data)
-    except Exception:
+    except (ImportError, FileNotFoundError, OSError, KeyError, TypeError, ValueError) as e:
         # Fall back to defaults if loading fails
+        from game.core.logger import log_warning
+        log_warning(f"Failed to load classification config: {e}")
         return ClassificationConfig(None)

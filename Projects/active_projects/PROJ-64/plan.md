@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Core & Simulation Layer | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Strategy Layer | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Strategy Layer | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI Panels & Renderer | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Screens (Part A) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. UI Screens (Part B) - Workshop, Test Lab, Strategy | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - 15 sites narrowed/documented across 10 files in core/simulation layer
-**Next Action:** Execute Phase 2 (Strategy Layer)
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - 17 sites narrowed across 8 files in strategy layer (checklist had 3 stale entries for files already clean)
+**Next Action:** Execute Phase 3 (UI Panels & Renderer)
 **Blockers:** None
 
 ## Overview

@@ -111,7 +111,7 @@ class SaveGameService:
         except (TypeError, ValueError) as e:
             log_error(f"SaveGameService: Serialization error - {e}\n{traceback.format_exc()}")
             return False, f"Save failed: Unable to serialize game state", None
-        except Exception as e:
+        except (KeyError, AttributeError, ImportError) as e:
             log_error(f"SaveGameService: Unexpected save error - {e}\n{traceback.format_exc()}")
             return False, f"Save failed: {str(e)}", None
 
@@ -211,7 +211,7 @@ class SaveGameService:
             except (TypeError, ValueError) as e:
                 log_error(f"SaveGameService: Invalid data format in {turn_file} - {e}")
                 return None, f"Save file corrupted: Invalid data format"
-            except Exception as e:
+            except (AttributeError, ImportError, RuntimeError) as e:
                 log_error(f"SaveGameService: Failed to reconstruct game session from {turn_file} - {e}")
                 return None, f"Save file corrupted: Failed to reconstruct game state"
 
@@ -227,7 +227,7 @@ class SaveGameService:
         except OSError as e:
             log_error(f"SaveGameService: OS error loading {save_path} - {e}")
             return None, f"Failed to load save: {str(e)}"
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, AttributeError, ImportError) as e:
             log_error(f"SaveGameService: Unexpected load error from {save_path} - {e}\n{traceback.format_exc()}")
             return None, f"Unexpected error while loading save"
 
@@ -349,7 +349,7 @@ class SaveGameService:
         except OSError as e:
             log_error(f"SaveGameService: OS error deleting {save_path} - {e}")
             return False, f"Delete failed: {str(e)}"
-        except Exception as e:
+        except shutil.Error as e:
             log_error(f"SaveGameService: Unexpected error deleting {save_path} - {e}")
             return False, f"Delete failed: {str(e)}"
 
@@ -448,6 +448,6 @@ class SaveGameService:
         except (PermissionError, OSError, json.JSONDecodeError) as e:
             log_error(f"SaveGameService: Error reading save info from {save_path} - {e}")
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             log_error(f"SaveGameService: Unexpected error reading save info from {save_path} - {e}")
             return None

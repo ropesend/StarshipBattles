@@ -395,7 +395,7 @@ class StrategySessionFacade:
         try:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
-        except Exception:
+        except (RuntimeError, AttributeError, ImportError):
             # If no registry available, return empty (legacy behavior)
             return {}
 

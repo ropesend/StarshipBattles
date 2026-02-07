@@ -223,7 +223,7 @@ class QuickstartBuilder:
                 try:
                     shutil.copy2(design_file, dest_path)
                     log_debug(f"Copied design {design_file.name} to empire_{empire_id}")
-                except Exception as e:
+                except (OSError, PermissionError, shutil.Error) as e:
                     log_error(f"Failed to copy design {design_file.name}: {e}")
                     success = False
 
