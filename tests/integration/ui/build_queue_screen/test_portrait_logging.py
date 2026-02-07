@@ -75,11 +75,12 @@ class TestBuildQueuePortraitLogging:
 
         # Simulate file exists but loading fails
         # Make os.path.exists return True for the first portrait path
+        # PROJ-63: Use portrait_loader (extracted class)
         with patch('os.path.exists', return_value=True):
             # Make pygame.image.load always raise an exception
             with patch('pygame.image.load', side_effect=pygame.error("Cannot identify image file")):
                 with caplog.at_level(logging.WARNING):
-                    result = bq_screen._load_design_portrait(mock_design, 64)
+                    result = bq_screen.portrait_loader.load_design_portrait(mock_design, 64)
 
         # Should have returned placeholder (since all paths failed)
         assert result is not None  # Placeholder surface
@@ -136,9 +137,10 @@ class TestBuildQueuePortraitLogging:
         mock_design.vehicle_type = "Ship"
 
         # No paths exist - should silently fall through to placeholder
+        # PROJ-63: Use portrait_loader (extracted class)
         with patch('os.path.exists', return_value=False):
             with caplog.at_level(logging.WARNING):
-                result = bq_screen._load_design_portrait(mock_design, 64)
+                result = bq_screen.portrait_loader.load_design_portrait(mock_design, 64)
 
         # Should return placeholder surface
         assert result is not None

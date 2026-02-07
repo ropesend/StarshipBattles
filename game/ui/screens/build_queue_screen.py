@@ -14,6 +14,7 @@ from game.core.logger import log_info, log_warning, log_error, log_debug
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.panels.design_report_panel import DesignReportPanel
+from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
@@ -63,6 +64,9 @@ class BuildQueueScreen:
         # PROJ-40: Use injected dependencies
         self.design_library = design_library
         self.design_loader = design_loader
+
+        # PROJ-63: Portrait loading extracted to dedicated class
+        self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
 
         # Validate required attributes
         if not hasattr(planet, 'owner_id'):
@@ -372,7 +376,7 @@ class BuildQueueScreen:
             )
 
             # Load miniature portrait icon
-            portrait_surface = self._load_design_portrait(design, icon_size)
+            portrait_surface = self.portrait_loader.load_design_portrait(design, icon_size)
             if portrait_surface:
                 icon_img = ui.UIImage(
                     relative_rect=pygame.Rect(2, 2, icon_size, icon_size),
@@ -400,73 +404,6 @@ class BuildQueueScreen:
                 manager=self.manager,
                 container=self.items_scrollable
             )
-
-    def _load_design_portrait(self, design, size: int) -> Optional[pygame.Surface]:
-        """
-        Load a miniature portrait for a design.
-
-        Args:
-            design: DesignMetadata object
-            size: Size of the square icon in pixels
-
-        Returns:
-            Scaled pygame.Surface or None if not found
-        """
-        import os
-        import re
-
-        # Get theme from session's player empire
-        theme = "Federation"  # Default
-        if hasattr(self.session, 'player_empire') and hasattr(self.session.player_empire, 'empire_theme_id'):
-            theme = self.session.player_empire.empire_theme_id
-
-        ship_class = getattr(design, 'ship_class', 'Unknown')
-        if not isinstance(ship_class, str):
-            ship_class = str(ship_class) if ship_class else 'Unknown'
-
-        # Parse ship class name (handle formats like "Large Escort (Scout)")
-        match = re.match(r"(.*)\s+\((.*)\)", ship_class)
-        if match:
-            base = match.group(1).strip().replace(" ", "")
-            sub = match.group(2).strip().replace(" ", "")
-            class_clean = f"{sub}{base}"
-        else:
-            class_clean = ship_class.replace(" ", "")
-
-        filename = f"{class_clean}_Portrait.jpg"
-
-        # Try multiple locations for portrait image
-        portrait_paths = [
-            os.path.join("assets", "ShipThemes", theme, "Portraits", filename),
-            os.path.join("resources", "Portraits", theme, filename),
-            os.path.join("assets", "Images", "Default_Ship_Portrait.png")
-        ]
-
-        for path in portrait_paths:
-            if os.path.exists(path):
-                try:
-                    loaded_img = pygame.image.load(path)
-                    return pygame.transform.smoothscale(loaded_img, (size, size))
-                except Exception as e:
-                    log_warning(f"Failed to load portrait from '{path}': {e}")
-                    continue
-
-        # Fallback: Create a colored placeholder based on vehicle type
-        placeholder = pygame.Surface((size, size))
-        vehicle_type = getattr(design, 'vehicle_type', 'Ship')
-        color_map = {
-            'Ship': (80, 100, 180),      # Blue for ships
-            'Complex': (80, 180, 100),   # Green for complexes/facilities
-            'Station': (180, 100, 80),   # Red for stations
-            'Fighter': (180, 180, 80),   # Yellow for fighters
-        }
-        color = color_map.get(vehicle_type, (100, 100, 100))
-        placeholder.fill(color)
-
-        # Draw simple icon shape
-        pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
-
-        return placeholder
 
     def _refresh_queue_display(self):
         """Refresh the build queue display."""
@@ -500,7 +437,7 @@ class BuildQueueScreen:
             item_panel.is_selected = is_selected  # Track selection state
 
             # Load and display portrait icon
-            portrait_surface = self._load_queue_item_portrait(design_id, item_type, icon_size)
+            portrait_surface = self.portrait_loader.load_queue_item_portrait(design_id, item_type, icon_size)
             if portrait_surface:
                 ui.UIImage(
                     relative_rect=pygame.Rect(5, 5, icon_size, icon_size),
@@ -535,41 +472,6 @@ class BuildQueueScreen:
                 manager=self.manager,
                 container=self.queue_scrollable
             )
-
-    def _load_queue_item_portrait(self, design_id: str, item_type: str, size: int) -> Optional[pygame.Surface]:
-        """
-        Load a miniature portrait for a queue item.
-
-        Args:
-            design_id: ID of the design
-            item_type: Type of item (ship, complex, etc.)
-            size: Size of the square icon in pixels
-
-        Returns:
-            Scaled pygame.Surface or None if not found
-        """
-        # Try to find design metadata for this design_id
-        designs = self.design_library.scan_designs()
-        design = next((d for d in designs if d.design_id == design_id), None)
-
-        if design:
-            return self._load_design_portrait(design, size)
-
-        # Fallback: Create a colored placeholder based on item type
-        placeholder = pygame.Surface((size, size))
-        type_lower = item_type.lower() if item_type else 'unknown'
-        color_map = {
-            'ship': (80, 100, 180),      # Blue for ships
-            'complex': (80, 180, 100),   # Green for complexes/facilities
-            'station': (180, 100, 80),   # Red for stations
-            'fighter': (180, 180, 80),   # Yellow for fighters
-            'planetary complex': (80, 180, 100),  # Green
-        }
-        color = color_map.get(type_lower, (100, 100, 100))
-        placeholder.fill(color)
-        pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
-
-        return placeholder
 
     def _set_category(self, category: str):
         """Set the active category filter."""
@@ -742,7 +644,7 @@ class BuildQueueScreen:
                         design = next((d for d in designs if d.design_id == design_id), None)
                         if design:
                             # Load portrait icon for drag preview (48px for cursor visibility)
-                            portrait = self._load_design_portrait(design, 48)
+                            portrait = self.portrait_loader.load_design_portrait(design, 48)
                             self.dragged_item = {
                                 'design_id': design.design_id,
                                 'name': design.name,
@@ -777,7 +679,7 @@ class BuildQueueScreen:
                         item_type = item.get('type', 'ship')
 
                         # Load portrait icon for drag preview
-                        portrait = self._load_queue_item_portrait(design_id, item_type, 48)
+                        portrait = self.portrait_loader.load_queue_item_portrait(design_id, item_type, 48)
 
                         self.dragged_item = {
                             'design_id': design_id,
