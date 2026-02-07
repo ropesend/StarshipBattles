@@ -165,57 +165,70 @@ class StaticTargetScenario(TestScenario):
         if hasattr(self, 'custom_update'):
             self.custom_update(battle_engine)
 
-    def verify(self, battle_engine) -> bool:
+    def _collect_results(self, battle_engine):
         """
-        Standard verification for static target scenarios.
-        Stores standard results and optionally verifies damage dealt.
-        Subclasses should override for custom verification logic.
-        """
-        # Handle skip test
-        if self.skip_test:
-            self.results['skipped'] = True
-            self.results['skip_reason'] = self.skip_reason
-            return False
+        Collect standard results. Always called, even if verify() is overridden.
 
-        # Calculate damage dealt
+        Subclasses that override verify() should call self._collect_results(battle_engine)
+        first to ensure standard results are stored and validation rules are run.
+
+        Subclasses can implement _collect_extra_results(battle_engine) to add
+        extra results without overriding this method.
+        """
         self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store standard results
         self.results['initial_hp'] = self.initial_hp
         self.results['final_hp'] = self.target.hp
         self.results['damage_dealt'] = self.damage_dealt
         self.results['ticks_run'] = battle_engine.tick_counter
         self.results['target_alive'] = self.target.is_alive
 
-        # Calculate hit rate if applicable (1 damage per hit)
         if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
             self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
 
-        # Store custom result keys (weapon-specific metadata)
         for key in self.custom_result_keys:
             if hasattr(self, key):
                 self.results[key] = getattr(self, key)
 
+        # Hook for subclasses to add extra results
+        if hasattr(self, '_collect_extra_results'):
+            self._collect_extra_results(battle_engine)
+
         # Run validation rules if defined in metadata
-        # Note: run_validation() stores results internally as dictionaries
         if hasattr(self.metadata, 'validation_rules') and self.metadata.validation_rules:
             self.run_validation(battle_engine)
 
-        # Apply configured pass criteria
+    def verify(self, battle_engine) -> bool:
+        """
+        Standard verification for static target scenarios.
+
+        Collects results via _collect_results(), then applies pass criteria.
+        Subclasses can either:
+        1. Set class flags (verify_damage_dealt, measurement_mode, etc.)
+        2. Override verify() and call self._collect_results(battle_engine) first
+
+        Pass criteria precedence (highest to lowest):
+        1. measurement_mode - always passes if simulation completed
+        2. expect_no_damage - passes if zero damage
+        3. min_damage_threshold - passes if damage >= threshold
+        4. verify_damage_dealt - passes if any damage dealt
+        5. NotImplementedError - subclass must override
+        """
+        if self.skip_test:
+            self.results['skipped'] = True
+            self.results['skip_reason'] = self.skip_reason
+            return False
+
+        self._collect_results(battle_engine)
+
         if self.measurement_mode:
-            # Measurement tests always pass if simulation completes (validation rules check statistics)
             return battle_engine.tick_counter > 0
         elif self.expect_no_damage:
-            # Out-of-range tests expect NO damage
             return self.damage_dealt == 0
         elif self.min_damage_threshold > 0:
-            # Tests with minimum damage threshold
             return self.damage_dealt >= self.min_damage_threshold
         elif self.verify_damage_dealt:
-            # Basic damage check (default)
             return self.damage_dealt > 0
         else:
-            # Subclasses must implement custom verification
             raise NotImplementedError(
                 f"{self.__class__.__name__} must implement verify() or configure pass criteria "
                 f"(measurement_mode, verify_damage_dealt, expect_no_damage, or min_damage_threshold)"

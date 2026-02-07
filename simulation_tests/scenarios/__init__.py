@@ -35,6 +35,7 @@ Usage:
 
 from simulation_tests.scenarios.base import TestScenario, TestMetadata
 from simulation_tests.scenarios.validation import (
+    resolve_path,
     ValidationRule,
     ExactMatchRule,
     DeterministicMatchRule,
@@ -42,6 +43,15 @@ from simulation_tests.scenarios.validation import (
     Validator,
     ValidationResult,
     ValidationStatus
+)
+from simulation_tests.scenarios.defense_scenarios import (
+    ShieldAbsorbsDamageScenario,
+    ShieldOverflowToHullScenario,
+    ShieldRegenerationScenario,
+    EmissiveArmorBlocksLowDamageScenario,
+    EmissiveArmorReducesHighDamageScenario,
+    ECMReducesHitRateScenario,
+    SensorImprovesHitRateScenario,
 )
 from simulation_tests.scenarios.resource_scenarios import (
     EngineFuelConsumptionScenario,
@@ -54,10 +64,19 @@ from simulation_tests.scenarios.resource_scenarios import (
     ProjectileAmmoDepletionScenario,
     SeekerAmmoConsumptionScenario
 )
+from simulation_tests.scenarios.modifier_scenarios import (
+    DamageMultiplierScenario,
+    RangeMultiplierScenario,
+    ReloadReductionScenario,
+    ThrustMultiplierScenario,
+    AccuracyBoostScenario,
+    TurretArcSetScenario,
+)
 
 __all__ = [
     'TestScenario',
     'TestMetadata',
+    'resolve_path',
     'ValidationRule',
     'ExactMatchRule',
     'DeterministicMatchRule',
@@ -65,6 +84,14 @@ __all__ = [
     'Validator',
     'ValidationResult',
     'ValidationStatus',
+    # Defense scenarios
+    'ShieldAbsorbsDamageScenario',
+    'ShieldOverflowToHullScenario',
+    'ShieldRegenerationScenario',
+    'EmissiveArmorBlocksLowDamageScenario',
+    'EmissiveArmorReducesHighDamageScenario',
+    'ECMReducesHitRateScenario',
+    'SensorImprovesHitRateScenario',
     # Resource scenarios
     'EngineFuelConsumptionScenario',
     'EngineFuelDepletionScenario',
@@ -74,5 +101,12 @@ __all__ = [
     'BeamEnergyRegenerationScenario',
     'ProjectileAmmoConsumptionScenario',
     'ProjectileAmmoDepletionScenario',
-    'SeekerAmmoConsumptionScenario'
+    'SeekerAmmoConsumptionScenario',
+    # Modifier scenarios
+    'DamageMultiplierScenario',
+    'RangeMultiplierScenario',
+    'ReloadReductionScenario',
+    'ThrustMultiplierScenario',
+    'AccuracyBoostScenario',
+    'TurretArcSetScenario',
 ]

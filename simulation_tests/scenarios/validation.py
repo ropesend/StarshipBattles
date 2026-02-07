@@ -41,6 +41,59 @@ from typing import Any, List, Optional, Literal, Dict
 from enum import Enum
 
 
+def resolve_path(context: Dict[str, Any], path: str) -> Any:
+    """
+    Resolve dot-notation path to value with detailed error reporting.
+
+    Supports both dict key access and object attribute access at each level.
+
+    Args:
+        context: Context dictionary (root of the path)
+        path: Dot-notation path (e.g., 'attacker.weapon.damage')
+
+    Returns:
+        Value at path
+
+    Raises:
+        ValueError: If path resolution fails, with detailed error message
+    """
+    parts = path.split('.')
+    current = context
+    path_trace = []
+
+    for part in parts:
+        path_trace.append(part)
+
+        if isinstance(current, dict):
+            if part not in current:
+                available = list(current.keys())
+                raise ValueError(
+                    f"Path resolution failed at '{'.'.join(path_trace)}'\n"
+                    f"  Key '{part}' not found in dict.\n"
+                    f"  Available keys: {available[:10]}" +
+                    (f"... ({len(available) - 10} more)" if len(available) > 10 else "")
+                )
+            current = current[part]
+        else:
+            if not hasattr(current, part):
+                available = [a for a in dir(current) if not a.startswith('_')]
+                raise ValueError(
+                    f"Path resolution failed at '{'.'.join(path_trace)}'\n"
+                    f"  Attribute '{part}' not found on {type(current).__name__}.\n"
+                    f"  Available attributes: {available[:10]}" +
+                    (f"... ({len(available) - 10} more)" if len(available) > 10 else "")
+                )
+            current = getattr(current, part)
+
+        if current is None:
+            raise ValueError(
+                f"Path resolution encountered None at '{'.'.join(path_trace)}'\n"
+                f"  Path '{'.'.join(parts)}' cannot be fully resolved."
+            )
+
+    return current
+
+
 class ValidationStatus(Enum):
     """Validation result status."""
     PASS = "PASS"     # Validation passed
@@ -152,7 +205,7 @@ class ExactMatchRule(ValidationRule):
             ValidationResult
         """
         # Resolve path to get actual value
-        actual = self._resolve_path(context, self.path)
+        actual = resolve_path(context, self.path)
 
         # Check exact equality
         if actual == self.expected:
@@ -173,57 +226,6 @@ class ExactMatchRule(ValidationRule):
                 actual=actual,
                 tolerance=0.0
             )
-
-    def _resolve_path(self, context: Dict[str, Any], path: str) -> Any:
-        """
-        Resolve dot-notation path to value with detailed error reporting.
-
-        Args:
-            context: Context dictionary
-            path: Dot-notation path (e.g., 'attacker.weapon.damage')
-
-        Returns:
-            Value at path
-
-        Raises:
-            ValueError: If path resolution fails, with detailed error message
-        """
-        parts = path.split('.')
-        current = context
-        path_trace = []
-
-        for i, part in enumerate(parts):
-            path_trace.append(part)
-
-            if isinstance(current, dict):
-                if part not in current:
-                    available = list(current.keys())
-                    raise ValueError(
-                        f"Path resolution failed at '{'.'.join(path_trace)}'\n"
-                        f"  Key '{part}' not found in dict.\n"
-                        f"  Available keys: {available[:10]}" +  # Show first 10 keys
-                        (f"... ({len(available) - 10} more)" if len(available) > 10 else "")
-                    )
-                current = current[part]
-            else:
-                # Object attribute access
-                if not hasattr(current, part):
-                    available = [a for a in dir(current) if not a.startswith('_')]
-                    raise ValueError(
-                        f"Path resolution failed at '{'.'.join(path_trace)}'\n"
-                        f"  Attribute '{part}' not found on {type(current).__name__}.\n"
-                        f"  Available attributes: {available[:10]}" +  # Show first 10 attributes
-                        (f"... ({len(available) - 10} more)" if len(available) > 10 else "")
-                    )
-                current = getattr(current, part)
-
-            if current is None:
-                raise ValueError(
-                    f"Path resolution encountered None at '{'.'.join(path_trace)}'\n"
-                    f"  Path '{'.'.join(parts)}' cannot be fully resolved."
-                )
-
-        return current
 
 
 class DeterministicMatchRule(ValidationRule):
@@ -283,7 +285,7 @@ class DeterministicMatchRule(ValidationRule):
         """
         # Resolve path to get actual value
         try:
-            actual = self._resolve_path(context, self.path)
+            actual = resolve_path(context, self.path)
         except ValueError as e:
             return ValidationResult(
                 name=self.name,
@@ -345,34 +347,6 @@ class DeterministicMatchRule(ValidationRule):
             tolerance=self.tolerance
         )
 
-    def _resolve_path(self, context: Dict[str, Any], path: str) -> Any:
-        """
-        Resolve dot-notation path to value.
-
-        Args:
-            context: Context dictionary
-            path: Dot-notation path
-
-        Returns:
-            Value at path
-
-        Raises:
-            ValueError: If path resolution fails
-        """
-        parts = path.split('.')
-        current = context
-
-        for part in parts:
-            if isinstance(current, dict):
-                if part not in current:
-                    raise ValueError(f"Key '{part}' not found")
-                current = current[part]
-            else:
-                if not hasattr(current, part):
-                    raise ValueError(f"Attribute '{part}' not found on {type(current).__name__}")
-                current = getattr(current, part)
-
-        return current
 
 
 class StatisticalTestRule(ValidationRule):

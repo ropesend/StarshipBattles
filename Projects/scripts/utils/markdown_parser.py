@@ -68,7 +68,11 @@ def get_project_path(project_id: str) -> Path:
 
 
 def parse_project_file(project_id: str) -> ProjectData:
-    """Parse a project file into structured data."""
+    """Parse a project file into structured data.
+
+    Supports both old format (phases inline in plan.md) and new directory
+    structure (separate phase_N_checklist.md files).
+    """
     filepath = get_project_path(project_id)
     content = filepath.read_text(encoding='utf-8')
 
@@ -76,8 +80,15 @@ def parse_project_file(project_id: str) -> ProjectData:
     title_match = re.search(r'^# (?:PROJ-\d+:\s*)?(.+)$', content, re.MULTILINE)
     title = title_match.group(1).strip() if title_match else project_id
 
-    # Parse phases
+    # Parse phases from plan.md (old inline format)
     phases = get_phases(content)
+
+    # If no inline phases found, check for standalone phase checklist files
+    if not phases:
+        project_dir = filepath.parent
+        for phase_file in sorted(project_dir.glob('phase_*_checklist.md')):
+            phase = parse_phase_file(phase_file)
+            phases.append(phase)
 
     # Parse current state
     current_state = get_current_state(content)
@@ -139,8 +150,8 @@ def extract_tasks(phase_content: str, phase_num: int) -> List[Task]:
     """Extract tasks from a phase section."""
     tasks = []
 
-    # Pattern: #### Task X.Y: Name [Complexity]
-    task_pattern = r'####\s*Task\s*(\d+\.\d+):\s*([^\[\n]+?)(?:\s*\[([^\]]+)\])?\s*\n'
+    # Pattern: ### Task X.Y: Name [Complexity] or #### Task X.Y: Name [Complexity]
+    task_pattern = r'#{3,4}\s*Task\s*(\d+\.\d+):\s*([^\[\n]+?)(?:\s*\[([^\]]+)\])?\s*\n'
 
     task_matches = list(re.finditer(task_pattern, phase_content))
 

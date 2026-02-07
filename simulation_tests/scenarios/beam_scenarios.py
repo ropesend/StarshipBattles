@@ -28,8 +28,6 @@ from simulation_tests.scenarios import (
 )
 from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.test_constants import (
-    POINT_BLANK_DISTANCE,
-    MID_RANGE_DISTANCE,
     STANDARD_TEST_TICKS,
     HIGH_TICK_TEST_TICKS,
     BEAM_LOW_ACCURACY,
@@ -38,10 +36,8 @@ from simulation_tests.test_constants import (
     BEAM_LOW_DAMAGE,
     BEAM_MED_ACCURACY,
     BEAM_MED_FALLOFF,
-    BEAM_MED_RANGE,
     BEAM_HIGH_ACCURACY,
     BEAM_HIGH_FALLOFF,
-    BEAM_HIGH_RANGE,
     STATIONARY_TARGET_MASS,
     STANDARD_MARGIN,
     HIGH_PRECISION_MARGIN,
@@ -100,6 +96,56 @@ def calculate_expected_hit_chance(
     net_score = (base_accuracy + attack_bonus) - (range_penalty + defense_penalty)
     clamped_score = max(-20.0, min(20.0, net_score))
     return 1.0 / (1.0 + math.exp(-clamped_score))
+
+
+def compute_beam_hit_chance(scenario, target_acceleration=0.0, target_turn_speed=0.0, target_ecm_score=0.0):
+    """
+    Compute the expected beam hit chance for a StaticTargetScenario.
+
+    Reads beam stats from the attacker's BeamWeaponAbility and target mass
+    from the loaded ships. Computes surface distance (center distance - target
+    radius) and applies the sigmoid accuracy formula.
+
+    Must be called after setup (needs scenario.attacker, scenario.target, scenario.distance).
+
+    Args:
+        scenario: StaticTargetScenario instance (post-setup)
+        target_acceleration: Target acceleration for defense score (0.0 for stationary)
+        target_turn_speed: Target turn speed for defense score (0.0 for stationary)
+        target_ecm_score: Target ECM score for defense score (0.0 for no ECM)
+
+    Returns:
+        Expected hit chance (0.0 to 1.0)
+    """
+    # Extract beam weapon stats from attacker
+    beam_ability = None
+    for layer_name, layer_data in scenario.attacker.layers.items():
+        if isinstance(layer_data, dict) and 'components' in layer_data:
+            for component in layer_data['components']:
+                if hasattr(component, 'ability_instances'):
+                    for ability in component.ability_instances:
+                        if ability.__class__.__name__ == 'BeamWeaponAbility':
+                            beam_ability = ability
+                            break
+
+    base_accuracy = beam_ability.base_accuracy
+    accuracy_falloff = beam_ability.accuracy_falloff
+
+    # Calculate target defense score
+    target_defense = calculate_defense_score(
+        mass=scenario.target.mass,
+        acceleration=target_acceleration,
+        turn_speed=target_turn_speed,
+        ecm_score=target_ecm_score
+    )
+
+    # Calculate surface distance (beam hits surface, not center)
+    target_radius = 40 * ((scenario.target.mass / 1000) ** (1/3))
+    surface_distance = scenario.distance - target_radius
+
+    return calculate_expected_hit_chance(
+        base_accuracy, accuracy_falloff, surface_distance, 0.0, target_defense
+    )
 
 
 # ============================================================================
@@ -228,51 +274,15 @@ class BeamLowAccuracyPointBlankScenario(StaticTargetScenario):
         }
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        # Beam weapons hit the target SURFACE, not center
-        # Distance to surface = center_distance - target_radius
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.24px
-        center_distance = POINT_BLANK_DISTANCE  # Ships positioned 50px apart
-        surface_distance = center_distance - target_radius  # ≈ 20.76px
-
-        # Calculate expected hit chance using SURFACE distance (what combat system uses)
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if any damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
@@ -390,51 +400,15 @@ class BeamLowAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         }
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        # Beam weapons hit the target SURFACE, not center
-        # Distance to surface = center_distance - target_radius
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = POINT_BLANK_DISTANCE  # Ships positioned 50px apart
-        surface_distance = center_distance - target_radius  # ≈ 20.53px
-
-        # Calculate expected hit chance using SURFACE distance (what combat system uses)
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if any damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
@@ -523,49 +497,15 @@ class BeamLowAccuracyMidRangeScenario(StaticTargetScenario):
         ]
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed (may or may not deal damage)
-        return battle_engine.tick_counter > 0
 
 
 class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
@@ -683,49 +623,15 @@ class BeamLowAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         }
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 370.53px
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
@@ -815,49 +721,15 @@ class BeamLowAccuracyMaxRangeScenario(StaticTargetScenario):
         ]
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 750.0
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_LOW_ACCURACY, BEAM_LOW_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 # ============================================================================
@@ -950,49 +822,15 @@ class BeamMediumAccuracyPointBlankScenario(StaticTargetScenario):
         ]
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = POINT_BLANK_DISTANCE
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if significant damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
@@ -1110,49 +948,15 @@ class BeamMediumAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         }
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = POINT_BLANK_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 20.53px
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
@@ -1241,49 +1045,15 @@ class BeamMediumAccuracyMidRangeScenario(StaticTargetScenario):
         ]
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
@@ -1401,49 +1171,15 @@ class BeamMediumAccuracyMidRangeHighTickScenario(StaticTargetScenario):
         }
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 370.53px
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
@@ -1532,49 +1268,15 @@ class BeamMediumAccuracyMaxRangeScenario(StaticTargetScenario):
         ]
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 750.0
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
@@ -1692,49 +1394,15 @@ class BeamMediumAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         }
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = 750.0
-        surface_distance = center_distance - target_radius  # ≈ 720.53px
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 # ============================================================================
@@ -1827,49 +1495,15 @@ class BeamHighAccuracyPointBlankScenario(StaticTargetScenario):
         ]
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = POINT_BLANK_DISTANCE
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
@@ -1987,49 +1621,15 @@ class BeamHighAccuracyPointBlankHighTickScenario(StaticTargetScenario):
         }
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = POINT_BLANK_DISTANCE
-        surface_distance = center_distance - target_radius  # ≈ 20.53px
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
@@ -2118,49 +1718,15 @@ class BeamHighAccuracyMaxRangeScenario(StaticTargetScenario):
         ]
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary)
-        target_defense = calculate_defense_score(
-            mass=STATIONARY_TARGET_MASS,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = STATIONARY_TARGET_MASS
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 750.0
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
@@ -2278,49 +1844,15 @@ class BeamHighAccuracyMaxRangeHighTickScenario(StaticTargetScenario):
         }
     )
 
+    verify_damage_dealt = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=400, stationary - now identical to standard)
-        target_defense = calculate_defense_score(
-            mass=400.0,
-            acceleration=0.0,
-            turn_speed=0.0,
-            ecm_score=0.0
-        )
+        self.expected_hit_chance = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 400.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))  # ≈ 29.47px (mass=400)
-        center_distance = 750.0
-        surface_distance = center_distance - target_radius  # ≈ 720.53px
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_HIGH_ACCURACY, BEAM_HIGH_FALLOFF, surface_distance, 0.0, target_defense)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
 
 
 # ============================================================================
@@ -2414,51 +1946,19 @@ class BeamMediumAccuracyErraticMidRangeScenario(StaticTargetScenario):
         ]
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=65, high maneuverability)
-        target_defense = calculate_defense_score(
-            mass=65.0,
-            acceleration=295.86,
-            turn_speed=238.53,
-            ecm_score=0.0
+        self.expected_hit_chance = compute_beam_hit_chance(
+            self, target_acceleration=295.86, target_turn_speed=238.53
         )
+        self.expected_hit_chance_base = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 65.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = MID_RANGE_DISTANCE
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-        self.expected_hit_chance_base = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['expected_hit_chance_base'] = self.expected_hit_chance_base
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
@@ -2548,51 +2048,19 @@ class BeamMediumAccuracyErraticMaxRangeScenario(StaticTargetScenario):
         ]
     )
 
+    measurement_mode = True
+
     def custom_setup(self, battle_engine):
         """Calculate test-specific expected hit chance."""
-        # Calculate target defense score (mass=65, high maneuverability)
-        target_defense = calculate_defense_score(
-            mass=65.0,
-            acceleration=295.86,
-            turn_speed=238.53,
-            ecm_score=0.0
+        self.expected_hit_chance = compute_beam_hit_chance(
+            self, target_acceleration=295.86, target_turn_speed=238.53
         )
+        self.expected_hit_chance_base = compute_beam_hit_chance(self)
 
-        # Calculate target radius (for surface distance calculation)
-        target_mass = 65.0
-        target_radius = 40 * ((target_mass / 1000) ** (1/3))
-        center_distance = 750.0
-        surface_distance = center_distance - target_radius
-
-        # Calculate expected hit chance using SURFACE distance
-        self.expected_hit_chance = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance, 0.0, target_defense)
-        self.expected_hit_chance_base = calculate_expected_hit_chance(BEAM_MED_ACCURACY, BEAM_MED_FALLOFF, surface_distance)
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store beam-specific results."""
         self.results['expected_hit_chance'] = self.expected_hit_chance
         self.results['expected_hit_chance_base'] = self.expected_hit_chance_base
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 # ============================================================================
@@ -2674,31 +2142,12 @@ class BeamOutOfRangeScenario(StaticTargetScenario):
         ]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check that no damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
+    expect_no_damage = True
 
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store test-specific results
+    def _collect_extra_results(self, battle_engine):
+        """Store range-specific results."""
         self.results['distance'] = 900
         self.results['weapon_max_range'] = 800
-
-        # Run automatic validation
-        self.run_validation(battle_engine)
-
-        # Pass if NO damage was dealt (out of range)
-        return self.damage_dealt == 0
 
 
 # ============================================================================

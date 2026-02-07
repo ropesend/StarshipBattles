@@ -45,6 +45,8 @@ from dataclasses import dataclass, field
 from typing import Any, List, Optional, Dict, Callable
 from enum import Enum
 
+from simulation_tests.scenarios.validation import resolve_path
+
 
 class ExpectationStatus(Enum):
     """Status of an expectation check."""
@@ -90,7 +92,7 @@ class DataExpectation:
             Self with actual, status, and error_message filled in
         """
         try:
-            self.actual = self._resolve_path(context, self.source)
+            self.actual = resolve_path(context, self.source)
 
             if self._values_match(self.expected, self.actual):
                 self.status = ExpectationStatus.MATCH
@@ -111,23 +113,6 @@ class DataExpectation:
                 return abs(actual) < self.tolerance
             return abs(actual - expected) / abs(expected) <= self.tolerance
         return expected == actual
-
-    def _resolve_path(self, context: Dict[str, Any], path: str) -> Any:
-        """Resolve dot-notation path to value."""
-        parts = path.split('.')
-        current = context
-
-        for part in parts:
-            if isinstance(current, dict):
-                if part not in current:
-                    raise ValueError(f"Key '{part}' not found in dict")
-                current = current[part]
-            else:
-                if not hasattr(current, part):
-                    raise ValueError(f"Attribute '{part}' not found on {type(current).__name__}")
-                current = getattr(current, part)
-
-        return current
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for display/serialization."""

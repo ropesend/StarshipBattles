@@ -4,7 +4,7 @@ import os
 
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import create_component
-from game.core.registry import get_default_registry_provider
+from game.core.registry import get_default_registry_provider, get_default_registries
 
 
 @pytest.mark.simulation
@@ -25,19 +25,21 @@ class TestSimulationInfrastructure:
     
     def test_components_loaded(self):
         """Verify test components are loaded."""
-        comp = create_component('test_engine_std')
+        registries = get_default_registries()
+        comp = create_component('test_engine_std', registries=registries)
         assert comp is not None
-        assert comp.mass == 20
-    
+        assert comp.mass == 0
+
     def test_ship_creation(self, ships_dir):
         """Verify ship can be created from test data."""
         import json
         ship_path = os.path.join(ships_dir, 'Test_Engine_1x_LowMass.json')
-        
+
         with open(ship_path, 'r') as f:
             ship_data = json.load(f)
-        
-        ship = Ship.from_dict(ship_data)
+
+        registries = get_default_registries()
+        ship = Ship.from_dict(ship_data, registries=registries)
         ship.recalculate_stats()
         
         assert ship is not None

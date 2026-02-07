@@ -117,7 +117,7 @@ class TestNoManuaStatsApplication:
         """CombatPropulsion should apply thrust_mult via its own recalculate()."""
         from game.simulation.components.component import create_component
 
-        engine = create_component('engine_basic', registries=fresh_registries)
+        engine = create_component('standard_engine', registries=fresh_registries)
         if engine is None:
             pytest.skip("engine_basic component not found")
 

@@ -76,33 +76,48 @@ def init_pygame():
 def isolated_registry():
     """
     Provide isolated registry for each test class.
-    
+
     Clears all registries before loading test data, ensures no pollution
     from previous tests or production data.
     """
-    from game.core.registry import RegistryManager
+    from game.core.registry import (
+        RegistryManager, GameRegistries,
+        set_default_registries,
+    )
+    import game.core.registry as _registry_module
     from game.simulation.entities.ship_loader import load_vehicle_classes
     from game.simulation.components.component import load_components, load_modifiers
     from game.ai.strategy_manager import StrategyManager
 
     # Clear registries
-    RegistryManager.instance().clear()
+    mgr = RegistryManager.instance()
+    mgr.clear()
 
     # Load test data
     load_vehicle_classes(DATA_DIR / 'vehicleclasses.json')
     load_components(DATA_DIR / 'components.json')
     load_modifiers(DATA_DIR / 'modifiers.json')
 
+    # Set default registries so code using get_default_registries() works
+    registries = GameRegistries(
+        components=mgr.components,
+        modifiers=mgr.modifiers,
+        vehicle_classes=mgr.vehicle_classes,
+        resources=mgr.resources,
+    )
+    set_default_registries(registries)
+
     # Load combat strategies for AI
     manager = StrategyManager.instance()
     manager.clear()
     manager.load_data(str(DATA_DIR))
     manager._loaded = True
-    
+
     yield
-    
+
     # Cleanup after test class
     RegistryManager.instance().clear()
+    _registry_module._default_registries = None
 
 
 @pytest.fixture

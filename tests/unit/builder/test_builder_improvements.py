@@ -25,7 +25,6 @@ def pygame_window(fresh_registries):
 
 
 class TestBuilderImprovements:
-    @pytest.mark.skip(reason="ComponentDetailPanel.draw() method missing - production bug needs fix")
     def test_image_scale_factor(self, pygame_window):
         """
         Verify that the image scaling logic uses the 2.5x factor.

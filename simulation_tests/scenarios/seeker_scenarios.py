@@ -25,11 +25,20 @@ from simulation_tests.scenarios import TestMetadata
 from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.test_constants import (
     STANDARD_DISTANCE,
-    STANDARD_TEST_TICKS,
-    SEEKER_DAMAGE,
-    SEEKER_RANGE,
     STANDARD_SEED
 )
+
+
+def _get_seeker_ability(ship):
+    """Extract the SeekerWeaponAbility instance from a loaded ship."""
+    for layer_name, layer_data in ship.layers.items():
+        if isinstance(layer_data, dict) and 'components' in layer_data:
+            for component in layer_data['components']:
+                if hasattr(component, 'ability_instances'):
+                    for ability in component.ability_instances:
+                        if ability.__class__.__name__ == 'SeekerWeaponAbility':
+                            return ability
+    return None
 
 
 # ============================================================================
@@ -81,59 +90,19 @@ class SeekerCloseRangeImpactScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "close-range", "guided"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """
-        Check if at least one missile hit.
+    min_damage_threshold = 100
 
-        Expected Behavior:
-        - Missile speed: 1000 px/s, Turn rate: 90°/sec
-        - Distance: 500px → Travel time ~0.5 seconds (50 ticks)
-        - Endurance: 5.0 seconds (5000px max travel)
-        - Damage: 100 per missile impact
-        - Reload: 5.0 seconds (500 ticks)
-
-        Pass Criteria:
-        - At least 1 missile hits (damage_dealt >= 100)
-        - Target should be impacted well before endurance expires
-        """
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store scenario-specific results
+    def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
-
-        # Store weapon info for output
-        self.results['weapon_type'] = 'Seeker360'
-        self.results['missile_speed'] = 1000
-        self.results['missile_turn_rate'] = 90
-        self.results['missile_damage'] = 100
-        self.results['missile_endurance'] = 5.0
-        self.results['expected_travel_time_ticks'] = 50
-
-        # Calculate pass/fail
-        passed = self.damage_dealt >= 100
-
-        if not passed:
-            missiles_hit = self.damage_dealt / 100
-            self.results['failure_reason'] = (
-                f"No missiles hit target at close range. "
-                f"Expected at least 1 hit (100 damage), got {missiles_hit:.1f} hits ({self.damage_dealt} damage). "
-                f"At 500px range with 1000 px/s speed, missile should reach target in ~50 ticks. "
-                f"Check missile tracking, guidance system, and collision detection."
-            )
-
-        return passed
+        # Read weapon stats from loaded ship data
+        seeker_ability = _get_seeker_ability(self.attacker)
+        if seeker_ability:
+            self.results['weapon_type'] = 'Seeker360'
+            self.results['missile_speed'] = seeker_ability.projectile_speed
+            self.results['missile_turn_rate'] = seeker_ability.turn_rate
+            self.results['missile_damage'] = seeker_ability.projectile_damage
+            self.results['missile_endurance'] = seeker_ability.endurance
+            self.results['expected_travel_time_ticks'] = int(self.distance / seeker_ability.projectile_speed * 100)
 
 
 class SeekerMidRangeImpactScenario(StaticTargetScenario):
@@ -180,27 +149,10 @@ class SeekerMidRangeImpactScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "mid-range", "guided"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
+    verify_damage_dealt = True
 
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store scenario-specific results
+    def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
-
-        # Pass if any damage was dealt
-        return self.damage_dealt > 0
 
 
 class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
@@ -247,27 +199,10 @@ class SeekerBeyondRangeExpireScenario(StaticTargetScenario):
         tags=["seeker", "missile", "endurance-limit", "expire", "edge-case"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
+    measurement_mode = True
 
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store scenario-specific results
+    def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
-
-        # Pass if simulation completed (damage or no damage)
-        return battle_engine.tick_counter > 0
 
 
 class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
@@ -315,27 +250,10 @@ class SeekerEdgeCaseRangeScenario(StaticTargetScenario):
         tags=["seeker", "missile", "endurance-limit", "edge-case"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
+    measurement_mode = True
 
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Store scenario-specific results
+    def _collect_extra_results(self, battle_engine):
         self.results['projectiles_remaining'] = len([p for p in battle_engine.projectiles if p.is_alive])
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
 
 
 # ============================================================================
@@ -386,24 +304,7 @@ class SeekerTrackingStationaryScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "stationary", "guided"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Pass if damage was dealt
-        return self.damage_dealt > 0
+    verify_damage_dealt = True
 
 
 class SeekerTrackingLinearScenario(StaticTargetScenario):
@@ -451,24 +352,7 @@ class SeekerTrackingLinearScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "linear-target", "intercept"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
+    measurement_mode = True
 
 
 class SeekerTrackingOrbitingScenario(StaticTargetScenario):
@@ -516,24 +400,7 @@ class SeekerTrackingOrbitingScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "orbiting", "curved-pursuit"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
+    measurement_mode = True
 
 
 class SeekerTrackingErraticScenario(StaticTargetScenario):
@@ -582,24 +449,7 @@ class SeekerTrackingErraticScenario(StaticTargetScenario):
         tags=["seeker", "missile", "tracking", "erratic", "evasion", "edge-case"]
     )
 
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        # Calculate damage dealt (template stores initial_hp automatically)
-        self.damage_dealt = self.initial_hp - self.target.hp
-
-        # Store all standard results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = self.damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Calculate hit rate if applicable
-        if battle_engine.tick_counter > 0 and self.damage_dealt > 0:
-            self.results['hit_rate'] = self.damage_dealt / battle_engine.tick_counter
-
-        # Pass if simulation completed
-        return battle_engine.tick_counter > 0
+    measurement_mode = True
 
 
 # ============================================================================

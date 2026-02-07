@@ -126,9 +126,17 @@
         "armor_hp_pool": {
           "type": "number",
           "minimum": 0
+        },
+        "max_shields": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "description": "Expected ship statistics for validation"
+    },
+    "propulsion_details": {
+      "type": "object",
+      "description": "Optional propulsion calculation details for documentation"
     },
     "resources": {
       "type": "object",
@@ -175,6 +183,29 @@
             }
           },
           "description": "Component position offset (optional)"
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/modifierReference"
+          },
+          "description": "Modifiers applied to this component"
+        }
+      },
+      "additionalProperties": false
+    },
+    "modifierReference": {
+      "type": "object",
+      "required": ["id", "value"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "description": "Modifier ID reference"
+        },
+        "value": {
+          "type": "number",
+          "description": "Parameter value for the modifier"
         }
       },
       "additionalProperties": false

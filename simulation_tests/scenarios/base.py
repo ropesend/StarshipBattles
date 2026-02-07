@@ -62,6 +62,53 @@ from game.core.constants import SimulationConstants
 # Get logger for this module
 logger = get_logger(__name__)
 
+# Maps ability class names to extraction config for _extract_ship_validation_data.
+# 'key' is the dict key in the extracted data (e.g., data['weapon']).
+# 'attrs' lists attributes to extract from the ability instance.
+ABILITY_EXTRACTION_MAP = {
+    'BeamWeaponAbility': {
+        'key': 'weapon',  # backward compat: data['weapon'] for beam scenarios
+        'attrs': ['damage', 'range', 'base_accuracy', 'accuracy_falloff', 'reload_time', 'firing_arc']
+    },
+    'ProjectileWeaponAbility': {
+        'key': 'projectile_weapon',
+        'attrs': ['damage', 'range', 'projectile_speed', 'reload_time', 'firing_arc']
+    },
+    'SeekerWeaponAbility': {
+        'key': 'seeker_weapon',
+        'attrs': ['damage', 'range', 'endurance', 'turn_rate', 'projectile_speed',
+                  'projectile_damage', 'projectile_hp', 'projectile_stealth', 'reload_time', 'firing_arc']
+    },
+    'ShieldProjection': {
+        'key': 'shield',
+        'attrs': ['capacity']
+    },
+    'ShieldRegeneration': {
+        'key': 'shield_regen',
+        'attrs': ['rate']
+    },
+    'EmissiveArmor': {
+        'key': 'emissive_armor',
+        'attrs': ['amount']
+    },
+    'ToHitAttackModifier': {
+        'key': 'attack_modifier',
+        'attrs': ['value']
+    },
+    'ToHitDefenseModifier': {
+        'key': 'defense_modifier',
+        'attrs': ['value']
+    },
+    'CombatPropulsion': {
+        'key': 'propulsion',
+        'attrs': ['thrust_force']
+    },
+    'ManeuveringThruster': {
+        'key': 'maneuvering',
+        'attrs': ['turn_rate']
+    },
+}
+
 
 @dataclass
 class TestMetadata:
@@ -610,6 +657,9 @@ class TestScenario(CombatScenario):
         Converts a Ship object into a dictionary structure suitable for
         validation rule path resolution (e.g., 'attacker.weapon.damage').
 
+        Uses ABILITY_EXTRACTION_MAP to extract data for all ability types,
+        not just beams. Also computes ship-level defense aggregates.
+
         Args:
             ship: Ship instance to extract data from
 
@@ -628,29 +678,41 @@ class TestScenario(CombatScenario):
             'turn_speed': getattr(ship, 'turn_speed', 0.0),
         }
 
-        # Extract weapon data from first weapon component
-        # This is simplified - assumes single weapon for testing
+        # Ship-level defense aggregates
+        total_defense_score = 0.0
+        total_emissive_armor = 0.0
+        total_max_shields = 0.0
+
+        # Extract ability data from all components using ABILITY_EXTRACTION_MAP
         if hasattr(ship, 'layers') and ship.layers:
             for layer_name, layer_data in ship.layers.items():
-                # Layer data is a dict with 'components' key containing the component list
                 if isinstance(layer_data, dict) and 'components' in layer_data:
-                    component_list = layer_data['components']
-                    for component in component_list:
-                        # Check if component has ability_instances (the instantiated ability objects)
+                    for component in layer_data['components']:
                         if hasattr(component, 'ability_instances') and component.ability_instances:
                             for ability in component.ability_instances:
                                 ability_class_name = ability.__class__.__name__
-                                if ability_class_name == 'BeamWeaponAbility':
-                                    # Extract beam weapon data from ability object
-                                    data['weapon'] = {
-                                        'damage': ability.damage if hasattr(ability, 'damage') else None,
-                                        'range': ability.range if hasattr(ability, 'range') else None,
-                                        'base_accuracy': ability.base_accuracy if hasattr(ability, 'base_accuracy') else None,
-                                        'accuracy_falloff': ability.accuracy_falloff if hasattr(ability, 'accuracy_falloff') else None,
-                                        'reload': ability.reload if hasattr(ability, 'reload') else None,
-                                        'firing_arc': ability.firing_arc if hasattr(ability, 'firing_arc') else None
-                                    }
-                                    logger.debug(f"Extracted weapon data from {ship.name}: damage={data['weapon']['damage']}, accuracy={data['weapon']['base_accuracy']}")
-                                    # Found weapon, return
-                                    return data
+                                config = ABILITY_EXTRACTION_MAP.get(ability_class_name)
+                                if config is None:
+                                    continue
+                                key = config['key']
+                                # Extract listed attributes
+                                ability_data = {}
+                                for attr in config['attrs']:
+                                    ability_data[attr] = getattr(ability, attr, None)
+                                # First occurrence wins (test ships have one of each)
+                                if key not in data:
+                                    data[key] = ability_data
+                                    logger.debug(f"Extracted {key} data from {ship.name}: {ability_data}")
+                                # Aggregate defense stats
+                                if ability_class_name == 'ToHitDefenseModifier':
+                                    total_defense_score += getattr(ability, 'value', 0.0)
+                                elif ability_class_name == 'EmissiveArmor':
+                                    total_emissive_armor += getattr(ability, 'amount', 0.0)
+                                elif ability_class_name == 'ShieldProjection':
+                                    total_max_shields += getattr(ability, 'capacity', 0.0)
+
+        data['total_defense_score'] = total_defense_score
+        data['emissive_armor'] = total_emissive_armor
+        data['max_shields'] = total_max_shields
+
         return data

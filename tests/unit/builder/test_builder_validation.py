@@ -222,15 +222,6 @@ class TestBuilderValidation:
         # Add Shield (Should fail - denied)
         assert not self.ship.add_component(shield, LayerType.INNER), "Should deny component with denied ability"
 
-    @pytest.mark.skip(reason="Symmetry enforcement is a UI feature, not implemented in Ship.check_validity()")
-    def test_symmetry_enforcement(self):
-        """Step 5b: Test symmetry enforcement (if enabled).
-
-        Note: Symmetry is a Builder UI feature, not part of backend validation.
-        This test is skipped until symmetry validation is added to Ship.check_validity().
-        """
-        pytest.fail("Symmetry enforcement not implemented in Ship validation")
-
     def test_block_id_restriction(self):
         """Step 7: Verify block_id restriction."""
         # Inject restriction: Block 'test_comp'

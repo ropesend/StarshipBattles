@@ -33,13 +33,10 @@ Projectile Weapon Stats:
 """
 
 import pygame
-import math
-from simulation_tests.scenarios import TestScenario, TestMetadata
+from simulation_tests.scenarios import TestMetadata
+from simulation_tests.scenarios.templates import StaticTargetScenario
 from simulation_tests.test_constants import (
-    STANDARD_DISTANCE,
     STANDARD_TEST_TICKS,
-    PROJECTILE_DAMAGE,
-    PROJECTILE_RANGE,
     STANDARD_SEED
 )
 
@@ -58,28 +55,12 @@ def calculate_projectile_travel_time(distance: float, projectile_speed: float) -
     return distance / projectile_speed
 
 
-def calculate_ticks_needed(shots: int, reload_time: float, travel_time: float, ticks_per_second: int = 100) -> int:
-    """
-    Calculate ticks needed for N shots to fire and reach target.
-
-    Args:
-        shots: Number of shots to fire
-        reload_time: Reload time in seconds
-        travel_time: Projectile travel time in seconds
-        ticks_per_second: Simulation frequency (default 100Hz)
-
-    Returns:
-        Recommended tick count
-    """
-    total_time = (shots * reload_time) + travel_time + 0.5  # +0.5s buffer
-    return int(total_time * ticks_per_second)
-
 
 # ============================================================================
 # STATIONARY TARGET TEST
 # ============================================================================
 
-class ProjectileStationaryTargetScenario(TestScenario):
+class ProjectileStationaryTargetScenario(StaticTargetScenario):
     """
     PROJ360-001: 100% Accuracy vs Stationary Target
 
@@ -113,99 +94,37 @@ class ProjectileStationaryTargetScenario(TestScenario):
         pass_criteria="damage_dealt >= 150",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=10,
         tags=["accuracy", "projectile", "stationary-target", "point-blank"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 200
+    min_damage_threshold = 150
 
-        # Position ships at close range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0  # Facing right (+X)
-        self.target.position = pygame.math.Vector2(200, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-        # Calculate projectile mechanics
+    def custom_setup(self, battle_engine):
+        """Store projectile mechanics for results."""
         self.travel_time = calculate_projectile_travel_time(200, 1500)
         self.expected_shots = 5
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """
-        Check if sufficient damage was dealt.
-
-        Expected Behavior:
-        - Projectile speed: 1500 px/s
-        - Distance: 200px → Travel time ~0.133 seconds (13 ticks)
-        - Reload time: 1.0s (100 ticks)
-        - Test duration: 500 ticks → 5 shots possible
-        - Damage: 50 per hit
-
-        Pass Criteria:
-        - At least 3 hits (damage_dealt >= 150)
-        - Stationary target should be hit by all or most shots
-        """
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
+    def _collect_extra_results(self, battle_engine):
+        """Store projectile-specific results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['expected_damage_min'] = 150
-
-        # Store weapon info for output
         self.results['weapon_type'] = 'Projectile360'
         self.results['weapon_damage'] = 50
         self.results['weapon_range'] = 1000
         self.results['projectile_speed'] = 1500
         self.results['reload_time'] = 1.0
 
-        # Calculate pass/fail
-        passed = damage_dealt >= 150
-
-        if not passed:
-            expected_hits = 3
-            actual_hits = damage_dealt / 50
-            self.results['failure_reason'] = (
-                f"Insufficient hits on stationary target. "
-                f"Expected at least {expected_hits} hits (150 damage), got {actual_hits:.1f} hits ({damage_dealt} damage). "
-                f"Check projectile physics, hit detection, and weapon firing."
-            )
-
-        return passed
-
 
 # ============================================================================
 # MOVING TARGET TESTS - LINEAR
 # ============================================================================
 
-class ProjectileLinearSlowTargetScenario(TestScenario):
+class ProjectileLinearSlowTargetScenario(StaticTargetScenario):
     """
     PROJ360-002: Accuracy vs Slow Linearly Moving Target
 
@@ -240,58 +159,23 @@ class ProjectileLinearSlowTargetScenario(TestScenario):
         pass_criteria="damage_dealt > 0 (test marked as skip - target config issue)",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=8,
         tags=["accuracy", "projectile", "moving-target", "linear", "leading"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Linear_Slow.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Linear_Slow.json"
+    distance = 200
+    verify_damage_dealt = True
 
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
+    def custom_setup(self, battle_engine):
+        """Adjust target position with y-offset and set target angle."""
         self.target.position = pygame.math.Vector2(200, 20)
         self.target.angle = 90  # Moving up (+Y)
 
-        # Store initial state
-        self.initial_hp = self.target.hp
 
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if any damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Pass if any damage was dealt (test marked skip in original)
-        return damage_dealt > 0
-
-
-class ProjectileLinearFastTargetScenario(TestScenario):
+class ProjectileLinearFastTargetScenario(StaticTargetScenario):
     """
     PROJ360-003: Accuracy vs Fast Linearly Moving Target
 
@@ -326,62 +210,27 @@ class ProjectileLinearFastTargetScenario(TestScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=7,
         tags=["accuracy", "projectile", "moving-target", "linear", "fast", "leading"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Linear_Fast.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Linear_Fast.json"
+    distance = 400
+    measurement_mode = True
 
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
+    def custom_setup(self, battle_engine):
+        """Adjust target position with y-offset and set target angle."""
         self.target.position = pygame.math.Vector2(400, 100)
         self.target.angle = 90  # Moving up (+Y)
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Pass if simulation completed (may or may not hit)
-        return battle_engine.tick_counter > 0
 
 
 # ============================================================================
 # MOVING TARGET TESTS - ERRATIC
 # ============================================================================
 
-class ProjectileErraticSmallTargetScenario(TestScenario):
+class ProjectileErraticSmallTargetScenario(StaticTargetScenario):
     """
     PROJ360-004: Accuracy vs Small Erratically Moving Target
 
@@ -417,58 +266,18 @@ class ProjectileErraticSmallTargetScenario(TestScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=6,
         tags=["accuracy", "projectile", "moving-target", "erratic", "small", "difficult"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Erratic_Small.json")
-
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(300, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Pass if simulation completed (measurement test)
-        return battle_engine.tick_counter > 0
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Erratic_Small.json"
+    distance = 300
+    measurement_mode = True
 
 
-class ProjectileErraticLargeTargetScenario(TestScenario):
+class ProjectileErraticLargeTargetScenario(StaticTargetScenario):
     """
     PROJ360-005: Accuracy vs Large Erratically Moving Target
 
@@ -503,62 +312,22 @@ class ProjectileErraticLargeTargetScenario(TestScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=1000,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=5,
         tags=["accuracy", "projectile", "moving-target", "erratic", "large"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Erratic_Large.json")
-
-        # Position ships
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(300, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
-
-        # Pass if simulation completed (measurement test)
-        return battle_engine.tick_counter > 0
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Erratic_Large.json"
+    distance = 300
+    measurement_mode = True
 
 
 # ============================================================================
 # RANGE LIMIT TEST
 # ============================================================================
 
-class ProjectileOutOfRangeScenario(TestScenario):
+class ProjectileOutOfRangeScenario(StaticTargetScenario):
     """
     PROJ360-006: Out of Range - Weapon Fires But No Hits
 
@@ -592,64 +361,27 @@ class ProjectileOutOfRangeScenario(TestScenario):
         pass_criteria="damage_dealt == 0",
         max_ticks=STANDARD_TEST_TICKS,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=9,
         tags=["range-limit", "out-of-range", "projectile"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 1200
+    expect_no_damage = True
 
-        # Position target beyond max range
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(1200, 0)  # Beyond 1000px range
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check that no damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
+    def _collect_extra_results(self, battle_engine):
+        """Store range-specific results."""
         self.results['distance'] = 1200
         self.results['weapon_max_range'] = 1000
-
-        # Pass if NO damage was dealt (out of range)
-        return damage_dealt == 0
 
 
 # ============================================================================
 # DAMAGE CONSISTENCY TESTS
 # ============================================================================
 
-class ProjectileDamageCloseRangeScenario(TestScenario):
+class ProjectileDamageCloseRangeScenario(StaticTargetScenario):
     """
     PROJ360-DMG-010: Damage at Close Range (100px / 10% of max range)
 
@@ -683,63 +415,27 @@ class ProjectileDamageCloseRangeScenario(TestScenario):
         pass_criteria="damage_dealt > 0 and (damage_dealt % 50 == 0 or damage_dealt > 0)",
         max_ticks=200,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=10,
         tags=["damage", "projectile", "close-range", "consistency"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 100
+    verify_damage_dealt = True
 
-        # Position at close range (10% of max)
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(100, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-        # Calculate travel time
+    def custom_setup(self, battle_engine):
+        """Calculate travel time for results."""
         self.travel_time = calculate_projectile_travel_time(100, 1500)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt consistently."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
+    def _collect_extra_results(self, battle_engine):
+        """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['damage_per_hit'] = 50
 
-        # Pass if damage dealt and consistent with weapon damage
-        return damage_dealt > 0 and (damage_dealt % 50 == 0 or damage_dealt > 0)
 
-
-class ProjectileDamageMidRangeScenario(TestScenario):
+class ProjectileDamageMidRangeScenario(StaticTargetScenario):
     """
     PROJ360-DMG-050: Damage at Mid-Range (500px / 50% of max range)
 
@@ -773,63 +469,27 @@ class ProjectileDamageMidRangeScenario(TestScenario):
         pass_criteria="damage_dealt > 0",
         max_ticks=300,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=9,
         tags=["damage", "projectile", "mid-range", "consistency"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 500
+    verify_damage_dealt = True
 
-        # Position at mid-range (50% of max)
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(500, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-        # Calculate travel time
+    def custom_setup(self, battle_engine):
+        """Calculate travel time for results."""
         self.travel_time = calculate_projectile_travel_time(500, 1500)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if damage was dealt."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
+    def _collect_extra_results(self, battle_engine):
+        """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['damage_per_hit'] = 50
 
-        # Pass if damage dealt
-        return damage_dealt > 0
 
-
-class ProjectileDamageLongRangeScenario(TestScenario):
+class ProjectileDamageLongRangeScenario(StaticTargetScenario):
     """
     PROJ360-DMG-090: Damage at Long Range (900px / 90% of max range)
 
@@ -864,60 +524,24 @@ class ProjectileDamageLongRangeScenario(TestScenario):
         pass_criteria="simulation_completes (ticks_run > 0)",
         max_ticks=400,
         seed=STANDARD_SEED,
-        battle_end_mode="time_based",  # Run for full duration regardless of ship status
+        battle_end_mode="time_based",
         ui_priority=8,
         tags=["damage", "projectile", "long-range", "max-range", "consistency"]
     )
 
-    def setup(self, battle_engine):
-        """Setup test scenario."""
-        # Load ships
-        self.attacker = self._load_ship("Test_Attacker_Proj360.json")
-        self.target = self._load_ship("Test_Target_Stationary.json")
+    attacker_ship = "Test_Attacker_Proj360.json"
+    target_ship = "Test_Target_Stationary.json"
+    distance = 900
+    measurement_mode = True
 
-        # Position at long range (90% of max)
-        self.attacker.position = pygame.math.Vector2(0, 0)
-        self.attacker.angle = 0
-        self.target.position = pygame.math.Vector2(900, 0)
-        self.target.angle = 0
-
-        # Store initial state
-        self.initial_hp = self.target.hp
-
-        # Create end condition (TIME_BASED: runs for full duration)
-        end_condition = self._create_end_condition()
-
-        # Start battle with time-based end condition
-        battle_engine.start([self.attacker], [self.target],
-                          seed=self.metadata.seed,
-                          end_condition=end_condition)
-
-        # Set target
-        self.attacker.current_target = self.target
-
-        # Calculate travel time
+    def custom_setup(self, battle_engine):
+        """Calculate travel time for results."""
         self.travel_time = calculate_projectile_travel_time(900, 1500)
 
-    def update(self, battle_engine):
-        """Force attacker to fire each tick."""
-        if self.attacker and self.attacker.is_alive:
-            self.attacker.comp_trigger_pulled = True
-
-    def verify(self, battle_engine) -> bool:
-        """Check if simulation completed."""
-        damage_dealt = self.initial_hp - self.target.hp
-
-        # Store results
-        self.results['initial_hp'] = self.initial_hp
-        self.results['final_hp'] = self.target.hp
-        self.results['damage_dealt'] = damage_dealt
-        self.results['ticks_run'] = battle_engine.tick_counter
-        self.results['target_alive'] = self.target.is_alive
+    def _collect_extra_results(self, battle_engine):
+        """Store damage consistency results."""
         self.results['travel_time_seconds'] = self.travel_time
         self.results['damage_per_hit'] = 50
-
-        # Pass if simulation completed (may or may not hit at extreme range)
-        return battle_engine.tick_counter > 0
 
 
 # ============================================================================

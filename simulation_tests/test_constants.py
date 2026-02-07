@@ -191,6 +191,68 @@ HIGH_TURN_SPEED = 4.0
 
 
 # ============================================================================
+# DEFENSE ABILITY CONSTANTS
+# ============================================================================
+
+# Shield configuration
+SHIELD_CAPACITY = 200       # HP from test_shield_200 component
+SHIELD_REGEN_RATE = 10      # HP/sec from test_shield_regen_10 component
+
+# Emissive armor
+EMISSIVE_ARMOR_REDUCTION = 5  # Flat damage reduction per hit
+
+# To-hit modifiers
+ECM_DEFENSE_VALUE = 1.0     # Defense score bonus from test_ecm_1
+SENSOR_ATTACK_VALUE = 1.0   # Attack score bonus from test_sensor_1
+
+# Defense test ship filenames
+SHIELDED_TARGET_SHIP = "Test_Target_Shielded.json"
+SHIELD_REGEN_TARGET_SHIP = "Test_Target_Shield_Regen.json"
+EMISSIVE_ARMOR_TARGET_SHIP = "Test_Target_EmissiveArmor.json"
+ECM_TARGET_SHIP = "Test_Target_ECM.json"
+SENSOR_ATTACKER_SHIP = "Test_Attacker_Beam360_WithSensor.json"
+
+# Defense test durations
+DEFENSE_TEST_TICKS = 500    # Standard duration for defense tests
+
+
+# ============================================================================
+# MODIFIER TEST CONSTANTS
+# ============================================================================
+
+# Modifier test ship filenames
+DAMAGE_BOOST_ATTACKER_SHIP = "Test_Attacker_Beam_DamageBoost.json"
+RANGE_BOOST_ATTACKER_SHIP = "Test_Attacker_Beam_RangeBoost.json"
+TURRET180_ATTACKER_SHIP = "Test_Attacker_Beam_Turret180.json"
+THRUST_BOOST_ENGINE_SHIP = "Test_Engine_ThrustBoost.json"
+
+# Modifier parameter values (as applied in ship JSONs)
+DAMAGE_BOOST_PARAM = 1.5       # test_damage_boost value
+RANGE_BOOST_PARAM = 1          # test_range_boost value (2^1 = 2x range)
+TURRET_ARC_PARAM = 180         # test_turret value (180 degree arc)
+THRUST_BOOST_PARAM = 2         # test_thrust_boost value (2x thrust)
+
+# Base weapon stats (from test_beam_med_acc_1dmg)
+MOD_BASE_BEAM_DAMAGE = 1
+MOD_BASE_BEAM_RANGE = 800
+MOD_BASE_BEAM_ARC = 360
+MOD_BASE_BEAM_ACCURACY = 2.0
+MOD_BASE_BEAM_FALLOFF = 0.001
+
+# Base engine stats (from test_engine_no_fuel)
+MOD_BASE_ENGINE_THRUST = 500
+
+# Expected post-modifier values
+MOD_EXPECTED_DAMAGE = MOD_BASE_BEAM_DAMAGE * DAMAGE_BOOST_PARAM          # 1.5
+MOD_EXPECTED_RANGE = MOD_BASE_BEAM_RANGE * (2 ** RANGE_BOOST_PARAM)      # 1600
+MOD_EXPECTED_ARC = TURRET_ARC_PARAM                                       # 180
+MOD_EXPECTED_THRUST = MOD_BASE_ENGINE_THRUST * THRUST_BOOST_PARAM         # 1000
+
+# Modifier test durations
+MODIFIER_TEST_TICKS = 500
+
+
+# ============================================================================
 # SEED VALUES
 # ============================================================================
 
