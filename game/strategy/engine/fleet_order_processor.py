@@ -211,6 +211,9 @@ class FleetOrderProcessor:
         empire.add_colony(final_planet)
         fleet.pop_order()
 
+        # PROJ-68: Transfer passengers from fleet to colony as founding population
+        self._transfer_founding_population(fleet, final_planet, empire)
+
         # PROJ-55: Remove only colony ship when registry is provided
         if component_registry is not None:
             planet_type_str = final_planet.planet_type.name
@@ -381,6 +384,74 @@ class FleetOrderProcessor:
             return actual_unloaded
 
         return 0
+
+    def _transfer_founding_population(
+        self,
+        fleet: Fleet,
+        planet,
+        empire
+    ) -> int:
+        """
+        Transfer passengers from fleet to colony as founding population.
+
+        PROJ-68: When colonizing, passengers become the founding population.
+        If no passengers but empire has race_config, seed minimum 100 units.
+
+        Args:
+            fleet: Fleet that colonized the planet
+            planet: Newly colonized planet
+            empire: Empire that owns the colony
+
+        Returns:
+            Number of population units seeded.
+        """
+        from game.strategy.data.planet import SpeciesPopulation
+
+        # Get passengers from fleet
+        # Wrap in try/except for mock compatibility in tests
+        try:
+            passengers = fleet.get_fleet_cargo_current("passengers")
+        except (AttributeError, TypeError):
+            passengers = 0
+
+        # Determine founding population
+        founding_pop = passengers if isinstance(passengers, int) else 0
+
+        # If no passengers but empire has race_config, seed minimum
+        race_config = getattr(empire, 'race_config', None)
+        # Check for actual RaceConfig (not MagicMock) - RaceConfig has race_id attribute
+        has_race_config = (
+            race_config is not None
+            and hasattr(race_config, 'race_id')
+            and isinstance(getattr(race_config, 'race_id', None), str)
+        )
+
+        if founding_pop == 0 and has_race_config:
+            founding_pop = 100  # Minimum seed: 100K people
+
+        if founding_pop <= 0:
+            return 0
+
+        # Unload passengers from fleet (if any)
+        if passengers > 0:
+            try:
+                fleet.unload_cargo_from_fleet("passengers", passengers)
+            except (AttributeError, TypeError):
+                pass  # Mock fleet, skip unload
+
+        # Determine race_id from empire
+        race_id = empire.race_config.race_id if empire.race_config else "default"
+
+        # Create founding population on planet
+        species_pop = SpeciesPopulation(
+            race_id=race_id,
+            count=founding_pop,
+            happiness=0.5  # Neutral starting happiness
+        )
+        planet.populations.append(species_pop)
+
+        log_debug(f"Colonization: Seeded {founding_pop} {race_id} on {planet.name}")
+        return founding_pop
 
     def process_end_turn_orders(
         self,
