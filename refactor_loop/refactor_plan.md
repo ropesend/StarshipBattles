@@ -8,24 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-66 Phase 3 (Identity Tab UI)
-**Current Status:** PROJ-66 Phase 3 complete, Phase 4 next
+**Last Completed:** PROJ-66 Phase 4 (Environment Tab Enhancement)
+**Current Status:** PROJ-66 Phase 4 complete, Phase 5 next
 **Current Project:** PROJ-66
-**Current Phase:** Phase 4 (Environment Tab Enhancement)
-**Test Status:** 6243 passed (2 pre-existing failures in bug_15 tests)
+**Current Phase:** Phase 5 (Aptitudes Tab & Point-Buy System)
+**Test Status:** 6255 passed (3 pre-existing failures in bug_15/stats_render tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-66 Phase 3 COMPLETE
-- Created game/ui/panels/race_identity_panel.py with:
-  - RaceIdentityPanel class following RaceEnvironmentPanel pattern
-  - Text inputs: race_name, race_name_plural, faction_name
-  - Dropdowns: physical_type, government_type, government_org, leader_title, society_type
-  - Faction auto-generation (_auto_generate_faction_name, _update_faction_if_not_overridden)
-  - Override tracking with _faction_name_overridden flag
-  - Standard methods: update_config(), set_from_config(), update_labels(), handle_event()
-- Created tests/unit/ui/panels/test_race_identity_panel.py with 21 tests
-- Next: Phase 4 - Add water sliders and homeworld dropdown to Environment tab
+- PROJ-66 Phase 4 COMPLETE
+- Enhanced game/ui/panels/race_environment_panel.py with:
+  - Homeworld type dropdown at top of panel (11 planet types + Custom)
+  - Water ideal + tolerance sliders with percentage formatting
+  - _create_homeworld_section(), _create_water_section() methods
+  - _format_water(), _format_water_tolerance() helpers
+  - apply_homeworld_preset() method for auto-populating all sliders
+  - Updated update_config(), update_labels(), set_from_config() for water sliders
+- Added 12 new tests to tests/unit/ui/test_race_environment_panel.py (29 total)
+- Next: Phase 5 - Create RaceAptitudesPanel with point-buy system
 
 ---
 
@@ -150,6 +150,7 @@
 | 2026-02-07 | PROJ-66 | Phase 1 | Complete | 6222 passed | pending | RaceConfig: +6 lists, +20 fields, serialization, validation |
 | 2026-02-07 | PROJ-66 | Phase 2 | Complete | 6222 passed | pending | Homeworld presets JSON + loader, 14 tests |
 | 2026-02-07 | PROJ-66 | Phase 3 | Complete | 6243 passed | pending | RaceIdentityPanel, 21 tests |
+| 2026-02-07 | PROJ-66 | Phase 4 | Complete | 6255 passed | pending | Env panel: homeworld dropdown, water sliders, presets |
 
 ---
 

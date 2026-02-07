@@ -2,16 +2,25 @@
 Race Environment Panel - Environmental preferences configuration for races.
 
 PROJ-12 Phase 4: Extracted from RaceSetupScreen to decompose the god class.
+PROJ-66 Phase 4: Added homeworld dropdown, water sliders, and preset auto-populate.
 
 Provides UI controls for configuring:
+- Homeworld type selection with presets
 - Gravity preferences (ideal and tolerance)
 - Temperature preferences (ideal and tolerance)
+- Water preferences (ideal and tolerance)
 - Radiation tolerance
 - Atmosphere gas preferences
 """
 import pygame
 import pygame_gui
-from typing import Dict, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING
+
+from game.strategy.data.homeworld_presets import (
+    get_available_homeworld_names,
+    get_preset_for_planet_type,
+    load_homeworld_presets,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -67,6 +76,13 @@ class RaceEnvironmentPanel:
         self.radiation_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
         self.radiation_label: Optional[pygame_gui.elements.UILabel] = None
 
+        self.water_ideal_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
+        self.water_tolerance_slider: Optional[pygame_gui.elements.UIHorizontalSlider] = None
+        self.water_ideal_label: Optional[pygame_gui.elements.UILabel] = None
+        self.water_tolerance_label: Optional[pygame_gui.elements.UILabel] = None
+
+        self.homeworld_dropdown: Optional[pygame_gui.elements.UIDropDownMenu] = None
+
         self.atmosphere_sliders: Dict[str, pygame_gui.elements.UIHorizontalSlider] = {}
         self.atmosphere_labels: Dict[str, pygame_gui.elements.UILabel] = {}
 
@@ -76,6 +92,10 @@ class RaceEnvironmentPanel:
         """Create all panel content."""
         panel_width = self.panel.get_relative_rect().width - 20
         y = 5
+
+        # Section 0: Homeworld Type (preset selector)
+        y = self._create_homeworld_section(y, panel_width)
+        y += 15
 
         # Section 1: Gravity
         y = self._create_gravity_section(y, panel_width)
@@ -89,8 +109,46 @@ class RaceEnvironmentPanel:
         y = self._create_radiation_section(y, panel_width)
         y += 15
 
-        # Section 4: Atmosphere Preferences
+        # Section 4: Water Preferences
+        y = self._create_water_section(y, panel_width)
+        y += 15
+
+        # Section 5: Atmosphere Preferences
         y = self._create_atmosphere_section(y, panel_width)
+
+    def _create_homeworld_section(self, y: int, width: int) -> int:
+        """Create homeworld type dropdown for preset selection."""
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, y, 200, 25),
+            text="Homeworld Type:",
+            manager=self.ui_manager,
+            container=self.panel,
+            object_id="#section_header"
+        )
+        y += 28
+
+        # Build dropdown options: all planet types + Custom
+        presets = load_homeworld_presets()
+        options = [preset["name"] for preset in presets.values()]
+        options.append("(Custom)")
+
+        # Determine starting selection
+        starting_option = "(Custom)"
+        if self.race_config.homeworld_type:
+            preset = presets.get(self.race_config.homeworld_type)
+            if preset:
+                starting_option = preset["name"]
+
+        self.homeworld_dropdown = pygame_gui.elements.UIDropDownMenu(
+            options_list=options,
+            starting_option=starting_option,
+            relative_rect=pygame.Rect(20, y, width - 30, 28),
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        y += 32
+
+        return y
 
     def _create_gravity_section(self, y: int, width: int) -> int:
         """Create gravity preference controls."""
@@ -246,6 +304,65 @@ class RaceEnvironmentPanel:
 
         return y
 
+    def _create_water_section(self, y: int, width: int) -> int:
+        """Create water preference controls."""
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, y, 200, 25),
+            text="Water Preferences:",
+            manager=self.ui_manager,
+            container=self.panel,
+            object_id="#section_header"
+        )
+        y += 28
+
+        # Ideal water: 0.0 - 1.0
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(20, y, 100, 22),
+            text="Ideal:",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        self.water_ideal_slider = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect(120, y, width - 200, 22),
+            start_value=self.race_config.water_ideal,
+            value_range=(0.0, 1.0),
+            manager=self.ui_manager,
+            container=self.panel,
+            click_increment=0.05
+        )
+        self.water_ideal_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(width - 70, y, 60, 22),
+            text=self._format_water(self.race_config.water_ideal),
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        y += 26
+
+        # Tolerance: 0.0 - 1.0
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(20, y, 100, 22),
+            text="Tolerance:",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        self.water_tolerance_slider = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect(120, y, width - 200, 22),
+            start_value=self.race_config.water_tolerance,
+            value_range=(0.0, 1.0),
+            manager=self.ui_manager,
+            container=self.panel,
+            click_increment=0.05
+        )
+        self.water_tolerance_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(width - 70, y, 60, 22),
+            text=self._format_water_tolerance(self.race_config.water_tolerance),
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        y += 26
+
+        return y
+
     def _create_atmosphere_section(self, y: int, width: int) -> int:
         """Create atmosphere preference controls."""
         pygame_gui.elements.UILabel(
@@ -320,6 +437,14 @@ class RaceEnvironmentPanel:
         else:
             return f"{value:.0f}"
 
+    def _format_water(self, value: float) -> str:
+        """Format water value as percentage."""
+        return f"{value * 100:.0f}%"
+
+    def _format_water_tolerance(self, value: float) -> str:
+        """Format water tolerance value as ± percentage."""
+        return f"±{value * 100:.0f}%"
+
     def update_config(self):
         """Update race_config from slider values."""
         if self.gravity_ideal_slider:
@@ -332,6 +457,10 @@ class RaceEnvironmentPanel:
             self.race_config.temperature_tolerance = self.temp_tolerance_slider.get_current_value()
         if self.radiation_slider:
             self.race_config.radiation_tolerance = self.radiation_slider.get_current_value()
+        if self.water_ideal_slider:
+            self.race_config.water_ideal = self.water_ideal_slider.get_current_value()
+        if self.water_tolerance_slider:
+            self.race_config.water_tolerance = self.water_tolerance_slider.get_current_value()
 
         for gas, slider in self.atmosphere_sliders.items():
             self.race_config.atmosphere_preferences[gas] = slider.get_current_value()
@@ -358,6 +487,14 @@ class RaceEnvironmentPanel:
             val = self.radiation_slider.get_current_value()
             self.radiation_label.set_text(self._format_radiation(val))
 
+        if self.water_ideal_slider and self.water_ideal_label:
+            val = self.water_ideal_slider.get_current_value()
+            self.water_ideal_label.set_text(self._format_water(val))
+
+        if self.water_tolerance_slider and self.water_tolerance_label:
+            val = self.water_tolerance_slider.get_current_value()
+            self.water_tolerance_label.set_text(self._format_water_tolerance(val))
+
         for gas, slider in self.atmosphere_sliders.items():
             if gas in self.atmosphere_labels:
                 val = slider.get_current_value()
@@ -375,9 +512,56 @@ class RaceEnvironmentPanel:
             self.temp_tolerance_slider.set_current_value(self.race_config.temperature_tolerance)
         if self.radiation_slider:
             self.radiation_slider.set_current_value(self.race_config.radiation_tolerance)
+        if self.water_ideal_slider:
+            self.water_ideal_slider.set_current_value(self.race_config.water_ideal)
+        if self.water_tolerance_slider:
+            self.water_tolerance_slider.set_current_value(self.race_config.water_tolerance)
 
         for gas, slider in self.atmosphere_sliders.items():
             if gas in self.race_config.atmosphere_preferences:
                 slider.set_current_value(self.race_config.atmosphere_preferences[gas])
 
+        self.update_labels()
+
+    def apply_homeworld_preset(self, planet_type_name: str) -> None:
+        """
+        Apply a homeworld preset to all environment sliders.
+
+        Args:
+            planet_type_name: Planet type ID (e.g., "CONTINENTAL") or "(Custom)"
+        """
+        # Custom means leave everything as-is
+        if planet_type_name == "(Custom)":
+            return
+
+        # Get the preset data
+        preset = get_preset_for_planet_type(planet_type_name)
+        if preset is None:
+            return
+
+        # Update race_config
+        self.race_config.homeworld_type = planet_type_name
+
+        # Set all slider values from preset
+        if self.gravity_ideal_slider:
+            self.gravity_ideal_slider.set_current_value(preset["gravity_ideal"])
+        if self.gravity_tolerance_slider:
+            self.gravity_tolerance_slider.set_current_value(preset["gravity_tolerance"])
+        if self.temp_ideal_slider:
+            self.temp_ideal_slider.set_current_value(preset["temperature_ideal"])
+        if self.temp_tolerance_slider:
+            self.temp_tolerance_slider.set_current_value(preset["temperature_tolerance"])
+        if self.water_ideal_slider:
+            self.water_ideal_slider.set_current_value(preset["water_ideal"])
+        if self.water_tolerance_slider:
+            self.water_tolerance_slider.set_current_value(preset["water_tolerance"])
+        if self.radiation_slider:
+            self.radiation_slider.set_current_value(preset["radiation_tolerance"])
+
+        # Set atmosphere preferences
+        for gas, value in preset["atmosphere_preferences"].items():
+            if gas in self.atmosphere_sliders:
+                self.atmosphere_sliders[gas].set_current_value(value)
+
+        # Update all labels to reflect new values
         self.update_labels()

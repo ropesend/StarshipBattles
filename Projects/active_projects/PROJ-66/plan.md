@@ -16,16 +16,16 @@
 | 1. Data Layer - RaceConfig Enhancement | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Homeworld Presets Data | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Identity Tab UI | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Environment Tab Enhancement | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Environment Tab Enhancement | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Aptitudes Tab & Point-Buy System | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Tab Reorganization & Summary Update | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Validation, Fixtures & Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Created RaceIdentityPanel with text inputs, dropdowns, faction auto-generation, 21 unit tests
-**Next Action:** Start Phase 4 - Environment Tab Enhancement
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - Added homeworld dropdown, water sliders, preset auto-populate to RaceEnvironmentPanel
+**Next Action:** Start Phase 5 - Aptitudes Tab & Point-Buy System
 **Blockers:** None
 
 ## Overview
