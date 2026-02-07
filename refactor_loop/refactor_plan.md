@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-57 Phase 3 - Extract screen.py and wire up package
-**Current Status:** Phase 3 complete, Phase 4 ready
+**Last Completed:** PROJ-57 Phase 4 - Update external references
+**Current Status:** Phase 4 complete, Phase 5 ready
 **Current Project:** PROJ-57
-**Current Phase:** Phase 4 (pending)
-**Test Status:** Tests fail until Phase 4 (external imports not updated yet)
+**Current Phase:** Phase 5 (pending)
+**Test Status:** 6246 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 3 complete: created screen.py (~2460 lines) with TestLabScreen + get_test_data_dir
-- Fixed path depth in get_test_data_dir (4 dirname() calls instead of 3)
-- Finalized __init__.py with proper exports
-- Deleted original test_lab_screen.py monolith
-- Package import works: `from game.ui.screens.test_lab import TestLabScreen`
-- 9 files total in test_lab/: __init__.py + 8 modules
-- Tests fail until Phase 4 updates: app.py, tests/unit/test_lab/test_data_paths.py, tests/unit/test_lab/test_visual_run.py
-- Next: Phase 4 - Update external references to use new package path
+- Phase 4 complete: updated all external imports to use new package path
+- Modified: game/app.py (1 import)
+- Modified: tests/unit/test_lab/test_data_paths.py (17 updates: 4 TestLabScreen imports, 13 patch paths)
+- Modified: tests/unit/test_lab/test_visual_run.py (8 updates: 1 TestLabScreen import, 7 TestRunner patch paths)
+- All test_lab tests passing (35), all test_lab_scene tests passing (79)
+- Full suite: 6246 passed
+- Next: Phase 5 - Verification & Documentation (final phase)
 
 ---
 
@@ -93,7 +92,8 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-06 | PROJ-57 | Phase 1 | Complete | 6246 passed | 3f185f28 | Extracted 5 leaf nodes |
 | 2026-02-06 | PROJ-57 | Phase 2 | Complete | 6246 passed | f9226ac7 | Extracted 2 composite modules |
-| 2026-02-07 | PROJ-57 | Phase 3 | Complete | Tests fail* | pending | *External refs need Phase 4 |
+| 2026-02-07 | PROJ-57 | Phase 3 | Complete | Tests fail* | 28d4dffd | *External refs need Phase 4 |
+| 2026-02-07 | PROJ-57 | Phase 4 | Complete | 6246 passed | pending | Updated external references |
 
 
 ---

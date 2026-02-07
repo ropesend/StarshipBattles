@@ -27,7 +27,7 @@ from game.ui.screens.setup_screen import BattleSetupScreen
 from game.ui.screens.strategy_screen import StrategyScreen
 from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
 from Tools.formation_editor import FormationEditorScreen
-from game.ui.screens.test_lab_screen import TestLabScreen
+from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test_screen import GalaxyTestScreen
 from game.core.profiling import PROFILER, profile_action
 from game.battle_coordinator import (

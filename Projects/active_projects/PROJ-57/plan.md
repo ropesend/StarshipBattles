@@ -16,16 +16,16 @@
 | 1. Setup & Extract Leaf Nodes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract Composite Nodes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract Screen & Wire Up Package | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Update External References | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Update External References | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Documentation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Extracted screen.py (TestLabScreen + get_test_data_dir), finalized __init__.py, deleted original test_lab_screen.py
-**Next Action:** Begin Phase 4 - Update external references (app.py, test files) to use new package path
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - Updated all external imports (app.py, test files) to use new package paths
+**Next Action:** Begin Phase 5 - Verification & Documentation
 **Blockers:** None
-**Context for Next Agent:** 9 module files in test_lab/: 8 modules + __init__.py. Package imports work. Tests in tests/unit/test_lab/ currently fail due to old import paths (ModuleNotFoundError) - Phase 4 fixes these.
+**Context for Next Agent:** All 4 phases complete. 6246 tests passing. Package fully functional. Phase 5 is final verification and documentation.
 
 ## Overview
 Decompose `game/ui/screens/test_lab_screen.py` (4,703 lines, 11 classes) into a well-organized `game/ui/screens/test_lab/` package. This is the single largest file in the project and contains the entire Combat Lab UI. The decomposition follows existing `builder/` and `formation/` package precedents.
