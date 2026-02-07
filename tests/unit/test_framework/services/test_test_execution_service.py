@@ -6,7 +6,7 @@ Tests visual and headless test execution, progress callbacks, and error handling
 
 import pytest
 import time
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from test_framework.services.test_execution_service import TestExecutionService
 
 
@@ -365,25 +365,28 @@ class TestRunHeadless:
         assert result['ticks_run'] == 0
         assert result['duration_real'] == 0
 
+    @patch('test_framework.services.test_execution_service.time')
     def test_run_headless_measures_time(
         self,
+        mock_time,
         mock_battle_engine,
         sample_scenario_info,
         mock_test_scenario
     ):
         """Test that execution time is measured."""
+        # Use deterministic mock times: start=100.0, end=100.5
+        mock_time.time.side_effect = [100.0, 100.5]
+
         service = TestExecutionService()
         mock_test_scenario.max_ticks = 100
         sample_scenario_info['class'] = Mock(return_value=mock_test_scenario)
         service.runner.load_data_for_scenario = Mock()
         service.runner._log_test_execution = Mock()
 
-        start_time = time.time()
         result = service.run_headless(sample_scenario_info, mock_battle_engine)
-        elapsed = time.time() - start_time
 
+        assert result['duration_real'] == pytest.approx(0.5)
         assert result['duration_real'] > 0
-        assert result['duration_real'] <= elapsed + 0.1  # Some tolerance
 
     def test_run_headless_returns_results_dict(
         self,

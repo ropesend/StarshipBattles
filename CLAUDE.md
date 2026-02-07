@@ -31,7 +31,7 @@ When working in VS Code, you are a **helpful technical consultant**, not an auto
 **Tech Stack:**
 - Python 3.x
 - Pygame for rendering
-- Pytest for testing (5199 tests baseline)
+- Pytest for testing (6246 tests baseline)
 - Test parallelization with pytest-xdist (4 workers)
 
 ---
@@ -205,7 +205,7 @@ DO:
 
 - **Parallel workers:** 4 for CLI (`-n 4`)
 - **Test monitor:** `--testmon` for incremental runs
-- **Baseline:** 5199 passed, 3 skipped
+- **Baseline:** 6246 passed, 0 skipped
 - **VS Code Test Explorer:** Use 4-8 workers for stability
 
 ---

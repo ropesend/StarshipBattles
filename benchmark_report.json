@@ -1,0 +1,102 @@
+[
+    {
+        "n": 4,
+        "duration": 74.06032389996108,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 5,
+        "duration": 55.31687670003157,
+        "exit_code": 1,
+        "fail_count": 1,
+        "fails": [
+            "tests/unit/test_framework/services/test_test_execution_service.py::TestRunHeadless::test_run_headless_measures_time"
+        ]
+    },
+    {
+        "n": 6,
+        "duration": 49.09434049995616,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 7,
+        "duration": 41.69283870002255,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 8,
+        "duration": 45.570557400002144,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 9,
+        "duration": 39.30519520002417,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 10,
+        "duration": 39.62519890000112,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 11,
+        "duration": 38.83072530000936,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 12,
+        "duration": 32.52128910005558,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 13,
+        "duration": 37.13186520000454,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 14,
+        "duration": 32.74097149993759,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 15,
+        "duration": 31.506736999959685,
+        "exit_code": 0,
+        "fail_count": 0,
+        "fails": []
+    },
+    {
+        "n": 16,
+        "duration": 33.643559299991466,
+        "exit_code": 1,
+        "fail_count": 6,
+        "fails": [
+            "tests/unit/builder/test_io_interactive.py::TestShipIOInteractive::test_load_ship_cancel",
+            "tests/unit/builder/test_io_interactive.py::TestShipIOInteractive::test_load_ship_corrupt",
+            "tests/unit/builder/test_io_interactive.py::TestShipIOInteractive::test_load_ship_success",
+            "tests/unit/builder/test_io_interactive.py::TestShipIOInteractive::test_save_ship_cancel",
+            "tests/unit/builder/test_io_interactive.py::TestShipIOInteractive::test_save_ship_failure",
+            "tests/unit/builder/test_io_interactive.py::TestShipIOInteractive::test_save_ship_success"
+        ]
+    }
+]

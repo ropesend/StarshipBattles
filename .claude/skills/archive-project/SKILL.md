@@ -49,7 +49,11 @@ Parse the arguments as a space-separated list of project numbers. For each numbe
 2. Append the extracted project block (including its `---` separator) to the end of `refactor_loop/archive.md`
 3. Remove the project block (including its `---` separator) from `refactor_loop/refactor_plan.md`
 
-### Step 3: Archive project folder
+### Step 3: Remove execution log entries
+
+In `refactor_loop/refactor_plan.md`, find the `## Execution Log` table. Remove ALL rows that contain `PROJ-N` (matching the project being archived). Keep the table header row and separator row intact. This prevents stale log entries from accumulating after archival.
+
+### Step 4: Archive project folder
 
 **First check** if the project folder exists in `active_projects/`:
 
