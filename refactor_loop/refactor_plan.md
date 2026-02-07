@@ -8,24 +8,30 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-66 Phase 4 (Environment Tab Enhancement)
-**Current Status:** PROJ-66 Phase 4 complete, Phase 5 next
+**Last Completed:** PROJ-66 Phase 5 (Aptitudes Tab & Point-Buy System)
+**Current Status:** PROJ-66 Phase 5 complete, Phase 6 next
 **Current Project:** PROJ-66
-**Current Phase:** Phase 5 (Aptitudes Tab & Point-Buy System)
-**Test Status:** 6255 passed (3 pre-existing failures in bug_15/stats_render tests)
+**Current Phase:** Phase 6 (Tab Reorganization & Summary Update)
+**Test Status:** 6297 passed (3 pre-existing failures in bug_15/stats_render tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-66 Phase 4 COMPLETE
-- Enhanced game/ui/panels/race_environment_panel.py with:
-  - Homeworld type dropdown at top of panel (11 planet types + Custom)
-  - Water ideal + tolerance sliders with percentage formatting
-  - _create_homeworld_section(), _create_water_section() methods
-  - _format_water(), _format_water_tolerance() helpers
-  - apply_homeworld_preset() method for auto-populating all sliders
-  - Updated update_config(), update_labels(), set_from_config() for water sliders
-- Added 12 new tests to tests/unit/ui/test_race_environment_panel.py (29 total)
-- Next: Phase 5 - Create RaceAptitudesPanel with point-buy system
+- PROJ-66 Phase 5 COMPLETE
+- Created game/strategy/data/race_point_budget.py with:
+  - RacePointBudget class with 100-point budget
+  - Linear aptitude costs (value - 5 per stat, can be negative)
+  - Exponential tolerance costs (2^n - 1 per tolerance level)
+  - calculate_aptitude_cost(), calculate_tolerance_cost(), calculate_total_cost()
+  - get_remaining_points(), is_within_budget()
+  - get_aptitude_breakdown(), get_tolerance_breakdown()
+- Created game/ui/panels/race_aptitudes_panel.py with:
+  - 9 aptitude sliders (Strength, Intelligence, etc.)
+  - Budget display "Points Remaining: X / 100"
+  - Tolerance cost display (read-only, reflects Environment tab)
+  - update_config(), set_from_config(), update_labels(), update_budget_display()
+- Added 25 tests to tests/unit/strategy/data/test_race_point_budget.py
+- Added 17 tests to tests/unit/ui/panels/test_race_aptitudes_panel.py
+- Next: Phase 6 - Reorganize tabs (5→7), integrate new panels
 
 ---
 
@@ -151,6 +157,7 @@
 | 2026-02-07 | PROJ-66 | Phase 2 | Complete | 6222 passed | pending | Homeworld presets JSON + loader, 14 tests |
 | 2026-02-07 | PROJ-66 | Phase 3 | Complete | 6243 passed | pending | RaceIdentityPanel, 21 tests |
 | 2026-02-07 | PROJ-66 | Phase 4 | Complete | 6255 passed | pending | Env panel: homeworld dropdown, water sliders, presets |
+| 2026-02-07 | PROJ-66 | Phase 5 | Complete | 6297 passed | pending | RacePointBudget + RaceAptitudesPanel, 42 new tests |
 
 ---
 
