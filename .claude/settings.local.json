@@ -37,7 +37,8 @@
       "Bash(where:*)",
       "Bash(move:*)",
       "Bash(pip show:*)",
-      "Read(//c/Dev/Starship Battles/**)"
+      "Read(//c/Dev/Starship Battles/**)",
+      "Bash(claude:*)"
     ]
   }
 }
