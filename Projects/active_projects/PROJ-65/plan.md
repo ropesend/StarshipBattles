@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Foundation — IScene Protocol & WIDTH/HEIGHT | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Foundation — IScene Protocol & WIDTH/HEIGHT | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Standardize Scene Interfaces | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract MenuScene & Scene Dispatch | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cleanup & Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-06
-**Active Phase:** Planning (approved, ready for implementation)
-**Last Action:** Plan created with 4 phases, design doc and decisions log populated
-**Next Action:** Begin Phase 1 — define IScene protocol, eliminate global WIDTH/HEIGHT
+**Last Updated:** 2026-02-07
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - IScene protocol added, global WIDTH/HEIGHT eliminated, module-level side effects moved to Game.__init__
+**Next Action:** Begin Phase 2 — standardize scene interfaces
 **Blockers:** None
-**Context for Next Agent:** Baseline: 6225 passed, 23 pre-existing failures (collision/projectile). See design.md for full architecture analysis.
+**Context for Next Agent:** 6235 passed (1 pre-existing mock failure in bug_15 test). app.py reduced, no global state.
 
 ## Overview
 Refactor `game/app.py` (759 lines, 43 methods) from a monolithic orchestrator with 5 if/elif chains (10 GameStates, ~45 branches) into a thin coordinator that dispatches to `self.active_scene` via a unified `IScene` protocol. This eliminates Open/Closed Principle violations, removes global WIDTH/HEIGHT state, extracts the menu into its own scene class, and decouples battle coordinator logic.

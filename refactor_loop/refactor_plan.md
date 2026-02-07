@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-64 Audit 1 - PASSED
-**Current Status:** PROJ-64 complete, next project is PROJ-65
+**Last Completed:** PROJ-65 Phase 1
+**Current Status:** PROJ-65 Phase 1 complete, Phase 2 ready
 **Current Project:** PROJ-65
-**Current Phase:** Ready to start
-**Test Status:** 6244 passed (2 pre-existing failures unrelated to project)
+**Current Phase:** Phase 2
+**Test Status:** 6235 passed (1 pre-existing mock failure in bug_15 test)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-64 complete: Narrow Exception Handling
-- Final: 12 intentional broad catches remain (all documented with comments)
-- 87% reduction from ~90 original sites
-- Audit passed cycle 1/5
-- Next: PROJ-65 Game Class Scene Protocol Refactor
+- PROJ-65 Phase 1 complete: Foundation
+- Added IScene protocol to game/core/protocols.py
+- Eliminated all global WIDTH/HEIGHT in app.py (now self.width/self.height)
+- Moved argparse into parse_args() function, fonts into Game.__init__
+- Next: Phase 2 - Standardize Scene Interfaces
 
 ---
 
@@ -76,8 +76,8 @@
 
 ---
 
-- [ ] **PROJ-65: Game Class Scene Protocol Refactor**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-65: Game Class Scene Protocol Refactor**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-65/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-65/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -121,6 +121,7 @@
 | 2026-02-07 | PROJ-64 | Phase 5 | Complete | 1338 passed | pending | 4 sites narrowed across 3 files, 4 files already clean/removed |
 | 2026-02-07 | PROJ-64 | Phase 6 | Complete | 6244 passed | bf7494b5 | 4 intentional comments added, 10 missed sites narrowed, 87% reduction |
 | 2026-02-07 | PROJ-64 | Audit 1 | PASSED | 6244 passed | pending | 12 intentional broad catches, all documented, 87% reduction |
+| 2026-02-07 | PROJ-65 | Phase 1 | Complete | 6235 passed | pending | IScene protocol, global WIDTH/HEIGHT eliminated, module-level effects moved |
 
 ---
 

@@ -5,7 +5,7 @@ This module provides @runtime_checkable Protocol classes and TypeGuard
 functions to replace hasattr/getattr patterns with proper type checking.
 
 Usage:
-    from game.core.protocols import is_fleet, is_planet, IFleet
+    from game.core.protocols import is_fleet, is_planet, is_scene, IFleet, IScene
 
     if is_fleet(obj):
         # obj is now typed as IFleet
@@ -13,6 +13,9 @@ Usage:
     elif is_planet(obj):
         # obj is now typed as IPlanet
         print(obj.name)
+    elif is_scene(obj):
+        # obj is now typed as IScene
+        obj.handle_event(event)
 """
 
 from typing import (
@@ -319,3 +322,37 @@ def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:
 def is_combatant(obj: Any) -> TypeGuard[ICombatant]:
     """Check if obj satisfies the ICombatant Protocol."""
     return isinstance(obj, ICombatant)
+
+
+# =============================================================================
+# Scene Protocol (PROJ-65)
+# =============================================================================
+
+@runtime_checkable
+class IScene(Protocol):
+    """
+    Protocol for game scenes (PROJ-65).
+
+    Scenes are the main UI states (menu, battle, workshop, etc.) that
+    handle events, update logic, and render to the screen.
+    """
+    def handle_event(self, event: Any) -> None:
+        """Handle a pygame event."""
+        ...
+
+    def update(self, dt: float) -> None:
+        """Update scene logic. dt is time since last frame in seconds."""
+        ...
+
+    def draw(self, screen: Any) -> None:
+        """Draw the scene to the screen surface."""
+        ...
+
+    def handle_resize(self, width: int, height: int) -> None:
+        """Handle window resize to new dimensions."""
+        ...
+
+
+def is_scene(obj: Any) -> TypeGuard[IScene]:
+    """Check if obj satisfies the IScene Protocol."""
+    return isinstance(obj, IScene)

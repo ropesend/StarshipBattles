@@ -8,13 +8,6 @@ from game.core.logger import log_debug, log_info, log_error
 from game.core.config import DisplayConfig
 from game.core.paths import Paths
 from game.ui.utils import create_centered_rect
-
-# Parse command line arguments
-parser = argparse.ArgumentParser(description="Starship Battles")
-parser.add_argument('--force-resolution', action='store_true',
-                    help='Force 2560x1600 resolution regardless of monitor size')
-args, _ = parser.parse_known_args()
-
 from game.simulation.components.component import load_components, load_modifiers
 from game.core.resources import load_resources
 from game.core.registry import GameRegistries, set_default_registries, RegistryManager
@@ -40,7 +33,6 @@ from game.exit_dialog import (
 
 # Constants
 DEFAULT_WIDTH, DEFAULT_HEIGHT = DisplayConfig.default_resolution()
-WIDTH, HEIGHT = DEFAULT_WIDTH, DEFAULT_HEIGHT
 FPS = 60
 BG_COLOR = (10, 10, 20)
 
@@ -49,44 +41,51 @@ from game.core.constants import GameState
 from game.ui.screens.battle_input_handler import BattleInputHandler
 
 
-# Initialize fonts
-pygame.font.init()
-font_small = pygame.font.SysFont("arial", 12)
-font_med = pygame.font.SysFont("arial", 20)
-font_large = pygame.font.SysFont("arial", 32)
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Starship Battles")
+    parser.add_argument('--force-resolution', action='store_true',
+                        help='Force 2560x1600 resolution regardless of monitor size')
+    args, _ = parser.parse_known_args()
+    return args
 
 
 class Game:
     """Main game class coordinating scenes and game loop."""
 
-    def __init__(self):
+    def __init__(self, args=None):
         pygame.init()
+
+        # Initialize fonts
+        pygame.font.init()
+        self.font_small = pygame.font.SysFont("arial", 12)
+        self.font_med = pygame.font.SysFont("arial", 20)
+        self.font_large = pygame.font.SysFont("arial", 32)
 
         # Monitor detection and resolution setup
         info = pygame.display.Info()
         monitor_w = info.current_w
         monitor_h = info.current_h
 
-        global WIDTH, HEIGHT
-
-        if args.force_resolution:
-            WIDTH, HEIGHT = DisplayConfig.default_resolution()
+        force_resolution = args.force_resolution if args else False
+        if force_resolution:
+            self.width, self.height = DisplayConfig.default_resolution()
         elif monitor_w >= 3840 and monitor_h >= 2160:
-            WIDTH, HEIGHT = 3840, 2160
+            self.width, self.height = 3840, 2160
         elif monitor_w >= 2560 and monitor_h >= 1600:
-            WIDTH, HEIGHT = 2560, 1600
+            self.width, self.height = 2560, 1600
         else:
-            WIDTH, HEIGHT = int(monitor_w * 0.9), int(monitor_h * 0.9)
+            self.width, self.height = int(monitor_w * 0.9), int(monitor_h * 0.9)
 
         if not pygame.display.get_surface():
-            self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+            self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
         else:
             self.screen = pygame.display.get_surface()
 
-        pygame.display.set_caption(f"Starship Battles ({WIDTH}x{HEIGHT})")
+        pygame.display.set_caption(f"Starship Battles ({self.width}x{self.height})")
 
         # pygame_gui UIManager for main menu buttons
-        self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+        self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
         self._menu_button_callbacks = {}  # Maps UIButton -> callback function
 
         self.clock = pygame.time.Clock()
@@ -126,11 +125,11 @@ class Game:
         # Scene objects
         context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = self.on_builder_return
-        self.builder_scene = DesignWorkshopScreen(WIDTH, HEIGHT, context)
+        self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
         self.battle_setup = BattleSetupScreen()
-        self.battle_scene = BattleScreen(WIDTH, HEIGHT)
-        self.strategy_scene = StrategyScreen(WIDTH, HEIGHT)
-        self.formation_scene = FormationEditorScreen(WIDTH, HEIGHT, self.on_formation_return)
+        self.battle_scene = BattleScreen(self.width, self.height)
+        self.strategy_scene = StrategyScreen(self.width, self.height)
+        self.formation_scene = FormationEditorScreen(self.width, self.height, self.on_formation_return)
         self.test_lab_scene = TestLabScreen(self)
 
     def update_menu_buttons(self):
@@ -156,7 +155,7 @@ class Game:
 
         for i, (text, callback) in enumerate(button_data):
             btn = UIButton(
-                relative_rect=pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 320 + i * 70, 200, 50),
+                relative_rect=pygame.Rect(self.width // 2 - 100, self.height // 2 - 320 + i * 70, 200, 50),
                 text=text,
                 manager=self.menu_ui_manager
             )
@@ -178,7 +177,7 @@ class Game:
         if context is None:
             context = WorkshopContext.standalone(tech_preset_name="default")
         context.on_return = self.on_builder_return
-        self.builder_scene = DesignWorkshopScreen(WIDTH, HEIGHT, context)
+        self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
 
     def on_builder_return(self, custom_ship=None):
         """Return from design workshop to caller or main menu."""
@@ -189,7 +188,7 @@ class Game:
         if self.builder_return_state == GameState.STRATEGY:
             self.state = GameState.STRATEGY
             if hasattr(self.strategy_scene, 'handle_resize'):
-                self.strategy_scene.handle_resize(WIDTH, HEIGHT)
+                self.strategy_scene.handle_resize(self.width, self.height)
         else:
             self.state = GameState.MENU
         self.builder_return_state = None
@@ -209,10 +208,10 @@ class Game:
 
         # Create UI manager if needed
         if not hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+            self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
 
         # Create new game setup window (expanded for race selection UI)
-        window_rect = create_centered_rect(650, 600, WIDTH, HEIGHT)
+        window_rect = create_centered_rect(650, 600, self.width, self.height)
 
         self.new_game_setup_window = NewGameSetupScreen(
             window_rect,
@@ -242,7 +241,7 @@ class Game:
             log_info(f"Initial save created: {save_path}")
 
             # Create strategy scene with new session
-            self.strategy_scene = StrategyScreen(WIDTH, HEIGHT, session=session)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=session)
             self.state = GameState.STRATEGY
             self.showing_new_game_setup = False
         else:
@@ -250,7 +249,7 @@ class Game:
             # Show error dialog
             import pygame_gui.windows
             error_rect = pygame.Rect(0, 0, 400, 200)
-            error_rect.center = (WIDTH // 2, HEIGHT // 2)
+            error_rect.center = (self.width // 2, self.height // 2)
             pygame_gui.windows.UIMessageWindow(
                 rect=error_rect,
                 html_message=f"<b>Save Failed</b><br><br>{message}",
@@ -295,7 +294,7 @@ class Game:
             # Copy quickstart designs for empires
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
-            self.strategy_scene = StrategyScreen(WIDTH, HEIGHT, session=session)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=session)
             self.state = GameState.STRATEGY
         else:
             log_error(f"Quickstart {player_count}P failed: {message}")
@@ -317,10 +316,10 @@ class Game:
 
         # Create UI manager if needed
         if not hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+            self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
 
         # Create save selection window
-        window_rect = create_centered_rect(600, 500, WIDTH, HEIGHT)
+        window_rect = create_centered_rect(600, 500, self.width, self.height)
 
         self.save_selection_window = SaveSelectionWindow(
             window_rect,
@@ -343,7 +342,7 @@ class Game:
 
         if game_session:
             # Create new strategy scene with loaded session
-            self.strategy_scene = StrategyScreen(WIDTH, HEIGHT, session=game_session)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session)
             self.state = GameState.STRATEGY
             self.showing_load_menu = False
             log_info(f"Game loaded successfully: {message}")
@@ -352,7 +351,7 @@ class Game:
             # Show error dialog
             import pygame_gui.windows
             error_rect = pygame.Rect(0, 0, 400, 200)
-            error_rect.center = (WIDTH // 2, HEIGHT // 2)
+            error_rect.center = (self.width // 2, self.height // 2)
             pygame_gui.windows.UIMessageWindow(
                 rect=error_rect,
                 html_message=f"<b>Load Failed</b><br><br>{message}",
@@ -369,7 +368,7 @@ class Game:
     def start_formation_editor(self):
         """Enter formation editor."""
         self.state = GameState.FORMATION
-        self.formation_scene.handle_resize(WIDTH, HEIGHT)
+        self.formation_scene.handle_resize(self.width, self.height)
 
     def on_formation_return(self):
         """Return from formation editor."""
@@ -387,7 +386,7 @@ class Game:
         log_info("Starting Research Tree sandbox")
         self.state = GameState.RESEARCH_TREE
         self.research_tree_scene = ResearchTreeScene(
-            WIDTH, HEIGHT,
+            self.width, self.height,
             on_close_callback=self.on_research_tree_return
         )
 
@@ -401,7 +400,7 @@ class Game:
         log_info("Starting Galaxy Test screen")
         self.state = GameState.GALAXY_TEST
         self.galaxy_test_scene = GalaxyTestScreen(
-            WIDTH, HEIGHT,
+            self.width, self.height,
             on_close_callback=self.on_galaxy_test_return
         )
 
@@ -418,10 +417,10 @@ class Game:
 
         # Create UI manager if needed
         if not hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager = pygame_gui.UIManager((WIDTH, HEIGHT))
+            self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
 
         # Create race setup window (larger for 2560x1600 displays)
-        window_rect = create_centered_rect(1800, 1200, WIDTH, HEIGHT)
+        window_rect = create_centered_rect(1800, 1200, self.width, self.height)
 
         # Import here to avoid circular imports
         from game.ui.screens.race_setup_screen import RaceSetupScreen
@@ -450,8 +449,8 @@ class Game:
     def start_battle(self, team1_ships, team2_ships, headless=False):
         """Start a battle with the given ships."""
         self.state = GameState.BATTLE
-        if self.battle_scene.screen_width != WIDTH or self.battle_scene.screen_height != HEIGHT:
-            self.battle_scene.handle_resize(WIDTH, HEIGHT)
+        if self.battle_scene.screen_width != self.width or self.battle_scene.screen_height != self.height:
+            self.battle_scene.handle_resize(self.width, self.height)
         self.battle_scene.start(team1_ships, team2_ships, headless=headless)
 
     def run(self):
@@ -555,12 +554,11 @@ class Game:
 
     def _handle_resize(self, w, h):
         """Handle window resize."""
-        global WIDTH, HEIGHT
-        WIDTH, HEIGHT = w, h
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+        self.width, self.height = w, h
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
 
         # Update menu UIManager resolution
-        self.menu_ui_manager.set_window_resolution((WIDTH, HEIGHT))
+        self.menu_ui_manager.set_window_resolution((self.width, self.height))
 
         if self.state == GameState.MENU:
             self.update_menu_buttons()
@@ -693,7 +691,7 @@ class Game:
                 self.galaxy_test_scene.draw(self.screen)
 
         if self.show_exit_dialog:
-            draw_exit_dialog(self.screen, font_large, font_med)
+            draw_exit_dialog(self.screen, self.font_large, self.font_med)
 
     def _draw_menu(self):
         """Draw main menu."""
@@ -731,11 +729,12 @@ class Game:
             update_battle_visual(self, self.battle_scene, frame_time, events)
             self.battle_scene.draw(self.screen)
             update_tick_rate(self.battle_scene, frame_time)
-            draw_battle_hud(self.screen, self.battle_scene, font_med, PROFILER.is_active())
+            draw_battle_hud(self.screen, self.battle_scene, self.font_med, PROFILER.is_active())
 
 
 def main():
-    game = Game()
+    args = parse_args()
+    game = Game(args)
 
     from game.core.registry import freeze_registry
     freeze_registry()
