@@ -294,9 +294,19 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         race = self.player_races[player_index]
 
         if race:
-            # Race selected - show race name and theme
-            self.race_preview_labels[player_index].set_text(f"Race: {race.name}")
-            self.theme_labels[player_index].set_text(f"Theme: {race.theme_id}")
+            # Race selected - show faction name (or race name fallback)
+            display_name = race.faction_name if race.faction_name else race.name
+            self.race_preview_labels[player_index].set_text(f"Race: {display_name}")
+            # Show government and society type if available
+            details = []
+            if race.government_type:
+                details.append(race.government_type)
+            if race.society_type:
+                details.append(race.society_type)
+            if details:
+                self.theme_labels[player_index].set_text(" • ".join(details))
+            else:
+                self.theme_labels[player_index].set_text(f"Theme: {race.theme_id}")
             # Hide name input - race name will be used
             self.empire_name_inputs[player_index].hide()
         else:

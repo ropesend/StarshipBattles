@@ -21,6 +21,23 @@ def complete_race_config():
     config.flag_id = "flag_01"
     config.portrait_id = "portrait_01"
     config.theme_id = "theme_01"
+    # Add PROJ-66 fields for budget validation
+    config.water_ideal = 0.5
+    config.water_tolerance = 0.2
+    config.gravity_tolerance = 0.3
+    config.temperature_tolerance = 50.0
+    config.radiation_tolerance = 0.0
+    config.atmosphere_preferences = {}
+    # Default aptitudes (all 5 = 0 cost)
+    config.aptitude_strength = 5
+    config.aptitude_intelligence = 5
+    config.aptitude_constitution = 5
+    config.aptitude_dexterity = 5
+    config.aptitude_tolerance_other_species = 5
+    config.aptitude_cooperation = 5
+    config.aptitude_happiness = 5
+    config.aptitude_population_growth = 5
+    config.aptitude_conflict_tolerance = 5
     return config
 
 
@@ -32,6 +49,23 @@ def empty_race_config():
     config.flag_id = None
     config.portrait_id = None
     config.theme_id = None
+    # Add PROJ-66 fields for budget validation
+    config.water_ideal = 0.5
+    config.water_tolerance = 0.2
+    config.gravity_tolerance = 0.3
+    config.temperature_tolerance = 50.0
+    config.radiation_tolerance = 0.0
+    config.atmosphere_preferences = {}
+    # Default aptitudes
+    config.aptitude_strength = 5
+    config.aptitude_intelligence = 5
+    config.aptitude_constitution = 5
+    config.aptitude_dexterity = 5
+    config.aptitude_tolerance_other_species = 5
+    config.aptitude_cooperation = 5
+    config.aptitude_happiness = 5
+    config.aptitude_population_growth = 5
+    config.aptitude_conflict_tolerance = 5
     return config
 
 
@@ -214,8 +248,8 @@ class TestValidationLogic:
 class TestErrorMessageQuality:
     """Tests for user-friendly error messages."""
 
-    def test_error_message_mentions_visuals_tab_for_name(self, complete_race_config):
-        """Name error mentions Visuals tab."""
+    def test_error_message_mentions_identity_tab_for_name(self, complete_race_config):
+        """Name error mentions Identity tab (PROJ-66 moved name to Identity tab)."""
         from game.ui.screens.race_validator import RaceValidator
 
         validator = RaceValidator()
@@ -223,7 +257,7 @@ class TestErrorMessageQuality:
 
         result = validator.validate(complete_race_config)
 
-        assert "visuals" in result.message.lower()
+        assert "identity" in result.message.lower()
 
     def test_error_message_mentions_visuals_tab_for_flag(self, complete_race_config):
         """Flag error mentions Visuals tab."""

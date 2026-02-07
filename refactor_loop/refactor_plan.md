@@ -8,31 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-66 Phase 6 (Tab Reorganization & Summary Update)
-**Current Status:** PROJ-66 Phase 6 complete, Phase 7 next
+**Last Completed:** PROJ-66 Phase 7 (Validation, Fixtures & Integration)
+**Current Status:** PROJ-66 All Phases Complete, Ready for Audit
 **Current Project:** PROJ-66
-**Current Phase:** Phase 7 (Validation, Fixtures & Integration)
-**Test Status:** 6210 passed (3 pre-existing failures in bug_15/stats_render tests)
+**Current Phase:** Audit Cycle 1
+**Test Status:** 6290 passed (2 pre-existing failures in bug_15 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-66 Phase 6 COMPLETE
-- Updated race_setup_screen.py with:
-  - TAB constants expanded from 5 to 7 (Summary, Identity, Visuals, Ships, Environment, Aptitudes, Descriptions)
-  - TAB_NAMES updated to 7 items
-  - Imported and integrated RaceIdentityPanel and RaceAptitudesPanel
-  - Added _create_identity_panel_content() and _create_aptitudes_panel_content()
-  - Event routing updated for dropdowns, sliders, text entry
-  - _populate_ui_from_config() includes new panels
-  - _validate_for_save() syncs identity panel, aptitudes, checks budget
-- Updated race_environment_panel.py with:
-  - Added handle_dropdown_change() for homeworld dropdown
-- Updated race_summary_panel.py with:
-  - Column 1 now shows: Faction, Race, Government, Physical Type, Society Type
-  - Column 3 now shows: Homeworld, Gravity, Temp, Water, Radiation, Budget, Aptitudes
-  - Added formatters for all new fields
-- Updated test_race_summary_panel.py fixtures with new identity fields
-- Next: Phase 7 - Validation, Fixtures & Integration
+- PROJ-66 Phase 7 COMPLETE
+- Updated race_validator.py with:
+  - Budget validation using RacePointBudget
+  - Water range validation (0.0-1.0)
+  - Aptitude range validation (1-10)
+  - Updated error messages to reference correct tabs (Identity, Environment, Aptitudes)
+- Created tests/unit/ui/screens/test_race_validator.py with 17 new tests
+- Updated test fixtures:
+  - test_emp1.json: Added all PROJ-66 fields (Federation/Democracy/Scientists)
+  - test_emp2.json: Added all PROJ-66 fields (Empire/Autocracy/Conquerors)
+- Updated new_game_setup_screen.py:
+  - _update_race_display() shows faction_name and government/society type
+- Fixed old test_race_validator.py fixtures with PROJ-66 fields
+- All 7 phases complete, ready for audit
+- Next: Audit Cycle 1
 
 ---
 
@@ -160,6 +158,7 @@
 | 2026-02-07 | PROJ-66 | Phase 4 | Complete | 6255 passed | pending | Env panel: homeworld dropdown, water sliders, presets |
 | 2026-02-07 | PROJ-66 | Phase 5 | Complete | 6297 passed | pending | RacePointBudget + RaceAptitudesPanel, 42 new tests |
 | 2026-02-07 | PROJ-66 | Phase 6 | Complete | 6210 passed | pending | Tab reorg 5→7, Identity+Aptitudes integrated, Summary updated |
+| 2026-02-07 | PROJ-66 | Phase 7 | Complete | 6290 passed | pending | Validator, fixtures, NewGameSetupScreen updated |
 
 ---
 

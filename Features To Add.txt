@@ -38,6 +38,8 @@ Features to add:
  
  Different System types
 
+ // Already Added
+
 Space Yards 
 - I want to create a space yard component that can be added to a ship.
 - This should be a different component than the one for the complexes, but the system should treat then the same.
