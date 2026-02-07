@@ -1,5 +1,7 @@
 """
-Build Queue Screen - Full-screen interface for managing planetary construction.
+Build Queue Screen - Full-screen interface for managing build queues.
+
+Supports both Planet and Fleet build contexts (PROJ-67 Phase 4).
 """
 from __future__ import annotations
 
@@ -7,7 +9,7 @@ import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 import pygame_gui.windows
-from typing import TYPE_CHECKING, Optional, Callable
+from typing import TYPE_CHECKING, Optional, Callable, Union
 
 from game.core.config import UIConfig
 from game.core.logger import log_info, log_warning, log_error, log_debug
@@ -19,38 +21,42 @@ from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler
 from game.ui.panels.build_queue_controller import BuildQueueController
 
 if TYPE_CHECKING:
+    from game.strategy.data.build_context import BuildContext
     from game.strategy.data.planet import Planet
+    from game.strategy.data.fleet import Fleet
     from game.strategy.systems.design_library import DesignLibrary
     from game.simulation.services.design_loader import SimulationDesignLoader
 
 
 class BuildQueueScreen:
-    """Full-screen modal interface for managing build queues on planets."""
+    """Full-screen modal interface for managing build queues on planets or fleets."""
 
     def __init__(
         self,
         manager: pygame_gui.UIManager,
-        planet: Planet,
+        build_context: Union['Planet', 'Fleet', 'BuildContext'],
         session,
         on_close_callback: Callable,
         portrait_surface: Optional[pygame.Surface] = None,
-        design_library: DesignLibrary = None,
-        design_loader: SimulationDesignLoader = None
+        design_library: 'DesignLibrary' = None,
+        design_loader: 'SimulationDesignLoader' = None
     ):
         """
         Initialize the build queue screen.
 
         Args:
             manager: pygame_gui UIManager
-            planet: Planet object to manage build queue for
+            build_context: Planet or Fleet whose build queue is being managed
             session: Game session with current_empire and savegame_path
             on_close_callback: Function to call when screen closes
-            portrait_surface: Optional pygame Surface for planet portrait
+            portrait_surface: Optional pygame Surface for context portrait
             design_library: Injected DesignLibrary instance (PROJ-40: DI pattern)
             design_loader: Injected SimulationDesignLoader instance (PROJ-40: DI pattern)
         """
         self.manager = manager
-        self.planet = planet
+        self.build_context = build_context
+        # Maintain backward compatibility with existing code that uses self.planet
+        self.planet = build_context  # Alias for backward compatibility
         self.session = session
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
@@ -65,12 +71,12 @@ class BuildQueueScreen:
         self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
 
         # Validate required attributes
-        if not hasattr(planet, 'owner_id'):
-            raise ValueError(f"BuildQueueScreen: planet '{getattr(planet, 'name', 'unknown')}' missing required 'owner_id' attribute")
-        if not hasattr(planet, 'name'):
-            log_warning("BuildQueueScreen: planet missing 'name' attribute")
+        if not hasattr(build_context, 'owner_id'):
+            raise ValueError(f"BuildQueueScreen: build_context '{getattr(build_context, 'name', 'unknown')}' missing required 'owner_id' attribute")
+        if not hasattr(build_context, 'name'):
+            log_warning("BuildQueueScreen: build_context missing 'name' attribute")
 
-        log_info(f"BuildQueue: Initialized for planet '{planet.name}' (owner_id={planet.owner_id})")
+        log_info(f"BuildQueue: Initialized for {build_context.context_type} '{build_context.name}' (owner_id={build_context.owner_id})")
         if self.design_library:
             log_info(f"BuildQueue: DesignLibrary with designs_folder: {self.design_library.designs_folder}")
 
@@ -89,8 +95,9 @@ class BuildQueueScreen:
         self._create_bottom_bar()
 
         # PROJ-63: Controller for queue business logic (after design_report is created)
+        # PROJ-67: Updated to use build_context (supports Planet or Fleet)
         self.controller = BuildQueueController(
-            planet=self.planet,
+            build_context=self.build_context,
             design_library=self.design_library,
             design_loader=self.design_loader,
             design_report=self.design_report,
@@ -118,22 +125,64 @@ class BuildQueueScreen:
         )
 
     def _create_planet_report_panel(self):
-        """Create top-left panel showing comprehensive planet information."""
+        """Create top-left panel showing context information (planet or fleet)."""
         # Match strategy screen dimensions exactly
-        planet_report_width = 580  # Strategy screen sidebar width (600) - margins (20)
-        planet_report_height = int((self.screen_height - 20) / 3)  # Strategy screen calculation
+        report_width = 580  # Strategy screen sidebar width (600) - margins (20)
+        report_height = int((self.screen_height - 20) / 3)  # Strategy screen calculation
 
         # Ensure minimum height
-        if planet_report_height < 350:
-            planet_report_height = 350
+        if report_height < 350:
+            report_height = 350
 
-        self.planet_report = PlanetReportPanel(
+        # PROJ-67: Show appropriate panel based on context type
+        if self.build_context.context_type == "planet":
+            self.planet_report = PlanetReportPanel(
+                manager=self.manager,
+                rect=pygame.Rect(10, 10, report_width, report_height),
+                planet=self.build_context,
+                container=self.background,
+                portrait_surface=self.portrait_surface,
+                show_complexes=False  # Match strategy UI - no separate complexes column
+            )
+            self.context_report = self.planet_report
+        else:
+            # Fleet context: create simple info panel
+            self._create_fleet_info_panel(report_width, report_height)
+            self.planet_report = None  # No planet report for fleets
+            # self.context_report set by _create_fleet_info_panel
+
+    def _create_fleet_info_panel(self, width: int, height: int):
+        """Create simple info panel for fleet context."""
+        self.context_report = ui.UIPanel(
+            relative_rect=pygame.Rect(10, 10, width, height),
             manager=self.manager,
-            rect=pygame.Rect(10, 10, planet_report_width, planet_report_height),
-            planet=self.planet,
-            container=self.background,
-            portrait_surface=self.portrait_surface,  # Pass portrait at init (cleaner)
-            show_complexes=False  # Match strategy UI - no separate complexes column
+            container=self.background
+        )
+
+        # Fleet name header
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 10, width - 20, 40),
+            html_text=f"<b>{self.build_context.name}</b>",
+            manager=self.manager,
+            container=self.context_report
+        )
+
+        # Fleet info
+        ship_count = len(self.build_context.ships) if hasattr(self.build_context, 'ships') else 0
+        has_yard = self.build_context.has_space_shipyard
+        queue_size = len(self.build_context.construction_queue)
+
+        info_text = f"""
+        <b>Ships:</b> {ship_count}<br>
+        <b>Space Yard:</b> {'Yes' if has_yard else 'No'}<br>
+        <b>Queue Size:</b> {queue_size} items<br>
+        """
+
+        ui.UITextBox(
+            relative_rect=pygame.Rect(10, 60, width - 20, height - 80),
+            html_text=info_text,
+            manager=self.manager,
+            container=self.context_report
         )
 
     def _create_design_report_panel(self):
@@ -396,7 +445,7 @@ class BuildQueueScreen:
         # Display each item in the queue
         y_offset = 0
         icon_size = 50  # Portrait icon size for queue items
-        for idx, item in enumerate(self.planet.construction_queue):
+        for idx, item in enumerate(self.build_context.construction_queue):
             # Dict format: {"design_id": ..., "type": ..., "turns_remaining": N}
             design_id = item.get("design_id", "Unknown")
             turns = item.get("turns_remaining", 0)
@@ -445,7 +494,7 @@ class BuildQueueScreen:
             self.queue_items.append(item_panel)
             y_offset += 65
 
-        if not self.planet.construction_queue:
+        if not self.build_context.construction_queue:
             ui.UILabel(
                 relative_rect=pygame.Rect(10, 10, 300, 30),
                 text="Queue is empty",
@@ -507,8 +556,8 @@ class BuildQueueScreen:
 
             # Remove selected from queue button
             elif event.ui_element == self.btn_remove_from_queue:
-                if self.selected_queue_index is not None and self.selected_queue_index < len(self.planet.construction_queue):
-                    removed_item = self.planet.construction_queue.pop(self.selected_queue_index)
+                if self.selected_queue_index is not None and self.selected_queue_index < len(self.build_context.construction_queue):
+                    removed_item = self.build_context.construction_queue.pop(self.selected_queue_index)
                     design_id = removed_item.get('design_id', 'Unknown')
                     log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
                     self.selected_queue_index = None
@@ -521,17 +570,17 @@ class BuildQueueScreen:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.drag_handler.handle_mouse_down(
                 event, self.items_scrollable, self.queue_items,
-                self.planet, self.controller.selected_category
+                self.build_context, self.controller.selected_category
             )
 
         # Handle Mouse Motion for drag threshold check
         if event.type == pygame.MOUSEMOTION and event.buttons[0]:
-            self.drag_handler.handle_mouse_motion(event, self.planet)
+            self.drag_handler.handle_mouse_motion(event, self.build_context)
 
         # Handle Drag End / Click Selection
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             result = self.drag_handler.handle_mouse_up(
-                event, self.build_queue_panel, self.queue_scrollable, self.planet
+                event, self.build_queue_panel, self.queue_scrollable, self.build_context
             )
             if result is not None:
                 self.selected_queue_index = result

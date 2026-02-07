@@ -3,15 +3,19 @@ Build Queue Controller - Business logic for queue operations.
 
 Extracted from build_queue_screen.py (PROJ-63 Phase 3).
 Manages category filtering, queue additions, and design report updates.
+
+Updated in PROJ-67 Phase 4 to support BuildContext protocol (Planet or Fleet).
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from game.core.logger import log_info, log_warning, log_error, log_debug
 
 if TYPE_CHECKING:
+    from game.strategy.data.build_context import BuildContext
     from game.strategy.data.planet import Planet
+    from game.strategy.data.fleet import Fleet
     from game.strategy.systems.design_library import DesignLibrary
     from game.simulation.services.design_loader import SimulationDesignLoader
     from game.ui.panels.design_report_panel import DesignReportPanel
@@ -23,32 +27,34 @@ class BuildQueueController:
 
     Responsibilities:
     - Category filtering for design lists
-    - Adding items to planet construction queue
+    - Adding items to build context's construction queue
     - Updating design report panel with selected design info
 
     This class is stateless except for selected_category tracking.
-    All queue modifications happen on the injected planet object.
+    All queue modifications happen on the injected build context object.
+
+    Updated in PROJ-67 to support BuildContext protocol (Planet or Fleet).
     """
 
     def __init__(
         self,
-        planet: Planet,
-        design_library: DesignLibrary,
-        design_loader: SimulationDesignLoader,
-        design_report: DesignReportPanel,
+        build_context: Union['Planet', 'Fleet', 'BuildContext'],
+        design_library: 'DesignLibrary',
+        design_loader: 'SimulationDesignLoader',
+        design_report: 'DesignReportPanel',
         on_queue_changed: Callable[[], None]
     ):
         """
         Initialize the controller.
 
         Args:
-            planet: Planet object whose construction_queue is managed
+            build_context: Planet or Fleet whose construction_queue is managed
             design_library: For scanning/loading designs
             design_loader: SimulationDesignLoader for creating ship objects
             design_report: DesignReportPanel for updating display
             on_queue_changed: Callback to trigger queue display refresh
         """
-        self.planet = planet
+        self.build_context = build_context
         self.design_library = design_library
         self.design_loader = design_loader
         self.design_report = design_report
@@ -102,7 +108,7 @@ class BuildQueueController:
 
     def add_to_queue(self, design_id: str, turns: int = 1, category: str = None, index: int = None):
         """
-        Add a design to the planet's construction queue.
+        Add a design to the build context's construction queue.
 
         Args:
             design_id: ID of the design to build
@@ -112,22 +118,26 @@ class BuildQueueController:
         """
         cat = category if category is not None else self.selected_category
 
-        # DIAGNOSTIC LOGGING for BUG-24 investigation
+        # DIAGNOSTIC LOGGING
         log_info(f"add_to_queue called: design_id={design_id}, category={cat}")
-        log_info(f"  planet.has_space_shipyard = {self.planet.has_space_shipyard}")
-        log_info(f"  planet.facilities count = {len(self.planet.facilities)}")
-        for i, f in enumerate(self.planet.facilities):
-            log_info(f"    [{i}] {f.name} (operational={f.is_operational})")
-            log_info(f"        design_data layers: {list(f.design_data.get('layers', {}).keys())}")
-            # Show component IDs in each layer
-            for layer_name, layer_data in f.design_data.get('layers', {}).items():
-                if isinstance(layer_data, list):
-                    comp_ids = [c.get('id', 'unknown') for c in layer_data if isinstance(c, dict)]
-                    log_info(f"        {layer_name} components: {comp_ids}")
+        log_info(f"  build_context.type = {self.build_context.context_type}")
+        log_info(f"  build_context.has_space_shipyard = {self.build_context.has_space_shipyard}")
 
-        # Validate shipyard requirement for ships
-        if cat == "ship" and not self.planet.has_space_shipyard:
-            log_warning("Cannot build ships without a space shipyard")
+        # Log facility details for planets only
+        if self.build_context.context_type == "planet":
+            log_info(f"  planet.facilities count = {len(self.build_context.facilities)}")
+            for i, f in enumerate(self.build_context.facilities):
+                log_info(f"    [{i}] {f.name} (operational={f.is_operational})")
+                log_info(f"        design_data layers: {list(f.design_data.get('layers', {}).keys())}")
+                # Show component IDs in each layer
+                for layer_name, layer_data in f.design_data.get('layers', {}).items():
+                    if isinstance(layer_data, list):
+                        comp_ids = [c.get('id', 'unknown') for c in layer_data if isinstance(c, dict)]
+                        log_info(f"        {layer_name} components: {comp_ids}")
+
+        # Validate build capability using protocol method
+        if not self.build_context.can_build_type(cat):
+            log_warning(f"Cannot build {cat}: build context cannot build this type")
             return
 
         # Prepare queue item
@@ -139,10 +149,10 @@ class BuildQueueController:
 
         # Add to queue
         if index is not None:
-            self.planet.construction_queue.insert(index, queue_item)
+            self.build_context.construction_queue.insert(index, queue_item)
             log_info(f"Inserted {design_id} into build queue at position {index}")
         else:
-            self.planet.construction_queue.append(queue_item)
+            self.build_context.construction_queue.append(queue_item)
             log_info(f"Added {design_id} to build queue ({turns} turns)")
 
         # Refresh display

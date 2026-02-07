@@ -128,6 +128,33 @@ class Planet:
                             return True
         return False
 
+    @property
+    def context_type(self) -> str:
+        """Return 'planet' for BuildContext protocol compliance."""
+        return "planet"
+
+    def can_build_type(self, vehicle_type: str) -> bool:
+        """
+        Check if this planet can build the given vehicle type.
+
+        Args:
+            vehicle_type: Type of vehicle ("ship", "fighter", "satellite", "complex")
+
+        Returns:
+            True if this planet can build the given type.
+        """
+        vehicle_lower = vehicle_type.lower()
+
+        # Complexes can always be built on planets
+        if vehicle_lower == "complex":
+            return True
+
+        # Ships, fighters, and satellites require a space shipyard
+        if vehicle_lower in ("ship", "fighter", "satellite"):
+            return self.has_space_shipyard
+
+        return False
+
     def add_production(self, design_id: str, turns: int, vehicle_type: str = "ship"):
         """Add item to construction queue.
 

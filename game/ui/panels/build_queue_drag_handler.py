@@ -2,18 +2,21 @@
 Build Queue Drag Handler - Manages drag-and-drop state machine for build queue.
 
 Extracted from build_queue_screen.py as part of PROJ-63.
+Updated in PROJ-67 Phase 4 to support BuildContext protocol (Planet or Fleet).
 """
 from __future__ import annotations
 
 import pygame
-from typing import TYPE_CHECKING, Optional, Callable, List, Any
+from typing import TYPE_CHECKING, Optional, Callable, List, Any, Union
 
 from game.core.logger import log_info, log_debug
 
 if TYPE_CHECKING:
     from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
     from game.strategy.systems.design_library import DesignLibrary
+    from game.strategy.data.build_context import BuildContext
     from game.strategy.data.planet import Planet
+    from game.strategy.data.fleet import Fleet
     import pygame_gui.elements as ui
 
 
@@ -72,7 +75,7 @@ class BuildQueueDragHandler:
         event: pygame.event.Event,
         items_scrollable: Any,
         queue_items: List[Any],
-        planet: Planet,
+        build_context: Union['Planet', 'Fleet', 'BuildContext'],
         selected_category: str
     ) -> bool:
         """
@@ -82,7 +85,7 @@ class BuildQueueDragHandler:
             event: pygame MOUSEBUTTONDOWN event
             items_scrollable: Scrollable container with design items
             queue_items: List of queue item UI panels
-            planet: Planet with construction queue
+            build_context: Planet or Fleet with construction queue
             selected_category: Currently selected design category
 
         Returns:
@@ -133,14 +136,14 @@ class BuildQueueDragHandler:
     def handle_mouse_motion(
         self,
         event: pygame.event.Event,
-        planet: Planet
+        build_context: Union['Planet', 'Fleet', 'BuildContext']
     ) -> bool:
         """
         Handle mouse motion event for drag threshold detection.
 
         Args:
             event: pygame MOUSEMOTION event
-            planet: Planet with construction queue
+            build_context: Planet or Fleet with construction queue
 
         Returns:
             True if drag was started, False otherwise
@@ -155,8 +158,8 @@ class BuildQueueDragHandler:
         if dx > self.drag_threshold or dy > self.drag_threshold:
             # Start actual drag - pick up from queue
             idx = self._pending_queue_index
-            if idx < len(planet.construction_queue):
-                item = planet.construction_queue.pop(idx)
+            if idx < len(build_context.construction_queue):
+                item = build_context.construction_queue.pop(idx)
                 design_id = item.get('design_id', 'Unknown')
                 item_type = item.get('type', 'ship')
 
@@ -186,7 +189,7 @@ class BuildQueueDragHandler:
         event: pygame.event.Event,
         build_queue_panel: Any,
         queue_scrollable: Any,
-        planet: Planet
+        build_context: Union['Planet', 'Fleet', 'BuildContext']
     ) -> Optional[int]:
         """
         Handle mouse button up event for drop or click-select.
@@ -195,7 +198,7 @@ class BuildQueueDragHandler:
             event: pygame MOUSEBUTTONUP event
             build_queue_panel: Panel containing the build queue
             queue_scrollable: Scrollable container for queue items
-            planet: Planet with construction queue
+            build_context: Planet or Fleet with construction queue
 
         Returns:
             Selected queue index if click-select occurred, None otherwise
@@ -227,7 +230,7 @@ class BuildQueueDragHandler:
 
                 # Estimate index: each item is ~65 pixels high
                 estimated_idx = rel_y // 65
-                insert_idx = max(0, min(int(estimated_idx), len(planet.construction_queue)))
+                insert_idx = max(0, min(int(estimated_idx), len(build_context.construction_queue)))
 
                 turns = self.dragged_item.get('turns', 1)
                 self.on_add_to_queue(

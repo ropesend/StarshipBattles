@@ -65,6 +65,26 @@ class Fleet:
         # Production (for fleets with space yards)
         self.construction_queue: List[Dict[str, Any]] = []
 
+    @property
+    def name(self) -> str:
+        """
+        Display name for the fleet.
+
+        Returns a descriptive name based on fleet composition.
+        """
+        ship_count = len(self.ships)
+        if ship_count == 0:
+            return f"Empty Fleet {self.id}"
+        elif ship_count == 1:
+            return f"Fleet {self.id}: {self.ships[0].name}"
+        else:
+            return f"Fleet {self.id} ({ship_count} ships)"
+
+    @property
+    def context_type(self) -> str:
+        """Return 'fleet' for BuildContext protocol compliance."""
+        return "fleet"
+
     def add_ship(self, ship: ShipInstance):
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)

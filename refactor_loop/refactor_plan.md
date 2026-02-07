@@ -8,24 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-67 Phase 3 - Fleet Production Engine
-**Current Status:** PROJ-67 Phase 3 Complete, Phase 4 Ready
+**Last Completed:** PROJ-67 Phase 4 - BuildContext Abstraction & UI Generalization
+**Current Status:** PROJ-67 Phase 4 Complete, Phase 5 Ready
 **Current Project:** PROJ-67
-**Current Phase:** Phase 4
-**Test Status:** 6361 passed (2 pre-existing failures in bug_15 tests)
+**Current Phase:** Phase 5
+**Test Status:** 516 passed with testmon (3 pre-existing failures in bug_15/logistics tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-67 Phase 3 Complete:
-  - Added process_fleet_production() to ProductionEngine
-  - Added _spawn_fleet_ship() - ships join building fleet directly
-  - Added _spawn_fleet_complex() - complexes spawn on planet at fleet hex
-  - Integrated fleet production into TurnEngine (Phase 4 of turn processing)
-  - Updated IProductionEngine interface with process_fleet_production()
-  - 12 new tests across 2 test files
-  - Updated MockProductionEngine and mock_fleet fixtures
+- PROJ-67 Phase 4 Complete:
+  - Created BuildContext Protocol (`game/strategy/data/build_context.py`)
+  - Added `context_type` and `can_build_type()` to Planet
+  - Added `name` and `context_type` properties to Fleet
+  - Generalized BuildQueueController to use `build_context` parameter
+  - Generalized BuildQueueScreen to accept Planet or Fleet
+  - Updated BuildQueueDragHandler to use `build_context` parameter
+  - Added fleet info panel for fleet build context
+  - 18 new tests in test_build_context.py, all existing tests pass
 - Commit: pending
-- Next: Phase 4 - BuildContext Abstraction & UI Generalization
+- Next: Phase 5 - Strategy Screen Integration
 
 ---
 
@@ -165,7 +166,8 @@
 | 2026-02-07 | PROJ-66 | Audit 1 | PASSED | 6290 passed | pending | No issues found, all 7 phases verified |
 | 2026-02-07 | PROJ-67 | Phase 1 | Complete | 6315 passed | 77c0e03d | fleet_space_yard component, construction_queue, has_space_shipyard, can_build_type() |
 | 2026-02-07 | PROJ-67 | Phase 2 | Complete | 6348 passed | 04616e8f | OrderType.BUILD, is_building, movement blocking, BUILD order processing, FleetInfo DTO |
-| 2026-02-07 | PROJ-67 | Phase 3 | Complete | 6361 passed | pending | Fleet production engine, ship/complex spawning, TurnEngine integration |
+| 2026-02-07 | PROJ-67 | Phase 3 | Complete | 6361 passed | 0ad28b61 | Fleet production engine, ship/complex spawning, TurnEngine integration |
+| 2026-02-07 | PROJ-67 | Phase 4 | Complete | 516 testmon | pending | BuildContext protocol, Planet/Fleet compliance, UI generalization |
 
 ---
 
