@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-64 Phase 5
-**Current Status:** Phase 5 complete, ready for Phase 6
+**Last Completed:** PROJ-64 Phase 6 (Final)
+**Current Status:** All phases complete, ready for Audit
 **Current Project:** PROJ-64
-**Current Phase:** Phase 6
-**Test Status:** 1338 passed (unit/ui + integration)
+**Current Phase:** Audit Cycle 1
+**Test Status:** 6244 passed (2 pre-existing failures unrelated to project)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-64 Phase 5 complete: UI Screens Part B exception narrowing
-- 4 sites narrowed across 3 existing files
-- workshop_data_loader.py: 1 site (data loading)
-- strategy_screen.py: 2 sites (report refresh, planet image)
-- strategy_input_handler.py: 1 site (screenshot toast)
-- 4 files already clean or removed (workshop_screen.py, workshop_context.py, test_lab_screen.py, test_lab.py)
-- Added json import to workshop_data_loader.py
-- Next: Phase 6 (Document Intentional Broad Catches - add comments to ~18 sites)
+- PROJ-64 Phase 6 complete: Document Intentional Broad Catches
+- Added "Intentional broad catch" comments to 4 final sites (app.py, logger.py, formula_system.py, modifier_effects.py)
+- Discovered and narrowed 10 missed sites from previous phases:
+  - build_queue_portraits.py:96 → pygame.error
+  - workshop_ship_io.py:163 → (OSError, ValueError, KeyError)
+  - build_queue_controller.py:183 → (OSError, ValueError, KeyError)
+  - workshop_data_reloader.py:152 → (OSError, ValueError, KeyError)
+  - test_lab/screen.py: 6 sites → narrowed to specific exceptions
+- Final count: 12 intentional broad catches (all documented), 87% reduction from ~90 original
+- Next: Audit cycle 1
 
 ---
 
@@ -122,6 +124,7 @@
 | 2026-02-07 | PROJ-64 | Phase 3 | Complete | 722 passed | pending | 7 sites in panels/renderer - all narrowed |
 | 2026-02-07 | PROJ-64 | Phase 4 | Complete | 1021 passed | pending | 16 sites in UI screens Part A - 14 narrowed, 2 intentional |
 | 2026-02-07 | PROJ-64 | Phase 5 | Complete | 1338 passed | pending | 4 sites narrowed across 3 files, 4 files already clean/removed |
+| 2026-02-07 | PROJ-64 | Phase 6 | Complete | 6244 passed | pending | 4 intentional comments added, 10 missed sites narrowed, 87% reduction |
 
 ---
 

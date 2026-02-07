@@ -175,7 +175,7 @@ class ModifierEffectEvaluator:
                 code="F003",
                 context=error_context
             ) from e
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: catch-and-convert to FormulaException for any eval() error
             raise FormulaException(
                 f"Cannot evaluate modifier formula '{original_formula}': {e}",
                 code="F004",

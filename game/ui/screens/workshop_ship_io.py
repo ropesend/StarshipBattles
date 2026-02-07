@@ -160,7 +160,7 @@ class WorkshopShipIO:
                         log_warning(f"  Folder exists with {len(files)} files: {files}")
                     else:
                         log_error(f"  Folder does not exist!")
-            except Exception as e:
+            except (OSError, ValueError, KeyError) as e:
                 log_error(f"Workshop Load: Exception during scan_designs(): {e}")
                 import traceback
                 log_error(traceback.format_exc())
@@ -256,6 +256,6 @@ class WorkshopShipIO:
                 parent=_tk_root
             )
             return name if name else ""
-        except Exception as e:
+        except Exception as e:  # Intentional broad catch: Tkinter dialog is platform-dependent
             log_error(f"Failed to prompt for design name: {e}")
             return default_name

@@ -93,7 +93,7 @@ class BuildQueuePortraitLoader:
                 try:
                     loaded_img = pygame.image.load(path)
                     return pygame.transform.smoothscale(loaded_img, (size, size))
-                except Exception as e:
+                except pygame.error as e:
                     log_warning(f"Failed to load portrait from '{path}': {e}")
                     continue
 

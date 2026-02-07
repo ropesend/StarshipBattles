@@ -136,8 +136,7 @@ def evaluate_math_formula(formula: str, context: Dict[str, Any]) -> Union[int, f
             code=FORMULA_ERROR_RUNTIME,
             context=error_context
         ) from e
-    except Exception as e:
-        # Catch-all for any other errors (likely security violations or unexpected issues)
+    except Exception as e:  # Intentional broad catch: catch-and-convert to FormulaException for any eval() error
         raise FormulaException(
             f"Formula evaluation failed for '{formula}': {e}",
             code=FORMULA_ERROR_SECURITY,

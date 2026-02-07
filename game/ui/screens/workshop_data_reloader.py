@@ -17,7 +17,7 @@ try:
     import tkinter as tk
     tk_root = tk.Tk()
     tk_root.withdraw()
-except Exception:
+except Exception:  # Intentional broad catch: Tkinter init is platform-dependent
     tk_root = None
 
 
@@ -149,7 +149,7 @@ class WorkshopDataReloader:
             # Show success
             self.show_error(f"Reloaded data from {os.path.basename(directory)}")
 
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             import traceback
             log_error(f"Failed to reload data: {e}\n{traceback.format_exc()}")
             self.show_error(f"Error reloading data: {e}")

@@ -742,7 +742,7 @@ def main():
 
     try:
         game.run()
-    except Exception as e:
+    except Exception as e:  # Intentional broad catch: top-level crash handler, logs and re-raises
         import traceback
         error_msg = traceback.format_exc()
         log_error("CRITICAL CRASH CAUGHT:")

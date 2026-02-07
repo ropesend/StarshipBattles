@@ -104,6 +104,5 @@ def log_event(event_type: str, **kwargs: Any) -> None:
     if _event_handler:
         try:
             _event_handler(event_type, **kwargs)
-        except Exception as e:
-            # Log handler errors but don't propagate - handlers shouldn't crash callers
+        except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers
             _logger.error(f"Event handler error for {event_type}: {e}")

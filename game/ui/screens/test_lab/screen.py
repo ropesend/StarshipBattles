@@ -373,7 +373,7 @@ class TestLabScreen:
                 if fail_count > 0 or warn_count > 0:
                     logger.info(f"  {test_id}: {pass_count} pass, {fail_count} fail, {warn_count} warn")
 
-            except Exception as e:
+            except (OSError, ValueError, KeyError, json.JSONDecodeError) as e:
                 logger.info(f"  {test_id}: Validation error - {e}")
 
         logger.info("=== Static Validation Complete ===\n")
@@ -595,7 +595,7 @@ class TestLabScreen:
 
             logger.info("Registry refreshed. Metadata updated successfully!")
 
-        except Exception as e:
+        except (OSError, ValueError, KeyError) as e:
             logger.error(f"Error updating metadata: {e}")
 
     def _create_ship_panels(self, test_id):
@@ -946,7 +946,7 @@ class TestLabScreen:
             pygame.scrap.init()
             pygame.scrap.put(pygame.SCRAP_TEXT, result_text.encode('utf-8'))
             self.output_log.append("Test results copied to clipboard")
-        except Exception as e:
+        except pygame.error as e:
             self.output_log.append(f"Failed to copy to clipboard: {e}")
 
     def _on_run(self):
@@ -1023,7 +1023,7 @@ class TestLabScreen:
 
             self.output_log.append(f"Started test {self.selected_test_id}")
 
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError) as e:
             logger.error(f"Error running visual test: {e}", exc_info=True)
             self.output_log.append(f"ERROR: {e}")
 
@@ -1154,7 +1154,7 @@ class TestLabScreen:
             # Clear running flag
             self.headless_running = False
 
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError) as e:
             self.headless_running = False
             self.output_log.append(f"ERROR: {e}")
 
@@ -1276,7 +1276,7 @@ class TestLabScreen:
             status = "PASSED" if scenario.passed else "FAILED"
             self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: {status}")
 
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError) as e:
             self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: ERROR - {e}")
 
         # Move to next test

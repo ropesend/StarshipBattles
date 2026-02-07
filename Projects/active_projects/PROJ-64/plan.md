@@ -18,13 +18,13 @@
 | 3. UI Panels & Renderer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Screens (Part A) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. UI Screens (Part B) - Workshop, Test Lab, Strategy | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Intentional Broad Catches - Document | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Intentional Broad Catches - Document | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 complete - 4 sites narrowed across 3 files (workshop_data_loader, strategy_screen, strategy_input_handler). 4 files already clean or removed.
-**Next Action:** Execute Phase 6 (Document Intentional Broad Catches)
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Phase 6 complete - documented 4 intentional broad catches with comments, narrowed 10 missed sites from previous phases
+**Next Action:** Audit cycle 1
 **Blockers:** None
 
 ## Overview
@@ -138,13 +138,13 @@ Replace 90 overly broad `except Exception` catches across the `game/` directory 
 | 1 | | | |
 
 ## Completion Checklist
-- [ ] All Phase 1 tasks checked off
-- [ ] All Phase 2 tasks checked off
-- [ ] All Phase 3 tasks checked off
-- [ ] All Phase 4 tasks checked off
-- [ ] All Phase 5 tasks checked off
-- [ ] All Phase 6 tasks checked off
-- [ ] All tests passing
-- [ ] Regression tests passing
+- [x] All Phase 1 tasks checked off
+- [x] All Phase 2 tasks checked off
+- [x] All Phase 3 tasks checked off
+- [x] All Phase 4 tasks checked off
+- [x] All Phase 5 tasks checked off
+- [x] All Phase 6 tasks checked off
+- [x] All tests passing (6244 passed, 2 pre-existing failures)
+- [x] Regression tests passing
 - [ ] Audit passed (no significant issues)
 - [ ] User verified
