@@ -1,7 +1,7 @@
 import pygame
 import pygame_gui.windows
 from game.core.constants import PLANET_RESOURCES
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIScrollingContainer, UITextEntryLine, UIHorizontalSlider, UIDropDownMenu, UIVerticalScrollBar
+from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
 from game.core.config import UIConfig
@@ -30,9 +30,8 @@ class PlanetListWindow(UIWindow):
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
-        self.detail_panel_width = 600  # Width for right-side planet report panel (PROJ-54)
-        self.panel_margin = 20         # Margin between list and panel (PROJ-54)
-        
+        self.detail_panel_width = 600
+        self.panel_margin = 20
         # --- State ---
         self.all_planets = gather_planets(galaxy, empire)
         self.filtered_planets = []
@@ -41,7 +40,6 @@ class PlanetListWindow(UIWindow):
         self.preset_manager = PresetManager()
         
         # Filter States
-        self.filter_name = ""
         self.filter_types = {
             'Continental': True, 'Arid': True, 'Pelagic': True, 
             'Magma': True, 'Cryoplanet': True, 'Barren': True, 
@@ -61,15 +59,12 @@ class PlanetListWindow(UIWindow):
         # UI References (for reading values)
         self.ui_filters = {}
 
-        # Planet detail panel (PROJ-54)
-        self.planet_detail_panel = None  # Created when planet selected
-        self.selected_planet = None      # Track current selection
-        self.btn_build_queue = None      # Build queue button (for owned planets)
-        self._debug_next_click = False   # Debug flag for click detection
+        # Planet detail panel
+        self.planet_detail_panel = None
+        self.selected_planet = None
+        self.btn_build_queue = None
 
-        # Default Columns
-        # ID, Width, Title, Attribute/Getter, Visible
-        # Note: owner column uses a lambda to capture self.galaxy/empire references
+        # Default Columns (owner column uses lambda to capture self.galaxy/empire references)
         self.columns = [
             {'id': 'icon', 'width': 50, 'title': '', 'type': 'image', 'visible': True},
             {'id': 'name', 'width': 150, 'title': 'Name', 'attr': 'name', 'visible': True},
@@ -82,8 +77,6 @@ class PlanetListWindow(UIWindow):
             {'id': 'water', 'width': 90, 'title': 'Water %', 'attr': 'surface_water', 'fmt': "{:.0%}", 'visible': False},
             {'id': 'pressure', 'width': 100, 'title': 'Press (atm)', 'attr': 'total_pressure_atm', 'fmt': "{:.2f}", 'visible': False}
         ]
-
-        
         # Add Resource Columns
         for res in PLANET_RESOURCES:
             self.columns.append({
@@ -93,10 +86,8 @@ class PlanetListWindow(UIWindow):
                 'func': lambda p, r=res: get_resource_str(p, r),
                 'visible': False # hidden by default
             })
-        
-        # --- UI Containers ---
-        
-        # 1. Sidebar (Filters/Config)
+
+        # UI Containers - Sidebar
         self.sidebar_panel = UIPanel(
             relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
             manager=manager,
@@ -127,52 +118,30 @@ class PlanetListWindow(UIWindow):
         self.dd_presets = sidebar_widgets['dd_presets']
         self.ui_filters = sidebar_widgets['ui_filters']
 
-        # 2. Main Content Area (Header + Scrollable List)
-        # Reserve space for detail panel on right (PROJ-54)
+        # Main Content Area
         main_w = rect.width - self.sidebar_width - self.detail_panel_width - self.panel_margin - 10
         self.main_panel = UIPanel(
             relative_rect=pygame.Rect(self.sidebar_width, 0, main_w, rect.height - 50),
-            manager=manager,
-            container=self,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-        
-        # Header Row
+            manager=manager, container=self,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
         self.header_container = UIPanel(
             relative_rect=pygame.Rect(0, 0, main_w, self.header_height),
-            manager=manager,
-            container=self.main_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top'}
-        )
+            manager=manager, container=self.main_panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top'})
+        self.column_mgr = ColumnManager(self.columns, manager, self.header_container, self.header_height)
 
-        # Column Manager - handles column ordering, sorting, and header UI
-        self.column_mgr = ColumnManager(
-            self.columns, manager, self.header_container, self.header_height
-        )
-
-        # Virtual List Viewport
-        # We use a panel that clips its contents.
+        # Virtual List Panel
         self.list_view_rect = pygame.Rect(0, self.header_height, main_w - 20, rect.height - 50 - self.header_height)
         self.list_panel = UIPanel(
-            relative_rect=self.list_view_rect,
-            manager=manager,
-            container=self.main_panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-        
-        # Scrollbar
+            relative_rect=self.list_view_rect, manager=manager, container=self.main_panel,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
         self.scroll_bar = UIVerticalScrollBar(
             relative_rect=pygame.Rect(-20, self.header_height, 20, self.list_view_rect.height),
-            visible_percentage=1.0,
-            manager=manager,
-            container=self.main_panel,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
-        )
-        
-        # Virtual List Renderer - handles row pool and scrolling
+            visible_percentage=1.0, manager=manager, container=self.main_panel,
+            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'})
         self.renderer = VirtualListRenderer(self.list_panel, self.row_height, manager)
 
-        # --- Initial Population ---
+        # Initial Population
         self.column_mgr.rebuild_headers()
         self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
         self.refresh_list()
@@ -223,42 +192,17 @@ class PlanetListWindow(UIWindow):
     def process_event(self, event):
         handled = super().process_event(event)
 
-        # Handle Build Queue button click (PROJ-54)
+        # Handle Build Queue button click
         if event.type == UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_build_queue:
                 if self.selected_planet:
-                    # Open build queue for selected planet
-                    # Note: Exact method may vary - need to determine how to trigger build queue
-                    # For now, we'll emit a log message as a placeholder
                     log_info(f"Build Queue button clicked for planet: {self.selected_planet.name}")
-                    # TODO: Implement actual build queue opening mechanism
-                    # Possible approaches:
-                    # 1. self.manager.close() then trigger build queue via callback
-                    # 2. Emit custom event that parent screen handles
-                    # 3. Call method on parent screen if reference exists
                 return True
 
-        # F9 key enables debug mode for next click
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
-            self._debug_next_click = True
-            log_info("=== PLANET LIST DEBUG MODE ENABLED - Click on a planet row now ===")
-            return True
-
-        # Debug: Log ALL events when debug mode is enabled
-        if self._debug_next_click:
-            log_info(f"DEBUG EVENT: type={event.type}, event={event}")
-
-        # Handle planet row clicks (PROJ-54)
-        # Note: Using MOUSEBUTTONUP because MOUSEBUTTONDOWN is consumed by parent UIWindow
+        # Handle planet row clicks
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:  # Left click
             mouse_pos = event.pos
             list_abs_rect = self.list_panel.get_abs_rect()
-
-            # Debug logging if enabled
-            if self._debug_next_click:
-                log_info(f"DEBUG: Mouse click at {mouse_pos}")
-                log_info(f"DEBUG: list_panel abs_rect: {list_abs_rect}")
-                self._debug_next_click = False  # Reset debug mode
 
             # Use renderer to calculate clicked index
             clicked_index = self.renderer.get_clicked_planet_index(
@@ -327,109 +271,26 @@ class PlanetListWindow(UIWindow):
 
     def update(self, time_delta):
         super().update(time_delta)
-        
+
+        # Apply button
         if self.btn_apply.check_pressed():
             self.refresh_list()
-            
-        if self.btn_all_types.check_pressed():
-            for t, btn in self.ui_filters['types'].items():
-                self.filter_types[t] = True
-                btn.select()
-                btn.set_text(f"[{t}]")
-            self.refresh_list()
 
-        if self.btn_none_types.check_pressed():
-            for t, btn in self.ui_filters['types'].items():
-                self.filter_types[t] = False
-                btn.unselect()
-                btn.set_text(f"{t}")
-            self.refresh_list()
-            
-        # Check Scrollbar
+        # Handle scrollbar changes
         if self.scroll_bar.check_has_moved_recently():
             self.renderer.update_visible_rows(self.filtered_planets, self.scroll_bar)
 
-        # Future enhancement: Handle resize to update viewport/row count.
-        # self.list_view_rect might need updating if window resizes.
-            
-        # Sync Sliders -> Text (One way, unless focused? No, text value follows slider if slider moves)
-        for key in ['gravity', 'temp', 'mass']:
-            f = self.ui_filters[key]
-            # Min
-            s_val = f['min'].get_current_value()
-            if not f['min_txt'].is_focused:
-                 # Check tolerance to avoid fighting?
-                 # Just formatting
-                 current_txt = f['min_txt'].get_text()
-                 new_txt = f"{s_val:.1f}"
-                 if current_txt != new_txt:
-                     f['min_txt'].set_text(new_txt)
-            
-            # Max
-            s_val = f['max'].get_current_value()
-            if not f['max_txt'].is_focused:
-                 current_txt = f['max_txt'].get_text()
-                 new_txt = f"{s_val:.1f}"
-                 if current_txt != new_txt:
-                     f['max_txt'].set_text(new_txt)
+        # Sync slider values to text boxes
+        self._handle_slider_sync()
 
-        # Handle Type Toggles
-        for t, btn in self.ui_filters.get('types', {}).items():
-            if btn.check_pressed():
-                state = not self.filter_types[t]
-                self.filter_types[t] = state
-                if state:
-                    btn.select()
-                    btn.set_text(f"[{t}]")
-                else:
-                    btn.unselect()
-                    btn.set_text(f"{t}")
-                self.refresh_list()
+        # Handle filter toggles
+        self._handle_filter_toggles(self.filter_types, self.btn_all_types, self.btn_none_types, 'types')
+        self._handle_filter_toggles(self.filter_owner, self.btn_all_owners, self.btn_none_owners, 'owners')
 
-        # Handle Owner All/None buttons (BUG-27)
-        if hasattr(self, 'btn_all_owners') and self.btn_all_owners.check_pressed():
-            for o, btn in self.ui_filters.get('owners', {}).items():
-                self.filter_owner[o] = True
-                btn.select()
-                btn.set_text(f"[{o}]")
-            self.refresh_list()
+        # Handle column visibility toggles
+        self._handle_column_toggles()
 
-        if hasattr(self, 'btn_none_owners') and self.btn_none_owners.check_pressed():
-            for o, btn in self.ui_filters.get('owners', {}).items():
-                self.filter_owner[o] = False
-                btn.unselect()
-                btn.set_text(f"{o}")
-            self.refresh_list()
-
-        # Handle Owner Toggles (BUG-27)
-        for o, btn in self.ui_filters.get('owners', {}).items():
-            if btn.check_pressed():
-                state = not self.filter_owner[o]
-                self.filter_owner[o] = state
-                if state:
-                    btn.select()
-                    btn.set_text(f"[{o}]")
-                else:
-                    btn.unselect()
-                    btn.set_text(f"{o}")
-                self.refresh_list()
-
-        # Handle Column Toggles
-        for col_id, btn in self.ui_filters.get('columns', {}).items():
-            if btn.check_pressed():
-                col = btn.col_ref
-                self.column_mgr.toggle_visibility(col['id'])
-
-                # Update text
-                t = f"[x] {col['title'] or col['id']}" if col['visible'] else f"[ ] {col['title'] or col['id']}"
-                btn.set_text(t)
-
-                # Rebuild
-                self.column_mgr.rebuild_headers()
-                self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())  # Rebuild pool to match new col visibility
-                self.refresh_list()
-
-        # Handle Header Arrows and Sort Clicks
+        # Handle header sort clicks
         sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
         if columns_changed:
             self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
@@ -437,13 +298,66 @@ class PlanetListWindow(UIWindow):
         elif sort_changed:
             self.refresh_list()
 
-        # Handle Presets
+        # Handle preset selection and save
+        self._handle_preset_changes()
+            
+    def _handle_filter_toggles(self, filter_dict, btn_all, btn_none, ui_key):
+        """Handle All/None buttons and individual toggles for a filter category."""
+        buttons = self.ui_filters.get(ui_key, {})
+        if btn_all.check_pressed():
+            for key, btn in buttons.items():
+                filter_dict[key] = True
+                btn.select()
+                btn.set_text(f"[{key}]")
+            self.refresh_list()
+            return
+        if btn_none.check_pressed():
+            for key, btn in buttons.items():
+                filter_dict[key] = False
+                btn.unselect()
+                btn.set_text(f"{key}")
+            self.refresh_list()
+            return
+        for key, btn in buttons.items():
+            if btn.check_pressed():
+                state = not filter_dict[key]
+                filter_dict[key] = state
+                btn.select() if state else btn.unselect()
+                btn.set_text(f"[{key}]" if state else f"{key}")
+                self.refresh_list()
+                return
+
+    def _handle_slider_sync(self):
+        """Sync slider values to text boxes."""
+        for key in ['gravity', 'temp', 'mass']:
+            f = self.ui_filters[key]
+            for which in ['min', 'max']:
+                txt_box = f[f'{which}_txt']
+                if not txt_box.is_focused:
+                    new_txt = f"{f[which].get_current_value():.1f}"
+                    if txt_box.get_text() != new_txt:
+                        txt_box.set_text(new_txt)
+
+    def _handle_column_toggles(self):
+        """Handle column visibility toggles."""
+        for col_id, btn in self.ui_filters.get('columns', {}).items():
+            if btn.check_pressed():
+                col = btn.col_ref
+                self.column_mgr.toggle_visibility(col['id'])
+                t = f"[x] {col['title'] or col['id']}" if col['visible'] else f"[ ] {col['title'] or col['id']}"
+                btn.set_text(t)
+                self.column_mgr.rebuild_headers()
+                self.renderer.rebuild_row_pool(self.column_mgr.get_visible_columns())
+                self.refresh_list()
+                return
+
+    def _handle_preset_changes(self):
+        """Handle preset dropdown selection and save button."""
         # Lazy init tracker
         if not hasattr(self, 'last_preset_selection'):
             self.last_preset_selection = self.dd_presets.selected_option
-            
+
         if self.dd_presets.selected_option != self.last_preset_selection:
-            # Change detected
             self.last_preset_selection = self.dd_presets.selected_option
             name = self.last_preset_selection
             if self.preset_manager.has_preset(name):
@@ -454,11 +368,9 @@ class PlanetListWindow(UIWindow):
             if name:
                 state = self._capture_current_state()
                 self.preset_manager.save_preset(name, state)
-                # Refresh Dropdown (Recreate)
                 rect = self.dd_presets.relative_rect
                 container = self.dd_presets.ui_container
                 self.dd_presets.kill()
-
                 self.dd_presets = UIDropDownMenu(
                     options_list=self.preset_manager.get_preset_names(),
                     starting_option=name,
@@ -467,7 +379,7 @@ class PlanetListWindow(UIWindow):
                     container=container
                 )
                 self.last_preset_selection = name
-            
+
     def _capture_current_state(self):
         """Serialize current filters and column config."""
         return capture_planet_list_state(
@@ -507,7 +419,7 @@ class PlanetListWindow(UIWindow):
             log_warning(f"Failed to show screenshot toast: {e}")
 
     def _on_planet_selected(self, planet):
-        """Handle planet selection - create/update detail panel. (PROJ-54)"""
+        """Handle planet selection - create/update detail panel."""
         # Kill old panel if exists
         if self.planet_detail_panel:
             self.planet_detail_panel.kill()
@@ -565,12 +477,10 @@ class PlanetListWindow(UIWindow):
         if hasattr(self, 'column_mgr'):
             self.column_mgr.kill()
 
-        # Clean up planet detail panel (PROJ-54)
         if self.planet_detail_panel:
             self.planet_detail_panel.kill()
             self.planet_detail_panel = None
 
-        # Clean up button (PROJ-54)
         if self.btn_build_queue:
             self.btn_build_queue.kill()
             self.btn_build_queue = None

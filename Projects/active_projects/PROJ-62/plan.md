@@ -16,15 +16,15 @@
 | 1. Extract Sidebar Builder | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract Data Helpers & Column Manager | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Extract Virtual Row Renderer | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Simplify Main Window & Final Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Simplify Main Window & Final Cleanup | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - extracted VirtualListRenderer to planet_list_renderer.py
-**Next Action:** Start Phase 4 - Simplify Main Window & Final Cleanup
+**Active Phase:** All Phases Complete
+**Last Action:** Phase 4 complete - simplified update(), removed dead code, 490 lines
+**Next Action:** Audit
 **Blockers:** None
-**Test Baseline:** 6244 passed
+**Test Baseline:** 6246 passed
 
 ## Overview
 Break down `planet_list_window.py` from **1136 lines** to **under 500 lines** by extracting cohesive subsystems into dedicated modules. The file already has `planet_list_filters.py` and `planet_list_presets.py` extracted. This project continues by extracting the sidebar builder, column manager, and virtual row renderer.
@@ -120,10 +120,10 @@ See [phase_4_checklist.md](phase_4_checklist.md).
 ---
 
 ## Completion Checklist
-- [ ] Phase 1 complete
-- [ ] Phase 2 complete
-- [ ] Phase 3 complete
-- [ ] Phase 4 complete
-- [ ] All tests passing
+- [x] Phase 1 complete
+- [x] Phase 2 complete
+- [x] Phase 3 complete
+- [x] Phase 4 complete
+- [x] All tests passing (6246 passed)
 - [ ] Audit passed
 - [ ] User verified

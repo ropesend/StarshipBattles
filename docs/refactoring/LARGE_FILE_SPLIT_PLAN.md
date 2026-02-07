@@ -17,7 +17,7 @@ This document provides a comprehensive plan for splitting 14 files exceeding 500
 | **HIGH** | strategy_scene.py | 1,568 | 6 modules | High | Medium |
 | **HIGH** | abilities.py | 780 | 5 modules (package) | Medium | Low |
 | **HIGH** | controller.py | 668 | 3 modules | Medium | Low |
-| **MEDIUM** | planet_list_window.py | 991 | 4 modules | Medium | Medium |
+| **COMPLETE** | planet_list_window.py | 490 | 4 modules | Medium | Medium |
 | **MEDIUM** | ship.py | 785 | 3 modules | Medium | Medium |
 | **MEDIUM** | battle_panels.py | 694 | 3 modules | Medium | Low |
 | **MEDIUM** | ship_stats.py | 678 | 4 modules | High | Medium |
@@ -104,22 +104,22 @@ abilities/
 
 ---
 
-### 4. planet_list_window.py (991 lines) - MEDIUM PRIORITY
+### 4. planet_list_window.py (490 lines) - COMPLETE ✓
 
-**Current:** Single `PlanetListWindow` class
+**Status:** COMPLETE (PROJ-62)
 
-**Recommended Splits:**
+**Final Structure:**
 
-| New Module | Lines | Contents |
-|------------|-------|----------|
-| `planet_filters.py` | ~180 | Filter UI, state, and logic |
-| `planet_column_mgr.py` | ~140 | Column definitions, reordering, visibility |
-| `planet_list_renderer.py` | ~150 | Virtual list, row pool, rendering |
-| `planet_list_window.py` | ~300 | Main window, coordination, presets |
+| Module | Lines | Contents |
+|--------|-------|----------|
+| `planet_list_filters.py` | 173 | Filter logic and data accessors |
+| `planet_list_presets.py` | 183 | Preset management |
+| `planet_list_sidebar.py` | 226 | Sidebar UI construction |
+| `planet_list_columns.py` | 145 | Column management and headers |
+| `planet_list_renderer.py` | 226 | Virtual list rendering |
+| `planet_list_window.py` | 490 | Main window coordinator |
 
-**Key Issues:**
-- Bidirectional state between filters and window
-- Scroll offset management tightly coupled
+**Original:** 1136 lines → **Final:** 490 lines (57% reduction)
 
 ---
 
