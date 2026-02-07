@@ -61,6 +61,9 @@ class Fleet:
         self.orders: List[FleetOrder] = []
         self.path: List[HexCoord] = []  # Current movement path for the ACTIVE Move order
 
+        # Production (for fleets with space yards)
+        self.construction_queue: List[Dict[str, Any]] = []
+
     def add_ship(self, ship: ShipInstance):
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)
@@ -98,6 +101,60 @@ class Fleet:
     def get_combat_capable_ships(self) -> List[ShipInstance]:
         """Get ships capable of combat (not destroyed or derelict)."""
         return [s for s in self.ships if s.is_combat_capable()]
+
+    @property
+    def has_space_shipyard(self) -> bool:
+        """
+        Check if fleet has an operational space shipyard.
+
+        Returns True if any combat-capable ship has a component with
+        SpaceShipyard ability (e.g., fleet_space_yard component).
+        """
+        for ship in self.get_combat_capable_ships():
+            design_data = ship.design_data
+            # Check all layers for space yard components
+            for layer_data in design_data.get("layers", {}).values():
+                if not isinstance(layer_data, list):
+                    continue
+                for comp in layer_data:
+                    if isinstance(comp, dict):
+                        # Check component id (real designs)
+                        if comp.get("id") == "fleet_space_yard":
+                            return True
+                        # Check abilities dict (test fixtures)
+                        if "SpaceShipyard" in comp.get("abilities", {}):
+                            return True
+        return False
+
+    def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
+        """
+        Check if fleet can build the specified vehicle type.
+
+        Args:
+            vehicle_type: Type of vehicle ("ship", "fighter", "satellite", "complex")
+            galaxy: Galaxy instance for planet proximity checks (required for complexes)
+
+        Returns:
+            True if fleet can build the given vehicle type.
+        """
+        if not self.has_space_shipyard:
+            return False
+
+        vehicle_lower = vehicle_type.lower()
+
+        # Ships, fighters, and satellites can always be built if we have a yard
+        if vehicle_lower in ("ship", "fighter", "satellite"):
+            return True
+
+        # Complexes require being at the same hex as a planet
+        if vehicle_lower == "complex":
+            if galaxy is None:
+                return False
+            # Check if there's a planet at our location
+            planets_at_hex = galaxy.get_planets_at_global_hex(self.location)
+            return len(planets_at_hex) > 0
+
+        return False
 
     def can_use_warp(self) -> bool:
         """
@@ -575,6 +632,7 @@ class Fleet:
             'ships': ships_data,
             'orders': [o.to_dict() for o in self.orders],
             'path': [list(p) if isinstance(p, tuple) else p for p in self.path],
+            'construction_queue': self.construction_queue,
         }
 
     @classmethod
@@ -633,6 +691,9 @@ class Fleet:
                         target = target_data['value']
 
             fleet.orders.append(FleetOrder(order_type, target))
+
+        # Restore construction queue
+        fleet.construction_queue = data.get('construction_queue', [])
 
         return fleet
 

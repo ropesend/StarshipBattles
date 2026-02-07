@@ -1892,6 +1892,36 @@
             }
         },
         {
+            "id": "fleet_space_yard",
+            "name": "Fleet Space Yard",
+            "type": "SpaceShipyard",
+            "mass": 600,
+            "hp": 800,
+            "allowed_vehicle_types": [
+                "Ship"
+            ],
+            "sprite_index": 205,
+            "abilities": {
+                "SpaceShipyard": {
+                    "construction_speed_bonus": 1.0,
+                    "max_ship_mass": 100000
+                },
+                "CrewRequired": 150,
+                "ResourceStorage": {
+                    "Metals": 500,
+                    "Organics": 250
+                }
+            },
+            "major_classification": "Production",
+            "resource_cost": {
+                "Metals": 600,
+                "Organics": 150,
+                "Vapors": 75,
+                "Radioactives": 250,
+                "Exotics": 125
+            }
+        },
+        {
             "id": "warp_drive",
             "name": "Warp Drive",
             "type": "WarpDrive",
