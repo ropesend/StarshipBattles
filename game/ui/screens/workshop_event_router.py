@@ -456,9 +456,5 @@ class WorkshopEventRouter:
             rect.center = (mx, my)
             gui.screenshot_manager.capture(region=rect, label="mouse_focus")
             return True
-        elif event.key == pygame.K_F10:
-            # Debug Sequence Trigger
-            gui._debug_sequence_capture()
-            return True
-        
+
         return False

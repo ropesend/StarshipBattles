@@ -2,9 +2,7 @@ import os
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import (
-    UIPanel, UIButton, UIDropDownMenu, UIWindow
-)
+from pygame_gui.elements import UIPanel, UIButton, UIWindow
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.logger import log_info
@@ -34,11 +32,6 @@ from game.ui.screens.builder.detail_panel import ComponentDetailPanel
 from game.core.logger import log_debug
 
 BG_COLOR = COLORS['bg_deep']
-PANEL_BG = '#14181f'
-
-
-
-
 
 
 
@@ -74,7 +67,6 @@ class DesignWorkshopScreen:
         self.viewmodel = WorkshopViewModel(self.event_bus, screen_width, screen_height, context=context)
         
         # UI Manager
-        from game.core.paths import Paths
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
         with profile_block("Builder: Init UIManager"):
             self.ui_manager = pygame_gui.UIManager(
@@ -123,12 +115,7 @@ class DesignWorkshopScreen:
         self.error_message = ""
         self.error_timer = 0
         self.show_firing_arcs = False
-        
-        self.show_firing_arcs = False
-        
-        # Selection now managed by ViewModel - proxy property below
 
-        
         # Event Router (composition pattern for event handling)
         self.event_router = WorkshopEventRouter(self)
 
@@ -276,7 +263,6 @@ class DesignWorkshopScreen:
         
         # Bottom Bar Buttons
         btn_y = self.height - self.bottom_bar_height + 10
-        btn_w = 140
         btn_h = 40
         spacing = 10
 
@@ -299,9 +285,7 @@ class DesignWorkshopScreen:
         self.left_panel.update_component_list()
         self.rebuild_modifier_ui()
 
-
     def update_stats(self):
-        # self.right_panel.update_stats_display(self.ship) # Now handled by event
         self.layer_panel.rebuild()
         self.event_bus.emit(BuilderEvents.SHIP_UPDATED, self.viewmodel.ship)
         
@@ -382,9 +366,6 @@ class DesignWorkshopScreen:
         self.error_message = msg
         self.error_timer = 3.0
         
-    def _show_error(self, msg):
-        self.show_error(msg)
-        
     def handle_event(self, event):
         """Route events through the event router.
         
@@ -428,29 +409,6 @@ class DesignWorkshopScreen:
         else:
             # Fallback for simple clear if pending_action not set
             self._clear_design()
-
-    def _debug_sequence_capture(self):
-        """test sequence capture for draw order debugging."""
-        log_info("Starting debug sequence capture...")
-        # Note: In a real scenario, this would likely be hooked into the draw loop 
-        # or a specific event. For this test, we will simulate a multi-step capture 
-        # by manually capturing the current state with different labels, 
-        # implying we would call this between draw calls.
-        
-        # 1. Capture "Start"
-        self.screenshot_manager.capture_step("1_start_sequence")
-        
-        # 2. Simulate "Draw Background" (just capturing same frame for test)
-        self.screenshot_manager.capture_step("2_draw_background")
-        
-        # 3. Simulate "Draw Ships"
-        self.screenshot_manager.capture_step("3_draw_ships")
-        
-        # 4. Simulate "Draw UI"
-        self.screenshot_manager.capture_step("4_draw_ui")
-        
-        log_info("Debug sequence capture complete.")
-
 
     def update(self, dt):
         if self.error_timer > 0:
@@ -523,10 +481,6 @@ class DesignWorkshopScreen:
             self.component_modifier_grid_panel.draw(screen)  # Draw modifier impact grid
             self.detail_panel.draw(screen)
         
-        if hovered and not self.controller.dragged_item:
-            # Tooltip removed
-            pass
-            
         if self.controller.dragged_item:
             mx, my = pygame.mouse.get_pos()
             sprite = self.sprite_mgr.get_sprite(self.controller.dragged_item.sprite_index)
@@ -538,9 +492,6 @@ class DesignWorkshopScreen:
             err_surf = font.render(self.error_message, True, COLORS['text_error'])
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))
-
-    # Tooltip method removed
-
 
     def _save_ship(self):
         """Save ship design (delegates to WorkshopShipIO)."""
