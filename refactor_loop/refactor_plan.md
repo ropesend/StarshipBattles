@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-68 Phase 3 - Population Growth Engine
-**Current Status:** PROJ-68 Phase 3 Complete
+**Last Completed:** PROJ-68 Phase 4 - Cargo Ability Layer
+**Current Status:** PROJ-68 Phase 4 Complete
 **Current Project:** PROJ-68
-**Current Phase:** Phase 4 - Cargo Ability Layer
-**Test Status:** 6437 passed, 2 pre-existing failures (bug_15 screenshot tests)
+**Current Phase:** Phase 5 - Cargo State Tracking
+**Test Status:** 6465 passed, 2 pre-existing failures (bug_15 screenshot tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-68 Phase 3 Complete:
-  - Created game/strategy/engine/population_engine.py
-  - IPopulationEngine interface added to engines.py
-  - Logistic growth: r * P * (1 - P/K) * happiness
-  - Aptitude to growth rate: 1->0.5%, 5->2.5%, 10->5.0%
-  - TurnEngine integration as Phase 5 (after fleet production)
-  - 15 new tests, all passing
-- Next: Phase 4 - Cargo Ability Layer
+- PROJ-68 Phase 4 Complete:
+  - Created game/simulation/components/abilities/cargo.py (CargoStorage ability)
+  - Registered in ABILITY_REGISTRY
+  - Added cargo_storage aggregation to ShipStatsCalculator
+  - Added passenger_quarters component to components.json
+  - 22 new tests, all passing
+- Next: Phase 5 - Cargo State Tracking
 
 ---
 
@@ -104,7 +103,7 @@
 ---
 
 - [/] **PROJ-68: Population System & Generic Cargo**
-  - **Phases:** 9 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 9 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-68/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-68/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -171,6 +170,7 @@
 | 2026-02-07 | PROJ-68 | Phase 1 | Complete | 6388 passed | pending | SpeciesPopulation, Planet populations, Empire.race_config |
 | 2026-02-07 | PROJ-68 | Phase 2 | Complete | 6422 passed | pending | Habitability scoring, 5 factor functions, 34 new tests |
 | 2026-02-07 | PROJ-68 | Phase 3 | Complete | 6437 passed | pending | PopulationEngine, logistic growth, TurnEngine integration |
+| 2026-02-07 | PROJ-68 | Phase 4 | Complete | 6465 passed | pending | CargoStorage ability, registry, ShipStatsCalculator, passenger_quarters |
 
 ---
 

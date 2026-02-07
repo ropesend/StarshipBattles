@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** New CargoStorage ability (follows ResourceStorage pattern), registered in ability system, aggregated by strategy-layer ShipStatsCalculator. Add passenger_quarters component to components.json.
 
 **Depends on:** None (ability system is independent — can run in parallel with Phases 1-2)
@@ -18,7 +18,7 @@
 **New file:** `game/simulation/components/abilities/cargo.py`
 **Tests:** `pytest tests/unit/simulation/abilities/test_cargo_storage.py`
 
-- [ ] `CargoStorage(Ability)` class:
+- [x] `CargoStorage(Ability)` class:
   - `layer = AbilityLayer.STRATEGIC` (cargo only relevant in strategy)
   - `STAT_BINDINGS` with `CAPACITY_MULT` -> `capacity`
   - Properties: `cargo_type: str`, `capacity: float`, `_base_capacity: float`
@@ -26,36 +26,36 @@
   - Handle scalar format: `5000` (defaults to cargo_type="generic")
   - `sync_data()`, `recalculate()`, `get_ui_rows()`, `get_primary_value()`
 
-**Notes:** Follow `ResourceStorage` pattern in `game/simulation/components/abilities/resources.py:151-189`
+**Notes:** Followed `ResourceStorage` pattern. Used `layer = 'strategic'` string instead of enum.
 
 ---
 
 ### Task 4.2: Register Ability [Simple]
 **File:** `game/simulation/components/abilities/__init__.py`
 
-- [ ] Import `CargoStorage` from `.cargo`
-- [ ] Add `"CargoStorage": CargoStorage` to `ABILITY_REGISTRY`
-- [ ] Add to `__all__`
+- [x] Import `CargoStorage` from `.cargo`
+- [x] Add `"CargoStorage": CargoStorage` to `ABILITY_REGISTRY`
+- [x] Add to `__all__`
 
-**Notes:**
+**Notes:** Complete
 
 ---
 
 ### Task 4.3: Strategy-Layer Stats Aggregation [Medium]
 **File:** `game/strategy/services/ship_stats_calculator.py`
 
-- [ ] Add `cargo_storage: Dict[str, float]` accumulator in calculation method
-- [ ] Aggregate `CargoStorage` abilities by `cargo_type` (sum capacities)
-- [ ] Include `'cargo_storage': cargo_storage` in returned stats dict
+- [x] Add `cargo_storage: Dict[str, float]` accumulator in calculation method
+- [x] Aggregate `CargoStorage` abilities by `cargo_type` (sum capacities)
+- [x] Include `'cargo_storage': cargo_storage` in returned stats dict
 
-**Notes:** Follow existing resource storage aggregation pattern in same file
+**Notes:** Added to main stats return and fallback expected_stats return
 
 ---
 
 ### Task 4.4: Passenger Quarters Component [Simple]
 **File:** `data/components.json` (after colony pod components)
 
-- [ ] Add `passenger_quarters` component definition:
+- [x] Add `passenger_quarters` component definition:
   ```json
   {
     "id": "passenger_quarters",
@@ -73,33 +73,33 @@
   }
   ```
 
-**Notes:**
+**Notes:** Added sprite_index: 230
 
 ---
 
 ### Task 4.5: Tests [Medium]
 **New file:** `tests/unit/simulation/abilities/test_cargo_storage.py`
 
-- [ ] `test_cargo_storage_creation_dict_format`
-- [ ] `test_cargo_storage_creation_scalar_format`
-- [ ] `test_cargo_storage_sync_data`
-- [ ] `test_cargo_storage_recalculate_with_modifier`
-- [ ] `test_cargo_storage_ui_rows`
-- [ ] `test_cargo_storage_registry_creation` — via `create_ability()`
-- [ ] `test_ship_stats_includes_cargo_storage` — strategy calculator aggregation
-- [ ] `test_passenger_quarters_component_loads` — from components.json
-- [ ] Verify: `pytest tests/unit/simulation/abilities/test_cargo_storage.py -v` — all pass
-- [ ] Verify: `pytest tests/ --testmon` — no regressions
+- [x] `test_cargo_storage_creation_dict_format`
+- [x] `test_cargo_storage_creation_scalar_format`
+- [x] `test_cargo_storage_sync_data`
+- [x] `test_cargo_storage_recalculate_with_modifier`
+- [x] `test_cargo_storage_ui_rows`
+- [x] `test_cargo_storage_registry_creation` — via `create_ability()`
+- [x] `test_ship_stats_includes_cargo_storage` — strategy calculator aggregation
+- [x] `test_passenger_quarters_component_loads` — from components.json
+- [x] Verify: `pytest tests/unit/simulation/abilities/test_cargo_storage.py -v` — 22 passed
+- [x] Verify: `pytest tests/ -n 12` — 6465 passed (2 pre-existing bug_15 failures)
 
-**Notes:**
+**Notes:** 22 new tests total covering all functionality
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All tests pass: `pytest tests/unit/simulation/abilities/test_cargo_storage.py -v`
-- [ ] No regressions: `pytest tests/ --testmon`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All tests pass: `pytest tests/unit/simulation/abilities/test_cargo_storage.py -v`
+- [x] No regressions: `pytest tests/ -n 12` — 6465 passed
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

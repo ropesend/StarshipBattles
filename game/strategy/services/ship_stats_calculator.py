@@ -115,6 +115,7 @@ class ShipStatsCalculator:
         total_mass = 0.0
         total_hp = 0.0
         resource_storage: Dict[str, float] = {}
+        cargo_storage: Dict[str, float] = {}
         resource_consumption_per_hex: Dict[str, float] = {}
         resource_consumption_per_turn: Dict[str, float] = {}
         warp_resource_costs: Dict[str, float] = {}
@@ -141,6 +142,7 @@ class ShipStatsCalculator:
                 'max_hp': expected.get('max_hp', 0),
                 'mass': expected.get('mass', 0),
                 'resource_storage': expected.get('resource_storage', {}),
+                'cargo_storage': expected.get('cargo_storage', {}),
                 'resource_consumption_per_hex': expected.get('resource_consumption_per_hex', {}),
                 'resource_consumption_per_turn': expected.get('resource_consumption_per_turn', {}),
                 'warp_resource_costs': expected.get('warp_resource_costs', {}),
@@ -199,6 +201,18 @@ class ShipStatsCalculator:
                     resource_storage[resource_type] = (
                         resource_storage.get(resource_type, 0) + max_amount * effectiveness
                     )
+
+            # Cargo Storage - degrades with damage (generic handling)
+            for ability_data in ShipStatsCalculator._get_ability_list(abilities, 'CargoStorage'):
+                cargo_type = ability_data.get('cargo_type', 'generic')
+                capacity = ShipStatsCalculator._evaluate_value(
+                    ability_data.get('capacity', 0), 0, formula_context
+                )
+                # Apply capacity multiplier from design modifiers
+                capacity *= capacity_mult
+                cargo_storage[cargo_type] = (
+                    cargo_storage.get(cargo_type, 0) + capacity * effectiveness
+                )
 
             # Strategic Movement - degrades with damage (with modifiers)
             if 'StrategicMovement' in abilities:
@@ -267,6 +281,7 @@ class ShipStatsCalculator:
             'mass': total_mass,
             # New generic fields
             'resource_storage': resource_storage,
+            'cargo_storage': cargo_storage,
             'resource_consumption_per_hex': resource_consumption_per_hex,
             'resource_consumption_per_turn': resource_consumption_per_turn,
             'warp_resource_costs': warp_resource_costs,

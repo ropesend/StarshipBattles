@@ -16,7 +16,7 @@
 | 1. Population Data Model | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Habitability Scoring | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Population Growth Engine | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Cargo Ability Layer | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Cargo Ability Layer | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cargo State Tracking | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. TRANSFER Order | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Colonization Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
@@ -25,9 +25,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4 — Cargo Ability Layer
-**Last Action:** Phase 3 complete — PopulationEngine with logistic growth, TurnEngine integration, 15 new tests
-**Next Action:** Begin Phase 4 — Cargo Ability Layer
+**Active Phase:** Phase 5 — Cargo State Tracking
+**Last Action:** Phase 4 complete — CargoStorage ability, registry, ShipStatsCalculator integration, passenger_quarters component, 22 tests
+**Next Action:** Begin Phase 5 — Cargo State Tracking
 **Blockers:** None
 
 ## Overview

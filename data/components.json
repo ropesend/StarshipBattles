@@ -2150,6 +2150,26 @@
                 "Organics": 100,
                 "Vapors": 100
             }
+        },
+        {
+            "id": "passenger_quarters",
+            "name": "Passenger Quarters",
+            "type": "Infrastructure",
+            "mass": 200,
+            "hp": 150,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "CargoStorage": {"cargo_type": "passengers", "capacity": 5000},
+                "LifeSupportCapacity": 5000,
+                "CrewRequired": 10
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 150,
+                "Organics": 100,
+                "Vapors": 50
+            }
         }
     ]
 }

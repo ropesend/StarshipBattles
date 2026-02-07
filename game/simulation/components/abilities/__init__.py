@@ -16,6 +16,9 @@ from .colonize import ColonizePlanet
 # Resource abilities
 from .resources import ResourceConsumption, ResourceStorage, ResourceGeneration
 
+# Cargo abilities
+from .cargo import CargoStorage
+
 # Propulsion abilities
 from .propulsion import CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
 
@@ -82,6 +85,7 @@ ABILITY_REGISTRY = {
     "StructuralIntegrity": StructuralIntegrity,
     "ResourceHarvester": ResourceHarvesterAbility,
     "SpaceShipyard": SpaceShipyardAbility,
+    "CargoStorage": CargoStorage,
 }
 
 # Map registry shortcut names to their actual class names for instance matching
@@ -141,6 +145,8 @@ __all__ = [
     # Harvester
     'ResourceHarvesterAbility',
     'SpaceShipyardAbility',
+    # Cargo
+    'CargoStorage',
     # Registry
     'ABILITY_REGISTRY',
     'ABILITY_CLASS_MAP',
