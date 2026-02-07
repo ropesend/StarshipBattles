@@ -15,14 +15,14 @@
 |-------|--------|-----------|
 | 1. Create Package & Extract Constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Extract Galaxy Mode Module | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Extract System Mode Module | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Extract System Mode Module | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Slim Main Screen to Coordinator | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 3
-**Last Action:** Completed Phase 2 - extracted galaxy_mode.py with GalaxyModeHelper (421 lines), reduced screen.py to 793 lines
-**Next Action:** Begin Phase 3 - Extract System Mode Module
+**Active Phase:** Phase 4
+**Last Action:** Completed Phase 3 - extracted system_mode.py with SystemModeHelper (568 lines), reduced screen.py to 281 lines
+**Next Action:** Begin Phase 4 - Slim Main Screen to Coordinator (final verification)
 **Blockers:** None
 
 ## Overview

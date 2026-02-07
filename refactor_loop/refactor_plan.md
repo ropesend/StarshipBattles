@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-60 Phase 2 - Extract Galaxy Mode Module
-**Current Status:** Phase 2 complete, Phase 3 pending
+**Last Completed:** PROJ-60 Phase 3 - Extract System Mode Module
+**Current Status:** Phase 3 complete, Phase 4 pending
 **Current Project:** PROJ-60
-**Current Phase:** Phase 3 - Extract System Mode Module
+**Current Phase:** Phase 4 - Slim Main Screen to Coordinator
 **Test Status:** 6246 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created `galaxy_mode.py` with `GalaxyModeHelper` class (421 lines)
-- Moved galaxy generation, drawing, UI creation to helper
-- screen.py now 793 lines (down from 1144)
-- Removed unused imports (time, Galaxy, VALID_GALAXY_TYPES)
+- Created `system_mode.py` with `SystemModeHelper` class (568 lines)
+- Moved all system inspection logic: UI creation, generation, drawing, click handling, formatting
+- screen.py now 281 lines (down from 794)
+- Removed unused imports (random, UITextEntryLine, UIDropDownMenu, hex_to_pixel, HexCoord, PlanetType, PLANET_TYPE_COLORS, HEX_SIZE)
 - All 6246 tests passing
-- Next: Phase 3 - extract system mode functions to system_mode.py
+- Next: Phase 4 - verify coordinator is slim, update __init__.py exports if needed
 
 ---
 
@@ -97,6 +97,7 @@
 | 2026-02-07 | PROJ-57 | Audit 1 | PASSED | 6246 passed | pending | No issues found |
 | 2026-02-07 | PROJ-60 | Phase 1 | Complete | 6246 passed | pending | Created package, extracted constants |
 | 2026-02-07 | PROJ-60 | Phase 2 | Complete | 6246 passed | pending | Extracted GalaxyModeHelper (421 lines) |
+| 2026-02-07 | PROJ-60 | Phase 3 | Complete | 6246 passed | pending | Extracted SystemModeHelper (568 lines), screen.py now 281 lines |
 
 
 ---
