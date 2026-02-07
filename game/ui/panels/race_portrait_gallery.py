@@ -144,7 +144,7 @@ class RacePortraitGallery:
                         surf, (self.PORTRAIT_THUMB_SIZE, self.PORTRAIT_THUMB_SIZE)
                     )
                     portraits.append((entry.name, scaled))
-                except Exception as e:
+                except (FileNotFoundError, OSError, pygame.error) as e:
                     log_error(f"Failed to load portrait {entry.path}: {e}")
 
         portraits.sort(key=lambda x: x[0])

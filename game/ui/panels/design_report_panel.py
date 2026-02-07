@@ -173,7 +173,7 @@ class DesignReportPanel:
                     loaded_img = pygame.image.load(path)
                     portrait_surface = pygame.transform.smoothscale(loaded_img, (portrait_width, portrait_height))
                     break
-                except Exception as e:
+                except (FileNotFoundError, OSError, pygame.error) as e:
                     from game.core.logger import log_warning
                     log_warning(f"Failed to load portrait from {path}: {e}")
                     continue
@@ -267,7 +267,7 @@ class DesignReportPanel:
 
             # Get dynamic construction rows
             construction = get_construction_rows(ship)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, AttributeError) as e:
             # Fallback if stat config fails
             from game.core.logger import log_error
             log_error(f"Error loading stat rows: {e}")
@@ -400,7 +400,7 @@ class DesignReportPanel:
 
             return y + 22  # Row height + small gap
 
-        except Exception as e:
+        except (TypeError, ValueError, AttributeError, KeyError) as e:
             from game.core.logger import log_error
             log_error(f"Error creating stat row for {stat_def.key}: {e}")
             return y

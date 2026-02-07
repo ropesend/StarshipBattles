@@ -1,0 +1,40 @@
+Features to add:
+
+1) Population
+ - all colonies should have population - this population can be made up of multiple species, and each species should be treated somewhat independently.
+ - The maximum population will depend on the surface area of the planet.
+	- population will grow or shrink everyturn based on a number of factors:
+	- How well the surface conditions of the planet match thoes of the race of population.
+	- A general base rate for the race as a whole - will need to be 
+	- A happyness modifyer
+	- System wide modifyers that may increase or decrease the rate.
+ - The PlanetDetails window will need to be updated to show the population of each race on the planet.
+  - a passenger quarters component should be added to the components json file
+    - the passenger component will have a new ability - this ability will provide the capability to store a certain amount of population and load and unload population at colonies
+    - This ability should be somewhat generic, In the future I will introduce cargo storage, and possibly other items theat will need to be loaded and unloaded at colonies, or transfered between shiips/fleets.  It should be somewhat similar to the resource system
+ - We will need a new order option for fleets to load/unload - and specify how much population to load and unload
+ - for colonizing, we will generally want to use ship designs that have a passenger component, when an order is given to colonize a planet, the ship ship given the order should automatically attempt to load population into it's passenger quarters, then move after that.  When a ship is used to colonize a planet then the population in the ship is transfered to the new colony.
+ - Please ask questions and make suggestions, create a plan to add this new aspect, break it up into phases, and substages - list all files that need to be edited, all tests that need to be added.
+ - Plan to use TDD
+ 
+ 
+ Log System - lists all events
+ - In the strategy layer, there should be a log that lists all events that have happened in the game.
+ - it should show them in order of events starting with the most recent events first.
+ - This should include events like
+    - any ships/complexes/vehicles being built at any space yard
+    - any new colonies being founded
+    - any combat
+
+
+
+ Turn Replay
+ - when looking at a system, you should be able to press some buttons see the history of ship movement for the prior turn.  It should work through all 100 ticks of the prior turn showing the positions of the ships/vehicles each turn, one of the buttons should show all 100 ticks without stopping (there should ba a .25 sec pause), another button should allow you to step through each tick one at a time
+ - we should try to limit it to ships in teh system, though sdome ships may leave or enter the system during the turn
+ 
+ Fog of war
+ 
+ Storms
+ 
+ Different System types
+ 

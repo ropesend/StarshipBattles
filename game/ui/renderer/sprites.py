@@ -113,7 +113,7 @@ class SpriteManager:
                     
             except ValueError:
                 continue
-            except Exception as e:
+            except (FileNotFoundError, OSError, pygame.error) as e:
                 log_error(f"loading {f}: {e}")
                 continue
         
@@ -140,7 +140,7 @@ class SpriteManager:
             self._slice_sprites()
             log_info(f"Loaded Atlas: {path} ({self.atlas.get_width()}x{self.atlas.get_height()})")
 
-        except Exception as e:
+        except (FileNotFoundError, OSError, pygame.error) as e:
             import traceback
             log_error(f"Exception loading atlas: {e}\n{traceback.format_exc()}")
 

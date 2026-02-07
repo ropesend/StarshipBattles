@@ -151,7 +151,7 @@ class RaceFlagGallery:
                             surf, (self.FLAG_THUMB_SIZE, self.FLAG_THUMB_SIZE)
                         )
                         flags.append((entry.name, scaled))
-                    except Exception as e:
+                    except (FileNotFoundError, OSError, pygame.error) as e:
                         log_error(f"Failed to load flag thumbnail {thumb_path}: {e}")
 
         flags.sort(key=lambda x: x[0])

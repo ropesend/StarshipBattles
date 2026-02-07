@@ -101,8 +101,14 @@ while ($iteration -lt $MAX_ITERATIONS) {
             Write-Warning "EPERM/symlink error detected (Windows file permission issue). Cleaning up..."
             Clear-ClaudeTempFiles
         }
+        elseif ($claudeOutput -match "only prompt commands are supported in streaming mode" -and $claudeOutput -match '"num_turns":0') {
+            # Claude failed on startup before doing any work — safe to retry
+            $retryCount++
+            Write-Warning "Claude CLI startup error (streaming mode). Retrying..."
+            Clear-ClaudeTempFiles
+        }
         else {
-            # Non-EPERM error, fail immediately
+            # Unknown error, fail immediately
             Write-ErrorLog "Claude CLI failed with exit code $claudeExitCode"
             Write-Warning "Check output above for errors"
             Write-Info "You can manually fix issues and restart"
@@ -111,9 +117,10 @@ while ($iteration -lt $MAX_ITERATIONS) {
     }
 
     if (-not $success) {
-        Write-ErrorLog "Failed after $MAX_RETRIES retries due to persistent EPERM errors"
+        Write-ErrorLog "Failed after $MAX_RETRIES retries due to persistent startup errors"
         Write-Info "Try enabling Windows Developer Mode (Settings > System > For developers)"
         Write-Info "Or run PowerShell as Administrator"
+        Write-Info "Or update Claude Code: npm update -g @anthropic-ai/claude-code"
         exit 1
     }
 
