@@ -18,14 +18,14 @@
 | 3. Column System | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Filtering | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Navigation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Multi-Select | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Multi-Select | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 5 Complete
-**Last Action:** Added navigation: get_hex_for_source(), navigate_to_source(), re-click detection. 12 new tests (85 total). Planet hex via system+location, fleet hex via location. Strategy screen callback wiring deferred to Phase 7.
-**Next Action:** Begin Phase 6 - Multi-Select
+**Active Phase:** Phase 6 Complete
+**Last Action:** Added multi-select (Ctrl+click) and batch add. handle_row_click(), get_selected_sources(), batch_add_to_selected(), get_selection_summary(), BatchAddResult dataclass. 22 new tests (107 total). Prevents empty selection on Ctrl+click last item. process_event uses KMOD_CTRL for Ctrl detection.
+**Next Action:** Begin Phase 7 - Integration
 **Blockers:** None
 
 ## Overview

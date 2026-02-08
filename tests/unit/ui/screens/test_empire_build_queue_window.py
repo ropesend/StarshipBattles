@@ -11,6 +11,7 @@ import pytest
 from unittest.mock import MagicMock, patch, call
 
 from game.strategy.data.build_queue_source import BuildQueueSource
+from game.ui.screens.empire_build_queue_window import BatchAddResult
 
 
 # ---------------------------------------------------------------------------
@@ -90,6 +91,9 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.search_text = ""
     win.filter_toggle_buttons = {}
     win.search_entry = None
+
+    # Multi-select state (Phase 6)
+    win.selected_indices = set()
 
     # Mock UI elements
     win.scroll_bar = MagicMock()
@@ -1085,3 +1089,269 @@ class TestDoubleClickNavigation:
         win._select_source(0)
         win._select_source(1)
         nav_cb.assert_not_called()
+
+
+# =======================================================================
+# Multi-Select State Tests (Phase 6)
+# =======================================================================
+
+class TestMultiSelectState:
+    """Multi-select should track a set of selected indices."""
+
+    def test_selected_indices_initialized_empty(self):
+        """Window starts with empty selected_indices set."""
+        win = _make_window()
+        assert hasattr(win, 'selected_indices')
+        assert isinstance(win.selected_indices, set)
+        assert len(win.selected_indices) == 0
+
+    def test_single_click_sets_single_selection(self):
+        """Single click sets selected_indices to just that index."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+        ]
+        win = _make_window(sources=sources)
+        win.handle_row_click(1, ctrl_held=False)
+        assert win.selected_indices == {1}
+
+    def test_single_click_replaces_previous_selection(self):
+        """Single click replaces any previous multi-selection."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+            _make_source("p3", "Gamma"),
+        ]
+        win = _make_window(sources=sources)
+        win.selected_indices = {0, 1}
+        win.handle_row_click(2, ctrl_held=False)
+        assert win.selected_indices == {2}
+
+    def test_ctrl_click_adds_to_selection(self):
+        """Ctrl+click adds index to existing selection."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+            _make_source("p3", "Gamma"),
+        ]
+        win = _make_window(sources=sources)
+        win.handle_row_click(0, ctrl_held=False)
+        win.handle_row_click(2, ctrl_held=True)
+        assert win.selected_indices == {0, 2}
+
+    def test_ctrl_click_toggles_off_selected(self):
+        """Ctrl+click on already-selected index removes it."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+        ]
+        win = _make_window(sources=sources)
+        win.selected_indices = {0, 1}
+        win.handle_row_click(0, ctrl_held=True)
+        assert win.selected_indices == {1}
+
+    def test_ctrl_click_on_only_selected_keeps_it(self):
+        """Ctrl+click on the only selected item keeps it (prevent empty selection)."""
+        sources = [_make_source("p1", "Alpha")]
+        win = _make_window(sources=sources)
+        win.selected_indices = {0}
+        win.handle_row_click(0, ctrl_held=True)
+        assert win.selected_indices == {0}
+
+    def test_single_click_updates_selected_source(self):
+        """Single click updates selected_source for backward compat."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+        ]
+        win = _make_window(sources=sources)
+        win.handle_row_click(1, ctrl_held=False)
+        assert win.selected_source is sources[1]
+        assert win.selected_index == 1
+
+    def test_multi_select_clears_selected_source(self):
+        """Multiple selections clear single selected_source."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+        ]
+        win = _make_window(sources=sources)
+        win.handle_row_click(0, ctrl_held=False)
+        win.handle_row_click(1, ctrl_held=True)
+        assert win.selected_source is None
+
+    def test_handle_row_click_out_of_range_ignored(self):
+        """Clicking out of range does nothing."""
+        sources = [_make_source("p1", "Alpha")]
+        win = _make_window(sources=sources)
+        win.handle_row_click(5, ctrl_held=False)
+        assert win.selected_indices == set()
+
+    def test_get_selected_sources_returns_correct_sources(self):
+        """get_selected_sources() returns BuildQueueSource list."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+            _make_source("p3", "Gamma"),
+        ]
+        win = _make_window(sources=sources)
+        win.selected_indices = {0, 2}
+        result = win.get_selected_sources()
+        assert len(result) == 2
+        assert sources[0] in result
+        assert sources[2] in result
+
+    def test_get_selected_sources_empty_when_none_selected(self):
+        """get_selected_sources() returns empty list when nothing selected."""
+        win = _make_window()
+        win.selected_indices = set()
+        result = win.get_selected_sources()
+        assert result == []
+
+    def test_apply_filters_clears_selected_indices(self):
+        """apply_filters() should clear the multi-select set."""
+        sources = [
+            _make_source("p1", "Alpha", "planet"),
+            _make_source("f1", "Fleet", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0, 1}
+        win.apply_filters()
+        assert win.selected_indices == set()
+
+
+# =======================================================================
+# Batch Add Tests (Phase 6)
+# =======================================================================
+
+class TestBatchAdd:
+    """batch_add_to_selected() should add items to multiple queues."""
+
+    def test_batch_add_to_single_selected_queue(self):
+        """Adding an item to a single selected queue appends it."""
+        source = _make_source("p1", "Alpha", can_build_ships=True,
+                              can_build_complexes=True, queue_items=[])
+        win = _make_window(sources=[source])
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0}
+        item = {"design_id": "frigate", "turns_remaining": 5}
+        result = win.batch_add_to_selected(item, item_type="ship")
+        assert result.added == 1
+        assert result.skipped == 0
+        assert len(source.construction_queue) == 1
+        assert source.construction_queue[0]["design_id"] == "frigate"
+
+    def test_batch_add_to_multiple_queues(self):
+        """Adding an item to multiple selected queues adds to all."""
+        sources = [
+            _make_source("p1", "Alpha", can_build_ships=True, queue_items=[]),
+            _make_source("p2", "Beta", can_build_ships=True, queue_items=[]),
+            _make_source("p3", "Gamma", can_build_ships=True, queue_items=[]),
+        ]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0, 1, 2}
+        item = {"design_id": "cruiser", "turns_remaining": 8}
+        result = win.batch_add_to_selected(item, item_type="ship")
+        assert result.added == 3
+        assert result.skipped == 0
+
+    def test_batch_add_skips_incompatible_queues_ships(self):
+        """Queues that can't build ships are skipped for ship items."""
+        sources = [
+            _make_source("p1", "Alpha", can_build_ships=True, queue_items=[]),
+            _make_source("p2", "Beta", can_build_ships=False,
+                         can_build_complexes=True, queue_items=[]),
+        ]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0, 1}
+        item = {"design_id": "frigate", "turns_remaining": 5}
+        result = win.batch_add_to_selected(item, item_type="ship")
+        assert result.added == 1
+        assert result.skipped == 1
+        assert len(sources[0].construction_queue) == 1
+        assert len(sources[1].construction_queue) == 0
+
+    def test_batch_add_skips_incompatible_queues_complexes(self):
+        """Queues that can't build complexes are skipped for complex items."""
+        sources = [
+            _make_source("p1", "Alpha", can_build_ships=True,
+                         can_build_complexes=False, queue_items=[]),
+            _make_source("p2", "Beta", can_build_ships=False,
+                         can_build_complexes=True, queue_items=[]),
+        ]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0, 1}
+        item = {"design_id": "mining_station", "turns_remaining": 3}
+        result = win.batch_add_to_selected(item, item_type="complex")
+        assert result.added == 1
+        assert result.skipped == 1
+        assert len(sources[0].construction_queue) == 0
+        assert len(sources[1].construction_queue) == 1
+
+    def test_batch_add_no_selection_returns_zero(self):
+        """Batch add with no selection adds nothing."""
+        sources = [_make_source("p1", "Alpha", can_build_ships=True, queue_items=[])]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win.selected_indices = set()
+        item = {"design_id": "frigate", "turns_remaining": 5}
+        result = win.batch_add_to_selected(item, item_type="ship")
+        assert result.added == 0
+        assert result.skipped == 0
+
+    def test_batch_add_preserves_existing_queue_items(self):
+        """Batch add appends to existing queue, doesn't replace."""
+        existing = [{"design_id": "scout", "turns_remaining": 2}]
+        source = _make_source("p1", "Alpha", can_build_ships=True,
+                              queue_items=existing)
+        win = _make_window(sources=[source])
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0}
+        item = {"design_id": "frigate", "turns_remaining": 5}
+        win.batch_add_to_selected(item, item_type="ship")
+        assert len(source.construction_queue) == 2
+        assert source.construction_queue[0]["design_id"] == "scout"
+        assert source.construction_queue[1]["design_id"] == "frigate"
+
+    def test_batch_add_unknown_type_skips_all(self):
+        """Unknown item_type is treated as incompatible with all queues."""
+        source = _make_source("p1", "Alpha", can_build_ships=True,
+                              can_build_complexes=True, queue_items=[])
+        win = _make_window(sources=[source])
+        win._refresh_list = MagicMock()
+        win.selected_indices = {0}
+        item = {"design_id": "frigate", "turns_remaining": 5}
+        result = win.batch_add_to_selected(item, item_type="unknown")
+        assert result.added == 0
+        assert result.skipped == 1
+
+    def test_get_selection_summary_single(self):
+        """Selection summary for single queue shows name."""
+        sources = [_make_source("p1", "Alpha Base")]
+        win = _make_window(sources=sources)
+        win.selected_indices = {0}
+        summary = win.get_selection_summary()
+        assert "1" in summary
+        assert "Alpha Base" in summary
+
+    def test_get_selection_summary_multiple(self):
+        """Selection summary for multiple queues shows count."""
+        sources = [
+            _make_source("p1", "Alpha"),
+            _make_source("p2", "Beta"),
+        ]
+        win = _make_window(sources=sources)
+        win.selected_indices = {0, 1}
+        summary = win.get_selection_summary()
+        assert "2" in summary
+
+    def test_get_selection_summary_none(self):
+        """Selection summary with nothing selected."""
+        win = _make_window()
+        win.selected_indices = set()
+        summary = win.get_selection_summary()
+        assert "0" in summary or "No" in summary or "none" in summary.lower()

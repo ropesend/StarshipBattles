@@ -8,10 +8,12 @@ Created as part of PROJ-76 Phase 2.
 Updated in Phase 3: Configurable column system with visibility toggles.
 Updated in Phase 4: Filtering (location type, queue status, capabilities, text search).
 Updated in Phase 5: Navigation (row click selects, re-click navigates to hex build screen).
+Updated in Phase 6: Multi-select (Ctrl+click) and batch add to selected queues.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Set, TYPE_CHECKING
 
 import pygame
 from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar, UITextEntryLine
@@ -25,6 +27,18 @@ from game.strategy.data.build_queue_source import (
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
+
+
+@dataclass
+class BatchAddResult:
+    """Result of a batch add operation.
+
+    Attributes:
+        added: Number of queues the item was added to.
+        skipped: Number of queues that were skipped (incompatible).
+    """
+    added: int
+    skipped: int
 
 
 class EmpireBuildQueueWindow(UIWindow):
@@ -87,6 +101,7 @@ class EmpireBuildQueueWindow(UIWindow):
         self.filtered_sources: List[BuildQueueSource] = list(self.all_sources)
         self.selected_source: Optional[BuildQueueSource] = None
         self.selected_index: int = -1
+        self.selected_indices: Set[int] = set()
         self.row_elements: list = []
         self.column_toggle_buttons: Dict[str, UIButton] = {}
 
@@ -279,6 +294,125 @@ class EmpireBuildQueueWindow(UIWindow):
             self.on_navigate_to_hex(hex_coord, source)
 
     # -------------------------------------------------------------------
+    # Multi-Select
+    # -------------------------------------------------------------------
+
+    def handle_row_click(self, index: int, ctrl_held: bool = False) -> None:
+        """Handle a row click with optional Ctrl modifier for multi-select.
+
+        Single click: select only this index.
+        Ctrl+click: toggle this index in the selection set.
+        Prevents empty selection on Ctrl+click deselect of last item.
+
+        Args:
+            index: Index into filtered_sources.
+            ctrl_held: True if Ctrl key was held during click.
+        """
+        if index < 0 or index >= len(self.filtered_sources):
+            return
+
+        if ctrl_held:
+            if index in self.selected_indices:
+                # Don't allow deselecting the last item
+                if len(self.selected_indices) > 1:
+                    self.selected_indices.discard(index)
+            else:
+                self.selected_indices.add(index)
+        else:
+            self.selected_indices = {index}
+
+        # Update legacy single-selection fields
+        if len(self.selected_indices) == 1:
+            sole_idx = next(iter(self.selected_indices))
+            self.selected_index = sole_idx
+            self.selected_source = self.filtered_sources[sole_idx]
+        else:
+            self.selected_index = -1
+            self.selected_source = None
+
+        log_debug(f"Selected {len(self.selected_indices)} queue(s)")
+
+    def get_selected_sources(self) -> List[BuildQueueSource]:
+        """Return the BuildQueueSource objects for all selected indices.
+
+        Returns:
+            List of selected sources, in index order.
+        """
+        return [
+            self.filtered_sources[i]
+            for i in sorted(self.selected_indices)
+            if 0 <= i < len(self.filtered_sources)
+        ]
+
+    def get_selection_summary(self) -> str:
+        """Return a human-readable summary of the current selection.
+
+        Returns:
+            Summary string describing what is selected.
+        """
+        count = len(self.selected_indices)
+        if count == 0:
+            return "No queues selected"
+        if count == 1:
+            idx = next(iter(self.selected_indices))
+            if 0 <= idx < len(self.filtered_sources):
+                name = self.filtered_sources[idx].display_name
+                return f"1 queue selected: {name}"
+            return "1 queue selected"
+        return f"{count} queues selected"
+
+    def batch_add_to_selected(
+        self, item: Dict[str, Any], item_type: str,
+    ) -> BatchAddResult:
+        """Add an item to all selected compatible queues.
+
+        Checks each selected source for compatibility with the item type
+        before appending. Ships require can_build_ships, complexes require
+        can_build_complexes.
+
+        Args:
+            item: Dict with at least 'design_id' and 'turns_remaining'.
+            item_type: Either 'ship' or 'complex' to determine compatibility.
+
+        Returns:
+            BatchAddResult with added and skipped counts.
+        """
+        sources = self.get_selected_sources()
+        added = 0
+        skipped = 0
+
+        for source in sources:
+            if self._source_can_build_type(source, item_type):
+                # Append a copy so each queue has its own dict
+                source.construction_queue.append(dict(item))
+                added += 1
+            else:
+                skipped += 1
+
+        if added > 0:
+            log_debug(f"Batch add: added to {added}/{added + skipped} queues")
+            self._refresh_list()
+
+        return BatchAddResult(added=added, skipped=skipped)
+
+    @staticmethod
+    def _source_can_build_type(source: BuildQueueSource, item_type: str) -> bool:
+        """Check if a source can build the given item type.
+
+        Args:
+            source: The build queue source to check.
+            item_type: 'ship' or 'complex'.
+
+        Returns:
+            True if the source can build that type.
+        """
+        if item_type == "ship":
+            return source.can_build_ships
+        if item_type == "complex":
+            return source.can_build_complexes
+        return False
+
+    # -------------------------------------------------------------------
     # Event Handling
     # -------------------------------------------------------------------
 
@@ -317,11 +451,18 @@ class EmpireBuildQueueWindow(UIWindow):
                 clicked_index = int(local_y // self.row_height)
 
                 if 0 <= clicked_index < len(self.filtered_sources):
-                    # Re-click on already-selected row → navigate
-                    if clicked_index == self.selected_index:
+                    mods = pygame.key.get_mods()
+                    ctrl_held = bool(mods & pygame.KMOD_CTRL)
+
+                    if ctrl_held:
+                        # Ctrl+click: multi-select toggle
+                        self.handle_row_click(clicked_index, ctrl_held=True)
+                    elif clicked_index == self.selected_index:
+                        # Re-click on already-selected row → navigate
                         self.navigate_to_source(self.filtered_sources[clicked_index])
                     else:
-                        self._select_source(clicked_index)
+                        # Normal click: single select
+                        self.handle_row_click(clicked_index, ctrl_held=False)
                     return True
 
         # Mouse wheel scrolling
@@ -519,6 +660,7 @@ class EmpireBuildQueueWindow(UIWindow):
         self.filtered_sources = self._filter_sources(self.all_sources)
         self.selected_source = None
         self.selected_index = -1
+        self.selected_indices = set()
         self._refresh_list()
 
     # -------------------------------------------------------------------

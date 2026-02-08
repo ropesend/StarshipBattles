@@ -8,23 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-76 Phase 5 - Navigation
-**Current Status:** PROJ-76 Phase 5 complete, Phase 6 next
+**Last Completed:** PROJ-76 Phase 6 - Multi-Select & Batch Add
+**Current Status:** PROJ-76 Phase 6 complete, Phase 7 next
 **Current Project:** PROJ-76
-**Current Phase:** Phase 6
-**Test Status:** 85 passed (testmon: 85 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
+**Current Phase:** Phase 7
+**Test Status:** 107 passed (testmon: 89 passed + 2 pre-existing failures)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-76 Phase 5 complete: Navigation system added
-- Modified: game/ui/screens/empire_build_queue_window.py (752→800 lines)
-- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (73→85 tests)
-- get_hex_for_source(source): resolves hex for planet (system.global_location + planet.location) or fleet (fleet.location)
-- navigate_to_source(source): selects source, resolves hex, calls on_navigate_to_hex(hex, source)
-- process_event: re-click on selected row triggers navigate_to_source (double-click pattern)
-- 12 new tests: 5 get_hex_for_source, 4 navigate_to_source, 3 double-click navigation
-- Task 5.2 (strategy screen callback wiring) deferred to Phase 7 (Integration)
-- Next: Phase 6 - Multi-Select (Ctrl+click for batch operations)
+- PROJ-76 Phase 6 complete: Multi-select and batch add implemented
+- Modified: game/ui/screens/empire_build_queue_window.py (+BatchAddResult dataclass, multi-select methods)
+- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (85→107 tests)
+- handle_row_click(index, ctrl_held): single click replaces, Ctrl+click toggles, prevents empty selection
+- get_selected_sources(): returns list of selected BuildQueueSource objects
+- batch_add_to_selected(item, item_type): adds to compatible queues, returns BatchAddResult(added, skipped)
+- get_selection_summary(): human-readable "N queues selected" string
+- _source_can_build_type(): static helper for ship/complex compatibility
+- process_event updated to use KMOD_CTRL for Ctrl+click detection
+- apply_filters() clears selected_indices
+- 22 new tests: 12 multi-select state, 8 batch add, 3 selection summary (1 test overlaps)
+- Next: Phase 7 - Integration (strategy screen wiring, top bar button)
 
 ---
 
@@ -169,7 +172,7 @@
 ---
 
 - [/] **PROJ-76: Empire-Wide Build Queue Window**
-  - **Phases:** 7 | **Status:** Phase 5 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 6 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-76/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-76/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -294,6 +297,7 @@
 | 2026-02-08 | PROJ-76 | Phase 3 | Complete | 47 testmon | pending | Column system: 8 columns, visibility toggles, sidebar, 26 new tests |
 | 2026-02-08 | PROJ-76 | Phase 4 | Complete | 73 testmon | pending | Filtering: location type, queue status, capabilities, text search, 26 new tests |
 | 2026-02-08 | PROJ-76 | Phase 5 | Complete | 85 testmon | pending | Navigation: get_hex_for_source, navigate_to_source, re-click detection, 12 new tests |
+| 2026-02-08 | PROJ-76 | Phase 6 | Complete | 107 testmon | pending | Multi-select & batch add: handle_row_click, batch_add_to_selected, BatchAddResult, 22 new tests |
 
 ---
 
