@@ -1,6 +1,30 @@
-"""Tests for ProductionEngine creation, empty queues, and turn decrement."""
+"""Tests for ProductionEngine creation, empty queues, and turn decrement.
+
+PROJ-69 Phase 2: Updated to reflect new queue model where ship items go in
+facility queues and base queue handles complexes only.
+"""
 import pytest
 from unittest.mock import MagicMock
+
+from game.strategy.data.planet import PlanetaryFacility
+
+
+def _make_shipyard(instance_id: str = "yard_1") -> PlanetaryFacility:
+    """Create a shipyard facility for tests."""
+    return PlanetaryFacility(
+        instance_id=instance_id,
+        design_id="shipyard_complex",
+        name="Space Shipyard",
+        design_data={
+            "layers": {
+                "CORE": [{
+                    "id": "space_shipyard",
+                    "abilities": {"SpaceShipyard": {"value": 1}}
+                }]
+            }
+        },
+        is_operational=True,
+    )
 
 
 class TestProductionEngineCreation:
@@ -51,13 +75,28 @@ class TestEmptyQueueHandling:
 class TestProductionTurnDecrement:
     """Tests for turn decrement in construction queue."""
 
-    def test_production_decrements_turns_dict_format(self, mock_empire, mock_planet):
-        """Production decrements turns remaining (dict format)."""
+    def test_production_decrements_turns_facility_queue(self, mock_empire, mock_planet):
+        """Facility queue decrements turns remaining for ship items."""
         from game.strategy.engine.production_engine import ProductionEngine
 
         engine = ProductionEngine()
-        mock_planet.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
-        mock_planet.has_space_shipyard = True
+        yard = _make_shipyard()
+        yard.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
+        mock_planet.facilities = [yard]
+        mock_planet.construction_queue = []
+        mock_empire.colonies = [mock_planet]
+
+        engine.process_production([mock_empire])
+
+        assert yard.construction_queue[0]["turns_remaining"] == 2
+
+    def test_production_decrements_turns_base_queue_complex(self, mock_empire, mock_planet):
+        """Base queue decrements turns remaining for complex items."""
+        from game.strategy.engine.production_engine import ProductionEngine
+
+        engine = ProductionEngine()
+        mock_planet.construction_queue = [{"type": "complex", "design_id": "Factory", "turns_remaining": 3}]
+        mock_planet.facilities = []
         mock_empire.colonies = [mock_planet]
 
         engine.process_production([mock_empire])
@@ -68,17 +107,19 @@ class TestProductionTurnDecrement:
 class TestDictFormatSupport:
     """Tests for dict format production queue items."""
 
-    def test_dict_format_supported(self, mock_empire, mock_planet):
-        """Dict format is fully supported."""
+    def test_dict_format_supported_facility_queue(self, mock_empire, mock_planet):
+        """Dict format is fully supported in facility queues."""
         from game.strategy.engine.production_engine import ProductionEngine
 
         engine = ProductionEngine()
-        mock_planet.construction_queue = [
+        yard = _make_shipyard()
+        yard.construction_queue = [
             {"type": "ship", "design_id": "Cruiser", "turns_remaining": 5}
         ]
-        mock_planet.has_space_shipyard = True
+        mock_planet.facilities = [yard]
+        mock_planet.construction_queue = []
         mock_empire.colonies = [mock_planet]
 
         engine.process_production([mock_empire])
 
-        assert mock_planet.construction_queue[0]["turns_remaining"] == 4
+        assert yard.construction_queue[0]["turns_remaining"] == 4

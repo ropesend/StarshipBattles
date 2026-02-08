@@ -1,8 +1,31 @@
-"""Tests for ship spawning, complex spawning, and multi-processing."""
+"""Tests for ship spawning, complex spawning, and multi-processing.
+
+PROJ-69 Phase 2: Updated multi-processing tests to use facility queues
+for ship items (base queue now handles complexes only).
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.hex_math import HexCoord
+from game.strategy.data.planet import PlanetaryFacility
+
+
+def _make_shipyard(instance_id: str = "yard_1") -> PlanetaryFacility:
+    """Create a shipyard facility for tests."""
+    return PlanetaryFacility(
+        instance_id=instance_id,
+        design_id="shipyard_complex",
+        name="Space Shipyard",
+        design_data={
+            "layers": {
+                "CORE": [{
+                    "id": "space_shipyard",
+                    "abilities": {"SpaceShipyard": {"value": 1}}
+                }]
+            }
+        },
+        is_operational=True,
+    )
 
 
 class TestShipSpawning:
@@ -159,77 +182,87 @@ class TestSpawnLocation:
 
 
 class TestMultipleItemsProcessing:
-    """Tests for processing multiple queue items."""
+    """Tests for processing multiple queue items in facility queues."""
 
     def test_only_first_item_processed_per_turn(self, mock_empire, mock_planet):
-        """Only first item in queue is processed each turn."""
+        """Only first item in facility queue is processed each turn."""
         from game.strategy.engine.production_engine import ProductionEngine
 
         engine = ProductionEngine()
-        mock_planet.construction_queue = [
+        yard = _make_shipyard()
+        yard.construction_queue = [
             {"type": "ship", "design_id": "Scout", "turns_remaining": 3},
             {"type": "ship", "design_id": "Cruiser", "turns_remaining": 5}
         ]
-        mock_planet.has_space_shipyard = True
+        mock_planet.facilities = [yard]
+        mock_planet.construction_queue = []
         mock_empire.colonies = [mock_planet]
 
         engine.process_production([mock_empire])
 
         # First item decremented
-        assert mock_planet.construction_queue[0]["turns_remaining"] == 2
+        assert yard.construction_queue[0]["turns_remaining"] == 2
         # Second item unchanged
-        assert mock_planet.construction_queue[1]["turns_remaining"] == 5
+        assert yard.construction_queue[1]["turns_remaining"] == 5
 
 
 class TestMultipleColoniesProcessing:
     """Tests for processing multiple colonies."""
 
     def test_all_colonies_processed(self, mock_empire):
-        """All empire colonies are processed."""
+        """All empire colonies are processed (facility queues)."""
         from game.strategy.engine.production_engine import ProductionEngine
 
         engine = ProductionEngine()
 
+        yard1 = _make_shipyard("yard_1")
+        yard1.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
         colony1 = MagicMock()
-        colony1.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
-        colony1.has_space_shipyard = True
+        colony1.construction_queue = []
+        colony1.facilities = [yard1]
 
+        yard2 = _make_shipyard("yard_2")
+        yard2.construction_queue = [{"type": "ship", "design_id": "Cruiser", "turns_remaining": 5}]
         colony2 = MagicMock()
-        colony2.construction_queue = [{"type": "ship", "design_id": "Cruiser", "turns_remaining": 5}]
-        colony2.has_space_shipyard = True
+        colony2.construction_queue = []
+        colony2.facilities = [yard2]
 
         mock_empire.colonies = [colony1, colony2]
 
         engine.process_production([mock_empire])
 
-        assert colony1.construction_queue[0]["turns_remaining"] == 2
-        assert colony2.construction_queue[0]["turns_remaining"] == 4
+        assert yard1.construction_queue[0]["turns_remaining"] == 2
+        assert yard2.construction_queue[0]["turns_remaining"] == 4
 
 
 class TestMultipleEmpiresProcessing:
     """Tests for processing multiple empires."""
 
     def test_all_empires_processed(self, mock_planet):
-        """All empires are processed."""
+        """All empires are processed (facility queues)."""
         from game.strategy.engine.production_engine import ProductionEngine
 
         engine = ProductionEngine()
 
+        yard1 = _make_shipyard("yard_1")
+        yard1.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
         empire1 = MagicMock()
         empire1.id = 0
         colony1 = MagicMock()
-        colony1.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
-        colony1.has_space_shipyard = True
+        colony1.construction_queue = []
+        colony1.facilities = [yard1]
         empire1.colonies = [colony1]
 
+        yard2 = _make_shipyard("yard_2")
+        yard2.construction_queue = [{"type": "ship", "design_id": "Cruiser", "turns_remaining": 5}]
         empire2 = MagicMock()
         empire2.id = 1
         colony2 = MagicMock()
-        colony2.construction_queue = [{"type": "ship", "design_id": "Cruiser", "turns_remaining": 5}]
-        colony2.has_space_shipyard = True
+        colony2.construction_queue = []
+        colony2.facilities = [yard2]
         empire2.colonies = [colony2]
 
         engine.process_production([empire1, empire2])
 
-        assert colony1.construction_queue[0]["turns_remaining"] == 2
-        assert colony2.construction_queue[0]["turns_remaining"] == 4
+        assert yard1.construction_queue[0]["turns_remaining"] == 2
+        assert yard2.construction_queue[0]["turns_remaining"] == 4

@@ -77,9 +77,9 @@ class TestProductionProcessing:
         # No errors, nothing built
 
     def test_production_decrements_turns(self, turn_engine, mock_empire, mock_planet):
-        """Production decrements turns remaining."""
-        mock_planet.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 3}]
-        mock_planet.has_space_shipyard = True
+        """Production decrements turns remaining (complex in base queue)."""
+        mock_planet.construction_queue = [{"type": "complex", "design_id": "Factory", "turns_remaining": 3}]
+        mock_planet.facilities = []
         mock_empire.colonies = [mock_planet]
 
         turn_engine.process_production([mock_empire])
@@ -87,13 +87,13 @@ class TestProductionProcessing:
         assert mock_planet.construction_queue[0]["turns_remaining"] == 2
 
     def test_production_completes_at_zero(self, turn_engine, mock_empire, mock_planet, mock_galaxy):
-        """Production completes when turns reach zero."""
-        mock_planet.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 1}]
-        mock_planet.has_space_shipyard = True
+        """Production completes when turns reach zero (complex in base queue)."""
+        mock_planet.construction_queue = [{"type": "complex", "design_id": "Factory", "turns_remaining": 1}]
+        mock_planet.facilities = []
         mock_empire.colonies = [mock_planet]
 
         # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
-        with patch.object(turn_engine.production_engine, '_spawn_ship') as mock_spawn:
+        with patch.object(turn_engine.production_engine, '_spawn_complex') as mock_spawn:
             turn_engine.process_production([mock_empire], mock_galaxy)
 
             mock_spawn.assert_called()

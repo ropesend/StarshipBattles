@@ -220,8 +220,13 @@ def test_shipyard_enables_ship_building(empire_with_colony):
     # Planet should now have shipyard
     assert planet.has_space_shipyard is True
 
-    # Now add ship to queue (shipyard exists)
-    planet.add_production("frigate_mk1", turns=3, vehicle_type="ship")
+    # PROJ-69 Phase 2: Ship items now go in facility queues, not base queue
+    # Add ship to the shipyard facility's construction queue
+    facility.construction_queue.append({
+        "design_id": "frigate_mk1",
+        "type": "ship",
+        "turns_remaining": 3
+    })
 
     # Process remaining turns for ship
     initial_fleet_count = len(empire.fleets)

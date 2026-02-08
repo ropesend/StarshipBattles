@@ -2,49 +2,58 @@
 Production completion tests.
 
 Tests ship and complex spawning when production completes.
+
+PROJ-69 Phase 2: Updated to use facility queues for ship items. Ship items
+now go in shipyard facility construction_queue, not planet base queue.
 """
 
 import pytest
 from game.strategy.data.planet import PlanetaryFacility
 
 
+def _make_shipyard(instance_id: str = "shipyard_1") -> PlanetaryFacility:
+    """Create a shipyard facility with space_shipyard ability."""
+    return PlanetaryFacility(
+        instance_id=instance_id,
+        design_id="shipyard_complex",
+        name="Space Shipyard",
+        design_data={
+            "layers": {
+                "CORE": [{
+                    "id": "space_shipyard",
+                    "abilities": {"SpaceShipyard": {"value": 1}}
+                }]
+            }
+        },
+        is_operational=True
+    )
+
+
 class TestProductionCompletion:
     """Tests for production completing and spawning entities."""
 
     def test_production_completion(self, production_setup):
-        """Verify ship spawns when production completes."""
+        """Verify ship spawns when production completes via facility queue."""
         planet = production_setup['planet']
         empire = production_setup['empire']
         engine = production_setup['engine']
         empires = production_setup['empires']
         temp_dir = production_setup['temp_dir']
 
-        # Add shipyard first
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
+        # Add shipyard with ship item in its facility queue
+        shipyard = _make_shipyard()
+        shipyard.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
         planet.facilities.append(shipyard)
-
-        planet.add_production("test_ship", 1)
 
         # Capture initial fleets
         initial_fleet_count = len(empire.fleets)
 
-        # Simulate processing logic (since we haven't written it yet, we are defining expectation)
         engine.process_production(empires, save_path=temp_dir)
 
-        # Expectation: Queue empty, Fleet count +1
-        assert len(planet.construction_queue) == 0
+        # Expectation: Facility queue empty, Fleet count +1
+        assert len(shipyard.construction_queue) == 0
         assert len(empire.fleets) == initial_fleet_count + 1
 
 
@@ -152,38 +161,26 @@ class TestComplexSpawning:
 
 
 class TestShipSpawning:
-    """Tests for ship spawning."""
+    """Tests for ship spawning via facility queues.
+
+    PROJ-69 Phase 2: Ship items are now in shipyard facility construction
+    queues, not the planet's base queue.
+    """
 
     def test_process_production_ship_spawns(self, production_setup):
-        """Verify ship spawns as fleet when production completes."""
+        """Verify ship spawns as fleet when facility queue production completes."""
         planet = production_setup['planet']
         empire = production_setup['empire']
         engine = production_setup['engine']
         empires = production_setup['empires']
         temp_dir = production_setup['temp_dir']
 
-        # Add shipyard first
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
+        # Add shipyard with ship in facility queue
+        shipyard = _make_shipyard()
+        shipyard.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
         planet.facilities.append(shipyard)
-
-        queue_item = {
-            "design_id": "test_ship",
-            "type": "ship",
-            "turns_remaining": 1
-        }
-        planet.construction_queue.append(queue_item)
 
         initial_fleet_count = len(empire.fleets)
 
@@ -191,39 +188,23 @@ class TestShipSpawning:
         engine.process_production(empires, save_path=temp_dir)
 
         # Should spawn fleet
-        assert len(planet.construction_queue) == 0
+        assert len(shipyard.construction_queue) == 0
         assert len(empire.fleets) == initial_fleet_count + 1
 
     def test_ship_builds_in_1_turn(self, production_setup):
-        """Test that ships complete after 1 turn."""
+        """Test that ships complete after 1 turn via facility queue."""
         planet = production_setup['planet']
         empire = production_setup['empire']
         engine = production_setup['engine']
         empires = production_setup['empires']
         temp_dir = production_setup['temp_dir']
 
-        # Add shipyard first
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
+        # Add shipyard with ship in facility queue
+        shipyard = _make_shipyard()
+        shipyard.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
         planet.facilities.append(shipyard)
-
-        queue_item = {
-            "design_id": "test_ship",
-            "type": "ship",
-            "turns_remaining": 1
-        }
-        planet.construction_queue.append(queue_item)
 
         initial_fleet_count = len(empire.fleets)
 
@@ -231,7 +212,7 @@ class TestShipSpawning:
         engine.process_production(empires, save_path=temp_dir)
 
         # Should complete and remove from queue
-        assert len(planet.construction_queue) == 0
+        assert len(shipyard.construction_queue) == 0
         # Should spawn fleet
         assert len(empire.fleets) == initial_fleet_count + 1
 
@@ -244,29 +225,12 @@ class TestShipSpawning:
         empires = production_setup['empires']
         temp_dir = production_setup['temp_dir']
 
-        # Add shipyard first
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
+        # Add shipyard with ship in facility queue
+        shipyard = _make_shipyard()
+        shipyard.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
         planet.facilities.append(shipyard)
-
-        # Add ship to queue
-        queue_item = {
-            "design_id": "test_ship",
-            "type": "ship",
-            "turns_remaining": 1
-        }
-        planet.construction_queue.append(queue_item)
 
         # Process turn
         engine.process_production(empires, save_path=temp_dir)
@@ -288,29 +252,12 @@ class TestShipSpawning:
         empires = production_setup['empires']
         temp_dir = production_setup['temp_dir']
 
-        # Add shipyard
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
+        # Add shipyard with ship in facility queue
+        shipyard = _make_shipyard()
+        shipyard.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
         planet.facilities.append(shipyard)
-
-        # Add ship to queue
-        queue_item = {
-            "design_id": "test_ship",
-            "type": "ship",
-            "turns_remaining": 1
-        }
-        planet.construction_queue.append(queue_item)
 
         # Process turn
         engine.process_production(empires, save_path=temp_dir)
@@ -327,30 +274,15 @@ class TestShipSpawning:
         empires = production_setup['empires']
         temp_dir = production_setup['temp_dir']
 
-        # Add shipyard
-        shipyard = PlanetaryFacility(
-            instance_id="shipyard_1",
-            design_id="shipyard_complex",
-            name="Space Shipyard",
-            design_data={
-                "layers": {
-                    "CORE": [{
-                        "abilities": {"SpaceShipyard": {"value": 1}}
-                    }]
-                }
-            },
-            is_operational=True
-        )
-        planet.facilities.append(shipyard)
-
-        # Add multiple ships to queue
+        # Add shipyard with multiple ships in facility queue
+        shipyard = _make_shipyard()
         for i in range(3):
-            queue_item = {
+            shipyard.construction_queue.append({
                 "design_id": f"test_ship_{i}",
                 "type": "ship",
                 "turns_remaining": 1
-            }
-            planet.construction_queue.append(queue_item)
+            })
+        planet.facilities.append(shipyard)
 
         # Process 3 turns
         for _ in range(3):

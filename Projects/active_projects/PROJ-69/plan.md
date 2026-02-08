@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Data Model - Facility Queues | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Production Engine - Parallel Processing | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Production Engine - Parallel Processing | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Build Queue Screen - Layout Restructure | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Controller & Drag Handler - Multi-Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Strategy Screen Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - PlanetaryFacility.construction_queue + BuildQueueSource + collector
-**Next Action:** Begin Phase 2 - Production Engine Parallel Processing
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - Production engine parallel facility queue processing
+**Next Action:** Begin Phase 3 - Build Queue Screen Layout Restructure
 **Blockers:** None
-**Context for Next Agent:** Test baseline: 6518 passed, 1 pre-existing failure (IFleet mock spec). New files: `game/strategy/data/build_queue_source.py`, `tests/unit/strategy/data/test_facility_construction_queue.py`, `tests/unit/strategy/data/test_build_queue_source.py`. 22 new tests total (7 + 15).
+**Context for Next Agent:** Test baseline: 6534 passed, 1 pre-existing failure (IFleet mock spec). Production engine refactored: `process_production()` now splits into `_process_base_queue()` (complexes only) and `_process_facility_queues()` (per-shipyard parallel). New file: `tests/unit/strategy/production_engine/test_facility_queue_production.py` (15 tests). Updated 6 existing test files for new queue model. Total +16 new tests from Phase 1 baseline.
 
 ## Overview
 Restructure the build queue system to support multiple simultaneous build queues per hex. Each shipyard facility on a planet generates its own build queue, and each fleet space yard has its own queue. A new queue selector UI column allows players to view and manage all queues at a hex, with support for single-queue viewing and multi-queue batch adding.

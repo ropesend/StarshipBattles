@@ -4,9 +4,11 @@ ProductionEngine - Handles construction queue processing and spawning.
 PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
 PROJ-20: Standardized on dict format only.
 PROJ-67 Phase 3: Added fleet production processing.
+PROJ-69 Phase 2: Parallel facility queue processing (multiple shipyards).
 
 Responsibilities:
-- Process construction queues for all colonies
+- Process base construction queue (complexes only) for all colonies
+- Process shipyard facility queues independently (parallel construction)
 - Process construction queues for fleets with space yards
 - Spawn completed ships as new fleets (planet) or add to fleet (fleet yards)
 - Spawn completed complexes as planetary facilities
@@ -16,6 +18,7 @@ import uuid
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
 from game.core.logger import log_info, log_warning
+from game.strategy.data.build_queue_source import _facility_is_shipyard
 from game.strategy.data.fleet import Fleet, OrderType
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
@@ -48,6 +51,10 @@ class ProductionEngine:
         """
         Process construction queues for all colonies.
 
+        PROJ-69 Phase 2: Two loops per colony:
+        1. Base queue (colony.construction_queue) - complexes only
+        2. Facility queues - each operational shipyard facility processes independently
+
         Args:
             empires: List of Empire objects to process
             galaxy: Galaxy object for fleet spawning
@@ -55,32 +62,85 @@ class ProductionEngine:
         """
         for emp in empires:
             for colony in emp.colonies:
-                if not colony.construction_queue:
-                    continue
+                # --- Base queue: complexes only ---
+                self._process_base_queue(colony, emp, galaxy, save_path)
 
-                item: Dict[str, Any] = colony.construction_queue[0]
-                vehicle_type = item.get("type", "ship")
-                design_id = item["design_id"]
+                # --- Facility queues: each shipyard processes independently ---
+                self._process_facility_queues(colony, emp, galaxy, save_path)
 
-                # Check if item requires shipyard
-                if vehicle_type in ["ship", "fighter", "satellite"]:
-                    if not colony.has_space_shipyard:
-                        log_info(f"Build paused at {colony.name}: no shipyard for {design_id}")
-                        continue  # Skip this colony, don't decrement turns
+    def _process_base_queue(
+        self, colony, empire, galaxy=None, save_path: Optional[str] = None
+    ) -> None:
+        """Process the colony's base construction queue (complexes only).
 
-                # Decrement turns now that validation passed
-                item["turns_remaining"] -= 1
-                turns_remaining = item["turns_remaining"]
+        Ship/fighter/satellite items in the base queue are skipped - they
+        belong in facility queues. Only complex items are processed here.
 
-                if turns_remaining <= 0:
-                    colony.construction_queue.pop(0)
-                    log_info(f"Production Complete: {design_id} ({vehicle_type})")
+        Args:
+            colony: Planet/colony to process.
+            empire: Empire that owns the colony.
+            galaxy: Galaxy object for spawning.
+            save_path: Path to savegame folder.
+        """
+        if not colony.construction_queue:
+            return
 
-                    # Route to appropriate spawner
-                    if vehicle_type == "complex":
-                        self._spawn_complex(colony, design_id, emp, save_path)
-                    else:
-                        self._spawn_ship(colony, design_id, emp, galaxy, save_path)
+        item: Dict[str, Any] = colony.construction_queue[0]
+        vehicle_type = item.get("type", "ship")
+        design_id = item["design_id"]
+
+        # Base queue only processes complexes
+        if vehicle_type != "complex":
+            log_info(f"Base queue at {colony.name}: skipping {vehicle_type} item {design_id} (use facility queue)")
+            return
+
+        # Decrement turns
+        item["turns_remaining"] -= 1
+        turns_remaining = item["turns_remaining"]
+
+        if turns_remaining <= 0:
+            colony.construction_queue.pop(0)
+            log_info(f"Production Complete: {design_id} ({vehicle_type})")
+            self._spawn_complex(colony, design_id, empire, save_path)
+
+    def _process_facility_queues(
+        self, colony, empire, galaxy=None, save_path: Optional[str] = None
+    ) -> None:
+        """Process each operational shipyard facility's construction queue.
+
+        Each shipyard facility has its own construction_queue and processes
+        independently, enabling parallel construction.
+
+        Args:
+            colony: Planet/colony to process.
+            empire: Empire that owns the colony.
+            galaxy: Galaxy object for spawning.
+            save_path: Path to savegame folder.
+        """
+        for facility in colony.facilities:
+            if not _facility_is_shipyard(facility):
+                continue
+
+            if not facility.construction_queue:
+                continue
+
+            item: Dict[str, Any] = facility.construction_queue[0]
+            vehicle_type = item.get("type", "ship")
+            design_id = item["design_id"]
+
+            # Decrement turns
+            item["turns_remaining"] -= 1
+            turns_remaining = item["turns_remaining"]
+
+            if turns_remaining <= 0:
+                facility.construction_queue.pop(0)
+                log_info(f"Facility Production Complete: {design_id} ({vehicle_type})")
+
+                # Route to appropriate spawner
+                if vehicle_type == "complex":
+                    self._spawn_complex(colony, design_id, empire, save_path)
+                else:
+                    self._spawn_ship(colony, design_id, empire, galaxy, save_path)
 
     def _spawn_complex(self, planet, design_id: str, empire, save_path: Optional[str] = None) -> None:
         """
