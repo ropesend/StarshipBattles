@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-72 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-72 complete, audit passed, awaiting user verification
-**Current Project:** PROJ-71 (next)
-**Current Phase:** Phase 1
-**Test Status:** 6652 passed (1 pre-existing failure in test_protocols.py)
+**Last Completed:** PROJ-71 Phase 1 - Core Data Model + InputMapper
+**Current Status:** PROJ-71 Phase 1 complete, ready for Phase 2
+**Current Project:** PROJ-71
+**Current Phase:** Phase 2
+**Test Status:** 6715 passed (1 pre-existing failure in test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-72 audit found and fixed panel height bug (245→265px, hardcoded→named constants)
-- Modified `game/ui/screens/strategy_ui.py` - imported PANEL_WIDTH/PANEL_HEIGHT, replaced magic numbers
-- Updated all phase checklists and plan.md
-- PROJ-72 marked [x] complete, ready for user verification
-- Next: PROJ-71 Strategy Layer Hotkey System
+- Phase 1 created: InputAction enum (37 actions, 7 contexts), KeyBinding dataclass, InputMapper service
+- New files: game/core/input_actions.py, game/core/input_mapper.py, data/default_keybindings.json
+- Modified: game/core/paths.py (added SETTINGS_DIR, DEFAULT_KEYBINDINGS_FILE, USER_KEYBINDINGS_FILE)
+- Tests: tests/unit/core/test_input_actions.py (30), tests/unit/core/test_input_mapper.py (33) = 63 new
+- Added detail_panel.* context (not in original plan) for panel buttons
+- Next: Phase 2 - Strategy Screen Integration (inject mapper, wire events, add tooltips)
 
 ---
 
@@ -132,8 +133,8 @@
 
 ---
 
-- [ ] **PROJ-71: Strategy Layer Hotkey System**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-71: Strategy Layer Hotkey System**
+  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-71/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-71/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -223,6 +224,7 @@
 | 2026-02-07 | PROJ-72 | Phase 3 | Complete | 6652 passed | pending | on_menu_option dispatch, load/quit/coming_soon helpers, App.py handlers, 22 tests |
 | 2026-02-07 | PROJ-72 | Phase 4 | Complete | 6652 passed | pending | Full test suite verification, manual items deferred to user |
 | 2026-02-07 | PROJ-72 | Audit 1 | PASSED | 6652 passed | pending | Fixed panel height bug (245→265px), replaced magic numbers with constants |
+| 2026-02-07 | PROJ-71 | Phase 1 | Complete | 6715 passed | pending | InputAction enum, KeyBinding, InputMapper, 63 new tests |
 
 ---
 

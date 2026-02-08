@@ -1,0 +1,49 @@
+{
+  "_version": 1,
+  "bindings": {
+    "global.exit": {"key": "K_x", "modifiers": ["alt"]},
+    "global.screenshot_full": {"key": "K_F12", "modifiers": []},
+    "global.screenshot_viewport": {"key": "K_F11", "modifiers": []},
+    "global.toggle_profiler": {"key": "K_F9", "modifiers": []},
+
+    "strategy.next_turn": {"key": "K_RETURN", "modifiers": []},
+    "strategy.prev_colony": {"key": "K_COMMA", "modifiers": []},
+    "strategy.next_colony": {"key": "K_PERIOD", "modifiers": []},
+    "strategy.prev_fleet": {"key": "K_LEFTBRACKET", "modifiers": []},
+    "strategy.next_fleet": {"key": "K_RIGHTBRACKET", "modifiers": []},
+    "strategy.open_planets": {"key": "K_p", "modifiers": []},
+    "strategy.open_empire": {"key": "K_e", "modifiers": []},
+    "strategy.open_research": {"key": "K_r", "modifiers": []},
+    "strategy.open_design": {"key": "K_d", "modifiers": []},
+    "strategy.open_build_queues": {"key": "K_b", "modifiers": []},
+    "strategy.save_game": {"key": "K_s", "modifiers": ["ctrl"]},
+    "strategy.zoom_galaxy": {"key": "K_g", "modifiers": ["shift"]},
+    "strategy.zoom_system": {"key": "K_s", "modifiers": ["shift"]},
+
+    "fleet.move": {"key": "K_m", "modifiers": []},
+    "fleet.join": {"key": "K_j", "modifiers": []},
+    "fleet.colonize": {"key": "K_c", "modifiers": []},
+    "fleet.transfer": {"key": "K_t", "modifiers": []},
+    "fleet.cancel_mode": {"key": "K_ESCAPE", "modifiers": []},
+
+    "detail_panel.orders": {"key": "K_o", "modifiers": []},
+    "detail_panel.fleet_report": {"key": "K_f", "modifiers": []},
+    "detail_panel.build": {},
+    "detail_panel.colonize": {},
+    "detail_panel.build_yard": {},
+
+    "build_queue.close": {"key": "K_ESCAPE", "modifiers": []},
+    "build_queue.add": {"key": "K_a", "modifiers": []},
+    "build_queue.remove": {"key": "K_DELETE", "modifiers": []},
+    "build_queue.cat_complexes": {"key": "K_1", "modifiers": []},
+    "build_queue.cat_ships": {"key": "K_2", "modifiers": []},
+    "build_queue.cat_satellites": {"key": "K_3", "modifiers": []},
+    "build_queue.cat_fighters": {"key": "K_4", "modifiers": []},
+
+    "fleet_orders.undo": {"key": "K_z", "modifiers": ["ctrl"]},
+    "fleet_orders.clear": {"key": "K_DELETE", "modifiers": []},
+
+    "transfer.confirm": {"key": "K_RETURN", "modifiers": []},
+    "transfer.cancel": {"key": "K_ESCAPE", "modifiers": []}
+  }
+}

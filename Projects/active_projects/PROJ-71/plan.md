@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Core Data Model + InputMapper | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Core Data Model + InputMapper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Strategy Screen Integration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Sub-Window Hotkey Integration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Keybindings Settings Scene | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Polish | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-07 19:00
-**Active Phase:** Planning Complete - Ready for Implementation
-**Last Action:** Completed architecture review and detailed plan
-**Next Action:** Begin Phase 1 - Create InputAction enum and KeyBinding dataclass
+**Last Updated:** 2026-02-07
+**Active Phase:** Phase 2 - Strategy Screen Integration
+**Last Action:** Completed Phase 1 - Core Data Model + InputMapper (63 new tests)
+**Next Action:** Begin Phase 2 - Integrate InputMapper into strategy screen
 **Blockers:** None
-**Context for Next Agent:** Test baseline is 6519 passed. All exploration findings are documented in design.md. User confirmed: scope covers strategy layer + all sub-screens reachable from it. Tooltips only (no button text changes). Full-screen IScene for settings. Defaults in data/, user overrides in output/settings/. PROJ-72 will wire the access button.
+**Context for Next Agent:** Phase 1 complete. Created InputAction enum (37 actions in 7 contexts), KeyBinding dataclass, InputMapper service with O(1) resolution, context filtering, conflict detection, save/load. Added detail_panel.* context for panel buttons. Path constants added (SETTINGS_DIR, DEFAULT_KEYBINDINGS_FILE, USER_KEYBINDINGS_FILE). 63 new tests (30 input_actions + 33 input_mapper). Full suite: 6715 passed, 1 pre-existing failure.
 
 ## Overview
 All keyboard shortcuts in the strategy layer are currently hardcoded. This project creates a centralized, data-driven keybinding system with a JSON defaults file, user override persistence, tooltip hints on buttons, and a full-screen keybinding editor scene. Every button and command in the strategy layer and its sub-screens gets a bindable hotkey.

@@ -62,6 +62,7 @@ class Paths:
     RACES_DIR: str = os.path.join(OUTPUT_DIR, "races")
     SCREENSHOTS_DIR: str = os.path.join(OUTPUT_DIR, "screenshots")
     LOGS_DIR: str = os.path.join(OUTPUT_DIR, "logs")
+    SETTINGS_DIR: str = os.path.join(OUTPUT_DIR, "settings")
 
     # === Data Subdirectories ===
     FORMATIONS_DIR: str = os.path.join(DATA_DIR, "formations")
@@ -84,6 +85,10 @@ class Paths:
     VEHICLE_CLASSES_FILE: str = os.path.join(DATA_DIR, "vehicleclasses.json")
     VEHICLE_LAYERS_FILE: str = os.path.join(DATA_DIR, "vehiclelayers.json")
     RESOURCES_FILE: str = os.path.join(DATA_DIR, "resources.json")
+
+    # === Settings Files ===
+    DEFAULT_KEYBINDINGS_FILE: str = os.path.join(DATA_DIR, "default_keybindings.json")
+    USER_KEYBINDINGS_FILE: str = os.path.join(SETTINGS_DIR, "keybindings.json")
 
     # === Asset Files ===
     ASSET_MANIFEST_FILE: str = os.path.join(ASSET_DIR, "asset_manifest.json")
