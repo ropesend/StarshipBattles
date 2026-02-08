@@ -8,18 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-76 Phase 1 - Data Layer
-**Current Status:** PROJ-76 Phase 1 complete, Phase 2 next
+**Last Completed:** PROJ-76 Phase 2 - Window Foundation
+**Current Status:** PROJ-76 Phase 2 complete, Phase 3 next
 **Current Project:** PROJ-76
-**Current Phase:** Phase 2
-**Test Status:** 7004+ passed (testmon: 183 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
+**Current Phase:** Phase 3
+**Test Status:** 7004+ passed (testmon: 21 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-76 Phase 1 complete: collect_all_build_queues_for_empire() added to build_queue_source.py
-- 7 new tests in TestCollectAllBuildQueuesForEmpire class
-- get_hex_for_source() helper deferred to Phase 5 (Navigation) where it's actually needed
-- Next: Phase 2 - Window Foundation (empire_build_queue_window.py)
+- PROJ-76 Phase 2 complete: EmpireBuildQueueWindow created
+- New file: game/ui/screens/empire_build_queue_window.py (~290 lines)
+- New test: tests/unit/ui/screens/test_empire_build_queue_window.py (21 tests)
+- Window has: sidebar placeholder, header, scrollable list, row rendering, click selection, scroll, close callback
+- Data formatters: _get_queue_summary(), _get_first_item_text(), _get_capabilities_text()
+- Next: Phase 3 - Column System (configurable columns like PlanetListWindow)
 
 ---
 
@@ -164,7 +166,7 @@
 ---
 
 - [/] **PROJ-76: Empire-Wide Build Queue Window**
-  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-76/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-76/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -285,6 +287,7 @@
 | 2026-02-08 | PROJ-75 | Phase 6 | Complete | 7004 passed | pending | Integration & UI: 15 E2E tests, build queue costs, resource bar, scuttle notifications |
 | 2026-02-08 | PROJ-75 | Audit 1 | PASSED | 7004 passed | pending | No issues found, 4 investigation agents verified all 6 phases |
 | 2026-02-08 | PROJ-76 | Phase 1 | Complete | 183 testmon | pending | collect_all_build_queues_for_empire(), 7 new tests |
+| 2026-02-08 | PROJ-76 | Phase 2 | Complete | 21 testmon | pending | EmpireBuildQueueWindow class, layout, row rendering, selection, 21 tests |
 
 ---
 
