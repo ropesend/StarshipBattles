@@ -1,7 +1,16 @@
 """Build Queue List Window - Shows all active build queues for an empire (BUG-67)."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UILabel
+
+from game.core.input_actions import InputAction
+
+if TYPE_CHECKING:
+    from game.core.input_mapper import InputMapper
 
 
 class BuildQueueListWindow(UIWindow):
@@ -9,10 +18,12 @@ class BuildQueueListWindow(UIWindow):
 
     ROW_HEIGHT = 30
 
-    def __init__(self, rect, manager, empire, on_close_callback=None):
+    def __init__(self, rect, manager, empire, on_close_callback=None,
+                 input_mapper: Optional['InputMapper'] = None):
         super().__init__(rect, manager, window_display_title="Build Queues", resizable=False)
         self.empire = empire
         self.on_close_callback = on_close_callback
+        self._mapper = input_mapper
         self.row_labels = []
         self._build_list()
 
@@ -83,6 +94,31 @@ class BuildQueueListWindow(UIWindow):
                 container=container
             )
             self.row_labels.append(lbl)
+
+    def _handle_keydown(self, event: pygame.event.Event) -> bool:
+        """Dispatch keyboard events via InputMapper.
+
+        Args:
+            event: A pygame KEYDOWN event.
+
+        Returns:
+            True if the event was handled.
+        """
+        if not self._mapper:
+            return False
+        action = self._mapper.resolve(event, contexts=["build_queue"])
+        if action == InputAction.BUILD_QUEUE_CLOSE:
+            self.kill()
+            return True
+        return False
+
+    def process_event(self, event):
+        """Handle pygame events, including hotkeys."""
+        handled = super().process_event(event)
+        if event.type == pygame.KEYDOWN:
+            if self._handle_keydown(event):
+                return True
+        return handled
 
     def kill(self):
         for lbl in self.row_labels:

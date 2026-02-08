@@ -15,17 +15,17 @@
 |-------|--------|-----------|
 | 1. Core Data Model + InputMapper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Strategy Screen Integration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Sub-Window Hotkey Integration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Sub-Window Hotkey Integration | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Keybindings Settings Scene | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Polish | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 3 - Sub-Window Hotkey Integration
-**Last Action:** Completed Phase 2 - Strategy Screen Integration (36 new tests)
-**Next Action:** Begin Phase 3 - Wire hotkeys into sub-windows (Fleet Orders, Build Queue, Transfer Dialog, etc.)
+**Active Phase:** Phase 4 - Keybindings Settings Scene
+**Last Action:** Completed Phase 3 - Sub-Window Hotkey Integration (25 new tests)
+**Next Action:** Begin Phase 4 - Build the full-screen keybinding editor scene
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. InputMapper injected into app.py, StrategyScreen, StrategyInputHandler, and StrategyUI. Hardcoded key checks replaced with InputMapper.resolve() dispatch (with legacy fallback). New hotkey actions: Enter=EndTurn, P=Planets, D=Design, B=BuildQueues, Ctrl+S=Save, []=Fleet, ,./=Colony, O=Orders, F=FleetReport. Tooltip enrichment on 14 buttons. Fixed InputMapper._build_lookup to support multi-action keys (ESC shared across non-overlapping contexts). Full suite: 6751 passed, 1 pre-existing failure.
+**Context for Next Agent:** Phase 3 complete. InputMapper wired into all sub-windows: FleetOrdersWindow (Ctrl+Z undo, Del clear, tooltips), BuildQueueScreen (ESC close, A add, Del remove, 1-4 categories, tooltips), TransferDialog (Enter confirm, ESC cancel, tooltips), BuildQueueListWindow (ESC close). StrategyUI passes _mapper to all sub-window constructors. StrategyScreen passes input_mapper to BuildQueueScreen in both on_build_yard_click and on_fleet_build_click. Full suite: 6776 passed, 1 pre-existing failure.
 
 ## Overview
 All keyboard shortcuts in the strategy layer are currently hardcoded. This project creates a centralized, data-driven keybinding system with a JSON defaults file, user override persistence, tooltip hints on buttons, and a full-screen keybinding editor scene. Every button and command in the strategy layer and its sub-screens gets a bindable hotkey.

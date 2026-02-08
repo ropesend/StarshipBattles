@@ -1,22 +1,32 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIButton, UILabel, UIDropDownMenu, UIHorizontalSlider
+from game.core.input_actions import InputAction
 from game.core.logger import log_debug, log_info
 from game.strategy.engine.commands import IssueTransferCommand
+
+if TYPE_CHECKING:
+    from game.core.input_mapper import InputMapper
 
 class TransferDialog(UIWindow):
     """
     Hex-aware cargo and population transfer dialog.
-    
+
     Allows selecting a source and target within the same sector, specifying
     cargo/species types, and the amount to transfer.
     """
-    def __init__(self, relative_rect, manager, source_fleet, hex_coord, scene):
+    def __init__(self, relative_rect, manager, source_fleet, hex_coord, scene,
+                 input_mapper: Optional['InputMapper'] = None):
         super().__init__(relative_rect, manager, window_display_title="Cargo & Population Transfer")
         self.source_fleet = source_fleet
         self.hex_coord = hex_coord
         self.scene = scene
         self.facade = scene.facade
+        self._mapper = input_mapper
         
         # UI State
         self.available_sources = []
@@ -24,6 +34,7 @@ class TransferDialog(UIWindow):
         self.available_cargo = [] # List of (label, type, species_id, max_amount)
         
         self._setup_ui()
+        self._apply_tooltips()
         self._populate_initial_data()
 
     def _setup_ui(self):
@@ -210,9 +221,45 @@ class TransferDialog(UIWindow):
         self.slider_amount.value_range = (0, max_val)
         self.lbl_amount.set_text(str(max_val))
 
+    def _apply_tooltips(self) -> None:
+        """Enrich buttons with hotkey hint tooltips from InputMapper."""
+        if not self._mapper:
+            return
+        confirm_hint = self._mapper.get_display_text(InputAction.TRANSFER_CONFIRM)
+        if confirm_hint:
+            self.btn_confirm.set_tooltip(f"Issue Order ({confirm_hint})")
+        cancel_hint = self._mapper.get_display_text(InputAction.TRANSFER_CANCEL)
+        if cancel_hint:
+            self.btn_cancel.set_tooltip(f"Cancel ({cancel_hint})")
+
+    def _handle_keydown(self, event: pygame.event.Event) -> bool:
+        """Dispatch keyboard events via InputMapper.
+
+        Args:
+            event: A pygame KEYDOWN event.
+
+        Returns:
+            True if the event was handled.
+        """
+        if not self._mapper:
+            return False
+        action = self._mapper.resolve(event, contexts=["transfer"])
+        if action == InputAction.TRANSFER_CONFIRM:
+            self._issue_order()
+            return True
+        if action == InputAction.TRANSFER_CANCEL:
+            self.kill()
+            return True
+        return False
+
     def process_event(self, event):
         """Handle UI events."""
         super().process_event(event)
+
+        # Keyboard hotkeys via InputMapper
+        if event.type == pygame.KEYDOWN:
+            if self._handle_keydown(event):
+                return
         
         if event.type == pygame_gui.UI_DROP_DOWN_MENU_CHANGED:
             if event.ui_element == self.drop_source:

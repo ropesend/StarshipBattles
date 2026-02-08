@@ -3,19 +3,27 @@
 Cross-layer imports (acceptable for UI):
 - OrderType: Runtime - displays and filters order types
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
 import pygame
 import pygame_gui
 from pygame_gui.windows import UIConfirmationDialog
 
 from game.core.config import UIConfig
+from game.core.input_actions import InputAction
 from game.strategy.data.fleet import OrderType
+
+if TYPE_CHECKING:
+    from game.core.input_mapper import InputMapper
 
 class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     """
     Window to manage a Fleet's orders.
     Allows re-ordering, deletion, undeletion, and clearing.
     """
-    def __init__(self, rect, manager, fleet):
+    def __init__(self, rect, manager, fleet, input_mapper: Optional['InputMapper'] = None):
         super().__init__(
             rect=rect,
             manager=manager,
@@ -24,9 +32,10 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             resizable=True
         )
         self.fleet = fleet
-        
+        self._mapper = input_mapper
+
         # Undo History: Stores (index, order_object) tuples
-        self.deleted_history = [] 
+        self.deleted_history = []
         
         # --- UI Layout ---
         
@@ -59,9 +68,10 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             anchors={'left': 'left', 'right': 'left', 'top': 'bottom', 'bottom': 'bottom'}
         )
         self.btn_undo.disable()
-        
+
         self.rows = [] # Keep track of row UI elements
         self.rebuild_list()
+        self._apply_tooltips()
         
     def rebuild_list(self):
         """Clear and rebuild the order list rows."""
@@ -170,9 +180,45 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         else:
              return f"{order.type.name}"
 
+    def _apply_tooltips(self) -> None:
+        """Enrich buttons with hotkey hint tooltips from InputMapper."""
+        if not self._mapper:
+            return
+        undo_hint = self._mapper.get_display_text(InputAction.FLEET_ORDERS_UNDO)
+        if undo_hint:
+            self.btn_undo.set_tooltip(f"Undo Delete ({undo_hint})")
+        clear_hint = self._mapper.get_display_text(InputAction.FLEET_ORDERS_CLEAR)
+        if clear_hint:
+            self.btn_clear.set_tooltip(f"Clear All ({clear_hint})")
+
+    def _handle_keydown(self, event: pygame.event.Event) -> bool:
+        """Dispatch keyboard events via InputMapper.
+
+        Args:
+            event: A pygame KEYDOWN event.
+
+        Returns:
+            True if the event was handled.
+        """
+        if not self._mapper:
+            return False
+        action = self._mapper.resolve(event, contexts=["fleet_orders"])
+        if action == InputAction.FLEET_ORDERS_UNDO:
+            self.undo_delete()
+            return True
+        if action == InputAction.FLEET_ORDERS_CLEAR:
+            self.show_clear_confirmation()
+            return True
+        return False
+
     def process_event(self, event):
         handled = super().process_event(event)
-        
+
+        # Keyboard hotkeys via InputMapper
+        if event.type == pygame.KEYDOWN:
+            if self._handle_keydown(event):
+                return True
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_clear:
                 self.show_clear_confirmation()

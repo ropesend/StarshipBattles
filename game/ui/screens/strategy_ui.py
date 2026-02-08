@@ -968,7 +968,8 @@ class StrategyUI:
 
         self.build_queue_list_window = BuildQueueListWindow(
             rect, self.manager, empire,
-            on_close_callback=self._on_build_queue_list_closed
+            on_close_callback=self._on_build_queue_list_closed,
+            input_mapper=self._mapper
         )
 
     def _on_build_queue_list_closed(self):
@@ -983,7 +984,9 @@ class StrategyUI:
         w, h = 400, 500
         rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
 
-        self.fleet_orders_window = FleetOrdersWindow(rect, self.manager, fleet)
+        self.fleet_orders_window = FleetOrdersWindow(
+            rect, self.manager, fleet, input_mapper=self._mapper
+        )
 
     def open_fleet_report_window(self, fleet):
         """Open the Fleet Report Window."""
@@ -1026,6 +1029,7 @@ class StrategyUI:
             manager=self.manager,
             source_fleet=source_fleet,
             hex_coord=hex_coord,
-            scene=self.scene
+            scene=self.scene,
+            input_mapper=self._mapper
         )
 

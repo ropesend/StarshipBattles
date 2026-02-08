@@ -401,7 +401,8 @@ class StrategyScreen:
                     design_loader=design_loader,
                     hex_coord=hex_coord,
                     galaxy=self.session.galaxy,
-                    empire=self.current_empire
+                    empire=self.current_empire,
+                    input_mapper=self.input_mapper
                 )
                 log_info(f"Opened build queue for {planet.name}")
 
@@ -503,7 +504,8 @@ class StrategyScreen:
                     design_loader=design_loader,
                     hex_coord=hex_coord,
                     galaxy=self.session.galaxy,
-                    empire=self.current_empire
+                    empire=self.current_empire,
+                    input_mapper=self.input_mapper
                 )
                 log_info(f"Opened build queue for fleet {fleet.id}")
 

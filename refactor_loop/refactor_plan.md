@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-71 Phase 2 - Strategy Screen Integration
-**Current Status:** PROJ-71 Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-71 Phase 3 - Sub-Window Hotkey Integration
+**Current Status:** PROJ-71 Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-71
-**Current Phase:** Phase 3
-**Test Status:** 6751 passed (1 pre-existing failure in test_protocols.py)
+**Current Phase:** Phase 4
+**Test Status:** 6776 passed (1 pre-existing failure in test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 wired InputMapper into strategy layer: app.py, StrategyScreen, StrategyInputHandler, StrategyUI
-- Modified: game/app.py (InputMapper init, DI to StrategyScreen, global hotkey dispatch)
-- Modified: game/ui/screens/strategy_screen.py (input_mapper param, passes to sub-modules)
-- Modified: game/ui/screens/strategy_input_handler.py (_handle_keydown_mapped + _handle_keydown_legacy, 20+ action dispatches)
-- Modified: game/ui/screens/strategy_ui.py (input_mapper param, _apply_hotkey_tooltips on 14 buttons)
-- Modified: game/core/input_mapper.py (multi-action lookup for shared keys like ESC)
-- Modified: game/core/constants.py (GameState.KEYBINDINGS = 10)
-- New tests: test_strategy_input_handler_hotkeys.py (32), test_strategy_ui_tooltips.py (4) = 36 new
-- Next: Phase 3 - Sub-Window Hotkey Integration (Fleet Orders, Build Queue, Transfer Dialog)
+- Phase 3 wired InputMapper into all sub-windows opened from strategy layer
+- Modified: game/ui/screens/fleet_orders_window.py (input_mapper param, _handle_keydown, _apply_tooltips)
+- Modified: game/ui/screens/build_queue_screen.py (input_mapper param, _handle_keydown, _handle_remove_hotkey, _apply_tooltips)
+- Modified: game/ui/screens/transfer_dialog.py (input_mapper param, _handle_keydown, _apply_tooltips)
+- Modified: game/ui/screens/build_queue_list_window.py (input_mapper param, _handle_keydown, process_event)
+- Modified: game/ui/screens/strategy_ui.py (passes _mapper to FleetOrdersWindow, BuildQueueListWindow, TransferDialog)
+- Modified: game/ui/screens/strategy_screen.py (passes input_mapper to BuildQueueScreen in 2 locations)
+- New tests: test_sub_window_hotkeys.py (25 tests)
+- Next: Phase 4 - Keybindings Settings Scene
 
 ---
 
@@ -137,7 +137,7 @@
 ---
 
 - [/] **PROJ-71: Strategy Layer Hotkey System**
-  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-71/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-71/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -229,6 +229,7 @@
 | 2026-02-07 | PROJ-72 | Audit 1 | PASSED | 6652 passed | pending | Fixed panel height bug (245→265px), replaced magic numbers with constants |
 | 2026-02-07 | PROJ-71 | Phase 1 | Complete | 6715 passed | pending | InputAction enum, KeyBinding, InputMapper, 63 new tests |
 | 2026-02-07 | PROJ-71 | Phase 2 | Complete | 6751 passed | pending | Strategy integration, multi-action lookup, tooltips, 36 new tests |
+| 2026-02-07 | PROJ-71 | Phase 3 | Complete | 6776 passed | pending | Sub-window hotkeys: FleetOrders, BuildQueue, Transfer, BuildQueueList, 25 new tests |
 
 ---
 

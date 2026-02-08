@@ -13,6 +13,7 @@ import pygame_gui.windows
 from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
 
 from game.core.config import UIConfig
+from game.core.input_actions import InputAction
 from game.core.logger import log_info, log_warning, log_error, log_debug
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
@@ -23,6 +24,7 @@ from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource, collect_build_queues_at_hex
 
 if TYPE_CHECKING:
+    from game.core.input_mapper import InputMapper
     from game.strategy.data.build_context import BuildContext
     from game.strategy.data.planet import Planet
     from game.strategy.data.fleet import Fleet
@@ -47,7 +49,8 @@ class BuildQueueScreen:
         design_loader: 'SimulationDesignLoader' = None,
         hex_coord: Optional['HexCoord'] = None,
         galaxy: Optional['Galaxy'] = None,
-        empire: Optional['Empire'] = None
+        empire: Optional['Empire'] = None,
+        input_mapper: Optional['InputMapper'] = None
     ):
         """
         Initialize the build queue screen.
@@ -69,6 +72,7 @@ class BuildQueueScreen:
         self.session = session
         self.on_close = on_close_callback
         self.portrait_surface = portrait_surface
+        self._mapper = input_mapper
         self.queue_items = []  # List of UI elements for queue display
         self.selected_queue_index = None  # Currently selected item in queue
 
@@ -153,6 +157,9 @@ class BuildQueueScreen:
             on_refresh_queue=self._refresh_queue_display,
             on_refresh_design_report=self.controller.refresh_design_report
         )
+
+        # Apply hotkey tooltips
+        self._apply_tooltips()
 
         # Load initial designs
         self._refresh_items_list()
@@ -704,6 +711,92 @@ class BuildQueueScreen:
         # Refresh queue selector to update item counts
         self._refresh_queue_selector()
 
+    def _apply_tooltips(self) -> None:
+        """Enrich buttons with hotkey hint tooltips from InputMapper."""
+        if not self._mapper:
+            return
+        _hint = self._mapper.get_display_text
+        close_hint = _hint(InputAction.BUILD_QUEUE_CLOSE)
+        if close_hint:
+            self.btn_close.set_tooltip(f"Close ({close_hint})")
+        add_hint = _hint(InputAction.BUILD_QUEUE_ADD)
+        if add_hint:
+            self.btn_add_to_queue.set_tooltip(f"Add to Queue ({add_hint})")
+        remove_hint = _hint(InputAction.BUILD_QUEUE_REMOVE)
+        if remove_hint:
+            self.btn_remove_from_queue.set_tooltip(f"Remove Selected ({remove_hint})")
+        cat_c = _hint(InputAction.BUILD_QUEUE_CAT_COMPLEXES)
+        if cat_c:
+            self.btn_category_complex.set_tooltip(f"Complexes ({cat_c})")
+        cat_s = _hint(InputAction.BUILD_QUEUE_CAT_SHIPS)
+        if cat_s:
+            self.btn_category_ship.set_tooltip(f"Ships ({cat_s})")
+        cat_sat = _hint(InputAction.BUILD_QUEUE_CAT_SATELLITES)
+        if cat_sat:
+            self.btn_category_satellite.set_tooltip(f"Satellites ({cat_sat})")
+        cat_f = _hint(InputAction.BUILD_QUEUE_CAT_FIGHTERS)
+        if cat_f:
+            self.btn_category_fighter.set_tooltip(f"Fighters ({cat_f})")
+
+    def _handle_keydown(self, event: pygame.event.Event) -> bool:
+        """Dispatch keyboard events via InputMapper.
+
+        Args:
+            event: A pygame KEYDOWN event.
+
+        Returns:
+            True if the event was handled.
+        """
+        if not self._mapper:
+            return False
+        action = self._mapper.resolve(event, contexts=["build_queue"])
+        if action == InputAction.BUILD_QUEUE_CLOSE:
+            self._close()
+            return True
+        if action == InputAction.BUILD_QUEUE_ADD:
+            if self.drag_handler.selected_design:
+                self.controller.add_to_queue(self.drag_handler.selected_design, turns=1)
+            return True
+        if action == InputAction.BUILD_QUEUE_REMOVE:
+            self._handle_remove_hotkey()
+            return True
+        if action == InputAction.BUILD_QUEUE_CAT_COMPLEXES:
+            self.controller.set_category("complex")
+            self._refresh_items_list()
+            return True
+        if action == InputAction.BUILD_QUEUE_CAT_SHIPS:
+            self.controller.set_category("ship")
+            self._refresh_items_list()
+            return True
+        if action == InputAction.BUILD_QUEUE_CAT_SATELLITES:
+            self.controller.set_category("satellite")
+            self._refresh_items_list()
+            return True
+        if action == InputAction.BUILD_QUEUE_CAT_FIGHTERS:
+            self.controller.set_category("fighter")
+            self._refresh_items_list()
+            return True
+        return False
+
+    def _handle_remove_hotkey(self) -> None:
+        """Handle remove-from-queue via hotkey."""
+        if len(self.selected_queue_indices) > 1:
+            log_warning("Cannot remove items in multi-select mode")
+            return
+        remove_queue = (
+            self.active_queue_source.construction_queue
+            if self.active_queue_source is not None
+            else self.build_context.construction_queue
+        )
+        if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
+            removed_item = remove_queue.pop(self.selected_queue_index)
+            design_id = removed_item.get('design_id', 'Unknown')
+            log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
+            self.selected_queue_index = None
+            self._refresh_queue_display()
+        else:
+            log_warning("No queue item selected to remove")
+
     def _close(self):
         """Close the build queue screen."""
         # Kill the background panel - this cascades to all children
@@ -819,8 +912,10 @@ class BuildQueueScreen:
             if result is not None:
                 self.selected_queue_index = result
 
-        # Handle keyboard events for screenshots
+        # Handle keyboard events via InputMapper, then screenshots
         if event.type == pygame.KEYDOWN:
+            if self._handle_keydown(event):
+                return
             log_debug(f"BuildQueueScreen: Reached keyboard handler section, key={event.key}")
             if event.key == pygame.K_F12:
                 log_info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
