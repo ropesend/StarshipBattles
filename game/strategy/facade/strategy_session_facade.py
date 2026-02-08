@@ -317,6 +317,42 @@ class StrategySessionFacade:
         """
         return self._session.turn_number
 
+    # --- Event Log Queries (PROJ-77) ---
+
+    def get_turn_events(self, turn: int = None) -> List[dict]:
+        """Get events for a specific turn (or current turn if None).
+
+        Args:
+            turn: The turn number to query. Defaults to current turn.
+
+        Returns:
+            List of event dicts (immutable for UI consumption).
+        """
+        if turn is None:
+            turn = self._session.turn_number
+        events = self._session.event_log.get_events_for_turn(turn)
+        return [e.to_dict() for e in events]
+
+    def get_all_events(self) -> List[dict]:
+        """Get all events from the event log.
+
+        Returns:
+            List of all event dicts (immutable for UI consumption).
+        """
+        return [e.to_dict() for e in self._session.event_log.get_all_events()]
+
+    def get_events_by_category(self, category: str) -> List[dict]:
+        """Get events filtered by category.
+
+        Args:
+            category: Category string or EventCategory enum value to filter by.
+
+        Returns:
+            List of matching event dicts (immutable for UI consumption).
+        """
+        events = self._session.event_log.get_events_by_category(category)
+        return [e.to_dict() for e in events]
+
     # --- Validation Queries ---
 
     def can_colonize(

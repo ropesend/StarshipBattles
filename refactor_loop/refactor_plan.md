@@ -8,21 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-77 Phase 1 - Event Infrastructure
-**Current Status:** PROJ-77 Phase 1 complete. Next: Phase 2 (GameSession Integration)
+**Last Completed:** PROJ-77 Phase 2 - GameSession Integration
+**Current Status:** PROJ-77 Phase 2 complete. Next: Phase 3 (Engine Event Emission)
 **Current Project:** PROJ-77
-**Current Phase:** Phase 2
-**Test Status:** 7111 passed + 31 new event tests, 2 pre-existing failures
+**Current Phase:** Phase 3
+**Test Status:** 7166 passed, 2 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created `game/strategy/events/` package: event_types.py, event_log.py, __init__.py
-- EventType (str, Enum): SHIP_BUILT, COMPLEX_BUILT, COLONY_FOUNDED, COMBAT_RESOLVED
-- EventCategory (str, Enum): PRODUCTION, COLONIES, COMBAT, ALL
-- Event dataclass: to_dict/from_dict with graceful missing-details handling
-- EventLog class: append, get_events_for_turn, get_events_by_category, to_dict/from_dict
-- 31 tests in tests/unit/strategy/events/
-- Next: Phase 2 - Integrate EventLog into GameSession save/load
+- GameSession._event_log: EventLog created in __init__ and from_dict
+- _create_event_handler() creates closure that captures session for log_event() callback
+- Handler coerces enum values to strings, uses current turn_number, defaults for missing kwargs
+- event_log property exposes _event_log
+- to_dict() includes 'event_log', from_dict() restores it (graceful empty default for old saves)
+- from_dict() also calls set_event_handler so post-load events work
+- Facade: get_turn_events(turn=None), get_all_events(), get_events_by_category(category)
+- All facade methods return List[dict] (immutable for UI)
+- 24 new tests: tests/unit/strategy/test_game_session_events.py, tests/unit/strategy/facade/test_event_queries.py
+- Next: Phase 3 - Add log_event() calls to ProductionEngine, FleetOrderProcessor, ConflictResolutionEngine
 
 ---
 
@@ -175,7 +178,7 @@
 ---
 
 - [/] **PROJ-77: Event Log System**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-77/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-77/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -296,6 +299,7 @@
 | 2026-02-08 | PROJ-76 | Phase 7 | Complete | 7111 passed | pending | Integration: All Queues button, open/close/navigate, modal check, test mocks updated |
 | 2026-02-08 | PROJ-76 | Audit 1 | PASSED | 7111 passed | pending | No significant issues, 6 minor observations, 4 agents verified |
 | 2026-02-08 | PROJ-77 | Phase 1 | Complete | 31 new, 7111+31 total | pending | EventType, EventCategory, Event, EventLog, 31 tests |
+| 2026-02-08 | PROJ-77 | Phase 2 | Complete | 7166 passed | pending | GameSession EventLog, persistence, facade queries, 24 new tests |
 
 ---
 

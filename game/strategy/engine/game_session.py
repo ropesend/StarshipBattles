@@ -47,8 +47,9 @@ import os
 import random
 import warnings
 from typing import Optional
-from game.core.logger import log_info, log_debug, log_warning
+from game.core.logger import log_info, log_debug, log_warning, set_event_handler
 from game.core.validation import validation_result
+from game.strategy.events import Event, EventLog
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.empire import Empire
@@ -95,6 +96,10 @@ class GameSession:
         self.config = config
         self.turn_number = 1
         self.save_path = None  # Set when save game is created/loaded (Phase 3)
+
+        # Event log (PROJ-77)
+        self._event_log = EventLog()
+        set_event_handler(self._create_event_handler())
 
         # Engine
         self.turn_engine = TurnEngine()
@@ -229,6 +234,35 @@ class GameSession:
                         log_info(f"GameSession: Seeded {initial_pop.count} population on {home_planet.name}")
 
                     log_info(f"GameSession: Empire '{empire.name}' home at system {home_indices[i]}")
+
+    @property
+    def event_log(self) -> EventLog:
+        """The session's event log for recording game events."""
+        return self._event_log
+
+    def _create_event_handler(self):
+        """Create a callback for the global log_event() system.
+
+        Returns a closure that captures this session, creating Event objects
+        from structured kwargs and appending them to the session's EventLog.
+        """
+        def handler(event_type: str, **kwargs):
+            category = kwargs.pop('category', 'other')
+            message = kwargs.pop('message', '')
+            empire_id = kwargs.pop('empire_id', -1)
+            # Coerce enum values to their string representation
+            cat_value = category.value if hasattr(category, 'value') else category
+            etype_value = event_type.value if hasattr(event_type, 'value') else event_type
+            event = Event(
+                event_type=etype_value,
+                category=cat_value,
+                turn=self.turn_number,
+                empire_id=empire_id,
+                message=message,
+                details=kwargs,
+            )
+            self._event_log.append(event)
+        return handler
 
     def _find_colony_at_fleet(self, fleet):
         """Find an empire colony at the fleet's current location (BUG-70)."""
@@ -716,7 +750,8 @@ class GameSession:
             'config': self.config.to_dict(),
             'galaxy': self.galaxy.to_dict(),
             'empires': [e.to_dict() for e in self.empires],
-            'human_player_ids': self.human_player_ids.copy()
+            'human_player_ids': self.human_player_ids.copy(),
+            'event_log': self._event_log.to_dict(),
         }
 
     @classmethod
@@ -760,6 +795,10 @@ class GameSession:
 
         # Initialize turn engine
         session.turn_engine = TurnEngine()
+
+        # Restore event log (PROJ-77)
+        session._event_log = EventLog.from_dict(data.get('event_log', {'events': []}))
+        set_event_handler(session._create_event_handler())
 
         # Step 1: Load Galaxy (creates all planets with IDs)
         try:
