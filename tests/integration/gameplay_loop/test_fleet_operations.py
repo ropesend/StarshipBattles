@@ -200,6 +200,7 @@ class TestResourceAccumulation:
         mock_ship.is_combat_capable.return_value = True
         mock_ship.is_destroyed = False
         mock_ship.is_derelict = False
+        mock_ship.design_data = {"layers": {}}  # PROJ-75: Maintenance engine reads design_data
         mock_ship.get_all_resource_costs_per_turn.return_value = {"fuel": 100.0}
         mock_ship.get_current_resource.return_value = 1000.0
         mock_ship.consume_resource.return_value = True

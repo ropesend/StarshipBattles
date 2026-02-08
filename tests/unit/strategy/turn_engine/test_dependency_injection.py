@@ -131,10 +131,12 @@ class TestFleetIteratorSafety:
 
         mock_empire = MagicMock(spec=Empire)
         mock_empire.id = 0
+        mock_empire.colonies = []  # PROJ-75: Maintenance engine iterates colonies
 
         fleet1 = MagicMock(spec=Fleet)
         fleet1.id = 1
         fleet1.orders = []
+        fleet1.ships = []  # PROJ-75: Maintenance engine iterates ships
         fleet1.construction_queue = []  # PROJ-67
         fleet1.is_building = False  # PROJ-67
         fleet1.get_current_order = MagicMock(return_value=None)
@@ -142,6 +144,7 @@ class TestFleetIteratorSafety:
         fleet2 = MagicMock(spec=Fleet)
         fleet2.id = 2
         fleet2.orders = []
+        fleet2.ships = []  # PROJ-75: Maintenance engine iterates ships
         fleet2.construction_queue = []  # PROJ-67
         fleet2.is_building = False  # PROJ-67
         fleet2.get_current_order = MagicMock(return_value=None)
@@ -149,6 +152,7 @@ class TestFleetIteratorSafety:
         fleet3 = MagicMock(spec=Fleet)
         fleet3.id = 3
         fleet3.orders = []
+        fleet3.ships = []  # PROJ-75: Maintenance engine iterates ships
         fleet3.construction_queue = []  # PROJ-67
         fleet3.is_building = False  # PROJ-67
         fleet3.get_current_order = MagicMock(return_value=None)

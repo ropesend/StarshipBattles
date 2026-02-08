@@ -8,6 +8,7 @@ PROJ-43 Phase 4: Full constructor dependency injection for all engines.
 
 Turn Phases:
     0. HARVESTING (via HarvestingEngine) - extract planetary resources to empire pool
+    0b. MAINTENANCE (via MaintenanceEngine) - deduct 5% build cost, scuttle on failure
     1. SUBTURN LOOP (100 ticks):
        - Phase 0: Per-turn resources (via ResourceManagementEngine)
        - Phase 0a: Fuel generation at facilities (via ResupplyEngine)
@@ -28,6 +29,7 @@ Delegated Engines:
     - ResourceManagementEngine: Per-turn resource consumption
     - ResupplyEngine: Fuel generation and fleet resupply
     - HarvestingEngine: Planetary resource extraction to empire pool
+    - MaintenanceEngine: Maintenance cost deduction and scuttling
 
 Dependency Injection:
     TurnEngine accepts optional engine parameters for all sub-engines.
@@ -61,6 +63,7 @@ if TYPE_CHECKING:
         IPopulationEngine,
         IResupplyEngine,
         IHarvestingEngine,
+        IMaintenanceEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -102,6 +105,7 @@ class TurnEngine:
         population_engine: Optional['IPopulationEngine'] = None,
         resupply_engine: Optional['IResupplyEngine'] = None,
         harvesting_engine: Optional['IHarvestingEngine'] = None,
+        maintenance_engine: Optional['IMaintenanceEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -109,6 +113,7 @@ class TurnEngine:
         PROJ-43 Phase 4: All engines can be injected for testing.
         PROJ-50: Added registries parameter for DI to sub-engines.
         PROJ-75 Phase 2: Added harvesting_engine parameter.
+        PROJ-75 Phase 5: Added maintenance_engine parameter.
 
         Args:
             battle_resolver: Optional battle resolver implementation.
@@ -131,6 +136,8 @@ class TurnEngine:
                            If None, creates ResupplyEngine.
             harvesting_engine: Optional harvesting engine (IHarvestingEngine).
                            If None, creates HarvestingEngine.
+            maintenance_engine: Optional maintenance engine (IMaintenanceEngine).
+                           If None, creates MaintenanceEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -154,6 +161,7 @@ class TurnEngine:
         self._population_engine: Optional['IPopulationEngine'] = population_engine
         self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine
         self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
+        self._maintenance_engine: Optional['IMaintenanceEngine'] = maintenance_engine
 
     @property
     def movement_engine(self) -> 'IMovementEngine':
@@ -223,6 +231,14 @@ class TurnEngine:
             self._harvesting_engine = HarvestingEngine(registries=self._registries)
         return self._harvesting_engine
 
+    @property
+    def maintenance_engine(self) -> 'IMaintenanceEngine':
+        """Return maintenance engine, lazily creating default if not injected."""
+        if self._maintenance_engine is None:
+            from game.strategy.engine.maintenance_engine import MaintenanceEngine
+            self._maintenance_engine = MaintenanceEngine()
+        return self._maintenance_engine
+
     def process_turn(self, empires, galaxy, save_path=None):
         """
         Execute one full turn (100 sub-ticks).
@@ -234,6 +250,9 @@ class TurnEngine:
         """
         # 0. Harvesting Phase (PROJ-75) - extract planetary resources to empire pools
         self.harvesting_engine.process_harvesting(empires)
+
+        # 0b. Maintenance Phase (PROJ-75) - deduct 5% build cost, scuttle on failure
+        self.maintenance_engine.process_maintenance(empires)
 
         # 1. Subturn Loop (Movement & Combat)
         for tick in range(1, 101):

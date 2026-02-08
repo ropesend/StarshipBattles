@@ -33,6 +33,7 @@ __all__ = [
     'IPopulationEngine',
     'IResupplyEngine',
     'IHarvestingEngine',
+    'IMaintenanceEngine',
 ]
 
 
@@ -395,6 +396,43 @@ class IHarvestingEngine(ABC):
 
         Args:
             empires: List of Empire objects to process
+        """
+        pass
+
+
+class IMaintenanceEngine(ABC):
+    """
+    Abstract interface for maintenance cost processing.
+
+    PROJ-75 Phase 5: Interface for MaintenanceEngine.
+
+    Implementations handle:
+    - Calculating maintenance costs (5% of build cost per turn)
+    - Deducting maintenance from empire resource pools
+    - Scuttling entities that cannot be maintained
+    - Cleaning up empty fleets after ship scuttles
+
+    Example usage:
+        engine = MaintenanceEngine()
+        events = engine.process_maintenance(empires)
+    """
+
+    @abstractmethod
+    def process_maintenance(
+        self,
+        empires: List
+    ) -> List:
+        """
+        Process maintenance for all empires.
+
+        Deducts 5% of build cost per turn for each operational facility
+        and ship. Scuttles entities that cannot be maintained.
+
+        Args:
+            empires: List of Empire objects to process
+
+        Returns:
+            List of ScuttleEvent records for scuttled entities
         """
         pass
 

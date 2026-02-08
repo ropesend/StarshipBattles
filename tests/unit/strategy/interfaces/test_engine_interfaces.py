@@ -195,6 +195,37 @@ class TestIResourceEngineInterface:
 
 
 # =============================================================================
+# IMaintenanceEngine Interface Tests
+# =============================================================================
+
+
+class TestIMaintenanceEngineInterface:
+    """Test IMaintenanceEngine abstract base class interface contract."""
+
+    def test_imaintenance_engine_importable(self):
+        """IMaintenanceEngine should be importable from interfaces module."""
+        from game.strategy.interfaces.engines import IMaintenanceEngine
+        assert IMaintenanceEngine is not None
+
+    def test_imaintenance_engine_is_abstract(self):
+        """IMaintenanceEngine should be an abstract base class."""
+        from game.strategy.interfaces.engines import IMaintenanceEngine
+        assert issubclass(IMaintenanceEngine, ABC)
+
+    def test_imaintenance_engine_cannot_instantiate(self):
+        """IMaintenanceEngine should not be directly instantiable."""
+        from game.strategy.interfaces.engines import IMaintenanceEngine
+        with pytest.raises(TypeError):
+            IMaintenanceEngine()
+
+    def test_imaintenance_engine_has_process_maintenance_method(self):
+        """IMaintenanceEngine should define process_maintenance abstract method."""
+        from game.strategy.interfaces.engines import IMaintenanceEngine
+        assert hasattr(IMaintenanceEngine, 'process_maintenance')
+        assert getattr(IMaintenanceEngine.process_maintenance, '__isabstractmethod__', False)
+
+
+# =============================================================================
 # Concrete Implementation Tests
 # =============================================================================
 
@@ -275,6 +306,18 @@ class TestConcreteImplementations:
         engine = MockResourceEngine()
         assert engine is not None
 
+    def test_concrete_maintenance_engine_implementation(self):
+        """Concrete IMaintenanceEngine implementation should work."""
+        from game.strategy.interfaces.engines import IMaintenanceEngine
+
+        class MockMaintenanceEngine(IMaintenanceEngine):
+            def process_maintenance(self, empires):
+                return []
+
+        engine = MockMaintenanceEngine()
+        assert engine is not None
+        assert engine.process_maintenance([]) == []
+
 
 # =============================================================================
 # Module Re-exports Test
@@ -308,3 +351,4 @@ class TestInterfacesModuleExports:
         assert 'IOrderProcessor' in engines.__all__
         assert 'IConflictEngine' in engines.__all__
         assert 'IResourceEngine' in engines.__all__
+        assert 'IMaintenanceEngine' in engines.__all__

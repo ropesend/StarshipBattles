@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Deduct 5% of build cost per turn, scuttle on failure
 
 ---
@@ -16,17 +16,17 @@
 **File:** `tests/unit/strategy/engine/test_maintenance_engine.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/engine/test_maintenance_engine.py -v`
 
-- [ ] Create test file with TestMaintenanceEngine class
-- [ ] Test: maintenance cost = 5% of total build cost
-- [ ] Test: successful payment deducts from empire pool
-- [ ] Test: facility scuttled when payment fails
-- [ ] Test: ship scuttled when payment fails
-- [ ] Test: multiple facilities - all checked in one pass
-- [ ] Test: scuttle cascade prevented (one-pass processing)
-- [ ] Test: non-operational facilities have no maintenance
-- [ ] Test: scuttle events returned for notification
+- [x] Create test file with TestMaintenanceEngine class
+- [x] Test: maintenance cost = 5% of total build cost
+- [x] Test: successful payment deducts from empire pool
+- [x] Test: facility scuttled when payment fails
+- [x] Test: ship scuttled when payment fails
+- [x] Test: multiple facilities - all checked in one pass
+- [x] Test: scuttle cascade prevented (one-pass processing)
+- [x] Test: non-operational facilities have no maintenance
+- [x] Test: scuttle events returned for notification
 
-**Notes:**
+**Notes:** 17 unit tests covering cost calculation, facility maintenance, ship maintenance, scuttling, cascade prevention, and edge cases.
 
 ---
 
@@ -34,34 +34,13 @@
 **File:** `game/strategy/engine/maintenance_engine.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/engine/test_maintenance_engine.py -v`
 
-- [ ] Create `MaintenanceEngine` class:
-  ```python
-  @dataclass
-  class ScuttleEvent:
-      empire_id: int
-      entity_type: str  # "facility" or "ship"
-      entity_name: str
-      location: str
+- [x] Create `MaintenanceEngine` class with MAINTENANCE_RATE = 0.05
+- [x] Implement `_process_empire(empire) -> List[ScuttleEvent]`
+- [x] Implement `_calculate_maintenance_cost(design_data) -> Dict[str, float]`
+- [x] Implement facility and ship maintenance checking
+- [x] Implement scuttling logic (remove from lists)
 
-  class MaintenanceEngine:
-      MAINTENANCE_RATE = 0.05  # 5% per turn
-
-      def __init__(self, *, registries: GameRegistries = None):
-          self._registries = registries
-
-      def process_maintenance(self, empires) -> List[ScuttleEvent]:
-          """Process maintenance for all empires. Returns scuttle events."""
-          events = []
-          for empire in empires:
-              events.extend(self._process_empire(empire))
-          return events
-  ```
-- [ ] Implement `_process_empire(empire) -> List[ScuttleEvent]`
-- [ ] Implement `_calculate_maintenance_cost(design_data) -> Dict[str, float]`
-- [ ] Implement facility and ship maintenance checking
-- [ ] Implement scuttling logic (remove from lists)
-
-**Notes:**
+**Notes:** Handles both layer formats (dict with "components" key and direct list format). Registries parameter removed as unnecessary for maintenance calculation.
 
 ---
 
@@ -69,21 +48,11 @@
 **File:** `game/strategy/engine/maintenance_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_maintenance_engine.py -v`
 
-- [ ] Implement `_scuttle_facility(planet, facility) -> ScuttleEvent`:
-  ```python
-  def _scuttle_facility(self, planet, facility) -> ScuttleEvent:
-      planet.facilities.remove(facility)
-      return ScuttleEvent(
-          empire_id=planet.owner_id,
-          entity_type="facility",
-          entity_name=facility.name,
-          location=f"Planet {planet.id}"
-      )
-  ```
-- [ ] Implement `_scuttle_ship(fleet, ship) -> ScuttleEvent`
-- [ ] Implement `_cleanup_empty_fleets(empire)` to remove fleets with no ships
+- [x] Scuttling integrated into `_process_colony_facilities` and `_process_fleet_ships` (batch removal after iteration)
+- [x] ScuttleEvent returned for each scuttled entity
+- [x] `_cleanup_empty_fleets(empire, fleets_with_scuttles)` removes only fleets emptied by scuttling
 
-**Notes:**
+**Notes:** Cleanup only removes fleets that had ships scuttled (not pre-existing empty fleets), preventing unintended fleet deletion.
 
 ---
 
@@ -91,12 +60,14 @@
 **File:** `game/strategy/engine/turn_engine.py`
 **Tests:** `pytest tests/integration/strategy/turn_engine/test_maintenance.py -v`
 
-- [ ] Write integration test in `tests/integration/strategy/turn_engine/test_maintenance.py` (NEW)
-- [ ] Add `_maintenance_engine` property with lazy initialization
-- [ ] Call after harvesting, before per-turn consumption
-- [ ] Store/log scuttle events for UI notification
+- [x] Write integration test in `tests/integration/strategy/turn_engine/test_maintenance.py` (NEW)
+- [x] Add `_maintenance_engine` property with lazy initialization
+- [x] Call after harvesting, before per-turn consumption (Phase 0b in process_turn)
+- [x] Added IMaintenanceEngine interface to engines.py
+- [x] Added MockMaintenanceEngine to mock_engines.py
+- [x] Updated test_engine_interfaces.py with 4 new interface tests + 1 concrete impl test + 1 __all__ check
 
-**Notes:**
+**Notes:** 6 integration tests verifying DI, call ordering, real maintenance deduction, and scuttling through TurnEngine.
 
 ---
 
@@ -104,18 +75,18 @@
 **File:** `game/strategy/engine/maintenance_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_maintenance_engine.py -v`
 
-- [ ] Iterate empire.fleets -> ships
-- [ ] Calculate ship maintenance from design_data
-- [ ] Deduct from empire pool or scuttle ship
-- [ ] Handle fleet becoming empty after scuttles
+- [x] Iterate empire.fleets -> ships
+- [x] Calculate ship maintenance from design_data
+- [x] Deduct from empire pool or scuttle ship
+- [x] Handle fleet becoming empty after scuttles
 
-**Notes:**
+**Notes:** Ship maintenance integrated into MaintenanceEngine alongside facility maintenance. Empty fleet cleanup only targets fleets with scuttled ships.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 6
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 6
