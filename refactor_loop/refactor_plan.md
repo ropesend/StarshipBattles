@@ -8,27 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-69 Phase 4 - Controller & Drag Handler Multi-Queue
-**Current Status:** PROJ-69 Phase 4 Complete, Phase 5 next
+**Last Completed:** PROJ-69 Phase 5 - Strategy Screen Integration
+**Current Status:** PROJ-69 Phase 5 Complete, Phase 6 next
 **Current Project:** PROJ-69
-**Current Phase:** Phase 5 - Strategy Screen Integration
+**Current Phase:** Phase 6 - Test Updates & Integration Testing
 **Test Status:** 6561 passed, 1 pre-existing failure (IFleet mock spec)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-69 Phase 4 complete:
-  - BuildQueueController: `set_active_queue()`, `set_selected_queues()`, 3 routing paths (single/multi/fallback)
-  - `_source_can_build_category()` maps category to `can_build_ships`/`can_build_complexes`
-  - `_add_to_single_queue()`, `_add_to_multiple_queues()`, `_add_to_fallback()` methods
-  - BuildQueueDragHandler: `build_context` replaced with `construction_queue` list + `multi_select_active` flag
-  - All 3 drag methods return early when `multi_select_active=True`
-  - BuildQueueScreen: syncs controller on `_on_queue_selected()`/`_on_queue_toggled()`
-  - Legacy (non-hex) mode uses controller fallback preserving dynamic `can_build_type()`
-  - Remove button disabled in multi-select mode
-  - 10 new controller tests, 6 new drag handler tests
-- Modified: `game/ui/panels/build_queue_controller.py`, `game/ui/panels/build_queue_drag_handler.py`, `game/ui/screens/build_queue_screen.py`
-- New: `tests/integration/ui/build_queue_screen/test_controller_multi_queue.py`, `tests/integration/ui/build_queue_screen/test_drag_handler_multi_queue.py`
-- Next: Phase 5 - Strategy Screen Integration
+- PROJ-69 Phase 5 complete:
+  - `on_build_yard_click()`: calculates hex_coord via `get_system_of_planet()` + `global_location + planet.location`, passes `hex_coord`, `galaxy`, `empire` to BuildQueueScreen
+  - `on_fleet_build_click()`: uses `fleet.location` as hex_coord, passes same three params
+  - `_on_build_queue_close()`: iterates all `queue_sources` from closing screen, handles fleet BUILD orders per fleet-type source (deduped by fleet id)
+  - Old single `build_context.context_type == 'fleet'` check replaced with queue_sources iteration
+  - Backward compat wrapper in BuildQueueScreen.__init__ retained for test compatibility
+- Modified: `game/ui/screens/strategy_screen.py`
+- Next: Phase 6 - Test Updates & Integration Testing
 
 ---
 
@@ -117,7 +112,7 @@
 ---
 
 - [/] **PROJ-69: Multi Build Queue Restructure**
-  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-69/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-69/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -219,6 +214,7 @@
 | 2026-02-07 | PROJ-69 | Phase 2 | Complete | 6534 passed | pending | Parallel facility queue processing, 15 new + 6 updated tests |
 | 2026-02-07 | PROJ-69 | Phase 3 | Complete | 6546 passed | 1a48bf19 | Queue selector panel, layout restructure, 12 new tests |
 | 2026-02-07 | PROJ-69 | Phase 4 | Complete | 6561 passed | pending | Controller multi-queue routing, drag handler queue-source, 16 new tests |
+| 2026-02-07 | PROJ-69 | Phase 5 | Complete | 6561 passed | pending | Strategy screen hex context, close callback iterates queue sources |
 
 ---
 

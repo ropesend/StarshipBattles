@@ -383,7 +383,11 @@ class StrategyScreen:
                 design_library = DesignLibrary(savegame_path, empire_id)
                 design_loader = SimulationDesignLoader(registries=get_default_registries())
 
-                # Create screen with injected dependencies
+                # PROJ-69: Calculate hex coord for multi-queue discovery
+                parent_sys = self.session.galaxy.get_system_of_planet(planet)
+                hex_coord = parent_sys.global_location + planet.location if parent_sys else None
+
+                # Create screen with injected dependencies and hex context
                 self.build_queue_screen = BuildQueueScreen(
                     self.ui.manager,
                     planet,
@@ -391,26 +395,35 @@ class StrategyScreen:
                     on_close_callback=self._on_build_queue_close,
                     portrait_surface=portrait_surface,
                     design_library=design_library,
-                    design_loader=design_loader
+                    design_loader=design_loader,
+                    hex_coord=hex_coord,
+                    galaxy=self.session.galaxy,
+                    empire=self.current_empire
                 )
                 log_info(f"Opened build queue for {planet.name}")
 
     def _on_build_queue_close(self):
-        """Handle build queue screen closing."""
-        log_info("_on_build_queue_close() CALLED")
-        log_info(f"  build_queue_screen before None: {self.build_queue_screen}")
+        """Handle build queue screen closing.
 
-        # PROJ-67: Check if fleet build queue closed with items - auto-issue BUILD order
-        build_context = getattr(self.build_queue_screen, 'build_context', None)
-        if build_context and hasattr(build_context, 'context_type'):
-            if build_context.context_type == 'fleet':
-                self._handle_fleet_build_queue_close(build_context)
+        PROJ-69: Iterates all queue sources from the closing screen and
+        manages BUILD orders for any fleet-type sources.
+        """
+        log_info("_on_build_queue_close() CALLED")
+
+        # PROJ-69: Handle fleet BUILD orders for all fleet-type queue sources
+        queue_sources = getattr(self.build_queue_screen, 'queue_sources', [])
+        processed_fleets = set()
+        for source in queue_sources:
+            if source.context_type == 'fleet':
+                fleet = source.owner_entity
+                fleet_id = getattr(fleet, 'id', id(fleet))
+                if fleet_id not in processed_fleets:
+                    processed_fleets.add(fleet_id)
+                    self._handle_fleet_build_queue_close(fleet)
 
         self.build_queue_screen = None
-        log_info(f"  build_queue_screen after None: {self.build_queue_screen}")
 
         # Show main UI again
-        log_info("  Calling self.ui.show_ui()")
         self.ui.show_ui()
 
         # Refresh planet details to show updated queue/facilities
@@ -421,7 +434,6 @@ class StrategyScreen:
                 self.ui.show_detailed_report(self.selected_object, img)
             except (FileNotFoundError, OSError, pygame.error, AttributeError, KeyError) as e:
                 log_warning(f"Could not refresh planet display after build queue close: {e}")
-                # Continue anyway - don't block the close operation
         log_info("_on_build_queue_close() FINISHED")
 
     def _handle_fleet_build_queue_close(self, fleet):
@@ -474,7 +486,10 @@ class StrategyScreen:
                 design_library = DesignLibrary(savegame_path, empire_id)
                 design_loader = SimulationDesignLoader(registries=get_default_registries())
 
-                # Create screen with fleet as build_context
+                # PROJ-69: Use fleet.location as hex_coord for multi-queue discovery
+                hex_coord = fleet.location
+
+                # Create screen with fleet as build_context and hex context
                 self.build_queue_screen = BuildQueueScreen(
                     self.ui.manager,
                     fleet,  # Fleet as build_context
@@ -482,7 +497,10 @@ class StrategyScreen:
                     on_close_callback=self._on_build_queue_close,
                     portrait_surface=portrait_surface,
                     design_library=design_library,
-                    design_loader=design_loader
+                    design_loader=design_loader,
+                    hex_coord=hex_coord,
+                    galaxy=self.session.galaxy,
+                    empire=self.current_empire
                 )
                 log_info(f"Opened build queue for fleet {fleet.id}")
 
