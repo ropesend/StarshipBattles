@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Empire Resource Pool Foundation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Harvesting Engine | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Harvesting Engine | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Storage Aggregation | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Production Resource Consumption | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Maintenance System | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** Empire resource pool: fields, methods, serialization, 26 tests
-**Next Action:** Begin Phase 2 - Harvesting Engine
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** HarvestingEngine: 16 unit tests, 4 integration tests, IHarvestingEngine interface, TurnEngine wiring, JSON rate updates
+**Next Action:** Begin Phase 3 - Storage Aggregation
 **Blockers:** None
 
 ## Overview
@@ -61,6 +61,8 @@ Implement a complete economy system with planetary resource harvesting, global e
 | Production | `game/strategy/engine/production_engine.py` |
 | Resource abilities | `game/simulation/components/abilities/resources.py` |
 | Harvester ability | `game/simulation/components/abilities/harvester.py` |
+| Harvesting engine | `game/strategy/engine/harvesting_engine.py` |
+| Engine interfaces | `game/strategy/interfaces/engines.py` |
 | Planet data | `game/strategy/data/planet.py` |
 | Component JSON | `data/components.json` |
 

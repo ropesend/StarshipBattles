@@ -32,6 +32,7 @@ __all__ = [
     'IResourceEngine',
     'IPopulationEngine',
     'IResupplyEngine',
+    'IHarvestingEngine',
 ]
 
 
@@ -337,6 +338,41 @@ class IResupplyEngine(ABC):
 
         Returns:
             List of ResupplyEvent records
+        """
+        pass
+
+
+class IHarvestingEngine(ABC):
+    """
+    Abstract interface for planetary resource harvesting.
+
+    PROJ-75 Phase 2: Interface for HarvestingEngine.
+
+    Implementations handle:
+    - Scanning facilities for harvester abilities
+    - Extracting planetary resources based on quality
+    - Adding harvested resources to empire pool
+    - Respecting storage limits and planet depletion
+
+    Example usage:
+        engine = HarvestingEngine(registries=registries)
+        engine.process_harvesting(empires)
+    """
+
+    @abstractmethod
+    def process_harvesting(
+        self,
+        empires: List
+    ) -> None:
+        """
+        Process resource harvesting for all empires.
+
+        Iterates through all empires, colonies, and facilities,
+        extracting planetary resources to empire pools based on
+        harvester abilities and planet resource quality.
+
+        Args:
+            empires: List of Empire objects to process
         """
         pass
 

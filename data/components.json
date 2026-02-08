@@ -1773,16 +1773,16 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "Metals",
-                    "base_harvest_rate": 10.0
+                    "base_harvest_rate": 100.0
                 },
                 "CrewRequired": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 100,
-                "Organics": 30,
-                "Vapors": 20,
-                "Radioactives": 40
+                "Metals": 1000,
+                "Organics": 200,
+                "Vapors": 200,
+                "Radioactives": 200
             }
         },
         {
@@ -1798,16 +1798,16 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "Organics",
-                    "base_harvest_rate": 10.0
+                    "base_harvest_rate": 100.0
                 },
                 "CrewRequired": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 80,
-                "Organics": 50,
-                "Vapors": 30,
-                "Radioactives": 20
+                "Metals": 800,
+                "Organics": 300,
+                "Vapors": 200,
+                "Radioactives": 100
             }
         },
         {
@@ -1823,16 +1823,16 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "Vapors",
-                    "base_harvest_rate": 10.0
+                    "base_harvest_rate": 100.0
                 },
                 "CrewRequired": 20
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 120,
-                "Organics": 20,
-                "Vapors": 60,
-                "Radioactives": 30
+                "Metals": 1000,
+                "Organics": 150,
+                "Vapors": 400,
+                "Radioactives": 200
             }
         },
         {
@@ -1848,17 +1848,17 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "Radioactives",
-                    "base_harvest_rate": 10.0
+                    "base_harvest_rate": 50.0
                 },
                 "CrewRequired": 25
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 150,
-                "Organics": 10,
-                "Vapors": 40,
-                "Radioactives": 80,
-                "Exotics": 20
+                "Metals": 1200,
+                "Organics": 100,
+                "Vapors": 300,
+                "Radioactives": 500,
+                "Exotics": 100
             }
         },
         {
@@ -1874,17 +1874,17 @@
             "abilities": {
                 "ResourceHarvester": {
                     "resource_type": "Exotics",
-                    "base_harvest_rate": 5.0
+                    "base_harvest_rate": 25.0
                 },
                 "CrewRequired": 30
             },
             "major_classification": "Resource",
             "resource_cost": {
-                "Metals": 200,
-                "Organics": 50,
-                "Vapors": 80,
-                "Radioactives": 100,
-                "Exotics": 50
+                "Metals": 1500,
+                "Organics": 300,
+                "Vapors": 500,
+                "Radioactives": 600,
+                "Exotics": 200
             }
         },
         {

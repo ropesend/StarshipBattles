@@ -8,21 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-75 Phase 1 - Empire Resource Pool Foundation
-**Current Status:** PROJ-75 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-75 Phase 2 - Harvesting Engine
+**Current Status:** PROJ-75 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-75
-**Current Phase:** Phase 2
-**Test Status:** 6846 passed, 1 pre-existing failure (test_protocols.py)
+**Current Phase:** Phase 3
+**Test Status:** 6890 passed, 1 pre-existing failure (test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-75 Phase 1 complete: Empire resource pool foundation
-- Added resource_pool and max_storage fields to Empire
-- Implemented add_resources(), consume_resources(), has_resources(), get_resource()
-- Updated to_dict()/from_dict() with safe defaults for old saves
-- 26 new tests in tests/unit/strategy/data/test_empire_resources.py
-- Files modified: game/strategy/data/empire.py
-- Next: Phase 2 - Harvesting Engine
+- PROJ-75 Phase 2 complete: Harvesting Engine
+- Created HarvestingEngine class in game/strategy/engine/harvesting_engine.py
+- Added IHarvestingEngine interface to game/strategy/interfaces/engines.py
+- Wired into TurnEngine with DI (harvesting_engine param, lazy property)
+- Harvesting runs at turn start (Phase 0), before subturn loop
+- Updated 5 harvester components in data/components.json with correct base_harvest_rates
+- Reused existing ResourceHarvesterAbility (no new ability class needed)
+- 16 unit tests + 4 integration tests (20 new tests total)
+- Files modified: turn_engine.py, engines.py, components.json
+- Files created: harvesting_engine.py, test_harvesting_engine.py, test_harvesting.py
+- Next: Phase 3 - Storage Aggregation
 
 ---
 
@@ -159,7 +163,7 @@
 ---
 
 - [/] **PROJ-75: Resource Harvesting & Economy System**
-  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-75/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-75/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -281,6 +285,7 @@
 | 2026-02-08 | PROJ-74 | Phase 6 | Complete | 6870 passed | pending | E2E testing: 8 integration + 8 save/load persistence tests |
 | 2026-02-08 | PROJ-74 | Audit 1 | PASSED | 6869 passed | pending | No significant issues, 41 tests verified across 4 test files |
 | 2026-02-08 | PROJ-75 | Phase 1 | Complete | 6846 passed | pending | Empire resource pool: fields, methods, serialization, 26 tests |
+| 2026-02-08 | PROJ-75 | Phase 2 | Complete | 6890 passed | pending | HarvestingEngine, IHarvestingEngine, TurnEngine wiring, JSON rates, 20 tests |
 
 ---
 

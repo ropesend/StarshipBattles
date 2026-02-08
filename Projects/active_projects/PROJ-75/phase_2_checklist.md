@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Create engine to extract planetary resources to empire pool
 
 ---
@@ -16,19 +16,19 @@
 **File:** `tests/unit/strategy/engine/test_harvesting_engine.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py -v`
 
-- [ ] Create test file with TestHarvestingEngine class
-- [ ] Test: single facility harvesting extracts resources
-- [ ] Test: harvest amount = base_rate * planet quality
-- [ ] Test: planet resource quantity reduced by harvest amount
-- [ ] Test: empire resource_pool increased by harvest amount
-- [ ] Test: multiple harvesters on same planet sum correctly
-- [ ] Test: planet resource depletion (quantity goes to 0, not negative)
-- [ ] Test: storage overflow handling (excess discarded)
-- [ ] Test: non-operational facility skipped
-- [ ] Test: facility without harvester ability skipped
-- [ ] Test: empty colonies list handled
+- [x] Create test file with TestHarvestingEngine class
+- [x] Test: single facility harvesting extracts resources
+- [x] Test: harvest amount = base_rate * planet quality
+- [x] Test: planet resource quantity reduced by harvest amount
+- [x] Test: empire resource_pool increased by harvest amount
+- [x] Test: multiple harvesters on same planet sum correctly
+- [x] Test: planet resource depletion (quantity goes to 0, not negative)
+- [x] Test: storage overflow handling (excess discarded)
+- [x] Test: non-operational facility skipped
+- [x] Test: facility without harvester ability skipped
+- [x] Test: empty colonies list handled
 
-**Notes:**
+**Notes:** 16 tests total including additional edge cases: zero quantity, zero quality, missing resource type, multiple resource types, registry-based lookup, empty empires list.
 
 ---
 
@@ -36,25 +36,11 @@
 **File:** `game/simulation/components/abilities/harvester.py`
 **Tests:** `pytest tests/unit/simulation/abilities/test_empire_harvester.py -v`
 
-- [ ] Write tests in `tests/unit/simulation/abilities/test_empire_harvester.py` (NEW)
-- [ ] Create `EmpireHarvesterAbility` class extending Ability:
-  ```python
-  class EmpireHarvesterAbility(Ability):
-      """Extracts planetary resources to empire pool each turn."""
+- [x] SKIPPED: Existing ResourceHarvesterAbility already has resource_type and base_harvest_rate fields
+- [x] SKIPPED: No new ability class needed - HarvestingEngine reads abilities directly from design_data
+- [x] SKIPPED: Already registered in ABILITY_REGISTRY as "ResourceHarvester"
 
-      def __init__(self, component, data: Dict[str, Any]):
-          super().__init__(component, data)
-          self.resource_type = data.get('resource_type', '')
-          self.base_rate = data.get('base_rate', 0.0)
-          self._base_rate = self.base_rate
-
-      def recalculate(self) -> None:
-          modifier = self.get_effective_stat('harvest_mult', 1.0)
-          self.base_rate = self._base_rate * modifier
-  ```
-- [ ] Add to ABILITY_REGISTRY in `game/simulation/components/abilities/__init__.py`
-
-**Notes:**
+**Notes:** Design called for a new EmpireHarvesterAbility, but the existing ResourceHarvesterAbility already stores resource_type and base_harvest_rate. The HarvestingEngine scans facility design_data for ResourceHarvester abilities directly, avoiding unnecessary abstraction.
 
 ---
 
@@ -62,19 +48,13 @@
 **File:** `game/strategy/engine/harvesting_engine.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py -v`
 
-- [ ] Create `HarvestingEngine` class following PopulationEngine pattern
-- [ ] Implement `__init__(self, *, registries: GameRegistries = None)`
-- [ ] Implement `process_harvesting(empires: List[Empire]) -> None`:
-  - Iterate: empire -> colonies -> facilities -> abilities
-  - For each EmpireHarvesterAbility:
-    - Calculate: `harvest = base_rate * planet.resources[type]['quality']`
-    - available = planet.resources[type]['quantity']
-    - actual_harvest = min(harvest, available)
-    - Deduct from planet: `planet.resources[type]['quantity'] -= actual_harvest`
-    - Add to empire: `empire.add_resources(type, actual_harvest)`
-- [ ] Add logging for harvest events
+- [x] Create `HarvestingEngine` class following PopulationEngine pattern
+- [x] Implement `__init__(self, *, registries: GameRegistries = None)`
+- [x] Implement `process_harvesting(empires: List[Empire]) -> None`
+- [x] Add logging for harvest events
+- [x] Implements IHarvestingEngine interface
 
-**Notes:**
+**Notes:** Supports both inline abilities in design_data and registry-based component ID lookup. Follows exact pattern from ResupplyEngine for scanning facility components.
 
 ---
 
@@ -82,15 +62,15 @@
 **File:** `data/components.json`
 **Tests:** Manual verification - start game and check registry
 
-- [ ] Add `metals_harvester` component (base_rate: 100)
-- [ ] Add `organics_harvester` component (base_rate: 100)
-- [ ] Add `vapors_harvester` component (base_rate: 100)
-- [ ] Add `radioactives_harvester` component (base_rate: 50)
-- [ ] Add `exotics_harvester` component (base_rate: 25)
-- [ ] All with `allowed_vehicle_types: ["Planetary Complex"]`
-- [ ] All with appropriate `resource_cost` fields
+- [x] Update `metal_harvester` component (base_rate: 100)
+- [x] Update `organic_harvester` component (base_rate: 100)
+- [x] Update `vapor_harvester` component (base_rate: 100)
+- [x] Update `radioactive_harvester` component (base_rate: 50)
+- [x] Update `exotic_harvester` component (base_rate: 25)
+- [x] All with `allowed_vehicle_types: ["Planetary Complex"]`
+- [x] All with appropriate `resource_cost` fields
 
-**Notes:**
+**Notes:** Components already existed with lower base_harvest_rate values. Updated rates and resource_cost values to match the economy scale. Named metal_harvester (not metals_harvester) per existing convention.
 
 ---
 
@@ -98,18 +78,19 @@
 **File:** `game/strategy/engine/turn_engine.py`
 **Tests:** `pytest tests/integration/strategy/turn_engine/test_harvesting.py -v`
 
-- [ ] Write integration test in `tests/integration/strategy/turn_engine/test_harvesting.py` (NEW)
-- [ ] Add `_harvesting_engine` property with lazy initialization
-- [ ] Call `harvesting_engine.process_harvesting(empires)` at turn start
-- [ ] Add interface to `game/strategy/interfaces/engines.py` if needed
+- [x] Write integration test in `tests/integration/strategy/turn_engine/test_harvesting.py` (NEW)
+- [x] Add `_harvesting_engine` property with lazy initialization
+- [x] Call `harvesting_engine.process_harvesting(empires)` at turn start
+- [x] Add IHarvestingEngine interface to `game/strategy/interfaces/engines.py`
+- [x] Added harvesting_engine constructor parameter for DI
 
-**Notes:**
+**Notes:** 4 integration tests: mock call verification, full E2E, ordering (harvesting before production), and storage cap.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3
