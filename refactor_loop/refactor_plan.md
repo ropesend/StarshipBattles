@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-69 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-69 complete, moving to PROJ-70
+**Last Completed:** PROJ-70 Phase 1 - Write Tests (TDD)
+**Current Status:** PROJ-70 Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-70
-**Current Phase:** Phase 1
-**Test Status:** 6575 passed, 1 pre-existing failure (IFleet mock spec)
+**Current Phase:** Phase 2
+**Test Status:** 14 tests in file (9 fail as TDD, 5 pass), full suite baseline 6575+
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-69 Audit Cycle 1 passed with no significant issues
-  - Data model layer: BuildQueueSource, facility queues, production engine all verified
-  - UI layer: BuildQueueScreen, controller, drag handler, strategy integration all verified
-  - Minor observations: type hints on collect_build_queues_at_hex params (pre-existing pattern)
-  - Full suite: 6575 passed, 1 pre-existing failure (IFleet mock spec)
-- PROJ-69 marked [x] complete
-- Next: PROJ-70 Phase 1 (Fleet Details Panel Enhancement)
+- PROJ-70 Phase 1 complete: 14 TDD tests written in `tests/unit/ui/screens/test_fleet_detail_fmt.py`
+  - Mock helpers: `_make_mock_ship()` and `_make_mock_fleet()` created
+  - 9 new tests fail (travel range x3, ship grouping x4, cargo summary x1, build order x1)
+  - 5 tests pass (2 existing TRANSFER, no_cargo, move_order, no_orders)
+  - Existing TRANSFER tests refactored to use new helpers
+- Next: Phase 2 - Enhance `format_fleet_info()` in `strategy_detail_fmt.py` to pass all 14 tests
 
 ---
 
@@ -118,7 +117,7 @@
 
 ---
 
-- [ ] **PROJ-70: Fleet Details Panel Enhancement**
+- [/] **PROJ-70: Fleet Details Panel Enhancement**
   - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-70/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-70/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -216,6 +215,7 @@
 | 2026-02-07 | PROJ-69 | Phase 5 | Complete | 6561 passed | pending | Strategy screen hex context, close callback iterates queue sources |
 | 2026-02-07 | PROJ-69 | Phase 6 | Complete | 6575 passed | 6d2736a7 | 14 new tests: 2 E2E integration + 12 controller multi-queue tests |
 | 2026-02-07 | PROJ-69 | Audit 1 | PASSED | 6575 passed | pending | No significant issues, minor type hint observations |
+| 2026-02-07 | PROJ-70 | Phase 1 | Complete | 9 fail (TDD), 5 pass | pending | 14 tests written, mock helpers, TDD setup |
 
 ---
 
