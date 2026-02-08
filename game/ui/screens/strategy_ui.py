@@ -782,6 +782,11 @@ class StrategyUI:
             # NOTE: btn_build_yard is handled in strategy_input_handler.py - do not duplicate here
             pass
 
+        # Handle quit-to-menu confirmation (PROJ-72)
+        if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
+            if hasattr(self.scene, '_quit_confirm_dialog') and event.ui_element == self.scene._quit_confirm_dialog:
+                self.scene._handle_quit_confirmed()
+
         if event.type == pygame_gui.UI_WINDOW_CLOSE:
             if event.ui_element == self.fleet_orders_window:
                 self.fleet_orders_window = None

@@ -8,17 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-72 Phase 2 - Wire Up Strategy UI
-**Current Status:** PROJ-72 Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-72 Phase 3 - Route Menu Actions
+**Current Status:** PROJ-72 Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-72
-**Current Phase:** Phase 3
-**Test Status:** 6630 passed (1 pre-existing failure in test_protocols.py)
+**Current Phase:** Phase 4
+**Test Status:** 6652 passed (1 pre-existing failure in test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Modified `game/ui/screens/strategy_ui.py` - replaced btn_save_game with btn_menu, added menu panel management (toggle/open/close), click-outside/Escape close, _has_modal_open updated
-- Created `tests/unit/ui/screens/test_strategy_ui_menu.py` - 24 tests (button replacement, panel management, event handling, modal detection)
-- Next: Phase 3 - Route menu actions (on_menu_option in StrategyScreen, load game/quit_to_menu/quit_game in App.py)
+- Modified `game/ui/screens/strategy_screen.py` - added on_menu_option dispatcher, _show_load_game_dialog, _on_load_selected, _confirm_quit_to_menu, _handle_quit_confirmed, _show_coming_soon, _quit_confirm_dialog init
+- Modified `game/ui/screens/strategy_ui.py` - added UI_CONFIRMATION_DIALOG_CONFIRMED handler for quit-to-menu
+- Modified `game/app.py` - extended _handle_strategy_action with load_game, quit_to_menu, quit_game handlers
+- Created `tests/unit/ui/screens/test_strategy_menu_actions.py` - 22 tests
+- Next: Phase 4 - Testing & Verification
 
 ---
 
@@ -123,7 +125,7 @@
 ---
 
 - [/] **PROJ-72: Strategy Menu Button**
-  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-72/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-72/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -218,6 +220,7 @@
 | 2026-02-07 | PROJ-70 | Audit 1 | PASSED | 6587 passed | pending | No significant issues, minor COLONIZE test coverage observation |
 | 2026-02-07 | PROJ-72 | Phase 1 | Complete | 6606 passed | pending | StrategyMenuPanel class, 6 buttons, 19 tests |
 | 2026-02-07 | PROJ-72 | Phase 2 | Complete | 6630 passed | pending | Menu button wiring, panel toggle, click-outside/Escape, 24 tests |
+| 2026-02-07 | PROJ-72 | Phase 3 | Complete | 6652 passed | pending | on_menu_option dispatch, load/quit/coming_soon helpers, App.py handlers, 22 tests |
 
 ---
 

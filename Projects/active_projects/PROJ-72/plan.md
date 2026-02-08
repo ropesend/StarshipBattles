@@ -15,14 +15,14 @@
 |-------|--------|-----------|
 | 1. Create Menu Panel Component | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Wire Up Strategy UI | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Route Menu Actions | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Route Menu Actions | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Testing & Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - Menu button replaces Save Game, panel management, click-outside/Escape, 24 tests
-**Next Action:** Phase 3 - Route menu actions (on_menu_option handler in StrategyScreen, App.py scene callbacks)
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - on_menu_option dispatcher, load/quit/coming_soon helpers, App.py handlers, 22 tests
+**Next Action:** Phase 4 - Testing & Verification
 **Blockers:** None
 
 ## Overview

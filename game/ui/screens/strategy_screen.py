@@ -100,6 +100,7 @@ class StrategyScreen:
         self.turn_processing = False
         self.action_open_design = False
         self.current_player_index = 0
+        self._quit_confirm_dialog = None
 
         # Assets
         self.empire_assets = {}
@@ -520,6 +521,85 @@ class StrategyScreen:
             # Fallback for legacy flag-based transition (deprecated)
             self.workshop_context_data = context_data
             self.action_open_design = True
+
+    def on_menu_option(self, option: str):
+        """Dispatch menu option from the strategy menu panel.
+
+        Args:
+            option: Option identifier string from StrategyMenuPanel.
+        """
+        if option == "save_game":
+            self.on_save_game_click()
+        elif option == "load_game":
+            self._show_load_game_dialog()
+        elif option == "settings":
+            self._show_coming_soon("Settings")
+        elif option == "controls":
+            self._show_coming_soon("Controls")
+        elif option == "quit_to_menu":
+            self._confirm_quit_to_menu()
+        elif option == "quit_game":
+            if self.scene_callback:
+                self.scene_callback("quit_game")
+
+    def _show_load_game_dialog(self):
+        """Open the save selection window for loading a game."""
+        from game.ui.screens.save_selection_window import SaveSelectionWindow
+        from game.ui.utils import create_centered_rect
+
+        window_rect = create_centered_rect(600, 500, self.screen_width, self.screen_height)
+        SaveSelectionWindow(
+            window_rect,
+            self.ui.manager,
+            on_load_callback=self._on_load_selected,
+            on_cancel_callback=lambda: None
+        )
+
+    def _on_load_selected(self, save_path, turn_number=None):
+        """Handle save selection from load dialog.
+
+        Args:
+            save_path: Path to the selected save file.
+            turn_number: Optional turn number to load.
+        """
+        if self.scene_callback:
+            self.scene_callback("load_game", save_path=save_path, turn_number=turn_number)
+
+    def _confirm_quit_to_menu(self):
+        """Show confirmation dialog before quitting to main menu."""
+        import pygame_gui.windows
+
+        dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
+        dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
+        self._quit_confirm_dialog = pygame_gui.windows.UIConfirmationDialog(
+            rect=dialog_rect,
+            action_long_desc="Unsaved progress will be lost. Return to main menu?",
+            manager=self.ui.manager,
+            window_title="Quit to Menu"
+        )
+
+    def _handle_quit_confirmed(self):
+        """Handle quit-to-menu confirmation dialog result."""
+        self._quit_confirm_dialog = None
+        if self.scene_callback:
+            self.scene_callback("quit_to_menu")
+
+    def _show_coming_soon(self, feature_name: str):
+        """Show a 'Coming Soon' placeholder dialog.
+
+        Args:
+            feature_name: Name of the feature to show in the dialog.
+        """
+        import pygame_gui.windows
+
+        dialog_rect = pygame.Rect(0, 0, UIConfig.CONFIRM_DIALOG_WIDTH, UIConfig.CONFIRM_DIALOG_HEIGHT)
+        dialog_rect.center = (self.screen_width // 2, self.screen_height // 2)
+        pygame_gui.windows.UIMessageWindow(
+            rect=dialog_rect,
+            html_message=f"<b>{feature_name}</b><br><br>Coming Soon!",
+            manager=self.ui.manager,
+            window_title=feature_name
+        )
 
     def on_save_game_click(self):
         """Handle 'Save Game' button click."""

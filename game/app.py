@@ -556,6 +556,17 @@ class Game:
             context_data = kwargs.get("context_data", {})
             context = self._create_workshop_context(context_data)
             self.start_builder(return_to=GameState.STRATEGY, context=context)
+        elif action == "load_game":
+            save_path = kwargs.get("save_path")
+            turn_number = kwargs.get("turn_number")
+            if save_path:
+                self._on_load_game(save_path, turn_number)
+        elif action == "quit_to_menu":
+            log_info("Returning to main menu from strategy")
+            self._switch_scene(GameState.MENU, self._menu_scene)
+        elif action == "quit_game":
+            log_info("Quitting game from strategy menu")
+            self.running = False
 
     def _create_workshop_context(self, context_data: dict):
         """Create WorkshopContext from strategy scene context data."""
