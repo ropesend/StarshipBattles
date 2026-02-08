@@ -169,16 +169,34 @@ class TestHarvestingIntegration:
         """Empire storage limits are respected during harvesting."""
         from game.strategy.engine.harvesting_engine import HarvestingEngine
 
-        facility = _make_harvester_facility("Metals", base_harvest_rate=100.0)
+        harvester = _make_harvester_facility("Metals", base_harvest_rate=100.0)
+        # Storage facility provides the 1000 cap
+        storage = PlanetaryFacility(
+            instance_id="store-001",
+            design_id="metals_vault",
+            name="Metals Vault",
+            design_data={
+                "layers": {
+                    "core": [{
+                        "id": "vault",
+                        "abilities": {
+                            "EmpireStorage": {
+                                "resource_type": "Metals",
+                                "capacity": 1000.0,
+                            }
+                        },
+                    }]
+                }
+            },
+        )
         planet = _make_planet_with_resources(
             resources={"Metals": {"quantity": 5000, "quality": 1.0}},
-            facilities=[facility],
+            facilities=[storage, harvester],
         )
 
         empire = Empire(0, "Test Empire", (255, 255, 255))
         empire.add_colony(planet)
         empire.resource_pool = {"Metals": 950.0}
-        empire.max_storage = {"Metals": 1000.0}
 
         mocks = _make_mock_engines()
         harvesting = HarvestingEngine()

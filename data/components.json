@@ -1888,6 +1888,134 @@
             }
         },
         {
+            "id": "resource_vault_metals",
+            "name": "Metals Storage Vault",
+            "type": "EmpireStorage",
+            "mass": 300,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 210,
+            "abilities": {
+                "EmpireStorage": {
+                    "resource_type": "Metals",
+                    "capacity": 10000.0
+                },
+                "StructuralIntegrity": true,
+                "CrewRequired": 10
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 2000,
+                "Organics": 200,
+                "Vapors": 300
+            }
+        },
+        {
+            "id": "resource_vault_organics",
+            "name": "Organics Storage Vault",
+            "type": "EmpireStorage",
+            "mass": 300,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 211,
+            "abilities": {
+                "EmpireStorage": {
+                    "resource_type": "Organics",
+                    "capacity": 10000.0
+                },
+                "StructuralIntegrity": true,
+                "CrewRequired": 10
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 1500,
+                "Organics": 500,
+                "Vapors": 300
+            }
+        },
+        {
+            "id": "resource_vault_vapors",
+            "name": "Vapors Storage Vault",
+            "type": "EmpireStorage",
+            "mass": 300,
+            "hp": 500,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 212,
+            "abilities": {
+                "EmpireStorage": {
+                    "resource_type": "Vapors",
+                    "capacity": 10000.0
+                },
+                "StructuralIntegrity": true,
+                "CrewRequired": 10
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 1800,
+                "Organics": 200,
+                "Vapors": 500
+            }
+        },
+        {
+            "id": "resource_vault_radioactives",
+            "name": "Radioactives Storage Vault",
+            "type": "EmpireStorage",
+            "mass": 400,
+            "hp": 600,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 213,
+            "abilities": {
+                "EmpireStorage": {
+                    "resource_type": "Radioactives",
+                    "capacity": 5000.0
+                },
+                "StructuralIntegrity": true,
+                "CrewRequired": 15
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 2500,
+                "Organics": 200,
+                "Vapors": 400,
+                "Radioactives": 300
+            }
+        },
+        {
+            "id": "resource_vault_exotics",
+            "name": "Exotics Storage Vault",
+            "type": "EmpireStorage",
+            "mass": 500,
+            "hp": 800,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 214,
+            "abilities": {
+                "EmpireStorage": {
+                    "resource_type": "Exotics",
+                    "capacity": 2500.0
+                },
+                "StructuralIntegrity": true,
+                "CrewRequired": 20
+            },
+            "major_classification": "Resource",
+            "resource_cost": {
+                "Metals": 3000,
+                "Organics": 300,
+                "Vapors": 500,
+                "Radioactives": 400,
+                "Exotics": 200
+            }
+        },
+        {
             "id": "space_shipyard",
             "name": "Space Shipyard",
             "type": "SpaceShipyard",

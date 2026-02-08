@@ -8,25 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-75 Phase 2 - Harvesting Engine
-**Current Status:** PROJ-75 Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-75 Phase 3 - Storage Aggregation
+**Current Status:** PROJ-75 Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-75
-**Current Phase:** Phase 3
-**Test Status:** 6890 passed, 1 pre-existing failure (test_protocols.py)
+**Current Phase:** Phase 4
+**Test Status:** 6940 passed, 1 pre-existing failure (test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-75 Phase 2 complete: Harvesting Engine
-- Created HarvestingEngine class in game/strategy/engine/harvesting_engine.py
-- Added IHarvestingEngine interface to game/strategy/interfaces/engines.py
-- Wired into TurnEngine with DI (harvesting_engine param, lazy property)
-- Harvesting runs at turn start (Phase 0), before subturn loop
-- Updated 5 harvester components in data/components.json with correct base_harvest_rates
-- Reused existing ResourceHarvesterAbility (no new ability class needed)
-- 16 unit tests + 4 integration tests (20 new tests total)
-- Files modified: turn_engine.py, engines.py, components.json
-- Files created: harvesting_engine.py, test_harvesting_engine.py, test_harvesting.py
-- Next: Phase 3 - Storage Aggregation
+- PROJ-75 Phase 3 complete: Storage Aggregation
+- Created EmpireStorageAbility class in game/simulation/components/abilities/harvester.py
+- Registered as "EmpireStorage" in ABILITY_REGISTRY
+- Added recalculate_storage() to HarvestingEngine (called at start of process_harvesting)
+- Supports inline abilities and registry lookup for storage components
+- Added 5 resource vault components to data/components.json (10k/10k/10k/5k/2.5k capacity)
+- Updated existing overflow tests to include storage facilities (recalculate_storage resets max_storage)
+- 10 ability tests + 9 storage aggregation tests = 19 new tests
+- Files modified: harvester.py, __init__.py, harvesting_engine.py, components.json
+- Files created: test_empire_storage.py
+- Next: Phase 4 - Production Resource Consumption
 
 ---
 
@@ -163,7 +163,7 @@
 ---
 
 - [/] **PROJ-75: Resource Harvesting & Economy System**
-  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-75/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-75/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -286,6 +286,7 @@
 | 2026-02-08 | PROJ-74 | Audit 1 | PASSED | 6869 passed | pending | No significant issues, 41 tests verified across 4 test files |
 | 2026-02-08 | PROJ-75 | Phase 1 | Complete | 6846 passed | pending | Empire resource pool: fields, methods, serialization, 26 tests |
 | 2026-02-08 | PROJ-75 | Phase 2 | Complete | 6890 passed | pending | HarvestingEngine, IHarvestingEngine, TurnEngine wiring, JSON rates, 20 tests |
+| 2026-02-08 | PROJ-75 | Phase 3 | Complete | 6940 passed | pending | EmpireStorageAbility, recalculate_storage, 5 vault components, 19 tests |
 
 ---
 

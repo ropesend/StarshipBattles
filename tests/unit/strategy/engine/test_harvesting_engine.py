@@ -247,10 +247,29 @@ class TestHarvestingEngine:
 
     def test_storage_overflow_discarded(self):
         """Excess resources beyond max_storage are discarded."""
-        facility = _make_harvester_facility("Metals", base_harvest_rate=100.0)
+        harvester = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
+        # Storage facility provides the 1000 cap
+        storage = PlanetaryFacility(
+            instance_id="s1",
+            design_id="metals_vault",
+            name="Metals Vault",
+            design_data={
+                "layers": {
+                    "core": [{
+                        "id": "vault",
+                        "abilities": {
+                            "EmpireStorage": {
+                                "resource_type": "Metals",
+                                "capacity": 1000.0,
+                            }
+                        },
+                    }]
+                }
+            },
+        )
         planet = _make_planet(
             resources={"Metals": {"quantity": 5000, "quality": 1.0}},
-            facilities=[facility],
+            facilities=[storage, harvester],
         )
         empire = _make_empire(
             colonies=[planet],
@@ -371,6 +390,30 @@ class TestHarvestingEngine:
         assert empire.resource_pool["Metals"] == pytest.approx(80.0)  # 100*0.8
         assert empire.resource_pool["Organics"] == pytest.approx(50.0)  # 50*1.0
 
+    def test_multiple_empires_independent(self):
+        """Each empire's harvesting is independent."""
+        f1 = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
+        p1 = _make_planet(
+            resources={"Metals": {"quantity": 5000, "quality": 1.0}},
+            facilities=[f1],
+            name="Planet A",
+        )
+        e1 = _make_empire(colonies=[p1], resource_pool={"Metals": 0.0})
+
+        f2 = _make_harvester_facility("Organics", base_harvest_rate=50.0, instance_id="h2")
+        p2 = _make_planet(
+            resources={"Organics": {"quantity": 3000, "quality": 0.6}},
+            facilities=[f2],
+            name="Planet B",
+        )
+        e2 = _make_empire(colonies=[p2], resource_pool={"Organics": 0.0})
+
+        engine = self._make_engine()
+        engine.process_harvesting([e1, e2])
+
+        assert e1.resource_pool["Metals"] == pytest.approx(100.0)
+        assert e2.resource_pool["Organics"] == pytest.approx(30.0)  # 50*0.6
+
     def test_registry_based_harvester_lookup(self):
         """Engine uses registries to resolve component abilities when design_data has plain IDs."""
         # Facility with plain component ID strings (no inline abilities)
@@ -398,3 +441,194 @@ class TestHarvestingEngine:
 
         # harvest = 200 * 0.5 = 100
         assert empire.resource_pool["Metals"] == pytest.approx(100.0)
+
+
+# ===========================================================================
+# Storage Aggregation Tests
+# ===========================================================================
+
+def _make_storage_facility(
+    resource_type="Metals",
+    capacity=10000.0,
+    instance_id="store-001",
+    is_operational=True,
+):
+    """Create a facility with an EmpireStorage ability in design_data."""
+    facility = PlanetaryFacility(
+        instance_id=instance_id,
+        design_id=f"{resource_type.lower()}_vault_complex",
+        name=f"{resource_type} Vault",
+        design_data={
+            "layers": {
+                "core": [
+                    {
+                        "id": f"resource_vault_{resource_type.lower()}",
+                        "abilities": {
+                            "EmpireStorage": {
+                                "resource_type": resource_type,
+                                "capacity": capacity,
+                            }
+                        },
+                    }
+                ]
+            }
+        },
+        is_operational=is_operational,
+    )
+    return facility
+
+
+class TestStorageAggregation:
+    """Tests for HarvestingEngine.recalculate_storage()."""
+
+    def _make_engine(self, registries=None):
+        from game.strategy.engine.harvesting_engine import HarvestingEngine
+        return HarvestingEngine(registries=registries or _make_mock_registries())
+
+    def test_single_storage_facility(self):
+        """Single storage facility sets empire max_storage for that resource."""
+        facility = _make_storage_facility("Metals", capacity=10000.0)
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(colonies=[planet])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(10000.0)
+
+    def test_multiple_storage_facilities_same_type(self):
+        """Multiple facilities for same resource stack additively."""
+        f1 = _make_storage_facility("Metals", capacity=10000.0, instance_id="s1")
+        f2 = _make_storage_facility("Metals", capacity=5000.0, instance_id="s2")
+        planet = _make_planet(facilities=[f1, f2])
+        empire = _make_empire(colonies=[planet])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(15000.0)
+
+    def test_multiple_resource_types(self):
+        """Storage for different resource types tracked independently."""
+        f1 = _make_storage_facility("Metals", capacity=10000.0, instance_id="s1")
+        f2 = _make_storage_facility("Organics", capacity=8000.0, instance_id="s2")
+        f3 = _make_storage_facility("Exotics", capacity=2500.0, instance_id="s3")
+        planet = _make_planet(facilities=[f1, f2, f3])
+        empire = _make_empire(colonies=[planet])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(10000.0)
+        assert empire.max_storage["Organics"] == pytest.approx(8000.0)
+        assert empire.max_storage["Exotics"] == pytest.approx(2500.0)
+
+    def test_non_operational_facility_not_counted(self):
+        """Non-operational storage facility does not contribute capacity."""
+        f1 = _make_storage_facility("Metals", capacity=10000.0, instance_id="s1")
+        f2 = _make_storage_facility("Metals", capacity=5000.0, instance_id="s2", is_operational=False)
+        planet = _make_planet(facilities=[f1, f2])
+        empire = _make_empire(colonies=[planet])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(10000.0)
+
+    def test_resets_max_storage_before_recalculating(self):
+        """Recalculate resets max_storage so removed facilities are not counted."""
+        facility = _make_storage_facility("Metals", capacity=10000.0)
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(
+            colonies=[planet],
+            max_storage={"Metals": 99999.0, "Organics": 50000.0},
+        )
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(10000.0)
+        # Organics had no facility, so should not be present
+        assert empire.max_storage.get("Organics", 0.0) == pytest.approx(0.0)
+
+    def test_multiple_colonies_sum(self):
+        """Storage from multiple colonies sums up."""
+        f1 = _make_storage_facility("Metals", capacity=10000.0, instance_id="s1")
+        f2 = _make_storage_facility("Metals", capacity=5000.0, instance_id="s2")
+        p1 = _make_planet(facilities=[f1], name="Colony A")
+        p2 = _make_planet(facilities=[f2], name="Colony B")
+        empire = _make_empire(colonies=[p1, p2])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(15000.0)
+
+    def test_empty_colonies_no_storage(self):
+        """Empire with no colonies gets empty max_storage."""
+        empire = _make_empire(colonies=[])
+
+        engine = self._make_engine()
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage == {}
+
+    def test_process_harvesting_calls_recalculate_storage(self):
+        """process_harvesting recalculates storage before harvesting."""
+        storage = _make_storage_facility("Metals", capacity=500.0, instance_id="s1")
+        harvester = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
+        planet = _make_planet(
+            resources={"Metals": {"quantity": 5000, "quality": 1.0}},
+            facilities=[storage, harvester],
+        )
+        empire = _make_empire(
+            colonies=[planet],
+            resource_pool={"Metals": 450.0},
+            max_storage={},  # Will be calculated
+        )
+
+        engine = self._make_engine()
+        engine.process_harvesting([empire])
+
+        # Storage should be set to 500 from the facility
+        assert empire.max_storage["Metals"] == pytest.approx(500.0)
+        # Harvest = 100*1.0 = 100, but pool was 450, cap at 500, so 500
+        assert empire.resource_pool["Metals"] == pytest.approx(500.0)
+
+    def test_registry_based_storage_lookup(self):
+        """Engine uses registries to resolve storage abilities from plain IDs."""
+        facility = PlanetaryFacility(
+            instance_id="reg-store-001",
+            design_id="metals_vault_complex",
+            name="Metals Vault",
+            design_data={
+                "layers": {
+                    "core": ["resource_vault_metals"]
+                }
+            },
+        )
+        planet = _make_planet(facilities=[facility])
+        empire = _make_empire(colonies=[planet])
+
+        regs = _make_mock_registries()
+        # Add storage component to registry
+        storage_comp = MagicMock()
+        storage_comp.abilities = {
+            "EmpireStorage": {
+                "resource_type": "Metals",
+                "capacity": 10000.0,
+            }
+        }
+        original_get = regs.components.get
+
+        def enhanced_get(comp_id):
+            if comp_id == "resource_vault_metals":
+                return storage_comp
+            return original_get(comp_id)
+
+        regs.components.get = enhanced_get
+
+        engine = self._make_engine(registries=regs)
+        engine.recalculate_storage([empire])
+
+        assert empire.max_storage["Metals"] == pytest.approx(10000.0)

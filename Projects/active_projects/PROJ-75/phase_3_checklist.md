@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Calculate empire storage capacity from storage components
 
 ---
@@ -16,12 +16,12 @@
 **File:** `tests/unit/simulation/abilities/test_empire_storage.py` (NEW)
 **Tests:** `pytest tests/unit/simulation/abilities/test_empire_storage.py -v`
 
-- [ ] Create test file with TestEmpireStorageAbility class
-- [ ] Test: ability creation with resource_type and capacity
-- [ ] Test: ability recalculation with modifiers
-- [ ] Test: ability in registry
+- [x] Create test file with TestEmpireStorageAbility class
+- [x] Test: ability creation with resource_type and capacity
+- [x] Test: ability recalculation with modifiers
+- [x] Test: ability in registry
 
-**Notes:**
+**Notes:** 10 tests covering creation, defaults, non-dict data, recalculate, primary value, UI rows, all resource types, and registry integration.
 
 ---
 
@@ -29,24 +29,10 @@
 **File:** `game/simulation/components/abilities/harvester.py`
 **Tests:** `pytest tests/unit/simulation/abilities/test_empire_storage.py -v`
 
-- [ ] Create `EmpireStorageAbility` class extending Ability:
-  ```python
-  class EmpireStorageAbility(Ability):
-      """Provides storage capacity for empire resource pool."""
+- [x] Create `EmpireStorageAbility` class extending Ability
+- [x] Add to ABILITY_REGISTRY in `game/simulation/components/abilities/__init__.py`
 
-      def __init__(self, component, data: Dict[str, Any]):
-          super().__init__(component, data)
-          self.resource_type = data.get('resource_type', '')
-          self.capacity = data.get('capacity', 0.0)
-          self._base_capacity = self.capacity
-
-      def recalculate(self) -> None:
-          modifier = self.get_effective_stat('storage_mult', 1.0)
-          self.capacity = self._base_capacity * modifier
-  ```
-- [ ] Add to ABILITY_REGISTRY in `game/simulation/components/abilities/__init__.py`
-
-**Notes:**
+**Notes:** Added to harvester.py alongside ResourceHarvesterAbility. Registered as "EmpireStorage" in ABILITY_REGISTRY.
 
 ---
 
@@ -54,13 +40,13 @@
 **File:** `tests/unit/strategy/engine/test_harvesting_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py -v`
 
-- [ ] Test: recalculate_storage with single storage facility
-- [ ] Test: recalculate_storage with multiple facilities
-- [ ] Test: recalculate_storage with multiple resource types
-- [ ] Test: recalculate_storage sets empire.max_storage correctly
-- [ ] Test: non-operational facility storage not counted
+- [x] Test: recalculate_storage with single storage facility
+- [x] Test: recalculate_storage with multiple facilities
+- [x] Test: recalculate_storage with multiple resource types
+- [x] Test: recalculate_storage sets empire.max_storage correctly
+- [x] Test: non-operational facility storage not counted
 
-**Notes:**
+**Notes:** 9 tests in TestStorageAggregation class. Also updated existing overflow test to include storage facility.
 
 ---
 
@@ -68,14 +54,10 @@
 **File:** `game/strategy/engine/harvesting_engine.py`
 **Tests:** `pytest tests/unit/strategy/engine/test_harvesting_engine.py -v`
 
-- [ ] Add `recalculate_storage(empires: List[Empire]) -> None` method:
-  - For each empire, reset max_storage to empty dict
-  - Iterate colonies -> facilities -> abilities
-  - For each EmpireStorageAbility:
-    - Add capacity to empire.max_storage[resource_type]
-- [ ] Call recalculate_storage at start of process_harvesting
+- [x] Add `recalculate_storage(empires: List[Empire]) -> None` method
+- [x] Call recalculate_storage at start of process_harvesting
 
-**Notes:**
+**Notes:** Added recalculate_storage + _aggregate_empire_storage + _collect_storage_from_facility + _get_storage_info + _lookup_storage_in_registry. Supports both inline abilities and registry lookup.
 
 ---
 
@@ -83,21 +65,21 @@
 **File:** `data/components.json`
 **Tests:** Manual verification - start game and check registry
 
-- [ ] Add `resource_vault_metals` (capacity: 10000)
-- [ ] Add `resource_vault_organics` (capacity: 10000)
-- [ ] Add `resource_vault_vapors` (capacity: 10000)
-- [ ] Add `resource_vault_radioactives` (capacity: 5000)
-- [ ] Add `resource_vault_exotics` (capacity: 2500)
-- [ ] All with `allowed_vehicle_types: ["Planetary Complex"]`
-- [ ] All with appropriate `resource_cost` fields
+- [x] Add `resource_vault_metals` (capacity: 10000)
+- [x] Add `resource_vault_organics` (capacity: 10000)
+- [x] Add `resource_vault_vapors` (capacity: 10000)
+- [x] Add `resource_vault_radioactives` (capacity: 5000)
+- [x] Add `resource_vault_exotics` (capacity: 2500)
+- [x] All with `allowed_vehicle_types: ["Planetary Complex"]`
+- [x] All with appropriate `resource_cost` fields
 
-**Notes:**
+**Notes:** All 5 vaults added with StructuralIntegrity and CrewRequired abilities. Resource costs scale with rarity.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4

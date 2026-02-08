@@ -51,8 +51,8 @@ from .weapons import (
     SeekerWeaponAbility,
 )
 
-# Harvester abilities
-from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility
+# Harvester and storage abilities
+from .harvester import ResourceHarvesterAbility, SpaceShipyardAbility, EmpireStorageAbility
 
 # --- Registry ---
 
@@ -85,6 +85,7 @@ ABILITY_REGISTRY = {
     "StructuralIntegrity": StructuralIntegrity,
     "ResourceHarvester": ResourceHarvesterAbility,
     "SpaceShipyard": SpaceShipyardAbility,
+    "EmpireStorage": EmpireStorageAbility,
     "CargoStorage": CargoStorage,
 }
 
@@ -142,9 +143,10 @@ __all__ = [
     'ProjectileWeaponAbility',
     'BeamWeaponAbility',
     'SeekerWeaponAbility',
-    # Harvester
+    # Harvester and storage
     'ResourceHarvesterAbility',
     'SpaceShipyardAbility',
+    'EmpireStorageAbility',
     # Cargo
     'CargoStorage',
     # Registry
