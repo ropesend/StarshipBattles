@@ -292,3 +292,104 @@ class TestShipSpawning:
         assert len(empire.fleets) == 3
         fleet_ids = [fleet.id for fleet in empire.fleets]
         assert len(fleet_ids) == len(set(fleet_ids))  # No duplicates
+
+
+class TestParallelShipyardE2E:
+    """E2E tests for parallel facility queue processing (PROJ-69 Phase 6)."""
+
+    def test_two_shipyards_process_and_complete_independently(self, production_setup):
+        """E2E: Planet with 2 shipyards + queued items → both process independently."""
+        planet = production_setup['planet']
+        empire = production_setup['empire']
+        engine = production_setup['engine']
+        empires = production_setup['empires']
+        temp_dir = production_setup['temp_dir']
+
+        # Add two shipyard facilities with separate queues
+        yard1 = _make_shipyard("shipyard_1")
+        yard1.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 2}
+        ]
+        yard2 = _make_shipyard("shipyard_2")
+        yard2.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
+        planet.facilities.extend([yard1, yard2])
+
+        initial_fleet_count = len(empire.fleets)
+
+        # Turn 1: yard2 completes (1 turn), yard1 decrements (2→1)
+        engine.process_production(empires, save_path=temp_dir)
+
+        assert yard1.construction_queue[0]["turns_remaining"] == 1
+        assert len(yard2.construction_queue) == 0
+        assert len(empire.fleets) == initial_fleet_count + 1  # yard2's ship spawned
+
+        # Turn 2: yard1 completes (1→0)
+        engine.process_production(empires, save_path=temp_dir)
+
+        assert len(yard1.construction_queue) == 0
+        assert len(empire.fleets) == initial_fleet_count + 2  # yard1's ship also spawned
+
+
+class TestFacilityQueueSaveLoadE2E:
+    """E2E tests for facility queue save/load persistence (PROJ-69 Phase 6)."""
+
+    def test_save_load_preserves_facility_queues_and_processes(self, production_setup):
+        """E2E: Save with facility queues → load → queues preserved → process → items complete."""
+        from game.strategy.data.planet import Planet
+
+        planet = production_setup['planet']
+        empire = production_setup['empire']
+        engine = production_setup['engine']
+        empires = production_setup['empires']
+        temp_dir = production_setup['temp_dir']
+
+        # Add shipyard with items in its facility queue
+        yard = _make_shipyard("shipyard_save_test")
+        yard.construction_queue = [
+            {"design_id": "test_ship", "type": "ship", "turns_remaining": 1}
+        ]
+        planet.facilities.append(yard)
+
+        # Also add complex to base queue
+        planet.construction_queue.append(
+            {"design_id": "test_complex", "type": "complex", "turns_remaining": 1}
+        )
+
+        # Serialize planet (simulating save)
+        planet_data = planet.to_dict()
+
+        # Deserialize planet (simulating load)
+        restored_planet = Planet.from_dict(planet_data)
+        restored_planet.owner_id = planet.owner_id
+
+        # Verify facility queue was preserved
+        assert len(restored_planet.facilities) == 1
+        restored_yard = restored_planet.facilities[0]
+        assert restored_yard.instance_id == "shipyard_save_test"
+        assert len(restored_yard.construction_queue) == 1
+        assert restored_yard.construction_queue[0]["design_id"] == "test_ship"
+        assert restored_yard.construction_queue[0]["turns_remaining"] == 1
+
+        # Verify base queue was preserved
+        assert len(restored_planet.construction_queue) == 1
+        assert restored_planet.construction_queue[0]["type"] == "complex"
+
+        # Replace colony in empire with the restored planet for processing
+        empire.colonies.clear()
+        empire.add_colony(restored_planet)
+
+        initial_fleet_count = len(empire.fleets)
+        initial_facility_count = len(restored_planet.facilities)
+
+        # Process production on restored planet - both queues should complete
+        engine.process_production(empires, save_path=temp_dir)
+
+        # Facility queue ship should have spawned
+        assert len(restored_yard.construction_queue) == 0
+        assert len(empire.fleets) == initial_fleet_count + 1
+
+        # Base queue complex should have spawned as facility
+        assert len(restored_planet.construction_queue) == 0
+        assert len(restored_planet.facilities) == initial_facility_count + 1
