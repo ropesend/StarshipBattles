@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Update app.py to call spawn_initial_complexes() during quickstart flow
 
 ---
@@ -16,15 +16,15 @@
 
 In the `_start_quickstart()` method, add call after `copy_quickstart_designs()`:
 
-- [ ] Locate `_start_quickstart()` method (around line 259)
-- [ ] Find the line: `QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)`
-- [ ] Add immediately after:
+- [x] Locate `_start_quickstart()` method (around line 259)
+- [x] Find the line: `QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)`
+- [x] Add immediately after:
 ```python
 # Spawn initial complexes on home planets
 QuickstartBuilder.spawn_initial_complexes(save_path, session)
 ```
 
-- [ ] Verify the import `from game.strategy.quickstart_builder import QuickstartBuilder` exists (should already be there)
+- [x] Verify the import `from game.strategy.quickstart_builder import QuickstartBuilder` exists (already there on line 266)
 
 **Notes:**
 

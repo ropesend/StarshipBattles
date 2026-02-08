@@ -288,6 +288,9 @@ class Game:
             # Copy quickstart designs for empires
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
+            # Spawn initial complexes on home planets
+            QuickstartBuilder.spawn_initial_complexes(save_path, session)
+
             self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
         else:
