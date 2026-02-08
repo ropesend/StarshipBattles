@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Core Data Model + InputMapper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Strategy Screen Integration | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Strategy Screen Integration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Sub-Window Hotkey Integration | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Keybindings Settings Scene | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Verification & Polish | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 2 - Strategy Screen Integration
-**Last Action:** Completed Phase 1 - Core Data Model + InputMapper (63 new tests)
-**Next Action:** Begin Phase 2 - Integrate InputMapper into strategy screen
+**Active Phase:** Phase 3 - Sub-Window Hotkey Integration
+**Last Action:** Completed Phase 2 - Strategy Screen Integration (36 new tests)
+**Next Action:** Begin Phase 3 - Wire hotkeys into sub-windows (Fleet Orders, Build Queue, Transfer Dialog, etc.)
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Created InputAction enum (37 actions in 7 contexts), KeyBinding dataclass, InputMapper service with O(1) resolution, context filtering, conflict detection, save/load. Added detail_panel.* context for panel buttons. Path constants added (SETTINGS_DIR, DEFAULT_KEYBINDINGS_FILE, USER_KEYBINDINGS_FILE). 63 new tests (30 input_actions + 33 input_mapper). Full suite: 6715 passed, 1 pre-existing failure.
+**Context for Next Agent:** Phase 2 complete. InputMapper injected into app.py, StrategyScreen, StrategyInputHandler, and StrategyUI. Hardcoded key checks replaced with InputMapper.resolve() dispatch (with legacy fallback). New hotkey actions: Enter=EndTurn, P=Planets, D=Design, B=BuildQueues, Ctrl+S=Save, []=Fleet, ,./=Colony, O=Orders, F=FleetReport. Tooltip enrichment on 14 buttons. Fixed InputMapper._build_lookup to support multi-action keys (ESC shared across non-overlapping contexts). Full suite: 6751 passed, 1 pre-existing failure.
 
 ## Overview
 All keyboard shortcuts in the strategy layer are currently hardcoded. This project creates a centralized, data-driven keybinding system with a JSON defaults file, user override persistence, tooltip hints on buttons, and a full-screen keybinding editor scene. Every button and command in the strategy layer and its sub-screens gets a bindable hotkey.

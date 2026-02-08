@@ -25,6 +25,8 @@ from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
 from game.core.profiling import PROFILER, profile_action
 from game.core.protocols import IScene
+from game.core.input_mapper import InputMapper
+from game.core.input_actions import InputAction
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel
 )
@@ -108,6 +110,10 @@ class Game:
         )
         set_default_registries(self.registries)
 
+        # Initialize input mapper (PROJ-71: centralized keybindings)
+        self.input_mapper = InputMapper()
+        self.input_mapper.load(Paths.DEFAULT_KEYBINDINGS_FILE, Paths.USER_KEYBINDINGS_FILE)
+
         # Load sprites
         sprite_mgr = SpriteManager.instance()
         sprite_mgr.load_sprites(Paths.ROOT_DIR)
@@ -125,7 +131,7 @@ class Game:
         self.builder_scene = DesignWorkshopScreen(self.width, self.height, context)
         self.battle_setup = BattleSetupScreen(self.width, self.height, self._handle_battle_setup_action)
         self.battle_scene = BattleScreen(self.width, self.height, self._handle_battle_action)
-        self.strategy_scene = StrategyScreen(self.width, self.height, scene_callback=self._handle_strategy_action)
+        self.strategy_scene = StrategyScreen(self.width, self.height, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
         self.formation_scene = FormationEditorScreen(self.width, self.height, self.on_formation_return)
         self.test_lab_scene = TestLabScreen(self, scene_callback=self._handle_test_lab_action)
 
@@ -229,7 +235,7 @@ class Game:
             log_info(f"Initial save created: {save_path}")
 
             # Create strategy scene with new session
-            self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_new_game_setup = False
         else:
@@ -282,7 +288,7 @@ class Game:
             # Copy quickstart designs for empires
             QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
 
-            self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
         else:
             log_error(f"Quickstart {player_count}P failed: {message}")
@@ -330,7 +336,7 @@ class Game:
 
         if game_session:
             # Create new strategy scene with loaded session
-            self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session, scene_callback=self._handle_strategy_action)
+            self.strategy_scene = StrategyScreen(self.width, self.height, session=game_session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
             self.showing_load_menu = False
             log_info(f"Game loaded successfully: {message}")
@@ -478,11 +484,13 @@ class Game:
 
             if event.type == pygame.QUIT:
                 self.running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_x and (event.mod & pygame.KMOD_ALT):
-                self.show_exit_dialog = True
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F9:
-                active = PROFILER.toggle()
-                log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
+            elif event.type == pygame.KEYDOWN:
+                action = self.input_mapper.resolve(event, contexts=["global"])
+                if action == InputAction.GLOBAL_EXIT:
+                    self.show_exit_dialog = True
+                elif action == InputAction.GLOBAL_TOGGLE_PROFILER:
+                    active = PROFILER.toggle()
+                    log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
             elif event.type == pygame.VIDEORESIZE:
                 self._handle_resize(event.w, event.h)
             elif event.type == pygame.MOUSEBUTTONDOWN:

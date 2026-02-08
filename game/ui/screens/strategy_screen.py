@@ -47,7 +47,7 @@ class StrategyScreen:
 
     TOP_BAR_HEIGHT = 50
 
-    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None):
+    def __init__(self, screen_width: int, screen_height: int, session=None, scene_callback=None, input_mapper=None):
         """Initialize strategy screen.
 
         Args:
@@ -57,10 +57,12 @@ class StrategyScreen:
             scene_callback: Callback function for scene transitions.
                            Called with (action, **kwargs) where action is:
                            - "open_builder": Open design workshop with context kwarg
+            input_mapper: Optional InputMapper for centralized keybinding resolution.
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.scene_callback = scene_callback
+        self.input_mapper = input_mapper
 
         # Session Management
         if session:
@@ -86,7 +88,7 @@ class StrategyScreen:
         self._focus_on_player_home()
 
         # UI
-        self.ui = StrategyUI(self, screen_width, screen_height)
+        self.ui = StrategyUI(self, screen_width, screen_height, input_mapper=input_mapper)
 
         # State
         self.hover_hex = None
@@ -112,7 +114,7 @@ class StrategyScreen:
         self._camera_nav = CameraNavigator(self)
         self._fleet_ops = FleetOperations(self, self._facade)
         self._colonization = ColonizationSystem(self, self._facade)
-        self._input = StrategyInputHandler(self)
+        self._input = StrategyInputHandler(self, input_mapper=input_mapper)
 
     # =========================================================================
     # Properties (delegate to session)

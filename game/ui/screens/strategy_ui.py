@@ -3,11 +3,16 @@
 Cross-layer imports (acceptable for UI):
 - Protocols: Runtime - duck typing for object identification
 """
+from __future__ import annotations
+
 import os
+from typing import Optional
+
 import pygame
 import pygame_gui
 from game.core.logger import log_debug
 from game.core.config import UIConfig
+from game.core.input_actions import InputAction
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
     is_warp_point, is_sector_environment
@@ -32,10 +37,11 @@ import pygame_gui.elements as ui
 class StrategyUI:
     """Handles all UI rendering and interaction for the StrategyScreen."""
 
-    def __init__(self, scene, screen_width, screen_height):
+    def __init__(self, scene, screen_width, screen_height, input_mapper=None):
         self.scene = scene
         self.width = screen_width
         self.height = screen_height
+        self._mapper = input_mapper
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
         self.fleet_orders_window = None  # active window instance
         self.planet_list_window = None   # planet list window instance (BUG-22)
@@ -317,6 +323,46 @@ class StrategyUI:
             self.sector_panel,
             self.detail_panel
         ]
+
+        # Apply hotkey tooltips to buttons (PROJ-71)
+        self._apply_hotkey_tooltips()
+
+    # =========================================================================
+    # Hotkey Tooltip Enrichment (PROJ-71)
+    # =========================================================================
+
+    def _apply_hotkey_tooltips(self) -> None:
+        """Apply hotkey hint tooltips to strategy UI buttons.
+
+        Uses the InputMapper to look up the display text for each button's
+        associated action. If the mapper is None or an action is unbound,
+        the button retains its default tooltip (none).
+        """
+        if not self._mapper:
+            return
+
+        # Map buttons to their InputAction
+        button_actions = {
+            self.btn_next_turn: InputAction.STRATEGY_NEXT_TURN,
+            self.btn_planets: InputAction.STRATEGY_OPEN_PLANETS,
+            self.btn_empire: InputAction.STRATEGY_OPEN_EMPIRE,
+            self.btn_research: InputAction.STRATEGY_OPEN_RESEARCH,
+            self.btn_design: InputAction.STRATEGY_OPEN_DESIGN,
+            self.btn_build_queues: InputAction.STRATEGY_OPEN_BUILD_QUEUES,
+            self.btn_prev_colony: InputAction.STRATEGY_PREV_COLONY,
+            self.btn_next_colony: InputAction.STRATEGY_NEXT_COLONY,
+            self.btn_prev_fleet: InputAction.STRATEGY_PREV_FLEET,
+            self.btn_next_fleet: InputAction.STRATEGY_NEXT_FLEET,
+            self.btn_colonize: InputAction.FLEET_COLONIZE,
+            self.btn_orders: InputAction.DETAIL_PANEL_ORDERS,
+            self.btn_fleet_report: InputAction.DETAIL_PANEL_FLEET_REPORT,
+            self.btn_build_fleet: InputAction.DETAIL_PANEL_BUILD,
+        }
+
+        for btn, action in button_actions.items():
+            hint = self._mapper.get_display_text(action)
+            if hint:
+                btn.set_tooltip(hint)
 
     # =========================================================================
     # Menu Panel Management (PROJ-72)

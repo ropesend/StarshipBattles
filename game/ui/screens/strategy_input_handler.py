@@ -3,26 +3,39 @@ Input handling for strategy scene.
 Routes keyboard and mouse events to appropriate handlers.
 
 Extracted from StrategyScreen to reduce file size and improve testability.
+PROJ-71: Refactored to use InputMapper for data-driven keybinding resolution.
 """
+from __future__ import annotations
+
+from typing import Optional
+
 import pygame
 import pygame_gui
 from game.core.config import UIConfig
+from game.core.input_actions import InputAction
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
 from game.strategy.data.hex_math import pixel_to_hex
 
 
 class StrategyInputHandler:
-    """Routes input events for strategy scene."""
+    """Routes input events for strategy scene.
 
-    def __init__(self, scene):
-        """
-        Initialize input handler.
+    When an InputMapper is provided, keyboard events are resolved through
+    the centralized binding table. Without a mapper, falls back to the
+    original hardcoded pygame key checks (backward compat).
+    """
+
+    def __init__(self, scene, input_mapper=None):
+        """Initialize input handler.
 
         Args:
-            scene: StrategyScreen instance providing state and sub-modules
+            scene: StrategyScreen instance providing state and sub-modules.
+            input_mapper: Optional InputMapper for centralized keybinding
+                         resolution (PROJ-71).
         """
         self.scene = scene
+        self._mapper = input_mapper
         self.input_mode = 'SELECT'
 
     def handle_event(self, event):
@@ -75,7 +88,103 @@ class StrategyInputHandler:
             self.scene.cycle_selection('fleet', 1)
 
     def _handle_keydown(self, event):
-        """Handle keyboard input."""
+        """Handle keyboard input via InputMapper or legacy fallback."""
+        if self._mapper:
+            self._handle_keydown_mapped(event)
+        else:
+            self._handle_keydown_legacy(event)
+
+    def _handle_keydown_mapped(self, event):
+        """Handle keyboard input using InputMapper (PROJ-71)."""
+        # Build context list based on current state
+        contexts = ["strategy", "global", "detail_panel"]
+        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET'):
+            contexts.append("fleet")
+
+        action = self._mapper.resolve(event, contexts)
+        if action is None:
+            return
+
+        # --- Fleet mode commands ---
+        if action == InputAction.FLEET_MOVE:
+            if self.scene.selected_fleet:
+                self.input_mode = 'MOVE'
+                log_debug("Input Mode: MOVE - Click destination for fleet.")
+            else:
+                log_debug("Select a fleet first.")
+
+        elif action == InputAction.FLEET_JOIN:
+            if self.scene.selected_fleet:
+                self.input_mode = 'JOIN'
+                log_debug("Input Mode: JOIN - Select fleet to join.")
+            else:
+                log_debug("Select a fleet first.")
+
+        elif action == InputAction.FLEET_COLONIZE:
+            if self.scene.selected_fleet:
+                self.input_mode = 'COLONIZE_TARGET'
+                log_debug("Input Mode: COLONIZE - Select target planet.")
+            else:
+                log_debug("Select a fleet first.")
+
+        elif action == InputAction.FLEET_TRANSFER:
+            if self.scene.selected_fleet:
+                fleet = self.scene.selected_fleet
+                self.scene.ui.open_transfer_dialog(fleet, fleet.location)
+                log_debug(f"Opening Transfer Dialog for Fleet {fleet.id} at {fleet.location}")
+            else:
+                log_debug("Select a fleet first for transfer.")
+
+        elif action == InputAction.FLEET_CANCEL_MODE:
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN'):
+                self.input_mode = 'SELECT'
+                log_debug("Input Mode: SELECT")
+
+        # --- Zoom shortcuts ---
+        elif action == InputAction.STRATEGY_ZOOM_GALAXY:
+            self.scene._camera_nav.zoom_to_galaxy()
+        elif action == InputAction.STRATEGY_ZOOM_SYSTEM:
+            self.scene._camera_nav.zoom_to_system()
+
+        # --- Screenshot shortcuts ---
+        elif action == InputAction.GLOBAL_SCREENSHOT_FULL:
+            self._take_screenshot_full()
+        elif action == InputAction.GLOBAL_SCREENSHOT_VIEWPORT:
+            self._take_screenshot_viewport()
+
+        # --- Button-triggered actions (Task 2.5) ---
+        elif action == InputAction.STRATEGY_NEXT_TURN:
+            self.scene.advance_turn()
+        elif action == InputAction.STRATEGY_OPEN_PLANETS:
+            self.scene.ui.open_planet_list()
+        elif action == InputAction.STRATEGY_OPEN_DESIGN:
+            self.scene.on_design_click()
+        elif action == InputAction.STRATEGY_OPEN_BUILD_QUEUES:
+            self.scene.ui.open_build_queue_list()
+        elif action == InputAction.STRATEGY_SAVE_GAME:
+            self.scene.on_save_game_click()
+        elif action == InputAction.STRATEGY_PREV_COLONY:
+            self.scene.cycle_selection('colony', -1)
+        elif action == InputAction.STRATEGY_NEXT_COLONY:
+            self.scene.cycle_selection('colony', 1)
+        elif action == InputAction.STRATEGY_PREV_FLEET:
+            self.scene.cycle_selection('fleet', -1)
+        elif action == InputAction.STRATEGY_NEXT_FLEET:
+            self.scene.cycle_selection('fleet', 1)
+
+        # --- Detail panel fleet commands ---
+        elif action == InputAction.DETAIL_PANEL_ORDERS:
+            if self.scene.selected_fleet:
+                self.scene.ui.open_orders_window(self.scene.selected_fleet)
+        elif action == InputAction.DETAIL_PANEL_FLEET_REPORT:
+            if self.scene.selected_fleet:
+                self.scene.ui.open_fleet_report_window(self.scene.selected_fleet)
+        elif action == InputAction.DETAIL_PANEL_BUILD:
+            if self.scene.selected_fleet:
+                self.scene.on_fleet_build_click()
+
+    def _handle_keydown_legacy(self, event):
+        """Handle keyboard input with hardcoded keys (backward compat)."""
         if event.key == pygame.K_m:
             if self.scene.selected_fleet:
                 self.input_mode = 'MOVE'
@@ -104,7 +213,6 @@ class StrategyInputHandler:
 
         elif event.key == pygame.K_t:
             if self.scene.selected_fleet:
-                # Open transfer dialog for selected fleet and its current location
                 fleet = self.scene.selected_fleet
                 self.scene.ui.open_transfer_dialog(fleet, fleet.location)
                 log_debug(f"Opening Transfer Dialog for Fleet {fleet.id} at {fleet.location}")

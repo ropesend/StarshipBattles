@@ -35,6 +35,7 @@ class GameState(IntEnum):
     RACE_SETUP = 7
     RESEARCH_TREE = 8
     GALAXY_TEST = 9
+    KEYBINDINGS = 10
 
 # Colors
 WHITE = (255, 255, 255)

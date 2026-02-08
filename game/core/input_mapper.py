@@ -65,7 +65,7 @@ class InputMapper:
         """Initialize with empty binding tables."""
         self._defaults: Dict[InputAction, Optional[KeyBinding]] = {}
         self._bindings: Dict[InputAction, Optional[KeyBinding]] = {}
-        self._lookup: Dict[Tuple[int, FrozenSet[str]], InputAction] = {}
+        self._lookup: Dict[Tuple[int, FrozenSet[str]], List[InputAction]] = {}
         self._defaults_path: Optional[str] = None
 
     def load(
@@ -125,7 +125,12 @@ class InputMapper:
             target[action] = KeyBinding.from_dict(binding_data)
 
     def _build_lookup(self) -> None:
-        """Build the (key_int, modifiers) -> InputAction lookup dict."""
+        """Build the (key_int, modifiers) -> [InputAction] lookup dict.
+
+        Multiple actions can share the same key+modifiers if they belong
+        to non-overlapping contexts (e.g., ESC for fleet.cancel_mode,
+        build_queue.close, and transfer.cancel).
+        """
         self._lookup.clear()
         for action, binding in self._bindings.items():
             if binding is None:
@@ -134,7 +139,9 @@ class InputMapper:
             if key_int is None:
                 continue
             lookup_key = (key_int, binding.modifiers)
-            self._lookup[lookup_key] = action
+            if lookup_key not in self._lookup:
+                self._lookup[lookup_key] = []
+            self._lookup[lookup_key].append(action)
 
     @staticmethod
     def _resolve_pygame_key(key_name: str) -> Optional[int]:
@@ -181,6 +188,9 @@ class InputMapper:
         are processed. Context filtering ensures actions only match when
         their context prefix is in the provided context list.
 
+        When multiple actions share the same key+modifiers (e.g., ESC in
+        different contexts), returns the first one whose context matches.
+
         Args:
             event: A pygame event (only KEYDOWN events are resolved).
             contexts: List of active context prefixes (e.g., ["strategy", "fleet"]).
@@ -196,17 +206,21 @@ class InputMapper:
         mods = self._extract_modifiers(event.mod)
         lookup_key = (key_int, mods)
 
-        action = self._lookup.get(lookup_key)
-        if action is None:
+        actions = self._lookup.get(lookup_key)
+        if not actions:
             return None
 
-        # Context filtering
-        if contexts is not None:
-            action_context = action.value.split(".")[0]
-            if action_context != "global" and action_context not in contexts:
-                return None
+        # No context filter: return first action
+        if contexts is None:
+            return actions[0]
 
-        return action
+        # Context filtering: return first matching action
+        for action in actions:
+            action_context = action.value.split(".")[0]
+            if action_context == "global" or action_context in contexts:
+                return action
+
+        return None
 
     def get_binding(self, action: InputAction) -> Optional[KeyBinding]:
         """Get the current key binding for an action.
