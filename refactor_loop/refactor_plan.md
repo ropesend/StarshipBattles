@@ -8,20 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-76 Phase 2 - Window Foundation
-**Current Status:** PROJ-76 Phase 2 complete, Phase 3 next
+**Last Completed:** PROJ-76 Phase 3 - Column System
+**Current Status:** PROJ-76 Phase 3 complete, Phase 4 next
 **Current Project:** PROJ-76
-**Current Phase:** Phase 3
-**Test Status:** 7004+ passed (testmon: 21 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
+**Current Phase:** Phase 4
+**Test Status:** 47 passed (testmon: 47 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-76 Phase 2 complete: EmpireBuildQueueWindow created
-- New file: game/ui/screens/empire_build_queue_window.py (~290 lines)
-- New test: tests/unit/ui/screens/test_empire_build_queue_window.py (21 tests)
-- Window has: sidebar placeholder, header, scrollable list, row rendering, click selection, scroll, close callback
-- Data formatters: _get_queue_summary(), _get_first_item_text(), _get_capabilities_text()
-- Next: Phase 3 - Column System (configurable columns like PlanetListWindow)
+- PROJ-76 Phase 3 complete: Configurable column system added
+- Modified: game/ui/screens/empire_build_queue_window.py (290→515 lines)
+- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (21→47 tests)
+- 8 columns: location, system, sector, queue_count, first_item, turns_left, capabilities, build_rate
+- Column methods: _get_visible_columns(), _get_column_value(), toggle_column_visibility()
+- Sidebar: _build_sidebar_column_toggles(), _handle_column_toggle_click(), [x]/[ ] toggle buttons
+- Header & rows now column-driven: _build_header_labels() and _refresh_list() iterate visible columns
+- New formatters: _get_system_name(), _get_sector_text(), _get_turns_left_text()
+- Next: Phase 4 - Filtering (location type, queue status, capabilities, text search)
 
 ---
 
@@ -166,7 +169,7 @@
 ---
 
 - [/] **PROJ-76: Empire-Wide Build Queue Window**
-  - **Phases:** 7 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-76/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-76/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -288,6 +291,7 @@
 | 2026-02-08 | PROJ-75 | Audit 1 | PASSED | 7004 passed | pending | No issues found, 4 investigation agents verified all 6 phases |
 | 2026-02-08 | PROJ-76 | Phase 1 | Complete | 183 testmon | pending | collect_all_build_queues_for_empire(), 7 new tests |
 | 2026-02-08 | PROJ-76 | Phase 2 | Complete | 21 testmon | pending | EmpireBuildQueueWindow class, layout, row rendering, selection, 21 tests |
+| 2026-02-08 | PROJ-76 | Phase 3 | Complete | 47 testmon | pending | Column system: 8 columns, visibility toggles, sidebar, 26 new tests |
 
 ---
 

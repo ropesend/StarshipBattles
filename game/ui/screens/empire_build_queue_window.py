@@ -5,13 +5,14 @@ empire in a unified, scrollable list. Provides queue summary info and
 navigation to individual hex build screens.
 
 Created as part of PROJ-76 Phase 2.
+Updated in Phase 3: Configurable column system with visibility toggles.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, List, Optional, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
-from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIVerticalScrollBar
+from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar
 
 from game.core.config import UIConfig
 from game.core.logger import log_debug
@@ -67,21 +68,35 @@ class EmpireBuildQueueWindow(UIWindow):
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
+        # --- Column Definitions ---
+        self.columns: List[Dict[str, Any]] = [
+            {'id': 'location', 'width': 180, 'title': 'Location', 'visible': True},
+            {'id': 'system', 'width': 120, 'title': 'System', 'visible': True},
+            {'id': 'sector', 'width': 80, 'title': 'Sector', 'visible': True},
+            {'id': 'queue_count', 'width': 80, 'title': 'Items', 'visible': True},
+            {'id': 'first_item', 'width': 150, 'title': 'Building', 'visible': True},
+            {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
+            {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
+            {'id': 'build_rate', 'width': 80, 'title': 'Rate/Turn', 'visible': False},
+        ]
+
         # --- State ---
         self.all_sources: List[BuildQueueSource] = collect_all_build_queues_for_empire(empire)
         self.filtered_sources: List[BuildQueueSource] = list(self.all_sources)
         self.selected_source: Optional[BuildQueueSource] = None
         self.selected_index: int = -1
         self.row_elements: list = []
+        self.column_toggle_buttons: Dict[str, UIButton] = {}
 
         # --- UI Containers ---
-        # Sidebar (filters - placeholder for Phase 4)
+        # Sidebar (column toggles + filters placeholder)
         self.sidebar_panel = UIPanel(
             relative_rect=pygame.Rect(0, 0, self.sidebar_width, rect.height - 50),
             manager=manager,
             container=self,
             anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
         )
+        self._build_sidebar_column_toggles(manager)
 
         # Main content area
         main_w = rect.width - self.sidebar_width - 10
@@ -132,22 +147,22 @@ class EmpireBuildQueueWindow(UIWindow):
     # -------------------------------------------------------------------
 
     def _build_header_labels(self, manager: Any, main_w: int) -> None:
-        """Create column title labels in the header."""
+        """Create column title labels in the header from visible columns."""
+        # Clear existing header labels
+        for child in getattr(self, '_header_labels', []):
+            child.kill()
+        self._header_labels: list = []
+
         x = 10
-        cols = [
-            ("Location", 200),
-            ("Items", 80),
-            ("Building", 150),
-            ("Can Build", 120),
-        ]
-        for title, width in cols:
-            UILabel(
-                relative_rect=pygame.Rect(x, 5, width, 30),
-                text=title,
+        for col in self._get_visible_columns():
+            lbl = UILabel(
+                relative_rect=pygame.Rect(x, 5, col['width'], 30),
+                text=col['title'],
                 manager=manager,
                 container=self.header_container,
             )
-            x += width + 10
+            self._header_labels.append(lbl)
+            x += col['width'] + 10
 
     # -------------------------------------------------------------------
     # List Population
@@ -169,52 +184,22 @@ class EmpireBuildQueueWindow(UIWindow):
         self.scroll_bar.bottom_limit = max(visible_h, total_h)
         self.scroll_bar.redraw_scrollbar()
 
-        # Create row labels
+        # Create row labels using column configuration
+        visible_cols = self._get_visible_columns()
         for i, source in enumerate(self.filtered_sources):
             y = i * self.row_height
             x = 10
 
-            # Location name
-            lbl_name = UILabel(
-                relative_rect=pygame.Rect(x, y, 200, self.row_height),
-                text=source.display_name,
-                manager=self.ui_manager,
-                container=self.list_panel,
-            )
-            self.row_elements.append(lbl_name)
-            x += 210
-
-            # Queue count
-            summary = self._get_queue_summary(source)
-            lbl_count = UILabel(
-                relative_rect=pygame.Rect(x, y, 80, self.row_height),
-                text=summary,
-                manager=self.ui_manager,
-                container=self.list_panel,
-            )
-            self.row_elements.append(lbl_count)
-            x += 90
-
-            # First item building
-            first_item = self._get_first_item_text(source)
-            lbl_building = UILabel(
-                relative_rect=pygame.Rect(x, y, 150, self.row_height),
-                text=first_item,
-                manager=self.ui_manager,
-                container=self.list_panel,
-            )
-            self.row_elements.append(lbl_building)
-            x += 160
-
-            # Capabilities
-            caps = self._get_capabilities_text(source)
-            lbl_caps = UILabel(
-                relative_rect=pygame.Rect(x, y, 120, self.row_height),
-                text=caps,
-                manager=self.ui_manager,
-                container=self.list_panel,
-            )
-            self.row_elements.append(lbl_caps)
+            for col in visible_cols:
+                text = self._get_column_value(source, col['id'])
+                lbl = UILabel(
+                    relative_rect=pygame.Rect(x, y, col['width'], self.row_height),
+                    text=text,
+                    manager=self.ui_manager,
+                    container=self.list_panel,
+                )
+                self.row_elements.append(lbl)
+                x += col['width'] + 10
 
     # -------------------------------------------------------------------
     # Selection
@@ -335,6 +320,183 @@ class EmpireBuildQueueWindow(UIWindow):
         if source.can_build_complexes:
             return "Complexes"
         return "None"
+
+    # -------------------------------------------------------------------
+    # Column System
+    # -------------------------------------------------------------------
+
+    def _get_visible_columns(self) -> List[Dict[str, Any]]:
+        """Return list of currently visible columns.
+
+        Returns:
+            List of column dicts where visible is True.
+        """
+        return [c for c in self.columns if c.get('visible', True)]
+
+    def _get_column_value(self, source: BuildQueueSource, col_id: str) -> str:
+        """Return the display value for a column and source.
+
+        Args:
+            source: The build queue source to extract data from.
+            col_id: Column identifier string.
+
+        Returns:
+            Human-readable string value for the cell.
+        """
+        if col_id == 'location':
+            return source.display_name
+        if col_id == 'system':
+            return self._get_system_name(source)
+        if col_id == 'sector':
+            return self._get_sector_text(source)
+        if col_id == 'queue_count':
+            return self._get_queue_summary(source)
+        if col_id == 'first_item':
+            return self._get_first_item_text(source)
+        if col_id == 'turns_left':
+            return self._get_turns_left_text(source)
+        if col_id == 'capabilities':
+            return self._get_capabilities_text(source)
+        if col_id == 'build_rate':
+            return "1/turn"
+        return ""
+
+    def toggle_column_visibility(self, col_id: str) -> bool:
+        """Toggle visibility of a column by ID.
+
+        Args:
+            col_id: ID of the column to toggle.
+
+        Returns:
+            True if visibility was toggled, False if column not found.
+        """
+        for col in self.columns:
+            if col['id'] == col_id:
+                col['visible'] = not col['visible']
+                return True
+        return False
+
+    # -------------------------------------------------------------------
+    # Sidebar Column Toggles
+    # -------------------------------------------------------------------
+
+    def _build_sidebar_column_toggles(self, manager: Any) -> None:
+        """Create column visibility toggle buttons in the sidebar.
+
+        Args:
+            manager: pygame_gui UIManager instance.
+        """
+        sidebar_w = self.sidebar_width - 20
+
+        UILabel(
+            relative_rect=pygame.Rect(10, 10, sidebar_w, 25),
+            text="COLUMNS",
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+
+        y_off = 40
+        for col in self.columns:
+            prefix = "[x]" if col['visible'] else "[ ]"
+            label = col['title'] or col['id']
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
+                text=f"{prefix} {label}",
+                manager=manager,
+                container=self.sidebar_panel,
+            )
+            self.column_toggle_buttons[col['id']] = btn
+            y_off += 35
+
+    def _handle_column_toggle_click(self, button: UIButton) -> None:
+        """Handle a column toggle button click.
+
+        Finds which column the button corresponds to, toggles its
+        visibility, updates the button text, and rebuilds the display.
+
+        Args:
+            button: The UIButton that was clicked.
+        """
+        for col_id, btn in self.column_toggle_buttons.items():
+            if btn is button:
+                self.toggle_column_visibility(col_id)
+                col = next(c for c in self.columns if c['id'] == col_id)
+                prefix = "[x]" if col['visible'] else "[ ]"
+                label = col['title'] or col['id']
+                btn.set_text(f"{prefix} {label}")
+                # Rebuild header and list with new column visibility
+                self._build_header_labels(self.ui_manager, 0)
+                self._refresh_list()
+                return
+
+    # -------------------------------------------------------------------
+    # Additional Data Formatters
+    # -------------------------------------------------------------------
+
+    def _get_system_name(self, source: BuildQueueSource) -> str:
+        """Return the system name for a queue source.
+
+        Args:
+            source: The build queue source.
+
+        Returns:
+            System name string, or dash if unavailable.
+        """
+        entity = source.owner_entity
+        if source.context_type == "planet":
+            system = getattr(entity, 'system_name', None)
+            if system:
+                return str(system)
+            # Try galaxy lookup
+            if self.galaxy and hasattr(self.galaxy, 'get_system_of_planet'):
+                sys_obj = self.galaxy.get_system_of_planet(entity)
+                if sys_obj:
+                    return getattr(sys_obj, 'name', '-')
+        elif source.context_type == "fleet":
+            location = getattr(entity, 'location', None)
+            if location and self.galaxy and hasattr(self.galaxy, 'get_system_at_hex'):
+                sys_obj = self.galaxy.get_system_at_hex(location)
+                if sys_obj:
+                    return getattr(sys_obj, 'name', '-')
+        return "-"
+
+    @staticmethod
+    def _get_sector_text(source: BuildQueueSource) -> str:
+        """Return sector/hex coordinate text for a queue source.
+
+        Args:
+            source: The build queue source.
+
+        Returns:
+            Hex coordinate string, or dash if unavailable.
+        """
+        entity = source.owner_entity
+        if source.context_type == "fleet":
+            location = getattr(entity, 'location', None)
+            if location is not None:
+                return str(location)
+        elif source.context_type == "planet":
+            # Planets may have hex or relative location
+            hex_loc = getattr(entity, 'global_hex', None) or getattr(entity, 'location', None)
+            if hex_loc is not None:
+                return str(hex_loc)
+        return "-"
+
+    @staticmethod
+    def _get_turns_left_text(source: BuildQueueSource) -> str:
+        """Return turns remaining for the first item in queue.
+
+        Args:
+            source: The build queue source.
+
+        Returns:
+            Turns remaining string, or dash if empty.
+        """
+        if not source.construction_queue:
+            return "-"
+        first = source.construction_queue[0]
+        turns = first.get("turns_remaining", "?")
+        return f"{turns}t"
 
     # -------------------------------------------------------------------
     # Cleanup

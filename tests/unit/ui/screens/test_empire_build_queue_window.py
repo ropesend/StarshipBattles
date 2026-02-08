@@ -70,6 +70,19 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.sidebar_width = 300
     win.ui_manager = MagicMock()
 
+    # Column definitions (matching constructor)
+    win.columns = [
+        {'id': 'location', 'width': 180, 'title': 'Location', 'visible': True},
+        {'id': 'system', 'width': 120, 'title': 'System', 'visible': True},
+        {'id': 'sector', 'width': 80, 'title': 'Sector', 'visible': True},
+        {'id': 'queue_count', 'width': 80, 'title': 'Items', 'visible': True},
+        {'id': 'first_item', 'width': 150, 'title': 'Building', 'visible': True},
+        {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
+        {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
+        {'id': 'build_rate', 'width': 80, 'title': 'Rate/Turn', 'visible': False},
+    ]
+    win.column_toggle_buttons = {}
+
     # Mock UI elements
     win.scroll_bar = MagicMock()
     win.scroll_bar.start_percentage = 0.0
@@ -81,6 +94,7 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.header_container = MagicMock()
     win.sidebar_panel = MagicMock()
     win.row_elements = []
+    win._header_labels = []
 
     return win
 
@@ -282,3 +296,226 @@ class TestQueueInfoDisplay:
         win = _make_window(sources=[source])
         text = win._get_capabilities_text(source)
         assert text == "Ships"
+
+    def test_get_capabilities_text_none(self):
+        """Source that can build neither shows 'None'."""
+        source = _make_source(can_build_ships=False, can_build_complexes=False)
+        win = _make_window(sources=[source])
+        text = win._get_capabilities_text(source)
+        assert text == "None"
+
+    def test_get_first_item_text_empty_queue(self):
+        """Empty queue returns dash."""
+        source = _make_source(queue_items=[])
+        win = _make_window(sources=[source])
+        text = win._get_first_item_text(source)
+        assert text == "-"
+
+    def test_get_first_item_text_with_item(self):
+        """Queue with items shows first design and turns."""
+        items = [{"design_id": "frigate", "turns_remaining": 3}]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        text = win._get_first_item_text(source)
+        assert "frigate" in text
+        assert "3" in text
+
+    def test_get_queue_summary_single_item(self):
+        """Queue with 1 item shows '1 item' (no plural)."""
+        items = [{"design_id": "frigate", "turns_remaining": 3}]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        summary = win._get_queue_summary(source)
+        assert summary == "1 item"
+
+
+# =======================================================================
+# Column Configuration Tests (Phase 3)
+# =======================================================================
+
+class TestColumnConfiguration:
+    """Column system should define configurable columns."""
+
+    def test_columns_list_exists(self):
+        """Window should have a columns list."""
+        win = _make_window()
+        assert hasattr(win, 'columns')
+        assert isinstance(win.columns, list)
+        assert len(win.columns) > 0
+
+    def test_each_column_has_required_fields(self):
+        """Each column must have id, width, title, visible."""
+        win = _make_window()
+        for col in win.columns:
+            assert 'id' in col, f"Column missing 'id': {col}"
+            assert 'width' in col, f"Column missing 'width': {col}"
+            assert 'title' in col, f"Column missing 'title': {col}"
+            assert 'visible' in col, f"Column missing 'visible': {col}"
+
+    def test_expected_column_ids(self):
+        """Columns should include all expected IDs."""
+        win = _make_window()
+        col_ids = {c['id'] for c in win.columns}
+        expected = {
+            'location', 'system', 'sector', 'queue_count',
+            'first_item', 'turns_left', 'capabilities', 'build_rate',
+        }
+        assert expected.issubset(col_ids), f"Missing columns: {expected - col_ids}"
+
+    def test_build_rate_hidden_by_default(self):
+        """Build rate column should be hidden by default."""
+        win = _make_window()
+        col = next(c for c in win.columns if c['id'] == 'build_rate')
+        assert col['visible'] is False
+
+    def test_location_visible_by_default(self):
+        """Location column should be visible by default."""
+        win = _make_window()
+        col = next(c for c in win.columns if c['id'] == 'location')
+        assert col['visible'] is True
+
+
+class TestGetVisibleColumns:
+    """_get_visible_columns() should filter by visibility."""
+
+    def test_returns_only_visible_columns(self):
+        """Only columns with visible=True should be returned."""
+        win = _make_window()
+        visible = win._get_visible_columns()
+        assert all(c['visible'] for c in visible)
+
+    def test_hidden_columns_excluded(self):
+        """Hidden columns should not appear in visible list."""
+        win = _make_window()
+        # Hide a column
+        for c in win.columns:
+            if c['id'] == 'capabilities':
+                c['visible'] = False
+        visible = win._get_visible_columns()
+        visible_ids = {c['id'] for c in visible}
+        assert 'capabilities' not in visible_ids
+
+    def test_all_visible_by_default_except_build_rate(self):
+        """Most columns should be visible by default."""
+        win = _make_window()
+        visible = win._get_visible_columns()
+        visible_ids = {c['id'] for c in visible}
+        # build_rate is hidden by default per spec
+        assert 'build_rate' not in visible_ids
+        assert 'location' in visible_ids
+        assert 'queue_count' in visible_ids
+
+
+class TestGetColumnValue:
+    """_get_column_value() should return correct display values."""
+
+    def test_location_column(self):
+        """Location column returns display_name."""
+        source = _make_source(display_name="Alpha - Base")
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'location') == "Alpha - Base"
+
+    def test_queue_count_column_empty(self):
+        """Queue count column returns dash for empty queue."""
+        source = _make_source(queue_items=[])
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'queue_count') == "-"
+
+    def test_queue_count_column_with_items(self):
+        """Queue count column returns count string."""
+        items = [
+            {"design_id": "frigate", "turns_remaining": 3},
+            {"design_id": "destroyer", "turns_remaining": 5},
+        ]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        result = win._get_column_value(source, 'queue_count')
+        assert "2" in result
+
+    def test_first_item_column_empty(self):
+        """First item column returns dash for empty queue."""
+        source = _make_source(queue_items=[])
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'first_item') == "-"
+
+    def test_first_item_column_with_item(self):
+        """First item column returns design name."""
+        items = [{"design_id": "cruiser", "turns_remaining": 8}]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        result = win._get_column_value(source, 'first_item')
+        assert "cruiser" in result
+
+    def test_turns_left_column_empty(self):
+        """Turns left column returns dash for empty queue."""
+        source = _make_source(queue_items=[])
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'turns_left') == "-"
+
+    def test_turns_left_column_with_item(self):
+        """Turns left column returns turns remaining string."""
+        items = [{"design_id": "frigate", "turns_remaining": 5}]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        result = win._get_column_value(source, 'turns_left')
+        assert "5" in result
+
+    def test_capabilities_column(self):
+        """Capabilities column returns correct text."""
+        source = _make_source(can_build_ships=True, can_build_complexes=True)
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'capabilities') == "Ships & Complexes"
+
+    def test_build_rate_column(self):
+        """Build rate column returns rate string."""
+        source = _make_source()
+        win = _make_window(sources=[source])
+        result = win._get_column_value(source, 'build_rate')
+        assert "1" in result
+
+    def test_unknown_column_returns_empty(self):
+        """Unknown column ID returns empty string."""
+        source = _make_source()
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'nonexistent') == ""
+
+
+class TestColumnToggle:
+    """Column visibility toggle should work correctly."""
+
+    def test_toggle_column_hides_visible_column(self):
+        """Toggling a visible column makes it invisible."""
+        win = _make_window()
+        # Verify location starts visible
+        loc_col = next(c for c in win.columns if c['id'] == 'location')
+        assert loc_col['visible'] is True
+
+        result = win.toggle_column_visibility('location')
+        assert result is True
+        assert loc_col['visible'] is False
+
+    def test_toggle_column_shows_hidden_column(self):
+        """Toggling a hidden column makes it visible."""
+        win = _make_window()
+        rate_col = next(c for c in win.columns if c['id'] == 'build_rate')
+        assert rate_col['visible'] is False
+
+        result = win.toggle_column_visibility('build_rate')
+        assert result is True
+        assert rate_col['visible'] is True
+
+    def test_toggle_unknown_column_returns_false(self):
+        """Toggling an unknown column ID returns False."""
+        win = _make_window()
+        result = win.toggle_column_visibility('nonexistent_column')
+        assert result is False
+
+    def test_toggle_affects_get_visible_columns(self):
+        """Toggling a column changes _get_visible_columns() output."""
+        win = _make_window()
+        before = {c['id'] for c in win._get_visible_columns()}
+        assert 'capabilities' in before
+
+        win.toggle_column_visibility('capabilities')
+        after = {c['id'] for c in win._get_visible_columns()}
+        assert 'capabilities' not in after
