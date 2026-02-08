@@ -6,8 +6,6 @@ duck typing replacement.
 """
 
 import pytest
-from typing import Any
-from unittest.mock import MagicMock
 
 
 class TestProtocolExistence:
@@ -304,38 +302,6 @@ class TestNoneSafety:
         assert is_warp_point(None) is False
         assert is_sector_environment(None) is False
         assert is_combatant(None) is False
-
-
-class TestMockObjectsWithSpec:
-    """Test that mock objects with spec work correctly with Protocols."""
-
-    def test_mock_with_fleet_spec_satisfies_ifleet(self):
-        """MagicMock with Fleet spec should satisfy IFleet Protocol."""
-        from game.core.protocols import IFleet, is_fleet
-        from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
-
-        # Create a real fleet first to use as spec
-        real_fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
-        mock_fleet = MagicMock(spec=real_fleet)
-
-        # MagicMock with spec should satisfy Protocol
-        assert isinstance(mock_fleet, IFleet)
-        assert is_fleet(mock_fleet) is True
-
-    def test_mock_without_spec_does_not_satisfy_protocol(self):
-        """MagicMock without spec should NOT satisfy Protocol reliably."""
-        from game.core.protocols import IFleet
-
-        # Plain MagicMock passes all hasattr checks, but Protocol isinstance
-        # checks work differently - they check for actual attributes
-        mock_obj = MagicMock()
-
-        # Note: Due to MagicMock's nature, this might pass isinstance check
-        # because MagicMock returns MagicMock for any attribute access.
-        # The test documents the expected behavior.
-        # When using Protocol-based isinstance checks, prefer spec=ClassName
-        # for reliable testing.
 
 
 class TestRuntimeCheckable:

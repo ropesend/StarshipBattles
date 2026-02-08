@@ -289,9 +289,14 @@ class TestBuildQueueScreenshotSupport:
         mock_planet.owner_id = 1
         mock_planet.construction_queue = []
         mock_planet.facilities = []
+        mock_planet.context_type = "planet"
+        mock_planet.has_space_shipyard = False
 
         mock_session = MagicMock()
         mock_session.save_path = None
+        # Mock current_empire with proper resource dicts to avoid MagicMock comparison issues
+        mock_session.current_empire.resource_pool = {}
+        mock_session.current_empire.max_storage = {}
 
         # PROJ-40: Create mock dependencies for DI injection
         mock_design_library = MagicMock()
