@@ -28,6 +28,10 @@ class Empire:
         # Ship serial number counters - per design_id
         self._design_serial_counters = {}  # Dict[str, int]
 
+        # Empire-wide resource economy (PROJ-75)
+        self.resource_pool = {}   # Dict[str, float] - current resource amounts
+        self.max_storage = {}     # Dict[str, float] - storage capacity per type
+
     def add_colony(self, planet):
         if planet not in self.colonies:
             self.colonies.append(planet)
@@ -69,6 +73,64 @@ class Empire:
         self._design_serial_counters[design_id] = next_serial
         return next_serial
 
+    # --- Resource Economy Methods (PROJ-75) ---
+
+    def add_resources(self, resource_type: str, amount: float) -> float:
+        """Add resources to the empire pool.
+
+        Args:
+            resource_type: Resource identifier (e.g. "Metals", "Organics").
+            amount: Amount to add.
+
+        Returns:
+            Overflow amount (0.0 if all fit within storage).
+        """
+        current = self.resource_pool.get(resource_type, 0.0)
+        max_cap = self.max_storage.get(resource_type, float('inf'))
+        new_total = current + amount
+        if new_total > max_cap:
+            self.resource_pool[resource_type] = max_cap
+            return new_total - max_cap
+        self.resource_pool[resource_type] = new_total
+        return 0.0
+
+    def consume_resources(self, resource_type: str, amount: float) -> bool:
+        """Consume resources from the empire pool (all-or-nothing).
+
+        Args:
+            resource_type: Resource identifier.
+            amount: Amount to consume.
+
+        Returns:
+            True if successful, False if insufficient (no deduction made).
+        """
+        current = self.resource_pool.get(resource_type, 0.0)
+        if current >= amount:
+            self.resource_pool[resource_type] = current - amount
+            return True
+        return False
+
+    def has_resources(self, costs: dict) -> bool:
+        """Check if the empire has all required resources.
+
+        Args:
+            costs: Dict mapping resource_type -> required amount.
+
+        Returns:
+            True if all resources are available.
+        """
+        for resource_type, amount in costs.items():
+            if self.resource_pool.get(resource_type, 0.0) < amount:
+                return False
+        return True
+
+    def get_resource(self, resource_type: str) -> float:
+        """Get current amount of a resource type.
+
+        Returns 0.0 if the resource type is not in the pool.
+        """
+        return self.resource_pool.get(resource_type, 0.0)
+
     def to_dict(self) -> dict:
         """
         Serialize Empire to dict.
@@ -87,6 +149,8 @@ class Empire:
             'built_ship_designs': list(self.built_ship_designs),
             '_next_fleet_id': self._next_fleet_id,
             '_design_serial_counters': self._design_serial_counters,
+            'resource_pool': dict(self.resource_pool),
+            'max_storage': dict(self.max_storage),
         }
         # Include race visual identity if set (backwards compatibility)
         if self.flag_id:
@@ -137,6 +201,10 @@ class Empire:
 
         # Restore ship serial counters
         empire._design_serial_counters = data.get('_design_serial_counters', {})
+
+        # Restore resource economy (PROJ-75)
+        empire.resource_pool = data.get('resource_pool', {})
+        empire.max_storage = data.get('max_storage', {})
 
         # Restore fleets
         empire.fleets = [Fleet.from_dict(f) for f in data.get('fleets', [])]
