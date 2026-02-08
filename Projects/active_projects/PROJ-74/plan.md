@@ -15,18 +15,18 @@
 |-------|--------|-----------|
 | 1. Fuel Synthesizer Component | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PlanetaryFacility Resource Tracking | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. ResupplyEngine Core | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. ResupplyEngine Core | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fleet Resupply Logic | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TurnEngine Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. End-to-End Testing | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 2 Complete - Ready for Phase 3
-**Last Action:** Added resource_levels field, serialization, and helper methods to PlanetaryFacility
-**Next Action:** Begin Phase 3 - ResupplyEngine Core
+**Active Phase:** Phase 3 Complete - Ready for Phase 4
+**Last Action:** Created ResupplyEngine with fuel generation, IResupplyEngine interface, 14 tests
+**Next Action:** Begin Phase 4 - Fleet Resupply Logic
 **Blockers:** None
-**Context for Next Agent:** PlanetaryFacility now has resource_levels: Dict[str, float] field with get_fuel_storage(), get_max_fuel_storage(registries), add_fuel(amount, registries), withdraw_fuel(amount) methods. Serialization updated in Planet.to_dict()/from_dict(). 25 new tests in test_facility_resource_tracking.py. All 6829 tests pass. Next phase creates the ResupplyEngine class.
+**Context for Next Agent:** ResupplyEngine created in game/strategy/engine/resupply_engine.py with ResupplyEvent dataclass and process_fuel_generation() method. Inherits from IResupplyEngine (added to game/strategy/interfaces/engines.py). Scans facility components for ResourceGeneration with resource="fuel", generates fuel/100 per tick, respects max storage via facility.add_fuel(). process_fleet_resupply() is a placeholder for Phase 4. 14 new tests in tests/unit/strategy/engine/test_resupply_engine.py. All 6843 tests pass.
 
 ## Overview
 Implement a fuel resupply system where:

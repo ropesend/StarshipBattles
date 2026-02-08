@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Create engine to process fuel generation at facilities
 
 ---
@@ -16,21 +16,15 @@
 **File:** `tests/unit/strategy/engine/test_resupply_engine.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/engine/test_resupply_engine.py`
 
-- [ ] Create test file with necessary imports and fixtures
-- [ ] Write `test_engine_requires_registries_strict_di`:
-  ```python
-  def test_engine_requires_registries_strict_di():
-      """ResupplyEngine must raise TypeError if registries is None."""
-      with pytest.raises(TypeError):
-          ResupplyEngine(registries=None)
-  ```
-- [ ] Write `test_process_fuel_generation_adds_to_facility`
-- [ ] Write `test_generation_respects_max_storage`
-- [ ] Write `test_non_operational_facility_no_generation`
-- [ ] Write `test_facility_without_synthesizer_no_generation`
-- [ ] Verify: All tests fail (TDD red phase)
+- [x] Create test file with necessary imports and fixtures
+- [x] Write `test_engine_requires_registries_strict_di`
+- [x] Write `test_process_fuel_generation_adds_to_facility`
+- [x] Write `test_generation_respects_max_storage`
+- [x] Write `test_non_operational_facility_no_generation`
+- [x] Write `test_facility_without_synthesizer_no_generation`
+- [x] Verify: All tests fail (TDD red phase)
 
-**Notes:**
+**Notes:** 14 total tests written including extra edge cases (energy generator, multiple empires, already full, empty inputs, accumulation, dataclass validation)
 
 ---
 
@@ -38,51 +32,19 @@
 **File:** `game/strategy/engine/resupply_engine.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/engine/test_resupply_engine.py`
 
-- [ ] Create new file with imports:
-  ```python
-  from dataclasses import dataclass
-  from typing import List, Optional, TYPE_CHECKING
+- [x] Create new file with imports
+- [x] Create ResupplyEvent dataclass
+- [x] Create ResupplyEngine class with strict DI
+- [x] Implement `process_fuel_generation(self, tick: int, empires) -> List[ResupplyEvent]`:
+  - Iterates empires → colonies → facilities
+  - Checks is_operational
+  - Checks for ResourceGeneration ability with resource="fuel"
+  - Adds fuel/100 per tick (spread over 100 ticks per turn)
+  - Respects max storage capacity via facility.add_fuel()
+  - Returns list of ResupplyEvent
+- [x] Verify: All tests from Task 3.1 pass (TDD green phase)
 
-  from game.core.logger import log_info
-  from game.core.registry import GameRegistries
-
-  if TYPE_CHECKING:
-      pass
-  ```
-
-- [ ] Create ResupplyEvent dataclass:
-  ```python
-  @dataclass
-  class ResupplyEvent:
-      """Record of a resupply operation."""
-      facility_name: str
-      fuel_generated: float
-      fuel_transferred: float = 0.0
-      fleet_id: Optional[int] = None
-  ```
-
-- [ ] Create ResupplyEngine class with strict DI:
-  ```python
-  class ResupplyEngine:
-      """Engine for processing fuel generation and resupply."""
-
-      def __init__(self, *, registries: GameRegistries):
-          if registries is None:
-              raise TypeError("registries is required for ResupplyEngine")
-          self._registries = registries
-  ```
-
-- [ ] Implement `process_fuel_generation(self, tick: int, empires) -> List[ResupplyEvent]`:
-  - Iterate empires → colonies → facilities
-  - Check is_operational
-  - Check for ResourceGeneration ability with resource="fuel"
-  - Add fuel/100 per tick (spread over 100 ticks per turn)
-  - Respect max storage capacity
-  - Return list of ResupplyEvent
-
-- [ ] Verify: All tests from Task 3.1 pass (TDD green phase)
-
-**Notes:**
+**Notes:** Uses _get_fuel_generation_rate() helper that scans design_data layers for ResourceGeneration abilities with resource="fuel". Uses ShipStatsCalculator._get_ability_list() for consistent ability scanning. Placeholder process_fleet_resupply() for Phase 4.
 
 ---
 
@@ -90,42 +52,19 @@
 **File:** `game/strategy/interfaces/engines.py`
 **Tests:** N/A (interface only)
 
-- [ ] Add import for ABC if not present
-- [ ] Add IResupplyEngine interface:
-  ```python
-  class IResupplyEngine(ABC):
-      """Abstract interface for resupply processing."""
+- [x] Add import for ABC if not present
+- [x] Add IResupplyEngine interface with process_fuel_generation and process_fleet_resupply
+- [x] Update ResupplyEngine to inherit from IResupplyEngine
+- [x] Added IResupplyEngine to __all__ exports
 
-      @abstractmethod
-      def process_fuel_generation(
-          self,
-          tick: int,
-          empires: List
-      ) -> List:
-          """Process fuel generation at facilities."""
-          pass
-
-      @abstractmethod
-      def process_fleet_resupply(
-          self,
-          tick: int,
-          empires: List,
-          galaxy: Any
-      ) -> List:
-          """Process fuel transfer from facilities to fleets."""
-          pass
-  ```
-
-- [ ] Update ResupplyEngine to inherit from IResupplyEngine
-
-**Notes:**
+**Notes:** Interface follows existing pattern (IResourceEngine, IPopulationEngine etc.)
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - all tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4

@@ -31,6 +31,7 @@ __all__ = [
     'IConflictEngine',
     'IResourceEngine',
     'IPopulationEngine',
+    'IResupplyEngine',
 ]
 
 
@@ -280,6 +281,62 @@ class IResourceEngine(ABC):
 
         Returns:
             List of ResourceDepletion events that occurred this tick
+        """
+        pass
+
+
+class IResupplyEngine(ABC):
+    """
+    Abstract interface for fuel generation and fleet resupply processing.
+
+    PROJ-74 Phase 3: Interface for ResupplyEngine.
+
+    Implementations handle:
+    - Fuel generation at planetary facilities with fuel synthesizers
+    - Fuel transfer from facilities to fleets at the same location
+    - Range equalization across fleet ships
+
+    Example usage:
+        engine = ResupplyEngine(registries=registries)
+        gen_events = engine.process_fuel_generation(tick, empires)
+        resupply_events = engine.process_fleet_resupply(tick, empires, galaxy)
+    """
+
+    @abstractmethod
+    def process_fuel_generation(
+        self,
+        tick: int,
+        empires: List
+    ) -> List:
+        """
+        Process fuel generation at facilities.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+
+        Returns:
+            List of ResupplyEvent records
+        """
+        pass
+
+    @abstractmethod
+    def process_fleet_resupply(
+        self,
+        tick: int,
+        empires: List,
+        galaxy: Any
+    ) -> List:
+        """
+        Process fuel transfer from facilities to fleets.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+            galaxy: Galaxy object for spatial lookup
+
+        Returns:
+            List of ResupplyEvent records
         """
         pass
 
