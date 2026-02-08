@@ -14,19 +14,19 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Fuel Synthesizer Component | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. PlanetaryFacility Resource Tracking | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. PlanetaryFacility Resource Tracking | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ResupplyEngine Core | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fleet Resupply Logic | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TurnEngine Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. End-to-End Testing | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-07
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** Added fuel_synthesizer component to data/components.json
-**Next Action:** Begin Phase 2 - PlanetaryFacility Resource Tracking
+**Last Updated:** 2026-02-08
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** Added resource_levels field, serialization, and helper methods to PlanetaryFacility
+**Next Action:** Begin Phase 3 - ResupplyEngine Core
 **Blockers:** None
-**Context for Next Agent:** Fuel Synthesizer added at line 344 in components.json (after generator, before laser_cannon). Type: Generator, Planetary Complex only, 300 fuel/turn, mass 100, hp 150, crew 10. All 6805 tests pass. Next phase adds resource_levels field to PlanetaryFacility for tracking stored fuel.
+**Context for Next Agent:** PlanetaryFacility now has resource_levels: Dict[str, float] field with get_fuel_storage(), get_max_fuel_storage(registries), add_fuel(amount, registries), withdraw_fuel(amount) methods. Serialization updated in Planet.to_dict()/from_dict(). 25 new tests in test_facility_resource_tracking.py. All 6829 tests pass. Next phase creates the ResupplyEngine class.
 
 ## Overview
 Implement a fuel resupply system where:

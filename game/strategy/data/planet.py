@@ -29,6 +29,69 @@ class PlanetaryFacility:
     design_data: Dict[str, Any]  # Full complex design (from JSON)
     is_operational: bool = True
     construction_queue: List[Dict[str, Any]] = field(default_factory=list)
+    resource_levels: Dict[str, float] = field(default_factory=dict)
+
+    def get_fuel_storage(self) -> float:
+        """Get current fuel level in this facility."""
+        return self.resource_levels.get('fuel', 0.0)
+
+    def get_max_fuel_storage(self, registries) -> float:
+        """Calculate max fuel capacity from design_data components.
+
+        Scans all components in the facility's design_data for ResourceStorage
+        abilities with resource type 'fuel' and sums their amounts.
+
+        Args:
+            registries: GameRegistries with component definitions.
+
+        Returns:
+            Total fuel storage capacity.
+        """
+        total = 0.0
+        for layer_data in self.design_data.get("layers", {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                comp_id = comp.get("id") if isinstance(comp, dict) else comp
+                comp_def = registries.components.get(comp_id)
+                if not comp_def:
+                    continue
+                abilities = getattr(comp_def, 'abilities', {}) or {}
+                for storage in (abilities.get('ResourceStorage') or []):
+                    if isinstance(storage, dict) and storage.get('resource') == 'fuel':
+                        total += storage.get('amount', 0)
+        return total
+
+    def add_fuel(self, amount: float, registries) -> float:
+        """Add fuel up to max capacity.
+
+        Args:
+            amount: Amount of fuel to add.
+            registries: GameRegistries for max capacity lookup.
+
+        Returns:
+            Overflow amount that could not be stored.
+        """
+        max_storage = self.get_max_fuel_storage(registries)
+        current = self.get_fuel_storage()
+        space = max_storage - current
+        added = min(amount, space)
+        self.resource_levels['fuel'] = current + added
+        return amount - added
+
+    def withdraw_fuel(self, amount: float) -> float:
+        """Withdraw fuel from this facility.
+
+        Args:
+            amount: Amount of fuel to withdraw.
+
+        Returns:
+            Actual amount withdrawn (may be less than requested).
+        """
+        current = self.get_fuel_storage()
+        withdrawn = min(amount, current)
+        self.resource_levels['fuel'] = current - withdrawn
+        return withdrawn
 
 
 @dataclass
@@ -244,7 +307,8 @@ class Planet:
                     'name': f.name,
                     'design_data': f.design_data,
                     'is_operational': f.is_operational,
-                    'construction_queue': list(f.construction_queue)
+                    'construction_queue': list(f.construction_queue),
+                    'resource_levels': f.resource_levels.copy()
                 } for f in self.facilities
             ],
             'populations': [
@@ -281,7 +345,8 @@ class Planet:
                 name=f['name'],
                 design_data=f['design_data'],
                 is_operational=f.get('is_operational', True),
-                construction_queue=f.get('construction_queue', [])
+                construction_queue=f.get('construction_queue', []),
+                resource_levels=f.get('resource_levels', {})
             ) for f in data.get('facilities', [])
         ]
 

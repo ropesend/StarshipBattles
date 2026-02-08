@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Add fuel storage tracking to planetary facilities
 
 ---
@@ -16,12 +16,12 @@
 **File:** `game/strategy/data/planet.py`
 **Tests:** `pytest tests/unit/strategy/data/ -k facility`
 
-- [ ] Import `field` from dataclasses if not already imported
-- [ ] Add new field to PlanetaryFacility dataclass (after line ~31):
+- [x] Import `field` from dataclasses if not already imported
+- [x] Add new field to PlanetaryFacility dataclass (after line ~31):
   ```python
   resource_levels: Dict[str, float] = field(default_factory=dict)
   ```
-- [ ] Verify: Dataclass still instantiates correctly
+- [x] Verify: Dataclass still instantiates correctly
 
 **Notes:**
 
@@ -31,11 +31,11 @@
 **File:** `game/strategy/data/planet.py`
 **Tests:** `pytest tests/integration/save_load/`
 
-- [ ] Find `to_dict()` method in PlanetaryFacility (or add if missing)
-- [ ] Add `resource_levels` to the dict output
-- [ ] Find `from_dict()` method (or add if missing)
-- [ ] Add `resource_levels` restoration from dict
-- [ ] Verify: Save/load cycle preserves facility fuel levels
+- [x] Find `to_dict()` method in PlanetaryFacility (or add if missing)
+- [x] Add `resource_levels` to the dict output
+- [x] Find `from_dict()` method (or add if missing)
+- [x] Add `resource_levels` restoration from dict
+- [x] Verify: Save/load cycle preserves facility fuel levels
 
 **Notes:**
 
@@ -45,14 +45,14 @@
 **File:** `game/strategy/data/planet.py`
 **Tests:** `pytest tests/unit/strategy/data/ -k facility`
 
-- [ ] Add `get_fuel_storage(self) -> float`:
+- [x] Add `get_fuel_storage(self) -> float`:
   ```python
   def get_fuel_storage(self) -> float:
       """Get current fuel level in this facility."""
       return self.resource_levels.get('fuel', 0.0)
   ```
 
-- [ ] Add `get_max_fuel_storage(self, registries) -> float`:
+- [x] Add `get_max_fuel_storage(self, registries) -> float`:
   ```python
   def get_max_fuel_storage(self, registries) -> float:
       """Calculate max fuel capacity from design_data components."""
@@ -72,7 +72,7 @@
       return total
   ```
 
-- [ ] Add `add_fuel(self, amount, registries) -> float`:
+- [x] Add `add_fuel(self, amount, registries) -> float`:
   ```python
   def add_fuel(self, amount: float, registries) -> float:
       """Add fuel up to max capacity. Returns overflow."""
@@ -84,7 +84,7 @@
       return amount - added  # overflow
   ```
 
-- [ ] Add `withdraw_fuel(self, amount) -> float`:
+- [x] Add `withdraw_fuel(self, amount) -> float`:
   ```python
   def withdraw_fuel(self, amount: float) -> float:
       """Withdraw fuel. Returns actual amount withdrawn."""
@@ -94,7 +94,7 @@
       return withdrawn
   ```
 
-- [ ] Verify: All methods work correctly with tests
+- [x] Verify: All methods work correctly with tests
 
 **Notes:**
 
@@ -102,8 +102,8 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - all tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 3
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ --testmon` - all tests pass
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 3

@@ -7,20 +7,21 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-07
-**Last Completed:** PROJ-74 Phase 1 - Fuel Synthesizer Component
-**Current Status:** PROJ-74 Phase 1 complete, ready for Phase 2
+**Last Session:** 2026-02-08
+**Last Completed:** PROJ-74 Phase 2 - PlanetaryFacility Resource Tracking
+**Current Status:** PROJ-74 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-74
-**Current Phase:** Phase 2
-**Test Status:** 6805 passed (1 pre-existing failure in test_protocols.py)
+**Current Phase:** Phase 3
+**Test Status:** 6829 passed (1 pre-existing failure in test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-74 Phase 1 completed: Added fuel_synthesizer component to data/components.json
-- Modified: data/components.json (new fuel_synthesizer entry after generator)
-- Component: type=Generator, Planetary Complex only, 300 fuel/turn, mass 100, hp 150, crew 10
-- All component tests pass (38), full suite passes (6805)
-- Next: Phase 2 - PlanetaryFacility Resource Tracking (add resource_levels field)
+- PROJ-74 Phase 2 completed: resource_levels field, serialization, helper methods on PlanetaryFacility
+- Modified: game/strategy/data/planet.py (resource_levels field + 4 methods)
+- Added: tests/unit/strategy/data/test_facility_resource_tracking.py (25 tests)
+- Methods: get_fuel_storage(), get_max_fuel_storage(registries), add_fuel(amount, registries), withdraw_fuel(amount)
+- Serialization: to_dict()/from_dict() updated, backward compat for old saves
+- Next: Phase 3 - ResupplyEngine Core
 
 ---
 
@@ -149,7 +150,7 @@
 ---
 
 - [/] **PROJ-74: Resupply System**
-  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-74/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-74/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -272,6 +273,7 @@
 | 2026-02-07 | PROJ-73 | Phase 1 | Complete | 6823 passed | pending | Animation state, renderer update wiring, rotation rendering, 10 new tests |
 | 2026-02-07 | PROJ-73 | Audit 1 | PASSED | 6823 passed | pending | No issues found, clean minimal feature addition |
 | 2026-02-07 | PROJ-74 | Phase 1 | Complete | 6805 passed | pending | Added fuel_synthesizer to components.json |
+| 2026-02-08 | PROJ-74 | Phase 2 | Complete | 6829 passed | pending | resource_levels field, serialization, 4 helper methods, 25 tests |
 
 ---
 
