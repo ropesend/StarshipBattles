@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Create the core event data model and collection system
 
 ---
@@ -19,24 +19,24 @@
 
 **Tests:** `pytest tests/unit/strategy/events/test_event_types.py`
 
-- [ ] Create `game/strategy/events/` directory
-- [ ] Create `__init__.py` with exports:
+- [x] Create `game/strategy/events/` directory
+- [x] Create `__init__.py` with exports:
   ```python
   from .event_types import EventType, EventCategory
   from .event_log import Event, EventLog
   ```
-- [ ] Create `event_types.py` with EventType enum:
+- [x] Create `event_types.py` with EventType enum:
   - `SHIP_BUILT = "ship_built"`
   - `COMPLEX_BUILT = "complex_built"`
   - `COLONY_FOUNDED = "colony_founded"`
   - `COMBAT_RESOLVED = "combat_resolved"`
-- [ ] Create EventCategory enum:
+- [x] Create EventCategory enum:
   - `PRODUCTION = "production"`
   - `COLONIES = "colonies"`
   - `COMBAT = "combat"`
   - `ALL = "all"`
 
-**Notes:**
+**Notes:** Used `str, Enum` (StrEnum pattern) so enum values compare directly with strings.
 
 ---
 
@@ -45,18 +45,18 @@
 
 **Tests:** `pytest tests/unit/strategy/events/test_event_log.py`
 
-- [ ] Create `@dataclass Event` with fields:
+- [x] Create `@dataclass Event` with fields:
   - `event_type: str`
   - `category: str`
   - `turn: int`
   - `empire_id: int`
   - `message: str`
   - `details: Dict[str, Any]` (default_factory=dict)
-- [ ] Add `to_dict()` method returning all fields as dict
-- [ ] Add `@classmethod from_dict(cls, data)` to reconstruct Event
-- [ ] Verify: serialization roundtrip preserves all fields
+- [x] Add `to_dict()` method returning all fields as dict
+- [x] Add `@classmethod from_dict(cls, data)` to reconstruct Event
+- [x] Verify: serialization roundtrip preserves all fields
 
-**Notes:**
+**Notes:** `from_dict` gracefully handles missing `details` key with `data.get("details", {})`.
 
 ---
 
@@ -65,17 +65,17 @@
 
 **Tests:** `pytest tests/unit/strategy/events/test_event_log.py`
 
-- [ ] Create `EventLog` class with `_events: List[Event]`
-- [ ] Add `append(event: Event)` method
-- [ ] Add `get_events_for_turn(turn: int) -> List[Event]`
-- [ ] Add `get_events_by_category(category: str) -> List[Event]`
+- [x] Create `EventLog` class with `_events: List[Event]`
+- [x] Add `append(event: Event)` method
+- [x] Add `get_events_for_turn(turn: int) -> List[Event]`
+- [x] Add `get_events_by_category(category: str) -> List[Event]`
   - If category == "all", return all events
-- [ ] Add `get_all_events() -> List[Event]`
-- [ ] Add `to_dict()` returning `{'events': [e.to_dict() for e in self._events]}`
-- [ ] Add `@classmethod from_dict(cls, data)` to restore EventLog
-- [ ] Verify: serialization roundtrip preserves all events
+- [x] Add `get_all_events() -> List[Event]`
+- [x] Add `to_dict()` returning `{'events': [e.to_dict() for e in self._events]}`
+- [x] Add `@classmethod from_dict(cls, data)` to restore EventLog
+- [x] Verify: serialization roundtrip preserves all events
 
-**Notes:**
+**Notes:** `get_events_by_category` accepts both `EventCategory` enum and raw string values.
 
 ---
 
@@ -87,30 +87,30 @@
 
 **Tests:** `pytest tests/unit/strategy/events/ -v`
 
-- [ ] Create test directory with `__init__.py`
-- [ ] Test EventType enum values exist and are strings
-- [ ] Test EventCategory enum values exist
-- [ ] Test Event creation with all fields
-- [ ] Test Event.to_dict() produces correct structure
-- [ ] Test Event.from_dict() reconstructs correctly
-- [ ] Test Event serialization roundtrip equality
-- [ ] Test EventLog.append() adds events
-- [ ] Test EventLog.get_events_for_turn() filters correctly
-- [ ] Test EventLog.get_events_by_category() filters correctly
-- [ ] Test EventLog.get_events_by_category("all") returns all
-- [ ] Test EventLog.to_dict() serializes all events
-- [ ] Test EventLog.from_dict() restores all events
-- [ ] Verify: `pytest tests/unit/strategy/events/ -v` all pass
+- [x] Create test directory with `__init__.py`
+- [x] Test EventType enum values exist and are strings
+- [x] Test EventCategory enum values exist
+- [x] Test Event creation with all fields
+- [x] Test Event.to_dict() produces correct structure
+- [x] Test Event.from_dict() reconstructs correctly
+- [x] Test Event serialization roundtrip equality
+- [x] Test EventLog.append() adds events
+- [x] Test EventLog.get_events_for_turn() filters correctly
+- [x] Test EventLog.get_events_by_category() filters correctly
+- [x] Test EventLog.get_events_by_category("all") returns all
+- [x] Test EventLog.to_dict() serializes all events
+- [x] Test EventLog.from_dict() restores all events
+- [x] Verify: `pytest tests/unit/strategy/events/ -v` all pass
 
-**Notes:**
+**Notes:** 31 tests total: 12 EventType/EventCategory tests, 19 Event/EventLog tests. All pass.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/unit/strategy/events/ -v` passes
-- [ ] Event and EventLog can be imported from `game.strategy.events`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 2
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/unit/strategy/events/ -v` passes
+- [x] Event and EventLog can be imported from `game.strategy.events`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 2
