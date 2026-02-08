@@ -8,24 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-69 Phase 2 - Production Engine Parallel Processing
-**Current Status:** PROJ-69 Phase 2 Complete, Phase 3 next
+**Last Completed:** PROJ-69 Phase 4 - Controller & Drag Handler Multi-Queue
+**Current Status:** PROJ-69 Phase 4 Complete, Phase 5 next
 **Current Project:** PROJ-69
-**Current Phase:** Phase 3 - Build Queue Screen Layout Restructure
-**Test Status:** 6534 passed, 1 pre-existing failure (IFleet mock spec)
+**Current Phase:** Phase 5 - Strategy Screen Integration
+**Test Status:** 6561 passed, 1 pre-existing failure (IFleet mock spec)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-69 Phase 2 complete:
-  - `process_production()` refactored into `_process_base_queue()` (complexes only) + `_process_facility_queues()` (per-shipyard parallel)
-  - Imported `_facility_is_shipyard()` from `build_queue_source.py` for facility detection
-  - 15 new tests in `test_facility_queue_production.py` covering: facility queue processing, parallel shipyard processing, base queue restrictions
-  - Updated 6 existing test files to use facility queues for ship items (base queue now complexes only)
-  - Fleet production completely unchanged (16 unit + 7 E2E tests pass)
-- Modified: `game/strategy/engine/production_engine.py`
-- New file: `tests/unit/strategy/production_engine/test_facility_queue_production.py`
-- Updated tests: `test_basics.py`, `test_completion.py`, `test_spawning.py`, `test_turn_processing.py`, integration `test_completion.py`, `test_queue.py`, `test_complex_workflow.py`
-- Next: Phase 3 - Build Queue Screen Layout Restructure
+- PROJ-69 Phase 4 complete:
+  - BuildQueueController: `set_active_queue()`, `set_selected_queues()`, 3 routing paths (single/multi/fallback)
+  - `_source_can_build_category()` maps category to `can_build_ships`/`can_build_complexes`
+  - `_add_to_single_queue()`, `_add_to_multiple_queues()`, `_add_to_fallback()` methods
+  - BuildQueueDragHandler: `build_context` replaced with `construction_queue` list + `multi_select_active` flag
+  - All 3 drag methods return early when `multi_select_active=True`
+  - BuildQueueScreen: syncs controller on `_on_queue_selected()`/`_on_queue_toggled()`
+  - Legacy (non-hex) mode uses controller fallback preserving dynamic `can_build_type()`
+  - Remove button disabled in multi-select mode
+  - 10 new controller tests, 6 new drag handler tests
+- Modified: `game/ui/panels/build_queue_controller.py`, `game/ui/panels/build_queue_drag_handler.py`, `game/ui/screens/build_queue_screen.py`
+- New: `tests/integration/ui/build_queue_screen/test_controller_multi_queue.py`, `tests/integration/ui/build_queue_screen/test_drag_handler_multi_queue.py`
+- Next: Phase 5 - Strategy Screen Integration
 
 ---
 
@@ -114,7 +117,7 @@
 ---
 
 - [/] **PROJ-69: Multi Build Queue Restructure**
-  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-69/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-69/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -214,6 +217,8 @@
 | 2026-02-07 | PROJ-68 | Audit 1 | PASSED | 6506 passed | pending | All 9 phases verified, 158 phase tests pass |
 | 2026-02-07 | PROJ-69 | Phase 1 | Complete | 6518 passed | pending | Facility queue field, BuildQueueSource, collector, 22 new tests |
 | 2026-02-07 | PROJ-69 | Phase 2 | Complete | 6534 passed | pending | Parallel facility queue processing, 15 new + 6 updated tests |
+| 2026-02-07 | PROJ-69 | Phase 3 | Complete | 6546 passed | 1a48bf19 | Queue selector panel, layout restructure, 12 new tests |
+| 2026-02-07 | PROJ-69 | Phase 4 | Complete | 6561 passed | pending | Controller multi-queue routing, drag handler queue-source, 16 new tests |
 
 ---
 

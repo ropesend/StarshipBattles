@@ -15,18 +15,18 @@
 |-------|--------|-----------|
 | 1. Data Model - Facility Queues | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Production Engine - Parallel Processing | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Build Queue Screen - Layout Restructure | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Controller & Drag Handler - Multi-Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Build Queue Screen - Layout Restructure | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Controller & Drag Handler - Multi-Queue | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Strategy Screen Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Test Updates & Integration Testing | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - Production engine parallel facility queue processing
-**Next Action:** Begin Phase 3 - Build Queue Screen Layout Restructure
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - Controller & Drag Handler Multi-Queue
+**Next Action:** Begin Phase 5 - Strategy Screen Integration
 **Blockers:** None
-**Context for Next Agent:** Test baseline: 6534 passed, 1 pre-existing failure (IFleet mock spec). Production engine refactored: `process_production()` now splits into `_process_base_queue()` (complexes only) and `_process_facility_queues()` (per-shipyard parallel). New file: `tests/unit/strategy/production_engine/test_facility_queue_production.py` (15 tests). Updated 6 existing test files for new queue model. Total +16 new tests from Phase 1 baseline.
+**Context for Next Agent:** Test baseline: 6561 passed, 1 pre-existing failure (IFleet mock spec). Controller now has `set_active_queue()` and `set_selected_queues()` methods with three routing paths: single-queue, multi-queue, and fallback to build_context. Drag handler accepts `construction_queue` list + `multi_select_active` flag (replaces `build_context` parameter). Drag disabled in multi-select mode. Screen syncs controller queue state on selection changes. Legacy (non-hex) mode uses controller fallback path preserving dynamic `can_build_type()`. Remove button disabled in multi-select mode. 16 new tests (10 controller, 6 drag handler). Next: Phase 5 - Strategy Screen Integration.
 
 ## Overview
 Restructure the build queue system to support multiple simultaneous build queues per hex. Each shipyard facility on a planet generates its own build queue, and each fleet space yard has its own queue. A new queue selector UI column allows players to view and manage all queues at a hex, with support for single-queue viewing and multi-queue batch adding.

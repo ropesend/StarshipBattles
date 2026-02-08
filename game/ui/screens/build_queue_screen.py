@@ -138,6 +138,13 @@ class BuildQueueScreen:
             on_queue_changed=self._refresh_queue_display
         )
 
+        # PROJ-69: Sync controller with initial queue selection
+        # Only set active queue source on controller when using hex-based multi-queue mode.
+        # In legacy mode (single build_context), the controller falls back to build_context
+        # which provides dynamic can_build_type() checks.
+        if hex_coord is not None and self.active_queue_source is not None:
+            self.controller.set_active_queue(self.active_queue_source)
+
         # PROJ-63: Drag-drop handling extracted to dedicated class
         self.drag_handler = BuildQueueDragHandler(
             portrait_loader=self.portrait_loader,
@@ -302,17 +309,23 @@ class BuildQueueScreen:
     def _on_queue_selected(self, index: int):
         """Handle single-click queue selection (deselects others).
 
+        Syncs the controller's active_queue_source for add operations.
+
         Args:
             index: Index into self.queue_sources to select.
         """
         self.selected_queue_indices = {index}
         self.active_queue_source = self.queue_sources[index]
+        # PROJ-69: Sync controller queue source
+        self.controller.set_active_queue(self.active_queue_source)
         log_info(f"BuildQueue: Selected queue '{self.active_queue_source.display_name}'")
         self._refresh_queue_selector()
         self._refresh_queue_display()
 
     def _on_queue_toggled(self, index: int):
         """Handle ctrl+click queue toggle for multi-select.
+
+        Syncs the controller's queue source state for add operations.
 
         Args:
             index: Index into self.queue_sources to toggle.
@@ -330,9 +343,16 @@ class BuildQueueScreen:
         if len(self.selected_queue_indices) == 1:
             sole_idx = next(iter(self.selected_queue_indices))
             self.active_queue_source = self.queue_sources[sole_idx]
+            # PROJ-69: Sync controller to single-queue mode
+            self.controller.set_active_queue(self.active_queue_source)
             log_info(f"BuildQueue: Single queue selected: '{self.active_queue_source.display_name}'")
         else:
             self.active_queue_source = None
+            # PROJ-69: Sync controller to multi-queue mode
+            selected_sources = [
+                self.queue_sources[i] for i in sorted(self.selected_queue_indices)
+            ]
+            self.controller.set_selected_queues(selected_sources)
             log_info(f"BuildQueue: Multi-select mode: {len(self.selected_queue_indices)} queues")
 
         self._refresh_queue_selector()
@@ -738,20 +758,24 @@ class BuildQueueScreen:
 
             # Remove selected from queue button
             elif event.ui_element == self.btn_remove_from_queue:
-                # PROJ-69: Use active queue source's construction_queue
-                active_queue = (
-                    self.active_queue_source.construction_queue
-                    if self.active_queue_source is not None
-                    else self.build_context.construction_queue
-                )
-                if self.selected_queue_index is not None and self.selected_queue_index < len(active_queue):
-                    removed_item = active_queue.pop(self.selected_queue_index)
-                    design_id = removed_item.get('design_id', 'Unknown')
-                    log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
-                    self.selected_queue_index = None
-                    self._refresh_queue_display()
+                # PROJ-69: Disable remove in multi-select mode
+                if len(self.selected_queue_indices) > 1:
+                    log_warning("Cannot remove items in multi-select mode")
                 else:
-                    log_warning("No queue item selected to remove")
+                    # Use active queue source's construction_queue
+                    remove_queue = (
+                        self.active_queue_source.construction_queue
+                        if self.active_queue_source is not None
+                        else self.build_context.construction_queue
+                    )
+                    if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
+                        removed_item = remove_queue.pop(self.selected_queue_index)
+                        design_id = removed_item.get('design_id', 'Unknown')
+                        log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
+                        self.selected_queue_index = None
+                        self._refresh_queue_display()
+                    else:
+                        log_warning("No queue item selected to remove")
 
             # PROJ-69: Queue selector button clicks
             elif hasattr(event.ui_element, 'queue_source_index'):
@@ -764,21 +788,33 @@ class BuildQueueScreen:
                     self._on_queue_selected(idx)
         # Design selection and drag handled via drag_handler
 
+        # PROJ-69: Determine active queue and multi-select state for drag handler
+        multi_select = len(self.selected_queue_indices) > 1
+        active_queue = (
+            self.active_queue_source.construction_queue
+            if self.active_queue_source is not None
+            else self.build_context.construction_queue
+        )
+
         # Handle Drag Start (on mouse down for immediate dragging)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.drag_handler.handle_mouse_down(
                 event, self.items_scrollable, self.queue_items,
-                self.build_context, self.controller.selected_category
+                active_queue, self.controller.selected_category,
+                multi_select_active=multi_select
             )
 
         # Handle Mouse Motion for drag threshold check
         if event.type == pygame.MOUSEMOTION and event.buttons[0]:
-            self.drag_handler.handle_mouse_motion(event, self.build_context)
+            self.drag_handler.handle_mouse_motion(
+                event, active_queue, multi_select_active=multi_select
+            )
 
         # Handle Drag End / Click Selection
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             result = self.drag_handler.handle_mouse_up(
-                event, self.build_queue_panel, self.queue_scrollable, self.build_context
+                event, self.build_queue_panel, self.queue_scrollable,
+                active_queue, multi_select_active=multi_select
             )
             if result is not None:
                 self.selected_queue_index = result

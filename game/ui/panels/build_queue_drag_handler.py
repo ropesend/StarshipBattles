@@ -3,20 +3,19 @@ Build Queue Drag Handler - Manages drag-and-drop state machine for build queue.
 
 Extracted from build_queue_screen.py as part of PROJ-63.
 Updated in PROJ-67 Phase 4 to support BuildContext protocol (Planet or Fleet).
+Updated in PROJ-69 Phase 4 to accept construction_queue list directly and
+disable drag operations in multi-select mode.
 """
 from __future__ import annotations
 
 import pygame
-from typing import TYPE_CHECKING, Optional, Callable, List, Any, Union
+from typing import TYPE_CHECKING, Dict, Optional, Callable, List, Any
 
 from game.core.logger import log_info, log_debug
 
 if TYPE_CHECKING:
     from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
     from game.strategy.systems.design_library import DesignLibrary
-    from game.strategy.data.build_context import BuildContext
-    from game.strategy.data.planet import Planet
-    from game.strategy.data.fleet import Fleet
     import pygame_gui.elements as ui
 
 
@@ -29,12 +28,15 @@ class BuildQueueDragHandler:
     - Queue item reordering via drag
     - Drag preview rendering
     - Click vs drag detection using threshold
+
+    PROJ-69: Drag operations are disabled in multi-select mode since
+    reordering across multiple queues is ambiguous.
     """
 
     def __init__(
         self,
-        portrait_loader: BuildQueuePortraitLoader,
-        design_library: DesignLibrary,
+        portrait_loader: 'BuildQueuePortraitLoader',
+        design_library: 'DesignLibrary',
         on_add_to_queue: Callable[[str, int, str, Optional[int]], None],
         on_refresh_queue: Callable[[], None],
         on_refresh_design_report: Callable[[str], None]
@@ -75,8 +77,9 @@ class BuildQueueDragHandler:
         event: pygame.event.Event,
         items_scrollable: Any,
         queue_items: List[Any],
-        build_context: Union['Planet', 'Fleet', 'BuildContext'],
-        selected_category: str
+        construction_queue: Optional[List[Dict[str, Any]]],
+        selected_category: str,
+        multi_select_active: bool = False
     ) -> bool:
         """
         Handle mouse button down event for drag initiation.
@@ -85,13 +88,18 @@ class BuildQueueDragHandler:
             event: pygame MOUSEBUTTONDOWN event
             items_scrollable: Scrollable container with design items
             queue_items: List of queue item UI panels
-            build_context: Planet or Fleet with construction queue
+            construction_queue: The active queue's construction list (or None)
             selected_category: Currently selected design category
+            multi_select_active: If True, disable all drag operations
 
         Returns:
             True if event was handled, False otherwise
         """
         if event.button != 1:  # Only handle left click
+            return False
+
+        # PROJ-69: Disable drag in multi-select mode
+        if multi_select_active:
             return False
 
         # Check if mouse is over a design button in the items list
@@ -136,18 +144,24 @@ class BuildQueueDragHandler:
     def handle_mouse_motion(
         self,
         event: pygame.event.Event,
-        build_context: Union['Planet', 'Fleet', 'BuildContext']
+        construction_queue: List[Dict[str, Any]],
+        multi_select_active: bool = False
     ) -> bool:
         """
         Handle mouse motion event for drag threshold detection.
 
         Args:
             event: pygame MOUSEMOTION event
-            build_context: Planet or Fleet with construction queue
+            construction_queue: The active queue's construction list
+            multi_select_active: If True, disable all drag operations
 
         Returns:
             True if drag was started, False otherwise
         """
+        # PROJ-69: Disable drag in multi-select mode
+        if multi_select_active:
+            return False
+
         if not (event.buttons[0] and self.drag_start_pos and self._pending_queue_index is not None):
             return False
 
@@ -158,8 +172,8 @@ class BuildQueueDragHandler:
         if dx > self.drag_threshold or dy > self.drag_threshold:
             # Start actual drag - pick up from queue
             idx = self._pending_queue_index
-            if idx < len(build_context.construction_queue):
-                item = build_context.construction_queue.pop(idx)
+            if idx < len(construction_queue):
+                item = construction_queue.pop(idx)
                 design_id = item.get('design_id', 'Unknown')
                 item_type = item.get('type', 'ship')
 
@@ -189,7 +203,8 @@ class BuildQueueDragHandler:
         event: pygame.event.Event,
         build_queue_panel: Any,
         queue_scrollable: Any,
-        build_context: Union['Planet', 'Fleet', 'BuildContext']
+        construction_queue: List[Dict[str, Any]],
+        multi_select_active: bool = False
     ) -> Optional[int]:
         """
         Handle mouse button up event for drop or click-select.
@@ -198,12 +213,21 @@ class BuildQueueDragHandler:
             event: pygame MOUSEBUTTONUP event
             build_queue_panel: Panel containing the build queue
             queue_scrollable: Scrollable container for queue items
-            build_context: Planet or Fleet with construction queue
+            construction_queue: The active queue's construction list
+            multi_select_active: If True, disable all drag operations
 
         Returns:
             Selected queue index if click-select occurred, None otherwise
         """
         if event.button != 1:  # Only handle left click
+            return None
+
+        # PROJ-69: Disable drag operations in multi-select mode
+        if multi_select_active:
+            # Clear any stale pending state
+            self._pending_queue_index = None
+            self.drag_start_pos = None
+            self.dragged_item = None
             return None
 
         selected_queue_index = None
@@ -230,7 +254,7 @@ class BuildQueueDragHandler:
 
                 # Estimate index: each item is ~65 pixels high
                 estimated_idx = rel_y // 65
-                insert_idx = max(0, min(int(estimated_idx), len(build_context.construction_queue)))
+                insert_idx = max(0, min(int(estimated_idx), len(construction_queue)))
 
                 turns = self.dragged_item.get('turns', 1)
                 self.on_add_to_queue(
