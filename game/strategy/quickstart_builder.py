@@ -6,14 +6,31 @@ that bypass the normal NewGameSetupScreen flow, enabling rapid iteration and tes
 """
 import os
 import shutil
+import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 from game.strategy.engine.game_config import GameConfig, PlayerConfig, THEME_DEFAULTS
 from game.strategy.data.race_config import RaceConfig
+from game.strategy.data.planet import PlanetaryFacility
+from game.strategy.systems.design_library import DesignLibrary
 from game.core.json_utils import load_json
-from game.core.logger import log_info, log_error, log_debug
+from game.core.logger import log_info, log_error, log_debug, log_warning
+
+if TYPE_CHECKING:
+    from game.strategy.engine.game_session import GameSession
+
+
+INITIAL_COMPLEXES = [
+    'qs_complex',           # Shipyard (existing)
+    'qs_metals_complex',
+    'qs_organics_complex',
+    'qs_vapors_complex',
+    'qs_radioactives_complex',
+    'qs_exotics_complex',
+    'qs_resupply_depot',
+]
 
 
 def get_quickstart_fixtures_dir() -> Path:
@@ -232,5 +249,51 @@ class QuickstartBuilder:
 
         if success:
             log_info(f"Copied {len(design_files)} designs to {len(empire_ids)} empires")
+
+        return success
+
+    @staticmethod
+    def spawn_initial_complexes(save_path: str, session: 'GameSession') -> bool:
+        """
+        Spawn pre-built complexes on all home planets.
+
+        Called after designs are copied and save_path is set.
+
+        Args:
+            save_path: Path to save folder (designs already copied here)
+            session: GameSession with empires and colonies initialized
+
+        Returns:
+            True if all complexes spawned successfully
+        """
+        success = True
+
+        for empire in session.empires:
+            # Get home planet (first colony)
+            if not empire.colonies:
+                log_warning(f"Empire {empire.id} has no colonies - skipping complex spawn")
+                continue
+
+            home_planet = empire.colonies[0]
+            library = DesignLibrary(save_path, empire.id)
+
+            for design_id in INITIAL_COMPLEXES:
+                design_data = library.load_design_data(design_id)
+
+                if not design_data:
+                    log_warning(f"Could not load design {design_id} for empire {empire.id}")
+                    success = False
+                    continue
+
+                facility = PlanetaryFacility(
+                    instance_id=str(uuid.uuid4()),
+                    design_id=design_id,
+                    name=design_data.get("name", design_id),
+                    design_data=design_data,
+                    is_operational=True
+                )
+
+                home_planet.facilities.append(facility)
+                log_info(f"Spawned {facility.name} on {home_planet.name} (Empire {empire.id})")
 
         return success

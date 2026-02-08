@@ -9,14 +9,17 @@ import tempfile
 import shutil
 import os
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from game.strategy.quickstart_builder import (
     QuickstartBuilder,
     get_quickstart_fixtures_dir,
     get_quickstart_races_dir,
     get_quickstart_designs_dir,
+    INITIAL_COMPLEXES,
 )
 from game.strategy.engine.game_config import GameConfig, PlayerConfig
+from game.strategy.data.planet import PlanetaryFacility
 
 
 class TestQuickstartBuilderPaths:
@@ -182,3 +185,209 @@ class TestQuickstartBuilderDesignCopying:
             assert empire_folder.exists()
             design_files = list(empire_folder.glob("*.json"))
             assert len(design_files) >= 2
+
+
+class TestInitialComplexesConstant:
+    """Tests for the INITIAL_COMPLEXES constant."""
+
+    def test_initial_complexes_has_seven_entries(self):
+        """Should have exactly 7 complex design IDs."""
+        assert len(INITIAL_COMPLEXES) == 7
+
+    def test_initial_complexes_includes_shipyard(self):
+        """Should include the existing qs_complex shipyard."""
+        assert 'qs_complex' in INITIAL_COMPLEXES
+
+    def test_initial_complexes_includes_all_resource_types(self):
+        """Should include complexes for all 5 resource types."""
+        assert 'qs_metals_complex' in INITIAL_COMPLEXES
+        assert 'qs_organics_complex' in INITIAL_COMPLEXES
+        assert 'qs_vapors_complex' in INITIAL_COMPLEXES
+        assert 'qs_radioactives_complex' in INITIAL_COMPLEXES
+        assert 'qs_exotics_complex' in INITIAL_COMPLEXES
+
+    def test_initial_complexes_includes_resupply_depot(self):
+        """Should include the resupply depot."""
+        assert 'qs_resupply_depot' in INITIAL_COMPLEXES
+
+    def test_initial_complexes_are_strings(self):
+        """All entries should be strings."""
+        for design_id in INITIAL_COMPLEXES:
+            assert isinstance(design_id, str)
+
+
+class TestSpawnInitialComplexes:
+    """Tests for QuickstartBuilder.spawn_initial_complexes()."""
+
+    @pytest.fixture
+    def temp_save_folder(self):
+        """Create a temporary save folder with designs copied."""
+        folder = tempfile.mkdtemp()
+        # Copy quickstart designs for empire 0
+        QuickstartBuilder.copy_quickstart_designs(folder, [0])
+        yield folder
+        shutil.rmtree(folder, ignore_errors=True)
+
+    @pytest.fixture
+    def temp_save_folder_2p(self):
+        """Create a temporary save folder with designs for 2 empires."""
+        folder = tempfile.mkdtemp()
+        QuickstartBuilder.copy_quickstart_designs(folder, [0, 1])
+        yield folder
+        shutil.rmtree(folder, ignore_errors=True)
+
+    @staticmethod
+    def _make_mock_planet(name="Home Planet"):
+        """Create a mock planet with facilities list."""
+        planet = MagicMock()
+        planet.name = name
+        planet.facilities = []
+        return planet
+
+    @staticmethod
+    def _make_mock_empire(empire_id=0, colonies=None):
+        """Create a mock empire with colonies."""
+        empire = MagicMock()
+        empire.id = empire_id
+        empire.colonies = colonies if colonies is not None else []
+        return empire
+
+    @staticmethod
+    def _make_mock_session(empires=None):
+        """Create a mock game session."""
+        session = MagicMock()
+        session.empires = empires if empires is not None else []
+        return session
+
+    def test_spawns_seven_complexes_on_home_planet(self, temp_save_folder):
+        """Should spawn all 7 complexes on the home planet."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        assert result is True
+        assert len(planet.facilities) == 7
+
+    def test_spawned_facilities_are_planetary_facility(self, temp_save_folder):
+        """Each spawned facility should be a PlanetaryFacility instance."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        for facility in planet.facilities:
+            assert isinstance(facility, PlanetaryFacility)
+
+    def test_spawned_facilities_are_operational(self, temp_save_folder):
+        """All spawned facilities should be operational."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        for facility in planet.facilities:
+            assert facility.is_operational is True
+
+    def test_spawned_facilities_have_unique_ids(self, temp_save_folder):
+        """Each facility should have a unique instance_id."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        instance_ids = [f.instance_id for f in planet.facilities]
+        assert len(instance_ids) == len(set(instance_ids)), "Instance IDs must be unique"
+
+    def test_spawned_facilities_have_design_data(self, temp_save_folder):
+        """Each facility should have populated design_data."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        for facility in planet.facilities:
+            assert isinstance(facility.design_data, dict)
+            assert len(facility.design_data) > 0, f"design_data empty for {facility.design_id}"
+
+    def test_spawned_facilities_have_correct_design_ids(self, temp_save_folder):
+        """Spawned facility design_ids should match INITIAL_COMPLEXES."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        spawned_ids = {f.design_id for f in planet.facilities}
+        expected_ids = set(INITIAL_COMPLEXES)
+        assert spawned_ids == expected_ids
+
+    def test_spawned_facilities_have_names(self, temp_save_folder):
+        """Each facility should have a non-empty name from design data."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        for facility in planet.facilities:
+            assert facility.name, f"Facility {facility.design_id} has no name"
+
+    def test_two_empires_both_get_complexes(self, temp_save_folder_2p):
+        """Both empires should get all 7 complexes on their home planets."""
+        planet1 = self._make_mock_planet("Home 1")
+        planet2 = self._make_mock_planet("Home 2")
+        empire1 = self._make_mock_empire(0, colonies=[planet1])
+        empire2 = self._make_mock_empire(1, colonies=[planet2])
+        session = self._make_mock_session(empires=[empire1, empire2])
+
+        result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder_2p, session)
+
+        assert result is True
+        assert len(planet1.facilities) == 7
+        assert len(planet2.facilities) == 7
+
+    def test_empire_with_no_colonies_skipped(self, temp_save_folder):
+        """Empire with no colonies should be skipped gracefully."""
+        empire = self._make_mock_empire(0, colonies=[])
+        session = self._make_mock_session(empires=[empire])
+
+        result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        # Still returns True overall - just warns and skips
+        assert result is True
+
+    def test_returns_true_on_success(self, temp_save_folder):
+        """Should return True when all complexes spawn successfully."""
+        planet = self._make_mock_planet()
+        empire = self._make_mock_empire(0, colonies=[planet])
+        session = self._make_mock_session(empires=[empire])
+
+        result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        assert result is True
+
+    def test_empty_empires_returns_true(self, temp_save_folder):
+        """No empires should return True (nothing to do, no failure)."""
+        session = self._make_mock_session(empires=[])
+
+        result = QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        assert result is True
+
+    def test_uses_first_colony_as_home_planet(self, temp_save_folder):
+        """Should spawn complexes on first colony only."""
+        home = self._make_mock_planet("Home")
+        second = self._make_mock_planet("Second Colony")
+        empire = self._make_mock_empire(0, colonies=[home, second])
+        session = self._make_mock_session(empires=[empire])
+
+        QuickstartBuilder.spawn_initial_complexes(temp_save_folder, session)
+
+        assert len(home.facilities) == 7
+        assert len(second.facilities) == 0
