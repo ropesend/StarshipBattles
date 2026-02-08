@@ -52,7 +52,7 @@ class RaceValidator:
         if not name or (isinstance(name, str) and not name.strip()):
             return validation_result(
                 is_valid=False,
-                message="Race name is required (set in Identity tab)"
+                message="Species name is required (set in Identity tab)"
             )
 
         # Flag selection required
@@ -89,7 +89,7 @@ class RaceValidator:
                 message="Water tolerance must be between 0% and 100% (Environment tab)"
             )
 
-        # Validate aptitudes in range (1-10)
+        # Validate aptitudes in range (1-100)
         aptitude_fields = [
             ("Strength", race_config.aptitude_strength),
             ("Intelligence", race_config.aptitude_intelligence),
@@ -102,10 +102,10 @@ class RaceValidator:
             ("Conflict Tolerance", race_config.aptitude_conflict_tolerance),
         ]
         for apt_name, apt_value in aptitude_fields:
-            if not (1 <= apt_value <= 10):
+            if not (1 <= apt_value <= 100):
                 return validation_result(
                     is_valid=False,
-                    message=f"Aptitude {apt_name} must be between 1 and 10 (Aptitudes tab)"
+                    message=f"Aptitude {apt_name} must be between 1 and 100 (Aptitudes tab)"
                 )
 
         # Validate budget
@@ -113,7 +113,7 @@ class RaceValidator:
             remaining = self._budget.get_remaining_points(race_config)
             return validation_result(
                 is_valid=False,
-                message=f"Race is over point budget by {abs(remaining)} points. "
+                message=f"Species is over point budget by {abs(remaining)} points. "
                         f"Reduce aptitudes or tolerance on the Aptitudes tab."
             )
 

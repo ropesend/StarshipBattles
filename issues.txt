@@ -1,20 +1,59 @@
-New Game Setup
-Need to be able to select number of stars
 
-Race Setup - should use larger window
 
-RAce setup --> racial points should bew displayed in the Environment windows
+16) In the Fleet Details panel on the lower right, the following should be shown/possible:
+ - The total number of hexes that the fleet can travel
+ - a scrollable list of all ships in the fleet - this should be condensed, where it is the ship Design with a multiple so: Devastater x 3 if there are 3 devastators, the most massive vehicles should be 1st with the smaller ships listed below.
+ - a list of all cargo - with quantities of each cargo item
+ - a list of the current orders in the order that they will be completed
+ 
+We need to restructure the build queue, since there can be multiple build queues on a planet, and multiple build queues within a ship and fleet, when you go to the build queue you need te be able to seel the list of available build queues in that sector (hex) you can select one queue and see what is being constructed in that queue - this should behave almost identically to what we currently have.  You can select multiple queues, this won't show what is currently queued up, but it will allow adding to multiple queues at one time.  The added items will jest get added to teh end of each queue.  The list of build queues could become very long, so it should be a colum just to the right of the planet details panel, that extends from the top of the window to the bottom just above the bar that says close, this list will extend down to the right of the Available designs as well.  The current list of items in the build queue can be moved to the right and made more narrow.
 
-Game Setup + RAce Setup should follow the same themes as the strategy layer
 
-All reference to race should be species instead
 
-Aptitudes shoud be 1 to 100, base 50, and it should be linear to 50, but exponentially expensive beyond 50
+There Should be a button up top called menue it should have:
+Save Game (moved from the top bar in the strategy view
+Load Game
+Settings - (just a dummy button for now)
+Controls - (just a dummy button for now)
+Quite to Main Menue (goes back to the opening screen)
+Quite Game (Ends Game entirely)
 
-When the homeworld type is selected, all environmental preferences should be set to a typical value for that type of planet.
 
-In the Design Workshop placing a component in multiple layers causes problems,  I had a Life Support component in the Inner layer, then added one to the outer layer, and then it looks like this: C:\Dev\Starship Battles\output\screenshots\screenshot_20260207_150507_593326_mouse_focus.png  The component in the outer layer shows, but the inner layer component disapears, and there is a blank space.
+For every window that opens in the strategy layer there should be a hotkey associated with every button in that window.  There will also be additional hotkeys for things like orders, and some other commands.
+I want to have a .json file that defines all of the default hotkeys, and then a settings window that allows the player to change them.
+The settings window should be able to save the hotkeys to a file, and load them from a file.  The settings window should also allow the player to reset the hotkeys to the default values.
+Please go through every single button that is connected to the strategy layer, and add a hotkey to it.  I want to be able to change the hotkeys in the settings window.  Order hotkeys should be able to be changed as well.
+The menue --> controls bnutton should be the way to get to changing the hotkeys.
 
-In the Design Workshop, int the Component modifyers Panel, all applicable modifiers should always be selected, and shown, all non applicable modifyers should not be shown.  Here is a visual of the panel when a Life Support module is selected, the Hardened component should be selected, but just default to 1.00 it should not be possible to unselect it, and it does not start out selected.,  please look into all modifyerss, as there are a few that seem to do this: C:\Dev\Starship Battles\output\screenshots\screenshot_20260207_150924_614024_mouse_focus.png
 
-In the Design Workshop when playing the actual game, I should not be able to select different themes, currently I can select different themes, but they don't actually impact the image of the ships shown.
+Reported:
+
+1) In the New Game Setup, I need to be able to select number of star systems in the starting galaxy should be 25 to 150 (can be a slider)
+
+2) In the Race Setup, the window should be larger
+
+3) RAce setup --> racial points should bew displayed in the Environment windows, so that I know how fast I'm using them.
+
+4) Game Setup + RAce Setup should follow the same visual themes as the strategy layer, and design workshop
+
+5) All reference to race should be changes to species instead (both in code, and in game)
+
+6) In the Species Setup the Aptitudes shoud be 1 to 100, base 50, and it should be linear to 50, but exponentially expensive beyond 50
+
+7) When the homeworld type is selected, all environmental preferences should be set to a typical value for that type of planet.
+
+8) In the strategy layer, The starting planet for a player should have exactly the same conditions as the ideal conditions for that species.
+
+9) In the Design Workshop placing a component in multiple layers causes problems,  I had a Life Support component in the Inner layer, then added one to the outer layer, and then it looks like this: C:\Dev\Starship Battles\output\screenshots\screenshot_20260207_150507_593326_mouse_focus.png  The component in the outer layer shows, but the inner layer component disapears, and there is a blank space.
+
+10) In the Design Workshop, in the Component modifyers Panel, all applicable modifiers should always be selected, and shown, all non applicable modifyers should not be shown.  Here is a visual of the panel when a Life Support module is selected, the Hardened component should be selected, but just default to 1.00 it should not be possible to unselect it, and Currently it does not start out selected like it should be.  please look into all modifyerss, as there are a few that seem to do this: C:\Dev\Starship Battles\output\screenshots\screenshot_20260207_150924_614024_mouse_focus.png
+
+11) In the Design Workshop when playing the actual game, I should not be able to select different vehicle themes, currently I can select different themes, but they don't actually impact the image of the ships shown.  There should not be an option to select a theme in the design workshop when playing the strategy layer.
+
+12) In the strategy layer there should be a button on the top named "Build Queues" that load the list of all build queues.
+
+13) In the Fleet Report I need to be able to select a ship, the Ship report should show on the right side.  I once selected I need to be able to remove a ship from the fleet.
+
+14) The scroll wheel gets locket out of teh strategy view occasionally, rolling the wheel has no impact on the zoom level.
+
+15) When I give a ship a colonize order, they should try to load population before they move, this should be an order in the order queue.

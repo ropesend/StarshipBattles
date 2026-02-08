@@ -15,7 +15,8 @@ class RacePointBudget:
     """
     Calculates and tracks point costs for race configuration.
 
-    Aptitude costs are linear: each point above/below base 5 costs/refunds 1 point.
+    Aptitude costs: linear below base 50 (1 point per step), exponential above 50.
+    Above 50, each additional point costs 2^((value-50)/10) cumulatively.
     Tolerance costs are exponential: each step costs 2^(step-1), so 1, 2, 4, 8, 16...
 
     This makes broad environmental tolerance extremely expensive, forcing races
@@ -26,7 +27,7 @@ class RacePointBudget:
     DEFAULT_BUDGET = 100
 
     # Base aptitude value (costs nothing at this level)
-    APTITUDE_BASE = 5
+    APTITUDE_BASE = 50
 
     # Tolerance step sizes for cost calculation
     GRAVITY_STEP = 0.1      # per 0.1g tolerance
@@ -48,8 +49,8 @@ class RacePointBudget:
         """
         Calculate total cost of aptitude selections.
 
-        Each point above base costs 1 point.
-        Each point below base refunds 1 point (negative cost).
+        Below base (50): linear, 1 point per step (refund for lowering).
+        Above base (50): exponential, each point above 50 costs 2^((value-50)/10).
 
         Args:
             race_config: Race configuration to calculate costs for
@@ -70,8 +71,18 @@ class RacePointBudget:
             race_config.aptitude_conflict_tolerance,
         ]
         for value in aptitudes:
-            total += (value - self.APTITUDE_BASE)
+            total += self._single_aptitude_cost(value)
         return total
+
+    def _single_aptitude_cost(self, value: int) -> int:
+        """Calculate cost for a single aptitude value."""
+        if value <= self.APTITUDE_BASE:
+            return value - self.APTITUDE_BASE  # Linear below base (negative = refund)
+        # Above base: sum of exponential increments
+        cost = 0
+        for v in range(self.APTITUDE_BASE + 1, value + 1):
+            cost += max(1, int(2 ** ((v - self.APTITUDE_BASE) / 10)))
+        return cost
 
     def calculate_tolerance_cost(self, race_config: 'RaceConfig') -> int:
         """
@@ -174,15 +185,15 @@ class RacePointBudget:
             Dictionary mapping aptitude name to its cost
         """
         return {
-            "strength": race_config.aptitude_strength - self.APTITUDE_BASE,
-            "intelligence": race_config.aptitude_intelligence - self.APTITUDE_BASE,
-            "constitution": race_config.aptitude_constitution - self.APTITUDE_BASE,
-            "dexterity": race_config.aptitude_dexterity - self.APTITUDE_BASE,
-            "tolerance_other_species": race_config.aptitude_tolerance_other_species - self.APTITUDE_BASE,
-            "cooperation": race_config.aptitude_cooperation - self.APTITUDE_BASE,
-            "happiness": race_config.aptitude_happiness - self.APTITUDE_BASE,
-            "population_growth": race_config.aptitude_population_growth - self.APTITUDE_BASE,
-            "conflict_tolerance": race_config.aptitude_conflict_tolerance - self.APTITUDE_BASE,
+            "strength": self._single_aptitude_cost(race_config.aptitude_strength),
+            "intelligence": self._single_aptitude_cost(race_config.aptitude_intelligence),
+            "constitution": self._single_aptitude_cost(race_config.aptitude_constitution),
+            "dexterity": self._single_aptitude_cost(race_config.aptitude_dexterity),
+            "tolerance_other_species": self._single_aptitude_cost(race_config.aptitude_tolerance_other_species),
+            "cooperation": self._single_aptitude_cost(race_config.aptitude_cooperation),
+            "happiness": self._single_aptitude_cost(race_config.aptitude_happiness),
+            "population_growth": self._single_aptitude_cost(race_config.aptitude_population_growth),
+            "conflict_tolerance": self._single_aptitude_cost(race_config.aptitude_conflict_tolerance),
         }
 
     def get_tolerance_breakdown(self, race_config: 'RaceConfig') -> Dict[str, int]:

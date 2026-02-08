@@ -116,16 +116,16 @@ class RaceConfig:
     # Radiation tolerance: -100 (very sensitive) to +100 (radiation resistant)
     radiation_tolerance: float = 0.0
 
-    # Aptitude attributes (1-10 scale, 5 is average)
-    aptitude_strength: int = 5
-    aptitude_intelligence: int = 5
-    aptitude_constitution: int = 5
-    aptitude_dexterity: int = 5
-    aptitude_tolerance_other_species: int = 5
-    aptitude_cooperation: int = 5
-    aptitude_happiness: int = 5
-    aptitude_population_growth: int = 5
-    aptitude_conflict_tolerance: int = 5
+    # Aptitude attributes (1-100 scale, 50 is average)
+    aptitude_strength: int = 50
+    aptitude_intelligence: int = 50
+    aptitude_constitution: int = 50
+    aptitude_dexterity: int = 50
+    aptitude_tolerance_other_species: int = 50
+    aptitude_cooperation: int = 50
+    aptitude_happiness: int = 50
+    aptitude_population_growth: int = 50
+    aptitude_conflict_tolerance: int = 50
 
     # Descriptions
     bio_description: str = ""  # Biological description (max 500 chars)
@@ -222,15 +222,15 @@ class RaceConfig:
                                             DEFAULT_ATMOSPHERE_PREFERENCES.copy()),
             radiation_tolerance=data.get("radiation_tolerance", 0.0),
             # Aptitudes
-            aptitude_strength=data.get("aptitude_strength", 5),
-            aptitude_intelligence=data.get("aptitude_intelligence", 5),
-            aptitude_constitution=data.get("aptitude_constitution", 5),
-            aptitude_dexterity=data.get("aptitude_dexterity", 5),
-            aptitude_tolerance_other_species=data.get("aptitude_tolerance_other_species", 5),
-            aptitude_cooperation=data.get("aptitude_cooperation", 5),
-            aptitude_happiness=data.get("aptitude_happiness", 5),
-            aptitude_population_growth=data.get("aptitude_population_growth", 5),
-            aptitude_conflict_tolerance=data.get("aptitude_conflict_tolerance", 5),
+            aptitude_strength=data.get("aptitude_strength", 50),
+            aptitude_intelligence=data.get("aptitude_intelligence", 50),
+            aptitude_constitution=data.get("aptitude_constitution", 50),
+            aptitude_dexterity=data.get("aptitude_dexterity", 50),
+            aptitude_tolerance_other_species=data.get("aptitude_tolerance_other_species", 50),
+            aptitude_cooperation=data.get("aptitude_cooperation", 50),
+            aptitude_happiness=data.get("aptitude_happiness", 50),
+            aptitude_population_growth=data.get("aptitude_population_growth", 50),
+            aptitude_conflict_tolerance=data.get("aptitude_conflict_tolerance", 50),
             # Descriptions
             bio_description=data.get("bio_description", ""),
             socio_description=data.get("socio_description", ""),
@@ -316,7 +316,7 @@ class RaceConfig:
         if not (0.0 <= self.water_tolerance <= 1.0):
             return False, "Water tolerance must be between 0.0 and 1.0"
 
-        # Validate aptitudes (1-10 range)
+        # Validate aptitudes (1-100 range)
         aptitude_fields = [
             ("strength", self.aptitude_strength),
             ("intelligence", self.aptitude_intelligence),
@@ -329,8 +329,8 @@ class RaceConfig:
             ("conflict_tolerance", self.aptitude_conflict_tolerance),
         ]
         for apt_name, apt_value in aptitude_fields:
-            if not (1 <= apt_value <= 10):
-                return False, f"Aptitude {apt_name} must be between 1 and 10"
+            if not (1 <= apt_value <= 100):
+                return False, f"Aptitude {apt_name} must be between 1 and 100"
 
         # Validate identity fields if set (optional, but must be valid if provided)
         if self.government_type and self.government_type not in GOVERNMENT_TYPES:

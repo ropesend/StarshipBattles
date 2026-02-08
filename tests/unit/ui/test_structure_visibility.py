@@ -133,6 +133,44 @@ class TestStructureVisibility:
 
         assert core_header is not None, "CORE layer header is missing despite containing a (hidden) hull!"
 
+    def test_same_component_in_multiple_layers_shows_in_both(self):
+        """BUG-64: Same component type placed in different layers must show in each layer."""
+        # Use a Cruiser which has INNER and OUTER layers (Capital_Standard config)
+        ship = Ship("Test Cruiser", 0, 0, (255, 255, 255), ship_class="Cruiser", registries=self.ship._registries)
+        self.mock_builder.ship = ship
+        self.mock_builder.viewmodel.ship = ship
+        self.mock_builder.viewmodel.show_hull_layer = False
+
+        # Add a life_support to INNER
+        from game.simulation.components.component import create_component
+        comp_inner = create_component("life_support", registries=ship._registries)
+        ship.add_component(comp_inner, LayerType.INNER)
+
+        # Add a life_support to OUTER
+        comp_outer = create_component("life_support", registries=ship._registries)
+        ship.add_component(comp_outer, LayerType.OUTER)
+
+        # Rebuild layer panel with new ship
+        # Clear old cache since ship changed
+        for item in self.layer_panel.ui_cache.values():
+            item.kill()
+        self.layer_panel.ui_cache = {}
+        self.layer_panel.rebuild()
+
+        # Count life_support group items - group_key is (component_id, modifiers_tuple)
+        life_support_groups = [
+            item for item in self.layer_panel.items
+            if isinstance(item, LayerComponentItem)
+            and isinstance(item.group_key, tuple)
+            and item.group_key[0] == 'life_support'
+        ]
+
+        # There must be 2 separate group items (one per layer), not 1
+        assert len(life_support_groups) == 2, (
+            f"Expected 2 life_support groups (one per layer), got {len(life_support_groups)}. "
+            "Same component type in different layers should have unique UI entries."
+        )
+
     def test_structure_list_shows_all_available_layers(self):
         """Verify that all layers defined in the ship's layer config are shown."""
         self.layer_panel.rebuild()

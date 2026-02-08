@@ -83,16 +83,18 @@ class TestTransferCommand:
         assert cmd.amount == 100
         assert cmd.name == 'IssueTransferCommand'
 
-    def test_transfer_command_default_amount(self):
-        """Amount defaults to 0 (all)."""
+    def test_transfer_command_with_species(self):
+        """IssueTransferCommand can include a species_id."""
         cmd = IssueTransferCommand(
             fleet_id=1,
             planet_id=10,
             cargo_type='passengers',
-            direction='load'
+            direction='load',
+            amount=100,
+            species_id='vulcan'
         )
 
-        assert cmd.amount == 0
+        assert cmd.species_id == 'vulcan'
 
 
 class TestFleetOrderProcessorTransfer:
@@ -322,6 +324,90 @@ class TestFleetOrderProcessorTransfer:
         alien_pop = next(p for p in planet.populations if p.race_id == "alien")
         assert alien_pop.count == 100
 
+    def test_process_transfer_species_specific_load(self):
+        """Load a specific species from colony to fleet."""
+        processor = FleetOrderProcessor()
+
+        planet = self.make_planet_with_pop(pop_count=500)
+        planet.populations[0].race_id = "human"
+        # Add a second species
+        planet.populations.append(SpeciesPopulation(race_id="vulcan", count=200))
+
+        fleet = self.make_fleet_with_cargo_ship(capacity=100, current=0)
+
+        # Set up TRANSFER order for specific species
+        params = {
+            'direction': 'load',
+            'cargo_type': 'passengers',
+            'amount': 50,
+            'planet_id': planet.id,
+            'species_id': 'vulcan'
+        }
+        order = FleetOrder(OrderType.TRANSFER, target=params)
+        fleet.orders.append(order)
+
+        # Mock galaxy
+        galaxy = MagicMock()
+        galaxy.get_planet_by_id = MagicMock(return_value=planet)
+        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+
+        # Mock empire
+        empire = MagicMock()
+
+        # Process
+        result = processor.process_transfer(fleet, empire, galaxy)
+
+        assert result.success
+        assert result.amount_transferred == 50
+        # Vulcan population should be reduced, human unchanged
+        vulcan_pop = next(p for p in planet.populations if p.race_id == "vulcan")
+        human_pop = next(p for p in planet.populations if p.race_id == "human")
+        assert vulcan_pop.count == 150
+        assert human_pop.count == 500
+        # Fleet should have vulcan passengers
+        assert fleet.get_fleet_cargo_current("passengers") == 50
+
+    def test_process_transfer_species_specific_unload(self):
+        """Unload a specific species from fleet to colony."""
+        processor = FleetOrderProcessor()
+
+        planet = self.make_planet_with_pop(pop_count=100)
+        planet.populations[0].race_id = "human"
+
+        fleet = self.make_fleet_with_cargo_ship(capacity=100, current=80)
+        # Manually set species in fleet if supported, else just assume it unloads what's specified
+        # In current implementation, fleet doesn't track species in cargo yet?
+        # TODO: Check if Fleet needs species support in cargo_contents
+
+        # Set up TRANSFER order for specific species
+        params = {
+            'direction': 'unload',
+            'cargo_type': 'passengers',
+            'amount': 30,
+            'planet_id': planet.id,
+            'species_id': 'vulcan'
+        }
+        order = FleetOrder(OrderType.TRANSFER, target=params)
+        fleet.orders.append(order)
+
+        # Mock galaxy
+        galaxy = MagicMock()
+        galaxy.get_planet_by_id = MagicMock(return_value=planet)
+        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+
+        # Mock empire
+        empire = MagicMock()
+
+        # Process
+        result = processor.process_transfer(fleet, empire, galaxy)
+
+        assert result.success
+        assert result.amount_transferred == 30
+        # Should have human AND vulcan populations now
+        assert len(planet.populations) == 2
+        vulcan_pop = next(p for p in planet.populations if p.race_id == "vulcan")
+        assert vulcan_pop.count == 30
+
 
 class TestTransferCommandDispatch:
     """Tests for command dispatch integration."""
@@ -384,7 +470,8 @@ class TestTransferCommandDispatch:
             planet_id=999,
             cargo_type='passengers',
             direction='load',
-            amount=50
+            amount=50,
+            species_id='human'
         )
 
         result = session.handle_command(cmd)

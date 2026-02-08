@@ -23,7 +23,8 @@ class TransferValidator:
         planet: Any,
         cargo_type: str,
         direction: str,
-        amount: int
+        amount: int,
+        species_id: str = None
     ) -> ValidationResult:
         """
         Validate if a fleet can perform a transfer operation with a colony.
@@ -92,16 +93,17 @@ class TransferValidator:
 
         # 7. Direction-specific validation
         if direction == "load":
-            return TransferValidator._validate_load(fleet, planet, cargo_type, amount)
+            return TransferValidator._validate_load(fleet, planet, cargo_type, amount, species_id)
         else:  # unload
-            return TransferValidator._validate_unload(fleet, planet, cargo_type, amount)
+            return TransferValidator._validate_unload(fleet, planet, cargo_type, amount, species_id)
 
     @staticmethod
     def _validate_load(
         fleet: Any,
         planet: Any,
         cargo_type: str,
-        amount: int
+        amount: int,
+        species_id: str = None
     ) -> ValidationResult:
         """Validate a load operation (colony → fleet)."""
         # For passengers, check fleet has cargo capacity
@@ -125,6 +127,15 @@ class TransferValidator:
                     "NO_POPULATION"
                 )
 
+            if species_id:
+                has_species = any(p.race_id == species_id and p.count > 0 for p in planet.populations)
+                if not has_species:
+                    return validation_result(
+                        False,
+                        f"{planet.name} has no {species_id} population to load.",
+                        "NO_POPULATION"
+                    )
+
         return validation_result(True, "Transfer load is valid.")
 
     @staticmethod
@@ -132,7 +143,8 @@ class TransferValidator:
         fleet: Any,
         planet: Any,
         cargo_type: str,
-        amount: int
+        amount: int,
+        species_id: str = None
     ) -> ValidationResult:
         """Validate an unload operation (fleet → colony)."""
         # Check fleet has cargo to unload

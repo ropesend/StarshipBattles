@@ -211,6 +211,11 @@ class GameSession:
                 if home_sys.planets:
                     # Assign first planet as home colony
                     home_planet = home_sys.planets[0]
+
+                    # Adjust planet conditions to match species preferences (BUG-63)
+                    if empire.race_config is not None:
+                        self._adjust_homeworld_to_race(home_planet, empire.race_config)
+
                     empire.add_colony(home_planet)
 
                     # Seed initial population if empire has race_config
@@ -224,6 +229,58 @@ class GameSession:
                         log_info(f"GameSession: Seeded {initial_pop.count} population on {home_planet.name}")
 
                     log_info(f"GameSession: Empire '{empire.name}' home at system {home_indices[i]}")
+
+    def _find_colony_at_fleet(self, fleet):
+        """Find an empire colony at the fleet's current location (BUG-70)."""
+        if not hasattr(self.galaxy, 'get_system_of_object'):
+            return None
+        for empire in self.empires:
+            if any(f.id == fleet.id for f in empire.fleets):
+                system = self.galaxy.get_system_of_object(fleet)
+                if system:
+                    for planet in system.planets:
+                        if planet.owner_id == empire.id:
+                            return planet
+                break
+        return None
+
+    @staticmethod
+    def _adjust_homeworld_to_race(planet, race_config):
+        """Adjust a starting planet's conditions to match species ideal environment (BUG-63)."""
+        from game.strategy.data.planet import PlanetType
+
+        # Set planet type from homeworld type
+        if race_config.homeworld_type:
+            try:
+                planet.planet_type = PlanetType[race_config.homeworld_type]
+            except KeyError:
+                pass  # Keep existing type if invalid
+
+        # Set surface conditions to species ideals
+        planet.surface_gravity = race_config.gravity_ideal * 9.81
+        planet.surface_temperature = race_config.temperature_ideal
+        planet.surface_water = race_config.water_ideal
+
+        # Build atmosphere from preferences (positive preferences = present gases)
+        # Use 1 ATM total pressure, distributed by positive preference weights
+        atm_prefs = race_config.atmosphere_preferences
+        positive_gases = {gas: val for gas, val in atm_prefs.items() if val > 0}
+
+        if positive_gases:
+            total_weight = sum(positive_gases.values())
+            one_atm = 101325.0  # Pa
+            planet.atmosphere = {}
+            for gas, val in positive_gases.items():
+                planet.atmosphere[gas] = (val / total_weight) * one_atm
+            planet.surface_pressure = one_atm
+        else:
+            # No positive gas preferences - minimal atmosphere
+            planet.atmosphere = {}
+            planet.surface_pressure = 0.0
+
+        log_info(f"GameSession: Adjusted {planet.name} to match species preferences "
+                 f"(type={planet.planet_type.name}, gravity={planet.surface_gravity/9.81:.1f}g, "
+                 f"temp={planet.surface_temperature:.0f}K, water={planet.surface_water:.0%})")
 
     def process_turn(self):
         """Advance the game simulation by one full turn."""
@@ -342,6 +399,19 @@ class GameSession:
         # 3. Apply
         if result.is_valid:
              from game.strategy.data.fleet import FleetOrder, OrderType
+
+             # Auto-load population from colony at fleet's location (BUG-70)
+             origin_colony = self._find_colony_at_fleet(fleet)
+             if origin_colony and origin_colony.populations:
+                 transfer_params = {
+                     'direction': 'load',
+                     'cargo_type': 'passengers',
+                     'amount': 0,
+                     'planet_id': origin_colony.id,
+                 }
+                 load_order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
+                 fleet.add_order(load_order)
+
              # Ensure we pass the OBJECT to rules
              order = FleetOrder(OrderType.COLONIZE, target=target_planet)
              fleet.add_order(order)
@@ -501,19 +571,31 @@ class GameSession:
         if not path:
             return validation_result(False, "No path found to target.")
 
-        # 5. Queue MOVE order if not already at target
+        # 5. Auto-load population from colony at fleet's current location (BUG-70)
+        origin_colony = self._find_colony_at_fleet(fleet)
+        if origin_colony and origin_colony.populations:
+            transfer_params = {
+                'direction': 'load',
+                'cargo_type': 'passengers',
+                'amount': 0,  # 0 = load as much as possible
+                'planet_id': origin_colony.id,
+            }
+            load_order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
+            fleet.add_order(load_order)
+
+        # 6. Queue MOVE order if not already at target
         if start_hex != cmd.target_hex:
             move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
             fleet.add_order(move_order)
 
-            # Set path immediately if it's the active order
+            # Set path immediately if it's the active order (and no load order was inserted)
             if len(fleet.orders) == 1:
                 # Remove start hex from path before assigning
                 if path and path[0] == fleet.location:
                     path = path[1:]
                 fleet.path = path
 
-        # 6. Queue COLONIZE order (target=None means "any available planet")
+        # 7. Queue COLONIZE order (target=None means "any available planet")
         colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
         fleet.add_order(colonize_order)
 
@@ -568,7 +650,7 @@ class GameSession:
 
         # 4. Validate
         result = TransferValidator.validate(
-            self.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount
+            self.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount, cmd.species_id
         )
 
         # 5. Apply
@@ -578,7 +660,8 @@ class GameSession:
                 'direction': cmd.direction,
                 'cargo_type': cmd.cargo_type,
                 'amount': cmd.amount,
-                'planet_id': cmd.planet_id
+                'planet_id': cmd.planet_id,
+                'species_id': cmd.species_id
             }
             order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
             fleet.add_order(order)

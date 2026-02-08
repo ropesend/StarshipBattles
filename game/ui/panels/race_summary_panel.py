@@ -80,7 +80,7 @@ class RaceSummaryPanel:
         # Title and Load Race button at top
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y, 400, 40),
-            text="Race Configuration Summary",
+            text="Species Configuration Summary",
             manager=self.ui_manager,
             container=self.panel,
             object_id="#summary_title"
@@ -89,7 +89,7 @@ class RaceSummaryPanel:
         # Load Race button (right side of title)
         self.btn_load = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(panel_width - 180, y, 180, 40),
-            text="Load Saved Race",
+            text="Load Saved Species",
             manager=self.ui_manager,
             container=self.panel
         )
@@ -144,7 +144,7 @@ class RaceSummaryPanel:
         # Race Name + Government
         self.summary_labels['race_value'] = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(x, y + 50, col_width, 22),
-            text="Race: --",
+            text="Species: --",
             manager=self.ui_manager,
             container=self.panel
         )
@@ -397,7 +397,7 @@ class RaceSummaryPanel:
     def _format_race_summary(self) -> str:
         """Format race name display."""
         race_name = self.race_config.race_name or self.race_config.name or "--"
-        return f"Race: {race_name}"
+        return f"Species: {race_name}"
 
     def _format_government_summary(self) -> str:
         """Format government type and organization."""

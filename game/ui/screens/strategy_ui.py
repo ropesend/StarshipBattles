@@ -17,6 +17,7 @@ from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
+from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.core.paths import Paths
 from game.strategy.data.fleet import OrderType
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
@@ -38,8 +39,10 @@ class StrategyUI:
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
         self.fleet_orders_window = None  # active window instance
         self.planet_list_window = None   # planet list window instance (BUG-22)
+        self.build_queue_list_window = None  # build queue list window (BUG-67)
         self.fleet_report_window = None  # fleet report window instance (PROJ-03)
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
+        self.transfer_dialog = None      # cargo transfer dialog instance (PROJ-68)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -236,10 +239,13 @@ class StrategyUI:
         self.btn_design = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design", manager=self.manager, container=self.top_bar
         )
-        
+        self.btn_build_queues = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Queues", manager=self.manager, container=self.top_bar
+        )
+
         # Save Game Button
         self.btn_save_game = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40),
+            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40),
             text="Save Game",
             manager=self.manager,
             container=self.top_bar
@@ -247,7 +253,7 @@ class StrategyUI:
 
         # End Turn (Larger)
         self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, 150, 40),
+            relative_rect=pygame.Rect(main_start_x + 6*(btn_w+gap), 5, 150, 40),
             text="End Turn",
             manager=self.manager,
             container=self.top_bar
@@ -642,6 +648,14 @@ class StrategyUI:
         if self.fleet_report_window is not None:
             return True
 
+        # Check for transfer dialog (PROJ-68)
+        if self.transfer_dialog is not None:
+            return True
+
+        # Check for build queue list window (BUG-67)
+        if self.build_queue_list_window is not None:
+            return True
+
         # Check if workshop is being opened
         if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
             return True
@@ -674,6 +688,8 @@ class StrategyUI:
             elif event.ui_element == self.btn_design:
                 if hasattr(self.scene, 'on_design_click'):
                     self.scene.on_design_click()
+            elif event.ui_element == self.btn_build_queues:
+                self.open_build_queue_list()
             elif event.ui_element == self.btn_save_game:
                 if hasattr(self.scene, 'on_save_game_click'):
                     self.scene.on_save_game_click()
@@ -733,15 +749,18 @@ class StrategyUI:
                       self.open_fleet_report_window(obj)
 
             # NOTE: btn_build_yard is handled in strategy_input_handler.py - do not duplicate here
+            pass
 
-            elif event.type == pygame_gui.UI_WINDOW_CLOSE:
-                 if event.ui_element == self.fleet_orders_window:
-                      self.fleet_orders_window = None
-                 elif event.ui_element == self.fleet_report_window:
-                      self.fleet_report_window = None
+        if event.type == pygame_gui.UI_WINDOW_CLOSE:
+            if event.ui_element == self.fleet_orders_window:
+                self.fleet_orders_window = None
+            elif event.ui_element == self.fleet_report_window:
+                self.fleet_report_window = None
+            elif event.ui_element == self.transfer_dialog:
+                self.transfer_dialog = None
+            elif event.ui_element == self.build_queue_list_window:
+                self.build_queue_list_window = None
 
-                    
-        
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled by UI."""
         # 1. Check logical sidebar area
@@ -855,6 +874,25 @@ class StrategyUI:
         """Callback when planet list window is closed."""
         self.planet_list_window = None
 
+    def open_build_queue_list(self):
+        """Open the Build Queue List Window (BUG-67)."""
+        if self.build_queue_list_window:
+            self.build_queue_list_window.kill()
+
+        empire = self.scene.current_empire
+
+        w, h = 700, 500
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        self.build_queue_list_window = BuildQueueListWindow(
+            rect, self.manager, empire,
+            on_close_callback=self._on_build_queue_list_closed
+        )
+
+    def _on_build_queue_list_closed(self):
+        """Callback when build queue list window is closed."""
+        self.build_queue_list_window = None
+
     def open_orders_window(self, fleet):
         """Open the Fleet Orders Window."""
         if self.fleet_orders_window:
@@ -884,4 +922,28 @@ class StrategyUI:
     def _on_fleet_report_closed(self):
         """Callback when fleet report window is closed."""
         self.fleet_report_window = None
+
+    def open_transfer_dialog(self, source_fleet, hex_coord):
+        """
+        Open the cargo/population transfer dialog.
+        
+        PROJ-68: Hex-aware selection between multiple ships and colonies.
+        """
+        if self.transfer_dialog is not None:
+            self.transfer_dialog.kill()
+            self.transfer_dialog = None
+            
+        from game.ui.screens.transfer_dialog import TransferDialog
+        
+        win_w, win_h = 600, 500
+        win_rect = pygame.Rect(0, 0, win_w, win_h)
+        win_rect.center = (self.width // 2, self.height // 2)
+        
+        self.transfer_dialog = TransferDialog(
+            relative_rect=win_rect,
+            manager=self.manager,
+            source_fleet=source_fleet,
+            hex_coord=hex_coord,
+            scene=self.scene
+        )
 

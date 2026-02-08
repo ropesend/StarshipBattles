@@ -54,56 +54,16 @@ class ModifierLogic:
 
     @staticmethod
     def get_mandatory_modifiers(component):
-        """Returns a list of modifier IDs that are mandatory for this component."""
-        mandatory = ['simple_size_mount'] # Everyone gets size
-        
-        # Use ability-based weapon detection instead of type_str
-        is_weapon = component.has_ability('WeaponAbility')
-        is_seeker = component.has_ability('SeekerWeaponAbility')
-        
-        if is_weapon:
-            # Check allowed types for specific mods before enforcing them
-            # (e.g. Seeker might adhere to Projectile rules or have specific ones)
-            # The Registry is the source of truth for "allowed", but we enforce "mandatory" here.
-            
-            # Range Mount: For Projectile/Beam 
-            if ModifierLogic.is_modifier_allowed('range_mount', component):
-                mandatory.append('range_mount')
-                
-            # Precision Targeting: For BeamWeapon
-            if component.has_ability('BeamWeaponAbility') and ModifierLogic.is_modifier_allowed('precision_mount', component):
-                mandatory.append('precision_mount')
-                
-            # Facing: For all weapons
-            if ModifierLogic.is_modifier_allowed('facing', component):
-                mandatory.append('facing')
-                
-            # Turret: For all weapons
-            if ModifierLogic.is_modifier_allowed('turret_mount', component):
-                mandatory.append('turret_mount')
-            
-            # Rapid Fire: For all weapons
-            if ModifierLogic.is_modifier_allowed('rapid_fire', component):
-                mandatory.append('rapid_fire')
+        """Returns a list of modifier IDs that are mandatory for this component.
 
-        if is_seeker:
-             # Seeker specific variants
-             if ModifierLogic.is_modifier_allowed('seeker_endurance', component):
-                 mandatory.append('seeker_endurance')
-             if ModifierLogic.is_modifier_allowed('seeker_damage', component):
-                 mandatory.append('seeker_damage')
-             if ModifierLogic.is_modifier_allowed('seeker_armored', component):
-                 mandatory.append('seeker_armored')
-             if ModifierLogic.is_modifier_allowed('seeker_stealth', component):
-                 mandatory.append('seeker_stealth')
-                 
-        # Automation: For any component with CrewRequired ability
-        # Need to check if component HAS crew requirement.
-        # Check base abilities or current abilities? Base/Data is safer source of truth for "capability"
-        if 'CrewRequired' in component.data.get('abilities', {}) or 'CrewRequired' in component.abilities:
-             if ModifierLogic.is_modifier_allowed('automation', component):
-                 mandatory.append('automation')
-                 
+        All applicable modifiers are mandatory - they are auto-applied at their
+        default value and cannot be toggled off. Users can only adjust values.
+        """
+        mandatory = []
+        modifiers = ModifierLogic._get_service().get_modifier_registry()
+        for mod_id in modifiers:
+            if ModifierLogic.is_modifier_allowed(mod_id, component):
+                mandatory.append(mod_id)
         return mandatory
 
     @staticmethod

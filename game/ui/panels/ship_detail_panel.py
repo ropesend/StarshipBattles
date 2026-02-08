@@ -54,7 +54,8 @@ class ShipDetailPanel:
     showing current HP/resources vs max, and component damage.
     """
 
-    def __init__(self, manager, rect: pygame.Rect, container=None):
+    def __init__(self, manager, rect: pygame.Rect, container=None,
+                 on_remove_ship=None):
         """
         Initialize ship detail panel.
 
@@ -62,11 +63,13 @@ class ShipDetailPanel:
             manager: pygame_gui UIManager
             rect: Panel dimensions and position
             container: Optional parent container
+            on_remove_ship: Optional callback(ShipInstance) when remove button clicked
         """
         self.manager = manager
         self.rect = rect
         self.container = container
         self.current_ship: Optional[ShipInstance] = None
+        self.on_remove_ship = on_remove_ship
 
         # Layer collapse state
         self.expanded_layers: Dict[str, bool] = {
@@ -95,6 +98,7 @@ class ShipDetailPanel:
         # Dynamic UI elements
         self.ui_elements: List = []
         self.layer_buttons: Dict[str, UIButton] = {}
+        self.btn_remove: Optional[UIButton] = None
 
         # Show placeholder initially
         self._show_placeholder()
@@ -305,6 +309,19 @@ class ShipDetailPanel:
             self.ui_elements.append(label)
             y += 24
 
+        # --- Remove from Fleet button ---
+        if self.on_remove_ship:
+            y += 10
+            self.btn_remove = UIButton(
+                relative_rect=pygame.Rect(10, y, width, 30),
+                text="Remove from Fleet",
+                manager=self.manager,
+                container=self.scroll_container,
+                object_id="#btn_remove_ship"
+            )
+            self.ui_elements.append(self.btn_remove)
+            y += 40
+
         # Update scrollable area
         self.scroll_container.set_scrollable_area_dimensions((width, y + 20))
 
@@ -407,9 +424,15 @@ class ShipDetailPanel:
         Returns:
             True if event was handled
         """
-        # Handle layer toggle buttons
+        # Handle layer toggle buttons and remove button
         if event.type == pygame.USEREVENT:
             if hasattr(event, 'user_type') and event.user_type == 'ui_button_pressed':
+                # Remove from fleet button
+                if self.btn_remove and event.ui_element == self.btn_remove:
+                    if self.on_remove_ship and self.current_ship:
+                        self.on_remove_ship(self.current_ship)
+                    return True
+                # Layer toggle buttons
                 for layer_name, button in self.layer_buttons.items():
                     if event.ui_element == button:
                         self.toggle_layer(layer_name)

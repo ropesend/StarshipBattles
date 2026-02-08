@@ -230,13 +230,13 @@ class TestRaceConfigSerialization:
         # Aptitude fields (all 9)
         assert data["aptitude_strength"] == 7
         assert data["aptitude_intelligence"] == 8
-        assert data["aptitude_constitution"] == 5
-        assert data["aptitude_dexterity"] == 5
-        assert data["aptitude_tolerance_other_species"] == 5
-        assert data["aptitude_cooperation"] == 5
-        assert data["aptitude_happiness"] == 5
-        assert data["aptitude_population_growth"] == 5
-        assert data["aptitude_conflict_tolerance"] == 5
+        assert data["aptitude_constitution"] == 50
+        assert data["aptitude_dexterity"] == 50
+        assert data["aptitude_tolerance_other_species"] == 50
+        assert data["aptitude_cooperation"] == 50
+        assert data["aptitude_happiness"] == 50
+        assert data["aptitude_population_growth"] == 50
+        assert data["aptitude_conflict_tolerance"] == 50
 
     def test_from_dict_with_all_new_fields(self):
         """Test from_dict restores all new fields correctly."""
@@ -306,8 +306,8 @@ class TestRaceConfigSerialization:
         assert config.homeworld_type == ""
         assert config.water_ideal == 0.5
         assert config.water_tolerance == 0.2
-        assert config.aptitude_strength == 5
-        assert config.aptitude_intelligence == 5
+        assert config.aptitude_strength == 50
+        assert config.aptitude_intelligence == 50
 
     def test_serialization_round_trip_complete(self):
         """Test complete round-trip serialization preserves all fields."""
@@ -588,13 +588,13 @@ class TestRaceConfigValidation:
         assert "aptitude" in message.lower()
 
     def test_validate_aptitude_above_maximum(self):
-        """Test that aptitude above 10 fails validation."""
+        """Test that aptitude above 100 fails validation."""
         config = RaceConfig(
             name="Test Race",
             flag_id="flag_001",
             portrait_id="portrait.jpg",
             theme_id="Federation",
-            aptitude_intelligence=11,  # Above maximum
+            aptitude_intelligence=101,  # Above maximum
         )
         is_valid, message = config.validate()
         assert is_valid is False
@@ -802,18 +802,18 @@ class TestRaceConfigAptitudeFields:
     """Tests for aptitude attribute fields."""
 
     def test_default_aptitudes_are_5(self):
-        """Test that all aptitudes default to 5."""
+        """Test that all aptitudes default to 50."""
         config = RaceConfig()
 
-        assert config.aptitude_strength == 5
-        assert config.aptitude_intelligence == 5
-        assert config.aptitude_constitution == 5
-        assert config.aptitude_dexterity == 5
-        assert config.aptitude_tolerance_other_species == 5
-        assert config.aptitude_cooperation == 5
-        assert config.aptitude_happiness == 5
-        assert config.aptitude_population_growth == 5
-        assert config.aptitude_conflict_tolerance == 5
+        assert config.aptitude_strength == 50
+        assert config.aptitude_intelligence == 50
+        assert config.aptitude_constitution == 50
+        assert config.aptitude_dexterity == 50
+        assert config.aptitude_tolerance_other_species == 50
+        assert config.aptitude_cooperation == 50
+        assert config.aptitude_happiness == 50
+        assert config.aptitude_population_growth == 50
+        assert config.aptitude_conflict_tolerance == 50
 
     def test_create_race_with_custom_aptitudes(self):
         """Test creating a race with custom aptitude values."""

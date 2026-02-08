@@ -189,7 +189,8 @@ class LayerPanel(DropTarget):
                     comp_template = comp_list[0]
                     
                     # --- GROUP ITEM ---
-                    item_key = ("group", group_key)
+                    # Include l_type so same component type in different layers gets unique keys
+                    item_key = ("group", l_type, group_key)
                     visited_keys.add(item_key)
                     
                     item = self.ui_cache.get(item_key)

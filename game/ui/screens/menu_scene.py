@@ -1,10 +1,12 @@
 """Main menu scene implementing IScene protocol."""
 
 from typing import Callable, Dict, Any, List, Tuple
+import os
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
+from game.core.paths import Paths
 from game.core.protocols import IScene
 
 
@@ -37,8 +39,12 @@ class MenuScene:
         self.height = height
         self.button_config = button_config
 
-        # Create UI manager for menu buttons
-        self.ui_manager = pygame_gui.UIManager((width, height))
+        # Create UI manager for menu buttons (use same theme as strategy/workshop)
+        theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
+        self.ui_manager = pygame_gui.UIManager(
+            (width, height),
+            theme_path=theme_path if os.path.exists(theme_path) else None
+        )
 
         # Button tracking
         self.buttons: List[UIButton] = []

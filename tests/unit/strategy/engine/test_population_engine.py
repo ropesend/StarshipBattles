@@ -43,7 +43,7 @@ def make_earth_like_planet(
 
 def make_human_race_config(
     race_id: str = "human",
-    aptitude_population_growth: int = 5
+    aptitude_population_growth: int = 50
 ) -> RaceConfig:
     """Create a human-like race config for testing."""
     return RaceConfig(
@@ -236,7 +236,7 @@ class TestPopulationDynamics:
             water_tolerance=0.3,
             atmosphere_preferences={"Oxygen": 30, "Nitrogen": 30},
             radiation_tolerance=50.0,  # More resistant
-            aptitude_population_growth=6  # Slightly faster growth
+            aptitude_population_growth=55  # Slightly faster growth
         )
 
         # Empire has multiple species (we store primary race_config)
@@ -275,13 +275,13 @@ class TestAptitudeEffects:
         # Low aptitude empire
         pop_low = SpeciesPopulation(race_id="slow", count=10000, happiness=1.0)
         planet_low = make_earth_like_planet(name="Slow", populations=[pop_low])
-        race_low = make_human_race_config(race_id="slow", aptitude_population_growth=1)
+        race_low = make_human_race_config(race_id="slow", aptitude_population_growth=10)
         empire_low = make_empire(1, [planet_low], race_low)
 
         # High aptitude empire
         pop_high = SpeciesPopulation(race_id="fast", count=10000, happiness=1.0)
         planet_high = make_earth_like_planet(name="Fast", populations=[pop_high])
-        race_high = make_human_race_config(race_id="fast", aptitude_population_growth=10)
+        race_high = make_human_race_config(race_id="fast", aptitude_population_growth=90)
         empire_high = make_empire(2, [planet_high], race_high)
 
         engine.process_population_growth([empire_low, empire_high])
@@ -299,29 +299,29 @@ class TestAptitudeConversion:
         """Verify aptitude conversion at boundaries."""
         engine = PopulationEngine()
 
-        # Aptitude 1 -> 0.5% per turn
+        # Aptitude 1 -> 0.05% per turn
         rate_1 = engine._aptitude_to_growth_rate(1)
-        assert abs(rate_1 - 0.005) < 0.001, "Aptitude 1 should give ~0.5% rate"
+        assert abs(rate_1 - 0.0005) < 0.0001, "Aptitude 1 should give ~0.05% rate"
 
-        # Aptitude 5 -> 2.5% per turn
-        rate_5 = engine._aptitude_to_growth_rate(5)
-        assert abs(rate_5 - 0.025) < 0.001, "Aptitude 5 should give ~2.5% rate"
+        # Aptitude 50 -> 2.5% per turn
+        rate_50 = engine._aptitude_to_growth_rate(50)
+        assert abs(rate_50 - 0.025) < 0.001, "Aptitude 50 should give ~2.5% rate"
 
-        # Aptitude 10 -> 5.0% per turn
-        rate_10 = engine._aptitude_to_growth_rate(10)
-        assert abs(rate_10 - 0.05) < 0.001, "Aptitude 10 should give ~5.0% rate"
+        # Aptitude 100 -> 5.0% per turn
+        rate_100 = engine._aptitude_to_growth_rate(100)
+        assert abs(rate_100 - 0.05) < 0.001, "Aptitude 100 should give ~5.0% rate"
 
     def test_aptitude_to_growth_rate_linear(self):
         """Growth rate increases linearly with aptitude."""
         engine = PopulationEngine()
 
-        rate_3 = engine._aptitude_to_growth_rate(3)
-        rate_7 = engine._aptitude_to_growth_rate(7)
+        rate_30 = engine._aptitude_to_growth_rate(30)
+        rate_70 = engine._aptitude_to_growth_rate(70)
 
-        # Linear: rate(3) should be 3/7 of rate(7) approximately
-        # Rate = 0.005 * aptitude, so rate_3/rate_7 = 3/7
-        ratio = rate_3 / rate_7
-        expected_ratio = 3 / 7
+        # Linear: rate(30) should be 30/70 of rate(70) approximately
+        # Rate = 0.0005 * aptitude, so rate_30/rate_70 = 30/70
+        ratio = rate_30 / rate_70
+        expected_ratio = 30 / 70
 
         assert abs(ratio - expected_ratio) < 0.1, "Growth rate should scale linearly"
 

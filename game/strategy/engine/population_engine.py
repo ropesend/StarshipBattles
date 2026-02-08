@@ -100,7 +100,7 @@ class PopulationEngine(IPopulationEngine):
             effective_capacity = 1
 
         # Get growth rate from aptitude
-        aptitude = getattr(race_config, 'aptitude_population_growth', 5)
+        aptitude = getattr(race_config, 'aptitude_population_growth', 50)
         base_rate = self._aptitude_to_growth_rate(aptitude)
 
         # Logistic growth: r * P * (1 - P/K)
@@ -155,16 +155,16 @@ class PopulationEngine(IPopulationEngine):
         """
         Convert population_growth aptitude to base growth rate.
 
-        Scale: 1 -> 0.5%, 5 -> 2.5%, 10 -> 5.0% per turn
+        Scale: 1 -> 0.05%, 50 -> 2.5%, 100 -> 5.0% per turn
 
         Args:
-            aptitude: Aptitude value (1-10)
+            aptitude: Aptitude value (1-100)
 
         Returns:
             Growth rate as decimal (e.g., 0.025 for 2.5%)
         """
-        # Linear scale: rate = 0.005 * aptitude
-        # aptitude 1 = 0.005 (0.5%)
-        # aptitude 5 = 0.025 (2.5%)
-        # aptitude 10 = 0.05 (5.0%)
-        return 0.005 * aptitude
+        # Linear scale: rate = 0.0005 * aptitude
+        # aptitude 1 = 0.0005 (0.05%)
+        # aptitude 50 = 0.025 (2.5%)
+        # aptitude 100 = 0.05 (5.0%)
+        return 0.0005 * aptitude

@@ -81,10 +81,10 @@ class TestRaceAptitudesPanel:
             assert name in aptitudes_panel.cost_labels, f"Missing cost label: {name}"
 
     def test_aptitudes_panel_sliders_initialized_to_base(self, aptitudes_panel):
-        """All sliders should start at base value (5)."""
+        """All sliders should start at base value (50)."""
         for name, slider in aptitudes_panel.aptitude_sliders.items():
             value = slider.get_current_value()
-            assert value == 5, f"Slider {name} should be 5, got {value}"
+            assert value == 50, f"Slider {name} should be 50, got {value}"
 
     # === Update Config Tests ===
 
@@ -151,8 +151,8 @@ class TestRaceAptitudesPanel:
         # Start with fresh budget display
         aptitudes_panel.update_budget_display()
 
-        # Increase strength by 3 points
-        aptitudes_panel.aptitude_sliders["strength"].set_current_value(8)
+        # Increase strength by 3 points above base (53 costs 3)
+        aptitudes_panel.aptitude_sliders["strength"].set_current_value(53)
         aptitudes_panel.update_config()
         aptitudes_panel.update_budget_display()
 
@@ -162,15 +162,15 @@ class TestRaceAptitudesPanel:
     def test_budget_display_red_when_over(self, aptitudes_panel, race_config):
         """Budget label should be red when over budget."""
         # Set config to be over budget
-        race_config.aptitude_strength = 10
-        race_config.aptitude_intelligence = 10
-        race_config.aptitude_constitution = 10
-        race_config.aptitude_dexterity = 10
-        race_config.aptitude_tolerance_other_species = 10
-        race_config.aptitude_cooperation = 10
-        race_config.aptitude_happiness = 10
-        race_config.aptitude_population_growth = 10
-        race_config.aptitude_conflict_tolerance = 10
+        race_config.aptitude_strength = 100
+        race_config.aptitude_intelligence = 100
+        race_config.aptitude_constitution = 100
+        race_config.aptitude_dexterity = 100
+        race_config.aptitude_tolerance_other_species = 100
+        race_config.aptitude_cooperation = 100
+        race_config.aptitude_happiness = 100
+        race_config.aptitude_population_growth = 100
+        race_config.aptitude_conflict_tolerance = 100
         race_config.gravity_tolerance = 1.0  # Adds 1023 points
 
         aptitudes_panel.update_budget_display()

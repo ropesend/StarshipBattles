@@ -4,6 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-72 | Strategy Menu Button | Planning | 2026-02-07 | 2026-02-07 |
+| PROJ-71 | Strategy Layer Hotkey System | Plan Approved | 2026-02-07 | 2026-02-07 |
+| PROJ-70 | Fleet Details Panel Enhancement | Planning | 2026-02-07 | 2026-02-07 |
+| PROJ-69 | Multi Build Queue Restructure | Planning | 2026-02-07 | 2026-02-07 |
 | PROJ-68 | Population System & Generic Cargo | Planning | 2026-02-07 | 2026-02-07 |
 | PROJ-67 | Fleet Space Yards | Planning (Awaiting Approval) | 2026-02-07 | 2026-02-07 |
 | PROJ-66 | Race Setup Enhancement | Planning | 2026-02-07 | 2026-02-07 |
@@ -165,7 +169,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-69
+## Next Project ID: PROJ-73
 
 ---
 

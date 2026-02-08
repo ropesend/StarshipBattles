@@ -102,6 +102,15 @@ class StrategyInputHandler:
             else:
                 log_debug("Select a fleet first.")
 
+        elif event.key == pygame.K_t:
+            if self.scene.selected_fleet:
+                # Open transfer dialog for selected fleet and its current location
+                fleet = self.scene.selected_fleet
+                self.scene.ui.open_transfer_dialog(fleet, fleet.location)
+                log_debug(f"Opening Transfer Dialog for Fleet {fleet.id} at {fleet.location}")
+            else:
+                log_debug("Select a fleet first for transfer.")
+
         # Quick Zoom Shortcuts
         elif event.key == pygame.K_g and (event.mod & pygame.KMOD_SHIFT):
             self.scene._camera_nav.zoom_to_galaxy()

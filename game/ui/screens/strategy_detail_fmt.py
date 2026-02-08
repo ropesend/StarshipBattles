@@ -223,6 +223,15 @@ def format_fleet_info(fleet) -> str:
             elif order.type == OrderType.COLONIZE:
                 p_name = order.target.name if hasattr(order.target, 'name') else "Unknown"
                 text += f" {i+1}. COLONIZE {p_name}<br>"
+            elif order.type == OrderType.TRANSFER:
+                if isinstance(order.target, dict):
+                    direction = order.target.get('direction', '?')
+                    cargo_type = order.target.get('cargo_type', '?')
+                    amount = order.target.get('amount', 0)
+                    amt_str = str(amount) if amount > 0 else "All"
+                    text += f" {i+1}. {direction.upper()} {amt_str} {cargo_type}<br>"
+                else:
+                    text += f" {i+1}. TRANSFER {order.target}<br>"
             else:
                 text += f" {i+1}. {order.type.name}<br>"
     else:

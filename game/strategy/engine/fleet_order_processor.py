@@ -272,13 +272,14 @@ class FleetOrderProcessor:
         cargo_type = params.get('cargo_type', '')
         amount = params.get('amount', 0)
         planet_id = params.get('planet_id')
+        species_id = params.get('species_id')
 
         # Resolve planet
         planet = galaxy.get_planet_by_id(planet_id) if planet_id else None
 
         # Validate
         validation = TransferValidator.validate(
-            galaxy, fleet, planet, cargo_type, direction, amount
+            galaxy, fleet, planet, cargo_type, direction, amount, species_id
         )
 
         if not validation.is_valid:
@@ -290,9 +291,9 @@ class FleetOrderProcessor:
         transferred = 0
 
         if direction == "load":
-            transferred = self._execute_load(fleet, planet, cargo_type, amount, empire)
+            transferred = self._execute_load(fleet, planet, cargo_type, amount, empire, species_id)
         else:  # unload
-            transferred = self._execute_unload(fleet, planet, cargo_type, amount, empire)
+            transferred = self._execute_unload(fleet, planet, cargo_type, amount, empire, species_id)
 
         fleet.pop_order()
         log_info(f"FleetOrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
@@ -304,7 +305,8 @@ class FleetOrderProcessor:
         planet,
         cargo_type: str,
         amount: int,
-        empire
+        empire,
+        species_id: str = None
     ) -> int:
         """Execute a load operation (colony → fleet)."""
         from game.strategy.data.planet import SpeciesPopulation
@@ -321,16 +323,24 @@ class FleetOrderProcessor:
             # Cap by available space
             to_load = min(to_load, available_space)
 
-            # Cap by colony population (use first species for now)
-            # TODO: Multi-species support - select which species to load
+            # Cap by colony population
             if planet.populations:
-                pop = planet.populations[0]
+                # If species_id provided, find that specific species
+                if species_id:
+                    pop = next((p for p in planet.populations if p.race_id == species_id), None)
+                    if not pop:
+                        return 0
+                else:
+                    # Legacy/Default: use first species
+                    pop = planet.populations[0]
+
                 to_load = min(to_load, pop.count)
 
                 # Subtract from colony
                 pop.count -= to_load
 
                 # Add to fleet cargo
+                # TODO: If we ever track species in fleet cargo, use species_id here
                 fleet.load_cargo_to_fleet("passengers", to_load)
 
                 return to_load
@@ -343,7 +353,8 @@ class FleetOrderProcessor:
         planet,
         cargo_type: str,
         amount: int,
-        empire
+        empire,
+        species_id: str = None
     ) -> int:
         """Execute an unload operation (fleet → colony)."""
         from game.strategy.data.planet import SpeciesPopulation
@@ -365,8 +376,8 @@ class FleetOrderProcessor:
             actual_unloaded = fleet.unload_cargo_from_fleet("passengers", to_unload)
 
             # Add to colony population
-            # Use empire's race_id to determine which species
-            race_id = empire.race_config.race_id if empire.race_config else "default"
+            # Use provided species_id or empire's race_id
+            race_id = species_id or (empire.race_config.race_id if empire.race_config else "default")
 
             # Find or create SpeciesPopulation for this race
             species_pop = None

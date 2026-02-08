@@ -54,7 +54,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         super().__init__(
             rect,
             manager,
-            window_display_title="Load Race",
+            window_display_title="Load Species",
             object_id="#race_browser_dialog",
             resizable=False
         )
@@ -111,7 +111,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         # "No races" label (hidden by default)
         self.no_races_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, scroll_height // 2, content_width, 30),
-            text="No saved races found. Create one first!",
+            text="No saved species found. Create one first!",
             manager=self.ui_manager,
             container=container
         )
@@ -214,7 +214,7 @@ class RaceBrowserDialog(pygame_gui.elements.UIWindow):
         # Race name label
         name_label = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(x, y + 25, row_width - x - 10, 30),
-            text=race.name or "[Unnamed Race]",
+            text=race.name or "[Unnamed Species]",
             manager=self.ui_manager,
             container=self.scroll_container
         )

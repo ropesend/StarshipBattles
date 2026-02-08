@@ -56,10 +56,11 @@ class StatRow:
         self._visible = visible
 
 class BuilderRightPanel:
-    def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None):
+    def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None, hide_theme_selector=False):
         self.builder = builder
         self.viewmodel = viewmodel or builder.viewmodel
         self.manager = manager
+        self.hide_theme_selector = hide_theme_selector
         self.rect = rect
         self.event_bus = event_bus
 
@@ -138,14 +139,16 @@ class BuilderRightPanel:
         self.name_entry.set_text(self.builder.ship.name)
         y += 40
         
-        # Theme
-        UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
-        theme_options = self.builder.theme_manager.get_available_themes()
-        curr_theme = getattr(self.builder.ship, 'theme_id', 'Federation')
-        if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
-        
-        self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
-        y += 40
+        # Theme (hidden in integrated/strategy mode where theme is locked to empire)
+        self.theme_dropdown = None
+        if not self.hide_theme_selector:
+            UILabel(pygame.Rect(10, y, 60, 25), "Theme:", manager=self.manager, container=self.panel)
+            theme_options = self.builder.theme_manager.get_available_themes()
+            curr_theme = getattr(self.builder.ship, 'theme_id', 'Federation')
+            if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
+
+            self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, pygame.Rect(70, y, 195, 30), manager=self.manager, container=self.panel)
+            y += 40
         
         # Vehicle Type (PROJ-43: via VehicleClassService)
         UILabel(pygame.Rect(10, y, 60, 25), "Type:", manager=self.manager, container=self.panel)
@@ -220,23 +223,23 @@ class BuilderRightPanel:
         self.name_entry.set_text(s.name)
         
         # Preservation of Rects
-        theme_rect = self.theme_dropdown.relative_rect
         type_rect = self.vehicle_type_dropdown.relative_rect
         class_rect = self.class_dropdown.relative_rect
         ai_rect = self.ai_dropdown.relative_rect
-        
+
         # Kill old dropdowns
-        self.theme_dropdown.kill()
         self.vehicle_type_dropdown.kill()
         self.class_dropdown.kill()
         self.ai_dropdown.kill()
-        
-        # 2. Recreate Theme
-        theme_options = self.builder.theme_manager.get_available_themes()
-        curr_theme = getattr(s, 'theme_id', 'Federation')
-        if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
-        
-        self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
+
+        # 2. Recreate Theme (if visible)
+        if self.theme_dropdown:
+            theme_rect = self.theme_dropdown.relative_rect
+            self.theme_dropdown.kill()
+            theme_options = self.builder.theme_manager.get_available_themes()
+            curr_theme = getattr(s, 'theme_id', 'Federation')
+            if theme_options and curr_theme not in theme_options: curr_theme = theme_options[0]
+            self.theme_dropdown = UIDropDownMenu(theme_options, curr_theme, theme_rect, manager=self.manager, container=self.panel)
         
         # 3. Recreate Type (PROJ-43: via VehicleClassService)
         types = self._vehicle_class_service.get_vehicle_types()

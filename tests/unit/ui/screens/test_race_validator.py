@@ -106,16 +106,16 @@ class TestRaceValidatorBudget:
 
     def test_validate_over_budget_returns_error(self, validator, valid_config):
         """Test that over-budget config fails validation."""
-        # Max out all aptitudes to 10 (45 points over base)
-        valid_config.aptitude_strength = 10
-        valid_config.aptitude_intelligence = 10
-        valid_config.aptitude_constitution = 10
-        valid_config.aptitude_dexterity = 10
-        valid_config.aptitude_tolerance_other_species = 10
-        valid_config.aptitude_cooperation = 10
-        valid_config.aptitude_happiness = 10
-        valid_config.aptitude_population_growth = 10
-        valid_config.aptitude_conflict_tolerance = 10
+        # Max out all aptitudes to 100 (massively over budget)
+        valid_config.aptitude_strength = 100
+        valid_config.aptitude_intelligence = 100
+        valid_config.aptitude_constitution = 100
+        valid_config.aptitude_dexterity = 100
+        valid_config.aptitude_tolerance_other_species = 100
+        valid_config.aptitude_cooperation = 100
+        valid_config.aptitude_happiness = 100
+        valid_config.aptitude_population_growth = 100
+        valid_config.aptitude_conflict_tolerance = 100
         # Plus max tolerances
         valid_config.gravity_tolerance = 1.0
         valid_config.temperature_tolerance = 100
@@ -128,7 +128,7 @@ class TestRaceValidatorBudget:
 
     def test_validate_within_budget_passes(self, validator, valid_config):
         """Test that within-budget config passes validation."""
-        # Default aptitudes (all 5) = 0 points
+        # Default aptitudes (all 50) = 0 points
         # Default tolerances = small cost
         result = validator.validate(valid_config)
         assert result.is_valid is True
@@ -205,8 +205,8 @@ class TestRaceValidatorAptitudes:
         return config
 
     def test_validate_aptitude_out_of_range_high(self, validator, valid_config):
-        """Test that aptitude > 10 fails validation."""
-        valid_config.aptitude_strength = 11
+        """Test that aptitude > 100 fails validation."""
+        valid_config.aptitude_strength = 101
 
         result = validator.validate(valid_config)
         assert result.is_valid is False
@@ -222,9 +222,10 @@ class TestRaceValidatorAptitudes:
         assert "aptitude" in result.message.lower() or "intelligence" in result.message.lower()
 
     def test_validate_aptitude_valid_range(self, validator, valid_config):
-        """Test that valid aptitude ranges pass."""
-        valid_config.aptitude_strength = 1
-        valid_config.aptitude_intelligence = 10
+        """Test that valid aptitude ranges pass (within budget)."""
+        valid_config.aptitude_strength = 1     # refunds 49 points
+        valid_config.aptitude_intelligence = 60  # costs 11 points
+        # Net aptitude cost: 11 - 49 = -38. Tolerance ~41. Total ~3. Within 100.
 
         result = validator.validate(valid_config)
         assert result.is_valid is True
@@ -260,15 +261,15 @@ class TestRaceValidatorNewFields:
         config.water_ideal = 0.6
         config.water_tolerance = 0.2
         # Aptitudes (within budget)
-        config.aptitude_strength = 5
-        config.aptitude_intelligence = 6
-        config.aptitude_constitution = 5
-        config.aptitude_dexterity = 5
-        config.aptitude_tolerance_other_species = 6
-        config.aptitude_cooperation = 7
-        config.aptitude_happiness = 5
-        config.aptitude_population_growth = 5
-        config.aptitude_conflict_tolerance = 4
+        config.aptitude_strength = 50
+        config.aptitude_intelligence = 51
+        config.aptitude_constitution = 50
+        config.aptitude_dexterity = 50
+        config.aptitude_tolerance_other_species = 51
+        config.aptitude_cooperation = 52
+        config.aptitude_happiness = 50
+        config.aptitude_population_growth = 50
+        config.aptitude_conflict_tolerance = 49
 
         result = validator.validate(config)
         assert result.is_valid is True
@@ -282,15 +283,15 @@ class TestRaceValidatorNewFields:
         config.theme_id = "Federation"
 
         # Over budget - should reference Aptitudes tab
-        config.aptitude_strength = 10
-        config.aptitude_intelligence = 10
-        config.aptitude_constitution = 10
-        config.aptitude_dexterity = 10
-        config.aptitude_tolerance_other_species = 10
-        config.aptitude_cooperation = 10
-        config.aptitude_happiness = 10
-        config.aptitude_population_growth = 10
-        config.aptitude_conflict_tolerance = 10
+        config.aptitude_strength = 100
+        config.aptitude_intelligence = 100
+        config.aptitude_constitution = 100
+        config.aptitude_dexterity = 100
+        config.aptitude_tolerance_other_species = 100
+        config.aptitude_cooperation = 100
+        config.aptitude_happiness = 100
+        config.aptitude_population_growth = 100
+        config.aptitude_conflict_tolerance = 100
         config.gravity_tolerance = 1.0
         config.temperature_tolerance = 100
 

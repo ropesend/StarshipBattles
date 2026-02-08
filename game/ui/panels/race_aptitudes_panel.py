@@ -131,7 +131,7 @@ class RaceAptitudesPanel:
         """Create aptitude slider controls."""
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Aptitudes (1-10, base 5):",
+            text="Aptitudes (1-100, base 50):",
             manager=self.ui_manager,
             container=self.panel,
             object_id="#section_header"
@@ -151,11 +151,11 @@ class RaceAptitudesPanel:
                 container=self.panel
             )
 
-            # Slider (1-10, start at current or base)
+            # Slider (1-100, start at current or base)
             slider = pygame_gui.elements.UIHorizontalSlider(
                 relative_rect=pygame.Rect(155, y, width - 280, 22),
                 start_value=current_value,
-                value_range=(1, 10),
+                value_range=(1, 100),
                 manager=self.ui_manager,
                 container=self.panel,
                 click_increment=1
@@ -172,7 +172,7 @@ class RaceAptitudesPanel:
             self.aptitude_labels[apt_name] = value_label
 
             # Cost label
-            cost = current_value - self.point_budget.APTITUDE_BASE
+            cost = self.point_budget._single_aptitude_cost(current_value)
             cost_text = self._format_cost(cost)
             cost_label = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(width - 75, y, 55, 22),
@@ -274,7 +274,7 @@ class RaceAptitudesPanel:
 
             # Update cost label
             if apt_name in self.cost_labels:
-                cost = value - self.point_budget.APTITUDE_BASE
+                cost = self.point_budget._single_aptitude_cost(value)
                 self.cost_labels[apt_name].set_text(self._format_cost(cost))
 
     def update_budget_display(self):

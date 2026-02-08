@@ -131,10 +131,36 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         )
         y_offset += 50
 
+        # Star system count label, slider, and value display
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, y_offset, 150, 25),
+            text="Star Systems:",
+            manager=self.ui_manager,
+            container=container
+        )
+        y_offset += 25
+
+        self.system_count = 50  # Default
+        self.system_count_slider = pygame_gui.elements.UIHorizontalSlider(
+            relative_rect=pygame.Rect(10, y_offset, content_width - 60, 30),
+            start_value=self.system_count,
+            value_range=(25, 150),
+            manager=self.ui_manager,
+            container=container,
+            click_increment=5
+        )
+        self.system_count_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(content_width - 40, y_offset, 50, 30),
+            text=str(self.system_count),
+            manager=self.ui_manager,
+            container=container
+        )
+        y_offset += 45
+
         # Empire/Race section header
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y_offset, content_width, 25),
-            text="Player Races:",
+            text="Player Species:",
             manager=self.ui_manager,
             container=container
         )
@@ -239,7 +265,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             # Race preview label (shows selected race name or instruction)
             race_preview = pygame_gui.elements.UILabel(
                 relative_rect=pygame.Rect(90, race_row_y, 280, 30),
-                text="No race selected (using defaults)",
+                text="No species selected (using defaults)",
                 manager=self.ui_manager,
                 container=container
             )
@@ -248,7 +274,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             # Load Race button
             load_btn = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(380, race_row_y, 100, 30),
-                text="Load Race",
+                text="Load Species",
                 manager=self.ui_manager,
                 container=container
             )
@@ -257,7 +283,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             # Setup Race button
             setup_btn = pygame_gui.elements.UIButton(
                 relative_rect=pygame.Rect(490, race_row_y, 110, 30),
-                text="Setup Race",
+                text="Setup Species",
                 manager=self.ui_manager,
                 container=container
             )
@@ -296,7 +322,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         if race:
             # Race selected - show faction name (or race name fallback)
             display_name = race.faction_name if race.faction_name else race.name
-            self.race_preview_labels[player_index].set_text(f"Race: {display_name}")
+            self.race_preview_labels[player_index].set_text(f"Species: {display_name}")
             # Show government and society type if available
             details = []
             if race.government_type:
@@ -311,7 +337,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             self.empire_name_inputs[player_index].hide()
         else:
             # No race - show default state
-            self.race_preview_labels[player_index].set_text("No race selected (using defaults)")
+            self.race_preview_labels[player_index].set_text("No species selected (using defaults)")
             default_theme = THEME_DEFAULTS[player_index][0]
             self.theme_labels[player_index].set_text(f"Theme: {default_theme}")
             # Show name input for manual entry
@@ -333,6 +359,12 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 handled = True
             elif event.ui_element == self.galaxy_type_dropdown:
                 self.galaxy_type = event.text
+                handled = True
+
+        elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+            if event.ui_element == self.system_count_slider:
+                self.system_count = int(event.value)
+                self.system_count_label.set_text(str(self.system_count))
                 handled = True
 
         elif event.type == pygame_gui.UI_BUTTON_PRESSED:
@@ -394,8 +426,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         from game.ui.screens.race_setup_screen import RaceSetupScreen
 
         # Race setup is larger - center it on screen
-        setup_width = 1400
-        setup_height = 900
+        setup_width = 1800
+        setup_height = 1200
 
         # Center on screen (use reasonable defaults)
         screen_width = 1920  # Fallback
@@ -470,7 +502,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 self.player_count,
                 empire_names,
                 self.player_races[:self.player_count],
-                self.galaxy_type
+                self.galaxy_type,
+                self.system_count
             )
         except ValueError as e:
             self.error_label.set_text(str(e))
@@ -526,7 +559,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
     def build_game_config(save_name: str, player_count: int,
                           empire_names: List[str],
                           race_configs: Optional[List[Optional[RaceConfig]]] = None,
-                          galaxy_type: str = "spiral") -> GameConfig:
+                          galaxy_type: str = "spiral",
+                          system_count: int = 50) -> GameConfig:
         """
         Build a GameConfig from setup screen values.
 
@@ -536,6 +570,7 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
             empire_names: List of empire names (may include empty strings)
             race_configs: Optional list of RaceConfig for each player (None = use defaults)
             galaxy_type: Galaxy layout type (default: "spiral")
+            system_count: Number of star systems (25-150, default: 50)
 
         Returns:
             Configured GameConfig
@@ -586,5 +621,6 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
         return GameConfig(
             save_name=save_name,
             players=players,
-            galaxy_type=galaxy_type
+            galaxy_type=galaxy_type,
+            system_count=system_count
         )

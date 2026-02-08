@@ -83,7 +83,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         super().__init__(
             rect,
             manager,
-            window_display_title="Race Setup",
+            window_display_title="Species Setup",
             object_id="#race_setup_window",
             resizable=False
         )

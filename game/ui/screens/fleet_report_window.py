@@ -369,7 +369,8 @@ class FleetReportWindow(UIWindow):
         self.ship_detail_panel = ShipDetailPanel(
             manager=self.ui_manager,
             rect=detail_rect,
-            container=self.detail_panel
+            container=self.detail_panel,
+            on_remove_ship=self._on_remove_ship
         )
 
     def _rebuild_headers(self):
@@ -766,6 +767,15 @@ class FleetReportWindow(UIWindow):
     def _update_detail_panel(self):
         """Update the detail panel with selected ship info."""
         self.ship_detail_panel.update_ship(self.selected_ship)
+
+    def _on_remove_ship(self, ship):
+        """Handle remove ship from fleet."""
+        if self.fleet.remove_ship(ship):
+            self.selected_ship = None
+            self.view_model = FleetListViewModel(self.fleet.ships)
+            self._update_detail_panel()
+            self.refresh_list()
+            self._update_sidebar()
 
     def update(self, time_delta: float):
         """Update UI elements and handle toggle button clicks."""

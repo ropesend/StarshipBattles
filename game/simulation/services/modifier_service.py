@@ -101,7 +101,8 @@ class ModifierService:
         """
         Returns a list of modifier IDs that are mandatory for this component.
 
-        PROJ-42: Simplified to instance-only method.
+        All applicable modifiers are mandatory - they are auto-applied at their
+        default value and cannot be toggled off. Users can only adjust values.
 
         Args:
             component: The component to check
@@ -109,59 +110,10 @@ class ModifierService:
         Returns:
             List of mandatory modifier IDs for this component
         """
-        check_allowed = lambda mod_id: self.is_modifier_allowed(mod_id, component)
-
-        mandatory = ['simple_size_mount']  # Everyone gets size
-
-        # Hardened Mount: For all components except Armor
-        if check_allowed('hardened_mount'):
-            mandatory.append('hardened_mount')
-
-        # Efficiency Mount: For any component with resource consumption
-        if check_allowed('efficiency_mount'):
-            mandatory.append('efficiency_mount')
-
-        # Use ability-based weapon detection
-        is_weapon = component.has_ability('WeaponAbility')
-        is_seeker = component.has_ability('SeekerWeaponAbility')
-
-        if is_weapon:
-            # Range Mount: For Projectile/Beam
-            if check_allowed('range_mount'):
-                mandatory.append('range_mount')
-
-            # Precision Targeting: For BeamWeapon
-            if component.has_ability('BeamWeaponAbility') and check_allowed('precision_mount'):
-                mandatory.append('precision_mount')
-
-            # Facing: For all weapons
-            if check_allowed('facing'):
-                mandatory.append('facing')
-
-            # Turret: For all weapons
-            if check_allowed('turret_mount'):
-                mandatory.append('turret_mount')
-
-            # Rapid Fire: For all weapons
-            if check_allowed('rapid_fire'):
-                mandatory.append('rapid_fire')
-
-        if is_seeker:
-            # Seeker specific variants
-            if check_allowed('seeker_endurance'):
-                mandatory.append('seeker_endurance')
-            if check_allowed('seeker_damage'):
-                mandatory.append('seeker_damage')
-            if check_allowed('seeker_armored'):
-                mandatory.append('seeker_armored')
-            if check_allowed('seeker_stealth'):
-                mandatory.append('seeker_stealth')
-
-        # Automation: For any component with CrewRequired ability
-        if 'CrewRequired' in component.data.get('abilities', {}) or 'CrewRequired' in component.abilities:
-            if check_allowed('automation'):
-                mandatory.append('automation')
-
+        mandatory = []
+        for mod_id in self._modifiers:
+            if self.is_modifier_allowed(mod_id, component):
+                mandatory.append(mod_id)
         return mandatory
 
     def is_modifier_mandatory(self, mod_id: str, component) -> bool:

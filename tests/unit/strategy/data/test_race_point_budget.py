@@ -19,54 +19,54 @@ class TestRacePointBudget:
 
     @pytest.fixture
     def default_config(self):
-        """Create default race config (all aptitudes at 5, minimal tolerance)."""
+        """Create default race config (all aptitudes at 50, minimal tolerance)."""
         return RaceConfig()
 
     # === Aptitude Cost Tests ===
 
     def test_default_aptitudes_cost_zero(self, budget, default_config):
-        """All aptitudes at base (5) should cost 0 points."""
+        """All aptitudes at base (50) should cost 0 points."""
         cost = budget.calculate_aptitude_cost(default_config)
         assert cost == 0
 
     def test_aptitude_cost_one_above_base(self, budget, default_config):
-        """One aptitude at 6 (1 above base) should cost 1 point."""
-        default_config.aptitude_strength = 6
+        """One aptitude at 51 (1 above base) should cost 1 point."""
+        default_config.aptitude_strength = 51
         cost = budget.calculate_aptitude_cost(default_config)
         assert cost == 1
 
     def test_aptitude_cost_one_below_base(self, budget, default_config):
-        """One aptitude at 4 (1 below base) should REFUND 1 point (negative cost)."""
-        default_config.aptitude_strength = 4
+        """One aptitude at 49 (1 below base) should REFUND 1 point (negative cost)."""
+        default_config.aptitude_strength = 49
         cost = budget.calculate_aptitude_cost(default_config)
         assert cost == -1
 
     def test_aptitude_cost_multiple_stats_above(self, budget, default_config):
-        """Three stats at 8 (3 above base each) should cost 9 points."""
-        default_config.aptitude_strength = 8
-        default_config.aptitude_intelligence = 8
-        default_config.aptitude_dexterity = 8
+        """Three stats at 53 (3 above base each) should cost 9 points."""
+        default_config.aptitude_strength = 53
+        default_config.aptitude_intelligence = 53
+        default_config.aptitude_dexterity = 53
         cost = budget.calculate_aptitude_cost(default_config)
         assert cost == 9  # 3 + 3 + 3
 
     def test_aptitude_cost_mixed_above_and_below(self, budget, default_config):
         """Stats above and below base should net out."""
-        default_config.aptitude_strength = 8  # +3
-        default_config.aptitude_intelligence = 2  # -3
+        default_config.aptitude_strength = 53  # +3
+        default_config.aptitude_intelligence = 47  # -3
         cost = budget.calculate_aptitude_cost(default_config)
         assert cost == 0  # Nets to 0
 
     def test_aptitude_cost_max_single_stat(self, budget, default_config):
-        """One stat at max (10) should cost 5 points."""
-        default_config.aptitude_strength = 10
+        """One stat at max (100) should cost 440 points (exponential above 50)."""
+        default_config.aptitude_strength = 100
         cost = budget.calculate_aptitude_cost(default_config)
-        assert cost == 5
+        assert cost == 440
 
     def test_aptitude_cost_min_single_stat(self, budget, default_config):
-        """One stat at min (1) should refund 4 points."""
+        """One stat at min (1) should refund 49 points."""
         default_config.aptitude_strength = 1
         cost = budget.calculate_aptitude_cost(default_config)
-        assert cost == -4
+        assert cost == -49
 
     # === Tolerance Cost Tests ===
 
@@ -195,8 +195,8 @@ class TestRacePointBudget:
 
     def test_total_cost_combines_aptitudes_and_tolerance(self, budget, default_config):
         """Total cost should sum aptitude and tolerance costs."""
-        # Aptitude: strength 8 = +3
-        default_config.aptitude_strength = 8
+        # Aptitude: strength 53 = +3
+        default_config.aptitude_strength = 53
 
         # Tolerance: gravity 0.2 = 3 points
         default_config.gravity_tolerance = 0.2
@@ -227,15 +227,15 @@ class TestRacePointBudget:
     def test_over_budget_detection(self, budget, default_config):
         """Config with max everything should be over budget."""
         # Max all aptitudes
-        default_config.aptitude_strength = 10
-        default_config.aptitude_intelligence = 10
-        default_config.aptitude_constitution = 10
-        default_config.aptitude_dexterity = 10
-        default_config.aptitude_tolerance_other_species = 10
-        default_config.aptitude_cooperation = 10
-        default_config.aptitude_happiness = 10
-        default_config.aptitude_population_growth = 10
-        default_config.aptitude_conflict_tolerance = 10
+        default_config.aptitude_strength = 100
+        default_config.aptitude_intelligence = 100
+        default_config.aptitude_constitution = 100
+        default_config.aptitude_dexterity = 100
+        default_config.aptitude_tolerance_other_species = 100
+        default_config.aptitude_cooperation = 100
+        default_config.aptitude_happiness = 100
+        default_config.aptitude_population_growth = 100
+        default_config.aptitude_conflict_tolerance = 100
 
         # Max all tolerances
         default_config.gravity_tolerance = 1.0
@@ -249,7 +249,7 @@ class TestRacePointBudget:
 
     def test_remaining_points_calculation(self, budget, default_config):
         """Remaining points should be budget minus cost."""
-        default_config.aptitude_strength = 8  # +3 cost
+        default_config.aptitude_strength = 53  # +3 cost
         default_config.gravity_tolerance = 0.0
         default_config.temperature_tolerance = 0.0
         default_config.water_tolerance = 0.0
@@ -262,7 +262,7 @@ class TestRacePointBudget:
 
     def test_remaining_points_can_be_negative(self, budget, default_config):
         """Remaining points can be negative when over budget."""
-        default_config.aptitude_strength = 10  # +5
+        default_config.aptitude_strength = 100  # +440
         default_config.gravity_tolerance = 1.0  # 10 steps = 1023 points
         default_config.temperature_tolerance = 0.0
         default_config.water_tolerance = 0.0
@@ -298,8 +298,8 @@ class TestRacePointBudgetCostBreakdown:
     def test_get_aptitude_breakdown(self, budget):
         """Should return per-aptitude costs."""
         config = RaceConfig()
-        config.aptitude_strength = 8  # +3
-        config.aptitude_intelligence = 3  # -2
+        config.aptitude_strength = 53  # +3
+        config.aptitude_intelligence = 48  # -2
 
         breakdown = budget.get_aptitude_breakdown(config)
 

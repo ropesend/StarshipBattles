@@ -86,12 +86,25 @@ class RaceEnvironmentPanel:
         self.atmosphere_sliders: Dict[str, pygame_gui.elements.UIHorizontalSlider] = {}
         self.atmosphere_labels: Dict[str, pygame_gui.elements.UILabel] = {}
 
+        self.points_label: Optional[pygame_gui.elements.UILabel] = None
+
         self._create_content()
 
     def _create_content(self):
         """Create all panel content."""
         panel_width = self.panel.get_relative_rect().width - 20
         y = 5
+
+        # Points display (BUG-58)
+        self.points_label = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, y, panel_width, 25),
+            text="",
+            manager=self.ui_manager,
+            container=self.panel,
+            object_id="#points_display"
+        )
+        self._update_points_display()
+        y += 30
 
         # Section 0: Homeworld Type (preset selector)
         y = self._create_homeworld_section(y, panel_width)
@@ -445,6 +458,22 @@ class RaceEnvironmentPanel:
         """Format water tolerance value as ± percentage."""
         return f"±{value * 100:.0f}%"
 
+    def _update_points_display(self):
+        """Update the racial points display label (BUG-58)."""
+        if not getattr(self, 'points_label', None):
+            return
+        try:
+            from game.strategy.data.race_point_budget import RacePointBudget
+            budget = RacePointBudget()
+            remaining = budget.get_remaining_points(self.race_config)
+            total = budget.total_budget
+            tolerance_cost = budget.calculate_tolerance_cost(self.race_config)
+            self.points_label.set_text(
+                f"Points: {remaining} / {total} remaining  |  Environment cost: {tolerance_cost}"
+            )
+        except Exception:
+            self.points_label.set_text("")
+
     def update_config(self):
         """Update race_config from slider values."""
         if self.gravity_ideal_slider:
@@ -499,6 +528,8 @@ class RaceEnvironmentPanel:
             if gas in self.atmosphere_labels:
                 val = slider.get_current_value()
                 self.atmosphere_labels[gas].set_text(self._format_atmosphere(val))
+
+        self._update_points_display()
 
     def set_from_config(self):
         """Set slider values from race_config (for loading saved races)."""

@@ -196,7 +196,8 @@ class DesignWorkshopScreen:
                 pygame.Rect(self.width - self.right_panel_width, 0,
                             self.right_panel_width, self.height - self.bottom_bar_height),
                 event_bus=self.event_bus,
-                viewmodel=self.viewmodel
+                viewmodel=self.viewmodel,
+                hide_theme_selector=self.context.is_integrated()
             )
             
             # Modifier Panel (Bottom Spanning Left+Layer)

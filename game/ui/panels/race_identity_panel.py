@@ -99,7 +99,7 @@ class RaceIdentityPanel:
         """Create race identity controls."""
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(10, y, 200, 25),
-            text="Race Identity:",
+            text="Species Identity:",
             manager=self.ui_manager,
             container=self.panel,
             object_id="#section_header"
@@ -109,7 +109,7 @@ class RaceIdentityPanel:
         # Race Name
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(20, y, 120, 22),
-            text="Race Name:",
+            text="Species Name:",
             manager=self.ui_manager,
             container=self.panel
         )
@@ -282,7 +282,7 @@ class RaceIdentityPanel:
         # Help text
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(20, y, width - 40, 20),
-            text="Auto-generated from Race Name + Government Type. Edit to override.",
+            text="Auto-generated from Species Name + Government Type. Edit to override.",
             manager=self.ui_manager,
             container=self.panel,
             object_id="#help_text"
