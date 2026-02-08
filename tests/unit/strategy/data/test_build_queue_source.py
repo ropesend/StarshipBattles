@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_build_queues_at_hex,
+    collect_all_build_queues_for_empire,
     _facility_is_shipyard,
 )
 from game.strategy.data.planet import Planet, PlanetaryFacility
@@ -325,3 +326,123 @@ class TestCollectBuildQueuesAtHex:
         assert len(sources) == 2  # base + 1 shipyard
         assert sources[0].queue_id == "planet_1_base"
         assert sources[1].queue_id == "yard-001"
+
+
+# ---------------------------------------------------------------------------
+# Tests: collect_all_build_queues_for_empire
+# ---------------------------------------------------------------------------
+
+class TestCollectAllBuildQueuesForEmpire:
+    """Test collect_all_build_queues_for_empire() function."""
+
+    def test_collect_all_build_queues_empty_empire(self):
+        """Empty empire with no colonies or fleets returns empty list."""
+        empire = _make_empire(empire_id=0, fleets=[])
+        empire.colonies = []
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        assert sources == []
+
+    def test_collect_all_build_queues_with_planet_base_queue(self):
+        """Planet colony gets a base queue (complexes only)."""
+        planet = _make_planet(name="Colony Alpha", planet_id=42, owner_id=0)
+        empire = _make_empire(empire_id=0)
+        empire.colonies = [planet]
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        assert len(sources) == 1
+        assert sources[0].queue_id == "planet_42_base"
+        assert sources[0].display_name == "Colony Alpha - Base"
+        assert sources[0].owner_entity is planet
+        assert sources[0].construction_queue is planet.construction_queue
+        assert sources[0].can_build_ships is False
+        assert sources[0].can_build_complexes is True
+        assert sources[0].context_type == "planet"
+
+    def test_collect_all_build_queues_with_shipyard_facility(self):
+        """Planet with shipyard facility returns base + shipyard sources."""
+        planet = _make_planet(name="Forge World", planet_id=7, owner_id=0)
+        yard = _make_shipyard_facility(instance_id="yard-100")
+        planet.facilities.append(yard)
+        empire = _make_empire(empire_id=0)
+        empire.colonies = [planet]
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        assert len(sources) == 2
+        # Base queue
+        assert sources[0].queue_id == "planet_7_base"
+        assert sources[0].can_build_ships is False
+        # Shipyard queue
+        assert sources[1].queue_id == "yard-100"
+        assert sources[1].display_name == "Forge World - Shipyard 1"
+        assert sources[1].can_build_ships is True
+        assert sources[1].can_build_complexes is True
+        assert sources[1].construction_queue is yard.construction_queue
+
+    def test_collect_all_build_queues_with_fleet_space_yard(self):
+        """Fleet with space yard returns a fleet source."""
+        fleet = _make_fleet_with_yard(fleet_id=555, owner_id=0, location=HexCoord(3, 3))
+        empire = _make_empire(empire_id=0, fleets=[fleet])
+        empire.colonies = []
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        assert len(sources) == 1
+        assert sources[0].queue_id == "fleet_555"
+        assert "Space Yard" in sources[0].display_name
+        assert sources[0].owner_entity is fleet
+        assert sources[0].construction_queue is fleet.construction_queue
+        assert sources[0].can_build_ships is True
+        assert sources[0].context_type == "fleet"
+
+    def test_collect_all_build_queues_mixed_sources(self):
+        """Multiple planets and fleets produce correct combined result."""
+        planet1 = _make_planet(name="Alpha", planet_id=1, owner_id=0)
+        planet2 = _make_planet(name="Beta", planet_id=2, owner_id=0)
+        planet2.facilities.append(_make_shipyard_facility(instance_id="yard-a"))
+        planet2.facilities.append(_make_shipyard_facility(instance_id="yard-b"))
+
+        fleet1 = _make_fleet_with_yard(fleet_id=300, owner_id=0, location=HexCoord(1, 1))
+        fleet2 = _make_fleet_without_yard(fleet_id=400, owner_id=0, location=HexCoord(2, 2))
+
+        empire = _make_empire(empire_id=0, fleets=[fleet1, fleet2])
+        empire.colonies = [planet1, planet2]
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        # planet1 base + planet2 base + 2 shipyards + 1 fleet = 5
+        assert len(sources) == 5
+
+        queue_ids = [s.queue_id for s in sources]
+        assert "planet_1_base" in queue_ids
+        assert "planet_2_base" in queue_ids
+        assert "yard-a" in queue_ids
+        assert "yard-b" in queue_ids
+        assert "fleet_300" in queue_ids
+        # Fleet without yard should NOT appear
+        assert "fleet_400" not in queue_ids
+
+    def test_collect_all_build_queues_non_operational_shipyard_excluded(self):
+        """Non-operational shipyard on colony is excluded."""
+        planet = _make_planet(name="Damaged", planet_id=9, owner_id=0)
+        planet.facilities.append(_make_shipyard_facility(instance_id="broken-yard", operational=False))
+        empire = _make_empire(empire_id=0)
+        empire.colonies = [planet]
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        assert len(sources) == 1  # Only base queue
+        assert sources[0].queue_id == "planet_9_base"
+
+    def test_collect_all_build_queues_fleet_without_yard_excluded(self):
+        """Fleet without space yard is not included."""
+        fleet = _make_fleet_without_yard(fleet_id=999, owner_id=0, location=HexCoord(0, 0))
+        empire = _make_empire(empire_id=0, fleets=[fleet])
+        empire.colonies = []
+
+        sources = collect_all_build_queues_for_empire(empire)
+
+        assert sources == []

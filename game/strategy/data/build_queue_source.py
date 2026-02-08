@@ -134,3 +134,65 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
         ))
 
     return sources
+
+
+def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
+    """Gather all build queue sources across the entire empire.
+
+    Iterates all colonies and fleets owned by the empire to produce a
+    comprehensive list of every active construction queue. This includes:
+    - One base queue per colony (complexes only)
+    - One queue per operational shipyard facility on each colony
+    - One queue per fleet with a space yard
+
+    Args:
+        empire: Empire instance whose queues to collect.
+
+    Returns:
+        List of BuildQueueSource objects for the whole empire.
+    """
+    sources: List[BuildQueueSource] = []
+
+    # Planet queues
+    for planet in empire.colonies:
+        # Base queue (complexes only)
+        sources.append(BuildQueueSource(
+            queue_id=f"planet_{planet.id}_base",
+            display_name=f"{planet.name} - Base",
+            owner_entity=planet,
+            construction_queue=planet.construction_queue,
+            can_build_ships=False,
+            can_build_complexes=True,
+            context_type="planet",
+        ))
+
+        # Shipyard facility queues
+        shipyard_index = 0
+        for facility in planet.facilities:
+            if _facility_is_shipyard(facility):
+                shipyard_index += 1
+                sources.append(BuildQueueSource(
+                    queue_id=facility.instance_id,
+                    display_name=f"{planet.name} - Shipyard {shipyard_index}",
+                    owner_entity=planet,
+                    construction_queue=facility.construction_queue,
+                    can_build_ships=True,
+                    can_build_complexes=True,
+                    context_type="planet",
+                ))
+
+    # Fleet queues
+    for fleet in empire.fleets:
+        if not fleet.has_space_shipyard:
+            continue
+        sources.append(BuildQueueSource(
+            queue_id=f"fleet_{fleet.id}",
+            display_name=f"{fleet.name} - Space Yard",
+            owner_entity=fleet,
+            construction_queue=fleet.construction_queue,
+            can_build_ships=True,
+            can_build_complexes=True,
+            context_type="fleet",
+        ))
+
+    return sources
