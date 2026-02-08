@@ -134,6 +134,14 @@
 
 ---
 
+- [ ] **PROJ-71: Strategy Layer Hotkey System**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-71/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-71/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
