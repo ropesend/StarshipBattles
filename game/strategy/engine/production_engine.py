@@ -5,6 +5,7 @@ PROJ-12 Phase 3: Extracted from TurnEngine to decompose the god class.
 PROJ-20: Standardized on dict format only.
 PROJ-67 Phase 3: Added fleet production processing.
 PROJ-69 Phase 2: Parallel facility queue processing (multiple shipyards).
+PROJ-75 Phase 4: Per-tick resource consumption for construction.
 
 Responsibilities:
 - Process base construction queue (complexes only) for all colonies
@@ -12,6 +13,7 @@ Responsibilities:
 - Process construction queues for fleets with space yards
 - Spawn completed ships as new fleets (planet) or add to fleet (fleet yards)
 - Spawn completed complexes as planetary facilities
+- Per-tick resource consumption from empire pool during construction
 """
 
 import uuid
@@ -41,11 +43,102 @@ class ProductionEngine:
     - design_id: str - The design identifier
     - type: str - "ship", "fighter", "satellite", or "complex" (defaults to "ship")
     - turns_remaining: int - Turns until completion
+
+    PROJ-75 Phase 4: Queue items may also have cost tracking fields:
+    - total_cost: Dict[str, float] - Total resource cost for the build
+    - cost_per_tick: Dict[str, float] - Per-tick resource cost
+    - resources_consumed: Dict[str, float] - Cumulative resources consumed
+    - ticks_in_current_turn: int - Tick counter within current turn
     """
 
     def __init__(self):
         """Initialize the production engine."""
         pass
+
+    # --- Resource Cost Methods (PROJ-75 Phase 4) ---
+
+    def _calculate_design_cost(self, design_data: Dict) -> Dict[str, float]:
+        """Calculate total resource cost from all components in a design.
+
+        Iterates through all layers and components, summing their resource_cost
+        fields. The result is cached as 'total_resource_cost' in design_data
+        to avoid recalculation.
+
+        Args:
+            design_data: The design data dict containing layers with components.
+
+        Returns:
+            Dict mapping resource type to total cost amount.
+        """
+        if 'total_resource_cost' in design_data:
+            return design_data['total_resource_cost']
+
+        total_cost: Dict[str, float] = {}
+        for layer in design_data.get('layers', {}).values():
+            for component in layer.get('components', []):
+                comp_cost = component.get('resource_cost', {})
+                for res, amount in comp_cost.items():
+                    total_cost[res] = total_cost.get(res, 0) + amount
+
+        design_data['total_resource_cost'] = total_cost
+        return total_cost
+
+    def process_construction_tick(self, tick: int, empires: List, galaxy) -> None:
+        """Process per-tick resource consumption for all construction queues.
+
+        PROJ-75 Phase 4: Called each subturn tick (1-100) to deduct resources
+        from empire pools for active construction. Items without cost tracking
+        fields (legacy items) are skipped.
+
+        Args:
+            tick: Current tick number (1-100).
+            empires: List of Empire objects to process.
+            galaxy: Galaxy object (unused, reserved for future use).
+        """
+        for empire in empires:
+            for colony in empire.colonies:
+                # Base queue (complexes)
+                self._process_queue_tick(colony.construction_queue, empire)
+
+                # Facility queues (shipyards)
+                for facility in colony.facilities:
+                    if hasattr(facility, 'construction_queue') and facility.construction_queue:
+                        self._process_queue_tick(facility.construction_queue, empire)
+
+    def _process_queue_tick(self, queue: List[Dict], empire) -> None:
+        """Process one tick of resource consumption for a single queue.
+
+        Only the first item in the queue is processed. If the empire lacks
+        sufficient resources, the tick is skipped (production paused).
+
+        Args:
+            queue: Construction queue (list of queue item dicts).
+            empire: Empire that owns the queue.
+        """
+        if not queue:
+            return
+
+        item = queue[0]
+        cost_per_tick = item.get('cost_per_tick')
+
+        # Skip legacy items without cost tracking
+        if cost_per_tick is None:
+            return
+
+        # Check if empire has all resources for this tick
+        if not empire.has_resources(cost_per_tick):
+            return  # Paused - insufficient resources
+
+        # Consume resources
+        for res, amount in cost_per_tick.items():
+            empire.consume_resources(res, amount)
+            item['resources_consumed'][res] = item.get('resources_consumed', {}).get(res, 0) + amount
+
+        # Track tick progress
+        item['ticks_in_current_turn'] = item.get('ticks_in_current_turn', 0) + 1
+        if item['ticks_in_current_turn'] >= 100:
+            item['ticks_in_current_turn'] = 0
+            item['turns_remaining'] -= 1
 
     def process_production(self, empires: List, galaxy=None, save_path: Optional[str] = None) -> None:
         """

@@ -119,14 +119,36 @@ class IProductionEngine(ABC):
     Implementations handle:
     - Construction queue processing for colonies
     - Construction queue processing for fleets with space yards
+    - Per-tick resource consumption during construction (PROJ-75)
     - Ship spawning
     - Complex spawning
 
     Example usage:
         engine = ProductionEngine()  # or MockProductionEngine for tests
+        engine.process_construction_tick(tick, empires, galaxy)
         engine.process_production(empires, galaxy, save_path)
         engine.process_fleet_production(empires, galaxy, save_path)
     """
+
+    @abstractmethod
+    def process_construction_tick(
+        self,
+        tick: int,
+        empires: List,
+        galaxy: Any
+    ) -> None:
+        """
+        Process per-tick resource consumption for all construction queues.
+
+        PROJ-75 Phase 4: Called each subturn tick (1-100) to deduct resources
+        from empire pools for active construction.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+            galaxy: Galaxy object
+        """
+        pass
 
     @abstractmethod
     def process_production(

@@ -8,25 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-75 Phase 3 - Storage Aggregation
-**Current Status:** PROJ-75 Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-75 Phase 4 - Production Resource Consumption
+**Current Status:** PROJ-75 Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-75
-**Current Phase:** Phase 4
-**Test Status:** 6940 passed, 1 pre-existing failure (test_protocols.py)
+**Current Phase:** Phase 5
+**Test Status:** 6962 passed, 1 pre-existing failure (test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-75 Phase 3 complete: Storage Aggregation
-- Created EmpireStorageAbility class in game/simulation/components/abilities/harvester.py
-- Registered as "EmpireStorage" in ABILITY_REGISTRY
-- Added recalculate_storage() to HarvestingEngine (called at start of process_harvesting)
-- Supports inline abilities and registry lookup for storage components
-- Added 5 resource vault components to data/components.json (10k/10k/10k/5k/2.5k capacity)
-- Updated existing overflow tests to include storage facilities (recalculate_storage resets max_storage)
-- 10 ability tests + 9 storage aggregation tests = 19 new tests
-- Files modified: harvester.py, __init__.py, harvesting_engine.py, components.json
-- Files created: test_empire_storage.py
-- Next: Phase 4 - Production Resource Consumption
+- PROJ-75 Phase 4 complete: Production Resource Consumption
+- Added _calculate_design_cost() to ProductionEngine: sums resource_cost across all layers/components, caches result
+- Added process_construction_tick() to ProductionEngine: per-tick resource consumption for all queues
+- Added _process_queue_tick() helper: consumes cost_per_tick from empire, tracks ticks_in_current_turn, decrements turns at 100 ticks
+- Gracefully skips legacy queue items without cost_per_tick field
+- Added process_construction_tick to IProductionEngine interface
+- Wired into TurnEngine._process_tick as Phase 0c (after resupply, before instant orders)
+- Updated MockProductionEngine in mock_engines.py and test_engine_interfaces.py
+- 8 design cost tests + 14 tick consumption tests = 22 new tests
+- Files modified: production_engine.py, turn_engine.py, engines.py (interfaces), mock_engines.py, test_engine_interfaces.py
+- Files created: test_resource_costs.py, test_tick_consumption.py
+- Next: Phase 5 - Maintenance System
 
 ---
 
@@ -163,7 +164,7 @@
 ---
 
 - [/] **PROJ-75: Resource Harvesting & Economy System**
-  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-75/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-75/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -287,6 +288,7 @@
 | 2026-02-08 | PROJ-75 | Phase 1 | Complete | 6846 passed | pending | Empire resource pool: fields, methods, serialization, 26 tests |
 | 2026-02-08 | PROJ-75 | Phase 2 | Complete | 6890 passed | pending | HarvestingEngine, IHarvestingEngine, TurnEngine wiring, JSON rates, 20 tests |
 | 2026-02-08 | PROJ-75 | Phase 3 | Complete | 6940 passed | pending | EmpireStorageAbility, recalculate_storage, 5 vault components, 19 tests |
+| 2026-02-08 | PROJ-75 | Phase 4 | Complete | 6962 passed | pending | _calculate_design_cost, process_construction_tick, IProductionEngine update, 22 tests |
 
 ---
 

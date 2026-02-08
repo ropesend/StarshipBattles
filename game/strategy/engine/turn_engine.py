@@ -12,6 +12,7 @@ Turn Phases:
        - Phase 0: Per-turn resources (via ResourceManagementEngine)
        - Phase 0a: Fuel generation at facilities (via ResupplyEngine)
        - Phase 0b: Fleet resupply from facilities (via ResupplyEngine)
+       - Phase 0c: Construction resource consumption (via ProductionEngine)
        - Phase 1: Instant orders (via FleetOrderProcessor)
        - Phase 2: Calculate moves (via FleetMovementEngine)
        - Phase 3: Apply moves (via FleetMovementEngine)
@@ -291,11 +292,13 @@ class TurnEngine:
 
         PROJ-12 Phase 3: Delegates to specialized engines.
         PROJ-74 Phase 5: Added fuel generation and fleet resupply phases.
+        PROJ-75 Phase 4: Added per-tick construction resource consumption.
 
-        Seven-phase processing:
+        Eight-phase processing:
         Phase 0: Per-turn resource consumption (1/100th of per_turn costs)
         Phase 0a: Fuel generation at facilities (via ResupplyEngine)
         Phase 0b: Fleet resupply from facilities (via ResupplyEngine)
+        Phase 0c: Construction resource consumption (via ProductionEngine)
         Phase 1: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
         Phase 2: Calculate paths/next moves for all fleets (based on current positions)
         Phase 3: Apply all movements simultaneously
@@ -313,6 +316,10 @@ class TurnEngine:
         # --- Phase 0b: Fleet resupply from facilities ---
         # PROJ-74: Transfer fuel from facilities to co-located fleets
         self.resupply_engine.process_fleet_resupply(tick, empires, galaxy)
+
+        # --- Phase 0c: Construction resource consumption ---
+        # PROJ-75: Deduct per-tick resource costs from empire pools
+        self.production_engine.process_construction_tick(tick, empires, galaxy)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
         # PROJ-12: Delegate to FleetOrderProcessor

@@ -225,6 +225,10 @@ class TestConcreteImplementations:
         from game.strategy.interfaces.engines import IProductionEngine
 
         class MockProductionEngine(IProductionEngine):
+            def process_construction_tick(self, tick, empires, galaxy):
+                """PROJ-75: Per-tick construction resource consumption."""
+                pass
+
             def process_production(self, empires, galaxy=None, save_path=None):
                 pass
 

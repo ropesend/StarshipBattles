@@ -89,8 +89,13 @@ class MockProductionEngine(IProductionEngine):
     """
 
     def __init__(self):
+        self.process_construction_tick_calls: List[Tuple] = []
         self.process_production_calls: List[Tuple] = []
         self.process_fleet_production_calls: List[Tuple] = []
+
+    @property
+    def process_construction_tick_called(self) -> bool:
+        return len(self.process_construction_tick_calls) > 0
 
     @property
     def process_production_called(self) -> bool:
@@ -99,6 +104,10 @@ class MockProductionEngine(IProductionEngine):
     @property
     def process_fleet_production_called(self) -> bool:
         return len(self.process_fleet_production_calls) > 0
+
+    def process_construction_tick(self, tick, empires, galaxy):
+        """PROJ-75: Per-tick construction resource consumption mock."""
+        self.process_construction_tick_calls.append((tick, empires, galaxy))
 
     def process_production(self, empires, galaxy=None, save_path=None):
         self.process_production_calls.append((empires, galaxy, save_path))
