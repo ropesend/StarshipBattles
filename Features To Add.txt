@@ -1,7 +1,7 @@
 Features to add:
 ================
 
-
+Design Details panel on the right of the Design Workshop, and on the right of the build queue, should be be created by the same code, both should show the same things, the design workshop panel is wider ( enough for 2 columns), this is the correct layout.  The Build queue list can be narrower to allow for a wider right panel.
 
 ================
 
@@ -43,6 +43,13 @@ Create Dyson Sphere
 
 ======================
 
+ad fuel up to their capacity
+- fuel should be shared between fleet ships
+
+************************************************************************************************************
+************************************************************************************************************
+ // Already Added
+
 Resource Harvesting
 - Each planetary resource should have it's own harvesting component.
 - The component should harvest an amount that is based on the quality of the resource on the planet * the base rate of the component.
@@ -61,12 +68,7 @@ Resupply System
 - New component called the Fuel Synthesizer - can only exist on complexes
 - Fuel Synthesizer produces Fuel
 - Use a regular fue tank component for storage in the complexes
-- Ships in the same sector of the planet automatically load fuel up to their capacity
-- fuel should be shared between fleet ships
-
-
- // Already Added
-
+- Ships in the same sector of the planet automatically lo
 1) Population
  - all colonies should have population - this population can be made up of multiple species, and each species should be treated somewhat independently.
  - The maximum population will depend on the surface area of the planet.

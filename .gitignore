@@ -24,3 +24,7 @@ collect_log*.txt
 
 # Personal development tools
 VibeCodingHotkeys.ahk
+cleanup_nul.py
+
+# Claude-generated artifacts
+nul

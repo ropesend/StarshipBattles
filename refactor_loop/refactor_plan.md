@@ -28,38 +28,6 @@
 
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
-- [x] **PROJ-57: Test Lab Screen God Class Decomposition**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-57/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-57/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-60: Break Down GalaxyTestScreen**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-60/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-60/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-61: Workshop Screen Breakdown**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-61/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-61/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-62: Planet List Window Breakdown**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-62/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-62/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
 - [x] **PROJ-63: Break Down build_queue_screen.py**
   - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-63/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-63/plan.md)
@@ -172,10 +140,10 @@
 
 ---
 
-- [x] **PROJ-77: Event Log System**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+- [/] **PROJ-77: Event Log System**
+  - **Phases:** 5 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-77/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-77/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -184,27 +152,6 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-06 | PROJ-57 | Phase 1 | Complete | 6246 passed | 3f185f28 | Extracted 5 leaf nodes |
-| 2026-02-06 | PROJ-57 | Phase 2 | Complete | 6246 passed | f9226ac7 | Extracted 2 composite modules |
-| 2026-02-07 | PROJ-57 | Phase 3 | Complete | Tests fail* | 28d4dffd | *External refs need Phase 4 |
-| 2026-02-07 | PROJ-57 | Phase 4 | Complete | 6246 passed | 28d4dffd | Updated external references |
-| 2026-02-07 | PROJ-57 | Phase 5 | Complete | 6246 passed | f7a1df07 | Verification & documentation |
-| 2026-02-07 | PROJ-57 | Audit 1 | PASSED | 6246 passed | pending | No issues found |
-| 2026-02-07 | PROJ-60 | Phase 1 | Complete | 6246 passed | pending | Created package, extracted constants |
-| 2026-02-07 | PROJ-60 | Phase 2 | Complete | 6246 passed | pending | Extracted GalaxyModeHelper (421 lines) |
-| 2026-02-07 | PROJ-60 | Phase 3 | Complete | 6246 passed | pending | Extracted SystemModeHelper (568 lines), screen.py now 281 lines |
-| 2026-02-07 | PROJ-60 | Phase 4 | Complete | 6246 passed | pending | Final verification, imports clean |
-| 2026-02-07 | PROJ-60 | Audit 1 | PASSED | 6246 passed | pending | No issues found |
-| 2026-02-07 | PROJ-61 | Phase 1 | Complete | 6246 passed | pending | Extracted WorkshopShipIO, 945->759 lines |
-| 2026-02-07 | PROJ-61 | Phase 2 | Complete | 6246 passed | pending | Pushed dropdown logic to right_panel, 759->728 lines |
-| 2026-02-07 | PROJ-61 | Phase 3 | Complete | 6244 passed | pending | Extracted WorkshopDataReloader, 728->643 lines |
-| 2026-02-07 | PROJ-61 | Phase 4 | Complete | 6246 passed | e81854d3 | Final cleanup, 643->594 lines |
-| 2026-02-07 | PROJ-61 | Audit 1 | PASSED | 6246 passed | e81854d3 | No issues found, 37% reduction achieved |
-| 2026-02-07 | PROJ-62 | Phase 1 | Complete | 6246 passed | pending | Extracted build_sidebar(), 1136->944 lines |
-| 2026-02-07 | PROJ-62 | Phase 2 | Complete | 6246 passed | pending | Extracted data accessors + ColumnManager, 944->757 lines |
-| 2026-02-07 | PROJ-62 | Phase 3 | Complete | 6244 passed | pending | Extracted VirtualListRenderer, 758->580 lines |
-| 2026-02-07 | PROJ-62 | Phase 4 | Complete | 6246 passed | pending | Simplified update(), 580->490 lines, under 500 target |
-| 2026-02-07 | PROJ-62 | Audit 1 | PASSED | 6246 passed | 93b50f61 | No issues, 57% reduction (1136->490 lines) |
 | 2026-02-07 | PROJ-63 | Phase 1 | Complete | 6246 passed | pending | Extracted BuildQueuePortraitLoader, -99 lines |
 | 2026-02-07 | PROJ-63 | Phase 2 | Complete | 6246 passed | pending | Extracted BuildQueueDragHandler, -132 lines |
 | 2026-02-07 | PROJ-63 | Phase 3 | Complete | 6246 passed | pending | Extracted BuildQueueController, -114 lines |
@@ -298,7 +245,6 @@
 | 2026-02-08 | PROJ-77 | Phase 3 | Complete | 7182 passed | pending | Engine event emission: 4 event types in 3 engines, 16 new tests |
 | 2026-02-08 | PROJ-77 | Phase 4 | Complete | 7209 passed | pending | EventLogWindow, Log button, turn-start modal, 27 new tests |
 | 2026-02-08 | PROJ-77 | Phase 5 | Complete | 7230 passed | pending | 9 unit edge cases + 12 integration tests, manual testing deferred |
-| 2026-02-08 | PROJ-77 | Audit 1 | PASSED | 7233 passed | pending | Fixed fleet complex event gap + __import__ anti-pattern, +3 tests |
 
 ---
 

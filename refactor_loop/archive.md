@@ -83,3 +83,35 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-57: Test Lab Screen God Class Decomposition**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-57/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-57/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-60: Break Down GalaxyTestScreen**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-60/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-60/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-61: Workshop Screen Breakdown**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-61/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-61/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-62: Planet List Window Breakdown**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-62/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-62/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---

@@ -19,15 +19,15 @@
 | PROJ-65 | Game Class Scene Protocol Refactor | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-64 | Narrow Exception Handling | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-63 | Break Down build_queue_screen.py | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-62 | Planet List Window Breakdown | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-61 | Workshop Screen Breakdown | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-60 | Break Down GalaxyTestScreen | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-62 | Planet List Window Breakdown | Archived | 2026-02-06 | 2026-02-08 |
+| PROJ-61 | Workshop Screen Breakdown | Archived | 2026-02-06 | 2026-02-08 |
+| PROJ-60 | Break Down GalaxyTestScreen | Archived | 2026-02-06 | 2026-02-08 |
 | PROJ-56 | Universal Planet Report Component | Archived | 2026-02-01 | 2026-02-06 |
 | PROJ-54 | Combat Lab Quality Cleanup and Expansion | Archived | 2026-02-05 | 2026-02-06 |
 | PROJ-55 | Data-Driven Planet-Specific Colonization System | Archived | 2026-02-01 | 2026-02-06 |

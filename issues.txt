@@ -1,6 +1,8 @@
+1)  (Build Queue) In the build queue, when multiple of the same compnent are in different layers pressing the + or - buttons to thr right do not nessesarily add/remove teh component from that layer, it may come from or go to another layer that already has one of the same components.
 
+2) Leader needs a name in Species Setup
 
-16) In the Fleet Details panel on the lower right, the following should be shown/possible:
+16) (Fleet Details) In the Fleet Details panel on the lower right, the following should be shown/possible:
  - The total number of hexes that the fleet can travel
  - a scrollable list of all ships in the fleet - this should be condensed, where it is the ship Design with a multiple so: Devastater x 3 if there are 3 devastators, the most massive vehicles should be 1st with the smaller ships listed below.
  - a list of all cargo - with quantities of each cargo item
