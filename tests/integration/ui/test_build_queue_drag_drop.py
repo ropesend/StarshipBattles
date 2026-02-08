@@ -130,7 +130,7 @@ def test_drag_drop_success(build_queue_screen):
         'category': 'complex'
     }
     
-    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    initial_queue_len = len(build_queue_screen.build_context.construction_queue)
     
     # Simulate mouse up over build queue panel
     drop_pos = build_queue_screen.build_queue_panel.rect.center
@@ -141,8 +141,8 @@ def test_drag_drop_success(build_queue_screen):
     build_queue_screen.handle_event(event)
     
     # Verify item added to queue
-    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len + 1
-    assert build_queue_screen.planet.construction_queue[-1]['design_id'] == 'mining_complex_mk1'
+    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_len + 1
+    assert build_queue_screen.build_context.construction_queue[-1]['design_id'] == 'mining_complex_mk1'
     # Verify drag cleared
     assert build_queue_screen.drag_handler.dragged_item is None
 
@@ -154,7 +154,7 @@ def test_drag_cancel(build_queue_screen):
         'category': 'ship'
     }
     
-    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    initial_queue_len = len(build_queue_screen.build_context.construction_queue)
     
     # Simulate mouse up somewhere else (e.g. top left corner)
     drop_pos = (0, 0)
@@ -165,17 +165,18 @@ def test_drag_cancel(build_queue_screen):
     build_queue_screen.handle_event(event)
     
     # Verify nothing added
-    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len
+    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_len
     # Verify drag cleared
     assert build_queue_screen.drag_handler.dragged_item is None
 
 def test_reorder_queue(build_queue_screen):
     """Test reordering items within the queue."""
     # Setup initial queue: [A, B]
-    build_queue_screen.planet.construction_queue = [
+    build_queue_screen.build_context.construction_queue.clear()
+    build_queue_screen.build_context.construction_queue.extend([
         {"design_id": "item_A", "type": "complex", "turns_remaining": 5},
         {"design_id": "item_B", "type": "complex", "turns_remaining": 5}
-    ]
+    ])
     build_queue_screen._refresh_queue_display()
     # CRITICAL: Update manager to calculate rects for new panels
     build_queue_screen.manager.update(0.1)
@@ -202,7 +203,7 @@ def test_reorder_queue(build_queue_screen):
     build_queue_screen.handle_event(event_motion)
 
     assert build_queue_screen.drag_handler.dragged_item['design_id'] == "item_B"
-    assert len(build_queue_screen.planet.construction_queue) == 1 # A is left
+    assert len(build_queue_screen.build_context.construction_queue) == 1 # A is left
     
     # 2. Drop at top of queue panel
     # The queue panel starts at some Y. rel_y // 65 = 0 means index 0.
@@ -217,15 +218,16 @@ def test_reorder_queue(build_queue_screen):
     build_queue_screen.handle_event(event_up)
     
     # 3. Verify: [B, A]
-    assert len(build_queue_screen.planet.construction_queue) == 2
-    assert build_queue_screen.planet.construction_queue[0]['design_id'] == "item_B"
-    assert build_queue_screen.planet.construction_queue[1]['design_id'] == "item_A"
+    assert len(build_queue_screen.build_context.construction_queue) == 2
+    assert build_queue_screen.build_context.construction_queue[0]['design_id'] == "item_B"
+    assert build_queue_screen.build_context.construction_queue[1]['design_id'] == "item_A"
 
 def test_remove_from_queue(build_queue_screen):
     """Test removing an item by dragging it outside."""
-    build_queue_screen.planet.construction_queue = [
+    build_queue_screen.build_context.construction_queue.clear()
+    build_queue_screen.build_context.construction_queue.extend([
         {"design_id": "to_remove", "type": "complex", "turns_remaining": 5}
-    ]
+    ])
     build_queue_screen._refresh_queue_display()
     build_queue_screen.manager.update(0.1)
     
@@ -259,5 +261,5 @@ def test_remove_from_queue(build_queue_screen):
     build_queue_screen.handle_event(event_up)
     
     # 3. Verify queue is empty
-    assert len(build_queue_screen.planet.construction_queue) == 0
+    assert len(build_queue_screen.build_context.construction_queue) == 0
     assert build_queue_screen.drag_handler.dragged_item is None

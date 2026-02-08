@@ -25,7 +25,7 @@ class MockSession:
 def test_build_queue_screen_initializes(build_queue_screen):
     """Test that BuildQueueScreen creates without crashing."""
     assert build_queue_screen is not None
-    assert build_queue_screen.planet is not None
+    assert build_queue_screen.build_context is not None
     assert build_queue_screen.session is not None
     assert build_queue_screen.on_close is not None
 
@@ -73,7 +73,7 @@ def test_switch_category_filter(build_queue_screen):
 
 def test_add_to_queue(build_queue_screen):
     """Test that selected design is added to planet construction queue."""
-    initial_queue_length = len(build_queue_screen.planet.construction_queue)
+    initial_queue_length = len(build_queue_screen.build_context.construction_queue)
 
     # Mock design selection
     build_queue_screen.drag_handler.selected_design = "mining_complex_mk1"
@@ -83,10 +83,10 @@ def test_add_to_queue(build_queue_screen):
     build_queue_screen.controller.add_to_queue("mining_complex_mk1", 5)
 
     # Verify queue updated
-    assert len(build_queue_screen.planet.construction_queue) == initial_queue_length + 1
+    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_length + 1
 
     # Verify item structure
-    item = build_queue_screen.planet.construction_queue[-1]
+    item = build_queue_screen.build_context.construction_queue[-1]
     assert isinstance(item, dict)
     assert item["design_id"] == "mining_complex_mk1"
     assert item["type"] == "complex"
@@ -96,7 +96,7 @@ def test_add_to_queue(build_queue_screen):
 def test_queue_display_updates(build_queue_screen):
     """Test that UI refreshes when queue changes."""
     # Add item to queue
-    build_queue_screen.planet.construction_queue.append({
+    build_queue_screen.build_context.construction_queue.append({
         "design_id": "frigate_mk1",
         "type": "ship",
         "turns_remaining": 10
@@ -210,7 +210,7 @@ def test_add_to_queue_defaults_to_1_turn(build_queue_screen):
     build_queue_screen.controller.add_to_queue("test_design")
 
     # Verify item was added with 1 turn
-    item = build_queue_screen.planet.construction_queue[-1]
+    item = build_queue_screen.build_context.construction_queue[-1]
     assert item["turns_remaining"] == 1
 
 
@@ -251,35 +251,35 @@ def test_add_ship_to_queue_with_shipyard(build_queue_screen):
         },
         is_operational=True
     )
-    build_queue_screen.planet.facilities.append(shipyard)
+    build_queue_screen.build_context.facilities.append(shipyard)
 
     # Verify has_space_shipyard returns True
-    assert build_queue_screen.planet.has_space_shipyard is True, \
+    assert build_queue_screen.build_context.has_space_shipyard is True, \
         "has_space_shipyard should return True when shipyard facility exists"
 
     # Try to add a ship
-    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    initial_queue_len = len(build_queue_screen.build_context.construction_queue)
     build_queue_screen.controller.set_category("ship")
     build_queue_screen.controller.add_to_queue("test_frigate", turns=1)
 
     # Verify ship was added
-    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len + 1, \
+    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_len + 1, \
         "Ship should be added to construction queue when shipyard exists"
-    assert build_queue_screen.planet.construction_queue[-1]["type"] == "ship"
-    assert build_queue_screen.planet.construction_queue[-1]["design_id"] == "test_frigate"
+    assert build_queue_screen.build_context.construction_queue[-1]["type"] == "ship"
+    assert build_queue_screen.build_context.construction_queue[-1]["design_id"] == "test_frigate"
 
 
 def test_add_ship_fails_without_shipyard(build_queue_screen):
     """Test that ships cannot be added without a shipyard facility."""
     # Ensure no shipyard exists
-    build_queue_screen.planet.facilities = []
-    assert build_queue_screen.planet.has_space_shipyard is False
+    build_queue_screen.build_context.facilities = []
+    assert build_queue_screen.build_context.has_space_shipyard is False
 
     # Try to add a ship
-    initial_queue_len = len(build_queue_screen.planet.construction_queue)
+    initial_queue_len = len(build_queue_screen.build_context.construction_queue)
     build_queue_screen.controller.set_category("ship")
     build_queue_screen.controller.add_to_queue("test_frigate", turns=1)
 
     # Verify ship was NOT added
-    assert len(build_queue_screen.planet.construction_queue) == initial_queue_len, \
+    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_len, \
         "Ship should NOT be added without a shipyard"
