@@ -15,6 +15,10 @@ from game.core.config import UIConfig
 from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
 from game.strategy.data.fleet import OrderType
 from game.ui.colors import COLORS
+from game.ui.utils import scale_and_rotate_image
+
+# Animation constants
+WARP_POINT_ROTATION_SPEED = 12.0  # degrees per second
 
 
 class StrategyRenderer:
@@ -35,6 +39,17 @@ class StrategyRenderer:
 
         # Cache commonly used fonts
         self._font_cache = {}
+
+        # Animation state
+        self._elapsed_time = 0.0
+
+    def update(self, dt: float) -> None:
+        """Update animation state.
+
+        Args:
+            dt: Delta time in seconds since last frame.
+        """
+        self._elapsed_time += dt
 
     def _get_font(self, size, bold=False):
         """Get a cached font by size and style."""
@@ -463,9 +478,19 @@ class StrategyRenderer:
 
             if img:
                 size = int(12 * self.camera.zoom)
-                scaled = pygame.transform.smoothscale(img, (size, size))
-                dest = scaled.get_rect(center=(int(w_screen.x), int(w_screen.y)))
-                screen.blit(scaled, dest, special_flags=pygame.BLEND_ADD)
+
+                # Calculate rotation: unique offset per warp point + continuous rotation
+                rotation_offset = hash(wp) % 360
+                rotation_angle = rotation_offset + (self._elapsed_time * WARP_POINT_ROTATION_SPEED)
+
+                # Scale factor for rotation utility
+                orig_size = max(img.get_width(), img.get_height())
+                scale_factor = size / orig_size if orig_size > 0 else 1.0
+
+                # Apply scale and rotation
+                rotated = scale_and_rotate_image(img, scale_factor, rotation_angle)
+                dest = rotated.get_rect(center=(int(w_screen.x), int(w_screen.y)))
+                screen.blit(rotated, dest, special_flags=pygame.BLEND_ADD)
             else:
                 pygame.draw.circle(screen, (200, 0, 255), w_screen, max(2, int(5 * self.camera.zoom)))
 

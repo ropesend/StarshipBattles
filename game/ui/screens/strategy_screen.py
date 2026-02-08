@@ -178,6 +178,7 @@ class StrategyScreen:
     def update(self, dt):
         """Update scene state."""
         self.camera.update(dt)
+        self._renderer.update(dt)
         self.ui.update(dt)
 
     def draw(self, screen):
