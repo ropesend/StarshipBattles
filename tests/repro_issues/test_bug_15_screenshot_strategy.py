@@ -207,6 +207,7 @@ class TestScreenshotInputHandler:
         mock_scene.screen_height = 720
 
         handler = StrategyInputHandler(mock_scene)
+        handler._show_screenshot_toast = MagicMock()
         handler._take_screenshot_full()
 
         mock_sm.capture_strategy_layer.assert_called_once()
@@ -228,6 +229,7 @@ class TestScreenshotInputHandler:
         mock_scene.screen_height = 720
 
         handler = StrategyInputHandler(mock_scene)
+        handler._show_screenshot_toast = MagicMock()
         handler._take_screenshot_viewport()
 
         mock_sm.capture_strategy_layer.assert_called_once()
