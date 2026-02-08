@@ -8,26 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-76 Phase 6 - Multi-Select & Batch Add
-**Current Status:** PROJ-76 Phase 6 complete, Phase 7 next
+**Last Completed:** PROJ-76 Phase 7 - Integration
+**Current Status:** PROJ-76 all phases complete, ready for audit
 **Current Project:** PROJ-76
-**Current Phase:** Phase 7
-**Test Status:** 107 passed (testmon: 89 passed + 2 pre-existing failures)
+**Current Phase:** Audit
+**Test Status:** 7111 passed, 2 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-76 Phase 6 complete: Multi-select and batch add implemented
-- Modified: game/ui/screens/empire_build_queue_window.py (+BatchAddResult dataclass, multi-select methods)
-- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (85→107 tests)
-- handle_row_click(index, ctrl_held): single click replaces, Ctrl+click toggles, prevents empty selection
-- get_selected_sources(): returns list of selected BuildQueueSource objects
-- batch_add_to_selected(item, item_type): adds to compatible queues, returns BatchAddResult(added, skipped)
-- get_selection_summary(): human-readable "N queues selected" string
-- _source_can_build_type(): static helper for ship/complex compatibility
-- process_event updated to use KMOD_CTRL for Ctrl+click detection
-- apply_filters() clears selected_indices
-- 22 new tests: 12 multi-select state, 8 batch add, 3 selection summary (1 test overlaps)
-- Next: Phase 7 - Integration (strategy screen wiring, top bar button)
+- PROJ-76 Phase 7 complete: Strategy UI integration
+- Modified: game/ui/screens/strategy_ui.py (+btn_all_queues, +open_empire_build_queue_window, +_on_empire_build_queue_closed, +modal check, +event handlers)
+- Modified: game/ui/screens/strategy_screen.py (+on_navigate_to_hex_build: closes window, opens BuildQueueScreen at hex)
+- Modified: tests/unit/ui/screens/test_strategy_ui_menu.py (updated mock helper with new fields)
+- "All Queues" button added at position 5 in top bar, Menu shifted to 6, End Turn to 7
+- Window opens at 90% screen size with empire+galaxy context
+- Navigation callback closes empire window then opens per-hex BuildQueueScreen
+- Next: Audit cycle 1
 
 ---
 
@@ -172,7 +168,7 @@
 ---
 
 - [/] **PROJ-76: Empire-Wide Build Queue Window**
-  - **Phases:** 7 | **Status:** Phase 6 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** All Phases Complete - Audit Next | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-76/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-76/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -298,6 +294,7 @@
 | 2026-02-08 | PROJ-76 | Phase 4 | Complete | 73 testmon | pending | Filtering: location type, queue status, capabilities, text search, 26 new tests |
 | 2026-02-08 | PROJ-76 | Phase 5 | Complete | 85 testmon | pending | Navigation: get_hex_for_source, navigate_to_source, re-click detection, 12 new tests |
 | 2026-02-08 | PROJ-76 | Phase 6 | Complete | 107 testmon | pending | Multi-select & batch add: handle_row_click, batch_add_to_selected, BatchAddResult, 22 new tests |
+| 2026-02-08 | PROJ-76 | Phase 7 | Complete | 7111 passed | pending | Integration: All Queues button, open/close/navigate, modal check, test mocks updated |
 
 ---
 

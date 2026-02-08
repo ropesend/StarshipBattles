@@ -23,6 +23,7 @@ from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
+from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -51,6 +52,7 @@ class StrategyUI:
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
         self.transfer_dialog = None      # cargo transfer dialog instance (PROJ-68)
         self.menu_panel = None           # strategy menu dropdown (PROJ-72)
+        self.empire_build_queue_window = None  # empire-wide build queue window (PROJ-76)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -250,10 +252,13 @@ class StrategyUI:
         self.btn_build_queues = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Queues", manager=self.manager, container=self.top_bar
         )
+        self.btn_all_queues = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40), text="All Queues", manager=self.manager, container=self.top_bar
+        )
 
         # Menu Button (replaces Save Game - options now in dropdown)
         self.btn_menu = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40),
+            relative_rect=pygame.Rect(main_start_x + 6*(btn_w+gap), 5, btn_w, 40),
             text="Menu",
             manager=self.manager,
             container=self.top_bar
@@ -261,7 +266,7 @@ class StrategyUI:
 
         # End Turn (Larger)
         self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 6*(btn_w+gap), 5, 150, 40),
+            relative_rect=pygame.Rect(main_start_x + 7*(btn_w+gap), 5, 150, 40),
             text="End Turn",
             manager=self.manager,
             container=self.top_bar
@@ -768,6 +773,10 @@ class StrategyUI:
         if self.build_queue_list_window is not None:
             return True
 
+        # Check for empire build queue window (PROJ-76)
+        if self.empire_build_queue_window is not None:
+            return True
+
         # Check if workshop is being opened
         if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
             return True
@@ -814,6 +823,8 @@ class StrategyUI:
                     self.scene.on_design_click()
             elif event.ui_element == self.btn_build_queues:
                 self.open_build_queue_list()
+            elif event.ui_element == self.btn_all_queues:
+                self.open_empire_build_queue_window()
             elif event.ui_element == self.btn_menu:
                 self.toggle_menu_panel()
             elif event.ui_element == self.btn_raw_data:
@@ -888,6 +899,8 @@ class StrategyUI:
                 self.transfer_dialog = None
             elif event.ui_element == self.build_queue_list_window:
                 self.build_queue_list_window = None
+            elif event.ui_element == self.empire_build_queue_window:
+                self._on_empire_build_queue_closed()
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled by UI."""
@@ -1021,6 +1034,27 @@ class StrategyUI:
     def _on_build_queue_list_closed(self):
         """Callback when build queue list window is closed."""
         self.build_queue_list_window = None
+
+    def open_empire_build_queue_window(self):
+        """Open the Empire-Wide Build Queue Window (PROJ-76)."""
+        if self.empire_build_queue_window:
+            self.empire_build_queue_window.kill()
+
+        empire = self.scene.current_empire
+        galaxy = self.scene.galaxy
+
+        w, h = int(self.width * 0.9), int(self.height * 0.9)
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        self.empire_build_queue_window = EmpireBuildQueueWindow(
+            rect, self.manager, empire, galaxy,
+            on_close_callback=self._on_empire_build_queue_closed,
+            on_navigate_to_hex=self.scene.on_navigate_to_hex_build,
+        )
+
+    def _on_empire_build_queue_closed(self):
+        """Callback when empire build queue window is closed."""
+        self.empire_build_queue_window = None
 
     def open_orders_window(self, fleet):
         """Open the Fleet Orders Window."""

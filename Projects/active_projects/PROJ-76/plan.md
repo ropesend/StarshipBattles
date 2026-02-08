@@ -19,13 +19,13 @@
 | 4. Filtering | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Navigation | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Multi-Select | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. Integration | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 6 Complete
-**Last Action:** Added multi-select (Ctrl+click) and batch add. handle_row_click(), get_selected_sources(), batch_add_to_selected(), get_selection_summary(), BatchAddResult dataclass. 22 new tests (107 total). Prevents empty selection on Ctrl+click last item. process_event uses KMOD_CTRL for Ctrl detection.
-**Next Action:** Begin Phase 7 - Integration
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Phase 7 Integration: Added "All Queues" button to top bar, open_empire_build_queue_window() method, modal check, UI_WINDOW_CLOSE handler, on_navigate_to_hex_build() in strategy_screen.py. Updated test mock helpers.
+**Next Action:** Audit
 **Blockers:** None
 
 ## Overview

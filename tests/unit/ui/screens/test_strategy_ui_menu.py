@@ -38,6 +38,7 @@ def _make_strategy_ui():
     ui.btn_planets = MagicMock()
     ui.btn_design = MagicMock()
     ui.btn_build_queues = MagicMock()
+    ui.btn_all_queues = MagicMock()
     ui.btn_raw_data = MagicMock()
     ui.btn_colonize = MagicMock()
     ui.btn_orders = MagicMock()
@@ -50,6 +51,7 @@ def _make_strategy_ui():
     ui.fleet_orders_window = None
     ui.planet_list_window = None
     ui.build_queue_list_window = None
+    ui.empire_build_queue_window = None
     ui.fleet_report_window = None
     ui.planet_report_panel = None
     ui.transfer_dialog = None
@@ -334,6 +336,7 @@ class TestMenuPanelModal:
         ui.fleet_report_window = None
         ui.transfer_dialog = None
         ui.build_queue_list_window = None
+        ui.empire_build_queue_window = None
         # scene.build_queue_screen and scene.action_open_design also checked
         scene.build_queue_screen = None
         scene.action_open_design = False

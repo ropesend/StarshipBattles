@@ -503,6 +503,64 @@ class StrategyScreen:
             # Queue is empty - remove BUILD order if present
             fleet.orders = [o for o in fleet.orders if o.type != OrderType.BUILD]
 
+    def on_navigate_to_hex_build(self, hex_coord, source):
+        """Navigate to the build queue screen for a specific hex and source.
+
+        Called from the empire-wide build queue window (PROJ-76) when the user
+        double-clicks a row to navigate to the per-hex build screen.
+
+        Args:
+            hex_coord: The HexCoord of the source's location.
+            source: BuildQueueSource identifying the entity to open.
+        """
+        # Guard against double-open
+        if hasattr(self, 'build_queue_screen') and self.build_queue_screen is not None:
+            log_info("Build queue already open, ignoring navigate")
+            return
+
+        entity = source.owner_entity
+        if entity is None:
+            log_warning("on_navigate_to_hex_build: source has no owner_entity")
+            return
+
+        # Close the empire build queue window
+        if self.ui.empire_build_queue_window:
+            self.ui.empire_build_queue_window.kill()
+            self.ui._on_empire_build_queue_closed()
+
+        from game.ui.screens.build_queue_screen import BuildQueueScreen
+        from game.strategy.systems.design_library import DesignLibrary
+        from game.simulation.services.design_loader import SimulationDesignLoader
+        from game.core.registry import get_default_registries
+
+        # Hide main UI
+        self.ui.hide_ui()
+
+        # Get portrait from asset system
+        portrait_surface = self._get_object_asset(entity)
+
+        # Create dependencies for DI injection
+        savegame_path = getattr(self.session, 'save_path', None)
+        empire_id = self.current_empire.id
+        design_library = DesignLibrary(savegame_path, empire_id)
+        design_loader = SimulationDesignLoader(registries=get_default_registries())
+
+        # Create build queue screen with hex context
+        self.build_queue_screen = BuildQueueScreen(
+            self.ui.manager,
+            entity,
+            self.session,
+            on_close_callback=self._on_build_queue_close,
+            portrait_surface=portrait_surface,
+            design_library=design_library,
+            design_loader=design_loader,
+            hex_coord=hex_coord,
+            galaxy=self.session.galaxy,
+            empire=self.current_empire,
+            input_mapper=self.input_mapper
+        )
+        log_info(f"Navigated to build queue for {source.display_name} at hex {hex_coord}")
+
     def on_fleet_build_click(self):
         """Open build queue screen for selected fleet (PROJ-67: Fleet Space Yards)."""
         # Guard against double-open

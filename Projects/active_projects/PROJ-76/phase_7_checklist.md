@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Wire up button and window in strategy UI
 
 ---
@@ -17,18 +17,10 @@
 **File:** `game/ui/screens/strategy_ui.py`
 **Tests:** Manual test - button visible and clickable
 
-- [ ] Add `self.empire_build_queue_window = None` (after line 46)
-- [ ] Add new button after Menu button (around line 253):
-  ```python
-  self.btn_all_queues = pygame_gui.elements.UIButton(
-      relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap) + btn_w + gap, 5, btn_w, 40),
-      text="All Queues",
-      manager=self.manager,
-      container=self.top_bar
-  )
-  ```
-- [ ] Shift End Turn button position to accommodate new button
-- [ ] Update button positioning constants if needed
+- [x] Add `self.empire_build_queue_window = None` (after line 46)
+- [x] Add new button after Build Queues button (position 5)
+- [x] Shift Menu and End Turn button positions to accommodate new button
+- [x] No constant updates needed - uses existing btn_w+gap pattern
 
 **Notes:**
 
@@ -39,26 +31,12 @@
 **File:** `game/ui/screens/strategy_ui.py`
 **Tests:** Manual test - window opens on click
 
-- [ ] Add import: `from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow`
-- [ ] Add `open_empire_build_queue_window()` method:
-  ```python
-  def open_empire_build_queue_window(self):
-      if self.empire_build_queue_window:
-          self.empire_build_queue_window.kill()
-
-      empire = self.scene.current_empire
-      galaxy = self.scene.galaxy
-      w, h = int(self.width * 0.9), int(self.height * 0.9)
-      rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
-
-      self.empire_build_queue_window = EmpireBuildQueueWindow(
-          rect, self.manager, empire, galaxy,
-          on_close_callback=self._on_empire_build_queue_closed,
-          on_navigate_to_hex=self.scene.on_navigate_to_hex_build
-      )
-  ```
-- [ ] Add close callback: `_on_empire_build_queue_closed()`
-- [ ] Add button event handler in `handle_event()` (around line 720)
+- [x] Add import: `from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow`
+- [x] Add `open_empire_build_queue_window()` method
+- [x] Add close callback: `_on_empire_build_queue_closed()`
+- [x] Add button event handler in `handle_event()` for btn_all_queues
+- [x] Add UI_WINDOW_CLOSE handler for empire_build_queue_window
+- [x] Add `on_navigate_to_hex_build()` to strategy_screen.py (closes window, opens BuildQueueScreen)
 
 **Notes:**
 
@@ -69,7 +47,7 @@
 **File:** `game/ui/screens/strategy_ui.py`
 **Tests:** Manual test - prevents input passthrough
 
-- [ ] Update `_has_modal_open()` to check `self.empire_build_queue_window is not None`
+- [x] Update `_has_modal_open()` to check `self.empire_build_queue_window is not None`
 
 **Notes:**
 
