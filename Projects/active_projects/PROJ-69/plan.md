@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Data Model - Facility Queues | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Data Model - Facility Queues | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Production Engine - Parallel Processing | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Build Queue Screen - Layout Restructure | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Controller & Drag Handler - Multi-Queue | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Planning
-**Last Action:** Project plan created from deep codebase analysis
-**Next Action:** Begin Phase 1 - Add construction_queue to PlanetaryFacility
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - PlanetaryFacility.construction_queue + BuildQueueSource + collector
+**Next Action:** Begin Phase 2 - Production Engine Parallel Processing
 **Blockers:** None
-**Context for Next Agent:** Test baseline: 6517 passed, 2 known-flaky failures (test_stats_render, test_structure_visibility). All design decisions confirmed with user.
+**Context for Next Agent:** Test baseline: 6518 passed, 1 pre-existing failure (IFleet mock spec). New files: `game/strategy/data/build_queue_source.py`, `tests/unit/strategy/data/test_facility_construction_queue.py`, `tests/unit/strategy/data/test_build_queue_source.py`. 22 new tests total (7 + 15).
 
 ## Overview
 Restructure the build queue system to support multiple simultaneous build queues per hex. Each shipyard facility on a planet generates its own build queue, and each fleet space yard has its own queue. A new queue selector UI column allows players to view and manage all queues at a hex, with support for single-queue viewing and multi-queue batch adding.

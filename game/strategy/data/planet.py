@@ -28,6 +28,7 @@ class PlanetaryFacility:
     name: str                 # Facility name
     design_data: Dict[str, Any]  # Full complex design (from JSON)
     is_operational: bool = True
+    construction_queue: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -242,7 +243,8 @@ class Planet:
                     'design_id': f.design_id,
                     'name': f.name,
                     'design_data': f.design_data,
-                    'is_operational': f.is_operational
+                    'is_operational': f.is_operational,
+                    'construction_queue': list(f.construction_queue)
                 } for f in self.facilities
             ],
             'populations': [
@@ -278,7 +280,8 @@ class Planet:
                 design_id=f['design_id'],
                 name=f['name'],
                 design_data=f['design_data'],
-                is_operational=f.get('is_operational', True)
+                is_operational=f.get('is_operational', True),
+                construction_queue=f.get('construction_queue', [])
             ) for f in data.get('facilities', [])
         ]
 

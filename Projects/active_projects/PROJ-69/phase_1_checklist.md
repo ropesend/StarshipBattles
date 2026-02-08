@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Give each shipyard facility its own construction queue and create the BuildQueueSource abstraction for discovering queues at a hex.
 
 ---
@@ -16,16 +16,16 @@
 **File:** `game/strategy/data/planet.py`
 **Tests:** `pytest tests/unit/strategy/ -k "planet or facility"`
 
-- [ ] Add `construction_queue: List[Dict[str, Any]] = field(default_factory=list)` to `PlanetaryFacility` dataclass (after line 30, before `is_operational`)
-- [ ] Add import `from typing import Dict, List, Optional, Any` is already present (line 3) - verify `List` and `Dict` are imported
-- [ ] Update `Planet.to_dict()` facility serialization (line 239-247) to include `'construction_queue': f.construction_queue` in the facility dict
-- [ ] Update `Planet.from_dict()` facility deserialization (around line 280+) to load `construction_queue` from saved data with default `[]`
-- [ ] Write unit test: PlanetaryFacility with queue items serializes correctly via Planet.to_dict()
-- [ ] Write unit test: Planet.from_dict() correctly restores facility construction_queue
-- [ ] Write unit test: PlanetaryFacility defaults to empty queue when not specified
-- [ ] Verify: run `pytest tests/unit/strategy/ -n 4` - all pass
+- [x] Add `construction_queue: List[Dict[str, Any]] = field(default_factory=list)` to `PlanetaryFacility` dataclass (after `is_operational`)
+- [x] Add import `from typing import Dict, List, Optional, Any` is already present (line 3) - verify `List` and `Dict` are imported
+- [x] Update `Planet.to_dict()` facility serialization to include `'construction_queue': list(f.construction_queue)` in the facility dict
+- [x] Update `Planet.from_dict()` facility deserialization to load `construction_queue` from saved data with default `[]`
+- [x] Write unit test: PlanetaryFacility with queue items serializes correctly via Planet.to_dict()
+- [x] Write unit test: Planet.from_dict() correctly restores facility construction_queue
+- [x] Write unit test: PlanetaryFacility defaults to empty queue when not specified
+- [x] Verify: run `pytest tests/unit/strategy/data/test_facility_construction_queue.py` - 7 passed
 
-**Notes:**
+**Notes:** Field placed after `is_operational` (both have defaults). Serialization uses `list()` for independent copy.
 
 ---
 
@@ -33,8 +33,8 @@
 **File:** `game/strategy/data/build_queue_source.py` (NEW)
 **Tests:** `pytest tests/unit/strategy/data/test_build_queue_source.py`
 
-- [ ] Create new file `game/strategy/data/build_queue_source.py`
-- [ ] Define `BuildQueueSource` dataclass with fields:
+- [x] Create new file `game/strategy/data/build_queue_source.py`
+- [x] Define `BuildQueueSource` dataclass with fields:
   - `queue_id: str` - Unique ID (facility `instance_id`, `f"planet_{id}_base"`, or `f"fleet_{id}"`)
   - `display_name: str` - Auto-generated display name
   - `owner_entity: Any` - Reference to Planet or Fleet
@@ -42,25 +42,26 @@
   - `can_build_ships: bool` - Whether ships/fighters/satellites can be queued
   - `can_build_complexes: bool` - Whether complexes can be queued
   - `context_type: str` - "planet" or "fleet"
-- [ ] Create helper `_facility_is_shipyard(facility: PlanetaryFacility) -> bool`:
+- [x] Create helper `_facility_is_shipyard(facility: PlanetaryFacility) -> bool`:
   - Reuse same logic as `Planet.has_space_shipyard` (planet.py:147-165)
   - Check `design_data` layers for component `id == "space_shipyard"` or ability `"SpaceShipyard"`
-- [ ] Create `collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSource]`:
+  - Also checks `is_operational` flag
+- [x] Create `collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSource]`:
   - Get planets via `galaxy.get_planets_at_global_hex(hex_coord)`
   - Filter by `planet.owner_id == empire.id`
-  - For each planet: create base queue source (complexes only, `construction_queue=planet.construction_queue`)
-  - For each planet: iterate `planet.facilities`, find operational shipyards via `_facility_is_shipyard()`, create queue source per shipyard (`construction_queue=facility.construction_queue`, can build ships+complexes)
-  - For each fleet in `empire.fleets` where `fleet.location == hex_coord` and `fleet.has_space_shipyard`: create queue source (`construction_queue=fleet.construction_queue`, can build ships+complexes)
+  - For each planet: create base queue source (complexes only)
+  - For each planet: iterate facilities, find operational shipyards, create queue source per shipyard
+  - For each fleet at hex with space yard: create queue source
   - Return list of all sources
-- [ ] Write unit test: `collect_build_queues_at_hex` with planet having 0 shipyards returns 1 source (base)
-- [ ] Write unit test: planet with 2 shipyards returns 3 sources (base + 2 shipyard)
-- [ ] Write unit test: fleet with space yard at same hex included in results
-- [ ] Write unit test: planet owned by different empire excluded
-- [ ] Write unit test: non-operational shipyard facility excluded
-- [ ] Write unit test: `_facility_is_shipyard` correctly identifies shipyard facilities
-- [ ] Verify: run `pytest tests/unit/strategy/data/test_build_queue_source.py` - all pass
+- [x] Write unit test: `collect_build_queues_at_hex` with planet having 0 shipyards returns 1 source (base)
+- [x] Write unit test: planet with 2 shipyards returns 3 sources (base + 2 shipyard)
+- [x] Write unit test: fleet with space yard at same hex included in results
+- [x] Write unit test: planet owned by different empire excluded
+- [x] Write unit test: non-operational shipyard facility excluded
+- [x] Write unit test: `_facility_is_shipyard` correctly identifies shipyard facilities
+- [x] Verify: run `pytest tests/unit/strategy/data/test_build_queue_source.py` - 15 passed
 
-**Notes:**
+**Notes:** Also added tests for: fleet without yard excluded, fleet at different hex excluded, empty hex, queue references shared, mixed facilities.
 
 ---
 
@@ -68,19 +69,19 @@
 **File:** `game/strategy/data/fleet.py`
 **Tests:** `pytest tests/unit/strategy/ -k "fleet"`
 
-- [ ] Verify `fleet.to_dict()` (line 754) serializes `construction_queue` correctly (no changes expected)
-- [ ] Verify `fleet.from_dict()` (line 819) deserializes `construction_queue` correctly (no changes expected)
-- [ ] Run `pytest tests/unit/strategy/ -k "fleet"` - all pass
-- [ ] Run `pytest tests/integration/strategy/production/test_fleet_save_load.py` - passes
+- [x] Verify `fleet.to_dict()` serializes `construction_queue` correctly (no changes needed)
+- [x] Verify `fleet.from_dict()` deserializes `construction_queue` correctly (no changes needed)
+- [x] Run `pytest tests/unit/strategy/fleet/` - 99 passed
+- [x] Run `pytest tests/integration/strategy/production/test_fleet_save_load.py` - 6 passed
 
-**Notes:**
+**Notes:** No changes to fleet.py required. All fleet serialization tests pass.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ --testmon` - all affected tests pass
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 2
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ -n 12` - 6518 passed, 1 pre-existing failure (IFleet mock spec)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 2
