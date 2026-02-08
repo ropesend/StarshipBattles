@@ -342,6 +342,32 @@
             }
         },
         {
+            "id": "fuel_synthesizer",
+            "name": "Fuel Synthesizer",
+            "type": "Generator",
+            "mass": 100,
+            "hp": 150,
+            "allowed_vehicle_types": [
+                "Planetary Complex"
+            ],
+            "sprite_index": 21,
+            "abilities": {
+                "ResourceGeneration": [
+                    {
+                        "resource": "fuel",
+                        "amount": 300
+                    }
+                ],
+                "CrewRequired": 10
+            },
+            "major_classification": "Infrastructure",
+            "resource_cost": {
+                "Metals": 200,
+                "Vapors": 100,
+                "Radioactives": 50
+            }
+        },
+        {
             "id": "laser_cannon",
             "name": "Laser Cannon",
             "type": "BeamWeaponAbility",
