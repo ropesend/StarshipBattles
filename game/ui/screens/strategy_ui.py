@@ -17,6 +17,7 @@ from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
+from game.ui.screens.strategy_menu_panel import StrategyMenuPanel
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -42,6 +43,7 @@ class StrategyUI:
         self.fleet_report_window = None  # fleet report window instance (PROJ-03)
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
         self.transfer_dialog = None      # cargo transfer dialog instance (PROJ-68)
+        self.menu_panel = None           # strategy menu dropdown (PROJ-72)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -242,10 +244,10 @@ class StrategyUI:
             relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Queues", manager=self.manager, container=self.top_bar
         )
 
-        # Save Game Button
-        self.btn_save_game = pygame_gui.elements.UIButton(
+        # Menu Button (replaces Save Game - options now in dropdown)
+        self.btn_menu = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40),
-            text="Save Game",
+            text="Menu",
             manager=self.manager,
             container=self.top_bar
         )
@@ -315,6 +317,42 @@ class StrategyUI:
             self.sector_panel,
             self.detail_panel
         ]
+
+    # =========================================================================
+    # Menu Panel Management (PROJ-72)
+    # =========================================================================
+
+    def toggle_menu_panel(self):
+        """Toggle the strategy menu dropdown panel open/closed."""
+        if self.menu_panel:
+            self.close_menu_panel()
+        else:
+            self.open_menu_panel()
+
+    def open_menu_panel(self):
+        """Open the strategy menu dropdown panel below the Menu button."""
+        btn_rect = self.btn_menu.get_abs_rect()
+        panel_rect = pygame.Rect(btn_rect.x, btn_rect.bottom + 2, 220, 245)
+        self.menu_panel = StrategyMenuPanel(panel_rect, self.manager, self._on_menu_option_selected)
+
+    def close_menu_panel(self):
+        """Close and destroy the strategy menu dropdown panel."""
+        if self.menu_panel:
+            self.menu_panel.kill()
+            self.menu_panel = None
+
+    def _on_menu_option_selected(self, option):
+        """Handle a menu option selection from the dropdown panel.
+
+        Args:
+            option: The option identifier string from StrategyMenuPanel.
+        """
+        self.close_menu_panel()
+        self.scene.on_menu_option(option)
+
+    # =========================================================================
+    # Visibility
+    # =========================================================================
 
     def hide_ui(self):
         """Hide all main strategy UI panels."""
@@ -610,6 +648,10 @@ class StrategyUI:
 
     def _has_modal_open(self) -> bool:
         """Check if any modal sub-panel is currently open."""
+        # Check for menu panel (PROJ-72)
+        if self.menu_panel:
+            return True
+
         # Check for build queue screen
         if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
             return True
@@ -654,12 +696,24 @@ class StrategyUI:
         if self.fleet_orders_window:
              self.fleet_orders_window.handle_global_event(event)
         
+        # Close menu panel on Escape
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.menu_panel:
+            self.close_menu_panel()
+            return
+
+        # Close menu panel on click outside
+        if event.type == pygame.MOUSEBUTTONDOWN and self.menu_panel:
+            panel_rect = self.menu_panel.get_abs_rect()
+            menu_btn_rect = self.btn_menu.get_abs_rect()
+            if not panel_rect.collidepoint(event.pos) and not menu_btn_rect.collidepoint(event.pos):
+                self.close_menu_panel()
+
         if self.system_tree.process_event(event):
              pass
-             
+
         if self.sector_tree.process_event(event):
              pass
-             
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.btn_planets:
                 self.open_planet_list()
@@ -668,9 +722,8 @@ class StrategyUI:
                     self.scene.on_design_click()
             elif event.ui_element == self.btn_build_queues:
                 self.open_build_queue_list()
-            elif event.ui_element == self.btn_save_game:
-                if hasattr(self.scene, 'on_save_game_click'):
-                    self.scene.on_save_game_click()
+            elif event.ui_element == self.btn_menu:
+                self.toggle_menu_panel()
             elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:

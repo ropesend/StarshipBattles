@@ -8,17 +8,17 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-72 Phase 1 - Create Menu Panel Component
-**Current Status:** PROJ-72 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-72 Phase 2 - Wire Up Strategy UI
+**Current Status:** PROJ-72 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-72
-**Current Phase:** Phase 2
-**Test Status:** 6587 passed + 19 new = 6606 (1 pre-existing failure in test_protocols.py)
+**Current Phase:** Phase 3
+**Test Status:** 6630 passed (1 pre-existing failure in test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created `game/ui/screens/strategy_menu_panel.py` - StrategyMenuPanel with 6 buttons
-- Created `tests/unit/ui/screens/test_strategy_menu_panel.py` - 19 tests (constants, creation, events, accessors)
-- Next: Phase 2 - Wire up strategy UI (replace Save Game button with Menu button, add toggle/close)
+- Modified `game/ui/screens/strategy_ui.py` - replaced btn_save_game with btn_menu, added menu panel management (toggle/open/close), click-outside/Escape close, _has_modal_open updated
+- Created `tests/unit/ui/screens/test_strategy_ui_menu.py` - 24 tests (button replacement, panel management, event handling, modal detection)
+- Next: Phase 3 - Route menu actions (on_menu_option in StrategyScreen, load game/quit_to_menu/quit_game in App.py)
 
 ---
 
@@ -123,7 +123,7 @@
 ---
 
 - [/] **PROJ-72: Strategy Menu Button**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-72/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-72/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -217,6 +217,7 @@
 | 2026-02-07 | PROJ-70 | Phase 3 | Complete | 6587 passed | a36393fa | Replaced inline fleet code with format_fleet_info() call, removed OrderType import |
 | 2026-02-07 | PROJ-70 | Audit 1 | PASSED | 6587 passed | pending | No significant issues, minor COLONIZE test coverage observation |
 | 2026-02-07 | PROJ-72 | Phase 1 | Complete | 6606 passed | pending | StrategyMenuPanel class, 6 buttons, 19 tests |
+| 2026-02-07 | PROJ-72 | Phase 2 | Complete | 6630 passed | pending | Menu button wiring, panel toggle, click-outside/Escape, 24 tests |
 
 ---
 
