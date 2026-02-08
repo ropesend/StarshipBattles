@@ -283,3 +283,118 @@ class TestEventLog:
             assert orig.empire_id == rest.empire_id
             assert orig.message == rest.message
             assert orig.details == rest.details
+
+
+# --- Phase 5: Additional Edge Case Tests ---
+
+
+class TestEventLogFilteringEdgeCases:
+    """Phase 5 Task 5.1: Edge case tests for EventLog filtering."""
+
+    def test_filter_by_category_with_all_four_types(self) -> None:
+        """Filtering returns correct counts across all event types."""
+        log = EventLog()
+        log.append(_make_event(event_type=EventType.SHIP_BUILT, category=EventCategory.PRODUCTION, turn=1))
+        log.append(_make_event(event_type=EventType.COMPLEX_BUILT, category=EventCategory.PRODUCTION, turn=1))
+        log.append(_make_event(event_type=EventType.COLONY_FOUNDED, category=EventCategory.COLONIES, turn=2))
+        log.append(_make_event(event_type=EventType.COMBAT_RESOLVED, category=EventCategory.COMBAT, turn=2))
+
+        assert len(log.get_events_by_category(EventCategory.PRODUCTION)) == 2
+        assert len(log.get_events_by_category(EventCategory.COLONIES)) == 1
+        assert len(log.get_events_by_category(EventCategory.COMBAT)) == 1
+        assert len(log.get_events_by_category(EventCategory.ALL)) == 4
+
+    def test_filter_by_turn_with_events_from_different_turns(self) -> None:
+        """get_events_for_turn returns only events from the requested turn."""
+        log = EventLog()
+        for turn in range(1, 6):
+            log.append(_make_event(turn=turn, message=f"Turn {turn} event A"))
+            log.append(_make_event(turn=turn, message=f"Turn {turn} event B"))
+
+        for turn in range(1, 6):
+            turn_events = log.get_events_for_turn(turn)
+            assert len(turn_events) == 2
+            assert all(e.turn == turn for e in turn_events)
+
+    def test_filter_by_turn_returns_empty_for_nonexistent_turn(self) -> None:
+        """get_events_for_turn returns [] for a turn with no events."""
+        log = EventLog()
+        log.append(_make_event(turn=3))
+        assert log.get_events_for_turn(99) == []
+
+    def test_filter_by_category_returns_empty_for_unused_category(self) -> None:
+        """get_events_by_category returns [] for categories with no events."""
+        log = EventLog()
+        log.append(_make_event(category=EventCategory.PRODUCTION))
+        assert log.get_events_by_category(EventCategory.COMBAT) == []
+        assert log.get_events_by_category(EventCategory.COLONIES) == []
+
+    def test_serialization_roundtrip_all_event_types(self) -> None:
+        """Save/load preserves events of every EventType."""
+        log = EventLog()
+        log.append(_make_event(event_type=EventType.SHIP_BUILT, category=EventCategory.PRODUCTION,
+                               message="Ship", details={"design_id": "scout"}))
+        log.append(_make_event(event_type=EventType.COMPLEX_BUILT, category=EventCategory.PRODUCTION,
+                               message="Complex", details={"design_id": "mine"}))
+        log.append(_make_event(event_type=EventType.COLONY_FOUNDED, category=EventCategory.COLONIES,
+                               message="Colony", details={"planet_id": 5}))
+        log.append(_make_event(event_type=EventType.COMBAT_RESOLVED, category=EventCategory.COMBAT,
+                               message="Combat", details={"winner_fleet_id": 1}))
+
+        restored = EventLog.from_dict(log.to_dict())
+        restored_events = restored.get_all_events()
+        assert len(restored_events) == 4
+        assert restored_events[0].event_type == EventType.SHIP_BUILT.value
+        assert restored_events[1].event_type == EventType.COMPLEX_BUILT.value
+        assert restored_events[2].event_type == EventType.COLONY_FOUNDED.value
+        assert restored_events[3].event_type == EventType.COMBAT_RESOLVED.value
+
+    def test_empty_eventlog_to_dict_and_from_dict(self) -> None:
+        """Empty EventLog serializes and deserializes cleanly."""
+        log = EventLog()
+        data = log.to_dict()
+        assert data == {"events": []}
+        restored = EventLog.from_dict(data)
+        assert restored.get_all_events() == []
+
+    def test_large_eventlog_performance(self) -> None:
+        """EventLog handles 200+ events without issues."""
+        log = EventLog()
+        for i in range(200):
+            category = [EventCategory.PRODUCTION, EventCategory.COMBAT, EventCategory.COLONIES][i % 3]
+            log.append(_make_event(
+                turn=i // 10 + 1,
+                empire_id=i % 2,
+                category=category,
+                message=f"Event {i}",
+            ))
+
+        assert len(log.get_all_events()) == 200
+
+        # Filter by turn
+        turn_1_events = log.get_events_for_turn(1)
+        assert len(turn_1_events) == 10
+
+        # Filter by category
+        production = log.get_events_by_category(EventCategory.PRODUCTION)
+        # Events 0,3,6,9... are production (every 3rd starting from 0)
+        expected_count = len([i for i in range(200) if i % 3 == 0])
+        assert len(production) == expected_count
+
+        # Roundtrip
+        restored = EventLog.from_dict(log.to_dict())
+        assert len(restored.get_all_events()) == 200
+
+    def test_from_dict_missing_events_key(self) -> None:
+        """from_dict with empty dict creates empty EventLog."""
+        log = EventLog.from_dict({})
+        assert log.get_all_events() == []
+
+    def test_get_all_events_returns_copy(self) -> None:
+        """get_all_events should return a copy, not the internal list."""
+        log = EventLog()
+        event = _make_event()
+        log.append(event)
+        events = log.get_all_events()
+        events.clear()  # Mutate the returned list
+        assert len(log.get_all_events()) == 1  # Internal list unaffected

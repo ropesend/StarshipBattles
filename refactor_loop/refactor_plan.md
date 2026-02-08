@@ -8,24 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-77 Phase 4 - Event Log UI
-**Current Status:** PROJ-77 Phase 4 complete. Next: Phase 5 (Testing & Polish)
+**Last Completed:** PROJ-77 Phase 5 - Testing & Polish
+**Current Status:** PROJ-77 all phases complete. Ready for audit.
 **Current Project:** PROJ-77
-**Current Phase:** Phase 5
-**Test Status:** 7209 passed, 2 pre-existing failures
+**Current Phase:** Audit Cycle 1
+**Test Status:** 7230 passed, 2 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created game/ui/screens/event_log_window.py: EventLogWindow(UIWindow) with filter tabs
-- Filter tabs: All, Combat, Production, Colonies - get_filtered_events() handles filtering + sort
-- Events sorted newest first (descending by turn)
-- StrategyUI: added btn_events ("Log") at position 7, End Turn shifted to 8
-- StrategyUI: open_event_log() fetches all events, open_event_log_with_events() for turn-start
-- StrategyUI: _has_modal_open() checks event_log_window, handle_event wired for close
-- StrategyScreen._process_full_turn(): auto-opens event log with turn events after processing
-- 27 new tests: tests/unit/ui/screens/test_event_log_window.py
-- Updated test_strategy_ui_menu.py mock to include event_log_window attribute
-- Next: Phase 5 - Testing & Polish
+- Phase 5 added 9 new unit edge case tests to test_event_log.py (TestEventLogFilteringEdgeCases)
+- Created tests/integration/strategy/test_event_log_integration.py: 12 integration tests
+- Integration tests cover: facade queries, category/turn filtering, all 4 event types, save/load persistence
+- Existing 27 UI tests verified sufficient for Task 5.3 requirements
+- Manual testing (Task 5.4) deferred to user
+- Full suite: 7230 passed, 2 pre-existing failures (unchanged)
+- Next: Audit Cycle 1
 
 ---
 
@@ -302,6 +299,7 @@
 | 2026-02-08 | PROJ-77 | Phase 2 | Complete | 7166 passed | pending | GameSession EventLog, persistence, facade queries, 24 new tests |
 | 2026-02-08 | PROJ-77 | Phase 3 | Complete | 7182 passed | pending | Engine event emission: 4 event types in 3 engines, 16 new tests |
 | 2026-02-08 | PROJ-77 | Phase 4 | Complete | 7209 passed | pending | EventLogWindow, Log button, turn-start modal, 27 new tests |
+| 2026-02-08 | PROJ-77 | Phase 5 | Complete | 7230 passed | pending | 9 unit edge cases + 12 integration tests, manual testing deferred |
 
 ---
 

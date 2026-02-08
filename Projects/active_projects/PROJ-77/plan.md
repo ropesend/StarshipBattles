@@ -17,15 +17,15 @@
 | 2. GameSession Integration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Engine Event Emission | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Event Log UI | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Testing & Polish | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Testing & Polish | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 5 - Testing & Polish
-**Last Action:** Phase 4 complete - EventLogWindow, top bar Log button, turn-start modal
-**Next Action:** Begin Phase 5 - Testing & Polish
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Phase 5 complete - Added 21 new tests (9 unit edge cases + 12 integration)
+**Next Action:** Project audit
 **Blockers:** None
-**Context:** EventLogWindow with filter tabs (All/Combat/Production/Colonies), scrollable list sorted newest-first. Log button in top bar opens all events. Turn start auto-opens current turn events. 27 new tests (98 total). 7209 passed, 2 pre-existing failures.
+**Context:** All 5 phases complete. Total project tests: 119 (28 unit EventLog, 12 event types, 16 engine emission, 12 session events, 27 UI, 12 integration, 12 facade). 7230 passed, 2 pre-existing failures. Manual testing deferred to user.
 
 ## Overview
 Implement a comprehensive event logging system for the strategy layer that captures and displays game events (ship/complex building, colony founding, combat) in a modal window at turn start, with a button to reopen the log.
