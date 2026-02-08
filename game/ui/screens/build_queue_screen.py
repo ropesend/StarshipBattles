@@ -13,6 +13,7 @@ import pygame_gui.windows
 from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
 
 from game.core.config import UIConfig
+from game.core.constants import PLANET_RESOURCES
 from game.core.input_actions import InputAction
 from game.core.logger import log_info, log_warning, log_error, log_debug
 from game.core.screenshot_manager import ScreenshotManager
@@ -531,6 +532,49 @@ class BuildQueueScreen:
             container=self.filter_panel
         )
 
+    @staticmethod
+    def _format_empire_resources(empire) -> str:
+        """Format empire resource pool for display in build queue bottom bar.
+
+        Args:
+            empire: Empire instance with resource_pool.
+
+        Returns:
+            Formatted string like "Met: 500  Org: 200  Vap: 0"
+        """
+        abbrevs = {"Metals": "Met", "Organics": "Org", "Vapors": "Vap",
+                   "Radioactives": "Rad", "Exotics": "Exo"}
+        parts = []
+        for res in PLANET_RESOURCES:
+            current = empire.resource_pool.get(res, 0.0)
+            cap = empire.max_storage.get(res, 0.0)
+            abbr = abbrevs.get(res, res[:3])
+            if cap > 0:
+                parts.append(f"{abbr}: {int(current)}/{int(cap)}")
+            elif current > 0:
+                parts.append(f"{abbr}: {int(current)}")
+        return "  |  ".join(parts) if parts else "No resources"
+
+    @staticmethod
+    def _format_resource_cost(cost: dict) -> str:
+        """Format resource cost dict into compact display string.
+
+        Args:
+            cost: Dict mapping resource type to amount.
+
+        Returns:
+            Compact string like "M:100 O:50 V:20"
+        """
+        abbrevs = {"Metals": "M", "Organics": "O", "Vapors": "V",
+                   "Radioactives": "R", "Exotics": "E"}
+        parts = []
+        for res in PLANET_RESOURCES:
+            amount = cost.get(res, 0)
+            if amount > 0:
+                abbr = abbrevs.get(res, res[0])
+                parts.append(f"{abbr}:{int(amount)}")
+        return " ".join(parts) if parts else ""
+
     def _create_bottom_bar(self):
         """Create bottom bar with close button and turn info."""
         bar_height = 60
@@ -545,6 +589,19 @@ class BuildQueueScreen:
         self.btn_close = ui.UIButton(
             relative_rect=pygame.Rect(10, 10, 120, 40),
             text="Close",
+            manager=self.manager,
+            container=self.bottom_bar
+        )
+
+        # Empire resource summary in bottom bar
+        empire = getattr(self.session, 'current_empire', None)
+        if empire and hasattr(empire, 'resource_pool'):
+            resource_text = self._format_empire_resources(empire)
+        else:
+            resource_text = ""
+        ui.UILabel(
+            relative_rect=pygame.Rect(150, 10, self.screen_width - 400, 40),
+            text=resource_text,
             manager=self.manager,
             container=self.bottom_bar
         )
@@ -574,9 +631,14 @@ class BuildQueueScreen:
         icon_size = 36  # Small icon size
         btn_height = 40
         for design in designs:
+            # Determine row height: taller when resource costs exist
+            raw_cost = getattr(design, 'resource_cost', None)
+            cost = raw_cost if isinstance(raw_cost, dict) else {}
+            row_height = btn_height + (18 if cost else 0)
+
             # Create horizontal container panel for icon + button
             row_panel = ui.UIPanel(
-                relative_rect=pygame.Rect(0, y_offset, 260, btn_height),
+                relative_rect=pygame.Rect(0, y_offset, 260, row_height),
                 manager=self.manager,
                 container=self.items_scrollable,
                 object_id="#design_row_panel"
@@ -602,7 +664,17 @@ class BuildQueueScreen:
             btn.design_id = design.design_id  # Store design_id on button
             row_panel.design_id = design.design_id  # Also store on panel for hit testing
 
-            y_offset += btn_height + 5
+            # Resource cost label (compact format below button)
+            if cost:
+                cost_str = self._format_resource_cost(cost)
+                ui.UILabel(
+                    relative_rect=pygame.Rect(icon_size + 4, btn_height, 260 - icon_size - 8, 16),
+                    text=cost_str,
+                    manager=self.manager,
+                    container=row_panel
+                )
+
+            y_offset += row_height + 5
 
         if not designs:
             ui.UILabel(
@@ -661,8 +733,12 @@ class BuildQueueScreen:
             is_selected = (idx == self.selected_queue_index)
             panel_object_id = "#queue_item_selected" if is_selected else "#queue_item"
 
+            # Taller panel when cost tracking is present
+            total_cost = item.get("total_cost")
+            panel_height = 78 if total_cost else 60
+
             item_panel = ui.UIPanel(
-                relative_rect=pygame.Rect(0, y_offset, self.queue_scrollable.get_container().get_size()[0] - 20, 60),
+                relative_rect=pygame.Rect(0, y_offset, self.queue_scrollable.get_container().get_size()[0] - 20, panel_height),
                 manager=self.manager,
                 container=self.queue_scrollable,
                 object_id=panel_object_id
@@ -684,21 +760,39 @@ class BuildQueueScreen:
             # Design name and turns (offset to right of icon)
             label_x = icon_size + 15
             ui.UILabel(
-                relative_rect=pygame.Rect(label_x, 10, 250, 25),
+                relative_rect=pygame.Rect(label_x, 5, 250, 20),
                 text=f"{design_id}",
                 manager=self.manager,
                 container=item_panel
             )
 
             ui.UILabel(
-                relative_rect=pygame.Rect(label_x, 35, 200, 20),
+                relative_rect=pygame.Rect(label_x, 25, 200, 18),
                 text=f"{turns} turns remaining | Type: {item_type}",
                 manager=self.manager,
                 container=item_panel
             )
 
+            # Resource cost progress (when cost tracking present)
+            if total_cost:
+                consumed = item.get("resources_consumed", {})
+                cost_str = self._format_resource_cost(total_cost)
+                consumed_parts = []
+                for res in PLANET_RESOURCES:
+                    total_amt = total_cost.get(res, 0)
+                    used_amt = consumed.get(res, 0)
+                    if total_amt > 0:
+                        consumed_parts.append(f"{int(used_amt)}/{int(total_amt)}")
+                progress_str = " | ".join(consumed_parts) if consumed_parts else cost_str
+                ui.UILabel(
+                    relative_rect=pygame.Rect(label_x, 45, 300, 16),
+                    text=f"Cost: {progress_str}",
+                    manager=self.manager,
+                    container=item_panel
+                )
+
             self.queue_items.append(item_panel)
-            y_offset += 65
+            y_offset += panel_height + 5
 
         if not queue:
             ui.UILabel(

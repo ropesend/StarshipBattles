@@ -8,31 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-75 Phase 5 - Maintenance System
-**Current Status:** PROJ-75 Phase 5 complete, ready for Phase 6
+**Last Completed:** PROJ-75 Phase 6 - Integration & UI
+**Current Status:** PROJ-75 all phases complete, ready for audit
 **Current Project:** PROJ-75
-**Current Phase:** Phase 6
-**Test Status:** 6989 passed, 2 pre-existing failures (test_protocols.py, test_stats_render.py)
+**Current Phase:** Audit
+**Test Status:** 7004 passed, 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-75 Phase 5 complete: Maintenance System
-- Created MaintenanceEngine class with MAINTENANCE_RATE = 0.05 (5% per turn)
-- ScuttleEvent dataclass for notification records
-- _calculate_maintenance_cost: sums resource_cost across layers (handles both dict and list layer formats)
-- _process_colony_facilities: iterates facilities, pays or scuttles, batch removal after iteration
-- _process_fleet_ships: iterates ships, pays or scuttles, batch removal after iteration
-- _cleanup_empty_fleets: only removes fleets that had scuttles (not pre-existing empty fleets)
-- Created IMaintenanceEngine interface in engines.py
-- Created MockMaintenanceEngine in mock_engines.py
-- Added maintenance_engine DI parameter to TurnEngine constructor
-- Wired into TurnEngine.process_turn as Phase 0b (after harvesting, before subturn loop)
-- Updated test_engine_interfaces.py with IMaintenanceEngine tests
-- Updated test_dependency_injection.py and test_fleet_operations.py mock objects for new maintenance iteration
-- 17 unit tests + 6 integration tests + 4 interface tests = 27 new tests
-- Files created: maintenance_engine.py, test_maintenance_engine.py, test_maintenance.py (integration)
-- Files modified: turn_engine.py, engines.py, mock_engines.py, test_engine_interfaces.py, test_dependency_injection.py, test_fleet_operations.py
-- Next: Phase 6 - Integration & UI
+- PROJ-75 Phase 6 complete: Integration & UI
+- Created tests/integration/strategy/test_economy_e2e.py with 15 E2E tests
+- Modified game/ui/screens/build_queue_screen.py: resource cost display, _format_resource_cost(), _format_empire_resources(), isinstance guard for MagicMock compatibility
+- Modified game/ui/screens/strategy_ui.py: resource_bar panel (24px) with per-frame refresh, _update_resource_display() method
+- Modified game/strategy/engine/turn_engine.py: last_scuttle_events storage from maintenance processing
+- Modified game/ui/screens/strategy_screen.py: _show_scuttle_notifications() popup for current player
+- All phases (1-6) complete: Empire pool, harvesting, storage, production costs, maintenance, integration/UI
+- Next: Audit cycle 1
 
 ---
 
@@ -169,7 +160,7 @@
 ---
 
 - [/] **PROJ-75: Resource Harvesting & Economy System**
-  - **Phases:** 6 | **Status:** Phase 5 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** All Phases Complete - Ready for Audit | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-75/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-75/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -295,6 +286,7 @@
 | 2026-02-08 | PROJ-75 | Phase 3 | Complete | 6940 passed | pending | EmpireStorageAbility, recalculate_storage, 5 vault components, 19 tests |
 | 2026-02-08 | PROJ-75 | Phase 4 | Complete | 6962 passed | pending | _calculate_design_cost, process_construction_tick, IProductionEngine update, 22 tests |
 | 2026-02-08 | PROJ-75 | Phase 5 | Complete | 6989 passed | pending | MaintenanceEngine, IMaintenanceEngine, TurnEngine wiring, 27 tests |
+| 2026-02-08 | PROJ-75 | Phase 6 | Complete | 7004 passed | pending | Integration & UI: 15 E2E tests, build queue costs, resource bar, scuttle notifications |
 
 ---
 

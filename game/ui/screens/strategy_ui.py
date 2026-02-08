@@ -31,6 +31,7 @@ from game.ui.screens.strategy_detail_fmt import (
     format_spectrum_html, format_atmosphere_raw, get_label_for_object,
     format_fleet_info
 )
+from game.core.constants import PLANET_RESOURCES
 import pygame_gui.windows
 import pygame_gui.elements as ui
 
@@ -273,7 +274,23 @@ class StrategyUI:
             manager=self.manager,
             container=self.top_bar
         )
-        
+
+        # Empire resource display (below top bar, full width)
+        resource_bar_y = 50  # Just below top bar
+        resource_bar_height = 24
+        self.resource_bar = pygame_gui.elements.UIPanel(
+            relative_rect=pygame.Rect(0, resource_bar_y, screen_width - self.sidebar_width, resource_bar_height),
+            manager=self.manager,
+            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
+        )
+        self.lbl_resources = pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(10, 0, screen_width - self.sidebar_width - 20, resource_bar_height),
+            text="",
+            manager=self.manager,
+            container=self.resource_bar
+        )
+        self._update_resource_display()
+
         # Contextual Buttons (Detail Panel)
         # Positioned below text
         self.btn_colonize = pygame_gui.elements.UIButton(
@@ -319,6 +336,7 @@ class StrategyUI:
         
         self.panels = [
             self.top_bar,
+            self.resource_bar,
             self.system_panel,
             self.sector_panel,
             self.detail_panel
@@ -678,9 +696,37 @@ class StrategyUI:
         return format_atmosphere_raw(planet)
 
         
+    def _update_resource_display(self):
+        """Update the empire resource bar with current pool values."""
+        if not hasattr(self.scene, 'current_empire'):
+            return
+        empire = self.scene.current_empire
+        if empire is None:
+            return
+
+        # Resource abbreviations for compact display
+        abbrevs = {"Metals": "Met", "Organics": "Org", "Vapors": "Vap",
+                   "Radioactives": "Rad", "Exotics": "Exo"}
+
+        parts = []
+        for res in PLANET_RESOURCES:
+            current = empire.get_resource(res)
+            cap = empire.max_storage.get(res, 0.0)
+            abbr = abbrevs.get(res, res[:3])
+            if cap > 0:
+                parts.append(f"{abbr}: {int(current)}/{int(cap)}")
+            elif current > 0:
+                parts.append(f"{abbr}: {int(current)}")
+
+        if parts:
+            self.lbl_resources.set_text("  |  ".join(parts))
+        else:
+            self.lbl_resources.set_text("No resources")
+
     def update(self, dt):
         """Update UI logic."""
         self.manager.update(dt)
+        self._update_resource_display()
  
     def draw(self, screen):
         """Draw the strategy scene UI elements."""

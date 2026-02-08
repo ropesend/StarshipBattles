@@ -163,6 +163,9 @@ class TurnEngine:
         self._harvesting_engine: Optional['IHarvestingEngine'] = harvesting_engine
         self._maintenance_engine: Optional['IMaintenanceEngine'] = maintenance_engine
 
+        # PROJ-75 Phase 6: Scuttle event storage for UI notification
+        self.last_scuttle_events: list = []
+
     @property
     def movement_engine(self) -> 'IMovementEngine':
         """Return movement engine, lazily creating default if not injected."""
@@ -252,7 +255,7 @@ class TurnEngine:
         self.harvesting_engine.process_harvesting(empires)
 
         # 0b. Maintenance Phase (PROJ-75) - deduct 5% build cost, scuttle on failure
-        self.maintenance_engine.process_maintenance(empires)
+        self.last_scuttle_events = self.maintenance_engine.process_maintenance(empires)
 
         # 1. Subturn Loop (Movement & Combat)
         for tick in range(1, 101):

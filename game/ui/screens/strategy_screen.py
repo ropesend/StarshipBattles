@@ -318,9 +318,49 @@ class StrategyScreen:
 
         self.turn_processing = False
 
+        # PROJ-75 Phase 6: Show scuttle notifications for current player
+        self._show_scuttle_notifications()
+
         # Refresh UI for currently selected object
         if self.selected_object:
             self.on_ui_selection(self.selected_object)
+
+    def _show_scuttle_notifications(self):
+        """Show maintenance scuttle events to the player after turn processing.
+
+        PROJ-75 Phase 6: Display a popup listing entities scuttled due to
+        maintenance failure, filtered to the current player's empire.
+        """
+        turn_engine = getattr(self.session, 'turn_engine', None)
+        if turn_engine is None:
+            return
+        events = getattr(turn_engine, 'last_scuttle_events', [])
+        if not events:
+            return
+
+        # Filter to current player's empire
+        current_id = self.current_empire.id
+        player_events = [e for e in events if e.empire_id == current_id]
+        if not player_events:
+            return
+
+        # Build notification message
+        lines = []
+        for ev in player_events:
+            lines.append(f"- {ev.entity_name} ({ev.entity_type}) at {ev.location}")
+        body = "<br>".join(lines)
+        html = f"<b>Maintenance Failure - Scuttled:</b><br>{body}"
+
+        # Show in a message window
+        import pygame_gui.windows
+        win_rect = pygame.Rect(0, 0, 450, min(200 + len(player_events) * 25, 500))
+        win_rect.center = (self.ui.width // 2, self.ui.height // 2)
+        pygame_gui.windows.UIMessageWindow(
+            rect=win_rect,
+            html_message=html,
+            manager=self.ui.manager,
+            window_title="Maintenance Report"
+        )
 
     def _update_player_label(self):
         """Update the player indicator label."""
