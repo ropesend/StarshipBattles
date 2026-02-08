@@ -8,6 +8,8 @@ Cross-layer imports (acceptable for UI):
 - OrderType: Runtime - formats order type display strings
 - Protocols: Runtime - duck typing for object identification
 """
+from collections import Counter
+
 from game.strategy.data.fleet import OrderType
 from game.core.protocols import (
     is_star_system, is_star, is_planet, is_fleet,
@@ -200,9 +202,126 @@ def format_star_info(star) -> str:
     return text
 
 
+def _format_ship_groups(fleet) -> str:
+    """
+    Format ship list grouped by design, sorted by mass descending.
+
+    Args:
+        fleet: Fleet object with ships list
+
+    Returns:
+        HTML string with grouped ship list
+    """
+    if not fleet.ships:
+        return "<b>Ships: None</b><br>"
+
+    # Count ships per design_id
+    design_counts = Counter(ship.design_id for ship in fleet.ships)
+
+    # Collect display info per unique design (name + mass from first ship)
+    design_info: dict[str, tuple[str, float]] = {}
+    for ship in fleet.ships:
+        did = ship.design_id
+        if did not in design_info:
+            data = getattr(ship, 'design_data', None) or {}
+            name = data.get('name', str(did)) if isinstance(data, dict) else str(did)
+            stats = ship.get_calculated_stats()
+            raw_mass = stats.get('mass', 0) if isinstance(stats, dict) else 0
+            mass = float(raw_mass) if isinstance(raw_mass, (int, float)) else 0.0
+            design_info[did] = (name, mass)
+
+    # Sort by mass descending, then name for stability
+    sorted_designs = sorted(
+        design_counts.keys(),
+        key=lambda d: (-design_info[d][1], design_info[d][0]),
+    )
+
+    total = sum(design_counts.values())
+    text = f"<b>Ships ({total}):</b><br>"
+    for design_id in sorted_designs:
+        name, _mass = design_info[design_id]
+        count = design_counts[design_id]
+        if count > 1:
+            text += f" {name} x {count}<br>"
+        else:
+            text += f" {name}<br>"
+
+    return text
+
+
+def _format_cargo_summary(fleet) -> str:
+    """
+    Format aggregated cargo summary across all ships in the fleet.
+
+    Args:
+        fleet: Fleet object with ships list
+
+    Returns:
+        HTML string with cargo summary, or empty string if no cargo
+    """
+    totals: dict[str, int] = {}
+    for ship in fleet.ships:
+        for cargo_type, amount in getattr(ship, 'cargo_contents', {}).items():
+            if amount > 0:
+                totals[cargo_type] = totals.get(cargo_type, 0) + amount
+
+    if not totals:
+        return ""
+
+    text = "<b>Cargo:</b><br>"
+    for cargo_type, amount in totals.items():
+        display_name = cargo_type.replace('_', ' ').title()
+        text += f" {display_name}: {amount}<br>"
+
+    return text
+
+
+def _format_orders(fleet) -> str:
+    """
+    Format fleet orders as numbered HTML list.
+
+    Handles MOVE, COLONIZE, BUILD, TRANSFER, and generic order types.
+
+    Args:
+        fleet: Fleet object with orders list
+
+    Returns:
+        HTML string with formatted orders
+    """
+    text = "<b>Orders:</b><br>"
+    if not fleet.orders:
+        text += " (No Orders)<br>"
+        return text
+
+    for i, order in enumerate(fleet.orders):
+        if order.type == OrderType.MOVE:
+            text += f" {i+1}. MOVE {order.target}<br>"
+        elif order.type == OrderType.COLONIZE:
+            p_name = getattr(order.target, 'name', 'Unknown')
+            text += f" {i+1}. COLONIZE {p_name}<br>"
+        elif order.type == OrderType.BUILD:
+            queue = getattr(fleet, 'construction_queue', [])
+            text += f" {i+1}. BUILDING ({len(queue)} items)<br>"
+        elif order.type == OrderType.TRANSFER:
+            if isinstance(order.target, dict):
+                direction = order.target.get('direction', '?')
+                cargo_type = order.target.get('cargo_type', '?')
+                amount = order.target.get('amount', 0)
+                amt_str = str(amount) if amount > 0 else "All"
+                text += f" {i+1}. {direction.upper()} {amt_str} {cargo_type}<br>"
+            else:
+                text += f" {i+1}. TRANSFER {order.target}<br>"
+        else:
+            text += f" {i+1}. {order.type.name}<br>"
+
+    return text
+
+
 def format_fleet_info(fleet) -> str:
     """
-    Format fleet information as HTML.
+    Format comprehensive fleet information as HTML.
+
+    Includes header, travel range, ship groups, cargo summary, and orders.
 
     Args:
         fleet: Fleet object
@@ -210,32 +329,28 @@ def format_fleet_info(fleet) -> str:
     Returns:
         HTML string with fleet details
     """
+    # Header
     text = f"<b>Fleet:</b> {fleet.id}<br>"
     text += f"<b>Owner:</b> {fleet.owner_id}<br>"
-    text += f"<b>Ships:</b> {len(fleet.ships)}<br>"
     text += f"<b>Location:</b> {fleet.location}<br>"
 
-    text += "<b>Orders:</b><br>"
-    if fleet.orders:
-        for i, order in enumerate(fleet.orders):
-            if order.type == OrderType.MOVE:
-                text += f" {i+1}. MOVE {order.target}<br>"
-            elif order.type == OrderType.COLONIZE:
-                p_name = order.target.name if hasattr(order.target, 'name') else "Unknown"
-                text += f" {i+1}. COLONIZE {p_name}<br>"
-            elif order.type == OrderType.TRANSFER:
-                if isinstance(order.target, dict):
-                    direction = order.target.get('direction', '?')
-                    cargo_type = order.target.get('cargo_type', '?')
-                    amount = order.target.get('amount', 0)
-                    amt_str = str(amount) if amount > 0 else "All"
-                    text += f" {i+1}. {direction.upper()} {amt_str} {cargo_type}<br>"
-                else:
-                    text += f" {i+1}. TRANSFER {order.target}<br>"
-            else:
-                text += f" {i+1}. {order.type.name}<br>"
+    # Travel range
+    speed = int(fleet.speed)
+    fuel = fleet.fuel_endurance()
+    if fuel == -1:
+        fuel_str = "unlimited fuel"
     else:
-        text += " (No Orders)<br>"
+        fuel_str = f"{fuel} hex fuel"
+    text += f"<b>Range:</b> {speed} hex/turn, {fuel_str}<br>"
+
+    # Ship groups
+    text += _format_ship_groups(fleet)
+
+    # Cargo summary (omitted if empty)
+    text += _format_cargo_summary(fleet)
+
+    # Orders
+    text += _format_orders(fleet)
 
     return text
 

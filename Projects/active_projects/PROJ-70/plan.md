@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Write Tests (TDD) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Enhance format_fleet_info() | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Enhance format_fleet_info() | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Wire Up strategy_ui.py | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - 14 TDD tests written (9 fail, 5 pass)
-**Next Action:** Begin Phase 2 - Enhance format_fleet_info()
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - format_fleet_info() rewritten with 3 helpers, all 14 tests pass
+**Next Action:** Begin Phase 3 - Wire up strategy_ui.py to use format_fleet_info()
 **Blockers:** None
-**Context for Next Agent:** Test file at `tests/unit/ui/screens/test_fleet_detail_fmt.py` has 14 tests. 9 new tests fail because format_fleet_info() in `strategy_detail_fmt.py` (lines 203-240) lacks travel range, ship grouping, cargo summary, and BUILD order handling. Existing TRANSFER + basic tests pass. Mock helpers `_make_mock_ship` and `_make_mock_fleet` available.
+**Context for Next Agent:** `format_fleet_info()` now includes travel range, ship grouping (by design, sorted by mass), cargo summary, and full order formatting (MOVE, COLONIZE, BUILD, TRANSFER). Three private helpers: `_format_ship_groups()`, `_format_cargo_summary()`, `_format_orders()`. All 14 tests pass. Next: replace inline fleet code in `strategy_ui.py` with a call to `format_fleet_info()`.
 
 ## Overview
 Enhance the Fleet Details panel in the strategy screen sidebar to show: travel range (hex/turn + fuel endurance), condensed ship list grouped by design sorted by mass, aggregated cargo list, and current orders. Also consolidates duplicated fleet formatting code.

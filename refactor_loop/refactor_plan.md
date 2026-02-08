@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-07
-**Last Completed:** PROJ-70 Phase 1 - Write Tests (TDD)
-**Current Status:** PROJ-70 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-70 Phase 2 - Enhance format_fleet_info()
+**Current Status:** PROJ-70 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-70
-**Current Phase:** Phase 2
-**Test Status:** 14 tests in file (9 fail as TDD, 5 pass), full suite baseline 6575+
+**Current Phase:** Phase 3
+**Test Status:** 6587 passed (1 pre-existing failure in test_protocols.py), 14/14 fleet detail tests pass
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-70 Phase 1 complete: 14 TDD tests written in `tests/unit/ui/screens/test_fleet_detail_fmt.py`
-  - Mock helpers: `_make_mock_ship()` and `_make_mock_fleet()` created
-  - 9 new tests fail (travel range x3, ship grouping x4, cargo summary x1, build order x1)
-  - 5 tests pass (2 existing TRANSFER, no_cargo, move_order, no_orders)
-  - Existing TRANSFER tests refactored to use new helpers
-- Next: Phase 2 - Enhance `format_fleet_info()` in `strategy_detail_fmt.py` to pass all 14 tests
+- PROJ-70 Phase 2 complete: `format_fleet_info()` rewritten with 3 private helpers
+  - `_format_ship_groups()`: Counter-based grouping by design_id, sorted by mass descending
+  - `_format_cargo_summary()`: Aggregates cargo_contents across all ships
+  - `_format_orders()`: Handles MOVE, COLONIZE, BUILD, TRANSFER, generic orders
+  - Added `collections.Counter` import, defensive handling for raw MagicMock ships
+  - All 14 TDD tests pass (was 5 pass / 9 fail before this phase)
+- Next: Phase 3 - Replace inline fleet code in `strategy_ui.py` with call to `format_fleet_info()`
 
 ---
 
@@ -216,6 +217,7 @@
 | 2026-02-07 | PROJ-69 | Phase 6 | Complete | 6575 passed | 6d2736a7 | 14 new tests: 2 E2E integration + 12 controller multi-queue tests |
 | 2026-02-07 | PROJ-69 | Audit 1 | PASSED | 6575 passed | pending | No significant issues, minor type hint observations |
 | 2026-02-07 | PROJ-70 | Phase 1 | Complete | 9 fail (TDD), 5 pass | pending | 14 tests written, mock helpers, TDD setup |
+| 2026-02-07 | PROJ-70 | Phase 2 | Complete | 6587 passed | pending | 3 helpers + format_fleet_info() rewrite, all 14 tests green |
 
 ---
 
