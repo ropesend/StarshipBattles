@@ -7,6 +7,7 @@ navigation to individual hex build screens.
 Created as part of PROJ-76 Phase 2.
 Updated in Phase 3: Configurable column system with visibility toggles.
 Updated in Phase 4: Filtering (location type, queue status, capabilities, text search).
+Updated in Phase 5: Navigation (row click selects, re-click navigates to hex build screen).
 """
 from __future__ import annotations
 
@@ -228,6 +229,56 @@ class EmpireBuildQueueWindow(UIWindow):
         log_debug(f"Selected queue source: {self.selected_source.display_name}")
 
     # -------------------------------------------------------------------
+    # Navigation
+    # -------------------------------------------------------------------
+
+    def get_hex_for_source(self, source: BuildQueueSource) -> Any:
+        """Resolve the global hex coordinate for a build queue source.
+
+        For planets, computes system.global_location + planet.location.
+        For fleets, returns fleet.location directly.
+
+        Args:
+            source: The build queue source to resolve.
+
+        Returns:
+            HexCoord for the source, or None if unresolvable.
+        """
+        entity = source.owner_entity
+        if source.context_type == "fleet":
+            return getattr(entity, 'location', None)
+        if source.context_type == "planet":
+            if self.galaxy and hasattr(self.galaxy, 'get_system_of_planet'):
+                system = self.galaxy.get_system_of_planet(entity)
+                if system is not None:
+                    return system.global_location + entity.location
+            return None
+        return None
+
+    def navigate_to_source(self, source: BuildQueueSource) -> None:
+        """Navigate to the hex build screen for a source.
+
+        Resolves the hex coordinate, selects the source, and invokes
+        the on_navigate_to_hex callback with (hex_coord, source).
+        Does nothing if hex cannot be resolved or no callback is set.
+
+        Args:
+            source: The build queue source to navigate to.
+        """
+        hex_coord = self.get_hex_for_source(source)
+        if hex_coord is None:
+            return
+
+        # Select the source in our list
+        if source in self.filtered_sources:
+            idx = self.filtered_sources.index(source)
+            self._select_source(idx)
+
+        if self.on_navigate_to_hex:
+            log_debug(f"Navigating to hex {hex_coord} for {source.display_name}")
+            self.on_navigate_to_hex(hex_coord, source)
+
+    # -------------------------------------------------------------------
     # Event Handling
     # -------------------------------------------------------------------
 
@@ -266,7 +317,11 @@ class EmpireBuildQueueWindow(UIWindow):
                 clicked_index = int(local_y // self.row_height)
 
                 if 0 <= clicked_index < len(self.filtered_sources):
-                    self._select_source(clicked_index)
+                    # Re-click on already-selected row → navigate
+                    if clicked_index == self.selected_index:
+                        self.navigate_to_source(self.filtered_sources[clicked_index])
+                    else:
+                        self._select_source(clicked_index)
                     return True
 
         # Mouse wheel scrolling

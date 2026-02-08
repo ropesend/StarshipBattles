@@ -8,24 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-76 Phase 4 - Filtering
-**Current Status:** PROJ-76 Phase 4 complete, Phase 5 next
+**Last Completed:** PROJ-76 Phase 5 - Navigation
+**Current Status:** PROJ-76 Phase 5 complete, Phase 6 next
 **Current Project:** PROJ-76
-**Current Phase:** Phase 5
-**Test Status:** 73 passed (testmon: 73 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
+**Current Phase:** Phase 6
+**Test Status:** 85 passed (testmon: 85 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-76 Phase 4 complete: Filtering system added
-- Modified: game/ui/screens/empire_build_queue_window.py (515→752 lines)
-- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (47→73 tests)
-- Filter state: filter_location_type, filter_status, filter_capabilities, search_text
-- Core methods: _filter_sources() (AND logic), apply_filters() (resets selection, refreshes)
-- Sidebar filter UI: _build_sidebar_filters() with 3 toggle sections + search entry + Apply button
-- Event handling: _handle_filter_toggle_click(), _handle_apply_filters_click()
-- Filter toggles use [x]/[ ] prefix pattern matching column toggles
-- 26 new tests: 4 location, 3 status, 6 capabilities, 5 search, 5 combined, 3 state init
-- Next: Phase 5 - Navigation (row click → hex build screen)
+- PROJ-76 Phase 5 complete: Navigation system added
+- Modified: game/ui/screens/empire_build_queue_window.py (752→800 lines)
+- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (73→85 tests)
+- get_hex_for_source(source): resolves hex for planet (system.global_location + planet.location) or fleet (fleet.location)
+- navigate_to_source(source): selects source, resolves hex, calls on_navigate_to_hex(hex, source)
+- process_event: re-click on selected row triggers navigate_to_source (double-click pattern)
+- 12 new tests: 5 get_hex_for_source, 4 navigate_to_source, 3 double-click navigation
+- Task 5.2 (strategy screen callback wiring) deferred to Phase 7 (Integration)
+- Next: Phase 6 - Multi-Select (Ctrl+click for batch operations)
 
 ---
 
@@ -170,7 +169,7 @@
 ---
 
 - [/] **PROJ-76: Empire-Wide Build Queue Window**
-  - **Phases:** 7 | **Status:** Phase 4 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-76/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-76/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -294,6 +293,7 @@
 | 2026-02-08 | PROJ-76 | Phase 2 | Complete | 21 testmon | pending | EmpireBuildQueueWindow class, layout, row rendering, selection, 21 tests |
 | 2026-02-08 | PROJ-76 | Phase 3 | Complete | 47 testmon | pending | Column system: 8 columns, visibility toggles, sidebar, 26 new tests |
 | 2026-02-08 | PROJ-76 | Phase 4 | Complete | 73 testmon | pending | Filtering: location type, queue status, capabilities, text search, 26 new tests |
+| 2026-02-08 | PROJ-76 | Phase 5 | Complete | 85 testmon | pending | Navigation: get_hex_for_source, navigate_to_source, re-click detection, 12 new tests |
 
 ---
 

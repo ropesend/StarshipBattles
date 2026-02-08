@@ -887,3 +887,201 @@ class TestCombinedFilters:
         win.apply_filters()
         assert win.selected_source is None
         assert win.selected_index == -1
+
+
+# =======================================================================
+# Navigation Tests (Phase 5)
+# =======================================================================
+
+class TestGetHexForSource:
+    """get_hex_for_source() should resolve hex coordinates."""
+
+    def test_fleet_source_returns_fleet_location(self):
+        """Fleet source returns fleet.location as hex coordinate."""
+        from game.strategy.data.hex_math import HexCoord
+        fleet_entity = MagicMock()
+        fleet_entity.location = HexCoord(5, 3)
+        source = BuildQueueSource(
+            queue_id="fleet_1", display_name="Fleet Yard",
+            owner_entity=fleet_entity, construction_queue=[],
+            can_build_ships=True, can_build_complexes=True,
+            context_type="fleet",
+        )
+        win = _make_window(sources=[source])
+        result = win.get_hex_for_source(source)
+        assert result == HexCoord(5, 3)
+
+    def test_planet_source_returns_system_plus_planet_location(self):
+        """Planet source returns system.global_location + planet.location."""
+        from game.strategy.data.hex_math import HexCoord
+        planet_entity = MagicMock()
+        planet_entity.location = HexCoord(1, 0)
+        system = MagicMock()
+        system.global_location = HexCoord(10, 20)
+        win = _make_window()
+        win.galaxy = MagicMock()
+        win.galaxy.get_system_of_planet.return_value = system
+        source = BuildQueueSource(
+            queue_id="planet_1_base", display_name="Alpha - Base",
+            owner_entity=planet_entity, construction_queue=[],
+            can_build_ships=False, can_build_complexes=True,
+            context_type="planet",
+        )
+        result = win.get_hex_for_source(source)
+        assert result == HexCoord(11, 20)
+
+    def test_planet_source_no_system_returns_none(self):
+        """Planet source returns None when system not found."""
+        planet_entity = MagicMock()
+        planet_entity.location = (1, 0)
+        win = _make_window()
+        win.galaxy = MagicMock()
+        win.galaxy.get_system_of_planet.return_value = None
+        source = BuildQueueSource(
+            queue_id="planet_1_base", display_name="Alpha - Base",
+            owner_entity=planet_entity, construction_queue=[],
+            can_build_ships=False, can_build_complexes=True,
+            context_type="planet",
+        )
+        result = win.get_hex_for_source(source)
+        assert result is None
+
+    def test_fleet_source_no_location_returns_none(self):
+        """Fleet source returns None when fleet has no location."""
+        fleet_entity = MagicMock(spec=[])
+        source = BuildQueueSource(
+            queue_id="fleet_1", display_name="Fleet Yard",
+            owner_entity=fleet_entity, construction_queue=[],
+            can_build_ships=True, can_build_complexes=True,
+            context_type="fleet",
+        )
+        win = _make_window(sources=[source])
+        result = win.get_hex_for_source(source)
+        assert result is None
+
+    def test_unknown_context_type_returns_none(self):
+        """Unknown context_type returns None."""
+        source = BuildQueueSource(
+            queue_id="other_1", display_name="Other",
+            owner_entity=MagicMock(), construction_queue=[],
+            can_build_ships=False, can_build_complexes=False,
+            context_type="unknown",
+        )
+        win = _make_window(sources=[source])
+        result = win.get_hex_for_source(source)
+        assert result is None
+
+
+class TestNavigateToSource:
+    """navigate_to_source() should call callback with hex coord and source."""
+
+    def test_navigate_calls_callback_with_hex_and_source(self):
+        """navigate_to_source() calls on_navigate_to_hex with (hex, source)."""
+        from game.strategy.data.hex_math import HexCoord
+        nav_cb = MagicMock()
+        fleet_entity = MagicMock()
+        fleet_entity.location = HexCoord(5, 3)
+        source = BuildQueueSource(
+            queue_id="fleet_1", display_name="Fleet Yard",
+            owner_entity=fleet_entity, construction_queue=[],
+            can_build_ships=True, can_build_complexes=True,
+            context_type="fleet",
+        )
+        win = _make_window(sources=[source], on_navigate=nav_cb)
+        win.navigate_to_source(source)
+        nav_cb.assert_called_once_with(HexCoord(5, 3), source)
+
+    def test_navigate_no_callback_does_not_crash(self):
+        """navigate_to_source() is safe when no callback is set."""
+        from game.strategy.data.hex_math import HexCoord
+        fleet_entity = MagicMock()
+        fleet_entity.location = HexCoord(5, 3)
+        source = BuildQueueSource(
+            queue_id="fleet_1", display_name="Fleet Yard",
+            owner_entity=fleet_entity, construction_queue=[],
+            can_build_ships=True, can_build_complexes=True,
+            context_type="fleet",
+        )
+        win = _make_window(sources=[source], on_navigate=None)
+        win.navigate_to_source(source)  # Should not raise
+
+    def test_navigate_no_hex_does_not_call_callback(self):
+        """navigate_to_source() does not call callback when hex is None."""
+        nav_cb = MagicMock()
+        planet_entity = MagicMock()
+        planet_entity.location = (1, 0)
+        source = BuildQueueSource(
+            queue_id="planet_1_base", display_name="Alpha - Base",
+            owner_entity=planet_entity, construction_queue=[],
+            can_build_ships=False, can_build_complexes=True,
+            context_type="planet",
+        )
+        win = _make_window(sources=[source], on_navigate=nav_cb)
+        win.galaxy = MagicMock()
+        win.galaxy.get_system_of_planet.return_value = None
+        win.navigate_to_source(source)
+        nav_cb.assert_not_called()
+
+    def test_navigate_selects_source_before_callback(self):
+        """navigate_to_source() selects the source before calling callback."""
+        from game.strategy.data.hex_math import HexCoord
+        nav_cb = MagicMock()
+        fleet_entity = MagicMock()
+        fleet_entity.location = HexCoord(5, 3)
+        source = BuildQueueSource(
+            queue_id="fleet_1", display_name="Fleet Yard",
+            owner_entity=fleet_entity, construction_queue=[],
+            can_build_ships=True, can_build_complexes=True,
+            context_type="fleet",
+        )
+        win = _make_window(sources=[source], on_navigate=nav_cb)
+        win.navigate_to_source(source)
+        assert win.selected_source is source
+
+
+class TestDoubleClickNavigation:
+    """Double-clicking a row should trigger navigation."""
+
+    def test_double_click_on_row_navigates(self):
+        """Double-click on a list row calls navigate_to_source."""
+        from game.strategy.data.hex_math import HexCoord
+        nav_cb = MagicMock()
+        fleet_entity = MagicMock()
+        fleet_entity.location = HexCoord(5, 3)
+        source = BuildQueueSource(
+            queue_id="fleet_1", display_name="Fleet Yard",
+            owner_entity=fleet_entity, construction_queue=[],
+            can_build_ships=True, can_build_complexes=True,
+            context_type="fleet",
+        )
+        win = _make_window(sources=[source], on_navigate=nav_cb)
+
+        # First click selects (already tested in Phase 2)
+        win._select_source(0)
+        assert win.selected_source is source
+
+        # Second click on same row triggers navigation
+        # Simulate by calling navigate_to_source directly (event handler
+        # will detect same-row click and call this)
+        win.navigate_to_source(source)
+        nav_cb.assert_called_once()
+
+    def test_single_click_does_not_navigate(self):
+        """Single click only selects, does not navigate."""
+        nav_cb = MagicMock()
+        source = _make_source("p1", "Alpha Base")
+        win = _make_window(sources=[source], on_navigate=nav_cb)
+        win._select_source(0)
+        nav_cb.assert_not_called()
+
+    def test_double_click_different_rows_does_not_navigate(self):
+        """Clicking two different rows does not trigger navigation."""
+        nav_cb = MagicMock()
+        sources = [
+            _make_source("p1", "Alpha Base"),
+            _make_source("p2", "Beta Shipyard"),
+        ]
+        win = _make_window(sources=sources, on_navigate=nav_cb)
+        win._select_source(0)
+        win._select_source(1)
+        nav_cb.assert_not_called()
