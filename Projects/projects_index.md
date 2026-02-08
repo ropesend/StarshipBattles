@@ -4,6 +4,11 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-77 | Event Log System | Plan Approved | 2026-02-07 | 2026-02-07 |
+| PROJ-76 | Empire-Wide Build Queue Window | Planning | 2026-02-07 | 2026-02-07 |
+| PROJ-75 | Resource Harvesting & Economy System | Planning | 2026-02-07 | 2026-02-07 |
+| PROJ-74 | Resupply System | Planning | 2026-02-07 | 2026-02-07 |
+| PROJ-73 | Rotating Warp Point Graphics | Planning | 2026-02-07 | 2026-02-07 |
 | PROJ-72 | Strategy Menu Button | Planning | 2026-02-07 | 2026-02-07 |
 | PROJ-71 | Strategy Layer Hotkey System | Plan Approved | 2026-02-07 | 2026-02-07 |
 | PROJ-70 | Fleet Details Panel Enhancement | Planning | 2026-02-07 | 2026-02-07 |
@@ -169,7 +174,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-73
+## Next Project ID: PROJ-78
 
 ---
 

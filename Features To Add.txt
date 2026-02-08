@@ -1,32 +1,69 @@
 Features to add:
-
-I want the warp point graphics to slowly rotate in teh sector on the strategy layer.
-
-There should be a separate button on the top for build queues.  This should open a window that shows all of the the various space yards in a list.
-It should be somewhat similar to the planet list window, it should show the portait of the planet/ship that the space yard is on, it should show the system, and sector
-columns should be configurtabel just like the planet list, and there should be a variety of filtering options.
-It should be posible to click on a single 
- 
- 
- Log System - lists all events
- - In the strategy layer, there should be a log that lists all events that have happened in the game.
- - it should show them in order of events starting with the most recent events first.
- - This should include events like
-    - any ships/complexes/vehicles being built at any space yard
-    - any new colonies being founded
-    - any combat
+================
 
 
+
+================
 
  Turn Replay
  - when looking at a system, you should be able to press some buttons see the history of ship movement for the prior turn.  It should work through all 100 ticks of the prior turn showing the positions of the ships/vehicles each turn, one of the buttons should show all 100 ticks without stopping (there should ba a .25 sec pause), another button should allow you to step through each tick one at a time
  - we should try to limit it to ships in teh system, though sdome ships may leave or enter the system during the turn
  
+================
  Fog of war
  
+================
  Storms
  
+================
  Different System types
+
+================
+Additional Orders:
+Waypoint system - can be assigned to fleets, build queues.
+ - any point in space can be a waypoint
+ - Need to be able to assign waypoints to fleets and build queues
+ - Need to be able to tag hexes as waypoints
+
+Warp - explicit command to move to a waypoint, then warp through it to the other side. - cannot be given to a fleed that can't warp
+
+Destroy Planet
+
+Destroy star
+
+Selfdestruct
+
+Open Warp Pooint
+
+Close Warp point
+
+Destroy Blackhole
+
+Create Dyson Sphere
+
+======================
+
+Resource Harvesting
+- Each planetary resource should have it's own harvesting component.
+- The component should harvest an amount that is based on the quality of the resource on the planet * the base rate of the component.
+- more modifyers will be added later
+- The component will reduce the total amount of the resource on the planet by the amount it produces each turn.  
+- Each planetary resource also needs a storage component - this will be used to store the resources
+- For now we will use a "magical" distribution system that makes all of the stored resource available wherever it is needed in the empire.
+- The resource system should be handled generically similar to the resource system for ships, it should be possible to mod in additional resources by editing the .json files.
+- if excess resource is produced then it should be stored in the storage component, if the storage component is full then the excess resource should be lost.  It should simply be a global pool of resources for the empire.
+- All build queues should be edited to use up resources, currently they build everything in 1 day for free, we should change this so that they can build at a limited rate, say may 5000 units of each resource per turn.  Anything that requires more than that will have to wait until the next turn, and the build queue should show how much of each resource is needed for the next turn.   If an item is finished during a turn it should be removed from the build queue, and the remaining resourse can be used for the next item in the build queue.  Some items may require a lot more of one resource than another, The resource use should be proportional lets say a ship is 100000 for one resource and 10000 for another resource, then each turn it should consume 10 times as much of the first resource as the second resource.
+- The building should be very granular, it should be processed in 100 tick increments, so that it is possible to have fractional resource usage per turn.  If a ship is created then it could be launched into space at any point during the turn.
+- All ships should have a maintenance cost, this should be deducted from the empire's resources each turn, it should be 5% of the build cost of the ship.  Complexes should also have a maintenance cost, this should be deducted from the empire's resources each turn, it should be 5% of the build cost of the complex.
+
+===================
+Resupply System
+- New component called the Fuel Synthesizer - can only exist on complexes
+- Fuel Synthesizer produces Fuel
+- Use a regular fue tank component for storage in the complexes
+- Ships in the same sector of the planet automatically load fuel up to their capacity
+- fuel should be shared between fleet ships
+
 
  // Already Added
 
@@ -174,3 +211,24 @@ Race Setup
   - increasing tolerance for a all sliders should come at an exponentially increasing cost.
  - Please ask questions and make suggestions, create a plan to add this new aspect, break it up into phases, and substages - list all files that need to be edited, all tests that need to be added.
 - Plan to use TDD
+
+
+I want the warp point graphics to slowly rotate in the sector on the strategy layer.
+
+================
+
+There should be a separate button on the top for all of an empires build queues.  This should open a window that shows all of the the various space yards in a list.
+It should be somewhat similar to the planet list window, In the list it should show the portait of the planet/ship that the space yard is on, it should show the system, and sector
+Colums should be configurable similar to the planets list, and there should be a variety of filtering options.
+It should be posible to click on a single build queue and go to the standard single sector build queue.  It should also be possible to select multiple build queues from across the empire and add items to them all at once.
+ 
+ ================
+ 
+ Log System - lists all events
+ - In the strategy layer, there should be a log that lists all events that have happened in the game.
+ - it should show them in order of events starting with the most recent events first.
+ - This should include events like
+    - any ships/complexes/vehicles being built at any space yard
+    - any new colonies being founded
+    - any combat
+- The log should show at the start of the turn, andthere should be a button on the top of the screen to reopen the log after it has been closed.
