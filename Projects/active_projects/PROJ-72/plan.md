@@ -16,13 +16,13 @@
 | 1. Create Menu Panel Component | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Wire Up Strategy UI | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Route Menu Actions | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Testing & Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Testing & Verification | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - on_menu_option dispatcher, load/quit/coming_soon helpers, App.py handlers, 22 tests
-**Next Action:** Phase 4 - Testing & Verification
+**Active Phase:** Complete - Audit Passed
+**Last Action:** Audit cycle 1 passed - Fixed panel height bug (245→265px via named constants)
+**Next Action:** User verification required
 **Blockers:** None
 
 ## Overview
@@ -67,8 +67,9 @@ Add a "Menu" button to the strategy view top bar that opens a dropdown panel wit
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (`pytest tests/ --testmon`)
+- [x] All phase checklists complete
+- [x] All tests passing (`pytest tests/ -n 12` → 6652 passed)
+- [x] Audit passed (cycle 1) - Fixed panel height bug
 - [ ] Manual testing: all 6 menu options work correctly
 - [ ] Manual testing: panel open/close behavior correct
 - [ ] Manual testing: no layout regressions in top bar

@@ -17,7 +17,7 @@ from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
-from game.ui.screens.strategy_menu_panel import StrategyMenuPanel
+from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -332,7 +332,7 @@ class StrategyUI:
     def open_menu_panel(self):
         """Open the strategy menu dropdown panel below the Menu button."""
         btn_rect = self.btn_menu.get_abs_rect()
-        panel_rect = pygame.Rect(btn_rect.x, btn_rect.bottom + 2, 220, 245)
+        panel_rect = pygame.Rect(btn_rect.x, btn_rect.bottom + 2, PANEL_WIDTH, PANEL_HEIGHT)
         self.menu_panel = StrategyMenuPanel(panel_rect, self.manager, self._on_menu_option_selected)
 
     def close_menu_panel(self):
