@@ -296,3 +296,292 @@ class TestProcessFuelGeneration:
         empire = _make_empire(colonies=[colony])
         events = engine.process_fuel_generation(tick=1, empires=[empire])
         assert events == []
+
+
+# ===========================================================================
+# Fleet Resupply Helpers
+# ===========================================================================
+
+def _make_mock_ship(
+    fuel_capacity: float = 500.0,
+    current_fuel: float = 500.0,
+    fuel_cost_per_hex: float = 5.0,
+    combat_capable: bool = True,
+):
+    """Create a mock ShipInstance with controlled fuel properties."""
+    ship = MagicMock()
+    ship.is_combat_capable.return_value = combat_capable
+    ship.get_resource_capacity.return_value = fuel_capacity
+    ship.get_current_fuel.return_value = current_fuel
+    ship.get_fuel_cost_per_hex.return_value = fuel_cost_per_hex
+
+    # Track resupply calls and update current_fuel accordingly
+    _fuel_state = {"current": current_fuel}
+
+    def _resupply(resource_name, amount):
+        if resource_name != 'fuel':
+            return 0.0
+        space = fuel_capacity - _fuel_state["current"]
+        actual = min(amount, space)
+        _fuel_state["current"] += actual
+        return actual
+
+    ship.resupply.side_effect = _resupply
+    return ship
+
+
+def _make_mock_fleet(owner_id: int = 0, location=None, ships=None):
+    """Create a mock Fleet with specified ships and location."""
+    fleet = MagicMock()
+    fleet.id = 1
+    fleet.owner_id = owner_id
+    fleet.location = location or HexCoord(0, 0)
+    fleet.ships = ships or []
+    return fleet
+
+
+def _make_mock_galaxy(planets_at_hex=None):
+    """Create a mock Galaxy with spatial lookup."""
+    galaxy = MagicMock()
+    _planets_map = planets_at_hex or {}
+
+    def _get_planets(global_hex):
+        return _planets_map.get(global_hex, [])
+
+    galaxy.get_planets_at_global_hex.side_effect = _get_planets
+    return galaxy
+
+
+def _make_planet_with_fuel(
+    owner_id: int = 0,
+    fuel_level: float = 100.0,
+    fuel_storage_amount: float = 500.0,
+    fuel_gen_amount: float = 300.0,
+):
+    """Create a Planet with a fuel facility that has stored fuel."""
+    registries = _make_mock_registries(
+        fuel_tank_amount=fuel_storage_amount,
+        fuel_gen_amount=fuel_gen_amount,
+    )
+    facility = _make_fuel_facility(
+        resource_levels={"fuel": fuel_level},
+    )
+    planet = MagicMock()
+    planet.owner_id = owner_id
+    planet.facilities = [facility]
+    return planet, facility, registries
+
+
+# Need HexCoord for fleet locations
+from game.strategy.data.hex_math import HexCoord
+
+
+# ===========================================================================
+# Task 4.1: Fleet Resupply Tests
+# ===========================================================================
+
+class TestFleetResupply:
+    """Tests for ResupplyEngine.process_fleet_resupply()."""
+
+    def test_fleet_at_planet_receives_fuel(self):
+        """Fleet at same location as planet with fuel facility gets resupplied."""
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+
+        # Ship with half fuel
+        ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=250.0, fuel_cost_per_hex=5.0)
+        location = HexCoord(3, 4)
+        fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship])
+
+        # Planet with fuel at same location
+        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        planet = MagicMock()
+        planet.owner_id = 0
+        planet.facilities = [facility]
+
+        galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
+
+        empire = MagicMock()
+        empire.fleets = [fleet]
+
+        events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
+
+        # Ship should have been resupplied
+        ship.resupply.assert_called()
+        assert len(events) >= 1
+        assert events[0].fuel_transferred > 0
+        assert events[0].fleet_id == fleet.id
+
+    def test_fleet_not_at_planet_no_fuel(self):
+        """Fleet at different location than planet gets no fuel."""
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+
+        ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=250.0)
+        fleet_loc = HexCoord(3, 4)
+        fleet = _make_mock_fleet(owner_id=0, location=fleet_loc, ships=[ship])
+
+        # Planet at different location
+        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        planet = MagicMock()
+        planet.owner_id = 0
+        planet.facilities = [facility]
+
+        planet_loc = HexCoord(10, 10)
+        galaxy = _make_mock_galaxy(planets_at_hex={planet_loc: [planet]})
+
+        empire = MagicMock()
+        empire.fleets = [fleet]
+
+        events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
+
+        # No planets at fleet location -> no resupply
+        ship.resupply.assert_not_called()
+        assert len(events) == 0
+
+    def test_owner_fleet_priority_over_others(self):
+        """Owner's fleet gets fuel; other empire's fleet does not."""
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+
+        location = HexCoord(5, 5)
+
+        # Owner's fleet (empire 0)
+        owner_ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=200.0)
+        owner_fleet = _make_mock_fleet(owner_id=0, location=location, ships=[owner_ship])
+
+        # Other empire's fleet (empire 1)
+        other_ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=200.0)
+        other_fleet = _make_mock_fleet(owner_id=1, location=location, ships=[other_ship])
+
+        # Planet owned by empire 0
+        facility = _make_fuel_facility(resource_levels={"fuel": 300.0})
+        planet = MagicMock()
+        planet.owner_id = 0
+        planet.facilities = [facility]
+
+        galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
+
+        empire_0 = MagicMock()
+        empire_0.fleets = [owner_fleet]
+        empire_1 = MagicMock()
+        empire_1.fleets = [other_fleet]
+
+        events = engine.process_fleet_resupply(
+            tick=1, empires=[empire_0, empire_1], galaxy=galaxy
+        )
+
+        # Owner fleet gets fuel
+        owner_ship.resupply.assert_called()
+        # Other fleet does NOT get fuel
+        other_ship.resupply.assert_not_called()
+
+    def test_fuel_distributed_to_equalize_range(self):
+        """Fuel is distributed to equalize effective range across fleet ships."""
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+
+        location = HexCoord(0, 0)
+
+        # Ship A: high consumption, empty (cost=10/hex, capacity=500, current=0)
+        ship_a = _make_mock_ship(fuel_capacity=500.0, current_fuel=0.0, fuel_cost_per_hex=10.0)
+        # Ship B: low consumption, empty (cost=2/hex, capacity=200, current=0)
+        ship_b = _make_mock_ship(fuel_capacity=200.0, current_fuel=0.0, fuel_cost_per_hex=2.0)
+
+        fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship_a, ship_b])
+
+        # 240 fuel available: with 10+2=12 cost/hex -> max_range = 240/12 = 20 hexes
+        # Ship A gets 10*20 = 200 fuel, Ship B gets 2*20 = 40 fuel => total = 240 ✓
+        facility = _make_fuel_facility(resource_levels={"fuel": 240.0})
+        planet = MagicMock()
+        planet.owner_id = 0
+        planet.facilities = [facility]
+
+        galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
+
+        empire = MagicMock()
+        empire.fleets = [fleet]
+
+        events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
+
+        # Check that resupply was called on both ships
+        ship_a.resupply.assert_called()
+        ship_b.resupply.assert_called()
+
+        # Ship A should receive 200.0 fuel (10 cost * 20 range)
+        a_call_args = ship_a.resupply.call_args
+        assert a_call_args[0][0] == 'fuel'
+        assert a_call_args[0][1] == pytest.approx(200.0)
+
+        # Ship B should receive 40.0 fuel (2 cost * 20 range)
+        b_call_args = ship_b.resupply.call_args
+        assert b_call_args[0][0] == 'fuel'
+        assert b_call_args[0][1] == pytest.approx(40.0)
+
+    def test_tanker_ships_partially_fueled(self):
+        """With limited fuel, tanker (high capacity) gets less while combat ships get priority via equalization."""
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+
+        location = HexCoord(0, 0)
+
+        # Combat ship: cost=10/hex, capacity=100, current=0
+        combat_ship = _make_mock_ship(
+            fuel_capacity=100.0, current_fuel=0.0, fuel_cost_per_hex=10.0
+        )
+        # Tanker: cost=1/hex, capacity=1000, current=0
+        tanker = _make_mock_ship(
+            fuel_capacity=1000.0, current_fuel=0.0, fuel_cost_per_hex=1.0
+        )
+
+        fleet = _make_mock_fleet(
+            owner_id=0, location=location, ships=[combat_ship, tanker]
+        )
+
+        # 110 fuel available: cost 10+1=11/hex -> max_range = 110/11 = 10 hexes
+        # Combat ship target: 10*10 = 100 (exactly at capacity)
+        # Tanker target: 1*10 = 10 (well below 1000 capacity)
+        facility = _make_fuel_facility(resource_levels={"fuel": 110.0})
+        planet = MagicMock()
+        planet.owner_id = 0
+        planet.facilities = [facility]
+
+        galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
+
+        empire = MagicMock()
+        empire.fleets = [fleet]
+
+        events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
+
+        # Combat ship gets full fill (100 fuel)
+        combat_call = combat_ship.resupply.call_args
+        assert combat_call[0][1] == pytest.approx(100.0)
+
+        # Tanker gets only 10 fuel (partially fueled)
+        tanker_call = tanker.resupply.call_args
+        assert tanker_call[0][1] == pytest.approx(10.0)
+
+    def test_facility_with_no_fuel_no_transfer(self):
+        """Facility with empty fuel storage transfers nothing."""
+        registries = _make_mock_registries()
+        engine = ResupplyEngine(registries=registries)
+
+        location = HexCoord(0, 0)
+        ship = _make_mock_ship(fuel_capacity=500.0, current_fuel=200.0)
+        fleet = _make_mock_fleet(owner_id=0, location=location, ships=[ship])
+
+        # Empty facility
+        facility = _make_fuel_facility(resource_levels={"fuel": 0.0})
+        planet = MagicMock()
+        planet.owner_id = 0
+        planet.facilities = [facility]
+
+        galaxy = _make_mock_galaxy(planets_at_hex={location: [planet]})
+
+        empire = MagicMock()
+        empire.fleets = [fleet]
+
+        events = engine.process_fleet_resupply(tick=1, empires=[empire], galaxy=galaxy)
+
+        ship.resupply.assert_not_called()
+        assert len(events) == 0

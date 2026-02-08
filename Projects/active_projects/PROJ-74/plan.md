@@ -16,17 +16,17 @@
 | 1. Fuel Synthesizer Component | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. PlanetaryFacility Resource Tracking | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ResupplyEngine Core | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Fleet Resupply Logic | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Fleet Resupply Logic | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TurnEngine Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. End-to-End Testing | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 3 Complete - Ready for Phase 4
-**Last Action:** Created ResupplyEngine with fuel generation, IResupplyEngine interface, 14 tests
-**Next Action:** Begin Phase 4 - Fleet Resupply Logic
+**Active Phase:** Phase 4 Complete - Ready for Phase 5
+**Last Action:** Implemented fleet resupply with range equalization algorithm, 6 new tests
+**Next Action:** Begin Phase 5 - TurnEngine Integration
 **Blockers:** None
-**Context for Next Agent:** ResupplyEngine created in game/strategy/engine/resupply_engine.py with ResupplyEvent dataclass and process_fuel_generation() method. Inherits from IResupplyEngine (added to game/strategy/interfaces/engines.py). Scans facility components for ResourceGeneration with resource="fuel", generates fuel/100 per tick, respects max storage via facility.add_fuel(). process_fleet_resupply() is a placeholder for Phase 4. 14 new tests in tests/unit/strategy/engine/test_resupply_engine.py. All 6843 tests pass.
+**Context for Next Agent:** process_fleet_resupply() now fully implemented in ResupplyEngine. Iterates empires→fleets→planets at fleet location→facilities. Owner-only check (planet.owner_id == fleet.owner_id). _calculate_fuel_distribution() equalizes range across fleet ships (fuel proportional to cost/hex). _transfer_fuel() helper executes fuel transfer and withdraws from facility. 6 new fleet resupply tests added (20 total in test file). All 6849 tests pass.
 
 ## Overview
 Implement a fuel resupply system where:

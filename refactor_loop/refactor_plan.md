@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-74 Phase 3 - ResupplyEngine Core
-**Current Status:** PROJ-74 Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-74 Phase 4 - Fleet Resupply Logic
+**Current Status:** PROJ-74 Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-74
-**Current Phase:** Phase 4
-**Test Status:** 6843 passed (1 pre-existing failure in test_protocols.py)
+**Current Phase:** Phase 5
+**Test Status:** 6849 passed (1 pre-existing failure in test_protocols.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-74 Phase 3 completed: ResupplyEngine class with fuel generation, IResupplyEngine interface
-- Added: game/strategy/engine/resupply_engine.py (ResupplyEvent dataclass, ResupplyEngine class)
-- Modified: game/strategy/interfaces/engines.py (IResupplyEngine interface added)
-- Added: tests/unit/strategy/engine/test_resupply_engine.py (14 tests)
-- ResupplyEngine.process_fuel_generation() scans facility components for ResourceGeneration fuel abilities
-- process_fleet_resupply() is a placeholder for Phase 4
-- Next: Phase 4 - Fleet Resupply Logic
+- PROJ-74 Phase 4 completed: Fleet resupply with range equalization
+- Modified: game/strategy/engine/resupply_engine.py (process_fleet_resupply, _calculate_fuel_distribution, _transfer_fuel)
+- Modified: tests/unit/strategy/engine/test_resupply_engine.py (6 new fleet tests, 20 total)
+- Range equalization: fuel distributed proportional to cost_per_hex so all ships get equal range
+- Owner-only priority: planet.owner_id must match fleet.owner_id
+- Next: Phase 5 - TurnEngine Integration
 
 ---
 
@@ -151,7 +150,7 @@
 ---
 
 - [/] **PROJ-74: Resupply System**
-  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-74/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-74/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -276,6 +275,7 @@
 | 2026-02-07 | PROJ-74 | Phase 1 | Complete | 6805 passed | pending | Added fuel_synthesizer to components.json |
 | 2026-02-08 | PROJ-74 | Phase 2 | Complete | 6829 passed | pending | resource_levels field, serialization, 4 helper methods, 25 tests |
 | 2026-02-08 | PROJ-74 | Phase 3 | Complete | 6843 passed | pending | ResupplyEngine, IResupplyEngine, ResupplyEvent, 14 tests |
+| 2026-02-08 | PROJ-74 | Phase 4 | Complete | 6849 passed | pending | Fleet resupply, range equalization, owner priority, 6 new tests |
 
 ---
 

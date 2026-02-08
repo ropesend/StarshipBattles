@@ -14,7 +14,7 @@ Fits into TurnEngine's _process_tick() as Phase 0a (after resource consumption).
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING
 
 from game.core.logger import log_info
 from game.core.registry import GameRegistries
@@ -156,9 +156,11 @@ class ResupplyEngine(IResupplyEngine):
 
     def process_fleet_resupply(self, tick: int, empires, galaxy) -> List[ResupplyEvent]:
         """
-        Process fuel transfer from facilities to fleets.
+        Process fuel transfer from facilities to fleets at co-located planets.
 
-        PROJ-74 Phase 4: Placeholder for fleet resupply logic.
+        For each fleet, finds planets at the fleet's location. Only the planet
+        owner's fleets receive fuel (no allied resupply). Fuel is distributed
+        across fleet ships to equalize effective range.
 
         Args:
             tick: Current tick number (1-100)
@@ -168,5 +170,104 @@ class ResupplyEngine(IResupplyEngine):
         Returns:
             List of ResupplyEvent records for transfers that occurred
         """
-        # Phase 4 will implement this
-        return []
+        events: List[ResupplyEvent] = []
+
+        for empire in empires:
+            for fleet in empire.fleets:
+                planets = galaxy.get_planets_at_global_hex(fleet.location)
+
+                for planet in planets:
+                    if planet.owner_id != fleet.owner_id:
+                        continue  # Owner priority only
+
+                    for facility in planet.facilities:
+                        if not facility.is_operational:
+                            continue
+
+                        available = facility.get_fuel_storage()
+                        if available <= 0:
+                            continue
+
+                        distribution = self._calculate_fuel_distribution(
+                            fleet, available
+                        )
+                        if not distribution:
+                            continue
+
+                        total_transferred = self._transfer_fuel(
+                            distribution, available, facility
+                        )
+
+                        if total_transferred > 0:
+                            events.append(ResupplyEvent(
+                                facility_name=facility.name,
+                                fuel_generated=0,
+                                fuel_transferred=total_transferred,
+                                fleet_id=fleet.id,
+                            ))
+
+        return events
+
+    def _calculate_fuel_distribution(
+        self, fleet, available_fuel: float
+    ) -> Dict:
+        """
+        Calculate fuel distribution to equalize range across all fleet ships.
+
+        Ships with higher fuel consumption per hex receive proportionally more
+        fuel so that all ships can travel the same number of hexes.
+
+        Args:
+            fleet: Fleet to distribute fuel to
+            available_fuel: Total fuel available from the facility
+
+        Returns:
+            Dict mapping ship -> fuel amount to transfer
+        """
+        ships = [s for s in fleet.ships if s.is_combat_capable()]
+        if not ships:
+            return {}
+
+        total_cost_per_hex = sum(s.get_fuel_cost_per_hex() for s in ships)
+        if total_cost_per_hex <= 0:
+            return {}
+
+        current_total = sum(s.get_current_fuel() for s in ships)
+        max_range = (available_fuel + current_total) / total_cost_per_hex
+
+        distribution: Dict = {}
+        for ship in ships:
+            target = ship.get_fuel_cost_per_hex() * max_range
+            capacity = ship.get_resource_capacity('fuel')
+            target = min(target, capacity)
+            deficit = target - ship.get_current_fuel()
+            if deficit > 0:
+                distribution[ship] = deficit
+
+        return distribution
+
+    def _transfer_fuel(
+        self, distribution: Dict, available: float, facility
+    ) -> float:
+        """
+        Execute fuel transfer from facility to ships.
+
+        Args:
+            distribution: Dict mapping ship -> fuel amount
+            available: Total fuel available in facility
+            facility: PlanetaryFacility to withdraw fuel from
+
+        Returns:
+            Total fuel actually transferred
+        """
+        total_transferred = 0.0
+
+        for ship, amount in distribution.items():
+            actual = min(amount, available - total_transferred)
+            if actual <= 0:
+                break
+            transferred = ship.resupply('fuel', actual)
+            total_transferred += transferred
+
+        facility.withdraw_fuel(total_transferred)
+        return total_transferred
