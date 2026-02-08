@@ -197,7 +197,7 @@ class KeybindingsScene:
         self._ui_elements.append(reset_btn)
 
         # Check if binding matches default
-        default_binding = self._mapper._defaults.get(action)
+        default_binding = self._mapper.get_default_binding(action)
         if binding == default_binding:
             reset_btn.hide()
 
@@ -391,7 +391,7 @@ class KeybindingsScene:
         row["binding_label"].set_text(binding_text)
 
         # Show/hide reset button based on whether binding matches default
-        default_binding = self._mapper._defaults.get(action)
+        default_binding = self._mapper.get_default_binding(action)
         current_binding = self._mapper.get_binding(action)
         if current_binding == default_binding:
             row["reset_btn"].hide()
@@ -513,7 +513,7 @@ class KeybindingsScene:
 
     def _reset_single_action(self, action: InputAction) -> None:
         """Reset a single action to its default binding."""
-        default_binding = self._mapper._defaults.get(action)
+        default_binding = self._mapper.get_default_binding(action)
         self._mapper.set_binding(action, default_binding)
         self._has_unsaved_changes = True
         self._refresh_action_row(action)

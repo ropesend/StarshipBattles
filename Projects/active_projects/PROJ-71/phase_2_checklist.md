@@ -36,8 +36,8 @@
   - `action = self.input_mapper.resolve(event, contexts=["global"])`
   - `if action == InputAction.GLOBAL_EXIT: self.show_exit_dialog = True`
   - `if action == InputAction.GLOBAL_TOGGLE_PROFILER: ...`
-- [ ] Add `start_keybindings(on_close)` method for PROJ-72 to call later:
-  - Deferred to Phase 4 (KeybindingsScene)
+- [x] Add `start_keybindings(on_close)` method for PROJ-72 to call later:
+  - Completed in Phase 4 (KeybindingsScene)
 - [x] Verify: Game launches without errors, ALT+X and F9 still work
 
 **Notes:** `start_keybindings` deferred since KeybindingsScene doesn't exist yet (Phase 4). Also added `InputAction` import for clean dispatching.

@@ -182,6 +182,25 @@ class TestInputMapperGetBinding:
         text = mapper.get_display_text(InputAction.DETAIL_PANEL_BUILD)
         assert text == ""
 
+    def test_get_default_binding_returns_original(self, mapper):
+        """get_default_binding returns the default even after user override."""
+        # Override the binding
+        mapper.set_binding(
+            InputAction.FLEET_MOVE,
+            KeyBinding(key="K_n", modifiers=frozenset()),
+        )
+        # Current binding should be the override
+        assert mapper.get_binding(InputAction.FLEET_MOVE).key == "K_n"
+        # Default binding should still be the original
+        default = mapper.get_default_binding(InputAction.FLEET_MOVE)
+        assert default is not None
+        assert default.key == "K_m"
+
+    def test_get_default_binding_unbound_returns_none(self, mapper):
+        """get_default_binding for unbound-by-default action returns None."""
+        default = mapper.get_default_binding(InputAction.DETAIL_PANEL_BUILD)
+        assert default is None
+
 
 class TestInputMapperSetBinding:
     """Tests for set_binding."""
@@ -326,3 +345,147 @@ class TestInputMapperGetAllBindings:
         """Unbound actions return None."""
         all_bindings = mapper.get_all_bindings()
         assert all_bindings[InputAction.DETAIL_PANEL_BUILD] is None
+
+
+class TestInputMapperEdgeCases:
+    """Tests for edge case handling and resilience."""
+
+    def test_corrupt_user_keybindings_falls_back_to_defaults(self, tmp_path):
+        """Corrupt user keybindings JSON falls back gracefully to defaults."""
+        corrupt_file = tmp_path / "keybindings.json"
+        corrupt_file.write_text("{this is not valid json!!!")
+
+        m = InputMapper()
+        m.load(
+            defaults_path=Paths.DEFAULT_KEYBINDINGS_FILE,
+            overrides_path=str(corrupt_file),
+        )
+        # Defaults should still be loaded
+        binding = m.get_binding(InputAction.FLEET_MOVE)
+        assert binding is not None
+        assert binding.key == "K_m"
+
+    def test_empty_user_keybindings_file_falls_back_to_defaults(self, tmp_path):
+        """Empty user keybindings file falls back to defaults."""
+        empty_file = tmp_path / "keybindings.json"
+        empty_file.write_text("")
+
+        m = InputMapper()
+        m.load(
+            defaults_path=Paths.DEFAULT_KEYBINDINGS_FILE,
+            overrides_path=str(empty_file),
+        )
+        # Defaults should still be loaded
+        binding = m.get_binding(InputAction.FLEET_MOVE)
+        assert binding is not None
+        assert binding.key == "K_m"
+
+    def test_empty_bindings_dict_preserves_defaults(self, tmp_path):
+        """User file with empty bindings dict preserves all defaults."""
+        overrides_file = tmp_path / "keybindings.json"
+        overrides_file.write_text(json.dumps({"bindings": {}}))
+
+        m = InputMapper()
+        m.load(
+            defaults_path=Paths.DEFAULT_KEYBINDINGS_FILE,
+            overrides_path=str(overrides_file),
+        )
+        binding = m.get_binding(InputAction.FLEET_MOVE)
+        assert binding is not None
+        assert binding.key == "K_m"
+
+    def test_save_creates_parent_directories(self, tmp_path):
+        """save_user_overrides creates missing parent directories."""
+        deep_path = tmp_path / "a" / "b" / "c" / "keybindings.json"
+        assert not deep_path.parent.exists()
+
+        m = InputMapper()
+        m.load(defaults_path=Paths.DEFAULT_KEYBINDINGS_FILE)
+        m.set_binding(
+            InputAction.FLEET_MOVE,
+            KeyBinding(key="K_n", modifiers=frozenset()),
+        )
+        result = m.save_user_overrides(str(deep_path))
+        assert result is True
+        assert deep_path.exists()
+
+    def test_unknown_actions_in_file_are_skipped(self, tmp_path):
+        """Unknown action names in user file are ignored without crashing."""
+        overrides_file = tmp_path / "keybindings.json"
+        overrides_file.write_text(json.dumps({
+            "bindings": {
+                "nonexistent.action": {"key": "K_z", "modifiers": []},
+                "fleet.move": {"key": "K_n", "modifiers": []},
+            }
+        }))
+
+        m = InputMapper()
+        m.load(
+            defaults_path=Paths.DEFAULT_KEYBINDINGS_FILE,
+            overrides_path=str(overrides_file),
+        )
+        # Valid override applied
+        binding = m.get_binding(InputAction.FLEET_MOVE)
+        assert binding is not None
+        assert binding.key == "K_n"
+
+    def test_all_actions_unbound_no_crash(self):
+        """An InputMapper with all actions unbound doesn't crash."""
+        m = InputMapper()
+        m.load()  # No defaults, no overrides
+
+        # Resolve should return None
+        event = MagicMock()
+        event.type = pygame.KEYDOWN
+        event.key = pygame.K_m
+        event.mod = 0
+        assert m.resolve(event, contexts=["fleet"]) is None
+
+        # Display text should be empty
+        assert m.get_display_text(InputAction.FLEET_MOVE) == ""
+
+        # get_all_bindings should have all actions as None
+        all_bindings = m.get_all_bindings()
+        for action in InputAction:
+            assert all_bindings[action] is None
+
+    def test_save_no_overrides_returns_true(self, mapper, tmp_path):
+        """Saving with no changes returns True without creating a file."""
+        output_file = tmp_path / "keybindings.json"
+        result = mapper.save_user_overrides(str(output_file))
+        assert result is True
+        assert not output_file.exists()
+
+    def test_resolve_no_contexts_returns_first_match(self, mapper, make_keydown):
+        """Resolve with contexts=None returns first matching action."""
+        event = make_keydown(pygame.K_m)
+        result = mapper.resolve(event, contexts=None)
+        assert result is not None
+
+    def test_invalid_pygame_key_in_binding_skipped(self, tmp_path):
+        """Binding with invalid pygame key name is silently skipped."""
+        overrides_file = tmp_path / "keybindings.json"
+        overrides_file.write_text(json.dumps({
+            "bindings": {
+                "fleet.move": {"key": "K_INVALID_KEY_NAME", "modifiers": []}
+            }
+        }))
+
+        m = InputMapper()
+        m.load(
+            defaults_path=Paths.DEFAULT_KEYBINDINGS_FILE,
+            overrides_path=str(overrides_file),
+        )
+        # The binding is stored but won't resolve because key is invalid
+        binding = m.get_binding(InputAction.FLEET_MOVE)
+        assert binding is not None
+        assert binding.key == "K_INVALID_KEY_NAME"
+
+        # Should not resolve to any action
+        event = MagicMock()
+        event.type = pygame.KEYDOWN
+        event.key = pygame.K_m
+        event.mod = 0
+        result = m.resolve(event, contexts=["fleet"])
+        # M no longer maps to fleet.move since it was overridden
+        assert result is None

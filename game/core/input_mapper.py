@@ -233,6 +233,20 @@ class InputMapper:
         """
         return self._bindings.get(action)
 
+    def get_default_binding(self, action: InputAction) -> Optional[KeyBinding]:
+        """Get the default key binding for an action.
+
+        Returns the binding from the defaults file, ignoring any user overrides.
+        Useful for the keybindings editor to show "Reset to Default" values.
+
+        Args:
+            action: The InputAction to look up.
+
+        Returns:
+            The default KeyBinding, or None if the action has no default binding.
+        """
+        return self._defaults.get(action)
+
     def get_display_text(self, action: InputAction) -> str:
         """Get human-readable display text for an action's current binding.
 
