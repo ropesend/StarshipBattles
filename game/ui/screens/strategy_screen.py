@@ -318,6 +318,11 @@ class StrategyScreen:
 
         self.turn_processing = False
 
+        # PROJ-77: Show event log if there are events for this turn
+        turn_events = self._facade.get_turn_events()
+        if turn_events:
+            self.ui.open_event_log_with_events(turn_events)
+
         # PROJ-75 Phase 6: Show scuttle notifications for current player
         self._show_scuttle_notifications()
 

@@ -8,22 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-77 Phase 3 - Engine Event Emission
-**Current Status:** PROJ-77 Phase 3 complete. Next: Phase 4 (Event Log UI)
+**Last Completed:** PROJ-77 Phase 4 - Event Log UI
+**Current Status:** PROJ-77 Phase 4 complete. Next: Phase 5 (Testing & Polish)
 **Current Project:** PROJ-77
-**Current Phase:** Phase 4
-**Test Status:** 7182 passed, 2 pre-existing failures
+**Current Phase:** Phase 5
+**Test Status:** 7209 passed, 2 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- ProductionEngine: log_event(EventType.SHIP_BUILT) in _spawn_ship() and _spawn_fleet_ship(), log_event(EventType.COMPLEX_BUILT) in _spawn_complex()
-- FleetOrderProcessor: log_event(EventType.COLONY_FOUNDED) in process_colonize() after success
-- ConflictResolutionEngine: log_event(EventType.COMBAT_RESOLVED) in both _resolve_combat_simulated() and _resolve_combat() RNG fallback
-- All engines now import log_event + EventType + EventCategory
-- Used getattr(planet, 'id', None) in colonize event for mock compatibility
-- Refactored conflict engine to use winner/loser variables for cleaner event emission
-- 16 new tests: tests/unit/strategy/test_engine_event_emission.py
-- Next: Phase 4 - Event Log UI (modal window, filter tabs, top bar button)
+- Created game/ui/screens/event_log_window.py: EventLogWindow(UIWindow) with filter tabs
+- Filter tabs: All, Combat, Production, Colonies - get_filtered_events() handles filtering + sort
+- Events sorted newest first (descending by turn)
+- StrategyUI: added btn_events ("Log") at position 7, End Turn shifted to 8
+- StrategyUI: open_event_log() fetches all events, open_event_log_with_events() for turn-start
+- StrategyUI: _has_modal_open() checks event_log_window, handle_event wired for close
+- StrategyScreen._process_full_turn(): auto-opens event log with turn events after processing
+- 27 new tests: tests/unit/ui/screens/test_event_log_window.py
+- Updated test_strategy_ui_menu.py mock to include event_log_window attribute
+- Next: Phase 5 - Testing & Polish
 
 ---
 
@@ -176,7 +178,7 @@
 ---
 
 - [/] **PROJ-77: Event Log System**
-  - **Phases:** 5 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-77/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-77/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -299,6 +301,7 @@
 | 2026-02-08 | PROJ-77 | Phase 1 | Complete | 31 new, 7111+31 total | pending | EventType, EventCategory, Event, EventLog, 31 tests |
 | 2026-02-08 | PROJ-77 | Phase 2 | Complete | 7166 passed | pending | GameSession EventLog, persistence, facade queries, 24 new tests |
 | 2026-02-08 | PROJ-77 | Phase 3 | Complete | 7182 passed | pending | Engine event emission: 4 event types in 3 engines, 16 new tests |
+| 2026-02-08 | PROJ-77 | Phase 4 | Complete | 7209 passed | pending | EventLogWindow, Log button, turn-start modal, 27 new tests |
 
 ---
 

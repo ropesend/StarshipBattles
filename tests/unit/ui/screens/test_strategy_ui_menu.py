@@ -55,6 +55,7 @@ def _make_strategy_ui():
     ui.fleet_report_window = None
     ui.planet_report_panel = None
     ui.transfer_dialog = None
+    ui.event_log_window = None  # PROJ-77
     ui.current_selection = None
 
     # System/sector trees (mock process_event to avoid issues)

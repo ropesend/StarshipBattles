@@ -24,6 +24,7 @@ from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
+from game.ui.screens.event_log_window import EventLogWindow
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -53,6 +54,7 @@ class StrategyUI:
         self.transfer_dialog = None      # cargo transfer dialog instance (PROJ-68)
         self.menu_panel = None           # strategy menu dropdown (PROJ-72)
         self.empire_build_queue_window = None  # empire-wide build queue window (PROJ-76)
+        self.event_log_window = None           # event log window (PROJ-77)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -264,9 +266,17 @@ class StrategyUI:
             container=self.top_bar
         )
 
+        # Event Log Button (PROJ-77)
+        self.btn_events = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(main_start_x + 7*(btn_w+gap), 5, btn_w, 40),
+            text="Log",
+            manager=self.manager,
+            container=self.top_bar
+        )
+
         # End Turn (Larger)
         self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 7*(btn_w+gap), 5, 150, 40),
+            relative_rect=pygame.Rect(main_start_x + 8*(btn_w+gap), 5, 150, 40),
             text="End Turn",
             manager=self.manager,
             container=self.top_bar
@@ -777,6 +787,10 @@ class StrategyUI:
         if self.empire_build_queue_window is not None:
             return True
 
+        # Check for event log window (PROJ-77)
+        if self.event_log_window is not None:
+            return True
+
         # Check if workshop is being opened
         if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
             return True
@@ -827,6 +841,8 @@ class StrategyUI:
                 self.open_empire_build_queue_window()
             elif event.ui_element == self.btn_menu:
                 self.toggle_menu_panel()
+            elif event.ui_element == self.btn_events:
+                self.open_event_log()
             elif event.ui_element == self.btn_raw_data:
                 self.show_raw_data_popup()
             elif event.ui_element == self.btn_colonize:
@@ -901,6 +917,8 @@ class StrategyUI:
                 self.build_queue_list_window = None
             elif event.ui_element == self.empire_build_queue_window:
                 self._on_empire_build_queue_closed()
+            elif event.ui_element == self.event_log_window:
+                self._on_event_log_closed()
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled by UI."""
@@ -1055,6 +1073,48 @@ class StrategyUI:
     def _on_empire_build_queue_closed(self):
         """Callback when empire build queue window is closed."""
         self.empire_build_queue_window = None
+
+    def open_event_log(self):
+        """Open the Event Log Window showing all events (PROJ-77).
+
+        Fetches all events from the facade and displays them in
+        a modal window with filter tabs.
+        """
+        if self.event_log_window:
+            self.event_log_window.kill()
+
+        events = self.scene._facade.get_all_events() if hasattr(self.scene, '_facade') else []
+
+        w, h = int(self.width * 0.7), int(self.height * 0.7)
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        self.event_log_window = EventLogWindow(
+            rect, self.manager, events,
+            on_close_callback=self._on_event_log_closed,
+        )
+
+    def open_event_log_with_events(self, events: list):
+        """Open the Event Log Window with a specific event list.
+
+        Used at turn start to show only the current turn's events.
+
+        Args:
+            events: List of event dicts to display.
+        """
+        if self.event_log_window:
+            self.event_log_window.kill()
+
+        w, h = int(self.width * 0.7), int(self.height * 0.7)
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        self.event_log_window = EventLogWindow(
+            rect, self.manager, events,
+            on_close_callback=self._on_event_log_closed,
+        )
+
+    def _on_event_log_closed(self):
+        """Callback when event log window is closed."""
+        self.event_log_window = None
 
     def open_orders_window(self, fleet):
         """Open the Fleet Orders Window."""
