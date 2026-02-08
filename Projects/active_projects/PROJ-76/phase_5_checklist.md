@@ -38,10 +38,10 @@
 **File:** `game/ui/screens/strategy_screen.py`
 **Tests:** Will be added in Phase 7
 
-- [ ] Add `on_navigate_to_hex_build(hex_coord)` callback method
-- [ ] Close empire build queue window
-- [ ] Open `BuildQueueScreen` for the specified hex
-- [ ] Pass galaxy, empire, hex_coord to BuildQueueScreen
+- [x] Add `on_navigate_to_hex_build(hex_coord)` callback method (implemented in Phase 7)
+- [x] Close empire build queue window (implemented in Phase 7)
+- [x] Open `BuildQueueScreen` for the specified hex (implemented in Phase 7)
+- [x] Pass galaxy, empire, hex_coord to BuildQueueScreen (implemented in Phase 7)
 
 **Notes:**
 - Deferred to Phase 7 (Integration) since the empire build queue window

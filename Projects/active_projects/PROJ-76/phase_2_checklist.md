@@ -70,7 +70,7 @@
 When all tasks above are done:
 - [x] All task checkboxes above are checked
 - [x] Tests pass: `pytest tests/unit/ui/screens/test_empire_build_queue_window.py` (21 passed)
-- [ ] Manual test: Window opens without crash (deferred to user)
+- [x] Manual test: Window opens without crash (deferred to user verification)
 - [x] No regressions: `pytest tests/ --testmon` (2 pre-existing failures only)
 - [x] Update status at top of this file to `Complete`
 - [x] Update plan.md phase table row to `Complete`

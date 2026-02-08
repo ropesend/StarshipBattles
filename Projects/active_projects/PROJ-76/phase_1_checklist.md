@@ -22,7 +22,7 @@
 - [x] For each planet, iterate facilities to find shipyard queues (use `_facility_is_shipyard()`)
 - [x] Iterate `empire.fleets` to collect fleet space yard queues
 - [x] Return `List[BuildQueueSource]` with all sources
-- [ ] Add `get_hex_for_source(source, galaxy)` helper to get global hex coordinate (deferred to Phase 5 - Navigation)
+- [x] Add `get_hex_for_source(source, galaxy)` helper to get global hex coordinate (implemented in Phase 5 as method on window class)
 
 **Implementation Pattern:**
 ```python
