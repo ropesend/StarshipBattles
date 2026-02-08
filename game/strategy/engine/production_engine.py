@@ -19,7 +19,8 @@ Responsibilities:
 import uuid
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
-from game.core.logger import log_info, log_warning
+from game.core.logger import log_info, log_warning, log_event
+from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.data.build_queue_source import _facility_is_shipyard
 from game.strategy.data.fleet import Fleet, OrderType
 from game.strategy.data.planet import PlanetaryFacility
@@ -269,6 +270,14 @@ class ProductionEngine:
 
         planet.facilities.append(facility)
         log_info(f"Built {facility.name} on {planet.name}")
+        log_event(
+            EventType.COMPLEX_BUILT,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=f"Built {facility.name} on {planet.name}",
+            design_id=design_id,
+            planet_id=planet.id,
+        )
 
     def _spawn_ship(
         self,
@@ -326,6 +335,15 @@ class ProductionEngine:
         design_library.increment_built_count(design_id)
 
         log_info(f"Spawned {design_data.get('name', design_id)} at {spawn_loc} (Fleet {new_fleet.id})")
+        log_event(
+            EventType.SHIP_BUILT,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=f"Built {design_data.get('name', design_id)} at {planet.name}",
+            design_id=design_id,
+            planet_id=planet.id,
+            fleet_id=new_fleet.id,
+        )
 
     def process_fleet_production(
         self, empires: List, galaxy=None, save_path: Optional[str] = None
@@ -429,6 +447,15 @@ class ProductionEngine:
         design_library.increment_built_count(design_id)
 
         log_info(f"Fleet {fleet.id} built {design_data.get('name', design_id)}")
+        log_event(
+            EventType.SHIP_BUILT,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=f"Fleet {fleet.id} built {design_data.get('name', design_id)}",
+            design_id=design_id,
+            fleet_id=fleet.id,
+            is_fleet_production=True,
+        )
 
     def _spawn_fleet_complex(
         self,

@@ -8,24 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-77 Phase 2 - GameSession Integration
-**Current Status:** PROJ-77 Phase 2 complete. Next: Phase 3 (Engine Event Emission)
+**Last Completed:** PROJ-77 Phase 3 - Engine Event Emission
+**Current Status:** PROJ-77 Phase 3 complete. Next: Phase 4 (Event Log UI)
 **Current Project:** PROJ-77
-**Current Phase:** Phase 3
-**Test Status:** 7166 passed, 2 pre-existing failures
+**Current Phase:** Phase 4
+**Test Status:** 7182 passed, 2 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- GameSession._event_log: EventLog created in __init__ and from_dict
-- _create_event_handler() creates closure that captures session for log_event() callback
-- Handler coerces enum values to strings, uses current turn_number, defaults for missing kwargs
-- event_log property exposes _event_log
-- to_dict() includes 'event_log', from_dict() restores it (graceful empty default for old saves)
-- from_dict() also calls set_event_handler so post-load events work
-- Facade: get_turn_events(turn=None), get_all_events(), get_events_by_category(category)
-- All facade methods return List[dict] (immutable for UI)
-- 24 new tests: tests/unit/strategy/test_game_session_events.py, tests/unit/strategy/facade/test_event_queries.py
-- Next: Phase 3 - Add log_event() calls to ProductionEngine, FleetOrderProcessor, ConflictResolutionEngine
+- ProductionEngine: log_event(EventType.SHIP_BUILT) in _spawn_ship() and _spawn_fleet_ship(), log_event(EventType.COMPLEX_BUILT) in _spawn_complex()
+- FleetOrderProcessor: log_event(EventType.COLONY_FOUNDED) in process_colonize() after success
+- ConflictResolutionEngine: log_event(EventType.COMBAT_RESOLVED) in both _resolve_combat_simulated() and _resolve_combat() RNG fallback
+- All engines now import log_event + EventType + EventCategory
+- Used getattr(planet, 'id', None) in colonize event for mock compatibility
+- Refactored conflict engine to use winner/loser variables for cleaner event emission
+- 16 new tests: tests/unit/strategy/test_engine_event_emission.py
+- Next: Phase 4 - Event Log UI (modal window, filter tabs, top bar button)
 
 ---
 
@@ -178,7 +176,7 @@
 ---
 
 - [/] **PROJ-77: Event Log System**
-  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-77/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-77/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -300,6 +298,7 @@
 | 2026-02-08 | PROJ-76 | Audit 1 | PASSED | 7111 passed | pending | No significant issues, 6 minor observations, 4 agents verified |
 | 2026-02-08 | PROJ-77 | Phase 1 | Complete | 31 new, 7111+31 total | pending | EventType, EventCategory, Event, EventLog, 31 tests |
 | 2026-02-08 | PROJ-77 | Phase 2 | Complete | 7166 passed | pending | GameSession EventLog, persistence, facade queries, 24 new tests |
+| 2026-02-08 | PROJ-77 | Phase 3 | Complete | 7182 passed | pending | Engine event emission: 4 event types in 3 engines, 16 new tests |
 
 ---
 

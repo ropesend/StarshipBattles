@@ -13,7 +13,8 @@ import random
 from dataclasses import dataclass
 from typing import Optional, List, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_info
+from game.core.logger import log_debug, log_info, log_event
+from game.strategy.events.event_types import EventType, EventCategory
 
 if TYPE_CHECKING:
     from game.strategy.interfaces.battle_resolver import IBattleResolver
@@ -176,8 +177,19 @@ class ConflictResolutionEngine:
         # Fallback to simple RNG for empty fleets
         log_debug("Using RNG combat resolution (empty fleet)")
         if random.random() > 0.5:
-            return f1
-        return f2
+            winner, loser = f1, f2
+        else:
+            winner, loser = f2, f1
+
+        log_event(
+            EventType.COMBAT_RESOLVED,
+            category=EventCategory.COMBAT,
+            empire_id=winner.owner_id,
+            message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
+            winner_fleet_id=winner.id,
+            loser_fleet_id=loser.id,
+        )
+        return winner
 
     def _resolve_combat_simulated(self, f1: 'Fleet', f2: 'Fleet') -> 'Fleet':
         """
@@ -206,9 +218,22 @@ class ConflictResolutionEngine:
 
         # Determine winner
         if result.winner == 0:
-            return f1
+            winner, loser = f1, f2
         elif result.winner == 1:
-            return f2
+            winner, loser = f2, f1
         else:
             # Draw - return fleet with more survivors
-            return f1 if len(result.team0_survivors) >= len(result.team1_survivors) else f2
+            if len(result.team0_survivors) >= len(result.team1_survivors):
+                winner, loser = f1, f2
+            else:
+                winner, loser = f2, f1
+
+        log_event(
+            EventType.COMBAT_RESOLVED,
+            category=EventCategory.COMBAT,
+            empire_id=winner.owner_id,
+            message=f"Battle: Fleet {winner.id} defeated Fleet {loser.id}",
+            winner_fleet_id=winner.id,
+            loser_fleet_id=loser.id,
+        )
+        return winner

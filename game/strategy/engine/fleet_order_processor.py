@@ -15,7 +15,8 @@ Responsibilities:
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
 
-from game.core.logger import log_debug, log_warning, log_info
+from game.core.logger import log_debug, log_warning, log_info, log_event
+from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.hex_math import HexCoord
 
@@ -234,6 +235,15 @@ class FleetOrderProcessor:
             empire.remove_fleet(fleet)
 
         log_info(f"FleetOrderProcessor: Colonization successful. {empire.name} claimed {final_planet.name}")
+        log_event(
+            EventType.COLONY_FOUNDED,
+            category=EventCategory.COLONIES,
+            empire_id=empire.id,
+            message=f"Founded colony on {final_planet.name}",
+            planet_id=getattr(final_planet, 'id', None),
+            planet_name=final_planet.name,
+            fleet_id=fleet.id,
+        )
         return ColonizeResult(colonized=True, planet_name=final_planet.name)
 
     def process_transfer(

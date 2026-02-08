@@ -15,17 +15,17 @@
 |-------|--------|-----------|
 | 1. Event Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. GameSession Integration | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Engine Event Emission | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Engine Event Emission | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Event Log UI | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Testing & Polish | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 3 - Engine Event Emission
-**Last Action:** Phase 2 complete - EventLog in GameSession, save/load persistence, facade queries
-**Next Action:** Begin Phase 3 - Add log_event() calls to ProductionEngine, FleetOrderProcessor, ConflictResolutionEngine
+**Active Phase:** Phase 4 - Event Log UI
+**Last Action:** Phase 3 complete - log_event() calls added to all 3 engines
+**Next Action:** Begin Phase 4 - Event Log UI (modal window with filter tabs, top bar button)
 **Blockers:** None
-**Context:** GameSession creates EventLog + registers handler via set_event_handler. Facade has get_turn_events/get_all_events/get_events_by_category. 24 new tests (55 total).
+**Context:** All 4 event types now emitted: ship_built (planet + fleet), complex_built, colony_founded, combat_resolved. Used EventType/EventCategory enums for type safety. 16 new tests (71 total). 7182 passed, 2 pre-existing failures.
 
 ## Overview
 Implement a comprehensive event logging system for the strategy layer that captures and displays game events (ship/complex building, colony founding, combat) in a modal window at turn start, with a button to reopen the log.
