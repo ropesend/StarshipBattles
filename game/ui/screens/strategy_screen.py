@@ -539,7 +539,8 @@ class StrategyScreen:
         elif option == "settings":
             self._show_coming_soon("Settings")
         elif option == "controls":
-            self._show_coming_soon("Controls")
+            if self.scene_callback:
+                self.scene_callback("open_keybindings")
         elif option == "quit_to_menu":
             self._confirm_quit_to_menu()
         elif option == "quit_game":

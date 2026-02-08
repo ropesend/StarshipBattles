@@ -403,6 +403,34 @@ class Game:
         self.galaxy_test_scene = None
         self._switch_scene(GameState.MENU, self._menu_scene)
 
+    def start_keybindings(self):
+        """Open the keybindings editor scene (PROJ-71 Phase 4)."""
+        from game.ui.screens.keybindings_scene import KeybindingsScene
+
+        log_info("Opening keybindings editor")
+        self._keybindings_return_state = self.state
+        self.keybindings_scene = KeybindingsScene(
+            self.width, self.height,
+            self.input_mapper,
+            on_close_callback=self.on_keybindings_return,
+        )
+        self._switch_scene(GameState.KEYBINDINGS, self.keybindings_scene)
+
+    def on_keybindings_return(self):
+        """Return from keybindings editor to previous scene."""
+        log_info("Returning from keybindings editor")
+        return_state = getattr(self, '_keybindings_return_state', GameState.MENU)
+
+        if return_state == GameState.STRATEGY:
+            # Refresh tooltips on strategy UI with possibly changed bindings
+            if hasattr(self.strategy_scene, '_ui') and hasattr(self.strategy_scene._ui, '_apply_tooltips'):
+                self.strategy_scene._ui._apply_tooltips()
+            self._switch_scene(GameState.STRATEGY, self.strategy_scene)
+        else:
+            self._switch_scene(GameState.MENU, self._menu_scene)
+
+        self._keybindings_return_state = None
+
     def start_race_setup(self):
         """Open race setup wizard."""
         import pygame_gui
@@ -569,6 +597,8 @@ class Game:
             turn_number = kwargs.get("turn_number")
             if save_path:
                 self._on_load_game(save_path, turn_number)
+        elif action == "open_keybindings":
+            self.start_keybindings()
         elif action == "quit_to_menu":
             log_info("Returning to main menu from strategy")
             self._switch_scene(GameState.MENU, self._menu_scene)

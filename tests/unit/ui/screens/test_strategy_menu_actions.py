@@ -71,14 +71,14 @@ class TestOnMenuOption:
 
         screen._show_coming_soon.assert_called_once_with("Settings")
 
-    def test_controls_calls_show_coming_soon(self):
-        """'controls' option should call _show_coming_soon('Controls')."""
+    def test_controls_calls_scene_callback(self):
+        """'controls' option should call scene_callback('open_keybindings')."""
         screen, _, _ = _make_strategy_screen()
-        screen._show_coming_soon = MagicMock()
+        screen.scene_callback = MagicMock()
 
         screen.on_menu_option("controls")
 
-        screen._show_coming_soon.assert_called_once_with("Controls")
+        screen.scene_callback.assert_called_once_with("open_keybindings")
 
     def test_quit_to_menu_calls_confirm_quit(self):
         """'quit_to_menu' option should call _confirm_quit_to_menu."""
