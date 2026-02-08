@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-74 Phase 4 - Fleet Resupply Logic
-**Current Status:** PROJ-74 Phase 4 complete, ready for Phase 5
+**Last Completed:** PROJ-74 Phase 5 - TurnEngine Integration
+**Current Status:** PROJ-74 Phase 5 complete, ready for Phase 6
 **Current Project:** PROJ-74
-**Current Phase:** Phase 5
-**Test Status:** 6849 passed (1 pre-existing failure in test_protocols.py)
+**Current Phase:** Phase 6
+**Test Status:** 6853 passed (2 pre-existing failures: test_protocols.py, test_stats_render.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-74 Phase 4 completed: Fleet resupply with range equalization
-- Modified: game/strategy/engine/resupply_engine.py (process_fleet_resupply, _calculate_fuel_distribution, _transfer_fuel)
-- Modified: tests/unit/strategy/engine/test_resupply_engine.py (6 new fleet tests, 20 total)
-- Range equalization: fuel distributed proportional to cost_per_hex so all ships get equal range
-- Owner-only priority: planet.owner_id must match fleet.owner_id
-- Next: Phase 5 - TurnEngine Integration
+- PROJ-74 Phase 5 completed: ResupplyEngine wired into TurnEngine
+- Modified: game/strategy/engine/turn_engine.py (resupply_engine property, _process_tick Phase 0a/0b)
+- Created: tests/integration/strategy/turn_engine/test_resupply.py (5 new integration tests)
+- Resupply runs after resource consumption, before movement (Phase 0a/0b)
+- DI pattern: resupply_engine Optional param with lazy init, matches existing engines
+- Next: Phase 6 - End-to-End Testing
 
 ---
 
@@ -150,7 +150,7 @@
 ---
 
 - [/] **PROJ-74: Resupply System**
-  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-74/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-74/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -276,6 +276,7 @@
 | 2026-02-08 | PROJ-74 | Phase 2 | Complete | 6829 passed | pending | resource_levels field, serialization, 4 helper methods, 25 tests |
 | 2026-02-08 | PROJ-74 | Phase 3 | Complete | 6843 passed | pending | ResupplyEngine, IResupplyEngine, ResupplyEvent, 14 tests |
 | 2026-02-08 | PROJ-74 | Phase 4 | Complete | 6849 passed | pending | Fleet resupply, range equalization, owner priority, 6 new tests |
+| 2026-02-08 | PROJ-74 | Phase 5 | Complete | 6853 passed | pending | TurnEngine integration, resupply_engine DI, Phase 0a/0b, 5 integration tests |
 
 ---
 

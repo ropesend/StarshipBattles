@@ -17,16 +17,16 @@
 | 2. PlanetaryFacility Resource Tracking | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ResupplyEngine Core | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fleet Resupply Logic | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. TurnEngine Integration | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. TurnEngine Integration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. End-to-End Testing | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 4 Complete - Ready for Phase 5
-**Last Action:** Implemented fleet resupply with range equalization algorithm, 6 new tests
-**Next Action:** Begin Phase 5 - TurnEngine Integration
+**Active Phase:** Phase 5 Complete - Ready for Phase 6
+**Last Action:** Wired ResupplyEngine into TurnEngine._process_tick(), 5 new integration tests
+**Next Action:** Begin Phase 6 - End-to-End Testing
 **Blockers:** None
-**Context for Next Agent:** process_fleet_resupply() now fully implemented in ResupplyEngine. Iterates empires→fleets→planets at fleet location→facilities. Owner-only check (planet.owner_id == fleet.owner_id). _calculate_fuel_distribution() equalizes range across fleet ships (fuel proportional to cost/hex). _transfer_fuel() helper executes fuel transfer and withdraws from facility. 6 new fleet resupply tests added (20 total in test file). All 6849 tests pass.
+**Context for Next Agent:** ResupplyEngine is now fully integrated into TurnEngine. Phase 0a (fuel generation) and Phase 0b (fleet resupply) run each tick after resource consumption but before movement. resupply_engine follows same DI pattern as other engines (lazy init property, constructor injection). 5 integration tests in tests/integration/strategy/turn_engine/test_resupply.py verify generation, resupply, ordering, and end-to-end. All 6853 tests pass (2 pre-existing failures).
 
 ## Overview
 Implement a fuel resupply system where:

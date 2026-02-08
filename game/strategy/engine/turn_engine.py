@@ -9,6 +9,8 @@ PROJ-43 Phase 4: Full constructor dependency injection for all engines.
 Turn Phases:
     1. SUBTURN LOOP (100 ticks):
        - Phase 0: Per-turn resources (via ResourceManagementEngine)
+       - Phase 0a: Fuel generation at facilities (via ResupplyEngine)
+       - Phase 0b: Fleet resupply from facilities (via ResupplyEngine)
        - Phase 1: Instant orders (via FleetOrderProcessor)
        - Phase 2: Calculate moves (via FleetMovementEngine)
        - Phase 3: Apply moves (via FleetMovementEngine)
@@ -22,6 +24,7 @@ Delegated Engines:
     - FleetOrderProcessor: Order lifecycle management
     - ConflictResolutionEngine: Combat detection and resolution
     - ResourceManagementEngine: Per-turn resource consumption
+    - ResupplyEngine: Fuel generation and fleet resupply
 
 Dependency Injection:
     TurnEngine accepts optional engine parameters for all sub-engines.
@@ -53,6 +56,7 @@ if TYPE_CHECKING:
         IConflictEngine,
         IResourceEngine,
         IPopulationEngine,
+        IResupplyEngine,
     )
     from game.strategy.engine.fleet_movement_engine import FleetMovementEngine
     from game.strategy.engine.production_engine import ProductionEngine
@@ -92,6 +96,7 @@ class TurnEngine:
         conflict_engine: Optional['IConflictEngine'] = None,
         resource_engine: Optional['IResourceEngine'] = None,
         population_engine: Optional['IPopulationEngine'] = None,
+        resupply_engine: Optional['IResupplyEngine'] = None,
     ):
         """
         Initialize the turn engine.
@@ -116,6 +121,8 @@ class TurnEngine:
                            If None, creates ResourceManagementEngine.
             population_engine: Optional population engine (IPopulationEngine).
                            If None, creates PopulationEngine.
+            resupply_engine: Optional resupply engine (IResupplyEngine).
+                           If None, creates ResupplyEngine.
         """
         # PROJ-11: Inject battle resolver for clean layer separation
         if battle_resolver is None:
@@ -137,6 +144,7 @@ class TurnEngine:
         self._conflict_engine: Optional['IConflictEngine'] = conflict_engine
         self._resource_engine: Optional['IResourceEngine'] = resource_engine
         self._population_engine: Optional['IPopulationEngine'] = population_engine
+        self._resupply_engine: Optional['IResupplyEngine'] = resupply_engine
 
     @property
     def movement_engine(self) -> 'IMovementEngine':
@@ -189,6 +197,14 @@ class TurnEngine:
             from game.strategy.engine.population_engine import PopulationEngine
             self._population_engine = PopulationEngine()
         return self._population_engine
+
+    @property
+    def resupply_engine(self) -> 'IResupplyEngine':
+        """Return resupply engine, lazily creating default if not injected."""
+        if self._resupply_engine is None:
+            from game.strategy.engine.resupply_engine import ResupplyEngine
+            self._resupply_engine = ResupplyEngine(registries=self._registries)
+        return self._resupply_engine
 
     def process_turn(self, empires, galaxy, save_path=None):
         """
@@ -255,9 +271,12 @@ class TurnEngine:
         """Process 1 sub-tick of movement and combat.
 
         PROJ-12 Phase 3: Delegates to specialized engines.
+        PROJ-74 Phase 5: Added fuel generation and fleet resupply phases.
 
-        Five-phase processing:
+        Seven-phase processing:
         Phase 0: Per-turn resource consumption (1/100th of per_turn costs)
+        Phase 0a: Fuel generation at facilities (via ResupplyEngine)
+        Phase 0b: Fleet resupply from facilities (via ResupplyEngine)
         Phase 1: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
         Phase 2: Calculate paths/next moves for all fleets (based on current positions)
         Phase 3: Apply all movements simultaneously
@@ -267,6 +286,14 @@ class TurnEngine:
         # --- Phase 0: Per-turn Resource Consumption ---
         # PROJ-36: Delegate to ResourceManagementEngine
         self.resource_engine.process_per_turn_consumption(tick, empires)
+
+        # --- Phase 0a: Fuel generation at facilities ---
+        # PROJ-74: Generate fuel at planetary facilities with fuel synthesizers
+        self.resupply_engine.process_fuel_generation(tick, empires)
+
+        # --- Phase 0b: Fleet resupply from facilities ---
+        # PROJ-74: Transfer fuel from facilities to co-located fleets
+        self.resupply_engine.process_fleet_resupply(tick, empires, galaxy)
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---
         # PROJ-12: Delegate to FleetOrderProcessor
