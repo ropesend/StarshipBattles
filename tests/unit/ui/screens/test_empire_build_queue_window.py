@@ -83,6 +83,14 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     ]
     win.column_toggle_buttons = {}
 
+    # Filter state (Phase 4)
+    win.filter_location_type = {'Planet': True, 'Fleet': True}
+    win.filter_status = {'Active': True, 'Empty': True}
+    win.filter_capabilities = {'Ships': True, 'Complexes': True}
+    win.search_text = ""
+    win.filter_toggle_buttons = {}
+    win.search_entry = None
+
     # Mock UI elements
     win.scroll_bar = MagicMock()
     win.scroll_bar.start_percentage = 0.0
@@ -519,3 +527,363 @@ class TestColumnToggle:
         win.toggle_column_visibility('capabilities')
         after = {c['id'] for c in win._get_visible_columns()}
         assert 'capabilities' not in after
+
+
+# =======================================================================
+# Filter State Tests (Phase 4)
+# =======================================================================
+
+class TestFilterState:
+    """Window should initialize filter state correctly."""
+
+    def test_filter_location_type_initialized(self):
+        """Window has location type filter dict with both types True."""
+        win = _make_window()
+        assert hasattr(win, 'filter_location_type')
+        assert win.filter_location_type == {'Planet': True, 'Fleet': True}
+
+    def test_filter_status_initialized(self):
+        """Window has queue status filter dict with both types True."""
+        win = _make_window()
+        assert hasattr(win, 'filter_status')
+        assert win.filter_status == {'Active': True, 'Empty': True}
+
+    def test_filter_capabilities_initialized(self):
+        """Window has capabilities filter dict with both types True."""
+        win = _make_window()
+        assert hasattr(win, 'filter_capabilities')
+        assert win.filter_capabilities == {'Ships': True, 'Complexes': True}
+
+    def test_search_text_initialized(self):
+        """Window has search_text initialized to empty string."""
+        win = _make_window()
+        assert hasattr(win, 'search_text')
+        assert win.search_text == ""
+
+
+# =======================================================================
+# Location Type Filter Tests (Phase 4)
+# =======================================================================
+
+class TestLocationTypeFilter:
+    """_filter_sources() should filter by location type."""
+
+    def test_show_all_locations(self):
+        """All sources shown when both types enabled."""
+        sources = [
+            _make_source("p1", "Planet Base", "planet"),
+            _make_source("f1", "Fleet Yard", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_location_type = {'Planet': True, 'Fleet': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 2
+
+    def test_hide_fleet_sources(self):
+        """Fleet sources hidden when Fleet filter disabled."""
+        sources = [
+            _make_source("p1", "Planet Base", "planet"),
+            _make_source("f1", "Fleet Yard", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_location_type = {'Planet': True, 'Fleet': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].context_type == "planet"
+
+    def test_hide_planet_sources(self):
+        """Planet sources hidden when Planet filter disabled."""
+        sources = [
+            _make_source("p1", "Planet Base", "planet"),
+            _make_source("f1", "Fleet Yard", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_location_type = {'Planet': False, 'Fleet': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].context_type == "fleet"
+
+    def test_hide_all_locations_shows_empty(self):
+        """Empty result when both location types disabled."""
+        sources = [
+            _make_source("p1", "Planet Base", "planet"),
+            _make_source("f1", "Fleet Yard", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_location_type = {'Planet': False, 'Fleet': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 0
+
+
+# =======================================================================
+# Queue Status Filter Tests (Phase 4)
+# =======================================================================
+
+class TestQueueStatusFilter:
+    """_filter_sources() should filter by queue status."""
+
+    def test_show_all_statuses(self):
+        """All sources shown when both statuses enabled."""
+        sources = [
+            _make_source("p1", "Active Queue", queue_items=[
+                {"design_id": "frigate", "turns_remaining": 3}
+            ]),
+            _make_source("p2", "Empty Queue", queue_items=[]),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_status = {'Active': True, 'Empty': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 2
+
+    def test_hide_empty_queues(self):
+        """Empty queues hidden when Empty filter disabled."""
+        sources = [
+            _make_source("p1", "Active Queue", queue_items=[
+                {"design_id": "frigate", "turns_remaining": 3}
+            ]),
+            _make_source("p2", "Empty Queue", queue_items=[]),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_status = {'Active': True, 'Empty': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p1"
+
+    def test_hide_active_queues(self):
+        """Active queues hidden when Active filter disabled."""
+        sources = [
+            _make_source("p1", "Active Queue", queue_items=[
+                {"design_id": "frigate", "turns_remaining": 3}
+            ]),
+            _make_source("p2", "Empty Queue", queue_items=[]),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_status = {'Active': False, 'Empty': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p2"
+
+
+# =======================================================================
+# Capabilities Filter Tests (Phase 4)
+# =======================================================================
+
+class TestCapabilitiesFilter:
+    """_filter_sources() should filter by build capabilities."""
+
+    def test_show_all_capabilities(self):
+        """All sources shown when both capabilities enabled."""
+        sources = [
+            _make_source("p1", "Ships Only", can_build_ships=True,
+                         can_build_complexes=False),
+            _make_source("p2", "Complexes Only", can_build_ships=False,
+                         can_build_complexes=True),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_capabilities = {'Ships': True, 'Complexes': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 2
+
+    def test_hide_ship_builders(self):
+        """Ship builders hidden when Ships filter disabled."""
+        sources = [
+            _make_source("p1", "Ships Only", can_build_ships=True,
+                         can_build_complexes=False),
+            _make_source("p2", "Complexes Only", can_build_ships=False,
+                         can_build_complexes=True),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_capabilities = {'Ships': False, 'Complexes': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p2"
+
+    def test_hide_complex_builders(self):
+        """Complex builders hidden when Complexes filter disabled."""
+        sources = [
+            _make_source("p1", "Ships Only", can_build_ships=True,
+                         can_build_complexes=False),
+            _make_source("p2", "Complexes Only", can_build_ships=False,
+                         can_build_complexes=True),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_capabilities = {'Ships': True, 'Complexes': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p1"
+
+    def test_both_capabilities_source_shown_when_either_enabled(self):
+        """Source building both ships+complexes is shown if either filter on."""
+        sources = [
+            _make_source("p1", "Both", can_build_ships=True,
+                         can_build_complexes=True),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_capabilities = {'Ships': True, 'Complexes': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+
+    def test_neither_capability_source_hidden_when_both_off(self):
+        """Source with no capabilities hidden when both filters off."""
+        sources = [
+            _make_source("p1", "None", can_build_ships=False,
+                         can_build_complexes=False),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_capabilities = {'Ships': False, 'Complexes': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 0
+
+    def test_neither_capability_source_shown_when_both_on(self):
+        """Source with no capabilities is still shown when all filters enabled.
+
+        A source that can build neither should appear when the user has all
+        capability filters turned on (no filtering desired).
+        """
+        sources = [
+            _make_source("p1", "None", can_build_ships=False,
+                         can_build_complexes=False),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_capabilities = {'Ships': True, 'Complexes': True}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+
+
+# =======================================================================
+# Text Search Filter Tests (Phase 4)
+# =======================================================================
+
+class TestTextSearchFilter:
+    """_filter_sources() should filter by text search on name."""
+
+    def test_empty_search_shows_all(self):
+        """Empty search text shows all sources."""
+        sources = [
+            _make_source("p1", "Alpha Base"),
+            _make_source("p2", "Beta Shipyard"),
+        ]
+        win = _make_window(sources=sources)
+        win.search_text = ""
+        result = win._filter_sources(sources)
+        assert len(result) == 2
+
+    def test_search_by_name_substring(self):
+        """Search matches display_name substring (case-insensitive)."""
+        sources = [
+            _make_source("p1", "Alpha Base"),
+            _make_source("p2", "Beta Shipyard"),
+        ]
+        win = _make_window(sources=sources)
+        win.search_text = "alpha"
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p1"
+
+    def test_search_case_insensitive(self):
+        """Search is case-insensitive."""
+        sources = [
+            _make_source("p1", "ALPHA Base"),
+        ]
+        win = _make_window(sources=sources)
+        win.search_text = "alpha"
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+
+    def test_search_no_match(self):
+        """Search with no matching sources returns empty."""
+        sources = [
+            _make_source("p1", "Alpha Base"),
+        ]
+        win = _make_window(sources=sources)
+        win.search_text = "gamma"
+        result = win._filter_sources(sources)
+        assert len(result) == 0
+
+    def test_search_matches_partial(self):
+        """Partial text matches."""
+        sources = [
+            _make_source("p1", "Alpha Base"),
+            _make_source("p2", "Alpha Shipyard"),
+            _make_source("p3", "Beta Base"),
+        ]
+        win = _make_window(sources=sources)
+        win.search_text = "alph"
+        result = win._filter_sources(sources)
+        assert len(result) == 2
+
+
+# =======================================================================
+# Combined Filter Tests (Phase 4)
+# =======================================================================
+
+class TestCombinedFilters:
+    """Multiple filters should combine (AND logic)."""
+
+    def test_location_and_status_combined(self):
+        """Location type AND status filters combine."""
+        sources = [
+            _make_source("p1", "Planet Active", "planet", queue_items=[
+                {"design_id": "frigate", "turns_remaining": 3}
+            ]),
+            _make_source("p2", "Planet Empty", "planet", queue_items=[]),
+            _make_source("f1", "Fleet Active", "fleet", queue_items=[
+                {"design_id": "cruiser", "turns_remaining": 5}
+            ]),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_location_type = {'Planet': True, 'Fleet': False}
+        win.filter_status = {'Active': True, 'Empty': False}
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p1"
+
+    def test_all_filters_combined(self):
+        """All four filters combine correctly."""
+        sources = [
+            _make_source("p1", "Alpha Base", "planet",
+                         can_build_ships=False, can_build_complexes=True,
+                         queue_items=[{"design_id": "mine", "turns_remaining": 2}]),
+            _make_source("p2", "Beta Shipyard", "planet",
+                         can_build_ships=True, can_build_complexes=True,
+                         queue_items=[]),
+            _make_source("f1", "Fleet Yard", "fleet",
+                         can_build_ships=True, can_build_complexes=False,
+                         queue_items=[{"design_id": "scout", "turns_remaining": 1}]),
+        ]
+        win = _make_window(sources=sources)
+        win.filter_location_type = {'Planet': True, 'Fleet': True}
+        win.filter_status = {'Active': True, 'Empty': False}
+        win.filter_capabilities = {'Ships': False, 'Complexes': True}
+        win.search_text = "alpha"
+        result = win._filter_sources(sources)
+        assert len(result) == 1
+        assert result[0].queue_id == "p1"
+
+    def test_apply_filters_updates_filtered_sources(self):
+        """apply_filters() updates filtered_sources and refreshes list."""
+        sources = [
+            _make_source("p1", "Alpha", "planet"),
+            _make_source("f1", "Fleet", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win.filter_location_type = {'Planet': True, 'Fleet': False}
+        win.apply_filters()
+        assert len(win.filtered_sources) == 1
+        assert win.filtered_sources[0].context_type == "planet"
+        win._refresh_list.assert_called_once()
+
+    def test_apply_filters_resets_selection(self):
+        """apply_filters() clears selection when filters change."""
+        sources = [
+            _make_source("p1", "Alpha", "planet"),
+            _make_source("f1", "Fleet", "fleet"),
+        ]
+        win = _make_window(sources=sources)
+        win._refresh_list = MagicMock()
+        win._select_source(0)
+        win.filter_location_type = {'Planet': True, 'Fleet': False}
+        win.apply_filters()
+        assert win.selected_source is None
+        assert win.selected_index == -1

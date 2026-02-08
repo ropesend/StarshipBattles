@@ -16,16 +16,16 @@
 | 1. Data Layer | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Window Foundation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Column System | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Filtering | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Filtering | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Navigation | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Multi-Select | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Integration | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 3 Complete
-**Last Action:** Added configurable column system with 8 columns, visibility toggles, sidebar controls, 26 new tests (47 total)
-**Next Action:** Begin Phase 4 - Filtering
+**Active Phase:** Phase 4 Complete
+**Last Action:** Added filtering: location type, queue status, capabilities, text search. 26 new tests (73 total). _filter_sources(), apply_filters(), sidebar filter UI with toggles and Apply button.
+**Next Action:** Begin Phase 5 - Navigation
 **Blockers:** None
 
 ## Overview

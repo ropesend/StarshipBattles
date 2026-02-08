@@ -6,13 +6,14 @@ navigation to individual hex build screens.
 
 Created as part of PROJ-76 Phase 2.
 Updated in Phase 3: Configurable column system with visibility toggles.
+Updated in Phase 4: Filtering (location type, queue status, capabilities, text search).
 """
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 import pygame
-from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar
+from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar, UITextEntryLine
 
 from game.core.config import UIConfig
 from game.core.logger import log_debug
@@ -88,6 +89,14 @@ class EmpireBuildQueueWindow(UIWindow):
         self.row_elements: list = []
         self.column_toggle_buttons: Dict[str, UIButton] = {}
 
+        # --- Filter State ---
+        self.filter_location_type: Dict[str, bool] = {'Planet': True, 'Fleet': True}
+        self.filter_status: Dict[str, bool] = {'Active': True, 'Empty': True}
+        self.filter_capabilities: Dict[str, bool] = {'Ships': True, 'Complexes': True}
+        self.search_text: str = ""
+        self.filter_toggle_buttons: Dict[str, UIButton] = {}
+        self.search_entry: Optional[UITextEntryLine] = None
+
         # --- UI Containers ---
         # Sidebar (column toggles + filters placeholder)
         self.sidebar_panel = UIPanel(
@@ -97,6 +106,7 @@ class EmpireBuildQueueWindow(UIWindow):
             anchors={'left': 'left', 'top': 'top', 'bottom': 'bottom'},
         )
         self._build_sidebar_column_toggles(manager)
+        self._build_sidebar_filters(manager)
 
         # Main content area
         main_w = rect.width - self.sidebar_width - 10
@@ -222,8 +232,23 @@ class EmpireBuildQueueWindow(UIWindow):
     # -------------------------------------------------------------------
 
     def process_event(self, event: pygame.event.Event) -> bool:
-        """Handle mouse clicks on rows."""
+        """Handle mouse clicks on rows, filter toggles, and apply button."""
         handled = super().process_event(event)
+
+        # UI button click handling
+        if event.type == pygame.USEREVENT:
+            ui_element = getattr(event, 'ui_element', None)
+            user_type = getattr(event, 'user_type', None)
+            # pygame_gui uses either user_type string or ui_element attribute
+            if ui_element is not None and str(user_type) == 'ui_button_pressed':
+                # Check column toggles
+                self._handle_column_toggle_click(ui_element)
+                # Check filter toggles
+                self._handle_filter_toggle_click(ui_element)
+                # Check apply button
+                if hasattr(self, 'btn_apply_filters') and ui_element is self.btn_apply_filters:
+                    self._handle_apply_filters_click()
+                    return True
 
         # Row click detection
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
@@ -377,6 +402,71 @@ class EmpireBuildQueueWindow(UIWindow):
         return False
 
     # -------------------------------------------------------------------
+    # Filtering
+    # -------------------------------------------------------------------
+
+    def _filter_sources(
+        self, sources: List[BuildQueueSource],
+    ) -> List[BuildQueueSource]:
+        """Apply all active filters to a list of sources.
+
+        Filters are combined with AND logic: a source must pass all
+        enabled filters to appear in the result.
+
+        Args:
+            sources: The full list of sources to filter.
+
+        Returns:
+            Filtered list of sources matching all criteria.
+        """
+        result = list(sources)
+
+        # Location type filter
+        result = [
+            s for s in result
+            if (s.context_type == "planet" and self.filter_location_type.get('Planet', True))
+            or (s.context_type == "fleet" and self.filter_location_type.get('Fleet', True))
+        ]
+
+        # Queue status filter
+        result = [
+            s for s in result
+            if (len(s.construction_queue) > 0 and self.filter_status.get('Active', True))
+            or (len(s.construction_queue) == 0 and self.filter_status.get('Empty', True))
+        ]
+
+        # Capabilities filter - show source if ANY of its capabilities match
+        # an enabled filter. If all filters are on, show everything.
+        if not (self.filter_capabilities.get('Ships', True)
+                and self.filter_capabilities.get('Complexes', True)):
+            result = [
+                s for s in result
+                if (s.can_build_ships and self.filter_capabilities.get('Ships', True))
+                or (s.can_build_complexes and self.filter_capabilities.get('Complexes', True))
+            ]
+
+        # Text search filter
+        if self.search_text.strip():
+            search_lower = self.search_text.strip().lower()
+            result = [
+                s for s in result
+                if search_lower in s.display_name.lower()
+            ]
+
+        return result
+
+    def apply_filters(self) -> None:
+        """Re-apply all filters to all_sources and refresh the display.
+
+        Clears the current selection and rebuilds the filtered list
+        and row display.
+        """
+        self.filtered_sources = self._filter_sources(self.all_sources)
+        self.selected_source = None
+        self.selected_index = -1
+        self._refresh_list()
+
+    # -------------------------------------------------------------------
     # Sidebar Column Toggles
     # -------------------------------------------------------------------
 
@@ -428,6 +518,153 @@ class EmpireBuildQueueWindow(UIWindow):
                 self._build_header_labels(self.ui_manager, 0)
                 self._refresh_list()
                 return
+
+    # -------------------------------------------------------------------
+    # Sidebar Filter Controls
+    # -------------------------------------------------------------------
+
+    def _build_sidebar_filters(self, manager: Any) -> None:
+        """Create filter toggle buttons and search box in the sidebar.
+
+        Adds sections for Location Type, Queue Status, Capabilities,
+        and a text search entry below the column toggles.
+
+        Args:
+            manager: pygame_gui UIManager instance.
+        """
+        sidebar_w = self.sidebar_width - 20
+        # Start below column toggles: header(35) + 8 columns * 35 + gap
+        y_off = 40 + len(self.columns) * 35 + 15
+
+        # --- Location Type ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
+            text="LOCATION TYPE",
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+        y_off += 30
+        for key in ('Planet', 'Fleet'):
+            prefix = "[x]" if self.filter_location_type[key] else "[ ]"
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
+                text=f"{prefix} {key}",
+                manager=manager,
+                container=self.sidebar_panel,
+            )
+            self.filter_toggle_buttons[f"loc_{key}"] = btn
+            y_off += 35
+
+        y_off += 10
+
+        # --- Queue Status ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
+            text="QUEUE STATUS",
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+        y_off += 30
+        for key in ('Active', 'Empty'):
+            prefix = "[x]" if self.filter_status[key] else "[ ]"
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
+                text=f"{prefix} {key}",
+                manager=manager,
+                container=self.sidebar_panel,
+            )
+            self.filter_toggle_buttons[f"status_{key}"] = btn
+            y_off += 35
+
+        y_off += 10
+
+        # --- Capabilities ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
+            text="CAPABILITIES",
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+        y_off += 30
+        for key in ('Ships', 'Complexes'):
+            prefix = "[x]" if self.filter_capabilities[key] else "[ ]"
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
+                text=f"{prefix} {key}",
+                manager=manager,
+                container=self.sidebar_panel,
+            )
+            self.filter_toggle_buttons[f"cap_{key}"] = btn
+            y_off += 35
+
+        y_off += 10
+
+        # --- Text Search ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y_off, sidebar_w, 25),
+            text="SEARCH",
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+        y_off += 30
+        self.search_entry = UITextEntryLine(
+            relative_rect=pygame.Rect(10, y_off, sidebar_w, 30),
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+        y_off += 40
+
+        # --- Apply Button ---
+        self.btn_apply_filters = UIButton(
+            relative_rect=pygame.Rect(10, y_off, sidebar_w, 35),
+            text="Apply Filters",
+            manager=manager,
+            container=self.sidebar_panel,
+        )
+
+    def _handle_filter_toggle_click(self, button: UIButton) -> None:
+        """Handle a filter toggle button click.
+
+        Identifies which filter the button controls, toggles its state,
+        updates the button text, and re-applies filters.
+
+        Args:
+            button: The UIButton that was clicked.
+        """
+        for filter_key, btn in self.filter_toggle_buttons.items():
+            if btn is not button:
+                continue
+
+            # Parse filter key: "loc_Planet", "status_Active", "cap_Ships"
+            parts = filter_key.split("_", 1)
+            category = parts[0]
+            value = parts[1]
+
+            if category == "loc":
+                self.filter_location_type[value] = not self.filter_location_type[value]
+                state = self.filter_location_type[value]
+            elif category == "status":
+                self.filter_status[value] = not self.filter_status[value]
+                state = self.filter_status[value]
+            elif category == "cap":
+                self.filter_capabilities[value] = not self.filter_capabilities[value]
+                state = self.filter_capabilities[value]
+            else:
+                return
+
+            prefix = "[x]" if state else "[ ]"
+            btn.set_text(f"{prefix} {value}")
+            self.apply_filters()
+            return
+
+    def _handle_apply_filters_click(self) -> None:
+        """Handle the Apply Filters button click.
+
+        Reads the search text entry and re-applies all filters.
+        """
+        if self.search_entry is not None:
+            self.search_text = self.search_entry.get_text()
+        self.apply_filters()
 
     # -------------------------------------------------------------------
     # Additional Data Formatters

@@ -8,23 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-76 Phase 3 - Column System
-**Current Status:** PROJ-76 Phase 3 complete, Phase 4 next
+**Last Completed:** PROJ-76 Phase 4 - Filtering
+**Current Status:** PROJ-76 Phase 4 complete, Phase 5 next
 **Current Project:** PROJ-76
-**Current Phase:** Phase 4
-**Test Status:** 47 passed (testmon: 47 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
+**Current Phase:** Phase 5
+**Test Status:** 73 passed (testmon: 73 passed), 2 pre-existing failures (test_protocols.py, test_bug_15_screenshot)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-76 Phase 3 complete: Configurable column system added
-- Modified: game/ui/screens/empire_build_queue_window.py (290→515 lines)
-- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (21→47 tests)
-- 8 columns: location, system, sector, queue_count, first_item, turns_left, capabilities, build_rate
-- Column methods: _get_visible_columns(), _get_column_value(), toggle_column_visibility()
-- Sidebar: _build_sidebar_column_toggles(), _handle_column_toggle_click(), [x]/[ ] toggle buttons
-- Header & rows now column-driven: _build_header_labels() and _refresh_list() iterate visible columns
-- New formatters: _get_system_name(), _get_sector_text(), _get_turns_left_text()
-- Next: Phase 4 - Filtering (location type, queue status, capabilities, text search)
+- PROJ-76 Phase 4 complete: Filtering system added
+- Modified: game/ui/screens/empire_build_queue_window.py (515→752 lines)
+- Modified: tests/unit/ui/screens/test_empire_build_queue_window.py (47→73 tests)
+- Filter state: filter_location_type, filter_status, filter_capabilities, search_text
+- Core methods: _filter_sources() (AND logic), apply_filters() (resets selection, refreshes)
+- Sidebar filter UI: _build_sidebar_filters() with 3 toggle sections + search entry + Apply button
+- Event handling: _handle_filter_toggle_click(), _handle_apply_filters_click()
+- Filter toggles use [x]/[ ] prefix pattern matching column toggles
+- 26 new tests: 4 location, 3 status, 6 capabilities, 5 search, 5 combined, 3 state init
+- Next: Phase 5 - Navigation (row click → hex build screen)
 
 ---
 
@@ -169,7 +170,7 @@
 ---
 
 - [/] **PROJ-76: Empire-Wide Build Queue Window**
-  - **Phases:** 7 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 7 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-76/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-76/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -292,6 +293,7 @@
 | 2026-02-08 | PROJ-76 | Phase 1 | Complete | 183 testmon | pending | collect_all_build_queues_for_empire(), 7 new tests |
 | 2026-02-08 | PROJ-76 | Phase 2 | Complete | 21 testmon | pending | EmpireBuildQueueWindow class, layout, row rendering, selection, 21 tests |
 | 2026-02-08 | PROJ-76 | Phase 3 | Complete | 47 testmon | pending | Column system: 8 columns, visibility toggles, sidebar, 26 new tests |
+| 2026-02-08 | PROJ-76 | Phase 4 | Complete | 73 testmon | pending | Filtering: location type, queue status, capabilities, text search, 26 new tests |
 
 ---
 
