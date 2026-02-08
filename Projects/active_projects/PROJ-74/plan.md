@@ -18,15 +18,15 @@
 | 3. ResupplyEngine Core | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fleet Resupply Logic | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TurnEngine Integration | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. End-to-End Testing | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. End-to-End Testing | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 5 Complete - Ready for Phase 6
-**Last Action:** Wired ResupplyEngine into TurnEngine._process_tick(), 5 new integration tests
-**Next Action:** Begin Phase 6 - End-to-End Testing
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Phase 6 End-to-End Testing: 16 new tests (8 integration + 8 save/load persistence)
+**Next Action:** Trigger audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** ResupplyEngine is now fully integrated into TurnEngine. Phase 0a (fuel generation) and Phase 0b (fleet resupply) run each tick after resource consumption but before movement. resupply_engine follows same DI pattern as other engines (lazy init property, constructor injection). 5 integration tests in tests/integration/strategy/turn_engine/test_resupply.py verify generation, resupply, ordering, and end-to-end. All 6853 tests pass (2 pre-existing failures).
+**Context for Next Agent:** All 6 phases complete. 16 new tests in Phase 6: complete resupply flow, multi-turn accumulation, storage cap, range equalization (2 scenarios), enemy fleet exclusion, full-fuel skip, and save/load persistence (facility fuel + ship fuel + full service round-trips). 6870 tests pass (1 pre-existing failure in test_protocols.py).
 
 ## Overview
 Implement a fuel resupply system where:
@@ -73,7 +73,7 @@ Implement a fuel resupply system where:
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing
 - [ ] Audit passed
 - [ ] User verified
