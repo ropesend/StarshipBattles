@@ -323,6 +323,91 @@ class TestComplexBuiltEvent:
 
 
 # ===========================================================================
+# Production: Fleet Complex Built
+# ===========================================================================
+
+
+class TestFleetComplexBuiltEvent:
+    """ProductionEngine emits complex_built event for fleet yard complex production."""
+
+    def test_spawn_fleet_complex_emits_complex_built_event(self):
+        """_spawn_fleet_complex() calls log_event with complex_built type."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.hex_math import HexCoord
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 9
+        fleet.location = HexCoord(5, 5)
+
+        planet = _make_mock_planet(planet_id=42, name="Forge World")
+        galaxy = _make_mock_galaxy()
+        galaxy.get_planets_at_global_hex.return_value = [planet]
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.DesignLibrary') as mock_lib_cls:
+            mock_lib = MagicMock()
+            mock_lib.load_design_data.return_value = {"name": "Orbital Refinery"}
+            mock_lib_cls.return_value = mock_lib
+
+            with patch('game.strategy.engine.production_engine.log_event', fake):
+                engine._spawn_fleet_complex(fleet, "refinery_design", empire, galaxy, save_path="/test")
+
+        assert len(calls) == 1
+        etype, kw = calls[0]
+        assert etype == EventType.COMPLEX_BUILT
+        assert kw["category"] == EventCategory.PRODUCTION
+        assert kw["empire_id"] == 0
+        assert "Orbital Refinery" in kw["message"]
+        assert "Forge World" in kw["message"]
+        assert "fleet yard" in kw["message"]
+        assert kw["design_id"] == "refinery_design"
+        assert kw["planet_id"] == 42
+
+    def test_spawn_fleet_complex_no_event_when_no_galaxy(self):
+        """No event emitted when galaxy is None."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.strategy.data.fleet import Fleet
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 9
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.log_event', fake):
+            engine._spawn_fleet_complex(fleet, "design_x", empire, galaxy=None)
+
+        assert len(calls) == 0
+
+    def test_spawn_fleet_complex_no_event_when_no_planet_at_hex(self):
+        """No event emitted when fleet is not at a planet hex."""
+        from game.strategy.engine.production_engine import ProductionEngine
+        from game.strategy.data.fleet import Fleet
+        from game.strategy.data.hex_math import HexCoord
+
+        engine = ProductionEngine()
+        empire = _make_mock_empire()
+        fleet = MagicMock(spec=Fleet)
+        fleet.id = 9
+        fleet.location = HexCoord(0, 0)
+
+        galaxy = _make_mock_galaxy()
+        galaxy.get_planets_at_global_hex.return_value = []
+
+        calls, fake = _capture_log_event_calls()
+
+        with patch('game.strategy.engine.production_engine.log_event', fake):
+            engine._spawn_fleet_complex(fleet, "design_y", empire, galaxy)
+
+        assert len(calls) == 0
+
+
+# ===========================================================================
 # Colony: Colony Founded
 # ===========================================================================
 

@@ -513,3 +513,11 @@ class ProductionEngine:
 
         planet.facilities.append(facility)
         log_info(f"Fleet {fleet.id} built {facility.name} on {planet.name}")
+        log_event(
+            EventType.COMPLEX_BUILT,
+            category=EventCategory.PRODUCTION,
+            empire_id=empire.id,
+            message=f"Built {facility.name} on {planet.name} (fleet yard)",
+            design_id=design_id,
+            planet_id=planet.id,
+        )

@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, Callable, Optional
 
 import pygame
+import pygame_gui
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIVerticalScrollBar
 
 
@@ -239,9 +240,7 @@ class EventLogWindow(UIWindow):
         """Handle UI events for filter button clicks."""
         handled = super().process_event(event)
 
-        if hasattr(event, "type") and event.type == getattr(
-            __import__("pygame_gui"), "UI_BUTTON_PRESSED", None
-        ):
+        if hasattr(event, "type") and event.type == pygame_gui.UI_BUTTON_PRESSED:
             clicked = getattr(event, "ui_element", None)
             for key, btn in self.filter_buttons.items():
                 if clicked is btn:
