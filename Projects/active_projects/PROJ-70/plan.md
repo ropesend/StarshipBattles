@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Write Tests (TDD) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Enhance format_fleet_info() | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Wire Up strategy_ui.py | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Wire Up strategy_ui.py | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-07
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - format_fleet_info() rewritten with 3 helpers, all 14 tests pass
-**Next Action:** Begin Phase 3 - Wire up strategy_ui.py to use format_fleet_info()
+**Active Phase:** All phases complete - ready for audit
+**Last Action:** Phase 3 complete - Replaced inline fleet code in strategy_ui.py with format_fleet_info() call, removed OrderType import
+**Next Action:** Trigger audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** `format_fleet_info()` now includes travel range, ship grouping (by design, sorted by mass), cargo summary, and full order formatting (MOVE, COLONIZE, BUILD, TRANSFER). Three private helpers: `_format_ship_groups()`, `_format_cargo_summary()`, `_format_orders()`. All 14 tests pass. Next: replace inline fleet code in `strategy_ui.py` with a call to `format_fleet_info()`.
+**Context for Next Agent:** All 3 phases complete. strategy_ui.py now calls format_fleet_info() instead of inline fleet formatting (22 lines → 1 line). OrderType import removed. 6587 tests pass (1 pre-existing failure in test_protocols.py).
 
 ## Overview
 Enhance the Fleet Details panel in the strategy screen sidebar to show: travel range (hex/turn + fuel endurance), condensed ship list grouped by design sorted by mass, aggregated cargo list, and current orders. Also consolidates duplicated fleet formatting code.

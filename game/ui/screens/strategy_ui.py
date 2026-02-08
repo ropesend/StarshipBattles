@@ -1,7 +1,6 @@
 """Strategy interface for the strategy screen.
 
 Cross-layer imports (acceptable for UI):
-- OrderType: Runtime - order formatting in fleet display
 - Protocols: Runtime - duck typing for object identification
 """
 import os
@@ -19,12 +18,12 @@ from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.core.paths import Paths
-from game.strategy.data.fleet import OrderType
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.screens.strategy_detail_fmt import (
-    format_spectrum_html, format_atmosphere_raw, get_label_for_object
+    format_spectrum_html, format_atmosphere_raw, get_label_for_object,
+    format_fleet_info
 )
 import pygame_gui.windows
 import pygame_gui.elements as ui
@@ -564,29 +563,8 @@ class StrategyUI:
             self.current_raw_data = self._format_spectrum(MockStar)
 
         elif is_fleet(obj):
-            text = f"<b>Fleet:</b> {obj.id}<br>"
-            text += f"<b>Owner:</b> {obj.owner_id}<br>"
-            text += f"<b>Ships:</b> {len(obj.ships)}<br>"
-            text += f"<b>Location:</b> {obj.location}<br>"
-            
-            text += "<b>Orders:</b><br>"
-            if obj.orders:
-                for i, order in enumerate(obj.orders):
-                    if order.type == OrderType.MOVE:
-                         text += f" {i+1}. MOVE {order.target}<br>"
-                    elif order.type == OrderType.COLONIZE:
-                         # target is Planet object
-                         p_name = order.target.name if hasattr(order.target, 'name') else "Unknown"
-                         text += f" {i+1}. COLONIZE {p_name}<br>"
-                    elif order.type == OrderType.BUILD:
-                         # PROJ-67: Show BUILD order with queue size
-                         queue_size = len(obj.construction_queue)
-                         text += f" {i+1}. BUILDING ({queue_size} items)<br>"
-                    else:
-                         text += f" {i+1}. {order.type.name}<br>"
-            else:
-                 text += " (No Orders)<br>"
-                 
+            text = format_fleet_info(obj)
+
             # Show Fleet Buttons
             if obj.owner_id == current_empire_id:
                  self.btn_orders.show()
