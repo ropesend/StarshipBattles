@@ -16,16 +16,16 @@
 | 1. Rename + Build Yards List Improvements | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Build Time from Cost + Tick-Granular Production | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Queue Item Display + Column Headers + Resource Icons | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Complex Target Planet Selection | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Complex Target Planet Selection | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Empire Build Queue Window Sync + Final Audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - Column headers with resource icons, per-turn cost display
-**Next Action:** Begin Phase 4 - Complex Target Planet Selection
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - Complex target planet selection for fleet shipyards
+**Next Action:** Begin Phase 5 - Empire Build Queue Window Sync + Final Audit
 **Blockers:** None
-**Context for Next Agent:** Phase 3 done. BuildQueuePortraitLoader now has load_resource_icons() method. Build queue panel has column headers (Item, Turns, 5 resource icons). Queue items show per-turn cost aligned under resource icons. 8 new tests for resource icon loading. Fixed BUG-15 screenshot test to mock UIImage.
+**Context for Next Agent:** Phase 4 complete. PlanetSelectionWindow generalized with window_title, list_label, show_any_button parameters. BuildQueueController has hex_coord/galaxy/empire context and on_planet_selection_needed callback. BuildQueueScreen has _prompt_target_planet() for fleet+complex at multi-colony hex. ProductionEngine._spawn_fleet_complex() uses target_planet_id. 14 new tests: 4 PlanetSelectionWindow, 7 controller, 3 ProductionEngine. 7344 tests pass.
 
 ## Overview
 Rework the build queue screen and production system to: rename "Build Queues" to "Build Yards" with Planetary Yard / Shipyard distinction, calculate build time from vehicle resource cost instead of hardcoding to 1 turn, implement tick-granular production so items complete mid-turn, show daily resource cost and resource icons in queue display, enforce complex-to-planet restrictions for fleet shipyards, and generalize the planet selection window for reuse.

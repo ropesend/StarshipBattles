@@ -46,19 +46,23 @@ def _make_source(
     can_build_complexes: bool = True,
     queue: list = None,
     build_rate: float = 2000.0,
+    context_type: str = "planet",
+    planet_id: int = None,
 ) -> BuildQueueSource:
     """Create a BuildQueueSource with a real mutable queue."""
     actual_queue = queue if queue is not None else []
-    return BuildQueueSource(
+    source = BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
         owner_entity=MagicMock(),
         construction_queue=actual_queue,
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
-        context_type="planet",
+        context_type=context_type,
         build_rate=build_rate,
+        planet_id=planet_id,
     )
+    return source
 
 
 class TestControllerSingleQueueAdd:
@@ -415,3 +419,231 @@ class TestBuildTimeCalculation:
 
         item = build_context.construction_queue[0]
         assert item["turns_remaining"] == 2  # 4000 / 2000 = 2
+
+
+class TestPlanetSelectionForFleetComplexes:
+    """PROJ-79 Phase 4: Tests for planet selection when fleet adds complex at multi-colony hex."""
+
+    def _make_fleet_controller_with_galaxy(
+        self,
+        hex_coord,
+        galaxy,
+        empire,
+        planets_at_hex: list,
+    ) -> BuildQueueController:
+        """Create controller with fleet source and galaxy context."""
+        build_context = MagicMock()
+        build_context.context_type = "fleet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+        build_context.construction_queue = []
+
+        mock_library = MagicMock()
+        mock_library.scan_designs.return_value = []
+        mock_loader = MagicMock()
+        mock_report = MagicMock()
+        on_changed = MagicMock()
+        on_planet_selection = MagicMock()
+
+        # Mock galaxy.get_planets_at_global_hex
+        galaxy.get_planets_at_global_hex.return_value = planets_at_hex
+
+        controller = BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=mock_loader,
+            design_report=mock_report,
+            on_queue_changed=on_changed,
+            hex_coord=hex_coord,
+            galaxy=galaxy,
+            empire=empire,
+            on_planet_selection_needed=on_planet_selection,
+        )
+        return controller
+
+    def test_needs_planet_selection_true_for_fleet_complex_multi_colony(self):
+        """_needs_planet_selection returns True for fleet+complex at multi-colony hex."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+        planet2 = MagicMock()
+        planet2.id = 20
+        planet2.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1, planet2]
+        )
+
+        source = _make_source(context_type="fleet")
+        source.context_type = "fleet"
+        source.planet_id = None
+        controller.set_active_queue(source)
+
+        result = controller._needs_planet_selection(source, "complex")
+        assert result is True
+
+    def test_needs_planet_selection_false_for_planet_source(self):
+        """_needs_planet_selection returns False when source has planet_id."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+        planet2 = MagicMock()
+        planet2.id = 20
+        planet2.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1, planet2]
+        )
+
+        source = _make_source(context_type="planet")
+        source.context_type = "planet"
+        source.planet_id = 10  # Has fixed planet
+        controller.set_active_queue(source)
+
+        result = controller._needs_planet_selection(source, "complex")
+        assert result is False
+
+    def test_needs_planet_selection_false_for_ship_category(self):
+        """_needs_planet_selection returns False for non-complex categories."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+        planet2 = MagicMock()
+        planet2.id = 20
+        planet2.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1, planet2]
+        )
+
+        source = _make_source(context_type="fleet")
+        source.context_type = "fleet"
+        source.planet_id = None
+        controller.set_active_queue(source)
+
+        result = controller._needs_planet_selection(source, "ship")
+        assert result is False
+
+    def test_needs_planet_selection_false_for_single_colony(self):
+        """_needs_planet_selection returns False when only one planet at hex."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1]
+        )
+
+        source = _make_source(context_type="fleet")
+        source.context_type = "fleet"
+        source.planet_id = None
+        controller.set_active_queue(source)
+
+        result = controller._needs_planet_selection(source, "complex")
+        assert result is False
+
+    def test_add_complex_triggers_planet_selection_callback(self):
+        """Adding complex to fleet at multi-colony hex triggers callback."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+        planet2 = MagicMock()
+        planet2.id = 20
+        planet2.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1, planet2]
+        )
+
+        source = _make_source(context_type="fleet")
+        source.context_type = "fleet"
+        source.planet_id = None
+        controller.set_active_queue(source)
+
+        controller.add_to_queue("factory", category="complex")
+
+        # Callback should have been called
+        controller.on_planet_selection_needed.assert_called_once()
+        call_args = controller.on_planet_selection_needed.call_args
+        planets_arg = call_args[0][0]
+        assert planet1 in planets_arg
+        assert planet2 in planets_arg
+
+    def test_add_complex_single_colony_auto_sets_target_planet_id(self):
+        """Adding complex at single-colony hex auto-sets target_planet_id."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1]
+        )
+
+        source = _make_source(context_type="fleet", build_rate=2000.0)
+        source.context_type = "fleet"
+        source.planet_id = None
+        controller.set_active_queue(source)
+
+        controller.add_to_queue("factory", category="complex")
+
+        # Should have added directly with target_planet_id
+        assert len(source.construction_queue) == 1
+        item = source.construction_queue[0]
+        assert item.get("target_planet_id") == 10
+
+    def test_add_complex_planet_source_uses_planet_id(self):
+        """Adding complex via planet source uses source.planet_id."""
+        hex_coord = MagicMock()
+        galaxy = MagicMock()
+        empire = MagicMock()
+        empire.id = 1
+
+        planet1 = MagicMock()
+        planet1.id = 10
+        planet1.owner_id = 1
+
+        controller = self._make_fleet_controller_with_galaxy(
+            hex_coord, galaxy, empire, [planet1]
+        )
+
+        source = _make_source(context_type="planet", build_rate=2000.0)
+        source.context_type = "planet"
+        source.planet_id = 10
+        controller.set_active_queue(source)
+
+        controller.add_to_queue("factory", category="complex")
+
+        # Should add directly with target_planet_id = source.planet_id
+        assert len(source.construction_queue) == 1
+        item = source.construction_queue[0]
+        assert item.get("target_planet_id") == 10

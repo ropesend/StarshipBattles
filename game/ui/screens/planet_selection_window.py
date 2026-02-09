@@ -7,12 +7,33 @@ from game.core.logger import log_debug
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 
 class PlanetSelectionWindow(UIWindow):
-    def __init__(self, rect, manager, planets, on_selection_callback):
+    def __init__(
+        self,
+        rect,
+        manager,
+        planets,
+        on_selection_callback,
+        window_title: str = "Select Planet to Colonize",
+        list_label: str = "Habitable bodies:",
+        show_any_button: bool = True
+    ):
+        """
+        Initialize planet selection window.
+
+        Args:
+            rect: Window position and size rectangle.
+            manager: pygame_gui UIManager instance.
+            planets: List of planet objects to select from.
+            on_selection_callback: Called with selected planet (or None for "Any").
+            window_title: Window title text (default: colonization use case).
+            list_label: Label text above planet list (default: "Habitable bodies:").
+            show_any_button: Whether to show "Any Planet" button (default: True).
+        """
         # Enforce minimum size for full planet report display
         if rect.width < 950: rect.width = 950
         if rect.height < 650: rect.height = 650
 
-        super().__init__(rect, manager, window_display_title="Select Planet to Colonize")
+        super().__init__(rect, manager, window_display_title=window_title)
         self.planets = planets
         self.callback = on_selection_callback
         self.current_selection_name = None
@@ -26,7 +47,7 @@ class PlanetSelectionWindow(UIWindow):
         
         self.label = UILabel(
              pygame.Rect(10, 10, list_width, 30),
-             "Habitable bodies:",
+             list_label,
              self.ui_manager,
              container=self
         )
@@ -59,12 +80,15 @@ class PlanetSelectionWindow(UIWindow):
             container=self
         )
         
-        self.btn_any = UIButton(
-            pygame.Rect(rect.width - 140, rect.height - 60, 130, 30),
-            "Any Planet",
-            self.ui_manager,
-            container=self
-        )
+        # Conditionally create "Any Planet" button
+        self.btn_any = None
+        if show_any_button:
+            self.btn_any = UIButton(
+                pygame.Rect(rect.width - 140, rect.height - 60, 130, 30),
+                "Any Planet",
+                self.ui_manager,
+                container=self
+            )
         
     def update(self, time_delta):
         super().update(time_delta)
@@ -128,7 +152,7 @@ class PlanetSelectionWindow(UIWindow):
             else:
                 log_debug("PlanetSelectionWindow: No selection made.")
 
-        if self.btn_any.check_pressed():
+        if self.btn_any and self.btn_any.check_pressed():
             # "Any Planet" -> Return None to defer selection to arrival
             self.callback(None)
             self.kill()

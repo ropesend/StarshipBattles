@@ -23,6 +23,7 @@ from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource, collect_build_queues_at_hex
+from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 
 if TYPE_CHECKING:
     from game.core.input_mapper import InputMapper
@@ -81,6 +82,12 @@ class BuildQueueScreen:
         self.design_library = design_library
         self.design_loader = design_loader
 
+        # PROJ-79: Store galaxy context for planet selection
+        self.hex_coord = hex_coord
+        self.galaxy = galaxy
+        self.empire = empire
+        self.planet_selection_window = None  # Active planet selection popup
+
         # PROJ-63: Portrait loading extracted to dedicated class
         self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
 
@@ -138,12 +145,17 @@ class BuildQueueScreen:
 
         # PROJ-63: Controller for queue business logic (after design_report is created)
         # PROJ-67: Updated to use build_context (supports Planet or Fleet)
+        # PROJ-79: Added hex_coord, galaxy, empire for planet selection
         self.controller = BuildQueueController(
             build_context=self.build_context,
             design_library=self.design_library,
             design_loader=self.design_loader,
             design_report=self.design_report,
-            on_queue_changed=self._refresh_queue_display
+            on_queue_changed=self._refresh_queue_display,
+            hex_coord=self.hex_coord,
+            galaxy=self.galaxy,
+            empire=self.empire,
+            on_planet_selection_needed=self._prompt_target_planet
         )
 
         # PROJ-69: Sync controller with initial queue selection
@@ -944,8 +956,34 @@ class BuildQueueScreen:
         else:
             log_warning("No queue item selected to remove")
 
+    def _prompt_target_planet(self, planets, on_selected):
+        """Open planet selection window for complex target planet.
+
+        PROJ-79: Called by controller when fleet+complex at multi-colony hex.
+
+        Args:
+            planets: List of Planet objects to choose from.
+            on_selected: Callback receiving the selected Planet.
+        """
+        rect = pygame.Rect(200, 100, 950, 650)
+        self.planet_selection_window = PlanetSelectionWindow(
+            rect,
+            self.manager,
+            planets,
+            on_selected,
+            window_title="Select Target Planet",
+            list_label="Colonies in sector:",
+            show_any_button=False
+        )
+        log_info(f"BuildQueue: Opened planet selection for {len(planets)} colonies")
+
     def _close(self):
         """Close the build queue screen."""
+        # PROJ-79: Kill planet selection window if open
+        if self.planet_selection_window:
+            self.planet_selection_window.kill()
+            self.planet_selection_window = None
+
         # Kill the background panel - this cascades to all children
         self.background.kill()
 

@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-79 Phase 3 - Complete
-**Current Status:** PROJ-79 Phase 3 complete, continuing to Phase 4
+**Last Completed:** PROJ-79 Phase 4 - Complete
+**Current Status:** PROJ-79 Phase 4 complete, continuing to Phase 5
 **Current Project:** PROJ-79
-**Current Phase:** Phase 4
-**Test Status:** 7330 passed
+**Current Phase:** Phase 5
+**Test Status:** 7344 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-79 Phase 3 completed: Column headers with resource icons, per-turn cost display
-- BuildQueuePortraitLoader: load_resource_icons() method added
-- BuildQueueScreen: Column headers (Item, Turns, 5 resource icons) + queue_column_positions dict
-- Queue items: Restructured layout with per-turn cost aligned under resource icon columns
-- 8 new tests for resource icon loading
-- Fixed BUG-15 screenshot test to mock UIImage
-- Next agent should continue with Phase 4: Complex Target Planet Selection
+- PROJ-79 Phase 4 completed: Complex target planet selection for fleet shipyards
+- PlanetSelectionWindow: Generalized with window_title, list_label, show_any_button parameters
+- BuildQueueController: Added hex_coord/galaxy/empire context, on_planet_selection_needed callback
+- BuildQueueController: New methods _needs_planet_selection(), _get_target_planet_id(), _add_item_with_target_planet()
+- BuildQueueScreen: _prompt_target_planet() opens PlanetSelectionWindow for fleet+complex at multi-colony hex
+- ProductionEngine: _spawn_fleet_complex() now uses target_planet_id parameter
+- 14 new tests: 4 PlanetSelectionWindow, 7 controller, 3 ProductionEngine
+- Next agent should continue with Phase 5: Empire Build Queue Window Sync + Final Audit
 
 ---
 
@@ -285,6 +286,7 @@
 | 2026-02-08 | PROJ-79 | Phase 1 | Complete | 7305 passed | pending | build_rate/planet_id fields, renames, UI widen, 8 new tests |
 | 2026-02-08 | PROJ-79 | Phase 2 | Complete | 7322 passed | pending | Build time from cost, tick-granular production, 28 new tests |
 | 2026-02-08 | PROJ-79 | Phase 3 | Complete | 7330 passed | pending | Column headers, resource icons, per-turn cost display, 8 new tests |
+| 2026-02-08 | PROJ-79 | Phase 4 | Complete | 7344 passed | pending | Planet selection for fleet+complex at multi-colony hex, 14 new tests |
 
 ---
 

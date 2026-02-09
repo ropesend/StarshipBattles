@@ -22,6 +22,9 @@ if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
     from game.strategy.data.planet import Planet
     from game.strategy.data.fleet import Fleet
+    from game.strategy.data.galaxy import Galaxy
+    from game.strategy.data.empire import Empire
+    from game.strategy.data.hex_math import HexCoord
     from game.strategy.systems.design_library import DesignLibrary
     from game.simulation.services.design_loader import SimulationDesignLoader
     from game.ui.panels.design_report_panel import DesignReportPanel
@@ -56,7 +59,11 @@ class BuildQueueController:
         design_library: 'DesignLibrary',
         design_loader: 'SimulationDesignLoader',
         design_report: 'DesignReportPanel',
-        on_queue_changed: Callable[[], None]
+        on_queue_changed: Callable[[], None],
+        hex_coord: Optional['HexCoord'] = None,
+        galaxy: Optional['Galaxy'] = None,
+        empire: Optional['Empire'] = None,
+        on_planet_selection_needed: Optional[Callable] = None,
     ):
         """
         Initialize the controller.
@@ -67,12 +74,22 @@ class BuildQueueController:
             design_loader: SimulationDesignLoader for creating ship objects
             design_report: DesignReportPanel for updating display
             on_queue_changed: Callback to trigger queue display refresh
+            hex_coord: Hex coordinate for planet lookup (PROJ-79)
+            galaxy: Galaxy instance for planet lookup (PROJ-79)
+            empire: Empire instance for ownership check (PROJ-79)
+            on_planet_selection_needed: Callback when planet selection is needed (PROJ-79)
         """
         self.build_context = build_context
         self.design_library = design_library
         self.design_loader = design_loader
         self.design_report = design_report
         self.on_queue_changed = on_queue_changed
+
+        # PROJ-79: Galaxy context for planet selection
+        self.hex_coord = hex_coord
+        self.galaxy = galaxy
+        self.empire = empire
+        self.on_planet_selection_needed = on_planet_selection_needed
 
         # Category filter state
         self.selected_category = "complex"
@@ -242,6 +259,69 @@ class BuildQueueController:
         # Unknown category - allow by default
         return True
 
+    def _needs_planet_selection(self, source: 'BuildQueueSource', category: str) -> bool:
+        """Check if adding a complex to this source requires planet selection.
+
+        PROJ-79: Fleet shipyards at multi-colony hexes must prompt for target planet.
+
+        Args:
+            source: The BuildQueueSource being added to.
+            category: Design category.
+
+        Returns:
+            True if planet selection popup is needed.
+        """
+        if category != "complex":
+            return False
+        if source.context_type != "fleet":
+            return False
+        if getattr(source, 'planet_id', None) is not None:
+            return False  # Already has a fixed planet
+        if not self.hex_coord or not self.galaxy or not self.empire:
+            return False  # No galaxy context
+
+        planets = [
+            p for p in self.galaxy.get_planets_at_global_hex(self.hex_coord)
+            if p.owner_id == self.empire.id
+        ]
+        return len(planets) > 1
+
+    def _get_target_planet_id(self, source: 'BuildQueueSource', category: str) -> Optional[int]:
+        """Get target_planet_id for a queue item.
+
+        PROJ-79: For planet sources, uses source.planet_id. For fleet sources
+        at single-colony hexes, uses that planet's ID. For multi-colony hexes,
+        returns None (caller should trigger planet selection).
+
+        Args:
+            source: The BuildQueueSource being added to.
+            category: Design category.
+
+        Returns:
+            Planet ID if determinable, None if selection needed.
+        """
+        if category != "complex":
+            return None
+
+        # Planet source: use source's planet_id
+        if source.context_type == "planet":
+            return getattr(source, 'planet_id', None)
+
+        # Fleet source: check for single colony at hex
+        if source.context_type == "fleet":
+            if getattr(source, 'planet_id', None) is not None:
+                return source.planet_id
+
+            if self.hex_coord and self.galaxy and self.empire:
+                planets = [
+                    p for p in self.galaxy.get_planets_at_global_hex(self.hex_coord)
+                    if p.owner_id == self.empire.id
+                ]
+                if len(planets) == 1:
+                    return planets[0].id
+
+        return None
+
     def _add_to_single_queue(
         self, design_id: str, turns: Optional[int], category: str, index: Optional[int]
     ) -> None:
@@ -261,6 +341,27 @@ class BuildQueueController:
             )
             return
 
+        # PROJ-79: Check if planet selection is needed for fleet+complex at multi-colony hex
+        if self._needs_planet_selection(source, category):
+            if self.on_planet_selection_needed:
+                planets = [
+                    p for p in self.galaxy.get_planets_at_global_hex(self.hex_coord)
+                    if p.owner_id == self.empire.id
+                ]
+
+                def on_planet_selected(planet):
+                    """Callback when planet is selected."""
+                    self._add_item_with_target_planet(
+                        source, design_id, category, planet.id, index
+                    )
+                    self.on_queue_changed()
+
+                self.on_planet_selection_needed(planets, on_planet_selected)
+                return  # Don't add directly - callback will do it
+            else:
+                log_warning("Planet selection needed but no callback provided")
+                return
+
         # Calculate build time if not provided
         build_rate = source.build_rate
         if turns is None:
@@ -274,12 +375,54 @@ class BuildQueueController:
         # Add cost tracking fields
         queue_item.update(self._build_cost_tracking(design_id, turns))
 
+        # PROJ-79: Add target_planet_id for complexes
+        target_planet_id = self._get_target_planet_id(source, category)
+        if target_planet_id is not None:
+            queue_item["target_planet_id"] = target_planet_id
+
         if index is not None:
             source.construction_queue.insert(index, queue_item)
             log_info(f"Inserted {design_id} into '{source.display_name}' at position {index}")
         else:
             source.construction_queue.append(queue_item)
             log_info(f"Added {design_id} to '{source.display_name}' ({turns} turns)")
+
+    def _add_item_with_target_planet(
+        self,
+        source: 'BuildQueueSource',
+        design_id: str,
+        category: str,
+        target_planet_id: int,
+        index: Optional[int] = None
+    ) -> None:
+        """Add item with specified target_planet_id.
+
+        PROJ-79: Called after planet selection callback.
+
+        Args:
+            source: The BuildQueueSource to add to.
+            design_id: ID of the design to build.
+            category: Design category.
+            target_planet_id: ID of the planet to receive the complex.
+            index: Optional insertion index.
+        """
+        build_rate = source.build_rate
+        turns = self._calculate_build_turns(design_id, build_rate)
+
+        queue_item = {
+            "design_id": design_id,
+            "type": category,
+            "turns_remaining": turns,
+            "target_planet_id": target_planet_id,
+        }
+        queue_item.update(self._build_cost_tracking(design_id, turns))
+
+        if index is not None:
+            source.construction_queue.insert(index, queue_item)
+            log_info(f"Inserted {design_id} into '{source.display_name}' at position {index} (target: planet {target_planet_id})")
+        else:
+            source.construction_queue.append(queue_item)
+            log_info(f"Added {design_id} to '{source.display_name}' ({turns} turns, target: planet {target_planet_id})")
 
     def _add_to_multiple_queues(self, design_id: str, turns: Optional[int], category: str) -> None:
         """Add item to all compatible selected queue sources.

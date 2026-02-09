@@ -263,7 +263,11 @@ class ProductionEngine:
             # Spawn the completed item
             if isinstance(colony_or_fleet, Fleet):
                 if vehicle_type == 'complex':
-                    self._spawn_fleet_complex(colony_or_fleet, design_id, empire, galaxy, save_path)
+                    target_planet_id = item.get('target_planet_id')
+                    self._spawn_fleet_complex(
+                        colony_or_fleet, design_id, empire, galaxy, save_path,
+                        target_planet_id=target_planet_id
+                    )
                 else:
                     self._spawn_fleet_ship(colony_or_fleet, design_id, empire, save_path)
             else:
@@ -591,7 +595,11 @@ class ProductionEngine:
 
                     # Route to appropriate spawner
                     if vehicle_type == "complex":
-                        self._spawn_fleet_complex(fleet, design_id, empire, galaxy, save_path)
+                        target_planet_id = item.get('target_planet_id')
+                        self._spawn_fleet_complex(
+                            fleet, design_id, empire, galaxy, save_path,
+                            target_planet_id=target_planet_id
+                        )
                     else:
                         self._spawn_fleet_ship(fleet, design_id, empire, save_path)
 
@@ -657,12 +665,14 @@ class ProductionEngine:
         design_id: str,
         empire,
         galaxy,
-        save_path: Optional[str] = None
+        save_path: Optional[str] = None,
+        target_planet_id: Optional[int] = None
     ) -> None:
         """
         Spawn complex on planet at fleet's location.
 
         PROJ-67 Phase 3: Fleet yards can build complexes when at a planet hex.
+        PROJ-79 Phase 4: Uses target_planet_id when specified.
 
         Args:
             fleet: Fleet building the complex
@@ -670,6 +680,7 @@ class ProductionEngine:
             empire: Empire that owns the fleet
             galaxy: Galaxy for planet lookup
             save_path: Path to savegame folder for loading design data
+            target_planet_id: Specific planet ID to receive the complex (PROJ-79)
         """
         # Find planet at fleet's location
         if galaxy is None:
@@ -681,8 +692,14 @@ class ProductionEngine:
             log_warning(f"Cannot spawn complex {design_id}: fleet not at planet hex")
             return
 
-        # Use the first planet at the hex
-        planet = planets_at_hex[0]
+        # PROJ-79: Use target_planet_id if specified, otherwise fall back to first planet
+        if target_planet_id is not None:
+            planet = next(
+                (p for p in planets_at_hex if p.id == target_planet_id),
+                planets_at_hex[0]
+            )
+        else:
+            planet = planets_at_hex[0]
 
         # Load design data
         design_data = {}

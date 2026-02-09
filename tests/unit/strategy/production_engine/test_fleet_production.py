@@ -436,3 +436,141 @@ class TestComplexPauseWhenFleetNotAtPlanet:
 
         # Turns should NOT be decremented
         assert fleet.construction_queue[0]["turns_remaining"] == 5
+
+
+class TestFleetComplexTargetPlanet:
+    """PROJ-79 Phase 4: Tests for target_planet_id in fleet complex spawning."""
+
+    def test_complex_spawns_on_target_planet_when_specified(self):
+        """Complex should spawn on target_planet_id if specified."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {
+                "design_id": "factory_1",
+                "type": "complex",
+                "turns_remaining": 1,
+                "target_planet_id": 20,  # Specific target
+            }
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        # Two planets at hex
+        mock_planet1 = MagicMock()
+        mock_planet1.id = 10
+        mock_planet1.facilities = []
+        mock_planet1.name = "Planet A"
+
+        mock_planet2 = MagicMock()
+        mock_planet2.id = 20
+        mock_planet2.facilities = []
+        mock_planet2.name = "Planet B"
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet1, mock_planet2]
+
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            empire = MagicMock()
+            empire.id = 0
+            empire.fleets = [fleet]
+
+            mock_design = {"name": "Factory", "layers": {}}
+
+            with patch('game.strategy.engine.production_engine.DesignLibrary') as MockLib:
+                mock_lib_instance = MagicMock()
+                mock_lib_instance.load_design_data.return_value = mock_design
+                MockLib.return_value = mock_lib_instance
+
+                engine.process_fleet_production([empire], mock_galaxy, "/fake/save/path")
+
+        # Complex should be on planet2 (target_planet_id=20), not planet1
+        assert len(mock_planet1.facilities) == 0
+        assert len(mock_planet2.facilities) == 1
+
+    def test_complex_falls_back_to_first_planet_when_target_not_found(self):
+        """Complex should fall back to first planet if target_planet_id not at hex."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {
+                "design_id": "factory_1",
+                "type": "complex",
+                "turns_remaining": 1,
+                "target_planet_id": 999,  # Not at hex
+            }
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        # Only planet1 at hex
+        mock_planet1 = MagicMock()
+        mock_planet1.id = 10
+        mock_planet1.facilities = []
+        mock_planet1.name = "Planet A"
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet1]
+
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            empire = MagicMock()
+            empire.id = 0
+            empire.fleets = [fleet]
+
+            mock_design = {"name": "Factory", "layers": {}}
+
+            with patch('game.strategy.engine.production_engine.DesignLibrary') as MockLib:
+                mock_lib_instance = MagicMock()
+                mock_lib_instance.load_design_data.return_value = mock_design
+                MockLib.return_value = mock_lib_instance
+
+                engine.process_fleet_production([empire], mock_galaxy, "/fake/save/path")
+
+        # Complex should fall back to planet1
+        assert len(mock_planet1.facilities) == 1
+
+    def test_complex_uses_first_planet_when_no_target_specified(self):
+        """Complex should use first planet when target_planet_id not specified (legacy)."""
+        engine = ProductionEngine()
+
+        fleet = Fleet(1, 0, HexCoord(5, 5))
+        fleet.construction_queue = [
+            {
+                "design_id": "factory_1",
+                "type": "complex",
+                "turns_remaining": 1,
+                # No target_planet_id - legacy behavior
+            }
+        ]
+        fleet.orders = [FleetOrder(OrderType.BUILD)]
+
+        mock_planet1 = MagicMock()
+        mock_planet1.id = 10
+        mock_planet1.facilities = []
+        mock_planet1.name = "Planet A"
+
+        mock_planet2 = MagicMock()
+        mock_planet2.id = 20
+        mock_planet2.facilities = []
+        mock_planet2.name = "Planet B"
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet1, mock_planet2]
+
+        with patch.object(Fleet, 'has_space_shipyard', new_callable=lambda: property(lambda self: True)):
+            empire = MagicMock()
+            empire.id = 0
+            empire.fleets = [fleet]
+
+            mock_design = {"name": "Factory", "layers": {}}
+
+            with patch('game.strategy.engine.production_engine.DesignLibrary') as MockLib:
+                mock_lib_instance = MagicMock()
+                mock_lib_instance.load_design_data.return_value = mock_design
+                MockLib.return_value = mock_lib_instance
+
+                engine.process_fleet_production([empire], mock_galaxy, "/fake/save/path")
+
+        # Complex should be on planet1 (first in list)
+        assert len(mock_planet1.facilities) == 1
+        assert len(mock_planet2.facilities) == 0
