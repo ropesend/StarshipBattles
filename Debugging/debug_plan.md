@@ -29,8 +29,8 @@
 | BUG-68 | 2026-02-07 | Fleet Report - ship selection + ship report + remove from fleet | Awaiting Confirmation | [BUG-68.md](active_bugs/BUG-68.md) |
 | BUG-69 | 2026-02-07 | Strategy view - scroll wheel zoom locks up intermittently | Awaiting Confirmation | [BUG-69.md](active_bugs/BUG-69.md) |
 | BUG-70 | 2026-02-07 | Colonize order should load population before moving | Awaiting Confirmation | [BUG-70.md](active_bugs/BUG-70.md) |
-| BUG-71 | 2026-02-08 | Design Workshop - +/- buttons affect wrong layer for duplicate components | Pending | [BUG-71.md](active_bugs/BUG-71.md) |
-| BUG-72 | 2026-02-08 | Leader needs a name in Species Setup | Pending | [BUG-72.md](active_bugs/BUG-72.md) |
+| BUG-71 | 2026-02-08 | Design Workshop - +/- buttons affect wrong layer for duplicate components | Awaiting Confirmation | [BUG-71.md](active_bugs/BUG-71.md) |
+| BUG-72 | 2026-02-08 | Leader needs a name in Species Setup | Awaiting Confirmation | [BUG-72.md](active_bugs/BUG-72.md) |
 
 ## 3. Current Focus: None
-**Status:** All pending bugs fixed. BUG-59, BUG-60, BUG-61, BUG-68 set to Awaiting Confirmation. No pending bugs remain.
+**Status:** All pending bugs fixed. BUG-71, BUG-72 set to Awaiting Confirmation. No pending bugs remain.

@@ -748,6 +748,7 @@ class TestRaceConfigIdentityFields:
         assert config.government_type == ""
         assert config.government_organization == ""
         assert config.leader_title == ""
+        assert config.leader_name == ""
         assert config.physical_type == ""
         assert config.society_type == ""
 
@@ -760,6 +761,7 @@ class TestRaceConfigIdentityFields:
             government_type="Empire",
             government_organization="Autocracy",
             leader_title="Emperor",
+            leader_name="Zara IV",
             physical_type="Felinoid",
             society_type="Conquerors",
         )
@@ -770,8 +772,24 @@ class TestRaceConfigIdentityFields:
         assert config.government_type == "Empire"
         assert config.government_organization == "Autocracy"
         assert config.leader_title == "Emperor"
+        assert config.leader_name == "Zara IV"
         assert config.physical_type == "Felinoid"
         assert config.society_type == "Conquerors"
+
+    def test_leader_name_serialization(self):
+        """Test leader_name round-trips through to_dict/from_dict."""
+        config = RaceConfig(leader_title="Emperor", leader_name="Zara IV")
+        data = config.to_dict()
+        assert data["leader_name"] == "Zara IV"
+
+        restored = RaceConfig.from_dict(data)
+        assert restored.leader_name == "Zara IV"
+
+    def test_leader_name_missing_in_dict_defaults_empty(self):
+        """Test backward compatibility when leader_name is absent from dict."""
+        data = {"leader_title": "Emperor"}
+        config = RaceConfig.from_dict(data)
+        assert config.leader_name == ""
 
 
 class TestRaceConfigHomeworldWaterFields:
