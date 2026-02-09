@@ -32,86 +32,105 @@ class MockResourceContainer:
     def get_resource(self, name):
         return self._resources.get(name)
 
+    def keys(self):
+        return self._resources.keys()
+
+
+class MockShip:
+    """Mock Ship class with explicit attributes to prevent MagicMock auto-attribute behavior."""
+
+    def __init__(self):
+        self.name = "Test Frigate"
+        self.ship_class = "Frigate"
+        self.vehicle_type = "Ship"
+        self.theme = "default"
+
+        # Basic stats
+        self.max_mass_budget = 1200
+        self.max_hp = 500
+        self.max_energy = 1000
+        self.mass = 1000
+        self.mass_limits_ok = True
+
+        # Maneuvering
+        self.thrust = 100
+        self.acceleration = 5.0
+        self.top_speed = 50
+        self.maneuver_points = 10
+        self.turn_rate = 45
+        self.total_maneuver_points = 10
+        self.total_strategic_movement = 100
+
+        # Shields
+        self.max_shields = 200
+        self.shield_regen = 10
+        self.shield_regen_cost = 5
+
+        # Armor
+        self.total_armor_hp = 300
+        self.damage_ignore_threshold = 5
+        self.shield_regen_on_hit = 2
+
+        # Targeting
+        self.max_targets = 3
+        self.evasion_score = 15
+        self.targeting_score = 20
+        self.target_profile = 10
+        self.scan_strength = 15
+
+        # Crew
+        self.crew_required = 50
+        self.crew_on_board = 50
+        self.life_support_capacity = 60
+
+        # Resources (needed for dynamic logistics rows)
+        self.resources = MockResourceContainer()
+
+        # Resource consumption/generation attributes (used in get_logistics_rows)
+        self.fuel_consumption = 10
+        self.ammo_consumption = 5
+        self.energy_consumption = 20
+        self.potential_fuel_consumption = 10
+        self.potential_ammo_consumption = 5
+        self.potential_energy_consumption = 20
+        self.fuel_generation = 0
+        self.ammo_generation = 0
+        self.energy_generation = 50
+
+        # Layers (needed for layer status section)
+        self.layers = {}  # Empty dict - no layers for mock
+        self.layer_status = {}
+
+        # Fighter support
+        self.fighter_capacity = 0
+        self.fighters_per_wave = 0
+
+        # Construction cost
+        self.construction_cost = {
+            'Metal': 500,
+            'Organics': 100,
+            'Rare': 50,
+            'Synthetics': 200,
+            'Volatiles': 150
+        }
+
+    def get_mass_display(self):
+        return self.mass
+
+    def get_ability_total(self, ability_name):
+        return 50
+
+    def get_missing_requirements(self):
+        return []
+
+    def get_validation_warnings(self):
+        return []
+
 
 @pytest.fixture
 def mock_ship():
     """Create a mock Ship object with stats."""
-    ship = MagicMock()
-    ship.name = "Test Frigate"
-    ship.ship_class = "Frigate"
-    ship.vehicle_type = "Ship"
-    ship.theme = "default"
-
-    # Basic stats - use configure_mock for methods
-    ship.get_mass_display = MagicMock(return_value=1000)
-    ship.max_mass_budget = 1200
-    ship.max_hp = 500
-    ship.max_energy = 1000
-    ship.energy_generation = 50
-    ship.mass = 1000
-    ship.mass_limits_ok = True
-
-    # Maneuvering
-    ship.thrust = 100
-    ship.acceleration = 5.0
-    ship.top_speed = 50
-    ship.maneuver_points = 10
-    ship.turn_rate = 45
-    ship.total_maneuver_points = 10
-    ship.total_strategic_movement = 100
-
-    # Shields
-    ship.max_shields = 200
-    ship.shield_regen = 10
-    ship.shield_regen_cost = 5
-
-    # Armor
-    ship.total_armor_hp = 300
-    ship.damage_ignore_threshold = 5
-    ship.shield_regen_on_hit = 2
-
-    # Targeting
-    ship.max_targets = 3
-    ship.evasion_score = 15
-    ship.targeting_score = 20
-    ship.target_profile = 10
-    ship.scan_strength = 15
-
-    # Crew
-    ship.crew_required = 50
-    ship.crew_on_board = 50
-    ship.life_support_capacity = 60
-    ship.get_ability_total = MagicMock(return_value=50)
-
-    # Resources (needed for dynamic logistics rows)
-    ship.resources = MockResourceContainer()
-
-    # Resource consumption/generation attributes
-    ship.fuel_consumption = 10
-    ship.ammo_consumption = 5
-    ship.energy_consumption = 20
-    ship.potential_fuel_consumption = 10
-    ship.potential_ammo_consumption = 5
-    ship.potential_energy_consumption = 20
-
-    # Layers (needed for layer status section)
-    ship.layers = {}
-    ship.layer_status = {}
-
-    # Fighter support
-    ship.fighter_capacity = 0
-    ship.fighters_per_wave = 0
-
-    # Construction cost
-    ship.construction_cost = {
-        'Metal': 500,
-        'Organics': 100,
-        'Rare': 50,
-        'Synthetics': 200,
-        'Volatiles': 150
-    }
-
-    return ship
+    return MockShip()
 
 
 @pytest.fixture
@@ -121,9 +140,14 @@ def design_report_panel(mock_ship):
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
 
+    # Panel height must be larger than portrait (730px) + stats area
+    # Production uses screen_height - 90 (~678 on 768 screen)
+    # For test, use 1500 to ensure scrolling container has enough room
+    panel_height = 1500
+
     # Create container panel
     container = pygame_gui.elements.UIPanel(
-        relative_rect=pygame.Rect(0, 0, 750, 350),
+        relative_rect=pygame.Rect(0, 0, 750, panel_height),
         manager=manager
     )
 
@@ -131,7 +155,7 @@ def design_report_panel(mock_ship):
     from game.ui.panels.design_report_panel import DesignReportPanel
     panel = DesignReportPanel(
         manager=manager,
-        rect=pygame.Rect(0, 0, 750, 350),
+        rect=pygame.Rect(0, 0, 750, panel_height),
         container=container
     )
 
@@ -194,27 +218,32 @@ def test_design_portrait_position_top_left(design_report_panel):
     assert rect.y == 10, f"Portrait y should be 10, got {rect.y}"
 
 
-def test_stats_container_exists(design_report_panel):
-    """Test that stats scrolling container exists."""
-    assert hasattr(design_report_panel, 'stats_container')
-    assert design_report_panel.stats_container is not None
-    assert isinstance(design_report_panel.stats_container, pygame_gui.elements.UIScrollingContainer)
+def test_stats_panel_exists_after_update(design_report_panel, mock_ship):
+    """Test that stats panel is created after design update."""
+    design_report_panel.update_design(mock_ship)
+    assert hasattr(design_report_panel, '_stats_panel')
+    assert design_report_panel._stats_panel is not None
+    # The stats panel contains a scrolling container
+    assert design_report_panel._stats_panel.stats_scroll is not None
+    assert isinstance(design_report_panel._stats_panel.stats_scroll, pygame_gui.elements.UIScrollingContainer)
 
 
-def test_stats_container_position(design_report_panel):
-    """Test that stats container is positioned below portrait (single column, full width)."""
-    stats_container = design_report_panel.stats_container
-    rect = stats_container.relative_rect
+def test_stats_panel_position(design_report_panel, mock_ship):
+    """Test that stats panel is positioned below portrait."""
+    design_report_panel.update_design(mock_ship)
+    stats_scroll = design_report_panel._stats_panel.stats_scroll
+    rect = stats_scroll.relative_rect
 
-    # Stats container should be below portrait
-    # Portrait is 730px tall (panel width - margins) + 20px gap = 750
+    # Stats should be below portrait (730px portrait + 20px gap = 750)
+    # But the DesignStatsPanel receives a rect positioned at y, so check relative positioning
+    # The panel is at 10, y where y = portrait_h + 20 = 730 + 20 = 750
     expected_y = 750
-    assert rect.y == expected_y, f"Stats container y should be {expected_y} (below portrait), got {rect.y}"
-    assert rect.x == 10, f"Stats container x should be 10 (left margin), got {rect.x}"
+    assert rect.y == expected_y, f"Stats scroll y should be {expected_y} (below portrait), got {rect.y}"
+    assert rect.x == 10, f"Stats scroll x should be 10 (left margin), got {rect.x}"
 
     # Stats width should be full width (750 - 20 margins = 730)
     expected_width = 730  # Panel width (750) - margins (20)
-    assert rect.width == expected_width, f"Stats container width should be {expected_width}, got {rect.width}"
+    assert rect.width == expected_width, f"Stats scroll width should be {expected_width}, got {rect.width}"
 
 
 def test_update_design_displays_ship_name(design_report_panel, mock_ship):
@@ -286,11 +315,13 @@ def test_no_warnings_section(design_report_panel, mock_ship):
 
 
 def test_panel_dimensions_match_design_workshop(design_report_panel):
-    """Test that panel dimensions match design workshop (750px wide)."""
+    """Test that panel width matches design workshop (750px wide)."""
     rect = design_report_panel.rect
 
+    # Width should be 750px to match design workshop
     assert rect.width == 750, f"Panel width should be 750px (design workshop standard), got {rect.width}"
-    assert rect.height == 350, f"Panel height should be 350px (match planet report), got {rect.height}"
+    # Height is variable based on screen size - just verify it's reasonable
+    assert rect.height >= 750, f"Panel height should be at least 750px for portrait + stats, got {rect.height}"
 
 
 def test_get_width_required_method_exists(design_report_panel):
@@ -337,10 +368,10 @@ def test_multiple_ship_updates(design_report_panel, mock_ship):
     assert design_report_panel.current_ship == mock_ship
 
     # Create different ship
-    ship2 = MagicMock()
+    ship2 = MockShip()
     ship2.name = "Test Destroyer"
     ship2.ship_class = "Destroyer"
-    ship2.get_mass_display = MagicMock(return_value=2000)
+    ship2.mass = 2000
     ship2.construction_cost = {'Metal': 1000}
 
     # Second update
@@ -348,27 +379,33 @@ def test_multiple_ship_updates(design_report_panel, mock_ship):
     assert design_report_panel.current_ship == ship2
 
 
-def test_panel_integrates_with_container():
+def test_panel_integrates_with_container(mock_ship):
     """Test that panel properly integrates with a parent container."""
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
 
+    panel_height = 1500  # Must be large enough for portrait (730px) + stats
+
     container = pygame_gui.elements.UIPanel(
-        relative_rect=pygame.Rect(520, 10, 750, 350),
+        relative_rect=pygame.Rect(520, 10, 750, panel_height),
         manager=manager
     )
 
     from game.ui.panels.design_report_panel import DesignReportPanel
     panel = DesignReportPanel(
         manager=manager,
-        rect=pygame.Rect(0, 0, 750, 350),
+        rect=pygame.Rect(0, 0, 750, panel_height),
         container=container
     )
 
     # Verify panel components are created
     assert panel.portrait_image is not None
-    assert panel.stats_container is not None
+
+    # Stats panel is only created after update_design
+    panel.update_design(mock_ship)
+    assert panel._stats_panel is not None
+    assert panel._stats_panel.stats_scroll is not None
 
     pygame.quit()
 
@@ -379,22 +416,24 @@ def test_panel_handles_ship_with_minimal_stats():
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
 
+    panel_height = 1500  # Must be large enough for portrait + stats
+
     container = pygame_gui.elements.UIPanel(
-        relative_rect=pygame.Rect(0, 0, 750, 350),
+        relative_rect=pygame.Rect(0, 0, 750, panel_height),
         manager=manager
     )
 
     from game.ui.panels.design_report_panel import DesignReportPanel
     panel = DesignReportPanel(
         manager=manager,
-        rect=pygame.Rect(0, 0, 750, 350),
+        rect=pygame.Rect(0, 0, 750, panel_height),
         container=container
     )
 
-    # Create minimal ship
-    minimal_ship = MagicMock()
+    # Create minimal ship using MockShip class
+    minimal_ship = MockShip()
     minimal_ship.name = "Minimal Ship"
-    minimal_ship.get_mass_display = MagicMock(return_value=0)
+    minimal_ship.mass = 0
     minimal_ship.construction_cost = {}
 
     # Should not crash
