@@ -31,6 +31,10 @@
 | BUG-70 | 2026-02-07 | Colonize order should load population before moving | Awaiting Confirmation | [BUG-70.md](active_bugs/BUG-70.md) |
 | BUG-71 | 2026-02-08 | Design Workshop - +/- buttons affect wrong layer for duplicate components | Awaiting Confirmation | [BUG-71.md](active_bugs/BUG-71.md) |
 | BUG-72 | 2026-02-08 | Leader needs a name in Species Setup | Awaiting Confirmation | [BUG-72.md](active_bugs/BUG-72.md) |
+| BUG-73 | 2026-02-08 | Species Setup - Homeworld type selection still reports "Custom" | Pending | [BUG-73.md](active_bugs/BUG-73.md) |
+| BUG-74 | 2026-02-08 | Normal new games should have homeworld complexes pre-built like quickstart | Pending | [BUG-74.md](active_bugs/BUG-74.md) |
+| BUG-75 | 2026-02-08 | Planet details panel dimensions mismatch in planets list vs strategy layer | Pending | [BUG-75.md](active_bugs/BUG-75.md) |
+| BUG-76 | 2026-02-08 | Turn log does not show at start of each strategy layer turn | Pending | [BUG-76.md](active_bugs/BUG-76.md) |
 
 ## 3. Current Focus: None
 **Status:** All pending bugs fixed. BUG-71, BUG-72 set to Awaiting Confirmation. No pending bugs remain.
