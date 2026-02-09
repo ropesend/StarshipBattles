@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-82 | Planet Resources Panel Redesign | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-81 | Sector Build Queue Window Fixes | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-80 | Unify Design Details Panel | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-79 | Build Queue Screen Rework | Planning | 2026-02-08 | 2026-02-08 |
@@ -178,7 +179,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-82
+## Next Project ID: PROJ-83
 
 ---
 

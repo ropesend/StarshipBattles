@@ -34,6 +34,11 @@ When working in VS Code, you are a **helpful technical consultant**, not an auto
 - Pytest for testing (6246 tests baseline)
 - Test parallelization with pytest-xdist
 
+**Display Target:**
+- Minimum resolution: 2560x1600
+- Optimized for: 4K (3840x2160)
+- All UI layout calculations should assume 2560px minimum width
+
 ---
 
 ## Project Structure

@@ -35,6 +35,7 @@
 | BUG-74 | 2026-02-08 | Normal new games should have homeworld complexes pre-built like quickstart | Awaiting Confirmation | [BUG-74.md](active_bugs/BUG-74.md) |
 | BUG-75 | 2026-02-08 | Planet details panel dimensions mismatch in planets list vs strategy layer | Awaiting Confirmation | [BUG-75.md](active_bugs/BUG-75.md) |
 | BUG-76 | 2026-02-08 | Turn log does not show at start of each strategy layer turn | Awaiting Confirmation | [BUG-76.md](active_bugs/BUG-76.md) |
+| BUG-77 | 2026-02-08 | Ships/fleets missing after save and load | Pending | [BUG-77.md](active_bugs/BUG-77.md) |
 
 ## 3. Current Focus: None
 **Status:** All pending bugs fixed. BUG-73, BUG-74, BUG-75, BUG-76 set to Awaiting Confirmation. No pending bugs remain.
