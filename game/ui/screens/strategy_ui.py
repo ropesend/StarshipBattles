@@ -536,6 +536,39 @@ class StrategyUI:
     def _format_spectrum(self, star):
         return format_spectrum_html(star)
 
+    def _compute_planet_production(self, planet) -> dict:
+        """
+        Compute per-resource production rates for a colony planet.
+
+        Args:
+            planet: Planet object to compute production for
+
+        Returns:
+            Dict mapping resource name to production rate per turn
+        """
+        if getattr(planet, 'owner_id', None) is None:
+            return {}
+
+        rates = {}
+        for facility in getattr(planet, 'facilities', []):
+            if not getattr(facility, 'is_operational', True):
+                continue
+            design_data = getattr(facility, 'design_data', {})
+            for layer_data in design_data.get('layers', {}).values():
+                if not isinstance(layer_data, list):
+                    continue
+                for comp in layer_data:
+                    harvester = None
+                    if isinstance(comp, dict):
+                        harvester = comp.get('abilities', {}).get('ResourceHarvester')
+                    if harvester and isinstance(harvester, dict):
+                        res_type = harvester.get('resource_type', '')
+                        base_rate = harvester.get('base_harvest_rate', 0.0)
+                        if res_type and base_rate > 0:
+                            quality = planet.resources.get(res_type, {}).get('quality', 0.0)
+                            rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
+        return rates
+
     def show_raw_data_popup(self):
         """Show raw data in a message window."""
         if self.current_raw_data:
@@ -643,13 +676,16 @@ class StrategyUI:
             panel_max_height = min(detail_panel_height - 60, button_relative_y - 20)  # 20px margin above button
 
             # Create planet report panel (NO complexes for strategy UI)
+            # PROJ-82: Pass production rates for resource grid
+            production_rates = self._compute_planet_production(obj)
             self.planet_report_panel = PlanetReportPanel(
                 manager=self.manager,
                 rect=pygame.Rect(10, 10, 580, panel_max_height),
                 planet=obj,
                 container=self.detail_panel,
                 portrait_surface=portrait_surface,
-                show_complexes=False  # Strategy UI doesn't show facility list
+                show_complexes=False,  # Strategy UI doesn't show facility list
+                production_rates=production_rates
             )
 
             # Show Build Yard button for owned planets (PROJ-54)

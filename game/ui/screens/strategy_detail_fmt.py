@@ -144,20 +144,7 @@ def format_planet_info(planet) -> str:
         else:
             text += "<br><b>Complexes:</b> None<br>"
 
-    if hasattr(planet, 'resources') and planet.resources:
-        text += "<br><b>Resources:</b><br>"
-        for r_name, r_data in planet.resources.items():
-            qty = r_data['quantity']
-            if qty >= 1000000:
-                q_str = f"{qty/1000000:.1f}M"
-            elif qty >= 1000:
-                q_str = f"{qty/1000:.0f}k"
-            else:
-                q_str = str(qty)
-
-            qual = r_data['quality']
-            text += f" {r_name}: {q_str} (Q:{qual:.0f})<br>"
-
+    # Resources are displayed in the dedicated resource grid panel (PROJ-82)
     return text
 
 

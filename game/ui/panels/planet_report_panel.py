@@ -5,12 +5,21 @@ This widget encapsulates the planet detail display from the strategy screen,
 showing planet portrait, comprehensive stats, and atmosphere composition graph.
 """
 
+import os
+from typing import Dict, List, Optional
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIImage, UITextBox, UIPanel, UIScrollingContainer, UILabel
 from game.ui.screens.strategy_detail_fmt import format_planet_info
 from game.ui.panels.strategy_widgets import AtmosphereGraph
+from game.ui.panels.build_queue_portraits import RESOURCE_PORTRAIT_FILES, RESOURCE_FALLBACK_COLORS
+from game.core.constants import PLANET_RESOURCES
 from collections import Counter
+
+
+# Height reserved for resource grid at bottom of panel
+RESOURCE_PANEL_HEIGHT = 100
 
 
 class PlanetReportPanel:
@@ -24,7 +33,16 @@ class PlanetReportPanel:
     - Complexes list (scrollable, right side)
     """
 
-    def __init__(self, manager, rect, planet, container=None, portrait_surface=None, show_complexes=True):
+    def __init__(
+        self,
+        manager,
+        rect,
+        planet,
+        container=None,
+        portrait_surface=None,
+        show_complexes=True,
+        production_rates: Optional[Dict[str, float]] = None
+    ):
         """
         Initialize planet report panel.
 
@@ -37,12 +55,20 @@ class PlanetReportPanel:
                 If provided, will be used instead of generating placeholder.
             show_complexes (bool, optional): Whether to show the complexes list.
                 Defaults to True. Set to False for contexts like Strategy UI.
+            production_rates (Dict[str, float], optional): Per-resource production rates.
+                Used for the resource grid. Defaults to empty dict.
         """
         self.manager = manager
         self.rect = rect
         self.planet = planet
         self.container = container
         self._init_portrait_surface = portrait_surface
+        self.production_rates = production_rates or {}
+        self._resource_icons: Dict[str, pygame.Surface] = {}
+        self._resource_grid_items: List = []
+
+        # Load resource icons
+        self._load_resource_icons()
 
         # Create panel container
         self.panel = UIPanel(
@@ -64,11 +90,12 @@ class PlanetReportPanel:
         complexes_gap = 10
 
         # Info text (170, 10, text_w, text_h) - width depends on whether complexes are shown
+        # Height reduced to make room for resource panel at bottom
         if show_complexes:
             text_w = rect.width - 180 - complexes_width - complexes_gap  # Leave room for complexes list
         else:
             text_w = rect.width - 180  # Only leave room for portrait and graph
-        text_h = rect.height - 20
+        text_h = rect.height - 20 - RESOURCE_PANEL_HEIGHT
         self.detail_text = UITextBox(
             html_text=format_planet_info(planet),
             relative_rect=pygame.Rect(170, 10, text_w, text_h),
@@ -77,10 +104,12 @@ class PlanetReportPanel:
         )
 
         # Complexes list (scrollable, right side) - only if show_complexes is True
+        # Height reduced to make room for resource panel at bottom
         if show_complexes:
             complexes_x = rect.width - complexes_width - 10  # 10px margin from right edge
+            complexes_h = rect.height - 20 - RESOURCE_PANEL_HEIGHT
             self.complexes_container = UIScrollingContainer(
-                relative_rect=pygame.Rect(complexes_x, 10, complexes_width, rect.height - 20),
+                relative_rect=pygame.Rect(complexes_x, 10, complexes_width, complexes_h),
                 manager=manager,
                 container=self.panel
             )
@@ -101,8 +130,9 @@ class PlanetReportPanel:
             self.complex_items = []
 
         # Atmosphere graph (10, 170, 150, graph_h)
+        # Height reduced to make room for resource panel at bottom
         graph_y = 170
-        graph_h = rect.height - 180
+        graph_h = rect.height - 180 - RESOURCE_PANEL_HEIGHT
         if graph_h < 50:
             graph_h = 50
 
@@ -118,29 +148,46 @@ class PlanetReportPanel:
         # Strategy screen uses AtmosphereGraph(height, width) then rotates -90 degrees
         self.graph = AtmosphereGraph(int(graph_h), 150)
 
+        # Resource grid panel at bottom (PROJ-82)
+        resource_y = rect.height - RESOURCE_PANEL_HEIGHT - 10
+        self.resource_panel = UIPanel(
+            relative_rect=pygame.Rect(10, resource_y, rect.width - 20, RESOURCE_PANEL_HEIGHT),
+            manager=manager,
+            container=self.panel
+        )
+
         # Initial render
         self._update_portrait(portrait_surface)
         self._update_graph()
         self._update_complexes_list()
+        self._build_resource_grid()
 
-    def update_planet(self, planet, portrait_surface=None):
+    def update_planet(
+        self,
+        planet,
+        portrait_surface=None,
+        production_rates: Optional[Dict[str, float]] = None
+    ):
         """
         Update display for a new planet.
 
         Args:
             planet: Planet object to display
             portrait_surface: Optional pygame Surface for planet portrait
+            production_rates: Optional per-resource production rates for the grid
         """
         self.planet = planet
+        self.production_rates = production_rates or {}
 
         # Update info text
         self.detail_text.html_text = format_planet_info(planet)
         self.detail_text.rebuild()
 
-        # Update portrait, graph, and complexes list
+        # Update portrait, graph, complexes list, and resource grid
         self._update_portrait(portrait_surface)
         self._update_graph()
         self._update_complexes_list()
+        self._update_resource_grid()
 
     def _update_portrait(self, portrait_surface=None):
         """Update planet portrait image."""
@@ -253,16 +300,147 @@ class PlanetReportPanel:
 
             y_offset += 30  # Gap between items
 
+    def _format_compact_number(self, value: float) -> str:
+        """Format a number with K/M suffixes for compact display."""
+        if value >= 1_000_000:
+            return f"{value / 1_000_000:.1f}M"
+        elif value >= 1_000:
+            return f"{value / 1_000:.0f}k"
+        else:
+            return str(int(value))
+
+    def _build_resource_grid(self) -> None:
+        """
+        Build the resource grid panel with icons, quantity, quality, and production rows.
+        """
+        # Clear any existing grid items
+        for item in self._resource_grid_items:
+            item.kill()
+        self._resource_grid_items = []
+
+        grid_width = self.resource_panel.relative_rect.width
+        label_col_width = 40  # Width for row labels (Qty, Qual, Prod)
+        col_w = (grid_width - label_col_width - 20) // 5  # 5 resources, 20px padding
+
+        # Row labels column (left side)
+        row_labels = ["Qty", "Qual", "Prod"]
+        row_y_offsets = [28, 48, 68]
+
+        for label_text, y_offset in zip(row_labels, row_y_offsets):
+            label = UILabel(
+                relative_rect=pygame.Rect(5, y_offset, label_col_width, 20),
+                text=label_text,
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(label)
+
+        # Resource columns
+        planet_resources = getattr(self.planet, 'resources', {}) or {}
+
+        for i, resource_name in enumerate(PLANET_RESOURCES):
+            col_x = label_col_width + 10 + i * col_w
+
+            # Icon header
+            icon_surf = self._resource_icons.get(resource_name)
+            if icon_surf:
+                icon_image = UIImage(
+                    relative_rect=pygame.Rect(col_x, 2, 24, 24),
+                    image_surface=icon_surf,
+                    manager=self.manager,
+                    container=self.resource_panel
+                )
+                self._resource_grid_items.append(icon_image)
+
+            # Get resource data
+            r_data = planet_resources.get(resource_name, {})
+            quantity = r_data.get('quantity', 0) if isinstance(r_data, dict) else 0
+            quality = r_data.get('quality', 0) if isinstance(r_data, dict) else 0
+            production = self.production_rates.get(resource_name, 0.0)
+
+            # Quantity label
+            qty_label = UILabel(
+                relative_rect=pygame.Rect(col_x, 28, col_w, 20),
+                text=self._format_compact_number(quantity),
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(qty_label)
+
+            # Quality label
+            qual_label = UILabel(
+                relative_rect=pygame.Rect(col_x, 48, col_w, 20),
+                text=f"{quality:.0f}" if quality else "0",
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(qual_label)
+
+            # Production label
+            prod_label = UILabel(
+                relative_rect=pygame.Rect(col_x, 68, col_w, 20),
+                text=self._format_compact_number(production) if production else "0",
+                manager=self.manager,
+                container=self.resource_panel
+            )
+            self._resource_grid_items.append(prod_label)
+
+    def _update_resource_grid(self) -> None:
+        """Refresh resource grid values when planet changes."""
+        self._build_resource_grid()
+
+    def _load_resource_icons(self, icon_size: int = 24) -> None:
+        """
+        Load resource portrait icons for the resource grid.
+
+        Args:
+            icon_size: Size of the square icons in pixels (default 24).
+        """
+        base_path = os.path.join("assets", "Images", "Resource Portraits")
+
+        for resource in PLANET_RESOURCES:
+            filename = RESOURCE_PORTRAIT_FILES.get(resource)
+            if filename:
+                path = os.path.join(base_path, filename)
+                try:
+                    img = pygame.image.load(path)
+                    self._resource_icons[resource] = pygame.transform.smoothscale(
+                        img, (icon_size, icon_size)
+                    )
+                except (FileNotFoundError, pygame.error):
+                    # Create fallback colored square
+                    surf = pygame.Surface((icon_size, icon_size))
+                    color = RESOURCE_FALLBACK_COLORS.get(resource, (128, 128, 128))
+                    surf.fill(color)
+                    pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                    self._resource_icons[resource] = surf
+            else:
+                # No filename mapped, create gray placeholder
+                surf = pygame.Surface((icon_size, icon_size))
+                surf.fill((128, 128, 128))
+                pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                self._resource_icons[resource] = surf
+
     def get_height_required(self):
         """
         Get minimum height required for this panel.
 
         Returns:
-            int: Minimum height in pixels (350px)
+            int: Minimum height in pixels (350 + RESOURCE_PANEL_HEIGHT)
         """
-        return 350
+        return 350 + RESOURCE_PANEL_HEIGHT
 
     def kill(self):
         """Clean up all UI elements."""
+        # Clean up resource grid items
+        for item in self._resource_grid_items:
+            item.kill()
+        self._resource_grid_items = []
+
+        # Clean up resource panel
+        if hasattr(self, 'resource_panel') and self.resource_panel:
+            self.resource_panel.kill()
+
+        # Clean up main panel (contains all other elements)
         if hasattr(self, 'panel'):
             self.panel.kill()
