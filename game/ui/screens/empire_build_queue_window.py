@@ -70,7 +70,7 @@ class EmpireBuildQueueWindow(UIWindow):
     ) -> None:
         super().__init__(
             rect, manager,
-            window_display_title="Empire Build Queues",
+            window_display_title="Empire Build Yards",
             resizable=True,
         )
 
@@ -93,7 +93,7 @@ class EmpireBuildQueueWindow(UIWindow):
             {'id': 'first_item', 'width': 150, 'title': 'Building', 'visible': True},
             {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
             {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
-            {'id': 'build_rate', 'width': 80, 'title': 'Rate/Turn', 'visible': False},
+            {'id': 'build_rate', 'width': 80, 'title': 'Build Rate', 'visible': True},
         ]
 
         # --- State ---
@@ -579,7 +579,7 @@ class EmpireBuildQueueWindow(UIWindow):
         if col_id == 'capabilities':
             return self._get_capabilities_text(source)
         if col_id == 'build_rate':
-            return "1/turn"
+            return f"{int(source.build_rate)}/turn"
         return ""
 
     def toggle_column_visibility(self, col_id: str) -> bool:

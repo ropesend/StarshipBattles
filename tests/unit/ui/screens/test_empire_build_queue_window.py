@@ -479,11 +479,12 @@ class TestGetColumnValue:
         assert win._get_column_value(source, 'capabilities') == "Ships & Complexes"
 
     def test_build_rate_column(self):
-        """Build rate column returns rate string."""
+        """Build rate column returns rate string from source.build_rate."""
         source = _make_source()
         win = _make_window(sources=[source])
         result = win._get_column_value(source, 'build_rate')
-        assert "1" in result
+        # Default build_rate is 2000, should display "2000/turn"
+        assert result == "2000/turn"
 
     def test_unknown_column_returns_empty(self):
         """Unknown column ID returns empty string."""

@@ -20,7 +20,7 @@ class BuildQueueListWindow(UIWindow):
 
     def __init__(self, rect, manager, empire, on_close_callback=None,
                  input_mapper: Optional['InputMapper'] = None):
-        super().__init__(rect, manager, window_display_title="Build Queues", resizable=False)
+        super().__init__(rect, manager, window_display_title="Build Yards", resizable=False)
         self.empire = empire
         self.on_close_callback = on_close_callback
         self._mapper = input_mapper

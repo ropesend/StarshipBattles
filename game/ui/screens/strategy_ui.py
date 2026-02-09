@@ -252,7 +252,7 @@ class StrategyUI:
             relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design", manager=self.manager, container=self.top_bar
         )
         self.btn_build_queues = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Queues", manager=self.manager, container=self.top_bar
+            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Yards", manager=self.manager, container=self.top_bar
         )
         self.btn_all_queues = pygame_gui.elements.UIButton(
             relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40), text="All Queues", manager=self.manager, container=self.top_bar

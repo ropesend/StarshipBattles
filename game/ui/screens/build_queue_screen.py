@@ -458,7 +458,7 @@ class BuildQueueScreen:
         # Header
         ui.UITextBox(
             relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
-            html_text="<b>Build Queue</b>",
+            html_text="<b>Build Yard</b>",
             manager=self.manager,
             container=self.build_queue_panel
         )

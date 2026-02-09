@@ -459,7 +459,7 @@ class PlanetListWindow(UIWindow):
             panel_height = self.planet_detail_panel.get_height_required()
             self.btn_build_queue = UIButton(
                 relative_rect=pygame.Rect(panel_x, panel_y + panel_height + 10, 200, 30),
-                text="Open Build Queue",
+                text="Open Build Yard",
                 manager=self.ui_manager,
                 container=self,
                 object_id="#build_queue_btn_planet_list"

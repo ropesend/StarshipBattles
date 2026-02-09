@@ -96,7 +96,7 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.STRATEGY_OPEN_EMPIRE: "Open Empire",
     InputAction.STRATEGY_OPEN_RESEARCH: "Open Research",
     InputAction.STRATEGY_OPEN_DESIGN: "Open Design",
-    InputAction.STRATEGY_OPEN_BUILD_QUEUES: "Open Build Queues",
+    InputAction.STRATEGY_OPEN_BUILD_QUEUES: "Open Build Yards",
     InputAction.STRATEGY_SAVE_GAME: "Save Game",
     InputAction.STRATEGY_ZOOM_GALAXY: "Zoom to Galaxy",
     InputAction.STRATEGY_ZOOM_SYSTEM: "Zoom to System",
@@ -113,7 +113,7 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.DETAIL_PANEL_COLONIZE: "Colonize Planet",
     InputAction.DETAIL_PANEL_BUILD_YARD: "Build Space Yard",
     # Build queue
-    InputAction.BUILD_QUEUE_CLOSE: "Close Build Queue",
+    InputAction.BUILD_QUEUE_CLOSE: "Close Build Yard",
     InputAction.BUILD_QUEUE_ADD: "Add to Queue",
     InputAction.BUILD_QUEUE_REMOVE: "Remove from Queue",
     InputAction.BUILD_QUEUE_CAT_COMPLEXES: "Category: Complexes",
@@ -165,7 +165,7 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
         InputAction.DETAIL_PANEL_COLONIZE,
         InputAction.DETAIL_PANEL_BUILD_YARD,
     ],
-    "Build Queue": [
+    "Build Yard": [
         InputAction.BUILD_QUEUE_CLOSE,
         InputAction.BUILD_QUEUE_ADD,
         InputAction.BUILD_QUEUE_REMOVE,

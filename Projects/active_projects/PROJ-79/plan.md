@@ -17,15 +17,15 @@
 | 2. Build Time from Cost + Tick-Granular Production | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Queue Item Display + Column Headers + Resource Icons | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Complex Target Planet Selection | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Empire Build Queue Window Sync + Final Audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Empire Build Queue Window Sync + Final Audit | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete - Complex target planet selection for fleet shipyards
-**Next Action:** Begin Phase 5 - Empire Build Queue Window Sync + Final Audit
+**Active Phase:** All phases complete - Ready for audit
+**Last Action:** Phase 5 complete - Empire Build Queue Window terminology, build rate display, full test audit
+**Next Action:** Trigger audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** Phase 4 complete. PlanetSelectionWindow generalized with window_title, list_label, show_any_button parameters. BuildQueueController has hex_coord/galaxy/empire context and on_planet_selection_needed callback. BuildQueueScreen has _prompt_target_planet() for fleet+complex at multi-colony hex. ProductionEngine._spawn_fleet_complex() uses target_planet_id. 14 new tests: 4 PlanetSelectionWindow, 7 controller, 3 ProductionEngine. 7344 tests pass.
+**Context for Next Agent:** All 5 phases complete. Phase 5 updated EmpireBuildQueueWindow title to "Empire Build Yards", made build_rate column visible with actual rate from source.build_rate, updated 7 UI strings across codebase. Fixed 1 test (test_build_rate_column). 7344 tests pass. Manual verification deferred to user.
 
 ## Overview
 Rework the build queue screen and production system to: rename "Build Queues" to "Build Yards" with Planetary Yard / Shipyard distinction, calculate build time from vehicle resource cost instead of hardcoding to 1 turn, implement tick-granular production so items complete mid-turn, show daily resource cost and resource icons in queue display, enforce complex-to-planet restrictions for fleet shipyards, and generalize the planet selection window for reuse.
