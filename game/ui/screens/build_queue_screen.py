@@ -1110,6 +1110,11 @@ class BuildQueueScreen:
             )
             if result is not None:
                 self.selected_queue_index = result
+                # PROJ-81 Phase 4: Update design report on queue item click
+                if result < len(active_queue):
+                    design_id = active_queue[result].get('design_id')
+                    if design_id:
+                        self.controller.refresh_design_report(design_id)
 
         # Handle keyboard events via InputMapper, then screenshots
         if event.type == pygame.KEYDOWN:

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIImage, UIPanel, UITextBox
+from pygame_gui.elements import UIImage, UILabel, UIPanel, UITextBox
 from typing import Optional, TYPE_CHECKING
 from game.ui.panels.design_stats_panel import DesignStatsPanel
 
@@ -64,6 +64,21 @@ class DesignReportPanel:
             container=self.panel
         )
 
+        # PROJ-81 Phase 4: Design identity labels (below portrait)
+        identity_y = portrait_height + 15
+        self.name_label = UILabel(
+            relative_rect=pygame.Rect(10, identity_y, rect.width - 20, 24),
+            text="",
+            manager=manager,
+            container=self.panel
+        )
+        self.type_class_label = UILabel(
+            relative_rect=pygame.Rect(10, identity_y + 24, rect.width - 20, 20),
+            text="",
+            manager=manager,
+            container=self.panel
+        )
+
         # Placeholder text (shown when no design selected)
         self.placeholder_text = None
         self.show_placeholder()
@@ -78,6 +93,12 @@ class DesignReportPanel:
             self._stats_panel.kill()
             self._stats_panel = None
         self.rows_map = {}
+
+        # PROJ-81: Clear identity labels
+        if hasattr(self, 'name_label'):
+            self.name_label.set_text("")
+        if hasattr(self, 'type_class_label'):
+            self.type_class_label.set_text("")
 
         # Show placeholder message
         if self.placeholder_text:
@@ -113,13 +134,20 @@ class DesignReportPanel:
         # Update portrait
         self._update_portrait(ship)
 
+        # PROJ-81 Phase 4: Populate design identity labels
+        self.name_label.set_text(ship.name)
+        vehicle_type = getattr(ship, 'vehicle_type', 'Unknown')
+        ship_class = getattr(ship, 'ship_class', 'Unknown')
+        self.type_class_label.set_text(f"{vehicle_type} - {ship_class}")
+
         # Kill old stats panel
         if self._stats_panel is not None:
             self._stats_panel.kill()
 
-        # Create stats panel below portrait
+        # Create stats panel below portrait + identity labels (50px for labels)
         portrait_h = self.portrait_image.relative_rect.height
-        stats_y = portrait_h + 20
+        identity_h = 50  # Height for name + type/class labels
+        stats_y = portrait_h + 15 + identity_h
         stats_w = self.rect.width - 20
         stats_h = self.rect.height - stats_y - 20
 

@@ -229,16 +229,16 @@ def test_stats_panel_exists_after_update(design_report_panel, mock_ship):
 
 
 def test_stats_panel_position(design_report_panel, mock_ship):
-    """Test that stats panel is positioned below portrait."""
+    """Test that stats panel is positioned below portrait and identity labels."""
     design_report_panel.update_design(mock_ship)
     stats_scroll = design_report_panel._stats_panel.stats_scroll
     rect = stats_scroll.relative_rect
 
-    # Stats should be below portrait (730px portrait + 20px gap = 750)
-    # But the DesignStatsPanel receives a rect positioned at y, so check relative positioning
-    # The panel is at 10, y where y = portrait_h + 20 = 730 + 20 = 750
-    expected_y = 750
-    assert rect.y == expected_y, f"Stats scroll y should be {expected_y} (below portrait), got {rect.y}"
+    # Stats should be below portrait + identity labels
+    # portrait_h (730) + 15 (gap) + 50 (identity labels) = 795
+    # PROJ-81 Phase 4 added identity labels (name + type/class)
+    expected_y = 795
+    assert rect.y == expected_y, f"Stats scroll y should be {expected_y} (below portrait+identity), got {rect.y}"
     assert rect.x == 10, f"Stats scroll x should be 10 (left margin), got {rect.x}"
 
     # Stats width should be full width (750 - 20 margins = 730)
@@ -253,6 +253,32 @@ def test_update_design_displays_ship_name(design_report_panel, mock_ship):
     # Check if there's a name label or title
     # The name might be displayed in the panel or stats
     assert design_report_panel.current_ship == mock_ship
+
+
+def test_identity_labels_populated(design_report_panel, mock_ship):
+    """PROJ-81 Phase 4: Test that identity labels are populated with name/type/class."""
+    design_report_panel.update_design(mock_ship)
+
+    # Name label should show ship name
+    assert design_report_panel.name_label.text == mock_ship.name
+
+    # Type/class label should show vehicle type and ship class
+    expected_type_class = f"{mock_ship.vehicle_type} - {mock_ship.ship_class}"
+    assert design_report_panel.type_class_label.text == expected_type_class
+
+
+def test_identity_labels_cleared_on_placeholder(design_report_panel, mock_ship):
+    """PROJ-81 Phase 4: Test that identity labels are cleared when showing placeholder."""
+    # First show a design
+    design_report_panel.update_design(mock_ship)
+    assert design_report_panel.name_label.text == mock_ship.name
+
+    # Then show placeholder
+    design_report_panel.show_placeholder()
+
+    # Labels should be cleared
+    assert design_report_panel.name_label.text == ""
+    assert design_report_panel.type_class_label.text == ""
 
 
 def test_update_design_updates_portrait(design_report_panel, mock_ship):
