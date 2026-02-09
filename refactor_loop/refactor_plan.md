@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-78 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-78 complete, audit passed, awaiting user verification
-**Current Project:** PROJ-78
-**Current Phase:** Audit Cycle 1 - PASSED
-**Test Status:** 7294 passed, 2 pre-existing failures
+**Last Completed:** PROJ-80 Phase 1 - DesignStatsPanel + StatRow created
+**Current Status:** PROJ-80 Phase 1 complete, moving to Phase 2
+**Current Project:** PROJ-80
+**Current Phase:** Phase 1 Complete
+**Test Status:** 33 targeted tests passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 3: Added spawn_initial_complexes() call to app.py _start_quickstart() method (line 292)
-- Phase 4: Created tests/integration/quickstart/ with 8 integration tests (1P + 2P coverage)
-- Fixed xdist parallel collision with UUID-based unique save names
-- Audit: 2 investigation agents verified all 4 phases, no issues found
-- Full suite: 7294 passed (+8 from integration tests), 2 pre-existing failures
-- PROJ-78 is DONE. No more projects in queue.
+- Created game/ui/panels/design_stats_panel.py with StatRow and DesignStatsPanel classes
+- StatRow: copied from right_panel.py with type hints added
+- DesignStatsPanel: two-column layout, optional requirements/recommendations, build cost section
+- Methods: _build_layout, _build_sections, update_stats, needs_rebuild, rebuild, kill
+- 33 targeted tests pass (test_stats_render.py, test_build_queue_design_report.py, etc.)
+- Next: Phase 2 - Integrate into BuilderRightPanel
 
 ---
 
@@ -157,8 +157,8 @@
 
 ---
 
-- [ ] **PROJ-80: Unify Design Details Panel**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-80: Unify Design Details Panel**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-80/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-80/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -276,6 +276,7 @@
 | 2026-02-08 | PROJ-78 | Phase 3 | Complete | 7286 passed | pending | app.py _start_quickstart() integration, 1 line added |
 | 2026-02-08 | PROJ-78 | Phase 4 | Complete | 7294 passed | pending | 8 integration tests, UUID save names for xdist safety |
 | 2026-02-08 | PROJ-78 | Audit 1 | PASSED | 7294 passed | pending | No issues found, 2 investigation agents verified all phases |
+| 2026-02-08 | PROJ-80 | Phase 1 | Complete | 33 targeted | pending | Created DesignStatsPanel + StatRow in design_stats_panel.py |
 
 ---
 
