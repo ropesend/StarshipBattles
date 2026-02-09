@@ -2,16 +2,35 @@
 BuildQueuePortraitLoader - Loads and caches design portraits for build queue UI.
 
 Extracted from build_queue_screen.py as part of PROJ-63 decomposition.
+PROJ-79: Added resource icon loading for column headers.
 """
 from __future__ import annotations
 
 import os
 import re
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Dict
 
 import pygame
 
 from game.core.logger import log_warning
+
+# Resource portrait filenames in assets/Images/Resource Portraits/
+RESOURCE_PORTRAIT_FILES = {
+    "Metals": "resource_metals_portrait.png",
+    "Organics": "resource_organics_portrait.png",
+    "Vapors": "resource_vapors_portrait.png",
+    "Radioactives": "resource_radioactives_portrait.png",
+    "Exotics": "resource_exotics_portrait.png",
+}
+
+# Fallback colors if portrait not found
+RESOURCE_FALLBACK_COLORS = {
+    "Metals": (192, 192, 192),       # Silver
+    "Organics": (80, 180, 80),       # Green
+    "Vapors": (100, 150, 220),       # Light blue
+    "Radioactives": (220, 180, 50),  # Yellow
+    "Exotics": (180, 80, 200),       # Purple
+}
 
 if TYPE_CHECKING:
     from game.strategy.systems.design_library import DesignLibrary
@@ -164,3 +183,34 @@ class BuildQueuePortraitLoader:
         pygame.draw.rect(placeholder, (255, 255, 255), placeholder.get_rect(), 1)
 
         return placeholder
+
+    def load_resource_icons(self, icon_size: int = 20) -> Dict[str, pygame.Surface]:
+        """Load resource portrait icons scaled to icon_size.
+
+        PROJ-79: Used for column headers in build queue display.
+
+        Args:
+            icon_size: Size of the square icon in pixels (default 20).
+
+        Returns:
+            Dict mapping resource name to scaled pygame.Surface.
+            All 5 resources are always present (fallback to colored square if file missing).
+        """
+        icons: Dict[str, pygame.Surface] = {}
+        base_path = os.path.join("assets", "Images", "Resource Portraits")
+
+        for resource, filename in RESOURCE_PORTRAIT_FILES.items():
+            path = os.path.join(base_path, filename)
+            try:
+                img = pygame.image.load(path)
+                icons[resource] = pygame.transform.smoothscale(img, (icon_size, icon_size))
+            except (FileNotFoundError, pygame.error) as e:
+                log_warning(f"Failed to load resource portrait '{path}': {e}")
+                # Create fallback colored square
+                surf = pygame.Surface((icon_size, icon_size))
+                color = RESOURCE_FALLBACK_COLORS.get(resource, (128, 128, 128))
+                surf.fill(color)
+                pygame.draw.rect(surf, (255, 255, 255), surf.get_rect(), 1)
+                icons[resource] = surf
+
+        return icons

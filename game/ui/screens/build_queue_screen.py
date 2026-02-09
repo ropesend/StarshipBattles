@@ -84,6 +84,9 @@ class BuildQueueScreen:
         # PROJ-63: Portrait loading extracted to dedicated class
         self.portrait_loader = BuildQueuePortraitLoader(design_library, session)
 
+        # PROJ-79: Load resource icons for column headers
+        self.resource_icons = self.portrait_loader.load_resource_icons(icon_size=20)
+
         # Validate required attributes
         if not hasattr(build_context, 'owner_id'):
             raise ValueError(f"BuildQueueScreen: build_context '{getattr(build_context, 'name', 'unknown')}' missing required 'owner_id' attribute")
@@ -448,9 +451,46 @@ class BuildQueueScreen:
             container=self.build_queue_panel
         )
 
-        # Scrollable queue
+        # PROJ-79: Column header row with resource icons
+        header_y = 42
+        header_height = 22
+        col_x = 10
+
+        # "Item" column label (aligned with portrait + name)
+        ui.UILabel(
+            relative_rect=pygame.Rect(col_x, header_y, 150, header_height),
+            text="Item",
+            manager=self.manager,
+            container=self.build_queue_panel
+        )
+        col_x += 155
+
+        # "Turns" column label
+        ui.UILabel(
+            relative_rect=pygame.Rect(col_x, header_y, 45, header_height),
+            text="Turns",
+            manager=self.manager,
+            container=self.build_queue_panel
+        )
+        col_x += 50
+
+        # Resource icon columns
+        self.queue_column_positions = {"Item": 10, "Turns": 165}
+        for resource in PLANET_RESOURCES:
+            icon = self.resource_icons.get(resource)
+            if icon:
+                ui.UIImage(
+                    relative_rect=pygame.Rect(col_x, header_y + 1, 20, 20),
+                    image_surface=icon,
+                    manager=self.manager,
+                    container=self.build_queue_panel
+                )
+            self.queue_column_positions[resource] = col_x
+            col_x += 28
+
+        # Scrollable queue - shifted down to accommodate header row
         self.queue_scrollable = ui.UIScrollingContainer(
-            relative_rect=pygame.Rect(10, 45, panel_width - 20, panel_height - 55),
+            relative_rect=pygame.Rect(10, 68, panel_width - 20, panel_height - 78),
             manager=self.manager,
             container=self.build_queue_panel
         )
@@ -723,7 +763,7 @@ class BuildQueueScreen:
 
         # Display each item in the queue
         y_offset = 0
-        icon_size = 50  # Portrait icon size for queue items
+        icon_size = 40  # Portrait icon size for queue items
         for idx, item in enumerate(queue):
             # Dict format: {"design_id": ..., "type": ..., "turns_remaining": N}
             design_id = item.get("design_id", "Unknown")
@@ -734,9 +774,9 @@ class BuildQueueScreen:
             is_selected = (idx == self.selected_queue_index)
             panel_object_id = "#queue_item_selected" if is_selected else "#queue_item"
 
-            # Taller panel when cost tracking is present
+            # PROJ-79: Consistent panel height with columnar layout
             total_cost = item.get("total_cost")
-            panel_height = 78 if total_cost else 60
+            panel_height = 48
 
             item_panel = ui.UIPanel(
                 relative_rect=pygame.Rect(0, y_offset, self.queue_scrollable.get_container().get_size()[0] - 20, panel_height),
@@ -752,48 +792,60 @@ class BuildQueueScreen:
             portrait_surface = self.portrait_loader.load_queue_item_portrait(design_id, item_type, icon_size)
             if portrait_surface:
                 ui.UIImage(
-                    relative_rect=pygame.Rect(5, 5, icon_size, icon_size),
+                    relative_rect=pygame.Rect(4, 4, icon_size, icon_size),
                     image_surface=portrait_surface,
                     manager=self.manager,
                     container=item_panel
                 )
 
-            # Design name and turns (offset to right of icon)
-            label_x = icon_size + 15
+            # PROJ-79: Columnar layout aligned with headers
+            # Design name (aligned with "Item" column)
+            name_x = icon_size + 8
             ui.UILabel(
-                relative_rect=pygame.Rect(label_x, 5, 250, 20),
-                text=f"{design_id}",
+                relative_rect=pygame.Rect(name_x, 4, 110, 20),
+                text=f"{design_id[:15]}",  # Truncate long names
                 manager=self.manager,
                 container=item_panel
             )
 
+            # Type on second line
             ui.UILabel(
-                relative_rect=pygame.Rect(label_x, 25, 200, 18),
-                text=f"{turns} turns remaining | Type: {item_type}",
+                relative_rect=pygame.Rect(name_x, 24, 110, 16),
+                text=f"{item_type}",
                 manager=self.manager,
                 container=item_panel
             )
 
-            # Resource cost progress (when cost tracking present)
-            if total_cost:
-                consumed = item.get("resources_consumed", {})
-                cost_str = self._format_resource_cost(total_cost)
-                consumed_parts = []
-                for res in PLANET_RESOURCES:
-                    total_amt = total_cost.get(res, 0)
-                    used_amt = consumed.get(res, 0)
+            # Turns column (aligned with "Turns" header)
+            turns_x = self.queue_column_positions.get("Turns", 165) - 10
+            ui.UILabel(
+                relative_rect=pygame.Rect(turns_x, 14, 45, 20),
+                text=f"{turns}",
+                manager=self.manager,
+                container=item_panel
+            )
+
+            # PROJ-79: Per-turn resource cost columns (aligned under resource icons)
+            if total_cost and turns > 0:
+                for resource in PLANET_RESOURCES:
+                    total_amt = total_cost.get(resource, 0)
                     if total_amt > 0:
-                        consumed_parts.append(f"{int(used_amt)}/{int(total_amt)}")
-                progress_str = " | ".join(consumed_parts) if consumed_parts else cost_str
-                ui.UILabel(
-                    relative_rect=pygame.Rect(label_x, 45, 300, 16),
-                    text=f"Cost: {progress_str}",
-                    manager=self.manager,
-                    container=item_panel
-                )
+                        per_turn = total_amt / turns
+                        col_x = self.queue_column_positions.get(resource, 0) - 10
+                        # Format: show as int if >= 1, else show one decimal
+                        if per_turn >= 1:
+                            cost_text = f"{int(per_turn)}"
+                        else:
+                            cost_text = f"{per_turn:.1f}"
+                        ui.UILabel(
+                            relative_rect=pygame.Rect(col_x, 14, 28, 20),
+                            text=cost_text,
+                            manager=self.manager,
+                            container=item_panel
+                        )
 
             self.queue_items.append(item_panel)
-            y_offset += panel_height + 5
+            y_offset += panel_height + 3
 
         if not queue:
             ui.UILabel(

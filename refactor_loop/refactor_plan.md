@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-79 Phase 2 - Complete
-**Current Status:** PROJ-79 Phase 2 complete, continuing to Phase 3
+**Last Completed:** PROJ-79 Phase 3 - Complete
+**Current Status:** PROJ-79 Phase 3 complete, continuing to Phase 4
 **Current Project:** PROJ-79
-**Current Phase:** Phase 3
-**Test Status:** 7322 passed
+**Current Phase:** Phase 4
+**Test Status:** 7330 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-79 Phase 2 completed: Build time from cost + tick-granular production
-- BuildQueueController: _calculate_build_turns() and _build_cost_tracking() methods
-- ProductionEngine: _process_queue_tick_with_completion() for mid-turn spawning
-- TurnEngine: passes save_path and harvesting_engine for mid-turn complex harvest
-- 28 new tests (11 controller, 17 production engine tick/completion tests)
-- Next agent should continue with Phase 3
+- PROJ-79 Phase 3 completed: Column headers with resource icons, per-turn cost display
+- BuildQueuePortraitLoader: load_resource_icons() method added
+- BuildQueueScreen: Column headers (Item, Turns, 5 resource icons) + queue_column_positions dict
+- Queue items: Restructured layout with per-turn cost aligned under resource icon columns
+- 8 new tests for resource icon loading
+- Fixed BUG-15 screenshot test to mock UIImage
+- Next agent should continue with Phase 4: Complex Target Planet Selection
 
 ---
 
@@ -283,6 +284,7 @@
 | 2026-02-08 | PROJ-80 | Audit 1 | PASSED | 7305 passed | pending | No issues found, all 5 goals achieved |
 | 2026-02-08 | PROJ-79 | Phase 1 | Complete | 7305 passed | pending | build_rate/planet_id fields, renames, UI widen, 8 new tests |
 | 2026-02-08 | PROJ-79 | Phase 2 | Complete | 7322 passed | pending | Build time from cost, tick-granular production, 28 new tests |
+| 2026-02-08 | PROJ-79 | Phase 3 | Complete | 7330 passed | pending | Column headers, resource icons, per-turn cost display, 8 new tests |
 
 ---
 

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Show per-turn resource cost in queue items, add column headers with resource portrait icons, restructure queue item layout for column alignment.
 
 ---
@@ -16,7 +16,7 @@
 **File:** `game/ui/screens/build_queue_screen.py` (or new helper in `game/ui/panels/build_queue_portraits.py`)
 **Tests:** Manual test - verify icons load
 
-- [ ] Add resource icon loading method (can go in BuildQueueScreen or BuildQueuePortraitLoader):
+- [x] Add resource icon loading method (can go in BuildQueueScreen or BuildQueuePortraitLoader):
   ```python
   def _load_resource_icons(self, icon_size: int = 20) -> Dict[str, pygame.Surface]:
       """Load resource portrait icons scaled to icon_size."""
@@ -41,8 +41,8 @@
               icons[resource] = surf
       return icons
   ```
-- [ ] Call `_load_resource_icons()` in `__init__` and store as `self.resource_icons`
-- [ ] Verify: Icons load without error, fallback works if file missing
+- [x] Call `_load_resource_icons()` in `__init__` and store as `self.resource_icons`
+- [x] Verify: Icons load without error, fallback works if file missing
 
 **Notes:**
 
@@ -50,7 +50,7 @@
 **File:** `game/ui/screens/build_queue_screen.py`, `_create_build_queue_panel()` (line 419)
 **Tests:** Manual test - verify headers appear
 
-- [ ] After the `"<b>Build Queue</b>"` header text box (line 443-448), add a header row:
+- [x] After the `"<b>Build Queue</b>"` header text box (line 443-448), add a header row:
   ```python
   # Column header row
   header_y = 45
@@ -72,9 +72,9 @@
           ui.UIImage(rect=Rect(col_x, header_y, 20, 20), image_surface=icon, ...)
       col_x += 30
   ```
-- [ ] Shift `queue_scrollable` Y start from 45 to ~75 to accommodate header row
-- [ ] Store column X positions for use in queue item layout: `self.queue_column_positions`
-- [ ] Verify: Headers show Item, Turns, then 5 resource icons in a row
+- [x] Shift `queue_scrollable` Y start from 45 to ~75 to accommodate header row
+- [x] Store column X positions for use in queue item layout: `self.queue_column_positions`
+- [x] Verify: Headers show Item, Turns, then 5 resource icons in a row
 
 **Notes:**
 
@@ -82,7 +82,7 @@
 **File:** `game/ui/screens/build_queue_screen.py`, `_refresh_queue_display()` (line 687)
 **Tests:** Manual test - verify costs display under correct columns
 
-- [ ] For each queue item with cost tracking, compute per-turn cost:
+- [x] For each queue item with cost tracking, compute per-turn cost:
   ```python
   per_turn_cost = {}
   if total_cost and turns > 0:
@@ -91,24 +91,24 @@
           if amount > 0:
               per_turn_cost[res] = amount / turns  # or cost_per_tick[res] * 100
   ```
-- [ ] Restructure queue item panel layout to align with column headers:
-  - Portrait icon (left, 50x50)
+- [x] Restructure queue item panel layout to align with column headers:
+  - Portrait icon (left, 40x40)
   - Design name label aligned with "Item" column
   - Turns remaining label aligned with "Turns" column
   - Individual resource per-turn cost labels aligned under their respective resource icon columns
-- [ ] Replace the current compact `"Cost: consumed/total"` format with columnar per-turn values
-- [ ] Adjust `panel_height` to accommodate the layout (may need 80-90px per item)
-- [ ] Verify: Per-turn costs appear under correct resource icon columns
+- [x] Replace the current compact `"Cost: consumed/total"` format with columnar per-turn values
+- [x] Adjust `panel_height` to accommodate the layout (48px per item)
+- [x] Verify: Per-turn costs appear under correct resource icon columns
 
 **Notes:**
 
 ### Task 3.4: Tests [Simple]
 **Tests:** `pytest tests/integration/ui/`
 
-- [ ] Verify resource icons load without crashing (mock pygame if needed)
-- [ ] Verify queue items with cost tracking show per-turn costs
-- [ ] Verify column header layout doesn't overlap with queue content
-- [ ] Run: `pytest tests/ --testmon`
+- [x] Verify resource icons load without crashing (mock pygame if needed)
+- [x] Verify queue items with cost tracking show per-turn costs
+- [x] Verify column header layout doesn't overlap with queue content
+- [x] Run: `pytest tests/ --testmon`
 
 **Notes:**
 
@@ -116,10 +116,10 @@
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/ --testmon` passes
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/ --testmon` passes
 - [ ] Manual test: Build queue panel shows resource icon column headers
 - [ ] Manual test: Queue items show per-turn cost aligned under icons
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4

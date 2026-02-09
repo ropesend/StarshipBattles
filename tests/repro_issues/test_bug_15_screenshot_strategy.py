@@ -312,6 +312,7 @@ class TestBuildQueueScreenshotSupport:
              patch('game.ui.screens.build_queue_screen.ui.UIButton'), \
              patch('game.ui.screens.build_queue_screen.ui.UITextBox'), \
              patch('game.ui.screens.build_queue_screen.ui.UILabel'), \
+             patch('game.ui.screens.build_queue_screen.ui.UIImage'), \
              patch('game.ui.screens.build_queue_screen.ui.UIScrollingContainer'), \
              patch('game.ui.screens.build_queue_screen.pygame_gui.windows.UIMessageWindow'):
 
