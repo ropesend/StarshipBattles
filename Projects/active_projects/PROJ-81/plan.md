@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Fix Stats Display + Cost Calculation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Build Queue Display Fixes | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Build Queue Display Fixes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Build Yards Panel Width | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Queue Item Selection + Design Identity | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-08
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - Fixed stats display + cost calculation
-**Next Action:** Begin Phase 2 - Build Queue Display Fixes
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - Resource icon spacing + header terminology fixed
+**Next Action:** Begin Phase 3 - Build Yards Panel Width
 **Blockers:** None
 
 ## Overview

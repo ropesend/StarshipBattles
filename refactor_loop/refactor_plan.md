@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-81 Phase 1
-**Current Status:** Phase 1 complete, starting Phase 2
+**Last Completed:** PROJ-81 Phase 2
+**Current Status:** Phase 2 complete, starting Phase 3
 **Current Project:** PROJ-81
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 7340 passed (4 pre-existing failures in test_transfer_dialog.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-81 Phase 1 complete: Fixed stats display + cost calculation (issues a, b, g)
-- Added `update_stats(ship)` call after DesignStatsPanel creation in design_report_panel.py
-- Created `_get_design_cost()` helper in build_queue_controller.py that loads ship and returns construction_cost
-- Updated `_calculate_build_turns()` and `_build_cost_tracking()` to use new helper
-- Updated test mocks in test_build_queue_controller.py to mock load_design_data and load_ship_from_design_data
-- Next: Phase 2 - Build Queue Display Fixes
+- PROJ-81 Phase 2 complete: Resource icon spacing + header terminology fixed
+- Increased resource column spacing from 28px to 55px in build_queue_screen.py
+- Updated per-turn cost label width from 28px to 50px
+- Stored queue_header_text, changed initial text from "Build Yard" to "Build Queue"
+- Added _update_queue_header() method that shows "Build Queue - [name]" when queue selected
+- Called _update_queue_header() from _on_queue_selected() and _on_queue_toggled()
+- Next: Phase 3 - Build Yards Panel Width
 
 ---
 
@@ -174,7 +175,7 @@
 ---
 
 - [/] **PROJ-81: Sector Build Queue Window Fixes**
-  - **Phases:** 4 | **Status:** In Progress - Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** In Progress - Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-81/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-81/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -304,6 +305,7 @@
 | 2026-02-08 | PROJ-79 | Phase 5 | Complete | 7344 passed | pending | Empire Build Yards terminology, build_rate column, 7 UI strings updated |
 | 2026-02-08 | PROJ-79 | Audit 1 | PASSED | 7344 passed | pending | All 7 goals verified, no issues found |
 | 2026-02-08 | PROJ-81 | Phase 1 | Complete | 7340 passed | pending | Fixed stats display + cost calculation, added _get_design_cost helper |
+| 2026-02-08 | PROJ-81 | Phase 2 | Complete | 7340 passed | pending | Resource column spacing 28→55px, header terminology "Build Queue - [name]" |
 
 ---
 

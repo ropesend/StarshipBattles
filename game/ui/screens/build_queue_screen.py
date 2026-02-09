@@ -345,6 +345,7 @@ class BuildQueueScreen:
         log_info(f"BuildQueue: Selected queue '{self.active_queue_source.display_name}'")
         self._refresh_queue_selector()
         self._refresh_queue_display()
+        self._update_queue_header()
 
     def _on_queue_toggled(self, index: int):
         """Handle ctrl+click queue toggle for multi-select.
@@ -381,6 +382,19 @@ class BuildQueueScreen:
 
         self._refresh_queue_selector()
         self._refresh_queue_display()
+        self._update_queue_header()
+
+    def _update_queue_header(self):
+        """Update build queue header to show active queue name.
+
+        PROJ-81: Header shows "Build Queue - [name]" when a queue is selected,
+        or just "Build Queue" when none/multi selected.
+        """
+        if self.active_queue_source is not None:
+            header_text = f"<b>Build Queue - {self.active_queue_source.display_name}</b>"
+        else:
+            header_text = "<b>Build Queue</b>"
+        self.queue_header_text.set_text(header_text)
 
     def _create_design_report_panel(self):
         """Create right column showing selected design information."""
@@ -455,10 +469,10 @@ class BuildQueueScreen:
             container=self.background
         )
 
-        # Header
-        ui.UITextBox(
+        # Header (PROJ-81: stored for dynamic update, text changed to "Build Queue")
+        self.queue_header_text = ui.UITextBox(
             relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
-            html_text="<b>Build Yard</b>",
+            html_text="<b>Build Queue</b>",
             manager=self.manager,
             container=self.build_queue_panel
         )
@@ -486,7 +500,7 @@ class BuildQueueScreen:
         )
         col_x += 50
 
-        # Resource icon columns
+        # Resource icon columns (PROJ-81: increased spacing from 28 to 55px)
         self.queue_column_positions = {"Item": 10, "Turns": 165}
         for resource in PLANET_RESOURCES:
             icon = self.resource_icons.get(resource)
@@ -498,7 +512,7 @@ class BuildQueueScreen:
                     container=self.build_queue_panel
                 )
             self.queue_column_positions[resource] = col_x
-            col_x += 28
+            col_x += 55
 
         # Scrollable queue - shifted down to accommodate header row
         self.queue_scrollable = ui.UIScrollingContainer(
@@ -850,7 +864,7 @@ class BuildQueueScreen:
                         else:
                             cost_text = f"{per_turn:.1f}"
                         ui.UILabel(
-                            relative_rect=pygame.Rect(col_x, 14, 28, 20),
+                            relative_rect=pygame.Rect(col_x, 14, 50, 20),
                             text=cost_text,
                             manager=self.manager,
                             container=item_panel
