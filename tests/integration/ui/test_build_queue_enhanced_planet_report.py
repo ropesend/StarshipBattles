@@ -76,6 +76,15 @@ def test_planet():
         'He': 5.0
     }
 
+    # Add resource data (PROJ-82)
+    planet.resources = {
+        "Metals": {"quantity": 250000, "quality": 85.0},
+        "Organics": {"quantity": 120000, "quality": 72.0},
+        "Vapors": {"quantity": 80000, "quality": 91.0},
+        "Radioactives": {"quantity": 45000, "quality": 43.0},
+        "Exotics": {"quantity": 12000, "quality": 67.0},
+    }
+
     return planet
 
 
@@ -110,6 +119,8 @@ def test_planet_report_panel_initializes(planet_report_panel):
     """Test that PlanetReportPanel creates without crashing."""
     assert planet_report_panel is not None
     assert planet_report_panel.planet is not None
+    # PROJ-82: Resource panel should also exist
+    assert planet_report_panel.resource_panel is not None
 
 
 def test_planet_portrait_exists(planet_report_panel):
@@ -244,8 +255,9 @@ def test_get_height_required_returns_valid_height(planet_report_panel):
     height = planet_report_panel.get_height_required()
 
     assert isinstance(height, (int, float)), "Height should be numeric"
-    assert height >= 300, f"Required height should be at least 300px, got {height}"
-    assert height <= 500, f"Required height should not exceed 500px, got {height}"
+    # PROJ-82: Height increased to accommodate resource panel (+100)
+    assert height >= 400, f"Required height should be at least 400px (350 + resource panel), got {height}"
+    assert height <= 600, f"Required height should not exceed 600px, got {height}"
 
 
 def test_panel_works_with_no_atmosphere(test_planet, mock_design_library):
@@ -350,3 +362,186 @@ def test_show_complexes_false(test_planet, mock_design_library):
     assert panel.detail_text is not None
 
     pygame.quit()
+
+
+# ============================================================================
+# PROJ-82: Resource Grid Tests
+# ============================================================================
+
+
+def test_resource_grid_exists(planet_report_panel):
+    """Test that resource grid panel is created and has items."""
+    # Resource panel should exist
+    assert planet_report_panel.resource_panel is not None
+    # Grid items should exist (icons + labels for 5 resources + 3 row labels)
+    assert len(planet_report_panel._resource_grid_items) > 0
+
+
+def test_resource_grid_shows_all_resources(test_planet, mock_design_library):
+    """Test that resource grid shows all 5 resource icons."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 500, 450),  # Taller to fit resource panel
+        planet=test_planet
+    )
+
+    # Should have icons for all 5 resources
+    assert len(panel._resource_icons) == 5
+    assert "Metals" in panel._resource_icons
+    assert "Organics" in panel._resource_icons
+    assert "Vapors" in panel._resource_icons
+    assert "Radioactives" in panel._resource_icons
+    assert "Exotics" in panel._resource_icons
+
+    pygame.quit()
+
+
+def test_resource_grid_with_production(test_planet, mock_design_library):
+    """Test that panel accepts production_rates parameter."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    production_rates = {"Metals": 100.0, "Organics": 50.0}
+
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 500, 450),
+        planet=test_planet,
+        production_rates=production_rates
+    )
+
+    # Should accept and store production rates
+    assert panel.production_rates == production_rates
+    assert panel.resource_panel is not None
+
+    pygame.quit()
+
+
+def test_resource_grid_no_production(test_planet, mock_design_library):
+    """Test that panel works without production_rates parameter."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 500, 450),
+        planet=test_planet
+        # No production_rates - should default to empty
+    )
+
+    # Should have empty production rates
+    assert panel.production_rates == {}
+    assert panel.resource_panel is not None
+
+    pygame.quit()
+
+
+def test_resource_grid_updates_on_planet_change(test_planet, mock_design_library):
+    """Test that resource grid updates when planet changes."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 500, 450),
+        planet=test_planet
+    )
+
+    # Create a different planet with different resources
+    new_planet = Planet(
+        name="Barren Rock",
+        location=HexCoord(10, 10),
+        orbit_distance=2,
+        mass=4.0e24,
+        radius=5000000,
+        surface_area=3.1e14,
+        density=5000,
+        surface_gravity=8.0,
+        surface_pressure=90000,
+        surface_temperature=280,
+        surface_water=0.5,
+        tectonic_activity=0.2,
+        magnetic_field=0.8,
+        planet_type=PlanetType.CONTINENTAL
+    )
+    new_planet.owner_id = 1
+    new_planet.id = 200
+    new_planet.resources = {
+        "Metals": {"quantity": 500000, "quality": 95.0},
+    }
+
+    # Update panel with new planet and production rates
+    new_rates = {"Metals": 200.0}
+    panel.update_planet(new_planet, production_rates=new_rates)
+
+    # Verify state updated
+    assert panel.planet == new_planet
+    assert panel.production_rates == new_rates
+    # Grid items should still exist
+    assert len(panel._resource_grid_items) > 0
+
+    pygame.quit()
+
+
+def test_resource_panel_no_resources(mock_design_library):
+    """Test that panel handles planet with empty resources dict."""
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    # Create planet with empty resources
+    empty_planet = Planet(
+        name="Empty World",
+        location=HexCoord(3, 3),
+        orbit_distance=1,
+        mass=2.0e24,
+        radius=4000000,
+        surface_area=2.0e14,
+        density=4000,
+        surface_gravity=6.0,
+        surface_pressure=50000,
+        surface_temperature=200,
+        surface_water=0.0,
+        tectonic_activity=0.0,
+        magnetic_field=0.5,
+        planet_type=PlanetType.CONTINENTAL
+    )
+    empty_planet.owner_id = 1
+    empty_planet.id = 300
+    empty_planet.resources = {}
+    empty_planet.atmosphere = {}
+
+    from game.ui.panels.planet_report_panel import PlanetReportPanel
+    panel = PlanetReportPanel(
+        manager=manager,
+        rect=pygame.Rect(0, 0, 500, 450),
+        planet=empty_planet
+    )
+
+    # Should not crash, grid should still exist with zero values
+    assert panel.resource_panel is not None
+    assert len(panel._resource_grid_items) > 0
+
+    pygame.quit()
+
+
+def test_resource_icons_loaded(planet_report_panel):
+    """Test that resource icons are loaded or fallback created."""
+    # All 5 resources should have icons
+    assert len(planet_report_panel._resource_icons) == 5
+
+    for resource_name, icon_surface in planet_report_panel._resource_icons.items():
+        assert isinstance(icon_surface, pygame.Surface)
+        assert icon_surface.get_width() == 24
+        assert icon_surface.get_height() == 24
