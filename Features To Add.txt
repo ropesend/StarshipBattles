@@ -1,7 +1,7 @@
 Features to add:
 ================
 
-Design Details panel on the right of the Design Workshop, and on the right of the build queue, should be be created by the same code, both should show the same things, the design workshop panel is wider ( enough for 2 columns), this is the correct layout.  The Build queue list can be narrower to allow for a wider right panel.
+Design Details panel on the right of the Design Workshop, and on the right of the build queue, should be be created by the same code, both should show the same things, the design workshop panel is wider ( enough for 2 columns), this is the correct layout.  The Build queue list can be narrower to allow for a wider right panel.  The panel for the Build Queues will not need the warnings or requirements panels.
 
 ================
 
@@ -25,9 +25,13 @@ Waypoint system - can be assigned to fleets, build queues.
  - Need to be able to assign waypoints to fleets and build queues
  - Need to be able to tag hexes as waypoints
 
+
+
 Warp - explicit command to move to a waypoint, then warp through it to the other side. - cannot be given to a fleed that can't warp
 
-Destroy Planet
+
+
+Destroy Planet - we need a new ability - destroy planet (should have a maximum size associated with it), and a new component (Planet Imploder)
 
 Destroy star
 

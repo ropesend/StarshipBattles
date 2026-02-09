@@ -1,6 +1,6 @@
-1)  (Build Queue) In the build queue, when multiple of the same compnent are in different layers pressing the + or - buttons to thr right do not nessesarily add/remove teh component from that layer, it may come from or go to another layer that already has one of the same components.
 
-2) Leader needs a name in Species Setup
+
+4) 
 
 16) (Fleet Details) In the Fleet Details panel on the lower right, the following should be shown/possible:
  - The total number of hexes that the fleet can travel
@@ -8,6 +8,14 @@
  - a list of all cargo - with quantities of each cargo item
  - a list of the current orders in the order that they will be completed
  
+
+
+
+
+
+
+Reported:
+
 We need to restructure the build queue, since there can be multiple build queues on a planet, and multiple build queues within a ship and fleet, when you go to the build queue you need te be able to seel the list of available build queues in that sector (hex) you can select one queue and see what is being constructed in that queue - this should behave almost identically to what we currently have.  You can select multiple queues, this won't show what is currently queued up, but it will allow adding to multiple queues at one time.  The added items will jest get added to teh end of each queue.  The list of build queues could become very long, so it should be a colum just to the right of the planet details panel, that extends from the top of the window to the bottom just above the bar that says close, this list will extend down to the right of the Available designs as well.  The current list of items in the build queue can be moved to the right and made more narrow.
 
 
@@ -28,8 +36,18 @@ Please go through every single button that is connected to the strategy layer, a
 The menue --> controls bnutton should be the way to get to changing the hotkeys.
 
 
-Reported:
+1)  In the Design Workshop, In the ship structure list when multiple of the same component are in different layers pressing the + or - buttons to the right do not nessesarily add/remove the component from that layer, it may come from or go to another layer that already has one of the same components.
 
+2) Leader needs a name in Species Setup
+
+3) Rework the build queue screen/system:
+- When I select a specific build queue from the build queues list in the Sector(hex) build Queue Screen, it needs to be indicated which I have selected
+- The Build Queues List should be renamed Build Yards - there are planetary yards (can only build planetary facilities, every planet defaults to having one) and tehr are Shipyards which can build anything if they are in the same sector(hex) as a planet.
+- Planetary yards can only build complexes for the planet that they are on, Ship Yards in a complex on a planet can only build complexes for the planet that they are on.  Ships with Ship Yards in the same sectora as multiple planets can can build complexes for any planet, Any time a icomplex is added to a ship yard build queue that is in a fleet, if there are multiple colonies in the sector then you need to specify which planet the item is built for.  We should be using the same code that is used to specify which planet is being colonized when a colony ship is sent to a sector with multiple planets.  The code will need to be reworked to make it more modular and generic, but both uses cases should be able to use the same code.
+- The Build Yards list needs to include the build rate of each queue, the list can be wider, there needs to be an easy way to select multiple build yards from the list to add multiple items
+- The items in the build Queue should show their current daily resource cost to construct.
+- there could be collumns and headers in the build queue list, you can use the resource icons for the productions cost headers
+- the current building does not appear to actually depend on teh cost of the vehicle
 1) In the New Game Setup, I need to be able to select number of star systems in the starting galaxy should be 25 to 150 (can be a slider)
 
 2) In the Race Setup, the window should be larger
