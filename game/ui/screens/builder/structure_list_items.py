@@ -16,7 +16,7 @@ ACTION_START_DRAG = 'start_drag'
 
 class IndividualComponentItem:
     """Row for a single component inside an expanded group."""
-    def __init__(self, ctx: ComponentItemContext, component, max_mass, y_pos, is_selected, is_last=False):
+    def __init__(self, ctx: ComponentItemContext, component, max_mass, y_pos, is_selected, is_last=False, layer_type=None):
         """
         Create an individual component row item.
 
@@ -27,8 +27,10 @@ class IndividualComponentItem:
             y_pos: Vertical position
             is_selected: Whether this item is selected
             is_last: Whether this is the last item in the group (affects tree line)
+            layer_type: The LayerType this component belongs to
         """
         self.component = component
+        self.layer_type = layer_type
         self.event_handler = ctx.event_handler
         self.is_selected = is_selected
         self.is_last = is_last
@@ -176,9 +178,9 @@ class IndividualComponentItem:
     def handle_event(self, event):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.remove_button:
-                return self.event_handler.handle_item_action(ACTION_REMOVE_INDIVIDUAL, self.component)
+                return self.event_handler.handle_item_action(ACTION_REMOVE_INDIVIDUAL, (self.component, self.layer_type))
             elif event.ui_element == self.add_button:
-                return self.event_handler.handle_item_action(ACTION_ADD_INDIVIDUAL, self.component)
+                return self.event_handler.handle_item_action(ACTION_ADD_INDIVIDUAL, (self.component, self.layer_type))
             elif event.ui_element == self.drag_button:
                 return self.event_handler.handle_item_action(ACTION_START_DRAG, self.component)
             elif event.ui_element == self.select_button:
@@ -191,7 +193,7 @@ class IndividualComponentItem:
 class LayerComponentItem:
     """Row representing a component group."""
     def __init__(self, ctx: ComponentItemContext, component, count, total_mass, total_pct, is_expanded,
-                 group_key, is_selected, y_pos):
+                 group_key, is_selected, y_pos, layer_type=None):
         """
         Create a component group row item.
 
@@ -205,8 +207,10 @@ class LayerComponentItem:
             group_key: Unique key for this component group
             is_selected: Whether this group is selected
             y_pos: Vertical position
+            layer_type: The LayerType this group belongs to
         """
         self.group_key = group_key
+        self.layer_type = layer_type
         self.event_handler = ctx.event_handler
         self.count = count
         self.is_selected = is_selected
@@ -332,9 +336,9 @@ class LayerComponentItem:
                 self.event_handler.handle_item_action(ACTION_TOGGLE_GROUP, self.group_key)
                 return ('refresh_ui', None)
             elif event.ui_element == self.remove_button:
-                return self.event_handler.handle_item_action(ACTION_REMOVE_GROUP, self.group_key)
+                return self.event_handler.handle_item_action(ACTION_REMOVE_GROUP, (self.group_key, self.layer_type))
             elif event.ui_element == self.add_button:
-                return self.event_handler.handle_item_action(ACTION_ADD_GROUP, self.group_key)
+                return self.event_handler.handle_item_action(ACTION_ADD_GROUP, (self.group_key, self.layer_type))
             elif event.ui_element == self.select_button:
                 return self.event_handler.handle_item_action(ACTION_SELECT_GROUP, self.group_key)
         return False

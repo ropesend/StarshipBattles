@@ -200,21 +200,20 @@ class WorkshopEventRouter:
         """Handle removing one component from a group.
 
         Args:
-            data: Tuple of (group_key, layer_type) for targeted deletion
+            data: Tuple of (group_key, layer_type) for targeted deletion,
+                  or just group_key for backwards compatibility.
         """
         gui = self.gui
         from game.ui.screens.builder.grouping_strategies import get_component_group_key
 
-        # Unpack data - now includes layer type for targeted deletion
-        if isinstance(data, tuple) and len(data) == 2 and not isinstance(data[0], str):
-            # New format: (group_key, layer_type)
+        # Unpack data - includes layer type for targeted deletion
+        if isinstance(data, tuple) and len(data) == 2:
             group_key, target_layer = data
         else:
-            # Backwards compatibility: data is just group_key
             group_key = data
             target_layer = None
 
-        # Find Last Component in this group to remove
+        # Find last component in this group to remove
         found_layer = None
         found_idx = -1
 
@@ -229,7 +228,7 @@ class WorkshopEventRouter:
                         found_idx = idx
                         break
         else:
-            # Fallback: search all layers (backwards compat)
+            # Fallback: search all layers
             for l_type, layers in gui.ship.layers.items():
                 comps = layers['components']
                 for idx in range(len(comps) - 1, -1, -1):
@@ -246,40 +245,77 @@ class WorkshopEventRouter:
             gui.update_stats()
     
     def _handle_remove_individual(self, data):
-        """Handle removing an individual component."""
+        """Handle removing an individual component.
+
+        Args:
+            data: Tuple of (component, layer_type) for targeted deletion,
+                  or just component for backwards compatibility.
+        """
         gui = self.gui
+
+        # Unpack layer-targeted data
+        if isinstance(data, tuple) and len(data) == 2:
+            comp, target_layer = data
+        else:
+            comp = data
+            target_layer = None
+
         removed = False
-        for l_type, layers in gui.ship.layers.items():
-            for idx, c in enumerate(layers['components']):
-                if c is data:
-                    gui.viewmodel.remove_component(l_type, idx)
-                    removed = True
-                    break
+        layers_to_search = [target_layer] if target_layer else list(gui.ship.layers.keys())
+        for l_type in layers_to_search:
+            if l_type in gui.ship.layers:
+                for idx, c in enumerate(gui.ship.layers[l_type]['components']):
+                    if c is comp:
+                        gui.viewmodel.remove_component(l_type, idx)
+                        removed = True
+                        break
             if removed:
                 break
-        
+
         # Remove from selection list if present
         if gui.selected_components:
-            gui.selected_components = [x for x in gui.selected_components if x[2] is not data]
+            gui.selected_components = [x for x in gui.selected_components if x[2] is not comp]
             gui.on_selection_changed(gui.selected_components)
-        
+
         gui.update_stats()
     
     def _handle_add_component(self, act_type, data):
-        """Handle adding a component (cloned from group or individual)."""
+        """Handle adding a component (cloned from group or individual).
+
+        Args:
+            act_type: 'add_individual' or 'add_group'
+            data: Tuple of (component_or_group_key, layer_type) for targeted addition,
+                  or just component/group_key for backwards compatibility.
+        """
         gui = self.gui
         target_comp = None
-        
+        target_layer = None
+
         if act_type == 'add_individual':
-            target_comp = data
+            if isinstance(data, tuple) and len(data) == 2:
+                target_comp, target_layer = data
+            else:
+                target_comp = data
         else:
-            # Find first component of group using ship helper
+            # add_group: unpack group_key and optional layer
+            if isinstance(data, tuple) and len(data) == 2:
+                group_key, target_layer = data
+            else:
+                group_key = data
+
+            # Find first component of group, preferring target layer
             from game.ui.screens.builder.grouping_strategies import get_component_group_key
-            for c in gui.ship.get_all_components():
-                if get_component_group_key(c) == data:
-                    target_comp = c
-                    break
-                    
+            if target_layer and target_layer in gui.ship.layers:
+                for c in gui.ship.layers[target_layer]['components']:
+                    if get_component_group_key(c) == group_key:
+                        target_comp = c
+                        break
+            if not target_comp:
+                for c in gui.ship.get_all_components():
+                    if get_component_group_key(c) == group_key:
+                        target_comp = c
+                        break
+
         if target_comp:
             # Clone
             new_comp = target_comp.clone()
@@ -289,14 +325,14 @@ class WorkshopEventRouter:
                 if nm:
                     nm.value = m.value
             new_comp.recalculate_stats()
-            
-            # Find layer of original using ship helper
-            target_layer = None
-            for l_type, comp in gui.ship.iter_components():
-                if comp is target_comp:
-                    target_layer = l_type
-                    break
-                    
+
+            # Use provided layer or find layer of original
+            if not target_layer:
+                for l_type, comp in gui.ship.iter_components():
+                    if comp is target_comp:
+                        target_layer = l_type
+                        break
+
             if target_layer:
                 success = gui.viewmodel.add_component_instance(new_comp, target_layer)
                 if success:

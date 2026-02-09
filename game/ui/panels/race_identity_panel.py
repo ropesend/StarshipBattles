@@ -70,6 +70,7 @@ class RaceIdentityPanel:
         # Text inputs
         self.race_name_input: Optional[pygame_gui.elements.UITextEntryLine] = None
         self.race_name_plural_input: Optional[pygame_gui.elements.UITextEntryLine] = None
+        self.leader_name_input: Optional[pygame_gui.elements.UITextEntryLine] = None
         self.faction_name_input: Optional[pygame_gui.elements.UITextEntryLine] = None
 
         # Dropdowns
@@ -225,6 +226,23 @@ class RaceIdentityPanel:
         )
         y += 32
 
+        # Leader Name
+        pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(20, y, 120, 22),
+            text="Leader Name:",
+            manager=self.ui_manager,
+            container=self.panel
+        )
+        self.leader_name_input = pygame_gui.elements.UITextEntryLine(
+            relative_rect=pygame.Rect(140, y, width - 160, 28),
+            manager=self.ui_manager,
+            container=self.panel,
+            placeholder_text="Name of the leader (e.g., Zara IV)"
+        )
+        if self.race_config.leader_name:
+            self.leader_name_input.set_text(self.race_config.leader_name)
+        y += 32
+
         # Society Type
         pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect(20, y, 120, 22),
@@ -372,6 +390,9 @@ class RaceIdentityPanel:
         if self.leader_title_dropdown:
             self.race_config.leader_title = self._get_dropdown_value(self.leader_title_dropdown)
 
+        if self.leader_name_input:
+            self.race_config.leader_name = self.leader_name_input.get_text()
+
         if self.society_type_dropdown:
             self.race_config.society_type = self._get_dropdown_value(self.society_type_dropdown)
 
@@ -391,6 +412,9 @@ class RaceIdentityPanel:
                 self.race_config.government_type
             )
             self._faction_name_overridden = (self.race_config.faction_name != auto and self.race_config.faction_name != "")
+
+        if self.leader_name_input:
+            self.leader_name_input.set_text(self.race_config.leader_name or "")
 
         # Set dropdowns - need to handle empty values
         self._set_dropdown_value(self.physical_type_dropdown, self.race_config.physical_type)

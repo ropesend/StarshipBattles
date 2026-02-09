@@ -87,6 +87,7 @@ class RaceConfig:
     government_type: str = ""  # From GOVERNMENT_TYPES
     government_organization: str = ""  # From GOVERNMENT_ORGANIZATIONS
     leader_title: str = ""  # From LEADER_TITLES
+    leader_name: str = ""  # Actual name of the leader (e.g., "Zara IV")
     physical_type: str = ""  # From PHYSICAL_TYPES
     society_type: str = ""  # From SOCIETY_TYPES
 
@@ -157,6 +158,7 @@ class RaceConfig:
             "government_type": self.government_type,
             "government_organization": self.government_organization,
             "leader_title": self.leader_title,
+            "leader_name": self.leader_name,
             "physical_type": self.physical_type,
             "society_type": self.society_type,
             # Visuals
@@ -204,6 +206,7 @@ class RaceConfig:
             government_type=data.get("government_type", ""),
             government_organization=data.get("government_organization", ""),
             leader_title=data.get("leader_title", ""),
+            leader_name=data.get("leader_name", ""),
             physical_type=data.get("physical_type", ""),
             society_type=data.get("society_type", ""),
             # Visuals

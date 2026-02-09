@@ -23,6 +23,7 @@ def mock_race_config():
     config.government_type = ""
     config.government_organization = ""
     config.leader_title = ""
+    config.leader_name = ""
     config.physical_type = ""
     config.society_type = ""
     return config
@@ -365,3 +366,52 @@ class TestUpdateLabels:
 
             # Should not raise
             panel.update_labels()
+
+
+# =============================================================================
+# Test: Leader Name Field (BUG-72)
+# =============================================================================
+
+class TestLeaderNameField:
+    """Tests for leader_name text input (BUG-72)."""
+
+    def test_identity_panel_has_leader_name_input(self):
+        """RaceIdentityPanel has leader_name_input attribute."""
+        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+
+        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
+            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
+            panel._init_empty_refs()
+            assert hasattr(panel, 'leader_name_input')
+
+    def test_update_config_reads_leader_name(self, mock_race_config):
+        """update_config reads leader_name from text input."""
+        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+
+        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
+            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
+            panel.race_config = mock_race_config
+            panel._init_empty_refs()
+
+            panel.leader_name_input = MagicMock()
+            panel.leader_name_input.get_text.return_value = "Zara IV"
+
+            panel.update_config()
+
+            assert mock_race_config.leader_name == "Zara IV"
+
+    def test_set_from_config_populates_leader_name(self, mock_race_config):
+        """set_from_config sets leader_name text input."""
+        from game.ui.panels.race_identity_panel import RaceIdentityPanel
+
+        with patch.object(RaceIdentityPanel, '__init__', lambda self, *args, **kwargs: None):
+            panel = RaceIdentityPanel.__new__(RaceIdentityPanel)
+            mock_race_config.leader_name = "Emperor Zog"
+            panel.race_config = mock_race_config
+            panel._init_empty_refs()
+
+            panel.leader_name_input = MagicMock()
+
+            panel.set_from_config()
+
+            panel.leader_name_input.set_text.assert_called_with("Emperor Zog")

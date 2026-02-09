@@ -215,7 +215,8 @@ class LayerPanel(DropTarget):
                             is_expanded=is_expanded,
                             group_key=group_key,
                             is_selected=is_selected_group,
-                            y_pos=y_pos
+                            y_pos=y_pos,
+                            layer_type=l_type
                         )
                         self.ui_cache[item_key] = item
                         
@@ -253,7 +254,8 @@ class LayerPanel(DropTarget):
                                     max_mass=total_max_mass,
                                     y_pos=y_pos,
                                     is_selected=is_sel_ind,
-                                    is_last=is_last
+                                    is_last=is_last,
+                                    layer_type=l_type
                                  )
                                  self.ui_cache[ind_key] = ind_item
                                  

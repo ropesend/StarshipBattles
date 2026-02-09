@@ -490,89 +490,114 @@ class BuilderScreen:
                     self.layer_panel.rebuild()
                 
             elif act_type == 'remove_group':
-                 # User requested delete on group.
-                 # Updated Requirement: Pressing - should delete ONE of the components.
-                 
-                 # data is group_key
+                 # Pressing - should delete ONE of the components from the correct layer.
                  from game.ui.screens.builder.grouping_strategies import get_component_group_key
-                 
-                 # Find Last Component in this group to remove
+
+                 # Unpack layer-targeted data
+                 if isinstance(data, tuple) and len(data) == 2:
+                     group_key, target_layer = data
+                 else:
+                     group_key = data
+                     target_layer = None
+
                  found_layer = None
                  found_idx = -1
-                 
-                 # Iterate backwards to find one instance
-                 for l_type, layers in self.ship.layers.items():
-                    # Check safe iteration
-                    comps = layers['components']
-                    for idx in range(len(comps)-1, -1, -1):
-                         c = comps[idx]
-                         if get_component_group_key(c) == data:
-                             found_layer = l_type
-                             found_idx = idx
-                             break
-                    if found_layer: break
-                 
+
+                 if target_layer is not None:
+                     if target_layer in self.ship.layers:
+                         comps = self.ship.layers[target_layer]['components']
+                         for idx in range(len(comps)-1, -1, -1):
+                             c = comps[idx]
+                             if get_component_group_key(c) == group_key:
+                                 found_layer = target_layer
+                                 found_idx = idx
+                                 break
+                 else:
+                     for l_type, layers in self.ship.layers.items():
+                         comps = layers['components']
+                         for idx in range(len(comps)-1, -1, -1):
+                             c = comps[idx]
+                             if get_component_group_key(c) == group_key:
+                                 found_layer = l_type
+                                 found_idx = idx
+                                 break
+                         if found_layer: break
+
                  if found_layer:
                      self.ship.remove_component(found_layer, found_idx)
-                     # self.on_selection_changed(None) # Don't clear selection on partial remove?
-                     # Better to clear if we removed the selected one.
                      self.update_stats()
-                 
+
             elif act_type == 'remove_individual':
-                 # data is component
+                 # Unpack layer-targeted data
+                 if isinstance(data, tuple) and len(data) == 2:
+                     comp, target_layer = data
+                 else:
+                     comp = data
+                     target_layer = None
+
                  removed = False
-                 for l_type, layers in self.ship.layers.items():
-                     for idx, c in enumerate(layers['components']):
-                         if c is data:
-                             self.ship.remove_component(l_type, idx)
-                             removed = True
-                             break
+                 layers_to_search = [target_layer] if target_layer else list(self.ship.layers.keys())
+                 for l_type in layers_to_search:
+                     if l_type in self.ship.layers:
+                         for idx, c in enumerate(self.ship.layers[l_type]['components']):
+                             if c is comp:
+                                 self.ship.remove_component(l_type, idx)
+                                 removed = True
+                                 break
                      if removed:
                          break
-                 
-                 # Remove from selection list if present
+
                  if self.selected_components:
-                      self.selected_components = [x for x in self.selected_components if x[2] is not data]
-                      self.on_selection_changed(self.selected_components) # Update primary
-                 
+                      self.selected_components = [x for x in self.selected_components if x[2] is not comp]
+                      self.on_selection_changed(self.selected_components)
+
                  self.update_stats()
-                 
+
             elif act_type == 'add_group' or act_type == 'add_individual':
-                 # Clone and Add one instance
-                 # data is group_key (for group) or component (for individual)
-                 
+                 # Clone and add one instance to the correct layer.
                  target_comp = None
-                 
+                 target_layer = None
+
                  if act_type == 'add_individual':
-                     target_comp = data
+                     if isinstance(data, tuple) and len(data) == 2:
+                         target_comp, target_layer = data
+                     else:
+                         target_comp = data
                  else:
-                     # Find first component of group
+                     if isinstance(data, tuple) and len(data) == 2:
+                         group_key, target_layer = data
+                     else:
+                         group_key = data
+
                      from game.ui.screens.builder.grouping_strategies import get_component_group_key
-                     for layers in self.ship.layers.values():
-                         for c in layers['components']:
-                             if get_component_group_key(c) == data:
+                     if target_layer and target_layer in self.ship.layers:
+                         for c in self.ship.layers[target_layer]['components']:
+                             if get_component_group_key(c) == group_key:
                                  target_comp = c
                                  break
-                         if target_comp: break
-                         
+                     if not target_comp:
+                         for layers in self.ship.layers.values():
+                             for c in layers['components']:
+                                 if get_component_group_key(c) == group_key:
+                                     target_comp = c
+                                     break
+                             if target_comp: break
+
                  if target_comp:
-                     # Clone
                      new_comp = target_comp.clone()
                      for m in target_comp.modifiers:
                         new_comp.add_modifier(m.definition.id)
                         nm = new_comp.get_modifier(m.definition.id)
                         if nm: nm.value = m.value
                      new_comp.recalculate_stats()
-                     
-                     # Find layer of original
-                     target_layer = None
-                     for l_type, layers in self.ship.layers.items():
-                         if target_comp in layers['components']:
-                             target_layer = l_type
-                             break
-                             
+
+                     if not target_layer:
+                         for l_type, layers in self.ship.layers.items():
+                             if target_comp in layers['components']:
+                                 target_layer = l_type
+                                 break
+
                      if target_layer:
-                        # PROJ-43: Use ValidationService instead of direct VALIDATOR import
                         validation = self._validation_service.validate_addition(self.ship, new_comp, target_layer)
                         if validation.is_valid:
                             self.ship.add_component(new_comp, target_layer)
