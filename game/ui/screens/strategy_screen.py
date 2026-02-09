@@ -293,6 +293,9 @@ class StrategyScreen:
         self.turn_processing = True
         log_info("Processing Turn...")
 
+        # Capture turn number before processing (events are logged at this turn)
+        processed_turn = self._facade.get_turn_number()
+
         # Force Render "Processing" state
         screen = pygame.display.get_surface()
         if screen:
@@ -319,7 +322,7 @@ class StrategyScreen:
         self.turn_processing = False
 
         # PROJ-77: Show event log if there are events for this turn
-        turn_events = self._facade.get_turn_events()
+        turn_events = self._facade.get_turn_events(turn=processed_turn)
         if turn_events:
             self.ui.open_event_log_with_events(turn_events)
 

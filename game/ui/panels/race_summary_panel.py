@@ -425,7 +425,9 @@ class RaceSummaryPanel:
     def _format_homeworld_summary(self) -> str:
         """Format homeworld type."""
         if self.race_config.homeworld_type:
-            return f"Homeworld: {self.race_config.homeworld_type}"
+            # Convert preset ID (e.g. "CONTINENTAL") to display name (e.g. "Continental")
+            display_name = self.race_config.homeworld_type.replace("_", " ").title()
+            return f"Homeworld: {display_name}"
         return "Homeworld: Custom"
 
     def _format_water_summary(self) -> str:

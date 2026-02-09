@@ -30,7 +30,7 @@ class PlanetListWindow(UIWindow):
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
-        self.detail_panel_width = 600
+        self.detail_panel_width = 580
         self.panel_margin = 20
         # --- State ---
         self.all_planets = gather_planets(galaxy, empire)

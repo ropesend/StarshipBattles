@@ -234,6 +234,12 @@ class Game:
             session.save_path = save_path
             log_info(f"Initial save created: {save_path}")
 
+            # Pre-build homeworld complexes (same as quickstart)
+            from game.strategy.quickstart_builder import QuickstartBuilder
+            empire_ids = [e.id for e in session.empires]
+            QuickstartBuilder.copy_quickstart_designs(save_path, empire_ids)
+            QuickstartBuilder.spawn_initial_complexes(save_path, session)
+
             # Create strategy scene with new session
             self.strategy_scene = StrategyScreen(self.width, self.height, session=session, scene_callback=self._handle_strategy_action, input_mapper=self.input_mapper)
             self._switch_scene(GameState.STRATEGY, self.strategy_scene)
