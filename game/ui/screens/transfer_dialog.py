@@ -131,7 +131,7 @@ class TransferDialog(UIWindow):
         # Default select source_fleet if possible
         starting_option = ""
         for s in self.available_sources:
-            if s['type'] == 'fleet' and s['id'] == self.source_fleet.fleet_id:
+            if s['type'] == 'fleet' and s['id'] == self.source_fleet.id:
                 starting_option = s['label']
                 break
         
