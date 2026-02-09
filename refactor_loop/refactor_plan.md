@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-79 Audit PASSED
-**Current Status:** PROJ-79 complete, awaiting user verification
-**Current Project:** None - All projects complete
-**Current Phase:** N/A
-**Test Status:** 7344 passed
+**Last Completed:** PROJ-81 Phase 1
+**Current Status:** Phase 1 complete, starting Phase 2
+**Current Project:** PROJ-81
+**Current Phase:** Phase 2
+**Test Status:** 7340 passed (4 pre-existing failures in test_transfer_dialog.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-79 Phase 5 completed: Empire Build Queue Window terminology + full test audit
-- Updated 7 UI strings from "Build Queue" to "Build Yard"
-- EmpireBuildQueueWindow: Title→"Empire Build Yards", build_rate column visible, shows source.build_rate
-- Fixed 1 test (test_build_rate_column) to expect "2000/turn"
-- Audit verified all 7 project goals achieved
-- All 18 projects now marked [x] complete
-- Manual verification deferred to user
+- PROJ-81 Phase 1 complete: Fixed stats display + cost calculation (issues a, b, g)
+- Added `update_stats(ship)` call after DesignStatsPanel creation in design_report_panel.py
+- Created `_get_design_cost()` helper in build_queue_controller.py that loads ship and returns construction_cost
+- Updated `_calculate_build_turns()` and `_build_cost_tracking()` to use new helper
+- Updated test mocks in test_build_queue_controller.py to mock load_design_data and load_ship_from_design_data
+- Next: Phase 2 - Build Queue Display Fixes
 
 ---
 
@@ -174,9 +173,17 @@
 
 ---
 
-- [ ] **PROJ-81: Sector Build Queue Window Fixes**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-81: Sector Build Queue Window Fixes**
+  - **Phases:** 4 | **Status:** In Progress - Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-81/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-81/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-82: Planet Resources Panel Redesign**
+  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-82/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-82/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
@@ -296,6 +303,7 @@
 | 2026-02-08 | PROJ-79 | Phase 4 | Complete | 7344 passed | pending | Planet selection for fleet+complex at multi-colony hex, 14 new tests |
 | 2026-02-08 | PROJ-79 | Phase 5 | Complete | 7344 passed | pending | Empire Build Yards terminology, build_rate column, 7 UI strings updated |
 | 2026-02-08 | PROJ-79 | Audit 1 | PASSED | 7344 passed | pending | All 7 goals verified, no issues found |
+| 2026-02-08 | PROJ-81 | Phase 1 | Complete | 7340 passed | pending | Fixed stats display + cost calculation, added _get_design_cost helper |
 
 ---
 

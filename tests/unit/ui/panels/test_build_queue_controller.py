@@ -256,7 +256,11 @@ class TestBuildTimeCalculation:
     """PROJ-79 Phase 2: Tests for build time calculation from resource cost."""
 
     def _make_controller_with_designs(self, designs: list) -> BuildQueueController:
-        """Create a controller with mock design library returning given designs."""
+        """Create a controller with mock design library returning given designs.
+
+        Updated in PROJ-81: Mocks load_design_data and load_ship_from_design_data
+        to return ships with construction_cost (used by _get_design_cost).
+        """
         build_context = MagicMock()
         build_context.context_type = "planet"
         build_context.has_space_shipyard = True
@@ -265,7 +269,33 @@ class TestBuildTimeCalculation:
 
         mock_library = MagicMock()
         mock_library.scan_designs.return_value = designs
+
+        # Build design_id -> resource_cost map for mocking
+        design_costs = {}
+        for d in designs:
+            design_costs[d.design_id] = d.resource_cost
+
+        # Mock load_design_data to return a dict with design_id
+        def mock_load_design_data(design_id):
+            if design_id in design_costs:
+                return {"design_id": design_id}
+            return None
+        mock_library.load_design_data.side_effect = mock_load_design_data
+
+        # Mock load_ship_from_design_data to return a ship with construction_cost
         mock_loader = MagicMock()
+        def mock_load_ship(design_data, x, y):
+            if design_data is None:
+                return None
+            design_id = design_data.get("design_id")
+            cost = design_costs.get(design_id)
+            if cost is None:
+                return None
+            ship = MagicMock()
+            ship.construction_cost = cost
+            return ship
+        mock_loader.load_ship_from_design_data.side_effect = mock_load_ship
+
         mock_report = MagicMock()
         on_changed = MagicMock()
 
@@ -406,11 +436,18 @@ class TestBuildTimeCalculation:
 
         mock_library = MagicMock()
         mock_library.scan_designs.return_value = [design]
+        mock_library.load_design_data.return_value = {"design_id": "factory"}
+
+        # Mock loader to return ship with construction_cost
+        mock_loader = MagicMock()
+        mock_ship = MagicMock()
+        mock_ship.construction_cost = {"Metals": 4000}
+        mock_loader.load_ship_from_design_data.return_value = mock_ship
 
         controller = BuildQueueController(
             build_context=build_context,
             design_library=mock_library,
-            design_loader=MagicMock(),
+            design_loader=mock_loader,
             design_report=MagicMock(),
             on_queue_changed=MagicMock(),
         )

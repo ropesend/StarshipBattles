@@ -131,6 +131,9 @@ class DesignReportPanel:
             show_requirements=False
         )
 
+        # Populate stat values (panel only builds layout with "--" placeholders)
+        self._stats_panel.update_stats(ship)
+
         # Sync rows_map for backward compat with tests
         self.rows_map = self._stats_panel.rows_map
 

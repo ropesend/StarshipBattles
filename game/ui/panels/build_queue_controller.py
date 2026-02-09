@@ -167,6 +167,32 @@ class BuildQueueController:
         self.on_queue_changed()
         log_info(f"Build queue category changed to: {category}")
 
+    def _get_design_cost(self, design_id: str) -> Dict[str, int]:
+        """Load design as ship and return its construction cost.
+
+        This loads the design, creates a ship object (which triggers
+        ShipStatsCalculator.recalculate_stats()), and extracts the
+        construction_cost field. This is more reliable than reading
+        from design metadata which may not have cost data.
+
+        Args:
+            design_id: ID of the design to get cost for.
+
+        Returns:
+            Dict of resource type -> amount, empty dict on error.
+        """
+        try:
+            design_data = self.design_library.load_design_data(design_id)
+            if design_data is None:
+                return {}
+            ship = self.design_loader.load_ship_from_design_data(design_data, 0, 0)
+            if ship is None:
+                return {}
+            return dict(ship.construction_cost) if ship.construction_cost else {}
+        except (OSError, ValueError, KeyError) as e:
+            log_warning(f"Failed to load design cost for {design_id}: {e}")
+            return {}
+
     def _calculate_build_turns(self, design_id: str, build_rate: float) -> int:
         """Calculate build turns from design resource cost and build rate.
 
@@ -179,11 +205,10 @@ class BuildQueueController:
         Returns:
             Number of turns required to build the design.
         """
-        designs = self.design_library.scan_designs()
-        design = next((d for d in designs if d.design_id == design_id), None)
-        if not design or not design.resource_cost:
+        cost = self._get_design_cost(design_id)
+        if not cost:
             return 1
-        max_cost = max(design.resource_cost.values()) if design.resource_cost else 0
+        max_cost = max(cost.values()) if cost else 0
         if max_cost <= 0:
             return 1
         return max(1, math.ceil(max_cost / build_rate))
@@ -198,9 +223,7 @@ class BuildQueueController:
         Returns:
             Dict with total_cost, cost_per_tick, resources_consumed, ticks_in_current_turn.
         """
-        designs = self.design_library.scan_designs()
-        design = next((d for d in designs if d.design_id == design_id), None)
-        total_cost = dict(design.resource_cost) if design and design.resource_cost else {}
+        total_cost = self._get_design_cost(design_id)
         total_ticks = turns * 100
         cost_per_tick = {res: amount / total_ticks for res, amount in total_cost.items()} if total_ticks > 0 else {}
         return {
