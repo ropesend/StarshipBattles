@@ -30,6 +30,8 @@ class TestBug04Display:
         """
         Reproduce BUG-04: When `rebuild_stats` is called (due to new resource keys),
         the stats display remains at "--" because update is not called.
+
+        PROJ-80: Stats logic now delegated to DesignStatsPanel.needs_rebuild().
         """
         # All patches applied inside the test to avoid circular import at decorator time
         # The circular import chain is: ui.builder -> game.ui -> builder_screen -> ui.builder
@@ -40,7 +42,11 @@ class TestBug04Display:
              patch('game.ui.screens.builder.right_panel.UITextBox'), \
              patch('game.ui.screens.builder.right_panel.UIImage'), \
              patch('game.ui.screens.builder.right_panel.pygame_gui.elements.UIScrollingContainer'), \
+             patch('game.ui.panels.design_stats_panel.UILabel'), \
+             patch('game.ui.panels.design_stats_panel.UITextBox'), \
+             patch('game.ui.panels.design_stats_panel.UIScrollingContainer'), \
              patch('game.ui.screens.builder.stats_config.get_logistics_rows') as mock_get_inv, \
+             patch('game.ui.screens.builder.stats_config.get_construction_rows', return_value=[]), \
              patch('game.ui.screens.builder.stats_config.STATS_CONFIG', new={}), \
              patch('game.ui.screens.builder.right_panel.BuilderRightPanel.update_portrait_image'):
 
@@ -60,53 +66,29 @@ class TestBug04Display:
             panel = BuilderRightPanel(mock_builder, manager, rect)
 
             # Let's spy on update_stats_display
-            with patch.object(panel, 'update_stats_display', wraps=panel.update_stats_display) as spy_update:
-                with patch.object(panel, 'rebuild_stats', wraps=panel.rebuild_stats) as spy_rebuild:
+            with patch.object(panel, 'update_stats_display') as spy_update:
+                # PROJ-80: Now we need to patch stats_panel.needs_rebuild() and stats_panel.rebuild()
+                with patch.object(panel.stats_panel, 'needs_rebuild', return_value=False) as spy_needs_rebuild:
+                    with patch.object(panel.stats_panel, 'rebuild') as spy_panel_rebuild:
 
-                    # 1. Trigger update with SAME keys (should call update_stats_display directly)
-                    # mock_get_inv still returns ["power"]
-                    panel.current_logistics_keys = {"power"}
-                    # Identity 1: StatRow
-                    row_mock.definition.get_status.return_value = (True, "")
-                    row_mock.definition.get_value.return_value = 100
-                    # Identity 2: Definition
-                    row_mock.get_status.return_value = (True, "")
-                    row_mock.get_value.return_value = 100
-                    row_mock.key = "power"  # Needed for key access
+                        # 1. Trigger update with SAME keys (needs_rebuild returns False)
+                        panel.on_ship_updated(mock_builder.ship)
 
-                    panel.rows_map = {"power": row_mock}  # Fake row map
-
-                    panel.on_ship_updated(mock_builder.ship)
-
-                    spy_update.assert_called()
-                    spy_rebuild.assert_not_called()
-
-                    spy_update.reset_mock()
-                    spy_rebuild.reset_mock()
-
-                    # 2. Trigger update with NEW keys (should call rebuild_stats)
-                    # Change return value
-                    new_row = MagicMock()
-                    new_row.key = "fuel"
-                    # Identity: Definition (only)
-                    new_row.get_status.return_value = (True, "")
-                    new_row.get_value.return_value = 50
-
-                    mock_get_inv.return_value = [row_mock, new_row]  # Power + Fuel
-
-                    # This should trigger rebuild because {"power", "fuel"} != {"power"}
-                    panel.on_ship_updated(mock_builder.ship)
-
-                    spy_rebuild.assert_called()
-
-                    # THE BUG: update_stats_display should be called AFTER rebuild (or inside it)
-                    # Currently it returns early.
-                    # Note: setup_stats (called by rebuild) does NOT call update_stats_display.
-                    # So spy_update should NOT be called if the bug exists.
-
-                    try:
                         spy_update.assert_called()
-                    except AssertionError:
-                        # This confirms the bug!
-                        print("\nCONFIRMED: update_stats_display was NOT called after rebuild_stats.")
-                        raise
+                        spy_panel_rebuild.assert_not_called()
+
+                        spy_update.reset_mock()
+                        spy_panel_rebuild.reset_mock()
+
+                # 2. Trigger update with NEW keys (needs_rebuild returns True)
+                with patch.object(panel.stats_panel, 'needs_rebuild', return_value=True) as spy_needs_rebuild:
+                    with patch.object(panel.stats_panel, 'rebuild') as spy_panel_rebuild:
+
+                        # This should trigger rebuild because needs_rebuild returns True
+                        panel.on_ship_updated(mock_builder.ship)
+
+                        spy_panel_rebuild.assert_called()
+
+                        # THE BUG FIX: update_stats_display should ALWAYS be called,
+                        # even after rebuild, to populate the values
+                        spy_update.assert_called()

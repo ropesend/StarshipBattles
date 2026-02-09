@@ -49,31 +49,66 @@ class TestUIDynamicUpdate:
     @patch('pygame_gui.elements.UILabel')
     def test_dynamic_row_addition(self, mock_label, mock_entry, mock_drop, mock_box, mock_img, mock_scroll_container):
         """Test that adding a resource triggers a UI rebuild to show the new row."""
-
-        # PROJ-46/51: Import path updated from ui.builder.right_panel
-        import game.ui.screens.builder.right_panel
+        import pygame_gui.elements
         import importlib
         import sys
-        if 'game.ui.screens.builder.right_panel' in sys.modules:
-            importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
-        # 1. Create Panel with NO resources (ensure ship is empty initially)
-        self.builder.ship.resources.reset_stats()
+        # Manually patch the module attribute to ensure it sticks
+        orig_label = pygame_gui.elements.UILabel
+        orig_img = pygame_gui.elements.UIImage
+        orig_box = pygame_gui.elements.UITextBox
+        orig_drop = pygame_gui.elements.UIDropDownMenu
+        orig_entry = pygame_gui.elements.UITextEntryLine
+        orig_scroll = pygame_gui.elements.UIScrollingContainer
 
-        panel = BuilderRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
+        pygame_gui.elements.UILabel = MagicMock()
+        pygame_gui.elements.UIImage = MagicMock()
+        pygame_gui.elements.UITextBox = MagicMock()
+        pygame_gui.elements.UIDropDownMenu = MagicMock()
+        pygame_gui.elements.UITextEntryLine = MagicMock()
+        pygame_gui.elements.UIScrollingContainer = MagicMock()
 
-        # Confirm no fuel rows
-        assert 'max_fuel' not in panel.rows_map
+        try:
+            # Reload design_stats_panel first (it's imported by right_panel)
+            if 'game.ui.panels.design_stats_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.panels.design_stats_panel'])
+            if 'game.ui.screens.builder.right_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
-        # 2. Add Resource (Simulate adding a component)
-        # We need to simulate the ship logic that adds capacity.
-        # Since we use real Ship logic, we can just register storage directly on the registry,
-        # mimicking what ShipStatsCalculator would do.
-        self.builder.ship.resources.register_storage('fuel', 100)
+            from game.ui.screens.builder.right_panel import BuilderRightPanel as ReloadedRightPanel
 
-        # 3. Trigger Update
-        panel.on_ship_updated(self.builder.ship)
+            # 1. Create Panel with NO resources (ensure ship is empty initially)
+            self.builder.ship.resources.reset_stats()
 
-        # 4. Verify Row Exists
-        # This checks that on_ship_updated rebuilds the structure when keys change
-        assert 'max_fuel' in panel.rows_map, "Fuel row should appear after adding fuel storage"
+            panel = ReloadedRightPanel(self.builder, self.manager, pygame.Rect(0,0,400,600))
+
+            # Confirm no fuel rows
+            assert 'max_fuel' not in panel.rows_map
+
+            # 2. Add Resource (Simulate adding a component)
+            # We need to simulate the ship logic that adds capacity.
+            # Since we use real Ship logic, we can just register storage directly on the registry,
+            # mimicking what ShipStatsCalculator would do.
+            self.builder.ship.resources.register_storage('fuel', 100)
+
+            # 3. Trigger Update
+            panel.on_ship_updated(self.builder.ship)
+
+            # 4. Verify Row Exists
+            # This checks that on_ship_updated rebuilds the structure when keys change
+            assert 'max_fuel' in panel.rows_map, "Fuel row should appear after adding fuel storage"
+
+        finally:
+            # Restore
+            pygame_gui.elements.UILabel = orig_label
+            pygame_gui.elements.UIImage = orig_img
+            pygame_gui.elements.UITextBox = orig_box
+            pygame_gui.elements.UIDropDownMenu = orig_drop
+            pygame_gui.elements.UITextEntryLine = orig_entry
+            pygame_gui.elements.UIScrollingContainer = orig_scroll
+
+            # Re-import to clean up for other tests
+            if 'game.ui.panels.design_stats_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.panels.design_stats_panel'])
+            if 'game.ui.screens.builder.right_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])

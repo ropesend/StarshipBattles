@@ -67,6 +67,9 @@ class TestStatsRender:
         pygame_gui.elements.UIScrollingContainer = MagicMock()
 
         try:
+            # Reload design_stats_panel first (it's imported by right_panel)
+            if 'game.ui.panels.design_stats_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.panels.design_stats_panel'])
             if 'game.ui.screens.builder.right_panel' in sys.modules:
                 importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
@@ -77,7 +80,14 @@ class TestStatsRender:
 
             # Verify Sections exist
             assert 'mass' in panel.rows_map
-            # ...
+            assert 'max_speed' in panel.rows_map
+            assert 'shield_regen' in panel.rows_map
+            assert 'emissive_armor' in panel.rows_map
+            assert 'targeting' in panel.rows_map
+            assert 'crew_required' in panel.rows_map
+
+            # Verify update call
+            panel.update_stats_display(self.builder.ship)
 
         finally:
             # Restore
@@ -88,30 +98,11 @@ class TestStatsRender:
             pygame_gui.elements.UITextEntryLine = orig_entry
             pygame_gui.elements.UIScrollingContainer = orig_scroll
 
-        # Re-import to clean up for other tests?
-        if 'ui.builder.right_panel' in sys.modules:
-             importlib.reload(sys.modules['ui.builder.right_panel'])
-
-        # Verify Sections exist
-        assert 'mass' in panel.rows_map
-        assert 'max_speed' in panel.rows_map
-        assert 'shield_regen' in panel.rows_map
-        assert 'emissive_armor' in panel.rows_map
-        assert 'targeting' in panel.rows_map
-        assert 'crew_required' in panel.rows_map
-
-        # Verify update call
-        panel.update_stats_display(self.builder.ship)
-
-        # Check if rows updated
-        # Since StatRow uses the injected UILabel (which is now a Mock due to patch),
-        # accessing panel.rows_map['mass'].label will give a Mock instance.
-        # We can verify set_text was called?
-        # StatRow calls self.label.set_text if visible.
-        # But wait, StatRow is ALSO defined in right_panel, but it imports UILabel from pygame_gui.groups.
-        # The Patch targets 'ui.builder.right_panel.UILabel'.
-        # Since StatRow is in the same file, it uses the global symbol UILabel which we patched.
-        # So yes, StatRow.label is a Mock.
+            # Re-import to clean up for other tests
+            if 'game.ui.panels.design_stats_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.panels.design_stats_panel'])
+            if 'game.ui.screens.builder.right_panel' in sys.modules:
+                importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
     @patch('pygame_gui.elements.UIScrollingContainer')
     @patch('pygame_gui.elements.UIImage')
@@ -140,8 +131,11 @@ class TestStatsRender:
          pygame_gui.elements.UIScrollingContainer = MagicMock()
 
          try:
-             if 'ui.builder.right_panel' in sys.modules:
-                 importlib.reload(sys.modules['ui.builder.right_panel'])
+             # Reload design_stats_panel first (it's imported by right_panel)
+             if 'game.ui.panels.design_stats_panel' in sys.modules:
+                 importlib.reload(sys.modules['game.ui.panels.design_stats_panel'])
+             if 'game.ui.screens.builder.right_panel' in sys.modules:
+                 importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])
 
              from game.ui.screens.builder.right_panel import BuilderRightPanel
 
@@ -160,5 +154,8 @@ class TestStatsRender:
              pygame_gui.elements.UITextEntryLine = orig_entry
              pygame_gui.elements.UIScrollingContainer = orig_scroll
 
-             if 'ui.builder.right_panel' in sys.modules:
-                 importlib.reload(sys.modules['ui.builder.right_panel'])
+             # Re-import to clean up for other tests
+             if 'game.ui.panels.design_stats_panel' in sys.modules:
+                 importlib.reload(sys.modules['game.ui.panels.design_stats_panel'])
+             if 'game.ui.screens.builder.right_panel' in sys.modules:
+                 importlib.reload(sys.modules['game.ui.screens.builder.right_panel'])

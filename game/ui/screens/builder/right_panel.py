@@ -3,6 +3,7 @@
 Displays ship statistics and configuration options.
 
 PROJ-43: Now uses VehicleClassService instead of direct VEHICLE_CLASSES import.
+PROJ-80: Stats display delegated to shared DesignStatsPanel.
 """
 import pygame
 import pygame_gui
@@ -11,49 +12,7 @@ from pygame_gui.core import UIElement
 
 from game.ai.strategy_manager import StrategyManager
 from game.core.logger import log_warning
-
-class StatRow:
-    """Helper class to manage a single statistic row (Label | Value | Unit) with caching."""
-    def __init__(self, key, label_text, manager, container, x, y, width):
-        self.key = key
-        # Layout: Label 50%, Value 30%, Unit 20%
-        lbl_w = int(width * 0.50)
-        val_w = int(width * 0.30)
-        unit_w = width - lbl_w - val_w
-        
-        self.label = UILabel(pygame.Rect(x, y, lbl_w, 20), f"{label_text}:", 
-                           manager=manager, container=container, object_id="#stat_label")
-        self.value = UILabel(pygame.Rect(x + lbl_w, y, val_w, 20), "--", 
-                           manager=manager, container=container, object_id="#stat_value")
-        self.unit = UILabel(pygame.Rect(x + lbl_w + val_w, y, unit_w, 20), "", 
-                          manager=manager, container=container, object_id="#stat_unit")
-        
-        self._last_val = None
-        self._last_unit = None
-        self._visible = True
-
-    def update(self, val_text, unit_text=""):
-        if self._last_val != val_text:
-            self.value.set_text(val_text)
-            self._last_val = val_text
-            
-        if self._last_unit != unit_text:
-            self.unit.set_text(unit_text)
-            self._last_unit = unit_text
-
-    def set_visible(self, visible):
-        if self._visible == visible:
-            return
-            
-        if visible:
-            self.label.show()
-            self.value.show()
-            self.unit.show()
-        else:
-            self.label.hide()
-            self.value.hide()
-            self.unit.hide()
-        self._visible = visible
+from game.ui.panels.design_stats_panel import DesignStatsPanel
 
 class BuilderRightPanel:
     def __init__(self, builder, manager, rect, event_bus=None, viewmodel=None, vehicle_class_service=None, hide_theme_selector=False):
@@ -91,39 +50,10 @@ class BuilderRightPanel:
         self.refresh_controls()
 
     def on_ship_updated(self, ship):
-        # Check if resource keys match our current rows
-        # If mismatch, we must rebuild the layout to add/remove rows
-        from .stats_config import get_logistics_rows
-
-        current_keys = set(self.rows_map.keys())
-
-        # Calculate expected keys for dynamic section
-        new_log_rows = get_logistics_rows(ship)
-        new_log_keys = set(r.key for r in new_log_rows)
-
-        # We need to know if the SET of keys in new_log_rows differs from what we HAVE for logistics.
-        # But self.rows_map contains ALL rows (Main, Shield, etc).
-        # We can check if all new_log_keys are present in current_keys.
-        # AND if we have any "stale" keys that are arguably logistics keys?
-        # Simpler: If any new key is missing -> REBUILD
-
-        needs_rebuild = False
-        missing_keys = new_log_keys - current_keys
-        if missing_keys:
-             self.rebuild_stats()
-             needs_rebuild = True
-
-        # Also check if any EXISTING key that looks like a resource key is NO LONGER valid?
-        # E.g. removed 'Biomass'.
-        # This is harder without knowing which keys are logistics.
-        # But generally, adding components is the main builder action. Removing implies set subtraction.
-        # Using self.logistics_keys stored in setup_stats would be better.
-
-        elif hasattr(self, 'current_logistics_keys'):
-            if new_log_keys != self.current_logistics_keys:
-                 self.rebuild_stats()
-                 needs_rebuild = True
-
+        """Handle ship update event - rebuild if needed, then update stats."""
+        if hasattr(self, 'stats_panel') and self.stats_panel.needs_rebuild(ship):
+            self.stats_panel.rebuild(ship)
+            self._sync_from_stats_panel()
         # BUG-04 Fix: Always call update_stats_display to populate values
         # even after rebuild (which only creates empty rows with "--" placeholders)
         self.update_stats_display(ship)
@@ -375,131 +305,38 @@ class BuilderRightPanel:
             log_warning(f"Failed to load portrait {full_path}: {e}")
 
     def setup_stats(self):
-        # Create Scroll Container for Stats
-        # Starts after controls (last_y) and takes remaining height
-        
-        # Calculate available height
+        """Set up the stats panel using shared DesignStatsPanel."""
         y = self.last_y
         total_h = self.rect.height - y - 10
-        if total_h < 100: total_h = 100
-        
-        self.stats_scroll = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(0, y, self.rect.width, total_h),
+        if total_h < 100:
+            total_h = 100
+
+        self.stats_panel = DesignStatsPanel(
             manager=self.manager,
+            rect=pygame.Rect(0, y, self.rect.width, total_h),
             container=self.panel,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+            ship=self.builder.ship,
+            show_requirements=True
         )
-        
-        # We need a container for the scrolling content (inner)
-        # However, UIScrollingContainer acts as the container source. 
-        # Elements should be parented to self.stats_scroll
-        
-        # Columns
-        # Width available inside scrollbar (assume 20px scrollbar)
-        list_w = self.stats_scroll.get_container().get_rect().width
-        full_w = list_w
-        
-        col_gap = 10
-        margin = 10
-        avail_w = full_w - (2 * margin) - col_gap
-        col_w = avail_w // 2
-        
-        col1_x = margin
-        col2_x = margin + col_w + col_gap
-        
-        # Start Y inside container (0-indexed)
-        y = 10 
-        start_y = y
-        
-        self.rows_map = {} # Store StatRow instances by key
-        
-        # === Generic Helper to Build Section ===
-        def build_section(title, stats_list, x, start_y):
-            curr_y = start_y
-            UILabel(pygame.Rect(x, curr_y, col_w, 25), f"── {title} ──", manager=self.manager, container=self.stats_scroll)
-            curr_y += 30
-            
-            for stat_def in stats_list:
-                row = StatRow(stat_def.key, stat_def.label, self.manager, self.stats_scroll, x, curr_y, col_w)
-                row.definition = stat_def # Attach definition to row for update loop
-                self.rows_map[stat_def.key] = row
-                curr_y += 20
-            
-            return curr_y + 10
+        # Expose attributes for backward compat with update methods
+        self._sync_from_stats_panel()
 
-        from .stats_config import STATS_CONFIG, get_logistics_rows
-
-        # FREEZING CONFIG
-        self.stats_config = STATS_CONFIG
-        
-        # === Column 1: Main, Maneuvering, Shields, Armor, Targeting ===
-        y = start_y
-        
-        y = build_section("Main Systems", self.stats_config.get('main', []), col1_x, y)
-        y = build_section("Maneuvering", self.stats_config.get('maneuvering', []), col1_x, y)
-        y = build_section("Shields", self.stats_config.get('shields', []), col1_x, y)
-        
-        # Armor
-        y = build_section("Armor", self.stats_config.get('armor', []), col1_x, y)
-        
-        # Layers (Special Case: Dynamic) - Inserted under Armor
-        
-        # -- Added Header "Layers" --
-        UILabel(pygame.Rect(col1_x, y, col_w, 20), "Layers", manager=self.manager, container=self.stats_scroll)
-        y += 20
-        # ---------------------------
-        
-        self.layer_rows = []
-        for i in range(4):
-            sr = StatRow(f"layer_{i}", f"Slot {i}", self.manager, self.stats_scroll, col1_x, y, col_w)
-            sr.set_visible(False)
-            self.layer_rows.append(sr)
-            y += 22
-        y += 10
-        
-        y = build_section("Targeting", self.stats_config.get('targeting', []), col1_x, y)
-        col1_max_y = y
-        
-        # === Column 2: Logistics, Crew, Fighter ===
-        y = start_y
-        
-        # Helper for Dynamic Logistics
-        log_rows = get_logistics_rows(self.builder.ship)
-        
-        # Store keys for dirty checking later
-        self.current_logistics_keys = set(r.key for r in log_rows)
-        
-        y = build_section("Logistics", log_rows, col2_x, y)
-
-        y = build_section("Crew Logistics", self.stats_config.get('crewlogistics', []), col2_x, y)
-        y = build_section("Fighter Support", self.stats_config.get('fightersupport', []), col2_x, y)
-        
-        col2_max_y = y
-        
-        # === Requirements (Bottom, Split) ===
-        y = max(col1_max_y, col2_max_y) + 10
-        
-        # Split Headers
-        UILabel(pygame.Rect(col1_x, y, col_w, 20), "── Requirements ──", manager=self.manager, container=self.stats_scroll)
-        UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Recommendations ──", manager=self.manager, container=self.stats_scroll)
-        y += 25
-        
-        # Box heights (enough for content, not fixed to panel bottom anymore)
-        rem_h = 200 # Fixed reasonable height inside scroll
-        
-        self.req_box_left = UITextBox("✓ All requirements met", pygame.Rect(col1_x, y, col_w, rem_h), manager=self.manager, container=self.stats_scroll)
-        self.req_box_right = UITextBox("", pygame.Rect(col2_x, y, col_w, rem_h), manager=self.manager, container=self.stats_scroll)
-
-        y += rem_h + 10
-        
-        # Update Scroll Area
-        self.stats_scroll.set_scrollable_area_dimensions((full_w, y))
+    def _sync_from_stats_panel(self):
+        """Sync internal references from DesignStatsPanel for backward compatibility."""
+        self.rows_map = self.stats_panel.rows_map
+        self.current_logistics_keys = self.stats_panel.current_logistics_keys
+        self.layer_rows = self.stats_panel.layer_rows
+        self.req_box_left = self.stats_panel.req_box_left
+        self.req_box_right = self.stats_panel.req_box_right
+        self.stats_scroll = self.stats_panel.stats_scroll
 
     def rebuild_stats(self):
         """Completely rebuild the stats scroll container (e.g. after ship load)."""
-        if hasattr(self, 'stats_scroll'):
-            self.stats_scroll.kill()
-        self.setup_stats()
+        if hasattr(self, 'stats_panel'):
+            self.stats_panel.rebuild(self.builder.ship)
+            self._sync_from_stats_panel()
+        else:
+            self.setup_stats()
 
     def update_class_dropdown(self, new_class: str, valid_classes: list):
         """Kill existing class dropdown and recreate with new options.
@@ -556,84 +393,5 @@ class BuilderRightPanel:
         self.update_vehicle_type_dropdown(default_type, types)
 
     def update_stats_display(self, s):
-        """Update ship stats labels using Data-Driven Config."""
-        
-        # Iterate over instantiated rows directly
-        # This allows us to handle dynamic rows that aren't in the static config
-        for key, row in self.rows_map.items():
-            if hasattr(row, 'definition'):
-                stat_def = row.definition
-                val = stat_def.get_value(s)
-                
-                # Check validation
-                is_ok, status_txt = stat_def.get_status(s, val)
-                
-                fmt_val = stat_def.format_value(val)
-                unit_val = stat_def.get_display_unit(s, val)
-                
-                final_unit = f"{unit_val}"
-                if status_txt:
-                     final_unit += f" {status_txt}"
-                     
-                row.update(fmt_val, final_unit)
-        
-        # Update layer stats (Still somewhat special case due to dynamic list)
-        from game.core.constants import LayerType  # Canonical location
-        
-        # Hide all first
-        for row in self.layer_rows:
-            row.set_visible(False)
-            
-        sorted_layers = sorted(s.layers.items(), key=lambda x: x[0].value) 
-        
-        slot_idx = 0
-        for layer_type, layer_data in sorted_layers:
-            if slot_idx < len(self.layer_rows):
-                status = s.layer_status.get(layer_type, {})
-                ratio = status.get('ratio', 0) * 100
-                limit = status.get('limit', 1.0) * 100
-                is_ok = status.get('ok', True)
-                mass = status.get('mass', 0)
-                
-                status_icon = "✓" if is_ok else "✗"
-                
-                row = self.layer_rows[slot_idx]
-                
-                # Update Label directly since it changes per slot in this dynamic list
-                row.label.set_text(f"{layer_type.name}:")
-                row.update(f"{ratio:.0f}% / {limit:.0f}%", f" ({mass:.0f}t) {status_icon}")
-                
-                row.set_visible(True)
-                
-                slot_idx += 1
-        
-        # Update requirements (Left)
-        missing_reqs = s.get_missing_requirements()
-        if not s.mass_limits_ok:
-            missing_reqs.append("⚠ Over mass limit")
-            
-        full_list_req = []
-        for req in missing_reqs:
-            full_list_req.append(f"<font color='#ffaa55'>{req}</font>")
-        
-        if not full_list_req:
-            html_left = "<font color='#88ff88'>✓ All met</font>"
-        else:
-            html_left = "<br>".join(full_list_req)
-        
-        self.req_box_left.html_text = html_left
-        self.req_box_left.rebuild()
-
-        # Update warnings (Right)
-        warnings = s.get_validation_warnings()
-        full_list_warn = []
-        for warn in warnings:
-            full_list_warn.append(f"<font color='#ffff88'>⚠ {warn}</font>")
-            
-        if not full_list_warn:
-            html_right = "<font color='#888888'>No recommendations</font>"
-        else:
-            html_right = "<br>".join(full_list_warn)
-            
-        self.req_box_right.html_text = html_right
-        self.req_box_right.rebuild()
+        """Update ship stats labels using shared DesignStatsPanel."""
+        self.stats_panel.update_stats(s)

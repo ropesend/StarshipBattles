@@ -16,7 +16,7 @@ import pygame_gui
 from pygame_gui.elements import UIImage, UIPanel, UIScrollingContainer, UITextBox, UILabel
 from typing import Optional, TYPE_CHECKING
 from game.core.constants import LayerType  # Canonical location for LayerType
-from game.ui.screens.builder.right_panel import StatRow
+from game.ui.panels.design_stats_panel import StatRow
 from game.ui.screens.builder.stats_config import STATS_CONFIG, get_construction_rows
 
 if TYPE_CHECKING:

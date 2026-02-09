@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-80 Phase 1 - DesignStatsPanel + StatRow created
-**Current Status:** PROJ-80 Phase 1 complete, moving to Phase 2
+**Last Completed:** PROJ-80 Phase 2 - BuilderRightPanel integration
+**Current Status:** PROJ-80 Phase 2 complete, moving to Phase 3
 **Current Project:** PROJ-80
-**Current Phase:** Phase 1 Complete
-**Test Status:** 33 targeted tests passed
+**Current Phase:** Phase 2 Complete
+**Test Status:** testmon 1 passed, 27 targeted tests passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Created game/ui/panels/design_stats_panel.py with StatRow and DesignStatsPanel classes
-- StatRow: copied from right_panel.py with type hints added
-- DesignStatsPanel: two-column layout, optional requirements/recommendations, build cost section
-- Methods: _build_layout, _build_sections, update_stats, needs_rebuild, rebuild, kill
-- 33 targeted tests pass (test_stats_render.py, test_build_queue_design_report.py, etc.)
-- Next: Phase 2 - Integrate into BuilderRightPanel
+- BuilderRightPanel now delegates all stats to DesignStatsPanel
+- Removed StatRow from right_panel.py, imports from design_stats_panel.py
+- Added _sync_from_stats_panel() for backward compat with rows_map, layer_rows, etc.
+- Updated design_report_panel.py to import StatRow from design_stats_panel.py
+- Updated tests: test_stats_render.py, test_bug_04_display.py, test_ui_dynamic_update.py
+- Next: Phase 3 - Integrate into DesignReportPanel + Widen Build Queue
 
 ---
 
@@ -277,6 +277,7 @@
 | 2026-02-08 | PROJ-78 | Phase 4 | Complete | 7294 passed | pending | 8 integration tests, UUID save names for xdist safety |
 | 2026-02-08 | PROJ-78 | Audit 1 | PASSED | 7294 passed | pending | No issues found, 2 investigation agents verified all phases |
 | 2026-02-08 | PROJ-80 | Phase 1 | Complete | 33 targeted | pending | Created DesignStatsPanel + StatRow in design_stats_panel.py |
+| 2026-02-08 | PROJ-80 | Phase 2 | Complete | testmon 1 passed | pending | BuilderRightPanel delegates to DesignStatsPanel, 4 test files updated |
 
 ---
 
