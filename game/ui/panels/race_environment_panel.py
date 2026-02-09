@@ -19,6 +19,7 @@ from typing import Dict, List, Optional, TYPE_CHECKING
 from game.strategy.data.homeworld_presets import (
     get_available_homeworld_names,
     get_preset_for_planet_type,
+    get_preset_id_from_name,
     load_homeworld_presets,
 )
 
@@ -610,13 +611,14 @@ class RaceEnvironmentPanel:
             True if event was handled
         """
         if hasattr(event, 'ui_element') and event.ui_element == self.homeworld_dropdown:
-            # Get selected option
+            # Get selected option (display name, e.g. "Continental")
             selected = self.homeworld_dropdown.selected_option
             if isinstance(selected, tuple):
                 selected = selected[0]
 
-            # Apply preset
-            self.apply_homeworld_preset(selected)
+            # Convert display name to preset ID (e.g. "CONTINENTAL")
+            preset_id = get_preset_id_from_name(selected)
+            self.apply_homeworld_preset(preset_id if preset_id else selected)
             self.update_config()
             return True
         return False
