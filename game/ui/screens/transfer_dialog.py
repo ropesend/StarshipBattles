@@ -122,7 +122,7 @@ class TransferDialog(UIWindow):
         # 2. Build options
         self.available_sources = []
         for f in fleets:
-            self.available_sources.append({'label': f"Fleet {f.id}", 'type': 'fleet', 'id': f.id})
+            self.available_sources.append({'label': f"Fleet {f.fleet_id}", 'type': 'fleet', 'id': f.fleet_id})
         for c in colonies:
             self.available_sources.append({'label': f"Colony: {c.name}", 'type': 'colony', 'id': c.planet_id})
             
@@ -131,7 +131,7 @@ class TransferDialog(UIWindow):
         # Default select source_fleet if possible
         starting_option = ""
         for s in self.available_sources:
-            if s['type'] == 'fleet' and s['id'] == self.source_fleet.id:
+            if s['type'] == 'fleet' and s['id'] == self.source_fleet.fleet_id:
                 starting_option = s['label']
                 break
         
