@@ -258,7 +258,7 @@ class BuildQueueScreen:
         # Position: right of context report, full height
         panel_x = 10 + 480 + 10  # After context report (480w) + gap
         panel_y = 10
-        panel_width = 280
+        panel_width = 700  # PROJ-81: Widened from 280px for better readability
         panel_height = self.screen_height - 10 - 80  # Full height minus bottom bar
 
         self.queue_selector_panel = ui.UIPanel(
@@ -296,7 +296,7 @@ class BuildQueueScreen:
         self.queue_selector_buttons.clear()
 
         row_height = 55
-        row_width = 260  # Fits inside scrollable with margin
+        row_width = 680  # PROJ-81: Updated to match new panel width (700px) minus margins
         y_offset = 0
 
         for idx, source in enumerate(self.queue_sources):
@@ -448,8 +448,8 @@ class BuildQueueScreen:
 
     def _create_build_queue_panel(self):
         """Create build queue panel in the middle column."""
-        # PROJ-69: Position after context report (480) + gap + queue selector (280) + gap
-        panel_left = 10 + 480 + 10 + 280 + 10  # = 790
+        # PROJ-81: Position after context report (480) + gap + queue selector (700) + gap
+        panel_left = 10 + 480 + 10 + 700 + 10  # = 1210
 
         # Width: remaining space between queue selector and design report
         design_details_width = 750

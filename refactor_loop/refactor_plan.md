@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-81 Phase 2
-**Current Status:** Phase 2 complete, starting Phase 3
+**Last Completed:** PROJ-81 Phase 3
+**Current Status:** Phase 3 complete, starting Phase 4
 **Current Project:** PROJ-81
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 7340 passed (4 pre-existing failures in test_transfer_dialog.py)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-81 Phase 2 complete: Resource icon spacing + header terminology fixed
-- Increased resource column spacing from 28px to 55px in build_queue_screen.py
-- Updated per-turn cost label width from 28px to 50px
-- Stored queue_header_text, changed initial text from "Build Yard" to "Build Queue"
-- Added _update_queue_header() method that shows "Build Queue - [name]" when queue selected
-- Called _update_queue_header() from _on_queue_selected() and _on_queue_toggled()
-- Next: Phase 3 - Build Yards Panel Width
+- PROJ-81 Phase 3 complete: Build Yards panel width increased
+- Changed panel_width 280→700px in _create_queue_selector_panel()
+- Changed row_width 260→680px in _refresh_queue_selector()
+- Updated panel_left 790→1210px in _create_build_queue_panel()
+- All edits in build_queue_screen.py
+- Next: Phase 4 - Queue Item Selection + Design Identity
 
 ---
 
@@ -306,6 +305,7 @@
 | 2026-02-08 | PROJ-79 | Audit 1 | PASSED | 7344 passed | pending | All 7 goals verified, no issues found |
 | 2026-02-08 | PROJ-81 | Phase 1 | Complete | 7340 passed | pending | Fixed stats display + cost calculation, added _get_design_cost helper |
 | 2026-02-08 | PROJ-81 | Phase 2 | Complete | 7340 passed | pending | Resource column spacing 28→55px, header terminology "Build Queue - [name]" |
+| 2026-02-08 | PROJ-81 | Phase 3 | Complete | 7340 passed | pending | Build Yards panel 280→700px, row 260→680px, build queue panel_left 790→1210px |
 
 ---
 
