@@ -192,7 +192,7 @@ class TestCollectBuildQueuesAtHex:
 
         assert len(sources) == 1
         assert sources[0].queue_id == "planet_1_base"
-        assert sources[0].display_name == "Alpha Prime - Base"
+        assert sources[0].display_name == "Alpha Prime - Planetary Yard"
         assert sources[0].can_build_ships is False
         assert sources[0].can_build_complexes is True
         assert sources[0].context_type == "planet"
@@ -235,7 +235,7 @@ class TestCollectBuildQueuesAtHex:
         assert len(sources) == 2  # base + fleet
         fleet_source = sources[1]
         assert fleet_source.queue_id == "fleet_100"
-        assert "Space Yard" in fleet_source.display_name
+        assert "Shipyard" in fleet_source.display_name
         assert fleet_source.can_build_ships is True
         assert fleet_source.context_type == "fleet"
 
@@ -354,7 +354,7 @@ class TestCollectAllBuildQueuesForEmpire:
 
         assert len(sources) == 1
         assert sources[0].queue_id == "planet_42_base"
-        assert sources[0].display_name == "Colony Alpha - Base"
+        assert sources[0].display_name == "Colony Alpha - Planetary Yard"
         assert sources[0].owner_entity is planet
         assert sources[0].construction_queue is planet.construction_queue
         assert sources[0].can_build_ships is False
@@ -392,7 +392,7 @@ class TestCollectAllBuildQueuesForEmpire:
 
         assert len(sources) == 1
         assert sources[0].queue_id == "fleet_555"
-        assert "Space Yard" in sources[0].display_name
+        assert "Shipyard" in sources[0].display_name
         assert sources[0].owner_entity is fleet
         assert sources[0].construction_queue is fleet.construction_queue
         assert sources[0].can_build_ships is True
@@ -446,3 +446,131 @@ class TestCollectAllBuildQueuesForEmpire:
         sources = collect_all_build_queues_for_empire(empire)
 
         assert sources == []
+
+
+# ---------------------------------------------------------------------------
+# Tests: New fields - build_rate and planet_id (PROJ-79)
+# ---------------------------------------------------------------------------
+
+class TestBuildQueueSourceNewFields:
+    """Test build_rate and planet_id fields added in PROJ-79."""
+
+    def test_build_queue_source_has_build_rate_default(self):
+        """BuildQueueSource defaults build_rate to 2000.0."""
+        source = BuildQueueSource(
+            queue_id="test",
+            display_name="Test",
+            owner_entity=None,
+            construction_queue=[],
+            can_build_ships=False,
+            can_build_complexes=True,
+            context_type="planet",
+        )
+        assert source.build_rate == 2000.0
+
+    def test_build_queue_source_has_planet_id_default(self):
+        """BuildQueueSource defaults planet_id to None."""
+        source = BuildQueueSource(
+            queue_id="test",
+            display_name="Test",
+            owner_entity=None,
+            construction_queue=[],
+            can_build_ships=False,
+            can_build_complexes=True,
+            context_type="planet",
+        )
+        assert source.planet_id is None
+
+    def test_collect_queues_sets_base_build_rate(self):
+        """Base (Planetary Yard) queue has build_rate = 2000.0."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord, planet_id=99)
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        assert len(sources) == 1
+        assert sources[0].build_rate == 2000.0
+
+    def test_collect_queues_sets_shipyard_build_rate(self):
+        """Shipyard facility queue has build_rate = 3000.0 (default)."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord, planet_id=99)
+        planet.facilities.append(_make_shipyard_facility(instance_id="yard-001"))
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        # Sources: base + shipyard
+        assert len(sources) == 2
+        shipyard_source = sources[1]
+        assert shipyard_source.build_rate == 3000.0
+
+    def test_collect_queues_sets_shipyard_build_rate_with_bonus(self):
+        """Shipyard with construction_speed_bonus applies multiplier."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord, planet_id=99)
+        # Create facility with construction_speed_bonus = 1.5
+        facility = PlanetaryFacility(
+            instance_id="yard-boosted",
+            design_id="boosted_yard",
+            name="Boosted Yard",
+            design_data={
+                "layers": {
+                    "hull": [
+                        {"id": "space_shipyard", "abilities": {
+                            "SpaceShipyard": {"construction_speed_bonus": 1.5}
+                        }}
+                    ]
+                }
+            },
+            is_operational=True,
+        )
+        planet.facilities.append(facility)
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        shipyard_source = sources[1]
+        assert shipyard_source.build_rate == 4500.0  # 3000 * 1.5
+
+    def test_collect_queues_sets_fleet_build_rate(self):
+        """Fleet shipyard queue has build_rate = 3000.0."""
+        hex_coord = HexCoord(5, 5)
+        fleet = _make_fleet_with_yard(location=hex_coord)
+        galaxy = _make_galaxy({hex_coord: []})
+        empire = _make_empire(empire_id=0, fleets=[fleet])
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        assert len(sources) == 1
+        assert sources[0].build_rate == 3000.0
+
+    def test_collect_queues_sets_planet_id_for_planet_sources(self):
+        """Planet-based sources have planet_id set to planet.id."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord, planet_id=42)
+        planet.facilities.append(_make_shipyard_facility(instance_id="yard-001"))
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        # Base queue
+        assert sources[0].planet_id == 42
+        # Shipyard queue
+        assert sources[1].planet_id == 42
+
+    def test_collect_queues_sets_planet_id_none_for_fleet(self):
+        """Fleet-based sources have planet_id = None."""
+        hex_coord = HexCoord(5, 5)
+        fleet = _make_fleet_with_yard(location=hex_coord)
+        galaxy = _make_galaxy({hex_coord: []})
+        empire = _make_empire(empire_id=0, fleets=[fleet])
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        assert sources[0].planet_id is None

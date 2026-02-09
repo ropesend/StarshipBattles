@@ -11,7 +11,7 @@ Created as part of PROJ-69 Phase 1.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import PlanetaryFacility
@@ -37,6 +37,32 @@ class BuildQueueSource:
     can_build_ships: bool
     can_build_complexes: bool
     context_type: str
+    build_rate: float = 2000.0
+    planet_id: Optional[int] = None
+
+
+def _get_facility_build_rate(facility: 'PlanetaryFacility') -> float:
+    """Extract build rate from a shipyard facility's design_data.
+
+    Shipyards build at 3000 units/turn * construction_speed_bonus.
+
+    Args:
+        facility: The planetary facility to check.
+
+    Returns:
+        Build rate in units per turn.
+    """
+    for layer_data in facility.design_data.get("layers", {}).values():
+        if not isinstance(layer_data, list):
+            continue
+        for comp in layer_data:
+            if isinstance(comp, dict):
+                abilities = comp.get("abilities", {})
+                shipyard_data = abilities.get("SpaceShipyard", {})
+                if isinstance(shipyard_data, dict):
+                    bonus = shipyard_data.get("construction_speed_bonus", 1.0)
+                    return 3000.0 * bonus
+    return 3000.0  # Default shipyard rate
 
 
 def _facility_is_shipyard(facility: PlanetaryFacility) -> bool:
@@ -94,12 +120,14 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
         # Base queue (complexes only)
         sources.append(BuildQueueSource(
             queue_id=f"planet_{planet.id}_base",
-            display_name=f"{planet.name} - Base",
+            display_name=f"{planet.name} - Planetary Yard",
             owner_entity=planet,
             construction_queue=planet.construction_queue,
             can_build_ships=False,
             can_build_complexes=True,
             context_type="planet",
+            build_rate=2000.0,
+            planet_id=planet.id,
         ))
 
         # Shipyard facility queues
@@ -115,6 +143,8 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
                     can_build_ships=True,
                     can_build_complexes=True,
                     context_type="planet",
+                    build_rate=_get_facility_build_rate(facility),
+                    planet_id=planet.id,
                 ))
 
     # Fleet queues
@@ -125,12 +155,14 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
             continue
         sources.append(BuildQueueSource(
             queue_id=f"fleet_{fleet.id}",
-            display_name=f"{fleet.name} - Space Yard",
+            display_name=f"{fleet.name} - Shipyard",
             owner_entity=fleet,
             construction_queue=fleet.construction_queue,
             can_build_ships=True,
             can_build_complexes=True,
             context_type="fleet",
+            build_rate=3000.0,
+            planet_id=None,
         ))
 
     return sources
@@ -158,12 +190,14 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
         # Base queue (complexes only)
         sources.append(BuildQueueSource(
             queue_id=f"planet_{planet.id}_base",
-            display_name=f"{planet.name} - Base",
+            display_name=f"{planet.name} - Planetary Yard",
             owner_entity=planet,
             construction_queue=planet.construction_queue,
             can_build_ships=False,
             can_build_complexes=True,
             context_type="planet",
+            build_rate=2000.0,
+            planet_id=planet.id,
         ))
 
         # Shipyard facility queues
@@ -179,6 +213,8 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
                     can_build_ships=True,
                     can_build_complexes=True,
                     context_type="planet",
+                    build_rate=_get_facility_build_rate(facility),
+                    planet_id=planet.id,
                 ))
 
     # Fleet queues
@@ -187,12 +223,14 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
             continue
         sources.append(BuildQueueSource(
             queue_id=f"fleet_{fleet.id}",
-            display_name=f"{fleet.name} - Space Yard",
+            display_name=f"{fleet.name} - Shipyard",
             owner_entity=fleet,
             construction_queue=fleet.construction_queue,
             can_build_ships=True,
             can_build_complexes=True,
             context_type="fleet",
+            build_rate=3000.0,
+            planet_id=None,
         ))
 
     return sources

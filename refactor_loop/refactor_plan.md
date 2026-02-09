@@ -8,17 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-80 Audit 1 - PASSED
-**Current Status:** PROJ-80 complete, awaiting user verification
-**Current Project:** None (ready for next project)
-**Current Phase:** N/A
+**Last Completed:** PROJ-79 Phase 1 - Complete
+**Current Status:** PROJ-79 Phase 1 complete, continuing to Phase 2
+**Current Project:** PROJ-79
+**Current Phase:** Phase 2
 **Test Status:** 7305 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-80 Audit PASSED with no issues found
-- All 5 design goals achieved: shared code path, two-column layout, 750px width, conditional requirements, identical sections
-- Next agent should start PROJ-79
+- PROJ-79 Phase 1 completed: Added build_rate/planet_id fields to BuildQueueSource
+- Renamed "Base" to "Planetary Yard", "Space Yard" to "Shipyard"
+- Widened queue selector panel (200->280px), added build rate display
+- 8 new tests added for new fields
+- Next agent should continue with Phase 2
 
 ---
 
@@ -162,7 +164,7 @@
 
 ---
 
-- [ ] **PROJ-79: Build Queue Screen & Production System Rework**
+- [/] **PROJ-79: Build Queue Screen & Production System Rework**
   - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-79/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-79/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -278,6 +280,7 @@
 | 2026-02-08 | PROJ-80 | Phase 3 | Complete | 12 test failures | pending | DesignReportPanel delegates to DesignStatsPanel, -168 lines, 400→750px |
 | 2026-02-08 | PROJ-80 | Phase 4 | Complete | 7305 passed | pending | Tests updated with MockShip class, fixture panel heights fixed |
 | 2026-02-08 | PROJ-80 | Audit 1 | PASSED | 7305 passed | pending | No issues found, all 5 goals achieved |
+| 2026-02-08 | PROJ-79 | Phase 1 | Complete | 7305 passed | pending | build_rate/planet_id fields, renames, UI widen, 8 new tests |
 
 ---
 

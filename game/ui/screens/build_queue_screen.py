@@ -243,7 +243,7 @@ class BuildQueueScreen:
         # Position: right of context report, full height
         panel_x = 10 + 480 + 10  # After context report (480w) + gap
         panel_y = 10
-        panel_width = 200
+        panel_width = 280
         panel_height = self.screen_height - 10 - 80  # Full height minus bottom bar
 
         self.queue_selector_panel = ui.UIPanel(
@@ -255,7 +255,7 @@ class BuildQueueScreen:
         # Header
         ui.UITextBox(
             relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
-            html_text="<b>Build Queues</b>",
+            html_text="<b>Build Yards</b>",
             manager=self.manager,
             container=self.queue_selector_panel
         )
@@ -280,16 +280,17 @@ class BuildQueueScreen:
             element.kill()
         self.queue_selector_buttons.clear()
 
-        row_height = 45
-        row_width = 180  # Fits inside scrollable with margin
+        row_height = 55
+        row_width = 260  # Fits inside scrollable with margin
         y_offset = 0
 
         for idx, source in enumerate(self.queue_sources):
             is_selected = idx in self.selected_queue_indices
             item_count = len(source.construction_queue)
 
-            # Display name with item count
-            label_text = f"{source.display_name} ({item_count})"
+            # Display name with item count and build rate, selection prefix
+            prefix = "> " if is_selected else "  "
+            label_text = f"{prefix}{source.display_name}\n{item_count} items | {int(source.build_rate)}/turn"
 
             # Use object_id to distinguish selected vs unselected visually
             object_id = "#queue_selector_selected" if is_selected else "#queue_selector_item"
@@ -418,8 +419,8 @@ class BuildQueueScreen:
 
     def _create_build_queue_panel(self):
         """Create build queue panel in the middle column."""
-        # PROJ-69: Position after context report (480) + gap + queue selector (200) + gap
-        panel_left = 10 + 480 + 10 + 200 + 10  # = 710
+        # PROJ-69: Position after context report (480) + gap + queue selector (280) + gap
+        panel_left = 10 + 480 + 10 + 280 + 10  # = 790
 
         # Width: remaining space between queue selector and design report
         design_details_width = 750
