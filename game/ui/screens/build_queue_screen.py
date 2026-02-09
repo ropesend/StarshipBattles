@@ -369,7 +369,7 @@ class BuildQueueScreen:
     def _create_design_report_panel(self):
         """Create right column showing selected design information."""
         # Design panel is a tall column on the far right
-        design_report_width = 400  # Single column width
+        design_report_width = 750  # Two-column width (matches design workshop)
         design_report_x = self.screen_width - design_report_width - 10  # Far right
         design_report_height = self.screen_height - 90  # Nearly full height (leave room for bottom bar)
 
@@ -422,7 +422,7 @@ class BuildQueueScreen:
         panel_left = 10 + 480 + 10 + 200 + 10  # = 710
 
         # Width: remaining space between queue selector and design report
-        design_details_width = 400
+        design_details_width = 750
         panel_width = self.screen_width - panel_left - design_details_width - 20
 
         # Ensure minimum width

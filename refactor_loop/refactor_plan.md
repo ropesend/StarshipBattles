@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-80 Phase 2 - BuilderRightPanel integration
-**Current Status:** PROJ-80 Phase 2 complete, moving to Phase 3
+**Last Completed:** PROJ-80 Phase 3 - DesignReportPanel integration + Build Queue widening
+**Current Status:** PROJ-80 Phase 3 complete, moving to Phase 4
 **Current Project:** PROJ-80
-**Current Phase:** Phase 2 Complete
-**Test Status:** testmon 1 passed, 27 targeted tests passed
+**Current Phase:** Phase 3 Complete
+**Test Status:** 12 tests failing (expected - test updates for Phase 4)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- BuilderRightPanel now delegates all stats to DesignStatsPanel
-- Removed StatRow from right_panel.py, imports from design_stats_panel.py
-- Added _sync_from_stats_panel() for backward compat with rows_map, layer_rows, etc.
-- Updated design_report_panel.py to import StatRow from design_stats_panel.py
-- Updated tests: test_stats_render.py, test_bug_04_display.py, test_ui_dynamic_update.py
-- Next: Phase 3 - Integrate into DesignReportPanel + Widen Build Queue
+- DesignReportPanel now delegates all stats to DesignStatsPanel (show_requirements=False)
+- Removed stats_container, _rebuild_stats, _create_stat_row, _create_section_header, _create_layers_section
+- Reduced design_report_panel.py from 421 to 253 lines (-40%)
+- Build Queue design report widened 400→750px
+- 12 tests in test_build_queue_design_report.py fail due to removed stats_container attribute
+- Next: Phase 4 - Update tests to use new interface
 
 ---
 
@@ -278,6 +278,7 @@
 | 2026-02-08 | PROJ-78 | Audit 1 | PASSED | 7294 passed | pending | No issues found, 2 investigation agents verified all phases |
 | 2026-02-08 | PROJ-80 | Phase 1 | Complete | 33 targeted | pending | Created DesignStatsPanel + StatRow in design_stats_panel.py |
 | 2026-02-08 | PROJ-80 | Phase 2 | Complete | testmon 1 passed | pending | BuilderRightPanel delegates to DesignStatsPanel, 4 test files updated |
+| 2026-02-08 | PROJ-80 | Phase 3 | Complete | 12 test failures | pending | DesignReportPanel delegates to DesignStatsPanel, -168 lines, 400→750px |
 
 ---
 
