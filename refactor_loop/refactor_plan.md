@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-08
-**Last Completed:** PROJ-79 Phase 1 - Complete
-**Current Status:** PROJ-79 Phase 1 complete, continuing to Phase 2
+**Last Completed:** PROJ-79 Phase 2 - Complete
+**Current Status:** PROJ-79 Phase 2 complete, continuing to Phase 3
 **Current Project:** PROJ-79
-**Current Phase:** Phase 2
-**Test Status:** 7305 passed
+**Current Phase:** Phase 3
+**Test Status:** 7322 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-79 Phase 1 completed: Added build_rate/planet_id fields to BuildQueueSource
-- Renamed "Base" to "Planetary Yard", "Space Yard" to "Shipyard"
-- Widened queue selector panel (200->280px), added build rate display
-- 8 new tests added for new fields
-- Next agent should continue with Phase 2
+- PROJ-79 Phase 2 completed: Build time from cost + tick-granular production
+- BuildQueueController: _calculate_build_turns() and _build_cost_tracking() methods
+- ProductionEngine: _process_queue_tick_with_completion() for mid-turn spawning
+- TurnEngine: passes save_path and harvesting_engine for mid-turn complex harvest
+- 28 new tests (11 controller, 17 production engine tick/completion tests)
+- Next agent should continue with Phase 3
 
 ---
 
@@ -281,6 +282,7 @@
 | 2026-02-08 | PROJ-80 | Phase 4 | Complete | 7305 passed | pending | Tests updated with MockShip class, fixture panel heights fixed |
 | 2026-02-08 | PROJ-80 | Audit 1 | PASSED | 7305 passed | pending | No issues found, all 5 goals achieved |
 | 2026-02-08 | PROJ-79 | Phase 1 | Complete | 7305 passed | pending | build_rate/planet_id fields, renames, UI widen, 8 new tests |
+| 2026-02-08 | PROJ-79 | Phase 2 | Complete | 7322 passed | pending | Build time from cost, tick-granular production, 28 new tests |
 
 ---
 

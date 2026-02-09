@@ -185,7 +185,7 @@ class TestBuildQueueScreenHotkeys:
         screen.drag_handler.selected_design = "test_design"
         event = _keydown(pygame.K_a)
         screen._handle_keydown(event)
-        screen.controller.add_to_queue.assert_called_once_with("test_design", turns=1)
+        screen.controller.add_to_queue.assert_called_once_with("test_design")
 
     def test_delete_removes_from_queue(self, mapper):
         """Delete key removes selected queue item."""

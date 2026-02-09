@@ -3,11 +3,16 @@ Tests for BuildQueueController multi-queue operations.
 
 PROJ-69 Phase 6: Verifies single-queue, multi-queue, and fallback add behavior,
 including can_build_ships/can_build_complexes compatibility filtering.
+
+PROJ-79 Phase 2: Added tests for build time calculation and cost tracking.
 """
 import pytest
 from unittest.mock import MagicMock
 
-from game.ui.panels.build_queue_controller import BuildQueueController
+from game.ui.panels.build_queue_controller import (
+    BuildQueueController,
+    PLANETARY_YARD_BUILD_RATE,
+)
 from game.strategy.data.build_queue_source import BuildQueueSource
 
 
@@ -40,6 +45,7 @@ def _make_source(
     can_build_ships: bool = True,
     can_build_complexes: bool = True,
     queue: list = None,
+    build_rate: float = 2000.0,
 ) -> BuildQueueSource:
     """Create a BuildQueueSource with a real mutable queue."""
     actual_queue = queue if queue is not None else []
@@ -51,6 +57,7 @@ def _make_source(
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
         context_type="planet",
+        build_rate=build_rate,
     )
 
 
@@ -239,3 +246,172 @@ class TestControllerModeTransitions:
 
         assert len(build_context.construction_queue) == 1
         assert build_context.construction_queue[0]["design_id"] == "factory"
+
+
+class TestBuildTimeCalculation:
+    """PROJ-79 Phase 2: Tests for build time calculation from resource cost."""
+
+    def _make_controller_with_designs(self, designs: list) -> BuildQueueController:
+        """Create a controller with mock design library returning given designs."""
+        build_context = MagicMock()
+        build_context.context_type = "planet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+        build_context.construction_queue = []
+
+        mock_library = MagicMock()
+        mock_library.scan_designs.return_value = designs
+        mock_loader = MagicMock()
+        mock_report = MagicMock()
+        on_changed = MagicMock()
+
+        return BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=mock_loader,
+            design_report=mock_report,
+            on_queue_changed=on_changed,
+        )
+
+    def test_calculate_build_turns_high_cost_planetary_yard(self):
+        """100000 Metals at 2000/turn = 50 turns."""
+        design = MagicMock()
+        design.design_id = "big_complex"
+        design.resource_cost = {"Metals": 100000, "Organics": 10000}
+
+        controller = self._make_controller_with_designs([design])
+        turns = controller._calculate_build_turns("big_complex", 2000.0)
+
+        assert turns == 50  # max(100000, 10000) / 2000 = 50
+
+    def test_calculate_build_turns_shipyard_rate(self):
+        """6000 Metals at 3000/turn = 2 turns."""
+        design = MagicMock()
+        design.design_id = "cruiser"
+        design.resource_cost = {"Metals": 6000}
+
+        controller = self._make_controller_with_designs([design])
+        turns = controller._calculate_build_turns("cruiser", 3000.0)
+
+        assert turns == 2  # 6000 / 3000 = 2
+
+    def test_calculate_build_turns_zero_cost_returns_1(self):
+        """Zero-cost design returns 1 turn minimum."""
+        design = MagicMock()
+        design.design_id = "free_stuff"
+        design.resource_cost = {}
+
+        controller = self._make_controller_with_designs([design])
+        turns = controller._calculate_build_turns("free_stuff", 2000.0)
+
+        assert turns == 1
+
+    def test_calculate_build_turns_no_resource_cost_returns_1(self):
+        """Design with no resource_cost attribute returns 1 turn."""
+        design = MagicMock()
+        design.design_id = "no_cost"
+        design.resource_cost = None
+
+        controller = self._make_controller_with_designs([design])
+        turns = controller._calculate_build_turns("no_cost", 2000.0)
+
+        assert turns == 1
+
+    def test_calculate_build_turns_unknown_design_returns_1(self):
+        """Unknown design ID returns 1 turn."""
+        controller = self._make_controller_with_designs([])
+        turns = controller._calculate_build_turns("unknown", 2000.0)
+
+        assert turns == 1
+
+    def test_build_cost_tracking_fields_created(self):
+        """_build_cost_tracking creates all required fields."""
+        design = MagicMock()
+        design.design_id = "factory"
+        design.resource_cost = {"Metals": 4000, "Organics": 2000}
+
+        controller = self._make_controller_with_designs([design])
+        tracking = controller._build_cost_tracking("factory", 2)  # 2 turns = 200 ticks
+
+        assert tracking["total_cost"] == {"Metals": 4000, "Organics": 2000}
+        assert tracking["cost_per_tick"]["Metals"] == pytest.approx(20.0)  # 4000/200
+        assert tracking["cost_per_tick"]["Organics"] == pytest.approx(10.0)  # 2000/200
+        assert tracking["resources_consumed"] == {"Metals": 0.0, "Organics": 0.0}
+        assert tracking["ticks_in_current_turn"] == 0
+
+    def test_add_to_queue_creates_cost_tracking(self):
+        """Adding to queue without turns creates cost tracking fields."""
+        design = MagicMock()
+        design.design_id = "factory"
+        design.resource_cost = {"Metals": 4000}
+
+        controller = self._make_controller_with_designs([design])
+        source = _make_source(build_rate=2000.0)
+        controller.set_active_queue(source)
+
+        controller.add_to_queue("factory", category="complex")
+
+        item = source.construction_queue[0]
+        assert item["turns_remaining"] == 2  # 4000 / 2000 = 2
+        assert "total_cost" in item
+        assert "cost_per_tick" in item
+        assert "resources_consumed" in item
+
+    def test_add_to_queue_uses_source_build_rate(self):
+        """Build time calculated using source's build_rate."""
+        design = MagicMock()
+        design.design_id = "cruiser"
+        design.resource_cost = {"Metals": 9000}
+
+        controller = self._make_controller_with_designs([design])
+        source = _make_source(build_rate=3000.0)  # Shipyard rate
+        controller.set_active_queue(source)
+
+        controller.add_to_queue("cruiser", category="ship")
+
+        item = source.construction_queue[0]
+        assert item["turns_remaining"] == 3  # 9000 / 3000 = 3
+
+    def test_multi_queue_add_uses_per_source_build_rate(self):
+        """Multi-queue add calculates turns per source."""
+        design = MagicMock()
+        design.design_id = "cruiser"
+        design.resource_cost = {"Metals": 6000}
+
+        controller = self._make_controller_with_designs([design])
+        slow_source = _make_source(queue_id="slow", build_rate=2000.0)
+        fast_source = _make_source(queue_id="fast", build_rate=3000.0)
+        controller.set_selected_queues([slow_source, fast_source])
+
+        controller.add_to_queue("cruiser", category="ship")
+
+        assert slow_source.construction_queue[0]["turns_remaining"] == 3  # 6000/2000
+        assert fast_source.construction_queue[0]["turns_remaining"] == 2  # 6000/3000
+
+    def test_fallback_uses_planetary_yard_rate(self):
+        """Fallback mode uses PLANETARY_YARD_BUILD_RATE."""
+        design = MagicMock()
+        design.design_id = "factory"
+        design.resource_cost = {"Metals": 4000}
+
+        build_context = MagicMock()
+        build_context.context_type = "planet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+        build_context.construction_queue = []
+
+        mock_library = MagicMock()
+        mock_library.scan_designs.return_value = [design]
+
+        controller = BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=MagicMock(),
+            design_report=MagicMock(),
+            on_queue_changed=MagicMock(),
+        )
+
+        controller.add_to_queue("factory", category="complex")
+
+        item = build_context.construction_queue[0]
+        assert item["turns_remaining"] == 2  # 4000 / 2000 = 2

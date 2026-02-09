@@ -84,27 +84,59 @@ class ProductionEngine:
         design_data['total_resource_cost'] = total_cost
         return total_cost
 
-    def process_construction_tick(self, tick: int, empires: List, galaxy) -> None:
-        """Process per-tick resource consumption for all construction queues.
+    def process_construction_tick(
+        self,
+        tick: int,
+        empires: List,
+        galaxy,
+        save_path: Optional[str] = None,
+        harvesting_engine=None
+    ) -> None:
+        """Process per-tick resource consumption and completion for all construction queues.
 
         PROJ-75 Phase 4: Called each subturn tick (1-100) to deduct resources
         from empire pools for active construction. Items without cost tracking
-        fields (legacy items) are skipped.
+        fields (legacy items) are skipped for resource consumption but still
+        processed at end-of-turn.
+
+        PROJ-79 Phase 2: Added mid-turn completion. When all resources are
+        consumed, the item completes immediately and the next item starts.
 
         Args:
             tick: Current tick number (1-100).
             empires: List of Empire objects to process.
-            galaxy: Galaxy object (unused, reserved for future use).
+            galaxy: Galaxy object for spawning.
+            save_path: Path to savegame folder for loading designs.
+            harvesting_engine: HarvestingEngine for mid-turn facility harvest.
         """
         for empire in empires:
             for colony in empire.colonies:
                 # Base queue (complexes)
-                self._process_queue_tick(colony.construction_queue, empire)
+                self._process_queue_tick_with_completion(
+                    colony.construction_queue, empire, tick, galaxy, save_path,
+                    colony_or_fleet=colony, harvesting_engine=harvesting_engine,
+                    is_complex_only=True
+                )
 
                 # Facility queues (shipyards)
                 for facility in colony.facilities:
                     if hasattr(facility, 'construction_queue') and facility.construction_queue:
-                        self._process_queue_tick(facility.construction_queue, empire)
+                        self._process_queue_tick_with_completion(
+                            facility.construction_queue, empire, tick, galaxy, save_path,
+                            colony_or_fleet=colony, harvesting_engine=harvesting_engine,
+                            is_complex_only=False
+                        )
+
+            # Fleet queues (PROJ-79)
+            for fleet in empire.fleets:
+                if not fleet.is_building or not fleet.has_space_shipyard:
+                    continue
+                if fleet.construction_queue:
+                    self._process_queue_tick_with_completion(
+                        fleet.construction_queue, empire, tick, galaxy, save_path,
+                        colony_or_fleet=fleet, harvesting_engine=harvesting_engine,
+                        is_complex_only=False
+                    )
 
     def _process_queue_tick(self, queue: List[Dict], empire) -> None:
         """Process one tick of resource consumption for a single queue.
@@ -140,6 +172,168 @@ class ProductionEngine:
         if item['ticks_in_current_turn'] >= 100:
             item['ticks_in_current_turn'] = 0
             item['turns_remaining'] -= 1
+
+    def _process_queue_tick_with_completion(
+        self,
+        queue: List[Dict],
+        empire,
+        tick: int,
+        galaxy,
+        save_path: Optional[str],
+        colony_or_fleet,
+        harvesting_engine,
+        is_complex_only: bool = False
+    ) -> None:
+        """Process one tick with mid-turn completion support.
+
+        PROJ-79 Phase 2: Enhanced tick processing that:
+        1. Consumes resources per tick
+        2. Checks if item is complete (all resources consumed)
+        3. Spawns completed items immediately
+        4. Starts next item in same tick if queue not empty
+        5. Triggers proportional harvest for mid-turn complexes
+
+        Args:
+            queue: Construction queue (list of queue item dicts).
+            empire: Empire that owns the queue.
+            tick: Current tick number (1-100).
+            galaxy: Galaxy object for spawning.
+            save_path: Path to savegame folder.
+            colony_or_fleet: Planet or Fleet that owns the queue.
+            harvesting_engine: For mid-turn facility harvest.
+            is_complex_only: If True, skip non-complex items.
+        """
+        if not queue:
+            return
+
+        item = queue[0]
+
+        # Skip if item is not a dict (e.g., MagicMock from tests)
+        if not isinstance(item, dict):
+            return
+
+        vehicle_type = item.get('type', 'ship')
+
+        # Base queue only processes complexes
+        if is_complex_only and vehicle_type != 'complex':
+            return
+
+        cost_per_tick = item.get('cost_per_tick')
+
+        # Legacy items without cost tracking - fall back to old behavior
+        if cost_per_tick is None:
+            return
+
+        # Check if empire has all resources for this tick
+        if not empire.has_resources(cost_per_tick):
+            return  # Paused - insufficient resources
+
+        # Fleet complexes require fleet to be at planet
+        if isinstance(colony_or_fleet, Fleet) and vehicle_type == 'complex':
+            if galaxy is None:
+                return
+            planets_at_hex = galaxy.get_planets_at_global_hex(colony_or_fleet.location)
+            if not planets_at_hex:
+                return  # Paused - not at planet
+
+        # Consume resources
+        for res, amount in cost_per_tick.items():
+            empire.consume_resources(res, amount)
+            item['resources_consumed'][res] = item.get('resources_consumed', {}).get(res, 0) + amount
+
+        # Track tick progress (for display purposes)
+        item['ticks_in_current_turn'] = item.get('ticks_in_current_turn', 0) + 1
+        if item['ticks_in_current_turn'] >= 100:
+            item['ticks_in_current_turn'] = 0
+            item['turns_remaining'] -= 1
+
+        # Check if item is complete (all resources consumed)
+        total_cost = item.get('total_cost', {})
+        resources_consumed = item.get('resources_consumed', {})
+        is_complete = all(
+            resources_consumed.get(res, 0) >= total_cost.get(res, 0)
+            for res in total_cost
+        )
+
+        if is_complete:
+            design_id = item['design_id']
+            queue.pop(0)
+            log_info(f"Mid-turn Production Complete (tick {tick}): {design_id} ({vehicle_type})")
+
+            # Spawn the completed item
+            if isinstance(colony_or_fleet, Fleet):
+                if vehicle_type == 'complex':
+                    self._spawn_fleet_complex(colony_or_fleet, design_id, empire, galaxy, save_path)
+                else:
+                    self._spawn_fleet_ship(colony_or_fleet, design_id, empire, save_path)
+            else:
+                # Colony/planet
+                if vehicle_type == 'complex':
+                    self._spawn_complex(colony_or_fleet, design_id, empire, save_path)
+                    # Trigger proportional harvest for mid-turn facility
+                    if harvesting_engine and tick < 100:
+                        self._apply_partial_harvest(
+                            colony_or_fleet, empire, tick, harvesting_engine
+                        )
+                else:
+                    self._spawn_ship(colony_or_fleet, design_id, empire, galaxy, save_path)
+
+    def _apply_partial_harvest(self, colony, empire, tick: int, harvesting_engine) -> None:
+        """Apply proportional harvest for facilities spawned mid-turn.
+
+        PROJ-79 Phase 2: When a harvesting facility is built mid-turn,
+        it should produce for the remaining fraction of the turn.
+
+        Args:
+            colony: Colony where the facility was built.
+            empire: Empire that owns the colony.
+            tick: Current tick (1-100) when facility was spawned.
+            harvesting_engine: HarvestingEngine for recalculation and harvest.
+        """
+        remaining_fraction = (100 - tick) / 100.0
+        if remaining_fraction <= 0:
+            return
+
+        # Recalculate storage capacity immediately
+        if hasattr(harvesting_engine, 'recalculate_storage'):
+            harvesting_engine.recalculate_storage([empire])
+
+        # Apply partial harvest for the newly built facility
+        # We only need to harvest the last facility (the one just built)
+        if not colony.facilities:
+            return
+
+        new_facility = colony.facilities[-1]
+        if not new_facility.is_operational:
+            return
+
+        # Find harvesters in the new facility
+        for layer_data in new_facility.design_data.get("layers", {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                if not isinstance(comp, dict):
+                    continue
+                abilities = comp.get("abilities", {})
+                harvester_data = abilities.get("ResourceHarvester", {})
+                if not harvester_data:
+                    continue
+
+                resource_type = harvester_data.get("resource_type")
+                base_rate = harvester_data.get("base_rate", 0)
+                if not resource_type or base_rate <= 0:
+                    continue
+
+                # Calculate partial harvest
+                quality = colony.resource_qualities.get(resource_type, 0.5)
+                partial_amount = base_rate * quality * remaining_fraction
+
+                # Add to empire pool
+                empire.add_resources(resource_type, partial_amount)
+                log_info(
+                    f"Mid-turn harvest: {partial_amount:.1f} {resource_type} "
+                    f"(tick {tick}, {remaining_fraction*100:.0f}% of turn)"
+                )
 
     def process_production(self, empires: List, galaxy=None, save_path: Optional[str] = None) -> None:
         """

@@ -9,9 +9,13 @@ Updated in PROJ-69 Phase 4 to support multi-queue operations via BuildQueueSourc
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, List, Optional, Union
+import math
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 
 from game.core.logger import log_info, log_warning, log_error, log_debug
+
+# Build rate constants (units per turn)
+PLANETARY_YARD_BUILD_RATE = 2000.0
 
 if TYPE_CHECKING:
     from game.strategy.data.build_context import BuildContext
@@ -146,7 +150,50 @@ class BuildQueueController:
         self.on_queue_changed()
         log_info(f"Build queue category changed to: {category}")
 
-    def add_to_queue(self, design_id: str, turns: int = 1, category: str = None, index: int = None):
+    def _calculate_build_turns(self, design_id: str, build_rate: float) -> int:
+        """Calculate build turns from design resource cost and build rate.
+
+        Formula: turns = max(1, ceil(max_resource_cost / build_rate))
+
+        Args:
+            design_id: ID of the design to calculate for.
+            build_rate: Build rate in resource units per turn.
+
+        Returns:
+            Number of turns required to build the design.
+        """
+        designs = self.design_library.scan_designs()
+        design = next((d for d in designs if d.design_id == design_id), None)
+        if not design or not design.resource_cost:
+            return 1
+        max_cost = max(design.resource_cost.values()) if design.resource_cost else 0
+        if max_cost <= 0:
+            return 1
+        return max(1, math.ceil(max_cost / build_rate))
+
+    def _build_cost_tracking(self, design_id: str, turns: int) -> Dict[str, float]:
+        """Create cost tracking fields for a queue item.
+
+        Args:
+            design_id: ID of the design to track costs for.
+            turns: Number of turns for the build.
+
+        Returns:
+            Dict with total_cost, cost_per_tick, resources_consumed, ticks_in_current_turn.
+        """
+        designs = self.design_library.scan_designs()
+        design = next((d for d in designs if d.design_id == design_id), None)
+        total_cost = dict(design.resource_cost) if design and design.resource_cost else {}
+        total_ticks = turns * 100
+        cost_per_tick = {res: amount / total_ticks for res, amount in total_cost.items()} if total_ticks > 0 else {}
+        return {
+            "total_cost": total_cost,
+            "cost_per_tick": cost_per_tick,
+            "resources_consumed": {res: 0.0 for res in total_cost},
+            "ticks_in_current_turn": 0,
+        }
+
+    def add_to_queue(self, design_id: str, turns: Optional[int] = None, category: str = None, index: int = None):
         """
         Add a design to the appropriate queue(s).
 
@@ -196,13 +243,13 @@ class BuildQueueController:
         return True
 
     def _add_to_single_queue(
-        self, design_id: str, turns: int, category: str, index: Optional[int]
+        self, design_id: str, turns: Optional[int], category: str, index: Optional[int]
     ) -> None:
         """Add item to the active queue source.
 
         Args:
             design_id: ID of the design to build.
-            turns: Number of turns to complete.
+            turns: Number of turns to complete (calculated if None).
             category: Design category.
             index: Optional insertion index.
         """
@@ -214,11 +261,18 @@ class BuildQueueController:
             )
             return
 
+        # Calculate build time if not provided
+        build_rate = source.build_rate
+        if turns is None:
+            turns = self._calculate_build_turns(design_id, build_rate)
+
         queue_item = {
             "design_id": design_id,
             "type": category,
             "turns_remaining": turns
         }
+        # Add cost tracking fields
+        queue_item.update(self._build_cost_tracking(design_id, turns))
 
         if index is not None:
             source.construction_queue.insert(index, queue_item)
@@ -227,7 +281,7 @@ class BuildQueueController:
             source.construction_queue.append(queue_item)
             log_info(f"Added {design_id} to '{source.display_name}' ({turns} turns)")
 
-    def _add_to_multiple_queues(self, design_id: str, turns: int, category: str) -> None:
+    def _add_to_multiple_queues(self, design_id: str, turns: Optional[int], category: str) -> None:
         """Add item to all compatible selected queue sources.
 
         Skips sources that cannot build the given category. Index is not
@@ -235,7 +289,7 @@ class BuildQueueController:
 
         Args:
             design_id: ID of the design to build.
-            turns: Number of turns to complete.
+            turns: Number of turns to complete (calculated per-source if None).
             category: Design category.
         """
         added_count = 0
@@ -250,11 +304,18 @@ class BuildQueueController:
                 skipped_count += 1
                 continue
 
+            # Calculate build time per-source if not provided
+            source_turns = turns
+            if source_turns is None:
+                source_turns = self._calculate_build_turns(design_id, source.build_rate)
+
             queue_item = {
                 "design_id": design_id,
                 "type": category,
-                "turns_remaining": turns
+                "turns_remaining": source_turns
             }
+            # Add cost tracking fields
+            queue_item.update(self._build_cost_tracking(design_id, source_turns))
             source.construction_queue.append(queue_item)
             added_count += 1
 
@@ -264,7 +325,7 @@ class BuildQueueController:
         )
 
     def _add_to_fallback(
-        self, design_id: str, turns: int, category: str, index: Optional[int]
+        self, design_id: str, turns: Optional[int], category: str, index: Optional[int]
     ) -> None:
         """Add item to build_context.construction_queue (fallback mode).
 
@@ -272,7 +333,7 @@ class BuildQueueController:
 
         Args:
             design_id: ID of the design to build.
-            turns: Number of turns to complete.
+            turns: Number of turns to complete (calculated if None).
             category: Design category.
             index: Optional insertion index.
         """
@@ -284,11 +345,17 @@ class BuildQueueController:
             log_warning(f"Cannot build {category}: build context cannot build this type")
             return
 
+        # Calculate build time if not provided
+        if turns is None:
+            turns = self._calculate_build_turns(design_id, PLANETARY_YARD_BUILD_RATE)
+
         queue_item = {
             "design_id": design_id,
             "type": category,
             "turns_remaining": turns
         }
+        # Add cost tracking fields
+        queue_item.update(self._build_cost_tracking(design_id, turns))
 
         if index is not None:
             self.build_context.construction_queue.insert(index, queue_item)

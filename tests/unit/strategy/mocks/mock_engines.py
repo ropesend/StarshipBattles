@@ -106,9 +106,9 @@ class MockProductionEngine(IProductionEngine):
     def process_fleet_production_called(self) -> bool:
         return len(self.process_fleet_production_calls) > 0
 
-    def process_construction_tick(self, tick, empires, galaxy):
-        """PROJ-75: Per-tick construction resource consumption mock."""
-        self.process_construction_tick_calls.append((tick, empires, galaxy))
+    def process_construction_tick(self, tick, empires, galaxy, save_path=None, harvesting_engine=None):
+        """PROJ-75/79: Per-tick construction resource consumption mock."""
+        self.process_construction_tick_calls.append((tick, empires, galaxy, save_path, harvesting_engine))
 
     def process_production(self, empires, galaxy=None, save_path=None):
         self.process_production_calls.append((empires, galaxy, save_path))

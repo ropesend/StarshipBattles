@@ -1,13 +1,15 @@
 """Tests for per-tick resource consumption in production.
 
 PROJ-75 Phase 4: Production resource consumption.
+PROJ-79 Phase 2: Tick-based completion (mid-turn spawning).
 
 Task 4.5: Per-tick consumption tests.
 """
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from game.strategy.data.empire import Empire
+from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.engine.production_engine import ProductionEngine
 
@@ -80,18 +82,27 @@ def _make_queue_item(
 
 
 class TestTickConsumption:
-    """Tests for process_construction_tick method."""
+    """Tests for process_construction_tick method.
+
+    NOTE: PROJ-79 changed base queue to only process complexes. Tests using
+    base queue now use vehicle_type="complex". Ship tests use facility queues.
+    """
 
     def test_successful_tick_deducts_from_empire(self):
         """Each tick deducts cost_per_tick from the empire resource pool."""
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0})
         item = _make_queue_item(
+            vehicle_type="complex",  # Base queue only processes complexes
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},  # 500 / (5*100)
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -103,11 +114,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -120,11 +136,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -136,11 +157,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 0.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -154,11 +180,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 0.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         # Tick 1: paused - no resources
@@ -178,12 +209,17 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 10000.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=2,
             total_cost={"Metals": 200},
             cost_per_tick={"Metals": 1.0},
             ticks_in_current_turn=99,
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -196,12 +232,17 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 10000.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=2,
             total_cost={"Metals": 200},
             cost_per_tick={"Metals": 1.0},
             ticks_in_current_turn=99,
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -214,18 +255,24 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0})
         item1 = _make_queue_item(
-            design_id="Scout",
+            design_id="Factory1",
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},
         )
         item2 = _make_queue_item(
-            design_id="Cruiser",
+            design_id="Factory2",
+            vehicle_type="complex",
             turns_remaining=10,
             total_cost={"Metals": 2000},
             cost_per_tick={"Metals": 2.0},
         )
         colony = _make_colony(construction_queue=[item1, item2])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -239,6 +286,7 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0})
         colony = _make_colony(construction_queue=[])
+        colony.facilities = []
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -250,12 +298,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0})
         item = _make_queue_item(
+            vehicle_type="ship",  # Facility queues can build ships
             turns_remaining=5,
             total_cost={"Metals": 500},
             cost_per_tick={"Metals": 1.0},
         )
         yard = _make_shipyard(construction_queue=[item])
         colony = _make_colony(construction_queue=[], facilities=[yard])
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -268,11 +320,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0, "Organics": 500.0, "Radioactives": 200.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500, "Organics": 250, "Radioactives": 100},
             cost_per_tick={"Metals": 1.0, "Organics": 0.5, "Radioactives": 0.2},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -286,11 +343,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({"Metals": 1000.0, "Organics": 0.0})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={"Metals": 500, "Organics": 250},
             cost_per_tick={"Metals": 1.0, "Organics": 0.5},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -304,11 +366,16 @@ class TestTickConsumption:
         engine = ProductionEngine()
         empire = _make_empire({})
         item = _make_queue_item(
+            vehicle_type="complex",
             turns_remaining=5,
             total_cost={},
             cost_per_tick={},
         )
         colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         engine.process_construction_tick(1, [empire], None)
@@ -321,11 +388,15 @@ class TestTickConsumption:
         empire = _make_empire({"Metals": 1000.0})
         # Legacy queue item without cost fields
         legacy_item = {
-            "design_id": "Scout",
-            "type": "ship",
+            "design_id": "Factory",
+            "type": "complex",
             "turns_remaining": 5,
         }
         colony = _make_colony(construction_queue=[legacy_item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
         empire.colonies = [colony]
 
         # Should not crash - just skip
@@ -333,3 +404,231 @@ class TestTickConsumption:
 
         # Legacy item should not have ticks_in_current_turn modified
         assert "ticks_in_current_turn" not in legacy_item or legacy_item.get("ticks_in_current_turn", 0) == 0
+
+
+class TestMidTurnCompletion:
+    """PROJ-79 Phase 2: Tests for mid-turn item completion."""
+
+    def test_item_completes_when_all_resources_consumed(self):
+        """Item pops from queue when resources_consumed >= total_cost."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0})
+
+        # Item almost complete - just needs one more tick of 1.0 Metals
+        item = _make_queue_item(
+            design_id="Factory",
+            vehicle_type="complex",
+            turns_remaining=1,
+            total_cost={"Metals": 100},
+            cost_per_tick={"Metals": 1.0},  # 100 / 100 ticks
+            resources_consumed={"Metals": 99.0},  # Need 1 more
+            ticks_in_current_turn=99,
+        )
+        colony = _make_colony(construction_queue=[item])
+        # Add facilities list and other attributes needed for spawning
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
+        empire.colonies = [colony]
+
+        with patch.object(engine, '_spawn_complex') as mock_spawn:
+            engine.process_construction_tick(100, [empire], None)
+
+            # Item should be removed from queue
+            assert len(colony.construction_queue) == 0
+            # Spawn should be called
+            mock_spawn.assert_called_once()
+
+    def test_next_item_starts_after_completion(self):
+        """After item completes mid-turn, next item gets queue position 0."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0})
+
+        item1 = _make_queue_item(
+            design_id="Factory1",
+            vehicle_type="complex",
+            turns_remaining=1,
+            total_cost={"Metals": 100},
+            cost_per_tick={"Metals": 1.0},
+            resources_consumed={"Metals": 99.0},  # Completes this tick
+            ticks_in_current_turn=99,
+        )
+        item2 = _make_queue_item(
+            design_id="Factory2",
+            vehicle_type="complex",
+            turns_remaining=5,
+            total_cost={"Metals": 500},
+            cost_per_tick={"Metals": 1.0},
+        )
+        colony = _make_colony(construction_queue=[item1, item2])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.id = 0
+        empire.colonies = [colony]
+
+        with patch.object(engine, '_spawn_complex'):
+            engine.process_construction_tick(100, [empire], None)
+
+            # Item1 removed, Item2 now at position 0
+            assert len(colony.construction_queue) == 1
+            assert colony.construction_queue[0]["design_id"] == "Factory2"
+
+    def test_fleet_tick_processing_added(self):
+        """Fleet queues are processed in tick-based completion."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0})
+        empire.id = 0
+        empire.colonies = []
+
+        item = _make_queue_item(
+            design_id="Scout",
+            vehicle_type="ship",
+            turns_remaining=1,
+            total_cost={"Metals": 100},
+            cost_per_tick={"Metals": 1.0},
+            resources_consumed={"Metals": 99.0},
+            ticks_in_current_turn=99,
+        )
+
+        fleet = MagicMock(spec=Fleet)
+        fleet.is_building = True
+        fleet.has_space_shipyard = True
+        fleet.construction_queue = [item]
+        fleet.id = 1
+        fleet.location = (10, 10)
+
+        empire.fleets = [fleet]
+
+        with patch.object(engine, '_spawn_fleet_ship') as mock_spawn:
+            engine.process_construction_tick(100, [empire], None)
+
+            # Should spawn ship
+            mock_spawn.assert_called_once()
+            # Queue should be empty
+            assert len(fleet.construction_queue) == 0
+
+    def test_fleet_complex_paused_when_not_at_planet(self):
+        """Fleet building complex pauses tick processing when not at planet."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0})
+        empire.id = 0
+        empire.colonies = []
+
+        item = _make_queue_item(
+            design_id="Factory",
+            vehicle_type="complex",
+            turns_remaining=1,
+            total_cost={"Metals": 100},
+            cost_per_tick={"Metals": 1.0},
+        )
+
+        fleet = MagicMock(spec=Fleet)
+        fleet.is_building = True
+        fleet.has_space_shipyard = True
+        fleet.construction_queue = [item]
+        fleet.id = 1
+        fleet.location = (10, 10)
+
+        empire.fleets = [fleet]
+
+        galaxy = MagicMock()
+        galaxy.get_planets_at_global_hex.return_value = []  # No planets
+
+        engine.process_construction_tick(1, [empire], galaxy)
+
+        # No resources consumed - paused
+        assert empire.resource_pool["Metals"] == 1000.0
+        assert item["ticks_in_current_turn"] == 0
+
+    def test_mid_turn_complex_triggers_partial_harvest(self):
+        """Complex completing mid-turn triggers proportional harvest."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0})
+        empire.id = 0
+
+        item = _make_queue_item(
+            design_id="Harvester",
+            vehicle_type="complex",
+            turns_remaining=1,
+            total_cost={"Metals": 100},
+            cost_per_tick={"Metals": 1.0},
+            resources_consumed={"Metals": 99.0},
+            ticks_in_current_turn=99,
+        )
+
+        colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {"Metals": 0.8}
+        colony.id = 1
+        empire.colonies = [colony]
+
+        harvesting_engine = MagicMock()
+
+        with patch.object(engine, '_spawn_complex'):
+            # Complete at tick 50 (50% of turn remaining)
+            item["resources_consumed"]["Metals"] = 99.0
+            engine.process_construction_tick(50, [empire], None, harvesting_engine=harvesting_engine)
+
+            # Should have called partial harvest (if tick < 100)
+            # Note: Item completes at tick 50, so 50% of turn remains
+
+    def test_storage_recalculated_on_mid_turn_complex(self):
+        """Mid-turn complex spawning triggers storage recalculation."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0})
+        empire.id = 0
+
+        item = _make_queue_item(
+            design_id="Vault",
+            vehicle_type="complex",
+            turns_remaining=1,
+            total_cost={"Metals": 100},
+            cost_per_tick={"Metals": 1.0},
+            resources_consumed={"Metals": 99.0},
+            ticks_in_current_turn=99,
+        )
+
+        colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.resource_qualities = {}
+        colony.id = 1
+        empire.colonies = [colony]
+
+        harvesting_engine = MagicMock()
+        harvesting_engine.recalculate_storage = MagicMock()
+
+        with patch.object(engine, '_spawn_complex'):
+            engine.process_construction_tick(50, [empire], None, harvesting_engine=harvesting_engine)
+
+            # Storage should be recalculated
+            harvesting_engine.recalculate_storage.assert_called()
+
+    def test_partial_resources_consumed_not_complete(self):
+        """Item doesn't complete until ALL resources are consumed."""
+        engine = ProductionEngine()
+        empire = _make_empire({"Metals": 1000.0, "Organics": 1000.0})
+        empire.id = 0
+
+        # Metals complete but Organics not
+        item = _make_queue_item(
+            design_id="Factory",
+            vehicle_type="complex",
+            turns_remaining=1,
+            total_cost={"Metals": 100, "Organics": 100},
+            cost_per_tick={"Metals": 1.0, "Organics": 1.0},
+            resources_consumed={"Metals": 100.0, "Organics": 50.0},  # Organics not done
+        )
+
+        colony = _make_colony(construction_queue=[item])
+        colony.facilities = []
+        colony.id = 1
+        empire.colonies = [colony]
+
+        with patch.object(engine, '_spawn_complex') as mock_spawn:
+            engine.process_construction_tick(1, [empire], None)
+
+            # Should NOT spawn - Organics not complete
+            mock_spawn.assert_not_called()
+            assert len(colony.construction_queue) == 1

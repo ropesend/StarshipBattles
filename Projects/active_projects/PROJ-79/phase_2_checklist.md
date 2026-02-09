@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Replace hardcoded `turns=1` with cost-based build time calculation. Move production completion from end-of-turn into per-tick processing so items complete mid-turn. Newly spawned facilities produce proportionally for remaining ticks.
 
 ---

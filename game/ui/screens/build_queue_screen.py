@@ -850,7 +850,7 @@ class BuildQueueScreen:
             return True
         if action == InputAction.BUILD_QUEUE_ADD:
             if self.drag_handler.selected_design:
-                self.controller.add_to_queue(self.drag_handler.selected_design, turns=1)
+                self.controller.add_to_queue(self.drag_handler.selected_design)
             return True
         if action == InputAction.BUILD_QUEUE_REMOVE:
             self._handle_remove_hotkey()
@@ -942,7 +942,7 @@ class BuildQueueScreen:
             # Add to queue button - delegate to controller
             elif event.ui_element == self.btn_add_to_queue:
                 if self.drag_handler.selected_design:
-                    self.controller.add_to_queue(self.drag_handler.selected_design, turns=1)
+                    self.controller.add_to_queue(self.drag_handler.selected_design)
 
             # Remove selected from queue button
             elif event.ui_element == self.btn_remove_from_queue:
