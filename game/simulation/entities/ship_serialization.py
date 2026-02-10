@@ -62,7 +62,7 @@ class ShipSerializer:
                     # recalculate_stats(), not in __init__. Default 0 is correct for uncalculated ships.
                     "strategic_movement": getattr(ship, 'total_strategic_movement', 0),
                     "mass": ship.mass,
-                    "armor_hp_pool": ship.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in ship.layers else 0,
+                    "armor_hp_pool": ship.layers[LayerType.ARMOR].max_hp_pool if LayerType.ARMOR in ship.layers else 0,
                     "warp_max_tonnage": getattr(ship, 'warp_max_tonnage', 0),
                     "warp_energy_cost": getattr(ship, 'warp_energy_cost', 0),
                 }
@@ -80,11 +80,7 @@ class ShipSerializer:
                     log_debug(f"    Skipping HULL layer")
                     continue
 
-                if not isinstance(layer_data, dict):
-                    log_error(f"    ERROR: layer_data is not a dict! Type: {type(layer_data)}, Value: {layer_data}")
-                    continue
-
-                components = layer_data.get('components', [])
+                components = layer_data.components
                 log_debug(f"    Layer has {len(components)} components")
 
                 filter_comps = []
@@ -233,7 +229,7 @@ class ShipSerializer:
                 mismatches.append(f"total_thrust: got {s.total_thrust}, expected {expected['total_thrust']}")
             if expected.get('mass') and abs(s.mass - expected['mass']) > 1:
                 mismatches.append(f"mass: got {s.mass}, expected {expected['mass']}")
-            armor_hp = s.layers[LayerType.ARMOR]['max_hp_pool'] if LayerType.ARMOR in s.layers else 0
+            armor_hp = s.layers[LayerType.ARMOR].max_hp_pool if LayerType.ARMOR in s.layers else 0
             if expected.get('armor_hp_pool') and abs(armor_hp - expected['armor_hp_pool']) > 1:
                 mismatches.append(f"armor_hp_pool: got {armor_hp}, expected {expected['armor_hp_pool']}")
             

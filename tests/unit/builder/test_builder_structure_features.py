@@ -9,6 +9,7 @@ from game.ui.screens.workshop_context import WorkshopContext
 from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.simulation.components.component_constants import ApplicationModifier
+from game.simulation.entities.layer_data import LayerData
 
 
 @pytest.fixture
@@ -39,10 +40,7 @@ def builder_setup(fresh_registries):
     # Mock Ship and Components
     ship = MagicMock(spec=Ship)
     ship.layers = {
-        'core': {
-            'components': [],
-            'max_mass': 100
-        }
+        'core': LayerData(max_mass_pct=100.0)
     }
 
     comp_data = {
@@ -59,23 +57,23 @@ def builder_setup(fresh_registries):
     component.name = "Test Component"
 
     # Populate ship
-    ship.layers['core']['components'] = [component]
+    ship.layers['core'].components = [component]
 
     # Add ship helper methods that event_router now uses
     def get_all_components():
         result = []
         for layer_data in ship.layers.values():
-            result.extend(layer_data['components'])
+            result.extend(layer_data.components)
         return result
 
     def iter_components():
         for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data['components']:
+            for comp in layer_data.components:
                 yield layer_type, comp
 
     def has_components():
         for layer_data in ship.layers.values():
-            if layer_data['components']:
+            if layer_data.components:
                 return True
         return False
 
@@ -306,7 +304,7 @@ class TestBuilderStructureFeatures:
 
         # Simulate Remove Individual
         comp = component
-        builder_gui.ship.layers['core']['components'] = [comp]
+        builder_gui.ship.layers['core'].components = [comp]
 
         # Let's mock layer_panel.handle_event to return the action
         event = MagicMock()

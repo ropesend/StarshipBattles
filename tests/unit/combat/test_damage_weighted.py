@@ -3,6 +3,7 @@ import pygame
 from game.simulation.entities.ship_combat_engine import ShipCombatEngine
 from game.simulation.components.component import Component
 from game.core.constants import LayerType  # Phase 7: Removed Bridge import
+from game.simulation.entities.layer_data import LayerData
 
 
 class MockComponent(Component):
@@ -41,10 +42,10 @@ class MockShip:
         self.is_alive = True
         self.name = "TestShip"
         self.layers = {
-            LayerType.ARMOR: {'components': [], 'radius_pct': 1.0},
-            LayerType.OUTER: {'components': [], 'radius_pct': 0.8},
-            LayerType.INNER: {'components': [], 'radius_pct': 0.5},
-            LayerType.CORE: {'components': [], 'radius_pct': 0.3}
+            LayerType.ARMOR: LayerData(radius_pct=1.0),
+            LayerType.OUTER: LayerData(radius_pct=0.8),
+            LayerType.INNER: LayerData(radius_pct=0.5),
+            LayerType.CORE: LayerData(radius_pct=0.3)
         }
         self._combat_engine = None
 
@@ -72,10 +73,10 @@ class TestDamageWeighted:
         ship = MockShip()
         c1 = MockComponent("Armor1", 10, 10)
         c2 = MockComponent("Armor2", 10, 10)
-        ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
+        ship.layers[LayerType.ARMOR].components = [c1, c2]
 
         bridge = MockBridge("Bridge", 100, 100)
-        ship.layers[LayerType.CORE]['components'] = [bridge]
+        ship.layers[LayerType.CORE].components = [bridge]
 
         # Mock choices to return [c1] then [c2] then [bridge]
         mock_choices.side_effect = [[c1], [c2], [bridge]]
@@ -92,7 +93,7 @@ class TestDamageWeighted:
         ship = MockShip()
         c1 = MockComponent("Broken", 0, 10)
         c2 = MockComponent("Healthy", 10, 10)
-        ship.layers[LayerType.ARMOR]['components'] = [c1, c2]
+        ship.layers[LayerType.ARMOR].components = [c1, c2]
 
         ship.combat_engine.take_damage(5)
         assert c1.current_hp == 0
@@ -102,7 +103,7 @@ class TestDamageWeighted:
         """Verify that ship dies when bridge HP reaches 0."""
         ship = MockShip()
         bridge = MockBridge("Bridge", 50, 50)
-        ship.layers[LayerType.CORE]['components'] = [bridge]
+        ship.layers[LayerType.CORE].components = [bridge]
 
         # 100 damage: all to bridge
         ship.combat_engine.take_damage(100)

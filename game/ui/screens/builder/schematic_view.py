@@ -96,10 +96,10 @@ class SchematicView:
             
         # Draw structure rings
         font = pygame.font.SysFont("Arial", 10)
-        sorted_layers = sorted(ship.layers.items(), key=lambda x: x[1]['radius_pct'], reverse=True)
+        sorted_layers = sorted(ship.layers.items(), key=lambda x: x[1].radius_pct, reverse=True)
         
         for ltype, data in sorted_layers:
-            pct = data['radius_pct']
+            pct = data.radius_pct
             r = int(max_r * pct)
             color = (100, 100, 100)
             if ltype.name == "ARMOR": color = (100, 100, 100)
@@ -125,7 +125,7 @@ class SchematicView:
 
     def draw_all_firing_arcs(self, screen, ship):
         for ltype, data in ship.layers.items():
-            for comp in data['components']:
+            for comp in data.components:
                 if comp.has_ability('WeaponAbility'):
                     self.draw_weapon_arc(screen, comp)
 

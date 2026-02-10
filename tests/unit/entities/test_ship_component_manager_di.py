@@ -80,7 +80,7 @@ class TestShipComponentManagerWithRegistries:
         result = ship.add_component(component, LayerType.CORE)
 
         assert result is True
-        assert component in ship.layers[LayerType.CORE]['components']
+        assert component in ship.layers[LayerType.CORE].components
 
 
 # =============================================================================

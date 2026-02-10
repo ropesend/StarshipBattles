@@ -58,7 +58,7 @@ class TestBuilderValidation:
         comp = Component(comp_data, registries=self.registries)
 
         # Inject restriction into INNER layer for this test
-        self.ship.layers[LayerType.INNER]['restrictions'].append("block_classification:Weapons")
+        self.ship.layers[LayerType.INNER].restrictions.append("block_classification:Weapons")
 
         # Try adding to INNER (Should fail)
         result = self.ship.add_component(comp, LayerType.INNER)
@@ -132,8 +132,8 @@ class TestBuilderValidation:
         # If accepted, check if comp1 is still there.
         # If comp1 is there and comp2 is there -> Fail.
 
-        has_comp1 = any(c.id == "group_a_1" for c in self.ship.layers[LayerType.INNER]['components'])
-        has_comp2 = any(c.id == "group_a_2" for c in self.ship.layers[LayerType.INNER]['components'])
+        has_comp1 = any(c.id == "group_a_1" for c in self.ship.layers[LayerType.INNER].components)
+        has_comp2 = any(c.id == "group_a_2" for c in self.ship.layers[LayerType.INNER].components)
 
         assert not (has_comp1 and has_comp2), "Should not allow multiple components from same exclusive group"
 
@@ -204,7 +204,7 @@ class TestBuilderValidation:
 
         # 1. Test allow_ability
         # Inject restriction: Only allow components with WeaponAbility in OUTER
-        self.ship.layers[LayerType.OUTER]['restrictions'] = ["allow_ability:WeaponAbility"]
+        self.ship.layers[LayerType.OUTER].restrictions = ["allow_ability:WeaponAbility"]
 
         # Add Weapon (Should pass)
         assert self.ship.add_component(weapon, LayerType.OUTER), "Should allow component with allowed ability"
@@ -214,7 +214,7 @@ class TestBuilderValidation:
 
         # 2. Test deny_ability
         # Inject restriction: Deny ShieldProjection in INNER
-        self.ship.layers[LayerType.INNER]['restrictions'] = ["deny_ability:ShieldProjection"]
+        self.ship.layers[LayerType.INNER].restrictions = ["deny_ability:ShieldProjection"]
 
         # Add Weapon (Should pass - not denied)
         assert self.ship.add_component(weapon, LayerType.INNER), "Should allow component without denied ability"
@@ -225,7 +225,7 @@ class TestBuilderValidation:
     def test_block_id_restriction(self):
         """Step 7: Verify block_id restriction."""
         # Inject restriction: Block 'test_comp'
-        self.ship.layers[LayerType.INNER]['restrictions'].append("block_id:test_comp")
+        self.ship.layers[LayerType.INNER].restrictions.append("block_id:test_comp")
 
         comp = self.create_component(id="test_comp")
         other_comp = self.create_component(id="other_comp")

@@ -26,7 +26,7 @@ class TestBulkAdd:
         count = 10
         ship.add_components_bulk(comp, LayerType.ARMOR, count)
 
-        assert len(ship.layers[LayerType.ARMOR]['components']) == 10
+        assert len(ship.layers[LayerType.ARMOR].components) == 10
         assert ship.current_mass == 100  # 10 * 10
 
     def test_bulk_add_with_limit(self, fresh_registries):

@@ -458,7 +458,7 @@ class BuilderScreen:
                     comps = []
                     from game.ui.screens.builder.grouping_strategies import get_component_group_key
                     for layers in self.ship.layers.values():
-                        for c in layers['components']:
+                        for c in layers.components:
                              if get_component_group_key(c) == data:
                                  comps.append(c)
                     
@@ -505,7 +505,7 @@ class BuilderScreen:
 
                  if target_layer is not None:
                      if target_layer in self.ship.layers:
-                         comps = self.ship.layers[target_layer]['components']
+                         comps = self.ship.layers[target_layer].components
                          for idx in range(len(comps)-1, -1, -1):
                              c = comps[idx]
                              if get_component_group_key(c) == group_key:
@@ -514,7 +514,7 @@ class BuilderScreen:
                                  break
                  else:
                      for l_type, layers in self.ship.layers.items():
-                         comps = layers['components']
+                         comps = layers.components
                          for idx in range(len(comps)-1, -1, -1):
                              c = comps[idx]
                              if get_component_group_key(c) == group_key:
@@ -539,7 +539,7 @@ class BuilderScreen:
                  layers_to_search = [target_layer] if target_layer else list(self.ship.layers.keys())
                  for l_type in layers_to_search:
                      if l_type in self.ship.layers:
-                         for idx, c in enumerate(self.ship.layers[l_type]['components']):
+                         for idx, c in enumerate(self.ship.layers[l_type].components):
                              if c is comp:
                                  self.ship.remove_component(l_type, idx)
                                  removed = True
@@ -571,13 +571,13 @@ class BuilderScreen:
 
                      from game.ui.screens.builder.grouping_strategies import get_component_group_key
                      if target_layer and target_layer in self.ship.layers:
-                         for c in self.ship.layers[target_layer]['components']:
+                         for c in self.ship.layers[target_layer].components:
                              if get_component_group_key(c) == group_key:
                                  target_comp = c
                                  break
                      if not target_comp:
                          for layers in self.ship.layers.values():
-                             for c in layers['components']:
+                             for c in layers.components:
                                  if get_component_group_key(c) == group_key:
                                      target_comp = c
                                      break
@@ -593,7 +593,7 @@ class BuilderScreen:
 
                      if not target_layer:
                          for l_type, layers in self.ship.layers.items():
-                             if target_comp in layers['components']:
+                             if target_comp in layers.components:
                                  target_layer = l_type
                                  break
 
@@ -1038,11 +1038,7 @@ class BuilderScreen:
     def _clear_design(self):
         logger.info("Clearing ship design")
         for layer_type, layer_data in self.ship.layers.items():
-            layer_data['components'] = []
-            layer_data['hp_pool'] = 0
-            layer_data['max_hp_pool'] = 0
-            layer_data['mass'] = 0
-            layer_data['hp'] = 0
+            layer_data.clear()  # Use LayerData.clear() method
             
         self.template_modifiers = {}
         self.ship.ai_strategy = "standard_ranged"

@@ -220,7 +220,7 @@ class WorkshopEventRouter:
         # If we have a target layer, only search in that layer
         if target_layer is not None:
             if target_layer in gui.ship.layers:
-                comps = gui.ship.layers[target_layer]['components']
+                comps = gui.ship.layers[target_layer].components
                 for idx in range(len(comps) - 1, -1, -1):
                     c = comps[idx]
                     if get_component_group_key(c) == group_key:
@@ -230,7 +230,7 @@ class WorkshopEventRouter:
         else:
             # Fallback: search all layers
             for l_type, layers in gui.ship.layers.items():
-                comps = layers['components']
+                comps = layers.components
                 for idx in range(len(comps) - 1, -1, -1):
                     c = comps[idx]
                     if get_component_group_key(c) == group_key:
@@ -264,7 +264,7 @@ class WorkshopEventRouter:
         layers_to_search = [target_layer] if target_layer else list(gui.ship.layers.keys())
         for l_type in layers_to_search:
             if l_type in gui.ship.layers:
-                for idx, c in enumerate(gui.ship.layers[l_type]['components']):
+                for idx, c in enumerate(gui.ship.layers[l_type].components):
                     if c is comp:
                         gui.viewmodel.remove_component(l_type, idx)
                         removed = True
@@ -306,7 +306,7 @@ class WorkshopEventRouter:
             # Find first component of group, preferring target layer
             from game.ui.screens.builder.grouping_strategies import get_component_group_key
             if target_layer and target_layer in gui.ship.layers:
-                for c in gui.ship.layers[target_layer]['components']:
+                for c in gui.ship.layers[target_layer].components:
                     if get_component_group_key(c) == group_key:
                         target_comp = c
                         break

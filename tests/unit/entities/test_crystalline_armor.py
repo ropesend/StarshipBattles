@@ -62,7 +62,7 @@ class TestCrystallineArmor:
 
     def add_armor(self):
         c = self.registries.components["crystalline_armor"].clone()
-        self.ship.layers[LayerType.ARMOR]['components'].append(c)
+        self.ship.layers[LayerType.ARMOR].components.append(c)
 
         # Also need a shield generator so max_shields > 0
         shield_data = {
@@ -76,7 +76,7 @@ class TestCrystallineArmor:
         }
         # Create ad-hoc component instance
         s_comp = Component(shield_data, registries=self.registries)
-        self.ship.layers[LayerType.ARMOR]['components'].append(s_comp)
+        self.ship.layers[LayerType.ARMOR].components.append(s_comp)
 
         self.ship.recalculate_stats()
         # Reset shields for predictable testing (recalculate_stats overwrites these)
@@ -141,7 +141,7 @@ class TestCrystallineArmor:
             }
         }
         c = Component(other_data, registries=self.registries)
-        self.ship.layers[LayerType.ARMOR]['components'].append(c)
+        self.ship.layers[LayerType.ARMOR].components.append(c)
         self.ship.recalculate_stats()
 
         # Total = 10 (Armor) + 5 (Hull) = 15

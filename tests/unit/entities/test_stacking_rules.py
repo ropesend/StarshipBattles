@@ -9,11 +9,12 @@ from game.simulation.entities.ship_stats import ShipStatsCalculator
 @pytest.fixture
 def ship_with_layers(fresh_registries):
     """Create a ship with mock layers for testing."""
+    from game.simulation.entities.layer_data import LayerData
     ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
-    # Mock layers
-    ship.layers[LayerType.OUTER] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
-    ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
-    ship.layers[LayerType.INNER] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
+    # Mock layers using LayerData
+    ship.layers[LayerType.OUTER] = LayerData(radius_pct=1.0, max_mass_pct=1.0, max_hp_pool=100, hp_pool=100)
+    ship.layers[LayerType.ARMOR] = LayerData(radius_pct=1.0, max_mass_pct=1.0, max_hp_pool=100, hp_pool=100)
+    ship.layers[LayerType.INNER] = LayerData(radius_pct=1.0, max_mass_pct=1.0, max_hp_pool=100, hp_pool=100)
     ship._fresh_registries = fresh_registries  # Store for component creation
     return ship
 

@@ -17,6 +17,7 @@ from game.simulation.components.component import Component
 from game.core.constants import LayerType
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.constants import LayerDefaults
+from game.simulation.entities.layer_data import LayerData
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -42,7 +43,7 @@ class ShipComponentManager:
             ship: The ship this manager is associated with.
         """
         self._ship = ship
-        self.layers: Dict[LayerType, Dict[str, Any]] = {}
+        self.layers: Dict[LayerType, LayerData] = {}
 
     def initialize_layers(self) -> None:
         """
@@ -68,14 +69,8 @@ class ShipComponentManager:
                 {"type": "ARMOR", "radius_pct": 1.0, "restrictions": []}
             ]
 
-        # Force HULL layer existence (Index 0)
-        self.layers[LayerType.HULL] = {
-            'components': [],
-            'radius_pct': 0.0,
-            'restrictions': ['HullOnly'],
-            'max_mass_pct': 100.0,
-            'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
-        }
+        # PROJ-84: Force HULL layer existence using LayerData factory
+        self.layers[LayerType.HULL] = LayerData.create_hull()
 
         for l_def in layer_defs:
             l_type_str = l_def.get('type')
@@ -85,13 +80,8 @@ class ShipComponentManager:
                 if l_type == LayerType.HULL:
                     continue
 
-                self.layers[l_type] = {
-                    'components': [],
-                    'radius_pct': l_def.get('radius_pct', 0.5),
-                    'restrictions': l_def.get('restrictions', []),
-                    'max_mass_pct': l_def.get('max_mass_pct', 1.0),
-                    'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
-                }
+                # PROJ-84: Use LayerData.from_definition() factory
+                self.layers[l_type] = LayerData.from_definition(l_def)
             except KeyError:
                 log_warning(f"Unknown LayerType {l_type_str} in class {self._ship.ship_class}")
 
@@ -109,18 +99,18 @@ class ShipComponentManager:
         # Calculate total mass capacity (sum of max_mass_pct)
         # HULL is structural (radius 0), so excluded from area-proportional calculation
         total_capacity_pct = sum(
-            self.layers[l]['max_mass_pct'] for l in present_layers if l != LayerType.HULL
+            self.layers[l].max_mass_pct for l in present_layers if l != LayerType.HULL
         )
 
         if total_capacity_pct > 0:
             cumulative_mass_pct = 0.0
             for l_type in present_layers:
                 if l_type == LayerType.HULL:
-                    self.layers[l_type]['radius_pct'] = 0.0
+                    self.layers[l_type].radius_pct = 0.0
                     continue
-                cumulative_mass_pct += self.layers[l_type]['max_mass_pct']
+                cumulative_mass_pct += self.layers[l_type].max_mass_pct
                 # Area = pi * r^2. Mass proportional to Area.
-                self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
+                self.layers[l_type].radius_pct = math.sqrt(cumulative_mass_pct / total_capacity_pct)
 
     def add_component(self, component: Optional[Component], layer_type: LayerType) -> bool:
         """
@@ -145,7 +135,7 @@ class ShipComponentManager:
                 log_error(err)
             return False
 
-        self.layers[layer_type]['components'].append(component)
+        self.layers[layer_type].components.append(component)
         component.layer_assigned = layer_type
         component.ship = self._ship
         component.recalculate_stats()
@@ -200,7 +190,7 @@ class ShipComponentManager:
                         log_error(err)
                 break
 
-            self.layers[layer_type]['components'].append(new_comp)
+            self.layers[layer_type].components.append(new_comp)
             new_comp.layer_assigned = layer_type
             new_comp.ship = self._ship
             new_comp.recalculate_stats()
@@ -225,8 +215,8 @@ class ShipComponentManager:
         Returns:
             The removed component, or None if index was invalid
         """
-        if 0 <= index < len(self.layers[layer_type]['components']):
-            comp = self.layers[layer_type]['components'].pop(index)
+        if 0 <= index < len(self.layers[layer_type].components):
+            comp = self.layers[layer_type].components.pop(index)
             # PROJ-49: Invalidate component cache
             if hasattr(self._ship, '_invalidate_components_cache'):
                 self._ship._invalidate_components_cache()
@@ -245,7 +235,7 @@ class ShipComponentManager:
         """
         result = []
         for layer_data in self.layers.values():
-            result.extend(layer_data['components'])
+            result.extend(layer_data.components)
         return result
 
     def iter_components(self) -> Iterator[Tuple[LayerType, Component]]:
@@ -257,7 +247,7 @@ class ShipComponentManager:
             Iterates through layers in dictionary order.
         """
         for layer_type, layer_data in self.layers.items():
-            for component in layer_data['components']:
+            for component in layer_data.components:
                 yield layer_type, component
 
     def get_components_by_ability(
@@ -278,7 +268,7 @@ class ShipComponentManager:
         """
         result = []
         for layer_data in self.layers.values():
-            for comp in layer_data['components']:
+            for comp in layer_data.components:
                 if operational_only and not comp.is_operational:
                     continue
                 if comp.has_ability(ability_name):
@@ -300,7 +290,7 @@ class ShipComponentManager:
         layer_data = self.layers.get(layer_type)
         if layer_data is None:
             return []
-        return list(layer_data['components'])
+        return list(layer_data.components)
 
     def has_components(self) -> bool:
         """
@@ -310,7 +300,7 @@ class ShipComponentManager:
             True if ship has at least one component in any layer, False otherwise.
         """
         for layer_data in self.layers.values():
-            if layer_data['components']:
+            if layer_data.components:
                 return True
         return False
 
@@ -328,7 +318,7 @@ class ShipComponentManager:
             Tuple of (layer_type, index, component) or None if not found
         """
         for layer_type, layer_data in self.layers.items():
-            for idx, comp in enumerate(layer_data['components']):
+            for idx, comp in enumerate(layer_data.components):
                 if predicate(comp):
                     return (layer_type, idx, comp)
         return None
@@ -341,5 +331,5 @@ class ShipComponentManager:
         """
         for layer_type, layer_data in self.layers.items():
             if layer_type != LayerType.HULL:
-                layer_data['components'].clear()
+                layer_data.components.clear()
         self._ship.recalculate_stats()

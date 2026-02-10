@@ -59,7 +59,7 @@ class TestVehicleDesignServiceCreateShip:
 
         assert result.success is True
         # Escort class should have a default hull in HULL layer
-        hull_components = result.ship.layers[LayerType.HULL]['components']
+        hull_components = result.ship.layers[LayerType.HULL].components
         assert len(hull_components) >= 1
 
     def test_create_ship_invalid_class(self, service):
@@ -91,7 +91,7 @@ class TestVehicleDesignServiceAddComponent:
 
         assert result.success is True
         # Verify component was added
-        outer_components = ship.layers[LayerType.OUTER]['components']
+        outer_components = ship.layers[LayerType.OUTER].components
         engine_ids = [c.id for c in outer_components]
         assert "standard_engine" in engine_ids
 
@@ -155,7 +155,7 @@ class TestVehicleDesignServiceRemoveComponent:
         service.add_component(ship, "standard_engine", LayerType.OUTER)
 
         # Get initial count
-        initial_count = len(ship.layers[LayerType.OUTER]['components'])
+        initial_count = len(ship.layers[LayerType.OUTER].components)
 
         # Remove it
         result = service.remove_component(
@@ -166,7 +166,7 @@ class TestVehicleDesignServiceRemoveComponent:
 
         assert result.success is True
         assert result.removed_component is not None
-        assert len(ship.layers[LayerType.OUTER]['components']) == initial_count - 1
+        assert len(ship.layers[LayerType.OUTER].components) == initial_count - 1
 
     def test_remove_component_invalid_index(self, service):
         """remove_component() with invalid index fails gracefully."""

@@ -298,9 +298,9 @@ class TestWorkshopViewModel:
         # Non-hull layers should be empty
         for layer_type, layer_data in ship.layers.items():
             if layer_type != LayerType.HULL:
-                assert len(layer_data['components']) == 0, \
+                assert len(layer_data.components) == 0, \
                     f"Layer {layer_type.name} should be empty after clear_design"
 
         # Hull should remain
         if LayerType.HULL in ship.layers:
-            assert len(ship.layers[LayerType.HULL]['components']) > 0
+            assert len(ship.layers[LayerType.HULL].components) > 0

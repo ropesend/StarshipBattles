@@ -19,8 +19,8 @@ class TestDynamicLayers:
         assert LayerType.INNER not in ship.layers
 
         # Check radii
-        assert ship.layers[LayerType.CORE]['radius_pct'] == pytest.approx(0.877, abs=0.001)
-        assert ship.layers[LayerType.ARMOR]['radius_pct'] == 1.0
+        assert ship.layers[LayerType.CORE].radius_pct == pytest.approx(0.877, abs=0.001)
+        assert ship.layers[LayerType.ARMOR].radius_pct == 1.0
 
     def test_satellite_layers(self, fresh_registries):
         """Satellite (Small) should have CORE, OUTER, ARMOR."""
@@ -48,9 +48,9 @@ class TestDynamicLayers:
 
         ship = Ship("Restricted Ship", 0, 0, (255, 0, 0), ship_class="Escort", registries=fresh_registries)
         # Add a fake restriction to OUTER layer
-        ship.layers[LayerType.OUTER]['restrictions'].append("block_classification:Weapons")
+        ship.layers[LayerType.OUTER].restrictions.append("block_classification:Weapons")
         # Clear restrictions on CORE to ensure test isolation (since Escort now has default blocks)
-        ship.layers[LayerType.CORE]['restrictions'] = []
+        ship.layers[LayerType.CORE].restrictions = []
 
         # Create a mock Weapon component
         # We can simulate a component nicely

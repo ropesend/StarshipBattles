@@ -66,15 +66,15 @@ class TestHullLayerMigration:
         ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_hull)
 
         assert LayerType.HULL in ship.layers
-        assert ship.layers[LayerType.HULL]['radius_pct'] == 0.0
-        assert 'HullOnly' in ship.layers[LayerType.HULL]['restrictions']
+        assert ship.layers[LayerType.HULL].radius_pct == 0.0
+        assert 'HullOnly' in ship.layers[LayerType.HULL].restrictions
 
     def test_hull_auto_equip_to_hull_layer(self, registry_with_hull):
         """Verify default hull is equipped to LayerType.HULL, not CORE."""
         ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_hull)
 
-        hull_layer_comps = ship.layers[LayerType.HULL]['components']
-        core_layer_comps = ship.layers[LayerType.CORE]['components']
+        hull_layer_comps = ship.layers[LayerType.HULL].components
+        core_layer_comps = ship.layers[LayerType.CORE].components
 
         assert len(hull_layer_comps) == 1
         assert hull_layer_comps[0].id == "hull_escort"
@@ -121,11 +121,11 @@ class TestHullLayerMigration:
         ship.change_class("Cruiser", migrate_components=True)
 
         # Should have Cruiser hull in HULL layer
-        assert ship.layers[LayerType.HULL]['components'][0].id == "hull_cruiser"
-        assert ship.layers[LayerType.HULL]['components'][0].layer_assigned == LayerType.HULL
+        assert ship.layers[LayerType.HULL].components[0].id == "hull_cruiser"
+        assert ship.layers[LayerType.HULL].components[0].layer_assigned == LayerType.HULL
 
         # Should have armor in CORE layer
-        assert any(c.id == "test_armor" for c in ship.layers[LayerType.CORE]['components'])
+        assert any(c.id == "test_armor" for c in ship.layers[LayerType.CORE].components)
 
         # Should NOT have Escort hull anywhere (using helper method)
         assert not any(c.id == "hull_escort" for c in ship.get_all_components())
@@ -140,5 +140,5 @@ class TestHullLayerMigration:
         # total_capacity = 1.0 (excluding HULL)
         # CORE radius = sqrt(1.0 / 1.0) = 1.0
 
-        assert ship.layers[LayerType.HULL]['radius_pct'] == 0.0
-        assert ship.layers[LayerType.CORE]['radius_pct'] == 1.0
+        assert ship.layers[LayerType.HULL].radius_pct == 0.0
+        assert ship.layers[LayerType.CORE].radius_pct == 1.0

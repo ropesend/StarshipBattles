@@ -134,7 +134,7 @@ class LayerPanel(DropTarget):
             if l_type not in ship.layers: continue
             
             data = ship.layers[l_type]
-            components = data['components']
+            components = data.components
             
             current_mass = sum(c.mass for c in components)
             layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
@@ -314,8 +314,8 @@ class LayerPanel(DropTarget):
             comp = payload
             removed = False
             for l_type, layers in self.builder.ship.layers.items():
-                if comp in layers['components']:
-                    layers['components'].remove(comp)
+                if comp in layers.components:
+                    layers.components.remove(comp)
                     removed = True
                     break
             
@@ -506,7 +506,7 @@ class LayerPanel(DropTarget):
                 # but we can iterate ship layers like BuilderScreen does.
                 g_key = item.group_key
                 for layers in self.builder.ship.layers.values():
-                    for c in layers['components']:
+                    for c in layers.components:
                         if get_component_group_key(c) == g_key:
                             result_components.append(c)
                             

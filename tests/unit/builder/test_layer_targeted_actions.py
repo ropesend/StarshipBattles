@@ -28,17 +28,18 @@ def _make_component(name, comp_type="weapon"):
 @pytest.fixture
 def router_setup():
     """Create a WorkshopEventRouter with a mocked GUI."""
+    from game.simulation.entities.layer_data import LayerData
     gui = MagicMock()
     gui.ship.layers = {
-        LayerType.CORE: {'components': []},
-        LayerType.INNER: {'components': []},
-        LayerType.OUTER: {'components': []},
-        LayerType.ARMOR: {'components': []},
+        LayerType.CORE: LayerData(),
+        LayerType.INNER: LayerData(),
+        LayerType.OUTER: LayerData(),
+        LayerType.ARMOR: LayerData(),
     }
 
     def iter_components():
         for l_type, data in gui.ship.layers.items():
-            for c in data['components']:
+            for c in data.components:
                 yield l_type, c
 
     gui.ship.iter_components = iter_components
@@ -46,7 +47,7 @@ def router_setup():
     def get_all_components():
         result = []
         for data in gui.ship.layers.values():
-            result.extend(data['components'])
+            result.extend(data.components)
         return result
 
     gui.ship.get_all_components = get_all_components
@@ -70,8 +71,8 @@ class TestRemoveGroupLayerTargeted:
         # Place "laser" in CORE and INNER
         core_laser = _make_component("laser")
         inner_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE]['components'] = [core_laser]
-        gui.ship.layers[LayerType.INNER]['components'] = [inner_laser]
+        gui.ship.layers[LayerType.CORE].components = [core_laser]
+        gui.ship.layers[LayerType.INNER].components = [inner_laser]
 
         # Remove from INNER (tuple format: group_key, layer_type)
         with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
@@ -86,8 +87,8 @@ class TestRemoveGroupLayerTargeted:
 
         core_laser = _make_component("laser")
         inner_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE]['components'] = [core_laser]
-        gui.ship.layers[LayerType.INNER]['components'] = [inner_laser]
+        gui.ship.layers[LayerType.CORE].components = [core_laser]
+        gui.ship.layers[LayerType.INNER].components = [inner_laser]
 
         with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
             router._handle_remove_group(("laser", LayerType.CORE))
@@ -99,7 +100,7 @@ class TestRemoveGroupLayerTargeted:
         router, gui = router_setup
 
         core_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE]['components'] = [core_laser]
+        gui.ship.layers[LayerType.CORE].components = [core_laser]
 
         with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
             router._handle_remove_group("laser")
@@ -115,7 +116,7 @@ class TestRemoveIndividualLayerTargeted:
         router, gui = router_setup
 
         inner_comp = _make_component("reactor")
-        gui.ship.layers[LayerType.INNER]['components'] = [inner_comp]
+        gui.ship.layers[LayerType.INNER].components = [inner_comp]
 
         router._handle_remove_individual((inner_comp, LayerType.INNER))
 
@@ -126,7 +127,7 @@ class TestRemoveIndividualLayerTargeted:
         router, gui = router_setup
 
         core_comp = _make_component("reactor")
-        gui.ship.layers[LayerType.CORE]['components'] = [core_comp]
+        gui.ship.layers[LayerType.CORE].components = [core_comp]
 
         router._handle_remove_individual(core_comp)
 
@@ -142,8 +143,8 @@ class TestAddComponentLayerTargeted:
 
         core_laser = _make_component("laser")
         inner_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE]['components'] = [core_laser]
-        gui.ship.layers[LayerType.INNER]['components'] = [inner_laser]
+        gui.ship.layers[LayerType.CORE].components = [core_laser]
+        gui.ship.layers[LayerType.INNER].components = [inner_laser]
 
         with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
             router._handle_add_component('add_group', ("laser", LayerType.INNER))
@@ -158,7 +159,7 @@ class TestAddComponentLayerTargeted:
         router, gui = router_setup
 
         inner_comp = _make_component("reactor")
-        gui.ship.layers[LayerType.INNER]['components'] = [inner_comp]
+        gui.ship.layers[LayerType.INNER].components = [inner_comp]
 
         router._handle_add_component('add_individual', (inner_comp, LayerType.INNER))
 
@@ -171,7 +172,7 @@ class TestAddComponentLayerTargeted:
         router, gui = router_setup
 
         core_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE]['components'] = [core_laser]
+        gui.ship.layers[LayerType.CORE].components = [core_laser]
 
         with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
             router._handle_add_component('add_group', "laser")

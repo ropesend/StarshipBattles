@@ -41,7 +41,7 @@ class TestShip:
         # Bridge is allowed in CORE
         bridge = create_component('bridge', registries=fresh_registries)
         ship.add_component(bridge, LayerType.CORE)
-        assert bridge in ship.layers[LayerType.CORE]['components']
+        assert bridge in ship.layers[LayerType.CORE].components
 
         # Railgun allowed in OUTER. Try adding to CORE (should fail or be allowed if logic checks?)
         # Ship.add_component definition:
@@ -110,7 +110,7 @@ class TestShip:
         assert armor.is_active is False
         # 50 damage should be distributed to CORE components
         # Due to random selection and HP caps, verify total damage absorbed is correct
-        core_hp_lost = sum(c.max_hp - c.current_hp for c in ship.layers[LayerType.CORE]['components'])
+        core_hp_lost = sum(c.max_hp - c.current_hp for c in ship.layers[LayerType.CORE].components)
         assert core_hp_lost >= 40, f"At least 40 HP should be lost in CORE (got {core_hp_lost})"
         assert core_hp_lost <= 50, f"At most 50 HP should be lost in CORE (got {core_hp_lost})"
 
@@ -133,11 +133,11 @@ class TestShip:
         assert new_ship.name == "TestShip"
         # HULL: Hull (auto-equipped) = 1 component
         # CORE: Bridge (from data) = 1 component
-        assert len(new_ship.layers[LayerType.HULL]['components']) == 1
-        assert len(new_ship.layers[LayerType.CORE]['components']) == 1
-        assert len(new_ship.layers[LayerType.OUTER]['components']) == 1
+        assert len(new_ship.layers[LayerType.HULL].components) == 1
+        assert len(new_ship.layers[LayerType.CORE].components) == 1
+        assert len(new_ship.layers[LayerType.OUTER].components) == 1
         # Check Bridge is present
-        bridge_found = any(c.type_str == 'Bridge' for c in new_ship.layers[LayerType.CORE]['components'])
+        bridge_found = any(c.type_str == 'Bridge' for c in new_ship.layers[LayerType.CORE].components)
         assert bridge_found is True, "Bridge component should be in CORE layer"
 
 
@@ -184,7 +184,7 @@ class TestShipClassMutation:
 
         # Helper to find component in layer
         def has_comp(layer_type, comp):
-            return comp in self.ship.layers[layer_type]['components']
+            return comp in self.ship.layers[layer_type].components
 
         assert has_comp(LayerType.CORE, bridge) is True
         assert has_comp(LayerType.OUTER, railgun) is True
@@ -311,7 +311,7 @@ class TestHullAutoEquip:
         """Verify Ship auto-equips default_hull_id from vehicle class."""
         ship = Ship(name="Test", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_hull)
 
-        hull_comps = ship.layers[LayerType.HULL]['components']
+        hull_comps = ship.layers[LayerType.HULL].components
         assert len(hull_comps) >= 1, "Expected at least 1 component in HULL layer"
 
         # Find the hull component

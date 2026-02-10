@@ -33,7 +33,7 @@ class TestDesignFactories:
         """create_brick ship should have a bridge component."""
         ship = create_brick(0, 0, registries=fresh_registries)
 
-        core_components = ship.layers[LayerType.CORE]['components']
+        core_components = ship.layers[LayerType.CORE].components
         has_bridge = any(c.type_str == 'Bridge' for c in core_components)
 
         assert has_bridge, "Brick should have a Bridge in CORE layer"
@@ -51,7 +51,7 @@ class TestDesignFactories:
         """create_brick ship should have armor plates."""
         ship = create_brick(0, 0, registries=fresh_registries)
 
-        armor_components = ship.layers[LayerType.ARMOR]['components']
+        armor_components = ship.layers[LayerType.ARMOR].components
         assert len(armor_components) > 0, "Brick should have armor"
 
     def test_create_interceptor_returns_ship(self, fresh_registries):
@@ -67,7 +67,7 @@ class TestDesignFactories:
         """create_interceptor ship should have a bridge component."""
         ship = create_interceptor(0, 0, registries=fresh_registries)
 
-        core_components = ship.layers[LayerType.CORE]['components']
+        core_components = ship.layers[LayerType.CORE].components
         has_bridge = any(c.type_str == 'Bridge' for c in core_components)
 
         assert has_bridge, "Interceptor should have a Bridge in CORE layer"
@@ -76,7 +76,7 @@ class TestDesignFactories:
         """create_interceptor ship should have weapons."""
         ship = create_interceptor(0, 0, registries=fresh_registries)
 
-        outer_components = ship.layers[LayerType.OUTER]['components']
+        outer_components = ship.layers[LayerType.OUTER].components
         # Should have railguns in OUTER layer
         has_weapons = any(c.has_ability('WeaponAbility') for c in outer_components)
 

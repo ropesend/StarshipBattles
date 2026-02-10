@@ -79,7 +79,7 @@ class TestShipSerializerFromDict:
         ship = ShipSerializer.from_dict(ship_dict_data, registries=mock_registries)
 
         # Check component was created
-        core_components = ship.layers[LayerType.CORE]['components']
+        core_components = ship.layers[LayerType.CORE].components
         assert len(core_components) > 0
 
         # Component should also have the registries
@@ -92,7 +92,7 @@ class TestShipSerializerFromDict:
 
         ship = ShipSerializer.from_dict(ship_dict_data, registries=mock_registries)
 
-        core_components = ship.layers[LayerType.CORE]['components']
+        core_components = ship.layers[LayerType.CORE].components
         assert len(core_components) > 0
 
         bridge = core_components[0]

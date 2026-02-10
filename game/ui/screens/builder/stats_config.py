@@ -192,7 +192,7 @@ def get_resource_consumption(ship, res_name):
     total = 0
     # Iterate all components in all layers
     for layer in ship.layers.values():
-        for comp in layer['components']:
+        for comp in layer.components:
             if hasattr(comp, 'ability_instances'):
                 for ability in comp.ability_instances:
                     if isinstance(ability, ResourceConsumption):
@@ -379,7 +379,7 @@ def _get_constant_consumption(ship, res_name):
     total = 0
     try:
         for layer in ship.layers.values():
-            for comp in layer['components']:
+            for comp in layer.components:
                 if hasattr(comp, 'ability_instances'):
                     for ability in comp.ability_instances:
                         if isinstance(ability, ResourceConsumption):

@@ -79,7 +79,7 @@ class TestShields:
         self.ship.combat_engine.take_damage(60)
         assert self.ship.current_shields == 0
         # Check that SOME damage was applied to CORE components
-        core_components = self.ship.layers[LayerType.CORE]['components']
+        core_components = self.ship.layers[LayerType.CORE].components
         total_hp_lost = sum(c.max_hp - c.current_hp for c in core_components)
         assert total_hp_lost == 10, "10 HP should bleed through shields to CORE"
 

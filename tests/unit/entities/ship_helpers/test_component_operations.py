@@ -43,7 +43,7 @@ class TestHasComponents:
         ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_components)
         # Clear all layers including hull
         for layer_data in ship.layers.values():
-            layer_data['components'] = []
+            layer_data.components.clear()
         result = ship.has_components()
         assert result is False
 
@@ -82,7 +82,7 @@ class TestFindComponentWithIndex:
         ship = Ship(name="EmptyShip", x=0, y=0, color=(255, 255, 255), ship_class="Escort", registries=registry_with_components)
         # Clear all layers including hull
         for layer_data in ship.layers.values():
-            layer_data['components'] = []
+            layer_data.components.clear()
         result = ship.find_component_with_index(lambda c: True)
         assert result is None
 
@@ -112,7 +112,7 @@ class TestFindComponentWithIndex:
         layer_type, index, component = result
 
         # Verify index is valid
-        layer_components = armed_ship.layers[layer_type]['components']
+        layer_components = armed_ship.layers[layer_type].components
         assert 0 <= index < len(layer_components)
         assert layer_components[index] is component
 

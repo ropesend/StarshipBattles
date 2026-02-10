@@ -77,7 +77,7 @@ class DamageCalculator:
         # Dynamic Layer Order: Sort by radius_pct descending (Outermost first)
         sorted_layers = sorted(
             ship.layers.items(),
-            key=lambda x: x[1]['radius_pct'],
+            key=lambda x: x[1].radius_pct,
             reverse=True
         )
 
@@ -113,7 +113,7 @@ class DamageCalculator:
 
         while damage > 0:
             # Filter for components with HP > 0
-            targets = [c for c in layer['components'] if c.current_hp > 0]
+            targets = [c for c in layer.components if c.current_hp > 0]
 
             if not targets:
                 break

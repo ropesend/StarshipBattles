@@ -164,7 +164,7 @@ class WorkshopViewModel:
                 if self._ship:
                     for l_type, l_data in self._ship.layers.items():
                         try:
-                            idx = l_data['components'].index(item)
+                            idx = l_data.components.index(item)
                             norm_selection.append((l_type, idx, item))
                             found = True
                             break

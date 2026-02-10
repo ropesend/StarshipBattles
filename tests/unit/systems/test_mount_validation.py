@@ -33,11 +33,12 @@ class TestMountDependencyRuleComponentAddition:
     @pytest.fixture
     def mock_ship_with_layers(self):
         """Create a mock ship with layer structure."""
+        from game.simulation.entities.layer_data import LayerData
         ship = Mock()
         ship.layers = {
-            LayerType.OUTER: {'components': []},
-            LayerType.INNER: {'components': []},
-            LayerType.CORE: {'components': []},
+            LayerType.OUTER: LayerData(),
+            LayerType.INNER: LayerData(),
+            LayerType.CORE: LayerData(),
         }
         return ship
 
@@ -55,7 +56,7 @@ class TestMountDependencyRuleComponentAddition:
         # Add a mount to the layer first
         mount = Mock()
         mount.data = {'name': 'weapon_mount', 'mount_type': 'weapon_mount'}
-        mock_ship_with_layers.layers[LayerType.OUTER]['components'] = [mount]
+        mock_ship_with_layers.layers[LayerType.OUTER].components = [mount]
 
         # Try to add component that requires that mount
         weapon = Mock()
@@ -82,7 +83,7 @@ class TestMountDependencyRuleComponentAddition:
         # Add mount to INNER layer
         mount = Mock()
         mount.data = {'mount_type': 'weapon_mount'}
-        mock_ship_with_layers.layers[LayerType.INNER]['components'] = [mount]
+        mock_ship_with_layers.layers[LayerType.INNER].components = [mount]
 
         # Try to add weapon to OUTER layer
         weapon = Mock()
@@ -100,7 +101,7 @@ class TestMountDependencyRuleComponentAddition:
         mount.data = {'mount_type': 'weapon_mount'}
         existing_weapon = Mock()
         existing_weapon.data = {'name': 'existing_laser', 'required_mount': 'weapon_mount'}
-        mock_ship_with_layers.layers[LayerType.OUTER]['components'] = [mount, existing_weapon]
+        mock_ship_with_layers.layers[LayerType.OUTER].components = [mount, existing_weapon]
 
         # Try to add another weapon (should fail - mount already in use)
         new_weapon = Mock()
@@ -120,7 +121,7 @@ class TestMountDependencyRuleComponentAddition:
         mount2.data = {'mount_type': 'weapon_mount'}
         existing_weapon = Mock()
         existing_weapon.data = {'name': 'existing_laser', 'required_mount': 'weapon_mount'}
-        mock_ship_with_layers.layers[LayerType.OUTER]['components'] = [mount1, mount2, existing_weapon]
+        mock_ship_with_layers.layers[LayerType.OUTER].components = [mount1, mount2, existing_weapon]
 
         # Try to add another weapon (should pass - second mount is available)
         new_weapon = Mock()
@@ -147,11 +148,12 @@ class TestMountDependencyRuleNoComponent:
     @pytest.fixture
     def mock_ship_with_layers(self):
         """Create a mock ship with layer structure."""
+        from game.simulation.entities.layer_data import LayerData
         ship = Mock()
         ship.layers = {
-            LayerType.OUTER: {'components': []},
-            LayerType.INNER: {'components': []},
-            LayerType.CORE: {'components': []},
+            LayerType.OUTER: LayerData(),
+            LayerType.INNER: LayerData(),
+            LayerType.CORE: LayerData(),
         }
         return ship
 
@@ -172,7 +174,7 @@ class TestMountDependencyRuleNoComponent:
         # Add a weapon without a mount (invalid state)
         weapon = Mock()
         weapon.data = {'name': 'laser', 'required_mount': 'weapon_mount'}
-        mock_ship_with_layers.layers[LayerType.OUTER]['components'] = [weapon]
+        mock_ship_with_layers.layers[LayerType.OUTER].components = [weapon]
 
         # Call without component - should NOT detect the invalid state
         result = rule.validate(mock_ship_with_layers)

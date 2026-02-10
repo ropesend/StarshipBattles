@@ -7,20 +7,23 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-09
-**Last Completed:** PROJ-83 Audit Passed
-**Current Status:** PROJ-83 Complete, Ready for Next Project
-**Current Project:** PROJ-85 (next)
-**Current Phase:** Phase 1
-**Test Status:** 7351 passed, 0 warnings
+**Last Session:** 2026-02-10
+**Last Completed:** PROJ-84 Phase 1 (partial)
+**Current Status:** PROJ-84 Phase 1 In Progress - 98.5% tests passing
+**Current Project:** PROJ-84
+**Current Phase:** Phase 1 (continuing)
+**Test Status:** 7255 passed, 110 failed, 10 errors
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-83 Complete: Eliminated all test warnings (299 → 0)
-- Phase 3: Added DeprecationWarning enforcement, PytestCollectionWarning filters
-- Audit PASSED: All goals met, no significant issues
-- Modified: pytest.ini
-- Next: PROJ-85 Phase 1 - Eradicate Module-Level Mutable Global State
+- PROJ-84 Phase 1: Created LayerData dataclass with factories (create_hull, from_definition)
+- Updated Ship._initialize_layers() to use LayerData
+- Updated ShipComponentManager to use LayerData
+- Updated 20+ production files for LayerData attribute access
+- Updated 30+ test files for LayerData
+- Core entity tests all passing (377 tests)
+- Remaining failures are UI/builder tests with mock dicts needing LayerData
+- Next action: Continue updating remaining test files with LayerData mock fixtures
 
 ---
 
@@ -196,10 +199,10 @@
 
 ---
 
-- [ ] **PROJ-85: Eradicate Module-Level Mutable Global State**
-  - **Phases:** 1 | **Status:** Ready | **Priority:** Medium
+- [x] **PROJ-85: Eradicate Module-Level Mutable Global State**
+  - **Phases:** 1 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-85/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-85/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -386,6 +389,8 @@
 | 2026-02-09 | PROJ-83 | Phase 2 | Complete | 7351 passed, 60 warnings | pending | 23+ labels abbreviated, headers/construction fixed, 80% total reduction |
 | 2026-02-09 | PROJ-83 | Phase 3 | Complete | 7351 passed, 0 warnings | pending | DeprecationWarning enforcement, PytestCollectionWarning filters |
 | 2026-02-09 | PROJ-83 | Audit 1 | PASSED | 7351 passed, 0 warnings | pending | All goals met, 100% warning elimination |
+| 2026-02-09 | PROJ-85 | Phase 1 | Complete | 7351 passed | b17d41ae | Removed 3 globals, cleaned imports |
+| 2026-02-09 | PROJ-85 | Audit 1 | PASSED | 7351 passed | b17d41ae | No runtime imports, all goals met |
 
 ---
 

@@ -38,9 +38,10 @@ class TestEmissiveArmor:
         # Add to ship
         self.emissive_comp = c.clone()
         if LayerType.ARMOR not in self.ship.layers:
-             self.ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
+            from game.simulation.entities.layer_data import LayerData
+            self.ship.layers[LayerType.ARMOR] = LayerData(radius_pct=1.0, max_mass_pct=1.0, max_hp_pool=100, hp_pool=100)
 
-        self.ship.layers[LayerType.ARMOR]['components'].append(self.emissive_comp)
+        self.ship.layers[LayerType.ARMOR].components.append(self.emissive_comp)
         self.ship.recalculate_stats()
 
     def test_damage_reduction_below_threshold(self):
@@ -59,7 +60,7 @@ class TestEmissiveArmor:
     def test_multiple_emissive_armor(self):
         # Add another plate
         comp2 = self.emissive_comp.clone()
-        self.ship.layers[LayerType.ARMOR]['components'].append(comp2)
+        self.ship.layers[LayerType.ARMOR].components.append(comp2)
         self.ship.recalculate_stats()
 
         # Total reduction should still be 15 (MAX of 15, 15)

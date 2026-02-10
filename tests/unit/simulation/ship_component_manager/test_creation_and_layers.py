@@ -48,8 +48,8 @@ class TestLayerInitialization:
         manager.initialize_layers()
 
         assert LayerType.HULL in manager.layers
-        assert 'components' in manager.layers[LayerType.HULL]
-        assert manager.layers[LayerType.HULL]['components'] == []
+        assert hasattr(manager.layers[LayerType.HULL], 'components')
+        assert manager.layers[LayerType.HULL].components == []
 
     def test_initialize_layers_creates_layers_from_class_def(self, fresh_registries):
         """initialize_layers creates layers based on vehicle class definition."""
@@ -77,12 +77,12 @@ class TestLayerInitialization:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
 
-        # Each layer should have required properties
+        # Each layer should have required properties (LayerData attributes)
         for layer_type, layer_data in manager.layers.items():
-            assert 'components' in layer_data
-            assert 'radius_pct' in layer_data
-            assert 'restrictions' in layer_data
-            assert 'max_mass_pct' in layer_data
+            assert hasattr(layer_data, 'components')
+            assert hasattr(layer_data, 'radius_pct')
+            assert hasattr(layer_data, 'restrictions')
+            assert hasattr(layer_data, 'max_mass_pct')
 
 
 class TestAddComponent:
@@ -102,7 +102,7 @@ class TestAddComponent:
         result = manager.add_component(engine_component, LayerType.OUTER)
 
         assert result is True
-        assert engine_component in manager.layers[LayerType.OUTER]['components']
+        assert engine_component in manager.layers[LayerType.OUTER].components
 
     def test_add_component_sets_layer_assigned(self, engine_component, fresh_registries):
         """add_component sets layer_assigned on component."""
@@ -179,7 +179,7 @@ class TestRemoveComponent:
         removed = manager.remove_component(LayerType.OUTER, 0)
 
         assert removed is engine_component
-        assert engine_component not in manager.layers[LayerType.OUTER]['components']
+        assert engine_component not in manager.layers[LayerType.OUTER].components
 
     def test_remove_component_invalid_index_returns_none(self, fresh_registries):
         """remove_component returns None for invalid index."""
@@ -224,13 +224,13 @@ class TestClearNonHullComponents:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
-        manager.layers[LayerType.OUTER]['components'].append(weapon_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(weapon_component)
         ship.recalculate_stats = MagicMock()
 
         manager.clear_non_hull_components()
 
-        assert manager.layers[LayerType.OUTER]['components'] == []
+        assert manager.layers[LayerType.OUTER].components == []
 
     def test_clear_non_hull_components_preserves_hull(self, fresh_registries):
         """clear_non_hull_components preserves HULL layer components."""
@@ -244,12 +244,12 @@ class TestClearNonHullComponents:
 
         # Add a mock hull component
         hull_comp = MagicMock()
-        manager.layers[LayerType.HULL]['components'].append(hull_comp)
+        manager.layers[LayerType.HULL].components.append(hull_comp)
         ship.recalculate_stats = MagicMock()
 
         manager.clear_non_hull_components()
 
-        assert hull_comp in manager.layers[LayerType.HULL]['components']
+        assert hull_comp in manager.layers[LayerType.HULL].components
 
 
 class TestAddComponentsBulk:
@@ -268,7 +268,7 @@ class TestAddComponentsBulk:
         count = manager.add_components_bulk(engine_component, LayerType.OUTER, 3)
 
         assert count == 3
-        assert len(manager.layers[LayerType.OUTER]['components']) == 3
+        assert len(manager.layers[LayerType.OUTER].components) == 3
 
     def test_add_components_bulk_returns_count_added(self, engine_component, fresh_registries):
         """add_components_bulk returns number successfully added."""

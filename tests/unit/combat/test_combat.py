@@ -51,7 +51,7 @@ class TestDamageLayerLogic:
 
     def test_armor_absorbs_damage_first(self):
         """Damage should be absorbed by armor layer first."""
-        armor = self.ship.layers[LayerType.ARMOR]['components'][0]
+        armor = self.ship.layers[LayerType.ARMOR].components[0]
         initial_armor_hp = armor.current_hp
 
         # Deal damage less than armor HP
@@ -59,12 +59,12 @@ class TestDamageLayerLogic:
 
         assert armor.current_hp < initial_armor_hp
         # Core components should be untouched
-        core_damage = sum(c.max_hp - c.current_hp for c in self.ship.layers[LayerType.CORE]['components'])
+        core_damage = sum(c.max_hp - c.current_hp for c in self.ship.layers[LayerType.CORE].components)
         assert core_damage == 0
 
     def test_damage_overflows_to_next_layer(self):
         """Excess damage should overflow to inner layers."""
-        armor = self.ship.layers[LayerType.ARMOR]['components'][0]
+        armor = self.ship.layers[LayerType.ARMOR].components[0]
         armor_hp = armor.current_hp
 
         # Deal more damage than armor can absorb
@@ -75,7 +75,7 @@ class TestDamageLayerLogic:
         assert armor.current_hp == 0
 
         # CORE (skipping empty OUTER/INNER) should have taken overflow
-        core_damage = sum(c.max_hp - c.current_hp for c in self.ship.layers[LayerType.CORE]['components'])
+        core_damage = sum(c.max_hp - c.current_hp for c in self.ship.layers[LayerType.CORE].components)
         assert core_damage > 0
 
     def test_shield_absorbs_before_armor(self):
@@ -85,7 +85,7 @@ class TestDamageLayerLogic:
         self.ship.recalculate_stats()
 
         initial_shields = self.ship.current_shields
-        armor = self.ship.layers[LayerType.ARMOR]['components'][0]
+        armor = self.ship.layers[LayerType.ARMOR].components[0]
         initial_armor_hp = armor.current_hp
 
         # Deal damage less than shields
@@ -119,11 +119,11 @@ class TestDamageLayerLogic:
         self.ship.add_component(hull, LayerType.CORE)
 
         # Remove armor first to make bridge accessible
-        self.ship.layers[LayerType.ARMOR]['components'] = []
+        self.ship.layers[LayerType.ARMOR].components = []
         self.ship.recalculate_stats()
 
         bridge = None
-        for c in self.ship.layers[LayerType.CORE]['components']:
+        for c in self.ship.layers[LayerType.CORE].components:
             if c.type_str == 'Bridge':
                 bridge = c
                 break
@@ -211,7 +211,7 @@ class TestWeaponCooldowns:
         # Phase 7: Use ability-based weapon detection
 
         weapon = None
-        for c in self.ship.layers[LayerType.OUTER]['components']:
+        for c in self.ship.layers[LayerType.OUTER].components:
             if c.has_ability('WeaponAbility') and c.is_active:
                 weapon = c
                 break
@@ -322,7 +322,7 @@ class TestCombatFlow:
 
         # Find the bridge component (Hull is auto-equipped first now)
         bridge = None
-        for comp in ship.layers[LayerType.CORE]['components']:
+        for comp in ship.layers[LayerType.CORE].components:
             if comp.type_str == 'Bridge':
                 bridge = comp
                 break
@@ -334,7 +334,7 @@ class TestCombatFlow:
         initial_hp = c.current_hp
 
         # Clear other components except the bridge for this test
-        ship.layers[LayerType.CORE]['components'] = [c]
+        ship.layers[LayerType.CORE].components = [c]
 
         # Take 10 damage -> Reduced by 5 -> 5 damage
         ship.combat_engine.take_damage(10)

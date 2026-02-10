@@ -264,7 +264,7 @@ class VehicleDesignService:
             return DesignResult(success=False, errors=errors)
 
         # Validate index
-        layer_components = ship.layers[layer]['components']
+        layer_components = ship.layers[layer].components
         if index < 0 or index >= len(layer_components):
             errors.append(f"Invalid component index {index} for layer {layer.name}")
             return DesignResult(
@@ -405,10 +405,10 @@ class VehicleDesignService:
                     'name': c.name,
                     'is_operational': c.is_operational
                 }
-                for c in layer_data['components']
+                for c in layer_data.components
             ],
-            'restrictions': layer_data.get('restrictions', []),
-            'radius_pct': layer_data.get('radius_pct', 1.0)
+            'restrictions': layer_data.restrictions,
+            'radius_pct': layer_data.radius_pct
         }
 
     def get_ship_summary(self, ship: Ship) -> dict:

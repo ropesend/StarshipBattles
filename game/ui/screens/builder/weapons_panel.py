@@ -247,7 +247,7 @@ class WeaponsReportPanel:
         """Get list of all weapon components from game.simulation.entities.ship, filtered."""
         weapons = []
         for layer_data in ship.layers.values():
-            for comp in layer_data['components']:
+            for comp in layer_data.components:
                 if comp.has_ability('WeaponAbility'):
                     # Filter by weapon ability type
                     if comp.has_ability('ProjectileWeaponAbility') and not self.filter_states['projectile']: continue

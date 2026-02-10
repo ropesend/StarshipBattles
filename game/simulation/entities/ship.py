@@ -6,6 +6,7 @@ from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Itera
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
+from game.simulation.entities.layer_data import LayerData
 from game.core.math import Vector2
 from game.core.logger import log_debug, log_info, log_warning, log_error
 from game.core.registry import GameRegistries
@@ -69,7 +70,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             hull_component = create_component(default_hull_id, registries=self._registries)
             if hull_component:
                 # Direct append to avoid validation during init
-                self.layers[LayerType.HULL]['components'].append(hull_component)
+                self.layers[LayerType.HULL].components.append(hull_component)
                 hull_component.layer_assigned = LayerType.HULL
                 hull_component.ship = self
             else:
@@ -335,9 +336,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """Initialize or Re-initialize layers based on current ship_class."""
         # PROJ-42: Use registries (always set via fallback in __init__)
         class_def = self._registries.vehicle_classes.get(self.ship_class, {})
-        self.layers = {}
+        self.layers: Dict[LayerType, LayerData] = {}
         layer_defs = class_def.get('layers', [])
-        
+
         # Fallback if no layers defined in vehicle class
         if not layer_defs:
             layer_defs = [
@@ -346,15 +347,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 { "type": "OUTER", "radius_pct": LayerDefaults.OUTER_RADIUS_PCT, "restrictions": [] },
                 { "type": "ARMOR", "radius_pct": 1.0, "restrictions": [] }
             ]
-            
-        # [NEW] Force HULL layer existence (Index 0)
-        self.layers[LayerType.HULL] = {
-            'components': [],
-            'radius_pct': 0.0,
-            'restrictions': ['HullOnly'],
-            'max_mass_pct': 100.0,
-            'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
-        }
+
+        # PROJ-84: Force HULL layer existence using LayerData factory
+        self.layers[LayerType.HULL] = LayerData.create_hull()
 
         for l_def in layer_defs:
             l_type_str = l_def.get('type')
@@ -362,14 +357,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 l_type = LayerType[l_type_str]
                 # Avoid overwriting HULL if it was somehow in data
                 if l_type == LayerType.HULL: continue
-                
-                self.layers[l_type] = {
-                    'components': [],
-                    'radius_pct': l_def.get('radius_pct', 0.5),
-                    'restrictions': l_def.get('restrictions', []),
-                    'max_mass_pct': l_def.get('max_mass_pct', 1.0),
-                    'hp_pool': 0, 'max_hp_pool': 0, 'mass': 0, 'hp': 0
-                }
+
+                # PROJ-84: Use LayerData.from_definition() factory
+                self.layers[l_type] = LayerData.from_definition(l_def)
             except KeyError:
                 # PROJ-45: Enhanced logging with context for unknown layer types
                 valid_layers = [lt.name for lt in LayerType]
@@ -381,23 +371,23 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         # Recalculate layer radii based on max_mass_pct (Area proportional to mass capacity)
         # Sort layers: HULL -> CORE -> INNER -> OUTER -> ARMOR
         layer_order = [LayerType.HULL, LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR]
-        
+
         # Filter layers present in this ship
         present_layers = [l for l in layer_order if l in self.layers]
-        
+
         # Calculate total mass capacity (sum of max_mass_pct)
         # HULL is structural (radius 0), so excluded from area-proportional calculation
-        total_capacity_pct = sum(self.layers[l]['max_mass_pct'] for l in present_layers if l != LayerType.HULL)
-        
+        total_capacity_pct = sum(self.layers[l].max_mass_pct for l in present_layers if l != LayerType.HULL)
+
         if total_capacity_pct > 0:
             cumulative_mass_pct = 0.0
             for l_type in present_layers:
                 if l_type == LayerType.HULL:
-                    self.layers[l_type]['radius_pct'] = 0.0
+                    self.layers[l_type].radius_pct = 0.0
                     continue
-                cumulative_mass_pct += self.layers[l_type]['max_mass_pct']
+                cumulative_mass_pct += self.layers[l_type].max_mass_pct
                 # Area = pi * r^2. Mass proportional to Area.
-                self.layers[l_type]['radius_pct'] = math.sqrt(cumulative_mass_pct / total_capacity_pct)
+                self.layers[l_type].radius_pct = math.sqrt(cumulative_mass_pct / total_capacity_pct)
         else:
             # Fallback if no mass limits defined
             pass
@@ -419,8 +409,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         old_components = []
         if migrate_components:
             # Flatten all components with their original layer
-            for l_type, data in self.layers.items():
-                for comp in data['components']:
+            for l_type, layer_data in self.layers.items():
+                for comp in layer_data.components:
                     # DON'T migrate the hull! New class gets its own new hull.
                     # This matches the to_dict() logic and Task 2.1 intent.
                     if l_type == LayerType.HULL or comp.id.startswith('hull_'):
@@ -447,7 +437,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             hull_component = create_component(default_hull_id, registries=self._registries)
             if hull_component:
                 # Direct append to avoid validation during class change
-                self.layers[LayerType.HULL]['components'].append(hull_component)
+                self.layers[LayerType.HULL].components.append(hull_component)
                 hull_component.layer_assigned = LayerType.HULL
                 hull_component.ship = self
         
@@ -489,7 +479,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                 log_error(err)
             return False
 
-        self.layers[layer_type]['components'].append(component)
+        self.layers[layer_type].components.append(component)
         component.layer_assigned = layer_type
         component.ship = self
         component.recalculate_stats()
@@ -535,7 +525,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
                         log_error(err)
                 break
                 
-            self.layers[layer_type]['components'].append(new_comp)
+            self.layers[layer_type].components.append(new_comp)
             new_comp.layer_assigned = layer_type
             new_comp.ship = self
             new_comp.recalculate_stats()
@@ -554,8 +544,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def remove_component(self, layer_type: LayerType, index: int) -> Optional[Component]:
         """Remove a component from the specified layer by index."""
-        if 0 <= index < len(self.layers[layer_type]['components']):
-            comp = self.layers[layer_type]['components'].pop(index)
+        if 0 <= index < len(self.layers[layer_type].components):
+            comp = self.layers[layer_type].components.pop(index)
             self._invalidate_components_cache()  # PROJ-49: Invalidate component cache
             self.recalculate_stats()
             return comp
@@ -571,7 +561,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
         # 1. Update components with current ship context
         for layer_data in self.layers.values():
-            for comp in layer_data['components']:
+            for comp in layer_data.components:
                 # Ensure ship ref is set
                 if not getattr(comp, 'ship', None): comp.ship = self
                 comp.recalculate_stats()
@@ -670,7 +660,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         if self._components_dirty or self._components_cache is None:
             result = []
             for layer_data in self.layers.values():
-                result.extend(layer_data['components'])
+                result.extend(layer_data.components)
             self._components_cache = result
             self._components_dirty = False
         return self._components_cache
@@ -684,7 +674,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             Iterates through layers in dictionary order.
         """
         for layer_type, layer_data in self.layers.items():
-            for component in layer_data['components']:
+            for component in layer_data.components:
                 yield layer_type, component
 
     def get_components_by_ability(
@@ -705,7 +695,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """
         result = []
         for layer_data in self.layers.values():
-            for comp in layer_data['components']:
+            for comp in layer_data.components:
                 if operational_only and not comp.is_operational:
                     continue
                 if comp.has_ability(ability_name):
@@ -745,7 +735,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         layer_data = self.layers.get(layer_type)
         if layer_data is None:
             return []
-        return list(layer_data['components'])
+        return list(layer_data.components)
 
     def has_components(self) -> bool:
         """
@@ -755,7 +745,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             True if ship has at least one component in any layer, False otherwise.
         """
         for layer_data in self.layers.values():
-            if layer_data['components']:
+            if layer_data.components:
                 return True
         return False
 
@@ -772,7 +762,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             Tuple of (layer_type, index, component) or None if not found
         """
         for layer_type, layer_data in self.layers.items():
-            for idx, comp in enumerate(layer_data['components']):
+            for idx, comp in enumerate(layer_data.components):
                 if predicate(comp):
                     return (layer_type, idx, comp)
         return None
@@ -784,7 +774,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """
         for layer_type, layer_data in self.layers.items():
             if layer_type != LayerType.HULL:
-                layer_data['components'].clear()
+                layer_data.components.clear()
         self.recalculate_stats()
 
     def check_validity(self) -> bool:
@@ -799,9 +789,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
     def layers_dict(self) -> Dict[str, List[Any]]:
         """Helper for JSON serialization."""
         d = {}
-        for l_type, data in self.layers.items():
+        for l_type, layer_data in self.layers.items():
             d[l_type.name] = []
-            for comp in data['components']:
+            for comp in layer_data.components:
                 # Minimal serialization: ID + Modifiers
                 c_data = {
                     "id": comp.id,

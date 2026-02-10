@@ -81,7 +81,7 @@ class TestShipResources:
         assert weapon.is_active is True
 
         # Remove crew quarters
-        self.ship.layers[LayerType.CORE]['components'] = [c for c in self.ship.layers[LayerType.CORE]['components'] if c.id != 'crew_quarters']
+        self.ship.layers[LayerType.CORE].components = [c for c in self.ship.layers[LayerType.CORE].components if c.id != 'crew_quarters']
         # Now only Bridge (5 housing). Requirement 10.
         self.ship.recalculate_stats()
 
@@ -107,7 +107,7 @@ class TestShipResources:
         # Bridge (5) needs crew. available_crew=25, LS=0. Effective=0.
         # Wait, if no LS provided, available_life_support=0.
 
-        bridge = [c for c in self.ship.layers[LayerType.CORE]['components'] if c.id == 'bridge'][0]
+        bridge = [c for c in self.ship.layers[LayerType.CORE].components if c.id == 'bridge'][0]
         assert bridge.is_active is False
         assert bridge.status == ComponentStatus.NO_CREW
 

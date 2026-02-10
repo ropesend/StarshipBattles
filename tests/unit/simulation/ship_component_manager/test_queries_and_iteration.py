@@ -36,8 +36,8 @@ class TestGetAllComponents:
         ship.layers = manager.layers
 
         # Add components to different layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
-        manager.layers[LayerType.OUTER]['components'].append(weapon_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(weapon_component)
 
         all_comps = manager.get_all_components()
 
@@ -53,7 +53,7 @@ class TestGetAllComponents:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
 
         list1 = manager.get_all_components()
         list2 = manager.get_all_components()
@@ -74,7 +74,7 @@ class TestIterComponents:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
 
         items = list(manager.iter_components())
 
@@ -114,7 +114,7 @@ class TestGetComponentsByAbility:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(weapon_component)
+        manager.layers[LayerType.OUTER].components.append(weapon_component)
         # Component uses is_active and _is_operational for is_operational property
         weapon_component.is_active = True
         weapon_component._is_operational = True
@@ -132,7 +132,7 @@ class TestGetComponentsByAbility:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(weapon_component)
+        manager.layers[LayerType.OUTER].components.append(weapon_component)
         # Make component non-operational
         weapon_component.is_active = False
 
@@ -149,7 +149,7 @@ class TestGetComponentsByAbility:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(weapon_component)
+        manager.layers[LayerType.OUTER].components.append(weapon_component)
         # Make component non-operational
         weapon_component.is_active = False
 
@@ -170,7 +170,7 @@ class TestGetComponentsByLayer:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
 
         result = manager.get_components_by_layer(LayerType.OUTER)
 
@@ -199,7 +199,7 @@ class TestGetComponentsByLayer:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
 
         list1 = manager.get_components_by_layer(LayerType.OUTER)
         list2 = manager.get_components_by_layer(LayerType.OUTER)
@@ -231,7 +231,7 @@ class TestHasComponents:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
 
         assert manager.has_components() is True
 
@@ -248,8 +248,8 @@ class TestFindComponentWithIndex:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
-        manager.layers[LayerType.OUTER]['components'].append(weapon_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(weapon_component)
 
         result = manager.find_component_with_index(lambda c: c is weapon_component)
 
@@ -268,7 +268,7 @@ class TestFindComponentWithIndex:
         manager = ShipComponentManager(ship)
         manager.initialize_layers()
         ship.layers = manager.layers
-        manager.layers[LayerType.OUTER]['components'].append(engine_component)
+        manager.layers[LayerType.OUTER].components.append(engine_component)
 
         result = manager.find_component_with_index(lambda c: False)
 

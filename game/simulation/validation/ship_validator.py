@@ -120,7 +120,7 @@ class MountDependencyRule(AdditionValidationRule):
             mount_count = 0
             user_count = 0
 
-            target_layer_comps = ship.layers[layer_type]['components']
+            target_layer_comps = ship.layers[layer_type].components
             for c in target_layer_comps:
                 if c.data.get('mount_type') == req_mount:
                     mount_count += 1
@@ -149,7 +149,7 @@ class LayerRestrictionDefinitionRule(AdditionValidationRule):
         if layer_type not in ship.layers:
             return result
 
-        restrictions = ship.layers[layer_type]['restrictions']
+        restrictions = ship.layers[layer_type].restrictions
 
         # [FIX for BUG-12] Handle HullOnly restriction
         if RestrictionPrefixes.HULL_ONLY in restrictions:
@@ -254,8 +254,8 @@ class MassBudgetRule(DesignValidationRule):
         if component and layer_type:
             if layer_type in ship.layers:
                 layer_data = ship.layers[layer_type]
-                current_layer_mass = sum(c.mass for c in layer_data['components'])
-                max_layer_mass = ship.max_mass_budget * layer_data.get('max_mass_pct', 1.0)
+                current_layer_mass = sum(c.mass for c in layer_data.components)
+                max_layer_mass = ship.max_mass_budget * layer_data.max_mass_pct
 
                 if current_layer_mass + component.mass > max_layer_mass:
                     result.add_error(f"Mass budget exceeded for {layer_type.name}")

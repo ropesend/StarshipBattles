@@ -92,7 +92,7 @@ class TestPDC:
         self.ship.resources.set_value('energy', 1000)
         self.ship.resources.set_max_value('energy', 1000)
         self.pdc = MockPDC(registries=fresh_registries)
-        self.ship.layers[LayerType.OUTER]['components'] = [self.pdc]
+        self.ship.layers[LayerType.OUTER].components = [self.pdc]
 
         # Enemy Missile
         self.missile = Projectile(

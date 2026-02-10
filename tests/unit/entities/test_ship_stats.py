@@ -46,14 +46,12 @@ class TestShipStatsBaseline:
         """Create a mock ship with the given components."""
         from game.core.constants import LayerType
         from game.simulation.systems.resource_manager import ResourceRegistry
+        from game.simulation.entities.layer_data import LayerData
 
         ship = MagicMock()
+        core_layer = LayerData(components=components, max_mass_pct=0.3)
         ship.layers = {
-            LayerType.CORE: {
-                'components': components,
-                'mass': 0,
-                'max_mass_pct': 0.3
-            }
+            LayerType.CORE: core_layer
         }
         ship.base_mass = 100
         ship.mass = 100
@@ -69,12 +67,12 @@ class TestShipStatsBaseline:
         def get_all_components():
             result = []
             for layer_data in ship.layers.values():
-                result.extend(layer_data['components'])
+                result.extend(layer_data.components)
             return result
 
         def iter_components():
             for layer_type, layer_data in ship.layers.items():
-                for comp in layer_data['components']:
+                for comp in layer_data.components:
                     yield layer_type, comp
 
         ship.get_all_components = get_all_components

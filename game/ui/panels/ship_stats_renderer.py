@@ -367,7 +367,7 @@ def draw_ship_weapons(surface, ship, x_indent, y, panel_w, font):
         if not layer:
             continue
 
-        for comp in layer['components']:
+        for comp in layer.components:
             if comp.has_ability('WeaponAbility'):
                 y = draw_weapon_entry(surface, comp, x_indent, y, panel_w, font)
 
@@ -396,7 +396,7 @@ def draw_ship_components(surface, ship, x_indent, y, font):
         if not layer:
             continue
 
-        for comp in layer['components']:
+        for comp in layer.components:
             if comp.has_ability('WeaponAbility'):
                 continue
             y = draw_component_entry(surface, comp, x_indent, y, font)

@@ -68,13 +68,13 @@ class TestShipSerialization:
         restored = ShipSerializer.from_dict(data, registries=registries)
 
         # Verify components are present
-        core_ids = [c.id for c in restored.layers[LayerType.CORE]['components']]
+        core_ids = [c.id for c in restored.layers[LayerType.CORE].components]
         assert 'bridge' in core_ids
 
-        outer_ids = [c.id for c in restored.layers[LayerType.OUTER]['components']]
+        outer_ids = [c.id for c in restored.layers[LayerType.OUTER].components]
         assert 'railgun' in outer_ids
 
-        armor_ids = [c.id for c in restored.layers[LayerType.ARMOR]['components']]
+        armor_ids = [c.id for c in restored.layers[LayerType.ARMOR].components]
         assert 'armor_plate' in armor_ids
 
     def test_roundtrip_with_modifiers(self, setup_game_data):
@@ -94,7 +94,7 @@ class TestShipSerialization:
         restored = ShipSerializer.from_dict(data, registries=registries)
 
         # Find railgun in restored ship
-        restored_railguns = [c for c in restored.layers[LayerType.OUTER]['components']
+        restored_railguns = [c for c in restored.layers[LayerType.OUTER].components
                             if c.id == 'railgun']
         assert len(restored_railguns) == 1
 
@@ -171,8 +171,8 @@ class TestShipSerialization:
         ship = Ship("HullTestShip", 0, 0, (255, 255, 255), ship_class="Escort", registries=registries)
 
         # Verify hull exists
-        assert len(ship.layers[LayerType.HULL]['components']) == 1
-        original_hull_id = ship.layers[LayerType.HULL]['components'][0].id
+        assert len(ship.layers[LayerType.HULL].components) == 1
+        original_hull_id = ship.layers[LayerType.HULL].components[0].id
 
         # Round-trip
         data = ship.to_dict()
@@ -184,8 +184,8 @@ class TestShipSerialization:
         restored = ShipSerializer.from_dict(data, registries=registries)
 
         # HULL should be auto-equipped on restore
-        assert len(restored.layers[LayerType.HULL]['components']) == 1
-        restored_hull_id = restored.layers[LayerType.HULL]['components'][0].id
+        assert len(restored.layers[LayerType.HULL].components) == 1
+        restored_hull_id = restored.layers[LayerType.HULL].components[0].id
         assert restored_hull_id == original_hull_id
 
     def test_layer_order_preserved(self, setup_game_data):
@@ -198,12 +198,12 @@ class TestShipSerialization:
             railgun = create_component('railgun', registries=registries)
             ship.add_component(railgun, LayerType.OUTER)
 
-        original_count = len(ship.layers[LayerType.OUTER]['components'])
+        original_count = len(ship.layers[LayerType.OUTER].components)
 
         # Round-trip
         data = ship.to_dict()
         restored = ShipSerializer.from_dict(data, registries=registries)
 
         # Same count should be preserved
-        restored_count = len(restored.layers[LayerType.OUTER]['components'])
+        restored_count = len(restored.layers[LayerType.OUTER].components)
         assert restored_count == original_count

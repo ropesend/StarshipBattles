@@ -24,7 +24,7 @@ def normalize_selection(new_selection, ship):
             found = False
             for l_type, l_data in ship.layers.items():
                 try:
-                    idx = l_data['components'].index(item)
+                    idx = l_data.components.index(item)
                     norm_selection.append((l_type, idx, item))
                     found = True
                     break

@@ -81,8 +81,8 @@ class ShipStatsCalculator:
         
         # Calculate Mass (Mass never changes due to damage/status in this model, dead weight remains)
         for layer_type, layer_data in ship.layers.items():
-            l_mass = sum(c.mass for c in layer_data['components'])
-            layer_data['mass'] = l_mass
+            l_mass = sum(c.mass for c in layer_data.components)
+            layer_data.mass = l_mass
             ship.current_mass += l_mass
             
         # Update cached values via property setters
@@ -115,7 +115,7 @@ class ShipStatsCalculator:
         ship.shield_regen_cost = 0
         ship.repair_rate = 0
         if LayerType.ARMOR in ship.layers:
-            ship.layers[LayerType.ARMOR]['max_hp_pool'] = 0
+            ship.layers[LayerType.ARMOR].max_hp_pool = 0
             
         ship.emissive_armor = 0
         ship.crystalline_armor = 0
@@ -273,7 +273,7 @@ class ShipStatsCalculator:
             # Armor HP pool (using ability-based detection)
             if comp.abilities.get('Armor', False):
                 if LayerType.ARMOR in ship.layers:
-                    ship.layers[LayerType.ARMOR]['max_hp_pool'] += comp.max_hp
+                    ship.layers[LayerType.ARMOR].max_hp_pool += comp.max_hp
             
             # Shields from ShieldProjection abilities
             for ab in comp.get_abilities('ShieldProjection'):
@@ -409,8 +409,8 @@ class ShipStatsCalculator:
 
         # Armor Pool Init (if starting)
         if LayerType.ARMOR in ship.layers:
-            if ship.layers[LayerType.ARMOR]['hp_pool'] == 0:
-                ship.layers[LayerType.ARMOR]['hp_pool'] = ship.layers[LayerType.ARMOR]['max_hp_pool']
+            if ship.layers[LayerType.ARMOR].hp_pool == 0:
+                ship.layers[LayerType.ARMOR].hp_pool = ship.layers[LayerType.ARMOR].max_hp_pool
             
         # Initialize Resources 
         self._initialize_resources(ship)
@@ -438,11 +438,11 @@ class ShipStatsCalculator:
              ship.max_mass_budget = self.vehicle_classes[ship.ship_class].get('max_mass', 1000)
 
         for layer_type, layer_data in ship.layers.items():
-            limit_ratio = layer_data.get('max_mass_pct', 1.0)
-            ratio = layer_data['mass'] / ship.max_mass_budget
+            limit_ratio = layer_data.max_mass_pct
+            ratio = layer_data.mass / ship.max_mass_budget
             is_ok = ratio <= limit_ratio
             ship.layer_status[layer_type] = {
-                'mass': layer_data['mass'],
+                'mass': layer_data.mass,
                 'ratio': ratio,
                 'limit': limit_ratio,
                 'ok': is_ok

@@ -158,7 +158,7 @@ class BuilderStateManager:
         """
         for layer_type, layer_data in self._ship.layers.items():
             try:
-                idx = layer_data['components'].index(component)
+                idx = layer_data.components.index(component)
                 return (layer_type, idx, component)
             except ValueError:
                 continue

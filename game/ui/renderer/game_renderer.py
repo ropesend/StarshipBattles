@@ -95,7 +95,7 @@ def draw_ship(surface, ship, camera):
                 elif ltype == LayerType.OUTER: radius = base_radius * 0.65
                 elif ltype == LayerType.ARMOR: radius = base_radius * 0.9
                 
-                comps = data['components']
+                comps = data.components
                 if not comps:
                     continue
                 
@@ -186,7 +186,7 @@ def draw_hud(surface, ship, x, y):
         surface.blit(l_text, (x, y))
         y += 18
         
-        components = ship.layers[ltype]['components']
+        components = ship.layers[ltype].components
         if not components:
             none_text = font_small.render("  (Empty)", True, (100, 100, 100))
             surface.blit(none_text, (x, y))

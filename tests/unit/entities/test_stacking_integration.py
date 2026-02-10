@@ -15,17 +15,16 @@ class TestStackingIntegration:
 
     @pytest.fixture(autouse=True)
     def setup(self, fresh_registries):
+        from game.simulation.entities.layer_data import LayerData
         self.registries = fresh_registries
         self.ship = Ship("Test Ship", 0, 0, (255, 0, 0), ship_class="Cruiser", registries=fresh_registries)
-        # Mock layers
-        self.ship.layers[LayerType.OUTER] = {
-            'components': [], 'radius_pct': 1.0, 'restrictions': [],
-            'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100
-        }
-        self.ship.layers[LayerType.ARMOR] = {
-            'components': [], 'radius_pct': 1.0, 'restrictions': [],
-            'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100
-        }
+        # Mock layers using LayerData
+        self.ship.layers[LayerType.OUTER] = LayerData(
+            radius_pct=1.0, max_mass_pct=1.0, max_hp_pool=100, hp_pool=100
+        )
+        self.ship.layers[LayerType.ARMOR] = LayerData(
+            radius_pct=1.0, max_mass_pct=1.0, max_hp_pool=100, hp_pool=100
+        )
 
     def _make_comp(self, data):
         return Component(data, registries=self.registries)
