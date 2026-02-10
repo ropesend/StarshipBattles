@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-94 Phase 1
-**Current Status:** PROJ-94 Phase 2 Ready
+**Last Completed:** PROJ-94 Phase 2
+**Current Status:** PROJ-94 Phase 3 Ready
 **Current Project:** PROJ-94
-**Current Phase:** Phase 2 - Not Started
-**Test Status:** 7616 passed (full suite)
+**Current Phase:** Phase 3 - Not Started
+**Test Status:** 7595 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-94 Phase 1 complete: Fixed UI encapsulation violations
-- stats_config.py: `._resources.keys()` → `get_resource_names()`
-- ship_stats_renderer.py: `._resources.values()` → `get_all_resources()`
-- Added get_all_resources() to ResourceRegistry
-- Extracted _capture_resource_levels() helper in ShipInstance
-- Removed getattr defensive calls for is_derelict
-- Fixed test mock in test_build_queue_design_report.py
-- 7616 tests passing
+- PROJ-94 Phase 2 complete: Deleted dead type-specific resource methods
+- ShipResourceManager: deleted 7 methods (97 lines) - get_fuel_cost_per_hex, get_current_fuel, consume_fuel, get_warp_fuel_cost, get_warp_energy_cost, get_current_energy, consume_energy
+- FleetResourceAggregator: deleted 5 methods (50 lines) - get_fuel_cost_per_hex, has_fuel_for_movement, consume_fleet_fuel, get_warp_energy_cost, get_warp_fuel_cost
+- Fleet: deleted 5 facade methods (20 lines)
+- Deleted 21 corresponding test methods
+- All greps confirm no production callers remain
+- 7595 tests passing
 
 ---
 
@@ -467,6 +466,7 @@
 | 2026-02-10 | PROJ-93 | Phase 1 | Complete | 7616 passed | pending | IPostBattleShip + IResourceHolder layers typed, test strengthened |
 | 2026-02-10 | PROJ-93 | Audit 1 | PASSED | 7616 passed | pending | All 3 goals verified: protocol return types + test assertions |
 | 2026-02-10 | PROJ-94 | Phase 1 | Complete | 7616 passed | pending | Fixed 2 UI encapsulation, extracted _capture_resource_levels(), removed getattr |
+| 2026-02-10 | PROJ-94 | Phase 2 | Complete | 7595 passed | pending | Deleted 17 type-specific methods (167 lines), 21 tests |
 
 ---
 

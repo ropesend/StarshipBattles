@@ -27,41 +27,6 @@ class FleetResourceAggregator:
         """
         self._fleet = fleet
 
-    # --- Fuel Consumption Methods ---
-
-    def get_fuel_cost_per_hex(self) -> float:
-        """
-        Calculate total fleet fuel consumption per hex.
-
-        Returns:
-            Sum of all combat-capable ships' strategic fuel costs.
-        """
-        return self.get_movement_resource_costs().get('fuel', 0.0)
-
-    def has_fuel_for_movement(self) -> bool:
-        """
-        Check if fleet has fuel for at least one hex of movement.
-
-        Returns:
-            True if all combat-capable ships have enough fuel for one hex.
-        """
-        # Delegate to generic method - fuel is just one movement resource
-        return self.has_resources_for_movement()
-
-    def consume_fleet_fuel(self, hexes: int = 1) -> bool:
-        """
-        Consume fuel from all ships for movement.
-
-        Args:
-            hexes: Number of hexes moved (default 1)
-
-        Returns:
-            True if all ships had sufficient fuel, False otherwise.
-            Note: If False, no fuel is consumed (atomic operation).
-        """
-        # Delegate to generic method - fuel is just one movement resource
-        return self.consume_movement_resources(hexes)
-
     # --- Generic Movement Resource Methods ---
 
     def get_movement_resource_costs(self) -> Dict[str, float]:
@@ -145,24 +110,6 @@ class FleetResourceAggregator:
             for resource_type, cost in ship_costs.items():
                 total_costs[resource_type] = total_costs.get(resource_type, 0) + cost
         return total_costs
-
-    def get_warp_energy_cost(self) -> float:
-        """
-        Calculate total fleet energy cost for a warp jump.
-
-        Returns:
-            Sum of all combat-capable ships' warp energy costs.
-        """
-        return self.get_warp_resource_costs().get('energy', 0.0)
-
-    def get_warp_fuel_cost(self) -> float:
-        """
-        Calculate total fleet fuel cost for a warp jump.
-
-        Returns:
-            Sum of all combat-capable ships' warp fuel costs.
-        """
-        return self.get_warp_resource_costs().get('fuel', 0.0)
 
     def has_resources_for_warp(self) -> bool:
         """

@@ -44,56 +44,6 @@ class TestFleetResourceAggregator:
         from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
         return FleetResourceAggregator(mock_fleet)
 
-    # --- Fuel Cost Tests ---
-
-    def test_get_fuel_cost_per_hex_aggregates_all_ships(self, aggregator, mock_fleet):
-        """Fuel cost per hex sums all ships."""
-        result = aggregator.get_fuel_cost_per_hex()
-        assert result == 20.0  # 10 + 10
-
-    def test_get_fuel_cost_per_hex_empty_fleet(self, mock_fleet):
-        """Empty fleet has zero fuel cost."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        mock_fleet.get_combat_capable_ships.return_value = []
-        agg = FleetResourceAggregator(mock_fleet)
-        assert agg.get_fuel_cost_per_hex() == 0.0
-
-    def test_has_fuel_for_movement_all_ships_have_fuel(self, aggregator):
-        """Returns True when all ships have enough fuel."""
-        assert aggregator.has_fuel_for_movement() is True
-
-    def test_has_fuel_for_movement_one_ship_empty(self, mock_fleet, mock_ship):
-        """Returns False when any ship lacks fuel."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        empty_ship = MagicMock()
-        empty_ship.is_combat_capable.return_value = True
-        empty_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
-        empty_ship.get_current_resource.return_value = 5.0  # Not enough
-        mock_fleet.get_combat_capable_ships.return_value = [mock_ship, empty_ship]
-        agg = FleetResourceAggregator(mock_fleet)
-        assert agg.has_fuel_for_movement() is False
-
-    def test_consume_fleet_fuel_success(self, aggregator, mock_ship):
-        """Consume fuel from all ships."""
-        result = aggregator.consume_fleet_fuel(1)
-        assert result is True
-        # Consumes both fuel and energy for each ship (2 resources x 2 ships)
-        assert mock_ship.consume_resource.call_count == 4
-
-    def test_consume_fleet_fuel_atomic_on_failure(self, mock_fleet, mock_ship):
-        """No fuel consumed if any ship lacks fuel."""
-        from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
-        empty_ship = MagicMock()
-        empty_ship.is_combat_capable.return_value = True
-        empty_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
-        empty_ship.get_current_resource.return_value = 5.0  # Not enough
-        mock_fleet.get_combat_capable_ships.return_value = [mock_ship, empty_ship]
-        agg = FleetResourceAggregator(mock_fleet)
-
-        result = agg.consume_fleet_fuel(1)
-        assert result is False
-        mock_ship.consume_resource.assert_not_called()
-
     # --- Movement Resource Tests ---
 
     def test_get_movement_resource_costs_aggregates(self, aggregator):
@@ -117,14 +67,6 @@ class TestFleetResourceAggregator:
         """Warp costs aggregate across ships."""
         result = aggregator.get_warp_resource_costs()
         assert result == {"energy": 100.0, "fuel": 50.0}
-
-    def test_get_warp_energy_cost_sums(self, aggregator):
-        """Warp energy cost is sum of all ships."""
-        assert aggregator.get_warp_energy_cost() == 100.0
-
-    def test_get_warp_fuel_cost_sums(self, aggregator):
-        """Warp fuel cost is sum of all ships."""
-        assert aggregator.get_warp_fuel_cost() == 50.0
 
     def test_has_resources_for_warp_all_available(self, aggregator):
         """Returns True when all ships have warp resources."""

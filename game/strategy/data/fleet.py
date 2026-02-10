@@ -167,20 +167,6 @@ class Fleet:
         """Get the ship that prevents the fleet from using warp, if any."""
         return self._capabilities.get_warp_limiting_ship()
 
-    # --- Fuel Consumption Methods (delegated to FleetResourceAggregator) ---
-
-    def get_fuel_cost_per_hex(self) -> float:
-        """Calculate total fleet fuel consumption per hex."""
-        return self._resource_agg.get_fuel_cost_per_hex()
-
-    def has_fuel_for_movement(self) -> bool:
-        """Check if fleet has fuel for at least one hex of movement."""
-        return self._resource_agg.has_fuel_for_movement()
-
-    def consume_fleet_fuel(self, hexes: int = 1) -> bool:
-        """Consume fuel from all ships for movement."""
-        return self._resource_agg.consume_fleet_fuel(hexes)
-
     # --- Generic Movement Resource Methods (delegated) ---
 
     def get_movement_resource_costs(self) -> Dict[str, float]:
@@ -200,14 +186,6 @@ class Fleet:
     def get_warp_resource_costs(self) -> Dict[str, float]:
         """Get total fleet resource costs for a warp jump."""
         return self._resource_agg.get_warp_resource_costs()
-
-    def get_warp_energy_cost(self) -> float:
-        """Calculate total fleet energy cost for a warp jump."""
-        return self._resource_agg.get_warp_energy_cost()
-
-    def get_warp_fuel_cost(self) -> float:
-        """Calculate total fleet fuel cost for a warp jump."""
-        return self._resource_agg.get_warp_fuel_cost()
 
     def has_resources_for_warp(self) -> bool:
         """Check if fleet has all required resources for a warp jump."""

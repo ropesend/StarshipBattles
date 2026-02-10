@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Fix UI Encapsulation & Extract Bridge Helper | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Delete Dead Type-Specific Methods | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Delete Dead Type-Specific Methods | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Wire Up IResourceReader Protocol | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Audit & Final Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - fixed 2 UI encapsulation violations, extracted _capture_resource_levels() helper, removed getattr defensive calls
-**Next Action:** Begin Phase 2 — delete dead type-specific methods from ShipResourceManager, FleetResourceAggregator, Fleet
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - deleted 17 dead type-specific methods (167 lines) and 21 corresponding tests
+**Next Action:** Begin Phase 3 — wire up IResourceReader protocol typing
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Fixed stats_config.py and ship_stats_renderer.py private `._resources` access. Added get_all_resources() to ResourceRegistry. Extracted _capture_resource_levels() static helper in ShipInstance to DRY duplicate code. Removed unnecessary getattr for is_derelict. Fixed test mock. 7616 tests passing.
+**Context for Next Agent:** Phase 2 complete. Deleted: 7 methods from ShipResourceManager (97 lines), 5 methods from FleetResourceAggregator (50 lines), 5 facade methods from Fleet (20 lines). Deleted 21 corresponding tests. All greps confirm no production callers remain. 7595 tests passing.
 
 ## Overview
 Clean up remaining resource API issues from the duplication audit: delete dead type-specific methods (~157 lines), fix 2 UI encapsulation violations, extract a bridge helper to DRY up resource capture code, and wire up `IResourceReader` typing into `IPostBattleShip`.

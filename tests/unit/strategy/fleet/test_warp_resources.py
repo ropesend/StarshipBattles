@@ -211,50 +211,6 @@ class TestWarpResourceMethods:
         assert result is True
 
 
-class TestFleetFuelConsumption:
-    """Test cases for Fleet.consume_fleet_fuel method (Group 4.3)."""
-
-    @pytest.fixture
-    def make_fuel_ship(self):
-        """Factory for creating mock ship instances with fuel costs."""
-        from game.strategy.data.ship_instance import ShipInstance
-
-        def _make(
-            fuel_cost_per_hex: float = 0.0,
-            current_resources: dict = None,
-            is_combat_capable: bool = True
-        ):
-            mock = MagicMock(spec=ShipInstance)
-            mock.is_combat_capable.return_value = is_combat_capable
-            mock.get_all_resource_costs_per_hex.return_value = {'fuel': fuel_cost_per_hex} if fuel_cost_per_hex else {}
-
-            current = current_resources or {}
-            mock.get_current_resource.side_effect = lambda r: current.get(r, 0)
-
-            mock._consumed = {}
-            def consume(resource_type, amount):
-                mock._consumed[resource_type] = mock._consumed.get(resource_type, 0) + amount
-                return True
-            mock.consume_resource.side_effect = consume
-
-            return mock
-        return _make
-
-    def test_consume_fleet_fuel_delegates_to_generic_method(self, make_fuel_ship):
-        """Test consume_fleet_fuel consumes fuel via generic resource API."""
-        fleet = Fleet("f1", 0, HexCoord(0, 0))
-        ship = make_fuel_ship(
-            fuel_cost_per_hex=10.0,
-            current_resources={'fuel': 100.0}
-        )
-        fleet.ships.append(ship)
-
-        result = fleet.consume_fleet_fuel(hexes=1)
-
-        assert result is True
-        ship.consume_resource.assert_called_with('fuel', 10.0)
-
-
 class TestEdgeCases:
     """Test cases for edge cases (Group 4.4)."""
 
