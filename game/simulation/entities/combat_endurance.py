@@ -3,6 +3,7 @@
 This module calculates endurance times for Fuel, Ammo, and Energy,
 as well as DPS and other combat-related statistics.
 """
+from game.core.constants import ResourceType
 
 
 def calculate_combat_endurance(ship, component_pool):
@@ -43,11 +44,11 @@ def calculate_combat_endurance(ship, component_pool):
                     amount = getattr(ab, 'amount', 0.0)
 
                     if trigger == 'constant':
-                        if resource_name == 'fuel':
+                        if resource_name == ResourceType.FUEL:
                             c_fuel += amount
-                        elif resource_name == 'energy':
+                        elif resource_name == ResourceType.ENERGY:
                             c_energy += amount
-                        elif resource_name == 'ammo':
+                        elif resource_name == ResourceType.AMMO:
                             c_ammo += amount
 
                     # Activation Costs (Energy/Ammo) -> Convert to Rate
@@ -71,9 +72,9 @@ def calculate_combat_endurance(ship, component_pool):
 
                         if reload_t > 0:
                             rate = ab.amount / reload_t
-                            if ab.resource_name == 'ammo':
+                            if ab.resource_name == ResourceType.AMMO:
                                 c_ammo += rate
-                            elif ab.resource_name == 'energy':
+                            elif ab.resource_name == ResourceType.ENERGY:
                                 c_energy += rate
 
         # Add to Potentials (Always)
@@ -98,22 +99,22 @@ def calculate_combat_endurance(ship, component_pool):
     ship.potential_energy_consumption = potential_energy
 
     # Use registry directly
-    max_fuel = ship.resources.get_max_value('fuel')
+    max_fuel = ship.resources.get_max_value(ResourceType.FUEL)
     # Endurance calculation: use active consumption, fallback to potential if inactive
     # This shows expected endurance even when components are deactivated (e.g., no crew)
     effective_fuel = fuel_consumption if fuel_consumption > 0 else potential_fuel
     ship.fuel_endurance = (max_fuel / effective_fuel) if effective_fuel > 0 else float('inf')
 
-    max_ammo = ship.resources.get_max_value('ammo')
+    max_ammo = ship.resources.get_max_value(ResourceType.AMMO)
     ship.ammo_endurance = (max_ammo / ammo_consumption) if ammo_consumption > 0 else float('inf')
 
     # Energy Gen Rate
-    r_energy = ship.resources.get_resource('energy')
+    r_energy = ship.resources.get_resource(ResourceType.ENERGY)
     energy_gen_rate = r_energy.regen_rate if r_energy else 0.0
 
     ship.energy_net = energy_gen_rate - energy_consumption
 
-    max_energy = ship.resources.get_max_value('energy')
+    max_energy = ship.resources.get_max_value(ResourceType.ENERGY)
 
     if ship.energy_net < 0:
         # Draining

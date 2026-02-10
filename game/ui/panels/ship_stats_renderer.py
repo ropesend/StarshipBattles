@@ -11,20 +11,20 @@ import pygame
 from game.simulation.components.component_constants import ComponentStatus
 from game.ai.strategy_manager import StrategyManager
 from game.core.config import UIConfig
-from game.core.constants import CombatConstants, LayerType
+from game.core.constants import CombatConstants, LayerType, ResourceType
 
 
 # Define standard colors for known resources (fallback to gray)
 RESOURCE_COLORS = {
-    'fuel': (255, 165, 0),      # Orange
-    'energy': (100, 200, 255),  # Blue
-    'ammo': (200, 200, 100),    # Yellow-ish
+    ResourceType.FUEL: (255, 165, 0),      # Orange
+    ResourceType.ENERGY: (100, 200, 255),  # Blue
+    ResourceType.AMMO: (200, 200, 100),    # Yellow-ish
     'biomass': (100, 255, 100), # Green
     'shield': (0, 200, 255)     # Cyan
 }
 
 # Resource display order priority
-RESOURCE_ORDER_PRIORITY = {'fuel': 0, 'energy': 1, 'ammo': 2}
+RESOURCE_ORDER_PRIORITY = {ResourceType.FUEL: 0, ResourceType.ENERGY: 1, ResourceType.AMMO: 2}
 
 
 def draw_stat_bar(surface, x, y, width, height, pct, color):

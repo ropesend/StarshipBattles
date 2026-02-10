@@ -8,6 +8,7 @@ __all__ = [
     'CombatConstants',
     'SimulationConstants',
     'PLANET_RESOURCES',
+    'ResourceType',
     # Colors
     'WHITE', 'BLACK', 'BLUE', 'RED', 'GREEN',
     # Font
@@ -89,6 +90,18 @@ class SimulationConstants:
 # Resource Types
 # PROJ-11: Moved from game.strategy.data.planet to eliminate simulation->strategy dependency
 PLANET_RESOURCES = ["Metals", "Organics", "Vapors", "Radioactives", "Exotics"]
+
+
+class ResourceType:
+    """Ship resource type constants for fuel, energy, and ammo."""
+    FUEL = 'fuel'
+    ENERGY = 'energy'
+    AMMO = 'ammo'
+
+    @classmethod
+    def all(cls) -> list:
+        """Return all resource types in display order."""
+        return [cls.FUEL, cls.ENERGY, cls.AMMO]
 
 
 # Layer Types - Ship layer zones for component placement and damage distribution

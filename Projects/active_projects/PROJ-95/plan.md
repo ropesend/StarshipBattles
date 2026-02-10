@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Add ResourceType Constants | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Add ResourceType Constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Rename is_destroyed to is_alive | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Eliminate None-Means-Full Convention | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Audit & Final Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Plan Approved
-**Last Action:** Project plan fully specified with detailed phase checklists
-**Next Action:** Begin Phase 1 -- create ResourceType constants and migrate all magic strings
-**Blockers:** PROJ-94 should ideally complete first (removes dead code that would otherwise need updating here)
-**Context for Next Agent:** This project addresses 3 of 4 remaining findings from the resource/state duplication audit. Finding #1 (dual resource systems) was accepted as architecturally justified. The 3 changes are independent but ordered for safety: constants first (no behavior change), then is_alive rename (semantic change), then None-means-full elimination (behavioral change). Baseline: **7616 tests passing**.
+**Active Phase:** Phase 1 Complete
+**Last Action:** Added ResourceType constants class to game/core/constants.py and replaced all magic strings in 18 production files
+**Next Action:** Begin Phase 2 -- Rename is_destroyed to is_alive across strategy layer
+**Blockers:** None
+**Context for Next Agent:** Phase 1 complete. ResourceType class with FUEL, ENERGY, AMMO constants added. All production code updated. Test files still use string literals which work because ResourceType.FUEL == 'fuel'. 7595 tests passing.
 
 ## Overview
 Three clean-sheet convention changes to the strategy layer's resource/state API:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Any, List
 
+from game.core.constants import ResourceType
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
 
 if TYPE_CHECKING:
@@ -68,18 +69,18 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         resource_storage = calculated_stats.get('resource_storage', {})
 
         # Fuel
-        ship_max_fuel = resource_storage.get('fuel', 0)
+        ship_max_fuel = resource_storage.get(ResourceType.FUEL, 0)
         max_fuel += ship_max_fuel
-        if 'fuel' in ship.resource_levels:
-            total_fuel += ship.resource_levels['fuel']
+        if ResourceType.FUEL in ship.resource_levels:
+            total_fuel += ship.resource_levels[ResourceType.FUEL]
         else:
             total_fuel += ship_max_fuel  # Full if not tracked
 
         # Energy
-        ship_max_energy = resource_storage.get('energy', 0)
+        ship_max_energy = resource_storage.get(ResourceType.ENERGY, 0)
         max_energy += ship_max_energy
-        if 'energy' in ship.resource_levels:
-            total_energy += ship.resource_levels['energy']
+        if ResourceType.ENERGY in ship.resource_levels:
+            total_energy += ship.resource_levels[ResourceType.ENERGY]
         else:
             total_energy += ship_max_energy  # Full if not tracked
 

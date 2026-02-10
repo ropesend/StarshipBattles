@@ -1,6 +1,7 @@
 from typing import Dict, Any, List
 
 from game.core.config import PhysicsConfig
+from game.core.constants import ResourceType
 from .base import Ability
 from .stat_keys import StatKey, AbilityStatBinding
 
@@ -129,11 +130,11 @@ class ResourceConsumption(Ability):
 
         # Color mapping based on resource type
         color = '#FFFFFF'
-        if self.resource_name == 'fuel':
+        if self.resource_name == ResourceType.FUEL:
             color = '#FFA500'  # Orange
-        elif self.resource_name == 'energy':
+        elif self.resource_name == ResourceType.ENERGY:
             color = '#64C8FF'  # Light Blue
-        elif self.resource_name == 'ammo':
+        elif self.resource_name == ResourceType.AMMO:
             color = '#C8C832'  # Dirty Yellow
 
         label_text = f"{self.resource_name.title()} {'Cost' if self.trigger != 'constant' else 'Use'}"
@@ -219,7 +220,7 @@ class ResourceGeneration(Ability):
 
     def get_ui_rows(self):
         color = '#FFFFFF'
-        if self.resource_type == 'energy':
+        if self.resource_type == ResourceType.ENERGY:
             color = '#FFFF00'  # Yellow
 
         return [{'label': f"{self.resource_type.title()} Gen", 'value': f"{self.rate:.1f}/s", 'color_hint': color}]

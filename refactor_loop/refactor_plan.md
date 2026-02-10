@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-94 Audit Cycle 1 PASSED
-**Current Status:** PROJ-94 Audit Passed - Awaiting User Verification
-**Current Project:** PROJ-94 complete, PROJ-95 next
-**Current Phase:** N/A - ready for next project
+**Last Completed:** PROJ-95 Phase 1 (Add ResourceType Constants)
+**Current Status:** PROJ-95 Phase 1 Complete
+**Current Project:** PROJ-95
+**Current Phase:** Phase 2 next
 **Test Status:** 7595 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-94 complete: All 4 phases done, audit passed
-- 175 lines removed total (ShipResourceManager -99, FleetResourceAggregator -54, Fleet -22)
-- All 5 goals verified by investigation agents
-- IPostBattleShip.resources typed as Optional[IResourceReader]
-- All dead type-specific methods deleted, UI encapsulation fixed
+- PROJ-95 Phase 1 complete: ResourceType constants class added
+- Added ResourceType class with FUEL, ENERGY, AMMO constants to game/core/constants.py
+- Updated 18 production files to use constants instead of magic strings
+- Test files unchanged - string literals still work because ResourceType.FUEL == 'fuel'
 - 7595 tests passing
-- Next: PROJ-95 (Resource API Consistency) when user verifies PROJ-94
+- Next: Phase 2 (Rename is_destroyed to is_alive)
 
 ---
 
@@ -286,8 +285,8 @@
 
 ---
 
-- [ ] **PROJ-95: Resource API Consistency and Clean-Sheet Conventions**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-95: Resource API Consistency and Clean-Sheet Conventions**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-95/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-95/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** PROJ-94
@@ -470,6 +469,7 @@
 | 2026-02-10 | PROJ-94 | Phase 3 | Complete | 7595 passed | pending | Added get_resource_names to IResourceReader, typed IPostBattleShip.resources |
 | 2026-02-10 | PROJ-94 | Phase 4 | Complete | 7595 passed | pending | All verification greps pass, 175 lines removed |
 | 2026-02-10 | PROJ-94 | Audit 1 | PASSED | 7595 passed | pending | 4 investigation agents verified all goals, no issues |
+| 2026-02-10 | PROJ-95 | Phase 1 | Complete | 7595 passed | pending | ResourceType constants class, 18 prod files updated |
 
 ---
 

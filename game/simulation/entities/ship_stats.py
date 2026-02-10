@@ -50,7 +50,7 @@ Example:
     # ship.max_speed, ship.turn_speed, etc. are now updated
 """
 from game.simulation.components.component_constants import ComponentStatus
-from game.core.constants import LayerType
+from game.core.constants import LayerType, ResourceType
 from game.simulation.physics_constants import K_SPEED, K_THRUST, K_TURN
 from game.simulation.entities.ability_aggregator import calculate_ability_totals, get_ability_total
 from game.simulation.entities.combat_endurance import calculate_combat_endurance
@@ -231,20 +231,20 @@ class ShipStatsCalculator:
                     if ab_cls == 'ResourceStorage':
                         res_type = getattr(ability, 'resource_type', '')
                         max_amt = getattr(ability, 'max_amount', 0.0)
-                        if res_type == 'fuel':
+                        if res_type == ResourceType.FUEL:
                             total_max_fuel += max_amt
-                        elif res_type == 'ammo':
+                        elif res_type == ResourceType.AMMO:
                             total_max_ammo += max_amt
-                        elif res_type == 'energy':
+                        elif res_type == ResourceType.ENERGY:
                             total_max_energy += max_amt
-                    
+
                     # Resource Generation
                     elif ab_cls == 'ResourceGeneration':
                         res_type = getattr(ability, 'resource_type', '')
                         rate = getattr(ability, 'rate', 0.0)
-                        if res_type == 'energy':
+                        if res_type == ResourceType.ENERGY:
                             total_energy_gen += rate
-                        elif res_type == 'ammo':
+                        elif res_type == ResourceType.AMMO:
                             total_ammo_gen += rate
             
             # Aggregate stats from ability instances
@@ -286,7 +286,7 @@ class ShipStatsCalculator:
             # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
             if comp.has_ability('ShieldRegeneration'):
                 for ab in comp.ability_instances:
-                    if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == 'energy':
+                    if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == ResourceType.ENERGY:
                         total_shield_cost += getattr(ab, 'amount', 0.0)
                         break
             
@@ -311,11 +311,11 @@ class ShipStatsCalculator:
                     ship.max_targets = mt 
 
         # Apply Accumulated Totals Atomicially
-        ship.resources.register_storage('fuel', total_max_fuel)
-        ship.resources.register_storage('ammo', total_max_ammo)
-        ship.resources.register_storage('energy', total_max_energy)
-        ship.resources.register_generation('energy', total_energy_gen)
-        ship.resources.register_generation('ammo', total_ammo_gen)
+        ship.resources.register_storage(ResourceType.FUEL, total_max_fuel)
+        ship.resources.register_storage(ResourceType.AMMO, total_max_ammo)
+        ship.resources.register_storage(ResourceType.ENERGY, total_max_energy)
+        ship.resources.register_generation(ResourceType.ENERGY, total_energy_gen)
+        ship.resources.register_generation(ResourceType.AMMO, total_ammo_gen)
         ship.total_thrust = total_thrust
         ship.total_strategic_movement = total_strategic_movement
         ship.turn_speed = total_turn_speed
@@ -401,7 +401,7 @@ class ShipStatsCalculator:
         ship.repair_rate = self._get_ability_total(component_pool, 'ShipRepair')
         
         # Ammo Generation (SumStacking) - using value from ResourceGeneration(ammo)
-        ammo_res = ship.resources.get_resource('ammo')
+        ammo_res = ship.resources.get_resource(ResourceType.AMMO)
         ship.ammo_gen_rate = ammo_res.regen_rate if ammo_res else 0.0
 
         # Resource aggregation is handled by ability instances above
@@ -460,18 +460,18 @@ class ShipStatsCalculator:
         prev_max_shields = getattr(ship, '_prev_max_shields', 0)
         
         # Get current max values directly from registry
-        curr_max_fuel = ship.resources.get_max_value('fuel')
-        curr_max_ammo = ship.resources.get_max_value('ammo')
-        curr_max_energy = ship.resources.get_max_value('energy')
-        
+        curr_max_fuel = ship.resources.get_max_value(ResourceType.FUEL)
+        curr_max_ammo = ship.resources.get_max_value(ResourceType.AMMO)
+        curr_max_energy = ship.resources.get_max_value(ResourceType.ENERGY)
+
         if not getattr(ship, '_resources_initialized', False):
             # First init - fill to max
             if curr_max_fuel > 0:
-                ship.resources.set_value('fuel', curr_max_fuel)
+                ship.resources.set_value(ResourceType.FUEL, curr_max_fuel)
             if curr_max_ammo > 0:
-                ship.resources.set_value('ammo', curr_max_ammo)
+                ship.resources.set_value(ResourceType.AMMO, curr_max_ammo)
             if curr_max_energy > 0:
-                ship.resources.set_value('energy', curr_max_energy)
+                ship.resources.set_value(ResourceType.ENERGY, curr_max_energy)
             if ship.max_shields > 0:
                 ship.current_shields = ship.max_shields
             ship._resources_initialized = True
@@ -480,13 +480,13 @@ class ShipStatsCalculator:
             # Logic: If max increased, add difference to current.
             if curr_max_fuel > prev_max_fuel:
                 delta = curr_max_fuel - prev_max_fuel
-                ship.resources.modify_value('fuel', delta)
+                ship.resources.modify_value(ResourceType.FUEL, delta)
             if curr_max_ammo > prev_max_ammo:
                 delta = curr_max_ammo - prev_max_ammo
-                ship.resources.modify_value('ammo', delta)
+                ship.resources.modify_value(ResourceType.AMMO, delta)
             if curr_max_energy > prev_max_energy:
                 delta = curr_max_energy - prev_max_energy
-                ship.resources.modify_value('energy', delta)
+                ship.resources.modify_value(ResourceType.ENERGY, delta)
             if ship.max_shields > prev_max_shields:
                 ship.current_shields += (ship.max_shields - prev_max_shields)
         

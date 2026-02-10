@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Any
+from game.core.constants import ResourceType
 from game.core.hex_math import HexCoord
 
 class PlanetType(Enum):
@@ -33,7 +34,7 @@ class PlanetaryFacility:
 
     def get_fuel_storage(self) -> float:
         """Get current fuel level in this facility."""
-        return self.resource_levels.get('fuel', 0.0)
+        return self.resource_levels.get(ResourceType.FUEL, 0.0)
 
     def get_max_fuel_storage(self, registries) -> float:
         """Calculate max fuel capacity from design_data components.
@@ -58,7 +59,7 @@ class PlanetaryFacility:
                     continue
                 abilities = getattr(comp_def, 'abilities', {}) or {}
                 for storage in (abilities.get('ResourceStorage') or []):
-                    if isinstance(storage, dict) and storage.get('resource') == 'fuel':
+                    if isinstance(storage, dict) and storage.get('resource') == ResourceType.FUEL:
                         total += storage.get('amount', 0)
         return total
 
@@ -76,7 +77,7 @@ class PlanetaryFacility:
         current = self.get_fuel_storage()
         space = max_storage - current
         added = min(amount, space)
-        self.resource_levels['fuel'] = current + added
+        self.resource_levels[ResourceType.FUEL] = current + added
         return amount - added
 
     def withdraw_fuel(self, amount: float) -> float:
@@ -90,7 +91,7 @@ class PlanetaryFacility:
         """
         current = self.get_fuel_storage()
         withdrawn = min(amount, current)
-        self.resource_levels['fuel'] = current - withdrawn
+        self.resource_levels[ResourceType.FUEL] = current - withdrawn
         return withdrawn
 
 

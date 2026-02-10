@@ -15,7 +15,7 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIScrollingContainer, UIImage
 from typing import Dict, Optional, Tuple, List, TYPE_CHECKING
 
-from game.core.constants import LayerType  # Canonical location for LayerType
+from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
 from game.ui.assets import ShipThemeManager
 
 if TYPE_CHECKING:
@@ -271,7 +271,7 @@ class ShipDetailPanel:
         # --- Resources Section ---
         y = self._add_section_header("RESOURCES", 10, y, width)
 
-        for resource in ['fuel', 'energy', 'ammo']:
+        for resource in [ResourceType.FUEL, ResourceType.ENERGY, ResourceType.AMMO]:
             display = ship.get_resource_display(resource)
             if display != "N/A":
                 pct = ship.get_resource_percentage(resource)

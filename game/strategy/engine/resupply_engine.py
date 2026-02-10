@@ -16,6 +16,7 @@ Fits into TurnEngine's _process_tick() as Phase 0a (after resource consumption).
 from dataclasses import dataclass
 from typing import Dict, List, Optional, TYPE_CHECKING
 
+from game.core.constants import ResourceType
 from game.core.logger import log_info
 from game.core.registry import GameRegistries
 from game.strategy.interfaces.engines import IResupplyEngine
@@ -149,7 +150,7 @@ class ResupplyEngine(IResupplyEngine):
 
                 abilities = getattr(comp_def, 'abilities', {}) or {}
                 for gen_data in ShipStatsCalculator._get_ability_list(abilities, 'ResourceGeneration'):
-                    if gen_data.get('resource') == 'fuel':
+                    if gen_data.get('resource') == ResourceType.FUEL:
                         total_rate += gen_data.get('amount', 0.0)
 
         return total_rate
@@ -228,19 +229,19 @@ class ResupplyEngine(IResupplyEngine):
         if not ships:
             return {}
 
-        total_cost_per_hex = sum(s.get_all_resource_costs_per_hex().get('fuel', 0) for s in ships)
+        total_cost_per_hex = sum(s.get_all_resource_costs_per_hex().get(ResourceType.FUEL, 0) for s in ships)
         if total_cost_per_hex <= 0:
             return {}
 
-        current_total = sum(s.get_current_resource('fuel') for s in ships)
+        current_total = sum(s.get_current_resource(ResourceType.FUEL) for s in ships)
         max_range = (available_fuel + current_total) / total_cost_per_hex
 
         distribution: Dict = {}
         for ship in ships:
-            target = ship.get_all_resource_costs_per_hex().get('fuel', 0) * max_range
-            capacity = ship.get_resource_capacity('fuel')
+            target = ship.get_all_resource_costs_per_hex().get(ResourceType.FUEL, 0) * max_range
+            capacity = ship.get_resource_capacity(ResourceType.FUEL)
             target = min(target, capacity)
-            deficit = target - ship.get_current_resource('fuel')
+            deficit = target - ship.get_current_resource(ResourceType.FUEL)
             if deficit > 0:
                 distribution[ship] = deficit
 
@@ -266,7 +267,7 @@ class ResupplyEngine(IResupplyEngine):
             actual = min(amount, available - total_transferred)
             if actual <= 0:
                 break
-            transferred = ship.resupply('fuel', actual)
+            transferred = ship.resupply(ResourceType.FUEL, actual)
             total_transferred += transferred
 
         facility.withdraw_fuel(total_transferred)

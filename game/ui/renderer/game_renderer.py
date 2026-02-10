@@ -6,7 +6,7 @@ Cross-layer imports (acceptable for rendering):
 """
 import pygame
 import math
-from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
+from game.core.constants import LayerType, LayerDefaults, ResourceType  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
 
 
@@ -168,13 +168,13 @@ def draw_hud(surface, ship, x, y):
         y += 20
     
     # Resources
-    draw_bar(surface, x, y, 100, 8, ship.resources.get_value('fuel') / ship.resources.get_max_value('fuel') if ship.resources.get_max_value('fuel') > 0 else 0, (255, 165, 0))
+    draw_bar(surface, x, y, 100, 8, ship.resources.get_value(ResourceType.FUEL) / ship.resources.get_max_value(ResourceType.FUEL) if ship.resources.get_max_value(ResourceType.FUEL) > 0 else 0, (255, 165, 0))
     surface.blit(font_small.render("Fuel", True, (200, 200, 200)), (x + 105, y - 2))
     y += 12
-    draw_bar(surface, x, y, 100, 8, ship.resources.get_value('ammo') / ship.resources.get_max_value('ammo') if ship.resources.get_max_value('ammo') > 0 else 0, (255, 50, 50))
+    draw_bar(surface, x, y, 100, 8, ship.resources.get_value(ResourceType.AMMO) / ship.resources.get_max_value(ResourceType.AMMO) if ship.resources.get_max_value(ResourceType.AMMO) > 0 else 0, (255, 50, 50))
     surface.blit(font_small.render("Ammo", True, (200, 200, 200)), (x + 105, y - 2))
     y += 12
-    draw_bar(surface, x, y, 100, 8, ship.resources.get_value('energy') / ship.resources.get_max_value('energy') if ship.resources.get_max_value('energy') > 0 else 0, (50, 100, 255))
+    draw_bar(surface, x, y, 100, 8, ship.resources.get_value(ResourceType.ENERGY) / ship.resources.get_max_value(ResourceType.ENERGY) if ship.resources.get_max_value(ResourceType.ENERGY) > 0 else 0, (50, 100, 255))
     surface.blit(font_small.render("Energy", True, (200, 200, 200)), (x + 105, y - 2))
     y += 20
     

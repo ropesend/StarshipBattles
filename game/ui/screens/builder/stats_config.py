@@ -6,7 +6,7 @@ Cross-layer imports (acceptable for builder UI):
 - LayerType: Runtime - layer stat organization
 """
 import json
-from game.core.constants import LayerType  # Canonical location for LayerType
+from game.core.constants import LayerType, ResourceType  # Canonical location for LayerType
 from game.core.logger import log_warning
 
 
@@ -222,9 +222,9 @@ def get_resource_max_usage(ship, res_name):
     Uses 'potential' stats to ensure UI shows component load even if currently inactive (e.g. no crew).
     """
     attr_map = {
-        'fuel': 'potential_fuel_consumption',
-        'ammo': 'potential_ammo_consumption',
-        'energy': 'potential_energy_consumption'
+        ResourceType.FUEL: 'potential_fuel_consumption',
+        ResourceType.AMMO: 'potential_ammo_consumption',
+        ResourceType.ENERGY: 'potential_energy_consumption'
     }
     attr = attr_map.get(res_name)
     if attr and hasattr(ship, attr):
@@ -232,9 +232,9 @@ def get_resource_max_usage(ship, res_name):
 
     # Fallback to standard consumption if potential not calculated
     fallback_map = {
-        'fuel': 'fuel_consumption',
-        'ammo': 'ammo_consumption',
-        'energy': 'energy_consumption'
+        ResourceType.FUEL: 'fuel_consumption',
+        ResourceType.AMMO: 'ammo_consumption',
+        ResourceType.ENERGY: 'energy_consumption'
     }
     attr = fallback_map.get(res_name)
     if attr:
@@ -425,7 +425,7 @@ def get_logistics_rows(ship):
 
     # 2. Add Dynamic Resource Rows
     # We want a specific order: Fuel, Energy, Ammo, [Others]
-    resource_order = ['fuel', 'energy', 'ammo']
+    resource_order = [ResourceType.FUEL, ResourceType.ENERGY, ResourceType.AMMO]
 
     # Identify all resources present on ship
     if hasattr(ship, 'resources'):

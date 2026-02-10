@@ -16,7 +16,7 @@ Refactored in PROJ-44 Phase 5: ShipCombatEngine Decomposition.
 """
 from typing import TYPE_CHECKING, List, Optional, Any
 
-from game.core.constants import CombatConstants
+from game.core.constants import CombatConstants, ResourceType
 from game.simulation.combat.targeting_system import TargetingSystem
 from game.simulation.combat.damage_calculator import DamageCalculator
 from game.simulation.combat.weapon_firing_system import WeaponFiringSystem
@@ -178,7 +178,7 @@ class ShipCombatEngine:
 
             has_energy = True
             if cost_amount > 0 and hasattr(ship, 'resources'):
-                energy_res = ship.resources.get_resource('energy')
+                energy_res = ship.resources.get_resource(ResourceType.ENERGY)
                 if energy_res:
                     if energy_res.current_value >= cost_amount:
                         energy_res.consume(cost_amount)
