@@ -4,6 +4,14 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-91 | Unify Resource/State Logic Between Strategy and Simulation Layers | Plan Approved | 2026-02-09 | 2026-02-09 |
+| PROJ-90 | Untangle Circular Dependencies and Layer Violations | Planning | 2026-02-09 | 2026-02-09 |
+| PROJ-89 | God Class Decomposition - Remaining UI Tier | Planning | 2026-02-09 | 2026-02-09 |
+| PROJ-88 | God Class Decomposition - Simulation Core Tier | Planning | 2026-02-09 | 2026-02-09 |
+| PROJ-87 | God Class Decomposition - Strategy Data Tier | Planning | 2026-02-09 | 2026-02-09 |
+| PROJ-86 | Critical God Class Decomposition - UI Tier | Planning | 2026-02-09 | 2026-02-09 |
+| PROJ-85 | Eradicate Module-Level Mutable Global State | Planning | 2026-02-09 | 2026-02-09 |
+| PROJ-84 | Ship Layer Data Typed Structures | Plan Approved | 2026-02-09 | 2026-02-09 |
 | PROJ-83 | Eliminate Test Warning Noise | Plan Approved | 2026-02-09 | 2026-02-09 |
 | PROJ-82 | Planet Resources Panel Redesign | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-81 | Sector Build Queue Window Fixes | Planning | 2026-02-08 | 2026-02-08 |
@@ -180,7 +188,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-84
+## Next Project ID: PROJ-92
 
 ---
 
@@ -198,3 +206,45 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 **Dependencies:** None - self-contained refactor
 **Source:** [Review 2026-01-31_general_resource-system-legacy-audit](../Reviews/results/2026-01-31_general_resource-system-legacy-audit/report.md)
 **Philosophy:** NO BACKWARDS COMPATIBILITY - breakage is intentional to surface all dependencies
+
+### PROJ-86: Critical God Class Decomposition - UI Tier
+**Scope:** Decompose 3 largest UI God classes: TestLabScreen (2536 LOC), StrategyUI (1211 LOC), BuildQueueScreen (1185 LOC)
+**Phases:** 8 (TestLab Data → TestLab Validation → TestLab Panels → TestLab Executor → StrategyUI Formatter → StrategyUI Windows → StrategyUI Panels/Events → BuildQueueScreen Re-decomposition)
+**Key Goals:**
+- TestLabScreen 2536 → ~1350 lines (47% reduction)
+- StrategyUI 1211 → ~400 lines (67% reduction)
+- BuildQueueScreen 1185 → ~700 lines (41% reduction)
+- Facade/delegate pattern preserves all public APIs
+**Dependencies:** Independent, but PROJ-87 recommended first
+**Execution Order:** 2nd (after PROJ-87)
+
+### PROJ-87: God Class Decomposition - Strategy Data Tier
+**Scope:** Decompose 3 strategy data God classes: ShipInstance (922 LOC), Fleet (833 LOC), GameSession (834 LOC)
+**Phases:** 6 (ShipInstance Resources → ShipInstance Cargo/Display → Fleet Resources → Fleet Capability/Battle → GameSession Commands → GameSession Init)
+**Key Goals:**
+- ShipInstance 922 → ~500 lines (46% reduction) — extract ShipResourceManager, ShipCargoManager, ShipDisplayFormatter
+- Fleet 833 → ~450 lines (46% reduction) — extract FleetResourceAggregator, FleetCapabilityCalculator, FleetBattleAdapter
+- GameSession 834 → ~550 lines (34% reduction) — extract CommandHandlerRegistry, GameInitializer
+- Facade/delegate pattern preserves all public APIs
+**Dependencies:** None - cleanest dependency graphs, best test coverage
+**Execution Order:** 1st (lowest blast radius, highest duplication density)
+
+### PROJ-88: God Class Decomposition - Simulation Core Tier
+**Scope:** Decompose 3 simulation core God classes: Ship (870 LOC), Component (756 LOC), Game/app (723 LOC)
+**Phases:** 5 (Eradicate Dead ShipComponentManager → Ship Stat Aggregation → Ship Validation → Component Resource/Health → Game IScene Completion)
+**Key Goals:**
+- Delete dead ShipComponentManager (369 lines never adopted from PROJ-12)
+- Ship 870 → ~550 lines (37% reduction) — extract ShipStatQuerier, ShipValidator
+- Component 756 → ~620 lines (18% reduction) — extract ComponentResourceManager, ComponentHealthManager
+- Game 723 → ~500 lines (31% reduction) — complete IScene migration from PROJ-65
+**Dependencies:** PROJ-87 should complete first (shared resource patterns)
+**Execution Order:** 3rd (highest blast radius: Component 161, Ship 136 importers)
+
+### PROJ-89: God Class Decomposition - Remaining UI Tier
+**Scope:** Decompose 2 remaining UI God classes: EmpireBuildQueueWindow (948 LOC), DesignSelectorWindow (716 LOC)
+**Phases:** 3 (Design Image Helper → Empire Build Queue Formatter → Empire Build Queue Filter Manager)
+**Key Goals:**
+- DesignSelectorWindow 716 → ~548 lines (23% reduction) — extract image handling
+- EmpireBuildQueueWindow 948 → ~700 lines (26% reduction) — extract formatter and filter manager
+**Dependencies:** Independent, but PROJ-86 patterns inform approach
+**Execution Order:** 4th (smallest scope, lowest priority)
