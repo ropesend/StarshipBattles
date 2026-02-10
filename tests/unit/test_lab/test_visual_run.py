@@ -76,6 +76,7 @@ class TestVisualRunFlow:
     def _create_test_lab_screen(self, mock_game, mock_registry, mock_controller):
         """Helper to create a TestLabScreen with mocked dependencies."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.test_executor import TestLabExecutor
         registry, _, _ = mock_registry
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
@@ -83,14 +84,48 @@ class TestVisualRunFlow:
             screen.game = mock_game
             screen.registry = registry
             screen.controller = mock_controller
+
+            # Create executor with proper callbacks
+            screen._executor = TestLabExecutor(
+                registry=registry,
+                test_history=Mock(),
+                controller=mock_controller,
+                render_progress=lambda t, s, d: None,
+                draw_and_flip=lambda: None,
+                get_engine=lambda: mock_game.battle_scene.engine,
+                ensure_engine=lambda: None,
+                switch_to_battle=lambda scenario: screen._switch_to_battle(scenario),
+                output_log=mock_controller.output_log,
+            )
+            # Add _switch_to_battle method
+            screen._switch_to_battle = lambda scenario: self._switch_to_battle_impl(mock_game, scenario)
             return screen
+
+    def _switch_to_battle_impl(self, mock_game, scenario):
+        """Implementation of _switch_to_battle for tests."""
+        from game.core.constants import GameState
+        engine = mock_game.battle_scene.engine
+        engine.start([], [])
+        scenario.setup(engine)
+        mock_game.battle_scene.headless_mode = False
+        mock_game.battle_scene.sim_paused = True
+        mock_game.battle_scene.test_mode = True
+        mock_game.battle_scene.test_scenario = scenario
+        mock_game.battle_scene.test_tick_count = 0
+        mock_game.battle_scene.test_completed = False
+        mock_game.battle_scene.action_return_to_test_lab = False
+        ships = engine.ships
+        if ships:
+            mock_game.battle_scene.camera.fit_objects(ships)
+            mock_game.battle_scene.camera.target_zoom = mock_game.battle_scene.camera.zoom
+        mock_game.state = GameState.BATTLE
 
     def test_visual_run_sets_test_mode_true(self, mock_game, mock_registry, mock_controller):
         """Visual run should set test_mode to True on battle_scene."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -101,7 +136,7 @@ class TestVisualRunFlow:
         """Visual run should set headless_mode to False (we want visuals!)."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -112,7 +147,7 @@ class TestVisualRunFlow:
         """Visual run should start with simulation paused."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -124,7 +159,7 @@ class TestVisualRunFlow:
         from game.core.constants import GameState
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -136,19 +171,19 @@ class TestVisualRunFlow:
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
-        # Verify scenario.setup() was called with the engine
-        mock_scenario.setup.assert_called_once_with(mock_game.battle_scene.engine)
+        # Verify scenario.setup() was called with the engine (called twice - once in executor, once in switch_to_battle)
+        assert mock_scenario.setup.call_count == 2
 
     def test_visual_run_stores_scenario_reference(self, mock_game, mock_registry, mock_controller):
         """Visual run should store scenario reference for update() calls."""
         screen = self._create_test_lab_screen(mock_game, mock_registry, mock_controller)
         _, _, mock_scenario = mock_registry
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 
@@ -163,7 +198,7 @@ class TestVisualRunFlow:
         mock_ship = Mock()
         mock_game.battle_scene.engine.ships = [mock_ship]
 
-        with patch('game.ui.screens.test_lab.screen.TestRunner') as MockRunner:
+        with patch('game.ui.screens.test_lab.test_executor.TestRunner') as MockRunner:
             MockRunner.return_value = Mock()
             screen._on_run()
 

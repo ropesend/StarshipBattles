@@ -8,13 +8,11 @@ import pygame
 import pygame_gui
 import os
 import sys
-import time
 
 from game.core.constants import WHITE, BLACK, BLUE, FONT_MAIN
 from game.core.config import DisplayConfig
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json
-from test_framework.runner import TestRunner
 from test_framework.registry import TestRegistry
 from test_framework.test_history import TestHistory
 from simulation_tests.logging_config import get_logger
@@ -26,6 +24,7 @@ from .test_run_card import TestRunCard
 from .data_extractor import TestLabDataExtractor, get_test_data_dir
 from .validation_manager import TestLabValidationManager
 from .panel_manager import TestLabPanelManager
+from .test_executor import TestLabExecutor
 
 logger = get_logger(__name__)
 
@@ -102,6 +101,19 @@ class TestLabScreen:
             self._data_extractor, self.test_history, layout
         )
 
+        # Test executor (handles visual, headless, and batch test runs)
+        self._executor = TestLabExecutor(
+            registry=self.registry,
+            test_history=self.test_history,
+            controller=self.controller,
+            render_progress=self._render_progress,
+            draw_and_flip=self._draw_and_flip,
+            get_engine=self._get_engine,
+            ensure_engine=self._ensure_engine,
+            switch_to_battle=self._switch_to_battle,
+            output_log=self.output_log,
+        )
+
         # Get categories for sidebar
         self.categories = self.registry.get_categories()
 
@@ -116,11 +128,7 @@ class TestLabScreen:
         self.test_list_max_scroll = 0
         self.test_list_panel_rect = None  # Set in _draw_test_list for scroll event handling
 
-        # Batch test execution state
-        self.batch_running = False
-        self.batch_tests = []  # List of test_ids to run
-        self.batch_current_index = 0
-        self.batch_total = 0
+        # Batch test execution state (delegated to executor, but need btn rect)
         self.run_all_tests_btn_rect = None
 
         # UI components
@@ -191,6 +199,21 @@ class TestLabScreen:
     @property
     def all_scenarios(self):
         return self.controller.all_scenarios
+
+    @property
+    def batch_running(self):
+        """Delegate batch_running to executor."""
+        return self._executor.batch_running
+
+    @property
+    def batch_current_index(self):
+        """Delegate batch_current_index to executor."""
+        return self._executor.batch_current_index
+
+    @property
+    def batch_total(self):
+        """Delegate batch_total to executor."""
+        return self._executor.batch_total
 
     def _extract_ships_from_scenario(self, test_id):
         """
@@ -379,6 +402,80 @@ class TestLabScreen:
         if hasattr(self.game, 'menu_screen') and hasattr(self.game.menu_screen, 'create_particles'):
             self.game.menu_screen.create_particles()
 
+    # --- Executor callback helpers ---
+
+    def _render_progress(self, title, subtitle, detail):
+        """Render a progress overlay for headless test execution."""
+        overlay = pygame.Surface((600, 200))
+        overlay.fill((40, 40, 45))
+        pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
+
+        title_text = self.header_font.render(title, True, (255, 255, 255))
+        sub_text = self.body_font.render(subtitle, True, (200, 200, 200))
+        detail_text = self.small_font.render(detail, True, (150, 150, 150))
+
+        overlay.blit(title_text, (300 - title_text.get_width()//2, 50))
+        overlay.blit(sub_text, (300 - sub_text.get_width()//2, 90))
+        overlay.blit(detail_text, (300 - detail_text.get_width()//2, 130))
+
+        screen_center_x = self.game.screen.get_width() // 2
+        screen_center_y = self.game.screen.get_height() // 2
+        self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
+
+    def _draw_and_flip(self):
+        """Draw current screen state with progress overlay and flip display."""
+        self.game.screen.fill((20, 20, 25))
+        self.draw(self.game.screen)
+        pygame.display.flip()
+
+    def _get_engine(self):
+        """Get the battle engine from battle scene."""
+        return self.game.battle_scene.engine
+
+    def _ensure_engine(self):
+        """Ensure battle engine exists (create if needed)."""
+        if self.game.battle_scene.engine is None:
+            self.game.battle_scene._battle_service.create_battle()
+
+    def _switch_to_battle(self, scenario):
+        """Configure battle scene for visual test mode and switch to battle state."""
+        engine = self.game.battle_scene.engine
+
+        # Clear and setup engine
+        engine.start([], [])
+        scenario.setup(engine)
+
+        # Configure battle scene for test mode
+        logger.debug(f" Configuring battle scene for test mode")
+        logger.debug(f" BEFORE: test_mode={self.game.battle_scene.test_mode}")
+        self.game.battle_scene.headless_mode = False
+        self.game.battle_scene.sim_paused = True  # Start paused
+        self.game.battle_scene.test_mode = True   # Enable test mode
+        self.game.battle_scene.test_scenario = scenario  # Pass scenario for update() calls
+        self.game.battle_scene.test_tick_count = 0  # Reset tick counter
+        self.game.battle_scene.test_completed = False  # Reset completed flag
+        self.game.battle_scene.action_return_to_test_lab = False
+        logger.debug(f" AFTER: test_mode={self.game.battle_scene.test_mode}")
+        logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
+
+        # Fit camera to ships
+        ships = engine.ships
+        logger.debug(f" Ships in engine: {len(ships) if ships else 0}")
+        if ships:
+            for i, ship in enumerate(ships):
+                logger.debug(f"   Ship {i}: {ship.name if hasattr(ship, 'name') else 'unknown'} at {ship.position}, alive={ship.is_alive}")
+            self.game.battle_scene.camera.fit_objects(ships)
+            # Also sync target_zoom to prevent animation overriding the fit
+            self.game.battle_scene.camera.target_zoom = self.game.battle_scene.camera.zoom
+            logger.debug(f" Camera fitted: pos={self.game.battle_scene.camera.position}, zoom={self.game.battle_scene.camera.zoom}")
+        else:
+            logger.warning(" No ships in engine after scenario setup!")
+
+        # Switch to battle state
+        from game.core.constants import GameState
+        logger.debug(f" Switching to BATTLE state")
+        self.game.state = GameState.BATTLE
+
     def _on_view_battle_states(self, run_record, run_number):
         """
         Open the battle state viewer for a test run.
@@ -484,343 +581,28 @@ class TestLabScreen:
 
     def _on_run(self):
         """Run the selected test scenario visually in Combat Lab."""
-        if self.selected_test_id is None:
-            self.output_log.append("ERROR: No test selected!")
-            return
-
-        scenario_info = self.registry.get_by_id(self.selected_test_id)
-        if scenario_info is None:
-            self.output_log.append(f"ERROR: Test {self.selected_test_id} not found!")
-            return
-
-        metadata = scenario_info['metadata']
-        self.output_log.append(f"Running {metadata.name}...")
-
-        runner = TestRunner()
-
-        try:
-            # Instantiate scenario
-            logger.debug(f" Instantiating scenario class")
-            scenario_cls = scenario_info['class']
-            scenario = scenario_cls()
-            logger.debug(f" Scenario instantiated: {scenario.name}")
-
-            # Load test data
-            logger.debug(f" Loading test data for scenario")
-            runner.load_data_for_scenario(scenario)
-            logger.debug(f" Test data loaded successfully")
-
-            # Ensure battle engine exists (may have been reset after previous test)
-            if self.game.battle_scene.engine is None:
-                self.game.battle_scene._battle_service.create_battle()
-
-            # Clear battle engine
-            logger.debug(f" Clearing battle engine")
-            self.game.battle_scene.engine.start([], [])
-
-            # Setup scenario
-            logger.debug(f" Calling scenario.setup()")
-            scenario.setup(self.game.battle_scene.engine)
-            logger.debug(f" Scenario setup complete")
-
-            # Configure battle scene for test mode
-            logger.debug(f" Configuring battle scene for test mode")
-            logger.debug(f" BEFORE: test_mode={self.game.battle_scene.test_mode}")
-            self.game.battle_scene.headless_mode = False
-            self.game.battle_scene.sim_paused = True  # Start paused
-            self.game.battle_scene.test_mode = True   # Enable test mode
-            self.game.battle_scene.test_scenario = scenario  # Pass scenario for update() calls
-            self.game.battle_scene.test_tick_count = 0  # Reset tick counter
-            self.game.battle_scene.test_completed = False  # Reset completed flag
-            self.game.battle_scene.action_return_to_test_lab = False
-            logger.debug(f" AFTER: test_mode={self.game.battle_scene.test_mode}")
-            logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
-
-            # Fit camera to ships
-            ships = self.game.battle_scene.engine.ships
-            logger.debug(f" Ships in engine: {len(ships) if ships else 0}")
-            if ships:
-                for i, ship in enumerate(ships):
-                    logger.debug(f"   Ship {i}: {ship.name if hasattr(ship, 'name') else 'unknown'} at {ship.position}, alive={ship.is_alive}")
-                self.game.battle_scene.camera.fit_objects(ships)
-                # Also sync target_zoom to prevent animation overriding the fit
-                self.game.battle_scene.camera.target_zoom = self.game.battle_scene.camera.zoom
-                logger.debug(f" Camera fitted: pos={self.game.battle_scene.camera.position}, zoom={self.game.battle_scene.camera.zoom}")
-            else:
-                logger.warning(" No ships in engine after scenario setup!")
-
-            # Switch to battle state
-            from game.core.constants import GameState
-            logger.debug(f" Switching to BATTLE state")
-            self.game.state = GameState.BATTLE
-
-            self.output_log.append(f"Started test {self.selected_test_id}")
-
-        except (OSError, ValueError, KeyError, TypeError) as e:
-            logger.error(f"Error running visual test: {e}", exc_info=True)
-            self.output_log.append(f"ERROR: {e}")
+        self._executor.run_visual(self.selected_test_id)
 
     def _on_run_headless(self):
         """Run the selected test scenario in headless mode (fast, no visuals)."""
-        if self.selected_test_id is None:
-            self.output_log.append("ERROR: No test selected!")
-            return
-
-        scenario_info = self.registry.get_by_id(self.selected_test_id)
-        if scenario_info is None:
-            self.output_log.append(f"ERROR: Test {self.selected_test_id} not found!")
-            return
-
-        metadata = scenario_info['metadata']
-        self.output_log.append(f"Running {metadata.name} (headless)...")
-
-        runner = TestRunner()
-
-        # Ensure battle engine exists (may have been reset after visual test)
-        if self.game.battle_scene.engine is None:
-            self.game.battle_scene._battle_service.create_battle()
-        engine = self.game.battle_scene.engine
-
-        try:
-            # Instantiate scenario
-            logger.debug(f" Instantiating scenario class for headless run")
-            scenario_cls = scenario_info['class']
-            scenario = scenario_cls()
-            logger.debug(f" Scenario instantiated: {scenario.name}")
-
-            # Load test data
-            logger.debug(f" Loading test data for scenario")
-            runner.load_data_for_scenario(scenario)
-            logger.debug(f" Test data loaded successfully")
-
-            # Get seed based on current seed mode setting BEFORE starting engine
-            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
-            logger.debug(f" Using seed: {seed} (mode: {self.controller.ui_state.get_seed_mode()})")
-
-            # Pass seed to scenario for use in engine.start()
-            # Don't call engine.start() here - let scenario do it with the seed
-            scenario._override_seed = seed
-            logger.debug(f" Set scenario._override_seed={seed}")
-
-            # Setup scenario (this will call engine.start with the seed)
-            logger.debug(f" Calling scenario.setup()")
-            scenario.setup(engine)
-            logger.debug(f" Scenario setup complete")
-
-            # Show "Running Test..." message
-            self.headless_running = True
-            self.game.screen.fill((20, 20, 25))
-            self.draw(self.game.screen)
-
-            # Draw "Running Test..." overlay
-            overlay = pygame.Surface((600, 200))
-            overlay.fill((40, 40, 45))
-            pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
-
-            title_text = self.header_font.render("Running Test...", True, (255, 255, 255))
-            test_text = self.body_font.render(f"{metadata.name}", True, (200, 200, 200))
-            ticks_text = self.body_font.render(f"Max ticks: {scenario.max_ticks}", True, (180, 180, 180))
-
-            overlay.blit(title_text, (300 - title_text.get_width()//2, 50))
-            overlay.blit(test_text, (300 - test_text.get_width()//2, 90))
-            overlay.blit(ticks_text, (300 - ticks_text.get_width()//2, 130))
-
-            screen_center_x = self.game.screen.get_width() // 2
-            screen_center_y = self.game.screen.get_height() // 2
-            self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
-            pygame.display.flip()
-
-            # Run simulation headless (stay on Combat Lab screen)
-            start_time = time.time()
-            tick_count = 0
-            max_ticks = scenario.max_ticks
-
-            logger.debug(f" Starting headless simulation loop (max_ticks={max_ticks})")
-
-            # Capture battle states for later viewing (seed already retrieved above)
-            from test_framework.battle_state_capture import BattleStateCapture
-
-            with BattleStateCapture(engine, self.selected_test_id, seed) as state_capture:
-                # Run simulation as fast as possible
-                while tick_count < max_ticks:
-                    # Call scenario update for dynamic logic
-                    scenario.update(engine)
-
-                    # Update engine one tick
-                    engine.update()
-                    tick_count += 1
-
-                    # Check if battle ended naturally
-                    if engine.is_battle_over():
-                        logger.debug(f" Battle ended naturally at tick {tick_count}")
-                        break
-
-            # Simulation complete - verify results
-            elapsed_time = time.time() - start_time
-            logger.debug(f" Simulation complete: {tick_count} ticks in {elapsed_time:.2f}s ({tick_count/elapsed_time:.0f} ticks/sec)")
-
-            # Verify and collect results
-            scenario.passed = scenario.verify(engine)
-            logger.debug(f" Test {'PASSED' if scenario.passed else 'FAILED'}")
-
-            # Store results including battle state file paths
-            scenario.results['ticks_run'] = tick_count
-            scenario.results['duration_real'] = elapsed_time
-            scenario.results['ticks'] = tick_count  # Alias for consistency with runner
-            scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
-            self.registry.update_last_run_results(self.selected_test_id, scenario.results)
-
-            # Add to persistent test history
-            self.test_history.add_run(self.selected_test_id, scenario.results)
-
-            # Log test execution (for UI vs headless comparison)
-            runner._log_test_execution(scenario, headless=True)
-
-            # Refresh results panel if it exists
-            if self.results_panel:
-                self.results_panel.set_test(self.selected_test_id)
-
-            # Update output log
-            status = "PASSED" if scenario.passed else "FAILED"
-            self.output_log.append(f"Test {self.selected_test_id} {status} ({tick_count} ticks, {elapsed_time:.2f}s)")
-
-            # Clear running flag
-            self.headless_running = False
-
-        except (OSError, ValueError, KeyError, TypeError) as e:
-            self.headless_running = False
-            self.output_log.append(f"ERROR: {e}")
+        self.headless_running = True
+        self._executor.run_headless(self.selected_test_id)
+        self.headless_running = False
+        # Refresh results panel if it exists
+        if self.results_panel:
+            self.results_panel.set_test(self.selected_test_id)
 
     def _on_run_all_tests(self):
         """Run all visible tests headlessly in sequence."""
-        filtered_scenarios = self._get_filtered_scenarios()
-        self.batch_tests = sorted(filtered_scenarios.keys())
-        self.batch_total = len(self.batch_tests)
-
-        if self.batch_total == 0:
-            self.output_log.append("No tests to run!")
-            return
-
-        self.batch_current_index = 0
-        self.batch_running = True
-        self.output_log.append(f"Starting batch run of {self.batch_total} tests...")
-        self._run_next_batch_test()
+        self._executor.run_all(self._get_filtered_scenarios())
 
     def _run_next_batch_test(self):
         """Run the next test in the batch sequence."""
-        if self.batch_current_index >= self.batch_total:
-            # All tests complete
-            self.batch_running = False
-            self.output_log.append(f"Batch complete: {self.batch_total} tests run")
-            return
-
-        test_id = self.batch_tests[self.batch_current_index]
-        scenario_info = self.registry.get_by_id(test_id)
-
-        if scenario_info is None:
-            self.output_log.append(f"ERROR: Test {test_id} not found, skipping")
-            self.batch_current_index += 1
-            self._run_next_batch_test()
-            return
-
-        metadata = scenario_info['metadata']
-        runner = TestRunner()
-
-        try:
-            # Instantiate scenario
-            scenario_cls = scenario_info['class']
-            scenario = scenario_cls()
-
-            # Load test data
-            runner.load_data_for_scenario(scenario)
-
-            # Get seed based on current seed mode setting BEFORE starting engine
-            seed = self.controller.ui_state.get_effective_seed(metadata.seed)
-
-            # Ensure battle engine exists (may have been reset)
-            if self.game.battle_scene.engine is None:
-                self.game.battle_scene._battle_service.create_battle()
-
-            # Get fresh battle engine
-            engine = self.game.battle_scene.engine
-
-            # Pass seed to scenario for use in engine.start()
-            scenario._override_seed = seed
-
-            # Setup scenario (this will call engine.start with the seed)
-            scenario.setup(engine)
-
-            # Draw progress overlay
-            self.game.screen.fill((20, 20, 25))
-            self.draw(self.game.screen)
-
-            overlay = pygame.Surface((600, 200))
-            overlay.fill((40, 40, 45))
-            pygame.draw.rect(overlay, (100, 100, 120), overlay.get_rect(), 3)
-
-            progress_text = f"Running test {self.batch_current_index + 1}/{self.batch_total}"
-            title_text = self.header_font.render(progress_text, True, (255, 255, 255))
-            test_text = self.body_font.render(f"{metadata.name}", True, (200, 200, 200))
-            id_text = self.small_font.render(f"ID: {test_id}", True, (150, 150, 150))
-
-            overlay.blit(title_text, (300 - title_text.get_width()//2, 50))
-            overlay.blit(test_text, (300 - test_text.get_width()//2, 90))
-            overlay.blit(id_text, (300 - id_text.get_width()//2, 125))
-
-            screen_center_x = self.game.screen.get_width() // 2
-            screen_center_y = self.game.screen.get_height() // 2
-            self.game.screen.blit(overlay, (screen_center_x - 300, screen_center_y - 100))
-            pygame.display.flip()
-
-            # Run simulation headless with battle state capture (seed already retrieved above)
-            from test_framework.battle_state_capture import BattleStateCapture
-
-            start_time = time.time()
-            tick_count = 0
-            max_ticks = scenario.max_ticks
-
-            with BattleStateCapture(engine, test_id, seed) as state_capture:
-                while tick_count < max_ticks:
-                    scenario.update(engine)
-                    engine.update()
-                    tick_count += 1
-
-                    if engine.is_battle_over():
-                        break
-
-            # Verify results
-            elapsed_time = time.time() - start_time
-            scenario.passed = scenario.verify(engine)
-
-            # Store results including battle state file paths
-            scenario.results['ticks_run'] = tick_count
-            scenario.results['duration_real'] = elapsed_time
-            scenario.results['ticks'] = tick_count
-            scenario.results.update(state_capture.get_results_dict())  # Add state file paths and seed
-            self.registry.update_last_run_results(test_id, scenario.results)
-
-            # Add to persistent test history
-            self.test_history.add_run(test_id, scenario.results)
-
-            # Log test execution
-            runner._log_test_execution(scenario, headless=True)
-
-            # Update output log
-            status = "PASSED" if scenario.passed else "FAILED"
-            self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: {status}")
-
-        except (OSError, ValueError, KeyError, TypeError) as e:
-            self.output_log.append(f"[{self.batch_current_index + 1}/{self.batch_total}] {test_id}: ERROR - {e}")
-
-        # Move to next test
-        self.batch_current_index += 1
-        # Use a small delay to allow UI updates, then continue
-        pygame.time.set_timer(pygame.USEREVENT + 1, 50, loops=1)  # Trigger next test after 50ms
+        self._executor.run_next_batch()
 
     def _continue_batch_test(self):
         """Continue batch execution (called from event handler)."""
-        if self.batch_running:
-            self._run_next_batch_test()
+        self._executor.continue_batch()
 
     def handle_event(self, event):
         """Handle a single pygame event (IScene protocol)."""
