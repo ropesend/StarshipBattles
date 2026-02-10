@@ -8,22 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-90 Phase 4
-**Current Status:** PROJ-90 Phase 4 Complete
-**Current Project:** PROJ-90
-**Current Phase:** Phase 5 (next)
+**Last Completed:** PROJ-90 Audit PASSED
+**Current Status:** PROJ-90 Complete - Awaiting User Verification
+**Current Project:** PROJ-91 (next)
+**Current Phase:** Phase 1 (next)
 **Test Status:** 7557 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-90 Phase 4 complete: Strategy-Simulation Boundary Protocol
-- Created IPostBattleShip and IResourceReader protocols in game/core/protocols.py
-- Updated ShipInstance.update_from_ship() and from_ship() to use IPostBattleShip
-- Updated Fleet.update_from_battle_results() and fleet_battle_adapter.py to use IPostBattleShip
-- Updated BattleResult.team0_survivors/team1_survivors from List[Any] to List[IPostBattleShip]
-- Added 17 protocol conformance tests in tests/unit/core/test_protocols_boundary.py
-- ship_instance.py no longer TYPE_CHECKING imports Ship (goal achieved)
-- Next: Phase 5 - Documentation & Audit
+- PROJ-90 complete: All 5 phases + audit passed
+- Phase 5 updated ARCHITECTURE.md with IPostBattleShip, BattleConfig, RegistryLoader documentation
+- Removed unused Ship import from fleet.py TYPE_CHECKING block
+- All 4 audit goals verified by investigation agents
+- Next project: PROJ-91 - Unify Resource/State Logic Between Strategy and Simulation Layers
 
 ---
 
@@ -239,10 +236,10 @@
 
 ---
 
-- [/] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-90/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-90/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -420,6 +417,8 @@
 | 2026-02-10 | PROJ-90 | Phase 2 | Complete | 7540 passed | pending | Created registry_loader.py (113 lines), removed method from RegistryManager, Core layer violation fixed |
 | 2026-02-10 | PROJ-90 | Phase 3 | Complete | 7540 passed | pending | Moved ShipCombatEngine+ShipSerializer to module level, ModifierService must stay late (real cycle) |
 | 2026-02-10 | PROJ-90 | Phase 4 | Complete | 7557 passed | pending | IPostBattleShip+IResourceReader protocols, ShipInstance/Fleet/BattleResult updated, 17 new tests |
+| 2026-02-10 | PROJ-90 | Phase 5 | Complete | 7557 passed | pending | ARCHITECTURE.md updated, removed unused Ship import from fleet.py |
+| 2026-02-10 | PROJ-90 | Audit 1 | PASSED | 7557 passed | pending | All 4 goals verified by investigation agents, all phases complete |
 
 ---
 

@@ -9,7 +9,6 @@ from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
-    from game.simulation.entities.ship import Ship
     from game.core.registry import GameRegistries
 
 

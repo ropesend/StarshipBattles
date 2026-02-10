@@ -118,54 +118,88 @@ Component definition registry accessible by all layers.
 
 ## Intentional Late Imports
 
-Some circular dependencies are resolved through late imports within methods.
-These are **intentional design patterns**, not workarounds:
+Some late imports within methods are **intentional design patterns** for specific purposes.
+PROJ-90 cleaned up several unnecessary late imports in ship.py (WeaponAbility, ShipCombatEngine,
+ShipSerializer are now module-level imports). The remaining late imports are documented below:
 
 ### Ship Module (game/simulation/entities/ship.py)
 
-1. **Line 262: `from game.simulation.components.abilities import WeaponAbility, SeekerWeaponAbility`**
-   - Location: `max_weapon_range` property
-   - Purpose: abilities.py may have transitive Ship dependencies
-   - Rationale: Property is rarely called at module load time
-
-2. **Lines 517, 558: `from game.simulation.services.modifier_service import ModifierService`**
+1. **Lines 487, 532: `from game.simulation.services.modifier_service import ModifierService`**
    - Location: `add_component()`, `add_components_bulk()`
-   - Purpose: ModifierService validates with component context
+   - Purpose: ModifierService has transitive dependencies through Ship
    - Rationale: Only called during component addition (edge operation, not hot path)
-
-3. **Lines 808, 827: `from .ship_serialization import ShipSerializer`**
-   - Location: `to_dict()`, `from_dict()`
-   - Purpose: Bidirectional dependency (Ship ↔ ShipSerializer)
-   - Rationale: Serialization inherently coupled to Ship; I/O operation not performance-critical
+   - Note: This is a real import cycle that cannot be moved to module level
 
 ### App Module (game/app.py)
 
-4. **Lazy imports for UI screens/services**
+2. **Lazy imports for UI screens/services**
    - Purpose: Avoid circular deps, improve startup performance
 
 ### Fleet Module (game/strategy/data/fleet.py)
 
-5. **Line 88: `from game.strategy.services.fleet_mobility_service import FleetMobilityService`**
+3. **Line 133: `from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator`**
    - Location: `_trigger_speed_recalculation()`
-   - Purpose: FleetMobilityService may have transitive dependencies
+   - Purpose: FleetSpeedCalculator may have transitive dependencies
    - Rationale: Edge operation (only called when ships added/removed)
-
-6. **Lines 110, 128: `from game.strategy.services.ship_stats_service import ShipStatsService`**
-   - Location: `can_use_warp()`, `get_warp_limiting_ship()`
-   - Purpose: ShipStatsService encapsulates warp capability logic
-   - Rationale: Query operations, not hot path
 
 ### ShipInstance Module (game/strategy/data/ship_instance.py)
 
-7. **Lines 125, 597: `from game.simulation.entities.ship_serialization import ShipSerializer`**
+4. **Lines 157, 562: `from game.simulation.entities.ship_serialization import ShipSerializer`**
    - Location: `from_ship()`, `to_ship()`
    - Purpose: Cross-layer boundary import (strategy -> simulation)
    - Rationale: Maintains layer separation; deferred to avoid load-time coupling
 
-8. **Line 189: `from game.strategy.services.ship_stats_service import ShipStatsService`**
+5. **Lines 222-223: ShipStatsCalculator and GameRegistries**
    - Location: `get_calculated_stats()`
    - Purpose: Lazy initialization pattern for cached stats
    - Rationale: Stats only calculated when first accessed
+
+## Strategy-Simulation Boundary Protocol (PROJ-90)
+
+The strategy layer communicates with the simulation layer across the battle boundary using the
+`IPostBattleShip` protocol defined in `game/core/protocols.py`.
+
+### IPostBattleShip Protocol
+
+```python
+# game/core/protocols.py
+
+@runtime_checkable
+class IPostBattleShip(Protocol):
+    """Protocol for ships returned from battle simulation."""
+    @property
+    def serial(self) -> str: ...
+    @property
+    def hp(self) -> int: ...
+    @property
+    def layers(self) -> Dict[str, Any]: ...
+    @property
+    def resource_levels(self) -> Dict[str, float]: ...
+    @property
+    def cargo_contents(self) -> Dict[str, int]: ...
+```
+
+### Usage
+
+- **BattleResult.team0_survivors / team1_survivors**: `List[IPostBattleShip]`
+- **ShipInstance.update_from_ship(ship: IPostBattleShip)**: Updates from battle survivor
+- **Fleet.update_from_battle_results(survivors: List[IPostBattleShip])**: Batch update
+
+This protocol decouples the strategy layer from the simulation layer's Ship class while still
+allowing type-safe data transfer across the boundary.
+
+## Configuration Extraction (PROJ-90)
+
+### BattleConfig (game/simulation/battle_config.py)
+
+`BattleConfig` and `BattleMode` were extracted from `battle_controller.py` to eliminate a
+circular import workaround. This module has no dependencies on other simulation modules.
+
+### Registry Loader (game/simulation/services/registry_loader.py)
+
+The `RegistryLoader` class was extracted from `game/core/registry.py` to fix a Core → Simulation
+layer violation. The loader handles all component/design JSON loading while the registry remains
+in core with no simulation dependencies.
 
 ## Testing Without Display
 
