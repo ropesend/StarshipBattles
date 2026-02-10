@@ -138,16 +138,18 @@ def test_default_selection_is_first_queue(build_queue_screen):
 # --- Queue selection tests ---
 
 def test_on_queue_selected_updates_active_source(build_queue_screen):
-    """Test that _on_queue_selected updates the active queue source."""
+    """Test that queue selection updates the active queue source."""
     # With single source, selecting index 0 should still work
-    build_queue_screen._on_queue_selected(0)
+    # PROJ-86: Use selector's internal method via screen's callback
+    build_queue_screen._queue_selector._on_queue_selected(0)
     assert build_queue_screen.active_queue_source is build_queue_screen.queue_sources[0]
     assert build_queue_screen.selected_queue_indices == {0}
 
 
 def test_on_queue_toggled_prevents_empty_selection(build_queue_screen):
     """Test that toggling off the only selected queue falls back to index 0."""
-    build_queue_screen._on_queue_toggled(0)
+    # PROJ-86: Use selector's internal method via screen's callback
+    build_queue_screen._queue_selector._on_queue_toggled(0)
     # Should not allow empty selection - falls back to {0}
     assert len(build_queue_screen.selected_queue_indices) > 0
     assert 0 in build_queue_screen.selected_queue_indices
@@ -262,14 +264,15 @@ def test_multi_select_sets_active_to_none():
     bq._refresh_queue_selector()
 
     # Select both queues
-    bq.selected_queue_indices = {0}
-    bq._on_queue_toggled(1)
+    # PROJ-86: Use selector's internal methods
+    bq._queue_selector.selected_indices = {0}
+    bq._queue_selector._on_queue_toggled(1)
 
     assert len(bq.selected_queue_indices) == 2
     assert bq.active_queue_source is None
 
     # Go back to single select
-    bq._on_queue_selected(0)
+    bq._queue_selector._on_queue_selected(0)
     assert len(bq.selected_queue_indices) == 1
     assert bq.active_queue_source is bq.queue_sources[0]
 

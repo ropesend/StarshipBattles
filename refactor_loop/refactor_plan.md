@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-86 Phase 7 Complete
-**Current Status:** PROJ-86 Phase 7 Complete - Ready for Phase 8
+**Last Completed:** PROJ-86 Phase 8 Complete
+**Current Status:** PROJ-86 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-86
-**Current Phase:** Phase 7 Complete → Phase 8 Next
+**Current Phase:** Phase 8 Complete → Audit Next
 **Test Status:** 7524 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-86 Phase 7 Complete: Extracted strategy_panel_manager.py and strategy_event_router.py from StrategyUI
-- strategy_ui.py: 841 → 381 lines (-460 lines, 55% reduction!)
-- strategy_panel_manager.py: 476 lines (StrategyWidgets dataclass + create_strategy_panels + resize_strategy_panels + apply_hotkey_tooltips)
-- strategy_event_router.py: 271 lines (StrategyEventRouter with route_event, handle_click, has_modal_open, etc.)
-- Updated 3 test files with event_router fixture (test_strategy_ui_menu.py, test_event_log_window.py, test_bug_16_raw_data_button.py)
-- Next: Phase 8 - BuildQueueScreen Re-decomposition
+- PROJ-86 Phase 8 Complete: Extracted build_queue_helpers.py and build_queue_selector.py from BuildQueueScreen
+- build_queue_screen.py: 1186 → 1079 lines (-107 lines, 9% reduction)
+- build_queue_helpers.py: 49 lines (format_empire_resources, format_resource_cost)
+- build_queue_selector.py: 188 lines (BuildQueueSelector class for queue panel management)
+- Updated 3 tests in test_queue_selector.py to use new selector interface
+- All 8 phases complete. Next: Audit (Protocol 04)
 
 ---
 
@@ -222,9 +222,9 @@
 ---
 
 - [/] **PROJ-86: Critical God Class Decomposition - UI Tier**
-  - **Phases:** 8 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 8 | **Status:** All Phases Complete - Audit Next | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-86/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-86/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** Pending | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -406,6 +406,7 @@
 | 2026-02-10 | PROJ-86 | Phase 5 | Complete | 7524 passed | pending | Extracted strategy_detail_formatter.py (391 lines), strategy_ui.py 1212→1041 (-171) |
 | 2026-02-10 | PROJ-86 | Phase 6 | Complete | 7524 passed | pending | Extracted strategy_window_manager.py (401 lines), strategy_ui.py 1041→841 (-200) |
 | 2026-02-10 | PROJ-86 | Phase 7 | Complete | 7524 passed | pending | Extracted strategy_panel_manager.py (476 lines) + strategy_event_router.py (271 lines), strategy_ui.py 841→381 (-460, 55% reduction!) |
+| 2026-02-10 | PROJ-86 | Phase 8 | Complete | 7524 passed | pending | Extracted build_queue_helpers.py (49 lines) + build_queue_selector.py (188 lines), build_queue_screen.py 1186→1079 (-107, 9% reduction) |
 
 ---
 

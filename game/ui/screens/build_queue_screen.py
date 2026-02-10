@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
 from game.core.config import UIConfig
 from game.core.constants import PLANET_RESOURCES
 from game.core.input_actions import InputAction
-from game.core.logger import log_info, log_warning, log_error, log_debug
+from game.core.logger import log_info, log_warning, log_debug
 from game.core.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel
 from game.ui.panels.design_report_panel import DesignReportPanel
@@ -24,6 +24,8 @@ from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler
 from game.ui.panels.build_queue_controller import BuildQueueController
 from game.strategy.data.build_queue_source import BuildQueueSource, collect_build_queues_at_hex
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
+from game.ui.screens.build_queue_helpers import format_empire_resources, format_resource_cost
+from game.ui.screens.build_queue_selector import BuildQueueSelector
 
 if TYPE_CHECKING:
     from game.core.input_mapper import InputMapper
@@ -117,11 +119,12 @@ class BuildQueueScreen:
                 context_type=build_context.context_type,
             )]
 
-        # PROJ-69: Queue selection state
+        # PROJ-69: Queue selection state (updated by BuildQueueSelector)
         self.selected_queue_indices: Set[int] = {0} if self.queue_sources else set()
         self.active_queue_source: Optional[BuildQueueSource] = (
             self.queue_sources[0] if self.queue_sources else None
         )
+        self._queue_selector: Optional[BuildQueueSelector] = None  # Set in _create_queue_selector_panel
 
         log_info(f"BuildQueue: Initialized for {build_context.context_type} '{build_context.name}' (owner_id={build_context.owner_id})")
         log_info(f"BuildQueue: {len(self.queue_sources)} queue source(s) discovered")
@@ -252,8 +255,8 @@ class BuildQueueScreen:
     def _create_queue_selector_panel(self):
         """Create queue selector column for choosing active build queue(s).
 
-        PROJ-69: New panel showing all build queue sources at the hex,
-        allowing single-click selection or ctrl+click multi-selection.
+        PROJ-69: Delegates to BuildQueueSelector helper class.
+        PROJ-86 Phase 8: Extracted to build_queue_selector.py.
         """
         # Position: right of context report, full height
         panel_x = 10 + 480 + 10  # After context report (480w) + gap
@@ -261,126 +264,48 @@ class BuildQueueScreen:
         panel_width = 700  # PROJ-81: Widened from 280px for better readability
         panel_height = self.screen_height - 10 - 80  # Full height minus bottom bar
 
-        self.queue_selector_panel = ui.UIPanel(
-            relative_rect=pygame.Rect(panel_x, panel_y, panel_width, panel_height),
+        self._queue_selector = BuildQueueSelector(
             manager=self.manager,
-            container=self.background
+            container=self.background,
+            rect=pygame.Rect(panel_x, panel_y, panel_width, panel_height),
+            queue_sources=self.queue_sources,
+            on_selection_changed=self._on_queue_selection_changed,
         )
-
-        # Header
-        ui.UITextBox(
-            relative_rect=pygame.Rect(10, 10, panel_width - 20, 30),
-            html_text="<b>Build Yards</b>",
-            manager=self.manager,
-            container=self.queue_selector_panel
-        )
-
-        # Scrollable container for queue entries
-        self.queue_selector_scrollable = ui.UIScrollingContainer(
-            relative_rect=pygame.Rect(5, 45, panel_width - 10, panel_height - 55),
-            manager=self.manager,
-            container=self.queue_selector_panel
-        )
-
-        # Store queue selector buttons for event handling
-        self.queue_selector_buttons: List[ui.UIButton] = []
-
-        self._refresh_queue_selector()
+        # Alias for backward compatibility with tests
+        self.queue_selector_panel = self._queue_selector.panel
+        self.queue_selector_scrollable = self._queue_selector.scrollable
+        self.queue_selector_buttons = self._queue_selector.buttons
 
     def _refresh_queue_selector(self):
         """Rebuild queue selector UI elements to reflect current selection state."""
-        # Clear existing selector entries
-        elements_to_kill = list(self.queue_selector_scrollable.get_container().elements)
-        for element in elements_to_kill:
-            element.kill()
-        self.queue_selector_buttons.clear()
+        if self._queue_selector:
+            self._queue_selector.refresh()
+            # Sync buttons list for backward compatibility
+            self.queue_selector_buttons = self._queue_selector.buttons
 
-        row_height = 55
-        row_width = 680  # PROJ-81: Updated to match new panel width (700px) minus margins
-        y_offset = 0
+    def _on_queue_selection_changed(
+        self, active_source: Optional[BuildQueueSource], selected_indices: Set[int]
+    ) -> None:
+        """Handle selection change from BuildQueueSelector.
 
-        for idx, source in enumerate(self.queue_sources):
-            is_selected = idx in self.selected_queue_indices
-            item_count = len(source.construction_queue)
-
-            # Display name with item count and build rate, selection prefix
-            prefix = "> " if is_selected else "  "
-            label_text = f"{prefix}{source.display_name}\n{item_count} items | {int(source.build_rate)}/turn"
-
-            # Use object_id to distinguish selected vs unselected visually
-            object_id = "#queue_selector_selected" if is_selected else "#queue_selector_item"
-
-            btn = ui.UIButton(
-                relative_rect=pygame.Rect(0, y_offset, row_width, row_height),
-                text=label_text,
-                manager=self.manager,
-                container=self.queue_selector_scrollable,
-                object_id=object_id
-            )
-            btn.queue_source_index = idx  # Tag button with source index
-
-            self.queue_selector_buttons.append(btn)
-            y_offset += row_height + 5
-
-        if not self.queue_sources:
-            ui.UILabel(
-                relative_rect=pygame.Rect(10, 10, row_width, 30),
-                text="No queues available",
-                manager=self.manager,
-                container=self.queue_selector_scrollable
-            )
-
-    def _on_queue_selected(self, index: int):
-        """Handle single-click queue selection (deselects others).
-
-        Syncs the controller's active_queue_source for add operations.
+        Syncs controller queue source state and refreshes display.
 
         Args:
-            index: Index into self.queue_sources to select.
+            active_source: The single active source, or None for multi-select.
+            selected_indices: Set of selected queue indices.
         """
-        self.selected_queue_indices = {index}
-        self.active_queue_source = self.queue_sources[index]
-        # PROJ-69: Sync controller queue source
-        self.controller.set_active_queue(self.active_queue_source)
-        log_info(f"BuildQueue: Selected queue '{self.active_queue_source.display_name}'")
-        self._refresh_queue_selector()
-        self._refresh_queue_display()
-        self._update_queue_header()
+        self.active_queue_source = active_source
+        self.selected_queue_indices = selected_indices
 
-    def _on_queue_toggled(self, index: int):
-        """Handle ctrl+click queue toggle for multi-select.
-
-        Syncs the controller's queue source state for add operations.
-
-        Args:
-            index: Index into self.queue_sources to toggle.
-        """
-        if index in self.selected_queue_indices:
-            self.selected_queue_indices.discard(index)
+        # Sync controller with selection
+        if active_source is not None:
+            self.controller.set_active_queue(active_source)
         else:
-            self.selected_queue_indices.add(index)
-
-        # Prevent empty selection
-        if not self.selected_queue_indices:
-            self.selected_queue_indices = {0}
-
-        # Set active queue source based on selection count
-        if len(self.selected_queue_indices) == 1:
-            sole_idx = next(iter(self.selected_queue_indices))
-            self.active_queue_source = self.queue_sources[sole_idx]
-            # PROJ-69: Sync controller to single-queue mode
-            self.controller.set_active_queue(self.active_queue_source)
-            log_info(f"BuildQueue: Single queue selected: '{self.active_queue_source.display_name}'")
-        else:
-            self.active_queue_source = None
-            # PROJ-69: Sync controller to multi-queue mode
             selected_sources = [
-                self.queue_sources[i] for i in sorted(self.selected_queue_indices)
+                self.queue_sources[i] for i in sorted(selected_indices)
             ]
             self.controller.set_selected_queues(selected_sources)
-            log_info(f"BuildQueue: Multi-select mode: {len(self.selected_queue_indices)} queues")
 
-        self._refresh_queue_selector()
         self._refresh_queue_display()
         self._update_queue_header()
 
@@ -603,44 +528,17 @@ class BuildQueueScreen:
     def _format_empire_resources(empire) -> str:
         """Format empire resource pool for display in build queue bottom bar.
 
-        Args:
-            empire: Empire instance with resource_pool.
-
-        Returns:
-            Formatted string like "Met: 500  Org: 200  Vap: 0"
+        PROJ-86 Phase 8: Delegates to build_queue_helpers module.
         """
-        abbrevs = {"Metals": "Met", "Organics": "Org", "Vapors": "Vap",
-                   "Radioactives": "Rad", "Exotics": "Exo"}
-        parts = []
-        for res in PLANET_RESOURCES:
-            current = empire.resource_pool.get(res, 0.0)
-            cap = empire.max_storage.get(res, 0.0)
-            abbr = abbrevs.get(res, res[:3])
-            if cap > 0:
-                parts.append(f"{abbr}: {int(current)}/{int(cap)}")
-            elif current > 0:
-                parts.append(f"{abbr}: {int(current)}")
-        return "  |  ".join(parts) if parts else "No resources"
+        return format_empire_resources(empire)
 
     @staticmethod
     def _format_resource_cost(cost: dict) -> str:
         """Format resource cost dict into compact display string.
 
-        Args:
-            cost: Dict mapping resource type to amount.
-
-        Returns:
-            Compact string like "M:100 O:50 V:20"
+        PROJ-86 Phase 8: Delegates to build_queue_helpers module.
         """
-        abbrevs = {"Metals": "M", "Organics": "O", "Vapors": "V",
-                   "Radioactives": "R", "Exotics": "E"}
-        parts = []
-        for res in PLANET_RESOURCES:
-            amount = cost.get(res, 0)
-            if amount > 0:
-                abbr = abbrevs.get(res, res[0])
-                parts.append(f"{abbr}:{int(amount)}")
-        return " ".join(parts) if parts else ""
+        return format_resource_cost(cost)
 
     def _create_bottom_bar(self):
         """Create bottom bar with close button and turn info."""
@@ -1069,15 +967,11 @@ class BuildQueueScreen:
                     else:
                         log_warning("No queue item selected to remove")
 
-            # PROJ-69: Queue selector button clicks
-            elif hasattr(event.ui_element, 'queue_source_index'):
-                idx = event.ui_element.queue_source_index
-                # Check for ctrl held for multi-select toggle
-                mods = pygame.key.get_mods()
-                if mods & pygame.KMOD_CTRL:
-                    self._on_queue_toggled(idx)
-                else:
-                    self._on_queue_selected(idx)
+            # PROJ-69/PROJ-86: Queue selector button clicks (delegated to selector)
+            elif self._queue_selector and self._queue_selector.handle_button_click(
+                event.ui_element, bool(pygame.key.get_mods() & pygame.KMOD_CTRL)
+            ):
+                pass  # Handled by selector
         # Design selection and drag handled via drag_handler
 
         # PROJ-69: Determine active queue and multi-select state for drag handler
