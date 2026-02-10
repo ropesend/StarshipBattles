@@ -1,7 +1,7 @@
 """Tests for StrategySessionFacade initialization and basic structure."""
 import pytest
 from unittest.mock import Mock, MagicMock
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 class TestFacadeInitialization:

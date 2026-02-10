@@ -13,15 +13,12 @@ Responsibilities:
 """
 
 from dataclasses import dataclass
-from typing import Optional, List, Tuple, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Tuple, Dict, Any
 
 from game.core.logger import log_debug, log_warning, log_info, log_event
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-from game.strategy.data.hex_math import HexCoord
-
-if TYPE_CHECKING:
-    pass
+from game.core.hex_math import HexCoord
 
 
 @dataclass

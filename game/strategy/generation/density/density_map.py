@@ -10,7 +10,7 @@ import random
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.generation.density.primitives.density_primitive import (
     DensityPrimitive,
     clamp_density,

@@ -11,7 +11,7 @@ from game.strategy.data.pathfinding import (
     get_system_at_hex,
     find_nearest_system,
 )
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 
 
 # =============================================================================

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, Optional, Any
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 class PlanetType(Enum):
     """
@@ -277,7 +277,7 @@ class Planet:
         Returns:
             Dict with all planet data
         """
-        from game.strategy.data.hex_math import hex_to_dict
+        from game.core.hex_math import hex_to_dict
 
         return {
             'id': self.id,
@@ -333,7 +333,7 @@ class Planet:
         Returns:
             Reconstructed Planet instance
         """
-        from game.strategy.data.hex_math import hex_from_dict
+        from game.core.hex_math import hex_from_dict
 
         location = hex_from_dict(data['location'])
         planet_type = PlanetType[data['planet_type']]

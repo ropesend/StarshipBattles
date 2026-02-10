@@ -10,7 +10,7 @@ import pytest
 import random
 from typing import Set
 
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.generation.placement_strategies import (
     ISystemPlacementStrategy,
     RandomPlacementStrategy,

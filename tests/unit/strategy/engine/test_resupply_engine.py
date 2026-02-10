@@ -379,7 +379,7 @@ def _make_planet_with_fuel(
 
 
 # Need HexCoord for fleet locations
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 # ===========================================================================

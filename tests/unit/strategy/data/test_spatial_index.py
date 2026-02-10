@@ -5,7 +5,7 @@ Tests grid-based spatial indexing for efficient neighbor queries.
 """
 
 import pytest
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.spatial_index import SpatialIndex
 
 

@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.systems.save_game_service import SaveGameService
 from game.core import paths as paths_module
 

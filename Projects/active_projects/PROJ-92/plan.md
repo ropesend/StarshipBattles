@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Move HexCoord to core | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Delete no-op TYPE_CHECKING blocks | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Update documentation & audit | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Move HexCoord to core | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Delete no-op TYPE_CHECKING blocks | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Update documentation & audit | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Plan Approved — Ready for Implementation
-**Last Action:** Plan created, reviewed, and approved by user
-**Next Action:** Begin Phase 1, Task 1.1 — copy hex_math.py to game/core/ and create re-export shim
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Completed all 3 phases, all verifications pass
+**Next Action:** Trigger audit
 **Blockers:** None
-**Context for Next Agent:** This is a pure mechanical refactor. No behavioral changes. The re-export shim pattern (Task 1.1) ensures tests pass at every step. All import updates are simple find-and-replace of `game.strategy.data.hex_math` → `game.core.hex_math`. Baseline: 7616 tests passing.
+**Context for Next Agent:** All phases complete. hex_math.py moved to core, 156 imports updated, 6 no-op TYPE_CHECKING blocks removed, ARCHITECTURE.md updated. 7616 tests passing.
 
 ## Overview
 A code review identified residual circular dependency artifacts left over from PROJ-90. Three issues remain:

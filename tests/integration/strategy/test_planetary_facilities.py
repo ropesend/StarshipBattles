@@ -1,6 +1,6 @@
 import pytest
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 @pytest.fixture

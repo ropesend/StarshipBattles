@@ -7,7 +7,7 @@ Tests warp jumps, movement with multi-resource consumption, and component toggle
 import pytest
 
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 from .conftest import create_mock_component, create_test_ship_design, make_ship_instance
 

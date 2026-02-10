@@ -11,7 +11,7 @@ Cross-layer imports (acceptable for UI):
 """
 from typing import TYPE_CHECKING
 from game.core.logger import log_debug, log_info, log_warning
-from game.strategy.data.hex_math import pixel_to_hex
+from game.core.hex_math import pixel_to_hex
 from game.strategy.engine.commands import IssueColonizeCommand, QueueColonizeMissionCommand
 
 if TYPE_CHECKING:

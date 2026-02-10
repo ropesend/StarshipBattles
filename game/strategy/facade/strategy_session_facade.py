@@ -5,7 +5,7 @@ All state mutations go through Commands, all reads return immutable DTOs.
 """
 from typing import List, Optional, TYPE_CHECKING
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult, validation_result
 from game.strategy.facade.dto import (
     FleetInfo,

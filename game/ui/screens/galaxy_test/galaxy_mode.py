@@ -11,7 +11,7 @@ from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMe
 
 from game.core.logger import log_info
 from game.strategy.data.galaxy import Galaxy
-from game.strategy.data.hex_math import hex_to_pixel
+from game.core.hex_math import hex_to_pixel
 from game.strategy.engine.game_config import VALID_GALAXY_TYPES
 from game.ui.screens.galaxy_test.constants import SIDEBAR_WIDTH, HEX_SIZE
 

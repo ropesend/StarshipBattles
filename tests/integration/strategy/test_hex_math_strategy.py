@@ -1,6 +1,6 @@
 import pytest
 import math
-from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel, pixel_to_hex
+from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel, pixel_to_hex
 
 class TestHexCoord:
     def test_init(self):

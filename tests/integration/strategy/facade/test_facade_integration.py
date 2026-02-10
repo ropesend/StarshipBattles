@@ -10,7 +10,7 @@ import pytest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.ship_instance import ShipInstance
 

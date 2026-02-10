@@ -10,7 +10,7 @@ import logging
 import random
 from typing import Protocol, Set, Optional, runtime_checkable
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.spatial_index import SpatialIndex
 from game.strategy.generation.density.density_map import DensityMap
 

@@ -11,7 +11,7 @@ from typing import List, Dict
 from game.core.constants import PLANET_RESOURCES
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
-from game.strategy.data.hex_math import HexCoord, hex_ring
+from game.core.hex_math import HexCoord, hex_ring
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star
 from game.strategy.data.planet_physics import (

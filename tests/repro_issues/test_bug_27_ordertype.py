@@ -43,7 +43,7 @@ class TestBug27OrderTypeImport:
         from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
         from game.strategy.data.empire import Empire
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         # Setup mock scene
         scene = MagicMock()
@@ -77,7 +77,7 @@ class TestBug27OrderTypeImport:
         from game.ui.screens.strategy_ui import StrategyUI
         from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
         from game.strategy.data.empire import Empire
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         from game.strategy.data.planet import Planet, PlanetType
 
         scene = MagicMock()

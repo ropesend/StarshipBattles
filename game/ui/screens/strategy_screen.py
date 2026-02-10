@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 from game.core.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
-from game.strategy.data.hex_math import hex_to_pixel
+from game.core.hex_math import hex_to_pixel
 from game.ui.renderer.camera import Camera
 from game.ui.screens.strategy_ui import StrategyUI
 

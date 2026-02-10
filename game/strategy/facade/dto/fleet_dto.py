@@ -5,7 +5,7 @@ Immutable DTOs representing fleet data for the UI layer.
 from dataclasses import dataclass, field
 from typing import Tuple, Optional, TYPE_CHECKING
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet

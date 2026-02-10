@@ -3,7 +3,7 @@ import random
 import math
 from enum import Enum, auto
 from dataclasses import dataclass, field
-from game.strategy.data.hex_math import HexCoord, hex_ring
+from game.core.hex_math import HexCoord, hex_ring
 
 # Constants
 SOLAR_MASS_KG = 1.989e30
@@ -88,7 +88,7 @@ class Star:
 
     def to_dict(self) -> dict:
         """Serialize Star to dict."""
-        from game.strategy.data.hex_math import hex_to_dict
+        from game.core.hex_math import hex_to_dict
         return {
             'name': self.name,
             'mass': self.mass,
@@ -105,7 +105,7 @@ class Star:
     @classmethod
     def from_dict(cls, data: dict) -> 'Star':
         """Deserialize Star from dict."""
-        from game.strategy.data.hex_math import hex_from_dict
+        from game.core.hex_math import hex_from_dict
         return cls(
             name=data['name'],
             mass=data['mass'],

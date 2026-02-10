@@ -15,7 +15,7 @@ from game.core.config import UIConfig
 from game.core.input_actions import InputAction
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.screenshot_manager import ScreenshotManager
-from game.strategy.data.hex_math import pixel_to_hex
+from game.core.hex_math import pixel_to_hex
 
 
 class StrategyInputHandler:
@@ -414,7 +414,7 @@ class StrategyInputHandler:
         Returns:
             Planet if clicked, None otherwise
         """
-        from game.strategy.data.hex_math import hex_to_pixel
+        from game.core.hex_math import hex_to_pixel
 
         # Group planets by hex (same as renderer)
         hex_groups = {}

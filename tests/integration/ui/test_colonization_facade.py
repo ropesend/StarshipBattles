@@ -5,7 +5,7 @@ instead of directly accessing session internals.
 """
 import pytest
 from unittest.mock import Mock, MagicMock
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.core.validation import validation_result
 
 

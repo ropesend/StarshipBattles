@@ -148,7 +148,7 @@ class TestMoveBlockingWhileBuilding:
     def test_move_blocked_when_building(self):
         """Test that move command is rejected for building fleet."""
         from game.ui.screens.strategy_fleet_ops import FleetOperations
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         # Setup
         mock_scene = MagicMock()
@@ -175,7 +175,7 @@ class TestMoveBlockingWhileBuilding:
     def test_move_allowed_when_not_building(self):
         """Test that move command is allowed for non-building fleet."""
         from game.ui.screens.strategy_fleet_ops import FleetOperations
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         # Setup
         mock_scene = MagicMock()
@@ -207,7 +207,7 @@ class TestFleetOrdersWindowBuildDisplay:
     def test_build_order_description(self):
         """Test that BUILD order shows correct description."""
         from game.ui.screens.fleet_orders_window import FleetOrdersWindow
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         pygame.init()
         pygame.display.set_mode((800, 600))

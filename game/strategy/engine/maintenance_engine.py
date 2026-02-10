@@ -16,12 +16,9 @@ but scuttled entities do NOT return resources (preventing cascade exploitation).
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict
 
 from game.core.logger import log_info, log_warning
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass

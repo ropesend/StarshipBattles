@@ -16,7 +16,7 @@ from typing import Optional, List, Tuple, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_warning
 from game.strategy.data.fleet import Fleet, OrderType
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 
 if TYPE_CHECKING:
     from game.strategy.services.fleet_navigation_service import FleetNavigationService

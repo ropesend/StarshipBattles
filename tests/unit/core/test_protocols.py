@@ -62,7 +62,7 @@ class TestProtocolsWithRealClasses:
         """Fleet class should satisfy IFleet Protocol."""
         from game.core.protocols import IFleet
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
         assert isinstance(fleet, IFleet)
@@ -71,7 +71,7 @@ class TestProtocolsWithRealClasses:
         """Planet class should satisfy IPlanet Protocol."""
         from game.core.protocols import IPlanet
         from game.strategy.data.planet import Planet, PlanetType
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         planet = Planet(
             name="Test Planet",
@@ -95,7 +95,7 @@ class TestProtocolsWithRealClasses:
         """StarSystem class should satisfy IStarSystem Protocol."""
         from game.core.protocols import IStarSystem
         from game.strategy.data.galaxy import StarSystem
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         assert isinstance(system, IStarSystem)
@@ -104,7 +104,7 @@ class TestProtocolsWithRealClasses:
         """Star class should satisfy IStar Protocol."""
         from game.core.protocols import IStar
         from game.strategy.data.stars import Star, StarType, Spectrum
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         spectrum = Spectrum(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
         star = Star(
@@ -125,7 +125,7 @@ class TestProtocolsWithRealClasses:
         """WarpPoint class should satisfy IWarpPoint Protocol."""
         from game.core.protocols import IWarpPoint
         from game.strategy.data.galaxy import WarpPoint
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         wp = WarpPoint(destination_id="Alpha Centauri", location=HexCoord(5, 3))
         assert isinstance(wp, IWarpPoint)
@@ -135,7 +135,7 @@ class TestProtocolsWithRealClasses:
         from game.core.protocols import ISectorEnvironment
         from game.strategy.data.physics import SectorEnvironment
         from game.strategy.data.galaxy import StarSystem
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         sector = SectorEnvironment(local_hex=HexCoord(3, 2), system=system)
@@ -149,7 +149,7 @@ class TestTypeGuardFunctions:
         """is_fleet should return True for Fleet instances."""
         from game.core.protocols import is_fleet
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
         assert is_fleet(fleet) is True
@@ -166,7 +166,7 @@ class TestTypeGuardFunctions:
         """is_planet should return True for Planet instances."""
         from game.core.protocols import is_planet
         from game.strategy.data.planet import Planet, PlanetType
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         planet = Planet(
             name="Test",
@@ -196,7 +196,7 @@ class TestTypeGuardFunctions:
         """is_star_system should return True for StarSystem instances."""
         from game.core.protocols import is_star_system
         from game.strategy.data.galaxy import StarSystem
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         assert is_star_system(system) is True
@@ -212,7 +212,7 @@ class TestTypeGuardFunctions:
         """is_star should return True for Star instances."""
         from game.core.protocols import is_star
         from game.strategy.data.stars import Star, StarType, Spectrum
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         spectrum = Spectrum(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
         star = Star(
@@ -238,7 +238,7 @@ class TestTypeGuardFunctions:
         """is_warp_point should return True for WarpPoint instances."""
         from game.core.protocols import is_warp_point
         from game.strategy.data.galaxy import WarpPoint
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         wp = WarpPoint(destination_id="Alpha", location=HexCoord(1, 1))
         assert is_warp_point(wp) is True
@@ -254,7 +254,7 @@ class TestTypeGuardFunctions:
         from game.core.protocols import is_sector_environment
         from game.strategy.data.physics import SectorEnvironment
         from game.strategy.data.galaxy import StarSystem
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         system = StarSystem(name="Sol", global_location=HexCoord(0, 0))
         sector = SectorEnvironment(local_hex=HexCoord(1, 1), system=system)

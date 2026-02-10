@@ -104,6 +104,18 @@ test_engine = TurnEngine(battle_resolver=MockResolver())
 Custom 2D vector class replacing pygame.math.Vector2 for simulation layer.
 Provides full duck-typing compatibility with pygame vectors.
 
+### HexCoord (game/core/hex_math.py)
+
+Hexagonal grid mathematics for the strategy layer galaxy map. Provides:
+- `HexCoord` class for axial coordinates (q, r)
+- Distance, pixel conversion, ring generation, line drawing
+- Serialization helpers (hex_to_dict, hex_from_dict)
+
+PROJ-92 moved this from `game/strategy/data/` to `game/core/` to fix a layer
+violation where `game/core/protocols.py` imported from the strategy layer.
+The module has no dependencies beyond stdlib `math`, making it appropriate
+for the core layer.
+
 ### Constants (game/core/constants.py)
 
 Shared constants accessible by all layers:

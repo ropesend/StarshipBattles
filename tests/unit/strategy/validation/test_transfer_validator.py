@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, PropertyMock
 from game.strategy.validation.transfer_validator import TransferValidator
 from game.strategy.data.planet import Planet, PlanetType, SpeciesPopulation
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 def make_mock_planet(planet_id=1, owner_id=0, total_pop=1000, location=HexCoord(0, 0)):

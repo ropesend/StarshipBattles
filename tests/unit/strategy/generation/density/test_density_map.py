@@ -5,7 +5,7 @@ Tests for DensityMap composite class.
 import pytest
 import random
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.generation.density.density_map import DensityMap
 from game.strategy.generation.density.primitives.radial import RadialPrimitive
 from game.strategy.generation.density.primitives.ring import RingPrimitive

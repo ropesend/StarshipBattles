@@ -1,7 +1,7 @@
 import pytest
 from game.strategy.data.physics import calculate_incident_radiation
 from game.strategy.data.stars import Star, Spectrum, StarType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 @pytest.fixture

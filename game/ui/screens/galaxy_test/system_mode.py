@@ -10,7 +10,7 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UILabel, UITextEntryLine, UIDropDownMenu
 
 from game.core.logger import log_info
-from game.strategy.data.hex_math import hex_to_pixel, HexCoord
+from game.core.hex_math import hex_to_pixel, HexCoord
 from game.strategy.data.planet import PlanetType
 from game.ui.screens.galaxy_test.constants import PLANET_TYPE_COLORS, SIDEBAR_WIDTH, HEX_SIZE
 

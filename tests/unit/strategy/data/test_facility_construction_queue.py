@@ -6,7 +6,7 @@ and that serialization round-trips correctly.
 """
 import pytest
 from game.strategy.data.planet import Planet, PlanetaryFacility
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 def _make_planet(**overrides) -> Planet:

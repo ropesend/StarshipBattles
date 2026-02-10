@@ -36,7 +36,7 @@ def _make_mock_empire(empire_id: int = 0, name: str = "Test Empire"):
 
 
 def _make_mock_planet(planet_id: int = 1, name: str = "Alpha Prime"):
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
 
     planet = MagicMock()
     planet.id = planet_id
@@ -334,7 +334,7 @@ class TestFleetComplexBuiltEvent:
         """_spawn_fleet_complex() calls log_event with complex_built type."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         engine = ProductionEngine()
         empire = _make_mock_empire()
@@ -388,7 +388,7 @@ class TestFleetComplexBuiltEvent:
         """No event emitted when fleet is not at a planet hex."""
         from game.strategy.engine.production_engine import ProductionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         engine = ProductionEngine()
         empire = _make_mock_empire()
@@ -508,7 +508,7 @@ class TestColonyFoundedEvent:
         order = FleetOrder(OrderType.COLONIZE, target=None)
         fleet.get_current_order.return_value = order
         fleet.pop_order = MagicMock()
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         fleet.location = HexCoord(0, 0)
 
         # Galaxy returns a planet at fleet's location
@@ -546,7 +546,7 @@ class TestCombatResolvedEvent:
         """_resolve_combat_simulated() emits combat_resolved event."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         mock_resolver = MagicMock()
         mock_result = MagicMock()
@@ -588,7 +588,7 @@ class TestCombatResolvedEvent:
         """combat_resolved event reflects correct winner when team 1 wins."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         mock_resolver = MagicMock()
         mock_result = MagicMock()
@@ -628,7 +628,7 @@ class TestCombatResolvedEvent:
         """_resolve_combat() RNG fallback also emits combat_resolved event."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         engine = ConflictResolutionEngine()
 
@@ -662,7 +662,7 @@ class TestCombatResolvedEvent:
         """combat_resolved event includes the winner's empire_id."""
         from game.strategy.engine.conflict_resolution_engine import ConflictResolutionEngine
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         mock_resolver = MagicMock()
         mock_result = MagicMock()

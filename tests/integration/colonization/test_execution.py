@@ -8,7 +8,7 @@ import pytest
 
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance
 
 
@@ -154,7 +154,7 @@ class TestColonizationWithMovement:
 
         # After first turn, fleet should have moved but not colonized yet
         # (unless it's already at destination)
-        from game.strategy.data.hex_math import hex_distance
+        from game.core.hex_math import hex_distance
         if hex_distance(start_loc, target_loc) > 1:
             turn_engine.process_turn([empire], simple_galaxy)
 

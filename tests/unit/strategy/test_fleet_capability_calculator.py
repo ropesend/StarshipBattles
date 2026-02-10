@@ -26,7 +26,7 @@ class TestFleetCapabilityCalculator:
         """Empty fleet has no space shipyard."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         calc = FleetCapabilityCalculator(fleet)
@@ -37,7 +37,7 @@ class TestFleetCapabilityCalculator:
         """Fleet with fleet_space_yard component has space shipyard."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -57,7 +57,7 @@ class TestFleetCapabilityCalculator:
         """Fleet with SpaceShipyard ability in abilities dict has space shipyard."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -77,7 +77,7 @@ class TestFleetCapabilityCalculator:
         """Fleet without space yard component has no space shipyard."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -97,7 +97,7 @@ class TestFleetCapabilityCalculator:
         """Fleet without shipyard cannot build anything."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         calc = FleetCapabilityCalculator(fleet)
@@ -110,7 +110,7 @@ class TestFleetCapabilityCalculator:
         """Fleet with shipyard can build ships, fighters, satellites."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -128,7 +128,7 @@ class TestFleetCapabilityCalculator:
         """Complex building requires being at a planet."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -154,7 +154,7 @@ class TestFleetCapabilityCalculator:
         """Empty fleet cannot use warp."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         calc = FleetCapabilityCalculator(fleet)
@@ -165,7 +165,7 @@ class TestFleetCapabilityCalculator:
         """Fleet where all ships are warp-capable can use warp."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Warper", design_data={})
@@ -182,7 +182,7 @@ class TestFleetCapabilityCalculator:
         """Fleet with one non-warp ship cannot use warp."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship1 = make_ship_instance(name="Warper", design_data={})
@@ -204,7 +204,7 @@ class TestFleetCapabilityCalculator:
         """No limiting ship when all are warp-capable."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Warper", design_data={})
@@ -221,7 +221,7 @@ class TestFleetCapabilityCalculator:
         """Returns the first non-warp capable ship."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship1 = make_ship_instance(name="Warper", design_data={})
@@ -248,7 +248,7 @@ class TestFleetCapabilityCalculatorDelegation:
     def test_fleet_has_space_shipyard_delegates(self):
         """Fleet.has_space_shipyard delegates to calculator."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -262,7 +262,7 @@ class TestFleetCapabilityCalculatorDelegation:
     def test_fleet_can_build_type_delegates(self):
         """Fleet.can_build_type delegates to calculator."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(
@@ -276,7 +276,7 @@ class TestFleetCapabilityCalculatorDelegation:
     def test_fleet_can_use_warp_delegates(self):
         """Fleet.can_use_warp delegates to calculator."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         # No ships = cannot warp
@@ -285,7 +285,7 @@ class TestFleetCapabilityCalculatorDelegation:
     def test_fleet_get_warp_limiting_ship_delegates(self):
         """Fleet.get_warp_limiting_ship delegates to calculator."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         # No ships = no limiting ship

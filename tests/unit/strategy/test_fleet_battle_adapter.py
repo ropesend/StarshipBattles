@@ -26,7 +26,7 @@ class TestFleetBattleAdapter:
         """Team 0 formations start on left side."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         adapter = FleetBattleAdapter(fleet)
@@ -42,7 +42,7 @@ class TestFleetBattleAdapter:
         """Team 1 formations start on right side."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         adapter = FleetBattleAdapter(fleet)
@@ -58,7 +58,7 @@ class TestFleetBattleAdapter:
         """Ships are spaced vertically."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         adapter = FleetBattleAdapter(fleet)
@@ -73,7 +73,7 @@ class TestFleetBattleAdapter:
         """Empty fleet returns empty list."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         adapter = FleetBattleAdapter(fleet)
@@ -85,7 +85,7 @@ class TestFleetBattleAdapter:
         """Combat-capable ships are converted."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Cruiser", design_data={})
@@ -106,7 +106,7 @@ class TestFleetBattleAdapter:
         """Non-combat ships are skipped."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Cruiser", design_data={})
@@ -121,7 +121,7 @@ class TestFleetBattleAdapter:
         """Custom formation positions are used when provided."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Cruiser", design_data={})
@@ -144,7 +144,7 @@ class TestFleetBattleAdapter:
         """Survivors are kept and updated."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship1 = make_ship_instance(name="Survivor", design_data={})
@@ -171,7 +171,7 @@ class TestFleetBattleAdapter:
         """All ships destroyed leaves empty fleet."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Victim", design_data={})
@@ -186,7 +186,7 @@ class TestFleetBattleAdapter:
         """Speed is recalculated after battle."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Ship", design_data={})
@@ -204,7 +204,7 @@ class TestFleetBattleAdapterDelegation:
     def test_fleet_to_battle_ships_delegates(self):
         """Fleet.to_battle_ships delegates to adapter."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         # Empty fleet should work
@@ -214,7 +214,7 @@ class TestFleetBattleAdapterDelegation:
     def test_fleet_update_from_battle_results_delegates(self):
         """Fleet.update_from_battle_results delegates to adapter."""
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         fleet = Fleet(1, 0, HexCoord(0, 0))
         ship = make_ship_instance(name="Ship", design_data={})

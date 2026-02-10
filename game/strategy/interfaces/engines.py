@@ -18,7 +18,7 @@ from typing import List, Optional, Tuple, Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
     from game.strategy.engine.fleet_movement_engine import MovementResult
     from game.strategy.engine.conflict_resolution_engine import ConflictResult
     from game.strategy.engine.resource_management_engine import ResourceDepletion

@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock
 
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 # --- Fixtures ---

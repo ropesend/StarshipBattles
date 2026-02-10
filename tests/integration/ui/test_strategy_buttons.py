@@ -42,7 +42,7 @@ def strategy_ui():
     ui = StrategyUI(scene, 800, 600)
     return ui
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 def create_dummy_planet(name, owner_id=None):
     p = Planet(

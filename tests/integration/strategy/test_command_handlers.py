@@ -4,7 +4,7 @@ from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.commands import IssueMoveCommand, IssueBuildShipCommand, CommandType
 from game.strategy.data.fleet import Fleet, OrderType, FleetOrder
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 
 # Mock Galaxy and related classes to avoid full initialization

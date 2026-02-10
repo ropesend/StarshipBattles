@@ -10,7 +10,7 @@ from game.strategy.data.pathfinding import (
     project_fleet_path,
     calculate_intercept_point,
 )
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.services.fleet_navigation_service import NavigationState
 
 

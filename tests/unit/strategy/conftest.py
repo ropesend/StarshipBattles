@@ -207,7 +207,7 @@ def fleet_with_resource_ships(
 ):
     """Fleet containing ships with various resource consumption patterns."""
     from game.strategy.data.fleet import Fleet
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
 
     fleet = Fleet(
         fleet_id='test-fleet',
@@ -224,7 +224,7 @@ def fleet_with_resource_ships(
 def empty_fleet():
     """Empty fleet for edge case testing."""
     from game.strategy.data.fleet import Fleet
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
 
     return Fleet(
         fleet_id='empty-fleet',

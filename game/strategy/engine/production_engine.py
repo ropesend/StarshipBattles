@@ -17,7 +17,7 @@ Responsibilities:
 """
 
 import uuid
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Dict, Any
 
 from game.core.logger import log_info, log_warning, log_event
 from game.strategy.events.event_types import EventType, EventCategory
@@ -26,9 +26,6 @@ from game.strategy.data.fleet import Fleet, OrderType
 from game.strategy.data.planet import PlanetaryFacility
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.systems.design_library import DesignLibrary
-
-if TYPE_CHECKING:
-    pass
 
 
 class ProductionEngine:

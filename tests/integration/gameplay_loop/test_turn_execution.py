@@ -9,7 +9,7 @@ import pytest
 from game.strategy.engine.game_session import GameSession
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from tests.conftest import make_mock_ship_instance
 
 
@@ -66,7 +66,7 @@ class TestTurnExecutionCycle:
 
         # With speed 100, fleet moves every tick (100 times per turn)
         # Should have moved a significant distance
-        from game.strategy.data.hex_math import hex_distance
+        from game.core.hex_math import hex_distance
         distance_moved = hex_distance(initial_loc, fleet.location)
         assert distance_moved > 0
 

@@ -6,7 +6,7 @@ Provides O(1) average case lookups for nearby systems instead of O(n) linear sca
 
 from typing import List, Tuple, Optional, Any, Dict, Set
 from collections import defaultdict
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 
 
 class SpatialIndex:

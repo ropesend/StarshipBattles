@@ -15,7 +15,7 @@ from game.strategy.data.build_queue_source import (
 from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 # ---------------------------------------------------------------------------

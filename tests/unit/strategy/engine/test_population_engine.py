@@ -10,7 +10,7 @@ from game.strategy.engine.population_engine import PopulationEngine
 from game.strategy.data.planet import Planet, SpeciesPopulation, PlanetType
 from game.strategy.data.race_config import RaceConfig
 from game.strategy.data.empire import Empire
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 def make_earth_like_planet(

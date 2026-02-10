@@ -18,7 +18,7 @@ from unittest.mock import MagicMock, patch
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.services.fleet_navigation_service import (
     FleetNavigationService,
     NavigationState,

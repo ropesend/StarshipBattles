@@ -896,7 +896,7 @@ class TestGetHexForSource:
 
     def test_fleet_source_returns_fleet_location(self):
         """Fleet source returns fleet.location as hex coordinate."""
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         fleet_entity = MagicMock()
         fleet_entity.location = HexCoord(5, 3)
         source = BuildQueueSource(
@@ -911,7 +911,7 @@ class TestGetHexForSource:
 
     def test_planet_source_returns_system_plus_planet_location(self):
         """Planet source returns system.global_location + planet.location."""
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         planet_entity = MagicMock()
         planet_entity.location = HexCoord(1, 0)
         system = MagicMock()
@@ -975,7 +975,7 @@ class TestNavigateToSource:
 
     def test_navigate_calls_callback_with_hex_and_source(self):
         """navigate_to_source() calls on_navigate_to_hex with (hex, source)."""
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         nav_cb = MagicMock()
         fleet_entity = MagicMock()
         fleet_entity.location = HexCoord(5, 3)
@@ -991,7 +991,7 @@ class TestNavigateToSource:
 
     def test_navigate_no_callback_does_not_crash(self):
         """navigate_to_source() is safe when no callback is set."""
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         fleet_entity = MagicMock()
         fleet_entity.location = HexCoord(5, 3)
         source = BuildQueueSource(
@@ -1022,7 +1022,7 @@ class TestNavigateToSource:
 
     def test_navigate_selects_source_before_callback(self):
         """navigate_to_source() selects the source before calling callback."""
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         nav_cb = MagicMock()
         fleet_entity = MagicMock()
         fleet_entity.location = HexCoord(5, 3)
@@ -1042,7 +1042,7 @@ class TestDoubleClickNavigation:
 
     def test_double_click_on_row_navigates(self):
         """Double-click on a list row calls navigate_to_source."""
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
         nav_cb = MagicMock()
         fleet_entity = MagicMock()
         fleet_entity.location = HexCoord(5, 3)

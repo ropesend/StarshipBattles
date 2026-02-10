@@ -10,13 +10,10 @@ The service encapsulates:
 - Modifier registry access
 - Modifier restriction validation
 """
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 
 from game.core.registry import get_default_registry_provider
 from game.core.protocols import IRegistryProvider
-
-if TYPE_CHECKING:
-    pass
 
 
 class ComponentService:

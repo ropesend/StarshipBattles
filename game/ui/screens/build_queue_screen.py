@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from game.strategy.data.build_context import BuildContext
     from game.strategy.data.planet import Planet
     from game.strategy.data.fleet import Fleet
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.empire import Empire
     from game.strategy.systems.design_library import DesignLibrary

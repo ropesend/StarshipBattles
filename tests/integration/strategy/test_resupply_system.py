@@ -12,7 +12,7 @@ from game.strategy.engine.resupply_engine import ResupplyEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 # ===========================================================================

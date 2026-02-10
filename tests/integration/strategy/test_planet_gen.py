@@ -2,7 +2,7 @@ import pytest
 import math
 from game.strategy.data.galaxy import Galaxy, StarSystem
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 def test_planet_types_exist():
     """Verify PlanetType enum exists."""

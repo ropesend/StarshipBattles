@@ -37,7 +37,7 @@ except ImportError:
     from typing_extensions import TypeGuard
 
 if TYPE_CHECKING:
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
 
 
 # =============================================================================

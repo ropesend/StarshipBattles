@@ -1,7 +1,7 @@
 """Tests for System and Planet DTOs."""
 import pytest
 from dataclasses import FrozenInstanceError
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 class TestStarInfo:

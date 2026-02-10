@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 from game.strategy.data.build_context import BuildContext
 from game.strategy.data.planet import Planet
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 class TestBuildContextProtocolCompliance:

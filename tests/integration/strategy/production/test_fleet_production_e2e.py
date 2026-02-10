@@ -12,7 +12,7 @@ import shutil
 from unittest.mock import MagicMock, patch
 
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.engine.production_engine import ProductionEngine
 from game.strategy.engine.fleet_movement_engine import FleetMovementEngine

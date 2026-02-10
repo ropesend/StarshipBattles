@@ -12,7 +12,7 @@ Cross-layer imports (acceptable for UI rendering):
 import math
 import pygame
 from game.core.config import UIConfig
-from game.strategy.data.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
+from game.core.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
 from game.strategy.data.fleet import OrderType
 from game.ui.colors import COLORS
 from game.ui.utils import scale_and_rotate_image

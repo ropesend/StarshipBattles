@@ -5,7 +5,7 @@ Shared fixtures for pathfinding tests.
 import pytest
 from unittest.mock import MagicMock
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.fleet import Fleet
 
 

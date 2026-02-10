@@ -1,8 +1,8 @@
-"""
+r"""
 Hex Math - Hexagonal Grid Mathematics
 
 This module provides utilities for working with hexagonal grids in the
-strategy layer. Used for galaxy maps, fleet positions, and pathfinding.
+core layer. Used for galaxy maps, fleet positions, and pathfinding.
 
 Coordinate System:
     Uses AXIAL coordinates (q, r) for storage efficiency.
@@ -88,7 +88,7 @@ class HexCoord:
 
     def __hash__(self):
         return hash((self.q, self.r))
-    
+
     def __repr__(self):
         return f"HexCoord({self.q}, {self.r})"
 
@@ -159,7 +159,7 @@ def _hex_round(q, r, s):
         ri = -qi - si
     else:
         si = -qi - ri
-    
+
     return HexCoord(qi, ri)
 
 
@@ -198,14 +198,14 @@ def hex_lerp(a, b, t):
     # We need floating point lerp on the cube coords
     # HexCoord only stores q, r. s is derived.
     # But lerp needs to work on floats.
-    # Let's do q, r lerp and then round? 
+    # Let's do q, r lerp and then round?
     # But for strict correctness we should lerp q, r, s.
-    
+
     # Simple lerp:
     q = a.q + (b.q - a.q) * t
     r = a.r + (b.r - a.r) * t
     s = a.s + (b.s - a.s) * t # s is needed for rounding
-    
+
     return _hex_round(q, r, s)
 
 def hex_linedraw(a, b):

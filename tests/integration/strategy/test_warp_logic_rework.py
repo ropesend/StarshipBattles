@@ -1,6 +1,6 @@
 import pytest
 import math
-from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel
+from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.data.stars import Star
 

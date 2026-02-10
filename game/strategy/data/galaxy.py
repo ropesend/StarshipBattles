@@ -2,7 +2,7 @@ import random
 import math
 from enum import Enum, auto
 from typing import List, Optional, TYPE_CHECKING
-from game.strategy.data.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
+from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
 from game.strategy.data.naming import NameRegistry
 import os
 
@@ -24,7 +24,7 @@ class WarpPoint:
 
     def to_dict(self) -> dict:
         """Serialize WarpPoint to dict."""
-        from game.strategy.data.hex_math import hex_to_dict
+        from game.core.hex_math import hex_to_dict
         return {
             'destination_id': self.destination_id,
             'location': hex_to_dict(self.location)
@@ -33,7 +33,7 @@ class WarpPoint:
     @classmethod
     def from_dict(cls, data: dict) -> 'WarpPoint':
         """Deserialize WarpPoint from dict."""
-        from game.strategy.data.hex_math import hex_from_dict
+        from game.core.hex_math import hex_from_dict
         return cls(
             destination_id=data['destination_id'],
             location=hex_from_dict(data['location'])
@@ -62,7 +62,7 @@ class StarSystem:
 
     def to_dict(self) -> dict:
         """Serialize StarSystem to dict."""
-        from game.strategy.data.hex_math import hex_to_dict
+        from game.core.hex_math import hex_to_dict
         result = {
             'name': self.name,
             'global_location': hex_to_dict(self.global_location),
@@ -77,7 +77,7 @@ class StarSystem:
     @classmethod
     def from_dict(cls, data: dict) -> 'StarSystem':
         """Deserialize StarSystem from dict."""
-        from game.strategy.data.hex_math import hex_from_dict
+        from game.core.hex_math import hex_from_dict
         from game.strategy.data.stars import Star
 
         system = cls(
@@ -555,7 +555,7 @@ class Galaxy:
 
     def to_dict(self) -> dict:
         """Serialize Galaxy to dict."""
-        from game.strategy.data.hex_math import hex_to_dict
+        from game.core.hex_math import hex_to_dict
 
         # Convert systems dict (HexCoord keys -> dict keys)
         systems_list = []
@@ -583,7 +583,7 @@ class Galaxy:
         Returns:
             Reconstructed Galaxy with all indexes rebuilt
         """
-        from game.strategy.data.hex_math import hex_from_dict
+        from game.core.hex_math import hex_from_dict
 
         # Create empty galaxy
         galaxy = cls(radius=data['radius'])

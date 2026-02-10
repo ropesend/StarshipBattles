@@ -2,7 +2,7 @@
 import pytest
 import math
 
-from game.strategy.data.hex_math import (
+from game.core.hex_math import (
     HexCoord,
     hex_distance,
     hex_to_pixel,

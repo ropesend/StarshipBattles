@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.empire import Empire
-    from game.strategy.data.hex_math import HexCoord
+    from game.core.hex_math import HexCoord
     from game.strategy.systems.design_library import DesignLibrary
     from game.simulation.services.design_loader import SimulationDesignLoader
     from game.ui.panels.design_report_panel import DesignReportPanel

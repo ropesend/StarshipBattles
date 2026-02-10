@@ -111,7 +111,7 @@ class TestStarGeneration:
                 # Primary is at 0,0,0
                 # Companion location magnitude should be > primary radius
                 # hex_distance between (0,0) and companion.location
-                from game.strategy.data.hex_math import hex_distance, HexCoord
+                from game.core.hex_math import hex_distance, HexCoord
                 dist = hex_distance(HexCoord(0, 0), companion.location)
 
                 assert dist > primary.diameter_hexes, "Companion inside primary?"

@@ -9,7 +9,7 @@ import math
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Tuple
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 @dataclass

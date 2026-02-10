@@ -184,7 +184,7 @@ class StrategyEventRouter:
             return
 
         # Find Uncolonized Planets at Fleet Location
-        from game.strategy.data.hex_math import hex_distance  # noqa: F401
+        from game.core.hex_math import hex_distance  # noqa: F401
 
         if not hasattr(ui.scene, 'galaxy'):
             return

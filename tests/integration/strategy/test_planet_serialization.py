@@ -7,7 +7,7 @@ saves that don't have these fields.
 """
 
 from game.strategy.data.planet import Planet, PlanetType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 
 

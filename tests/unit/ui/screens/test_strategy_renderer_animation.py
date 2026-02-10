@@ -62,7 +62,7 @@ class TestWarpPointRotationAngle:
     def test_different_warp_points_get_different_offsets(self):
         """Different warp points should have different rotation offsets based on hash."""
         from game.strategy.data.galaxy import WarpPoint
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         wp1 = WarpPoint("sys1", HexCoord(1, 0))
         wp2 = WarpPoint("sys2", HexCoord(2, 0))
@@ -78,7 +78,7 @@ class TestWarpPointRotationAngle:
     def test_rotation_offset_is_deterministic(self):
         """Same warp point should always get the same rotation offset."""
         from game.strategy.data.galaxy import WarpPoint
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         wp = WarpPoint("sys1", HexCoord(1, 0))
         offset1 = hash(wp) % 360

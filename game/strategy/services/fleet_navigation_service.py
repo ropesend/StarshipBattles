@@ -53,15 +53,12 @@ Architecture:
   - calculate_fleet_next_hex(fleet, galaxy) → HexCoord?
 """
 from dataclasses import dataclass
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.strategy.data.pathfinding import find_hybrid_path
 from game.core.logger import log_warning
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass(frozen=True)

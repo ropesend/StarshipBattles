@@ -1,6 +1,6 @@
 import math
 from game.strategy.data.stars import Spectrum
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 
 class SectorEnvironment:
     """

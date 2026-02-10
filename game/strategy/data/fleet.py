@@ -1,4 +1,4 @@
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator

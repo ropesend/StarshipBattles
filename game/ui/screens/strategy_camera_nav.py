@@ -10,7 +10,7 @@ Cross-layer imports (acceptable for UI):
 """
 import pygame
 from game.core.logger import log_debug
-from game.strategy.data.hex_math import hex_to_pixel, HexCoord
+from game.core.hex_math import hex_to_pixel, HexCoord
 from game.strategy.data.galaxy import StarSystem
 
 

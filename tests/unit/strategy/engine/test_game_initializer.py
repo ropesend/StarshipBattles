@@ -7,7 +7,7 @@ Tests galaxy initialization and empire scenario setup.
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 class TestGameInitializer:
@@ -105,7 +105,7 @@ class TestGameInitializer:
         """_adjust_homeworld_to_race should set planet type from race config."""
         from game.strategy.engine.game_initializer import GameInitializer
         from game.strategy.data.planet import Planet, PlanetType
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         planet = Planet(
             name="Test", location=HexCoord(0, 0), orbit_distance=1,
@@ -129,7 +129,7 @@ class TestGameInitializer:
         """_adjust_homeworld_to_race should set surface gravity."""
         from game.strategy.engine.game_initializer import GameInitializer
         from game.strategy.data.planet import Planet, PlanetType
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         planet = Planet(
             name="Test", location=HexCoord(0, 0), orbit_distance=1,
@@ -153,7 +153,7 @@ class TestGameInitializer:
         """_adjust_homeworld_to_race should handle invalid planet type gracefully."""
         from game.strategy.engine.game_initializer import GameInitializer
         from game.strategy.data.planet import Planet, PlanetType
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         planet = Planet(
             name="Test", location=HexCoord(0, 0), orbit_distance=1,
@@ -183,7 +183,7 @@ class TestGalaxyFleetRegistry:
         """get_fleet_by_id() should return the fleet with matching ID."""
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         galaxy = Galaxy(radius=1000)
         fleet = Fleet(fleet_id=42, owner_id=0, location=HexCoord(0, 0))
@@ -205,7 +205,7 @@ class TestGalaxyFleetRegistry:
         """unregister_fleet() should remove fleet from registry."""
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         galaxy = Galaxy(radius=1000)
         fleet = Fleet(fleet_id=42, owner_id=0, location=HexCoord(0, 0))
@@ -219,7 +219,7 @@ class TestGalaxyFleetRegistry:
         """Fleet registry should handle multiple fleets correctly."""
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         galaxy = Galaxy(radius=1000)
         fleet1 = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
@@ -238,7 +238,7 @@ class TestGalaxyFleetRegistry:
         """Fleet registry should work after galaxy deserialization."""
         from game.strategy.data.galaxy import Galaxy
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         galaxy = Galaxy(radius=1000)
         # Note: Fleet registry is NOT serialized - fleets are owned by empires
@@ -260,7 +260,7 @@ class TestGameSessionFleetLookup:
         from game.strategy.engine.game_session import GameSession
         from game.strategy.engine.game_config import GameConfig
         from game.strategy.data.fleet import Fleet
-        from game.strategy.data.hex_math import HexCoord
+        from game.core.hex_math import HexCoord
 
         config = GameConfig(system_count=3)
         session = GameSession(config=config)

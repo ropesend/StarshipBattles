@@ -11,7 +11,7 @@ from game.strategy.data.pathfinding import (
     find_hybrid_path,
     calculate_intercept_point,
 )
-from game.strategy.data.hex_math import HexCoord, hex_distance
+from game.core.hex_math import HexCoord, hex_distance
 
 
 # =============================================================================

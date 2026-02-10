@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 from game.strategy.data.ship_instance import ShipInstance
 

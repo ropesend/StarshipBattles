@@ -15,7 +15,7 @@ from game.strategy.formulas.habitability import (
     score_planet_for_race,
 )
 from game.strategy.data.planet import Planet
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.race_config import RaceConfig
 
 

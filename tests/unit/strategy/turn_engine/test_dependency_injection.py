@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.fleet import Fleet
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 
 

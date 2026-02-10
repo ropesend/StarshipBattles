@@ -1,6 +1,6 @@
 import pytest
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 from game.strategy.data.pathfinding import find_path_interstellar
 from game.strategy.data.fleet import Fleet
 

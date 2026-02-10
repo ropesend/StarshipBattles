@@ -2,7 +2,7 @@ import heapq
 from typing import List, Union, Optional, TYPE_CHECKING
 
 from game.core.logger import log_error, log_info, log_warning, log_debug
-from game.strategy.data.hex_math import hex_distance, hex_linedraw, HexCoord
+from game.core.hex_math import hex_distance, hex_linedraw, HexCoord
 from game.strategy.data.fleet import OrderType
 
 if TYPE_CHECKING:

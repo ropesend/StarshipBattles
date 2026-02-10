@@ -6,7 +6,7 @@ Tests core galaxy functionality including system lookups and name mapping.
 
 import pytest
 from game.strategy.data.galaxy import Galaxy, StarSystem
-from game.strategy.data.hex_math import HexCoord
+from game.core.hex_math import HexCoord
 
 
 class TestGalaxyNameMap:

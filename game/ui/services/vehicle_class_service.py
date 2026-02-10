@@ -13,12 +13,9 @@ The service encapsulates:
 - Class filtering by type
 - Max mass lookups
 """
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple
 
 from game.core.protocols import IRegistryProvider
-
-if TYPE_CHECKING:
-    pass
 
 
 class VehicleClassService:
