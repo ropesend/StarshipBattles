@@ -9,17 +9,18 @@ class TestFleetResourceAggregator:
 
     @pytest.fixture
     def mock_ship(self):
-        """Create a mock ship with resource methods."""
+        """Create a mock ship with resource methods.
+
+        PROJ-91: Uses generic resource API only. Type-specific methods
+        (get_current_fuel, consume_fuel, etc.) were removed from ShipInstance.
+        """
         ship = MagicMock()
         ship.is_combat_capable.return_value = True
-        ship.get_fuel_cost_per_hex.return_value = 10.0
-        ship.get_current_fuel.return_value = 100.0
+        # Generic resource API (used by FleetResourceAggregator)
         ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0, "energy": 5.0}
         ship.get_current_resource.return_value = 100.0
         ship.get_warp_resource_costs.return_value = {"energy": 50.0, "fuel": 25.0}
-        ship.get_warp_energy_cost.return_value = 50.0
-        ship.get_warp_fuel_cost.return_value = 25.0
-        ship.get_current_energy.return_value = 200.0
+        # Cargo API
         ship.get_cargo_capacity.return_value = 100
         ship.get_current_cargo.return_value = 50
         ship.load_cargo.return_value = 50

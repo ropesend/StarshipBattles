@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Fix Bugs & Add Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate Callers to Generic API | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Remove Type-Specific Methods & Clean Up | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Remove Type-Specific Methods & Clean Up | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 3 — Remove Type-Specific Methods & Clean Up
-**Last Action:** Phase 2 complete - all 8 tasks done
-**Next Action:** Begin Phase 3 implementation
+**Active Phase:** All Phases Complete — Ready for Audit
+**Last Action:** Phase 3 complete - all 7 type-specific methods deleted from ShipInstance
+**Next Action:** Trigger audit
 **Blockers:** None
-**Context for Next Agent:** Phase 2 done. FleetResourceAggregator now uses generic methods internally. ResupplyEngine migrated. All test mocks updated. Tests: 7561 passed.
+**Context for Next Agent:** All 3 phases complete. Deleted 7 type-specific methods from ShipInstance (-68 lines), deleted TestResourceConvenienceMethods test class (-4 tests), cleaned up mock helpers. Tests: 7557 passed.
 
 ## Overview
 ShipInstance (strategy layer) duplicates resource management logic that already exists in generic form. Seven type-specific methods (`get_current_fuel`, `consume_fuel`, `get_current_energy`, `consume_energy`, `get_fuel_cost_per_hex`, `get_warp_fuel_cost`, `get_warp_energy_cost`) independently reimplement the same logic as the generic `get_current_resource()`, `consume_resource()`, etc. Additionally, two methods (`resupply()` and `get_resource_percentage()`) have bugs from incorrect key lookups. Bridge methods between layers use defensive `hasattr` checks and hardcoded resource name lists.
@@ -92,18 +92,18 @@ See [phase_2_checklist.md](phase_2_checklist.md) for detailed tasks.
 
 ### Phase 3: Remove Type-Specific Methods & Clean Up [Simple]
 **Objective:** Delete the 7 type-specific methods from ShipInstance, delete deprecated tests, and verify everything.
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_3_checklist.md](phase_3_checklist.md) for detailed tasks.
 
 ---
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (7353 baseline)
-- [ ] No hardcoded `['fuel', 'energy', 'ammo']` lists remain in bridge methods
-- [ ] No `hasattr(ship, 'resources')` checks remain
-- [ ] No type-specific resource methods on ShipInstance
-- [ ] No type-specific resource wrappers on Fleet
+- [x] All phase checklists complete
+- [x] All tests passing (7557 passed)
+- [x] No hardcoded `['fuel', 'energy', 'ammo']` lists remain in bridge methods
+- [x] No `hasattr(ship, 'resources')` checks remain
+- [x] No type-specific resource methods on ShipInstance
+- [x] No type-specific resource wrappers on Fleet (internal to FleetResourceAggregator)
 - [ ] Audit passed
 - [ ] User verified

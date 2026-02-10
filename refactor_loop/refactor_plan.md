@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-91 Phase 2
-**Current Status:** PROJ-91 Phase 2 Complete
-**Current Project:** PROJ-91
-**Current Phase:** Phase 3 (next)
-**Test Status:** 7561 passed (full suite)
+**Last Completed:** PROJ-91 Audit Passed
+**Current Status:** PROJ-91 Complete
+**Current Project:** PROJ-89 (next)
+**Current Phase:** Ready to start
+**Test Status:** 7557 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-91 Phase 2 complete: All 8 tasks done
-- FleetResourceAggregator now uses generic ShipInstance methods internally
-- ResupplyEngine._calculate_fuel_distribution() migrated to generic API
-- Updated 4 test mock helpers to use generic methods
-- Updated test_warp_resources.py TestBackwardCompatibility → TestFleetFuelConsumption
-- get_capability_summary() now returns movement_resource_costs/warp_resource_costs
-- Next: Phase 3 - Delete type-specific methods from ShipInstance and Fleet
+- PROJ-91 complete: All 3 phases done, audit passed
+- Phase 3: Deleted 7 type-specific methods from ShipInstance (-68 lines)
+- Deleted TestResourceConvenienceMethods class (4 tests removed)
+- Cleaned up test mock helpers to use generic API only
+- Fixed 1 integration test using deprecated method
+- Next: PROJ-89 - God Class Decomposition - Remaining UI Tier
 
 ---
 
@@ -246,10 +245,10 @@
 
 ---
 
-- [/] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
-  - **Phases:** 3 | **Status:** Phase 2 Complete | **Priority:** Medium
+- [x] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
+  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-91/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-91/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -423,6 +422,8 @@
 | 2026-02-10 | PROJ-90 | Audit 1 | PASSED | 7557 passed | pending | All 4 goals verified by investigation agents, all phases complete |
 | 2026-02-10 | PROJ-91 | Phase 1 | Complete | 7561 passed | pending | get_resource_names(), IResourceHolder, resupply fix, un-hardcode 3 bridge methods |
 | 2026-02-10 | PROJ-91 | Phase 2 | Complete | 7561 passed | pending | FleetResourceAggregator migrated, ResupplyEngine migrated, 4 test mocks updated |
+| 2026-02-10 | PROJ-91 | Phase 3 | Complete | 7557 passed | pending | Deleted 7 type-specific methods (-68 lines), 4 deprecated tests, cleaned mocks |
+| 2026-02-10 | PROJ-91 | Audit 1 | PASSED | 7557 passed | pending | All 6 goals verified, no issues found |
 
 ---
 

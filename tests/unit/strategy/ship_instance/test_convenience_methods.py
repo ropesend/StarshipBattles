@@ -2,94 +2,12 @@
 Tests for ShipInstance - convenience methods and method interactions.
 
 PROJ-48: Split from test_resources.py
+PROJ-91: Removed tests for type-specific methods (get_current_fuel, consume_fuel,
+         get_current_energy, consume_energy) - use generic methods instead.
 """
 
 import pytest
 from game.strategy.data.ship_instance import ShipInstance
-
-
-class TestResourceConvenienceMethods:
-    """Tests for fuel/energy convenience methods."""
-
-    def test_get_current_fuel(self, make_design_data_with_stats):
-        """get_current_fuel method returns correct fuel level."""
-        design_data = make_design_data_with_stats(expected_stats={
-            'resource_storage': {'fuel': 5000}
-        })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
-
-        # Use legacy method
-        current = ship.get_current_fuel()
-        assert current == 5000
-
-        # Consume and check again
-        ship.resource_levels['fuel'] = 3000
-        current = ship.get_current_fuel()
-        assert current == 3000
-
-    def test_consume_fuel(self, make_design_data_with_stats):
-        """consume_fuel method consumes fuel correctly."""
-        design_data = make_design_data_with_stats(expected_stats={
-            'resource_storage': {'fuel': 5000}
-        })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
-
-        result = ship.consume_fuel(1000)
-
-        assert result is True
-        assert ship.resource_levels['fuel'] == 4000
-
-    def test_get_current_energy(self, make_design_data_with_stats):
-        """get_current_energy method returns correct energy level."""
-        design_data = make_design_data_with_stats(expected_stats={
-            'resource_storage': {'energy': 2000}
-        })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
-
-        # Use legacy method
-        current = ship.get_current_energy()
-        assert current == 2000
-
-        # Consume and check again
-        ship.resource_levels['energy'] = 1500
-        current = ship.get_current_energy()
-        assert current == 1500
-
-    def test_consume_energy(self, make_design_data_with_stats):
-        """consume_energy method consumes energy correctly."""
-        design_data = make_design_data_with_stats(expected_stats={
-            'resource_storage': {'energy': 2000}
-        })
-        ship = ShipInstance(
-            instance_id='test-1',
-            design_id='TestDesign',
-            name='Test Ship',
-            owner_id=0,
-            design_data=design_data
-        )
-
-        result = ship.consume_energy(500)
-
-        assert result is True
-        assert ship.resource_levels['energy'] == 1500
 
 
 class TestResourceMethodInteractions:

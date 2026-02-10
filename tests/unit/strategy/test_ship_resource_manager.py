@@ -225,13 +225,17 @@ class TestShipResourceManagerIntegration:
         return ship
 
     def test_delegation_to_resource_manager(self, ship_with_resources):
-        """ShipInstance methods delegate to resource manager."""
+        """ShipInstance methods delegate to resource manager.
+
+        PROJ-91: Uses generic resource API. Type-specific methods
+        (get_current_fuel, get_fuel_cost_per_hex, etc.) were removed.
+        """
         # Access through ShipInstance facade
         ship = ship_with_resources
 
-        # These should work via delegation
-        fuel = ship.get_current_fuel()
+        # These should work via delegation (generic API)
+        fuel = ship.get_current_resource('fuel')
         assert isinstance(fuel, (int, float))
 
-        fuel_cost = ship.get_fuel_cost_per_hex()
+        fuel_cost = ship.get_all_resource_costs_per_hex().get('fuel', 0.0)
         assert isinstance(fuel_cost, (int, float))
