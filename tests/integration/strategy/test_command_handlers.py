@@ -13,7 +13,8 @@ class MockGalaxy:
         self.systems = {}
         self.warp_lanes = [] # minimal support
         self.planets_by_id = {}  # For ID-based lookups
-        
+        self.fleets_by_id = {}   # For fleet registry (PROJ-87)
+
     def get_planets_at_global_hex(self, global_hex):
         """Return planets at the given global hex (calculates from system data)."""
         result = []
@@ -22,10 +23,22 @@ class MockGalaxy:
                 if hasattr(p, 'location') and (sys.global_location + p.location) == global_hex:
                     result.append(p)
         return result
-    
+
     def get_planet_by_id(self, planet_id):
         """O(1) lookup of planet by ID."""
         return self.planets_by_id.get(planet_id)
+
+    def get_fleet_by_id(self, fleet_id):
+        """O(1) lookup of fleet by ID."""
+        return self.fleets_by_id.get(fleet_id)
+
+    def register_fleet(self, fleet):
+        """Register a fleet for O(1) lookup."""
+        self.fleets_by_id[fleet.id] = fleet
+
+    def unregister_fleet(self, fleet):
+        """Unregister a fleet."""
+        self.fleets_by_id.pop(fleet.id, None)
 
 def test_preview_fleet_path():
     """Test that preview_fleet_path returns a path without modifying state."""

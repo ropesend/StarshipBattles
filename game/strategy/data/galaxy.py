@@ -108,6 +108,9 @@ class Galaxy:
         # Spatial Indexes (Issue #2 fix: O(1) lookups instead of O(n²))
         self._planet_to_system = {}    # Planet -> StarSystem
         self._global_hex_planets = {}  # HexCoord -> List[Planet]
+
+        # Fleet Registry (PROJ-87 Phase 6: O(1) fleet lookup)
+        self.fleets_by_id = {}  # int -> Fleet
         
         # Initialize Naming Registry
         data_path = os.path.join(os.getcwd(), 'data', 'StarSystemNames.YAML')
@@ -192,7 +195,36 @@ class Galaxy:
     def get_planets_at_global_hex(self, global_hex):
         """O(1) spatial lookup: get all planets at a global hex coordinate."""
         return self._global_hex_planets.get(global_hex, [])
-    
+
+    # --- Fleet Registry Methods (PROJ-87 Phase 6) ---
+
+    def register_fleet(self, fleet) -> None:
+        """Register a fleet for O(1) lookup by ID.
+
+        Args:
+            fleet: Fleet object to register.
+        """
+        self.fleets_by_id[fleet.id] = fleet
+
+    def unregister_fleet(self, fleet) -> None:
+        """Remove a fleet from the registry.
+
+        Args:
+            fleet: Fleet object to unregister.
+        """
+        self.fleets_by_id.pop(fleet.id, None)
+
+    def get_fleet_by_id(self, fleet_id: int):
+        """O(1) lookup of fleet by ID.
+
+        Args:
+            fleet_id: Fleet ID to find.
+
+        Returns:
+            Fleet if found, None otherwise.
+        """
+        return self.fleets_by_id.get(fleet_id)
+
     def generate_planets(self, system):
         """Generate planets for a system based on its star type."""
         # Use new Planet Generator

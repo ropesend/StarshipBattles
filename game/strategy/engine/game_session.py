@@ -43,25 +43,14 @@ Example:
     cmd = IssueMoveCommand(fleet_id=fleet.id, target_hex=destination)
     result = session.handle_command(cmd)
 """
-import os
-import random
 import warnings
-from typing import Optional
-from game.core.logger import log_info, log_debug, log_warning, set_event_handler
-from game.core.validation import validation_result
+from game.core.logger import log_info, log_debug, set_event_handler
 from game.strategy.events import Event, EventLog
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
 from game.strategy.engine.command_handlers import create_default_registry
 from game.strategy.data.empire import Empire
 from game.strategy.data.galaxy import Galaxy
-from game.strategy.generation.placement_strategies import (
-    RandomPlacementStrategy,
-    DensityBasedPlacementStrategy,
-)
-from game.strategy.generation.density.density_map import DensityMap
-from game.strategy.generation.loaders.galaxy_layouts_loader import GalaxyLayoutsLoader
-from game.strategy.data.planet import SpeciesPopulation
 
 class GameSession:
     """
@@ -106,22 +95,10 @@ class GameSession:
         self.turn_engine = TurnEngine()
         self._command_registry = create_default_registry()
 
-        # Create empires dynamically from config.players
-        self.empires = []
-        for i, player_cfg in enumerate(config.players):
-            theme_path = config.get_player_theme_path(i)
-            log_info(f"GameSession: Creating empire {i} with theme={player_cfg.theme}, theme_path={theme_path}")
-            empire = Empire(
-                empire_id=i,
-                name=player_cfg.name,
-                color=player_cfg.color,
-                theme_path=theme_path,
-                empire_theme_id=player_cfg.theme,
-                flag_id=player_cfg.flag_id,
-                portrait_id=player_cfg.portrait_id,
-                race_config=player_cfg.race_config
-            )
-            self.empires.append(empire)
+        # Initialization via GameInitializer (PROJ-87 Phase 6)
+        from game.strategy.engine.game_initializer import GameInitializer
+        self.galaxy, self.empires = GameInitializer.initialize(config)
+        self.systems = list(self.galaxy.systems.values())
 
         # Human player IDs based on is_human flag
         self.human_player_ids = [
@@ -131,111 +108,6 @@ class GameSession:
         # Convenience references for backward compatibility
         self.player_empire = self.empires[0] if len(self.empires) > 0 else None
         self.enemy_empire = self.empires[1] if len(self.empires) > 1 else None
-
-        # Galaxy
-        self.galaxy = Galaxy(radius=config.galaxy_radius)
-        self.systems = []
-
-        # Initialization
-        self._initialize_galaxy(config.system_count)
-        self._setup_initial_scenario()
-
-    def _initialize_galaxy(self, count):
-        """Initialize the galaxy with systems and warp lanes.
-
-        Uses the galaxy_type and galaxy_seed from config to determine
-        placement strategy. If galaxy_type is "random", uses uniform random
-        placement. Otherwise, loads the density-based layout from
-        galaxy_layouts.json.
-
-        Args:
-            count: Number of systems to generate
-        """
-        galaxy_type = self.config.galaxy_type
-        galaxy_seed = self.config.galaxy_seed
-
-        log_info(f"GameSession: Generating Galaxy (type={galaxy_type}, seed={galaxy_seed})...")
-
-        # Set up RNG for deterministic generation
-        rng: Optional[random.Random] = None
-        if galaxy_seed is not None:
-            rng = random.Random(galaxy_seed)
-            # Also seed global random for star/planet generation
-            random.seed(galaxy_seed)
-
-        # Create placement strategy based on galaxy type
-        if galaxy_type == "random":
-            strategy = RandomPlacementStrategy()
-        else:
-            # Load layout configuration
-            loader = GalaxyLayoutsLoader()
-            layout_config = loader.load_and_scale(galaxy_type, self.galaxy.radius)
-
-            # Create density map from config
-            density_map = DensityMap.from_config(layout_config, self.galaxy.radius)
-            strategy = DensityBasedPlacementStrategy(density_map)
-
-        # Generate systems using the strategy
-        self.systems = self.galaxy.generate_systems(
-            count=count,
-            min_dist=400,
-            placement_strategy=strategy,
-            rng=rng
-        )
-        self.galaxy.generate_warp_lanes()
-
-        log_info(f"GameSession: Generated {len(self.systems)} systems.")
-
-    def _setup_initial_scenario(self):
-        """Set up starting colonies and fleets for all empires."""
-        if not self.systems:
-            return
-
-        num_empires = len(self.empires)
-        num_systems = len(self.systems)
-
-        # Distribute starting colonies across the galaxy
-        # Use evenly spaced system indices to spread empires apart
-        if num_empires == 1:
-            # Single player gets first system
-            home_indices = [0]
-        elif num_empires == 2:
-            # Two players get first and last systems (opposite ends)
-            home_indices = [0, num_systems - 1]
-        elif num_empires == 3:
-            # Three players: first, middle, last
-            mid = num_systems // 2
-            home_indices = [0, mid, num_systems - 1]
-        else:  # 4 players
-            # Four players: distribute evenly
-            step = max(1, num_systems // 4)
-            home_indices = [0, step, step * 2, num_systems - 1]
-
-        # Assign home systems to empires
-        for i, empire in enumerate(self.empires):
-            if i < len(home_indices) and home_indices[i] < num_systems:
-                home_sys = self.systems[home_indices[i]]
-                if home_sys.planets:
-                    # Assign first planet as home colony
-                    home_planet = home_sys.planets[0]
-
-                    # Adjust planet conditions to match species preferences (BUG-63)
-                    if empire.race_config is not None:
-                        self._adjust_homeworld_to_race(home_planet, empire.race_config)
-
-                    empire.add_colony(home_planet)
-
-                    # Seed initial population if empire has race_config
-                    if empire.race_config is not None:
-                        initial_pop = SpeciesPopulation(
-                            race_id=empire.race_config.race_id,
-                            count=10000,  # 10 million people
-                            happiness=0.7
-                        )
-                        home_planet.populations.append(initial_pop)
-                        log_info(f"GameSession: Seeded {initial_pop.count} population on {home_planet.name}")
-
-                    log_info(f"GameSession: Empire '{empire.name}' home at system {home_indices[i]}")
 
     @property
     def event_log(self) -> EventLog:
@@ -279,44 +151,6 @@ class GameSession:
                             return planet
                 break
         return None
-
-    @staticmethod
-    def _adjust_homeworld_to_race(planet, race_config):
-        """Adjust a starting planet's conditions to match species ideal environment (BUG-63)."""
-        from game.strategy.data.planet import PlanetType
-
-        # Set planet type from homeworld type
-        if race_config.homeworld_type:
-            try:
-                planet.planet_type = PlanetType[race_config.homeworld_type]
-            except KeyError:
-                pass  # Keep existing type if invalid
-
-        # Set surface conditions to species ideals
-        planet.surface_gravity = race_config.gravity_ideal * 9.81
-        planet.surface_temperature = race_config.temperature_ideal
-        planet.surface_water = race_config.water_ideal
-
-        # Build atmosphere from preferences (positive preferences = present gases)
-        # Use 1 ATM total pressure, distributed by positive preference weights
-        atm_prefs = race_config.atmosphere_preferences
-        positive_gases = {gas: val for gas, val in atm_prefs.items() if val > 0}
-
-        if positive_gases:
-            total_weight = sum(positive_gases.values())
-            one_atm = 101325.0  # Pa
-            planet.atmosphere = {}
-            for gas, val in positive_gases.items():
-                planet.atmosphere[gas] = (val / total_weight) * one_atm
-            planet.surface_pressure = one_atm
-        else:
-            # No positive gas preferences - minimal atmosphere
-            planet.atmosphere = {}
-            planet.surface_pressure = 0.0
-
-        log_info(f"GameSession: Adjusted {planet.name} to match species preferences "
-                 f"(type={planet.planet_type.name}, gravity={planet.surface_gravity/9.81:.1f}g, "
-                 f"temp={planet.surface_temperature:.0f}K, water={planet.surface_water:.0%})")
 
     def process_turn(self):
         """Advance the game simulation by one full turn."""
@@ -387,11 +221,11 @@ class GameSession:
 
     def _get_fleet_by_id(self, fleet_id: int):
         """
-        Find fleet by ID across all empires.
+        Find fleet by ID, using Galaxy registry for O(1) lookup with fallback.
 
-        PROJ-40/NEW-STRAT-009: Reviewed and kept - used 7 times for command validation.
-        Iterates all empires since fleets belong to empires but commands reference
-        fleets by global ID.
+        PROJ-87 Phase 6: Tries galaxy.get_fleet_by_id() first for O(1) performance.
+        Falls back to O(n) empire iteration for backward compatibility with tests
+        that don't register fleets with the galaxy.
 
         Args:
             fleet_id: Fleet ID to find.
@@ -399,6 +233,12 @@ class GameSession:
         Returns:
             Fleet if found, None otherwise.
         """
+        # Try O(1) registry lookup first
+        fleet = self.galaxy.get_fleet_by_id(fleet_id)
+        if fleet is not None:
+            return fleet
+
+        # Fallback to O(n) iteration (for backward compatibility)
         for emp in self.empires:
             for f in emp.fleets:
                 if f.id == fleet_id:

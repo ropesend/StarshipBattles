@@ -416,16 +416,24 @@ class TestTransferCommandDispatch:
         """GameSession dispatches IssueTransferCommand correctly."""
         from game.strategy.engine.game_session import GameSession
         from game.strategy.engine.game_config import GameConfig
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.data.galaxy import Galaxy
+        from game.strategy.data.empire import Empire
 
         # Create minimal session with mocked galaxy generation
-        with patch.object(GameSession, '_initialize_galaxy'):
-            with patch.object(GameSession, '_setup_initial_scenario'):
-                config = GameConfig()
-                session = GameSession(config=config)
+        def mock_initialize(config):
+            galaxy = Galaxy(radius=config.galaxy_radius)
+            empires = [Empire(i, f"Empire {i}", (255, 255, 255)) for i in range(2)]
+            return galaxy, empires
+
+        with patch.object(GameInitializer, 'initialize', side_effect=mock_initialize):
+            config = GameConfig()
+            session = GameSession(config=config)
 
         # Create test fleet and planet
         fleet = Fleet(fleet_id=99, owner_id=0, location=HexCoord(5, 5))
         session.empires[0].fleets.append(fleet)
+        session.galaxy.register_fleet(fleet)  # Register for O(1) lookup
 
         # Add cargo ship to fleet
         ship = ShipInstance(
