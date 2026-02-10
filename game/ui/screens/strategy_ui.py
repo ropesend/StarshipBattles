@@ -14,14 +14,8 @@ from game.core.logger import log_debug
 from game.core.config import UIConfig
 from game.core.input_actions import InputAction
 from game.core.protocols import is_fleet
-from game.ui.screens.planet_selection_window import PlanetSelectionWindow
-from game.ui.screens.planet_list_window import PlanetListWindow
-from game.ui.screens.fleet_orders_window import FleetOrdersWindow
-from game.ui.screens.fleet_report_window import FleetReportWindow
-from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
-from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
-from game.ui.screens.event_log_window import EventLogWindow
+from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
@@ -38,15 +32,10 @@ class StrategyUI:
         self.height = screen_height
         self._mapper = input_mapper
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
-        self.fleet_orders_window = None  # active window instance
-        self.planet_list_window = None   # planet list window instance (BUG-22)
-        self.build_queue_list_window = None  # build queue list window (BUG-67)
-        self.fleet_report_window = None  # fleet report window instance (PROJ-03)
+        # PROJ-86: Window state now managed by StrategyWindowManager
+        # Only keep references needed by local logic
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
-        self.transfer_dialog = None      # cargo transfer dialog instance (PROJ-68)
         self.menu_panel = None           # strategy menu dropdown (PROJ-72)
-        self.empire_build_queue_window = None  # empire-wide build queue window (PROJ-76)
-        self.event_log_window = None           # event log window (PROJ-77)
 
         # UI State
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
@@ -376,6 +365,16 @@ class StrategyUI:
             screen_size=(screen_width, screen_height),
         )
 
+        # PROJ-86: Initialize window manager
+        self._window_manager = StrategyWindowManager(
+            scene=self.scene,
+            manager=self.manager,
+            width=self.width,
+            height=self.height,
+            input_mapper=self._mapper,
+            asset_resolver=self._get_object_asset,
+        )
+
     # =========================================================================
     # Hotkey Tooltip Enrichment (PROJ-71)
     # =========================================================================
@@ -522,6 +521,9 @@ class StrategyUI:
         self._detail_formatter.update_graph_rect(self.graph_rect)
         self._detail_formatter.update_graphs(self.spectrum_graph, self.atmosphere_graph)
 
+        # PROJ-86: Update window manager with new dimensions
+        self._window_manager.handle_resize(width, height)
+
         # Position Raw Data Button: Top-Right of Graph
         # Graph is at (10, graph_y) to (160, graph_y + h)
         # Button is 20x20.
@@ -629,32 +631,21 @@ class StrategyUI:
         if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
             return True
 
-        # Check for fleet orders window
-        if self.fleet_orders_window is not None:
+        # Check window manager for open windows (PROJ-86)
+        wm = self._window_manager
+        if wm.fleet_orders_window is not None:
             return True
-
-        # Check for planet list window (BUG-22)
-        if self.planet_list_window is not None:
+        if wm.planet_list_window is not None:
             return True
-
-        # Check for fleet report window (PROJ-03)
-        if self.fleet_report_window is not None:
+        if wm.fleet_report_window is not None:
             return True
-
-        # Check for transfer dialog (PROJ-68)
-        if self.transfer_dialog is not None:
+        if wm.transfer_dialog is not None:
             return True
-
-        # Check for build queue list window (BUG-67)
-        if self.build_queue_list_window is not None:
+        if wm.build_queue_list_window is not None:
             return True
-
-        # Check for empire build queue window (PROJ-76)
-        if self.empire_build_queue_window is not None:
+        if wm.empire_build_queue_window is not None:
             return True
-
-        # Check for event log window (PROJ-77)
-        if self.event_log_window is not None:
+        if wm.event_log_window is not None:
             return True
 
         # Check if workshop is being opened
@@ -671,11 +662,12 @@ class StrategyUI:
     def handle_event(self, event):
         """Pass events to pygame_gui and handle custom UI logic."""
         self.manager.process_events(event)
-        self.process_custom_ui_events(event)
-        
+        # PROJ-86: Use window manager for UI callbacks
+        self._window_manager.process_ui_callbacks(event)
+
         # Pass generic events to orders window if active (e.g. for confirmation dialogs)
-        if self.fleet_orders_window:
-             self.fleet_orders_window.handle_global_event(event)
+        if self._window_manager.fleet_orders_window:
+             self._window_manager.fleet_orders_window.handle_global_event(event)
         
         # Close menu panel on Escape
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.menu_panel:
@@ -772,19 +764,21 @@ class StrategyUI:
             if hasattr(self.scene, '_quit_confirm_dialog') and event.ui_element == self.scene._quit_confirm_dialog:
                 self.scene._handle_quit_confirmed()
 
+        # PROJ-86: Handle window close via window manager
+        wm = self._window_manager
         if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == self.fleet_orders_window:
-                self.fleet_orders_window = None
-            elif event.ui_element == self.fleet_report_window:
-                self.fleet_report_window = None
-            elif event.ui_element == self.transfer_dialog:
-                self.transfer_dialog = None
-            elif event.ui_element == self.build_queue_list_window:
-                self.build_queue_list_window = None
-            elif event.ui_element == self.empire_build_queue_window:
-                self._on_empire_build_queue_closed()
-            elif event.ui_element == self.event_log_window:
-                self._on_event_log_closed()
+            if event.ui_element == wm.fleet_orders_window:
+                wm.fleet_orders_window = None
+            elif event.ui_element == wm.fleet_report_window:
+                wm.fleet_report_window = None
+            elif event.ui_element == wm.transfer_dialog:
+                wm.transfer_dialog = None
+            elif event.ui_element == wm.build_queue_list_window:
+                wm.build_queue_list_window = None
+            elif event.ui_element == wm.empire_build_queue_window:
+                wm._on_empire_build_queue_closed()
+            elif event.ui_element == wm.event_log_window:
+                wm._on_event_log_closed()
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled by UI."""
@@ -801,241 +795,47 @@ class StrategyUI:
 
 
         
+    # =========================================================================
+    # Window Management Delegation (PROJ-86)
+    # =========================================================================
+
     def prompt_planet_selection(self, planets, on_select):
         """Open a modal window to select a planet."""
-        # Large window to fit full planet report (matches strategy UI detail panel)
-        width = 950
-        height = 650
-        x = (self.width - width) / 2
-        y = (self.height - height) / 2
-
-        rect = pygame.Rect(x, y, width, height)
-        # Use PlanetSelectionWindow (PROJ-54 - now uses PlanetReportPanel internally)
-        PlanetSelectionWindow(rect, self.manager, planets, on_select)
+        self._window_manager.prompt_planet_selection(planets, on_select)
 
     def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
-        """
-        Dialog to choose between moving to the sector or intercepting the fleet.
-        """
-        # We can use a confirmation dialog with custom buttons or a small custom window.
-        # pygame_gui doesn't natively support "3 buttons" easily in standard dialogs without custom class.
-        # Let's use a standard UIConfirmationDialog but we need 2 positive options? No.
-        # Let's use a small custom UIWindow or UIMessageWindow?
-        # Simpler: A Custom UIWindow with 2 Buttons.
-        
-        width = 300
-        height = 150
-        x = (self.width - width) / 2
-        y = (self.height - height) / 2
-        rect = pygame.Rect(x, y, width, height)
-        
-        win = pygame_gui.elements.UIWindow(
-            rect=rect,
-            manager=self.manager,
-            window_display_title="Select Move Type"
-        )
-        
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 10, 280, 30),
-            text=f"Fleet detected at target.",
-            manager=self.manager,
-            container=win
-        )
-        
-        btn_sector = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, 50, 280, 30),
-            text="Move to Sector (Static)",
-            manager=self.manager,
-            container=win
-        )
-        
-        btn_intercept = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(10, 90, 280, 30),
-            text="Intercept Fleet (Dynamic)",
-            manager=self.manager,
-            container=win
-        )
-        
-        # We need to bind click events. 
-        # Since we can't easily pass callbacks to generic UIElements without a wrapper class or external event handling,
-        # we will use a small inline class or rely on the fact that StrategyInterface handles events?
-        # StrategyInterface.handle_event handles UI_BUTTON_PRESSED.
-        # But we don't store references to these dyanmic buttons easily.
-        
-        # Pattern: Store callback map?
-        # self.active_callbacks[btn_element] = callback
-        
-        if not hasattr(self, 'ui_callbacks'):
-            self.ui_callbacks = {}
-            
-        self.ui_callbacks[btn_sector] = lambda: (on_move_sector(), win.kill())
-        self.ui_callbacks[btn_intercept] = lambda: (on_intercept_fleet(), win.kill())
-
-    def process_custom_ui_events(self, event):
-        """Helper to process custom callbacks."""
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if hasattr(self, 'ui_callbacks') and event.ui_element in self.ui_callbacks:
-                self.ui_callbacks[event.ui_element]()
-                del self.ui_callbacks[event.ui_element] # Cleanup
-
+        """Dialog to choose between moving to the sector or intercepting the fleet."""
+        self._window_manager.prompt_move_choice(fleet, target_hex, on_move_sector, on_intercept_fleet)
 
     def open_planet_list(self):
         """Open the Planet List Window."""
-        w, h = self.width * 0.9, self.height * 0.9
-        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
-
-        # Get Empire (current player)
-        empire = self.scene.current_empire
-        galaxy = self.scene.galaxy
-
-        # Store reference to track window state (BUG-22)
-        self.planet_list_window = PlanetListWindow(
-            rect, self.manager, galaxy, empire,
-            on_close_callback=self._on_planet_list_closed,
-            asset_resolver=self._get_object_asset
-        )
-
-    def _on_planet_list_closed(self):
-        """Callback when planet list window is closed."""
-        self.planet_list_window = None
+        self._window_manager.open_planet_list()
 
     def open_build_queue_list(self):
         """Open the Build Queue List Window (BUG-67)."""
-        if self.build_queue_list_window:
-            self.build_queue_list_window.kill()
-
-        empire = self.scene.current_empire
-
-        w, h = 700, 500
-        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
-
-        self.build_queue_list_window = BuildQueueListWindow(
-            rect, self.manager, empire,
-            on_close_callback=self._on_build_queue_list_closed,
-            input_mapper=self._mapper
-        )
-
-    def _on_build_queue_list_closed(self):
-        """Callback when build queue list window is closed."""
-        self.build_queue_list_window = None
+        self._window_manager.open_build_queue_list()
 
     def open_empire_build_queue_window(self):
         """Open the Empire-Wide Build Queue Window (PROJ-76)."""
-        if self.empire_build_queue_window:
-            self.empire_build_queue_window.kill()
-
-        empire = self.scene.current_empire
-        galaxy = self.scene.galaxy
-
-        w, h = int(self.width * 0.9), int(self.height * 0.9)
-        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
-
-        self.empire_build_queue_window = EmpireBuildQueueWindow(
-            rect, self.manager, empire, galaxy,
-            on_close_callback=self._on_empire_build_queue_closed,
-            on_navigate_to_hex=self.scene.on_navigate_to_hex_build,
-        )
-
-    def _on_empire_build_queue_closed(self):
-        """Callback when empire build queue window is closed."""
-        self.empire_build_queue_window = None
+        self._window_manager.open_empire_build_queue_window()
 
     def open_event_log(self):
-        """Open the Event Log Window showing all events (PROJ-77).
-
-        Fetches all events from the facade and displays them in
-        a modal window with filter tabs.
-        """
-        if self.event_log_window:
-            self.event_log_window.kill()
-
-        events = self.scene._facade.get_all_events() if hasattr(self.scene, '_facade') else []
-
-        w, h = int(self.width * 0.7), int(self.height * 0.7)
-        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
-
-        self.event_log_window = EventLogWindow(
-            rect, self.manager, events,
-            on_close_callback=self._on_event_log_closed,
-        )
+        """Open the Event Log Window showing all events (PROJ-77)."""
+        self._window_manager.open_event_log()
 
     def open_event_log_with_events(self, events: list):
-        """Open the Event Log Window with a specific event list.
-
-        Used at turn start to show only the current turn's events.
-
-        Args:
-            events: List of event dicts to display.
-        """
-        if self.event_log_window:
-            self.event_log_window.kill()
-
-        w, h = int(self.width * 0.7), int(self.height * 0.7)
-        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
-
-        self.event_log_window = EventLogWindow(
-            rect, self.manager, events,
-            on_close_callback=self._on_event_log_closed,
-        )
-
-    def _on_event_log_closed(self):
-        """Callback when event log window is closed."""
-        self.event_log_window = None
+        """Open the Event Log Window with a specific event list."""
+        self._window_manager.open_event_log_with_events(events)
 
     def open_orders_window(self, fleet):
         """Open the Fleet Orders Window."""
-        if self.fleet_orders_window:
-            self.fleet_orders_window.kill()
-
-        w, h = 400, 500
-        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
-
-        self.fleet_orders_window = FleetOrdersWindow(
-            rect, self.manager, fleet, input_mapper=self._mapper
-        )
+        self._window_manager.open_orders_window(fleet)
 
     def open_fleet_report_window(self, fleet):
         """Open the Fleet Report Window."""
-        if self.fleet_report_window:
-            self.fleet_report_window.kill()
-
-        # Match PlanetListWindow size (90% of screen)
-        w, h = self.width * 0.9, self.height * 0.9
-        rect = pygame.Rect((self.width - w)/2, (self.height - h)/2, w, h)
-
-        self.fleet_report_window = FleetReportWindow(
-            rect,
-            self.manager,
-            fleet,
-            on_close_callback=self._on_fleet_report_closed
-        )
-
-    def _on_fleet_report_closed(self):
-        """Callback when fleet report window is closed."""
-        self.fleet_report_window = None
+        self._window_manager.open_fleet_report_window(fleet)
 
     def open_transfer_dialog(self, source_fleet, hex_coord):
-        """
-        Open the cargo/population transfer dialog.
-        
-        PROJ-68: Hex-aware selection between multiple ships and colonies.
-        """
-        if self.transfer_dialog is not None:
-            self.transfer_dialog.kill()
-            self.transfer_dialog = None
-            
-        from game.ui.screens.transfer_dialog import TransferDialog
-        
-        win_w, win_h = 600, 500
-        win_rect = pygame.Rect(0, 0, win_w, win_h)
-        win_rect.center = (self.width // 2, self.height // 2)
-        
-        self.transfer_dialog = TransferDialog(
-            relative_rect=win_rect,
-            manager=self.manager,
-            source_fleet=source_fleet,
-            hex_coord=hex_coord,
-            scene=self.scene,
-            input_mapper=self._mapper
-        )
+        """Open the cargo/population transfer dialog."""
+        self._window_manager.open_transfer_dialog(source_fleet, hex_coord)
 

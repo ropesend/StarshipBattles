@@ -47,25 +47,27 @@ def _make_strategy_ui():
     ui.btn_research = MagicMock()
     ui.btn_build_fleet = MagicMock()
 
-    # Modal tracking attributes
-    ui.fleet_orders_window = None
-    ui.planet_list_window = None
-    ui.build_queue_list_window = None
-    ui.empire_build_queue_window = None
-    ui.fleet_report_window = None
+    # Modal tracking attributes (PROJ-86: now via window manager)
     ui.planet_report_panel = None
-    ui.transfer_dialog = None
-    ui.event_log_window = None  # PROJ-77
     ui.current_selection = None
+
+    # PROJ-86: Window manager mock
+    ui._window_manager = MagicMock()
+    ui._window_manager.fleet_orders_window = None
+    ui._window_manager.planet_list_window = None
+    ui._window_manager.build_queue_list_window = None
+    ui._window_manager.empire_build_queue_window = None
+    ui._window_manager.fleet_report_window = None
+    ui._window_manager.transfer_dialog = None
+    ui._window_manager.event_log_window = None
+    ui._window_manager.ui_callbacks = {}
+    ui._window_manager.process_ui_callbacks.return_value = False
 
     # System/sector trees (mock process_event to avoid issues)
     ui.system_tree = MagicMock()
     ui.system_tree.process_event.return_value = False
     ui.sector_tree = MagicMock()
     ui.sector_tree.process_event.return_value = False
-
-    # Custom callbacks tracking
-    ui.ui_callbacks = {}
 
     return ui, scene, manager
 

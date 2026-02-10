@@ -326,46 +326,35 @@ class TestBuildQueueListWindowHotkeys:
 # =======================================================================
 
 class TestStrategyUIPassesMapper:
-    """StrategyUI should pass input_mapper to sub-window constructors."""
+    """StrategyUI should pass input_mapper to sub-window constructors via window manager."""
 
-    @patch('game.ui.screens.strategy_ui.FleetOrdersWindow')
+    @patch('game.ui.screens.strategy_window_manager.FleetOrdersWindow')
     def test_open_orders_passes_mapper(self, MockWindow, mapper):
-        """open_orders_window passes input_mapper to FleetOrdersWindow."""
-        from game.ui.screens.strategy_ui import StrategyUI
+        """open_orders_window passes input_mapper to FleetOrdersWindow via window manager."""
+        from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
-        ui = MagicMock(spec=StrategyUI)
-        ui._mapper = mapper
-        ui.manager = MagicMock()
-        ui.fleet_orders_window = None
-        ui.width = 1920
-        ui.height = 1080
-        # Bind real method
-        ui.open_orders_window = StrategyUI.open_orders_window.__get__(ui, StrategyUI)
+        scene = MagicMock()
+        manager = MagicMock()
+        wm = StrategyWindowManager(scene, manager, 1920, 1080, input_mapper=mapper)
 
         fleet = MagicMock()
-        ui.open_orders_window(fleet)
+        wm.open_orders_window(fleet)
 
         # Verify mapper was passed as keyword arg
         _, kwargs = MockWindow.call_args
         assert kwargs.get('input_mapper') is mapper
 
-    @patch('game.ui.screens.strategy_ui.BuildQueueListWindow')
+    @patch('game.ui.screens.strategy_window_manager.BuildQueueListWindow')
     def test_open_build_queue_list_passes_mapper(self, MockWindow, mapper):
-        """open_build_queue_list passes input_mapper to BuildQueueListWindow."""
-        from game.ui.screens.strategy_ui import StrategyUI
+        """open_build_queue_list passes input_mapper to BuildQueueListWindow via window manager."""
+        from game.ui.screens.strategy_window_manager import StrategyWindowManager
 
-        ui = MagicMock(spec=StrategyUI)
-        ui._mapper = mapper
-        ui.manager = MagicMock()
-        ui.build_queue_list_window = None
-        ui.width = 1920
-        ui.height = 1080
-        ui.scene = MagicMock()
-        ui.scene.current_empire = MagicMock()
-        ui._on_build_queue_list_closed = MagicMock()
-        ui.open_build_queue_list = StrategyUI.open_build_queue_list.__get__(ui, StrategyUI)
+        scene = MagicMock()
+        scene.current_empire = MagicMock()
+        manager = MagicMock()
+        wm = StrategyWindowManager(scene, manager, 1920, 1080, input_mapper=mapper)
 
-        ui.open_build_queue_list()
+        wm.open_build_queue_list()
 
         _, kwargs = MockWindow.call_args
         assert kwargs.get('input_mapper') is mapper
