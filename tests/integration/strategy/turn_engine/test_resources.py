@@ -106,7 +106,7 @@ class TestPerTurnResourceConsumption:
         combat_ship.get_all_resource_costs_per_turn = MagicMock(return_value={'energy': 10.0})
         combat_ship.consume_resource = MagicMock(return_value=True)
 
-        destroyed_ship = create_mock_ship_instance(name="DestroyedShip", is_destroyed=True)
+        destroyed_ship = create_mock_ship_instance(name="DestroyedShip", is_alive=False)
         destroyed_ship.is_combat_capable = MagicMock(return_value=False)
         destroyed_ship.get_all_resource_costs_per_turn = MagicMock(return_value={'energy': 10.0})
         destroyed_ship.consume_resource = MagicMock(return_value=True)

@@ -28,7 +28,7 @@ def mock_galaxy():
 def create_mock_ship_instance(
     name="TestShip",
     owner_id=0,
-    is_destroyed=False,
+    is_alive=True,
     is_derelict=False,
     resource_levels=None,
     component_toggles=None,
@@ -42,7 +42,7 @@ def create_mock_ship_instance(
         design_id=name,
         name=name,
         owner_id=owner_id,
-        is_destroyed=is_destroyed,
+        is_alive=is_alive,
         is_derelict=is_derelict,
     )
     if resource_levels:

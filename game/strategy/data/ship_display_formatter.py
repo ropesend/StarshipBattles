@@ -47,7 +47,7 @@ class ShipDisplayFormatter:
         Returns:
             One of: "OK", "DAMAGED", "DERELICT", "DESTROYED"
         """
-        if self._ship.is_destroyed:
+        if not self._ship.is_alive:
             return "DESTROYED"
         elif self._ship.is_derelict:
             return "DERELICT"

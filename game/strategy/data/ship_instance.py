@@ -57,7 +57,7 @@ class ShipInstance:
     cargo_contents: Dict[str, int] = field(default_factory=dict)
 
     # Status
-    is_destroyed: bool = False
+    is_alive: bool = True
     is_derelict: bool = False
 
     # Strategy tracking
@@ -193,7 +193,7 @@ class ShipInstance:
         instance.resource_levels = cls._capture_resource_levels(ship)
 
         instance.is_derelict = ship.is_derelict
-        instance.is_destroyed = not ship.is_alive
+        instance.is_alive = ship.is_alive
 
         return instance
 
@@ -207,7 +207,7 @@ class ShipInstance:
 
     def is_combat_capable(self) -> bool:
         """Check if ship can participate in combat."""
-        return not self.is_destroyed and not self.is_derelict
+        return self.is_alive and not self.is_derelict
 
     def get_calculated_stats(self, force_refresh: bool = False) -> Dict[str, Any]:
         """
@@ -548,9 +548,9 @@ class ShipInstance:
                 self.current_hp = ship.hp
             else:
                 self.current_hp = None  # Full health
-            self.is_destroyed = False
+            self.is_alive = True
         else:
-            self.is_destroyed = True
+            self.is_alive = False
             self.current_hp = 0
 
         self.is_derelict = ship.is_derelict
@@ -614,7 +614,7 @@ class ShipInstance:
             'component_damage': self.component_damage,
             'resource_levels': self.resource_levels,
             'component_toggles': self.component_toggles,
-            'is_destroyed': self.is_destroyed,
+            'is_alive': self.is_alive,
             'is_derelict': self.is_derelict,
             'experience': self.experience,
             'kills': self.kills,
@@ -640,7 +640,7 @@ class ShipInstance:
             resource_levels=data.get('resource_levels', {}),
             component_toggles=data.get('component_toggles', {}),
             cargo_contents=data.get('cargo_contents', {}),
-            is_destroyed=data.get('is_destroyed', False),
+            is_alive=data.get('is_alive', True),
             is_derelict=data.get('is_derelict', False),
             experience=data.get('experience', 0),
             kills=data.get('kills', 0),
@@ -672,7 +672,7 @@ class ShipInstance:
             resource_levels=copy.deepcopy(self.resource_levels),
             component_toggles=copy.deepcopy(self.component_toggles),
             cargo_contents=copy.deepcopy(self.cargo_contents),
-            is_destroyed=self.is_destroyed,
+            is_alive=self.is_alive,
             is_derelict=self.is_derelict,
             experience=self.experience,
             kills=self.kills,
@@ -681,5 +681,5 @@ class ShipInstance:
 
     def __repr__(self) -> str:
         hp_status = f"{self.current_hp}HP" if self.current_hp is not None else "Full"
-        status = "DESTROYED" if self.is_destroyed else ("DERELICT" if self.is_derelict else "OK")
+        status = "DESTROYED" if not self.is_alive else ("DERELICT" if self.is_derelict else "OK")
         return f"ShipInstance({self.name}, {hp_status}, {status})"

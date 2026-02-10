@@ -145,7 +145,7 @@ class ColumnManager:
             return f"{ship.get_hp_percentage() * 100:.0f}%"
 
         elif col_id == 'status':
-            if ship.is_destroyed:
+            if not ship.is_alive:
                 return "DESTROYED"
             elif ship.is_derelict:
                 return "DERELICT"

@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Add ResourceType Constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Rename is_destroyed to is_alive | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Rename is_destroyed to is_alive | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Eliminate None-Means-Full Convention | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Audit & Final Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 1 Complete
-**Last Action:** Added ResourceType constants class to game/core/constants.py and replaced all magic strings in 18 production files
-**Next Action:** Begin Phase 2 -- Rename is_destroyed to is_alive across strategy layer
+**Active Phase:** Phase 2 Complete
+**Last Action:** Renamed is_destroyed to is_alive across 4 production files and 10 test files. Inverted all boolean logic. Updated serialization.
+**Next Action:** Begin Phase 3 -- Eliminate None-Means-Full Convention
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. ResourceType class with FUEL, ENERGY, AMMO constants added. All production code updated. Test files still use string literals which work because ResourceType.FUEL == 'fuel'. 7595 tests passing.
+**Context for Next Agent:** Phase 2 complete. is_destroyed renamed to is_alive with logic inversion. 4 prod files + 10 test files updated. Zero is_destroyed occurrences remain. 7595 tests passing.
 
 ## Overview
 Three clean-sheet convention changes to the strategy layer's resource/state API:

@@ -9,7 +9,7 @@ def make_mock_ship(
     serial=None,
     design_name="Destroyer",
     hp_pct=1.0,
-    is_destroyed=False,
+    is_alive=True,
     is_derelict=False,
     is_damaged=False,
     mass=1000,
@@ -24,7 +24,7 @@ def make_mock_ship(
     ship.serial = serial
     ship.design_id = design_name.lower().replace(" ", "_")
     ship.name = design_name
-    ship.is_destroyed = is_destroyed
+    ship.is_alive = is_alive
     ship.is_derelict = is_derelict
     ship.is_damaged.return_value = is_damaged
 
@@ -64,7 +64,7 @@ def make_mock_ship(
         ship.resource_levels['energy'] = current_energy
 
     # Combat capable status
-    ship.is_combat_capable.return_value = not is_destroyed and not is_derelict
+    ship.is_combat_capable.return_value = is_alive and not is_derelict
 
     return ship
 
@@ -127,9 +127,9 @@ class TestCalculateFleetStats:
         from game.ui.screens.fleet_report_filters import calculate_fleet_stats
 
         ships = [
-            make_mock_ship(is_destroyed=False),
-            make_mock_ship(is_destroyed=True),
-            make_mock_ship(is_destroyed=False),
+            make_mock_ship(is_alive=True),
+            make_mock_ship(is_alive=False),
+            make_mock_ship(is_alive=True),
         ]
         stats = calculate_fleet_stats(ships)
 
@@ -274,8 +274,8 @@ class TestFilterShips:
         from game.ui.screens.fleet_report_filters import filter_ships
 
         ships = [
-            make_mock_ship(is_destroyed=True),
-            make_mock_ship(is_destroyed=False),
+            make_mock_ship(is_alive=False),
+            make_mock_ship(is_alive=True),
         ]
         filter_state = {
             'show_damaged': True,
@@ -286,7 +286,7 @@ class TestFilterShips:
         result = filter_ships(ships, filter_state)
 
         assert len(result) == 1
-        assert not result[0].is_destroyed
+        assert result[0].is_alive
 
 
 class TestHasWarpCapability:

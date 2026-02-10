@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-95 Phase 1 (Add ResourceType Constants)
-**Current Status:** PROJ-95 Phase 1 Complete
+**Last Completed:** PROJ-95 Phase 2 (Rename is_destroyed to is_alive)
+**Current Status:** PROJ-95 Phase 2 Complete
 **Current Project:** PROJ-95
-**Current Phase:** Phase 2 next
+**Current Phase:** Phase 3 next
 **Test Status:** 7595 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-95 Phase 1 complete: ResourceType constants class added
-- Added ResourceType class with FUEL, ENERGY, AMMO constants to game/core/constants.py
-- Updated 18 production files to use constants instead of magic strings
-- Test files unchanged - string literals still work because ResourceType.FUEL == 'fuel'
+- PROJ-95 Phase 2 complete: is_destroyed renamed to is_alive with logic inversion
+- Updated 4 production files: ship_instance.py, ship_display_formatter.py, fleet_report_filters.py, column_manager.py
+- Updated 10 test files with inverted assertions
+- Zero is_destroyed occurrences remain in game/ or tests/
 - 7595 tests passing
-- Next: Phase 2 (Rename is_destroyed to is_alive)
+- Next: Phase 3 (Eliminate None-Means-Full Convention)
 
 ---
 
@@ -470,6 +470,7 @@
 | 2026-02-10 | PROJ-94 | Phase 4 | Complete | 7595 passed | pending | All verification greps pass, 175 lines removed |
 | 2026-02-10 | PROJ-94 | Audit 1 | PASSED | 7595 passed | pending | 4 investigation agents verified all goals, no issues |
 | 2026-02-10 | PROJ-95 | Phase 1 | Complete | 7595 passed | pending | ResourceType constants class, 18 prod files updated |
+| 2026-02-10 | PROJ-95 | Phase 2 | Complete | 7595 passed | pending | is_destroyed→is_alive, 4 prod + 10 test files |
 
 ---
 

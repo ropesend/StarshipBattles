@@ -136,7 +136,7 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
                 continue
 
         # Destroyed filter
-        if ship.is_destroyed:
+        if not ship.is_alive:
             if not filter_state.get('show_destroyed', True):
                 continue
             result.append(ship)
@@ -191,7 +191,7 @@ def sort_ships(
             return ship.get_hp_percentage()
         elif sort_column == 'status':
             # Sort by severity: OK=0, DAMAGED=1, DERELICT=2, DESTROYED=3
-            if ship.is_destroyed:
+            if not ship.is_alive:
                 return 3
             elif ship.is_derelict:
                 return 2

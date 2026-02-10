@@ -21,7 +21,7 @@ class TestFleetListViewModel:
             ship.name = f"Ship {i}"
             ship.design_id = f"design-{i % 2}"
             ship.design_data = {'name': f'Design {i % 2}', 'theme_id': 'Federation'}
-            ship.is_destroyed = (i == 4)  # Last ship is destroyed
+            ship.is_alive = (i != 4)  # Last ship is not alive (destroyed)
             ship.is_derelict = (i == 3)   # 4th ship is derelict
             ship.is_damaged = Mock(return_value=(i >= 2))  # Ships 2,3,4 are damaged
             ship.get_hp_percentage = Mock(return_value=(1.0 - i * 0.2))  # 100%, 80%, 60%, 40%, 20%
@@ -129,7 +129,7 @@ class TestFleetListViewModel:
         """Updating ships refreshes the filtered list."""
         new_ships = [Mock() for _ in range(3)]
         for i, ship in enumerate(new_ships):
-            ship.is_destroyed = False
+            ship.is_alive = True
             ship.is_derelict = False
             ship.is_damaged = Mock(return_value=False)
             ship.get_hp_percentage = Mock(return_value=1.0)
@@ -170,7 +170,7 @@ class TestFleetListViewModelWarpFilters:
             ship = Mock()
             ship.instance_id = f"ship-{i}"
             ship.serial = i + 1
-            ship.is_destroyed = False
+            ship.is_alive = True
             ship.is_derelict = False
             ship.is_damaged = Mock(return_value=False)
             ship.get_hp_percentage = Mock(return_value=1.0)

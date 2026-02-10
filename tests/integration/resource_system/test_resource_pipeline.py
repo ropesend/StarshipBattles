@@ -269,7 +269,7 @@ class TestBackwardCompatLoadOldSaveWithoutComponentToggles:
             'component_damage': {'engine_0': 50},
             'resource_levels': {'fuel': 25000},
             # Note: component_toggles is intentionally missing
-            'is_destroyed': False,
+            'is_alive': True,
             'is_derelict': False,
             'experience': 10,
             'kills': 2,

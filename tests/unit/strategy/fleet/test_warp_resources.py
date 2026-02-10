@@ -224,12 +224,12 @@ class TestEdgeCases:
             warp_resource_costs: dict = None,
             current_resources: dict = None,
             is_combat_capable: bool = True,
-            is_destroyed: bool = False,
+            is_alive: bool = True,
             is_derelict: bool = False
         ):
             mock = MagicMock(spec=ShipInstance)
-            mock.is_combat_capable.return_value = is_combat_capable and not is_destroyed and not is_derelict
-            mock.is_destroyed = is_destroyed
+            mock.is_combat_capable.return_value = is_combat_capable and is_alive and not is_derelict
+            mock.is_alive = is_alive
             mock.is_derelict = is_derelict
             mock.get_all_resource_costs_per_hex.return_value = resource_costs_per_hex or {}
             mock.get_warp_resource_costs.return_value = warp_resource_costs or {}
@@ -256,7 +256,7 @@ class TestEdgeCases:
         destroyed_ship = make_edge_ship(
             resource_costs_per_hex={'fuel': 50.0},  # Should be ignored
             current_resources={'fuel': 0.0},
-            is_destroyed=True,
+            is_alive=False,
             is_combat_capable=False
         )
         fleet.ships.extend([active_ship, destroyed_ship])
@@ -295,7 +295,7 @@ class TestEdgeCases:
         )
         destroyed = make_edge_ship(
             resource_costs_per_hex={'fuel': 20.0},
-            is_destroyed=True,
+            is_alive=False,
             is_combat_capable=False
         )
         derelict = make_edge_ship(

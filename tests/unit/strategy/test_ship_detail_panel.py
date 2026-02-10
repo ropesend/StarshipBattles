@@ -128,7 +128,7 @@ class TestShipInstanceDisplayMethods:
     def test_get_status_text_destroyed(self, design_data):
         """Destroyed ship should return DESTROYED status."""
         instance = ShipInstance.create(design_data, owner_id=0)
-        instance.is_destroyed = True
+        instance.is_alive = False
 
         status = instance.get_status_text()
 
@@ -154,7 +154,7 @@ class TestShipInstanceDisplayMethods:
     def test_get_hp_display_destroyed(self, design_data):
         """Destroyed ship should show 0/max."""
         instance = ShipInstance.create(design_data, owner_id=0)
-        instance.is_destroyed = True
+        instance.is_alive = False
         instance.current_hp = 0
 
         display = instance.get_hp_display()

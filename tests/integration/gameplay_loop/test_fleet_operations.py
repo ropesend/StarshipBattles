@@ -167,7 +167,7 @@ class TestResourceAccumulation:
         # Create minimal ship instance with fuel
         mock_ship = MagicMock(spec=ShipInstance)
         mock_ship.is_combat_capable.return_value = True
-        mock_ship.is_destroyed = False
+        mock_ship.is_alive = True
         mock_ship.is_derelict = False
         mock_ship.mass = 5000  # Required for warp capability check
         mock_ship.design_data = {"layers": {}}  # Required for warp capability check
@@ -198,7 +198,7 @@ class TestResourceAccumulation:
 
         mock_ship = MagicMock(spec=ShipInstance)
         mock_ship.is_combat_capable.return_value = True
-        mock_ship.is_destroyed = False
+        mock_ship.is_alive = True
         mock_ship.is_derelict = False
         mock_ship.design_data = {"layers": {}}  # PROJ-75: Maintenance engine reads design_data
         mock_ship.get_all_resource_costs_per_turn.return_value = {"fuel": 100.0}
@@ -228,7 +228,7 @@ class TestResourceAccumulation:
         # Create ship with no fuel
         mock_ship = MagicMock(spec=ShipInstance)
         mock_ship.is_combat_capable.return_value = True
-        mock_ship.is_destroyed = False
+        mock_ship.is_alive = True
         mock_ship.is_derelict = False
         mock_ship.mass = 5000  # Required for warp capability check
         mock_ship.design_data = {"layers": {}}  # Required for warp capability check

@@ -13,7 +13,7 @@ class TestShipDisplayFormatter:
         ship.design_data = {'name': 'TestShip'}
         ship.design_id = 'test_ship'
         ship.serial = 42
-        ship.is_destroyed = False
+        ship.is_alive = True
         ship.is_derelict = False
         ship.current_hp = None
         ship.resource_levels = {}
@@ -64,7 +64,7 @@ class TestShipDisplayFormatter:
     def test_get_status_text_destroyed(self, mock_ship_instance):
         """Test get_status_text returns DESTROYED."""
         from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
-        mock_ship_instance.is_destroyed = True
+        mock_ship_instance.is_alive = False
         formatter = ShipDisplayFormatter(mock_ship_instance)
 
         assert formatter.get_status_text() == "DESTROYED"

@@ -164,7 +164,7 @@ class TestColumnManager:
 
         mgr = ColumnManager()
         ship = Mock()
-        ship.is_destroyed = False
+        ship.is_alive = True
         ship.is_derelict = False
         ship.is_damaged = Mock(return_value=False)
 
@@ -179,7 +179,7 @@ class TestColumnManager:
 
         mgr = ColumnManager()
         ship = Mock()
-        ship.is_destroyed = True
+        ship.is_alive = False
 
         col = mgr.get_column('status')
         value = mgr.get_column_value(ship, col)
@@ -192,7 +192,7 @@ class TestColumnManager:
 
         mgr = ColumnManager()
         ship = Mock()
-        ship.is_destroyed = False
+        ship.is_alive = True
         ship.is_derelict = True
 
         col = mgr.get_column('status')
@@ -206,7 +206,7 @@ class TestColumnManager:
 
         mgr = ColumnManager()
         ship = Mock()
-        ship.is_destroyed = False
+        ship.is_alive = True
         ship.is_derelict = False
         ship.is_damaged = Mock(return_value=True)
 
