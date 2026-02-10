@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Type `IPostBattleShip.resources` properly and clean up unnecessary defensive code.
 
 ---
@@ -16,16 +16,16 @@
 **File:** `game/core/protocols.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Add `get_resource_names` method to `IResourceReader` protocol (after line 378):
+- [x] Add `get_resource_names` method to `IResourceReader` protocol (after line 378):
   ```python
   def get_resource_names(self) -> List[str]:
       """Return list of all registered resource names."""
       ...
   ```
-- [ ] Verify `List` is imported from typing (check existing imports at top of file)
-- [ ] Verify: `python -c "from game.core.protocols import IResourceReader"`
+- [x] Verify `List` is imported from typing (check existing imports at top of file)
+- [x] Verify: `python -c "from game.core.protocols import IResourceReader"`
 
-**Notes:**
+**Notes:** Added after get_max_value method.
 
 ---
 
@@ -33,7 +33,7 @@
 **File:** `game/core/protocols.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Change line 421 from:
+- [x] Change line 421 from:
   ```python
   def resources(self) -> Any:
       """Resource registry (may be None). Should satisfy IResourceReader if present."""
@@ -43,21 +43,21 @@
   def resources(self) -> Optional['IResourceReader']:
       """Resource registry (may be None)."""
   ```
-- [ ] Ensure `Optional` is imported from typing (check existing imports)
-- [ ] Verify: `python -c "from game.core.protocols import IPostBattleShip, IResourceReader"`
+- [x] Ensure `Optional` is imported from typing (check existing imports)
+- [x] Verify: `python -c "from game.core.protocols import IPostBattleShip, IResourceReader"`
 
-**Notes:**
+**Notes:** Updated type annotation and simplified docstring.
 
 ---
 
 ### Task 3.3: Verify IResourceReader protocol matches ResourceRegistry [Simple]
-- [ ] Confirm `ResourceRegistry` satisfies `IResourceReader`:
+- [x] Confirm `ResourceRegistry` satisfies `IResourceReader`:
   - Has `get_value(name: str) -> float` (resource_manager.py line ~120)
   - Has `get_max_value(name: str) -> float` (resource_manager.py line ~130)
   - Has `get_resource_names() -> List[str]` (resource_manager.py line 197-199, added by PROJ-91)
-- [ ] Run: `pytest tests/ --testmon`
+- [x] Run: `pytest tests/ --testmon`
 
-**Notes:**
+**Notes:** isinstance(ResourceRegistry(), IResourceReader) returns True.
 
 ---
 
@@ -65,24 +65,24 @@
 **File:** `game/strategy/data/ship_instance.py`
 **Tests:** `pytest tests/unit/strategy/ship_instance/ tests/integration/strategy/ --testmon`
 
-- [ ] Line 188: Change `instance.is_derelict = getattr(ship, 'is_derelict', False)` to `instance.is_derelict = ship.is_derelict`
-- [ ] Line 549: Change `self.is_derelict = getattr(ship, 'is_derelict', False)` to `self.is_derelict = ship.is_derelict`
-- [ ] Rationale: `IPostBattleShip` declares `is_derelict` as required property (line 411) -- getattr is unnecessary defensive code
-- [ ] Run tests: `pytest tests/unit/strategy/ship_instance/ tests/integration/strategy/ --testmon`
+- [x] Line 188: Change `instance.is_derelict = getattr(ship, 'is_derelict', False)` to `instance.is_derelict = ship.is_derelict`
+- [x] Line 549: Change `self.is_derelict = getattr(ship, 'is_derelict', False)` to `self.is_derelict = ship.is_derelict`
+- [x] Rationale: `IPostBattleShip` declares `is_derelict` as required property (line 411) -- getattr is unnecessary defensive code
+- [x] Run tests: `pytest tests/unit/strategy/ship_instance/ tests/integration/strategy/ --testmon`
 
-**Notes:**
+**Notes:** Already completed in Phase 1 (verified via grep - no getattr.*is_derelict in ship_instance.py).
 
 ---
 
 ### Task 3.5: Run full test suite [Simple]
-- [ ] `pytest tests/ -n 12` -- all tests pass
-- [ ] Record test count
+- [x] `pytest tests/ -n 12` -- all tests pass
+- [x] Record test count: 7595 passed
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

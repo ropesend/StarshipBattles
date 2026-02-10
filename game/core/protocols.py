@@ -380,6 +380,10 @@ class IResourceReader(Protocol):
         """Get maximum value of a resource."""
         ...
 
+    def get_resource_names(self) -> List[str]:
+        """Return list of all registered resource names."""
+        ...
+
 
 @runtime_checkable
 class IPostBattleShip(Protocol):
@@ -421,8 +425,8 @@ class IPostBattleShip(Protocol):
         ...
 
     @property
-    def resources(self) -> Any:
-        """Resource registry (may be None). Should satisfy IResourceReader if present."""
+    def resources(self) -> Optional['IResourceReader']:
+        """Resource registry (None for ships without consumables)."""
         ...
 
 
