@@ -68,6 +68,14 @@ class ShipInstance:
     # Cached calculated stats (invalidated on damage change)
     _cached_stats: Optional[Dict[str, Any]] = field(default=None, repr=False)
 
+    def __hash__(self) -> int:
+        return hash(self.instance_id)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ShipInstance):
+            return NotImplemented
+        return self.instance_id == other.instance_id
+
     @classmethod
     def create(
         cls,

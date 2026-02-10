@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-83 | Eliminate Test Warning Noise | Plan Approved | 2026-02-09 | 2026-02-09 |
 | PROJ-82 | Planet Resources Panel Redesign | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-81 | Sector Build Queue Window Fixes | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-80 | Unify Design Details Panel | Planning | 2026-02-08 | 2026-02-08 |
@@ -179,7 +180,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-83
+## Next Project ID: PROJ-84
 
 ---
 
