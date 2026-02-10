@@ -17,12 +17,12 @@ import uuid
 import json
 
 from game.core.logger import log_warning, log_debug
+from game.core.protocols import IPostBattleShip
 from game.strategy.data.ship_resource_manager import ShipResourceManager
 from game.strategy.data.ship_cargo_manager import ShipCargoManager
 from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 
 if TYPE_CHECKING:
-    from game.simulation.entities.ship import Ship
     from game.strategy.data.empire import Empire
     from game.core.registry import GameRegistries
 
@@ -142,11 +142,15 @@ class ShipInstance:
         return instance
 
     @classmethod
-    def from_ship(cls, ship: 'Ship', owner_id: int) -> 'ShipInstance':
+    def from_ship(cls, ship: IPostBattleShip, owner_id: int) -> 'ShipInstance':
         """
         Create a ShipInstance from a live Ship object.
 
         Captures the current state of the ship including any damage.
+
+        Note:
+            Also calls ShipSerializer.to_dict() internally, which requires
+            a full simulation Ship instance (not just IPostBattleShip).
         """
         # INTENTIONAL LATE IMPORT: Cross-layer boundary (strategy -> simulation)
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
@@ -594,7 +598,7 @@ class ShipInstance:
 
         return ship
 
-    def update_from_ship(self, ship: 'Ship') -> None:
+    def update_from_ship(self, ship: IPostBattleShip) -> None:
         """
         Update this instance from post-battle ship state.
 

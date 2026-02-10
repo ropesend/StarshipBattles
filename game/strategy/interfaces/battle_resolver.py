@@ -13,7 +13,9 @@ The interface enables:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Any, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
+
+from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -28,16 +30,18 @@ class BattleResult:
     This is a strategy-layer representation of battle outcomes,
     decoupled from simulation-layer internals.
 
+    PROJ-90: Uses IPostBattleShip protocol for survivors typing.
+
     Attributes:
         winner: Team that won (0 or 1), or None for a draw
         tick_count: Number of simulation ticks the battle took
-        team0_survivors: List of surviving ship data for team 0
-        team1_survivors: List of surviving ship data for team 1
+        team0_survivors: List of surviving ships for team 0
+        team1_survivors: List of surviving ships for team 1
     """
     winner: Optional[int]
     tick_count: int
-    team0_survivors: List[Any]
-    team1_survivors: List[Any]
+    team0_survivors: List[IPostBattleShip]
+    team1_survivors: List[IPostBattleShip]
 
 
 class IBattleResolver(ABC):

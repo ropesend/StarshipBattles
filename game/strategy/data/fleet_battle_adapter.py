@@ -2,9 +2,13 @@
 
 PROJ-87 Phase 4: Bridges strategy layer Fleet with simulation layer Ship
 for battle conversion.
+
+PROJ-90 Phase 4: Uses IPostBattleShip protocol for strategy-simulation boundary.
 """
 
 from typing import List, Optional, Tuple, TYPE_CHECKING
+
+from game.core.protocols import IPostBattleShip
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -95,13 +99,13 @@ class FleetBattleAdapter:
 
     def update_from_battle_results(
         self,
-        surviving_ships: List['Ship'],
+        surviving_ships: List[IPostBattleShip],
     ) -> None:
         """
         Update fleet ships from battle results.
 
         Args:
-            surviving_ships: Ships that survived the battle
+            surviving_ships: Ships that survived the battle (IPostBattleShip protocol)
         """
         # Build lookup for surviving ships by name
         survivors_by_name = {s.name: s for s in surviving_ships}

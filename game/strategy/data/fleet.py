@@ -6,6 +6,8 @@ from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from enum import Enum, auto
 from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
+from game.core.protocols import IPostBattleShip
+
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
     from game.core.registry import GameRegistries
@@ -267,7 +269,7 @@ class Fleet:
 
     def update_from_battle_results(
         self,
-        surviving_ships: List['Ship'],
+        surviving_ships: List[IPostBattleShip],
     ) -> None:
         """Update fleet ships from battle results."""
         self._battle.update_from_battle_results(surviving_ships)

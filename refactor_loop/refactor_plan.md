@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-90 Phase 3
-**Current Status:** PROJ-90 Phase 3 Complete
+**Last Completed:** PROJ-90 Phase 4
+**Current Status:** PROJ-90 Phase 4 Complete
 **Current Project:** PROJ-90
-**Current Phase:** Phase 4 (next)
-**Test Status:** 7540 passed (full suite)
+**Current Phase:** Phase 5 (next)
+**Test Status:** 7557 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-90 Phase 3 complete: Ship.py late import cleanup
-- Moved ShipCombatEngine and ShipSerializer to module-level imports
-- ModifierService MUST stay as late import (real cycle: services/__init__.py → VehicleDesignService → Ship)
-- Updated comments to document the real reason for remaining late imports
-- WeaponAbility and `import re` already removed in PROJ-88
-- ship_component_manager.py deleted in PROJ-88
-- Next: Phase 4 - IPostBattleShip protocol for strategy-simulation boundary
+- PROJ-90 Phase 4 complete: Strategy-Simulation Boundary Protocol
+- Created IPostBattleShip and IResourceReader protocols in game/core/protocols.py
+- Updated ShipInstance.update_from_ship() and from_ship() to use IPostBattleShip
+- Updated Fleet.update_from_battle_results() and fleet_battle_adapter.py to use IPostBattleShip
+- Updated BattleResult.team0_survivors/team1_survivors from List[Any] to List[IPostBattleShip]
+- Added 17 protocol conformance tests in tests/unit/core/test_protocols_boundary.py
+- ship_instance.py no longer TYPE_CHECKING imports Ship (goal achieved)
+- Next: Phase 5 - Documentation & Audit
 
 ---
 
@@ -418,6 +419,7 @@
 | 2026-02-10 | PROJ-90 | Phase 1 | Complete | 7540 passed | pending | Created battle_config.py, eliminated 2 late imports, 11 files updated |
 | 2026-02-10 | PROJ-90 | Phase 2 | Complete | 7540 passed | pending | Created registry_loader.py (113 lines), removed method from RegistryManager, Core layer violation fixed |
 | 2026-02-10 | PROJ-90 | Phase 3 | Complete | 7540 passed | pending | Moved ShipCombatEngine+ShipSerializer to module level, ModifierService must stay late (real cycle) |
+| 2026-02-10 | PROJ-90 | Phase 4 | Complete | 7557 passed | pending | IPostBattleShip+IResourceReader protocols, ShipInstance/Fleet/BattleResult updated, 17 new tests |
 
 ---
 

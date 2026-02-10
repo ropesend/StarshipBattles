@@ -356,3 +356,78 @@ class IScene(Protocol):
 def is_scene(obj: Any) -> TypeGuard[IScene]:
     """Check if obj satisfies the IScene Protocol."""
     return isinstance(obj, IScene)
+
+
+# =============================================================================
+# Strategy-Simulation Boundary Protocols (PROJ-90)
+# =============================================================================
+
+@runtime_checkable
+class IResourceReader(Protocol):
+    """
+    Read-only interface for resource values.
+
+    Used to access resource state without depending on concrete ResourceRegistry.
+    """
+    def get_value(self, name: str) -> float:
+        """Get current value of a resource."""
+        ...
+
+    def get_max_value(self, name: str) -> float:
+        """Get maximum value of a resource."""
+        ...
+
+
+@runtime_checkable
+class IPostBattleShip(Protocol):
+    """
+    Minimal interface for reading post-battle ship state.
+
+    Used by ShipInstance.update_from_ship() and Fleet.update_from_battle_results()
+    to extract results without depending on the concrete Ship class.
+    Defines the Strategy <-> Simulation boundary for post-battle state transfer.
+    """
+    @property
+    def name(self) -> str:
+        """Ship name for identification."""
+        ...
+
+    @property
+    def hp(self) -> int:
+        """Current hull points."""
+        ...
+
+    @property
+    def max_hp(self) -> int:
+        """Maximum hull points."""
+        ...
+
+    @property
+    def is_alive(self) -> bool:
+        """True if ship is still operational (not destroyed)."""
+        ...
+
+    @property
+    def is_derelict(self) -> bool:
+        """True if ship is a derelict hulk."""
+        ...
+
+    @property
+    def layers(self) -> Dict[str, Any]:
+        """Ship layers containing components."""
+        ...
+
+    @property
+    def resources(self) -> Any:
+        """Resource registry (may be None). Should satisfy IResourceReader if present."""
+        ...
+
+
+def is_post_battle_ship(obj: Any) -> TypeGuard[IPostBattleShip]:
+    """Check if obj satisfies the IPostBattleShip Protocol."""
+    return isinstance(obj, IPostBattleShip)
+
+
+def is_resource_reader(obj: Any) -> TypeGuard[IResourceReader]:
+    """Check if obj satisfies the IResourceReader Protocol."""
+    return isinstance(obj, IResourceReader)
