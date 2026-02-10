@@ -1,6 +1,8 @@
 from game.strategy.data.hex_math import HexCoord
 from game.strategy.data.ship_instance import ShipInstance
 from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
+from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
 from enum import Enum, auto
 from typing import List, Optional, Tuple, TYPE_CHECKING, Any, Dict
 
@@ -73,6 +75,12 @@ class Fleet:
         # Delegate for resource aggregation (PROJ-87 Phase 3)
         self._resource_agg = FleetResourceAggregator(self)
 
+        # Delegate for capability queries (PROJ-87 Phase 4)
+        self._capabilities = FleetCapabilityCalculator(self)
+
+        # Delegate for battle conversion (PROJ-87 Phase 4)
+        self._battle = FleetBattleAdapter(self)
+
     @property
     def name(self) -> str:
         """
@@ -133,27 +141,8 @@ class Fleet:
 
     @property
     def has_space_shipyard(self) -> bool:
-        """
-        Check if fleet has an operational space shipyard.
-
-        Returns True if any combat-capable ship has a component with
-        SpaceShipyard ability (e.g., fleet_space_yard component).
-        """
-        for ship in self.get_combat_capable_ships():
-            design_data = ship.design_data
-            # Check all layers for space yard components
-            for layer_data in design_data.get("layers", {}).values():
-                if not isinstance(layer_data, list):
-                    continue
-                for comp in layer_data:
-                    if isinstance(comp, dict):
-                        # Check component id (real designs)
-                        if comp.get("id") == "fleet_space_yard":
-                            return True
-                        # Check abilities dict (test fixtures)
-                        if "SpaceShipyard" in comp.get("abilities", {}):
-                            return True
-        return False
+        """Check if fleet has an operational space shipyard."""
+        return self._capabilities.has_space_shipyard
 
     @property
     def is_building(self) -> bool:
@@ -166,74 +155,16 @@ class Fleet:
         return current is not None and current.type == OrderType.BUILD
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
-        """
-        Check if fleet can build the specified vehicle type.
-
-        Args:
-            vehicle_type: Type of vehicle ("ship", "fighter", "satellite", "complex")
-            galaxy: Galaxy instance for planet proximity checks (required for complexes)
-
-        Returns:
-            True if fleet can build the given vehicle type.
-        """
-        if not self.has_space_shipyard:
-            return False
-
-        vehicle_lower = vehicle_type.lower()
-
-        # Ships, fighters, and satellites can always be built if we have a yard
-        if vehicle_lower in ("ship", "fighter", "satellite"):
-            return True
-
-        # Complexes require being at the same hex as a planet
-        if vehicle_lower == "complex":
-            if galaxy is None:
-                return False
-            # Check if there's a planet at our location
-            planets_at_hex = galaxy.get_planets_at_global_hex(self.location)
-            return len(planets_at_hex) > 0
-
-        return False
+        """Check if fleet can build the specified vehicle type."""
+        return self._capabilities.can_build_type(vehicle_type, galaxy)
 
     def can_use_warp(self) -> bool:
-        """
-        Check if ALL ships in fleet can use warp points.
-
-        A fleet can only use warp points if every combat-capable ship has
-        a WarpJump ability with max_tonnage >= that ship's mass.
-
-        Returns:
-            True if all combat-capable ships are warp-capable, False otherwise.
-            Returns False if fleet has no combat-capable ships.
-        """
-        # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-
-        combat_ships = self.get_combat_capable_ships()
-        if not combat_ships:
-            return False
-
-        for ship in combat_ships:
-            if not ShipStatsCalculator.has_warp_capability(ship):
-                return False
-        return True
+        """Check if ALL ships in fleet can use warp points."""
+        return self._capabilities.can_use_warp()
 
     def get_warp_limiting_ship(self) -> Optional[ShipInstance]:
-        """
-        Get the ship that prevents the fleet from using warp, if any.
-
-        Returns:
-            The first ship without warp capability, or None if all ships are warp-capable.
-        """
-        # INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
-
-        for ship in self.get_combat_capable_ships():
-            if not ShipStatsCalculator.has_warp_capability(ship):
-                return ship
-        return None
+        """Get the ship that prevents the fleet from using warp, if any."""
+        return self._capabilities.get_warp_limiting_ship()
 
     # --- Fuel Consumption Methods (delegated to FleetResourceAggregator) ---
 
@@ -323,38 +254,8 @@ class Fleet:
         formation_positions: Optional[List[Tuple[float, float]]] = None,
         registries: Optional['GameRegistries'] = None
     ) -> List['Ship']:
-        """
-        Convert fleet ships to simulation Ship objects for battle.
-
-        Only works with ShipInstance objects - legacy strings cannot be converted.
-
-        Args:
-            team_id: Team assignment for battle (0 or 1)
-            formation_positions: Optional list of (x, y) positions for ships
-            registries: Optional GameRegistries for DI. If None, uses global fallback
-                        (transitional - will be required in Phase 6).
-
-        Returns:
-            List of Ship objects ready for battle
-        """
-        ships = []
-
-        if not self.ships:
-            return []
-
-        # Generate default positions if not provided
-        if formation_positions is None:
-            formation_positions = self._default_formation_positions(len(self.ships), team_id)
-
-        for i, instance in enumerate(self.ships):
-            if not instance.is_combat_capable():
-                continue
-
-            pos = formation_positions[i] if i < len(formation_positions) else (0, 0)
-            ship = instance.to_ship(pos, team_id, registries=registries)
-            ships.append(ship)
-
-        return ships
+        """Convert fleet ships to simulation Ship objects for battle."""
+        return self._battle.to_battle_ships(team_id, formation_positions, registries)
 
     def _default_formation_positions(
         self,
@@ -362,47 +263,14 @@ class Fleet:
         team_id: int
     ) -> List[Tuple[float, float]]:
         """Generate default formation positions for ships."""
-        positions = []
-
-        # Team 0 starts on the left, Team 1 on the right
-        base_x = 20000 if team_id == 0 else 80000
-        base_y = 50000
-
-        # Simple line formation
-        spacing = 2000
-
-        for i in range(count):
-            y = base_y + (i - count // 2) * spacing
-            positions.append((base_x, y))
-
-        return positions
+        return self._battle._default_formation_positions(count, team_id)
 
     def update_from_battle_results(
         self,
         surviving_ships: List['Ship'],
     ) -> None:
-        """
-        Update fleet ships from battle results.
-
-        Args:
-            surviving_ships: Ships that survived the battle
-        """
-        # Build lookup for surviving ships by name
-        survivors_by_name = {s.name: s for s in surviving_ships}
-
-        # Update each ShipInstance - ships not in survivors were destroyed
-        new_ships = []
-        for s in self.ships:
-            if s.name in survivors_by_name:
-                # Update state from battle
-                s.update_from_ship(survivors_by_name[s.name])
-                new_ships.append(s)
-            # else: ship was destroyed, don't include
-
-        self.ships = new_ships
-
-        # Recalculate speed (ships may have been destroyed or damaged)
-        self._trigger_speed_recalculation()
+        """Update fleet ships from battle results."""
+        self._battle.update_from_battle_results(surviving_ships)
 
     def add_order(self, order, index=None):
         """Add an order to the queue."""
