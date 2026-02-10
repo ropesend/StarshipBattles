@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-91 Audit Passed
-**Current Status:** PROJ-91 Complete
-**Current Project:** PROJ-89 (next)
-**Current Phase:** Ready to start
-**Test Status:** 7557 passed (full suite)
+**Last Completed:** PROJ-89 Phase 1
+**Current Status:** PROJ-89 In Progress
+**Current Project:** PROJ-89
+**Current Phase:** Phase 2 (next)
+**Test Status:** 7570 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-91 complete: All 3 phases done, audit passed
-- Phase 3: Deleted 7 type-specific methods from ShipInstance (-68 lines)
-- Deleted TestResourceConvenienceMethods class (4 tests removed)
-- Cleaned up test mock helpers to use generic API only
-- Fixed 1 integration test using deprecated method
-- Next: PROJ-89 - God Class Decomposition - Remaining UI Tier
+- PROJ-89 Phase 1 complete: Extracted design_image_helper.py
+- Created 196-line helper module with load_portrait_thumbnail, load_topdown_thumbnail, _get_visible_bounding_box
+- DesignSelectorWindow: 716 -> 551 lines (-165 lines, 23% reduction)
+- Fixed boundary condition bug in _get_visible_bounding_box (single-pixel case)
+- Added 13 new unit tests
+- Next: Phase 2 - Extract EmpireBuildQueueWindow Formatter
 
 ---
 
@@ -253,8 +253,8 @@
 
 ---
 
-- [ ] **PROJ-89: God Class Decomposition - Remaining UI Tier**
-  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-89: God Class Decomposition - Remaining UI Tier**
+  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-89/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-89/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -424,6 +424,7 @@
 | 2026-02-10 | PROJ-91 | Phase 2 | Complete | 7561 passed | pending | FleetResourceAggregator migrated, ResupplyEngine migrated, 4 test mocks updated |
 | 2026-02-10 | PROJ-91 | Phase 3 | Complete | 7557 passed | pending | Deleted 7 type-specific methods (-68 lines), 4 deprecated tests, cleaned mocks |
 | 2026-02-10 | PROJ-91 | Audit 1 | PASSED | 7557 passed | pending | All 6 goals verified, no issues found |
+| 2026-02-10 | PROJ-89 | Phase 1 | Complete | 7570 passed | pending | Extracted design_image_helper.py (196 lines), DSW -165 lines (-23%), 13 new tests |
 
 ---
 
