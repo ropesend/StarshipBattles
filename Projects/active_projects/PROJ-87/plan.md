@@ -17,14 +17,14 @@
 | 2. ShipInstance Cargo & Display Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fleet Resource Aggregation Extraction | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fleet Capability & Battle Extraction | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. GameSession Command Handlers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. GameSession Command Handlers | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. GameSession Initialization Extraction | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 5
-**Last Action:** Phase 4 complete — FleetCapabilityCalculator + FleetBattleAdapter extracted (545→413 lines, 28 new tests)
-**Next Action:** Begin Phase 5 — GameSession command handlers extraction
+**Active Phase:** Phase 6
+**Last Action:** Phase 5 complete — CommandHandlerRegistry + 8 handlers extracted (835→517 lines, 22 new tests)
+**Next Action:** Begin Phase 6 — GameSession initialization extraction
 **Blockers:** None
 
 ## Overview
@@ -177,7 +177,7 @@ See [phase_6_checklist.md](phase_6_checklist.md)
 - [x] Phase 2 complete — Cargo and display methods extracted
 - [x] Phase 3 complete — FleetResourceAggregator extracted
 - [x] Phase 4 complete — Fleet capability and battle adapter extracted
-- [ ] Phase 5 complete — Command handlers extracted
+- [x] Phase 5 complete — Command handlers extracted
 - [ ] Phase 6 complete — GameSession initialization extracted
 - [ ] All tests passing
 - [ ] Audit passed

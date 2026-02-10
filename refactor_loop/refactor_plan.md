@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-87 Phase 4
-**Current Status:** PROJ-87 Phase 4 Complete
+**Last Completed:** PROJ-87 Phase 5
+**Current Status:** PROJ-87 Phase 5 Complete
 **Current Project:** PROJ-87
-**Current Phase:** Phase 5
-**Test Status:** 7485 passed (full suite, 1 pre-existing failure)
+**Current Phase:** Phase 6
+**Test Status:** 7508 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-87 Phase 4 COMPLETE: FleetCapabilityCalculator + FleetBattleAdapter extracted (545→413 lines)
-- Created game/strategy/data/fleet_capability_calculator.py (115 lines)
-- Created game/strategy/data/fleet_battle_adapter.py (100 lines)
-- Created tests/unit/strategy/test_fleet_capability_calculator.py (17 tests)
-- Created tests/unit/strategy/test_fleet_battle_adapter.py (11 tests)
-- Fleet now 413 lines (51% reduction from original 834 lines, exceeds 46% target)
-- Facade pattern: Fleet delegates to _capabilities and _battle
-- Next: Phase 5 - GameSession command handlers extraction
+- PROJ-87 Phase 5 COMPLETE: CommandHandlerRegistry + 8 handlers extracted (835→517 lines)
+- Created game/strategy/engine/command_handlers.py (318 lines)
+- Created tests/unit/strategy/test_command_handlers.py (22 tests)
+- GameSession now 517 lines (38% reduction from original 835, exceeds 34% target)
+- Registry pattern: ICommandHandler protocol, CommandHandlerRegistry, create_default_registry()
+- 8 handler classes: Colonize, Move, BuildShip, Intercept, Join, ColonizeMission, ClearOrders, Transfer
+- Next: Phase 6 - GameSession initialization extraction
 
 ---
 
@@ -398,6 +397,7 @@
 | 2026-02-10 | PROJ-87 | Phase 2 | Complete | 7432 passed | pending | ShipCargoManager + ShipDisplayFormatter extracted, 31 tests, 125 lines saved |
 | 2026-02-10 | PROJ-87 | Phase 3 | Complete | 7458 passed | pending | FleetResourceAggregator extracted, 26 tests, 289 lines saved (834→545) |
 | 2026-02-10 | PROJ-87 | Phase 4 | Complete | 7485 passed | pending | FleetCapabilityCalculator + FleetBattleAdapter extracted, 28 tests, 132 lines saved (545→413) |
+| 2026-02-10 | PROJ-87 | Phase 5 | Complete | 7508 passed | pending | CommandHandlerRegistry + 8 handlers extracted, 22 tests, 318 lines saved (835→517) |
 
 ---
 

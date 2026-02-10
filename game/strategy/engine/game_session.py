@@ -52,6 +52,7 @@ from game.core.validation import validation_result
 from game.strategy.events import Event, EventLog
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.engine.game_config import GameConfig
+from game.strategy.engine.command_handlers import create_default_registry
 from game.strategy.data.empire import Empire
 from game.strategy.data.galaxy import Galaxy
 from game.strategy.generation.placement_strategies import (
@@ -103,6 +104,7 @@ class GameSession:
 
         # Engine
         self.turn_engine = TurnEngine()
+        self._command_registry = create_default_registry()
 
         # Create empires dynamically from config.players
         self.empires = []
@@ -371,7 +373,7 @@ class GameSession:
 
     def handle_command(self, command):
         """
-        Execute a user command.
+        Execute a user command via the command registry.
 
         Args:
             command: Command object
@@ -380,328 +382,8 @@ class GameSession:
             ValidationResult (is_valid=True/False)
         """
         if command.type == command.type.ISSUE_ORDER:
-            # Determine command type by class
-            cmd_name = command.name
-
-            if cmd_name == 'IssueColonizeCommand':
-                return self._handle_colonize_command(command)
-            elif cmd_name == 'IssueMoveCommand':
-                return self._handle_move_command(command)
-            elif cmd_name == 'IssueBuildShipCommand':
-                return self._handle_build_ship_command(command)
-            elif cmd_name == 'IssueInterceptCommand':
-                return self._handle_intercept_command(command)
-            elif cmd_name == 'IssueJoinFleetCommand':
-                return self._handle_join_command(command)
-            elif cmd_name == 'QueueColonizeMissionCommand':
-                return self._handle_colonize_mission_command(command)
-            elif cmd_name == 'ClearFleetOrdersCommand':
-                return self._handle_clear_orders_command(command)
-            elif cmd_name == 'IssueTransferCommand':
-                return self._handle_transfer_command(command)
-
-        return None  # Warning/Error?
-
-    def _handle_colonize_command(self, cmd):
-        """Handle IssueColonizeCommand."""
-        # 1. Resolve Data
-        # We need fleet object and planet object
-        # Searching fleets:
-        fleet = None
-        owning_empire = None
-
-        for emp in self.empires:
-             for f in emp.fleets:
-                 if f.id == cmd.fleet_id:
-                     fleet = f
-                     owning_empire = emp
-                     break
-             if fleet: break
-
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # Resolve Planet
-        target_planet = None
-        if cmd.planet_id:
-            # Use galaxy's O(1) registry lookup instead of O(n²) scan with id()
-            target_planet = self.galaxy.get_planet_by_id(cmd.planet_id)
-
-        # 2. Validate
-        result = self.turn_engine.validate_colonize_order(self.galaxy, fleet, target_planet)
-
-        # 3. Apply
-        if result.is_valid:
-             from game.strategy.data.fleet import FleetOrder, OrderType
-
-             # Auto-load population from colony at fleet's location (BUG-70)
-             origin_colony = self._find_colony_at_fleet(fleet)
-             if origin_colony and origin_colony.populations:
-                 transfer_params = {
-                     'direction': 'load',
-                     'cargo_type': 'passengers',
-                     'amount': 0,
-                     'planet_id': origin_colony.id,
-                 }
-                 load_order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
-                 fleet.add_order(load_order)
-
-             # Ensure we pass the OBJECT to rules
-             order = FleetOrder(OrderType.COLONIZE, target=target_planet)
-             fleet.add_order(order)
-             log_info(f"GameSession: Issued Colonize Order for Fleet {fleet.id}")
-
-        return result
-
-    def _handle_move_command(self, cmd):
-        """Handle IssueMoveCommand."""
-        # 1. Resolve Fleet
-        fleet = self._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # 2. Validation / Pathfinding
-        # We validate by checking if a path exists.
-        # Use preview_path (internal logic reuse)
-        path = self.preview_fleet_path(fleet, cmd.target_hex)
-
-        if not path:
-             # Basic check: Is it already there?
-             if fleet.location == cmd.target_hex:
-                 # Move to self? Valid but no-op? Or invalid?
-                 # Let's say valid but logs.
-                 pass
-             else:
-                 # If path is None and locations differ, it's unreachable
-                 return validation_result(False, "Target is unreachable or invalid.")
-
-        # 3. Apply
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
-        # Clear existing move orders? Or append? Standard RTS usually overrides current move.
-        # But our system has an order queue.
-        # UI usually clears queue for immediate move.
-        # Let's assume this command appends for now, or we can make a flag.
-        # For this refactor, let's Append (Queue) as per 'add_order' behavior in existing code.
-        # BUT existing UI code did `fleet.orders = []` sometimes?
-        # Let's stick to safe append. The user can clear orders via another command if needed.
-        # Actually, standard RTS right-click usually clears previous move.
-        # Let's simple append for safety in Phase 1.
-
-        order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-        fleet.add_order(order)
-
-        # Optimization: Set path immediately if it's the active order
-        if len(fleet.orders) == 1:
-            fleet.path = path # Assign the calculated path
-
-        return validation_result(True, "Move order issued.")
-
-    def _handle_build_ship_command(self, cmd):
-        """Handle IssueBuildShipCommand."""
-        # 1. Resolve Planet
-        planet = self._get_planet_by_id(cmd.planet_id)
-        if not planet:
-             return validation_result(False, "Planet not found.")
-
-        # 2. Validate Ownership
-        # Check if planet belongs to a known empire?
-        # We generally trust the ID resolution, but logic should check.
-        # For now, just executed.
-
-        # 3. Apply
-        # Standard build time = 1 turn for now? Logic was `add_production("Colony Ship", 1)`
-        # We should probably look up design cost/time.
-        # For now, hardcode 1 as per legacy.
-        planet.add_production(cmd.design_name, 1)
-
-        return validation_result(True, f"Started construction of {cmd.design_name}.")
-
-    def _handle_intercept_command(self, cmd):
-        """Handle IssueInterceptCommand.
-
-        Creates a MOVE_TO_FLEET order targeting another fleet.
-        """
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
-        # 1. Resolve source fleet
-        fleet = self._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # 2. Resolve target fleet
-        target_fleet = self._get_fleet_by_id(cmd.target_fleet_id)
-        if not target_fleet:
-            return validation_result(False, "Target fleet not found.")
-
-        # 3. Create MOVE_TO_FLEET order
-        order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
-        fleet.add_order(order)
-
-        log_info(f"GameSession: Issued Intercept Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
-        return validation_result(True, "Intercept order issued.")
-
-    def _handle_join_command(self, cmd):
-        """Handle IssueJoinFleetCommand.
-
-        Creates MOVE_TO_FLEET and JOIN_FLEET orders to move to and merge with target.
-        """
-        from game.strategy.data.fleet import FleetOrder, OrderType
-
-        # 1. Resolve source fleet
-        fleet = self._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # 2. Resolve target fleet
-        target_fleet = self._get_fleet_by_id(cmd.target_fleet_id)
-        if not target_fleet:
-            return validation_result(False, "Target fleet not found.")
-
-        # 3. Create MOVE_TO_FLEET order first
-        move_order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
-        fleet.add_order(move_order)
-
-        # 4. Then create JOIN_FLEET order
-        join_order = FleetOrder(OrderType.JOIN_FLEET, target=target_fleet)
-        fleet.add_order(join_order)
-
-        log_info(f"GameSession: Issued Join Fleet Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
-        return validation_result(True, "Join fleet order issued.")
-
-    def _handle_colonize_mission_command(self, cmd):
-        """Handle QueueColonizeMissionCommand.
-
-        Queues MOVE and COLONIZE orders. Calculates path from current location
-        or last order's target hex if fleet has existing orders.
-
-        If planet_id is None, queues a colonize order with target=None,
-        meaning "colonize any available planet" when the fleet arrives.
-        """
-        from game.strategy.data.fleet import FleetOrder, OrderType
-        from game.strategy.data.pathfinding import find_hybrid_path
-
-        # 1. Resolve fleet
-        fleet = self._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # 2. Resolve planet (None is valid - means "any planet")
-        planet = None
-        if cmd.planet_id is not None:
-            planet = self._get_planet_by_id(cmd.planet_id)
-            if not planet:
-                return validation_result(False, "Planet not found.")
-
-        # 3. Determine start hex (current location or last order target)
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
-
-        # 4. Calculate path
-        path = find_hybrid_path(self.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return validation_result(False, "No path found to target.")
-
-        # 5. Auto-load population from colony at fleet's current location (BUG-70)
-        origin_colony = self._find_colony_at_fleet(fleet)
-        if origin_colony and origin_colony.populations:
-            transfer_params = {
-                'direction': 'load',
-                'cargo_type': 'passengers',
-                'amount': 0,  # 0 = load as much as possible
-                'planet_id': origin_colony.id,
-            }
-            load_order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
-            fleet.add_order(load_order)
-
-        # 6. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
-
-            # Set path immediately if it's the active order (and no load order was inserted)
-            if len(fleet.orders) == 1:
-                # Remove start hex from path before assigning
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
-
-        # 7. Queue COLONIZE order (target=None means "any available planet")
-        colonize_order = FleetOrder(OrderType.COLONIZE, target=planet)
-        fleet.add_order(colonize_order)
-
-        planet_name = planet.name if planet else "Any Planet"
-        log_info(f"GameSession: Queued Colonize Mission for Fleet {fleet.id} -> {planet_name}")
-        return validation_result(True, "Colonize mission queued.")
-
-    def _handle_clear_orders_command(self, cmd):
-        """Handle ClearFleetOrdersCommand.
-
-        Clears all orders and the path from a fleet.
-        """
-        # 1. Resolve fleet
-        fleet = self._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # 2. Clear orders and path
-        fleet.orders = []
-        fleet.path = []
-
-        log_info(f"GameSession: Cleared orders for Fleet {fleet.id}")
-        return validation_result(True, "Fleet orders cleared.")
-
-    def _handle_transfer_command(self, cmd):
-        """Handle IssueTransferCommand.
-
-        Creates a TRANSFER order for cargo operations between fleet and colony.
-        """
-        from game.strategy.data.fleet import FleetOrder, OrderType
-        from game.strategy.validation import TransferValidator
-
-        # 1. Resolve fleet
-        fleet = self._get_fleet_by_id(cmd.fleet_id)
-        if not fleet:
-            return validation_result(False, "Fleet not found.")
-
-        # 2. Find owning empire
-        owning_empire = None
-        for emp in self.empires:
-            if fleet in emp.fleets:
-                owning_empire = emp
-                break
-
-        if not owning_empire:
-            return validation_result(False, "Fleet owner not found.")
-
-        # 3. Resolve planet
-        planet = self._get_planet_by_id(cmd.planet_id)
-        if not planet:
-            return validation_result(False, "Planet not found.")
-
-        # 4. Validate
-        result = TransferValidator.validate(
-            self.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount, cmd.species_id
-        )
-
-        # 5. Apply
-        if result.is_valid:
-            # Create TRANSFER order with params dict
-            transfer_params = {
-                'direction': cmd.direction,
-                'cargo_type': cmd.cargo_type,
-                'amount': cmd.amount,
-                'planet_id': cmd.planet_id,
-                'species_id': cmd.species_id
-            }
-            order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
-            fleet.add_order(order)
-            log_info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}")
-
-        return result
+            return self._command_registry.dispatch(command.name, self, command)
+        return None
 
     def _get_fleet_by_id(self, fleet_id: int):
         """
@@ -793,8 +475,9 @@ class GameSession:
         session.turn_number = data.get('turn_number', 1)
         session.save_path = data.get('save_path')
 
-        # Initialize turn engine
+        # Initialize turn engine and command registry
         session.turn_engine = TurnEngine()
+        session._command_registry = create_default_registry()
 
         # Restore event log (PROJ-77)
         session._event_log = EventLog.from_dict(data.get('event_log', {'events': []}))
