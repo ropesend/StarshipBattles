@@ -1,18 +1,16 @@
 import random
 import math
 import typing
-from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator, TYPE_CHECKING
+from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
 from game.engine.physics import PhysicsBody
 from game.simulation.components.component import Component, create_component
 from game.core.constants import LayerType
 from game.core.math import Vector2
 from game.core.logger import log_debug, log_info, log_warning, log_error
-from game.core.registry import get_default_registry_provider, GameRegistries
+from game.core.registry import GameRegistries
 from game.core.constants import LayerDefaults, CombatConstants
 
-if TYPE_CHECKING:
-    pass  # GameRegistries imported above
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_formation import ShipFormation
@@ -20,12 +18,6 @@ from game.simulation.systems.resource_manager import ResourceRegistry
 
 # Internal import (no longer re-exported)
 from .ship_loader import get_or_create_validator
-
-# PROJ-42: Module-level VEHICLE_CLASSES kept for UI hot-reload compatibility.
-# This is the actual registry dict reference - UI uses it for in-place reload.
-# Internal Ship methods use self._registries.vehicle_classes instead.
-VEHICLE_CLASSES = get_default_registry_provider().get_vehicle_classes()
-
 
 class Ship(PhysicsBody, ShipPhysicsMixin):
 

@@ -74,14 +74,6 @@ from .component_stats_calculator import ComponentStatsCalculator
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
 
-# Convenience aliases for registry data (read-only references)
-# PROJ-42 Note: These module-level references are intentionally kept for UI hot-reload
-# functionality (see builder/main.py _reload_data). They provide mutable dict refs
-# that can be cleared.
-COMPONENT_REGISTRY = get_default_registry_provider().get_components()
-MODIFIER_REGISTRY = get_default_registry_provider().get_modifiers()
-
-
 class Component:
     def __init__(self, data, *, registries: 'GameRegistries'):
         """
