@@ -2,6 +2,12 @@
 
 Cross-layer imports (acceptable for UI):
 - Protocols: Runtime - duck typing for object identification
+
+PROJ-86: Decomposed into helper modules:
+- strategy_panel_manager.py: Panel creation and resize
+- strategy_event_router.py: Event routing and handling
+- strategy_window_manager.py: Window lifecycle management
+- strategy_detail_formatter.py: Detail panel formatting
 """
 from __future__ import annotations
 
@@ -10,21 +16,28 @@ from typing import Optional
 
 import pygame
 import pygame_gui
-from game.core.logger import log_debug
 from game.core.config import UIConfig
-from game.core.input_actions import InputAction
-from game.core.protocols import is_fleet
+from game.core.paths import Paths
+from game.core.constants import PLANET_RESOURCES
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.strategy_window_manager import StrategyWindowManager
-from game.core.paths import Paths
-from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
-from game.ui.panels.system_tree_panel import SystemTreePanel
 from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
-from game.core.constants import PLANET_RESOURCES
-import pygame_gui.elements as ui
+from game.ui.screens.strategy_panel_manager import (
+    create_strategy_panels,
+    resize_strategy_panels,
+    apply_hotkey_tooltips,
+)
+from game.ui.screens.strategy_event_router import StrategyEventRouter
 
 class StrategyUI:
-    """Handles all UI rendering and interaction for the StrategyScreen."""
+    """Handles all UI rendering and interaction for the StrategyScreen.
+
+    PROJ-86: Decomposed into helper modules:
+    - strategy_panel_manager: Panel creation and layout
+    - strategy_event_router: Event routing and handling
+    - strategy_window_manager: Window lifecycle management
+    - strategy_detail_formatter: Detail panel formatting
+    """
 
     def __init__(self, scene, screen_width, screen_height, input_mapper=None):
         self.scene = scene
@@ -32,7 +45,8 @@ class StrategyUI:
         self.height = screen_height
         self._mapper = input_mapper
         self.sidebar_width = UIConfig.STRATEGY_SIDEBAR_WIDTH
-        # PROJ-86: Window state now managed by StrategyWindowManager
+
+        # PROJ-86: Window state managed by StrategyWindowManager
         # Only keep references needed by local logic
         self.planet_report_panel = None  # planet report panel instance (PROJ-54)
         self.menu_panel = None           # strategy menu dropdown (PROJ-72)
@@ -41,305 +55,61 @@ class StrategyUI:
         theme_path = os.path.join(Paths.DATA_DIR, 'builder_theme.json')
         self.manager = pygame_gui.UIManager((screen_width, screen_height), theme_path=theme_path)
 
-        # --- Right Sidebar Layout (Three Panels) ---
-        # 1. System Window (Top)
-        # 2. Sector Window (Middle)
-        # 3. Detail Window (Bottom)
+        # PROJ-86: Create all panels and widgets via panel manager
+        widgets = create_strategy_panels(
+            self.manager, screen_width, screen_height,
+            self.sidebar_width, self.on_ui_selection
+        )
 
-        # Vertical partitioning
-        # Let's divide by ratio or fixed px?
-        # Detail needs minimal 250px for portrait.
-        # Let's say top two split the remaining space.
+        # Unpack widget references onto self
+        self.system_panel = widgets.system_panel
+        self.sector_panel = widgets.sector_panel
+        self.detail_panel = widgets.detail_panel
+        self.top_bar = widgets.top_bar
+        self.resource_bar = widgets.resource_bar
+        self.system_header = widgets.system_header
+        self.system_tree = widgets.system_tree
+        self.sector_header = widgets.sector_header
+        self.sector_tree = widgets.sector_tree
+        self.portrait_image = widgets.portrait_image
+        self.detail_text = widgets.detail_text
+        self.graph_image = widgets.graph_image
+        self.graph_rect = widgets.graph_rect
+        self.btn_raw_data = widgets.btn_raw_data
+        self.btn_colonize = widgets.btn_colonize
+        self.btn_build_yard = widgets.btn_build_yard
+        self.btn_orders = widgets.btn_orders
+        self.btn_fleet_report = widgets.btn_fleet_report
+        self.btn_build_fleet = widgets.btn_build_fleet
+        self.btn_prev_colony = widgets.btn_prev_colony
+        self.lbl_colony = widgets.lbl_colony
+        self.btn_next_colony = widgets.btn_next_colony
+        self.btn_prev_fleet = widgets.btn_prev_fleet
+        self.lbl_fleet = widgets.lbl_fleet
+        self.btn_next_fleet = widgets.btn_next_fleet
+        self.btn_planets = widgets.btn_planets
+        self.btn_empire = widgets.btn_empire
+        self.btn_research = widgets.btn_research
+        self.btn_design = widgets.btn_design
+        self.btn_build_queues = widgets.btn_build_queues
+        self.btn_all_queues = widgets.btn_all_queues
+        self.btn_menu = widgets.btn_menu
+        self.btn_events = widgets.btn_events
+        self.btn_next_turn = widgets.btn_next_turn
+        self.lbl_current_player = widgets.lbl_current_player
+        self.lbl_resources = widgets.lbl_resources
+        self.spectrum_graph = widgets.spectrum_graph
+        self.atmosphere_graph = widgets.atmosphere_graph
+        self.panels = widgets.panels
 
-        gap = UIConfig.PANEL_GAP
-        panel_h_approx = (screen_height - 20) / 3
-        
-        # 1. System Panel (Top)
-        rect_system = pygame.Rect(-self.sidebar_width + 10, 10, self.sidebar_width - 20, panel_h_approx - gap)
-        
-        self.system_panel = pygame_gui.elements.UIPanel(
-            relative_rect=rect_system,
-            manager=self.manager,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        self.system_header = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 10, self.sidebar_width - 40, 30),
-            text="System: Deep Space",
-            manager=self.manager,
-            container=self.system_panel
-        )
-        
-        self.system_tree = SystemTreePanel(
-            relative_rect=pygame.Rect(10, 40, self.sidebar_width - 40, rect_system.height - 50),
-            manager=self.manager,
-            container=self.system_panel
-        )
-        self.system_tree.set_selection_callback(self.on_ui_selection)
-        
-        # 2. Sector Panel (Middle)
-        rect_sector = pygame.Rect(-self.sidebar_width + 10, 10 + panel_h_approx, self.sidebar_width - 20, panel_h_approx - gap)
-        
-        self.sector_panel = pygame_gui.elements.UIPanel(
-            relative_rect=rect_sector,
-            manager=self.manager,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        self.sector_header = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 10, self.sidebar_width - 40, 30),
-            text="Sector: Unknown",
-            manager=self.manager,
-            container=self.sector_panel
-        )
-        
-        self.sector_tree = SystemTreePanel(
-            relative_rect=pygame.Rect(10, 40, self.sidebar_width - 40, rect_sector.height - 50),
-            manager=self.manager,
-            container=self.sector_panel
-        )
-        self.sector_tree.set_selection_callback(self.on_ui_selection)
-        
-        # 3. Detail Panel (Bottom)
-        rect_detail = pygame.Rect(-self.sidebar_width + 10, 10 + 2*panel_h_approx, self.sidebar_width - 20, panel_h_approx - gap)
-        
-        self.detail_panel = pygame_gui.elements.UIPanel(
-            relative_rect=rect_detail,
-            manager=self.manager,
-            anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        # Portrait Image
-        self.portrait_image = pygame_gui.elements.UIImage(
-            relative_rect=pygame.Rect(10, 10, 150, 150),
-            image_surface=pygame.Surface((150, 150)),
-            manager=self.manager,
-            container=self.detail_panel
-        )
-        
-        # Info Text (Right of Portrait)
-        text_w = self.sidebar_width - 180
-        text_h = rect_detail.height - 20
-        self.detail_text = pygame_gui.elements.UITextBox(
-            html_text="Select an object for details.",
-            relative_rect=pygame.Rect(170, 10, text_w, text_h),
-            manager=self.manager,
-            container=self.detail_panel
-        )
-        
-        # Graph Image (Below Portrait)
-        # Rotated 90 degrees, so it will be visually vertical.
-        graph_y = 170
-        graph_h = rect_detail.height - 180
-        if graph_h < 50: graph_h = 50 
-        
-        self.graph_rect = pygame.Rect(10, graph_y, 150, graph_h)
-        self.graph_image = pygame_gui.elements.UIImage(
-            relative_rect=self.graph_rect,
-            image_surface=pygame.Surface((150, graph_h)),
-            manager=self.manager,
-            container=self.detail_panel
-        )
-        
-        # Raw Data Button (Top Right of Graph Box)
-        # Position at top-right corner of the graph_rect
-        btn_x = self.graph_rect.right - 22  # Inside right edge of graph
-        btn_y = self.graph_rect.top + 2     # Inside top edge of graph
-
-        self.btn_raw_data = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(btn_x, btn_y, 20, 20),
-            text="",
-            manager=self.manager,
-            container=self.detail_panel,
-            anchors={'left': 'left', 'right': 'left', 'top': 'top', 'bottom': 'top'},
-            object_id="@small_icon_button"
-        )
-        self.btn_raw_data.hide()
-        
-        # Widgets
-        # Initialize with SWAPPED dimensions because we will rotate the result 90 degrees.
-        # Visually: 150(W) x H. Functionally: H(W) x 150(H) before rotation.
-        self.spectrum_graph = SpectrumGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-        self.atmosphere_graph = AtmosphereGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-        
-        self.current_raw_data = "" # store for popup
-        
-        # Mapping: Label -> Object
-        self.current_sector_objects = {} 
+        # State
+        self.current_raw_data = ""
+        self.current_sector_objects = {}
         self.current_selection = None
-        
-        # --- Top Bar ---
-        self.top_bar = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(0, 0, screen_width - self.sidebar_width, 50),
-            manager=self.manager,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        
-        button_width = 150
-        gap = 10
-        # Button Groups
-        # Nav Group: [< Col >] [< Fleet >]
-        # Main Group: [Empire] [Research] [Next Turn]
-        
-        # --- Top Bar Layout ---
-        # Strategy: Left Align after Player Label to avoid centering overlap issues.
-        # Player Label ends at x=210.
-        
-        start_x = 230 
-        
-        # --- Nav Buttons ---
-        # Group 1: Colony (Width ~140)
-        self.btn_prev_colony = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        self.lbl_colony = pygame_gui.elements.UILabel(
-             relative_rect=pygame.Rect(start_x + 30, 5, 80, 40), text="Colony", manager=self.manager, container=self.top_bar
-        )
-        self.btn_next_colony = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        
-        # Group 2: Fleet (Width ~140)
-        # Position: Right of Colony Group + Gap
-        fleet_start_x = start_x + 140 + 20 
-        
-        self.btn_prev_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(fleet_start_x, 5, 30, 40), text="<", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        self.lbl_fleet = pygame_gui.elements.UILabel(
-             relative_rect=pygame.Rect(fleet_start_x + 30, 5, 80, 40), text="Fleet", manager=self.manager, container=self.top_bar
-        )
-        self.btn_next_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(fleet_start_x + 110, 5, 30, 40), text=">", manager=self.manager, container=self.top_bar, object_id='@nav_btn'
-        )
-        
-        # --- Main Buttons ---
-        # Position: Right of Fleet Group + Gap
-        # Fleet ends at fleet_start_x + 140
-        main_start_x = fleet_start_x + 140 + 40
-        btn_w = 100
-        gap = 10
-        
-        self.btn_planets = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x, 5, btn_w, 40), text="Planets", manager=self.manager, container=self.top_bar
-        )
-        self.btn_empire = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 1*(btn_w+gap), 5, btn_w, 40), text="Empire", manager=self.manager, container=self.top_bar
-        )
-        self.btn_research = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 2*(btn_w+gap), 5, btn_w, 40), text="Research", manager=self.manager, container=self.top_bar
-        )
-        self.btn_design = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 3*(btn_w+gap), 5, btn_w, 40), text="Design", manager=self.manager, container=self.top_bar
-        )
-        self.btn_build_queues = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 4*(btn_w+gap), 5, btn_w, 40), text="Build Yards", manager=self.manager, container=self.top_bar
-        )
-        self.btn_all_queues = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 5*(btn_w+gap), 5, btn_w, 40), text="All Queues", manager=self.manager, container=self.top_bar
-        )
-
-        # Menu Button (replaces Save Game - options now in dropdown)
-        self.btn_menu = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 6*(btn_w+gap), 5, btn_w, 40),
-            text="Menu",
-            manager=self.manager,
-            container=self.top_bar
-        )
-
-        # Event Log Button (PROJ-77)
-        self.btn_events = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 7*(btn_w+gap), 5, btn_w, 40),
-            text="Log",
-            manager=self.manager,
-            container=self.top_bar
-        )
-
-        # End Turn (Larger)
-        self.btn_next_turn = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(main_start_x + 8*(btn_w+gap), 5, 150, 40),
-            text="End Turn",
-            manager=self.manager,
-            container=self.top_bar
-        )
-        
-        # Player indicator label (far left of top bar)
-        self.lbl_current_player = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 5, 200, 40),
-            text="Player 1's Turn",
-            manager=self.manager,
-            container=self.top_bar
-        )
-
-        # Empire resource display (below top bar, full width)
-        resource_bar_y = 50  # Just below top bar
-        resource_bar_height = 24
-        self.resource_bar = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(0, resource_bar_y, screen_width - self.sidebar_width, resource_bar_height),
-            manager=self.manager,
-            anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'top'}
-        )
-        self.lbl_resources = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, 0, screen_width - self.sidebar_width - 20, resource_bar_height),
-            text="",
-            manager=self.manager,
-            container=self.resource_bar
-        )
-        self._update_resource_display()
-
-        # Contextual Buttons (Detail Panel)
-        # Positioned below text
-        self.btn_colonize = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(220, rect_detail.height - 50, 120, 40),
-            text="Colonize",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-        
-        self.btn_build_yard = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(350, rect_detail.height - 50, 120, 40),
-            text="Build Yard",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-        
-        self.btn_orders = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(80, rect_detail.height - 50, 120, 40),
-            text="Orders",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-
-        self.btn_fleet_report = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(210, rect_detail.height - 50, 120, 40),
-            text="Fleet Report",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0 # Hidden by default
-        )
-
-        # Fleet build button (PROJ-67: Fleet Space Yards)
-        self.btn_build_fleet = pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(340, rect_detail.height - 50, 120, 40),
-            text="Build",
-            manager=self.manager,
-            container=self.detail_panel,
-            visible=0  # Hidden by default
-        )
-        
-        self.panels = [
-            self.top_bar,
-            self.resource_bar,
-            self.system_panel,
-            self.sector_panel,
-            self.detail_panel
-        ]
 
         # Apply hotkey tooltips to buttons (PROJ-71)
         self._apply_hotkey_tooltips()
+        self._update_resource_display()
 
         # PROJ-86: Initialize detail formatter
         self._detail_formatter = StrategyDetailFormatter(
@@ -375,42 +145,16 @@ class StrategyUI:
             asset_resolver=self._get_object_asset,
         )
 
+        # PROJ-86: Initialize event router
+        self._event_router = StrategyEventRouter(self)
+
     # =========================================================================
     # Hotkey Tooltip Enrichment (PROJ-71)
     # =========================================================================
 
     def _apply_hotkey_tooltips(self) -> None:
-        """Apply hotkey hint tooltips to strategy UI buttons.
-
-        Uses the InputMapper to look up the display text for each button's
-        associated action. If the mapper is None or an action is unbound,
-        the button retains its default tooltip (none).
-        """
-        if not self._mapper:
-            return
-
-        # Map buttons to their InputAction
-        button_actions = {
-            self.btn_next_turn: InputAction.STRATEGY_NEXT_TURN,
-            self.btn_planets: InputAction.STRATEGY_OPEN_PLANETS,
-            self.btn_empire: InputAction.STRATEGY_OPEN_EMPIRE,
-            self.btn_research: InputAction.STRATEGY_OPEN_RESEARCH,
-            self.btn_design: InputAction.STRATEGY_OPEN_DESIGN,
-            self.btn_build_queues: InputAction.STRATEGY_OPEN_BUILD_QUEUES,
-            self.btn_prev_colony: InputAction.STRATEGY_PREV_COLONY,
-            self.btn_next_colony: InputAction.STRATEGY_NEXT_COLONY,
-            self.btn_prev_fleet: InputAction.STRATEGY_PREV_FLEET,
-            self.btn_next_fleet: InputAction.STRATEGY_NEXT_FLEET,
-            self.btn_colonize: InputAction.FLEET_COLONIZE,
-            self.btn_orders: InputAction.DETAIL_PANEL_ORDERS,
-            self.btn_fleet_report: InputAction.DETAIL_PANEL_FLEET_REPORT,
-            self.btn_build_fleet: InputAction.DETAIL_PANEL_BUILD,
-        }
-
-        for btn, action in button_actions.items():
-            hint = self._mapper.get_display_text(action)
-            if hint:
-                btn.set_tooltip(hint)
+        """Apply hotkey hint tooltips to strategy UI buttons."""
+        apply_hotkey_tooltips(self, self._mapper)
 
     # =========================================================================
     # Menu Panel Management (PROJ-72)
@@ -471,50 +215,9 @@ class StrategyUI:
         self.width = width
         self.height = height
         self.manager.set_window_resolution((width, height))
-        
-        panel_h_approx = (height - 20) / 3
-        gap = 5
-        
-        # System (Top)
-        self.system_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
-        self.system_panel.set_relative_position((-self.sidebar_width + 10, 10))
-        self.system_tree.set_dimensions((self.sidebar_width - 40, panel_h_approx - 60))
-        
-        # Sector (Middle)
-        self.sector_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
-        self.sector_panel.set_relative_position((-self.sidebar_width + 10, 10 + panel_h_approx))
-        self.sector_tree.set_dimensions((self.sidebar_width - 40, panel_h_approx - 60))
-        
-        # Detail (Bottom)
-        self.detail_panel.set_dimensions((self.sidebar_width - 20, panel_h_approx - gap))
-        self.detail_panel.set_relative_position((-self.sidebar_width + 10, 10 + 2*panel_h_approx))
-        
-        # Detail Text (Right side)
-        text_w = self.sidebar_width - 180
-        text_h = self.detail_panel.rect.height - 20
-        self.detail_text.set_dimensions((text_w, text_h))
-        self.detail_text.set_relative_position((170, 10))
-        
-        # Graph (Left side, under Portrait)
-        # Portrait is 150x150 at (10,10)
-        # Graph Y = 170.
-        graph_y = 170
-        graph_h = self.detail_panel.rect.height - 180
-        if graph_h < 50: graph_h = 50
-        
-        # NOTE: We can't resize the 'graph_image' UIImage easily if it expects fixed surface?
-        # Actually UIImage resizes if we set dimensions? No, it scales the image?
-        # We need to recreate the surface or just set dimensions container?
-        # PygameGUI UIImage doesn't auto-resize surface. But we can update the rect.
-        # But we also need to recreate the Graph Rendering widgets to match new size?
-        # Yes, SpectrumGraph stores width/height.
-        self.graph_rect = pygame.Rect(10, graph_y, 150, graph_h)
-        self.graph_image.set_dimensions((150, graph_h))
-        self.graph_image.set_relative_position((10, graph_y))
-        
-        # Re-init graphs with new size (SWAPPED for rotation)
-        self.spectrum_graph = SpectrumGraph(int(self.graph_rect.height), int(self.graph_rect.width))
-        self.atmosphere_graph = AtmosphereGraph(int(self.graph_rect.height), int(self.graph_rect.width))
+
+        # PROJ-86: Delegate panel resize to panel manager
+        resize_strategy_panels(self, self.manager, width, height, self.sidebar_width)
 
         # PROJ-86: Update detail formatter with new dimensions
         self._detail_formatter.update_screen_size(width, height)
@@ -523,13 +226,6 @@ class StrategyUI:
 
         # PROJ-86: Update window manager with new dimensions
         self._window_manager.handle_resize(width, height)
-
-        # Position Raw Data Button: Top-Right of Graph
-        # Graph is at (10, graph_y) to (160, graph_y + h)
-        # Button is 20x20.
-        btn_x = self.graph_rect.right - 22 # Inside right edge
-        btn_y = self.graph_rect.top + 2    # Inside top edge
-        self.btn_raw_data.set_relative_position((btn_x, btn_y))
 
     def show_system_info(self, system_obj, contents):
         """Populate Top List (System) using Tree View."""
@@ -623,175 +319,19 @@ class StrategyUI:
 
     def _has_modal_open(self) -> bool:
         """Check if any modal sub-panel is currently open."""
-        # Check for menu panel (PROJ-72)
-        if self.menu_panel:
-            return True
-
-        # Check for build queue screen
-        if hasattr(self.scene, 'build_queue_screen') and self.scene.build_queue_screen is not None:
-            return True
-
-        # Check window manager for open windows (PROJ-86)
-        wm = self._window_manager
-        if wm.fleet_orders_window is not None:
-            return True
-        if wm.planet_list_window is not None:
-            return True
-        if wm.fleet_report_window is not None:
-            return True
-        if wm.transfer_dialog is not None:
-            return True
-        if wm.build_queue_list_window is not None:
-            return True
-        if wm.empire_build_queue_window is not None:
-            return True
-        if wm.event_log_window is not None:
-            return True
-
-        # Check if workshop is being opened
-        if hasattr(self.scene, 'action_open_design') and self.scene.action_open_design:
-            return True
-
-        return False
+        return self._event_router.has_modal_open()
 
     def on_ui_selection(self, obj):
         """Handle selection of an object from any UI panel."""
-        if hasattr(self.scene, 'on_ui_selection'):
-            self.scene.on_ui_selection(obj)
+        self._event_router.on_ui_selection(obj)
 
     def handle_event(self, event):
         """Pass events to pygame_gui and handle custom UI logic."""
-        self.manager.process_events(event)
-        # PROJ-86: Use window manager for UI callbacks
-        self._window_manager.process_ui_callbacks(event)
-
-        # Pass generic events to orders window if active (e.g. for confirmation dialogs)
-        if self._window_manager.fleet_orders_window:
-             self._window_manager.fleet_orders_window.handle_global_event(event)
-        
-        # Close menu panel on Escape
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.menu_panel:
-            self.close_menu_panel()
-            return
-
-        # Close menu panel on click outside
-        if event.type == pygame.MOUSEBUTTONDOWN and self.menu_panel:
-            panel_rect = self.menu_panel.get_abs_rect()
-            menu_btn_rect = self.btn_menu.get_abs_rect()
-            if not panel_rect.collidepoint(event.pos) and not menu_btn_rect.collidepoint(event.pos):
-                self.close_menu_panel()
-
-        if self.system_tree.process_event(event):
-             pass
-
-        if self.sector_tree.process_event(event):
-             pass
-
-        if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.btn_planets:
-                self.open_planet_list()
-            elif event.ui_element == self.btn_design:
-                if hasattr(self.scene, 'on_design_click'):
-                    self.scene.on_design_click()
-            elif event.ui_element == self.btn_build_queues:
-                self.open_build_queue_list()
-            elif event.ui_element == self.btn_all_queues:
-                self.open_empire_build_queue_window()
-            elif event.ui_element == self.btn_menu:
-                self.toggle_menu_panel()
-            elif event.ui_element == self.btn_events:
-                self.open_event_log()
-            elif event.ui_element == self.btn_raw_data:
-                self.show_raw_data_popup()
-            elif event.ui_element == self.btn_colonize:
-                # Logic: Issues order mostly from Fleet
-                obj = self.current_selection
-                if obj and is_fleet(obj):
-                     # Find Uncolonized Planets at Fleet Location
-                     from game.strategy.data.hex_math import hex_distance # Import if needed or check equality
-                     
-                     if not hasattr(self.scene, 'galaxy'): return
-                     
-                     # Fleet location
-                     f_loc = obj.location
-                     
-                     # Find System
-                     system = self.scene.galaxy.get_system_of_object(obj)
-                     if not system:
-                         log_debug("Colonize: Fleet not in system?")
-                         return
-                         
-                     # Find planets at this location (SYSTEM)
-                     candidates = []
-                     for p in system.planets:
-                         # Any planet in system is reachable if fleet is at system
-                         if p.owner_id is None: # Unowned
-                             candidates.append(p)
-                                 
-                     if not candidates:
-                         # Feedback?
-                         log_debug("No unowned planets at this location.")
-                         return
-                         
-                     if len(candidates) == 1:
-                         # Single candidate, order directly
-                         if hasattr(self.scene, 'request_colonize_order'):
-                             self.scene.request_colonize_order(obj, candidates[0])
-                     else:
-                         # Multiple -> Dialog
-                         # Define callback wrapper
-                         def on_planet_selected(planet):
-                             if hasattr(self.scene, 'request_colonize_order'):
-                                 self.scene.request_colonize_order(obj, planet)
-                                 
-                         self.prompt_planet_selection(candidates, on_planet_selected)
-            
-            elif event.ui_element == self.btn_orders:
-                 obj = self.current_selection
-                 if obj and is_fleet(obj):
-                      self.open_orders_window(obj)
-
-            elif event.ui_element == self.btn_fleet_report:
-                 obj = self.current_selection
-                 if obj and is_fleet(obj):
-                      self.open_fleet_report_window(obj)
-
-            # NOTE: btn_build_yard is handled in strategy_input_handler.py - do not duplicate here
-            pass
-
-        # Handle quit-to-menu confirmation (PROJ-72)
-        if event.type == pygame_gui.UI_CONFIRMATION_DIALOG_CONFIRMED:
-            if hasattr(self.scene, '_quit_confirm_dialog') and event.ui_element == self.scene._quit_confirm_dialog:
-                self.scene._handle_quit_confirmed()
-
-        # PROJ-86: Handle window close via window manager
-        wm = self._window_manager
-        if event.type == pygame_gui.UI_WINDOW_CLOSE:
-            if event.ui_element == wm.fleet_orders_window:
-                wm.fleet_orders_window = None
-            elif event.ui_element == wm.fleet_report_window:
-                wm.fleet_report_window = None
-            elif event.ui_element == wm.transfer_dialog:
-                wm.transfer_dialog = None
-            elif event.ui_element == wm.build_queue_list_window:
-                wm.build_queue_list_window = None
-            elif event.ui_element == wm.empire_build_queue_window:
-                wm._on_empire_build_queue_closed()
-            elif event.ui_element == wm.event_log_window:
-                wm._on_event_log_closed()
+        self._event_router.route_event(event)
 
     def handle_click(self, mx, my, button):
         """Handle mouse clicks. Returns True if click was handled by UI."""
-        # 1. Check logical sidebar area
-        if mx > self.width - self.sidebar_width:
-            return True
-            
-        # 2. Check if ANY UI element is being hovered (e.g. windows, modals)
-        # This prevents clicking "through" the planet selection window to the map
-        if self.manager.get_hovering_any_element():
-             return True
-             
-        return False
+        return self._event_router.handle_click(mx, my, button)
 
 
         

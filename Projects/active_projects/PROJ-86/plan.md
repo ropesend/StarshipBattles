@@ -19,16 +19,16 @@
 | 4. TestLabScreen Test Executor | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. StrategyUI Detail Formatter | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. StrategyUI Window Manager | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
-| 7. StrategyUI Panel & Event Managers | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
+| 7. StrategyUI Panel & Event Managers | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. BuildQueueScreen Re-decomposition | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 7
-**Last Action:** Phase 6 Complete - Extracted strategy_window_manager.py (401 lines) from StrategyUI
-**Next Action:** Begin Phase 7 -- Extract strategy_panel_manager.py and strategy_event_router.py
+**Active Phase:** Phase 8
+**Last Action:** Phase 7 Complete - Extracted strategy_panel_manager.py (476 lines) and strategy_event_router.py (271 lines) from StrategyUI
+**Next Action:** Begin Phase 8 -- BuildQueueScreen Re-decomposition
 **Blockers:** None
-**Context for Next Agent:** strategy_ui.py reduced from 1041 to 841 lines (-200 lines). strategy_window_manager.py contains StrategyWindowManager class with all window open/close methods (15 methods). Window state moved to window manager, StrategyUI keeps thin delegation wrappers. _has_modal_open and handle_event now check via window_manager. Updated 3 test files with new fixture pattern. 7524 tests passing.
+**Context for Next Agent:** strategy_ui.py reduced from 841 to 381 lines (-460 lines, 55% reduction!). Far exceeded ~600 line target. Created StrategyWidgets dataclass for all 40+ widget refs. StrategyEventRouter handles all event routing. Updated 3 test files with event_router fixture. 7524 tests passing.
 
 ## Overview
 Decompose the three largest UI god classes -- TestLabScreen (2536 lines, 58 methods), StrategyUI (1211 lines, 41 methods), and BuildQueueScreen (1185 lines, 28 methods) -- by extracting cohesive responsibility clusters into focused helper modules. The original classes remain as thin facades, preserving all existing call sites. This is a pure structural refactor with zero behavior changes.

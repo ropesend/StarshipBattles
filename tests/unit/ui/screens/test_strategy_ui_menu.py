@@ -69,6 +69,10 @@ def _make_strategy_ui():
     ui.sector_tree = MagicMock()
     ui.sector_tree.process_event.return_value = False
 
+    # PROJ-86 Phase 7: Event router
+    from game.ui.screens.strategy_event_router import StrategyEventRouter
+    ui._event_router = StrategyEventRouter(ui)
+
     return ui, scene, manager
 
 

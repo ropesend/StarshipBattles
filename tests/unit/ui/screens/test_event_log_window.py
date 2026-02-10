@@ -272,6 +272,10 @@ class TestStrategyUIEventLogIntegration:
         ui._window_manager.transfer_dialog = None
         ui._window_manager.event_log_window = None
 
+        # PROJ-86 Phase 7: Event router
+        from game.ui.screens.strategy_event_router import StrategyEventRouter
+        ui._event_router = StrategyEventRouter(ui)
+
         return ui, scene
 
     def test_event_log_window_attr_exists(self):

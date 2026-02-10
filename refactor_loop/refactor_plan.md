@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-86 Phase 6 Complete
-**Current Status:** PROJ-86 Phase 6 Complete - Ready for Phase 7
+**Last Completed:** PROJ-86 Phase 7 Complete
+**Current Status:** PROJ-86 Phase 7 Complete - Ready for Phase 8
 **Current Project:** PROJ-86
-**Current Phase:** Phase 6 Complete → Phase 7 Next
+**Current Phase:** Phase 7 Complete → Phase 8 Next
 **Test Status:** 7524 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-86 Phase 6 Complete: Extracted strategy_window_manager.py from StrategyUI
-- strategy_ui.py: 1041 → 841 lines (-200 lines saved)
-- strategy_window_manager.py: 401 lines (StrategyWindowManager with 15 window open/close methods)
-- Window state (fleet_orders_window, planet_list_window, etc.) moved to window manager
-- _has_modal_open and handle_event now check via self._window_manager
-- Updated 3 test files with new mock fixture pattern for window manager
-- Next: Phase 7 - Extract strategy_panel_manager.py and strategy_event_router.py from StrategyUI
+- PROJ-86 Phase 7 Complete: Extracted strategy_panel_manager.py and strategy_event_router.py from StrategyUI
+- strategy_ui.py: 841 → 381 lines (-460 lines, 55% reduction!)
+- strategy_panel_manager.py: 476 lines (StrategyWidgets dataclass + create_strategy_panels + resize_strategy_panels + apply_hotkey_tooltips)
+- strategy_event_router.py: 271 lines (StrategyEventRouter with route_event, handle_click, has_modal_open, etc.)
+- Updated 3 test files with event_router fixture (test_strategy_ui_menu.py, test_event_log_window.py, test_bug_16_raw_data_button.py)
+- Next: Phase 8 - BuildQueueScreen Re-decomposition
 
 ---
 
@@ -406,6 +405,7 @@
 | 2026-02-10 | PROJ-86 | Phase 4 | Complete | 7524 passed | pending | Extracted test_executor.py (310 lines), screen.py 2055→1837 (-218) |
 | 2026-02-10 | PROJ-86 | Phase 5 | Complete | 7524 passed | pending | Extracted strategy_detail_formatter.py (391 lines), strategy_ui.py 1212→1041 (-171) |
 | 2026-02-10 | PROJ-86 | Phase 6 | Complete | 7524 passed | pending | Extracted strategy_window_manager.py (401 lines), strategy_ui.py 1041→841 (-200) |
+| 2026-02-10 | PROJ-86 | Phase 7 | Complete | 7524 passed | pending | Extracted strategy_panel_manager.py (476 lines) + strategy_event_router.py (271 lines), strategy_ui.py 841→381 (-460, 55% reduction!) |
 
 ---
 

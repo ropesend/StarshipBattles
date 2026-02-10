@@ -44,11 +44,13 @@ class TestRawDataButtonPosition:
         """
         Verify that the source code uses the correct initial position,
         not (0, 0) which was the buggy position.
+
+        PROJ-86: Panel creation moved to strategy_panel_manager.py
         """
         import inspect
-        from game.ui.screens import strategy_ui
+        from game.ui.screens import strategy_panel_manager
 
-        source = inspect.getsource(strategy_ui.StrategyUI.__init__)
+        source = inspect.getsource(strategy_panel_manager.create_strategy_panels)
 
         # The fix: button should be created with calculated position, not (0, 0)
         # Check that graph_rect.right is used for button positioning
