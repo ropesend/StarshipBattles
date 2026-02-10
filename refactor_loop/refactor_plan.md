@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-86 Phase 4 Complete
-**Current Status:** PROJ-86 Phase 4 Complete - Ready for Phase 5
+**Last Completed:** PROJ-86 Phase 5 Complete
+**Current Status:** PROJ-86 Phase 5 Complete - Ready for Phase 6
 **Current Project:** PROJ-86
-**Current Phase:** Phase 4 Complete → Phase 5 Next
+**Current Phase:** Phase 5 Complete → Phase 6 Next
 **Test Status:** 7524 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-86 Phase 4 Complete: Extracted test_executor.py from TestLabScreen
-- screen.py: 2055 → 1837 lines (218 lines saved in Phase 4, 699 total from 2536)
-- test_executor.py: 310 lines (TestLabExecutor with 5 methods)
-- Updated test_visual_run.py to patch TestRunner in new location
-- Removed unused imports: time, TestRunner from screen.py
-- Next: Phase 5 - Extract strategy_detail_formatter.py from StrategyUI
+- PROJ-86 Phase 5 Complete: Extracted strategy_detail_formatter.py from StrategyUI
+- strategy_ui.py: 1212 → 1041 lines (-171 lines saved)
+- strategy_detail_formatter.py: 391 lines (StrategyDetailFormatter with show_detailed_report, compute_planet_production, show_raw_data_popup)
+- State synced back from formatter for event handlers (current_selection, current_raw_data, planet_report_panel)
+- Removed unused imports: is_star_system, is_star, is_planet, is_warp_point, is_sector_environment, pygame_gui.windows
+- Next: Phase 6 - Extract strategy_window_manager.py from StrategyUI
 
 ---
 
@@ -403,6 +403,7 @@
 | 2026-02-10 | PROJ-86 | Phase 2 | Complete | 7524 passed | pending | Extracted validation_manager.py (290 lines), screen.py 2382→2164 (-218) |
 | 2026-02-10 | PROJ-86 | Phase 3 | Complete | 7524 passed | pending | Extracted panel_manager.py (233 lines), screen.py 2164→2055 (-109) |
 | 2026-02-10 | PROJ-86 | Phase 4 | Complete | 7524 passed | pending | Extracted test_executor.py (310 lines), screen.py 2055→1837 (-218) |
+| 2026-02-10 | PROJ-86 | Phase 5 | Complete | 7524 passed | pending | Extracted strategy_detail_formatter.py (391 lines), strategy_ui.py 1212→1041 (-171) |
 
 ---
 

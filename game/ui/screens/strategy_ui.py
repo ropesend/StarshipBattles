@@ -13,10 +13,7 @@ import pygame_gui
 from game.core.logger import log_debug
 from game.core.config import UIConfig
 from game.core.input_actions import InputAction
-from game.core.protocols import (
-    is_star_system, is_star, is_planet, is_fleet,
-    is_warp_point, is_sector_environment
-)
+from game.core.protocols import is_fleet
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
@@ -28,13 +25,8 @@ from game.ui.screens.event_log_window import EventLogWindow
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph
 from game.ui.panels.system_tree_panel import SystemTreePanel
-from game.ui.panels.planet_report_panel import PlanetReportPanel
-from game.ui.screens.strategy_detail_fmt import (
-    format_spectrum_html, format_atmosphere_raw, get_label_for_object,
-    format_fleet_info
-)
+from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
 from game.core.constants import PLANET_RESOURCES
-import pygame_gui.windows
 import pygame_gui.elements as ui
 
 class StrategyUI:
@@ -360,6 +352,30 @@ class StrategyUI:
         # Apply hotkey tooltips to buttons (PROJ-71)
         self._apply_hotkey_tooltips()
 
+        # PROJ-86: Initialize detail formatter
+        self._detail_formatter = StrategyDetailFormatter(
+            scene=self.scene,
+            manager=self.manager,
+            detail_panel=self.detail_panel,
+            widgets={
+                'portrait_image': self.portrait_image,
+                'detail_text': self.detail_text,
+                'graph_image': self.graph_image,
+                'btn_raw_data': self.btn_raw_data,
+                'btn_colonize': self.btn_colonize,
+                'btn_build_yard': self.btn_build_yard,
+                'btn_orders': self.btn_orders,
+                'btn_fleet_report': self.btn_fleet_report,
+                'btn_build_fleet': self.btn_build_fleet,
+            },
+            graphs={
+                'spectrum_graph': self.spectrum_graph,
+                'atmosphere_graph': self.atmosphere_graph,
+            },
+            graph_rect=self.graph_rect,
+            screen_size=(screen_width, screen_height),
+        )
+
     # =========================================================================
     # Hotkey Tooltip Enrichment (PROJ-71)
     # =========================================================================
@@ -501,6 +517,11 @@ class StrategyUI:
         self.spectrum_graph = SpectrumGraph(int(self.graph_rect.height), int(self.graph_rect.width))
         self.atmosphere_graph = AtmosphereGraph(int(self.graph_rect.height), int(self.graph_rect.width))
 
+        # PROJ-86: Update detail formatter with new dimensions
+        self._detail_formatter.update_screen_size(width, height)
+        self._detail_formatter.update_graph_rect(self.graph_rect)
+        self._detail_formatter.update_graphs(self.spectrum_graph, self.atmosphere_graph)
+
         # Position Raw Data Button: Top-Right of Graph
         # Graph is at (10, graph_y) to (160, graph_y + h)
         # Button is 20x20.
@@ -525,7 +546,7 @@ class StrategyUI:
         self.sector_tree.set_items(contents, self, flat_view=True)
         
     def _get_label_for_obj(self, obj):
-        return get_label_for_object(obj)
+        return self._detail_formatter._get_label_for_obj(obj)
 
     def _get_object_asset(self, obj):
         """Proxy to scene for asset resolution."""
@@ -534,217 +555,26 @@ class StrategyUI:
         return None
         
     def _format_spectrum(self, star):
-        return format_spectrum_html(star)
+        return self._detail_formatter._format_spectrum(star)
 
     def _compute_planet_production(self, planet) -> dict:
-        """
-        Compute per-resource production rates for a colony planet.
-
-        Args:
-            planet: Planet object to compute production for
-
-        Returns:
-            Dict mapping resource name to production rate per turn
-        """
-        if getattr(planet, 'owner_id', None) is None:
-            return {}
-
-        rates = {}
-        for facility in getattr(planet, 'facilities', []):
-            if not getattr(facility, 'is_operational', True):
-                continue
-            design_data = getattr(facility, 'design_data', {})
-            for layer_data in design_data.get('layers', {}).values():
-                if not isinstance(layer_data, list):
-                    continue
-                for comp in layer_data:
-                    harvester = None
-                    if isinstance(comp, dict):
-                        harvester = comp.get('abilities', {}).get('ResourceHarvester')
-                    if harvester and isinstance(harvester, dict):
-                        res_type = harvester.get('resource_type', '')
-                        base_rate = harvester.get('base_harvest_rate', 0.0)
-                        if res_type and base_rate > 0:
-                            quality = planet.resources.get(res_type, {}).get('quality', 0.0)
-                            rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
-        return rates
+        """Compute per-resource production rates for a colony planet."""
+        return self._detail_formatter.compute_planet_production(planet)
 
     def show_raw_data_popup(self):
         """Show raw data in a message window."""
-        if self.current_raw_data:
-            win_rect = pygame.Rect(0, 0, 400, 400)
-            win_rect.center = (self.width/2, self.height/2)
-            pygame_gui.windows.UIMessageWindow(
-                rect=win_rect,
-                html_message=self.current_raw_data,
-                manager=self.manager,
-                window_title="Raw Data Analysis"
-            )
+        self._detail_formatter.show_raw_data_popup()
 
     def show_detailed_report(self, obj, portrait_surface=None):
-        """Update the detail report implementation."""
-        self.current_selection = obj # UPDATE STATE
-
-        # Reset state
-        self.btn_raw_data.hide()
-        self.graph_image.hide()
-
-        # Default hidden, shown based on context below
-        self.btn_colonize.hide()
-        self.btn_build_yard.hide()
-        self.btn_orders.hide()
-        self.btn_fleet_report.hide()
-        self.btn_build_fleet.hide()
-        self.current_raw_data = ""
-
-        # Clean up planet report panel if switching to non-planet object
-        if self.planet_report_panel is not None:
-            self.planet_report_panel.kill()
-            self.planet_report_panel = None
-            # Show the old widgets again for non-planet objects
-            self.portrait_image.show()
-            self.detail_text.show()
-
-        # Determine Current Player (Local to UI or passed?) 
-        # StrategyInterface doesn't know "Current Player" easily without accessing scene.
-        # But scene.current_empire exists.
-        current_empire_id = -1
-        if hasattr(self.scene, 'current_empire'):
-            current_empire_id = self.scene.current_empire.id
-
-        self.current_raw_data = ""
-        
-        if portrait_surface:
-             # Resize portrait if needed to fit 150x150?
-             scaled = pygame.transform.smoothscale(portrait_surface, (150, 150))
-             self.portrait_image.set_image(scaled)
-        else:
-             self.portrait_image.set_image(pygame.Surface((150, 150))) # clear
-             
-        if not obj:
-            self.detail_text.set_text("Select an object for details.")
-            return
-            
-        text = ""
-        
-        if is_star_system(obj):
-            # Show Primary Star Info
-            primary = obj.primary_star
-            if primary:
-                text = f"<b>System:</b> {obj.name}<br>"
-                text += f"<b>Primary:</b> {primary.name}<br>"
-                text += f"<b>Type:</b> {primary.star_type.name}<br>"
-                text += f"<b>Mass:</b> {primary.mass:.2f} Sol<br>"
-                text += f"<b>Temp:</b> {int(primary.temperature)} K<br>"
-                text += f"<b>Stars:</b> {len(obj.stars)}<br>"
-
-                # Graph
-                self.graph_image.show()
-                self.btn_raw_data.show()
-                surface = self.spectrum_graph.render(primary, vertical=True)
-                surface = pygame.transform.rotate(surface, -90)
-                self.graph_image.set_image(surface)
-                self.current_raw_data = self._format_spectrum(primary)
-            else:
-                 text = f"<b>System:</b> {obj.name}<br>(Empty System)"
-
-        elif is_star(obj):
-            text = f"<b>Star:</b> {obj.name}<br>"
-            text += f"<b>Type:</b> {obj.star_type.name}<br>"
-            text += f"<b>Mass:</b> {obj.mass:.2f} Sol<br>"
-            text += f"<b>Temp:</b> {int(obj.temperature)} K<br>"
-            text += f"<b>Diam:</b> {obj.diameter_hexes:.1f} Hex<br>"
-            
-            self.graph_image.show()
-            self.btn_raw_data.show()
-            surface = self.spectrum_graph.render(obj, vertical=True)
-            surface = pygame.transform.rotate(surface, -90)
-            self.graph_image.set_image(surface)
-            self.current_raw_data = self._format_spectrum(obj)
-
-        elif is_planet(obj):
-            # Hide old widgets - using PlanetReportPanel instead
-            self.portrait_image.hide()
-            self.detail_text.hide()
-            # graph_image already hidden at start of method
-
-            # Calculate available height for panel
-            # Constrain panel to not cover the Build Yard button (PROJ-54)
-            # Button is at a fixed position from initialization
-            detail_panel_height = self.detail_panel.rect.height
-            button_relative_y = self.btn_build_yard.relative_rect.y  # Button's Y position in detail panel
-            panel_max_height = min(detail_panel_height - 60, button_relative_y - 20)  # 20px margin above button
-
-            # Create planet report panel (NO complexes for strategy UI)
-            # PROJ-82: Pass production rates for resource grid
-            production_rates = self._compute_planet_production(obj)
-            self.planet_report_panel = PlanetReportPanel(
-                manager=self.manager,
-                rect=pygame.Rect(10, 10, 580, panel_max_height),
-                planet=obj,
-                container=self.detail_panel,
-                portrait_surface=portrait_surface,
-                show_complexes=False,  # Strategy UI doesn't show facility list
-                production_rates=production_rates
-            )
-
-            # Show Build Yard button for owned planets (PROJ-54)
-            if obj.owner_id == current_empire_id:
-                self.btn_build_yard.show()
-
-            # No text needed - panel handles all display
-            text = ""
-
-        elif is_sector_environment(obj):
-            # Calculate dynamic radiation
-            spec = obj.calculate_radiation()
-            # Mock a star-like object so _format_spectrum works
-            class MockStar:
-                spectrum = spec
-            
-            text = f"<b>Local Environment</b><br>"
-            text += f"<b>System:</b> {obj.system.name}<br>"
-            text += f"<b>Local:</b> {obj.local_hex}<br>"
-            text += f"<br><b>Total Incident Radiation:</b><br>"
-            text += f"{spec.get_total_output():.2e} W/m^2 (relative)<br>"
-            
-            self.graph_image.show()
-            self.btn_raw_data.show()
-            surface = self.spectrum_graph.render(MockStar, vertical=True)
-            surface = pygame.transform.rotate(surface, -90)
-            self.graph_image.set_image(surface)
-            self.current_raw_data = self._format_spectrum(MockStar)
-
-        elif is_fleet(obj):
-            text = format_fleet_info(obj)
-
-            # Show Fleet Buttons
-            if obj.owner_id == current_empire_id:
-                 self.btn_orders.show()
-                 self.btn_fleet_report.show()
-
-                 # PROJ-67: Show Build button for fleets with space shipyard
-                 if obj.has_space_shipyard:
-                     self.btn_build_fleet.show()
-
-                 # Check if we can colonize (Ask Engine)
-                 # We query for 'Any Planet' (target=None) to see if *something* is possible here.
-                 if hasattr(self.scene, 'turn_engine'):
-                     # We need galaxy ref
-                     res = self.scene.turn_engine.validate_colonize_order(self.scene.galaxy, obj, None)
-                     if res.is_valid:
-                         self.btn_colonize.show()
-
-        elif is_warp_point(obj):
-             text = f"<b>Warp Point</b><br>"
-             text += f"<b>To:</b> {obj.destination_id}<br>"
-             text += f"<b>Local Loc:</b> {obj.location}<br>"
-             
-        self.detail_text.html_text = text
-        self.detail_text.rebuild()
+        """Update the detail report for the selected object."""
+        self._detail_formatter.show_detailed_report(obj, portrait_surface)
+        # Sync state back from formatter for event handlers that access it
+        self.planet_report_panel = self._detail_formatter.planet_report_panel
+        self.current_selection = self._detail_formatter.current_selection
+        self.current_raw_data = self._detail_formatter.current_raw_data
 
     def _format_atmosphere_raw(self, planet):
-        return format_atmosphere_raw(planet)
+        return self._detail_formatter._format_atmosphere_raw(planet)
 
         
     def _update_resource_display(self):
