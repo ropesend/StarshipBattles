@@ -197,6 +197,70 @@
 
 ---
 
+- [ ] **PROJ-85: Eradicate Module-Level Mutable Global State**
+  - **Phases:** 1 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-85/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-85/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-84: Ship Layer Data Typed Structures**
+  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-84/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-84/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-87: God Class Decomposition — Strategy Data Tier**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-87/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-87/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-86: Critical God Class Decomposition - UI Tier**
+  - **Phases:** 8 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-86/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-86/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-88: God Class Decomposition - Simulation Core Tier**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-88/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-88/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-90/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-90/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-91/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-91/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-89: God Class Decomposition - Remaining UI Tier**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-89/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-89/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
