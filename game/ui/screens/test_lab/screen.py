@@ -6,7 +6,6 @@ the Combat Lab interface for viewing and running test scenarios.
 """
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton
 import os
 import sys
 import time
@@ -23,12 +22,10 @@ from simulation_tests.logging_config import get_logger
 # Intra-package imports
 from .dialogs import JSONPopup, ConfirmationDialog
 from .json_viewer import ScrollableJSONViewer
-from .ship_panels import ShipPanel, TabbedShipPanel, ComponentPanel
 from .test_run_card import TestRunCard
-from .test_run_details import TestRunDetailsPanel
-from .results_panel import ResultsPanel
 from .data_extractor import TestLabDataExtractor, get_test_data_dir
 from .validation_manager import TestLabValidationManager
+from .panel_manager import TestLabPanelManager
 
 logger = get_logger(__name__)
 
@@ -92,6 +89,17 @@ class TestLabScreen:
         # Validation manager (static validation, expected value updates)
         self._validation_manager = TestLabValidationManager(
             self.registry, self._data_extractor, lambda: self.all_scenarios
+        )
+
+        # Panel manager (factory for ship, component, results panels)
+        layout = {
+            'header_height': 80,
+            'category_width': 220,
+            'test_list_width': 420,
+            'metadata_width': 540,
+        }
+        self._panel_manager = TestLabPanelManager(
+            self._data_extractor, self.test_history, layout
         )
 
         # Get categories for sidebar
@@ -249,87 +257,8 @@ class TestLabScreen:
         Args:
             test_id: Test ID (e.g., "BEAM360-001")
         """
-        self.ship_panels = []
-        self.component_panels = []
-        self.tabbed_ship_panel = None  # For 3+ ships
-
-        # Extract ships from scenario
-        ships = self._extract_ships_from_scenario(test_id)
-
-        if not ships:
-            return
-
-        # Panel dimensions
-        base_x = 20 + self.category_width + 20 + self.test_list_width + 20 + self.metadata_width + 20
-        panel_width = 540
-
-        # Ship panel (top half) - ~960px tall (100-1060)
-        ship_panel_y_start = self.header_height + 20  # 100px
-        ship_panel_height = HEIGHT // 2 - ship_panel_y_start - 20  # Ends at ~1060px with 20px gap
-
-        # Component panel (bottom half) - ~980px tall (1080-2060)
-        component_panel_y_start = HEIGHT // 2 + 20  # 1080px (middle + 20px gap)
-        component_panel_height = HEIGHT - component_panel_y_start - 100  # ~980px tall
-
-        # Use TabbedShipPanel for 3+ ships
-        if len(ships) >= 3:
-            # Create single tabbed panel for all ships
-            tabbed_width = panel_width * 2 + 20  # Use width of 2 normal panels
-            self.tabbed_ship_panel = TabbedShipPanel(
-                x=base_x,
-                y=ship_panel_y_start,
-                width=tabbed_width,
-                height=ship_panel_height,
-                ships_info=ships
-            )
-
-            # Create single component panel that updates based on selected tab
-            # Collect all component IDs from all ships for combined panel
-            all_component_ids = []
-            for ship_info in ships:
-                all_component_ids.extend(ship_info.get('component_ids', []))
-            # Remove duplicates while preserving order
-            seen = set()
-            unique_component_ids = []
-            for cid in all_component_ids:
-                if cid not in seen:
-                    seen.add(cid)
-                    unique_component_ids.append(cid)
-
-            component_panel = ComponentPanel(
-                x=base_x,
-                y=component_panel_y_start,
-                width=tabbed_width,
-                height=component_panel_height,
-                component_ids=unique_component_ids,
-                load_component_callback=self._load_component_data
-            )
-            self.component_panels.append(component_panel)
-        else:
-            # Use individual panels for 1-2 ships
-            for i, ship_info in enumerate(ships):
-                panel_x = base_x + (i * (panel_width + 20))
-
-                # Create ship panel (top)
-                ship_panel = ShipPanel(
-                    x=panel_x,
-                    y=ship_panel_y_start,
-                    width=panel_width,
-                    height=ship_panel_height,
-                    ship_info=ship_info
-                )
-                self.ship_panels.append(ship_panel)
-
-                # Create component panel (bottom)
-                component_panel = ComponentPanel(
-                    x=panel_x,
-                    y=component_panel_y_start,
-                    width=panel_width,
-                    height=component_panel_height,
-                    component_ids=ship_info['component_ids'],
-                    load_component_callback=self._load_component_data
-                )
-                self.component_panels.append(component_panel)
+        panels = self._panel_manager.create_ship_panels(test_id, self)
+        self.ship_panels, self.component_panels, self.tabbed_ship_panel = panels
 
     def _create_results_panel(self, test_id):
         """
@@ -340,63 +269,25 @@ class TestLabScreen:
         Args:
             test_id: Test ID (e.g., "BEAM360-001")
         """
-        # Calculate position: after tabbed ship panel, last ship panel, or after Test Details
-        if self.tabbed_ship_panel:
-            # Place after tabbed ship panel
-            base_x = self.tabbed_ship_panel.x + self.tabbed_ship_panel.width + 20
-        elif len(self.ship_panels) > 0:
-            # Place after last ship panel
-            last_ship_panel = self.ship_panels[-1]
-            base_x = last_ship_panel.x + last_ship_panel.width + 20
-        else:
-            # No ships, place after Test Details panel
-            base_x = 20 + self.category_width + 20 + self.test_list_width + 20 + self.metadata_width + 20
-
-        # Create results panel (600px width)
-        self.results_panel = ResultsPanel(
-            x=base_x,
-            y=self.header_height + 20,
-            width=600,
-            height=HEIGHT - self.header_height - 120,
-            test_history=self.test_history
+        callbacks = {
+            'on_view_battle_states': self._on_view_battle_states,
+            'on_use_seed': self._on_use_seed_from_run,
+            'on_copy_results': self._on_copy_results,
+        }
+        panels = self._panel_manager.create_results_panel(
+            test_id, self.ship_panels, self.tabbed_ship_panel, callbacks
         )
-
-        # Create test run details panel (to the right of results panel)
-        details_x = base_x + 600 + 20
-        self.test_details_panel = TestRunDetailsPanel(
-            x=details_x,
-            y=self.header_height + 20,
-            width=600,
-            height=HEIGHT - self.header_height - 120
-        )
-
-        # Link panels
-        self.results_panel.set_details_panel(self.test_details_panel)
-
-        # Set up View States callback
-        self.test_details_panel.on_view_states = self._on_view_battle_states
-
-        # Set up Use Seed callback
-        self.test_details_panel.on_use_seed = self._on_use_seed_from_run
-
-        # Set up Copy Results callback
-        self.test_details_panel.on_copy_results = self._on_copy_results
-
-        self.results_panel.set_test(test_id)
-
-        logger.debug(f"Created results panel at x={base_x} and details panel at x={details_x} for test {test_id}")
+        self.results_panel, self.test_details_panel = panels
 
     def _create_ui(self):
         """Create UI buttons."""
         self.buttons = []  # Legacy list, kept for compatibility but not used for new UIButtons
 
-        # Back Button (pygame_gui UIButton)
-        self.btn_back = UIButton(
-            relative_rect=pygame.Rect(20, 20, 100, 40),
-            text="Back",
-            manager=self.ui_manager
+        # Delegate button creation to panel manager
+        self.btn_back, callbacks = self._panel_manager.create_ui_buttons(
+            self.ui_manager, self._on_back
         )
-        self._button_callbacks[self.btn_back] = self._on_back
+        self._button_callbacks.update(callbacks)
 
         # Run Test and Run Headless buttons are now drawn in _draw_metadata_panel()
         self.run_test_btn_rect = None
