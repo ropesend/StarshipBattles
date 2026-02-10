@@ -71,24 +71,16 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.sidebar_width = 300
     win.ui_manager = MagicMock()
 
-    # Column definitions (matching constructor)
-    win.columns = [
-        {'id': 'location', 'width': 180, 'title': 'Location', 'visible': True},
-        {'id': 'system', 'width': 120, 'title': 'System', 'visible': True},
-        {'id': 'sector', 'width': 80, 'title': 'Sector', 'visible': True},
-        {'id': 'queue_count', 'width': 80, 'title': 'Items', 'visible': True},
-        {'id': 'first_item', 'width': 150, 'title': 'Building', 'visible': True},
-        {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
-        {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
-        {'id': 'build_rate', 'width': 80, 'title': 'Rate/Turn', 'visible': False},
-    ]
-    win.column_toggle_buttons = {}
-
-    # Filter state (Phase 4)
-    win.filter_location_type = {'Planet': True, 'Fleet': True}
-    win.filter_status = {'Active': True, 'Empty': True}
-    win.filter_capabilities = {'Ships': True, 'Complexes': True}
+    # Filter manager (owns columns and filter state)
+    from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
+    win._filter_mgr = BuildQueueFilterManager()
+    # Expose as direct references for compatibility
+    win.columns = win._filter_mgr.columns
+    win.filter_location_type = win._filter_mgr.filter_location_type
+    win.filter_status = win._filter_mgr.filter_status
+    win.filter_capabilities = win._filter_mgr.filter_capabilities
     win.search_text = ""
+    win.column_toggle_buttons = {}
     win.filter_toggle_buttons = {}
     win.search_entry = None
 
@@ -374,11 +366,11 @@ class TestColumnConfiguration:
         }
         assert expected.issubset(col_ids), f"Missing columns: {expected - col_ids}"
 
-    def test_build_rate_hidden_by_default(self):
-        """Build rate column should be hidden by default."""
+    def test_build_rate_visible_by_default(self):
+        """Build rate column should be visible by default."""
         win = _make_window()
         col = next(c for c in win.columns if c['id'] == 'build_rate')
-        assert col['visible'] is False
+        assert col['visible'] is True
 
     def test_location_visible_by_default(self):
         """Location column should be visible by default."""
@@ -407,15 +399,16 @@ class TestGetVisibleColumns:
         visible_ids = {c['id'] for c in visible}
         assert 'capabilities' not in visible_ids
 
-    def test_all_visible_by_default_except_build_rate(self):
-        """Most columns should be visible by default."""
+    def test_all_columns_visible_by_default(self):
+        """All columns should be visible by default."""
         win = _make_window()
         visible = win._get_visible_columns()
         visible_ids = {c['id'] for c in visible}
-        # build_rate is hidden by default per spec
-        assert 'build_rate' not in visible_ids
+        # All columns visible by default
+        assert 'build_rate' in visible_ids
         assert 'location' in visible_ids
         assert 'queue_count' in visible_ids
+        assert len(visible) == 8  # All 8 columns
 
 
 class TestGetColumnValue:
@@ -507,15 +500,15 @@ class TestColumnToggle:
         assert result is True
         assert loc_col['visible'] is False
 
-    def test_toggle_column_shows_hidden_column(self):
-        """Toggling a hidden column makes it visible."""
+    def test_toggle_column_hides_visible_column(self):
+        """Toggling a visible column makes it hidden."""
         win = _make_window()
         rate_col = next(c for c in win.columns if c['id'] == 'build_rate')
-        assert rate_col['visible'] is False
+        assert rate_col['visible'] is True
 
         result = win.toggle_column_visibility('build_rate')
         assert result is True
-        assert rate_col['visible'] is True
+        assert rate_col['visible'] is False
 
     def test_toggle_unknown_column_returns_false(self):
         """Toggling an unknown column ID returns False."""

@@ -32,6 +32,7 @@ from game.ui.screens.empire_build_queue_formatter import (
     get_sector_text,
     get_turns_left_text,
 )
+from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -92,17 +93,14 @@ class EmpireBuildQueueWindow(UIWindow):
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
-        # --- Column Definitions ---
-        self.columns: List[Dict[str, Any]] = [
-            {'id': 'location', 'width': 180, 'title': 'Location', 'visible': True},
-            {'id': 'system', 'width': 120, 'title': 'System', 'visible': True},
-            {'id': 'sector', 'width': 80, 'title': 'Sector', 'visible': True},
-            {'id': 'queue_count', 'width': 80, 'title': 'Items', 'visible': True},
-            {'id': 'first_item', 'width': 150, 'title': 'Building', 'visible': True},
-            {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
-            {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
-            {'id': 'build_rate', 'width': 80, 'title': 'Build Rate', 'visible': True},
-        ]
+        # --- Filter Manager (owns column definitions and filter state) ---
+        self._filter_mgr = BuildQueueFilterManager()
+        # Expose filter state as direct references for sidebar builders
+        self.columns = self._filter_mgr.columns
+        self.filter_location_type = self._filter_mgr.filter_location_type
+        self.filter_status = self._filter_mgr.filter_status
+        self.filter_capabilities = self._filter_mgr.filter_capabilities
+        self.search_text: str = ""  # Synced to filter manager on apply
 
         # --- State ---
         self.all_sources: List[BuildQueueSource] = collect_all_build_queues_for_empire(empire)
@@ -113,11 +111,7 @@ class EmpireBuildQueueWindow(UIWindow):
         self.row_elements: list = []
         self.column_toggle_buttons: Dict[str, UIButton] = {}
 
-        # --- Filter State ---
-        self.filter_location_type: Dict[str, bool] = {'Planet': True, 'Fleet': True}
-        self.filter_status: Dict[str, bool] = {'Active': True, 'Empty': True}
-        self.filter_capabilities: Dict[str, bool] = {'Ships': True, 'Complexes': True}
-        self.search_text: str = ""
+        # --- UI Filter Elements ---
         self.filter_toggle_buttons: Dict[str, UIButton] = {}
         self.search_entry: Optional[UITextEntryLine] = None
 
@@ -525,7 +519,7 @@ class EmpireBuildQueueWindow(UIWindow):
         Returns:
             List of column dicts where visible is True.
         """
-        return [c for c in self.columns if c.get('visible', True)]
+        return self._filter_mgr.get_visible_columns()
 
     def _get_column_value(self, source: BuildQueueSource, col_id: str) -> str:
         """Return the display value for a column and source.
@@ -564,11 +558,7 @@ class EmpireBuildQueueWindow(UIWindow):
         Returns:
             True if visibility was toggled, False if column not found.
         """
-        for col in self.columns:
-            if col['id'] == col_id:
-                col['visible'] = not col['visible']
-                return True
-        return False
+        return self._filter_mgr.toggle_column_visibility(col_id)
 
     # -------------------------------------------------------------------
     # Filtering
@@ -588,41 +578,13 @@ class EmpireBuildQueueWindow(UIWindow):
         Returns:
             Filtered list of sources matching all criteria.
         """
-        result = list(sources)
-
-        # Location type filter
-        result = [
-            s for s in result
-            if (s.context_type == "planet" and self.filter_location_type.get('Planet', True))
-            or (s.context_type == "fleet" and self.filter_location_type.get('Fleet', True))
-        ]
-
-        # Queue status filter
-        result = [
-            s for s in result
-            if (len(s.construction_queue) > 0 and self.filter_status.get('Active', True))
-            or (len(s.construction_queue) == 0 and self.filter_status.get('Empty', True))
-        ]
-
-        # Capabilities filter - show source if ANY of its capabilities match
-        # an enabled filter. If all filters are on, show everything.
-        if not (self.filter_capabilities.get('Ships', True)
-                and self.filter_capabilities.get('Complexes', True)):
-            result = [
-                s for s in result
-                if (s.can_build_ships and self.filter_capabilities.get('Ships', True))
-                or (s.can_build_complexes and self.filter_capabilities.get('Complexes', True))
-            ]
-
-        # Text search filter
-        if self.search_text.strip():
-            search_lower = self.search_text.strip().lower()
-            result = [
-                s for s in result
-                if search_lower in s.display_name.lower()
-            ]
-
-        return result
+        # Sync all filter state to filter manager before filtering
+        # (handles case where tests replace dict objects directly)
+        self._filter_mgr.filter_location_type = self.filter_location_type
+        self._filter_mgr.filter_status = self.filter_status
+        self._filter_mgr.filter_capabilities = self.filter_capabilities
+        self._filter_mgr.search_text = self.search_text
+        return self._filter_mgr.filter_sources(sources)
 
     def apply_filters(self) -> None:
         """Re-apply all filters to all_sources and refresh the display.
