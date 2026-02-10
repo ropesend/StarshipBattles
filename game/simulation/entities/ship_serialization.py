@@ -125,7 +125,7 @@ class ShipSerializer:
         """
         if registries is None:
             raise TypeError("registries is required for ShipSerializer.from_dict")
-        # Import here to avoid circular dependency
+        # MUST remain a runtime import — ship.py imports ShipSerializer at module level
         from game.simulation.entities.ship import Ship
 
         # PROJ-42 Phase 4: Check format version (v1.x had string component format, no longer supported)

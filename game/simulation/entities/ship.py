@@ -21,6 +21,8 @@ from game.simulation.systems.resource_manager import ResourceRegistry
 
 # Internal import (no longer re-exported)
 from .ship_loader import get_or_create_validator
+from .ship_combat_engine import ShipCombatEngine
+from .ship_serialization import ShipSerializer
 
 class Ship(PhysicsBody, ShipPhysicsMixin):
 
@@ -209,11 +211,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         """
         Get or create the ShipCombatEngine for this ship.
 
-        Lazy initialization to avoid import cycles and ensure ship
-        is fully initialized before engine creation.
+        Lazy initialization ensures ship is fully initialized before engine creation.
         """
         if not hasattr(self, '_combat_engine') or self._combat_engine is None:
-            from game.simulation.entities.ship_combat_engine import ShipCombatEngine
             self._combat_engine = ShipCombatEngine(self)
         return self._combat_engine
 
@@ -483,8 +483,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         component.ship = self
         component.recalculate_stats()
         # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-        # INTENTIONAL LATE IMPORT: Edge operation, ModifierService has component dependencies
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
+        # LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
         from game.simulation.services.modifier_service import ModifierService
         # PROJ-50: Use strict DI with ship's registries
         service = ModifierService(modifier_registry=self._registries.modifiers)
@@ -529,7 +528,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             new_comp.ship = self
             new_comp.recalculate_stats()
             # Apply mandatory modifiers (e.g., size mount) immediately upon addition
-            # INTENTIONAL LATE IMPORT: Edge operation, ModifierService has component dependencies
+            # LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
             from game.simulation.services.modifier_service import ModifierService
             # PROJ-50: Use strict DI with ship's registries
             service = ModifierService(modifier_registry=self._registries.modifiers)
@@ -771,9 +770,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         Raises:
             TypeError: If component data cannot be serialized to JSON-compatible types.
         """
-        # INTENTIONAL LATE IMPORT: Bidirectional dependency (Ship ↔ ShipSerializer)
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from .ship_serialization import ShipSerializer
         return ShipSerializer.to_dict(self)
 
     @staticmethod
@@ -800,8 +796,6 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
             TypeError: If data types are invalid or incompatible.
             ValueError: If component or modifier IDs are invalid.
         """
-        # INTENTIONAL LATE IMPORT: Bidirectional dependency (Ship ↔ ShipSerializer)
-        from .ship_serialization import ShipSerializer
         return ShipSerializer.from_dict(data, registries=registries)
 
 

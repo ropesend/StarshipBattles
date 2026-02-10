@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-90 Phase 2
-**Current Status:** PROJ-90 Phase 2 Complete
+**Last Completed:** PROJ-90 Phase 3
+**Current Status:** PROJ-90 Phase 3 Complete
 **Current Project:** PROJ-90
-**Current Phase:** Phase 3 (next)
+**Current Phase:** Phase 4 (next)
 **Test Status:** 7540 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-90 Phase 2 complete: Core → Simulation violation fix
-- Created registry_loader.py (113 lines) - extracted reload_registries_from_directory()
-- Removed 94-line method from RegistryManager
-- game/core/registry.py now has ZERO imports from game.simulation
-- Updated test file: 12 test calls changed to use free function
-- Next: Phase 3 - Clean up late imports in ship.py
+- PROJ-90 Phase 3 complete: Ship.py late import cleanup
+- Moved ShipCombatEngine and ShipSerializer to module-level imports
+- ModifierService MUST stay as late import (real cycle: services/__init__.py → VehicleDesignService → Ship)
+- Updated comments to document the real reason for remaining late imports
+- WeaponAbility and `import re` already removed in PROJ-88
+- ship_component_manager.py deleted in PROJ-88
+- Next: Phase 4 - IPostBattleShip protocol for strategy-simulation boundary
 
 ---
 
@@ -416,6 +417,7 @@
 | 2026-02-10 | PROJ-88 | Audit 1 | PASSED | 7540 passed | pending | All 5 goals met, Ship -59, Component -43, app.py -14, new helpers 428 lines |
 | 2026-02-10 | PROJ-90 | Phase 1 | Complete | 7540 passed | pending | Created battle_config.py, eliminated 2 late imports, 11 files updated |
 | 2026-02-10 | PROJ-90 | Phase 2 | Complete | 7540 passed | pending | Created registry_loader.py (113 lines), removed method from RegistryManager, Core layer violation fixed |
+| 2026-02-10 | PROJ-90 | Phase 3 | Complete | 7540 passed | pending | Moved ShipCombatEngine+ShipSerializer to module level, ModifierService must stay late (real cycle) |
 
 ---
 

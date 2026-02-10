@@ -15,17 +15,17 @@
 |-------|--------|-----------|
 | 1. Quick Wins — Dead Code & Config Extraction | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Core → Simulation Violation Fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Ship.py Late Import Cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Ship.py Late Import Cleanup | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy-Simulation Boundary Protocol | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Documentation & Audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 3 — Ship.py Late Import Cleanup
-**Last Action:** Phase 2 complete. Extracted reload_registries_from_directory() to simulation layer, fixing Core→Simulation violation.
-**Next Action:** Start Phase 3 — Clean up late imports in ship.py
+**Active Phase:** Phase 4 — Strategy-Simulation Boundary Protocol
+**Last Action:** Phase 3 complete. Moved ShipCombatEngine and ShipSerializer to module-level imports. ModifierService must stay as late import (real cycle via services/__init__.py → VehicleDesignService → Ship).
+**Next Action:** Start Phase 4 — Create IPostBattleShip protocol and formalize strategy-simulation boundary
 **Blockers:** None
-**Context for Next Agent:** 7540 tests passing. Phase 2 created registry_loader.py (113 lines), removed 94-line method from RegistryManager. game/core/registry.py now has zero imports from game.simulation.
+**Context for Next Agent:** 7540 tests passing. ship.py now has only 2 late imports (ModifierService x2, documented as necessary). ShipCombatEngine and ShipSerializer moved to module level.
 
 ## Overview
 A code review audit flagged pervasive circular dependencies managed through TYPE_CHECKING guards. Deep analysis by 6 swarm agents revealed the codebase is in much better shape than the audit suggested — no true import cycles exist at runtime, and the layer architecture is fundamentally sound. This project fixes 5 concrete issues: a Core→Simulation layer violation in registry.py, BattleConfig/BattleMode placement causing a circular import workaround, dead code in ship.py, unnecessary late imports in ship.py (verified NOT to be real cycles), and formalizing the ShipInstance→Ship coupling with a protocol.
