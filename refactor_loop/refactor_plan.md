@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-91 Phase 1
-**Current Status:** PROJ-91 Phase 1 Complete
+**Last Completed:** PROJ-91 Phase 2
+**Current Status:** PROJ-91 Phase 2 Complete
 **Current Project:** PROJ-91
-**Current Phase:** Phase 2 (next)
+**Current Phase:** Phase 3 (next)
 **Test Status:** 7561 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-91 Phase 1 complete: All 6 tasks done
-- Added get_resource_names() to ResourceRegistry (2 tests)
-- Added IResourceHolder protocol to protocols.py
-- Fixed resupply bug in ShipResourceManager (2 tests)
-- Un-hardcoded resource lists in ship_instance.py (from_ship, update_from_ship) and battle_state.py (ShipState.from_ship)
-- Next: Phase 2 - Migrate callers to generic API
+- PROJ-91 Phase 2 complete: All 8 tasks done
+- FleetResourceAggregator now uses generic ShipInstance methods internally
+- ResupplyEngine._calculate_fuel_distribution() migrated to generic API
+- Updated 4 test mock helpers to use generic methods
+- Updated test_warp_resources.py TestBackwardCompatibility → TestFleetFuelConsumption
+- get_capability_summary() now returns movement_resource_costs/warp_resource_costs
+- Next: Phase 3 - Delete type-specific methods from ShipInstance and Fleet
 
 ---
 
@@ -246,7 +247,7 @@
 ---
 
 - [/] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
-  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 3 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-91/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-91/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -421,6 +422,7 @@
 | 2026-02-10 | PROJ-90 | Phase 5 | Complete | 7557 passed | pending | ARCHITECTURE.md updated, removed unused Ship import from fleet.py |
 | 2026-02-10 | PROJ-90 | Audit 1 | PASSED | 7557 passed | pending | All 4 goals verified by investigation agents, all phases complete |
 | 2026-02-10 | PROJ-91 | Phase 1 | Complete | 7561 passed | pending | get_resource_names(), IResourceHolder, resupply fix, un-hardcode 3 bridge methods |
+| 2026-02-10 | PROJ-91 | Phase 2 | Complete | 7561 passed | pending | FleetResourceAggregator migrated, ResupplyEngine migrated, 4 test mocks updated |
 
 ---
 

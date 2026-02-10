@@ -106,13 +106,15 @@ def _make_mock_ship(
     ship = MagicMock()
     ship.is_combat_capable.return_value = combat_capable
     ship.get_resource_capacity.return_value = fuel_capacity
-    ship.get_fuel_cost_per_hex.return_value = fuel_cost_per_hex
+    ship.get_all_resource_costs_per_hex.return_value = {"fuel": fuel_cost_per_hex}
     # Track fuel state across resupply calls
     _fuel = {"current": current_fuel}
 
-    def _get_current():
-        return _fuel["current"]
-    ship.get_current_fuel.side_effect = _get_current
+    def _get_current_resource(resource_name):
+        if resource_name == 'fuel':
+            return _fuel["current"]
+        return 0.0
+    ship.get_current_resource.side_effect = _get_current_resource
 
     def _resupply(resource_name, amount):
         if resource_name != 'fuel':

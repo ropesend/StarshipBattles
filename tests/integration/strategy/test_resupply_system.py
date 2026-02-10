@@ -120,13 +120,15 @@ def _make_mock_ship(
     ship = MagicMock()
     ship.is_combat_capable.return_value = combat_capable
     ship.get_resource_capacity.return_value = fuel_capacity
-    ship.get_fuel_cost_per_hex.return_value = fuel_cost_per_hex
+    ship.get_all_resource_costs_per_hex.return_value = {"fuel": fuel_cost_per_hex}
 
     _fuel = {"current": current_fuel}
 
-    def _get_current():
-        return _fuel["current"]
-    ship.get_current_fuel.side_effect = _get_current
+    def _get_current_resource(resource_name):
+        if resource_name == "fuel":
+            return _fuel["current"]
+        return 0.0
+    ship.get_current_resource.side_effect = _get_current_resource
 
     def _resupply(resource_name, amount):
         if resource_name != "fuel":
@@ -177,7 +179,7 @@ class TestCompleteResupplyFlow:
         # Verify: ship was resupplied (resupply called at least once)
         assert ship.resupply.call_count > 0
         # Ship should have received fuel (more than starting 250)
-        assert ship.get_current_fuel() > 250.0
+        assert ship.get_current_resource('fuel') > 250.0
 
     def test_multi_turn_fuel_accumulation(self):
         """Fuel accumulates across multiple turns when no fleet is present."""
@@ -285,9 +287,9 @@ class TestRangeEqualization:
         resupply_engine.process_fleet_resupply(1, [empire], galaxy)
 
         # Ship A should get fuel (was at 100/500, needs more)
-        assert ship_a.get_current_fuel() == pytest.approx(500.0)
+        assert ship_a.get_current_resource('fuel') == pytest.approx(500.0)
         # Ship B should stay at 100 (target is 100, already there)
-        assert ship_b.get_current_fuel() == pytest.approx(100.0)
+        assert ship_b.get_current_resource('fuel') == pytest.approx(100.0)
         # Facility should have 0 fuel left (400 transferred to Ship A)
         assert facility.get_fuel_storage() == pytest.approx(0.0)
 
@@ -329,9 +331,9 @@ class TestRangeEqualization:
         resupply_engine.process_fleet_resupply(1, [empire], galaxy)
 
         # Ship A: 100 fuel (10 hexes × 10 cost/hex)
-        assert ship_a.get_current_fuel() == pytest.approx(100.0)
+        assert ship_a.get_current_resource('fuel') == pytest.approx(100.0)
         # Ship B: 50 fuel (10 hexes × 5 cost/hex)
-        assert ship_b.get_current_fuel() == pytest.approx(50.0)
+        assert ship_b.get_current_resource('fuel') == pytest.approx(50.0)
         # Facility depleted
         assert facility.get_fuel_storage() == pytest.approx(0.0)
 

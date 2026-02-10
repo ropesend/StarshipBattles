@@ -66,8 +66,8 @@ class TestFleetResourceAggregator:
         from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
         empty_ship = MagicMock()
         empty_ship.is_combat_capable.return_value = True
-        empty_ship.get_fuel_cost_per_hex.return_value = 10.0
-        empty_ship.get_current_fuel.return_value = 5.0  # Not enough
+        empty_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
+        empty_ship.get_current_resource.return_value = 5.0  # Not enough
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship, empty_ship]
         agg = FleetResourceAggregator(mock_fleet)
         assert agg.has_fuel_for_movement() is False
@@ -76,21 +76,22 @@ class TestFleetResourceAggregator:
         """Consume fuel from all ships."""
         result = aggregator.consume_fleet_fuel(1)
         assert result is True
-        assert mock_ship.consume_fuel.call_count == 2
+        # Consumes both fuel and energy for each ship (2 resources x 2 ships)
+        assert mock_ship.consume_resource.call_count == 4
 
     def test_consume_fleet_fuel_atomic_on_failure(self, mock_fleet, mock_ship):
         """No fuel consumed if any ship lacks fuel."""
         from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
         empty_ship = MagicMock()
         empty_ship.is_combat_capable.return_value = True
-        empty_ship.get_fuel_cost_per_hex.return_value = 10.0
-        empty_ship.get_current_fuel.return_value = 5.0  # Not enough
+        empty_ship.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
+        empty_ship.get_current_resource.return_value = 5.0  # Not enough
         mock_fleet.get_combat_capable_ships.return_value = [mock_ship, empty_ship]
         agg = FleetResourceAggregator(mock_fleet)
 
         result = agg.consume_fleet_fuel(1)
         assert result is False
-        mock_ship.consume_fuel.assert_not_called()
+        mock_ship.consume_resource.assert_not_called()
 
     # --- Movement Resource Tests ---
 
@@ -141,13 +142,13 @@ class TestFleetResourceAggregator:
         from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
         ship1 = MagicMock()
         ship1.is_combat_capable.return_value = True
-        ship1.get_fuel_cost_per_hex.return_value = 10.0
-        ship1.get_current_fuel.return_value = 100.0  # 10 hexes
+        ship1.get_all_resource_costs_per_hex.return_value = {"fuel": 10.0}
+        ship1.get_current_resource.return_value = 100.0  # 10 hexes
 
         ship2 = MagicMock()
         ship2.is_combat_capable.return_value = True
-        ship2.get_fuel_cost_per_hex.return_value = 20.0
-        ship2.get_current_fuel.return_value = 100.0  # 5 hexes
+        ship2.get_all_resource_costs_per_hex.return_value = {"fuel": 20.0}
+        ship2.get_current_resource.return_value = 100.0  # 5 hexes
 
         mock_fleet.get_combat_capable_ships.return_value = [ship1, ship2]
         agg = FleetResourceAggregator(mock_fleet)
@@ -159,7 +160,7 @@ class TestFleetResourceAggregator:
         from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
         ship = MagicMock()
         ship.is_combat_capable.return_value = True
-        ship.get_fuel_cost_per_hex.return_value = 0.0  # No fuel consumption
+        ship.get_all_resource_costs_per_hex.return_value = {}  # No fuel consumption
         mock_fleet.get_combat_capable_ships.return_value = [ship]
         agg = FleetResourceAggregator(mock_fleet)
 
@@ -170,10 +171,9 @@ class TestFleetResourceAggregator:
         from game.strategy.data.fleet_resource_aggregator import FleetResourceAggregator
         ship = MagicMock()
         ship.is_combat_capable.return_value = True
-        ship.get_warp_energy_cost.return_value = 50.0
-        ship.get_warp_fuel_cost.return_value = 25.0
-        ship.get_current_energy.return_value = 100.0  # 2 jumps
-        ship.get_current_fuel.return_value = 50.0  # 2 jumps (limiting)
+        ship.get_warp_resource_costs.return_value = {"energy": 50.0, "fuel": 25.0}
+        # Return 100 for energy, 50 for fuel
+        ship.get_current_resource.side_effect = lambda r: 100.0 if r == 'energy' else 50.0
 
         mock_fleet.get_combat_capable_ships.return_value = [ship]
         mock_fleet.can_use_warp.return_value = True
@@ -200,9 +200,8 @@ class TestFleetResourceAggregator:
         assert 'warp_limiting_ship' in result
         assert 'fuel_endurance' in result
         assert 'warp_jumps' in result
-        assert 'fuel_cost_per_hex' in result
-        assert 'warp_energy_cost' in result
-        assert 'warp_fuel_cost' in result
+        assert 'movement_resource_costs' in result
+        assert 'warp_resource_costs' in result
 
     # --- Cargo Tests ---
 

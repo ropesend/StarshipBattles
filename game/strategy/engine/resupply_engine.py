@@ -228,19 +228,19 @@ class ResupplyEngine(IResupplyEngine):
         if not ships:
             return {}
 
-        total_cost_per_hex = sum(s.get_fuel_cost_per_hex() for s in ships)
+        total_cost_per_hex = sum(s.get_all_resource_costs_per_hex().get('fuel', 0) for s in ships)
         if total_cost_per_hex <= 0:
             return {}
 
-        current_total = sum(s.get_current_fuel() for s in ships)
+        current_total = sum(s.get_current_resource('fuel') for s in ships)
         max_range = (available_fuel + current_total) / total_cost_per_hex
 
         distribution: Dict = {}
         for ship in ships:
-            target = ship.get_fuel_cost_per_hex() * max_range
+            target = ship.get_all_resource_costs_per_hex().get('fuel', 0) * max_range
             capacity = ship.get_resource_capacity('fuel')
             target = min(target, capacity)
-            deficit = target - ship.get_current_fuel()
+            deficit = target - ship.get_current_resource('fuel')
             if deficit > 0:
                 distribution[ship] = deficit
 

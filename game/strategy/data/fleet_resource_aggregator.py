@@ -36,10 +36,7 @@ class FleetResourceAggregator:
         Returns:
             Sum of all combat-capable ships' strategic fuel costs.
         """
-        total = 0.0
-        for ship in self._fleet.get_combat_capable_ships():
-            total += ship.get_fuel_cost_per_hex()
-        return total
+        return self.get_movement_resource_costs().get('fuel', 0.0)
 
     def has_fuel_for_movement(self) -> bool:
         """
@@ -48,13 +45,8 @@ class FleetResourceAggregator:
         Returns:
             True if all combat-capable ships have enough fuel for one hex.
         """
-        for ship in self._fleet.get_combat_capable_ships():
-            cost = ship.get_fuel_cost_per_hex()
-            if cost > 0:
-                current = ship.get_current_fuel()
-                if current < cost:
-                    return False
-        return True
+        # Delegate to generic method - fuel is just one movement resource
+        return self.has_resources_for_movement()
 
     def consume_fleet_fuel(self, hexes: int = 1) -> bool:
         """
@@ -67,23 +59,8 @@ class FleetResourceAggregator:
             True if all ships had sufficient fuel, False otherwise.
             Note: If False, no fuel is consumed (atomic operation).
         """
-        ships = self._fleet.get_combat_capable_ships()
-
-        # First, verify all ships have enough fuel
-        for ship in ships:
-            cost = ship.get_fuel_cost_per_hex() * hexes
-            if cost > 0:
-                current = ship.get_current_fuel()
-                if current < cost:
-                    return False
-
-        # All ships have enough, now consume
-        for ship in ships:
-            cost = ship.get_fuel_cost_per_hex() * hexes
-            if cost > 0:
-                ship.consume_fuel(cost)
-
-        return True
+        # Delegate to generic method - fuel is just one movement resource
+        return self.consume_movement_resources(hexes)
 
     # --- Generic Movement Resource Methods ---
 
@@ -176,10 +153,7 @@ class FleetResourceAggregator:
         Returns:
             Sum of all combat-capable ships' warp energy costs.
         """
-        total = 0.0
-        for ship in self._fleet.get_combat_capable_ships():
-            total += ship.get_warp_energy_cost()
-        return total
+        return self.get_warp_resource_costs().get('energy', 0.0)
 
     def get_warp_fuel_cost(self) -> float:
         """
@@ -188,10 +162,7 @@ class FleetResourceAggregator:
         Returns:
             Sum of all combat-capable ships' warp fuel costs.
         """
-        total = 0.0
-        for ship in self._fleet.get_combat_capable_ships():
-            total += ship.get_warp_fuel_cost()
-        return total
+        return self.get_warp_resource_costs().get('fuel', 0.0)
 
     def has_resources_for_warp(self) -> bool:
         """
@@ -255,11 +226,11 @@ class FleetResourceAggregator:
         min_endurance = float('inf')
 
         for ship in self._fleet.get_combat_capable_ships():
-            cost_per_hex = ship.get_fuel_cost_per_hex()
+            cost_per_hex = ship.get_all_resource_costs_per_hex().get('fuel', 0.0)
             if cost_per_hex <= 0:
                 continue  # This ship doesn't consume fuel
 
-            current_fuel = ship.get_current_fuel()
+            current_fuel = ship.get_current_resource('fuel')
             endurance = int(current_fuel / cost_per_hex) if cost_per_hex > 0 else float('inf')
             min_endurance = min(min_endurance, endurance)
 
@@ -269,7 +240,7 @@ class FleetResourceAggregator:
         """
         Calculate how many warp jumps fleet can make.
 
-        This is data-driven - considers both energy and fuel costs as
+        This is data-driven - considers all resource costs as
         specified by the warp drive components.
 
         Returns:
@@ -283,19 +254,12 @@ class FleetResourceAggregator:
         min_jumps = float('inf')
 
         for ship in self._fleet.get_combat_capable_ships():
-            # Check energy-limited jumps
-            energy_cost = ship.get_warp_energy_cost()
-            if energy_cost > 0:
-                current_energy = ship.get_current_energy()
-                energy_jumps = int(current_energy / energy_cost)
-                min_jumps = min(min_jumps, energy_jumps)
-
-            # Check fuel-limited jumps
-            fuel_cost = ship.get_warp_fuel_cost()
-            if fuel_cost > 0:
-                current_fuel = ship.get_current_fuel()
-                fuel_jumps = int(current_fuel / fuel_cost)
-                min_jumps = min(min_jumps, fuel_jumps)
+            warp_costs = ship.get_warp_resource_costs()
+            for resource_type, cost in warp_costs.items():
+                if cost > 0:
+                    current = ship.get_current_resource(resource_type)
+                    jumps = int(current / cost)
+                    min_jumps = min(min_jumps, jumps)
 
         return int(min_jumps) if min_jumps != float('inf') else -1
 
@@ -312,9 +276,8 @@ class FleetResourceAggregator:
             'warp_limiting_ship': self._fleet.get_warp_limiting_ship(),
             'fuel_endurance': self.fuel_endurance(),
             'warp_jumps': self.warp_jumps_remaining(),
-            'fuel_cost_per_hex': self.get_fuel_cost_per_hex(),
-            'warp_energy_cost': self.get_warp_energy_cost(),
-            'warp_fuel_cost': self.get_warp_fuel_cost(),
+            'movement_resource_costs': self.get_movement_resource_costs(),
+            'warp_resource_costs': self.get_warp_resource_costs(),
         }
 
     # --- Cargo Methods ---
