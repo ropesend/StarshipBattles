@@ -45,10 +45,13 @@ class TestExtractShipsFromScenario:
     def mock_test_lab_screen(self):
         """Create a minimal TestLabScreen for testing path construction."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.data_extractor import TestLabDataExtractor
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
             screen = TestLabScreen.__new__(TestLabScreen)
             screen.registry = Mock()
+            # Create data extractor (delegated methods require this)
+            screen._data_extractor = TestLabDataExtractor(screen.registry)
             return screen
 
     def test_extract_ships_uses_correct_path(self, mock_test_lab_screen):
@@ -77,7 +80,7 @@ class TestExtractShipsFromScenario:
                 }
             }
 
-        with patch('game.ui.screens.test_lab.screen.load_json', side_effect=track_load_json):
+        with patch('game.ui.screens.test_lab.data_extractor.load_json', side_effect=track_load_json):
             ships = mock_test_lab_screen._extract_ships_from_scenario('TEST-001')
 
         # Verify path was constructed correctly
@@ -115,7 +118,7 @@ class TestExtractShipsFromScenario:
                 }
             }
 
-        with patch('game.ui.screens.test_lab.screen.load_json', side_effect=mock_load_json):
+        with patch('game.ui.screens.test_lab.data_extractor.load_json', side_effect=mock_load_json):
             ships = mock_test_lab_screen._extract_ships_from_scenario('TEST-001')
 
         assert len(ships) == 1
@@ -217,10 +220,13 @@ class TestLoadComponentData:
     def mock_test_lab_screen(self):
         """Create a minimal TestLabScreen for testing."""
         from game.ui.screens.test_lab import TestLabScreen
+        from game.ui.screens.test_lab.data_extractor import TestLabDataExtractor
 
         with patch.object(TestLabScreen, '__init__', lambda self, game, w, h: None):
             screen = TestLabScreen.__new__(TestLabScreen)
-            screen._components_cache = None
+            screen.registry = Mock()
+            # Create data extractor (delegated methods require this)
+            screen._data_extractor = TestLabDataExtractor(screen.registry)
             return screen
 
     def test_load_component_data_uses_correct_path(self, mock_test_lab_screen):
@@ -235,7 +241,7 @@ class TestLoadComponentData:
                 ]
             }
 
-        with patch('game.ui.screens.test_lab.screen.load_json', side_effect=track_load_json):
+        with patch('game.ui.screens.test_lab.data_extractor.load_json', side_effect=track_load_json):
             result = mock_test_lab_screen._load_component_data('test_component')
 
         assert len(loaded_paths) == 1
@@ -252,7 +258,7 @@ class TestPathHelperFunction:
 
     def test_get_test_data_dir_returns_correct_path(self):
         """get_test_data_dir should return path to simulation_tests/data/."""
-        from game.ui.screens.test_lab.screen import get_test_data_dir
+        from game.ui.screens.test_lab.data_extractor import get_test_data_dir
 
         data_dir = get_test_data_dir()
 
@@ -271,7 +277,7 @@ class TestPathHelperFunction:
 
     def test_get_test_data_dir_ships_subdir_exists(self):
         """Ships subdirectory should exist within test data dir."""
-        from game.ui.screens.test_lab.screen import get_test_data_dir
+        from game.ui.screens.test_lab.data_extractor import get_test_data_dir
 
         data_dir = get_test_data_dir()
         ships_dir = os.path.join(data_dir, 'ships')

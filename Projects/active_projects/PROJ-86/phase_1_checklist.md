@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Extract data loading functions from TestLabScreen into a new `data_extractor.py` module within the `test_lab/` package. This removes ~211 lines of pure data logic with zero UI dependencies.
 
 **File:** `game/ui/screens/test_lab/screen.py`
@@ -19,60 +19,60 @@
 ### Task 1.1: Create data_extractor.py with extracted functions [Simple]
 **File:** `game/ui/screens/test_lab/data_extractor.py` (new)
 
-- [ ] Create new file `game/ui/screens/test_lab/data_extractor.py`
-- [ ] Move `get_test_data_dir()` module-level function from `screen.py` (lines 35-49) into `data_extractor.py`
-- [ ] Create `class TestLabDataExtractor` with constructor accepting `registry` parameter
-- [ ] Move `_extract_ships_from_scenario(self, test_id)` logic (lines 198-327) into `TestLabDataExtractor.extract_ships(self, test_id)` method
-- [ ] Move `_load_component_data(self, component_id)` logic (lines 448-474) into `TestLabDataExtractor.load_component(self, component_id)` method
-- [ ] Add `self._components_cache = None` to `TestLabDataExtractor.__init__`
-- [ ] Ensure imports: `os`, `json`, `game.core.json_utils.load_json`, `simulation_tests.logging_config.get_logger`
-- [ ] Add docstrings to module and class
+- [x] Create new file `game/ui/screens/test_lab/data_extractor.py`
+- [x] Move `get_test_data_dir()` module-level function from `screen.py` (lines 35-49) into `data_extractor.py`
+- [x] Create `class TestLabDataExtractor` with constructor accepting `registry` parameter
+- [x] Move `_extract_ships_from_scenario(self, test_id)` logic (lines 198-327) into `TestLabDataExtractor.extract_ships(self, test_id)` method
+- [x] Move `_load_component_data(self, component_id)` logic (lines 448-474) into `TestLabDataExtractor.load_component(self, component_id)` method
+- [x] Add `self._components_cache = None` to `TestLabDataExtractor.__init__`
+- [x] Ensure imports: `os`, `json`, `game.core.json_utils.load_json`, `simulation_tests.logging_config.get_logger`
+- [x] Add docstrings to module and class
 
-**Notes:** `_extract_ships_from_scenario` uses `self.registry` and `get_test_data_dir()`. `_load_component_data` uses `self._components_cache` and `get_test_data_dir()`. Both are pure data operations with no pygame dependencies.
+**Notes:** Also added helper method `_extract_component_ids()` to reduce duplication in ship extraction logic. 210 lines in new file.
 
 ---
 
 ### Task 1.2: Update screen.py to delegate to data_extractor [Simple]
 **File:** `game/ui/screens/test_lab/screen.py`
 
-- [ ] Add import: `from .data_extractor import TestLabDataExtractor, get_test_data_dir`
-- [ ] Remove the `get_test_data_dir()` function definition from `screen.py` (lines 35-49)
-- [ ] In `TestLabScreen.__init__`, after `self.registry` is initialized, create `self._data_extractor = TestLabDataExtractor(self.registry)`
-- [ ] Replace `_extract_ships_from_scenario` method body with delegation: `return self._data_extractor.extract_ships(test_id)`
-- [ ] Replace `_load_component_data` method body with delegation: `return self._data_extractor.load_component(component_id)`
-- [ ] Update `self._components_cache` references to use `self._data_extractor._components_cache` where needed (check `_build_validation_context_from_files` at line 422)
-- [ ] Remove now-unused imports from screen.py if any (check `os.path` usage -- may still be needed elsewhere)
-- [ ] Verify `get_test_data_dir` is still accessible to other callers via the import
+- [x] Add import: `from .data_extractor import TestLabDataExtractor, get_test_data_dir`
+- [x] Remove the `get_test_data_dir()` function definition from `screen.py` (lines 35-49)
+- [x] In `TestLabScreen.__init__`, after `self.registry` is initialized, create `self._data_extractor = TestLabDataExtractor(self.registry)`
+- [x] Replace `_extract_ships_from_scenario` method body with delegation: `return self._data_extractor.extract_ships(test_id)`
+- [x] Replace `_load_component_data` method body with delegation: `return self._data_extractor.load_component(component_id)`
+- [x] Update `self._components_cache` references to use `self._data_extractor._components_cache` where needed (check `_build_validation_context_from_files` at line 422)
+- [x] Remove now-unused imports from screen.py if any (check `os.path` usage -- may still be needed elsewhere)
+- [x] Verify `get_test_data_dir` is still accessible to other callers via the import
 
-**Notes:** Keep the thin wrapper methods `_extract_ships_from_scenario` and `_load_component_data` on `TestLabScreen` so that all internal callers continue to work without changes.
+**Notes:** Added `_components_cache` as a property delegating to data extractor for backward compatibility. Removed self._components_cache = None from __init__. os and load_json still needed elsewhere in screen.py.
 
 ---
 
 ### Task 1.3: Update test_lab package __init__.py [Simple]
 **File:** `game/ui/screens/test_lab/__init__.py`
 
-- [ ] Add `data_extractor` to exports if `__init__.py` has an `__all__` list
-- [ ] If `__init__.py` is empty or minimal, no changes needed
+- [x] Add `data_extractor` to exports if `__init__.py` has an `__all__` list
+- [x] If `__init__.py` is empty or minimal, no changes needed
 
-**Notes:**
+**Notes:** Added TestLabDataExtractor and get_test_data_dir to __all__ and imports.
 
 ---
 
 ### Task 1.4: Run tests and verify [Simple]
 **Tests:** `pytest tests/unit/ui/test_lab_scene/ tests/unit/test_lab/ -x`
 
-- [ ] Run targeted tests for TestLabScreen
-- [ ] Run full test suite: `pytest tests/ -n 12`
-- [ ] Verify no import errors
-- [ ] Verify line count of `screen.py` decreased by ~160+ lines (wrapper methods add back ~10 lines)
-- [ ] Fix any failures discovered
+- [x] Run targeted tests for TestLabScreen
+- [x] Run full test suite: `pytest tests/ -n 12`
+- [x] Verify no import errors
+- [x] Verify line count of `screen.py` decreased by ~160+ lines (wrapper methods add back ~10 lines)
+- [x] Fix any failures discovered
 
-**Notes:**
+**Notes:** screen.py: 2536 -> 2382 lines (154 lines saved). Updated test fixtures in test_data_paths.py to properly set up _data_extractor and patch at data_extractor.load_json instead of screen.load_json. 7524 tests pass.
 
 ---
 
 ## Phase Completion Checklist
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to Complete
-- [ ] Update plan.md phase table row to Complete
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to Complete
+- [x] Update plan.md phase table row to Complete
+- [x] Update plan.md Current State to point to next phase

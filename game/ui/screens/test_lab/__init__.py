@@ -7,6 +7,7 @@ into focused modules for better maintainability.
 
 Modules:
     screen.py           - TestLabScreen main orchestrator class
+    data_extractor.py   - TestLabDataExtractor for loading ships/components
     dialogs.py          - JSONPopup and ConfirmationDialog
     json_viewer.py      - ScrollableJSONViewer for JSON display
     component_dropdown.py - ComponentDropdown for component selection
@@ -17,5 +18,6 @@ Modules:
 """
 
 from .screen import TestLabScreen
+from .data_extractor import TestLabDataExtractor, get_test_data_dir
 
-__all__ = ['TestLabScreen']
+__all__ = ['TestLabScreen', 'TestLabDataExtractor', 'get_test_data_dir']
