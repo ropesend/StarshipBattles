@@ -41,7 +41,7 @@ def print_propulsion_test_header(test_id, description, scenario):
     logger.info(f"\nComponents:")
     # Iterate through ship layers to find components
     for layer_name, layer_data in scenario.ship.layers.items():
-        for component in layer_data.get('components', []):
+        for component in layer_data.components:
             if hasattr(component, 'thrust_power') and component.thrust_power > 0:
                 logger.info(f"  - {component.name}: {component.thrust_power} thrust")
             elif hasattr(component, 'turn_speed') and component.turn_speed > 0:

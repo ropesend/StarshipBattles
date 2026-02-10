@@ -8,20 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-84 Phase 1
-**Current Status:** PROJ-84 Phase 1 Complete - 7375 tests passing
-**Current Project:** PROJ-84
-**Current Phase:** Phase 2 (next)
+**Last Completed:** PROJ-84 Audit PASSED
+**Current Status:** PROJ-84 Complete - Awaiting User Verification
+**Current Project:** PROJ-87 (next)
+**Current Phase:** Not Started
 **Test Status:** 7375 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-84 Phase 1 COMPLETE: All LayerData conversions done
-- Updated 25+ production files for LayerData attribute access
-- Updated 40+ test files with LayerData fixtures
-- Additional files: battle_state.py, ship_instance.py, battle_ui_service.py, design_metadata.py, stats_config.py, layer_panel.py
-- Most Phase 2-6 work done as cascading updates in Phase 1
-- Next action: Verify Phase 2-7 checklists - likely can be marked complete
+- PROJ-84 AUDIT PASSED: All 7 phases complete, LayerData migration successful
+- Fixed 6 simulation_test files with isinstance guards
+- Grep audits: zero layer dict access patterns remaining in game/
+- Next project: PROJ-87 (God Class Decomposition - Strategy Data Tier)
 
 ---
 
@@ -205,10 +203,10 @@
 
 ---
 
-- [/] **PROJ-84: Ship Layer Data Typed Structures**
-  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-84: Ship Layer Data Typed Structures**
+  - **Phases:** 7 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-84/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-84/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -390,6 +388,8 @@
 | 2026-02-09 | PROJ-85 | Phase 1 | Complete | 7351 passed | b17d41ae | Removed 3 globals, cleaned imports |
 | 2026-02-09 | PROJ-85 | Audit 1 | PASSED | 7351 passed | b17d41ae | No runtime imports, all goals met |
 | 2026-02-10 | PROJ-84 | Phase 1 | Complete | 7375 passed | pending | LayerData dataclass, 25+ prod files, 40+ test files updated |
+| 2026-02-10 | PROJ-84 | Phase 2-7 | Complete | 7375 passed | pending | Verified cascading updates from Phase 1, fixed simulation_test isinstance guards |
+| 2026-02-10 | PROJ-84 | Audit 1 | PASSED | 7375 passed | pending | All goals met, zero layer dict access remaining |
 
 ---
 

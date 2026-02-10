@@ -11,7 +11,7 @@
 | PROJ-87 | God Class Decomposition - Strategy Data Tier | Planning | 2026-02-09 | 2026-02-09 |
 | PROJ-86 | Critical God Class Decomposition - UI Tier | Planning | 2026-02-09 | 2026-02-09 |
 | PROJ-85 | Eradicate Module-Level Mutable Global State | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-84 | Ship Layer Data Typed Structures | Plan Approved | 2026-02-09 | 2026-02-09 |
+| PROJ-84 | Ship Layer Data Typed Structures | Awaiting Verification | 2026-02-09 | 2026-02-10 |
 | PROJ-83 | Eliminate Test Warning Noise | Plan Approved | 2026-02-09 | 2026-02-09 |
 | PROJ-82 | Planet Resources Panel Redesign | Planning | 2026-02-08 | 2026-02-08 |
 | PROJ-81 | Sector Build Queue Window Fixes | Planning | 2026-02-08 | 2026-02-08 |

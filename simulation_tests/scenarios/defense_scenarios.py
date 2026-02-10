@@ -394,8 +394,7 @@ class SensorImprovesHitRateScenario(StaticTargetScenario):
         # Extract beam weapon stats
         beam_ability = None
         for layer_name, layer_data in self.attacker.layers.items():
-            if isinstance(layer_data, dict) and 'components' in layer_data:
-                for component in layer_data['components']:
+            for component in layer_data.components:
                     if hasattr(component, 'ability_instances'):
                         for ability in component.ability_instances:
                             if ability.__class__.__name__ == 'BeamWeaponAbility':

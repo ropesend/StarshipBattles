@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Convert all test files that construct or access layer dicts directly. This is the largest phase — ~50 test files need mechanical conversion from dict access to LayerData attribute access.
 
 **Conversion patterns:**
@@ -24,12 +24,12 @@
 - `tests/unit/ui/services/battle_ui_service/conftest.py`
 **Tests:** `pytest tests/unit/simulation/armor_mechanics/ tests/unit/ui/services/battle_ui_service/ -x`
 
-- [ ] Replace dict literals with `LayerData(...)` construction in conftest fixtures
-- [ ] Update any dict key access to attribute access
-- [ ] Add LayerData import
-- [ ] Verify: tests pass
+- [x] Replace dict literals with `LayerData(...)` construction in conftest fixtures
+- [x] Update any dict key access to attribute access
+- [x] Add LayerData import
+- [x] Verify: tests pass
 
-**Notes:**
+**Notes:** Completed in Phase 1 cascading updates.
 
 ---
 
@@ -47,12 +47,12 @@
 - `tests/unit/simulation/ship_combat_engine/test_combat_ops.py`
 **Tests:** `pytest tests/unit/combat/ tests/unit/simulation/armor_mechanics/ tests/unit/simulation/combat/ tests/unit/simulation/ship_combat_engine/ -x`
 
-- [ ] Replace all `ship.layers[X] = {dict}` with `ship.layers[X] = LayerData(...)`
-- [ ] Replace all `ship.layers[X]['key']` with `ship.layers[X].key`
-- [ ] Add LayerData import to each file
-- [ ] Verify: tests pass
+- [x] Replace all `ship.layers[X] = {dict}` with `ship.layers[X] = LayerData(...)`
+- [x] Replace all `ship.layers[X]['key']` with `ship.layers[X].key`
+- [x] Add LayerData import to each file
+- [x] Verify: tests pass
 
-**Notes:**
+**Notes:** Completed in Phase 1 cascading updates.
 
 ---
 
@@ -70,11 +70,11 @@
 - `tests/unit/simulation/ship_component_manager/test_queries_and_iteration.py`
 **Tests:** `pytest tests/unit/entities/ tests/unit/simulation/ship_component_manager/ -x`
 
-- [ ] Replace all dict-style layer access with attribute access
-- [ ] Add LayerData import to each file
-- [ ] Verify: tests pass
+- [x] Replace all dict-style layer access with attribute access
+- [x] Add LayerData import to each file
+- [x] Verify: tests pass
 
-**Notes:**
+**Notes:** Completed in Phase 1 cascading updates.
 
 ---
 
@@ -97,11 +97,11 @@
 - `tests/unit/ui/test_rendering_logic.py`
 **Tests:** `pytest tests/unit/builder/ tests/unit/workshop/ tests/unit/ui/ -x`
 
-- [ ] Replace all dict-style layer access with attribute access
-- [ ] Add LayerData import to each file
-- [ ] Verify: tests pass
+- [x] Replace all dict-style layer access with attribute access
+- [x] Add LayerData import to each file
+- [x] Verify: tests pass
 
-**Notes:**
+**Notes:** Completed in Phase 1 cascading updates.
 
 ---
 
@@ -119,11 +119,11 @@
 - `tests/repro_issues/test_bug_13_clear_removes_hull.py`
 **Tests:** `pytest tests/repro_issues/ -x`
 
-- [ ] Replace all dict-style layer access with attribute access
-- [ ] Add LayerData import to each file
-- [ ] Verify: tests pass
+- [x] Replace all dict-style layer access with attribute access
+- [x] Add LayerData import to each file
+- [x] Verify: tests pass
 
-**Notes:**
+**Notes:** Completed in Phase 1 cascading updates.
 
 ---
 
@@ -140,28 +140,28 @@
 - `tests/unit/builder/test_fleet_composition.py`
 **Tests:** `pytest tests/unit/simulation/ tests/unit/systems/ tests/unit/ai/ tests/integration/ -x`
 
-- [ ] Replace all dict-style layer access with attribute access
-- [ ] Add LayerData import to each file
-- [ ] Verify: tests pass
+- [x] Replace all dict-style layer access with attribute access
+- [x] Add LayerData import to each file
+- [x] Verify: tests pass
 
-**Notes:**
+**Notes:** Completed in Phase 1 cascading updates.
 
 ---
 
 ### Task 6.7: Full test suite run [Simple]
 **Tests:** `pytest tests/ -n 12`
 
-- [ ] Run complete test suite with parallelism
-- [ ] Fix any remaining failures
-- [ ] Verify all 7353+ tests pass
+- [x] Run complete test suite with parallelism
+- [x] Fix any remaining failures
+- [x] Verify all 7353+ tests pass
 
-**Notes:**
+**Notes:** 7375 tests passed.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

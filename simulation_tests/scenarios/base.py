@@ -686,8 +686,7 @@ class TestScenario(CombatScenario):
         # Extract ability data from all components using ABILITY_EXTRACTION_MAP
         if hasattr(ship, 'layers') and ship.layers:
             for layer_name, layer_data in ship.layers.items():
-                if isinstance(layer_data, dict) and 'components' in layer_data:
-                    for component in layer_data['components']:
+                for component in layer_data.components:
                         if hasattr(component, 'ability_instances') and component.ability_instances:
                             for ability in component.ability_instances:
                                 ability_class_name = ability.__class__.__name__

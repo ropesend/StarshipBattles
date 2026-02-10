@@ -47,24 +47,22 @@ from simulation_tests.test_constants import (
 def _get_beam_ability(ship):
     """Extract the BeamWeaponAbility instance from a loaded ship."""
     for layer_name, layer_data in ship.layers.items():
-        if isinstance(layer_data, dict) and 'components' in layer_data:
-            for component in layer_data['components']:
-                if hasattr(component, 'ability_instances'):
-                    for ability in component.ability_instances:
-                        if ability.__class__.__name__ == 'BeamWeaponAbility':
-                            return ability
+        for component in layer_data.components:
+            if hasattr(component, 'ability_instances'):
+                for ability in component.ability_instances:
+                    if ability.__class__.__name__ == 'BeamWeaponAbility':
+                        return ability
     return None
 
 
 def _get_propulsion_ability(ship):
     """Extract the CombatPropulsion ability instance from a loaded ship."""
     for layer_name, layer_data in ship.layers.items():
-        if isinstance(layer_data, dict) and 'components' in layer_data:
-            for component in layer_data['components']:
-                if hasattr(component, 'ability_instances'):
-                    for ability in component.ability_instances:
-                        if ability.__class__.__name__ == 'CombatPropulsion':
-                            return ability
+        for component in layer_data.components:
+            if hasattr(component, 'ability_instances'):
+                for ability in component.ability_instances:
+                    if ability.__class__.__name__ == 'CombatPropulsion':
+                        return ability
     return None
 
 
