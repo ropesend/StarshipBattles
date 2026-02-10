@@ -42,6 +42,9 @@ class StrategyInputHandler:
         """
         Process pygame events.
 
+        Handles all event types through IScene.handle_event() instead of
+        requiring separate dispatch from app.py (PROJ-88 Phase 5).
+
         Args:
             event: Pygame event to process
         """
@@ -64,6 +67,15 @@ class StrategyInputHandler:
         # Keyboard Events
         if event.type == pygame.KEYDOWN:
             self._handle_keydown(event)
+
+        # Mouse Click Events (PROJ-88: folded from app.py legacy dispatch)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mx, my = event.pos
+            self.handle_click(mx, my, event.button)
+
+        # Mouse Wheel Events (PROJ-88: folded from app.py legacy dispatch)
+        elif event.type == pygame.MOUSEWHEEL:
+            self._handle_scroll(event)
 
     def _handle_button_press(self, event):
         """Handle UI button presses."""
@@ -575,34 +587,49 @@ class StrategyInputHandler:
             self.scene.selected_object = None
             self.scene.ui.show_detailed_report(None, None)
 
-    def update_input(self, dt, events):
-        """
-        Update camera input.
+    def _handle_scroll(self, event):
+        """Handle mouse wheel scroll events (PROJ-88: folded from app.py).
+
+        Forwards scroll events to the camera, filtering based on mouse position
+        over UI elements (sidebar, top bar) and modal state.
 
         Args:
-            dt: Delta time
-            events: List of pygame events
+            event: pygame.MOUSEWHEEL event
         """
-        # Filter events for Camera: Block MouseWheel if over sidebar or modal is open (BUG-22)
-        cam_events = []
         mx, my = pygame.mouse.get_pos()
         over_sidebar = (mx > self.scene.screen_width - UIConfig.STRATEGY_SIDEBAR_WIDTH)
         over_topbar = (my < self.scene.TOP_BAR_HEIGHT)
 
-        # Check if modal sub-panel is open (blocks all camera input)
+        # Check if modal sub-panel is open (blocks scroll)
         modal_open = False
         if hasattr(self.scene, 'ui') and hasattr(self.scene.ui, '_has_modal_open'):
             modal_open = self.scene.ui._has_modal_open()
 
-        for e in events:
-            if e.type == pygame.MOUSEWHEEL:
-                if over_sidebar or over_topbar or modal_open:
-                    continue
-            cam_events.append(e)
+        # Block scroll over UI elements or when modal is open
+        if over_sidebar or over_topbar or modal_open:
+            return
 
+        # Forward to camera as single-event list for its update_input processing
+        self.scene.camera.update_input(0, [event])
+
+    def update_input(self, dt, events):
+        """
+        Update per-frame input state (keyboard polling, hover).
+
+        Note: MOUSEWHEEL events are now handled in handle_event() via _handle_scroll().
+        This method handles per-frame keyboard state and hover logic only.
+
+        Args:
+            dt: Delta time
+            events: List of pygame events (used for camera keyboard polling)
+        """
+        # Camera processes keyboard input (arrow keys, WASD, middle-mouse drag)
+        # Note: MOUSEWHEEL is now filtered out since it's handled in handle_event()
+        cam_events = [e for e in events if e.type != pygame.MOUSEWHEEL]
         self.scene.camera.update_input(dt, cam_events)
 
         # Hover Logic
+        mx, my = pygame.mouse.get_pos()
         world_pos = self.scene.camera.screen_to_world((mx, my))
         self.scene.hover_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
 

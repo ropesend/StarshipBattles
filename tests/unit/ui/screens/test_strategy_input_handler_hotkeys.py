@@ -272,3 +272,103 @@ class TestStrategyScreenPassesMapper:
         sig = inspect.signature(StrategyScreen.__init__)
         param = sig.parameters['input_mapper']
         assert param.default is None  # Default should be None
+
+
+class TestMouseEventHandling:
+    """PROJ-88 Phase 5: Mouse events handled through handle_event()."""
+
+    def test_mousebuttondown_calls_handle_click(self, mock_scene, mapper):
+        """MOUSEBUTTONDOWN event triggers handle_click via handle_event."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        # Create a mock that tracks calls
+        handler.handle_click = MagicMock()
+
+        event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': (100, 200), 'button': 1})
+        handler.handle_event(event)
+
+        handler.handle_click.assert_called_once_with(100, 200, 1)
+
+    def test_mousebuttondown_right_click(self, mock_scene, mapper):
+        """Right-click MOUSEBUTTONDOWN is forwarded correctly."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler.handle_click = MagicMock()
+
+        event = pygame.event.Event(pygame.MOUSEBUTTONDOWN, {'pos': (50, 75), 'button': 3})
+        handler.handle_event(event)
+
+        handler.handle_click.assert_called_once_with(50, 75, 3)
+
+    def test_mousewheel_calls_handle_scroll(self, mock_scene, mapper):
+        """MOUSEWHEEL event triggers _handle_scroll via handle_event."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        handler._handle_scroll = MagicMock()
+
+        event = pygame.event.Event(pygame.MOUSEWHEEL, {'y': 1})
+        handler.handle_event(event)
+
+        handler._handle_scroll.assert_called_once_with(event)
+
+    def test_handle_scroll_blocked_over_sidebar(self, mock_scene, mapper):
+        """Scroll events over sidebar are blocked."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        mock_scene.screen_width = 1920
+        mock_scene.TOP_BAR_HEIGHT = 50
+        mock_scene.ui._has_modal_open = MagicMock(return_value=False)
+        mock_scene.camera = MagicMock()
+
+        # Simulate mouse over sidebar (far right of screen)
+        with patch('pygame.mouse.get_pos', return_value=(1800, 500)):
+            event = pygame.event.Event(pygame.MOUSEWHEEL, {'y': 1})
+            handler._handle_scroll(event)
+
+        # Camera should NOT receive the scroll event
+        mock_scene.camera.update_input.assert_not_called()
+
+    def test_handle_scroll_blocked_over_topbar(self, mock_scene, mapper):
+        """Scroll events over top bar are blocked."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        mock_scene.screen_width = 1920
+        mock_scene.TOP_BAR_HEIGHT = 50
+        mock_scene.ui._has_modal_open = MagicMock(return_value=False)
+        mock_scene.camera = MagicMock()
+
+        # Simulate mouse over top bar
+        with patch('pygame.mouse.get_pos', return_value=(500, 25)):
+            event = pygame.event.Event(pygame.MOUSEWHEEL, {'y': 1})
+            handler._handle_scroll(event)
+
+        # Camera should NOT receive the scroll event
+        mock_scene.camera.update_input.assert_not_called()
+
+    def test_handle_scroll_allowed_in_viewport(self, mock_scene, mapper):
+        """Scroll events in viewport area are forwarded to camera."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        mock_scene.screen_width = 1920
+        mock_scene.TOP_BAR_HEIGHT = 50
+        mock_scene.ui._has_modal_open = MagicMock(return_value=False)
+        mock_scene.camera = MagicMock()
+
+        # Simulate mouse in viewport (middle of screen)
+        # STRATEGY_SIDEBAR_WIDTH is typically 400, so 500 should be in viewport
+        with patch('pygame.mouse.get_pos', return_value=(500, 300)):
+            event = pygame.event.Event(pygame.MOUSEWHEEL, {'y': 1})
+            handler._handle_scroll(event)
+
+        # Camera should receive the scroll event
+        mock_scene.camera.update_input.assert_called_once()
+
+    def test_handle_scroll_blocked_when_modal_open(self, mock_scene, mapper):
+        """Scroll events blocked when modal is open."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+        mock_scene.screen_width = 1920
+        mock_scene.TOP_BAR_HEIGHT = 50
+        mock_scene.ui._has_modal_open = MagicMock(return_value=True)  # Modal is open
+        mock_scene.camera = MagicMock()
+
+        # Mouse in viewport but modal is open
+        with patch('pygame.mouse.get_pos', return_value=(500, 300)):
+            event = pygame.event.Event(pygame.MOUSEWHEEL, {'y': 1})
+            handler._handle_scroll(event)
+
+        # Camera should NOT receive the scroll event
+        mock_scene.camera.update_input.assert_not_called()

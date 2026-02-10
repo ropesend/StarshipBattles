@@ -515,7 +515,12 @@ class Game:
                     self.show_exit_dialog = False
 
     def _handle_normal_events(self, events):
-        """Handle events during normal gameplay."""
+        """Handle events during normal gameplay.
+
+        PROJ-88 Phase 5: Removed legacy MOUSEBUTTONDOWN/MOUSEWHEEL dispatch.
+        These events now flow through _forward_event_to_scene() to each scene's
+        handle_event() method, completing the IScene migration.
+        """
         for event in events:
             state_before = self.state
 
@@ -530,10 +535,6 @@ class Game:
                     log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
             elif event.type == pygame.VIDEORESIZE:
                 self._handle_resize(event.w, event.h)
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                self._handle_click(event)
-            elif event.type == pygame.MOUSEWHEEL:
-                self._handle_scroll(event)
 
             # Forward events to current scene only if state didn't change
             if self.state != state_before:
@@ -569,17 +570,6 @@ class Game:
 
         # Unified dispatch to active scene
         self.active_scene.handle_resize(w, h)
-
-    def _handle_click(self, event):
-        """Handle mouse click events.
-
-        Note: Battle/setup clicks are now handled via handle_event.
-        """
-        mx, my = event.pos
-
-        # Strategy still uses legacy click handler
-        if self.state == GameState.STRATEGY:
-            self.strategy_scene.handle_click(mx, my, event.button)
 
     def _handle_battle_action(self, action: str, **kwargs):
         """Handle scene actions from BattleScreen."""
@@ -649,21 +639,17 @@ class Game:
         if action == "return_to_menu":
             self._switch_scene(GameState.MENU, self._menu_scene)
 
-    def _handle_scroll(self, event):
-        """Handle mouse wheel events.
-
-        Note: Battle scrolls are now handled via handle_event.
-        """
-        # Strategy still uses legacy scroll handler
-        if self.state == GameState.STRATEGY and hasattr(self.strategy_scene, 'handle_scroll'):
-            self.strategy_scene.handle_scroll(event.y, self.screen.get_size()[1])
-
     def _update_and_draw(self, frame_time, events):
-        """Update logic and draw current scene (PROJ-65: unified dispatch)."""
-        # Handle input for scenes that have legacy input handling
-        # TODO: Fold these into handle_event() in respective scenes
+        """Update logic and draw current scene (PROJ-65: unified dispatch).
+
+        PROJ-88 Phase 5: StrategyScreen event dispatch is now fully through
+        handle_event(). The update_input() call remains for per-frame keyboard
+        polling (arrow keys for panning) and hover logic.
+        """
+        # Per-frame input handling (keyboard polling, hover)
         if self.state == GameState.STRATEGY:
             self.strategy_scene.update_input(frame_time, events)
+        # Legacy scenes that haven't migrated to IScene event handling
         elif self.state == GameState.RESEARCH_TREE and hasattr(self.active_scene, 'handle_input'):
             self.active_scene.handle_input(frame_time, events)
         elif self.state == GameState.GALAXY_TEST and hasattr(self.active_scene, 'handle_input'):

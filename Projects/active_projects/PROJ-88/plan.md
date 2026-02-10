@@ -17,15 +17,15 @@
 | 2. Ship Stat Aggregation Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Validation Extraction | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Resource & Health Managers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Game/app Scene Dispatch Completion | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Game/app Scene Dispatch Completion | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 4 Complete -- Ready for Phase 5
-**Last Action:** Extracted ComponentResourceManager (97 lines) and ComponentHealthManager (72 lines), Component 756→713 (-43 lines)
-**Next Action:** Begin Phase 5 -- complete IScene migration for StrategyScreen, remove legacy dispatch from app.py
+**Active Phase:** All Phases Complete -- Ready for Audit
+**Last Action:** Completed IScene migration for StrategyScreen, removed legacy dispatch from app.py
+**Next Action:** Run audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** Phase 4 complete. Created ComponentResourceManager and ComponentHealthManager. Component uses lazy resource_manager/health_manager properties. 21 new tests. 7533 passed.
+**Context for Next Agent:** Phase 5 complete. MOUSEBUTTONDOWN/MOUSEWHEEL now handled through handle_event(). Removed _handle_click() and _handle_scroll() from app.py. Added _handle_scroll() to StrategyInputHandler. update_input() remains for per-frame keyboard/hover. 7 new tests. 7540 passed.
 
 ## Overview
 This project decomposes three god classes in the simulation core tier: Ship (870 lines, 136 importers), Component (756 lines, 161 importers), and Game/app.py (723 lines, 4 importers). The approach is conservative -- delete dead code first, then extract cohesive helpers behind facade methods that preserve existing APIs, minimizing blast radius across the large importer base.

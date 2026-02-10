@@ -8,21 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-88 Phase 4
-**Current Status:** PROJ-88 Phase 4 Complete
+**Last Completed:** PROJ-88 Phase 5
+**Current Status:** PROJ-88 All Phases Complete -- Ready for Audit
 **Current Project:** PROJ-88
-**Current Phase:** Phase 4 Complete → Phase 5 Next
-**Test Status:** 7533 passed (full suite)
+**Current Phase:** All Phases Complete → Audit Next
+**Test Status:** 7540 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-88 Phase 4: Extracted ComponentResourceManager (97 lines) and ComponentHealthManager (72 lines)
-- Methods moved: can_afford_activation, consume_activation, try_activate, get_resource_cost, take_damage, reset_hp, hp_ratio
-- Component reduced 756→713 lines (-43 lines)
-- Component uses lazy resource_manager/health_manager properties for delegation
-- 21 new tests written (13 resource + 8 health)
-- Test count: 7512→7533 (+21 tests)
-- Next: Phase 5 - Complete IScene migration for StrategyScreen, remove legacy dispatch from app.py
+- PROJ-88 Phase 5: Completed IScene migration for StrategyScreen
+- Added MOUSEBUTTONDOWN/MOUSEWHEEL handling to StrategyInputHandler.handle_event()
+- Created _handle_scroll() method in StrategyInputHandler with sidebar/topbar/modal filtering
+- Removed _handle_click() and _handle_scroll() methods from app.py
+- Removed MOUSEBUTTONDOWN/MOUSEWHEEL dispatch from app.py _handle_normal_events()
+- update_input() retained for per-frame keyboard polling and hover logic
+- 7 new tests for mouse event handling
+- Test count: 7533→7540 (+7 tests)
+- Next: Run audit (Protocol 04)
 
 ---
 
@@ -413,6 +415,7 @@
 | 2026-02-10 | PROJ-88 | Phase 2 | Complete | 7503 passed | pending | Extracted ShipStatQuerier (149 lines), Ship 870→812 (-58 lines), 15 new tests |
 | 2026-02-10 | PROJ-88 | Phase 3 | Complete | 7512 passed | pending | Extracted ShipValidatorHelper (67 lines), Ship 812→811 (-1 line), 9 new tests |
 | 2026-02-10 | PROJ-88 | Phase 4 | Complete | 7533 passed | pending | Extracted ComponentResourceManager (97 lines) + ComponentHealthManager (72 lines), Component 756→713 (-43 lines), 21 new tests |
+| 2026-02-10 | PROJ-88 | Phase 5 | Complete | 7540 passed | pending | IScene migration complete, removed legacy dispatch from app.py, 7 new tests |
 
 ---
 
