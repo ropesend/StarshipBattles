@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Eradicate Dead ShipComponentManager | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Ship Stat Aggregation Extraction | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Ship Stat Aggregation Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Validation Extraction | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Resource & Health Managers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Game/app Scene Dispatch Completion | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 1 Complete -- Ready for Phase 2
-**Last Action:** Deleted ship_component_manager.py (345 lines) and 5 test files (36 tests)
-**Next Action:** Begin Phase 2 -- extract ship stat aggregation into ShipStatQuerier
+**Active Phase:** Phase 2 Complete -- Ready for Phase 3
+**Last Action:** Extracted stat aggregation methods into ShipStatQuerier (149 lines), Ship reduced 870→812 (-58 lines)
+**Next Action:** Begin Phase 3 -- extract ship validation into ShipValidatorHelper
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. ShipComponentManager and all tests deleted (7524→7488 tests). Zero references remain in codebase. Phase 2 extracts stat aggregation methods (get_ability_total, get_total_ecm_score, etc.) from Ship into ShipStatQuerier while keeping facade methods on Ship.
+**Context for Next Agent:** Phase 2 complete. ShipStatQuerier created with get_ability_total, get_total_ability_value, get_total_sensor_score, get_total_ecm_score, max_weapon_range, cached_summary. Ship uses lazy stat_querier property for delegation. _format_ability_name removed (unused). 15 new tests. 7503 passed.
 
 ## Overview
 This project decomposes three god classes in the simulation core tier: Ship (870 lines, 136 importers), Component (756 lines, 161 importers), and Game/app.py (723 lines, 4 importers). The approach is conservative -- delete dead code first, then extract cohesive helpers behind facade methods that preserve existing APIs, minimizing blast radius across the large importer base.

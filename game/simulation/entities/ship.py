@@ -15,6 +15,7 @@ from game.core.constants import LayerDefaults, CombatConstants
 from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_formation import ShipFormation
+from .ship_stat_querier import ShipStatQuerier
 from game.simulation.systems.resource_manager import ResourceRegistry
 
 # Internal import (no longer re-exported)
@@ -161,8 +162,9 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.total_defense_score: float = 1.0
         self.baseline_to_hit_offense: float = 1.0  # Offensive multiplier (sensor strength)
         
-        # Initialize helper (lazy or eager)
+        # Initialize helpers (lazy)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
+        self._stat_querier: Optional[ShipStatQuerier] = None
 
 
 
@@ -230,28 +232,16 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self._components_cache = None
 
     @property
+    def stat_querier(self) -> ShipStatQuerier:
+        """Lazy-initialized stat querier for aggregation methods."""
+        if self._stat_querier is None:
+            self._stat_querier = ShipStatQuerier(self)
+        return self._stat_querier
+
+    @property
     def max_weapon_range(self) -> float:
         """Calculate maximum range of all equipped weapons."""
-        # INTENTIONAL LATE IMPORT: Avoid circular dependency with abilities module
-        # See docs/ARCHITECTURE.md "Intentional Late Imports" section
-        from game.simulation.components.abilities import SeekerWeaponAbility, WeaponAbility
-        max_rng = 0.0
-        for comp in self.get_all_components():
-            for ab in comp.ability_instances:
-                # Polymorphic check using isinstance (Phase 2 Task 2.5)
-                if not isinstance(ab, WeaponAbility):
-                    continue
-
-                rng = getattr(ab, 'range', 0.0)
-                # For SeekerWeapons, calculate range from endurance if not set
-                if isinstance(ab, SeekerWeaponAbility):
-                    if rng <= 0 and hasattr(ab, 'projectile_speed') and hasattr(ab, 'endurance'):
-                        rng = ab.projectile_speed * ab.endurance
-
-                if rng > max_rng:
-                    max_rng = rng
-
-        return max_rng if max_rng > 0 else 0.0
+        return self.stat_querier.max_weapon_range
 
     def update(self, dt: float = 0.01, context: Optional[dict] = None) -> None:
         """
@@ -586,61 +576,31 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         result = get_or_create_validator().validate_design(self)
         return result.warnings
     
-    def _format_ability_name(self, ability_name: str) -> str:
-        """Convert ability ID to readable name."""
-        import re
-        return re.sub(r'(?<!^)(?=[A-Z])', ' ', ability_name)
-    
     def get_ability_total(self, ability_name: str) -> Union[float, int, bool]:
         """Get total value of a specific ability across all components."""
-        all_components = self.get_all_components()
+        return self.stat_querier.get_ability_total(ability_name)
 
-        if not self.stats_calculator:
-            # PROJ-42: Use registries instead of provider
-            self.stats_calculator = ShipStatsCalculator(self._registries.vehicle_classes)
-
-        totals = self.stats_calculator.calculate_ability_totals(all_components)
-        return totals.get(ability_name, 0)
-    
     def get_total_ability_value(self, ability_name: str, operational_only: bool = True) -> float:
         """
         Sum values from all matching abilities across all components.
         Uses polymorphic get_primary_value() interface for extensibility.
-        
+
         Args:
             ability_name: Name of ability class to sum (e.g., 'CombatPropulsion')
             operational_only: If True, only count abilities from operational components
-            
+
         Returns:
             Sum of primary value attribute from all matching abilities
         """
-        total = 0.0
-        for comp in self.get_all_components():
-            if operational_only and not comp.is_operational:
-                continue
-            for ab in comp.get_abilities(ability_name):
-                total += ab.get_primary_value()
-        return total
-    
+        return self.stat_querier.get_total_ability_value(ability_name, operational_only)
+
     def get_total_sensor_score(self) -> float:
-        """Calculate total Targeting Score from all active sensors.
-        
-        Uses stack_group rules:
-        - Same stack_group: MAX (redundancy)
-        - Different stack_groups: MULTIPLY (stacking)
-        """
-        result = self.get_ability_total('ToHitAttackModifier')
-        return float(result) if isinstance(result, (int, float)) else 0.0
+        """Calculate total Targeting Score from all active sensors."""
+        return self.stat_querier.get_total_sensor_score()
 
     def get_total_ecm_score(self) -> float:
-        """Calculate total Evasion/Defense Score from all active ECM/Electronics.
-        
-        Uses stack_group rules:
-        - Same stack_group: MAX (redundancy)
-        - Different stack_groups: MULTIPLY (stacking)
-        """
-        result = self.get_ability_total('ToHitDefenseModifier')
-        return float(result) if isinstance(result, (int, float)) else 0.0
+        """Calculate total Evasion/Defense Score from all active ECM/Electronics."""
+        return self.stat_querier.get_total_ecm_score()
 
     # =========================================================================
     # Component Access Helper Methods (Phase 2 Consolidation)

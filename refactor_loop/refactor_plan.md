@@ -8,18 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-88 Phase 1
-**Current Status:** PROJ-88 Phase 1 Complete
+**Last Completed:** PROJ-88 Phase 2
+**Current Status:** PROJ-88 Phase 2 Complete
 **Current Project:** PROJ-88
-**Current Phase:** Phase 1 Complete → Phase 2 Next
-**Test Status:** 7488 passed (full suite)
+**Current Phase:** Phase 2 Complete → Phase 3 Next
+**Test Status:** 7503 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-88 Phase 1: Deleted ShipComponentManager (345 lines dead code) + 5 test files (36 tests)
-- Test count: 7524→7488 (36 tests deleted)
-- Zero references to ShipComponentManager remain in codebase
-- Next: Phase 2 - Extract ship stat aggregation into ShipStatQuerier
+- PROJ-88 Phase 2: Extracted ShipStatQuerier (149 lines) from Ship
+- Methods moved: get_ability_total, get_total_ability_value, get_total_sensor_score, get_total_ecm_score, max_weapon_range, cached_summary
+- Ship reduced 870→812 lines (-58 lines)
+- _format_ability_name removed (was unused)
+- 15 new tests written
+- Test count: 7488→7503 (+15 tests)
+- Next: Phase 3 - Extract ship validation into ShipValidatorHelper
 
 ---
 
@@ -407,6 +410,7 @@
 | 2026-02-10 | PROJ-86 | Phase 8 | Complete | 7524 passed | pending | Extracted build_queue_helpers.py (49 lines) + build_queue_selector.py (188 lines), build_queue_screen.py 1186→1079 (-107, 9% reduction) |
 | 2026-02-10 | PROJ-86 | Audit 1 | PASSED | 7524 passed | pending | 2,912 lines extracted across 10 modules. TLS 28%, SUI 69%, BQS 9% reduction. Zero circular imports. |
 | 2026-02-10 | PROJ-88 | Phase 1 | Complete | 7488 passed | pending | Deleted ShipComponentManager (345 lines) + 5 test files (36 tests). Zero references remain. |
+| 2026-02-10 | PROJ-88 | Phase 2 | Complete | 7503 passed | pending | Extracted ShipStatQuerier (149 lines), Ship 870→812 (-58 lines), 15 new tests |
 
 ---
 
