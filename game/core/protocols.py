@@ -36,8 +36,11 @@ try:
 except ImportError:
     from typing_extensions import TypeGuard
 
+from game.core.constants import LayerType
+
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
+    from game.simulation.entities.layer_data import LayerData
 
 
 # =============================================================================
@@ -413,7 +416,7 @@ class IPostBattleShip(Protocol):
         ...
 
     @property
-    def layers(self) -> Dict[str, Any]:
+    def layers(self) -> Dict['LayerType', 'LayerData']:
         """Ship layers containing components."""
         ...
 
@@ -456,7 +459,7 @@ class IResourceHolder(Protocol):
     def is_derelict(self) -> bool: ...
 
     @property
-    def layers(self) -> Dict[str, Any]: ...
+    def layers(self) -> Dict['LayerType', 'LayerData']: ...
 
 
 def is_resource_holder(obj: Any) -> TypeGuard[IResourceHolder]:

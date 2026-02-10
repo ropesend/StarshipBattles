@@ -13,15 +13,15 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Update Protocol Type Annotations | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Update Protocol Type Annotations | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Planning — Approved, ready for implementation
-**Last Action:** Plan created and approved
-**Next Action:** Begin Phase 1, Task 1.1 — update imports in protocols.py
+**Active Phase:** Audit Passed — Awaiting User Verification
+**Last Action:** Audit Cycle 1 PASSED — all 3 goals verified
+**Next Action:** User verification
 **Blockers:** None
-**Context for Next Agent:** This is a 2-file, ~10-line change. Update the `layers` property return type in `IPostBattleShip` and `IResourceHolder` protocols from `Dict[str, Any]` to `Dict['LayerType', 'LayerData']`, then strengthen the conformance test.
+**Context for Next Agent:** Project complete. Both protocol `layers` return types updated to `Dict['LayerType', 'LayerData']`. Test strengthened. 7616 tests passing.
 
 ## Overview
 PROJ-84 converted ship layers from raw `Dict[str, Any]` to a typed `LayerData` dataclass. All ~90 access sites across 29 files now use typed attribute access (`layer_data.components`, not `layer_data['components']`). However, two protocol definitions in `game/core/protocols.py` still declare `layers` as `Dict[str, Any]` — the only remaining untyped layer references in the codebase. This project finishes what PROJ-84 started.
@@ -86,22 +86,22 @@ See [phase_1_checklist.md](phase_1_checklist.md) for detailed tasks.
 - [x] Run full test suite: `pytest tests/` — 7615 passed, 1 known flaky
 
 ### After Phase 1
-- [ ] Run `pytest tests/unit/core/test_protocols_boundary.py` — all pass
-- [ ] Run `pytest tests/ -n 12` — no regressions
+- [x] Run `pytest tests/unit/core/test_protocols_boundary.py` — all pass
+- [x] Run `pytest tests/ -n 12` — no regressions
 
 ### Final Verification
-- [ ] Full test suite passes: `pytest tests/ -n 12`
-- [ ] Audit passed
+- [x] Full test suite passes: `pytest tests/ -n 12`
+- [x] Audit passed
 
 ---
 
 ## Audit Log
 | Cycle | Date | Findings | Resolution |
 |-------|------|----------|------------|
-| 1 | | | |
+| 1 | 2026-02-10 | All 3 goals verified: IPostBattleShip.layers, IResourceHolder.layers typed, test strengthened | PASSED |
 
 ## Completion Checklist
-- [ ] Phase 1 tasks checked off
-- [ ] All tests passing
-- [ ] Audit passed
+- [x] Phase 1 tasks checked off
+- [x] All tests passing
+- [x] Audit passed
 - [ ] User verified

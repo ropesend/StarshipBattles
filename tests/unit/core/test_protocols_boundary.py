@@ -12,6 +12,8 @@ from game.core.protocols import (
     is_post_battle_ship,
     is_resource_reader,
 )
+from game.core.constants import LayerType
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestIPostBattleShipConformance:
@@ -75,6 +77,10 @@ class TestIPostBattleShipConformance:
         """Ship.layers should be accessible as dict."""
         assert hasattr(simple_ship, 'layers')
         assert isinstance(simple_ship.layers, dict)
+        # Verify typed layer structure (PROJ-84 / PROJ-93)
+        for key, value in simple_ship.layers.items():
+            assert isinstance(key, LayerType), f"Layer key {key} should be LayerType"
+            assert isinstance(value, LayerData), f"Layer value for {key} should be LayerData"
 
     def test_ship_has_resources_attribute(self, simple_ship):
         """Ship.resources should be accessible."""
