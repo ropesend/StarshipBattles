@@ -4,6 +4,7 @@ import sys
 
 from game.simulation.entities.ship import Ship
 from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.entities.layer_data import LayerData
 from game.ui.screens.builder.stats_config import StatDefinition, get_logistics_rows
 from tests.fixtures.paths import get_project_root
 
@@ -55,7 +56,7 @@ class TestStatsConfig:
 
         # Add a component with consumption
         from game.simulation.components.component import Component
-        from game.simulation.entities.ship import LayerType
+        from game.core.constants import LayerType
 
         comp = Component({'id': 'test_engine', 'name': 'Test Engine', 'type': 'Engine', 'mass': 10, 'hp': 10}, registries=fresh_registries)
         # Inject ability data
@@ -64,7 +65,7 @@ class TestStatsConfig:
         comp._instantiate_abilities()
 
         # Add to ship layer manually (avoid validation for unit test simplicity)
-        ship.layers[LayerType.CORE]['components'].append(comp)
+        ship.layers[LayerType.CORE].components.append(comp)
         comp.ship = ship
 
         from game.ui.screens.builder.stats_config import get_logistics_rows

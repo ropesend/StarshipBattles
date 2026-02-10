@@ -5,6 +5,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
+from game.simulation.entities.layer_data import LayerData
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -53,7 +54,7 @@ class TestBuilderLogic:
         # Now manually inject a huge component to verify mass_limits_ok handles invalid states (e.g. from loading)
         huge_plate = create_component('armor_plate', registries=self.registries)
         huge_plate.mass = 2000 # Way over budget
-        self.ship.layers[LayerType.ARMOR]['components'].append(huge_plate)
+        self.ship.layers[LayerType.ARMOR].components.append(huge_plate)
         huge_plate.ship = self.ship
         self.ship.current_mass += huge_plate.mass
 
@@ -84,7 +85,7 @@ class TestBuilderLogic:
         # Engine only allowed in INNER, OUTER
         res = self.ship.add_component(engine, LayerType.ARMOR)
         assert not res
-        assert engine not in self.ship.layers[LayerType.ARMOR]['components']
+        assert engine not in self.ship.layers[LayerType.ARMOR].components
 
     def test_vehicle_class_requirements_loading(self):
         """Verify ship_class does not crash when validating.

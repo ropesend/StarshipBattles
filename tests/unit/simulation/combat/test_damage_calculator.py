@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from game.core.math import Vector2
 from game.core.constants import LayerType
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestDamageCalculatorCreation:
@@ -199,8 +200,8 @@ class TestLayerDamage:
         ship.current_shields = 0  # No shields
         ship.max_shields = 0
         ship.layers = {
-            LayerType.OUTER: {'radius_pct': 0.8, 'components': [outer_comp]},
-            LayerType.INNER: {'radius_pct': 0.4, 'components': [inner_comp]},
+            LayerType.OUTER: LayerData(radius_pct=0.8, components=[outer_comp]),
+            LayerType.INNER: LayerData(radius_pct=0.4, components=[inner_comp]),
         }
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
@@ -244,8 +245,8 @@ class TestLayerDamage:
         ship.current_shields = 0
         ship.max_shields = 0
         ship.layers = {
-            LayerType.OUTER: {'radius_pct': 0.8, 'components': [outer_comp]},
-            LayerType.INNER: {'radius_pct': 0.4, 'components': [inner_comp]},
+            LayerType.OUTER: LayerData(radius_pct=0.8, components=[outer_comp]),
+            LayerType.INNER: LayerData(radius_pct=0.4, components=[inner_comp]),
         }
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()

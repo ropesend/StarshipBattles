@@ -8,22 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-84 Phase 1 (partial)
-**Current Status:** PROJ-84 Phase 1 In Progress - 98.5% tests passing
+**Last Completed:** PROJ-84 Phase 1
+**Current Status:** PROJ-84 Phase 1 Complete - 7375 tests passing
 **Current Project:** PROJ-84
-**Current Phase:** Phase 1 (continuing)
-**Test Status:** 7255 passed, 110 failed, 10 errors
+**Current Phase:** Phase 2 (next)
+**Test Status:** 7375 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-84 Phase 1: Created LayerData dataclass with factories (create_hull, from_definition)
-- Updated Ship._initialize_layers() to use LayerData
-- Updated ShipComponentManager to use LayerData
-- Updated 20+ production files for LayerData attribute access
-- Updated 30+ test files for LayerData
-- Core entity tests all passing (377 tests)
-- Remaining failures are UI/builder tests with mock dicts needing LayerData
-- Next action: Continue updating remaining test files with LayerData mock fixtures
+- PROJ-84 Phase 1 COMPLETE: All LayerData conversions done
+- Updated 25+ production files for LayerData attribute access
+- Updated 40+ test files with LayerData fixtures
+- Additional files: battle_state.py, ship_instance.py, battle_ui_service.py, design_metadata.py, stats_config.py, layer_panel.py
+- Most Phase 2-6 work done as cascading updates in Phase 1
+- Next action: Verify Phase 2-7 checklists - likely can be marked complete
 
 ---
 
@@ -207,8 +205,8 @@
 
 ---
 
-- [ ] **PROJ-84: Ship Layer Data Typed Structures**
-  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-84: Ship Layer Data Typed Structures**
+  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-84/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-84/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -391,6 +389,7 @@
 | 2026-02-09 | PROJ-83 | Audit 1 | PASSED | 7351 passed, 0 warnings | pending | All goals met, 100% warning elimination |
 | 2026-02-09 | PROJ-85 | Phase 1 | Complete | 7351 passed | b17d41ae | Removed 3 globals, cleaned imports |
 | 2026-02-09 | PROJ-85 | Audit 1 | PASSED | 7351 passed | b17d41ae | No runtime imports, all goals met |
+| 2026-02-10 | PROJ-84 | Phase 1 | Complete | 7375 passed | pending | LayerData dataclass, 25+ prod files, 40+ test files updated |
 
 ---
 

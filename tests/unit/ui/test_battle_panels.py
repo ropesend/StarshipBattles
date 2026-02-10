@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import sys
 import os
+from game.simulation.entities.layer_data import LayerData
 
 # Mock Rect to allow logic validation
 class MockRect:
@@ -75,10 +76,10 @@ class TestBattlePanels:
         ship.is_derelict = False
         ship.max_shields = 100
         ship.layers = {
-            'outer': {'components': []},
-            'inner': {'components': []},
-            'core': {'components': []},
-            'armor': {'components': []}
+            'outer': LayerData(),
+            'inner': LayerData(),
+            'core': LayerData(),
+            'armor': LayerData()
         }
         # Needed for height calc
         ship.max_hp = 100

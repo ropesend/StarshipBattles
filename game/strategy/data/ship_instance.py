@@ -155,7 +155,7 @@ class ShipInstance:
 
         # Capture component damage
         for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data.get('components', []):
+            for comp in layer_data.components:
                 if comp.current_hp < comp.max_hp:
                     instance.component_damage[comp.id] = comp.current_hp
 
@@ -735,7 +735,7 @@ class ShipInstance:
         # Apply component-specific damage
         for comp_id, target_hp in self.component_damage.items():
             for layer_type, layer_data in ship.layers.items():
-                for comp in layer_data.get('components', []):
+                for comp in layer_data.components:
                     if comp.id == comp_id:
                         # Set component to specific HP
                         damage = comp.current_hp - target_hp
@@ -774,7 +774,7 @@ class ShipInstance:
         # Update component damage
         self.component_damage.clear()
         for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data.get('components', []):
+            for comp in layer_data.components:
                 if comp.current_hp < comp.max_hp:
                     self.component_damage[comp.id] = comp.current_hp
 

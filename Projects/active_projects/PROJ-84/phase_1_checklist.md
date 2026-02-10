@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** Complete
 **Objective:** Define the LayerData dataclass, update Ship and ShipComponentManager to use it, consolidate duplicated layer initialization.
 
 ---
@@ -128,9 +128,8 @@ Many test files also updated with LayerData usage.
 ## Phase Completion Checklist
 When all tasks above are done:
 - [x] All task checkboxes above are checked
-- [/] Update status at top of this file to `Complete` (In Progress - some test files still need updating)
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
 
-**Current Test Status:** 7255 passed, 110 failed, 10 errors (98.5% passing)
-Remaining failures are in UI tests and builder tests that still have mock dicts needing LayerData updates.
+**Final Test Status:** 7375 passed (100% passing)

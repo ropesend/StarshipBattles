@@ -9,6 +9,7 @@ Covers:
 """
 import pytest
 from unittest.mock import MagicMock
+from game.simulation.entities.layer_data import LayerData
 
 
 def create_mock_component(hp=100):
@@ -62,13 +63,13 @@ class TestShieldInteraction:
         ship.current_shields = 20
         ship.max_shields = 100
         ship.hp = 100
-        ship.layers = {'ARMOR': {'radius_pct': 1.0, 'components': []}}
+        ship.layers = {'ARMOR': LayerData(radius_pct=1.0)}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         # Create mock component to absorb damage
         mock_comp = create_mock_component()
-        ship.layers['ARMOR']['components'].append(mock_comp)
+        ship.layers['ARMOR'].components.append(mock_comp)
 
         engine = ShipCombatEngine(ship)
         engine.take_damage(50)
@@ -158,13 +159,13 @@ class TestArmorEdgeCases:
         ship.current_shields = 0
         ship.max_shields = 0
         ship.hp = 100
-        ship.layers = {'ARMOR': {'radius_pct': 1.0, 'components': []}}
+        ship.layers = {'ARMOR': LayerData(radius_pct=1.0)}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         # Create mock component to absorb damage
         mock_comp = create_mock_component()
-        ship.layers['ARMOR']['components'].append(mock_comp)
+        ship.layers['ARMOR'].components.append(mock_comp)
 
         engine = ShipCombatEngine(ship)
         engine.take_damage(20)
@@ -259,9 +260,9 @@ class TestLayerDamageDistribution:
         ship.max_shields = 0
         ship.hp = 100
         ship.layers = {
-            'OUTER': {'radius_pct': 1.0, 'components': [create_layer_comp('OUTER', 10)]},
-            'INNER': {'radius_pct': 0.5, 'components': [create_layer_comp('INNER', 10)]},
-            'CORE': {'radius_pct': 0.2, 'components': [create_layer_comp('CORE', 10)]},
+            'OUTER': LayerData(radius_pct=1.0, components=[create_layer_comp('OUTER', 10)]),
+            'INNER': LayerData(radius_pct=0.5, components=[create_layer_comp('INNER', 10)]),
+            'CORE': LayerData(radius_pct=0.2, components=[create_layer_comp('CORE', 10)]),
         }
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
@@ -294,8 +295,8 @@ class TestLayerDamageDistribution:
         ship.max_shields = 0
         ship.hp = 100
         ship.layers = {
-            'OUTER': {'radius_pct': 1.0, 'components': [comp]},
-            'INNER': {'radius_pct': 0.5, 'components': []},
+            'OUTER': LayerData(radius_pct=1.0, components=[comp]),
+            'INNER': LayerData(radius_pct=0.5),
         }
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()

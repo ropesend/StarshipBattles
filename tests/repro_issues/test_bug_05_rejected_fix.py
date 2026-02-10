@@ -3,6 +3,7 @@ from game.simulation.components.component import Component
 from game.simulation.components.abilities import ResourceGeneration, ResourceStorage, ResourceConsumption, WeaponAbility
 from game.ui.screens.builder.stats_config import get_logistics_rows
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+from game.simulation.entities.layer_data import LayerData
 
 class MockClass:
     def __init__(self, data):
@@ -26,7 +27,7 @@ def test_usage_only_visibility(fresh_registries):
         ResourceConsumption(weapon, {'resource': 'energy', 'amount': 5.0, 'trigger': 'activation'}),
         WeaponAbility(weapon, {'damage': 10, 'reload': 1.0})
     ]
-    ship.layers[LayerType.INNER]['components'].append(weapon)
+    ship.layers[LayerType.INNER].components.append(weapon)
 
     # Calc stats
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
@@ -52,7 +53,7 @@ def test_max_usage_calculation(fresh_registries):
     # 1. Constant Draw: 2.0/s
     life_support = Component({"id": "ls", "name": "LifeSupport", "mass": 20, "hp": 50, "type": "Internal"}, registries=fresh_registries)
     life_support.ability_instances = [ResourceConsumption(life_support, {'resource': 'energy', 'amount': 2.0, 'trigger': 'constant'})]
-    ship.layers[LayerType.INNER]['components'].append(life_support)
+    ship.layers[LayerType.INNER].components.append(life_support)
 
     # 2. Weapon 1: 5.0 cost / 1.0s reload -> 5.0/s
     w1 = Component({"id": "w1", "name": "W1", "mass": 10, "hp": 50, "type": "Internal"}, registries=fresh_registries)
@@ -60,7 +61,7 @@ def test_max_usage_calculation(fresh_registries):
         ResourceConsumption(w1, {'resource': 'energy', 'amount': 5.0, 'trigger': 'activation'}),
         WeaponAbility(w1, {'damage': 10, 'reload': 1.0})
     ]
-    ship.layers[LayerType.INNER]['components'].append(w1)
+    ship.layers[LayerType.INNER].components.append(w1)
 
     # 3. Weapon 2: 10.0 cost / 2.0s reload -> 5.0/s
     w2 = Component({"id": "w2", "name": "W2", "mass": 10, "hp": 50, "type": "Internal"}, registries=fresh_registries)
@@ -68,7 +69,7 @@ def test_max_usage_calculation(fresh_registries):
         ResourceConsumption(w2, {'resource': 'energy', 'amount': 10.0, 'trigger': 'activation'}),
         WeaponAbility(w2, {'damage': 10, 'reload': 2.0})
     ]
-    ship.layers[LayerType.INNER]['components'].append(w2)
+    ship.layers[LayerType.INNER].components.append(w2)
 
     # Total Expected: 2.0 + 5.0 + 5.0 = 12.0
 

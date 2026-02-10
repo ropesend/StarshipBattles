@@ -3,6 +3,7 @@ from game.simulation.validation.ship_validator import LayerRestrictionDefinition
 from game.core.validation import ValidationResult
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestLayerRestrictionsRefactor:
@@ -11,15 +12,9 @@ class TestLayerRestrictionsRefactor:
         self.rule = LayerRestrictionDefinitionRule()
         self.ship = MagicMock()
         self.ship.layers = {
-            LayerType.CORE: {
-                'restrictions': ["block_classification:Weapons"]
-            },
-            LayerType.ARMOR: {
-                'restrictions': ["allow_classification:Armor"]
-            },
-            LayerType.INNER: {
-                'restrictions': []  # No restrictions
-            }
+            LayerType.CORE: LayerData(restrictions=["block_classification:Weapons"]),
+            LayerType.ARMOR: LayerData(restrictions=["allow_classification:Armor"]),
+            LayerType.INNER: LayerData(restrictions=[])  # No restrictions
         }
 
     def create_mock_component(self, comp_id, classification, type_str):

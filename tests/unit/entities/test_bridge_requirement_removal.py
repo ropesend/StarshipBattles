@@ -7,6 +7,7 @@ from game.core.validation import ValidationResult
 from game.simulation.entities.ship import Ship, LayerType
 from game.core.registry import RegistryManager
 from game.simulation.components.component import Component
+from game.simulation.entities.layer_data import LayerData
 from tests.fixtures.paths import get_unit_test_data_dir
 
 
@@ -38,9 +39,9 @@ class TestBridgeRequirementRemoval:
         ship.ship_class = "TestClass"
         ship.vehicle_type = "Ship"
         ship.layers = {
-            LayerType.CORE: {'components': []},
-            LayerType.INNER: {'components': []},
-            LayerType.OUTER: {'components': []}
+            LayerType.CORE: LayerData(),
+            LayerType.INNER: LayerData(),
+            LayerType.OUTER: LayerData()
         }
         # Mocking values for MassBudgetRule to pass
         ship.current_mass = 100

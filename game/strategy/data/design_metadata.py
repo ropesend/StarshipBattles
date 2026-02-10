@@ -189,7 +189,7 @@ class DesignMetadata:
 
         # Sum weapon damage
         for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data.get('components', []):
+            for comp in layer_data.components:
                 if hasattr(comp, 'category') and comp.category == 'weapon':
                     power += getattr(comp, 'damage', 0) * 10
                     power += getattr(comp, 'rate_of_fire', 0) * 5
@@ -227,7 +227,7 @@ class DesignMetadata:
         costs = {}
 
         for layer_type, layer_data in ship.layers.items():
-            for comp in layer_data.get('components', []):
+            for comp in layer_data.components:
                 if hasattr(comp, 'cost'):
                     comp_cost = comp.cost
 

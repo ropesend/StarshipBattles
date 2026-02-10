@@ -7,6 +7,7 @@ from game.simulation.components.abilities import ResourceGeneration, ResourceSto
 from game.ui.screens.builder.stats_config import get_logistics_rows
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+from game.simulation.entities.layer_data import LayerData
 
 class MockClass:
     def __init__(self, data):
@@ -42,19 +43,19 @@ def test_missing_logistics_details(fresh_registries):
         first_key = list(ship.layers.keys())[0]
         print(f"Ship Layer Key type: {type(first_key)} (id: {id(first_key)})")
 
-    ship.layers[LayerType.INNER]['components'].append(battery)
+    ship.layers[LayerType.INNER].components.append(battery)
 
     # B. Reactor (Generation)
     reactor = Component({"id": "react", "name": "Reactor", "mass": 50, "hp": 100, "type": "Internal"}, registries=fresh_registries)
     # Rate 5.0 per tick -> 500 per second (if 100hz) but UI usually shows per second or tick
     # Let's assume rate is per tick for now as per system norms
     reactor.ability_instances = [ResourceGeneration(reactor, {'resource': 'energy', 'amount': 5.0})]
-    ship.layers[LayerType.INNER]['components'].append(reactor)
+    ship.layers[LayerType.INNER].components.append(reactor)
 
     # C. Life Support (Constant Consumption)
     life_support = Component({"id": "ls", "name": "LifeSupport", "mass": 20, "hp": 50, "type": "Internal"}, registries=fresh_registries)
     life_support.ability_instances = [ResourceConsumption(life_support, {'resource': 'energy', 'amount': 2.0, 'trigger': 'constant'})]
-    ship.layers[LayerType.INNER]['components'].append(life_support)
+    ship.layers[LayerType.INNER].components.append(life_support)
 
     # D. Weapon (Active Consumption)
     weapon = Component({"id": "laser", "name": "Laser", "mass": 10, "hp": 50, "type": "Internal"}, registries=fresh_registries)
@@ -63,7 +64,7 @@ def test_missing_logistics_details(fresh_registries):
         ResourceConsumption(weapon, {'resource': 'energy', 'amount': 5.0, 'trigger': 'activation'}),
         WeaponAbility(weapon, {'damage': 10, 'reload': 1.0})
     ]
-    ship.layers[LayerType.INNER]['components'].append(weapon)
+    ship.layers[LayerType.INNER].components.append(weapon)
 
     # 3. Calculate Stats
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)

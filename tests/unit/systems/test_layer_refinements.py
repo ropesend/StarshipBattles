@@ -25,8 +25,8 @@ class TestLayerRefinements:
         core = fighter.layers[LayerType.CORE]
         armor = fighter.layers[LayerType.ARMOR]
 
-        assert core['max_mass_pct'] == 1.0, "Fighter CORE should be 100%"
-        assert armor['max_mass_pct'] == pytest.approx(0.3, abs=0.01), "Fighter ARMOR should be 30%"
+        assert core.max_mass_pct == 1.0, "Fighter CORE should be 100%"
+        assert armor.max_mass_pct == pytest.approx(0.3, abs=0.01), "Fighter ARMOR should be 30%"
 
         # Verify Escort (likely 3 real layers + 1 HULL)
         layer_count = len(escort.layers)
@@ -34,12 +34,12 @@ class TestLayerRefinements:
         # [NEW] Adjust for mandatory HULL layer
         if layer_count == 4:
             # Was 3-layer -> now 4. Core: 0.5, Outer: 0.7, Armor: 0.3
-            assert escort.layers[LayerType.CORE]['max_mass_pct'] == 0.5
-            assert escort.layers[LayerType.OUTER]['max_mass_pct'] == 0.7
+            assert escort.layers[LayerType.CORE].max_mass_pct == 0.5
+            assert escort.layers[LayerType.OUTER].max_mass_pct == 0.7
         elif layer_count == 5:
             # Was 4-layer -> now 5.
-            assert escort.layers[LayerType.CORE]['max_mass_pct'] == 0.3
-            assert escort.layers[LayerType.OUTER]['max_mass_pct'] == 0.5
+            assert escort.layers[LayerType.CORE].max_mass_pct == 0.3
+            assert escort.layers[LayerType.OUTER].max_mass_pct == 0.5
 
     def test_mass_budget_enforcement(self, fighter):
         """Verify mass_budget_exceeded logic via VALIDATOR."""
@@ -117,8 +117,8 @@ class TestLayerRefinements:
         # Core Radius = sqrt(1.0 / 1.3) = sqrt(0.769) ~= 0.877
         # Armor Radius = sqrt((1.0 + 0.3) / 1.3) = sqrt(1.0) = 1.0
 
-        core_r = fighter.layers[LayerType.CORE]['radius_pct']
-        armor_r = fighter.layers[LayerType.ARMOR]['radius_pct']
+        core_r = fighter.layers[LayerType.CORE].radius_pct
+        armor_r = fighter.layers[LayerType.ARMOR].radius_pct
 
         assert core_r == pytest.approx(0.877, abs=0.001), f"Fighter Core Radius mismatch. Got {core_r}"
         assert armor_r == pytest.approx(1.0, abs=0.001), f"Fighter Armor Radius mismatch. Got {armor_r}"
@@ -126,11 +126,11 @@ class TestLayerRefinements:
         # Verify Escort (assuming 3 layers: Core 0.5, Outer 0.7, Armor 0.3) -> Total 1.5 (or whatever it actually is)
         # Inspect actual mass limits to be sure
         present_layers = [l for l in [LayerType.CORE, LayerType.INNER, LayerType.OUTER, LayerType.ARMOR] if l in escort.layers]
-        total_mass = sum(escort.layers[l]['max_mass_pct'] for l in present_layers)
+        total_mass = sum(escort.layers[l].max_mass_pct for l in present_layers)
 
         cumulative = 0
         for l in present_layers:
-            cumulative += escort.layers[l]['max_mass_pct']
+            cumulative += escort.layers[l].max_mass_pct
             expected_r = (cumulative / total_mass) ** 0.5
-            actual_r = escort.layers[l]['radius_pct']
+            actual_r = escort.layers[l].radius_pct
             assert actual_r == pytest.approx(expected_r, abs=0.001), f"Escort {l.name} radius mismatch"

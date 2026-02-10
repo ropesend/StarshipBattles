@@ -18,6 +18,7 @@ from game.ui.interfaces.battle_ui import (
     ResourceDTO,
 )
 from game.core.math import Vector2
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBattleUIServiceBattleState:
@@ -408,7 +409,7 @@ class TestBattleUIServiceDefensiveFallbacks:
             # Note: layers will be set below
 
         ship = ShipWithComponent()
-        ship.layers = {layer_type: {'components': [comp]}}
+        ship.layers = {layer_type: LayerData(components=[comp])}
 
         engine.ships = [ship]
         engine.projectiles = []

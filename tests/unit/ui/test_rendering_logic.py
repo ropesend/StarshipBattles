@@ -9,6 +9,7 @@ import pygame
 
 from game.ui.renderer.game_renderer import draw_ship, draw_hud
 from game.simulation.entities.ship import LayerType
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestRenderingLogic:
@@ -39,10 +40,10 @@ class TestRenderingLogic:
             self.ship.forward_vector.return_value = pygame.math.Vector2(1, 0)
 
             self.ship.layers = {
-                LayerType.CORE: {'components': []},
-                LayerType.INNER: {'components': []},
-                LayerType.OUTER: {'components': []},
-                LayerType.ARMOR: {'components': []}
+                LayerType.CORE: LayerData(),
+                LayerType.INNER: LayerData(),
+                LayerType.OUTER: LayerData(),
+                LayerType.ARMOR: LayerData()
             }
 
             self.mock_camera.world_to_screen.side_effect = lambda pos: pos
@@ -75,7 +76,7 @@ class TestRenderingLogic:
         comp_engine.has_ability.side_effect = lambda x: True if x == 'CombatPropulsion' else False
 
         start_comps = [comp_weapon, comp_engine]
-        self.ship.layers[LayerType.OUTER]['components'] = start_comps
+        self.ship.layers[LayerType.OUTER].components = start_comps
 
         self.mock_camera.zoom = 1.0
         self.mock_camera.show_overlay = True

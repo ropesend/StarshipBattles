@@ -115,7 +115,7 @@ def fmt_targeting(val):
 def get_armor_hp(ship):
     from game.core.constants import LayerType
     if LayerType.ARMOR in ship.layers:
-        return ship.layers[LayerType.ARMOR].get('max_hp_pool', 0)
+        return ship.layers[LayerType.ARMOR].max_hp_pool
     return 0
 
 def get_maneuver_points(ship):

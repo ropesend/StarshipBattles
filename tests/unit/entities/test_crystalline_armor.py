@@ -7,6 +7,7 @@ pygame.init()
 from game.simulation.components.component import Component
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestCrystallineArmor:
@@ -48,7 +49,7 @@ class TestCrystallineArmor:
 
         # Add Armor Layer
         if LayerType.ARMOR not in self.ship.layers:
-             self.ship.layers[LayerType.ARMOR] = {'components': [], 'radius_pct': 1.0, 'restrictions': [], 'max_mass_pct': 1.0, 'max_hp_pool': 100, 'hp_pool': 100}
+             self.ship.layers[LayerType.ARMOR] = LayerData(components=[], radius_pct=1.0, restrictions=[], max_mass_pct=1.0, max_hp_pool=100, hp_pool=100)
 
         # Be "Alive"
         self.ship.is_alive = True

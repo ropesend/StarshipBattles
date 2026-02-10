@@ -18,6 +18,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component, load_components, create_component
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+from game.simulation.entities.layer_data import LayerData
 
 
 def _get_layer_key(ship, layer_name):
@@ -49,7 +50,7 @@ def test_generator_without_crew_is_inactive(fresh_registries):
 
     # Add ONLY generator (no crew quarters/life support)
     generator = create_component("generator", registries=fresh_registries)
-    ship.layers[layer_key]['components'].append(generator)
+    ship.layers[layer_key].components.append(generator)
     generator.ship = ship
 
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
@@ -81,16 +82,16 @@ def test_generator_with_crew_is_active(fresh_registries):
 
     # Add crew support first
     quarters = create_component("crew_quarters", registries=fresh_registries)  # Provides crew capacity
-    ship.layers[layer_key]['components'].append(quarters)
+    ship.layers[layer_key].components.append(quarters)
     quarters.ship = ship
 
     life_support = create_component("life_support", registries=fresh_registries)  # Provides life support
-    ship.layers[layer_key]['components'].append(life_support)
+    ship.layers[layer_key].components.append(life_support)
     life_support.ship = ship
 
     # Now add generator
     generator = create_component("generator", registries=fresh_registries)
-    ship.layers[layer_key]['components'].append(generator)
+    ship.layers[layer_key].components.append(generator)
     generator.ship = ship
 
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)

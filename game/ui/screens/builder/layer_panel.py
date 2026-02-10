@@ -137,7 +137,7 @@ class LayerPanel(DropTarget):
             components = data.components
             
             current_mass = sum(c.mass for c in components)
-            layer_max_mass = ship.max_mass_budget * data.get('max_mass_pct', 1.0)
+            layer_max_mass = ship.max_mass_budget * data.max_mass_pct
             total_max_mass = ship.max_mass_budget
             
             # --- HEADER ---

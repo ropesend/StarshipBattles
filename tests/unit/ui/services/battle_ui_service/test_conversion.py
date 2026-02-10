@@ -17,6 +17,7 @@ from game.ui.interfaces.battle_ui import (
     ComponentDTO,
 )
 from game.core.math import Vector2
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBattleUIServiceCreation:
@@ -98,7 +99,7 @@ class TestBattleUIServiceShipConversion:
         comp.shots_hit = 7
 
         mock_ship.layers = {
-            Mock(value="outer"): {"components": [comp]}
+            Mock(value="outer"): LayerData(components=[comp])
         }
 
         service = BattleUIService(mock_battle_service)

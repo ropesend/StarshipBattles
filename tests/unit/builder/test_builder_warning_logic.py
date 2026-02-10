@@ -10,6 +10,7 @@ os.environ["SDL_VIDEODRIVER"] = "dummy"
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.core.registry import RegistryManager
+from game.simulation.entities.layer_data import LayerData
 
 
 @pytest.fixture
@@ -72,7 +73,7 @@ class TestBuilderWarningLogic:
         """Test changing class with no components triggers immediate action (no warning)."""
         builder = builder_warning_setup
         # Ensure ship is empty
-        builder.ship.layers = {'CORE': {'components': []}}
+        builder.ship.layers = {'CORE': LayerData()}
 
         # Setup event
         event = MagicMock()
@@ -93,7 +94,7 @@ class TestBuilderWarningLogic:
         """Test changing class WITH components triggers warning dialog."""
         builder = builder_warning_setup
         # Add a dummy component
-        builder.ship.layers = {'CORE': {'components': ['mock_comp']}}
+        builder.ship.layers = {'CORE': LayerData(components=['mock_comp'])}
 
         event = MagicMock()
         event.type = pygame_gui.UI_DROP_DOWN_MENU_CHANGED
@@ -111,7 +112,7 @@ class TestBuilderWarningLogic:
     def test_change_type_empty_ship(self, builder_warning_setup):
         """Test changing type with no components triggers immediate action."""
         builder = builder_warning_setup
-        builder.ship.layers = {'CORE': {'components': []}}
+        builder.ship.layers = {'CORE': LayerData()}
 
         event = MagicMock()
         event.type = pygame_gui.UI_DROP_DOWN_MENU_CHANGED
@@ -133,7 +134,7 @@ class TestBuilderWarningLogic:
     def test_change_type_non_empty_ship(self, builder_warning_setup):
         """Test changing type WITH components triggers warning."""
         builder = builder_warning_setup
-        builder.ship.layers = {'CORE': {'components': ['mock_comp']}}
+        builder.ship.layers = {'CORE': LayerData(components=['mock_comp'])}
 
         event = MagicMock()
         event.type = pygame_gui.UI_DROP_DOWN_MENU_CHANGED

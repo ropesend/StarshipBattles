@@ -12,6 +12,7 @@ from game.core.constants import LayerType
 from game.core.registry import RegistryManager, GameRegistries
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
+from game.simulation.entities.layer_data import LayerData
 
 
 @pytest.fixture
@@ -100,13 +101,13 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
     gui.layer_panel = MagicMock()
 
     # Verify initial hull exists (added by Ship.__init__ for Escort class)
-    hull_comps = gui.viewmodel.ship.layers[LayerType.HULL]['components']
+    hull_comps = gui.viewmodel.ship.layers[LayerType.HULL].components
     assert len(hull_comps) == 1, "Ship should start with a hull component"
 
     # Add a non-hull component to another layer
     laser = Component({"id": "small_laser", "name": "Laser", "type": "Weapon", "mass": 10, "hp": 50},
                       registries=registries)
-    gui.viewmodel.ship.layers[LayerType.CORE]['components'].append(laser)
+    gui.viewmodel.ship.layers[LayerType.CORE].components.append(laser)
 
     # Trigger clear design - this now delegates to viewmodel.clear_design()
     # which properly preserves the hull
@@ -114,11 +115,11 @@ def test_clear_design_removes_hull_logic_repro(simple_ship_registry):
 
     # Verify the fix is working:
     # 1. Non-hull component is correctly removed
-    assert len(gui.viewmodel.ship.layers[LayerType.CORE]['components']) == 0, \
+    assert len(gui.viewmodel.ship.layers[LayerType.CORE].components) == 0, \
         "CORE layer should be cleared"
 
     # 2. Hull component is preserved (this was the bug - hull was removed)
-    hull_comps_after = gui.viewmodel.ship.layers[LayerType.HULL]['components']
+    hull_comps_after = gui.viewmodel.ship.layers[LayerType.HULL].components
     assert len(hull_comps_after) > 0, \
         "BUG-13: Hull component should NOT be removed by Clear Design"
 

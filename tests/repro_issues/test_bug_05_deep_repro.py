@@ -7,6 +7,7 @@ from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.components.component import Component
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.ui.screens.builder.stats_config import get_logistics_rows
+from game.simulation.entities.layer_data import LayerData
 
 # Mock Data simulating components.json entries
 MOCK_SHIELD_REGEN_DATA = {
@@ -66,7 +67,7 @@ def test_shield_regen_consumption(fresh_registries):
 
     # Create Component from Dict (simulating load_components)
     comp = Component(MOCK_SHIELD_REGEN_DATA, registries=fresh_registries)
-    ship.layers[LayerType.INNER]['components'].append(comp)
+    ship.layers[LayerType.INNER].components.append(comp)
 
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
     calc.calculate(ship)
@@ -116,7 +117,7 @@ def test_laser_cannon_consumption(fresh_registries):
     assert comp.has_ability('ResourceConsumption')
     assert comp.has_ability('WeaponAbility')  # BeamWeaponAbility inherits
 
-    ship.layers[LayerType.INNER]['components'].append(comp)
+    ship.layers[LayerType.INNER].components.append(comp)
 
     calc = ShipStatsCalculator(fresh_registries.vehicle_classes)
     calc.calculate(ship)

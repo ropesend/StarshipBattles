@@ -32,12 +32,11 @@ class TestLayerRestrictionRuleRefactor:
 
     def _create_mock_ship(self, restrictions):
         """Create a mock ship with given layer restrictions."""
+        from game.simulation.entities.layer_data import LayerData
+
         ship = MagicMock()
         ship.layers = {
-            self.LayerType.CORE: {
-                'components': [],
-                'restrictions': restrictions
-            }
+            self.LayerType.CORE: LayerData(restrictions=restrictions)
         }
         return ship
 

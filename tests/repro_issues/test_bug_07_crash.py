@@ -8,6 +8,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
 from game.simulation.components.abilities import create_ability, ToHitAttackModifier
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBug07Crash:
@@ -46,7 +47,7 @@ class TestBug07Crash:
         # 3. Add Component to Ship
         # We need to bypass the validator to avoid unrelated errors, or just use valid setup.
         # Direct addition to layer might be easiest for unit test.
-        ship.layers[LayerType.CORE]['components'].append(comp)
+        ship.layers[LayerType.CORE].components.append(comp)
         
         # 4. Trigger validation (Crash happens here)
         try:

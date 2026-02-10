@@ -9,6 +9,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.entities.projectile import Projectile
 from game.engine.spatial import SpatialGrid
 from game.core.constants import AttackType
+from game.simulation.entities.layer_data import LayerData
 
 
 @pytest.fixture
@@ -36,10 +37,10 @@ def engine_with_ships(fresh_registries):
 
     # Manually constructing minimal layer structure
     ship1.layers = {
-        'CORE': {'components': [dummy_comp1]}
+        'CORE': LayerData(components=[dummy_comp1])
     }
     ship2.layers = {
-        'CORE': {'components': [dummy_comp2]}
+        'CORE': LayerData(components=[dummy_comp2])
     }
 
     ship1.is_alive = True

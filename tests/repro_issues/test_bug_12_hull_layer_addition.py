@@ -10,6 +10,7 @@ from game.simulation.entities.ship_loader import initialize_ship_data
 from game.simulation.components.component import load_components, create_component
 from game.core.registry import RegistryManager
 from tests.fixtures.paths import get_project_root
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBug12HullAddition:
@@ -38,7 +39,7 @@ class TestBug12HullAddition:
         res = ship.add_component(comp, LayerType.HULL)
 
         assert res is False, "Should NOT be able to add armor_plate to HULL layer"
-        assert comp not in ship.layers[LayerType.HULL]['components'], \
+        assert comp not in ship.layers[LayerType.HULL].components, \
             "Component should not be present in HULL layer list"
 
     def test_prevent_any_addition_to_hull_layer_in_builder(self, setup):
@@ -48,4 +49,4 @@ class TestBug12HullAddition:
             comp = create_component(comp_id, registries=self.registries)
             res = ship.add_component(comp, LayerType.HULL)
             assert res is False, f"Should NOT be able to add {comp_id} to HULL layer"
-            assert comp not in ship.layers[LayerType.HULL]['components']
+            assert comp not in ship.layers[LayerType.HULL].components

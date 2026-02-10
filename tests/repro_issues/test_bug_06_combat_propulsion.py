@@ -13,6 +13,7 @@ from game.simulation.components.abilities import (
 )
 from game.simulation.entities.ship_stats import ShipStatsCalculator
 from game.simulation.validation.ship_validator import ShipDesignValidator
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBug06CombatPropulsion:
@@ -97,9 +98,9 @@ class TestBug06CombatPropulsion:
         assert core_key is not None, "Ship should have CORE layer"
         assert outer_key is not None, "Ship should have OUTER layer"
         
-        ship.layers[core_key]['components'].append(bridge)
+        ship.layers[core_key].components.append(bridge)
         bridge.ship = ship
-        ship.layers[outer_key]['components'].append(engine)
+        ship.layers[outer_key].components.append(engine)
         engine.ship = ship
         
         # 5. Calculate stats using our test calculator
@@ -137,7 +138,7 @@ class TestBug06CombatPropulsion:
                 outer_key = k
                 break
         
-        ship.layers[outer_key]['components'].append(engine)
+        ship.layers[outer_key].components.append(engine)
         engine.ship = ship
         
         # Calculate and verify

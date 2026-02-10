@@ -13,6 +13,7 @@ from game.ui.screens.workshop_screen import DesignWorkshopScreen
 from game.ui.screens.workshop_context import WorkshopContext
 from game.core.registry import RegistryManager
 from game.simulation.entities.ship import LayerType
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBuilderDragDropReal:
@@ -73,28 +74,29 @@ class TestBuilderDragDropReal:
 
         # Setup test ship via viewmodel
         builder.viewmodel._ship = MagicMock()
+        # Use real LayerData objects (PROJ-84)
         builder.ship.layers = {
-            LayerType.CORE: {'components': []},
-            LayerType.INNER: {'components': []},
-            LayerType.OUTER: {'components': []},
-            LayerType.ARMOR: {'components': []}
+            LayerType.CORE: LayerData(),
+            LayerType.INNER: LayerData(),
+            LayerType.OUTER: LayerData(),
+            LayerType.ARMOR: LayerData()
         }
 
         # Add ship helper methods that event_router now uses
         def get_all_components():
             result = []
             for layer_data in builder.ship.layers.values():
-                result.extend(layer_data['components'])
+                result.extend(layer_data.components)
             return result
 
         def iter_components():
             for layer_type, layer_data in builder.ship.layers.items():
-                for comp in layer_data['components']:
+                for comp in layer_data.components:
                     yield layer_type, comp
 
         def has_components():
             for layer_data in builder.ship.layers.values():
-                if layer_data['components']:
+                if layer_data.components:
                     return True
             return False
 
@@ -187,7 +189,7 @@ class TestBuilderDragDropReal:
 
         original.clone.return_value = cloned
 
-        self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
+        self.builder.ship.layers[LayerType.OUTER].components = [original]
 
         # Mock the viewmodel's add_component_instance to return success
         self.builder.viewmodel.add_component_instance = MagicMock(return_value=True)
@@ -223,7 +225,7 @@ class TestBuilderDragDropReal:
 
         original.clone.return_value = cloned
 
-        self.builder.ship.layers[LayerType.OUTER]['components'] = [original]
+        self.builder.ship.layers[LayerType.OUTER].components = [original]
 
         # Mock the viewmodel's add_component_instance to return failure
         self.builder.viewmodel.add_component_instance = MagicMock(return_value=False)

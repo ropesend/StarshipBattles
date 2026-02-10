@@ -185,7 +185,7 @@ class ShipState:
         for layer_type, layer_data in ship.layers.items():
             layer_name = layer_type.name
             components[layer_name] = []
-            for comp in layer_data.get('components', []):
+            for comp in layer_data.components:
                 components[layer_name].append(ComponentState.from_component(comp))
 
         # Capture resource levels

@@ -6,6 +6,7 @@ import os
 from unittest.mock import MagicMock
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import save_json
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestDesignMetadata:
@@ -132,9 +133,7 @@ class TestDesignMetadata:
         armor.cost = {"metal": 100}
 
         ship.layers = {
-            "outer": {
-                "components": [weapon, armor]
-            }
+            "outer": LayerData(components=[weapon, armor])
         }
 
         # Create metadata

@@ -10,6 +10,7 @@ from game.simulation.entities.ship import Ship
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
 from game.core.registry import RegistryManager
+from game.simulation.entities.layer_data import LayerData
 
 
 @pytest.fixture
@@ -54,14 +55,14 @@ def test_hull_updates_on_class_change_no_migrate(dual_class_registry):
     ship = Ship(name="Test", x=0, y=0, color=(255,255,255), ship_class="Escort", registries=dual_class_registry)
     
     # Initial check
-    hull_comps = ship.layers[LayerType.HULL]['components']
+    hull_comps = ship.layers[LayerType.HULL].components
     assert any(c.id == "hull_escort" for c in hull_comps), "Initial hull should be hull_escort"
     
     # Change class
     ship.change_class("Frigate", migrate_components=False)
     
     # Verification
-    hull_comps = ship.layers[LayerType.HULL]['components']
+    hull_comps = ship.layers[LayerType.HULL].components
     assert any(c.id == "hull_frigate" for c in hull_comps), "Hull should have updated to hull_frigate"
     assert not any(c.id == "hull_escort" for c in hull_comps), "Old hull should be gone"
 
@@ -74,6 +75,6 @@ def test_hull_updates_on_class_change_with_migrate(dual_class_registry):
     ship.change_class("Frigate", migrate_components=True)
     
     # Verification
-    hull_comps = ship.layers[LayerType.HULL]['components']
+    hull_comps = ship.layers[LayerType.HULL].components
     assert any(c.id == "hull_frigate" for c in hull_comps), "Hull should have updated to hull_frigate"
     assert not any(c.id == "hull_escort" for c in hull_comps), "Old hull should be gone"

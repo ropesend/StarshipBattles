@@ -144,7 +144,7 @@ class BattleUIService:
         components = []
         for layer_type, layer_data in ship.layers.items():
             layer_name = layer_type.value if hasattr(layer_type, 'value') else str(layer_type)
-            for comp in layer_data.get('components', []):
+            for comp in layer_data.components:
                 components.append(self._convert_component(comp, layer_name))
 
         # Get target name

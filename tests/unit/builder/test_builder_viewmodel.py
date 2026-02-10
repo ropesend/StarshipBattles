@@ -13,6 +13,7 @@ import pygame
 
 from game.core.registry import RegistryManager, GameRegistries
 from game.ui.screens.workshop_context import WorkshopContext, WorkshopMode
+from game.simulation.entities.layer_data import LayerData
 from tests.fixtures.paths import get_project_root, get_data_dir
 
 
@@ -315,12 +316,12 @@ class TestBuilderViewModel:
         # Non-hull layers should be empty
         for layer_type, layer_data in ship.layers.items():
             if layer_type != LayerType.HULL:
-                assert len(layer_data['components']) == 0, \
+                assert len(layer_data.components) == 0, \
                     f"Layer {layer_type.name} should be empty after clear_design"
 
         # Hull should remain
         if LayerType.HULL in ship.layers:
-            assert len(ship.layers[LayerType.HULL]['components']) > 0
+            assert len(ship.layers[LayerType.HULL].components) > 0
 
     # ─────────────────────────────────────────────────────────────────
     # Ship Property Mutation Tests (PROJ-33: UI-01 Remediation)

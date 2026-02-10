@@ -8,6 +8,7 @@ from game.simulation.components.component import Component
 from game.simulation.components.abilities import ResourceConsumption, WeaponAbility
 from game.ui.screens.builder.stats_config import get_logistics_rows
 from game.simulation.entities.ship_stats import ShipStatsCalculator
+from game.simulation.entities.layer_data import LayerData
 
 
 def _get_layer_key(ship, layer_name):
@@ -58,7 +59,7 @@ def test_ammo_usage_triggers_logistics_row(fresh_registries):
     layer_key = _get_layer_key(ship, 'INNER')
     assert layer_key is not None, f"Ship should have INNER layer. Available: {[k.name for k in ship.layers]}"
 
-    ship.layers[layer_key]['components'].append(railgun)
+    ship.layers[layer_key].components.append(railgun)
     railgun.ship = ship
 
     # 3. Calculate Stats
@@ -93,7 +94,7 @@ def test_ammo_usage_triggers_logistics_row(fresh_registries):
         ResourceConsumption(laser, {'resource': 'energy', 'amount': 5.0, 'trigger': 'activation'}),
         WeaponAbility(laser, {'damage': 10, 'reload': 2.0, 'resource_cost': {'energy': 5.0}})
     ]
-    ship.layers[layer_key]['components'].append(laser)
+    ship.layers[layer_key].components.append(laser)
     laser.ship = ship
 
     calc.calculate(ship)

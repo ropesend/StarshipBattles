@@ -130,8 +130,8 @@ def measure_formation_deviation(master: Ship) -> float:
 
 def heal_target(target: Ship):
     """Keep target alive by resetting component HP."""
-    for val in target.layers.values():
-        for comp in val['components']:
+    for layer_data in target.layers.values():
+        for comp in layer_data.components:
             if hasattr(comp, 'current_hp'):
                 comp.current_hp = comp.max_hp
 

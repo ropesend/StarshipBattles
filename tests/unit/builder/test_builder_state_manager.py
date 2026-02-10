@@ -7,6 +7,7 @@ import pytest
 from unittest.mock import MagicMock, Mock, patch, PropertyMock
 from game.simulation.components.component import Component
 from game.core.constants import LayerType
+from game.simulation.entities.layer_data import LayerData
 
 
 class TestBuilderStateManager:
@@ -17,9 +18,9 @@ class TestBuilderStateManager:
         """Create a mock ship with layers."""
         ship = MagicMock()
         ship.layers = {
-            LayerType.HULL: {'components': []},
-            LayerType.ARMOR: {'components': []},
-            LayerType.OUTER: {'components': []},
+            LayerType.HULL: LayerData(),
+            LayerType.ARMOR: LayerData(),
+            LayerType.OUTER: LayerData(),
         }
         return ship
 
@@ -155,7 +156,7 @@ class TestBuilderStateManager:
 
     def test_tuple_selection(self, state_manager, sample_component, mock_ship):
         """Can select via (layer, index, component) tuple."""
-        mock_ship.layers[LayerType.OUTER]['components'] = [sample_component]
+        mock_ship.layers[LayerType.OUTER].components = [sample_component]
 
         selection = (LayerType.OUTER, 0, sample_component)
         state_manager.on_selection_changed(selection, append=False)
@@ -252,7 +253,7 @@ class TestBuilderStateManager:
 
     def test_find_component_in_ship(self, state_manager, mock_ship, sample_component):
         """State manager can locate component in ship layers."""
-        mock_ship.layers[LayerType.HULL]['components'] = [sample_component]
+        mock_ship.layers[LayerType.HULL].components = [sample_component]
 
         state_manager.on_selection_changed(sample_component, append=False)
 
@@ -288,8 +289,8 @@ class TestBuilderStateManagerWithShip:
         """Can select a component that's actually in the ship."""
         # Get first component from ship
         for layer_type, layer_data in basic_escort_ship.layers.items():
-            if layer_data['components']:
-                comp = layer_data['components'][0]
+            if layer_data.components:
+                comp = layer_data.components[0]
                 break
         else:
             pytest.skip("No components in ship")

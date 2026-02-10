@@ -11,6 +11,7 @@ the engine for accurate behavior testing.
 """
 import pytest
 from unittest.mock import MagicMock
+from game.simulation.entities.layer_data import LayerData
 
 
 def create_mock_component(hp=100):
@@ -50,11 +51,11 @@ class TestEmissiveArmorBehavior:
         from game.simulation.entities.ship_combat_engine import ShipCombatEngine
 
         # Set up layers with components that can take damage
-        mock_ship_with_emissive.layers = {'ARMOR': {'radius_pct': 1.0, 'components': []}}
+        mock_ship_with_emissive.layers = {'ARMOR': LayerData(radius_pct=1.0)}
 
         # Create a mock component that can absorb damage
         mock_comp = create_mock_component()
-        mock_ship_with_emissive.layers['ARMOR']['components'].append(mock_comp)
+        mock_ship_with_emissive.layers['ARMOR'].components.append(mock_comp)
 
         engine = ShipCombatEngine(mock_ship_with_emissive)
         engine.take_damage(25)
@@ -86,13 +87,13 @@ class TestEmissiveArmorBehavior:
         ship.current_shields = 0
         ship.max_shields = 0
         ship.hp = 100
-        ship.layers = {'ARMOR': {'radius_pct': 1.0, 'components': []}}
+        ship.layers = {'ARMOR': LayerData(radius_pct=1.0)}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         # Create mock component to absorb damage
         mock_comp = create_mock_component()
-        ship.layers['ARMOR']['components'].append(mock_comp)
+        ship.layers['ARMOR'].components.append(mock_comp)
 
         engine = ShipCombatEngine(ship)
         engine.take_damage(20)
@@ -165,13 +166,13 @@ class TestCrystallineArmorBehavior:
         ship.current_shields = 0
         ship.max_shields = 0  # No shield system
         ship.hp = 100
-        ship.layers = {'ARMOR': {'radius_pct': 1.0, 'components': []}}
+        ship.layers = {'ARMOR': LayerData(radius_pct=1.0)}
         ship.recalculate_stats = MagicMock()
         ship.update_derelict_status = MagicMock()
 
         # Create mock component to absorb damage
         mock_comp = create_mock_component()
-        ship.layers['ARMOR']['components'].append(mock_comp)
+        ship.layers['ARMOR'].components.append(mock_comp)
 
         engine = ShipCombatEngine(ship)
         engine.take_damage(20)
