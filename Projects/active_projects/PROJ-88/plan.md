@@ -16,16 +16,16 @@
 | 1. Eradicate Dead ShipComponentManager | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Ship Stat Aggregation Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Validation Extraction | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Component Resource & Health Managers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Component Resource & Health Managers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Game/app Scene Dispatch Completion | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 3 Complete -- Ready for Phase 4
-**Last Action:** Extracted validation methods into ShipValidatorHelper (67 lines), Ship reduced 812→811 (-1 line net, logic extracted)
-**Next Action:** Begin Phase 4 -- extract component resource and health managers
+**Active Phase:** Phase 4 Complete -- Ready for Phase 5
+**Last Action:** Extracted ComponentResourceManager (97 lines) and ComponentHealthManager (72 lines), Component 756→713 (-43 lines)
+**Next Action:** Begin Phase 5 -- complete IScene migration for StrategyScreen, remove legacy dispatch from app.py
 **Blockers:** None
-**Context for Next Agent:** Phase 3 complete. ShipValidatorHelper created with check_validity, get_validation_warnings, get_missing_requirements. Ship uses lazy validator_helper property for delegation. 9 new tests. 7512 passed.
+**Context for Next Agent:** Phase 4 complete. Created ComponentResourceManager and ComponentHealthManager. Component uses lazy resource_manager/health_manager properties. 21 new tests. 7533 passed.
 
 ## Overview
 This project decomposes three god classes in the simulation core tier: Ship (870 lines, 136 importers), Component (756 lines, 161 importers), and Game/app.py (723 lines, 4 importers). The approach is conservative -- delete dead code first, then extract cohesive helpers behind facade methods that preserve existing APIs, minimizing blast radius across the large importer base.

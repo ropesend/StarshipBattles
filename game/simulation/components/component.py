@@ -70,6 +70,8 @@ from .component_constants import ComponentStatus, Modifier, ApplicationModifier
 from .ability_manager import AbilityManager
 from .modifier_manager import ModifierManager
 from .component_stats_calculator import ComponentStatsCalculator
+from .component_resource_manager import ComponentResourceManager
+from .component_health_manager import ComponentHealthManager
 
 if TYPE_CHECKING:
     from game.core.registry import GameRegistries
@@ -151,7 +153,11 @@ class Component:
 
         # Instantiate Abilities
         self._instantiate_abilities()
-        
+
+        # Lazy-initialized helper managers (PROJ-88)
+        self._resource_mgr: ComponentResourceManager | None = None
+        self._health_mgr: ComponentHealthManager | None = None
+
         # Load default modifiers from data definition
         # PROJ-50: self._registries is now always required via constructor
         if 'modifiers' in self.data:
@@ -226,6 +232,20 @@ class Component:
 
 
     @property
+    def resource_manager(self) -> ComponentResourceManager:
+        """Lazy-initialized resource manager. PROJ-88."""
+        if self._resource_mgr is None:
+            self._resource_mgr = ComponentResourceManager(self)
+        return self._resource_mgr
+
+    @property
+    def health_manager(self) -> ComponentHealthManager:
+        """Lazy-initialized health manager. PROJ-88."""
+        if self._health_mgr is None:
+            self._health_mgr = ComponentHealthManager(self)
+        return self._health_mgr
+
+    @property
     def hp_ratio(self) -> float:
         """Get current HP as ratio of max HP. Cached with dirty flag.
 
@@ -235,10 +255,7 @@ class Component:
         Returns:
             float: HP ratio (0.0 to 1.0), returns 1.0 if max_hp is 0
         """
-        if self._hp_ratio_dirty:
-            self._cached_hp_ratio = self.current_hp / self.max_hp if self.max_hp > 0 else 1.0
-            self._hp_ratio_dirty = False
-        return self._cached_hp_ratio
+        return self.health_manager.hp_ratio
 
     @property
     def cooldown_timer(self):
@@ -304,83 +321,31 @@ class Component:
         return self._is_operational and self.is_active
 
     def can_afford_activation(self):
-        """Check if component can afford activation costs."""
-        for ability in self.ability_instances:
-            # Use duck typing to check for activation-triggered resource consumption
-            trigger = getattr(ability, 'trigger', None)
-            check_fn = getattr(ability, 'check_available', None)
-            if trigger == 'activation' and check_fn is not None:
-                if not check_fn():
-                    return False
-        return True
+        """Check if component can afford activation costs. Delegates to resource_manager."""
+        return self.resource_manager.can_afford_activation()
 
     def consume_activation(self):
-        """Consume activation costs."""
-        for ability in self.get_abilities('ResourceConsumption'):
-            if ability.trigger == 'activation':
-                ability.check_and_consume()
+        """Consume activation costs. Delegates to resource_manager."""
+        self.resource_manager.consume_activation()
 
     def try_activate(self):
-        """Check if component can afford activation costs, consume them if available, and return True on success."""
-        if self.can_afford_activation():
-            self.consume_activation()
-            return True
-        return False
+        """Check and consume activation costs atomically. Delegates to resource_manager."""
+        return self.resource_manager.try_activate()
 
 
 
 
-    def take_damage(self, amount: float) -> None:
-        if not isinstance(amount, (int, float)):
-            raise TypeError(f"amount must be numeric, got {type(amount).__name__}")
-
-        self.current_hp -= amount
-        self._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty
-
-        # Update Status
-        if self.current_hp <= 0:
-            self.current_hp = 0
-            self.is_active = False
-            return True # Destroyed
-
-        # Update status to DAMAGED if below damage threshold (default 50%)
-        if self.current_hp < (self.max_hp * self.damage_threshold):
-            self.status = ComponentStatus.DAMAGED
-
-        return False
+    def take_damage(self, amount: float) -> bool:
+        """Apply damage to component. Delegates to health_manager."""
+        return self.health_manager.take_damage(amount)
 
     def reset_hp(self):
-        self.current_hp = self.max_hp
-        self._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty
-        self.is_active = True
-        self.status = ComponentStatus.ACTIVE
+        """Restore component to full HP. Delegates to health_manager."""
+        self.health_manager.reset_hp()
 
     def get_resource_cost(self, context: dict = None):
-        """Returns the current resource costs, including modifier multipliers.
-
-        Args:
-            context: Optional dict with context for formula evaluation.
-                     Expected keys: 'ship_class_mass' (float).
-                     If not provided, falls back to component.ship reference.
-        """
-        base_costs = getattr(self, 'evaluated_resource_cost', None) or self.data.get("resource_cost", {})
-        multiplier = self.stats.get('cost_mult', 1.0)
-
-        # Build context for formula evaluation
-        # Priority: explicit context > ship reference > default
-        eval_context = {'ship_class_mass': 1000}
-        if context and 'ship_class_mass' in context:
-            eval_context['ship_class_mass'] = context['ship_class_mass']
-        elif self.ship:
-            eval_context['ship_class_mass'] = getattr(self.ship, 'max_mass_budget', 1000)
-
-        result = {}
-        for res, amount in base_costs.items():
-            if isinstance(amount, str) and amount.startswith("="):
-                # Evaluate formula on-demand
-                amount = safe_evaluate_math_formula(amount[1:], eval_context, default=0)
-            result[res] = int(amount * multiplier)
-        return result
+        """Returns the current resource costs. Delegates to resource_manager."""
+        return self.resource_manager.get_resource_cost(context)
 
     def add_modifier(self, mod_id, value=None):
         """Add a modifier to this component. Delegates to ModifierManager."""
