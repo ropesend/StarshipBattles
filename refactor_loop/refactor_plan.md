@@ -8,18 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-84 Audit PASSED
-**Current Status:** PROJ-84 Complete - Awaiting User Verification
-**Current Project:** PROJ-87 (next)
-**Current Phase:** Not Started
-**Test Status:** 7375 passed
+**Last Completed:** PROJ-87 Phase 1
+**Current Status:** PROJ-87 Phase 1 Complete
+**Current Project:** PROJ-87
+**Current Phase:** Phase 2
+**Test Status:** 1414+346 passed (strategy unit+integration)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-84 AUDIT PASSED: All 7 phases complete, LayerData migration successful
-- Fixed 6 simulation_test files with isinstance guards
-- Grep audits: zero layer dict access patterns remaining in game/
-- Next project: PROJ-87 (God Class Decomposition - Strategy Data Tier)
+- PROJ-87 Phase 1 COMPLETE: ShipResourceManager extracted (923→873 lines)
+- Created game/strategy/data/ship_resource_manager.py (252 lines)
+- Created tests/unit/strategy/test_ship_resource_manager.py (26 tests)
+- Facade pattern: ShipInstance delegates to _resource_mgr
+- Next: Phase 2 - ShipInstance cargo & display extraction
 
 ---
 
@@ -211,8 +212,8 @@
 
 ---
 
-- [ ] **PROJ-87: God Class Decomposition — Strategy Data Tier**
-  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-87: God Class Decomposition — Strategy Data Tier**
+  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-87/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-87/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -390,6 +391,7 @@
 | 2026-02-10 | PROJ-84 | Phase 1 | Complete | 7375 passed | pending | LayerData dataclass, 25+ prod files, 40+ test files updated |
 | 2026-02-10 | PROJ-84 | Phase 2-7 | Complete | 7375 passed | pending | Verified cascading updates from Phase 1, fixed simulation_test isinstance guards |
 | 2026-02-10 | PROJ-84 | Audit 1 | PASSED | 7375 passed | pending | All goals met, zero layer dict access remaining |
+| 2026-02-10 | PROJ-87 | Phase 1 | Complete | 1414+346 passed | pending | ShipResourceManager extracted, 26 tests, 50 lines saved |
 
 ---
 

@@ -17,6 +17,7 @@ import uuid
 import json
 
 from game.core.logger import log_warning, log_debug
+from game.strategy.data.ship_resource_manager import ShipResourceManager
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -67,6 +68,13 @@ class ShipInstance:
 
     # Cached calculated stats (invalidated on damage change)
     _cached_stats: Optional[Dict[str, Any]] = field(default=None, repr=False)
+
+    # Resource manager delegate (initialized in __post_init__)
+    _resource_mgr: Optional['ShipResourceManager'] = field(default=None, repr=False, init=False)
+
+    def __post_init__(self) -> None:
+        """Initialize delegate managers after dataclass init."""
+        self._resource_mgr = ShipResourceManager(self)
 
     def __hash__(self) -> int:
         return hash(self.instance_id)
@@ -250,8 +258,7 @@ class ShipInstance:
         Returns:
             Fuel consumed per hex of strategic movement, or 0 if no consumption.
         """
-        stats = self.get_calculated_stats()
-        return stats.get('resource_consumption_per_hex', {}).get('fuel', 0)
+        return self._resource_mgr.get_fuel_cost_per_hex()
 
     def get_current_fuel(self) -> float:
         """
@@ -260,9 +267,7 @@ class ShipInstance:
         Returns:
             Current fuel amount. Returns max_fuel if not tracked (assumed full).
         """
-        stats = self.get_calculated_stats()
-        max_fuel = stats.get('resource_storage', {}).get('fuel', 0)
-        return self.resource_levels.get('fuel', max_fuel)
+        return self._resource_mgr.get_current_fuel()
 
     def consume_fuel(self, amount: float) -> bool:
         """
@@ -274,16 +279,7 @@ class ShipInstance:
         Returns:
             True if fuel was available and consumed, False if insufficient
         """
-        stats = self.get_calculated_stats()
-        max_fuel = stats.get('resource_storage', {}).get('fuel', 0)
-        current = self.resource_levels.get('fuel', max_fuel)
-
-        if current < amount:
-            return False
-
-        new_level = current - amount
-        self.resource_levels['fuel'] = new_level
-        return True
+        return self._resource_mgr.consume_fuel(amount)
 
     def get_warp_energy_cost(self) -> float:
         """
@@ -292,8 +288,7 @@ class ShipInstance:
         Returns:
             Energy consumed per warp jump, or 0 if no energy cost.
         """
-        stats = self.get_calculated_stats()
-        return stats.get('warp_resource_costs', {}).get('energy', 0)
+        return self._resource_mgr.get_warp_energy_cost()
 
     def get_warp_fuel_cost(self) -> float:
         """
@@ -302,8 +297,7 @@ class ShipInstance:
         Returns:
             Fuel consumed per warp jump, or 0 if no fuel cost.
         """
-        stats = self.get_calculated_stats()
-        return stats.get('warp_resource_costs', {}).get('fuel', 0)
+        return self._resource_mgr.get_warp_fuel_cost()
 
     def get_current_energy(self) -> float:
         """
@@ -312,9 +306,7 @@ class ShipInstance:
         Returns:
             Current energy amount. Returns max_energy if not tracked (assumed full).
         """
-        stats = self.get_calculated_stats()
-        max_energy = stats.get('resource_storage', {}).get('energy', 0)
-        return self.resource_levels.get('energy', max_energy)
+        return self._resource_mgr.get_current_energy()
 
     def consume_energy(self, amount: float) -> bool:
         """
@@ -326,16 +318,7 @@ class ShipInstance:
         Returns:
             True if energy was available and consumed, False if insufficient
         """
-        stats = self.get_calculated_stats()
-        max_energy = stats.get('resource_storage', {}).get('energy', 0)
-        current = self.resource_levels.get('energy', max_energy)
-
-        if current < amount:
-            return False
-
-        new_level = current - amount
-        self.resource_levels['energy'] = new_level
-        return True
+        return self._resource_mgr.consume_energy(amount)
 
     # --- Generic Resource Methods ---
 
@@ -349,9 +332,7 @@ class ShipInstance:
         Returns:
             Maximum capacity for the resource, or 0 if not available.
         """
-        stats = self.get_calculated_stats()
-        resource_storage = stats.get('resource_storage', {})
-        return resource_storage.get(resource_type, 0)
+        return self._resource_mgr.get_resource_capacity(resource_type)
 
     def get_current_resource(self, resource_type: str) -> float:
         """
@@ -363,8 +344,7 @@ class ShipInstance:
         Returns:
             Current resource level. Returns max capacity if not tracked (assumed full).
         """
-        max_val = self.get_resource_capacity(resource_type)
-        return self.resource_levels.get(resource_type, max_val)
+        return self._resource_mgr.get_current_resource(resource_type)
 
     def consume_resource(self, resource_type: str, amount: float) -> bool:
         """
@@ -378,18 +358,7 @@ class ShipInstance:
             True if resource was available and consumed, False if insufficient
             or if amount is negative.
         """
-        # Reject negative amounts - cannot "consume" a negative amount
-        if amount < 0:
-            return False
-
-        max_val = self.get_resource_capacity(resource_type)
-        current = self.resource_levels.get(resource_type, max_val)
-
-        if current < amount:
-            return False
-
-        self.resource_levels[resource_type] = current - amount
-        return True
+        return self._resource_mgr.consume_resource(resource_type, amount)
 
     def get_all_resource_costs_per_hex(self) -> Dict[str, float]:
         """
@@ -398,8 +367,7 @@ class ShipInstance:
         Returns:
             Dict mapping resource type to cost per hex of movement.
         """
-        stats = self.get_calculated_stats()
-        return stats.get('resource_consumption_per_hex', {})
+        return self._resource_mgr.get_all_resource_costs_per_hex()
 
     def get_all_resource_costs_per_turn(self) -> Dict[str, float]:
         """
@@ -408,8 +376,7 @@ class ShipInstance:
         Returns:
             Dict mapping resource type to cost per turn.
         """
-        stats = self.get_calculated_stats()
-        return stats.get('resource_consumption_per_turn', {})
+        return self._resource_mgr.get_all_resource_costs_per_turn()
 
     # --- Cargo Methods ---
 
@@ -510,8 +477,7 @@ class ShipInstance:
         Returns:
             Dict mapping resource type to cost per warp jump.
         """
-        stats = self.get_calculated_stats()
-        return stats.get('warp_resource_costs', {})
+        return self._resource_mgr.get_warp_resource_costs()
 
     # --- Component Toggle Methods ---
 
@@ -822,22 +788,7 @@ class ShipInstance:
 
         Returns the actual amount resupplied.
         """
-        if resource_name not in self.resource_levels:
-            return 0  # Already at full
-
-        max_key = f'max_{resource_name}'
-        max_val = self.get_calculated_stats().get(max_key, 100)
-
-        old_val = self.resource_levels[resource_name]
-        new_val = min(max_val, old_val + amount)
-
-        # If fully resupplied, remove from tracking
-        if new_val >= max_val:
-            del self.resource_levels[resource_name]
-            return max_val - old_val
-        else:
-            self.resource_levels[resource_name] = new_val
-            return new_val - old_val
+        return self._resource_mgr.resupply(resource_name, amount)
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""
