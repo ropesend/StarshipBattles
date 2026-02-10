@@ -87,11 +87,7 @@ class ShipDisplayFormatter:
         if max_val is None or max_val <= 0:
             return "N/A"
 
-        if resource_name in self._ship.resource_levels:
-            current = int(self._ship.resource_levels[resource_name])
-        else:
-            current = int(max_val)  # Full if not tracked
-
+        current = int(self._ship.resource_levels.get(resource_name, 0))
         return f"{current}/{int(max_val)}"
 
     def get_resource_percentage(self, resource_name: str) -> float:
@@ -102,12 +98,9 @@ class ShipDisplayFormatter:
             resource_name: Name of resource (fuel, energy, ammo)
 
         Returns:
-            Percentage (0.0 to 1.0), or 1.0 if resource not tracked (assumed full).
+            Percentage (0.0 to 1.0).
         """
-        if resource_name not in self._ship.resource_levels:
-            return 1.0  # Full by default
-
-        current = self._ship.resource_levels[resource_name]
+        current = self._ship.resource_levels.get(resource_name, 0.0)
         stats = self._ship.get_calculated_stats()
         resource_storage = stats.get('resource_storage', {})
         max_val = resource_storage.get(resource_name, 0)

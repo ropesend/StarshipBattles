@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Add ResourceType Constants | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Rename is_destroyed to is_alive | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Eliminate None-Means-Full Convention | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Eliminate None-Means-Full Convention | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Audit & Final Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 2 Complete
-**Last Action:** Renamed is_destroyed to is_alive across 4 production files and 10 test files. Inverted all boolean logic. Updated serialization.
-**Next Action:** Begin Phase 3 -- Eliminate None-Means-Full Convention
+**Active Phase:** Phase 3 Complete
+**Last Action:** Eliminated None-means-full convention. Resources always stored with actual values. Simplified getters, removed sparse dict patterns.
+**Next Action:** Begin Phase 4 -- Audit & Final Verification
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. is_destroyed renamed to is_alive with logic inversion. 4 prod files + 10 test files updated. Zero is_destroyed occurrences remain. 7595 tests passing.
+**Context for Next Agent:** Phase 3 complete. create() initializes resource_levels with max values. _capture_resource_levels stores ALL values. Removed get(key, max) patterns, del on resupply, key absence checks. 4 prod files + 6 test files updated. 7595 tests passing.
 
 ## Overview
 Three clean-sheet convention changes to the strategy layer's resource/state API:

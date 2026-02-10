@@ -8,7 +8,10 @@ class TestShipDisplayFormatter:
 
     @pytest.fixture
     def mock_ship_instance(self):
-        """Create a mock ShipInstance for testing."""
+        """Create a mock ShipInstance for testing.
+
+        PROJ-95: resource_levels always contains actual values.
+        """
         ship = Mock()
         ship.design_data = {'name': 'TestShip'}
         ship.design_id = 'test_ship'
@@ -16,7 +19,12 @@ class TestShipDisplayFormatter:
         ship.is_alive = True
         ship.is_derelict = False
         ship.current_hp = None
-        ship.resource_levels = {}
+        # Resources always stored with actual values
+        ship.resource_levels = {
+            'fuel': 500,
+            'energy': 200,
+            'ammo': 100,
+        }
         ship.component_damage = {}
         ship.get_calculated_stats = Mock(return_value={
             'max_hp': 100,

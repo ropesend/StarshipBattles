@@ -8,9 +8,17 @@ class TestShipResourceManager:
 
     @pytest.fixture
     def mock_ship_instance(self):
-        """Create a mock ShipInstance with required attributes."""
+        """Create a mock ShipInstance with required attributes.
+
+        PROJ-95: resource_levels always contains actual values (no None-means-full).
+        """
         ship = Mock()
-        ship.resource_levels = {}
+        # Resources always stored with actual values
+        ship.resource_levels = {
+            'fuel': 1000,
+            'energy': 500,
+            'ammo': 100,
+        }
         ship.get_calculated_stats = Mock(return_value={
             'resource_storage': {
                 'fuel': 1000,
@@ -53,8 +61,12 @@ class TestShipResourceManager:
         mock_ship_instance.resource_levels['ammo'] = 75
         assert resource_manager.get_current_resource('ammo') == 75
 
-    def test_get_current_resource_full(self, resource_manager):
-        """Get current resource when full returns max."""
+    def test_get_current_resource_full(self, resource_manager, mock_ship_instance):
+        """Get current resource when full returns stored value.
+
+        PROJ-95: Resources are always stored with actual values.
+        """
+        # ammo is already 100 (full) in mock_ship_instance.resource_levels
         assert resource_manager.get_current_resource('ammo') == 100
 
     def test_consume_resource_success(self, resource_manager, mock_ship_instance):
@@ -108,17 +120,23 @@ class TestShipResourceManager:
         assert mock_ship_instance.resource_levels['fuel'] == 700
 
     def test_resupply_to_full(self, resource_manager, mock_ship_instance):
-        """Resupply to full removes from tracking."""
+        """Resupply to full keeps value stored at max.
+
+        PROJ-95: Resources always stored (no sparse dict convention).
+        """
         mock_ship_instance.get_calculated_stats.return_value['max_fuel'] = 1000
         mock_ship_instance.resource_levels['fuel'] = 800
 
         result = resource_manager.resupply('fuel', 300)
         assert result == 200  # Capped at max
-        assert 'fuel' not in mock_ship_instance.resource_levels
+        assert mock_ship_instance.resource_levels['fuel'] == 1000  # Full value stored
 
     def test_resupply_already_full(self, resource_manager, mock_ship_instance):
-        """Resupply when already full returns 0."""
-        # fuel not in resource_levels means it's full
+        """Resupply when already full returns 0.
+
+        PROJ-95: Resources always stored, so check against stored max value.
+        """
+        # fuel is already at max (1000) in resource_levels
         result = resource_manager.resupply('fuel', 100)
         assert result == 0
 

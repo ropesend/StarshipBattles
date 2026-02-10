@@ -216,7 +216,10 @@ class TestAdditionalCoverage:
     """Additional tests for comprehensive coverage."""
 
     def test_resource_levels_preserved_through_serialization(self, make_design_data_with_stats):
-        """resource_levels are preserved through to_dict/from_dict round trip."""
+        """resource_levels are preserved through to_dict/from_dict round trip.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000, 'energy': 2000}
         })
@@ -225,7 +228,8 @@ class TestAdditionalCoverage:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship.consume_resource('fuel', 1000)
@@ -280,7 +284,10 @@ class TestAdditionalCoverage:
         assert ship.get_current_resource('fuel') == 0
 
     def test_clone_preserves_resource_levels(self, make_design_data_with_stats):
-        """clone preserves resource_levels state."""
+        """clone preserves resource_levels state.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000, 'energy': 2000}
         })
@@ -289,18 +296,19 @@ class TestAdditionalCoverage:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship.consume_resource('fuel', 1000)
 
         cloned = ship.clone()
 
-        assert cloned.resource_levels == {'fuel': 4000}
+        assert cloned.resource_levels == {'fuel': 4000, 'energy': 2000}
         # Modify clone should not affect original
         cloned.consume_resource('fuel', 500)
-        assert ship.resource_levels == {'fuel': 4000}
-        assert cloned.resource_levels == {'fuel': 3500}
+        assert ship.resource_levels == {'fuel': 4000, 'energy': 2000}
+        assert cloned.resource_levels == {'fuel': 3500, 'energy': 2000}
 
 
 class TestEdgeCases:

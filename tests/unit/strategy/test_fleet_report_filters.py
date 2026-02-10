@@ -56,12 +56,11 @@ def make_mock_ship(
     else:
         ship.current_hp = None
 
-    # Resource levels (empty dict means full)
-    ship.resource_levels = {}
-    if current_fuel < max_fuel:
-        ship.resource_levels['fuel'] = current_fuel
-    if current_energy < max_energy:
-        ship.resource_levels['energy'] = current_energy
+    # PROJ-95: Resource levels always store actual values (no sparse dict convention)
+    ship.resource_levels = {
+        'fuel': current_fuel,
+        'energy': current_energy,
+    }
 
     # Combat capable status
     ship.is_combat_capable.return_value = is_alive and not is_derelict

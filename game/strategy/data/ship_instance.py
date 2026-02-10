@@ -139,18 +139,21 @@ class ShipInstance:
             design_data=design_data,
         )
         instance.serial = serial
+
+        # Initialize all resources to full capacity
+        stats = instance.get_calculated_stats()
+        storage = stats.get('resource_storage', {})
+        instance.resource_levels = {name: float(val) for name, val in storage.items()}
+
         return instance
 
     @staticmethod
     def _capture_resource_levels(ship: IPostBattleShip) -> Dict[str, float]:
-        """Extract non-full resource levels from a post-battle Ship."""
+        """Extract all resource levels from a post-battle Ship."""
         levels: Dict[str, float] = {}
         if ship.resources:
             for name in ship.resources.get_resource_names():
-                current = ship.resources.get_value(name)
-                max_val = ship.resources.get_max_value(name)
-                if current < max_val:
-                    levels[name] = current
+                levels[name] = ship.resources.get_value(name)
         return levels
 
     @classmethod

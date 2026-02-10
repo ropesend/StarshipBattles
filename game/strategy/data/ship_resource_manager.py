@@ -61,10 +61,9 @@ class ShipResourceManager:
             resource_type: Resource type (e.g., 'fuel', 'energy', 'ammo')
 
         Returns:
-            Current resource level. Returns max capacity if not tracked (assumed full).
+            Current resource level. Returns 0.0 if not tracked (safe fallback).
         """
-        max_val = self.get_resource_capacity(resource_type)
-        return self._ship.resource_levels.get(resource_type, max_val)
+        return self._ship.resource_levels.get(resource_type, 0.0)
 
     def consume_resource(self, resource_type: str, amount: float) -> bool:
         """
@@ -82,8 +81,7 @@ class ShipResourceManager:
         if amount < 0:
             return False
 
-        max_val = self.get_resource_capacity(resource_type)
-        current = self._ship.resource_levels.get(resource_type, max_val)
+        current = self._ship.resource_levels.get(resource_type, 0.0)
 
         if current < amount:
             return False
@@ -136,18 +134,8 @@ class ShipResourceManager:
         Returns:
             The actual amount resupplied.
         """
-        if resource_name not in self._ship.resource_levels:
-            return 0  # Already at full
-
         max_val = self.get_resource_capacity(resource_name)
-
-        old_val = self._ship.resource_levels[resource_name]
+        old_val = self._ship.resource_levels.get(resource_name, 0.0)
         new_val = min(max_val, old_val + amount)
-
-        # If fully resupplied, remove from tracking
-        if new_val >= max_val:
-            del self._ship.resource_levels[resource_name]
-            return max_val - old_val
-        else:
-            self._ship.resource_levels[resource_name] = new_val
-            return new_val - old_val
+        self._ship.resource_levels[resource_name] = new_val
+        return new_val - old_val

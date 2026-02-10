@@ -71,18 +71,12 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         # Fuel
         ship_max_fuel = resource_storage.get(ResourceType.FUEL, 0)
         max_fuel += ship_max_fuel
-        if ResourceType.FUEL in ship.resource_levels:
-            total_fuel += ship.resource_levels[ResourceType.FUEL]
-        else:
-            total_fuel += ship_max_fuel  # Full if not tracked
+        total_fuel += ship.resource_levels.get(ResourceType.FUEL, 0)
 
         # Energy
         ship_max_energy = resource_storage.get(ResourceType.ENERGY, 0)
         max_energy += ship_max_energy
-        if ResourceType.ENERGY in ship.resource_levels:
-            total_energy += ship.resource_levels[ResourceType.ENERGY]
-        else:
-            total_energy += ship_max_energy  # Full if not tracked
+        total_energy += ship.resource_levels.get(ResourceType.ENERGY, 0)
 
     # Warp capability counts - PROJ-40: Call ShipStatsCalculator directly
     warp_capable_count = sum(1 for s in ships if ShipStatsCalculator.has_warp_capability(s))

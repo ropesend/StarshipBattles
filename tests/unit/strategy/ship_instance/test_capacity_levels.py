@@ -90,8 +90,11 @@ class TestGetResourceCapacity:
 class TestGetCurrentResource:
     """Tests for get_current_resource method."""
 
-    def test_get_current_resource_returns_default_when_full(self, make_design_data_with_stats):
-        """get_current_resource returns capacity when not tracked (assumed full)."""
+    def test_get_current_resource_returns_stored_value(self, make_design_data_with_stats):
+        """get_current_resource returns stored value.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000}
         })
@@ -100,10 +103,10 @@ class TestGetCurrentResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000}  # Explicitly stored at full
         )
 
-        # No entry in resource_levels = full
         assert ship.get_current_resource('fuel') == 5000
 
     def test_get_current_resource_returns_current_when_partial(self, make_design_data_with_stats):
@@ -123,7 +126,10 @@ class TestGetCurrentResource:
         assert ship.get_current_resource('fuel') == 3000
 
     def test_get_current_resource_with_all_types(self, make_design_data_with_stats):
-        """get_current_resource works with multiple resource types."""
+        """get_current_resource works with multiple resource types.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000, 'energy': 2000, 'ammo': 500}
         })
@@ -132,12 +138,9 @@ class TestGetCurrentResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 2500, 'energy': 1000, 'ammo': 500}
         )
-
-        ship.resource_levels['fuel'] = 2500
-        ship.resource_levels['energy'] = 1000
-        # ammo not tracked = full
 
         assert ship.get_current_resource('fuel') == 2500
         assert ship.get_current_resource('energy') == 1000
@@ -164,7 +167,10 @@ class TestConsumeResource:
     """Tests for consume_resource method."""
 
     def test_consume_resource_success(self, make_design_data_with_stats):
-        """consume_resource returns True and updates level on success."""
+        """consume_resource returns True and updates level on success.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000}
         })
@@ -173,7 +179,8 @@ class TestConsumeResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000}  # Start at full
         )
 
         result = ship.consume_resource('fuel', 1000)
@@ -220,7 +227,10 @@ class TestConsumeResource:
         assert ship.resource_levels['fuel'] == 0
 
     def test_consume_resource_zero_amount(self, make_design_data_with_stats):
-        """consume_resource with zero amount returns True without changes."""
+        """consume_resource with zero amount returns True without changes.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000}
         })
@@ -229,17 +239,20 @@ class TestConsumeResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000}
         )
 
         result = ship.consume_resource('fuel', 0)
 
         assert result is True
-        # Should still track now that consume was called
         assert ship.get_current_resource('fuel') == 5000
 
     def test_consume_resource_multiple_types(self, make_design_data_with_stats):
-        """consume_resource handles multiple resource types independently."""
+        """consume_resource handles multiple resource types independently.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000, 'energy': 2000}
         })
@@ -248,7 +261,8 @@ class TestConsumeResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000, 'energy': 2000}
         )
 
         ship.consume_resource('fuel', 1000)
@@ -258,7 +272,10 @@ class TestConsumeResource:
         assert ship.resource_levels['energy'] == 1500
 
     def test_consume_resource_custom_type(self, make_design_data_with_stats):
-        """consume_resource works with custom resource types."""
+        """consume_resource works with custom resource types.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'glag': 100}
         })
@@ -267,7 +284,8 @@ class TestConsumeResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'glag': 100}
         )
 
         result = ship.consume_resource('glag', 25)
@@ -275,8 +293,11 @@ class TestConsumeResource:
         assert result is True
         assert ship.resource_levels['glag'] == 75
 
-    def test_consume_resource_when_not_tracked(self, make_design_data_with_stats):
-        """consume_resource initializes tracking when first consumed."""
+    def test_consume_resource_from_full(self, make_design_data_with_stats):
+        """consume_resource works when starting from full capacity.
+
+        PROJ-95: Resources always stored with actual values.
+        """
         design_data = make_design_data_with_stats(expected_stats={
             'resource_storage': {'fuel': 5000}
         })
@@ -285,14 +306,14 @@ class TestConsumeResource:
             design_id='TestDesign',
             name='Test Ship',
             owner_id=0,
-            design_data=design_data
+            design_data=design_data,
+            resource_levels={'fuel': 5000}
         )
 
-        # Not tracked yet
-        assert 'fuel' not in ship.resource_levels
+        # Start at full
+        assert ship.resource_levels['fuel'] == 5000
 
         result = ship.consume_resource('fuel', 1000)
 
         assert result is True
-        assert 'fuel' in ship.resource_levels
         assert ship.resource_levels['fuel'] == 4000
