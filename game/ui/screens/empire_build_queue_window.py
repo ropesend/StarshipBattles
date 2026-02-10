@@ -24,6 +24,14 @@ from game.strategy.data.build_queue_source import (
     BuildQueueSource,
     collect_all_build_queues_for_empire,
 )
+from game.ui.screens.empire_build_queue_formatter import (
+    get_queue_summary,
+    get_first_item_text,
+    get_capabilities_text,
+    get_system_name,
+    get_sector_text,
+    get_turns_left_text,
+)
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -494,53 +502,18 @@ class EmpireBuildQueueWindow(UIWindow):
 
     @staticmethod
     def _get_queue_summary(source: BuildQueueSource) -> str:
-        """Return a short summary of queue contents.
-
-        Args:
-            source: The build queue source to summarize.
-
-        Returns:
-            Dash if empty, otherwise item count string.
-        """
-        count = len(source.construction_queue)
-        if count == 0:
-            return "-"
-        return f"{count} item{'s' if count != 1 else ''}"
+        """Return a short summary of queue contents."""
+        return get_queue_summary(source)
 
     @staticmethod
     def _get_first_item_text(source: BuildQueueSource) -> str:
-        """Return the name of the first item being built.
-
-        Args:
-            source: The build queue source.
-
-        Returns:
-            Design ID of first item, or dash if empty.
-        """
-        if not source.construction_queue:
-            return "-"
-        first = source.construction_queue[0]
-        design_id = first.get("design_id", "Unknown")
-        turns = first.get("turns_remaining", "?")
-        return f"{design_id} ({turns}t)"
+        """Return the name of the first item being built."""
+        return get_first_item_text(source)
 
     @staticmethod
     def _get_capabilities_text(source: BuildQueueSource) -> str:
-        """Return human-readable capabilities string.
-
-        Args:
-            source: The build queue source.
-
-        Returns:
-            'Ships', 'Complexes', 'Ships & Complexes', or 'None'.
-        """
-        if source.can_build_ships and source.can_build_complexes:
-            return "Ships & Complexes"
-        if source.can_build_ships:
-            return "Ships"
-        if source.can_build_complexes:
-            return "Complexes"
-        return "None"
+        """Return human-readable capabilities string."""
+        return get_capabilities_text(source)
 
     # -------------------------------------------------------------------
     # Column System
@@ -868,69 +841,18 @@ class EmpireBuildQueueWindow(UIWindow):
     # -------------------------------------------------------------------
 
     def _get_system_name(self, source: BuildQueueSource) -> str:
-        """Return the system name for a queue source.
-
-        Args:
-            source: The build queue source.
-
-        Returns:
-            System name string, or dash if unavailable.
-        """
-        entity = source.owner_entity
-        if source.context_type == "planet":
-            system = getattr(entity, 'system_name', None)
-            if system:
-                return str(system)
-            # Try galaxy lookup
-            if self.galaxy and hasattr(self.galaxy, 'get_system_of_planet'):
-                sys_obj = self.galaxy.get_system_of_planet(entity)
-                if sys_obj:
-                    return getattr(sys_obj, 'name', '-')
-        elif source.context_type == "fleet":
-            location = getattr(entity, 'location', None)
-            if location and self.galaxy and hasattr(self.galaxy, 'get_system_at_hex'):
-                sys_obj = self.galaxy.get_system_at_hex(location)
-                if sys_obj:
-                    return getattr(sys_obj, 'name', '-')
-        return "-"
+        """Return the system name for a queue source."""
+        return get_system_name(source, self.galaxy)
 
     @staticmethod
     def _get_sector_text(source: BuildQueueSource) -> str:
-        """Return sector/hex coordinate text for a queue source.
-
-        Args:
-            source: The build queue source.
-
-        Returns:
-            Hex coordinate string, or dash if unavailable.
-        """
-        entity = source.owner_entity
-        if source.context_type == "fleet":
-            location = getattr(entity, 'location', None)
-            if location is not None:
-                return str(location)
-        elif source.context_type == "planet":
-            # Planets may have hex or relative location
-            hex_loc = getattr(entity, 'global_hex', None) or getattr(entity, 'location', None)
-            if hex_loc is not None:
-                return str(hex_loc)
-        return "-"
+        """Return sector/hex coordinate text for a queue source."""
+        return get_sector_text(source)
 
     @staticmethod
     def _get_turns_left_text(source: BuildQueueSource) -> str:
-        """Return turns remaining for the first item in queue.
-
-        Args:
-            source: The build queue source.
-
-        Returns:
-            Turns remaining string, or dash if empty.
-        """
-        if not source.construction_queue:
-            return "-"
-        first = source.construction_queue[0]
-        turns = first.get("turns_remaining", "?")
-        return f"{turns}t"
+        """Return turns remaining for the first item in queue."""
+        return get_turns_left_text(source)
 
     # -------------------------------------------------------------------
     # Cleanup

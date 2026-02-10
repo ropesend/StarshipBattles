@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-89 Phase 1
+**Last Completed:** PROJ-89 Phase 2
 **Current Status:** PROJ-89 In Progress
 **Current Project:** PROJ-89
-**Current Phase:** Phase 2 (next)
-**Test Status:** 7570 passed (full suite)
+**Current Phase:** Phase 3 (next)
+**Test Status:** 7593 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-89 Phase 1 complete: Extracted design_image_helper.py
-- Created 196-line helper module with load_portrait_thumbnail, load_topdown_thumbnail, _get_visible_bounding_box
-- DesignSelectorWindow: 716 -> 551 lines (-165 lines, 23% reduction)
-- Fixed boundary condition bug in _get_visible_bounding_box (single-pixel case)
-- Added 13 new unit tests
-- Next: Phase 2 - Extract EmpireBuildQueueWindow Formatter
+- PROJ-89 Phase 2 complete: Extracted empire_build_queue_formatter.py
+- Created 131-line formatter module with 6 pure data formatting functions
+- EmpireBuildQueueWindow: 949 -> 870 lines (-79 lines, 8% reduction)
+- Added 23 new unit tests for formatter functions
+- All 107 existing EBQW tests pass unchanged
+- Next: Phase 3 - Extract EmpireBuildQueueWindow Filter Manager
 
 ---
 
@@ -425,6 +425,7 @@
 | 2026-02-10 | PROJ-91 | Phase 3 | Complete | 7557 passed | pending | Deleted 7 type-specific methods (-68 lines), 4 deprecated tests, cleaned mocks |
 | 2026-02-10 | PROJ-91 | Audit 1 | PASSED | 7557 passed | pending | All 6 goals verified, no issues found |
 | 2026-02-10 | PROJ-89 | Phase 1 | Complete | 7570 passed | pending | Extracted design_image_helper.py (196 lines), DSW -165 lines (-23%), 13 new tests |
+| 2026-02-10 | PROJ-89 | Phase 2 | Complete | 7593 passed | pending | Extracted empire_build_queue_formatter.py (131 lines), EBQW -79 lines (-8%), 23 new tests |
 
 ---
 
