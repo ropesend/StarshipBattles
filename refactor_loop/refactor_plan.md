@@ -10,8 +10,8 @@
 **Last Session:** 2026-02-10
 **Last Completed:** PROJ-89 Audit 1 PASSED
 **Current Status:** PROJ-89 Complete - Awaiting User Verification
-**Current Project:** None (all projects complete)
-**Current Phase:** N/A
+**Current Project:** PROJ-92 (next up)
+**Current Phase:** Phase 1 - Not Started
 **Test Status:** 7616 passed (full suite)
 **Active Blockers:** None
 
@@ -259,6 +259,38 @@
   - **Plan:** [Projects/active_projects/PROJ-89/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-89/plan.md)
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-92: Clean Up Residual Circular Dependency Artifacts**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-92/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-92/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-93: Update Protocol Layer Type Annotations**
+  - **Phases:** 1 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-93/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-93/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-94: Resource API Cleanup and Protocol Wiring**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-94/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-94/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-95: Resource API Consistency and Clean-Sheet Conventions**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-95/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-95/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** PROJ-94
 
 ---
 

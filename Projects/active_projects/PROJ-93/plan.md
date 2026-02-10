@@ -13,37 +13,95 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. TBD | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Update Protocol Type Annotations | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-10 05:27
-**Active Phase:** Planning
-**Last Action:** Project created
-**Next Action:** Define project scope and phases
+**Last Updated:** 2026-02-10
+**Active Phase:** Planning — Approved, ready for implementation
+**Last Action:** Plan created and approved
+**Next Action:** Begin Phase 1, Task 1.1 — update imports in protocols.py
 **Blockers:** None
+**Context for Next Agent:** This is a 2-file, ~10-line change. Update the `layers` property return type in `IPostBattleShip` and `IResourceHolder` protocols from `Dict[str, Any]` to `Dict['LayerType', 'LayerData']`, then strengthen the conformance test.
 
 ## Overview
-[2-3 sentence description of what this project accomplishes]
+PROJ-84 converted ship layers from raw `Dict[str, Any]` to a typed `LayerData` dataclass. All ~90 access sites across 29 files now use typed attribute access (`layer_data.components`, not `layer_data['components']`). However, two protocol definitions in `game/core/protocols.py` still declare `layers` as `Dict[str, Any]` — the only remaining untyped layer references in the codebase. This project finishes what PROJ-84 started.
 
 ## Goals
-- [Goal 1]
-- [Goal 2]
+- Update `IPostBattleShip.layers` return type from `Dict[str, Any]` to `Dict[LayerType, LayerData]`
+- Update `IResourceHolder.layers` return type from `Dict[str, Any]` to `Dict[LayerType, LayerData]`
+- Strengthen protocol conformance tests to verify typed layer data
 
 ## Scope
-**In:** [What's included]
-**Out:** [What's explicitly excluded]
+**In:**
+- Type annotation updates in `game/core/protocols.py`
+- Import additions (direct for `LayerType`, TYPE_CHECKING for `LayerData`)
+- Strengthened assertions in `tests/unit/core/test_protocols_boundary.py`
+
+**Out:**
+- Any runtime behavior changes
+- Modifying any other protocol properties
+- Touching any consumer code (already uses typed access)
 
 ## Key Files
-| Component | File Path |
-|-----------|-----------|
-| [Name] | `path/to/file.py` |
+| Component | File Path | Class/Function |
+|-----------|-----------|----------------|
+| Protocols | `game/core/protocols.py` | `IPostBattleShip`, `IResourceHolder` |
+| LayerData | `game/simulation/entities/layer_data.py` | `LayerData` dataclass |
+| LayerType | `game/core/constants.py` | `LayerType` enum |
+| Protocol tests | `tests/unit/core/test_protocols_boundary.py` | `TestIPostBattleShipConformance` |
+
+## Decisions Log
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-02-10 | Import `LayerType` directly, `LayerData` under TYPE_CHECKING | LayerType is in `game.core.constants` (same layer as protocols). LayerData is in `game.simulation.entities` (cross-layer) — must use TYPE_CHECKING guard. No circular deps: simulation never imports protocols.py. |
+| 2026-02-10 | Use string forward references `'LayerType'`, `'LayerData'` in annotations | @runtime_checkable protocols execute at import time. String refs prevent runtime import errors when LayerData isn't available outside TYPE_CHECKING block. |
+| 2026-02-10 | Keep IResourceHolder (don't delete as dead code) | Created intentionally by PROJ-91 to formalize resource access contract. Has no external consumers yet but is planned infrastructure. |
+
+## Initial Analysis
+- **Baseline:** 7615 tests passing, 1 known flaky (`test_different_warp_points_get_different_offsets`)
+- **Layer system:** Fully typed via PROJ-84 — `LayerData` dataclass in `game/simulation/entities/layer_data.py`, `Dict[LayerType, LayerData]` in `ship.py:338`
+- **Protocols:** `IPostBattleShip` (line 382-428) and `IResourceHolder` (line 437-464) both declare `layers -> Dict[str, Any]`
+- **Consumers:** 5 files use `IPostBattleShip` (ship_instance.py, fleet.py, battle_resolver.py, fleet_battle_adapter.py, test_protocols_boundary.py). `IResourceHolder` has zero external consumers.
+- **All consumers already access layers as typed objects** — `layer_data.components`, not `layer_data['components']`
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
 - [decisions.md](decisions.md) - Full decisions log
 
-## Verification
-- [ ] All phase checklists complete
+---
+
+## Phases
+
+### Phase 1: Update Protocol Type Annotations [Simple]
+**Objective:** Update the two protocol `layers` return types and strengthen tests
+**Status:** Not Started
+
+See [phase_1_checklist.md](phase_1_checklist.md) for detailed tasks.
+
+---
+
+## Verification Checklist
+
+### Project Start (REQUIRED)
+- [x] Run full test suite: `pytest tests/` — 7615 passed, 1 known flaky
+
+### After Phase 1
+- [ ] Run `pytest tests/unit/core/test_protocols_boundary.py` — all pass
+- [ ] Run `pytest tests/ -n 12` — no regressions
+
+### Final Verification
+- [ ] Full test suite passes: `pytest tests/ -n 12`
+- [ ] Audit passed
+
+---
+
+## Audit Log
+| Cycle | Date | Findings | Resolution |
+|-------|------|----------|------------|
+| 1 | | | |
+
+## Completion Checklist
+- [ ] Phase 1 tasks checked off
 - [ ] All tests passing
 - [ ] Audit passed
 - [ ] User verified

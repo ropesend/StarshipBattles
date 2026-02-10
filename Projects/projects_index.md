@@ -4,8 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-95 | Resource API Consistency and Clean-Sheet Conventions | Plan Approved | 2026-02-10 | 2026-02-10 |
+| PROJ-94 | Resource API Cleanup and Protocol Wiring | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-93 | Update Protocol Layer Type Annotations | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-92 | Clean Up Residual Circular Dependency Artifacts | Planning | 2026-02-10 | 2026-02-10 |
+| PROJ-92 | Clean Up Residual Circular Dependency Artifacts | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-91 | Unify Resource/State Logic Between Strategy and Simulation Layers | Plan Approved | 2026-02-09 | 2026-02-09 |
 | PROJ-90 | Untangle Circular Dependencies and Layer Violations | Planning | 2026-02-09 | 2026-02-09 |
 | PROJ-89 | God Class Decomposition - Remaining UI Tier | Planning | 2026-02-09 | 2026-02-09 |
@@ -190,7 +192,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-94
+## Next Project ID: PROJ-96
 
 ---
 
