@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Quick Wins — Dead Code & Config Extraction | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Quick Wins — Dead Code & Config Extraction | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Core → Simulation Violation Fix | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship.py Late Import Cleanup | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy-Simulation Boundary Protocol | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Documentation & Audit | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-09 21:30
-**Active Phase:** Planning — Awaiting User Approval
-**Last Action:** Deep analysis complete. Plan drafted with 5 phases across all 5 issues.
-**Next Action:** User approves plan → Begin Phase 1 implementation
+**Last Updated:** 2026-02-10
+**Active Phase:** Phase 2 — Core → Simulation Violation Fix
+**Last Action:** Phase 1 complete. Created battle_config.py, eliminated 2 late imports, updated 11 files.
+**Next Action:** Start Phase 2 — Fix Core → Simulation layer violation in registry.py
 **Blockers:** None
-**Context for Next Agent:** Baseline is 7353 tests passing. Deep swarm analysis confirmed that most TYPE_CHECKING/late imports in the codebase are legitimate patterns — only 5 concrete issues need fixing. All late imports in ship.py were verified to NOT be real circular dependency cycles.
+**Context for Next Agent:** 7540 tests passing. Phase 1 extracted BattleConfig/BattleMode to battle_config.py, removing circular import workarounds in battle_state_manager.py and battle_mode_handler.py.
 
 ## Overview
 A code review audit flagged pervasive circular dependencies managed through TYPE_CHECKING guards. Deep analysis by 6 swarm agents revealed the codebase is in much better shape than the audit suggested — no true import cycles exist at runtime, and the layer architecture is fundamentally sound. This project fixes 5 concrete issues: a Core→Simulation layer violation in registry.py, BattleConfig/BattleMode placement causing a circular import workaround, dead code in ship.py, unnecessary late imports in ship.py (verified NOT to be real cycles), and formalizing the ShipInstance→Ship coupling with a protocol.

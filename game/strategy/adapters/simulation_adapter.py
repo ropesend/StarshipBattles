@@ -22,9 +22,8 @@ if TYPE_CHECKING:
 
 
 # Import simulation layer components
-from game.simulation.battle_controller import (
-    BattleController, BattleConfig, BattleMode
-)
+from game.simulation.battle_controller import BattleController
+from game.simulation.battle_config import BattleConfig, BattleMode
 from game.simulation.services.battle_service import BattleService
 
 

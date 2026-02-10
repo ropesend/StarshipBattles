@@ -2,7 +2,8 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from game.simulation.battle_controller import BattleController, BattleConfig, BattleMode
+from game.simulation.battle_controller import BattleController
+from game.simulation.battle_config import BattleConfig, BattleMode
 from game.simulation.services.battle_service import BattleResult
 
 

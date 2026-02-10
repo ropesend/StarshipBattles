@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-88 Audit Passed
-**Current Status:** PROJ-88 Complete - Awaiting User Verification
-**Current Project:** PROJ-90 (next)
-**Current Phase:** Ready to start
+**Last Completed:** PROJ-90 Phase 1
+**Current Status:** PROJ-90 Phase 1 Complete
+**Current Project:** PROJ-90
+**Current Phase:** Phase 2 (next)
 **Test Status:** 7540 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-88: All 5 phases complete, audit passed
-- Ship.py: 870→811 lines (-59), Component.py: 756→713 lines (-43), app.py: -14 lines
-- New helpers: ShipStatQuerier (149), ShipValidatorHelper (67), ComponentResourceManager (119), ComponentHealthManager (93)
-- Dead ShipComponentManager deleted (345 lines + 36 tests)
-- IScene migration complete - events flow through handle_event()
-- Test count: 7524→7540 (+16 net)
-- Next: Start PROJ-90 (Untangle Circular Dependencies and Layer Violations)
+- PROJ-90 Phase 1 complete: BattleConfig extraction
+- Created battle_config.py (52 lines) - extracted BattleMode enum + BattleConfig dataclass
+- Eliminated 2 late imports: battle_state_manager.py, battle_mode_handler.py
+- Updated 11 files total (5 prod, 6 test)
+- Task 1.1 was already done in PROJ-88 (no TYPE_CHECKING in ship.py)
+- Next: Phase 2 - Fix Core → Simulation layer violation in registry.py
 
 ---
 
@@ -238,8 +237,8 @@
 
 ---
 
-- [ ] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
+  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-90/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-90/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -415,6 +414,7 @@
 | 2026-02-10 | PROJ-88 | Phase 4 | Complete | 7533 passed | pending | Extracted ComponentResourceManager (97 lines) + ComponentHealthManager (72 lines), Component 756→713 (-43 lines), 21 new tests |
 | 2026-02-10 | PROJ-88 | Phase 5 | Complete | 7540 passed | pending | IScene migration complete, removed legacy dispatch from app.py, 7 new tests |
 | 2026-02-10 | PROJ-88 | Audit 1 | PASSED | 7540 passed | pending | All 5 goals met, Ship -59, Component -43, app.py -14, new helpers 428 lines |
+| 2026-02-10 | PROJ-90 | Phase 1 | Complete | 7540 passed | pending | Created battle_config.py, eliminated 2 late imports, 11 files updated |
 
 ---
 

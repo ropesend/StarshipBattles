@@ -264,7 +264,7 @@ class TestBattleModeHandlerFactory:
     def test_manual_mode_returns_manual_handler(self):
         """MANUAL mode returns ManualBattleModeHandler."""
         from game.simulation.combat.battle_mode_handler import get_handler_for_mode
-        from game.simulation.battle_controller import BattleMode
+        from game.simulation.battle_config import BattleMode
 
         handler = get_handler_for_mode(BattleMode.MANUAL)
 
@@ -273,7 +273,7 @@ class TestBattleModeHandlerFactory:
     def test_test_mode_returns_test_handler(self):
         """TEST mode returns TestBattleModeHandler."""
         from game.simulation.combat.battle_mode_handler import get_handler_for_mode
-        from game.simulation.battle_controller import BattleMode
+        from game.simulation.battle_config import BattleMode
 
         handler = get_handler_for_mode(BattleMode.TEST)
 
@@ -282,7 +282,7 @@ class TestBattleModeHandlerFactory:
     def test_strategy_mode_returns_strategy_handler(self):
         """STRATEGY mode returns StrategyBattleModeHandler."""
         from game.simulation.combat.battle_mode_handler import get_handler_for_mode
-        from game.simulation.battle_controller import BattleMode
+        from game.simulation.battle_config import BattleMode
 
         handler = get_handler_for_mode(BattleMode.STRATEGY)
 
@@ -291,7 +291,7 @@ class TestBattleModeHandlerFactory:
     def test_hypothetical_mode_returns_hypothetical_handler(self):
         """HYPOTHETICAL mode returns HypotheticalBattleModeHandler."""
         from game.simulation.combat.battle_mode_handler import get_handler_for_mode
-        from game.simulation.battle_controller import BattleMode
+        from game.simulation.battle_config import BattleMode
 
         handler = get_handler_for_mode(BattleMode.HYPOTHETICAL)
 

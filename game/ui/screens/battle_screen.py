@@ -24,7 +24,8 @@ from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
 
 if TYPE_CHECKING:
-    from game.simulation.battle_controller import BattleController, BattleConfig
+    from game.simulation.battle_controller import BattleController
+    from game.simulation.battle_config import BattleConfig
     from game.simulation.entities.ship import Ship
 
 

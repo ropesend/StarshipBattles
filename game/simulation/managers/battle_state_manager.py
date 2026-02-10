@@ -11,10 +11,10 @@ from typing import Dict, Optional, List, Tuple, Any, TYPE_CHECKING
 
 from game.simulation.battle_state import BattleState
 from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.simulation.battle_config import BattleConfig, BattleMode
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from game.simulation.battle_controller import BattleConfig
 
 
 class BattleStateManager:
@@ -60,7 +60,7 @@ class BattleStateManager:
     def restore_config_from_state(
         self,
         state: BattleState
-    ) -> 'BattleConfig':
+    ) -> BattleConfig:
         """
         Restore battle configuration from saved state.
 
@@ -73,9 +73,6 @@ class BattleStateManager:
         Raises:
             ValueError: If state has invalid mode
         """
-        # Import inside method to avoid circular import
-        from game.simulation.battle_controller import BattleConfig, BattleMode
-
         try:
             mode = BattleMode(state.mode)
         except ValueError:

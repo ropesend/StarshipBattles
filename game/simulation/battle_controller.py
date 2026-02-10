@@ -14,8 +14,6 @@ Handles:
 - Retreat and reinforcement mechanics
 - Result collection and state extraction
 """
-from dataclasses import dataclass, field
-from enum import Enum
 from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
 import copy
 
@@ -32,50 +30,11 @@ from game.simulation.combat.battle_mode_handler import (
     BattleModeHandler,
     get_handler_for_mode,
 )
+from game.simulation.battle_config import BattleConfig, BattleMode
 from game.core.logger import log_debug, log_info, log_warning
-from game.core.constants import SimulationConstants
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
-    from test_framework.scenario import CombatScenario
-
-
-class BattleMode(Enum):
-    """Types of battle execution modes."""
-    MANUAL = "manual"           # Battle Setup screen
-    TEST = "test"               # Combat Lab
-    STRATEGY = "strategy"       # Strategy layer fleet combat
-    HYPOTHETICAL = "hypothetical"  # Planning simulations (isolated)
-
-
-@dataclass
-class BattleConfig:
-    """Configuration for a battle instance."""
-    mode: BattleMode = BattleMode.MANUAL
-    seed: Optional[int] = None
-    max_ticks: int = SimulationConstants.DEFAULT_MAX_TICKS
-    end_mode: BattleEndMode = BattleEndMode.HP_BASED
-
-    # Mode-specific options
-    headless: bool = False
-    start_paused: bool = False
-    enable_logging: bool = True
-    allow_retreat: bool = False
-    allow_reinforcements: bool = False
-
-    # For test mode
-    test_scenario: Optional['CombatScenario'] = None
-
-    # For strategy mode
-    source_fleets: Optional[Tuple[Any, Any]] = None
-
-    # For hypothetical mode
-    isolated: bool = True  # Never mutate source ships
-
-    # Map bounds for retreat calculations
-    map_bounds: Tuple[float, float, float, float] = (
-        0, 0, SimulationConstants.DEFAULT_MAP_SIZE, SimulationConstants.DEFAULT_MAP_SIZE
-    )
 
 
 class BattleController:

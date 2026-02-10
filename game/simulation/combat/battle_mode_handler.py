@@ -13,8 +13,10 @@ scattered throughout BattleController (CQ-024 Open/Closed violation fix).
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Optional, Tuple
 
+from game.simulation.battle_config import BattleConfig, BattleMode
+
 if TYPE_CHECKING:
-    from game.simulation.battle_controller import BattleController, BattleConfig, BattleMode
+    from game.simulation.battle_controller import BattleController
     from game.simulation.battle_state import BattleResults
 
 
@@ -274,7 +276,7 @@ class HypotheticalBattleModeHandler(BattleModeHandler):
         pass
 
 
-def get_handler_for_mode(mode: 'BattleMode') -> BattleModeHandler:
+def get_handler_for_mode(mode: BattleMode) -> BattleModeHandler:
     """
     Factory function to get the appropriate handler for a battle mode.
 
@@ -287,8 +289,6 @@ def get_handler_for_mode(mode: 'BattleMode') -> BattleModeHandler:
     Raises:
         ValueError: If mode is not recognized
     """
-    from game.simulation.battle_controller import BattleMode
-
     handlers = {
         BattleMode.MANUAL: ManualBattleModeHandler,
         BattleMode.TEST: TestBattleModeHandler,

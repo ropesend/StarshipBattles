@@ -6,7 +6,8 @@ PROJ-50: Updated to use fresh_registries for strict DI.
 
 import pytest
 
-from game.simulation.battle_controller import BattleController, BattleConfig, BattleMode
+from game.simulation.battle_controller import BattleController
+from game.simulation.battle_config import BattleConfig, BattleMode
 from game.simulation.services.battle_service import BattleService
 from tests.fixtures.ships import create_test_ship
 
