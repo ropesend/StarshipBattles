@@ -16,6 +16,7 @@ from .ship_stats import ShipStatsCalculator
 from .ship_physics import ShipPhysicsMixin
 from .ship_formation import ShipFormation
 from .ship_stat_querier import ShipStatQuerier
+from .ship_validator_helper import ShipValidatorHelper
 from game.simulation.systems.resource_manager import ResourceRegistry
 
 # Internal import (no longer re-exported)
@@ -165,6 +166,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         # Initialize helpers (lazy)
         self.stats_calculator: Optional[ShipStatsCalculator] = None
         self._stat_querier: Optional[ShipStatQuerier] = None
+        self._validator_helper: Optional[ShipValidatorHelper] = None
 
 
 
@@ -237,6 +239,13 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         if self._stat_querier is None:
             self._stat_querier = ShipStatQuerier(self)
         return self._stat_querier
+
+    @property
+    def validator_helper(self) -> ShipValidatorHelper:
+        """Lazy-initialized validator helper for validation methods."""
+        if self._validator_helper is None:
+            self._validator_helper = ShipValidatorHelper(self)
+        return self._validator_helper
 
     @property
     def max_weapon_range(self) -> float:
@@ -564,17 +573,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def get_missing_requirements(self) -> List[str]:
         """Check class requirements and return list of missing items based on abilities."""
-        # Use centralized validator
-        result = get_or_create_validator().validate_design(self)
-        if result.is_valid:
-            return []
-        # Return all errors as list of strings
-        return [f"⚠ {err}" for err in result.errors]
+        return self.validator_helper.get_missing_requirements()
 
     def get_validation_warnings(self) -> List[str]:
         """Check class requirements and return list of warnings (soft requirements)."""
-        result = get_or_create_validator().validate_design(self)
-        return result.warnings
+        return self.validator_helper.get_validation_warnings()
     
     def get_ability_total(self, ability_name: str) -> Union[float, int, bool]:
         """Get total value of a specific ability across all components."""
@@ -739,11 +742,7 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
     def check_validity(self) -> bool:
         """Check if the current ship design is valid."""
-        self.recalculate_stats()
-        result = get_or_create_validator().validate_design(self)
-        # Check for mass errors specifically for UI feedback flag
-        self.mass_limits_ok = not any("Mass budget exceeded" in e for e in result.errors)
-        return result.is_valid
+        return self.validator_helper.check_validity()
 
     @property
     def layers_dict(self) -> Dict[str, List[Any]]:
