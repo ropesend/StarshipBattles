@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-87 Phase 1
-**Current Status:** PROJ-87 Phase 1 Complete
+**Last Completed:** PROJ-87 Phase 2
+**Current Status:** PROJ-87 Phase 2 Complete
 **Current Project:** PROJ-87
-**Current Phase:** Phase 2
-**Test Status:** 1414+346 passed (strategy unit+integration)
+**Current Phase:** Phase 3
+**Test Status:** 7432 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-87 Phase 1 COMPLETE: ShipResourceManager extracted (923→873 lines)
-- Created game/strategy/data/ship_resource_manager.py (252 lines)
-- Created tests/unit/strategy/test_ship_resource_manager.py (26 tests)
-- Facade pattern: ShipInstance delegates to _resource_mgr
-- Next: Phase 2 - ShipInstance cargo & display extraction
+- PROJ-87 Phase 2 COMPLETE: ShipCargoManager + ShipDisplayFormatter extracted (874→749 lines)
+- Created game/strategy/data/ship_cargo_manager.py (112 lines)
+- Created game/strategy/data/ship_display_formatter.py (109 lines)
+- Created tests/unit/strategy/test_ship_cargo_manager.py (15 tests)
+- Created tests/unit/strategy/test_ship_display_formatter.py (16 tests)
+- Facade pattern: ShipInstance delegates cargo to _cargo_mgr, display to _display_fmt
+- Next: Phase 3 - Fleet resource aggregation extraction
 
 ---
 
@@ -213,7 +215,7 @@
 ---
 
 - [/] **PROJ-87: God Class Decomposition — Strategy Data Tier**
-  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-87/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-87/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -392,6 +394,7 @@
 | 2026-02-10 | PROJ-84 | Phase 2-7 | Complete | 7375 passed | pending | Verified cascading updates from Phase 1, fixed simulation_test isinstance guards |
 | 2026-02-10 | PROJ-84 | Audit 1 | PASSED | 7375 passed | pending | All goals met, zero layer dict access remaining |
 | 2026-02-10 | PROJ-87 | Phase 1 | Complete | 1414+346 passed | pending | ShipResourceManager extracted, 26 tests, 50 lines saved |
+| 2026-02-10 | PROJ-87 | Phase 2 | Complete | 7432 passed | pending | ShipCargoManager + ShipDisplayFormatter extracted, 31 tests, 125 lines saved |
 
 ---
 

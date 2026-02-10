@@ -18,6 +18,8 @@ import json
 
 from game.core.logger import log_warning, log_debug
 from game.strategy.data.ship_resource_manager import ShipResourceManager
+from game.strategy.data.ship_cargo_manager import ShipCargoManager
+from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -69,12 +71,16 @@ class ShipInstance:
     # Cached calculated stats (invalidated on damage change)
     _cached_stats: Optional[Dict[str, Any]] = field(default=None, repr=False)
 
-    # Resource manager delegate (initialized in __post_init__)
+    # Delegate managers (initialized in __post_init__)
     _resource_mgr: Optional['ShipResourceManager'] = field(default=None, repr=False, init=False)
+    _cargo_mgr: Optional['ShipCargoManager'] = field(default=None, repr=False, init=False)
+    _display_fmt: Optional['ShipDisplayFormatter'] = field(default=None, repr=False, init=False)
 
     def __post_init__(self) -> None:
         """Initialize delegate managers after dataclass init."""
         self._resource_mgr = ShipResourceManager(self)
+        self._cargo_mgr = ShipCargoManager(self)
+        self._display_fmt = ShipDisplayFormatter(self)
 
     def __hash__(self) -> int:
         return hash(self.instance_id)
@@ -240,16 +246,7 @@ class ShipInstance:
 
     def get_resource_percentage(self, resource_name: str) -> float:
         """Get current resource level as percentage of max."""
-        if resource_name not in self.resource_levels:
-            return 1.0  # Full by default
-
-        current = self.resource_levels[resource_name]
-        max_key = f'max_{resource_name}'
-        max_val = self.get_calculated_stats().get(max_key, 100)
-
-        if max_val <= 0:
-            return 0.0
-        return current / max_val
+        return self._display_fmt.get_resource_percentage(resource_name)
 
     def get_fuel_cost_per_hex(self) -> float:
         """
@@ -378,97 +375,27 @@ class ShipInstance:
         """
         return self._resource_mgr.get_all_resource_costs_per_turn()
 
-    # --- Cargo Methods ---
+    # --- Cargo Methods (delegated to ShipCargoManager) ---
 
     def get_cargo_capacity(self, cargo_type: str) -> int:
-        """
-        Get maximum cargo capacity for a specific cargo type.
-
-        Args:
-            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
-
-        Returns:
-            Maximum capacity for this cargo type, or 0 if not available.
-        """
-        stats = self.get_calculated_stats()
-        cargo_storage = stats.get('cargo_storage', {})
-        return int(cargo_storage.get(cargo_type, 0))
+        """Get maximum cargo capacity for a specific cargo type."""
+        return self._cargo_mgr.get_cargo_capacity(cargo_type)
 
     def get_current_cargo(self, cargo_type: str) -> int:
-        """
-        Get current amount of cargo loaded for a specific type.
-
-        Args:
-            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
-
-        Returns:
-            Current cargo amount, or 0 if none loaded.
-        """
-        return self.cargo_contents.get(cargo_type, 0)
+        """Get current amount of cargo loaded for a specific type."""
+        return self._cargo_mgr.get_current_cargo(cargo_type)
 
     def get_cargo_space_available(self, cargo_type: str) -> int:
-        """
-        Get available space for a specific cargo type.
-
-        Args:
-            cargo_type: Type of cargo (e.g., 'passengers', 'generic')
-
-        Returns:
-            Available space (capacity - current).
-        """
-        capacity = self.get_cargo_capacity(cargo_type)
-        current = self.get_current_cargo(cargo_type)
-        return max(0, capacity - current)
+        """Get available space for a specific cargo type."""
+        return self._cargo_mgr.get_cargo_space_available(cargo_type)
 
     def load_cargo(self, cargo_type: str, amount: int) -> int:
-        """
-        Load cargo onto this ship.
-
-        Args:
-            cargo_type: Type of cargo to load
-            amount: Amount to load (will be capped at available space)
-
-        Returns:
-            Actual amount loaded (may be less than requested if space limited).
-        """
-        if amount <= 0:
-            return 0
-
-        available_space = self.get_cargo_space_available(cargo_type)
-        actual_load = min(amount, available_space)
-
-        if actual_load > 0:
-            current = self.cargo_contents.get(cargo_type, 0)
-            self.cargo_contents[cargo_type] = current + actual_load
-
-        return actual_load
+        """Load cargo onto this ship."""
+        return self._cargo_mgr.load_cargo(cargo_type, amount)
 
     def unload_cargo(self, cargo_type: str, amount: int) -> int:
-        """
-        Unload cargo from this ship.
-
-        Args:
-            cargo_type: Type of cargo to unload
-            amount: Amount to unload (will be capped at current amount)
-
-        Returns:
-            Actual amount unloaded (may be less than requested if not enough cargo).
-        """
-        if amount <= 0:
-            return 0
-
-        current = self.cargo_contents.get(cargo_type, 0)
-        actual_unload = min(amount, current)
-
-        if actual_unload > 0:
-            new_amount = current - actual_unload
-            if new_amount <= 0:
-                # Remove zero entries to keep dict clean
-                self.cargo_contents.pop(cargo_type, None)
-            else:
-                self.cargo_contents[cargo_type] = new_amount
-
-        return actual_unload
+        """Unload cargo from this ship."""
+        return self._cargo_mgr.unload_cargo(cargo_type, amount)
 
     def get_warp_resource_costs(self) -> Dict[str, float]:
         """
@@ -509,17 +436,8 @@ class ShipInstance:
         return self.component_toggles.get(component_id, True)
 
     def get_display_id(self) -> Optional[str]:
-        """
-        Get human-readable display ID in format "DesignName-000001".
-
-        Returns:
-            Display ID string if serial is set, None otherwise.
-        """
-        if self.serial is None:
-            return None
-        # Use design name from design_data for display
-        design_name = self.design_data.get('name', self.design_id)
-        return f"{design_name}-{self.serial:06d}"
+        """Get human-readable display ID in format "DesignName-000001"."""
+        return self._display_fmt.get_display_id()
 
     def get_component_damage_summary(self) -> Dict[str, int]:
         """
@@ -553,58 +471,16 @@ class ShipInstance:
         return {}
 
     def get_status_text(self) -> str:
-        """
-        Get human-readable status text.
-
-        Returns:
-            One of: "OK", "DAMAGED", "DERELICT", "DESTROYED"
-        """
-        if self.is_destroyed:
-            return "DESTROYED"
-        elif self.is_derelict:
-            return "DERELICT"
-        elif self.is_damaged():
-            return "DAMAGED"
-        else:
-            return "OK"
+        """Get human-readable status text."""
+        return self._display_fmt.get_status_text()
 
     def get_hp_display(self) -> str:
-        """
-        Get HP as display string "current/max".
-
-        Returns:
-            HP display string like "150/200"
-        """
-        max_hp = self.get_calculated_stats().get('max_hp', 100)
-
-        if self.current_hp is None:
-            return f"{max_hp}/{max_hp}"
-        else:
-            return f"{self.current_hp}/{max_hp}"
+        """Get HP as display string "current/max"."""
+        return self._display_fmt.get_hp_display()
 
     def get_resource_display(self, resource_name: str) -> str:
-        """
-        Get resource as display string "current/max".
-
-        Args:
-            resource_name: Name of resource (fuel, energy, ammo)
-
-        Returns:
-            Resource display string like "250/500", or "N/A" if not tracked
-        """
-        stats = self.get_calculated_stats()
-        resource_storage = stats.get('resource_storage', {})
-        max_val = resource_storage.get(resource_name)
-
-        if max_val is None or max_val <= 0:
-            return "N/A"
-
-        if resource_name in self.resource_levels:
-            current = int(self.resource_levels[resource_name])
-        else:
-            current = int(max_val)  # Full if not tracked
-
-        return f"{current}/{int(max_val)}"
+        """Get resource as display string "current/max"."""
+        return self._display_fmt.get_resource_display(resource_name)
 
     def get_components_by_layer(self) -> Dict[str, List[Dict[str, Any]]]:
         """

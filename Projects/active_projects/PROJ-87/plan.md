@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. ShipInstance Resource Extraction | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. ShipInstance Cargo & Display Extraction | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. ShipInstance Cargo & Display Extraction | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fleet Resource Aggregation Extraction | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fleet Capability & Battle Extraction | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. GameSession Command Handlers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete — ShipResourceManager extracted (923→873 lines, 26 tests)
-**Next Action:** Begin Phase 2 — ShipInstance cargo & display extraction
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete — ShipCargoManager + ShipDisplayFormatter extracted (874→749 lines, 31 new tests)
+**Next Action:** Begin Phase 3 — Fleet resource aggregation extraction
 **Blockers:** None
 
 ## Overview
@@ -174,7 +174,7 @@ See [phase_6_checklist.md](phase_6_checklist.md)
 
 ## Completion Checklist
 - [x] Phase 1 complete — ShipResourceManager extracted
-- [ ] Phase 2 complete — Cargo and display methods extracted
+- [x] Phase 2 complete — Cargo and display methods extracted
 - [ ] Phase 3 complete — FleetResourceAggregator extracted
 - [ ] Phase 4 complete — Fleet capability and battle adapter extracted
 - [ ] Phase 5 complete — Command handlers extracted
