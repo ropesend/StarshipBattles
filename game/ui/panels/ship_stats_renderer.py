@@ -108,13 +108,11 @@ def draw_ship_resources(surface, ship, x_indent, y, bar_w, bar_h, font):
     Returns:
         Updated Y position after drawing
     """
-    if not hasattr(ship, 'resources'):
+    if not hasattr(ship, 'resources') or not ship.resources:
         return y
 
-    # Access underlying dictionary
-    all_res = []
-    if hasattr(ship.resources, '_resources'):
-        all_res = list(ship.resources._resources.values())
+    # Get all resources via public API
+    all_res = ship.resources.get_all_resources()
 
     # Sort: Priority first, then alphabetical
     all_res.sort(key=lambda r: (RESOURCE_ORDER_PRIORITY.get(r.name, 99), r.name))

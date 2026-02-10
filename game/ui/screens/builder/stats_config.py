@@ -430,7 +430,7 @@ def get_logistics_rows(ship):
     # Identify all resources present on ship
     if hasattr(ship, 'resources'):
         # Get all resource names from registry
-        res_names = set(ship.resources._resources.keys())
+        res_names = set(ship.resources.get_resource_names())
 
         # Also discover resources from consumption/generation attributes
         # This handles the case where a weapon consumes a resource but no storage exists

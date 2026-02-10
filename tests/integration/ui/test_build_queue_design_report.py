@@ -32,6 +32,9 @@ class MockResourceContainer:
     def get_resource(self, name):
         return self._resources.get(name)
 
+    def get_resource_names(self):
+        return list(self._resources.keys())
+
     def keys(self):
         return self._resources.keys()
 

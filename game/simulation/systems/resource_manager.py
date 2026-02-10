@@ -198,6 +198,10 @@ class ResourceRegistry:
         """Return list of all registered resource names."""
         return list(self._resources.keys())
 
+    def get_all_resources(self) -> List['ResourceState']:
+        """Return list of all registered ResourceState objects."""
+        return list(self._resources.values())
+
 
 # --- Ability System ---
 

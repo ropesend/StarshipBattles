@@ -141,6 +141,18 @@ class ShipInstance:
         instance.serial = serial
         return instance
 
+    @staticmethod
+    def _capture_resource_levels(ship: IPostBattleShip) -> Dict[str, float]:
+        """Extract non-full resource levels from a post-battle Ship."""
+        levels: Dict[str, float] = {}
+        if ship.resources:
+            for name in ship.resources.get_resource_names():
+                current = ship.resources.get_value(name)
+                max_val = ship.resources.get_max_value(name)
+                if current < max_val:
+                    levels[name] = current
+        return levels
+
     @classmethod
     def from_ship(cls, ship: IPostBattleShip, owner_id: int) -> 'ShipInstance':
         """
@@ -178,14 +190,9 @@ class ShipInstance:
                     instance.component_damage[comp.id] = comp.current_hp
 
         # Capture resource levels
-        if ship.resources:
-            for name in ship.resources.get_resource_names():
-                current = ship.resources.get_value(name)
-                max_val = ship.resources.get_max_value(name)
-                if current < max_val:
-                    instance.resource_levels[name] = current
+        instance.resource_levels = cls._capture_resource_levels(ship)
 
-        instance.is_derelict = getattr(ship, 'is_derelict', False)
+        instance.is_derelict = ship.is_derelict
         instance.is_destroyed = not ship.is_alive
 
         return instance
@@ -546,7 +553,7 @@ class ShipInstance:
             self.is_destroyed = True
             self.current_hp = 0
 
-        self.is_derelict = getattr(ship, 'is_derelict', False)
+        self.is_derelict = ship.is_derelict
 
         # Update component damage
         self.component_damage.clear()
@@ -556,13 +563,7 @@ class ShipInstance:
                     self.component_damage[comp.id] = comp.current_hp
 
         # Update resource levels
-        self.resource_levels.clear()
-        if ship.resources:
-            for name in ship.resources.get_resource_names():
-                current = ship.resources.get_value(name)
-                max_val = ship.resources.get_max_value(name)
-                if current < max_val:
-                    self.resource_levels[name] = current
+        self.resource_levels = self._capture_resource_levels(ship)
 
         # Update battle stats
         self.battles_survived += 1

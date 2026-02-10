@@ -8,18 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-93 Audit 1 PASSED
-**Current Status:** PROJ-93 Complete - Awaiting User Verification
-**Current Project:** PROJ-94 (next up)
-**Current Phase:** Phase 1 - Not Started
+**Last Completed:** PROJ-94 Phase 1
+**Current Status:** PROJ-94 Phase 2 Ready
+**Current Project:** PROJ-94
+**Current Phase:** Phase 2 - Not Started
 **Test Status:** 7616 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-93 Audit 1 PASSED: All 3 goals verified
-- IPostBattleShip.layers return type updated to Dict['LayerType', 'LayerData']
-- IResourceHolder.layers return type updated to Dict['LayerType', 'LayerData']
-- Protocol conformance test strengthened with LayerType/LayerData isinstance checks
+- PROJ-94 Phase 1 complete: Fixed UI encapsulation violations
+- stats_config.py: `._resources.keys()` → `get_resource_names()`
+- ship_stats_renderer.py: `._resources.values()` → `get_all_resources()`
+- Added get_all_resources() to ResourceRegistry
+- Extracted _capture_resource_levels() helper in ShipInstance
+- Removed getattr defensive calls for is_derelict
+- Fixed test mock in test_build_queue_design_report.py
 - 7616 tests passing
 
 ---
@@ -276,8 +279,8 @@
 
 ---
 
-- [ ] **PROJ-94: Resource API Cleanup and Protocol Wiring**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-94: Resource API Cleanup and Protocol Wiring**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-94/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-94/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -463,6 +466,7 @@
 | 2026-02-10 | PROJ-92 | Audit 1 | PASSED | 7616 passed | pending | All 5 goals verified: layer violation fixed, zero old refs, clean migration |
 | 2026-02-10 | PROJ-93 | Phase 1 | Complete | 7616 passed | pending | IPostBattleShip + IResourceHolder layers typed, test strengthened |
 | 2026-02-10 | PROJ-93 | Audit 1 | PASSED | 7616 passed | pending | All 3 goals verified: protocol return types + test assertions |
+| 2026-02-10 | PROJ-94 | Phase 1 | Complete | 7616 passed | pending | Fixed 2 UI encapsulation, extracted _capture_resource_levels(), removed getattr |
 
 ---
 
