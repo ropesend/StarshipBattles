@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Eradicate Dead ShipComponentManager | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Eradicate Dead ShipComponentManager | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Ship Stat Aggregation Extraction | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Ship Validation Extraction | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Component Resource & Health Managers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Game/app Scene Dispatch Completion | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-09 22:00
-**Active Phase:** Planning Complete -- Ready for Phase 1
-**Last Action:** Project plan and design documents written
-**Next Action:** Begin Phase 1 -- delete ShipComponentManager dead code
+**Last Updated:** 2026-02-10
+**Active Phase:** Phase 1 Complete -- Ready for Phase 2
+**Last Action:** Deleted ship_component_manager.py (345 lines) and 5 test files (36 tests)
+**Next Action:** Begin Phase 2 -- extract ship stat aggregation into ShipStatQuerier
 **Blockers:** None
-**Context for Next Agent:** ShipComponentManager (345 lines) is completely dead code -- zero production imports outside its own file. It was extracted in PROJ-12 but never adopted. Ship added caching in PROJ-49 that makes the extraction permanently divergent. Four test files exist that test the dead code and must also be deleted. The project follows a facade pattern: extract helper classes but keep Ship/Component forwarding methods so callers don't change.
+**Context for Next Agent:** Phase 1 complete. ShipComponentManager and all tests deleted (7524→7488 tests). Zero references remain in codebase. Phase 2 extracts stat aggregation methods (get_ability_total, get_total_ecm_score, etc.) from Ship into ShipStatQuerier while keeping facade methods on Ship.
 
 ## Overview
 This project decomposes three god classes in the simulation core tier: Ship (870 lines, 136 importers), Component (756 lines, 161 importers), and Game/app.py (723 lines, 4 importers). The approach is conservative -- delete dead code first, then extract cohesive helpers behind facade methods that preserve existing APIs, minimizing blast radius across the large importer base.
