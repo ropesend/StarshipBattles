@@ -7,21 +7,22 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-08
-**Last Completed:** PROJ-82 Audit
-**Current Status:** PROJ-82 Complete - All phases and audit passed
-**Current Project:** PROJ-82
-**Current Phase:** Complete
-**Test Status:** 7349 passed (4 pre-existing failures in test_transfer_dialog.py)
+**Last Session:** 2026-02-09
+**Last Completed:** PROJ-83 Phase 1
+**Current Status:** PROJ-83 Phase 1 Complete
+**Current Project:** PROJ-83
+**Current Phase:** Phase 2
+**Test Status:** 7351 passed, 148 warnings (down from 299)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-82 Complete: Planet Resources Panel Redesign
-- Phase 1: Resource grid panel added to PlanetReportPanel
-- Phase 2: 7 new tests added, all passing
-- Audit: PASSED - All 4 goals verified
-- Modified: strategy_detail_fmt.py, planet_report_panel.py, strategy_ui.py, test_build_queue_enhanced_planet_report.py
-- Next: Mark project complete, await user verification
+- PROJ-83 Phase 1 Complete: Slider, Deprecation, Clamping
+- Task 1.1: Fixed slider value_range ordering in transfer_dialog.py
+- Task 1.2: Injected ai_factory into battle fixtures/tests, deleted 2 legacy tests
+- Task 1.3: Added filterwarnings in pytest.ini for pygame_gui cosmetic warnings
+- 51% warning reduction (299 → 148)
+- Modified: transfer_dialog.py, battle.py, test_battle_engine_core.py, test_fighter_launch.py, pytest.ini
+- Next: Phase 2 - Label Rect fixes (abbreviate labels, fix heights)
 
 ---
 
@@ -189,8 +190,8 @@
 
 ---
 
-- [ ] **PROJ-83: Eliminate Test Warning Noise**
-  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-83: Eliminate Test Warning Noise**
+  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-83/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-83/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -383,6 +384,7 @@
 | 2026-02-08 | PROJ-82 | Phase 1 | Complete | 7342 passed | pending | Resource grid added: icons, Qty/Qual/Prod rows, production_rates param |
 | 2026-02-08 | PROJ-82 | Phase 2 | Complete | 7349 passed | pending | 7 new resource grid tests, fixture updated with resources |
 | 2026-02-08 | PROJ-82 | Audit 1 | PASSED | 7349 passed | pending | All 4 goals verified, no issues found |
+| 2026-02-09 | PROJ-83 | Phase 1 | Complete | 7351 passed, 148 warnings | pending | Slider fix, deprecation fixes, warning filters, 51% reduction |
 
 ---
 

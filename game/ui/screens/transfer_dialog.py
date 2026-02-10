@@ -217,8 +217,8 @@ class TransferDialog(UIWindow):
     def _update_amount_ui(self, max_val):
         """Reset slider for a new item. Ensure max_val is int for slider.range."""
         max_val = int(max_val)
-        self.slider_amount.set_current_value(max_val) # Default to all
         self.slider_amount.value_range = (0, max_val)
+        self.slider_amount.set_current_value(max_val)  # Default to all
         self.lbl_amount.set_text(str(max_val))
 
     def _apply_tooltips(self) -> None:

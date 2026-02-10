@@ -136,8 +136,10 @@ class TestBattleEngineCore:
         BattleEngine wraps ships in ShipControllableAdapter, so the comparison
         ai.ship == ship must unwrap the adapter via ai.ship.ship == ship.
         """
+        from game.simulation.factories.ai_factory import AIControllerFactory
         mock_logger = MagicMock()
         engine = BattleEngine(logger=mock_logger)
+        engine._ai_factory = AIControllerFactory(engine.grid)
 
         # Create test ships
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), team_id=0, registries=fresh_registries)
@@ -204,34 +206,16 @@ class TestBattleEngineAIControllerInjection:
         assert len(engine.ai_controllers) == 2
         assert engine.ai_controllers == ai_controllers
 
-    def test_start_without_ai_controllers_uses_legacy_path(self, fresh_registries):
-        """Verify start() creates AI controllers internally when not provided (backward compat)."""
-        from game.simulation.systems.battle_engine import BattleEngine
-        from game.simulation.entities.ship import Ship
-
-        mock_logger = MagicMock()
-        engine = BattleEngine(logger=mock_logger)
-
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
-
-        # Start without ai_controllers parameter
-        engine.start([ship1], [ship2])
-
-        # Verify controllers were created internally
-        assert len(engine.ai_controllers) == 2
-        # Verify team IDs are assigned
-        assert ship1.team_id == 0
-        assert ship2.team_id == 1
-
     def test_add_ship_mid_battle_with_precreated_controller(self, fresh_registries):
         """Verify add_ship_mid_battle() accepts pre-created AI controller."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
         from game.ui.orchestration import BattleOrchestrator
+        from game.simulation.factories.ai_factory import AIControllerFactory
 
         mock_logger = MagicMock()
         engine = BattleEngine(logger=mock_logger)
+        engine._ai_factory = AIControllerFactory(engine.grid)
 
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
         ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
@@ -251,30 +235,6 @@ class TestBattleEngineAIControllerInjection:
         assert ai_controller in engine.ai_controllers
         assert reinforcement in engine.ships
         assert reinforcement.team_id == 0
-
-    def test_add_ship_mid_battle_without_controller_uses_legacy_path(self, fresh_registries):
-        """Verify add_ship_mid_battle() creates controller internally when not provided."""
-        from game.simulation.systems.battle_engine import BattleEngine
-        from game.simulation.entities.ship import Ship
-
-        mock_logger = MagicMock()
-        engine = BattleEngine(logger=mock_logger)
-
-        ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
-        ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
-        engine.start([ship1], [ship2])
-
-        initial_count = len(engine.ai_controllers)
-
-        # Add reinforcement without pre-created controller
-        reinforcement = Ship("Reinforcement", 200, 0, (0, 255, 0), registries=fresh_registries)
-        engine.add_ship_mid_battle(reinforcement, team_id=0)
-
-        # Verify controller was created internally
-        assert len(engine.ai_controllers) == initial_count + 1
-        assert reinforcement in engine.ships
-        assert reinforcement.team_id == 0
-
 
 class TestBattleEngineAIFactory:
     """Tests for PROJ-43: ai_factory parameter for decoupled AI creation."""

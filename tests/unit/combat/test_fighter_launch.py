@@ -93,6 +93,8 @@ class TestFighterLaunch:
 
         enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
 
+        from game.simulation.factories.ai_factory import AIControllerFactory
+        engine._ai_factory = AIControllerFactory(engine.grid)
         engine.start([carrier], [enemy])
 
         # Assert initial state
@@ -176,6 +178,8 @@ class TestFighterLaunch:
 
         enemy = Ship("Enemy", 1000, 0, (0, 0, 255), team_id=1, registries=fresh_registries)
 
+        from game.simulation.factories.ai_factory import AIControllerFactory
+        engine._ai_factory = AIControllerFactory(engine.grid)
         engine.start([carrier], [enemy])
 
         # Run updates until fighter is launched
