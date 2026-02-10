@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Quick Wins (Slider, Deprecation, Clamping) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Label Rect Fixes | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Label Rect Fixes | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Verification & Regression Guard | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-09
-**Active Phase:** Phase 2
-**Last Action:** Completed Phase 1 — slider fix, deprecation fixes, warning filters
-**Next Action:** Begin Phase 2, Task 2.1 (abbreviate stats_layout.json labels)
+**Active Phase:** Phase 3
+**Last Action:** Completed Phase 2 — abbreviated 23+ labels, fixed section headers, build queue labels, construction rows
+**Next Action:** Begin Phase 3 (verification and regression guards)
 **Blockers:** None
-**Context for Next Agent:** 7351 passed, 148 warnings (down from 299). All remaining warnings are "Label Rect is too small" from pygame_gui. Phase 2 addresses these via label abbreviation and height fixes.
+**Context for Next Agent:** 7351 passed, 60 warnings (only pytest collection warnings remain). All pygame_gui label overflow warnings eliminated. Phase 3 will add regression guards.
 
 ## Overview
 The test suite emits 299 warnings across 5 categories (label overflow, BattleEngine deprecation, font preloading, shadow/border clamping, slider range). This project fixes all root causes and adds regression guards to keep warning count at zero.

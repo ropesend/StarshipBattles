@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-09
-**Last Completed:** PROJ-83 Phase 1
-**Current Status:** PROJ-83 Phase 1 Complete
+**Last Completed:** PROJ-83 Phase 2
+**Current Status:** PROJ-83 Phase 2 Complete
 **Current Project:** PROJ-83
-**Current Phase:** Phase 2
-**Test Status:** 7351 passed, 148 warnings (down from 299)
+**Current Phase:** Phase 3
+**Test Status:** 7351 passed, 60 warnings (only pytest collection warnings)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-83 Phase 1 Complete: Slider, Deprecation, Clamping
-- Task 1.1: Fixed slider value_range ordering in transfer_dialog.py
-- Task 1.2: Injected ai_factory into battle fixtures/tests, deleted 2 legacy tests
-- Task 1.3: Added filterwarnings in pytest.ini for pygame_gui cosmetic warnings
-- 51% warning reduction (299 → 148)
-- Modified: transfer_dialog.py, battle.py, test_battle_engine_core.py, test_fighter_launch.py, pytest.ini
-- Next: Phase 2 - Label Rect fixes (abbreviate labels, fix heights)
+- PROJ-83 Phase 2 Complete: Label Rect Fixes
+- Task 2.1: Abbreviated 23+ labels in stats_layout.json (more aggressive than planned)
+- Task 2.2: Shortened section headers in design_stats_panel.py (Reqs, Recommends, Ftr Support)
+- Task 2.3: Fixed build queue screen labels (height 16→20, truncation 15→12)
+- Task 2.4: Added LABEL_ABBREV for construction rows (Radioactives→Radact)
+- 80% total warning reduction (299 → 60)
+- Modified: stats_layout.json, design_stats_panel.py, build_queue_screen.py, stats_config.py
+- Next: Phase 3 - Verification and regression guards
 
 ---
 
@@ -385,6 +386,7 @@
 | 2026-02-08 | PROJ-82 | Phase 2 | Complete | 7349 passed | pending | 7 new resource grid tests, fixture updated with resources |
 | 2026-02-08 | PROJ-82 | Audit 1 | PASSED | 7349 passed | pending | All 4 goals verified, no issues found |
 | 2026-02-09 | PROJ-83 | Phase 1 | Complete | 7351 passed, 148 warnings | pending | Slider fix, deprecation fixes, warning filters, 51% reduction |
+| 2026-02-09 | PROJ-83 | Phase 2 | Complete | 7351 passed, 60 warnings | pending | 23+ labels abbreviated, headers/construction fixed, 80% total reduction |
 
 ---
 

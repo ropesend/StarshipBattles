@@ -829,14 +829,14 @@ class BuildQueueScreen:
             name_x = icon_size + 8
             ui.UILabel(
                 relative_rect=pygame.Rect(name_x, 4, 110, 20),
-                text=f"{design_id[:15]}",  # Truncate long names
+                text=f"{design_id[:12]}",  # Truncate to fit 110px
                 manager=self.manager,
                 container=item_panel
             )
 
             # Type on second line
             ui.UILabel(
-                relative_rect=pygame.Rect(name_x, 24, 110, 16),
+                relative_rect=pygame.Rect(name_x, 24, 110, 20),
                 text=f"{item_type}",
                 manager=self.manager,
                 container=item_panel

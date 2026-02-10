@@ -244,7 +244,7 @@ class DesignStatsPanel:
         y = self._build_section("Logistics", log_rows, col2_x, y, col_w)
 
         y = self._build_section("Crew Logistics", STATS_CONFIG.get('crewlogistics', []), col2_x, y, col_w)
-        y = self._build_section("Fighter Support", STATS_CONFIG.get('fightersupport', []), col2_x, y, col_w)
+        y = self._build_section("Ftr Support", STATS_CONFIG.get('fightersupport', []), col2_x, y, col_w)
 
         # Build Cost (construction resources)
         construction_rows = get_construction_rows(ship)
@@ -257,9 +257,9 @@ class DesignStatsPanel:
             y = max(col1_max_y, col2_max_y) + 10
 
             # Split Headers
-            UILabel(pygame.Rect(col1_x, y, col_w, 20), "── Requirements ──",
+            UILabel(pygame.Rect(col1_x, y, col_w, 25), "── Reqs ──",
                    manager=self.manager, container=self.stats_scroll)
-            UILabel(pygame.Rect(col2_x, y, col_w, 20), "── Recommendations ──",
+            UILabel(pygame.Rect(col2_x, y, col_w, 25), "── Recommends ──",
                    manager=self.manager, container=self.stats_scroll)
             y += 25
 

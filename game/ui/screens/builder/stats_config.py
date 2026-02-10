@@ -578,6 +578,16 @@ def get_construction_rows(ship):
     Generate the list of stat rows for the Construction section.
     """
     from game.core.constants import PLANET_RESOURCES
+
+    # Abbreviations for narrow label columns
+    LABEL_ABBREV = {
+        "Metals": "Metals",
+        "Organics": "Organics",
+        "Vapors": "Vapors",
+        "Radioactives": "Radact",
+        "Exotics": "Exotics",
+    }
+
     rows = []
 
     # Construction costs from ship.construction_cost
@@ -588,7 +598,7 @@ def get_construction_rows(ship):
 
         row = StatDefinition(
             id=f"cost_{res.lower()}",
-            label=f"{res}",
+            label=LABEL_ABBREV.get(res, res),
             getter=res_getter,
             formatter="{:.0f}",
             unit=""

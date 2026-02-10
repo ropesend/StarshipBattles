@@ -12,7 +12,7 @@
                 },
                 {
                     "id": "strategic_speed",
-                    "label": "Strategic Speed",
+                    "label": "Strat Spd",
                     "getter": "get_strategic_speed",
                     "unit": " hex/turn"
                 },
@@ -22,11 +22,11 @@
                 },
                 {
                     "id": "max_energy",
-                    "label": "Max Energy"
+                    "label": "Max Egy"
                 },
                 {
                     "id": "energy_gen",
-                    "label": "Energy Gen",
+                    "label": "Egy Gen",
                     "key": "energy_gen_rate",
                     "formatter": "fmt_decimal",
                     "unit": "/s"
@@ -191,16 +191,16 @@
             "items": [
                 {
                     "id": "armor_hp",
-                    "label": "Total Armor HP",
+                    "label": "Arm HP",
                     "getter": "get_armor_hp"
                 },
                 {
                     "id": "emissive_armor",
-                    "label": "Dmg Ignore"
+                    "label": "Dm Ignr"
                 },
                 {
                     "id": "crystalline_armor",
-                    "label": "Shield Regen/Hit",
+                    "label": "Rgn/Hit",
                     "unit": "/hit",
                     "formatter": "fmt_decimal"
                 }
@@ -211,28 +211,28 @@
             "items": [
                 {
                     "id": "thrust",
-                    "label": "Total Thrust",
+                    "label": "Thrust",
                     "key": "total_thrust"
                 },
                 {
                     "id": "acceleration",
-                    "label": "Acceleration",
+                    "label": "Accel",
                     "key": "acceleration_rate",
                     "formatter": "{:.2f}"
                 },
                 {
                     "id": "max_speed",
-                    "label": "Top Speed"
+                    "label": "Top Spd"
                 },
                 {
                     "id": "maneuver_points",
-                    "label": "Total Maneuvering Points",
+                    "label": "Manv Pts",
                     "getter": "get_maneuver_points",
                     "formatter": "{:.0f}"
                 },
                 {
                     "id": "turn_rate",
-                    "label": "Turning Rate",
+                    "label": "Trn Rate",
                     "key": "turn_speed",
                     "unit": " deg/s"
                 }
@@ -243,18 +243,18 @@
             "items": [
                 {
                     "id": "max_shields",
-                    "label": "Max Shields"
+                    "label": "Shields"
                 },
                 {
                     "id": "shield_regen",
-                    "label": "Shield Regen",
+                    "label": "Shld Rgn",
                     "key": "shield_regen_rate",
                     "formatter": "fmt_decimal",
                     "unit": "/s"
                 },
                 {
                     "id": "shield_cost",
-                    "label": "Regen Cost",
+                    "label": "Rgn Cost",
                     "key": "shield_regen_cost",
                     "formatter": "fmt_decimal",
                     "unit": " E/t"
@@ -266,20 +266,20 @@
             "items": [
                 {
                     "id": "targeting",
-                    "label": "Max Targets",
+                    "label": "Max Tgt",
                     "getter": "get_max_targets",
                     "formatter": "fmt_targeting"
                 },
                 {
                     "id": "target_profile",
-                    "label": "Evasion Score",
+                    "label": "Evasion",
                     "key": "total_defense_score",
                     "formatter": "fmt_score",
                     "unit": ""
                 },
                 {
                     "id": "scan_strength",
-                    "label": "Targeting Score",
+                    "label": "Trgt Scr",
                     "key": "baseline_to_hit_offense",
                     "formatter": "fmt_score",
                     "unit": ""
@@ -291,18 +291,18 @@
             "items": [
                 {
                     "id": "crew_required",
-                    "label": "Crew Required",
+                    "label": "Crew Req",
                     "getter": "get_crew_required"
                 },
                 {
                     "id": "crew_housed",
-                    "label": "Crew On Board",
+                    "label": "Crew Cap",
                     "getter": "get_crew_capacity",
                     "validator": "crew_validator"
                 },
                 {
                     "id": "life_support",
-                    "label": "Life Support",
+                    "label": "Life Sup",
                     "getter": "get_life_support",
                     "validator": "life_support_validator"
                 }
@@ -313,15 +313,15 @@
             "items": [
                 {
                     "id": "fighter_capacity",
-                    "label": "Fighter Cap"
+                    "label": "Ftr Cap"
                 },
                 {
                     "id": "fighters_per_wave",
-                    "label": "Launch/Wave"
+                    "label": "Ftr/Wave"
                 },
                 {
                     "id": "fighter_time",
-                    "label": "Fighter Time",
+                    "label": "Ftr Time",
                     "key": "fighter_endurance",
                     "formatter": "fmt_time"
                 }
