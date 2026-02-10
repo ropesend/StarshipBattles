@@ -191,8 +191,8 @@ class ShipState:
         # Capture resource levels
         resource_levels = {}
         resource_max = {}
-        if hasattr(ship, 'resources') and ship.resources:
-            for name in ['fuel', 'energy', 'ammo']:
+        if ship.resources:
+            for name in ship.resources.get_resource_names():
                 resource_levels[name] = ship.resources.get_value(name)
                 resource_max[name] = ship.resources.get_max_value(name)
 

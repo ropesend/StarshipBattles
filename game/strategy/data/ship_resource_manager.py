@@ -237,8 +237,7 @@ class ShipResourceManager:
         if resource_name not in self._ship.resource_levels:
             return 0  # Already at full
 
-        max_key = f'max_{resource_name}'
-        max_val = self._ship.get_calculated_stats().get(max_key, 100)
+        max_val = self.get_resource_capacity(resource_name)
 
         old_val = self._ship.resource_levels[resource_name]
         new_val = min(max_val, old_val + amount)

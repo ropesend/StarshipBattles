@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-90 Audit PASSED
-**Current Status:** PROJ-90 Complete - Awaiting User Verification
-**Current Project:** PROJ-91 (next)
-**Current Phase:** Phase 1 (next)
-**Test Status:** 7557 passed (full suite)
+**Last Completed:** PROJ-91 Phase 1
+**Current Status:** PROJ-91 Phase 1 Complete
+**Current Project:** PROJ-91
+**Current Phase:** Phase 2 (next)
+**Test Status:** 7561 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-90 complete: All 5 phases + audit passed
-- Phase 5 updated ARCHITECTURE.md with IPostBattleShip, BattleConfig, RegistryLoader documentation
-- Removed unused Ship import from fleet.py TYPE_CHECKING block
-- All 4 audit goals verified by investigation agents
-- Next project: PROJ-91 - Unify Resource/State Logic Between Strategy and Simulation Layers
+- PROJ-91 Phase 1 complete: All 6 tasks done
+- Added get_resource_names() to ResourceRegistry (2 tests)
+- Added IResourceHolder protocol to protocols.py
+- Fixed resupply bug in ShipResourceManager (2 tests)
+- Un-hardcoded resource lists in ship_instance.py (from_ship, update_from_ship) and battle_state.py (ShipState.from_ship)
+- Next: Phase 2 - Migrate callers to generic API
 
 ---
 
@@ -244,8 +245,8 @@
 
 ---
 
-- [ ] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
-  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
+  - **Phases:** 3 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-91/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-91/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -419,6 +420,7 @@
 | 2026-02-10 | PROJ-90 | Phase 4 | Complete | 7557 passed | pending | IPostBattleShip+IResourceReader protocols, ShipInstance/Fleet/BattleResult updated, 17 new tests |
 | 2026-02-10 | PROJ-90 | Phase 5 | Complete | 7557 passed | pending | ARCHITECTURE.md updated, removed unused Ship import from fleet.py |
 | 2026-02-10 | PROJ-90 | Audit 1 | PASSED | 7557 passed | pending | All 4 goals verified by investigation agents, all phases complete |
+| 2026-02-10 | PROJ-91 | Phase 1 | Complete | 7561 passed | pending | get_resource_names(), IResourceHolder, resupply fix, un-hardcode 3 bridge methods |
 
 ---
 

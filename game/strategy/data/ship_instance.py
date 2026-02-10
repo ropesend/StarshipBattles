@@ -178,8 +178,8 @@ class ShipInstance:
                     instance.component_damage[comp.id] = comp.current_hp
 
         # Capture resource levels
-        if hasattr(ship, 'resources') and ship.resources:
-            for name in ['fuel', 'energy', 'ammo']:
+        if ship.resources:
+            for name in ship.resources.get_resource_names():
                 current = ship.resources.get_value(name)
                 max_val = ship.resources.get_max_value(name)
                 if current < max_val:
@@ -626,8 +626,8 @@ class ShipInstance:
 
         # Update resource levels
         self.resource_levels.clear()
-        if hasattr(ship, 'resources') and ship.resources:
-            for name in ['fuel', 'energy', 'ammo']:
+        if ship.resources:
+            for name in ship.resources.get_resource_names():
                 current = ship.resources.get_value(name)
                 max_val = ship.resources.get_max_value(name)
                 if current < max_val:

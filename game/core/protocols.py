@@ -431,3 +431,34 @@ def is_post_battle_ship(obj: Any) -> TypeGuard[IPostBattleShip]:
 def is_resource_reader(obj: Any) -> TypeGuard[IResourceReader]:
     """Check if obj satisfies the IResourceReader Protocol."""
     return isinstance(obj, IResourceReader)
+
+
+@runtime_checkable
+class IResourceHolder(Protocol):
+    """Protocol for objects that hold resources accessible via ResourceRegistry.
+
+    Used by ShipInstance bridge methods (to_ship, from_ship, update_from_ship)
+    to access Ship resource state without hasattr checks.
+    """
+    @property
+    def resources(self) -> Any: ...  # ResourceRegistry (typed as Any to avoid cross-layer import)
+
+    @property
+    def hp(self) -> int: ...
+
+    @property
+    def max_hp(self) -> int: ...
+
+    @property
+    def is_alive(self) -> bool: ...
+
+    @property
+    def is_derelict(self) -> bool: ...
+
+    @property
+    def layers(self) -> Dict[str, Any]: ...
+
+
+def is_resource_holder(obj: Any) -> TypeGuard[IResourceHolder]:
+    """Check if obj implements IResourceHolder protocol."""
+    return isinstance(obj, IResourceHolder)

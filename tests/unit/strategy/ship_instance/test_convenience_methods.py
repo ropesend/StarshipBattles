@@ -165,3 +165,54 @@ class TestResourceMethodInteractions:
         assert per_hex1 == per_hex2
         assert per_turn1 == per_turn2
         assert warp1 == warp2
+
+
+class TestResupply:
+    """Tests for resupply method (PROJ-91 bug fix)."""
+
+    def test_resupply_uses_resource_storage_not_max_key(self, make_design_data_with_stats):
+        """resupply uses resource_storage for max, not 'max_{resource_name}' key.
+
+        Regression test for PROJ-91: resupply() was using max_key format
+        ('max_fuel') which doesn't exist in calculated stats. The correct
+        key is resource_storage['fuel'].
+        """
+        design_data = make_design_data_with_stats(expected_stats={
+            'resource_storage': {'fuel': 250}
+        })
+        ship = ShipInstance(
+            instance_id='test-1',
+            design_id='TestDesign',
+            name='Test Ship',
+            owner_id=0,
+            design_data=design_data,
+            resource_levels={'fuel': 100}  # Depleted fuel
+        )
+
+        # Resupply should correctly use 250 as max (from resource_storage)
+        # not 100 (default fallback from old buggy code)
+        actual = ship.resupply('fuel', 200)
+
+        # Should be clamped to max of 250
+        assert actual == 150  # 250 - 100 = 150 actual resupplied
+        # fuel should be removed from resource_levels when full
+        assert 'fuel' not in ship.resource_levels
+
+    def test_resupply_partial(self, make_design_data_with_stats):
+        """resupply partial amount works correctly."""
+        design_data = make_design_data_with_stats(expected_stats={
+            'resource_storage': {'fuel': 1000}
+        })
+        ship = ShipInstance(
+            instance_id='test-1',
+            design_id='TestDesign',
+            name='Test Ship',
+            owner_id=0,
+            design_data=design_data,
+            resource_levels={'fuel': 500}
+        )
+
+        actual = ship.resupply('fuel', 200)
+
+        assert actual == 200
+        assert ship.resource_levels['fuel'] == 700

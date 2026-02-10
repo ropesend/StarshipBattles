@@ -57,6 +57,21 @@ class TestResourceRegistry:
         reg.register_generation("energy", 10)
         assert r.regen_rate == 15
 
+    def test_get_resource_names_empty(self):
+        """get_resource_names returns empty list when no resources registered."""
+        reg = ResourceRegistry()
+        assert reg.get_resource_names() == []
+
+    def test_get_resource_names_returns_all_registered(self):
+        """get_resource_names returns all registered resource names."""
+        reg = ResourceRegistry()
+        reg.register_storage("fuel", 100)
+        reg.register_storage("energy", 50)
+        reg.register_generation("ammo", 5)
+
+        names = reg.get_resource_names()
+        assert set(names) == {"fuel", "energy", "ammo"}
+
 
 class TestAbilities:
     def test_consumption_ability(self):

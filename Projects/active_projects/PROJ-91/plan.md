@@ -13,17 +13,17 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Fix Bugs & Add Infrastructure | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Fix Bugs & Add Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate Callers to Generic API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Remove Type-Specific Methods & Clean Up | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-09 21:30
-**Active Phase:** Planning — Approved & Ready
-**Last Action:** Plan created with full swarm analysis
-**Next Action:** Begin Phase 1 implementation
+**Last Updated:** 2026-02-10
+**Active Phase:** Phase 2 — Migrate Callers to Generic API
+**Last Action:** Phase 1 complete - all 6 tasks done
+**Next Action:** Begin Phase 2 implementation
 **Blockers:** None
-**Context for Next Agent:** Plan approved. Baseline is 7353 tests passing. Start with Phase 1 Task 1.1 (add `get_resource_names()` to ResourceRegistry).
+**Context for Next Agent:** Phase 1 done. Added get_resource_names() to ResourceRegistry, IResourceHolder protocol, fixed resupply bug, un-hardcoded resource lists in 3 bridge methods. Tests: 7561 passed (+4 new).
 
 ## Overview
 ShipInstance (strategy layer) duplicates resource management logic that already exists in generic form. Seven type-specific methods (`get_current_fuel`, `consume_fuel`, `get_current_energy`, `consume_energy`, `get_fuel_cost_per_hex`, `get_warp_fuel_cost`, `get_warp_energy_cost`) independently reimplement the same logic as the generic `get_current_resource()`, `consume_resource()`, etc. Additionally, two methods (`resupply()` and `get_resource_percentage()`) have bugs from incorrect key lookups. Bridge methods between layers use defensive `hasattr` checks and hardcoded resource name lists.
@@ -80,7 +80,7 @@ ShipInstance (strategy layer) duplicates resource management logic that already 
 
 ### Phase 1: Fix Bugs & Add Infrastructure [Medium]
 **Objective:** Fix existing bugs and add the infrastructure needed for migration (protocol, ResourceRegistry method).
-**Status:** Not Started
+**Status:** Complete
 
 See [phase_1_checklist.md](phase_1_checklist.md) for detailed tasks.
 

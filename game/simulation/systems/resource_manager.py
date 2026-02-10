@@ -194,6 +194,10 @@ class ResourceRegistry:
         if res:
             res.regen_rate = value
 
+    def get_resource_names(self) -> List[str]:
+        """Return list of all registered resource names."""
+        return list(self._resources.keys())
+
 
 # --- Ability System ---
 
