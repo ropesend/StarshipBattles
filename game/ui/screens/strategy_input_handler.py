@@ -117,13 +117,29 @@ class StrategyInputHandler:
         if action is None:
             return
 
-        # --- Fleet mode commands ---
+        # Try each category handler in order
+        if self._handle_fleet_mode_action(action):
+            return
+        if self._handle_superweapon_action(action):
+            return
+        if self._handle_ui_action(action):
+            return
+        if self._handle_detail_panel_action(action):
+            return
+
+    def _handle_fleet_mode_action(self, action):
+        """Handle fleet mode commands (FLEET_MOVE, FLEET_JOIN, etc.).
+
+        Returns:
+            True if action was handled, False otherwise.
+        """
         if action == InputAction.FLEET_MOVE:
             if self.scene.selected_fleet:
                 self.input_mode = 'MOVE'
                 log_debug("Input Mode: MOVE - Click destination for fleet.")
             else:
                 log_debug("Select a fleet first.")
+            return True
 
         elif action == InputAction.FLEET_JOIN:
             if self.scene.selected_fleet:
@@ -131,6 +147,7 @@ class StrategyInputHandler:
                 log_debug("Input Mode: JOIN - Select fleet to join.")
             else:
                 log_debug("Select a fleet first.")
+            return True
 
         elif action == InputAction.FLEET_COLONIZE:
             if self.scene.selected_fleet:
@@ -138,6 +155,7 @@ class StrategyInputHandler:
                 log_debug("Input Mode: COLONIZE - Select target planet.")
             else:
                 log_debug("Select a fleet first.")
+            return True
 
         elif action == InputAction.FLEET_TRANSFER:
             if self.scene.selected_fleet:
@@ -145,6 +163,7 @@ class StrategyInputHandler:
                 log_debug("Input Mode: TRANSFER - Click destination hex for transfer.")
             else:
                 log_debug("Select a fleet first for transfer.")
+            return True
 
         elif action == InputAction.FLEET_DROP_CARGO:
             if self.scene.selected_fleet:
@@ -152,6 +171,7 @@ class StrategyInputHandler:
                 log_debug("Input Mode: DROP_CARGO - Click target hex.")
             else:
                 log_debug("Select a fleet first.")
+            return True
 
         elif action == InputAction.FLEET_LOAD_CARGO:
             if self.scene.selected_fleet:
@@ -159,6 +179,7 @@ class StrategyInputHandler:
                 log_debug("Input Mode: LOAD_CARGO - Click target hex.")
             else:
                 log_debug("Select a fleet first.")
+            return True
 
         elif action == InputAction.FLEET_CANCEL_MODE:
             if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
@@ -166,81 +187,131 @@ class StrategyInputHandler:
                                    'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
+            return True
 
-        # --- Superweapon commands ---
-        elif action == InputAction.FLEET_IMPLODE_PLANET:
+        return False
+
+    def _handle_superweapon_action(self, action):
+        """Handle superweapon commands (FLEET_IMPLODE_PLANET, etc.).
+
+        Returns:
+            True if action was handled, False otherwise.
+        """
+        if action == InputAction.FLEET_IMPLODE_PLANET:
             if self.scene.selected_fleet:
                 self.input_mode = 'IMPLODE_PLANET_TARGET'
                 log_debug("Input Mode: IMPLODE_PLANET - Select target planet.")
+            return True
 
         elif action == InputAction.FLEET_STELLERATE_STAR:
             if self.scene.selected_fleet:
                 self.input_mode = 'STELLERATE_STAR_TARGET'
                 log_debug("Input Mode: STELLERATE_STAR - Select target star.")
+            return True
 
         elif action == InputAction.FLEET_OPEN_WARP_POINT:
             if self.scene.selected_fleet:
                 self.input_mode = 'OPEN_WARP_TARGET'
                 log_debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
+            return True
 
         elif action == InputAction.FLEET_CLOSE_WARP_POINT:
             if self.scene.selected_fleet:
                 self.input_mode = 'CLOSE_WARP_TARGET'
                 log_debug("Input Mode: CLOSE_WARP_POINT - Select warp point to close.")
+            return True
 
         elif action == InputAction.FLEET_CREATE_DYSON_SPHERE:
             if self.scene.selected_fleet:
                 self.input_mode = 'DYSON_SPHERE_TARGET'
                 log_debug("Input Mode: DYSON_SPHERE - Select target star.")
+            return True
 
         elif action == InputAction.FLEET_SELF_DESTRUCT:
             if self.scene.selected_fleet:
                 self.scene._superweapons.handle_self_destruct(self.scene.selected_fleet)
+            return True
 
+        return False
+
+    def _handle_ui_action(self, action):
+        """Handle UI actions (zoom, screenshot, button-triggered, cycle selection).
+
+        Returns:
+            True if action was handled, False otherwise.
+        """
         # --- Zoom shortcuts ---
-        elif action == InputAction.STRATEGY_ZOOM_GALAXY:
+        if action == InputAction.STRATEGY_ZOOM_GALAXY:
             self.scene._camera_nav.zoom_to_galaxy()
+            return True
         elif action == InputAction.STRATEGY_ZOOM_SYSTEM:
             self.scene._camera_nav.zoom_to_system()
+            return True
 
         # --- Screenshot shortcuts ---
         elif action == InputAction.GLOBAL_SCREENSHOT_FULL:
             self._take_screenshot_full()
+            return True
         elif action == InputAction.GLOBAL_SCREENSHOT_VIEWPORT:
             self._take_screenshot_viewport()
+            return True
 
-        # --- Button-triggered actions (Task 2.5) ---
+        # --- Button-triggered actions ---
         elif action == InputAction.STRATEGY_NEXT_TURN:
             self.scene.advance_turn()
+            return True
         elif action == InputAction.STRATEGY_OPEN_PLANETS:
             self.scene.ui.open_planet_list()
+            return True
         elif action == InputAction.STRATEGY_OPEN_DESIGN:
             self.scene.on_design_click()
+            return True
         elif action == InputAction.STRATEGY_OPEN_BUILD_QUEUES:
             self.scene.ui.open_build_queue_list()
+            return True
         elif action == InputAction.STRATEGY_OPEN_EMPIRE:
             self.scene.ui.open_empire_panel()
+            return True
         elif action == InputAction.STRATEGY_SAVE_GAME:
             self.scene.on_save_game_click()
+            return True
+
+        # --- Cycle selection ---
         elif action == InputAction.STRATEGY_PREV_COLONY:
             self.scene.cycle_selection('colony', -1)
+            return True
         elif action == InputAction.STRATEGY_NEXT_COLONY:
             self.scene.cycle_selection('colony', 1)
+            return True
         elif action == InputAction.STRATEGY_PREV_FLEET:
             self.scene.cycle_selection('fleet', -1)
+            return True
         elif action == InputAction.STRATEGY_NEXT_FLEET:
             self.scene.cycle_selection('fleet', 1)
+            return True
 
-        # --- Detail panel fleet commands ---
-        elif action == InputAction.DETAIL_PANEL_ORDERS:
+        return False
+
+    def _handle_detail_panel_action(self, action):
+        """Handle detail panel fleet commands.
+
+        Returns:
+            True if action was handled, False otherwise.
+        """
+        if action == InputAction.DETAIL_PANEL_ORDERS:
             if self.scene.selected_fleet:
                 self.scene.ui.open_orders_window(self.scene.selected_fleet)
+            return True
         elif action == InputAction.DETAIL_PANEL_FLEET_REPORT:
             if self.scene.selected_fleet:
                 self.scene.ui.open_fleet_report_window(self.scene.selected_fleet)
+            return True
         elif action == InputAction.DETAIL_PANEL_BUILD:
             if self.scene.selected_fleet:
                 self.scene.on_fleet_build_click()
+            return True
+
+        return False
 
     def _handle_keydown_legacy(self, event):
         """Handle keyboard input with hardcoded keys (backward compat)."""
