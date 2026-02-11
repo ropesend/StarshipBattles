@@ -8,20 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-96 Phase 3
-**Current Status:** PROJ-96 Phase 3 Complete
-**Current Project:** PROJ-96
-**Current Phase:** Phase 4
+**Last Completed:** PROJ-96 Audit Cycle 1 PASSED
+**Current Status:** PROJ-96 Complete - Awaiting User Verification
+**Current Project:** PROJ-97 (next)
+**Current Phase:** Ready to start
 **Test Status:** 7593 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-96 Phase 3: 3x3 grid with 9 ships, smart scaling, centered layout
-- Ship classes expanded: Fighter, Satellite, Escort, Frigate, Cruiser, Heavy Cruiser, Battleship, Dreadnought, Superdreadnought
-- Smart scaling using get_image_metrics() for visible bounding rect
-- Portraits loaded via get_portrait_image() API, deleted _load_ship_portrait (-37 lines)
-- Layout: portrait_size=160, image_gap=5, row_spacing=10
-- Next: Phase 4 - Final cleanup and testing
+- PROJ-96: All 4 phases complete, audit passed with 4 investigation agents
+- Dead code cleanup: THEME_SHIP_SIZE removed
+- Visual verification deferred to user
+- Next: Start PROJ-97 or await user verification of PROJ-96
 
 ---
 
@@ -293,10 +291,10 @@
 
 ---
 
-- [/] **PROJ-96: Species Setup Ships View Layout Redesign**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+- [x] **PROJ-96: Species Setup Ships View Layout Redesign**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-96/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-96/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -500,6 +498,8 @@
 | 2026-02-10 | PROJ-96 | Phase 1 | Complete | 7593 passed | pending | RaceThemeGallery→UIScrollingContainer, height param, -2 obsolete tests |
 | 2026-02-10 | PROJ-96 | Phase 2 | Complete | 7593 passed | pending | Side-by-side layout, theme list left 200px, preview right |
 | 2026-02-10 | PROJ-96 | Phase 3 | Complete | 7593 passed | pending | 3x3 grid, 9 ships, smart scaling, _load_ship_portrait deleted |
+| 2026-02-10 | PROJ-96 | Phase 4 | Complete | 7593 passed | pending | THEME_SHIP_SIZE dead code removed |
+| 2026-02-10 | PROJ-96 | Audit 1 | PASSED | 7593 passed | pending | 4 investigation agents verified all goals |
 
 ---
 

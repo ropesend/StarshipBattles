@@ -64,7 +64,7 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
     # Thumbnail sizes (larger for 2560x1600 displays)
     # FLAG_THUMB_SIZE moved to RaceFlagGallery
     # PORTRAIT_THUMB_SIZE moved to RacePortraitGallery
-    THEME_SHIP_SIZE = 180  # For ship preview images
+    # SHIP_PREVIEW_SIZE defined locally in _refresh_ship_preview (160px)
 
     def __init__(self, rect: pygame.Rect, manager: pygame_gui.UIManager,
                  on_complete_callback: Callable[[RaceConfig], None],
