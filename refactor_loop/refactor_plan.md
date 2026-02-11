@@ -8,20 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-96 Phase 1
-**Current Status:** PROJ-96 Phase 1 Complete
+**Last Completed:** PROJ-96 Phase 2
+**Current Status:** PROJ-96 Phase 2 Complete
 **Current Project:** PROJ-96
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 7593 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-96 Phase 1: RaceThemeGallery restructured to UIScrollingContainer
-- Added height parameter to constructor
-- Removed preview label/panel (no longer needed)
-- Call site updated in race_setup_screen.py
-- 12 gallery tests passing (removed 2 obsolete tests)
-- Next: Phase 2 - Restructure ships panel to side-by-side layout
+- PROJ-96 Phase 2: Side-by-side layout implemented in `_create_ships_panel_content`
+- Theme gallery on left (200px width), preview scroll container on right
+- Removed unused `ship_preview_container` alias
+- Layout constants: THEME_LIST_WIDTH=200, CONTENT_GAP=10
+- Next: Phase 3 - 3-column grid with 9 ships, smart image scaling
 
 ---
 
@@ -490,6 +489,7 @@
 | 2026-02-10 | PROJ-95 | Phase 3 | Complete | 7595 passed | pending | None-means-full eliminated, 4 prod + 6 test files |
 | 2026-02-10 | PROJ-95 | Audit 1 | PASSED | 7595 passed | pending | All verification greps pass, no issues |
 | 2026-02-10 | PROJ-96 | Phase 1 | Complete | 7593 passed | pending | RaceThemeGallery→UIScrollingContainer, height param, -2 obsolete tests |
+| 2026-02-10 | PROJ-96 | Phase 2 | Complete | 7593 passed | pending | Side-by-side layout, theme list left 200px, preview right |
 
 ---
 

@@ -344,34 +344,34 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         )
         y += 45
 
-        # PROJ-12 Phase 4: Use RaceThemeGallery for theme selection
-        # The gallery handles theme buttons and selection highlighting
-        # PROJ-96: Gallery now uses vertical scrolling list
-        theme_gallery_height = 200
+        # PROJ-96: Side-by-side layout - theme list on left, preview grid on right
+        THEME_LIST_WIDTH = 200
+        CONTENT_GAP = 10
+        content_y = y
+        content_height = panel_height - content_y - 10
+
+        # Theme gallery (vertical scrolling list on left)
         self._theme_gallery = RaceThemeGallery(
             panel=panel,
             manager=self.ui_manager,
             race_config=self.race_config,
             x=10,
-            y=y,
-            width=panel_width,
-            height=theme_gallery_height,
+            y=content_y,
+            width=THEME_LIST_WIDTH,
+            height=content_height,
             on_select_callback=self._on_theme_selected
         )
-        y += theme_gallery_height + 10
 
-        # Ship preview area (scrolling container for ship images)
-        preview_height = panel_height - y - 20
+        # Ship preview area (scrolling container on right)
+        preview_x = 10 + THEME_LIST_WIDTH + CONTENT_GAP
+        preview_width = panel_width - THEME_LIST_WIDTH - CONTENT_GAP
         self.ship_preview_scroll = pygame_gui.elements.UIScrollingContainer(
-            relative_rect=pygame.Rect(10, y, panel_width, preview_height),
+            relative_rect=pygame.Rect(preview_x, content_y, preview_width, content_height),
             manager=self.ui_manager,
             container=panel,
             allow_scroll_x=False,
             allow_scroll_y=True
         )
-
-        # Store reference to container for dynamic updates
-        self.ship_preview_container = self.ship_preview_scroll
 
         # Note: theme selection is handled by RaceThemeGallery via on_select_callback
 
