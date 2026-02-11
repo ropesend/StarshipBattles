@@ -16,6 +16,8 @@ Functions:
 """
 from typing import Dict, Any, List
 
+from game.simulation.components.modifier_effects import ModifierEffectEvaluator
+
 
 def is_v2_format(modifier: Dict[str, Any]) -> bool:
     """
@@ -240,9 +242,14 @@ def validate_modifier_v2(modifier: Dict[str, Any]) -> bool:
         # Empty effects array is invalid - modifiers should have at least one effect
         return False
 
-    # Validate each effect
+    # Validate each effect (structural validation)
     for effect in modifier['effects']:
         if not validate_effect_v2(effect):
+            return False
+        # Delegate formula validation to modifier_effects (semantic validation)
+        # This prevents drift between structural and semantic checks
+        formula_errors = ModifierEffectEvaluator.validate_formula(effect['formula'])
+        if formula_errors:
             return False
 
     # Optional: param

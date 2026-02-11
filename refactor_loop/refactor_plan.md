@@ -8,24 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-108 Phase 4
-**Current Status:** PROJ-108 Phase 4 Complete
+**Last Completed:** PROJ-108 Phase 5
+**Current Status:** PROJ-108 Phase 5 Complete
 **Current Project:** PROJ-108
-**Current Phase:** Phase 5
+**Current Phase:** Phase 6
 **Test Status:** 8237 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-108 Phase 4 complete: Migrated all callers to shared utilities
-  - SuperweaponValidator: Deleted _get_component_abilities(), delegates to ComponentInspector
-  - ColonizeValidator: Uses iterate_design_components() for colony pod detection
-  - FleetCapabilityCalculator: Uses ship_has_ability() and count_ability()
-  - target_evaluator.py: Removed ~105 lines, now imports from combat_utils
-  - controller.py: Updated _get_hp_percent/_is_in_pdc_arc to use combat_utils
-  - Enhanced iterate_design_components to support inline abilities (backward compat)
-  - Updated test files that were testing deleted methods
-  - ~150 lines of duplicate code eliminated
-- Next: Phase 5 - Simulation Deduplication (ability aggregation, resource consumption)
+- PROJ-108 Phase 5 complete: Simulation Deduplication
+  - Merged calculate_ability_totals_for_layer() into calculate_ability_totals() with layer/scope_filter params (~65 lines removed)
+  - Updated test_ability_aggregator_layers.py to use merged function with keyword args
+  - Added formula validation delegation in modifier_schema.validate_modifier_v2() to ModifierEffectEvaluator.validate_formula()
+  - Added get_ability_instances_by_class() utility generator for filtering abilities by class name
+- Next: Phase 6 - UI Deduplication (BaseGallery, BaseColumnManager, formatting utils)
 
 ---
 
@@ -312,6 +308,7 @@
 | 2026-02-11 | PROJ-108 | Phase 2 | Complete | 8199 passed | pending | 7 singletons converted, ~175 lines removed, 8 test files updated |
 | 2026-02-11 | PROJ-108 | Phase 3 | Complete | 8237 passed | pending | ComponentInspector (5 funcs, 18 tests) + combat_utils (7 funcs, 20 tests) |
 | 2026-02-11 | PROJ-108 | Phase 4 | Complete | 8237 passed | pending | Migrated SuperweaponValidator, ColonizeValidator, FleetCapabilityCalculator, target_evaluator, controller; ~150 lines removed |
+| 2026-02-11 | PROJ-108 | Phase 5 | Complete | 8237 passed | pending | Merged ability_totals_for_layer (~65 lines), formula validation delegation, get_ability_instances_by_class utility |
 
 ---
 

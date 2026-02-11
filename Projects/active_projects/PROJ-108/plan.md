@@ -17,14 +17,14 @@
 | 2. Convert Singletons | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ComponentInspector + AI Utils | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate Strategy + AI Callers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Simulation Deduplication | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Simulation Deduplication | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. UI Deduplication | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 4 Complete
-**Last Action:** Migrated all callers to use ComponentInspector and combat_utils. Removed ~150 lines of duplicate code from superweapon_validator.py, colonize_validator.py, fleet_capability_calculator.py, and target_evaluator.py.
-**Next Action:** Start Phase 5 (Simulation Deduplication)
+**Active Phase:** Phase 5 Complete
+**Last Action:** Merged calculate_ability_totals_for_layer into calculate_ability_totals (~65 lines removed). Added formula validation delegation in modifier_schema. Added get_ability_instances_by_class utility.
+**Next Action:** Start Phase 6 (UI Deduplication)
 **Blockers:** None
 
 ## Overview

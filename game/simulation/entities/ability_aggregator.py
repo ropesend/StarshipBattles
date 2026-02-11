@@ -4,7 +4,7 @@ This module provides functions for calculating total ability values
 across ship components, supporting stacking groups and redundancy.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Iterator, Tuple
 
 from game.simulation.components.abilities.base import AbilityLayer, AbilityScope
 
@@ -67,13 +67,23 @@ def _aggregate_ability_groups(ability_groups: Dict[str, Dict[Any, List[Any]]]) -
     return totals
 
 
-def calculate_ability_totals(components):
+def calculate_ability_totals(
+    components,
+    layer: Optional[AbilityLayer] = None,
+    scope_filter: Optional[AbilityScope] = None
+):
     """Calculate total values for all abilities from components.
 
     Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
+    Optionally filters abilities by layer and/or scope.
 
     Args:
         components: List of components to aggregate abilities from
+        layer: Optional layer to filter by (COMBAT, STRATEGIC, or BOTH).
+               When specified, only processes ability instances (not raw dicts)
+               and only includes abilities that apply to the requested layer.
+        scope_filter: Optional scope to filter by (e.g., only ALLIED_SYSTEM abilities).
+                      Only effective when layer is also specified.
 
     Returns:
         Dict mapping ability names to their total values
@@ -92,6 +102,14 @@ def calculate_ability_totals(components):
             # Handle List (Current Implementation)
             if isinstance(comp.ability_instances, list):
                 for ab in comp.ability_instances:
+                    # Layer filtering (when layer is specified)
+                    if layer is not None:
+                        if not ab.applies_to_layer(layer):
+                            continue
+                        # Scope filtering (only when layer is specified)
+                        if scope_filter is not None and ab.scope != scope_filter:
+                            continue
+
                     ability_name = ab.__class__.__name__
                     handled_abilities.add(ability_name)
 
@@ -118,7 +136,11 @@ def calculate_ability_totals(components):
                 # ... (omitted for brevity, assume debug print sufficient in list block)
                 pass
 
-        # 2. Process Raw Dictionary
+        # 2. Process Raw Dictionary (skipped when layer filtering is active)
+        # Layer filtering requires ability instances with applies_to_layer() method
+        if layer is not None:
+            continue
+
         abilities = getattr(comp, 'abilities', {})
         if isinstance(abilities, dict):
             for ability_name, raw_value in abilities.items():
@@ -162,68 +184,35 @@ def get_ability_total(components, ability_name):
     return totals.get(ability_name, 0)
 
 
-def calculate_ability_totals_for_layer(
-    components: List[Any],
-    layer: AbilityLayer,
-    scope_filter: Optional[AbilityScope] = None
-) -> Dict[str, Any]:
-    """Calculate total ability values filtered by game layer and optionally scope.
+def get_ability_instances_by_class(
+    components,
+    class_name: str
+) -> Iterator[Tuple[Any, Any]]:
+    """Yield (component, ability) pairs for abilities matching class_name.
 
-    This function filters abilities by their layer classification before aggregating.
-    Use this for layer-specific calculations (e.g., only strategic abilities for
-    fleet movement, only combat abilities for battle simulation).
-
-    Supports 'stack_group' in ability definition for redundancy (MAX) vs stacking (SUM/MULT).
+    This utility extracts ability instances that match a specific class name
+    from a list of components. It enables filtering abilities by type without
+    duplicating the iteration pattern across multiple files.
 
     Args:
-        components: List of components to aggregate abilities from
-        layer: Which layer to filter for (COMBAT, STRATEGIC, or BOTH)
-        scope_filter: Optional scope to filter by (e.g., only ALLIED_SYSTEM abilities)
+        components: List of components to search
+        class_name: The ability class name to filter for (e.g., 'ResourceConsumption')
 
-    Returns:
-        Dict mapping ability names to their total values
+    Yields:
+        Tuples of (component, ability_instance) for each matching ability
+
+    Example:
+        for comp, ability in get_ability_instances_by_class(components, 'ResourceConsumption'):
+            resource_type = ability.resource_type
+            rate = ability.get_primary_value()
+            # Process the ability...
     """
-    totals = {}
-
-    # Intermediate structure: ability -> { group_key -> [values] }
-    ability_groups = {}
-
     for comp in components:
-        # Process Ability Instances only (layer/scope require instance)
-        if not hasattr(comp, 'ability_instances'):
-            continue
+        if hasattr(comp, 'ability_instances'):
+            instances = comp.ability_instances
+            if isinstance(instances, list):
+                for ab in instances:
+                    if ab.__class__.__name__ == class_name:
+                        yield comp, ab
 
-        if not isinstance(comp.ability_instances, list):
-            continue
 
-        for ab in comp.ability_instances:
-            # Check if ability applies to requested layer
-            if not ab.applies_to_layer(layer):
-                continue
-
-            # Check scope filter if provided
-            if scope_filter is not None and ab.scope != scope_filter:
-                continue
-
-            ability_name = ab.__class__.__name__
-
-            # Extract value using polymorphic interface
-            value = ab.get_primary_value()
-
-            # Marker abilities (no numeric value) return 0.0 from get_primary_value()
-            # For class requirements, these need boolean True semantics
-            if ability_name in MARKER_ABILITIES:
-                value = True
-
-            stack_group = getattr(ab, 'stack_group', None)
-            group_key = stack_group if stack_group else comp
-
-            if ability_name not in ability_groups:
-                ability_groups[ability_name] = {}
-            if group_key not in ability_groups[ability_name]:
-                ability_groups[ability_name][group_key] = []
-
-            ability_groups[ability_name][group_key].append(value)
-
-    # Use shared aggregation helper
-    return _aggregate_ability_groups(ability_groups)

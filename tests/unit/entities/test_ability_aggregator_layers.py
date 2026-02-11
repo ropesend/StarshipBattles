@@ -1,7 +1,7 @@
 """
 Tests for layer-aware ability aggregation.
 
-TDD Phase 1, Step 1.2: Tests for calculate_ability_totals_for_layer().
+TDD Phase 1, Step 1.2: Tests for calculate_ability_totals().
 """
 
 import pytest
@@ -61,11 +61,11 @@ class MockComponent:
 
 
 class TestCalculateAbilityTotalsForLayer:
-    """Tests for the calculate_ability_totals_for_layer() function."""
+    """Tests for the calculate_ability_totals() function."""
 
     def test_calculate_totals_for_combat_layer(self):
         """Should only include COMBAT layer abilities when filtering for COMBAT."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
         mock_component = MagicMock()
 
@@ -77,7 +77,7 @@ class TestCalculateAbilityTotalsForLayer:
         comp = MockComponent([combat_ability, strategic_ability, dual_ability])
 
         # Get totals for COMBAT layer
-        totals = calculate_ability_totals_for_layer([comp], AbilityLayer.COMBAT)
+        totals = calculate_ability_totals([comp], layer=AbilityLayer.COMBAT)
 
         # Should include combat and dual, exclude strategic
         assert 'MockCombatAbility' in totals
@@ -90,7 +90,7 @@ class TestCalculateAbilityTotalsForLayer:
 
     def test_calculate_totals_for_strategic_layer(self):
         """Should only include STRATEGIC layer abilities when filtering for STRATEGIC."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
         mock_component = MagicMock()
 
@@ -101,7 +101,7 @@ class TestCalculateAbilityTotalsForLayer:
         comp = MockComponent([combat_ability, strategic_ability, dual_ability])
 
         # Get totals for STRATEGIC layer
-        totals = calculate_ability_totals_for_layer([comp], AbilityLayer.STRATEGIC)
+        totals = calculate_ability_totals([comp], layer=AbilityLayer.STRATEGIC)
 
         # Should include strategic and dual, exclude combat
         assert 'MockStrategicAbility' in totals
@@ -114,7 +114,7 @@ class TestCalculateAbilityTotalsForLayer:
 
     def test_calculate_totals_excludes_wrong_layer(self):
         """Should completely exclude abilities from the wrong layer."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
         mock_component = MagicMock()
 
@@ -125,7 +125,7 @@ class TestCalculateAbilityTotalsForLayer:
         comp = MockComponent([combat_ability1, combat_ability2])
 
         # Get totals for STRATEGIC layer
-        totals = calculate_ability_totals_for_layer([comp], AbilityLayer.STRATEGIC)
+        totals = calculate_ability_totals([comp], layer=AbilityLayer.STRATEGIC)
 
         # Should be empty - no strategic abilities
         assert 'MockCombatAbility' not in totals
@@ -133,7 +133,7 @@ class TestCalculateAbilityTotalsForLayer:
 
     def test_calculate_totals_with_scope_filter(self):
         """Should filter by scope when scope_filter is provided."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
         mock_component = MagicMock()
 
@@ -144,9 +144,9 @@ class TestCalculateAbilityTotalsForLayer:
         comp = MockComponent([self_scoped, system_scoped])
 
         # Filter for only ALLIED_SYSTEM scope
-        totals = calculate_ability_totals_for_layer(
+        totals = calculate_ability_totals(
             [comp],
-            AbilityLayer.STRATEGIC,
+            layer=AbilityLayer.STRATEGIC,
             scope_filter=AbilityScope.ALLIED_SYSTEM
         )
 
@@ -156,7 +156,7 @@ class TestCalculateAbilityTotalsForLayer:
 
     def test_calculate_totals_aggregates_multiple_components(self):
         """Should aggregate abilities across multiple components."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
         mock_component = MagicMock()
 
@@ -166,7 +166,7 @@ class TestCalculateAbilityTotalsForLayer:
         comp1 = MockComponent([combat1])
         comp2 = MockComponent([combat2])
 
-        totals = calculate_ability_totals_for_layer([comp1, comp2], AbilityLayer.COMBAT)
+        totals = calculate_ability_totals([comp1, comp2], layer=AbilityLayer.COMBAT)
 
         # Should sum both combat abilities
         assert 'MockCombatAbility' in totals
@@ -174,15 +174,15 @@ class TestCalculateAbilityTotalsForLayer:
 
     def test_calculate_totals_empty_components_list(self):
         """Should return empty dict for empty components list."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
-        totals = calculate_ability_totals_for_layer([], AbilityLayer.COMBAT)
+        totals = calculate_ability_totals([], layer=AbilityLayer.COMBAT)
 
         assert totals == {}
 
     def test_calculate_totals_respects_stack_groups(self):
         """Should respect stack_group aggregation rules (MAX within group)."""
-        from game.simulation.entities.ability_aggregator import calculate_ability_totals_for_layer
+        from game.simulation.entities.ability_aggregator import calculate_ability_totals
 
         mock_component = MagicMock()
 
@@ -192,7 +192,7 @@ class TestCalculateAbilityTotalsForLayer:
 
         comp = MockComponent([combat1, combat2])
 
-        totals = calculate_ability_totals_for_layer([comp], AbilityLayer.COMBAT)
+        totals = calculate_ability_totals([comp], layer=AbilityLayer.COMBAT)
 
         # With same stack_group, should take MAX (150), not sum
         assert 'MockCombatAbility' in totals
