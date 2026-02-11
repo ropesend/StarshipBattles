@@ -1,0 +1,393 @@
+"""
+Superweapon Command Handlers - Strategy Command Dispatch
+
+PROJ-102 Phase 5: Command handlers for superweapon orders.
+Each handler wires a command to its validator and creates the appropriate fleet order.
+
+Usage:
+    handler = ImplodePlanetCommandHandler()
+    result = handler.execute(session, command)
+"""
+from typing import Any, TYPE_CHECKING
+
+from game.core.logger import log_info
+from game.core.validation import validation_result, ValidationResult
+from game.strategy.data.fleet import FleetOrder, OrderType
+from game.strategy.data.pathfinding import find_hybrid_path
+from game.strategy.validation import SuperweaponValidator
+
+if TYPE_CHECKING:
+    from game.strategy.engine.game_session import GameSession
+
+
+# =============================================================================
+# Direct Command Handlers
+# =============================================================================
+
+class ImplodePlanetCommandHandler:
+    """Handler for IssueImplodePlanetCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueImplodePlanetCommand - creates IMPLODE_PLANET order."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Resolve planet
+        planet = session._get_planet_by_id(cmd.planet_id)
+        if not planet:
+            return validation_result(False, "Planet not found.")
+
+        # 3. Validate
+        result = SuperweaponValidator.validate_implode_planet(
+            session.galaxy, fleet, planet
+        )
+
+        # 4. Apply
+        if result.is_valid:
+            order = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued IMPLODE_PLANET order for Fleet {fleet.id}")
+
+        return result
+
+
+class StellerateStarCommandHandler:
+    """Handler for IssueStellerateStarCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueStellerateStarCommand - creates STELLERATE_STAR order."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Validate
+        result = SuperweaponValidator.validate_stellerate_star(
+            session.galaxy, fleet
+        )
+
+        # 3. Apply
+        if result.is_valid:
+            order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued STELLERATE_STAR order for Fleet {fleet.id}")
+
+        return result
+
+
+class OpenWarpPointCommandHandler:
+    """Handler for IssueOpenWarpPointCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueOpenWarpPointCommand - creates OPEN_WARP_POINT order."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Validate
+        result = SuperweaponValidator.validate_open_warp_point(
+            session.galaxy, fleet, cmd.target_system_name
+        )
+
+        # 3. Apply
+        if result.is_valid:
+            target_dict = {
+                'target_hex': cmd.target_hex,
+                'target_system_name': cmd.target_system_name
+            }
+            order = FleetOrder(OrderType.OPEN_WARP_POINT, target=target_dict)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued OPEN_WARP_POINT order for Fleet {fleet.id}")
+
+        return result
+
+
+class CloseWarpPointCommandHandler:
+    """Handler for IssueCloseWarpPointCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueCloseWarpPointCommand - creates CLOSE_WARP_POINT order."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Validate
+        result = SuperweaponValidator.validate_close_warp_point(
+            session.galaxy, fleet, cmd.warp_point_destination_id
+        )
+
+        # 3. Apply
+        if result.is_valid:
+            order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued CLOSE_WARP_POINT order for Fleet {fleet.id}")
+
+        return result
+
+
+class CreateDysonSphereCommandHandler:
+    """Handler for IssueCreateDysonSphereCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueCreateDysonSphereCommand - creates CREATE_DYSON_SPHERE order."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Validate
+        result = SuperweaponValidator.validate_create_dyson_sphere(
+            session.galaxy, fleet
+        )
+
+        # 3. Apply
+        if result.is_valid:
+            order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued CREATE_DYSON_SPHERE order for Fleet {fleet.id}")
+
+        return result
+
+
+class SelfDestructCommandHandler:
+    """Handler for IssueSelfDestructCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle IssueSelfDestructCommand - creates SELF_DESTRUCT order."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Validate
+        result = SuperweaponValidator.validate_self_destruct(fleet, cmd.ship_ids)
+
+        # 3. Apply
+        if result.is_valid:
+            order = FleetOrder(OrderType.SELF_DESTRUCT, target=cmd.ship_ids)
+            fleet.add_order(order)
+            log_info(f"GameSession: Issued SELF_DESTRUCT order for Fleet {fleet.id}")
+
+        return result
+
+
+# =============================================================================
+# Mission Command Handlers (Move + Action)
+# =============================================================================
+
+class ImplodePlanetMissionCommandHandler:
+    """Handler for QueueImplodePlanetMissionCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle QueueImplodePlanetMissionCommand - queues MOVE + IMPLODE_PLANET."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Resolve planet
+        planet = session._get_planet_by_id(cmd.planet_id)
+        if not planet:
+            return validation_result(False, "Planet not found.")
+
+        # 3. Determine start hex
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
+        # 4. Calculate path
+        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
+        if not path:
+            return validation_result(False, "No path found to target.")
+
+        # 5. Queue MOVE order if not already at target
+        if start_hex != cmd.target_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+            fleet.add_order(move_order)
+
+            # Set path immediately if it's the first order
+            if len(fleet.orders) == 1:
+                if path and path[0] == fleet.location:
+                    path = path[1:]
+                fleet.path = path
+
+        # 6. Queue IMPLODE_PLANET order
+        action_order = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
+        fleet.add_order(action_order)
+
+        log_info(f"GameSession: Queued IMPLODE_PLANET mission for Fleet {fleet.id}")
+        return validation_result(True, "Implode planet mission queued.")
+
+
+class StellerateStarMissionCommandHandler:
+    """Handler for QueueStellerateStarMissionCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle QueueStellerateStarMissionCommand - queues MOVE + STELLERATE_STAR."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Determine start hex
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
+        # 3. Calculate path
+        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
+        if not path:
+            return validation_result(False, "No path found to target.")
+
+        # 4. Queue MOVE order if not already at target
+        if start_hex != cmd.target_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+            fleet.add_order(move_order)
+
+            # Set path immediately if it's the first order
+            if len(fleet.orders) == 1:
+                if path and path[0] == fleet.location:
+                    path = path[1:]
+                fleet.path = path
+
+        # 5. Queue STELLERATE_STAR order
+        action_order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
+        fleet.add_order(action_order)
+
+        log_info(f"GameSession: Queued STELLERATE_STAR mission for Fleet {fleet.id}")
+        return validation_result(True, "Stellerate star mission queued.")
+
+
+class OpenWarpPointMissionCommandHandler:
+    """Handler for QueueOpenWarpPointMissionCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle QueueOpenWarpPointMissionCommand - queues MOVE + OPEN_WARP_POINT."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Determine start hex
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
+        # 3. Calculate path
+        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
+        if not path:
+            return validation_result(False, "No path found to target.")
+
+        # 4. Queue MOVE order if not already at target
+        if start_hex != cmd.target_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+            fleet.add_order(move_order)
+
+            # Set path immediately if it's the first order
+            if len(fleet.orders) == 1:
+                if path and path[0] == fleet.location:
+                    path = path[1:]
+                fleet.path = path
+
+        # 5. Queue OPEN_WARP_POINT order with target dict
+        target_dict = {
+            'target_hex': cmd.target_hex,
+            'target_system_name': cmd.target_system_name
+        }
+        action_order = FleetOrder(OrderType.OPEN_WARP_POINT, target=target_dict)
+        fleet.add_order(action_order)
+
+        log_info(f"GameSession: Queued OPEN_WARP_POINT mission for Fleet {fleet.id}")
+        return validation_result(True, "Open warp point mission queued.")
+
+
+class CloseWarpPointMissionCommandHandler:
+    """Handler for QueueCloseWarpPointMissionCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle QueueCloseWarpPointMissionCommand - queues MOVE + CLOSE_WARP_POINT."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Determine start hex
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
+        # 3. Calculate path
+        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
+        if not path:
+            return validation_result(False, "No path found to target.")
+
+        # 4. Queue MOVE order if not already at target
+        if start_hex != cmd.target_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+            fleet.add_order(move_order)
+
+            # Set path immediately if it's the first order
+            if len(fleet.orders) == 1:
+                if path and path[0] == fleet.location:
+                    path = path[1:]
+                fleet.path = path
+
+        # 5. Queue CLOSE_WARP_POINT order
+        action_order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
+        fleet.add_order(action_order)
+
+        log_info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")
+        return validation_result(True, "Close warp point mission queued.")
+
+
+class CreateDysonSphereMissionCommandHandler:
+    """Handler for QueueCreateDysonSphereMissionCommand."""
+
+    def execute(self, session: 'GameSession', cmd: Any) -> ValidationResult:
+        """Handle QueueCreateDysonSphereMissionCommand - queues MOVE + CREATE_DYSON_SPHERE."""
+        # 1. Resolve fleet
+        fleet = session._get_fleet_by_id(cmd.fleet_id)
+        if not fleet:
+            return validation_result(False, "Fleet not found.")
+
+        # 2. Determine start hex
+        start_hex = fleet.location
+        if fleet.orders:
+            last = fleet.orders[-1]
+            if last.type == OrderType.MOVE:
+                start_hex = last.target
+
+        # 3. Calculate path
+        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
+        if not path:
+            return validation_result(False, "No path found to target.")
+
+        # 4. Queue MOVE order if not already at target
+        if start_hex != cmd.target_hex:
+            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
+            fleet.add_order(move_order)
+
+            # Set path immediately if it's the first order
+            if len(fleet.orders) == 1:
+                if path and path[0] == fleet.location:
+                    path = path[1:]
+                fleet.path = path
+
+        # 5. Queue CREATE_DYSON_SPHERE order
+        action_order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
+        fleet.add_order(action_order)
+
+        log_info(f"GameSession: Queued CREATE_DYSON_SPHERE mission for Fleet {fleet.id}")
+        return validation_result(True, "Create Dyson Sphere mission queued.")

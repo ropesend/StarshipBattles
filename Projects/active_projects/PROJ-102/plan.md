@@ -17,7 +17,7 @@
 | 2. Order Types & Commands | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Data Model Extensions | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Validators | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Command Handlers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Command Handlers | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Order Processing (Turn Execution) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Input Actions & Key Bindings | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 | 8. UI Module - Superweapon Operations | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
@@ -25,11 +25,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 5 - Command Handlers
-**Last Action:** Phase 4 complete - Created SuperweaponValidator with 7 validation methods (find_ship_with_ability, validate_implode_planet, validate_stellerate_star, validate_open_warp_point, validate_close_warp_point, validate_create_dyson_sphere, validate_self_destruct)
-**Next Action:** Begin Phase 5 - Create command handlers for superweapon orders
+**Active Phase:** Phase 6 - Order Processing (Turn Execution)
+**Last Action:** Phase 5 complete - Created superweapon_command_handlers.py with 11 handlers (6 direct + 5 mission), 25 tests
+**Next Action:** Begin Phase 6 - Implement turn execution logic for superweapon orders
 **Blockers:** None
-**Context for Next Agent:** Created superweapon_validator.py (7 validators + _find_system_at_location helper). Created test_superweapon_validator.py (25 tests). Updated __init__.py to export SuperweaponValidator. 58 validation tests total passing. Next: Phase 5 command handlers.
+**Context for Next Agent:** Created superweapon_command_handlers.py (6 direct handlers: ImplodePlanet, StellerateStar, OpenWarpPoint, CloseWarpPoint, CreateDysonSphere, SelfDestruct + 5 mission handlers for MOVE+action). Registered all 11 in create_default_registry(). Created test_superweapon_command_handlers.py (25 tests). 7921 tests passing. Next: Phase 6 - order processing in turn execution.
 
 ## Overview
 Add 7 strategic superweapon abilities to the game: Destroy Planet, Destroy Star, Open Warp Point, Close Warp Point, Create Dyson Sphere, and Self-Destruct. Each feature includes a new ability class, component JSON definition, keyboard shortcut, strategy map order, command handler, and turn execution processing. These are galaxy-altering powers that follow the existing ability/component/order/command pipeline.

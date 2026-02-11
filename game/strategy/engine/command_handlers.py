@@ -361,9 +361,25 @@ def create_default_registry() -> CommandHandlerRegistry:
     """Create a registry with all standard command handlers registered.
 
     Returns:
-        CommandHandlerRegistry with all 8 handlers registered.
+        CommandHandlerRegistry with all handlers registered.
     """
+    from game.strategy.engine.superweapon_command_handlers import (
+        ImplodePlanetCommandHandler,
+        StellerateStarCommandHandler,
+        OpenWarpPointCommandHandler,
+        CloseWarpPointCommandHandler,
+        CreateDysonSphereCommandHandler,
+        SelfDestructCommandHandler,
+        ImplodePlanetMissionCommandHandler,
+        StellerateStarMissionCommandHandler,
+        OpenWarpPointMissionCommandHandler,
+        CloseWarpPointMissionCommandHandler,
+        CreateDysonSphereMissionCommandHandler,
+    )
+
     registry = CommandHandlerRegistry()
+
+    # Core handlers
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     registry.register('IssueMoveCommand', MoveCommandHandler())
     registry.register('IssueBuildShipCommand', BuildShipCommandHandler())
@@ -372,4 +388,20 @@ def create_default_registry() -> CommandHandlerRegistry:
     registry.register('QueueColonizeMissionCommand', ColonizeMissionCommandHandler())
     registry.register('ClearFleetOrdersCommand', ClearOrdersCommandHandler())
     registry.register('IssueTransferCommand', TransferCommandHandler())
+
+    # Superweapon direct handlers (PROJ-102)
+    registry.register('IssueImplodePlanetCommand', ImplodePlanetCommandHandler())
+    registry.register('IssueStellerateStarCommand', StellerateStarCommandHandler())
+    registry.register('IssueOpenWarpPointCommand', OpenWarpPointCommandHandler())
+    registry.register('IssueCloseWarpPointCommand', CloseWarpPointCommandHandler())
+    registry.register('IssueCreateDysonSphereCommand', CreateDysonSphereCommandHandler())
+    registry.register('IssueSelfDestructCommand', SelfDestructCommandHandler())
+
+    # Superweapon mission handlers (PROJ-102)
+    registry.register('QueueImplodePlanetMissionCommand', ImplodePlanetMissionCommandHandler())
+    registry.register('QueueStellerateStarMissionCommand', StellerateStarMissionCommandHandler())
+    registry.register('QueueOpenWarpPointMissionCommand', OpenWarpPointMissionCommandHandler())
+    registry.register('QueueCloseWarpPointMissionCommand', CloseWarpPointMissionCommandHandler())
+    registry.register('QueueCreateDysonSphereMissionCommand', CreateDysonSphereMissionCommandHandler())
+
     return registry

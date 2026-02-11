@@ -758,3 +758,107 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Test Case:** Race environment panel tests
 
 ---
+
+## [BUG-64] - Design Workshop - Component Disappears in Multi-Layer Placement
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Placing the same component type in multiple layers caused one to disappear (blank space) because the UI cache key didn't include layer type.
+* **Solution Implemented:** Changed cache key from `("group", group_key)` to `("group", l_type, group_key)` in `layer_panel.py` to ensure unique UI entries per layer.
+* **Test Case:** `tests/unit/ui/test_structure_visibility.py` - `test_same_component_in_multiple_layers_shows_in_both`
+
+---
+
+## [BUG-65] - Design Workshop - Modifiers Should Auto-Select Applicable Ones
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Some applicable modifiers (e.g., Hardened Mount) weren't auto-selected for components due to hardcoded incomplete lists in `get_mandatory_modifiers()`.
+* **Solution Implemented:** Changed both `ModifierLogic` and `ModifierService` `get_mandatory_modifiers()` to dynamically return ALL allowed modifiers. Toggle buttons disabled; users adjust values only.
+* **Test Case:** All 360 modifier-specific tests pass
+
+---
+
+## [BUG-66] - Design Workshop - Hide Vehicle Theme Selector in Strategy Mode
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Theme dropdown was visible in the Design Workshop when playing the strategy layer, but selecting themes had no effect on ship images.
+* **Solution Implemented:** Added `hide_theme_selector` parameter to `BuilderRightPanel`. When workshop is in integrated mode (strategy layer), theme dropdown is not created; theme is locked to the empire's theme.
+* **Test Case:** All 241 workshop/builder tests pass
+
+---
+
+## [BUG-67] - Strategy Layer - Add "Build Queues" Button to Top Bar
+* **Date Solved:** 2026-02-07
+* **Original Issue:** No top bar button existed for viewing all active build queues from the strategy layer.
+* **Solution Implemented:** Added `btn_build_queues` button to top bar in `strategy_ui.py`. Created new `BuildQueueListWindow` that lists all active build queues across planets and fleets.
+* **Test Case:** All 1113 UI + strategy tests pass
+
+---
+
+## [BUG-71] - Design Workshop - +/- Buttons Affect Wrong Layer for Duplicate Components
+* **Date Solved:** 2026-02-08
+* **Original Issue:** +/- buttons on components present in multiple layers targeted the wrong layer because no layer context was passed through the event chain.
+* **Solution Implemented:** Threaded `layer_type` through `structure_list_items.py`, `layer_panel.py`, `workshop_event_router.py`, and legacy `main.py`. Event handlers now search only the targeted layer.
+* **Test Case:** `tests/unit/builder/test_layer_targeted_actions.py` (8 new tests)
+
+---
+
+## [BUG-72] - Leader Needs a Name in Species Setup
+* **Date Solved:** 2026-02-08
+* **Original Issue:** Species Setup lacked a text input field for the leader's name.
+* **Solution Implemented:** Added `leader_name: str` field to `RaceConfig` with serialization support. Added `leader_name_input` (UITextEntryLine) to `race_identity_panel.py` in the Government section.
+* **Test Case:** `tests/unit/strategy/data/test_race_config.py`, `tests/unit/ui/panels/test_race_identity_panel.py`
+
+---
+
+## [BUG-74] - Normal New Games Should Have Homeworld Complexes Pre-Built
+* **Date Solved:** 2026-02-08
+* **Original Issue:** Normal new games created empty homeworlds while quickstart games had 7 pre-built facilities (shipyard, resource harvesters, resupply depot).
+* **Solution Implemented:** Added `QuickstartBuilder.copy_quickstart_designs()` and `spawn_initial_complexes()` calls to `_on_new_game_start()` in `app.py`, matching the quickstart code path.
+* **Test Case:** Strategy and quickstart tests
+
+---
+
+## [BUG-75] - Planet Details Panel Dimensions Mismatch
+* **Date Solved:** 2026-02-08
+* **Original Issue:** Planet details panel in the planets list window was 600px wide while the strategy layer version was 580px.
+* **Solution Implemented:** Changed `detail_panel_width` from 600 to 580 in `planet_list_window.py` to match strategy layer.
+* **Test Case:** Planet list window tests
+
+---
+
+## [BUG-76] - Turn Log Does Not Show at Start of Each Strategy Turn
+* **Date Solved:** 2026-02-08
+* **Original Issue:** Off-by-one bug: `process_turn()` logs events at turn N then increments to N+1. `get_turn_events()` queried N+1, returning empty results.
+* **Solution Implemented:** Captured turn number before calling `process_turn()` and passed it explicitly to `get_turn_events(turn=processed_turn)` in `strategy_screen.py`.
+* **Test Case:** Strategy screen tests
+
+---
+
+## [BUG-77] - Ships/Fleets Missing After Save and Load
+* **Date Solved:** 2026-02-08
+* **Original Issue:** All ships/fleets disappeared after save and load. `Fleet.to_dict()` could not serialize `HexCoord` locations, resulting in `null` in save files.
+* **Solution Implemented:** Updated `Fleet.to_dict()` to check `isinstance(HexCoord)` and serialize as `{'q': q, 'r': r}`. Updated `from_dict()` for the new dict format with backward compatibility. Same fix applied to path serialization.
+* **Test Case:** `tests/unit/strategy/fleet/test_serialization.py` (9 tests), 46 save/load integration tests
+
+---
+
+## [BUG-78] - Planet Production Values Display as 0; Icons Not Centered
+* **Date Solved:** 2026-02-10
+* **Original Issue:** Production values showed 0 because `compute_planet_production()` only checked inline abilities, not registry lookups. Icons were left-aligned instead of centered.
+* **Solution Implemented:** Added `_get_harvester_info()` with registry lookup fallback in `strategy_detail_formatter.py`. Fixed icon centering to `col_x + (col_w - 24) // 2` in `planet_report_panel.py`.
+* **Test Case:** `tests/unit/ui/screens/test_planet_production_display.py` (5 new tests)
+
+---
+
+## [BUG-80] - Build Yards List - Names/Properties Should Be on 1 Line
+* **Date Solved:** 2026-02-10
+* **Original Issue:** Yard entries in the Build Yards list used `\n` to split name and properties onto two lines, wasting space.
+* **Solution Implemented:** Changed format to single-line `"{name} ({count} items, {rate}/turn)"` in `build_queue_selector.py`. Reduced `row_height` from 55 to 30.
+* **Test Case:** 169 build queue UI tests pass
+
+---
+
+## [BUG-81] - Build Queue - Item Column Too Narrow, Properties Overflow
+* **Date Solved:** 2026-02-10
+* **Original Issue:** Build queue Item column was 150px wide with 12-character name truncation. Properties overflowed onto separate lines.
+* **Solution Implemented:** Widened Item column from 150px to 450px (3x). Combined design name and type on single line. Shifted Turns and resource columns right. Removed name truncation.
+* **Test Case:** 169 build queue tests, 7659 full suite pass
+
+---
