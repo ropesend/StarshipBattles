@@ -130,6 +130,40 @@ class TestRunDetailsPanel:
 
         y_offset = self.y + 40 - self.scroll_offset
 
+        # Run info header and status
+        y_offset = self._draw_header_and_status(surface, run_record, run_number, y_offset)
+
+        # Seed and Ticks info
+        y_offset = self._draw_metadata(surface, run_record, y_offset)
+
+        # Action buttons (View States, Use Seed, Copy Results)
+        y_offset = self._draw_action_buttons(surface, run_record, y_offset)
+
+        # TEST OUTCOMES section for propulsion tests
+        if self._is_propulsion_test(run_record):
+            y_offset = self._draw_propulsion_outcomes(surface, run_record, y_offset)
+            y_offset += 10
+
+        # RESOURCE CONSUMPTION section for resource tests
+        if self._is_resource_test(run_record):
+            y_offset = self._draw_resource_outcomes(surface, run_record, y_offset)
+            y_offset += 10
+
+        # Metrics
+        y_offset = self._draw_metrics(surface, run_record, y_offset)
+
+        # Validation Results
+        y_offset = self._draw_validation_results(surface, run_record, y_offset)
+
+        surface.set_clip(None)
+        if self.max_scroll > 0:
+            self._draw_scrollbar(surface)
+
+    def _draw_header_and_status(self, surface, run_record, run_number, y_offset):
+        """Draw run info header and pass/fail status.
+
+        Returns updated y_offset.
+        """
         # Run info header
         timestamp_str = run_record.get_formatted_timestamp()
         header_text = f"Run #{run_number} - {timestamp_str}"
@@ -144,7 +178,13 @@ class TestRunDetailsPanel:
         surface.blit(status_surf, (self.x + 10, y_offset))
         y_offset += 25
 
-        # Seed and Ticks info
+        return y_offset
+
+    def _draw_metadata(self, surface, run_record, y_offset):
+        """Draw seed and ticks information.
+
+        Returns updated y_offset.
+        """
         if run_record.seed is not None:
             seed_text = f"Seed: {run_record.seed}"
             seed_surf = self.small_font.render(seed_text, True, (150, 150, 160))
@@ -158,6 +198,13 @@ class TestRunDetailsPanel:
             ticks_x = self.x + 180 if run_record.seed is not None else self.x + 15
             surface.blit(ticks_surf, (ticks_x, y_offset))
 
+        return y_offset
+
+    def _draw_action_buttons(self, surface, run_record, y_offset):
+        """Draw View States, Use Seed, and Copy Results buttons.
+
+        Returns updated y_offset.
+        """
         y_offset -= 25  # Reset for button positioning
 
         # View States button (if battle states are available)
@@ -243,17 +290,13 @@ class TestRunDetailsPanel:
 
         y_offset += 40
 
-        # TEST OUTCOMES section for propulsion tests
-        if self._is_propulsion_test(run_record):
-            y_offset = self._draw_propulsion_outcomes(surface, run_record, y_offset)
-            y_offset += 10
+        return y_offset
 
-        # RESOURCE CONSUMPTION section for resource tests
-        if self._is_resource_test(run_record):
-            y_offset = self._draw_resource_outcomes(surface, run_record, y_offset)
-            y_offset += 10
+    def _draw_metrics(self, surface, run_record, y_offset):
+        """Draw test metrics section.
 
-        # Metrics
+        Returns updated y_offset.
+        """
         metrics_title = self.header_font.render("Test Metrics", True, self.header_color)
         surface.blit(metrics_title, (self.x + 10, y_offset))
         y_offset += 25
@@ -272,125 +315,154 @@ class TestRunDetailsPanel:
 
         y_offset += 10
 
-        # Validation Results - display expected/actual/status with color coding
-        if run_record.validation_results:
-            val_title = self.header_font.render("VALIDATION RESULTS", True, self.header_color)
-            surface.blit(val_title, (self.x + 10, y_offset))
-            y_offset += 25
+        return y_offset
 
-            # Draw separator line
-            pygame.draw.line(surface, (60, 60, 70),
-                           (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
-            y_offset += 8
+    def _draw_validation_results(self, surface, run_record, y_offset):
+        """Draw validation results section with expected/actual/status.
 
-            for vr in run_record.validation_results:
-                status = vr['status']
-                name = vr['name']
-                expected = vr.get('expected')
-                actual = vr.get('actual')
-                p_value = vr.get('p_value')
-                tolerance = vr.get('tolerance')
+        Returns updated y_offset.
+        """
+        if not run_record.validation_results:
+            return y_offset
 
-                # Determine colors based on status
-                if status == 'PASS':
-                    status_color = self.pass_color
-                    symbol = "PASS"
-                    actual_color = self.pass_color  # Green for passing actual values
-                elif status == 'FAIL':
-                    status_color = self.fail_color
-                    symbol = "FAIL"
-                    actual_color = self.fail_color  # Red for failing actual values
-                else:
-                    status_color = (255, 200, 100)
-                    symbol = "WARN"
-                    actual_color = (255, 200, 100)
+        val_title = self.header_font.render("VALIDATION RESULTS", True, self.header_color)
+        surface.blit(val_title, (self.x + 10, y_offset))
+        y_offset += 25
 
-                # Validation name with symbol (color-coded)
-                val_line = f"{symbol} {name}"
-                val_surf = self.small_font.render(val_line, True, status_color)
-                surface.blit(val_surf, (self.x + 15, y_offset))
-                y_offset += 18
+        # Draw separator line
+        pygame.draw.line(surface, (60, 60, 70),
+                       (self.x + 10, y_offset), (self.x + self.width - 20, y_offset))
+        y_offset += 8
 
-                # Define layout constants
-                label_color = (140, 140, 160)
-                expected_color = (180, 200, 255)  # Light blue for expected values
-                indent = 30
-                label_width = 75
+        for vr in run_record.validation_results:
+            y_offset = self._draw_single_validation(surface, vr, y_offset)
 
-                # Show expected value (if present)
-                if expected is not None:
-                    exp_str = self._format_value(expected)
-                    exp_label = self.small_font.render("Expected:", True, label_color)
-                    exp_value = self.small_font.render(exp_str, True, expected_color)
-                    surface.blit(exp_label, (self.x + indent, y_offset))
-                    surface.blit(exp_value, (self.x + indent + label_width, y_offset))
-                    y_offset += 16
+        return y_offset
 
-                # Show actual value (color-coded green/red based on status)
-                if actual is not None:
-                    act_str = self._format_value(actual)
-                    act_label = self.small_font.render("Actual:", True, label_color)
-                    act_value = self.small_font.render(act_str, True, actual_color)
-                    surface.blit(act_label, (self.x + indent, y_offset))
-                    surface.blit(act_value, (self.x + indent + label_width, y_offset))
-                    y_offset += 16
+    def _draw_single_validation(self, surface, vr, y_offset):
+        """Draw a single validation result item.
 
-                # Show difference/percentage (if both values are numeric)
-                if expected is not None and actual is not None:
-                    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
-                        diff = actual - expected
-                        abs_diff = abs(diff)
+        Returns updated y_offset.
+        """
+        status = vr['status']
+        name = vr['name']
+        expected = vr.get('expected')
+        actual = vr.get('actual')
+        p_value = vr.get('p_value')
 
-                        if expected != 0:
-                            pct_diff = (diff / expected) * 100
-                            abs_pct_diff = abs(pct_diff)
+        # Determine colors based on status
+        if status == 'PASS':
+            status_color = self.pass_color
+            symbol = "PASS"
+            actual_color = self.pass_color
+        elif status == 'FAIL':
+            status_color = self.fail_color
+            symbol = "FAIL"
+            actual_color = self.fail_color
+        else:
+            status_color = (255, 200, 100)
+            symbol = "WARN"
+            actual_color = (255, 200, 100)
 
-                            if abs_pct_diff < 1e-9:
-                                diff_str = "EXACT MATCH"
-                                diff_color = self.pass_color
-                            elif abs_pct_diff < 0.01:
-                                diff_str = f"{pct_diff:+.6f}% (essentially exact)"
-                                diff_color = self.pass_color
-                            else:
-                                diff_str = f"{pct_diff:+.4f}%"
-                                diff_color = self.pass_color if status == 'PASS' else self.fail_color
-                        else:
-                            if abs_diff < 1e-9:
-                                diff_str = "EXACT MATCH"
-                                diff_color = self.pass_color
-                            else:
-                                diff_str = f"Diff: {diff:+.6f}"
-                                diff_color = self.pass_color if status == 'PASS' else self.fail_color
+        # Validation name with symbol (color-coded)
+        val_line = f"{symbol} {name}"
+        val_surf = self.small_font.render(val_line, True, status_color)
+        surface.blit(val_surf, (self.x + 15, y_offset))
+        y_offset += 18
 
-                        diff_label = self.small_font.render("Difference:", True, label_color)
-                        diff_value = self.small_font.render(diff_str, True, diff_color)
-                        surface.blit(diff_label, (self.x + indent, y_offset))
-                        surface.blit(diff_value, (self.x + indent + label_width, y_offset))
-                        y_offset += 16
+        # Define layout constants
+        label_color = (140, 140, 160)
+        expected_color = (180, 200, 255)
+        indent = 30
+        label_width = 75
 
-                # P-value (for statistical tests)
-                if p_value is not None:
-                    p_color = self.pass_color if p_value < 0.05 else self.fail_color
-                    p_str = f"{p_value:.6f}"
-                    if p_value < 0.05:
-                        p_str += " (proven equivalent)"
-                    else:
-                        p_str += " (not proven equivalent)"
-                    p_label = self.small_font.render("p-value:", True, label_color)
-                    p_value_surf = self.small_font.render(p_str, True, p_color)
-                    surface.blit(p_label, (self.x + indent, y_offset))
-                    surface.blit(p_value_surf, (self.x + indent + label_width, y_offset))
-                    y_offset += 16
+        # Show expected value (if present)
+        if expected is not None:
+            exp_str = self._format_value(expected)
+            exp_label = self.small_font.render("Expected:", True, label_color)
+            exp_value = self.small_font.render(exp_str, True, expected_color)
+            surface.blit(exp_label, (self.x + indent, y_offset))
+            surface.blit(exp_value, (self.x + indent + label_width, y_offset))
+            y_offset += 16
 
-                y_offset += 10  # Space between validation items
+        # Show actual value (color-coded green/red based on status)
+        if actual is not None:
+            act_str = self._format_value(actual)
+            act_label = self.small_font.render("Actual:", True, label_color)
+            act_value = self.small_font.render(act_str, True, actual_color)
+            surface.blit(act_label, (self.x + indent, y_offset))
+            surface.blit(act_value, (self.x + indent + label_width, y_offset))
+            y_offset += 16
 
-                # Draw subtle separator between validation items
-                pygame.draw.line(surface, (45, 45, 55),
-                               (self.x + 20, y_offset - 5), (self.x + self.width - 30, y_offset - 5))
+        # Show difference/percentage (if both values are numeric)
+        if expected is not None and actual is not None:
+            y_offset = self._draw_numeric_difference(
+                surface, expected, actual, status, y_offset, indent, label_width
+            )
 
-        surface.set_clip(None)
-        if self.max_scroll > 0:
-            self._draw_scrollbar(surface)
+        # P-value (for statistical tests)
+        if p_value is not None:
+            label_color = (140, 140, 160)
+            p_color = self.pass_color if p_value < 0.05 else self.fail_color
+            p_str = f"{p_value:.6f}"
+            if p_value < 0.05:
+                p_str += " (proven equivalent)"
+            else:
+                p_str += " (not proven equivalent)"
+            p_label = self.small_font.render("p-value:", True, label_color)
+            p_value_surf = self.small_font.render(p_str, True, p_color)
+            surface.blit(p_label, (self.x + indent, y_offset))
+            surface.blit(p_value_surf, (self.x + indent + label_width, y_offset))
+            y_offset += 16
+
+        y_offset += 10  # Space between validation items
+
+        # Draw subtle separator between validation items
+        pygame.draw.line(surface, (45, 45, 55),
+                       (self.x + 20, y_offset - 5), (self.x + self.width - 30, y_offset - 5))
+
+        return y_offset
+
+    def _draw_numeric_difference(self, surface, expected, actual, status, y_offset, indent, label_width):
+        """Draw the difference/percentage line for numeric values.
+
+        Returns updated y_offset.
+        """
+        if not (isinstance(expected, (int, float)) and isinstance(actual, (int, float))):
+            return y_offset
+
+        label_color = (140, 140, 160)
+        diff = actual - expected
+        abs_diff = abs(diff)
+
+        if expected != 0:
+            pct_diff = (diff / expected) * 100
+            abs_pct_diff = abs(pct_diff)
+
+            if abs_pct_diff < 1e-9:
+                diff_str = "EXACT MATCH"
+                diff_color = self.pass_color
+            elif abs_pct_diff < 0.01:
+                diff_str = f"{pct_diff:+.6f}% (essentially exact)"
+                diff_color = self.pass_color
+            else:
+                diff_str = f"{pct_diff:+.4f}%"
+                diff_color = self.pass_color if status == 'PASS' else self.fail_color
+        else:
+            if abs_diff < 1e-9:
+                diff_str = "EXACT MATCH"
+                diff_color = self.pass_color
+            else:
+                diff_str = f"Diff: {diff:+.6f}"
+                diff_color = self.pass_color if status == 'PASS' else self.fail_color
+
+        diff_label = self.small_font.render("Difference:", True, label_color)
+        diff_value = self.small_font.render(diff_str, True, diff_color)
+        surface.blit(diff_label, (self.x + indent, y_offset))
+        surface.blit(diff_value, (self.x + indent + label_width, y_offset))
+        y_offset += 16
+
+        return y_offset
 
     def _is_propulsion_test(self, run_record):
         """Check if this run record is from a propulsion test."""
