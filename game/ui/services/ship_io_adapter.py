@@ -23,6 +23,15 @@ class ShipIOAdapter:
     ship designs without directly using the ShipIO class from the
     simulation layer.
 
+    Return Value Convention:
+        - save operations: Tuple[bool, Optional[str]] where bool=success
+        - load operations: Tuple[Optional[T], Optional[str]] where T=loaded object
+        - For both: message=None means user cancelled the dialog
+
+    The different return types are intentional: save operations return a
+    success flag because there is no object to return, while load operations
+    return the loaded object (or None on failure/cancel).
+
     Usage:
         adapter = ShipIOAdapter()
         adapter.set_ships_folder("custom_ships")

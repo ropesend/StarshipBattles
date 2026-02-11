@@ -30,28 +30,28 @@ class ShipFactory:
     without directly importing the Ship class from the simulation layer.
 
     Usage:
-        factory = ShipFactory(registries=fresh_registries)
+        factory = ShipFactory(registry_provider=fresh_registries)
         ship = factory.create_from_design(design_data)
         factory.configure_ship(ship, position, angle, team_id, ai_strategy, source_file)
 
     PROJ-50/PROJ-58: Registries stored on instance; method-level override also supported.
     """
 
-    def __init__(self, *, registries: Optional['GameRegistries'] = None):
+    def __init__(self, *, registry_provider: Optional['GameRegistries'] = None):
         """Initialize ShipFactory with optional registries.
 
         Args:
-            registries: GameRegistries for DI. If None, uses get_default_registries()
+            registry_provider: GameRegistries for DI. If None, uses get_default_registries()
                        at method call time.
         """
-        self._registries = registries
+        self._registry_provider = registry_provider
 
-    def _get_registries(self, registries: Optional['GameRegistries'] = None) -> 'GameRegistries':
+    def _get_registries(self, registry_provider: Optional['GameRegistries'] = None) -> 'GameRegistries':
         """Resolve registries: explicit > stored > global default."""
-        if registries is not None:
-            return registries
-        if self._registries is not None:
-            return self._registries
+        if registry_provider is not None:
+            return registry_provider
+        if self._registry_provider is not None:
+            return self._registry_provider
         from game.core.registry import get_default_registries
         return get_default_registries()
 
@@ -59,7 +59,7 @@ class ShipFactory:
         self,
         design_data: Dict[str, Any],
         *,
-        registries: Optional['GameRegistries'] = None
+        registry_provider: Optional['GameRegistries'] = None
     ) -> 'Ship':
         """Create a Ship instance from design dictionary data.
 
@@ -70,7 +70,7 @@ class ShipFactory:
                 - theme_id: Visual theme identifier
                 - color: RGB color tuple
                 - layers: Component layer definitions
-            registries: Optional GameRegistries override (keyword-only).
+            registry_provider: Optional GameRegistries override (keyword-only).
                        If None, uses stored registries or global default.
 
         Returns:
@@ -81,13 +81,13 @@ class ShipFactory:
             ValueError: If component or modifier IDs are invalid.
         """
         from game.simulation.entities.ship import Ship
-        return Ship.from_dict(design_data, registries=self._get_registries(registries))
+        return Ship.from_dict(design_data, registries=self._get_registries(registry_provider))
 
     def get_ship_radius(
         self,
         design_data: Dict[str, Any],
         *,
-        registries: Optional['GameRegistries'] = None
+        registry_provider: Optional['GameRegistries'] = None
     ) -> float:
         """Get the radius a ship would have based on design data.
 
@@ -97,13 +97,13 @@ class ShipFactory:
 
         Args:
             design_data: Dictionary containing ship design data.
-            registries: Optional GameRegistries override (keyword-only).
+            registry_provider: Optional GameRegistries override (keyword-only).
                        If None, uses stored registries or global default.
 
         Returns:
             The calculated radius of the ship in world units.
         """
-        temp_ship = self.create_from_design(design_data, registries=registries)
+        temp_ship = self.create_from_design(design_data, registry_provider=registry_provider)
         temp_ship.recalculate_stats()
         return temp_ship.radius
 

@@ -16,15 +16,15 @@
 | 1. Error Code Standardization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Type Hint & Return Type Standardization | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Naming & API Standardization | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. UI Service DI & Return Type Standardization | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. UI Service DI & Return Type Standardization | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation API Consistency | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Minor Cleanup Batch | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 3 Complete - Ready for Phase 4
-**Last Action:** Phase 3 complete. Deleted duplicate `add_ship_instance()` (6 call sites). Deleted redundant `_stat_*` static methods. Renamed `check_missiles` -> `include_missiles`. Added `is_alive()` docstring.
-**Next Action:** Begin Phase 4 - UI Service DI & Return Type Standardization
+**Active Phase:** Phase 4 Complete - Ready for Phase 5
+**Last Action:** Phase 4 complete. Renamed `registries` -> `registry_provider` in ShipFactory and DesignLoaderAdapter (standardized DI naming). Added class-level return value convention docstring to ShipIOAdapter.
+**Next Action:** Begin Phase 5 - Simulation API Consistency
 **Blockers:** None
 **Test Baseline:** 8185 tests passing
 

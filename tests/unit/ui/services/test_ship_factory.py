@@ -39,7 +39,7 @@ class TestShipFactory:
         }
 
         factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registries=fresh_registries)
+        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
 
         assert ship is not None
         assert ship.name == "Test Ship"
@@ -58,7 +58,7 @@ class TestShipFactory:
         }
 
         factory = ShipFactory()
-        radius = factory.get_ship_radius(design_data, registries=fresh_registries)
+        radius = factory.get_ship_radius(design_data, registry_provider=fresh_registries)
 
         assert radius > 0
         assert isinstance(radius, float)
@@ -77,7 +77,7 @@ class TestShipFactory:
         }
 
         factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registries=fresh_registries)
+        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
 
         factory.configure_ship(
             ship,
@@ -109,14 +109,14 @@ class TestShipFactory:
         }
 
         factory = ShipFactory()
-        master = factory.create_from_design(design_data, registries=fresh_registries)
+        master = factory.create_from_design(design_data, registry_provider=fresh_registries)
         master.position = pygame.math.Vector2(0, 0)
         master.angle = 0
 
-        follower1 = factory.create_from_design(design_data, registries=fresh_registries)
+        follower1 = factory.create_from_design(design_data, registry_provider=fresh_registries)
         follower1.position = pygame.math.Vector2(100, 0)
 
-        follower2 = factory.create_from_design(design_data, registries=fresh_registries)
+        follower2 = factory.create_from_design(design_data, registry_provider=fresh_registries)
         follower2.position = pygame.math.Vector2(0, 100)
 
         ships = [master, follower1, follower2]
@@ -151,7 +151,7 @@ class TestShipFactory:
         }
 
         factory = ShipFactory()
-        ship = factory.create_from_design(design_data, registries=fresh_registries)
+        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
         factory.configure_ship(
             ship,
             position=pygame.math.Vector2(500, 500),
@@ -196,8 +196,8 @@ class TestShipFactoryStaticMethods:
             "layers": {}
         }
 
-        ship1 = factory1.create_from_design(design_data, registries=fresh_registries)
-        ship2 = factory2.create_from_design(design_data, registries=fresh_registries)
+        ship1 = factory1.create_from_design(design_data, registry_provider=fresh_registries)
+        ship2 = factory2.create_from_design(design_data, registry_provider=fresh_registries)
 
         # Both should work independently
         assert ship1 is not None

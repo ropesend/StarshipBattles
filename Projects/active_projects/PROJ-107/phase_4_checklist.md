@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Standardize UI service DI patterns to a single convention. Standardize ShipIOAdapter return type semantics.
 
 **Findings:** CON-UI2-001, CON-UI2-005, CON-UI2-007
@@ -26,15 +26,17 @@ The 4 services use different DI patterns:
 
 Decision: Standardize on the **ComponentService** pattern (optional with lazy default) as the baseline. VehicleClassService strict pattern is acceptable since PROJ-50 explicitly made it required.
 
-- [ ] Add docstring to ComponentService.__init__ clarifying this is the standard DI pattern
-- [ ] Rename `registries` parameter in ShipFactory to `registry_provider` for naming consistency with ComponentService/VehicleClassService
-- [ ] Update ShipFactory._get_registries to match new param name
-- [ ] Grep for all `ShipFactory(registries=` call sites and update to `ShipFactory(registry_provider=`
+- [x] Add docstring to ComponentService.__init__ clarifying this is the standard DI pattern
+- [x] Rename `registries` parameter in ShipFactory to `registry_provider` for naming consistency with ComponentService/VehicleClassService
+- [x] Update ShipFactory._get_registries to match new param name
+- [x] Grep for all `ShipFactory(registries=` call sites and update to `ShipFactory(registry_provider=`
   - Note: ShipFactory uses keyword-only args so all call sites use the keyword form
-- [ ] Rename DesignLoaderAdapter `registries` kwarg to `registry_provider`
-- [ ] Update DesignLoaderAdapter.__init__ body to use new param name
-- [ ] Grep for all `DesignLoaderAdapter(` call sites and update keyword args
-- [ ] Verify: `pytest tests/ -n 12 -k "ship_factory or design_loader or component_service or vehicle_class"` passes
+  - Updated: docstring example only, other call sites use no kwargs
+- [x] Rename DesignLoaderAdapter `registries` kwarg to `registry_provider`
+- [x] Update DesignLoaderAdapter.__init__ body to use new param name
+- [x] Grep for all `DesignLoaderAdapter(` call sites and update keyword args
+  - Updated: workshop_screen.py (only call site using registries kwarg)
+- [x] Verify: `pytest tests/ -n 12 -k "ship_factory or design_loader or component_service or vehicle_class"` passes
 
 **Notes:** We're standardizing the *parameter name* (registry_provider) not the pattern (strict vs optional). Each service can still choose strict or optional based on its PROJ-50 status.
 
@@ -50,16 +52,16 @@ Current inconsistency:
 
 Decision: Keep both signatures as-is (they represent genuinely different semantics: save returns success flag, load returns the loaded object). Instead, add clear docstring documentation of the contract.
 
-- [ ] Verify save_ship docstring clearly documents the three cases: success, failure, cancel
-- [ ] Verify load_ship docstring clearly documents the three cases: success, failure, cancel
-- [ ] Add a class-level docstring section documenting the return value contract:
+- [x] Verify save_ship docstring clearly documents the three cases: success, failure, cancel
+- [x] Verify load_ship docstring clearly documents the three cases: success, failure, cancel
+- [x] Add a class-level docstring section documenting the return value contract:
   ```
   Return Value Convention:
       - save operations: Tuple[bool, Optional[str]] where bool=success
       - load operations: Tuple[Optional[T], Optional[str]] where T=loaded object
       - For both: message=None means user cancelled the dialog
   ```
-- [ ] Verify: `pytest tests/unit/ui/ -v` passes
+- [x] Verify: `pytest tests/unit/ui/ -v` passes (1407 passed)
 
 **Notes:** The different return types are intentional - save has no object to return. Documenting the convention is sufficient.
 
@@ -67,8 +69,8 @@ Decision: Keep both signatures as-is (they represent genuinely different semanti
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run full test suite: `pytest tests/ -n 12`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Run full test suite: `pytest tests/ -n 12` (8185 passed)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

@@ -31,6 +31,12 @@ class ComponentService:
     def __init__(self, registry_provider: Optional[IRegistryProvider] = None):
         """Initialize the ComponentService.
 
+        This follows the standard UI service DI pattern:
+        - Parameter name: registry_provider (or registry_provider/registries for GameRegistries)
+        - Default: Optional with lazy resolution via get_default_registry_provider()
+        - Services may choose strict required pattern (raises ValueError if None)
+          when PROJ-50 explicitly mandated it (e.g., VehicleClassService).
+
         Args:
             registry_provider: Optional registry provider for dependency injection.
                 If None, uses get_default_registry_provider().

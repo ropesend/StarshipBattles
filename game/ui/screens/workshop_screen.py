@@ -60,7 +60,7 @@ class DesignWorkshopScreen:
 
         # PROJ-43: UI service adapters for ship I/O and design loading
         self._ship_io_adapter = ShipIOAdapter()
-        self._design_loader_adapter = DesignLoaderAdapter(registries=context.registries)
+        self._design_loader_adapter = DesignLoaderAdapter(registry_provider=context.registries)
 
         # MVVM: Create ViewModel to manage builder state
         # PROJ-38: Pass context for DI

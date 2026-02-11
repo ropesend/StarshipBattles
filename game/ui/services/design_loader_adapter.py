@@ -28,19 +28,19 @@ class DesignLoaderAdapter:
         ship, message = adapter.load_ship_from_file(filepath, width, height)
     """
 
-    def __init__(self, design_loader: Optional[Any] = None, *, registries: Optional[Any] = None):
+    def __init__(self, design_loader: Optional[Any] = None, *, registry_provider: Optional[Any] = None):
         """Initialize the DesignLoaderAdapter.
 
         Args:
             design_loader: Optional SimulationDesignLoader instance for dependency
                 injection. If None, creates a new SimulationDesignLoader.
-            registries: Optional GameRegistries for DI (keyword-only).
+            registry_provider: Optional GameRegistries for DI (keyword-only).
                        Required if design_loader is None.
         """
         if design_loader is None:
-            if registries is None:
-                registries = get_default_registries()
-            design_loader = SimulationDesignLoader(registries=registries)
+            if registry_provider is None:
+                registry_provider = get_default_registries()
+            design_loader = SimulationDesignLoader(registries=registry_provider)
         self._loader = design_loader
 
     def load_ship_from_design_data(

@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-107 Phase 3
-**Current Status:** PROJ-107 Phase 3 Complete
+**Last Completed:** PROJ-107 Phase 4
+**Current Status:** PROJ-107 Phase 4 Complete
 **Current Project:** PROJ-107
-**Current Phase:** Phase 4 (next)
+**Current Phase:** Phase 5 (next)
 **Test Status:** 8185 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-107 Phase 3 Complete — Naming & API Standardization
-  - Task 3.1: Deleted duplicate `add_ship_instance()` method, updated 6 call sites to use `add_ship()`
-  - Task 3.2: Deleted redundant `_stat_get_hp_percent` and `_stat_is_in_pdc_arc` static methods
-  - Task 3.3: Renamed `check_missiles` -> `include_missiles` parameter in AIController
-  - Task 3.4: Added semantic docstring to `is_alive()` in IControllable
+- PROJ-107 Phase 4 Complete — UI Service DI & Return Type Standardization
+  - Task 4.1: Renamed `registries` -> `registry_provider` in ShipFactory (init + method params)
+  - Task 4.1: Renamed `registries` -> `registry_provider` in DesignLoaderAdapter
+  - Task 4.1: Updated workshop_screen.py call site
+  - Task 4.1: Added standard DI pattern docstring to ComponentService
+  - Task 4.2: Added class-level return value convention docstring to ShipIOAdapter
   - 8185 tests passing
-- Next: Phase 4 (UI Service DI & Return Type Standardization)
+- Next: Phase 5 (Simulation API Consistency)
 
 ---
 
@@ -167,7 +168,7 @@
 ---
 
 - [/] **PROJ-107: Consistency & API Standardization**
-  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -301,6 +302,7 @@
 | 2026-02-11 | PROJ-107 | Phase 1 | Complete | 8185 passed | pending | Added AI error codes, fixed docstrings, added F001/F002/F004 |
 | 2026-02-11 | PROJ-107 | Phase 2 | Complete | 8185 passed | pending | Type hints: AI/sim/strategy, 16 HexCoord replacements, 12 to_dict standardized |
 | 2026-02-11 | PROJ-107 | Phase 3 | Complete | 8185 passed | pending | Deleted add_ship_instance (6 refs), deleted _stat_* wrappers, renamed check_missiles, added is_alive docstring |
+| 2026-02-11 | PROJ-107 | Phase 4 | Complete | 8185 passed | pending | registries→registry_provider in ShipFactory/DesignLoaderAdapter, ShipIOAdapter return type docs |
 
 ---
 
