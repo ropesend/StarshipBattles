@@ -11,7 +11,7 @@ from game.simulation.battle_controller import (
     create_strategy_battle,
     create_hypothetical_battle,
 )
-from game.simulation.services.battle_service import BattleResult
+from game.simulation.services.battle_service import BattleServiceResult
 
 
 class TestBattleControllerQueryMethods:
@@ -148,9 +148,9 @@ class TestFactoryFunctions:
         """create_manual_battle creates a configured controller."""
         with patch('game.simulation.battle_controller.BattleService') as MockService:
             mock_service = Mock()
-            mock_service.create_battle.return_value = BattleResult(success=True)
-            mock_service.add_ship.return_value = BattleResult(success=True)
-            mock_service.start_battle.return_value = BattleResult(success=True)
+            mock_service.create_battle.return_value = BattleServiceResult(success=True)
+            mock_service.add_ship.return_value = BattleServiceResult(success=True)
+            mock_service.start_battle.return_value = BattleServiceResult(success=True)
             mock_service.get_all_ships.return_value = []
             mock_engine = Mock()
             mock_engine.ships = []
@@ -172,7 +172,7 @@ class TestFactoryFunctions:
         """create_test_battle creates a configured controller."""
         with patch('game.simulation.battle_controller.BattleService') as MockService:
             mock_service = Mock()
-            mock_service.create_battle.return_value = BattleResult(success=True)
+            mock_service.create_battle.return_value = BattleServiceResult(success=True)
             MockService.return_value = mock_service
 
             mock_scenario = Mock()
@@ -191,7 +191,7 @@ class TestFactoryFunctions:
         """create_strategy_battle creates a configured controller."""
         with patch('game.simulation.battle_controller.BattleService') as MockService:
             mock_service = Mock()
-            mock_service.create_battle.return_value = BattleResult(success=True)
+            mock_service.create_battle.return_value = BattleServiceResult(success=True)
             MockService.return_value = mock_service
 
             mock_fleet1 = Mock()
@@ -210,9 +210,9 @@ class TestFactoryFunctions:
              patch('game.simulation.entities.ship_serialization.ShipSerializer') as MockSerializer:
 
             mock_service = Mock()
-            mock_service.create_battle.return_value = BattleResult(success=True)
-            mock_service.add_ship.return_value = BattleResult(success=True)
-            mock_service.start_battle.return_value = BattleResult(success=True)
+            mock_service.create_battle.return_value = BattleServiceResult(success=True)
+            mock_service.add_ship.return_value = BattleServiceResult(success=True)
+            mock_service.start_battle.return_value = BattleServiceResult(success=True)
             mock_service.get_all_ships.return_value = []
             mock_engine = Mock()
             mock_engine.ships = []

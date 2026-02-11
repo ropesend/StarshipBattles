@@ -17,8 +17,15 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class BattleResult:
-    """Result object for battle service operations."""
+class BattleServiceResult:
+    """
+    Result object for battle service operations.
+
+    Note: This class was renamed from BattleResult to BattleServiceResult
+    (PROJ-107) to disambiguate from:
+    - BattleResults (battle_state.py) - actual battle outcome data
+    - BattleResult (strategy layer) - strategy DTO for battle resolution
+    """
     success: bool
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
@@ -44,7 +51,7 @@ class BattleService:
         self,
         seed: Optional[int] = None,
         enable_logging: bool = False
-    ) -> BattleResult:
+    ) -> BattleServiceResult:
         """
         Create a new battle instance.
 
@@ -53,7 +60,7 @@ class BattleService:
             enable_logging: Whether to enable battle logging to file
 
         Returns:
-            BattleResult with the created engine
+            BattleServiceResult with the created engine
         """
         try:
             logger = BattleLogger(enabled=enable_logging)
@@ -68,14 +75,14 @@ class BattleService:
             self._is_started = False
             self._seed = seed
 
-            return BattleResult(
+            return BattleServiceResult(
                 success=True,
                 engine=self._engine
             )
 
         except (TypeError, ValueError, AttributeError) as e:
             log_error(f"Failed to create battle: {e}")
-            return BattleResult(
+            return BattleServiceResult(
                 success=False,
                 errors=[str(e)]
             )
@@ -84,7 +91,7 @@ class BattleService:
         self,
         ship: 'Ship',
         team_id: int
-    ) -> BattleResult:
+    ) -> BattleServiceResult:
         """
         Add a ship to the battle.
 
@@ -93,17 +100,17 @@ class BattleService:
             team_id: Team identifier (0 or 1)
 
         Returns:
-            BattleResult indicating success/failure
+            BattleServiceResult indicating success/failure
         """
         errors = []
 
         if self._engine is None:
             errors.append("No active battle - call create_battle() first")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         if self._is_started:
             errors.append("Cannot add ships after battle has started")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         # Update ship's team_id
         ship.team_id = team_id
@@ -114,12 +121,12 @@ class BattleService:
         else:
             self._team1_ships.append(ship)
 
-        return BattleResult(success=True, engine=self._engine)
+        return BattleServiceResult(success=True, engine=self._engine)
 
     def remove_ship(
         self,
         ship: 'Ship'
-    ) -> BattleResult:
+    ) -> BattleServiceResult:
         """
         Remove a ship from the battle (before start).
 
@@ -127,17 +134,17 @@ class BattleService:
             ship: Ship to remove
 
         Returns:
-            BattleResult indicating success/failure
+            BattleServiceResult indicating success/failure
         """
         errors = []
 
         if self._engine is None:
             errors.append("No active battle")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         if self._is_started:
             errors.append("Cannot remove ships after battle has started")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         removed = False
         if ship in self._team0_ships:
@@ -149,15 +156,15 @@ class BattleService:
 
         if not removed:
             errors.append(f"Ship '{ship.name}' not found in battle")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
-        return BattleResult(success=True, engine=self._engine)
+        return BattleServiceResult(success=True, engine=self._engine)
 
     def start_battle(
         self,
         end_mode: BattleEndMode = BattleEndMode.HP_BASED,
         max_ticks: Optional[int] = None
-    ) -> BattleResult:
+    ) -> BattleServiceResult:
         """
         Start the battle simulation.
 
@@ -166,21 +173,21 @@ class BattleService:
             max_ticks: Maximum ticks for time-based battles
 
         Returns:
-            BattleResult indicating success/failure
+            BattleServiceResult indicating success/failure
         """
         errors = []
 
         if self._engine is None:
             errors.append("No active battle - call create_battle() first")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         if self._is_started:
             errors.append("Battle already started")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         if not self._team0_ships and not self._team1_ships:
             errors.append("Cannot start battle with no ships")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         # Create end condition
         end_condition = BattleEndCondition(mode=end_mode)
@@ -198,30 +205,30 @@ class BattleService:
 
         log_info(f"Battle started: {len(self._team0_ships)} vs {len(self._team1_ships)} ships")
 
-        return BattleResult(success=True, engine=self._engine)
+        return BattleServiceResult(success=True, engine=self._engine)
 
-    def update(self) -> BattleResult:
+    def update(self) -> BattleServiceResult:
         """
         Run one simulation tick.
 
         Returns:
-            BattleResult indicating success/failure
+            BattleServiceResult indicating success/failure
         """
         errors = []
 
         if self._engine is None:
             errors.append("No active battle")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         if not self._is_started:
             errors.append("Battle not started - call start_battle() first")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         self._engine.update()
 
-        return BattleResult(success=True, engine=self._engine)
+        return BattleServiceResult(success=True, engine=self._engine)
 
-    def run_ticks(self, count: int) -> BattleResult:
+    def run_ticks(self, count: int) -> BattleServiceResult:
         """
         Run multiple simulation ticks.
 
@@ -229,24 +236,24 @@ class BattleService:
             count: Number of ticks to run
 
         Returns:
-            BattleResult indicating success/failure
+            BattleServiceResult indicating success/failure
         """
         errors = []
 
         if self._engine is None:
             errors.append("No active battle")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         if not self._is_started:
             errors.append("Battle not started - call start_battle() first")
-            return BattleResult(success=False, errors=errors)
+            return BattleServiceResult(success=False, errors=errors)
 
         for _ in range(count):
             if self._engine.is_battle_over():
                 break
             self._engine.update()
 
-        return BattleResult(success=True, engine=self._engine)
+        return BattleServiceResult(success=True, engine=self._engine)
 
     def is_battle_over(self) -> bool:
         """
@@ -263,8 +270,14 @@ class BattleService:
         """
         Get the winning team ID.
 
+        Returns None only when no battle engine is active. Otherwise
+        delegates to BattleEngine.get_winner() which returns 0, 1, or -1.
+
         Returns:
-            Winning team ID (0 or 1), -1 for draw, or None if no engine
+            0: Team 0 wins
+            1: Team 1 wins
+            -1: Draw (both teams alive, or both eliminated)
+            None: No active battle engine
         """
         if self._engine is None:
             return None

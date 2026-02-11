@@ -18,7 +18,8 @@ from typing import List, Optional, Dict, Callable, Tuple, Any, TYPE_CHECKING
 import copy
 
 from game.core.exceptions import StateException
-from game.simulation.services.battle_service import BattleService, BattleResult
+from game.core.error_codes import ErrorCode
+from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.battle_state import BattleState, BattleResults, ShipState
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
 from game.simulation.managers.retreat_manager import (
@@ -79,7 +80,7 @@ class BattleController:
 
     # === Configuration ===
 
-    def configure(self, config: BattleConfig) -> BattleResult:
+    def configure(self, config: BattleConfig) -> BattleServiceResult:
         """
         Set up a new battle with given configuration.
 
@@ -111,7 +112,7 @@ class BattleController:
 
         return result
 
-    def add_ships(self, ships: List['Ship'], team_id: int) -> BattleResult:
+    def add_ships(self, ships: List['Ship'], team_id: int) -> BattleServiceResult:
         """
         Add ships to a team. Ships can have pre-existing damage.
 
@@ -123,7 +124,7 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._is_configured:
-            return BattleResult(success=False, errors=["Controller not configured"])
+            return BattleServiceResult(success=False, errors=["Controller not configured"])
 
         errors = []
         for ship in ships:
@@ -131,9 +132,9 @@ class BattleController:
             if not result.success:
                 errors.extend(result.errors)
 
-        return BattleResult(success=len(errors) == 0, errors=errors)
+        return BattleServiceResult(success=len(errors) == 0, errors=errors)
 
-    def add_ships_from_state(self, states: List[ShipState], team_id: int) -> BattleResult:
+    def add_ships_from_state(self, states: List[ShipState], team_id: int) -> BattleServiceResult:
         """
         Add ships from serialized state (for resume or strategy battles).
 
@@ -145,7 +146,7 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._is_configured:
-            return BattleResult(success=False, errors=["Controller not configured"])
+            return BattleServiceResult(success=False, errors=["Controller not configured"])
 
         errors = []
         for state in states:
@@ -160,9 +161,9 @@ class BattleController:
             except (TypeError, ValueError, KeyError, AttributeError) as e:
                 errors.append(f"Failed to create ship from state: {e}")
 
-        return BattleResult(success=len(errors) == 0, errors=errors)
+        return BattleServiceResult(success=len(errors) == 0, errors=errors)
 
-    def start(self) -> BattleResult:
+    def start(self) -> BattleServiceResult:
         """
         Start the battle, capturing initial state.
 
@@ -170,10 +171,10 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._is_configured:
-            return BattleResult(success=False, errors=["Controller not configured"])
+            return BattleServiceResult(success=False, errors=["Controller not configured"])
 
         if self._is_started:
-            return BattleResult(success=False, errors=["Battle already started"])
+            return BattleServiceResult(success=False, errors=["Battle already started"])
 
         result = self._service.start_battle(
             end_mode=self._config.end_mode,
@@ -205,7 +206,7 @@ class BattleController:
 
     # === Execution ===
 
-    def update(self) -> BattleResult:
+    def update(self) -> BattleServiceResult:
         """
         Run one simulation tick (for visual mode).
 
@@ -213,7 +214,7 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._is_started:
-            return BattleResult(success=False, errors=["Battle not started"])
+            return BattleServiceResult(success=False, errors=["Battle not started"])
 
         # Update retreat states if allowed by mode or config
         if self._retreat_allowed():
@@ -271,7 +272,7 @@ class BattleController:
 
         return self.get_results()
 
-    def run_ticks(self, count: int) -> BattleResult:
+    def run_ticks(self, count: int) -> BattleServiceResult:
         """
         Run multiple simulation ticks.
 
@@ -282,7 +283,7 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._is_started:
-            return BattleResult(success=False, errors=["Battle not started"])
+            return BattleServiceResult(success=False, errors=["Battle not started"])
 
         for _ in range(count):
             if self.is_battle_over():
@@ -294,11 +295,11 @@ class BattleController:
 
             self._service.update()
 
-        return BattleResult(success=True, engine=self._service.get_engine())
+        return BattleServiceResult(success=True, engine=self._service.get_engine())
 
     # === Retreat / Reinforcements ===
 
-    def request_retreat(self, ship: 'Ship', method: str = "edge") -> BattleResult:
+    def request_retreat(self, ship: 'Ship', method: str = "edge") -> BattleServiceResult:
         """
         Request a ship to retreat.
 
@@ -310,34 +311,34 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._retreat_allowed():
-            return BattleResult(success=False, errors=["Retreat not allowed in this battle"])
+            return BattleServiceResult(success=False, errors=["Retreat not allowed in this battle"])
 
         # Convert string method to enum
         retreat_method = RetreatMethod.EDGE if method == "edge" else RetreatMethod.WARP
         if method not in ("edge", "warp"):
-            return BattleResult(success=False, errors=[f"Unknown retreat method: {method}"])
+            return BattleServiceResult(success=False, errors=[f"Unknown retreat method: {method}"])
 
         success, error = self._retreat_manager.request_retreat(
             ship, self._ship_id_map, method=retreat_method
         )
 
         if success:
-            return BattleResult(success=True)
-        return BattleResult(success=False, errors=[error])
+            return BattleServiceResult(success=True)
+        return BattleServiceResult(success=False, errors=[error])
 
-    def cancel_retreat(self, ship: 'Ship') -> BattleResult:
+    def cancel_retreat(self, ship: 'Ship') -> BattleServiceResult:
         """Cancel a ship's retreat."""
         success, error = self._retreat_manager.cancel_retreat(ship, self._ship_id_map)
         if success:
-            return BattleResult(success=True)
-        return BattleResult(success=False, errors=[error])
+            return BattleServiceResult(success=True)
+        return BattleServiceResult(success=False, errors=[error])
 
     def add_reinforcements(
         self,
         ships: List['Ship'],
         team_id: int,
         entry_point: Tuple[float, float]
-    ) -> BattleResult:
+    ) -> BattleServiceResult:
         """
         Add ships mid-battle as reinforcements.
 
@@ -350,14 +351,14 @@ class BattleController:
             BattleResult indicating success/failure
         """
         if not self._reinforcements_allowed():
-            return BattleResult(success=False, errors=["Reinforcements not allowed"])
+            return BattleServiceResult(success=False, errors=["Reinforcements not allowed"])
 
         if not self._is_started:
-            return BattleResult(success=False, errors=["Battle not started"])
+            return BattleServiceResult(success=False, errors=["Battle not started"])
 
         engine = self._service.get_engine()
         if not engine:
-            return BattleResult(success=False, errors=["No battle engine"])
+            return BattleServiceResult(success=False, errors=["No battle engine"])
 
         errors = []
         for ship in ships:
@@ -377,7 +378,7 @@ class BattleController:
             except (TypeError, ValueError, AttributeError) as e:
                 errors.append(f"Failed to add reinforcement {ship.name}: {e}")
 
-        return BattleResult(success=len(errors) == 0, errors=errors)
+        return BattleServiceResult(success=len(errors) == 0, errors=errors)
 
     def _update_retreats(self) -> None:
         """Process retreat states each tick (delegates to RetreatManager)."""
@@ -447,7 +448,7 @@ class BattleController:
             self._config
         )
 
-    def load_state(self, state: BattleState) -> BattleResult:
+    def load_state(self, state: BattleState) -> BattleServiceResult:
         """
         Restore battle from saved state (uses BattleStateManager for config restoration).
 
@@ -507,11 +508,11 @@ class BattleController:
 
             log_info(f"Battle state restored at tick {state.tick_count}")
 
-            return BattleResult(success=True, engine=engine)
+            return BattleServiceResult(success=True, engine=engine)
 
         except (TypeError, ValueError, KeyError, AttributeError) as e:
             log_warning(f"Failed to load battle state: {e}")
-            return BattleResult(success=False, errors=[str(e)])
+            return BattleServiceResult(success=False, errors=[str(e)])
 
     # === Query Methods ===
 
@@ -609,7 +610,11 @@ class BattleController:
         Delegates to mode handler for actual implementation.
         """
         if not self._config or self._config.mode != BattleMode.STRATEGY:
-            raise ValueError("apply_results_to_fleets only valid in STRATEGY mode")
+            raise StateException(
+                "apply_results_to_fleets only valid in STRATEGY mode",
+                code=ErrorCode.INVALID_STATE.value,
+                context={"mode": self._config.mode.value if self._config else None}
+            )
 
         # Delegate to mode handler
         if self._mode_handler:
@@ -619,7 +624,11 @@ class BattleController:
 
         # Legacy fallback (should not normally reach here)
         if not self._config.source_fleets:
-            raise ValueError("No source fleets configured")
+            raise StateException(
+                "No source fleets configured",
+                code=ErrorCode.INVALID_STATE.value,
+                context={"operation": "apply_results_to_fleets"}
+            )
 
         fleet1, fleet2 = self._config.source_fleets
 

@@ -626,6 +626,10 @@ class BattleEngine:
         """
         Determine battle winner based on surviving ships.
 
+        Note: This method always returns an int, never None. The return type
+        is explicitly `int` (not `Optional[int]`). Layers above (BattleService,
+        BattleController) may return None to indicate "no active battle".
+
         Returns:
             0: Team 0 wins (team 1 has no alive ships)
             1: Team 1 wins (team 0 has no alive ships)

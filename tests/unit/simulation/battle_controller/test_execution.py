@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from game.simulation.battle_controller import BattleController
 from game.simulation.battle_config import BattleConfig, BattleMode
-from game.simulation.services.battle_service import BattleResult
+from game.simulation.services.battle_service import BattleServiceResult
 
 
 class TestBattleControllerStart:
@@ -47,7 +47,7 @@ class TestBattleControllerStart:
 
     def test_start_does_not_set_is_started_on_failure(self, controller, basic_config, mock_service):
         """start does not set _is_started when service fails."""
-        mock_service.start_battle.return_value = BattleResult(success=False, errors=["Error"])
+        mock_service.start_battle.return_value = BattleServiceResult(success=False, errors=["Error"])
         controller.configure(basic_config)
 
         controller.start()
@@ -82,7 +82,7 @@ class TestBattleControllerStart:
     def test_start_returns_service_result(self, controller, basic_config, mock_service):
         """start returns the result from service."""
         controller.configure(basic_config)
-        expected_result = BattleResult(success=True)
+        expected_result = BattleServiceResult(success=True)
         mock_service.start_battle.return_value = expected_result
 
         result = controller.start()
@@ -148,7 +148,7 @@ class TestBattleControllerUpdate:
         controller.configure(basic_config)
         controller.start()
 
-        expected_result = BattleResult(success=True)
+        expected_result = BattleServiceResult(success=True)
         mock_service.update.return_value = expected_result
 
         result = controller.update()
@@ -228,14 +228,14 @@ class TestBattleControllerRunHeadless:
             assert mock_retreats.call_count == 5
 
     def test_run_headless_returns_results(self, controller, basic_config, mock_service):
-        """run_headless returns BattleResults."""
+        """run_headless returns BattleServiceResults."""
         controller.configure(basic_config)
         controller.start()
         mock_service.is_battle_over.return_value = True
 
         results = controller.run_headless()
 
-        # BattleResults should be returned
+        # BattleServiceResults should be returned
         assert hasattr(results, 'winner')
         assert hasattr(results, 'tick_count')
 

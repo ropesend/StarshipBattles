@@ -8,7 +8,7 @@ from game.simulation.battle_controller import (
     BattleMode,
 )
 from game.simulation.managers.retreat_manager import RetreatMethod, RetreatState
-from game.simulation.services.battle_service import BattleResult
+from game.simulation.services.battle_service import BattleServiceResult
 
 
 class TestBattleControllerAddShips:
@@ -44,7 +44,7 @@ class TestBattleControllerAddShips:
     def test_add_ships_collects_errors(self, controller, basic_config, mock_service):
         """add_ships collects errors from failed additions."""
         controller.configure(basic_config)
-        mock_service.add_ship.return_value = BattleResult(success=False, errors=["Ship error"])
+        mock_service.add_ship.return_value = BattleServiceResult(success=False, errors=["Ship error"])
 
         ships = [Mock(), Mock()]
         result = controller.add_ships(ships, team_id=0)

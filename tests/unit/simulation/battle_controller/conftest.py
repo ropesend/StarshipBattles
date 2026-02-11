@@ -3,17 +3,17 @@ import pytest
 from unittest.mock import Mock
 
 from game.simulation.battle_config import BattleConfig, BattleMode
-from game.simulation.services.battle_service import BattleResult
+from game.simulation.services.battle_service import BattleServiceResult
 
 
 @pytest.fixture
 def mock_service():
     """Create a mock BattleService."""
     service = Mock()
-    service.create_battle.return_value = BattleResult(success=True)
-    service.add_ship.return_value = BattleResult(success=True)
-    service.start_battle.return_value = BattleResult(success=True)
-    service.update.return_value = BattleResult(success=True)
+    service.create_battle.return_value = BattleServiceResult(success=True)
+    service.add_ship.return_value = BattleServiceResult(success=True)
+    service.start_battle.return_value = BattleServiceResult(success=True)
+    service.update.return_value = BattleServiceResult(success=True)
     service.is_battle_over.return_value = False
     service.get_winner.return_value = None
     service.get_all_ships.return_value = []

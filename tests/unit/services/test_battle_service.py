@@ -6,7 +6,7 @@ handling battle creation, ship management, and battle state queries.
 """
 import pytest
 
-from game.simulation.services.battle_service import BattleService, BattleResult
+from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.entities.ship import Ship
 from game.simulation.systems.battle_end_conditions import BattleEndMode
 
@@ -204,19 +204,19 @@ class TestBattleServiceIsBattleOver:
         assert service.is_battle_over() is False
 
 
-class TestBattleResult:
-    """Tests for BattleResult dataclass."""
+class TestBattleServiceResult:
+    """Tests for BattleServiceResult dataclass."""
 
     def test_result_success(self):
-        """BattleResult stores success state correctly."""
-        result = BattleResult(success=True)
+        """BattleServiceResult stores success state correctly."""
+        result = BattleServiceResult(success=True)
 
         assert result.success is True
         assert result.errors == []
 
     def test_result_with_errors(self):
-        """BattleResult stores errors correctly."""
-        result = BattleResult(
+        """BattleServiceResult stores errors correctly."""
+        result = BattleServiceResult(
             success=False,
             errors=["Error 1", "Error 2"]
         )

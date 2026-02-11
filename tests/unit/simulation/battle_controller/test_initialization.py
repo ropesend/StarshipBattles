@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from game.simulation.battle_controller import BattleController
 from game.simulation.battle_config import BattleConfig, BattleMode
-from game.simulation.services.battle_service import BattleResult
+from game.simulation.services.battle_service import BattleServiceResult
 
 
 class TestBattleControllerInit:
@@ -79,7 +79,7 @@ class TestBattleControllerConfigure:
 
     def test_configure_does_not_set_is_configured_on_failure(self, controller, basic_config, mock_service):
         """Configure does not set _is_configured when service fails."""
-        mock_service.create_battle.return_value = BattleResult(success=False, errors=["Error"])
+        mock_service.create_battle.return_value = BattleServiceResult(success=False, errors=["Error"])
         controller.configure(basic_config)
         assert controller._is_configured is False
 
@@ -91,7 +91,7 @@ class TestBattleControllerConfigure:
 
     def test_configure_returns_service_result(self, controller, basic_config, mock_service):
         """Configure returns the result from service."""
-        expected_result = BattleResult(success=True)
+        expected_result = BattleServiceResult(success=True)
         mock_service.create_battle.return_value = expected_result
 
         result = controller.configure(basic_config)

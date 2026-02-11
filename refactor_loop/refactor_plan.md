@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-107 Phase 4
-**Current Status:** PROJ-107 Phase 4 Complete
+**Last Completed:** PROJ-107 Phase 5
+**Current Status:** PROJ-107 Phase 5 Complete
 **Current Project:** PROJ-107
-**Current Phase:** Phase 5 (next)
+**Current Phase:** Phase 6 (next)
 **Test Status:** 8185 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-107 Phase 4 Complete — UI Service DI & Return Type Standardization
-  - Task 4.1: Renamed `registries` -> `registry_provider` in ShipFactory (init + method params)
-  - Task 4.1: Renamed `registries` -> `registry_provider` in DesignLoaderAdapter
-  - Task 4.1: Updated workshop_screen.py call site
-  - Task 4.1: Added standard DI pattern docstring to ComponentService
-  - Task 4.2: Added class-level return value convention docstring to ShipIOAdapter
+- PROJ-107 Phase 5 Complete — Simulation API Consistency
+  - Task 5.1: Renamed BattleResult -> BattleServiceResult (11 files updated)
+  - Task 5.2: Documented get_winner() return type layering (BattleEngine int vs BattleService Optional[int])
+  - Task 5.3: Added ResourceRegistry return convention docstring (Optional for single, List for collection)
+  - Task 5.4: Changed ValueError -> StateException with ErrorCode in battle_controller.py
   - 8185 tests passing
-- Next: Phase 5 (Simulation API Consistency)
+- Next: Phase 6 (Minor Cleanup Batch)
 
 ---
 
@@ -168,7 +167,7 @@
 ---
 
 - [/] **PROJ-107: Consistency & API Standardization**
-  - **Phases:** 6 | **Status:** Phase 4 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 5 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -303,6 +302,7 @@
 | 2026-02-11 | PROJ-107 | Phase 2 | Complete | 8185 passed | pending | Type hints: AI/sim/strategy, 16 HexCoord replacements, 12 to_dict standardized |
 | 2026-02-11 | PROJ-107 | Phase 3 | Complete | 8185 passed | pending | Deleted add_ship_instance (6 refs), deleted _stat_* wrappers, renamed check_missiles, added is_alive docstring |
 | 2026-02-11 | PROJ-107 | Phase 4 | Complete | 8185 passed | pending | registries→registry_provider in ShipFactory/DesignLoaderAdapter, ShipIOAdapter return type docs |
+| 2026-02-11 | PROJ-107 | Phase 5 | Complete | 8185 passed | pending | BattleResult→BattleServiceResult (11 files), get_winner docs, ResourceRegistry docs, ValueError→StateException |
 
 ---
 

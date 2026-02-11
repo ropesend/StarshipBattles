@@ -21,7 +21,7 @@ Battle System (game.simulation.systems):
 
 Services (game.simulation.services):
     BattleService - High-level battle management
-    BattleResult - Result object for battle operations
+    BattleServiceResult - Result object for battle operations
 
 Battle State (game.simulation):
     BattleState - State container for battle simulation
@@ -42,7 +42,7 @@ from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from game.simulation.systems.battle_end_conditions import BattleEndMode, BattleEndCondition
 
 # Services
-from game.simulation.services.battle_service import BattleService, BattleResult
+from game.simulation.services.battle_service import BattleService, BattleServiceResult
 
 # State
 from game.simulation.battle_state import BattleState
@@ -65,7 +65,7 @@ __all__ = [
     'BattleEndCondition',
     # Services
     'BattleService',
-    'BattleResult',
+    'BattleServiceResult',
     # State
     'BattleState',
     # Validation

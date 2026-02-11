@@ -100,13 +100,19 @@ class ResourceState:
 
 class ResourceRegistry:
     """
-    Registry of all resources on a ship. 
+    Registry of all resources on a ship.
     Acts as the Source of Truth for current resource state (fuel, energy, ammo).
-    
+
     Responsibilities:
     - Tracking current vs max values.
     - Handling regeneration ticks (update).
     - Providing thread-safe(ish) consume/check methods.
+
+    Return Convention:
+        - Single-value lookups: Optional[T] (None = not found)
+          e.g., get_resource(name) -> Optional[ResourceState]
+        - Collection lookups: List[T] (empty list = none found)
+          e.g., get_resource_names() -> List[str]
     """
     def __init__(self):
         self._resources: Dict[str, ResourceState] = {}
