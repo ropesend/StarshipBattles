@@ -280,8 +280,8 @@ class TestTargetingHelpers:
         missile = MockMissile()
         ai_setup['grid'].insert(missile)
 
-        # Get enemies with check_missiles=True
-        enemies = ai_setup['ai']._find_enemies_in_radius(check_missiles=True)
+        # Get enemies with include_missiles=True
+        enemies = ai_setup['ai']._find_enemies_in_radius(include_missiles=True)
         assert missile in enemies
 
     def test_score_and_sort_enemies_returns_sorted_list(self, ai_setup):

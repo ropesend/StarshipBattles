@@ -137,7 +137,14 @@ class IControllable(ABC):
 
     @abstractmethod
     def is_alive(self) -> bool:
-        """Check if the entity is alive."""
+        """Check if the entity is alive and operational.
+
+        An entity is considered alive if it has not been destroyed (hull HP > 0)
+        and has not been flagged as derelict. Escaped ships are still alive.
+
+        Returns:
+            True if the entity has positive hull HP, False otherwise.
+        """
         pass
 
     # =========================================================================

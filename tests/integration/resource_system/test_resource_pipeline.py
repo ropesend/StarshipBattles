@@ -131,7 +131,7 @@ class TestPerTurnConsumptionAcrossFullTurn:
 
         # Create fleet with this ship
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
-        fleet.add_ship_instance(ship)
+        fleet.add_ship(ship)
 
         # Create mock empire
         class MockEmpire:
@@ -209,7 +209,7 @@ class TestAutoDisableComponentChainOnResourceDepletion:
 
         # Create fleet
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
-        fleet.add_ship_instance(ship)
+        fleet.add_ship(ship)
 
         class MockEmpire:
             def __init__(self):

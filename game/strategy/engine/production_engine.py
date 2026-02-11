@@ -523,7 +523,7 @@ class ProductionEngine:
         # Create fleet with unique ID
         fleet_id = empire.get_next_fleet_id()
         new_fleet = Fleet(fleet_id, empire.id, spawn_loc)
-        new_fleet.add_ship_instance(ship_instance)
+        new_fleet.add_ship(ship_instance)
         empire.add_fleet(new_fleet)
 
         # Increment design's times_built counter
@@ -640,7 +640,7 @@ class ProductionEngine:
         )
 
         # Add ship to the building fleet
-        fleet.add_ship_instance(ship_instance)
+        fleet.add_ship(ship_instance)
 
         # Increment design's times_built counter
         design_library.increment_built_count(design_id)

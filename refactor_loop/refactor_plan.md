@@ -8,23 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-107 Phase 2
-**Current Status:** PROJ-107 Phase 2 Complete
+**Last Completed:** PROJ-107 Phase 3
+**Current Status:** PROJ-107 Phase 3 Complete
 **Current Project:** PROJ-107
-**Current Phase:** Phase 3 (next)
+**Current Phase:** Phase 4 (next)
 **Test Status:** 8185 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-107 Phase 2 Complete — Type Hint & Return Type Standardization
-  - Task 2.1: Added `-> float` to AIController.get_engage_distance_multiplier
-  - Task 2.2: Added return types to 4 target_evaluator module functions
-  - Task 2.3: Added return types to 11 ShipStatsCalculator methods
-  - Task 2.4: Replaced 16 `target_hex: Any` with `HexCoord` in commands.py
-  - Task 2.5: Standardized 12 `to_dict()` methods to `Dict[str, Any]` across 9 files
-  - Task 2.6: Already complete - BattleUIService methods had types
+- PROJ-107 Phase 3 Complete — Naming & API Standardization
+  - Task 3.1: Deleted duplicate `add_ship_instance()` method, updated 6 call sites to use `add_ship()`
+  - Task 3.2: Deleted redundant `_stat_get_hp_percent` and `_stat_is_in_pdc_arc` static methods
+  - Task 3.3: Renamed `check_missiles` -> `include_missiles` parameter in AIController
+  - Task 3.4: Added semantic docstring to `is_alive()` in IControllable
   - 8185 tests passing
-- Next: Phase 3 (Naming & API Standardization)
+- Next: Phase 4 (UI Service DI & Return Type Standardization)
 
 ---
 
@@ -169,7 +167,7 @@
 ---
 
 - [/] **PROJ-107: Consistency & API Standardization**
-  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -302,6 +300,7 @@
 | 2026-02-11 | PROJ-106 | Audit 1 | PASSED | 8185 passed | pending | All layer boundaries verified, private attributes clean, deferred findings documented |
 | 2026-02-11 | PROJ-107 | Phase 1 | Complete | 8185 passed | pending | Added AI error codes, fixed docstrings, added F001/F002/F004 |
 | 2026-02-11 | PROJ-107 | Phase 2 | Complete | 8185 passed | pending | Type hints: AI/sim/strategy, 16 HexCoord replacements, 12 to_dict standardized |
+| 2026-02-11 | PROJ-107 | Phase 3 | Complete | 8185 passed | pending | Deleted add_ship_instance (6 refs), deleted _stat_* wrappers, renamed check_missiles, added is_alive docstring |
 
 ---
 

@@ -123,11 +123,6 @@ class Fleet:
         self.ships.append(ship)
         self._trigger_speed_recalculation()
 
-    def add_ship_instance(self, instance: ShipInstance):
-        """Add a ShipInstance to the fleet."""
-        self.ships.append(instance)
-        self._trigger_speed_recalculation()
-
     def remove_ship(self, ship: ShipInstance) -> bool:
         """Remove a ship from the fleet. Returns True if found and removed."""
         if ship in self.ships:

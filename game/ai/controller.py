@@ -105,12 +105,12 @@ class AIController:
             return float(val)
         return 1.0
 
-    def _find_enemies_in_radius(self, exclude=None, check_missiles=False):
+    def _find_enemies_in_radius(self, exclude=None, include_missiles=False):
         """Find alive enemy entities within targeting radius.
 
         Args:
             exclude: Optional entity to exclude from results (e.g., primary target)
-            check_missiles: If True, also include enemy missiles within missile query radius
+            include_missiles: If True, also include enemy missiles within missile query radius
 
         Returns:
             List of enemy entities (ships and optionally missiles)
@@ -121,7 +121,7 @@ class AIController:
                    and obj.team_id == self.enemy_team_id
                    and obj != exclude]
 
-        if check_missiles:
+        if include_missiles:
             missiles = [obj for obj in self.grid.query_radius(self.ship.get_position(), BattleConfig.MISSILE_QUERY_RADIUS)
                         if (getattr(obj, 'type', '') == 'missile' or getattr(obj, 'type', '') == AttackType.MISSILE)
                         and obj.is_alive
@@ -233,9 +233,9 @@ class AIController:
         rules = targeting_policy.get('rules', [])
 
         # Check if policy cares about missiles
-        check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
+        include_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
 
-        enemies = self._find_enemies_in_radius(check_missiles=check_missiles)
+        enemies = self._find_enemies_in_radius(include_missiles=include_missiles)
         if not enemies:
             return None
 
@@ -256,27 +256,17 @@ class AIController:
         rules = targeting_policy.get('rules', [])
 
         # Check if policy cares about missiles
-        check_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
+        include_missiles = any(r.get('type') in ['pdc_arc', 'missiles_in_pdc_arc'] for r in rules)
 
-        enemies = self._find_enemies_in_radius(exclude=current, check_missiles=check_missiles)
+        enemies = self._find_enemies_in_radius(exclude=current, include_missiles=include_missiles)
         if not enemies:
             return []
 
         sorted_enemies = self._score_and_sort_enemies(enemies, rules)
         return sorted_enemies[:count_needed]
 
-    @staticmethod
-    def _stat_get_hp_percent(ship):
-        """Static version for evaluator - delegates to TargetEvaluator."""
-        return TargetEvaluator._default_get_hp_percent(ship)
-
     def _get_hp_percent(self, ship):
         return TargetEvaluator._default_get_hp_percent(ship)
-
-    @staticmethod
-    def _stat_is_in_pdc_arc(ship, target):
-        """Static version for evaluator - delegates to TargetEvaluator."""
-        return TargetEvaluator._default_is_in_pdc_arc(ship, target)
 
     def _is_in_pdc_arc(self, target):
         return TargetEvaluator._default_is_in_pdc_arc(self.ship, target)

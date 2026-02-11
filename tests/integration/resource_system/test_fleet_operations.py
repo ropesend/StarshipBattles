@@ -93,7 +93,7 @@ class TestWarpJumpUsesResourceConsumptionTrigger:
 
         # Create fleet and consume warp resources
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
-        fleet.add_ship_instance(ship)
+        fleet.add_ship(ship)
 
         # Verify consume_warp_resources() works
         success = fleet.consume_warp_resources()
@@ -176,7 +176,7 @@ class TestMovementWithMultiResourceConsumption:
 
         # Create fleet
         fleet = Fleet(fleet_id=1, owner_id=0, location=HexCoord(0, 0))
-        fleet.add_ship_instance(ship)
+        fleet.add_ship(ship)
 
         # Verify movement resource costs
         costs = fleet.get_movement_resource_costs()
