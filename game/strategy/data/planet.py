@@ -20,6 +20,7 @@ class PlanetType(Enum):
     CHTHONIAN = auto()   # Stripped Giant Core
     ICE_DWARF = auto()   # Pluto type
     PLANETOID = auto()   # Ceres / Large Asteroid
+    DYSON_SPHERE = auto()  # Artificial megastructure enclosing a star
 
 @dataclass
 class PlanetaryFacility:

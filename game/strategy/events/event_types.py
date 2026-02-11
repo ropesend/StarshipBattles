@@ -10,6 +10,12 @@ class EventType(str, Enum):
     COMPLEX_BUILT = "complex_built"
     COLONY_FOUNDED = "colony_founded"
     COMBAT_RESOLVED = "combat_resolved"
+    PLANET_DESTROYED = "planet_destroyed"
+    STAR_DESTROYED = "star_destroyed"
+    WARP_POINT_OPENED = "warp_point_opened"
+    WARP_POINT_CLOSED = "warp_point_closed"
+    DYSON_SPHERE_CREATED = "dyson_sphere_created"
+    SHIPS_SELF_DESTRUCTED = "ships_self_destructed"
 
 
 class EventCategory(str, Enum):
@@ -18,4 +24,5 @@ class EventCategory(str, Enum):
     PRODUCTION = "production"
     COLONIES = "colonies"
     COMBAT = "combat"
+    SUPERWEAPONS = "superweapons"
     ALL = "all"

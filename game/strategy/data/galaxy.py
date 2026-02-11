@@ -225,6 +225,96 @@ class Galaxy:
         """
         return self.fleets_by_id.get(fleet_id)
 
+    def unregister_planet(self, planet: 'Planet') -> None:
+        """Remove a planet from all galaxy indexes and its parent system.
+
+        Args:
+            planet: The planet to unregister.
+        """
+        # Remove from ID registry
+        self.planets_by_id.pop(planet.id, None)
+
+        # Get system before removing from lookup
+        system = self._planet_to_system.pop(planet, None)
+
+        # Remove from spatial index
+        if system is not None:
+            global_hex = system.global_location + planet.location
+            if global_hex in self._global_hex_planets:
+                planets_at_hex = self._global_hex_planets[global_hex]
+                if planet in planets_at_hex:
+                    planets_at_hex.remove(planet)
+                # Clean up empty list
+                if not planets_at_hex:
+                    del self._global_hex_planets[global_hex]
+
+            # Remove from system's planets list
+            if planet in system.planets:
+                system.planets.remove(planet)
+
+    def remove_warp_link(self, system_a_name: str, system_b_name: str) -> None:
+        """Remove warp points connecting two systems.
+
+        Removes warp points from both systems that link to each other.
+        Handles missing systems gracefully.
+
+        Args:
+            system_a_name: Name of the first system.
+            system_b_name: Name of the second system.
+        """
+        system_a = self.name_map.get(system_a_name)
+        system_b = self.name_map.get(system_b_name)
+
+        if system_a is not None:
+            system_a.warp_points = [
+                wp for wp in system_a.warp_points
+                if wp.destination_id != system_b_name
+            ]
+
+        if system_b is not None:
+            system_b.warp_points = [
+                wp for wp in system_b.warp_points
+                if wp.destination_id != system_a_name
+            ]
+
+    def get_all_fleets_in_system(self, system: 'StarSystem', empires: List) -> List[tuple]:
+        """Find all fleets from all empires at any hex within a system.
+
+        Checks the system's global_location plus all planet, star, and
+        warp point local offsets.
+
+        Args:
+            system: The StarSystem to search within.
+            empires: List of Empire objects to search.
+
+        Returns:
+            List of (empire, fleet) tuples for all fleets in the system.
+        """
+        # Build set of all valid hexes in the system
+        system_hexes = {system.global_location}
+
+        # Add planet locations
+        for planet in system.planets:
+            system_hexes.add(system.global_location + planet.location)
+
+        # Add star locations
+        for star in system.stars:
+            if hasattr(star, 'location'):
+                system_hexes.add(system.global_location + star.location)
+
+        # Add warp point locations
+        for wp in system.warp_points:
+            system_hexes.add(system.global_location + wp.location)
+
+        # Find all fleets at any of these hexes
+        result = []
+        for empire in empires:
+            for fleet in empire.fleets:
+                if fleet.location in system_hexes:
+                    result.append((empire, fleet))
+
+        return result
+
     def generate_planets(self, system):
         """Generate planets for a system based on its star type."""
         # Use new Planet Generator

@@ -53,6 +53,9 @@ class PlanetImageRegistry:
             except KeyError:
                 log_warning(f"Unknown planet type '{type_name}' for image '{filename}'")
 
+        # Dyson Sphere has a dedicated image (not in classifications JSON)
+        self._type_to_images[PlanetType.DYSON_SPHERE] = ["Sphereworld_Portrait.png"]
+
         # Log distribution
         total = sum(len(imgs) for imgs in self._type_to_images.values())
         log_info(f"Loaded {total} planet images across {len(PlanetType)} types")

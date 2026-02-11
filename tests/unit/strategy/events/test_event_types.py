@@ -22,8 +22,9 @@ class TestEventType:
         for member in EventType:
             assert isinstance(member.value, str)
 
-    def test_has_four_members(self) -> None:
-        assert len(EventType) == 4
+    def test_has_ten_members(self) -> None:
+        # Original 4 + 6 superweapon events (PROJ-102)
+        assert len(EventType) == 10
 
 
 class TestEventCategory:
@@ -45,5 +46,6 @@ class TestEventCategory:
         for member in EventCategory:
             assert isinstance(member.value, str)
 
-    def test_has_four_members(self) -> None:
-        assert len(EventCategory) == 4
+    def test_has_five_members(self) -> None:
+        # Original 4 + SUPERWEAPONS (PROJ-102)
+        assert len(EventCategory) == 5
