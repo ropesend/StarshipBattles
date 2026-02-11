@@ -136,6 +136,209 @@ class TargetEvaluator:
     """Helper to evaluate targets based on rules."""
 
     @staticmethod
+    def _eval_distance_rule(ship, candidate, rule, distance_cache):
+        """Evaluate distance-based rules: nearest, farthest, distance.
+
+        Args:
+            ship: The ship doing the targeting
+            candidate: The potential target
+            rule: The targeting rule dict
+            distance_cache: Optional dict mapping candidate to pre-calculated distance
+
+        Returns:
+            Tuple of (score_value, match_succeeded)
+        """
+        r_type = rule.get('type')
+        weight = rule.get('weight', 0)
+        factor = rule.get('factor', 1)
+
+        # PERF: Use cached distance if available
+        if distance_cache and candidate in distance_cache:
+            dist = distance_cache[candidate]
+        else:
+            dist = _safe_distance(ship, candidate)
+
+        if r_type == 'nearest':
+            # Closer is better (higher score)
+            if weight > 0:
+                val = -dist * weight
+            else:
+                val = dist * factor
+        elif r_type == 'farthest':
+            # Farther is better
+            if weight > 0:
+                val = dist * weight
+            else:
+                val = dist * factor
+        else:  # 'distance'
+            val = dist * factor
+
+        return (val, True)
+
+    @staticmethod
+    def _eval_mass_rule(candidate, rule):
+        """Evaluate mass/size-based rules: mass, largest, smallest, strongest, weakest.
+
+        Args:
+            candidate: The potential target
+            rule: The targeting rule dict
+
+        Returns:
+            Tuple of (score_value, match_succeeded)
+        """
+        r_type = rule.get('type')
+        weight = rule.get('weight', 0)
+        factor = rule.get('factor', 1)
+        mass = getattr(candidate, 'mass', 100)
+
+        if r_type in ('mass', 'largest', 'strongest'):
+            # Larger/stronger is better
+            if weight > 0:
+                val = mass * weight
+            else:
+                val = mass * factor
+        else:  # 'smallest' or 'weakest'
+            # Smaller/weaker is better
+            if weight > 0:
+                val = -mass * weight
+            else:
+                val = mass * factor  # factor should be negative
+
+        return (val, True)
+
+    @staticmethod
+    def _eval_speed_rule(candidate, rule):
+        """Evaluate speed-based rules: fastest, slowest.
+
+        Args:
+            candidate: The potential target
+            rule: The targeting rule dict
+
+        Returns:
+            Tuple of (score_value, match_succeeded)
+        """
+        r_type = rule.get('type')
+        weight = rule.get('weight', 0)
+        factor = rule.get('factor', 1)
+        speed = getattr(candidate, 'velocity', Vector2(0, 0)).length()
+
+        if r_type == 'fastest':
+            val = speed * (weight if weight > 0 else factor)
+        else:  # 'slowest'
+            val = -speed * (weight if weight > 0 else -factor)
+
+        return (val, True)
+
+    @staticmethod
+    def _eval_damage_rule(candidate, rule, stat_helpers):
+        """Evaluate damage-based rules: most_damaged, least_damaged.
+
+        Args:
+            candidate: The potential target
+            rule: The targeting rule dict
+            stat_helpers: Dict with 'get_hp_percent' function
+
+        Returns:
+            Tuple of (score_value, match_succeeded)
+        """
+        r_type = rule.get('type')
+        weight = rule.get('weight', 0)
+        factor = rule.get('factor', 1)
+        hp_pct = stat_helpers['get_hp_percent'](candidate)
+
+        if r_type == 'most_damaged':
+            # Lower HP % is better
+            if weight > 0:
+                val = -hp_pct * weight * 100
+            else:
+                val = hp_pct * factor
+        else:  # 'least_damaged'
+            # Higher HP % is better
+            if weight > 0:
+                val = hp_pct * weight * 100
+            else:
+                val = hp_pct * factor
+
+        return (val, True)
+
+    @staticmethod
+    def _eval_has_weapons_rule(candidate, rule, ship_capabilities_cache):
+        """Evaluate has_weapons rule."""
+        weight = rule.get('weight', 0)
+        required = rule.get('required', False)
+
+        # PERF: Use cached capability check if available
+        candidate_id = getattr(candidate, 'id', None)
+        if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
+            has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
+        else:
+            # Fall back to component lookup
+            has_wpns = any(candidate.get_components_by_ability('WeaponAbility', operational_only=False))
+
+        if has_wpns:
+            return (weight if weight > 0 else 1000, True)
+        return (0, not required)
+
+    @staticmethod
+    def _eval_least_armor_rule(candidate, rule):
+        """Evaluate least_armor rule."""
+        weight = rule.get('weight', 0)
+        factor = rule.get('factor', 1)
+
+        armor_comps = candidate.get_components_by_layer(LayerType.ARMOR)
+        armor_hp = sum(getattr(c, 'hp', 0) for c in armor_comps)
+        val = -armor_hp * (weight if weight > 0 else -factor)
+        return (val, True)
+
+    @staticmethod
+    def _eval_pdc_arc_rule(ship, candidate, rule, stat_helpers):
+        """Evaluate pdc_arc/missiles_in_pdc_arc rule."""
+        weight = rule.get('weight', 0)
+        required = rule.get('required', False)
+
+        e_type = getattr(candidate, 'type', '')
+        is_missile = e_type == 'missile' or e_type == AttackType.MISSILE
+
+        if not is_missile:
+            # Rule is specific to missiles, target is not a missile - pass through
+            return (0, True)
+
+        in_arc = stat_helpers['is_in_pdc_arc'](ship, candidate)
+        if in_arc:
+            return (weight if weight > 0 else 2000, True)
+
+        # Not in arc
+        if required:
+            return (0, False)
+        # Strong penalty if not required but logic implies we want it
+        return (-999999, False)
+
+    @staticmethod
+    def _eval_capability_rule(ship, candidate, rule, stat_helpers, ship_capabilities_cache):
+        """Evaluate capability-based rules: has_weapons, least_armor, pdc_arc/missiles_in_pdc_arc.
+
+        Args:
+            ship: The ship doing the targeting
+            candidate: The potential target
+            rule: The targeting rule dict
+            stat_helpers: Dict with 'is_in_pdc_arc' function
+            ship_capabilities_cache: Optional dict for cached capabilities
+
+        Returns:
+            Tuple of (score_value, match_succeeded)
+        """
+        r_type = rule.get('type')
+
+        if r_type == 'has_weapons':
+            return TargetEvaluator._eval_has_weapons_rule(
+                candidate, rule, ship_capabilities_cache
+            )
+        elif r_type == 'least_armor':
+            return TargetEvaluator._eval_least_armor_rule(candidate, rule)
+        else:  # 'pdc_arc' or 'missiles_in_pdc_arc'
+            return TargetEvaluator._eval_pdc_arc_rule(ship, candidate, rule, stat_helpers)
+
+    @staticmethod
     def evaluate(ship, candidate, rules, stat_helpers=None, distance_cache=None, ship_capabilities_cache=None):
         """Evaluate a candidate target based on targeting rules.
 
@@ -166,138 +369,28 @@ class TargetEvaluator:
 
         for rule in rules:
             r_type = rule.get('type')
-            weight = rule.get('weight', 0)
-            factor = rule.get('factor', 1)  # Multiplier for continuous values
             required = rule.get('required', False)
-
             val = 0
             match = True
 
-            if r_type == 'nearest':
-                # PERF: Use cached distance if available
-                if distance_cache and candidate in distance_cache:
-                    dist = distance_cache[candidate]
-                else:
-                    dist = _safe_distance(ship, candidate)
-                # 'nearest' usually implies closer is better (higher score).
-                # Existing logic: score -= dist * weight.
-                # If we use weight > 0, we can do score -= dist * weight
-                # Or if using factor: score += dist * factor (where factor is negative)
-                if weight > 0:
-                    val = -dist * weight
-                else:
-                    val = dist * factor
+            if r_type in ('nearest', 'farthest', 'distance'):
+                val, match = TargetEvaluator._eval_distance_rule(
+                    ship, candidate, rule, distance_cache
+                )
 
-            elif r_type == 'farthest':
-                # PERF: Use cached distance if available
-                if distance_cache and candidate in distance_cache:
-                    dist = distance_cache[candidate]
-                else:
-                    dist = _safe_distance(ship, candidate)
-                if weight > 0:
-                    val = dist * weight
-                else:
-                    val = dist * factor
+            elif r_type in ('mass', 'largest', 'smallest', 'strongest', 'weakest'):
+                val, match = TargetEvaluator._eval_mass_rule(candidate, rule)
 
-            elif r_type == 'distance':
-                # Generic distance rule
-                # PERF: Use cached distance if available
-                if distance_cache and candidate in distance_cache:
-                    dist = distance_cache[candidate]
-                else:
-                    dist = _safe_distance(ship, candidate)
-                val = dist * factor
+            elif r_type in ('fastest', 'slowest'):
+                val, match = TargetEvaluator._eval_speed_rule(candidate, rule)
 
-            elif r_type == 'mass' or r_type == 'largest':
-                mass = getattr(candidate, 'mass', 100)
-                if weight > 0:
-                    val = mass * weight
-                else:
-                    val = mass * factor
+            elif r_type in ('most_damaged', 'least_damaged'):
+                val, match = TargetEvaluator._eval_damage_rule(candidate, rule, stat_helpers)
 
-            elif r_type == 'smallest':
-                mass = getattr(candidate, 'mass', 100)
-                # Smallest means lower mass is better
-                if weight > 0:
-                    val = -mass * weight
-                else:
-                    val = mass * factor  # factor should be negative
-
-            elif r_type == 'fastest':
-                speed = getattr(candidate, 'velocity', Vector2(0, 0)).length()
-                val = speed * (weight if weight > 0 else factor)
-
-            elif r_type == 'slowest':
-                speed = getattr(candidate, 'velocity', Vector2(0, 0)).length()
-                val = -speed * (weight if weight > 0 else -factor)
-
-            elif r_type == 'most_damaged':
-                hp_pct = stat_helpers['get_hp_percent'](candidate)
-                # Lower HP % is better
-                # Existing: score -= hp_pct * weight * 100
-                if weight > 0:
-                    val = -hp_pct * weight * 100
-                else:
-                    val = hp_pct * factor
-
-            elif r_type == 'least_damaged':
-                hp_pct = stat_helpers['get_hp_percent'](candidate)
-                # Higher HP % is better
-                if weight > 0:
-                    val = hp_pct * weight * 100
-                else:
-                    val = hp_pct * factor
-
-            elif r_type == 'strongest':
-                # Usually alias for mass/weapons?
-                # Existing uses mass
-                mass = getattr(candidate, 'mass', 100)
-                val = mass * (weight if weight > 0 else factor)
-
-            elif r_type == 'weakest':
-                mass = getattr(candidate, 'mass', 100)
-                val = -mass * (weight if weight > 0 else -factor)
-
-            elif r_type == 'has_weapons':
-                # PERF: Use cached capability check if available
-                candidate_id = getattr(candidate, 'id', None)
-                if ship_capabilities_cache and candidate_id in ship_capabilities_cache:
-                    has_wpns = ship_capabilities_cache[candidate_id]['has_weapons']
-                else:
-                    # Fall back to component lookup
-                    has_wpns = any(candidate.get_components_by_ability('WeaponAbility', operational_only=False))
-                if has_wpns:
-                    val = weight if weight > 0 else 1000
-                else:
-                    if required:
-                        match = False
-
-            elif r_type == 'least_armor':
-                # Use Ship helper method to get armor layer components and sum HP
-                armor_comps = candidate.get_components_by_layer(LayerType.ARMOR)
-                armor_hp = sum(getattr(c, 'hp', 0) for c in armor_comps)
-                params = -armor_hp * (weight if weight > 0 else -factor)
-                val = params
-
-            elif r_type == 'pdc_arc' or r_type == 'missiles_in_pdc_arc':
-                e_type = getattr(candidate, 'type', '')
-                is_missile = e_type == 'missile' or e_type == AttackType.MISSILE
-                if is_missile:
-                    in_arc = stat_helpers['is_in_pdc_arc'](ship, candidate)
-                    if in_arc:
-                        val = weight if weight > 0 else 2000
-                    else:
-                        if required:
-                            match = False
-                        else:
-                            # Strong penalty if not required but logic implies we want it?
-                            # Actually typical behavior: if rule exists, we prioritize it.
-                            val = -999999
-                            match = False
-                else:
-                    # If rule is specific to missiles (pdc_arc), and target is NOT missile,
-                    # pass
-                    pass
+            elif r_type in ('has_weapons', 'least_armor', 'pdc_arc', 'missiles_in_pdc_arc'):
+                val, match = TargetEvaluator._eval_capability_rule(
+                    ship, candidate, rule, stat_helpers, ship_capabilities_cache
+                )
 
             if required and not match:
                 return -float('inf')
