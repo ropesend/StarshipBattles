@@ -72,6 +72,22 @@ class TestStrategyManagerSingleton:
         assert instance1.targeting_policies == {}
         assert instance1.movement_policies == {}
 
+    def test_clear_resets_loaded_flag(self):
+        """Test that clear() resets the _loaded flag."""
+        from game.ai.strategy_manager import StrategyManager
+
+        instance = StrategyManager.instance()
+
+        # Mark as loaded
+        instance._loaded = True
+        instance.strategies = {'test': {}}
+
+        # Clear should reset loaded flag
+        instance.clear()
+
+        assert instance._loaded is False
+        assert instance.strategies == {}
+
 
 class TestStrategyManagerThreadSafety:
     """Tests for thread-safe singleton creation."""

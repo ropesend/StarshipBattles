@@ -191,9 +191,11 @@ class TestBuildQueueScreenHotkeys:
         """Delete key removes selected queue item."""
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         screen = self._make_screen(mapper)
-        # Bind _handle_remove_hotkey too since _handle_keydown delegates to it
+        # Bind _handle_remove_hotkey and _get_active_queue since _handle_keydown delegates to them
         screen._handle_remove_hotkey = BuildQueueScreen._handle_remove_hotkey.__get__(screen, BuildQueueScreen)
+        screen._get_active_queue = BuildQueueScreen._get_active_queue.__get__(screen, BuildQueueScreen)
         screen.selected_queue_index = 0
+        screen.selected_queue_indices = set()  # Empty set for single selection mode
         active_queue = [{"design_id": "test", "turns_remaining": 5}]
         screen.active_queue_source.construction_queue = active_queue
         event = _keydown(pygame.K_DELETE)
