@@ -1354,3 +1354,128 @@ class TestBatchAdd:
         win.selected_indices = set()
         summary = win.get_selection_summary()
         assert "0" in summary or "No" in summary or "none" in summary.lower()
+
+
+# =======================================================================
+# Process Event Tests (PROJ-98 Phase 1)
+# =======================================================================
+
+class TestProcessEvent:
+    """process_event() should dispatch pygame_gui button events correctly."""
+
+    def test_column_toggle_button_click_toggles_visibility(self):
+        """Clicking a column toggle button toggles that column's visibility."""
+        import pygame_gui
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        # Create mock column toggle button
+        mock_btn = MagicMock()
+        mock_btn.set_text = MagicMock()
+        win.column_toggle_buttons = {'location': mock_btn}
+        # Initially visible
+        for col in win.columns:
+            if col['id'] == 'location':
+                col['visible'] = True
+                break
+        # Mock UI rebuild methods
+        win._build_header_labels = MagicMock()
+        win._refresh_list = MagicMock()
+
+        # Create pygame_gui UI_BUTTON_PRESSED event
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = mock_btn
+
+        # Mock parent process_event to avoid UIWindow attribute errors
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            win.process_event(event)
+
+        # Column should now be invisible
+        col = next(c for c in win.columns if c['id'] == 'location')
+        assert col['visible'] is False
+        # Button text should be updated
+        mock_btn.set_text.assert_called()
+        # Display should be rebuilt
+        win._build_header_labels.assert_called()
+        win._refresh_list.assert_called()
+
+    def test_filter_toggle_button_click_toggles_filter(self):
+        """Clicking a filter toggle button toggles that filter's state."""
+        import pygame_gui
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        # Create mock filter toggle button
+        mock_btn = MagicMock()
+        mock_btn.set_text = MagicMock()
+        win.filter_toggle_buttons = {'loc_Planet': mock_btn}
+        win.filter_location_type = {'Planet': True, 'Fleet': True}
+        # Mock apply_filters
+        win.apply_filters = MagicMock()
+
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = mock_btn
+
+        # Mock parent process_event to avoid UIWindow attribute errors
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            win.process_event(event)
+
+        # Filter should now be False
+        assert win.filter_location_type['Planet'] is False
+        # Button text should be updated
+        mock_btn.set_text.assert_called()
+        # Filters should be re-applied
+        win.apply_filters.assert_called()
+
+    def test_apply_filters_button_click_reads_search_and_applies(self):
+        """Clicking Apply Filters button reads search text and applies filters."""
+        import pygame_gui
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        # Create mock apply button
+        mock_btn = MagicMock()
+        win.btn_apply_filters = mock_btn
+        # Create mock search entry
+        win.search_entry = MagicMock()
+        win.search_entry.get_text = MagicMock(return_value="frigate")
+        win.apply_filters = MagicMock()
+
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = mock_btn
+
+        # Mock parent process_event to avoid UIWindow attribute errors
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            result = win.process_event(event)
+
+        # Search text should be read
+        assert win.search_text == "frigate"
+        # Filters should be applied
+        win.apply_filters.assert_called()
+        # Should return True (event handled)
+        assert result is True
+
+    def test_unrecognized_button_click_does_not_crash(self):
+        """Clicking an unrecognized button doesn't crash or throw errors."""
+        import pygame_gui
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        win.column_toggle_buttons = {}
+        win.filter_toggle_buttons = {}
+        win._build_header_labels = MagicMock()
+        win._refresh_list = MagicMock()
+
+        # Create event with unknown button
+        unknown_btn = MagicMock()
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = unknown_btn
+
+        # Mock parent process_event to avoid UIWindow attribute errors
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            # Should not crash
+            win.process_event(event)

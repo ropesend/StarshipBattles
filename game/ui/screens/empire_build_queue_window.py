@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Set, TYPE_CHECKING
 
 import pygame
+import pygame_gui
 from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar, UITextEntryLine
 
 from game.core.config import UIConfig
@@ -423,19 +424,16 @@ class EmpireBuildQueueWindow(UIWindow):
         handled = super().process_event(event)
 
         # UI button click handling
-        if event.type == pygame.USEREVENT:
-            ui_element = getattr(event, 'ui_element', None)
-            user_type = getattr(event, 'user_type', None)
-            # pygame_gui uses either user_type string or ui_element attribute
-            if ui_element is not None and str(user_type) == 'ui_button_pressed':
-                # Check column toggles
-                self._handle_column_toggle_click(ui_element)
-                # Check filter toggles
-                self._handle_filter_toggle_click(ui_element)
-                # Check apply button
-                if hasattr(self, 'btn_apply_filters') and ui_element is self.btn_apply_filters:
-                    self._handle_apply_filters_click()
-                    return True
+        if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            ui_element = event.ui_element
+            # Check column toggles
+            self._handle_column_toggle_click(ui_element)
+            # Check filter toggles
+            self._handle_filter_toggle_click(ui_element)
+            # Check apply button
+            if hasattr(self, 'btn_apply_filters') and ui_element is self.btn_apply_filters:
+                self._handle_apply_filters_click()
+                return True
 
         # Row click detection
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
