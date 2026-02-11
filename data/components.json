@@ -2037,11 +2037,7 @@
                         "Exotics": 3000
                     }
                 },
-                "CrewRequired": 100,
-                "ResourceStorage": {
-                    "Metals": 1000,
-                    "Organics": 500
-                }
+                "CrewRequired": 100
             },
             "major_classification": "Production",
             "resource_cost": {
@@ -2074,11 +2070,7 @@
                         "Exotics": 3000
                     }
                 },
-                "CrewRequired": 150,
-                "ResourceStorage": {
-                    "Metals": 500,
-                    "Organics": 250
-                }
+                "CrewRequired": 150
             },
             "major_classification": "Production",
             "resource_cost": {

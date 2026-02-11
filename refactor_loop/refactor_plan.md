@@ -8,22 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-97 Phases 3-4 complete
-**Current Status:** PROJ-97 Phases 3-4 complete, ready for Phase 5
+**Last Completed:** PROJ-97 Phase 5 complete
+**Current Status:** PROJ-97 Phase 5 complete, ready for Phase 6
 **Current Project:** PROJ-97
-**Current Phase:** Phase 5
+**Current Phase:** Phase 6
 **Test Status:** 7602 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-97 Phases 3-4: Controller + UI updates complete
-- Modified: build_queue_controller.py - _calculate_build_turns() accepts Dict[str, float]
-- Modified: build_queue_controller.py - _build_cost_tracking() caps per-tick costs
-- Removed: PLANETARY_YARD_BUILD_RATE constant, using get_default_production_rates()
-- Modified: empire_build_queue_window.py, build_queue_selector.py - UI display for dict rates
-- Added: 9 new tests in TestPerResourceBuildRates class (38 total controller tests)
-- Updated: test helpers to use Dict build_rate
-- Next: Phase 5 - Remove Shipyard ResourceStorage
+- PROJ-97 Phase 5: Removed dead ResourceStorage from shipyards
+- Modified: data/components.json - removed ResourceStorage from space_shipyard and fleet_space_yard
+- Zero breakage: 7602 tests pass
+- Next: Phase 6 - Integration Tests & Verification
 
 ---
 
@@ -507,6 +503,7 @@
 | 2026-02-10 | PROJ-97 | Phase 1 | Complete | 7593 passed | pending | JSON data, ability update, 9 new tests |
 | 2026-02-10 | PROJ-97 | Phase 2 | Complete | 46 BQS tests | pending | build_rate Dict, loader functions, 7 new tests |
 | 2026-02-10 | PROJ-97 | Phase 3-4 | Complete | 7602 passed | pending | Controller+UI Dict rates, 9 new tests |
+| 2026-02-10 | PROJ-97 | Phase 5 | Complete | 7602 passed | pending | Removed ResourceStorage from shipyards |
 
 ---
 
