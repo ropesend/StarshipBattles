@@ -56,6 +56,14 @@ class InputAction(str, Enum):
     FLEET_LOAD_CARGO = "fleet.load_cargo"
     FLEET_CANCEL_MODE = "fleet.cancel_mode"
 
+    # Superweapon commands
+    FLEET_IMPLODE_PLANET = "fleet.implode_planet"
+    FLEET_STELLERATE_STAR = "fleet.stellerate_star"
+    FLEET_OPEN_WARP_POINT = "fleet.open_warp_point"
+    FLEET_CLOSE_WARP_POINT = "fleet.close_warp_point"
+    FLEET_CREATE_DYSON_SPHERE = "fleet.create_dyson_sphere"
+    FLEET_SELF_DESTRUCT = "fleet.self_destruct"
+
     # --- Detail panel buttons ---
     DETAIL_PANEL_ORDERS = "detail_panel.orders"
     DETAIL_PANEL_FLEET_REPORT = "detail_panel.fleet_report"
@@ -110,6 +118,12 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.FLEET_DROP_CARGO: "Drop Cargo",
     InputAction.FLEET_LOAD_CARGO: "Load Cargo",
     InputAction.FLEET_CANCEL_MODE: "Cancel Mode",
+    InputAction.FLEET_IMPLODE_PLANET: "Destroy Planet",
+    InputAction.FLEET_STELLERATE_STAR: "Destroy Star",
+    InputAction.FLEET_OPEN_WARP_POINT: "Open Warp Point",
+    InputAction.FLEET_CLOSE_WARP_POINT: "Close Warp Point",
+    InputAction.FLEET_CREATE_DYSON_SPHERE: "Create Dyson Sphere",
+    InputAction.FLEET_SELF_DESTRUCT: "Self-Destruct",
     # Detail panel
     InputAction.DETAIL_PANEL_ORDERS: "Fleet Orders",
     InputAction.DETAIL_PANEL_FLEET_REPORT: "Fleet Report",
@@ -163,6 +177,12 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
         InputAction.FLEET_DROP_CARGO,
         InputAction.FLEET_LOAD_CARGO,
         InputAction.FLEET_CANCEL_MODE,
+        InputAction.FLEET_IMPLODE_PLANET,
+        InputAction.FLEET_STELLERATE_STAR,
+        InputAction.FLEET_OPEN_WARP_POINT,
+        InputAction.FLEET_CLOSE_WARP_POINT,
+        InputAction.FLEET_CREATE_DYSON_SPHERE,
+        InputAction.FLEET_SELF_DESTRUCT,
     ],
     "Detail Panel": [
         InputAction.DETAIL_PANEL_ORDERS,

@@ -161,9 +161,41 @@ class StrategyInputHandler:
                 log_debug("Select a fleet first.")
 
         elif action == InputAction.FLEET_CANCEL_MODE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO'):
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
+                                   'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET', 'OPEN_WARP_TARGET',
+                                   'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
+
+        # --- Superweapon commands ---
+        elif action == InputAction.FLEET_IMPLODE_PLANET:
+            if self.scene.selected_fleet:
+                self.input_mode = 'IMPLODE_PLANET_TARGET'
+                log_debug("Input Mode: IMPLODE_PLANET - Select target planet.")
+
+        elif action == InputAction.FLEET_STELLERATE_STAR:
+            if self.scene.selected_fleet:
+                self.input_mode = 'STELLERATE_STAR_TARGET'
+                log_debug("Input Mode: STELLERATE_STAR - Select target star.")
+
+        elif action == InputAction.FLEET_OPEN_WARP_POINT:
+            if self.scene.selected_fleet:
+                self.input_mode = 'OPEN_WARP_TARGET'
+                log_debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
+
+        elif action == InputAction.FLEET_CLOSE_WARP_POINT:
+            if self.scene.selected_fleet:
+                self.input_mode = 'CLOSE_WARP_TARGET'
+                log_debug("Input Mode: CLOSE_WARP_POINT - Select warp point to close.")
+
+        elif action == InputAction.FLEET_CREATE_DYSON_SPHERE:
+            if self.scene.selected_fleet:
+                self.input_mode = 'DYSON_SPHERE_TARGET'
+                log_debug("Input Mode: DYSON_SPHERE - Select target star.")
+
+        elif action == InputAction.FLEET_SELF_DESTRUCT:
+            if self.scene.selected_fleet:
+                self.scene._superweapons.handle_self_destruct(self.scene.selected_fleet)
 
         # --- Zoom shortcuts ---
         elif action == InputAction.STRATEGY_ZOOM_GALAXY:
@@ -227,7 +259,9 @@ class StrategyInputHandler:
                 log_debug("Select a fleet first.")
 
         elif event.key == pygame.K_ESCAPE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO'):
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
+                                   'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET', 'OPEN_WARP_TARGET',
+                                   'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
 
@@ -257,6 +291,36 @@ class StrategyInputHandler:
         elif event.key == pygame.K_F11:
             self._take_screenshot_viewport()
 
+        # Superweapon legacy key handlers
+        elif event.key == pygame.K_i and (event.mod & pygame.KMOD_CTRL):
+            if self.scene.selected_fleet:
+                self.input_mode = 'IMPLODE_PLANET_TARGET'
+                log_debug("Input Mode: IMPLODE_PLANET - Select target planet.")
+
+        elif event.key == pygame.K_s and (event.mod & pygame.KMOD_CTRL) and (event.mod & pygame.KMOD_SHIFT):
+            if self.scene.selected_fleet:
+                self.input_mode = 'STELLERATE_STAR_TARGET'
+                log_debug("Input Mode: STELLERATE_STAR - Select target star.")
+
+        elif event.key == pygame.K_w and (event.mod & pygame.KMOD_CTRL):
+            if self.scene.selected_fleet:
+                self.input_mode = 'OPEN_WARP_TARGET'
+                log_debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
+
+        elif event.key == pygame.K_l and (event.mod & pygame.KMOD_CTRL):
+            if self.scene.selected_fleet:
+                self.input_mode = 'CLOSE_WARP_TARGET'
+                log_debug("Input Mode: CLOSE_WARP_POINT - Select warp point to close.")
+
+        elif event.key == pygame.K_d and (event.mod & pygame.KMOD_CTRL):
+            if self.scene.selected_fleet:
+                self.input_mode = 'DYSON_SPHERE_TARGET'
+                log_debug("Input Mode: DYSON_SPHERE - Select target star.")
+
+        elif event.key == pygame.K_x and not (event.mod & (pygame.KMOD_CTRL | pygame.KMOD_SHIFT | pygame.KMOD_ALT)):
+            if self.scene.selected_fleet:
+                self.scene._superweapons.handle_self_destruct(self.scene.selected_fleet)
+
     def handle_click(self, mx, my, button):
         """
         Handle mouse clicks.
@@ -283,6 +347,16 @@ class StrategyInputHandler:
             return self._handle_drop_cargo_mode_click(mx, my, button)
         elif self.input_mode == 'LOAD_CARGO':
             return self._handle_load_cargo_mode_click(mx, my, button)
+        elif self.input_mode == 'IMPLODE_PLANET_TARGET':
+            return self._handle_implode_planet_click(mx, my, button)
+        elif self.input_mode == 'STELLERATE_STAR_TARGET':
+            return self._handle_stellerate_star_click(mx, my, button)
+        elif self.input_mode == 'OPEN_WARP_TARGET':
+            return self._handle_open_warp_click(mx, my, button)
+        elif self.input_mode == 'CLOSE_WARP_TARGET':
+            return self._handle_close_warp_click(mx, my, button)
+        elif self.input_mode == 'DYSON_SPHERE_TARGET':
+            return self._handle_dyson_sphere_click(mx, my, button)
         elif self.input_mode == 'SELECT':
             return self._handle_select_mode_click(mx, my, button)
 
@@ -416,6 +490,81 @@ class StrategyInputHandler:
             fleet = self.scene.selected_fleet
             self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'load')
             self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_implode_planet_click(self, mx, my, button):
+        """Handle click in IMPLODE_PLANET_TARGET mode."""
+        if button == 1:  # Left Click
+            result = self.scene._superweapons.handle_implode_planet_designation(
+                mx, my, self.scene.selected_fleet
+            )
+            if result:
+                self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_stellerate_star_click(self, mx, my, button):
+        """Handle click in STELLERATE_STAR_TARGET mode."""
+        if button == 1:  # Left Click
+            result = self.scene._superweapons.handle_stellerate_star_designation(
+                mx, my, self.scene.selected_fleet
+            )
+            if result:
+                self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_open_warp_click(self, mx, my, button):
+        """Handle click in OPEN_WARP_TARGET mode."""
+        if button == 1:  # Left Click
+            result = self.scene._superweapons.handle_open_warp_designation(
+                mx, my, self.scene.selected_fleet
+            )
+            if result:
+                self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_close_warp_click(self, mx, my, button):
+        """Handle click in CLOSE_WARP_TARGET mode."""
+        if button == 1:  # Left Click
+            result = self.scene._superweapons.handle_close_warp_designation(
+                mx, my, self.scene.selected_fleet
+            )
+            if result:
+                self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_dyson_sphere_click(self, mx, my, button):
+        """Handle click in DYSON_SPHERE_TARGET mode."""
+        if button == 1:  # Left Click
+            result = self.scene._superweapons.handle_dyson_sphere_designation(
+                mx, my, self.scene.selected_fleet
+            )
+            if result:
+                self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
             self.input_mode = 'SELECT'

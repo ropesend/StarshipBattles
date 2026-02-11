@@ -186,3 +186,99 @@ class TestQuickstartDesignSpecificContent:
         """Escort design should be of Ship type."""
         data = load_json(str(quickstart_designs_dir / "qs_escort.json"))
         assert data["vehicle_type"] == "Ship"
+
+
+COLONY_PLANET_TYPES = [
+    "CONTINENTAL", "ARID", "PELAGIC", "MAGMA", "CRYOPLANET",
+    "BARREN", "JOVIAN", "ICE_GIANT", "CHTHONIAN", "ICE_DWARF", "PLANETOID",
+]
+
+COLONY_DESIGN_FILES = [
+    f"qs_colony_{pt.lower()}.json" for pt in COLONY_PLANET_TYPES
+]
+
+SUPERWEAPON_DESIGNS = {
+    "qs_planet_destroyer.json": "DestroyPlanet",
+    "qs_warp_gate_closer.json": "CloseWarpPoint",
+    "qs_warp_gate_opener.json": "OpenWarpPoint",
+    "qs_star_destroyer.json": "DestroyStar",
+    "qs_sphere_builder.json": "CreateDysonSphere",
+}
+
+
+class TestColonyShipDesigns:
+    """Tests for colony ship design fixtures."""
+
+    def test_all_colony_designs_exist(self, quickstart_designs_dir):
+        """All 11 colony ship designs should exist."""
+        for filename in COLONY_DESIGN_FILES:
+            assert (quickstart_designs_dir / filename).exists(), \
+                f"Missing colony design: {filename}"
+
+    @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
+    def test_colony_ship_has_colony_pod(self, filename, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
+        """Each colony ship should have a ColonizePlanet ability."""
+        data = load_json(str(quickstart_designs_dir / filename))
+        ship = Ship.from_dict(data, registries=fresh_registries)
+
+        all_comps = ship.get_all_components()
+        has_colony = any(c.has_ability("ColonizePlanet") for c in all_comps)
+        assert has_colony, f"{filename} should have a ColonizePlanet ability"
+
+    @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
+    def test_colony_ship_has_passenger_quarters(self, filename, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
+        """Each colony ship should have passenger capacity."""
+        data = load_json(str(quickstart_designs_dir / filename))
+        ship = Ship.from_dict(data, registries=fresh_registries)
+
+        all_comps = ship.get_all_components()
+        has_cargo = any(c.has_ability("CargoStorage") for c in all_comps)
+        assert has_cargo, f"{filename} should have CargoStorage (passengers)"
+
+    @pytest.mark.parametrize("filename", COLONY_DESIGN_FILES)
+    def test_colony_ship_is_destroyer_class(self, filename, quickstart_designs_dir):
+        """Each colony ship should be Destroyer class."""
+        data = load_json(str(quickstart_designs_dir / filename))
+        assert data["ship_class"] == "Destroyer", f"{filename} should be Destroyer class"
+
+
+class TestGeneralPurposeShipDesign:
+    """Tests for the general purpose ship design."""
+
+    def test_general_purpose_exists(self, quickstart_designs_dir):
+        """General purpose ship design should exist."""
+        assert (quickstart_designs_dir / "qs_general_purpose.json").exists()
+
+    def test_general_purpose_has_space_yards(self, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
+        """General purpose ship should have SpaceShipyard ability."""
+        data = load_json(str(quickstart_designs_dir / "qs_general_purpose.json"))
+        ship = Ship.from_dict(data, registries=fresh_registries)
+
+        all_comps = ship.get_all_components()
+        yard_count = sum(1 for c in all_comps if c.has_ability("SpaceShipyard"))
+        assert yard_count >= 2, f"General purpose ship should have 2+ space yards, got {yard_count}"
+
+    def test_general_purpose_is_light_cruiser(self, quickstart_designs_dir):
+        """General purpose ship should be Light Cruiser class."""
+        data = load_json(str(quickstart_designs_dir / "qs_general_purpose.json"))
+        assert data["ship_class"] == "Light Cruiser"
+
+
+class TestSuperweaponShipDesigns:
+    """Tests for superweapon ship design fixtures."""
+
+    @pytest.mark.parametrize("filename,ability", list(SUPERWEAPON_DESIGNS.items()))
+    def test_superweapon_design_exists(self, filename, ability, quickstart_designs_dir):
+        """Each superweapon ship design should exist."""
+        assert (quickstart_designs_dir / filename).exists(), \
+            f"Missing superweapon design: {filename}"
+
+    @pytest.mark.parametrize("filename,ability", list(SUPERWEAPON_DESIGNS.items()))
+    def test_superweapon_has_correct_ability(self, filename, ability, quickstart_designs_dir, quickstart_ship_data, fresh_registries):
+        """Each superweapon ship should have its expected ability."""
+        data = load_json(str(quickstart_designs_dir / filename))
+        ship = Ship.from_dict(data, registries=fresh_registries)
+
+        all_comps = ship.get_all_components()
+        has_ability = any(c.has_ability(ability) for c in all_comps)
+        assert has_ability, f"{filename} should have {ability} ability"

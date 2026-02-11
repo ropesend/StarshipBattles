@@ -27,6 +27,12 @@
     "fleet.cancel_mode": {"key": "K_ESCAPE", "modifiers": []},
     "fleet.drop_cargo": {"key": "K_d", "modifiers": []},
     "fleet.load_cargo": {"key": "K_l", "modifiers": []},
+    "fleet.implode_planet": {"key": "K_i", "modifiers": ["ctrl"]},
+    "fleet.stellerate_star": {"key": "K_s", "modifiers": ["ctrl", "shift"]},
+    "fleet.open_warp_point": {"key": "K_w", "modifiers": ["ctrl"]},
+    "fleet.close_warp_point": {"key": "K_l", "modifiers": ["ctrl"]},
+    "fleet.create_dyson_sphere": {"key": "K_d", "modifiers": ["ctrl"]},
+    "fleet.self_destruct": {"key": "K_x", "modifiers": []},
 
     "detail_panel.orders": {"key": "K_o", "modifiers": []},
     "detail_panel.fleet_report": {"key": "K_f", "modifiers": []},
