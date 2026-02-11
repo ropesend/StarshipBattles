@@ -8,21 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-99 Phase 1 - Economy Calculator
-**Current Status:** PROJ-99 Phase 1 Complete
+**Last Completed:** PROJ-99 Phase 2 - Treasury Panel
+**Current Status:** PROJ-99 Phase 2 Complete
 **Current Project:** PROJ-99
-**Current Phase:** Phase 2
-**Test Status:** 7672 passed
+**Current Phase:** Phase 3
+**Test Status:** 7691 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-99 Phase 1 complete: EmpireEconomyCalculator + EmpireEconomySnapshot
-- Created game/strategy/engine/empire_economy_calculator.py (222 lines)
-- Created tests/unit/strategy/engine/test_empire_economy_calculator.py (13 tests)
-- Calculator aggregates colony production (ResourceHarvester), maintenance (5% of build cost)
-- Handles both layer formats (dict with components key, direct list)
-- No pygame imports - pure strategy layer
-- Next: Phase 2 - Treasury Panel UI
+- PROJ-99 Phase 2 complete: EmpireTreasuryPanel + load_resource_icons
+- Created game/ui/panels/empire_treasury_panel.py (259 lines)
+- Created tests/unit/ui/panels/test_empire_treasury_panel.py (19 tests)
+- Panel displays 3 sections: Production, Expenses, Treasury
+- Uses UIScrollingContainer with resource icon column headers
+- Refresh method clears and rebuilds UI with new snapshot
+- Next: Phase 3 - Empire Panel Window
 
 ---
 
@@ -531,6 +531,7 @@
 | 2026-02-10 | PROJ-98 | Phase 4 | Complete | 7648 passed | pending | Final verification - all 4 issues confirmed fixed |
 | 2026-02-10 | PROJ-98 | Audit 1 | PASSED | 7648 passed | pending | All goals met: event handling, resource columns, sorting, filter toggles |
 | 2026-02-10 | PROJ-99 | Phase 1 | Complete | 7672 passed | pending | EmpireEconomyCalculator + EmpireEconomySnapshot, 13 tests |
+| 2026-02-10 | PROJ-99 | Phase 2 | Complete | 7691 passed | pending | EmpireTreasuryPanel + load_resource_icons, 19 tests |
 
 ---
 
