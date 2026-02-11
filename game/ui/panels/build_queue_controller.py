@@ -14,9 +14,6 @@ from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Union
 
 from game.core.logger import log_info, log_warning, log_error, log_debug
 
-# Build rate constants (units per turn)
-PLANETARY_YARD_BUILD_RATE = 2000.0
-
 if TYPE_CHECKING:
     from game.strategy.data.build_context import BuildContext
     from game.strategy.data.build_queue_source import BuildQueueSource
@@ -193,14 +190,15 @@ class BuildQueueController:
             log_warning(f"Failed to load design cost for {design_id}: {e}")
             return {}
 
-    def _calculate_build_turns(self, design_id: str, build_rate: float) -> int:
-        """Calculate build turns from design resource cost and build rate.
+    def _calculate_build_turns(self, design_id: str, build_rate: Dict[str, float]) -> int:
+        """Calculate build turns from design resource cost and per-resource rates.
 
-        Formula: turns = max(1, ceil(max_resource_cost / build_rate))
+        Formula: For each resource, turns_for_res = ceil(cost / rate).
+        Total turns = max(1, max of all turns_for_res).
 
         Args:
             design_id: ID of the design to calculate for.
-            build_rate: Build rate in resource units per turn.
+            build_rate: Per-resource production rates (resource -> units/turn).
 
         Returns:
             Number of turns required to build the design.
@@ -208,24 +206,52 @@ class BuildQueueController:
         cost = self._get_design_cost(design_id)
         if not cost:
             return 1
-        max_cost = max(cost.values()) if cost else 0
-        if max_cost <= 0:
+        if not build_rate:
             return 1
-        return max(1, math.ceil(max_cost / build_rate))
 
-    def _build_cost_tracking(self, design_id: str, turns: int) -> Dict[str, float]:
+        turns_per_resource = []
+        for res, rate in build_rate.items():
+            res_cost = cost.get(res, 0)
+            if res_cost > 0 and rate > 0:
+                turns_per_resource.append(math.ceil(res_cost / rate))
+
+        if not turns_per_resource:
+            return 1
+        return max(1, max(turns_per_resource))
+
+    def _build_cost_tracking(
+        self, design_id: str, turns: int, build_rate: Optional[Dict[str, float]] = None
+    ) -> Dict[str, float]:
         """Create cost tracking fields for a queue item.
+
+        Per-resource cost_per_tick is capped at rate/100 to prevent exceeding
+        per-turn production limits.
 
         Args:
             design_id: ID of the design to track costs for.
             turns: Number of turns for the build.
+            build_rate: Per-resource production rates (resource -> units/turn).
+                        If None, no capping is applied.
 
         Returns:
             Dict with total_cost, cost_per_tick, resources_consumed, ticks_in_current_turn.
         """
         total_cost = self._get_design_cost(design_id)
         total_ticks = turns * 100
-        cost_per_tick = {res: amount / total_ticks for res, amount in total_cost.items()} if total_ticks > 0 else {}
+
+        # Calculate max per-tick for each resource (rate / 100)
+        max_per_tick = {}
+        if build_rate:
+            max_per_tick = {res: rate / 100 for res, rate in build_rate.items()}
+
+        # Calculate cost_per_tick with per-resource capping
+        cost_per_tick = {}
+        if total_ticks > 0:
+            for res, amount in total_cost.items():
+                natural_rate = amount / total_ticks
+                cap = max_per_tick.get(res, float('inf'))
+                cost_per_tick[res] = min(natural_rate, cap)
+
         return {
             "total_cost": total_cost,
             "cost_per_tick": cost_per_tick,
@@ -395,8 +421,8 @@ class BuildQueueController:
             "type": category,
             "turns_remaining": turns
         }
-        # Add cost tracking fields
-        queue_item.update(self._build_cost_tracking(design_id, turns))
+        # Add cost tracking fields with per-resource capping
+        queue_item.update(self._build_cost_tracking(design_id, turns, build_rate))
 
         # PROJ-79: Add target_planet_id for complexes
         target_planet_id = self._get_target_planet_id(source, category)
@@ -438,7 +464,7 @@ class BuildQueueController:
             "turns_remaining": turns,
             "target_planet_id": target_planet_id,
         }
-        queue_item.update(self._build_cost_tracking(design_id, turns))
+        queue_item.update(self._build_cost_tracking(design_id, turns, build_rate))
 
         if index is not None:
             source.construction_queue.insert(index, queue_item)
@@ -480,8 +506,8 @@ class BuildQueueController:
                 "type": category,
                 "turns_remaining": source_turns
             }
-            # Add cost tracking fields
-            queue_item.update(self._build_cost_tracking(design_id, source_turns))
+            # Add cost tracking fields with per-resource capping
+            queue_item.update(self._build_cost_tracking(design_id, source_turns, source.build_rate))
             source.construction_queue.append(queue_item)
             added_count += 1
 
@@ -512,16 +538,18 @@ class BuildQueueController:
             return
 
         # Calculate build time if not provided
+        from game.strategy.data.build_queue_source import get_default_production_rates
+        default_rate = get_default_production_rates("planetary_yard")
         if turns is None:
-            turns = self._calculate_build_turns(design_id, PLANETARY_YARD_BUILD_RATE)
+            turns = self._calculate_build_turns(design_id, default_rate)
 
         queue_item = {
             "design_id": design_id,
             "type": category,
             "turns_remaining": turns
         }
-        # Add cost tracking fields
-        queue_item.update(self._build_cost_tracking(design_id, turns))
+        # Add cost tracking fields with per-resource capping
+        queue_item.update(self._build_cost_tracking(design_id, turns, default_rate))
 
         if index is not None:
             self.build_context.construction_queue.insert(index, queue_item)

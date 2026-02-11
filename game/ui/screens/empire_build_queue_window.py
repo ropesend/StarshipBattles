@@ -546,7 +546,11 @@ class EmpireBuildQueueWindow(UIWindow):
         if col_id == 'capabilities':
             return self._get_capabilities_text(source)
         if col_id == 'build_rate':
-            return f"{int(source.build_rate)}/turn"
+            # Per-resource rates dict: show max rate (all rates are usually equal)
+            if source.build_rate:
+                max_rate = max(source.build_rate.values())
+                return f"{int(max_rate)}/turn"
+            return "N/A"
         return ""
 
     def toggle_column_visibility(self, col_id: str) -> bool:

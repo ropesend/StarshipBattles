@@ -15,18 +15,18 @@
 |-------|--------|-----------|
 | 1. JSON Data & Ability Update | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. BuildQueueSource Per-Resource Rates | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Controller Turn Calc & Tick Capping | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. UI Display Updates | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 3. Controller Turn Calc & Tick Capping | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. UI Display Updates | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remove Shipyard ResourceStorage | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Integration Tests & Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - BuildQueueSource per-resource rates
-**Next Action:** Execute Phase 3 - Controller turn calc & tick capping
+**Active Phase:** Phase 5
+**Last Action:** Phases 3-4 complete - Controller + UI updates
+**Next Action:** Execute Phase 5 - Remove Shipyard ResourceStorage
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. BuildQueueSource.build_rate changed from float to Dict[str, float]. Added get_default_production_rates() and _get_facility_production_rates(). Updated collect_build_queues_at_hex() and collect_all_build_queues_for_empire(). 7 new tests added. 46 tests in test_build_queue_source.py pass. UI files (controller, empire_build_queue_window, build_queue_selector) need updating in Phases 3-4.
+**Context for Next Agent:** Phases 3-4 complete. _calculate_build_turns() now accepts Dict[str, float] and uses per-resource bottleneck formula. _build_cost_tracking() caps per-tick costs to rate/100. Removed PLANETARY_YARD_BUILD_RATE constant, using get_default_production_rates(). Updated UI display in empire_build_queue_window.py and build_queue_selector.py. 9 new tests added in TestPerResourceBuildRates class. All 7602 tests pass.
 
 ## Overview
 Change the build queue production system from a single uniform `build_rate: float` to per-resource production rates (`Dict[str, float]`). This allows each resource type to have a different maximum production rate per turn at each build yard. Also remove dead `ResourceStorage` abilities from shipyard components, and add `production_rates` data to the SpaceShipyard ability in JSON.

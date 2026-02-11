@@ -9,11 +9,8 @@ PROJ-79 Phase 2: Added tests for build time calculation and cost tracking.
 import pytest
 from unittest.mock import MagicMock
 
-from game.ui.panels.build_queue_controller import (
-    BuildQueueController,
-    PLANETARY_YARD_BUILD_RATE,
-)
-from game.strategy.data.build_queue_source import BuildQueueSource
+from game.ui.panels.build_queue_controller import BuildQueueController
+from game.strategy.data.build_queue_source import BuildQueueSource, get_default_production_rates
 
 
 def _make_controller(build_context=None) -> BuildQueueController:
@@ -39,18 +36,24 @@ def _make_controller(build_context=None) -> BuildQueueController:
     )
 
 
+def _default_build_rate() -> dict:
+    """Return default build rate dict for testing."""
+    return {"Metals": 2000.0, "Organics": 2000.0, "Radioactives": 2000.0, "Vapors": 2000.0, "Exotics": 2000.0}
+
+
 def _make_source(
     queue_id: str = "test_queue",
     display_name: str = "Test Queue",
     can_build_ships: bool = True,
     can_build_complexes: bool = True,
     queue: list = None,
-    build_rate: float = 2000.0,
+    build_rate: dict = None,
     context_type: str = "planet",
     planet_id: int = None,
 ) -> BuildQueueSource:
     """Create a BuildQueueSource with a real mutable queue."""
     actual_queue = queue if queue is not None else []
+    actual_rate = build_rate if build_rate is not None else _default_build_rate()
     source = BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
@@ -59,7 +62,7 @@ def _make_source(
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
         context_type=context_type,
-        build_rate=build_rate,
+        build_rate=actual_rate,
         planet_id=planet_id,
     )
     return source
@@ -314,9 +317,10 @@ class TestBuildTimeCalculation:
         design.resource_cost = {"Metals": 100000, "Organics": 10000}
 
         controller = self._make_controller_with_designs([design])
-        turns = controller._calculate_build_turns("big_complex", 2000.0)
+        build_rate = {"Metals": 2000.0, "Organics": 2000.0}
+        turns = controller._calculate_build_turns("big_complex", build_rate)
 
-        assert turns == 50  # max(100000, 10000) / 2000 = 50
+        assert turns == 50  # ceil(100000/2000) = 50, ceil(10000/2000) = 5 → max = 50
 
     def test_calculate_build_turns_shipyard_rate(self):
         """6000 Metals at 3000/turn = 2 turns."""
@@ -325,7 +329,8 @@ class TestBuildTimeCalculation:
         design.resource_cost = {"Metals": 6000}
 
         controller = self._make_controller_with_designs([design])
-        turns = controller._calculate_build_turns("cruiser", 3000.0)
+        build_rate = {"Metals": 3000.0}
+        turns = controller._calculate_build_turns("cruiser", build_rate)
 
         assert turns == 2  # 6000 / 3000 = 2
 
@@ -336,7 +341,8 @@ class TestBuildTimeCalculation:
         design.resource_cost = {}
 
         controller = self._make_controller_with_designs([design])
-        turns = controller._calculate_build_turns("free_stuff", 2000.0)
+        build_rate = {"Metals": 2000.0}
+        turns = controller._calculate_build_turns("free_stuff", build_rate)
 
         assert turns == 1
 
@@ -347,14 +353,16 @@ class TestBuildTimeCalculation:
         design.resource_cost = None
 
         controller = self._make_controller_with_designs([design])
-        turns = controller._calculate_build_turns("no_cost", 2000.0)
+        build_rate = {"Metals": 2000.0}
+        turns = controller._calculate_build_turns("no_cost", build_rate)
 
         assert turns == 1
 
     def test_calculate_build_turns_unknown_design_returns_1(self):
         """Unknown design ID returns 1 turn."""
         controller = self._make_controller_with_designs([])
-        turns = controller._calculate_build_turns("unknown", 2000.0)
+        build_rate = {"Metals": 2000.0}
+        turns = controller._calculate_build_turns("unknown", build_rate)
 
         assert turns == 1
 
@@ -380,7 +388,7 @@ class TestBuildTimeCalculation:
         design.resource_cost = {"Metals": 4000}
 
         controller = self._make_controller_with_designs([design])
-        source = _make_source(build_rate=2000.0)
+        source = _make_source(build_rate={"Metals": 2000.0})
         controller.set_active_queue(source)
 
         controller.add_to_queue("factory", category="complex")
@@ -398,7 +406,7 @@ class TestBuildTimeCalculation:
         design.resource_cost = {"Metals": 9000}
 
         controller = self._make_controller_with_designs([design])
-        source = _make_source(build_rate=3000.0)  # Shipyard rate
+        source = _make_source(build_rate={"Metals": 3000.0})  # Shipyard rate
         controller.set_active_queue(source)
 
         controller.add_to_queue("cruiser", category="ship")
@@ -413,8 +421,8 @@ class TestBuildTimeCalculation:
         design.resource_cost = {"Metals": 6000}
 
         controller = self._make_controller_with_designs([design])
-        slow_source = _make_source(queue_id="slow", build_rate=2000.0)
-        fast_source = _make_source(queue_id="fast", build_rate=3000.0)
+        slow_source = _make_source(queue_id="slow", build_rate={"Metals": 2000.0})
+        fast_source = _make_source(queue_id="fast", build_rate={"Metals": 3000.0})
         controller.set_selected_queues([slow_source, fast_source])
 
         controller.add_to_queue("cruiser", category="ship")
@@ -646,7 +654,7 @@ class TestPlanetSelectionForFleetComplexes:
             hex_coord, galaxy, empire, [planet1]
         )
 
-        source = _make_source(context_type="fleet", build_rate=2000.0)
+        source = _make_source(context_type="fleet", build_rate={"Metals": 2000.0})
         source.context_type = "fleet"
         source.planet_id = None
         controller.set_active_queue(source)
@@ -673,7 +681,7 @@ class TestPlanetSelectionForFleetComplexes:
             hex_coord, galaxy, empire, [planet1]
         )
 
-        source = _make_source(context_type="planet", build_rate=2000.0)
+        source = _make_source(context_type="planet", build_rate={"Metals": 2000.0})
         source.context_type = "planet"
         source.planet_id = 10
         controller.set_active_queue(source)
@@ -684,3 +692,201 @@ class TestPlanetSelectionForFleetComplexes:
         assert len(source.construction_queue) == 1
         item = source.construction_queue[0]
         assert item.get("target_planet_id") == 10
+
+
+class TestPerResourceBuildRates:
+    """PROJ-97 Phase 3: Tests for per-resource production rate limits."""
+
+    def _make_controller_with_designs(self, designs: list) -> BuildQueueController:
+        """Create a controller with mock design library returning given designs."""
+        build_context = MagicMock()
+        build_context.context_type = "planet"
+        build_context.has_space_shipyard = True
+        build_context.can_build_type.return_value = True
+        build_context.construction_queue = []
+
+        mock_library = MagicMock()
+        mock_library.scan_designs.return_value = designs
+
+        # Build design_id -> resource_cost map for mocking
+        design_costs = {}
+        for d in designs:
+            design_costs[d.design_id] = d.resource_cost
+
+        def mock_load_design_data(design_id):
+            if design_id in design_costs:
+                return {"design_id": design_id}
+            return None
+        mock_library.load_design_data.side_effect = mock_load_design_data
+
+        mock_loader = MagicMock()
+        def mock_load_ship(design_data, x, y):
+            if design_data is None:
+                return None
+            design_id = design_data.get("design_id")
+            cost = design_costs.get(design_id)
+            if cost is None:
+                return None
+            ship = MagicMock()
+            ship.construction_cost = cost
+            return ship
+        mock_loader.load_ship_from_design_data.side_effect = mock_load_ship
+
+        mock_report = MagicMock()
+        on_changed = MagicMock()
+
+        return BuildQueueController(
+            build_context=build_context,
+            design_library=mock_library,
+            design_loader=mock_loader,
+            design_report=mock_report,
+            on_queue_changed=on_changed,
+        )
+
+    def test_per_resource_bottleneck_metals(self):
+        """5500 Metals at 3000/turn, 1000 Organics at 3000/turn → 2 turns from Metals."""
+        design = MagicMock()
+        design.design_id = "cruiser"
+        design.resource_cost = {"Metals": 5500, "Organics": 1000}
+
+        controller = self._make_controller_with_designs([design])
+        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        turns = controller._calculate_build_turns("cruiser", build_rate)
+
+        # ceil(5500/3000) = 2, ceil(1000/3000) = 1 → max = 2
+        assert turns == 2
+
+    def test_per_resource_bottleneck_exotics(self):
+        """Metals 3000/turn, Exotics 1500/turn with 3000 of each → Exotics bottleneck."""
+        design = MagicMock()
+        design.design_id = "advanced_ship"
+        design.resource_cost = {"Metals": 3000, "Exotics": 3000}
+
+        controller = self._make_controller_with_designs([design])
+        build_rate = {"Metals": 3000.0, "Exotics": 1500.0}
+        turns = controller._calculate_build_turns("advanced_ship", build_rate)
+
+        # ceil(3000/3000) = 1, ceil(3000/1500) = 2 → max = 2
+        assert turns == 2
+
+    def test_resource_in_cost_not_in_rates_treated_as_unbounded(self):
+        """Resource in cost but not in rates → treated as 1 turn."""
+        design = MagicMock()
+        design.design_id = "exotic_ship"
+        design.resource_cost = {"Metals": 2000, "Vapors": 1000}
+
+        controller = self._make_controller_with_designs([design])
+        build_rate = {"Metals": 3000.0}  # No Vapors rate
+        turns = controller._calculate_build_turns("exotic_ship", build_rate)
+
+        # Metals: ceil(2000/3000) = 1, Vapors: unbounded (1) → max = 1
+        assert turns == 1
+
+    def test_empty_build_rate_returns_1(self):
+        """Empty build_rate dict returns 1 turn."""
+        design = MagicMock()
+        design.design_id = "ship"
+        design.resource_cost = {"Metals": 5000}
+
+        controller = self._make_controller_with_designs([design])
+        turns = controller._calculate_build_turns("ship", {})
+
+        assert turns == 1
+
+    def test_zero_rate_skipped_no_divide_by_zero(self):
+        """Rate of 0 is skipped (no divide by zero)."""
+        design = MagicMock()
+        design.design_id = "ship"
+        design.resource_cost = {"Metals": 3000, "Organics": 1000}
+
+        controller = self._make_controller_with_designs([design])
+        build_rate = {"Metals": 3000.0, "Organics": 0.0}
+        turns = controller._calculate_build_turns("ship", build_rate)
+
+        # Metals: ceil(3000/3000) = 1, Organics: rate 0 skipped → max = 1
+        assert turns == 1
+
+    def test_cost_per_tick_capped_per_resource(self):
+        """cost_per_tick is capped per-resource to max_per_tick = rate/100."""
+        design = MagicMock()
+        design.design_id = "mixed"
+        # Metals: 5500 at 3000/turn → 2 turns, but natural per-tick is 5500/200 = 27.5
+        # Cap is 3000/100 = 30, so 27.5 is fine
+        # Organics: 500 at 3000/turn → would finish turn 1 if allowed
+        # Natural per-tick is 500/200 = 2.5, cap is 30, so 2.5 is fine
+        design.resource_cost = {"Metals": 5500, "Organics": 500}
+
+        controller = self._make_controller_with_designs([design])
+        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
+        tracking = controller._build_cost_tracking("mixed", 2, build_rate)
+
+        # 2 turns = 200 ticks
+        # max_per_tick = {Metals: 30, Organics: 30}
+        # Metals: 5500/200 = 27.5 < 30, OK
+        # Organics: 500/200 = 2.5 < 30, OK
+        assert tracking["cost_per_tick"]["Metals"] == pytest.approx(27.5)
+        assert tracking["cost_per_tick"]["Organics"] == pytest.approx(2.5)
+
+    def test_cost_per_tick_capped_when_exceeds_max(self):
+        """cost_per_tick capped when natural rate exceeds max_per_tick."""
+        design = MagicMock()
+        design.design_id = "fast_resource"
+        # 1 turn scenario: 100 ticks
+        # Metals: 2000 at 3000/turn → cap = 30/tick
+        # Natural: 2000/100 = 20, capped at 30 → OK, no cap needed
+        # But let's test: Metals 4000 in 1 turn at 3000/turn rate
+        # cap = 30/tick, natural = 40/tick → should cap to 30
+        design.resource_cost = {"Metals": 4000}
+
+        controller = self._make_controller_with_designs([design])
+        build_rate = {"Metals": 3000.0}
+        # Force 1 turn to test capping
+        tracking = controller._build_cost_tracking("fast_resource", 1, build_rate)
+
+        # 1 turn = 100 ticks
+        # Natural: 4000/100 = 40
+        # Cap: 3000/100 = 30
+        # Should be capped to 30
+        assert tracking["cost_per_tick"]["Metals"] == pytest.approx(30.0)
+
+    def test_add_to_queue_with_dict_build_rate(self):
+        """Adding to queue calculates turns using Dict build_rate."""
+        design = MagicMock()
+        design.design_id = "cruiser"
+        design.resource_cost = {"Metals": 5500, "Organics": 1000}
+
+        controller = self._make_controller_with_designs([design])
+        source = _make_source(build_rate={"Metals": 3000.0, "Organics": 3000.0})
+        controller.set_active_queue(source)
+
+        controller.add_to_queue("cruiser", category="ship")
+
+        item = source.construction_queue[0]
+        # 5500 Metals / 3000 = 2 turns
+        assert item["turns_remaining"] == 2
+
+    def test_multi_queue_different_per_resource_rates(self):
+        """Multi-queue with different per-resource rates."""
+        design = MagicMock()
+        design.design_id = "cruiser"
+        design.resource_cost = {"Metals": 6000, "Exotics": 3000}
+
+        controller = self._make_controller_with_designs([design])
+        # Standard yard: all at 3000
+        standard = _make_source(
+            queue_id="standard",
+            build_rate={"Metals": 3000.0, "Exotics": 3000.0}
+        )
+        # Advanced yard: Metals 3000, but Exotics 1500
+        advanced = _make_source(
+            queue_id="advanced",
+            build_rate={"Metals": 3000.0, "Exotics": 1500.0}
+        )
+        controller.set_selected_queues([standard, advanced])
+
+        controller.add_to_queue("cruiser", category="ship")
+
+        # Standard: Metals ceil(6000/3000)=2, Exotics ceil(3000/3000)=1 → 2 turns
+        assert standard.construction_queue[0]["turns_remaining"] == 2
+        # Advanced: Metals ceil(6000/3000)=2, Exotics ceil(3000/1500)=2 → 2 turns
+        assert advanced.construction_queue[0]["turns_remaining"] == 2

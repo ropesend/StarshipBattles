@@ -31,7 +31,7 @@ def _make_source(
     source.context_type = context_type
     source.owner_entity = owner_entity if owner_entity is not None else MagicMock()
     source.display_name = "Test Location"
-    source.build_rate = 10
+    source.build_rate = {"Metals": 10.0}
     return source
 
 

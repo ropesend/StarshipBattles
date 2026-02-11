@@ -20,8 +20,12 @@ from game.ui.screens.empire_build_queue_window import BatchAddResult
 
 def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
                  context_type="planet", can_build_ships=False,
-                 can_build_complexes=True, queue_items=None) -> BuildQueueSource:
+                 can_build_complexes=True, queue_items=None,
+                 build_rate=None) -> BuildQueueSource:
     """Create a BuildQueueSource for testing."""
+    # Default to standard per-resource rates for testing
+    if build_rate is None:
+        build_rate = {"Metals": 2000.0, "Organics": 2000.0, "Radioactives": 2000.0, "Vapors": 2000.0, "Exotics": 2000.0}
     return BuildQueueSource(
         queue_id=queue_id,
         display_name=display_name,
@@ -30,6 +34,7 @@ def _make_source(queue_id="planet_1_base", display_name="Alpha - Base",
         can_build_ships=can_build_ships,
         can_build_complexes=can_build_complexes,
         context_type=context_type,
+        build_rate=build_rate,
     )
 
 
