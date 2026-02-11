@@ -16,7 +16,7 @@
 | 1. Ability Classes & Components | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Order Types & Commands | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Data Model Extensions | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Validators | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Validators | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Command Handlers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Order Processing (Turn Execution) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Input Actions & Key Bindings | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
@@ -25,11 +25,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 4 - Validators
-**Last Action:** Phase 3 complete - Added PlanetType.DYSON_SPHERE, Galaxy cleanup methods (unregister_planet, remove_warp_link, get_all_fleets_in_system), 6 new EventTypes, SUPERWEAPONS category, Dyson Sphere image registration
-**Next Action:** Begin Phase 4 - Create validators for superweapon orders
+**Active Phase:** Phase 5 - Command Handlers
+**Last Action:** Phase 4 complete - Created SuperweaponValidator with 7 validation methods (find_ship_with_ability, validate_implode_planet, validate_stellerate_star, validate_open_warp_point, validate_close_warp_point, validate_create_dyson_sphere, validate_self_destruct)
+**Next Action:** Begin Phase 5 - Create command handlers for superweapon orders
 **Blockers:** None
-**Context for Next Agent:** Baseline is 7871 tests passing (+18 Phase 3 tests, updated event type test assertions). Modified: planet.py, galaxy.py, event_types.py, planet_image_registry.py, test_event_types.py. Created: test_galaxy_cleanup.py (18 tests). Next: Phase 4 validators.
+**Context for Next Agent:** Created superweapon_validator.py (7 validators + _find_system_at_location helper). Created test_superweapon_validator.py (25 tests). Updated __init__.py to export SuperweaponValidator. 58 validation tests total passing. Next: Phase 5 command handlers.
 
 ## Overview
 Add 7 strategic superweapon abilities to the game: Destroy Planet, Destroy Star, Open Warp Point, Close Warp Point, Create Dyson Sphere, and Self-Destruct. Each feature includes a new ability class, component JSON definition, keyboard shortcut, strategy map order, command handler, and turn execution processing. These are galaxy-altering powers that follow the existing ability/component/order/command pipeline.
