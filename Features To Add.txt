@@ -28,8 +28,18 @@ Waypoint system - can be assigned to fleets, build queues.
 Warp - explicit command to move to a waypoint, then warp through it to the other side. - cannot be given to a fleed that can't warp
 
 
-I want to add several abilities/components/commands: 
 
+
+======================
+
+ad fuel up to their capacity
+- fuel should be shared between fleet ships
+
+************************************************************************************************************
+************************************************************************************************************
+ // Already AddedI want to add several abilities/components/commands: 
+
+=======================
 Destroy Planet
 	- New ability - destroy planet
 	- new component (Planet Imploder)
@@ -41,22 +51,27 @@ Destroy star
 	- New Order - Stellerate Star - press "s" then select a star, the ship should then get a new move order to the star, then destroy the star when it gets there.  When the star is destroyed it should eliminate the star, and all of the planets and ships in the starsystem, the only thing that should remain are the warp points.
 
 Open Warp Pooint
+	- New ability - open warp point
+	- New component - Quantum Tunnling Inverter
+	- New Order - Open Warp Point - press "o" then select a location, then select a target star system from some sort of dialog box. the ship should then get a new move order to the location then open the warp point when it gets there.  You will need to create both ends of the warp points, and they should be linked together.  The player will be able to select the location of one opening, but the location of the other will be based on the direction of the ship to the star system, and the other end should open at a typical distance from the star in that direction.  
 
 Close Warp point
-
-Destroy Blackhole
+	- New ability - close warp point
+	- New component - Quantum Tunnling Diverter
+	- New Order - Close Warp Point - press "l" then select a warp point, the ship should then get a new move order to the warp point then close the warp point when it gets there.  When the warp point on both sides of the link should be completely eliminated.
 
 Create Dyson Sphere
+	- New ability - create dyson sphere
+	- New component - Dyson Sphere Constructor
+	- New Order - Create Dyson Sphere - press "d" then select a star, the ship should then get a new move order to the star, then create the dyson sphere when it gets there.  When the dyson sphere is created it should eliminate the star, and all of the planets that are within 9 hexes of the star.  The Dyson sphere should be 15 hexes in diameter.  The dyson sphere should be treted as a colonizable planet.  Use this image: C:\Dev\Starship Battles\assets\Images\Stellar Objects\Sphere world\Sphereworld_Portrait.png
 
 Selfdestruct
+- New ability - selfdestruct
+- New component - Selfdestruct Device
+- New Order - Selfdestruct - press "x" then a dialog where you select a ship from the fleet that has a selfdestruct device.  The shp should destroy itself at the start of the next turn.
+
+
 ======================
-
-ad fuel up to their capacity
-- fuel should be shared between fleet ships
-
-************************************************************************************************************
-************************************************************************************************************
- // Already Added
 Design Details panel on the right of the Design Workshop, and on the right of the build queue, should be be created by the same code, both should show the same things, the design workshop panel is wider ( enough for 2 columns), this is the correct layout.  The Build queue list can be narrower to allow for a wider right panel.  The panel for the Build Queues will not need the warnings or requirements panels.
 
 ======================

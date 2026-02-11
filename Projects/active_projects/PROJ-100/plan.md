@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. T Key Input Mode + Keybinding Standardization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Transfer Dialog Size Fix | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Transfer Dialog Size Fix | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Drop/Load Quick Commands | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Tests for Drop/Load | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** T key now sets TRANSFER input mode; left-click opens dialog at clicked hex. Screen openers changed to Shift+P/E/R/D/B.
-**Next Action:** Begin Phase 2 - Transfer Dialog Size Fix
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** Transfer dialog size increased from 600x500 to 750x600 in strategy_window_manager.py
+**Next Action:** Begin Phase 3 - Drop/Load Quick Commands
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Tests now 7694 passed. T key enters TRANSFER mode, click selects target hex, dialog opens with clicked coordinates. Screen openers now require Shift modifier.
+**Context for Next Agent:** Phase 2 complete. Tests still 7694 passed. Dialog size change at line 326 in strategy_window_manager.py. All dialog elements use self.rect dimensions so auto-adjust.
 
 ## Overview
 Overhaul the cargo transfer order system to improve usability: (1) Change T key to use input-mode-then-click pattern for hex selection before opening the transfer dialog, (2) Fix transfer dialog clipping by increasing window size, (3) Add Drop (D) and Load (L) quick commands with simplified cargo dialogs, (4) Standardize keybindings so screen/menu openers use Shift+Key and fleet commands use plain keys.

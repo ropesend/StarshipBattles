@@ -8,20 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-100 Phase 1
-**Current Status:** PROJ-100 Phase 1 Complete - Ready for Phase 2
+**Last Completed:** PROJ-100 Phase 2
+**Current Status:** PROJ-100 Phase 2 Complete - Ready for Phase 3
 **Current Project:** PROJ-100
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 7694 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: T key input mode + keybinding standardization
-- T key now sets TRANSFER input mode (like M/J/C)
-- Left-click in TRANSFER mode opens dialog at clicked hex
-- Screen openers (P/E/R/D/B) now require Shift modifier
-- Updated 4 test files: transfer tests, hotkey tests, tooltip tests
-- Next: Phase 2 - Transfer Dialog Size Fix (600x500 → 750x600)
+- Phase 2 complete: Transfer dialog size increased 600x500 → 750x600
+- Modified: game/ui/screens/strategy_window_manager.py line 326
+- Dialog elements use self.rect dimensions, auto-adjust to new size
+- All 4 transfer dialog tests pass
+- Next: Phase 3 - Drop/Load Quick Commands (D/L keys)
 
 ---
 
@@ -543,6 +542,7 @@
 | 2026-02-10 | PROJ-99 | Phase 4 | Complete | 7691 passed | pending | Integration: window manager, event router, keyboard shortcut |
 | 2026-02-10 | PROJ-99 | Audit 1 | PASSED | 7691 passed | pending | All 5 goals verified, 32 tests pass |
 | 2026-02-10 | PROJ-100 | Phase 1 | Complete | 7694 passed | pending | T key→TRANSFER mode, Shift+P/E/R/D/B screen openers |
+| 2026-02-10 | PROJ-100 | Phase 2 | Complete | 7694 passed | pending | Transfer dialog size 600x500 → 750x600 |
 
 ---
 

@@ -323,7 +323,7 @@ class StrategyWindowManager:
 
         from game.ui.screens.transfer_dialog import TransferDialog
 
-        win_w, win_h = 600, 500
+        win_w, win_h = 750, 600
         win_rect = pygame.Rect(0, 0, win_w, win_h)
         win_rect.center = (self.width // 2, self.height // 2)
 
