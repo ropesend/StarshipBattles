@@ -8,10 +8,20 @@ Created as part of PROJ-89 Phase 3.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.build_queue_source import BuildQueueSource
+
+
+# Columns that should use numeric sorting (parse to float)
+NUMERIC_COLUMNS: set[str] = {
+    'queue_count', 'turns_left', 'build_rate',
+    'res_metals_rate', 'res_organics_rate', 'res_vapors_rate',
+    'res_radioactives_rate', 'res_exotics_rate',
+    'res_metals_total', 'res_organics_total', 'res_vapors_total',
+    'res_radioactives_total', 'res_exotics_total',
+}
 
 
 # Default column definitions for the empire build queue window
@@ -160,3 +170,52 @@ class BuildQueueFilterManager:
             'selected_index': -1,
             'selected_indices': set(),
         }
+
+    def sort_sources(
+        self,
+        sources: List[BuildQueueSource],
+        sort_column_id: str | None,
+        sort_descending: bool,
+        get_column_value_fn: Callable[[BuildQueueSource, str], str],
+    ) -> List[BuildQueueSource]:
+        """Sort sources by the specified column.
+
+        Args:
+            sources: List of sources to sort (modified in place).
+            sort_column_id: ID of column to sort by, or None for no sort.
+            sort_descending: Whether to sort in descending order.
+            get_column_value_fn: Function to get display value for a source/column.
+
+        Returns:
+            The sorted list (same reference as input).
+        """
+        if not sort_column_id:
+            return sources
+
+        # Check if column exists
+        col = next((c for c in self.columns if c['id'] == sort_column_id), None)
+        if not col:
+            return sources
+
+        is_numeric = sort_column_id in NUMERIC_COLUMNS
+
+        def sort_key(source: BuildQueueSource) -> Any:
+            """Generate sort key for a source."""
+            val = get_column_value_fn(source, sort_column_id)
+
+            if is_numeric:
+                # Parse to float, "-" or unparseable -> infinity (sorts last)
+                if val == "-" or val == "":
+                    return float('inf')
+                try:
+                    return float(val.replace(',', ''))
+                except (ValueError, AttributeError):
+                    return float('inf')
+            else:
+                # String sort: lowercase, "-" sorts after all other values
+                if val == "-":
+                    return ("\xff", val)  # Sort after everything
+                return (val.lower() if isinstance(val, str) else str(val).lower(), val)
+
+        sources.sort(key=sort_key, reverse=sort_descending)
+        return sources

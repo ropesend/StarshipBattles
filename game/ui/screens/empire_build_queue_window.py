@@ -52,6 +52,7 @@ RESOURCE_TOTAL_COLS = {
     'res_exotics_total': 'Exotics',
 }
 from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
+from game.ui.screens.planet_list_columns import ColumnManager
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
@@ -161,7 +162,11 @@ class EmpireBuildQueueWindow(UIWindow):
             container=self.main_panel,
             anchors={'left': 'left', 'right': 'right', 'top': 'top'},
         )
-        self._build_header_labels(manager, main_w)
+        self.column_mgr = ColumnManager(
+            self._filter_mgr.columns, manager,
+            self.header_container, self.header_height
+        )
+        self.column_mgr.rebuild_headers()
 
         # Scrollable list area
         self.list_view_rect = pygame.Rect(
@@ -188,28 +193,6 @@ class EmpireBuildQueueWindow(UIWindow):
 
         # Initial population
         self._refresh_list()
-
-    # -------------------------------------------------------------------
-    # Header
-    # -------------------------------------------------------------------
-
-    def _build_header_labels(self, manager: Any, main_w: int) -> None:
-        """Create column title labels in the header from visible columns."""
-        # Clear existing header labels
-        for child in getattr(self, '_header_labels', []):
-            child.kill()
-        self._header_labels: list = []
-
-        x = 10
-        for col in self._get_visible_columns():
-            lbl = UILabel(
-                relative_rect=pygame.Rect(x, 5, col['width'], 30),
-                text=col['title'],
-                manager=manager,
-                container=self.header_container,
-            )
-            self._header_labels.append(lbl)
-            x += col['width'] + 10
 
     # -------------------------------------------------------------------
     # List Population
@@ -499,8 +482,13 @@ class EmpireBuildQueueWindow(UIWindow):
         return handled
 
     def update(self, time_delta: float) -> None:
-        """Update loop - check scrollbar changes."""
+        """Update loop - check scrollbar and header button changes."""
         super().update(time_delta)
+
+        # Check for column header clicks (sort/reorder)
+        sort_changed, columns_changed = self.column_mgr.handle_header_clicks()
+        if columns_changed or sort_changed:
+            self._apply_sort_and_refresh()
 
         if self.scroll_bar.check_has_moved_recently():
             # Future: update visible rows for virtual scrolling
@@ -617,9 +605,26 @@ class EmpireBuildQueueWindow(UIWindow):
         and row display.
         """
         self.filtered_sources = self._filter_sources(self.all_sources)
+        # Apply current sort order
+        self._filter_mgr.sort_sources(
+            self.filtered_sources,
+            self.column_mgr.sort_column_id,
+            self.column_mgr.sort_descending,
+            self._get_column_value,
+        )
         self.selected_source = None
         self.selected_index = -1
         self.selected_indices = set()
+        self._refresh_list()
+
+    def _apply_sort_and_refresh(self) -> None:
+        """Apply current sort order to filtered sources and refresh display."""
+        self._filter_mgr.sort_sources(
+            self.filtered_sources,
+            self.column_mgr.sort_column_id,
+            self.column_mgr.sort_descending,
+            self._get_column_value,
+        )
         self._refresh_list()
 
     # -------------------------------------------------------------------
@@ -671,7 +676,7 @@ class EmpireBuildQueueWindow(UIWindow):
                 label = col['title'] or col['id']
                 btn.set_text(f"{prefix} {label}")
                 # Rebuild header and list with new column visibility
-                self._build_header_labels(self.ui_manager, 0)
+                self.column_mgr.rebuild_headers()
                 self._refresh_list()
                 return
 
@@ -849,6 +854,8 @@ class EmpireBuildQueueWindow(UIWindow):
         for elem in self.row_elements:
             elem.kill()
         self.row_elements.clear()
+
+        self.column_mgr.kill()
 
         if self.on_close_callback:
             self.on_close_callback()

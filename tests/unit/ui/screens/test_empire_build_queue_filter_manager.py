@@ -11,6 +11,7 @@ from unittest.mock import MagicMock
 from game.ui.screens.empire_build_queue_filter_manager import (
     BuildQueueFilterManager,
     DEFAULT_COLUMNS,
+    NUMERIC_COLUMNS,
 )
 
 
@@ -309,3 +310,145 @@ class TestResetSelectionState:
         state2 = mgr.reset_selection_state()
         state1['selected_indices'].add(5)
         assert 5 not in state2['selected_indices']
+
+
+class TestSortSources:
+    """Tests for sort_sources method."""
+
+    def test_sort_by_location_ascending(self):
+        """Alphabetical sort A->Z on location column."""
+        mgr = BuildQueueFilterManager()
+        sources = [
+            _make_source("Zeta Base"),
+            _make_source("Alpha Station"),
+            _make_source("Charlie Yard"),
+        ]
+        # Map source names to column values
+        values = {
+            "Zeta Base": "Zeta Base",
+            "Alpha Station": "Alpha Station",
+            "Charlie Yard": "Charlie Yard",
+        }
+        get_val = lambda s, col: values.get(s.display_name, "-")
+        result = mgr.sort_sources(sources, 'location', False, get_val)
+        assert [s.display_name for s in result] == ["Alpha Station", "Charlie Yard", "Zeta Base"]
+
+    def test_sort_by_location_descending(self):
+        """Alphabetical sort Z->A on location column."""
+        mgr = BuildQueueFilterManager()
+        sources = [
+            _make_source("Alpha Station"),
+            _make_source("Zeta Base"),
+            _make_source("Charlie Yard"),
+        ]
+        values = {
+            "Zeta Base": "Zeta Base",
+            "Alpha Station": "Alpha Station",
+            "Charlie Yard": "Charlie Yard",
+        }
+        get_val = lambda s, col: values.get(s.display_name, "-")
+        result = mgr.sort_sources(sources, 'location', True, get_val)
+        assert [s.display_name for s in result] == ["Zeta Base", "Charlie Yard", "Alpha Station"]
+
+    def test_sort_by_queue_count_numeric(self):
+        """Numeric sort on queue_count column, '-' sorts to bottom."""
+        mgr = BuildQueueFilterManager()
+        sources = [
+            _make_source("Three"),
+            _make_source("One"),
+            _make_source("Empty"),
+            _make_source("Ten"),
+        ]
+        values = {
+            "Three": "3",
+            "One": "1",
+            "Empty": "-",
+            "Ten": "10",
+        }
+        get_val = lambda s, col: values.get(s.display_name, "-")
+        result = mgr.sort_sources(sources, 'queue_count', False, get_val)
+        # Ascending: 1, 3, 10, then "-" last
+        assert [s.display_name for s in result] == ["One", "Three", "Ten", "Empty"]
+
+    def test_sort_by_turns_left_numeric(self):
+        """Numeric sort on turns_left column."""
+        mgr = BuildQueueFilterManager()
+        sources = [
+            _make_source("Long"),
+            _make_source("Short"),
+            _make_source("Medium"),
+        ]
+        values = {
+            "Long": "15",
+            "Short": "2",
+            "Medium": "7",
+        }
+        get_val = lambda s, col: values.get(s.display_name, "-")
+        result = mgr.sort_sources(sources, 'turns_left', False, get_val)
+        assert [s.display_name for s in result] == ["Short", "Medium", "Long"]
+
+    def test_sort_by_resource_rate_numeric(self):
+        """Resource rate column sorted numerically."""
+        mgr = BuildQueueFilterManager()
+        sources = [
+            _make_source("High"),
+            _make_source("Low"),
+            _make_source("Mid"),
+        ]
+        values = {
+            "High": "500",
+            "Low": "25",
+            "Mid": "100",
+        }
+        get_val = lambda s, col: values.get(s.display_name, "-")
+        result = mgr.sort_sources(sources, 'res_metals_rate', False, get_val)
+        assert [s.display_name for s in result] == ["Low", "Mid", "High"]
+
+    def test_sort_no_column_id_unchanged(self):
+        """None sort_column_id returns unchanged list."""
+        mgr = BuildQueueFilterManager()
+        sources = [_make_source("B"), _make_source("A"), _make_source("C")]
+        original_order = [s.display_name for s in sources]
+        get_val = lambda s, col: s.display_name
+        result = mgr.sort_sources(sources, None, False, get_val)
+        assert [s.display_name for s in result] == original_order
+
+    def test_sort_unknown_column_unchanged(self):
+        """Unknown column ID returns unchanged list."""
+        mgr = BuildQueueFilterManager()
+        sources = [_make_source("B"), _make_source("A"), _make_source("C")]
+        original_order = [s.display_name for s in sources]
+        get_val = lambda s, col: s.display_name
+        result = mgr.sort_sources(sources, 'nonexistent_column', False, get_val)
+        assert [s.display_name for s in result] == original_order
+
+    def test_sort_dash_values_last(self):
+        """'-' values sort after real values in both ascending and descending."""
+        mgr = BuildQueueFilterManager()
+        sources = [
+            _make_source("Dash1"),
+            _make_source("Alpha"),
+            _make_source("Dash2"),
+            _make_source("Beta"),
+        ]
+        values = {
+            "Dash1": "-",
+            "Alpha": "Alpha",
+            "Dash2": "-",
+            "Beta": "Beta",
+        }
+        get_val = lambda s, col: values.get(s.display_name, "-")
+
+        # Ascending: real values sorted, then dashes
+        result_asc = mgr.sort_sources(list(sources), 'location', False, get_val)
+        names_asc = [s.display_name for s in result_asc]
+        # Alpha and Beta should come before Dash1 and Dash2
+        assert names_asc.index("Alpha") < names_asc.index("Dash1")
+        assert names_asc.index("Beta") < names_asc.index("Dash2")
+
+        # Descending: dashes first (reversed infinity), then real values reversed
+        result_desc = mgr.sort_sources(list(sources), 'location', True, get_val)
+        names_desc = [s.display_name for s in result_desc]
+        # When descending, dash values (\xff) come first
+        assert names_desc[0] in ["Dash1", "Dash2"]
+        assert names_desc[1] in ["Dash1", "Dash2"]

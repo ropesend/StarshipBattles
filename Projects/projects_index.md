@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-100 | Cargo Transfer Orders Overhaul | Planning | 2026-02-10 | 2026-02-10 |
+| PROJ-99 | Empire Panel Window | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-98 | Empire Build Yards Screen Enhancement | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-97 | Per-Resource Production Rate Limits for Build Queues | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-96 | Species Setup Ships View Layout Redesign | Plan Approved | 2026-02-10 | 2026-02-10 |
@@ -195,7 +197,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-99
+## Next Project ID: PROJ-101
 
 ---
 

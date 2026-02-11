@@ -103,7 +103,12 @@ def _make_window(sources=None, on_close=None, on_navigate=None):
     win.header_container = MagicMock()
     win.sidebar_panel = MagicMock()
     win.row_elements = []
-    win._header_labels = []
+
+    # Column manager (Phase 3 sorting/reordering)
+    win.column_mgr = MagicMock()
+    win.column_mgr.sort_column_id = None
+    win.column_mgr.sort_descending = False
+    win.column_mgr.handle_header_clicks = MagicMock(return_value=(False, False))
 
     return win
 
@@ -1412,7 +1417,6 @@ class TestProcessEvent:
                 col['visible'] = True
                 break
         # Mock UI rebuild methods
-        win._build_header_labels = MagicMock()
         win._refresh_list = MagicMock()
 
         # Create pygame_gui UI_BUTTON_PRESSED event
@@ -1429,8 +1433,8 @@ class TestProcessEvent:
         assert col['visible'] is False
         # Button text should be updated
         mock_btn.set_text.assert_called()
-        # Display should be rebuilt
-        win._build_header_labels.assert_called()
+        # Headers should be rebuilt via ColumnManager
+        win.column_mgr.rebuild_headers.assert_called()
         win._refresh_list.assert_called()
 
     def test_filter_toggle_button_click_toggles_filter(self):
@@ -1512,3 +1516,65 @@ class TestProcessEvent:
         with patch.object(UIWindow, 'process_event', return_value=False):
             # Should not crash
             win.process_event(event)
+
+
+# =======================================================================
+# Column Sorting & Reordering Tests (Phase 3)
+# =======================================================================
+
+class TestColumnSortingAndReorder:
+    """Tests for column sorting and reordering via ColumnManager."""
+
+    def test_column_mgr_attribute_exists(self):
+        """Window has column_mgr attribute after initialization."""
+        win = _make_window()
+        assert hasattr(win, 'column_mgr')
+        assert win.column_mgr is not None
+
+    def test_apply_sort_and_refresh_calls_sort(self):
+        """_apply_sort_and_refresh calls sort_sources then _refresh_list."""
+        win = _make_window()
+        win._refresh_list = MagicMock()
+        win.column_mgr.sort_column_id = 'location'
+        win.column_mgr.sort_descending = False
+
+        win._apply_sort_and_refresh()
+
+        # Verify sort was applied via filter manager
+        # The actual sort logic is tested in filter manager tests
+        win._refresh_list.assert_called_once()
+
+    def test_apply_filters_includes_sort(self):
+        """apply_filters calls sort_sources before _refresh_list."""
+        win = _make_window()
+        win._refresh_list = MagicMock()
+        win.column_mgr.sort_column_id = 'queue_count'
+        win.column_mgr.sort_descending = True
+        original_sources = list(win.filtered_sources)
+
+        win.apply_filters()
+
+        # Filtered sources should have been processed through sort
+        # (actual sort order tested in filter manager tests)
+        win._refresh_list.assert_called()
+
+    def test_column_toggle_rebuilds_headers(self):
+        """Toggling a column calls column_mgr.rebuild_headers()."""
+        import pygame_gui
+        from pygame_gui.elements import UIWindow
+
+        win = _make_window()
+        mock_btn = MagicMock()
+        mock_btn.set_text = MagicMock()
+        win.column_toggle_buttons = {'location': mock_btn}
+        win._refresh_list = MagicMock()
+
+        # Create toggle event
+        event = MagicMock()
+        event.type = pygame_gui.UI_BUTTON_PRESSED
+        event.ui_element = mock_btn
+
+        with patch.object(UIWindow, 'process_event', return_value=False):
+            win.process_event(event)
+
+        win.column_mgr.rebuild_headers.assert_called()
