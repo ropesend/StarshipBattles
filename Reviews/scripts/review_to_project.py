@@ -348,7 +348,7 @@ def parse_report(report_path: Path) -> dict:
     # Format 1 (PRIMARY): 5-column findings table from compile_findings.py
     # | ID | Severity | Title | Location | Effort |
     table_5col_pattern = re.compile(
-        r'\|\s*([A-Z]+-\d+)\s*\|'           # ID: AR-01, MOD-SIM-04, etc.
+        r'\|\s*([A-Z]+-(?:[A-Z0-9]+-)*\d+)\s*\|'  # ID: AR-01, ADR-FND-001, etc.
         r'\s*([^|]+)\|'                      # Severity: Critical, Major, etc.
         r'\s*([^|]+)\|'                      # Title: description
         r'\s*([^|]+)\|'                      # Location: file.py:line or file.py
@@ -367,9 +367,16 @@ def parse_report(report_path: Path) -> dict:
         if finding_id.upper() == 'ID' or severity_raw.lower() == 'severity':
             continue
 
+        # Validate this is a true 5-column row by checking that col2
+        # contains a known severity keyword. 4-column rows (no severity
+        # column) can falsely match the 5-column pattern.
+        severity_normalized = normalize_severity(severity_raw)
+        if severity_normalized == 'Unknown':
+            continue
+
         findings.append({
             'id': finding_id,
-            'severity': normalize_severity(severity_raw),
+            'severity': severity_normalized,
             'title': title,
             'location': location.strip('`'),  # Remove backticks if present
             'effort': normalize_effort(effort_raw),
@@ -379,7 +386,7 @@ def parse_report(report_path: Path) -> dict:
     # | ID | Title | `location` | Effort |
     if not findings:
         table_4col_pattern = re.compile(
-            r'\|\s*([A-Z]+-\d+)\s*\|\s*([^|]+)\|\s*`?([^|`]+)`?\s*\|\s*(\w+)\s*\|'
+            r'\|\s*([A-Z]+-(?:[A-Z0-9]+-)*\d+)\s*\|\s*([^|]+)\|\s*`?([^|`]+)`?\s*\|\s*(\w+)\s*\|'
         )
 
         for match in table_4col_pattern.finditer(findings_section):
@@ -665,12 +672,111 @@ def generate_handoff(review_folder: Path, selected_ids: list = None) -> str:
     return handoff
 
 
+SHARD_NAMES = {
+    'FND': 'Foundation',
+    'SIM': 'Simulation',
+    'STR': 'Strategy',
+    'UI2': 'UI-Framework',
+    'UI1': 'UI-Screens',
+}
+
+# Ordered by dependency: foundation first, UI last
+SHARD_ORDER = ['FND', 'SIM', 'STR', 'UI2', 'UI1']
+
+
+def _extract_shard(finding_id: str) -> str:
+    """Extract shard suffix from a finding ID like ADR-FND-001."""
+    parts = finding_id.split('-')
+    if len(parts) >= 2 and parts[1] in SHARD_NAMES:
+        return parts[1]
+    return 'UNK'
+
+
+def _build_phases_by_severity(selected: list) -> list:
+    """Group findings into phases by severity (original behavior)."""
+    critical = [f for f in selected if f.get('severity') == 'Critical']
+    major = [f for f in selected if f.get('severity') == 'Major']
+    other = [f for f in selected if f.get('severity') not in ('Critical', 'Major')]
+
+    phases = []
+    if critical:
+        phases.append({
+            'name': 'Critical Fixes',
+            'priority': 'Immediate',
+            'objective': 'Address critical severity findings that pose immediate risk',
+            'findings': critical,
+        })
+    if major:
+        phases.append({
+            'name': 'Major Issues',
+            'priority': 'High',
+            'objective': 'Address major severity findings that significantly impact quality',
+            'findings': major,
+        })
+    if other:
+        phases.append({
+            'name': 'Cleanup',
+            'priority': 'Normal',
+            'objective': 'Address remaining findings for overall improvement',
+            'findings': other,
+        })
+    return phases
+
+
+def _build_phases_by_shard(selected: list) -> list:
+    """Group findings into phases by module shard."""
+    from collections import defaultdict
+
+    by_shard = defaultdict(list)
+    for f in selected:
+        shard = _extract_shard(f.get('id', ''))
+        by_shard[shard].append(f)
+
+    phases = []
+    for shard_id in SHARD_ORDER:
+        if shard_id in by_shard:
+            shard_name = SHARD_NAMES[shard_id]
+            findings = by_shard[shard_id]
+            crit_count = sum(
+                1 for f in findings if f.get('severity') == 'Critical'
+            )
+            priority = 'High' if crit_count > 0 else 'Normal'
+            phases.append({
+                'name': shard_name,
+                'priority': priority,
+                'objective': (
+                    f'Address findings in the {shard_name} module '
+                    f'({len(findings)} findings, '
+                    f'{crit_count} critical)'
+                ),
+                'findings': findings,
+            })
+
+    # Handle unknown shard findings
+    unknown = by_shard.get('UNK', [])
+    if unknown:
+        phases.append({
+            'name': 'Other',
+            'priority': 'Normal',
+            'objective': 'Address findings not mapped to a specific shard',
+            'findings': unknown,
+        })
+
+    return phases
+
+
 def create_project_from_review(
     review_folder: Path,
     selected_ids: list = None,
-    title: str = None
+    title: str = None,
+    phase_by: str = 'severity',
 ) -> tuple[str, Path]:
     """Create a full project structure from review findings.
+
+    Args:
+        phase_by: How to group findings into phases.
+            'severity' — phases by Critical/Major/Other (default).
+            'shard' — phases by module shard (FND/SIM/STR/UI2/UI1).
 
     Returns tuple of (project_id, project_dir).
     """
@@ -751,34 +857,16 @@ def create_project_from_review(
     print(f"  Created: {project_dir}")
     print(f"  Created: {findings_dir}")
 
-    # Group findings by severity for phasing
+    # Build phases list based on grouping strategy
+    if phase_by == 'shard':
+        phases = _build_phases_by_shard(selected)
+    else:
+        phases = _build_phases_by_severity(selected)
+
+    # For severity counts used later in design.md
     critical = [f for f in selected if f.get('severity') == 'Critical']
     major = [f for f in selected if f.get('severity') == 'Major']
     other = [f for f in selected if f.get('severity') not in ('Critical', 'Major')]
-
-    # Build phases list
-    phases = []
-    if critical:
-        phases.append({
-            'name': 'Critical Fixes',
-            'priority': 'Immediate',
-            'objective': 'Address critical severity findings that pose immediate risk',
-            'findings': critical
-        })
-    if major:
-        phases.append({
-            'name': 'Major Issues',
-            'priority': 'High',
-            'objective': 'Address major severity findings that significantly impact quality',
-            'findings': major
-        })
-    if other:
-        phases.append({
-            'name': 'Cleanup',
-            'priority': 'Normal',
-            'objective': 'Address remaining findings for overall improvement',
-            'findings': other
-        })
 
     # Generate phase table for plan.md
     phase_table_lines = []
@@ -1023,6 +1111,9 @@ If --findings is not specified, all Critical and Major findings are used.
     parser.add_argument('--dry-run', '-n',
                         action='store_true',
                         help='Show what would be parsed without creating any files')
+    parser.add_argument('--phase-by',
+                        choices=['severity', 'shard'], default='severity',
+                        help='How to group findings into phases (default: severity)')
 
     args = parser.parse_args()
 
@@ -1072,7 +1163,8 @@ If --findings is not specified, all Critical and Major findings are used.
         project_id, project_dir = create_project_from_review(
             folder_path,
             selected_ids,
-            args.title
+            args.title,
+            phase_by=args.phase_by,
         )
 
         print(f"\n{'=' * 60}")

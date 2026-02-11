@@ -157,6 +157,11 @@ class Fleet:
         return [s for s in self.ships if s.is_combat_capable()]
 
     @property
+    def capabilities(self) -> 'FleetCapabilityCalculator':
+        """Public access to fleet capability queries."""
+        return self._capabilities
+
+    @property
     def has_space_shipyard(self) -> bool:
         """Check if fleet has an operational space shipyard."""
         return self._capabilities.has_space_shipyard

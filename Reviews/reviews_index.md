@@ -13,7 +13,7 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
-| 2026-02-10 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-10_sweep_full-codebase-sweep](results/2026-02-10_sweep_full-codebase-sweep/) |
+| 2026-02-10 | Sweep Review | full-codebase-sweep | Led to Project | [2026-02-10_sweep_full-codebase-sweep](results/2026-02-10_sweep_full-codebase-sweep/) |
 | 2026-02-10 | General Review | resource-state-duplication-audit | In Progress | [2026-02-10_general_resource-state-duplication-audit](results/2026-02-10_general_resource-state-duplication-audit/) |
 | 2026-02-07 | General Review | rust-bevy-migration-feasibility | In Progress | [2026-02-07_general_rust-bevy-migration-feasibility](results/2026-02-07_general_rust-bevy-migration-feasibility/) |
 | 2026-02-01 | General Review | Full Codebase Health Check | In Progress | [2026-02-01_general_full-codebase-health-check](results/2026-02-01_general_full-codebase-health-check/) |
@@ -55,6 +55,12 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 | 2026-01-24_general_full-codebase-maintainability | PROJ-12 | God Class Decomposition (Ship, TurnEngine, RaceSetupScreen) |
 | 2026-01-24_general_full-codebase-maintainability | PROJ-13 | Code Quality & Documentation (remaining findings) |
 | 2026-01-27_general_path-centralization | PROJ-39 | Path Centralization (47+ hardcoded paths → single source of truth) |
+| 2026-02-10_sweep_full-codebase-sweep | PROJ-106 | Architecture Layer Violations (15 findings) |
+| 2026-02-10_sweep_full-codebase-sweep | PROJ-107 | Consistency & API Standardization (85 findings) |
+| 2026-02-10_sweep_full-codebase-sweep | PROJ-108 | Duplication Elimination (40 findings) |
+| 2026-02-10_sweep_full-codebase-sweep | PROJ-109 | Legacy Cleanup (48 findings) |
+| 2026-02-10_sweep_full-codebase-sweep | PROJ-110 | Test Coverage - Core Systems (54 findings) |
+| 2026-02-10_sweep_full-codebase-sweep | PROJ-111 | Test Coverage - UI & Framework (41 findings) |
 
 ---
 

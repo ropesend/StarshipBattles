@@ -10,8 +10,8 @@
 **Last Session:** 2026-02-10
 **Last Completed:** PROJ-104 Audit PASSED
 **Current Status:** PROJ-104 Complete — Awaiting User Verification
-**Current Project:** None (all projects complete)
-**Current Phase:** N/A
+**Current Project:** PROJ-106 (next in queue)
+**Current Phase:** Not Started
 **Test Status:** 8167 passed
 **Active Blockers:** None
 
@@ -157,6 +157,54 @@
   - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-104/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-104/plan.md)
   - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-106: Architecture Layer Violations**
+  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-106/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-106/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-107: Consistency & API Standardization**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-108: Duplication Elimination**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-108/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-108/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-109: Legacy Cleanup**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-109/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-109/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-110: Test Coverage - Core Systems**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-110/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-110/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-111: Test Coverage - UI & Framework**
+  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-111/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-111/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---

@@ -1,6 +1,6 @@
 ---
 name: sweep-all
-description: Fire-and-forget parallel codebase sweep — launches 25 agents across 5 sweep types and 5 module shards
+description: Fire-and-forget parallel codebase sweep — launches 25 agents across 5 sweep types and 5 module shards, then generates prospective projects for user approval
 disable-model-invocation: true
 argument-hint: [optional: directory scope, e.g., game/simulation/]
 ---
@@ -114,16 +114,83 @@ Read the compiled `report.md` and present to the user:
 3. **Findings by shard** (which module is most problematic?)
 4. **Top 10 priority issues** across all sweeps
 5. **Path to full report**: `Reviews/results/{REVIEW_FOLDER}/report.md`
-6. **Next step suggestion**: If Critical or Major findings exist, suggest:
-   ```
-   To convert these findings into a project:
-   python Reviews/scripts/review_to_project.py {REVIEW_FOLDER}
-   ```
+
+Announce: "Sweep complete. Generating prospective project proposals..."
+
+### Step 11: Scaffold Prospective Projects
+
+Run:
+```bash
+python Reviews/scripts/generate_prospective_projects.py Reviews/results/{REVIEW_FOLDER}
+```
+
+This parses all findings into structured JSON, checks for overlapping existing projects, and creates the `prospective_projects/` directory structure that the project generation agent will populate.
+
+If the `prospective_projects/` directory already exists from a previous run, add `--force` to overwrite.
+
+### Step 12: Launch Project Generation Agent
+
+Read the prompt file `Reviews/Prompts/Sweep - Generate Projects.txt`.
+
+Launch **1 general-purpose agent** using a single Task tool call:
+
+**Agent configuration:**
+- `subagent_type`: `general-purpose`
+- `description`: "Generate prospective projects from sweep"
+- `prompt`: The prompt file content with these placeholders replaced:
+  - `{REVIEW_FOLDER}` -> Full path to the review folder (e.g., `Reviews/results/2026-02-10_sweep_full-codebase-sweep`)
+  - `{REVIEW_FOLDER_NAME}` -> Just the folder name (e.g., `2026-02-10_sweep_full-codebase-sweep`)
+  - `{PROSPECTIVE_DIR}` -> Full path to `Reviews/results/{REVIEW_FOLDER}/prospective_projects`
+- `mode`: `bypassPermissions` (the agent needs to write files into the prospective_projects directory)
+
+Wait for the agent to complete.
+
+**Verify outputs:** Check that `prospective_projects/summary.md` exists and is non-empty. Check that at least 1 project subdirectory exists with `proposal.md` and `findings.json` files. If the agent failed to produce output, note the failure and skip to Step 14 with a message to the user.
+
+### Step 13: Present Proposals to User
+
+Read `prospective_projects/summary.md` and present the comparison table to the user.
+
+For each proposed project, show:
+- Project title
+- Number of findings by severity (Critical/Major/Minor/Info)
+- Affected modules
+- Estimated scope (Small/Medium/Large)
+- Any overlap warnings with existing projects
+
+Then ask the user which projects to approve. Use AskUserQuestion or accept free-text input. Valid responses:
+- **"all"** — approve all proposed projects
+- **"none"** — reject all (skip project creation)
+- **Comma-separated slugs or numbers** — e.g., "1,3,5" or "architecture,legacy"
+- **Individual names** — e.g., "architecture" (partial matching supported)
+
+**This is the ONE interactive step in the entire sweep workflow.** Everything before and after is automated.
+
+### Step 14: Execute Approvals
+
+Based on the user's response from Step 13:
+
+**If the user approved any projects**, run:
+```bash
+python Reviews/scripts/approve_prospective_projects.py Reviews/results/{REVIEW_FOLDER} --approve "{USER_SELECTIONS}"
+```
+
+This calls `review_to_project.py` for each approved project with the appropriate `--findings` and `--title` flags, creating real PROJ-XX entries in the project system. Rejected proposals are moved to `rejected_projects/`.
+
+**If the user selected "none"**, announce that no projects were created and the proposals remain in `prospective_projects/` for future reference.
+
+Present the final summary:
+1. **Created projects** with their PROJ-XX IDs
+2. **Rejected proposals** (stored in `rejected_projects/` for future reference)
+3. **Total findings** covered by created projects
+4. **Next step**: "Use 'Continue Project' prompt with any of the created project IDs to begin implementation."
 
 ## Constraints
 
-- Do NOT ask the user any questions during execution
+- Do NOT ask the user any questions during Steps 1-12 (fire-and-forget)
 - Do NOT wait for user input between waves
 - Do NOT skip any agent -- all 25 MUST run (or all 5 if scope-narrowed)
 - If an agent fails retry, note it in the summary but continue with remaining waves
 - Announce progress between waves: "Wave 1/5 complete (Duplication). Starting Wave 2 (Legacy Holdovers)..."
+- Step 13 is the ONLY interactive step -- present proposals and get approval before creating projects
+- Do NOT create real projects without user approval

@@ -1,10 +1,24 @@
+1) The planet details window in teh Planets List should eb the same dimaensions as the planet details panel on the main strategy layer.  currently the 1st is much shorter than the latter.  Also when the planets window is resized, the planet details panel should move with it.
 
+2) On the Species Setup Window the Load Saved Species from the summary tab does not actually load anything, it opens a dialog that lets me see the various species to load, but wht I actuually select one and click load , the dialog closes and nothing is loaded.
 
+3) NIT TAKES A LONG TIME TO FOR THE lOAD design window to load from the design workshop, I'm wondering if it is the image processing for the icons
 
+4) The Fleet Report should also have a column for the following: Can Destroy planet, Can open warp point, can cloase warp point, can destroy star. Can create sphere world, these are all things that should allow filtering as well
+
+5) When I order a ship with a warp gate closer on it to close a warp point, nothing happens
 
 
 
 Reported:
+
+
+2) i WANT PRE MADE DESIGNS FOR BOTH QUICKSTART AND THE NEW GAME OPTIONS.  allplayers should start with the following designs:
+- 1 of each colony ship - should move at 5 hex / turn, Destroyer sized, needs fuel, battery, warp drive, passenger component
+- 1 "General Purpose Ship" - Light Cruser Sized, 5 hex per turn speed, 2x space yards, 1 warp drive, battery, fuel, crew, life support.
+- 1 of each of the stellar manipulation ships, open warp point, close warp point, destroy planet, destroy star, create sphere world...
+- you can name the designs something simple but descriptive
+
 
 Fleet Report SCreen:
 1) I can no longer select a specific ship from the fleet report, I should be able to click on a ship in the fleet and see it pop up to the right in the design details panel.  This panel should be the same one that in in the Build Queue, and in the Design Workshop (same code)  You will need to make the Fleet list of ships snarrower to make room, remember we are tageting a min 2560x1600 resolution.

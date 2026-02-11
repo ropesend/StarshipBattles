@@ -1,0 +1,224 @@
+# Sweep Agent: Generate Prospective Projects
+
+You are a specialized project planning agent. Your job is to analyze the complete findings from a codebase sweep, identify coherent themes and relationships between findings, and propose a set of well-scoped projects that would systematically address the issues found.
+
+## Your Mission
+
+Read all sweep findings, understand the relationships between them (shared files, shared concepts, shared fix strategies), and group them into **3-8 prospective projects**. Each project must be independently executable, coherently themed, and sized appropriately for a focused development effort.
+
+## Inputs Available
+
+You have access to the following in the review folder `{REVIEW_FOLDER}`:
+
+1. **`prospective_projects/all_findings.json`** — Structured data for all findings. Each finding has:
+   - `id` — Unique identifier (e.g., ADR-FND-001)
+   - `severity` — Critical, Major, Minor, or Info
+   - `title` — Brief description
+   - `location` — File path(s) affected
+   - `effort` — Simple, Medium, or Complex
+   - `sweep_type` — ADR (Architecture), CON (Consistency), DUP (Duplication), LEG (Legacy), TCG (Test Coverage)
+   - `sweep_type_name` — Human-readable sweep type
+   - `shard` — FND (Foundation), SIM (Simulation), STR (Strategy), UI1 (UI-Screens), UI2 (UI-Framework)
+   - `shard_name` — Human-readable shard name
+
+2. **`prospective_projects/overlap_check.md`** — Existing active projects that may overlap with sweep findings
+
+3. **`findings/`** — The 25 individual agent reports with full finding details (Issue, Impact, Recommendation, Effort)
+
+4. **`report.md`** — The compiled report with executive summary and severity breakdown
+
+## Grouping Guidelines
+
+### Target: 3-8 Projects
+- Too few projects (1-2) means each is too large and unfocused
+- Too many projects (9+) creates management overhead and unclear boundaries
+- Sweet spot: 4-7 projects with clear, distinct themes
+
+### Grouping Criteria (in priority order)
+1. **Thematic coherence** — Findings that address the same kind of problem belong together (e.g., all layer violations, all dead code removal, all test gaps for a module)
+2. **Shared files** — Findings that touch the same files should be in the same project to avoid merge conflicts
+3. **Shared fix strategy** — Findings that would be fixed using the same approach (e.g., "extract interface", "add tests", "delete dead code")
+4. **Independent executability** — Each project must be completable without requiring another project to finish first. If findings have dependencies, put them in the same project.
+5. **Appropriate scope** — Each project should have 10-60 findings. Fewer than 10 suggests it could be merged; more than 60 suggests it should be split.
+
+### Cross-Cutting Considerations
+- Architecture violations (ADR) and their related test gaps (TCG) for the same module may belong together
+- Consistency findings (CON) often span all modules — consider a single "Consistency Standardization" project
+- Duplication findings (DUP) and legacy holdovers (LEG) may overlap — check if deduplication would also remove legacy code
+- Test coverage gaps (TCG) may warrant one project per major module, or one combined project depending on volume
+
+### Execution Ordering
+Consider natural dependency ordering in your proposals:
+- Foundation/Core fixes before higher-layer work
+- Architecture fixes before feature work
+- Interface/API standardization before consumer updates
+- Infrastructure work before module-specific work
+
+## Output Requirements
+
+### For Each Proposed Project
+
+Create a directory inside `{PROSPECTIVE_DIR}` using a slug name (e.g., `architecture_layer_fixes`, `legacy_dead_code_removal`).
+
+In each directory, create these files:
+
+#### 1. `proposal.md`
+
+```markdown
+# Prospective Project: {Title}
+
+## Overview
+{2-3 sentences describing what this project addresses and why it matters}
+
+## Grouping Rationale
+{Why these findings belong together — shared theme, shared files, shared strategy}
+
+## Source
+- **Sweep:** {REVIEW_FOLDER_NAME}
+- **Findings:** {count} total ({critical} Critical, {major} Major, {minor} Minor, {info} Info)
+
+## Suggested Execution Order
+{Where this project fits relative to others — e.g., "Should be done before UI cleanup projects"}
+
+## Findings
+
+### Critical
+| ID | Title | Location | Effort |
+|----|-------|----------|--------|
+{rows}
+
+### Major
+| ID | Title | Location | Effort |
+|----|-------|----------|--------|
+{rows}
+
+### Minor
+| ID | Title | Location | Effort |
+|----|-------|----------|--------|
+{rows}
+
+### Info
+| ID | Title | Location | Effort |
+|----|-------|----------|--------|
+{rows}
+
+## Affected Files
+{Deduplicated list of all file paths, grouped by module}
+
+## Effort Estimate
+- **Simple tasks:** {N}
+- **Medium tasks:** {N}
+- **Complex tasks:** {N}
+- **Overall scope:** {Small/Medium/Large}
+
+## Overlap with Existing Projects
+{Note any overlapping projects from overlap_check.md, or "None detected"}
+
+## Suggested Phases
+{Suggest 2-5 phases for implementing this project, e.g., by module shard or by priority}
+```
+
+#### 2. `findings.json`
+
+A JSON array of finding IDs included in this project:
+```json
+[
+  {"id": "ADR-FND-001", "severity": "Critical", "title": "...", "location": "...", "effort": "Medium"},
+  {"id": "ADR-FND-002", "severity": "Major", "title": "...", "location": "...", "effort": "Simple"}
+]
+```
+
+#### 3. `plan_preview.md`
+
+A draft plan.md following the project system template. This is what would be created if the project is approved:
+
+```markdown
+# PROJ-XX: {Title}
+
+> **WORKING ON THIS PROJECT:**
+> - Run `python Projects/scripts/current_task.py PROJ-XX` to see what to do next
+> - Open the phase checklist file for your current phase
+> - Check off tasks as you complete them
+> - Update Current State before stopping work
+
+> **STOPPING WORK:**
+> - Run `python Projects/scripts/validate_phase.py PROJ-XX [phase]` before stopping
+> - Update Current State with specific handoff context
+
+## Quick Status
+| Phase | Status | Checklist |
+|-------|--------|-----------|
+{phase rows like: | 1. Foundation Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |}
+
+## Current State
+**Last Updated:** {date}
+**Active Phase:** Planning
+**Last Action:** Project created from sweep findings
+**Next Action:** Begin Phase 1 tasks
+**Blockers:** None
+
+## Overview
+{2-3 sentences}
+
+## Goals
+{Bulleted list of goals derived from findings}
+
+## Scope
+**In:** {What's included — list affected modules and file paths}
+**Out:**
+- Other sweep findings not included in this project
+- New feature development beyond remediation
+
+## Key Files
+| Component | File Path |
+|-----------|-----------|
+{Key files from findings}
+
+## Related Documents
+- [design.md](design.md) - Architecture analysis and design rationale
+- [decisions.md](decisions.md) - Full decisions log
+
+## Verification
+- [ ] All phase checklists complete
+- [ ] All tests passing
+- [ ] Audit passed
+- [ ] User verified
+```
+
+### Summary File
+
+Create `{PROSPECTIVE_DIR}/summary.md` with an overview of ALL proposals:
+
+```markdown
+# Prospective Projects Summary
+
+## Sweep Source
+- **Review:** {REVIEW_FOLDER_NAME}
+- **Total Findings:** {N} ({Critical} Critical, {Major} Major, {Minor} Minor, {Info} Info)
+- **Findings Assigned to Projects:** {N} / {TOTAL}
+- **Unassigned Findings:** {N} (explain why, if any)
+
+## Proposed Projects
+
+| # | Project | Findings | Critical | Major | Minor | Info | Scope | Execution Order |
+|---|---------|----------|----------|-------|-------|------|-------|-----------------|
+{one row per project}
+
+## Execution Order Recommendation
+{Numbered list of recommended execution order with brief rationale}
+
+## Coverage Analysis
+- Findings covered: {N}/{TOTAL} ({percentage}%)
+- {List any findings intentionally excluded and why}
+
+## Overlap Notes
+{Summary of overlaps with existing projects, if any}
+```
+
+## Constraints
+
+- **Every finding must be assigned to exactly one project** (no duplicates, no orphans). If a finding doesn't fit any theme, create a "Miscellaneous Cleanup" project or provide explicit rationale for exclusion.
+- **Read the full finding details** from `findings/` directory for Critical and Major findings before grouping. The summary data in all_findings.json has truncated titles and locations.
+- **Use the overlap_check.md** to note potential conflicts with existing projects in each proposal.
+- **Write all files with UTF-8 encoding.**
+- **Do not create real projects** (no running create_project.py). You are generating proposals only.

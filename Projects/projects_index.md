@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-111 | Test Coverage - UI and Framework | Planning | 2026-02-11 | 2026-02-11 |
+| PROJ-110 | Test Coverage - Core Systems | Planning | 2026-02-11 | 2026-02-11 |
+| PROJ-109 | Legacy Cleanup | Planning | 2026-02-11 | 2026-02-11 |
+| PROJ-108 | Duplication Elimination | Planning | 2026-02-11 | 2026-02-11 |
+| PROJ-107 | Consistency and API Standardization | Planning | 2026-02-11 | 2026-02-11 |
+| PROJ-106 | Architecture Layer Violations | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-105 | Visual Regression Testing for UI Panels | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-104 | Cyclomatic Complexity Reduction - Critical Functions | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
@@ -202,7 +208,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-106
+## Next Project ID: PROJ-112
 
 ---
 
