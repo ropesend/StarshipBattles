@@ -8,21 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-108 Audit Cycle 1 PASSED
-**Current Status:** PROJ-108 Complete - Awaiting User Verification
+**Last Completed:** PROJ-109 Phase 1 (Dead Code Deletion)
+**Current Status:** PROJ-109 Phase 1 Complete
 **Current Project:** PROJ-109
-**Current Phase:** Phase 1
-**Test Status:** 8260 passed
+**Current Phase:** Phase 2
+**Test Status:** 8250 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-108 Audit Cycle 1 PASSED:
-  - All 6 phases complete
-  - Verified: SingletonMeta (7 classes), ComponentInspector (3 validators), combat_utils (2 AI files)
-  - Verified: BaseGallery (2 galleries), format_value utility (23 tests), RESOURCE_ABBREVS constant
-  - BaseColumnManager skipped (low ROI, documented rationale)
-  - All tests passing: 8260
-- Next: PROJ-109 Legacy Cleanup
+- PROJ-109 Phase 1 complete:
+  - Deleted _find_nearest_edge, _is_at_map_edge from BattleController
+  - Deleted from_tuple, to_tuple from ComponentRef
+  - Deleted ValidationResult.create() classmethod
+  - Deleted commented allowed_layers code from Component
+  - Deleted get_zero, get_fuel_recharge, get_ammo_recharge from stats_config
+  - Deleted self.buttons lists from TestLabScreen
+  - Fixed 2 misleading "legacy"/"backwards-compatible" comments
+  - Deleted 10 obsolete tests
+- Next: Phase 2 (Simple Shim Removals)
 
 ---
 
@@ -182,8 +185,8 @@
 
 ---
 
-- [ ] **PROJ-109: Legacy Cleanup**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-109: Legacy Cleanup**
+  - **Phases:** 5 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-109/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-109/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -312,6 +315,7 @@
 | 2026-02-11 | PROJ-108 | Phase 5 | Complete | 8237 passed | pending | Merged ability_totals_for_layer (~65 lines), formula validation delegation, get_ability_instances_by_class utility |
 | 2026-02-11 | PROJ-108 | Phase 6 | Complete | 8260 passed | pending | formatting_utils (23 tests), RESOURCE_ABBREVS constant, BaseGallery (~240 lines), 2 galleries refactored |
 | 2026-02-11 | PROJ-108 | Audit 1 | PASSED | 8260 passed | pending | All goals verified: SingletonMeta (7), ComponentInspector (3), combat_utils (2), BaseGallery (2), formatting (23 tests) |
+| 2026-02-11 | PROJ-109 | Phase 1 | Complete | 8250 passed | pending | Deleted 8 dead methods, 3 getters, 2 button lists, 10 tests; fixed 2 comments |
 
 ---
 

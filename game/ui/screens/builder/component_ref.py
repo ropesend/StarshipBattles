@@ -12,12 +12,6 @@ USAGE:
     selection = ComponentRef(component=component, layer_type=LayerType.WEAPONS, index=3)
     comp = selection.component  # Clear and type-safe
 
-MIGRATION:
-    For backward compatibility during migration, use ComponentRef.from_tuple():
-
-    legacy_tuple = (layer_type, index, component)
-    ref = ComponentRef.from_tuple(legacy_tuple)
-
 NOTE: ComponentRef is frozen (immutable) to ensure consistency when used as
 dict keys or in sets. The underlying component object can still be mutated,
 but the reference itself cannot change.
@@ -25,7 +19,7 @@ but the reference itself cannot change.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional, Tuple, Any
+from typing import TYPE_CHECKING, Optional, Any
 
 if TYPE_CHECKING:
     from game.core.constants import LayerType
@@ -68,30 +62,3 @@ class ComponentRef:
     def is_placed(self) -> bool:
         """Check if this component is actively placed in a layer."""
         return self.layer_type is not None and self.index is not None
-
-    @classmethod
-    def from_tuple(cls, legacy_tuple: Tuple[Optional["LayerType"], Optional[int], Any]) -> "ComponentRef":
-        """Convert a legacy (layer_type, index, component) tuple to ComponentRef.
-
-        This method aids migration from the old tuple-based pattern.
-
-        Args:
-            legacy_tuple: A tuple of (layer_type, index, component).
-
-        Returns:
-            A new ComponentRef instance with the same values.
-
-        Example:
-            legacy = (LayerType.WEAPONS, 3, component)
-            ref = ComponentRef.from_tuple(legacy)
-        """
-        layer_type, index, component = legacy_tuple
-        return cls(component=component, layer_type=layer_type, index=index)
-
-    def to_tuple(self) -> Tuple[Optional["LayerType"], Optional[int], Any]:
-        """Convert back to legacy tuple format for backward compatibility.
-
-        Returns:
-            A tuple of (layer_type, index, component).
-        """
-        return (self.layer_type, self.index, self.component)

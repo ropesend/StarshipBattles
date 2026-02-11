@@ -132,7 +132,6 @@ class TestLabScreen:
         self.run_all_tests_btn_rect = None
 
         # UI components
-        self.buttons = []
         self.json_popup = None  # For displaying JSON data
         self.confirmation_dialog = None  # For confirming metadata updates
         self.ship_panels = []  # Ship JSON panels
@@ -304,8 +303,6 @@ class TestLabScreen:
 
     def _create_ui(self):
         """Create UI buttons."""
-        self.buttons = []  # Legacy list, kept for compatibility but not used for new UIButtons
-
         # Delegate button creation to panel manager
         self.btn_back, callbacks = self._panel_manager.create_ui_buttons(
             self.ui_manager, self._on_back

@@ -77,34 +77,6 @@ class TestComponentRefBasics:
         assert ref.is_placed is False
 
 
-class TestComponentRefFromTuple:
-    """Test migration helper for converting legacy tuples."""
-
-    def test_from_tuple_with_valid_tuple(self):
-        """ComponentRef.from_tuple should convert (layer, index, component)."""
-        component = MagicMock()
-        component.id = "engine_impulse"
-        legacy_tuple = (LayerType.CORE, 3, component)
-
-        ref = ComponentRef.from_tuple(legacy_tuple)
-
-        assert ref.component is component
-        assert ref.layer_type == LayerType.CORE
-        assert ref.index == 3
-
-    def test_from_tuple_preserves_none_values(self):
-        """ComponentRef.from_tuple should handle None in tuple."""
-        component = MagicMock()
-        component.id = "test"
-        legacy_tuple = (None, None, component)
-
-        ref = ComponentRef.from_tuple(legacy_tuple)
-
-        assert ref.component is component
-        assert ref.layer_type is None
-        assert ref.index is None
-
-
 class TestComponentRefEquality:
     """Test equality and identity semantics."""
 

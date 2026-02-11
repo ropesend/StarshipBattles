@@ -152,9 +152,9 @@ def safe_evaluate_math_formula(
     """
     Safely evaluate a formula with fallback to default on error.
 
-    This is a backwards-compatible wrapper around evaluate_math_formula that
-    catches FormulaException and returns a default value instead, while logging
-    a warning. Use this when formula errors should not be fatal.
+    Wrapper around evaluate_math_formula that catches FormulaException and
+    returns a default value instead, while logging a warning. Use this when
+    formula errors should not be fatal.
 
     Args:
         formula: The formula string (e.g. "sqrt(mass) * 2"). Should NOT start with '='.

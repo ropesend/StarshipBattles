@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Delete dead code with zero callers. No behavior changes. Lowest risk.
 
 ---
@@ -17,11 +17,12 @@
 **File:** `game/simulation/battle_controller.py:401-407`
 **Tests:** `pytest tests/unit/combat/ tests/unit/simulation/ -n 12`
 
-- [ ] Delete `_find_nearest_edge()` method (line 401-403)
-- [ ] Delete `_is_at_map_edge()` method (line 405-407)
-- [ ] Verify: grep confirms no callers exist outside definitions
+- [x] Delete `_find_nearest_edge()` method (line 401-403)
+- [x] Delete `_is_at_map_edge()` method (line 405-407)
+- [x] Verify: grep confirms no callers exist outside definitions
+- [x] Delete 8 obsolete tests in test_mechanics.py
 
-**Notes:**
+**Notes:** Methods delegated to RetreatManager but were never called. 8 tests deleted.
 
 ---
 
@@ -30,12 +31,14 @@
 **File:** `game/ui/screens/builder/component_ref.py:72-97`
 **Tests:** `pytest tests/unit/builder/ -n 12`
 
-- [ ] Delete `from_tuple()` classmethod (lines 72-89)
-- [ ] Delete `to_tuple()` method (lines 91-97)
-- [ ] Remove the migration section from the module docstring (lines 15-19)
-- [ ] Verify: grep confirms no callers exist
+- [x] Delete `from_tuple()` classmethod (lines 72-89)
+- [x] Delete `to_tuple()` method (lines 91-97)
+- [x] Remove the migration section from the module docstring (lines 15-19)
+- [x] Remove unused Tuple import
+- [x] Delete 2 obsolete tests in test_component_ref.py
+- [x] Verify: grep confirms no callers exist
 
-**Notes:**
+**Notes:** Migration helpers never used. 2 tests deleted from TestComponentRefFromTuple class.
 
 ---
 
@@ -44,10 +47,10 @@
 **File:** `game/core/validation.py:105-118`
 **Tests:** `pytest tests/unit/core/ -n 12`
 
-- [ ] Delete the `create()` classmethod (lines 105-118)
-- [ ] Verify: grep confirms no callers exist
+- [x] Delete the `create()` classmethod (lines 105-118)
+- [x] Verify: grep confirms no callers exist
 
-**Notes:**
+**Notes:** Factory method never used. validation_result() function provides same functionality.
 
 ---
 
@@ -56,9 +59,9 @@
 **File:** `game/simulation/components/component.py:116-117`
 **Tests:** `pytest tests/unit/entities/test_components.py`
 
-- [ ] Delete the two commented lines: `# allowed_layers removed in refactor` and `# self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]`
+- [x] Delete the two commented lines: `# allowed_layers removed in refactor` and `# self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]`
 
-**Notes:**
+**Notes:** Dead commented code removed.
 
 ---
 
@@ -67,16 +70,17 @@
 **File:** `game/ui/screens/builder/stats_config.py:140-149, 261, 274-278`
 **Tests:** `pytest tests/unit/builder/ -n 12`
 
-- [ ] Delete `get_zero()` function (line 140-141)
-- [ ] Delete `get_fuel_recharge()` function (lines 143-145)
-- [ ] Delete `get_ammo_recharge()` function (lines 147-149)
-- [ ] Remove `'get_zero': get_zero` from GETTERS registry (line 261)
-- [ ] Remove `'get_fuel_recharge': get_fuel_recharge` from GETTERS registry (line 274)
-- [ ] Remove `'get_ammo_recharge': get_ammo_recharge` from GETTERS registry (line 275)
-- [ ] Verify: grep data/stats_layout.json confirms these getter names are not referenced
-- [ ] Verify: grep codebase confirms no other callers
+- [x] Delete `get_zero()` function (line 140-141)
+- [x] Delete `get_fuel_recharge()` function (lines 143-145)
+- [x] Delete `get_ammo_recharge()` function (lines 147-149)
+- [x] Remove `'get_zero': get_zero` from GETTERS registry (line 261)
+- [x] Remove `'get_fuel_recharge': get_fuel_recharge` from GETTERS registry (line 274)
+- [x] Remove `'get_ammo_recharge': get_ammo_recharge` from GETTERS registry (line 275)
+- [x] Removed misleading "Legacy" comment block
+- [x] Verify: grep data/stats_layout.json confirms these getter names are not referenced
+- [x] Verify: grep codebase confirms no other callers
 
-**Notes:**
+**Notes:** Placeholder functions never wired to JSON or called.
 
 ---
 
@@ -85,10 +89,10 @@
 **File:** `game/ui/screens/test_lab/screen.py:307`
 **Tests:** `pytest tests/unit/test_lab/ -n 12`
 
-- [ ] Delete the `self.buttons = []` line and its comment about being "kept for compatibility but not used for new UIButtons"
-- [ ] Verify: grep confirms `self.buttons` is never read in this file
+- [x] Delete both `self.buttons = []` lines (one in __init__, one in _create_ui)
+- [x] Verify: grep confirms `self.buttons` is never read in this file
 
-**Notes:**
+**Notes:** Empty list assigned twice, never read.
 
 ---
 
@@ -97,9 +101,9 @@
 **File:** `game/simulation/battle_controller.py:620`
 **Tests:** `pytest tests/unit/combat/ -n 12`
 
-- [ ] Change comment from "Legacy fallback (should not normally reach here)" to describe actual intent (e.g., "Defensive fallback for unexpected fleet mutation state")
+- [x] Change comment from "Legacy fallback (should not normally reach here)" to describe actual intent (e.g., "Defensive fallback for unexpected mode handler state")
 
-**Notes:**
+**Notes:** Comment clarified to reflect actual purpose (defensive programming, not legacy).
 
 ---
 
@@ -108,16 +112,16 @@
 **File:** `game/simulation/formula_system.py:148-171`
 **Tests:** `pytest tests/unit/simulation/ -n 12`
 
-- [ ] Change the docstring from "backwards-compatible wrapper around evaluate_math_formula" to describe actual purpose (e.g., "Safe wrapper that catches FormulaException and returns a default value")
+- [x] Change the docstring from "backwards-compatible wrapper around evaluate_math_formula" to describe actual purpose (e.g., "Wrapper that catches FormulaException and returns a default value")
 
-**Notes:**
+**Notes:** Docstring clarified to remove misleading "backwards-compatible" phrase.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/ -n 12` passes (8164 baseline)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/ -n 12` passes (8250 passed, -10 from deleted tests)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

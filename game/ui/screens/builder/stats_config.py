@@ -137,17 +137,6 @@ def get_strategic_speed(ship):
     raw_hexes = (movement_points * K_STRATEGIC) / mass
     return max(MIN_HEXES, min(MAX_HEXES, int(raw_hexes)))
 
-def get_zero(ship):
-    return 0
-
-def get_fuel_recharge(ship):
-    # Placeholder: No regen mechanism yet
-    return 0
-    
-def get_ammo_recharge(ship):
-    # Placeholder: No regen mechanism yet
-    return 0
-    
 def get_fuel_consumption(ship):
     return getattr(ship, 'fuel_consumption', 0)
 
@@ -254,11 +243,9 @@ GETTERS = {
     'get_crew_capacity': get_crew_capacity,
     'get_life_support': get_life_support,
     'get_max_targets': get_max_targets,
-    # New
     'get_armor_hp': get_armor_hp,
     'get_maneuver_points': get_maneuver_points,
     'get_strategic_speed': get_strategic_speed,
-    'get_zero': get_zero,
 
     # Generic Resource Getters
     'get_resource_storage': get_resource_storage,
@@ -269,10 +256,7 @@ GETTERS = {
     'get_resource_replenish': get_resource_replenish,
     'get_resource_max_usage': get_resource_max_usage,
 
-    # Legacy (Mapped to Generics or Keep implementations?)
-    # Kept for compatibility if JSON not fully migrated yet
-    'get_fuel_recharge': get_fuel_recharge,
-    'get_ammo_recharge': get_ammo_recharge,
+    # Type-specific consumption getters (used by stats_layout.json)
     'get_fuel_consumption': get_fuel_consumption,
     'get_ammo_consumption': get_ammo_consumption,
     'get_energy_consumption': get_energy_consumption

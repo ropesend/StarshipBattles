@@ -399,14 +399,6 @@ class BattleController:
         # Delegate to manager
         self._retreat_manager.update(get_ship_by_id)
 
-    def _find_nearest_edge(self, ship: 'Ship') -> Tuple[float, float]:
-        """Find the nearest map edge for retreat (delegates to RetreatManager)."""
-        return self._retreat_manager.find_nearest_edge(ship)
-
-    def _is_at_map_edge(self, ship: 'Ship', threshold: float = 500) -> bool:
-        """Check if ship is at map edge (delegates to RetreatManager)."""
-        return self._retreat_manager.at_map_edge(ship, threshold)
-
     def _retreat_allowed(self) -> bool:
         """
         Check if retreat is allowed in current battle.
@@ -622,7 +614,7 @@ class BattleController:
             log_info(f"Battle results applied to fleets via mode handler")
             return
 
-        # Legacy fallback (should not normally reach here)
+        # Defensive fallback for unexpected mode handler state
         if not self._config.source_fleets:
             raise StateException(
                 "No source fleets configured",

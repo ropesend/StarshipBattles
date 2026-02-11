@@ -102,21 +102,6 @@ class ValidationResult:
         if self.warnings is None:
             self.warnings = []
 
-    @classmethod
-    def create(cls, is_valid: bool, message: str = "", error_code: Optional[str] = None) -> 'ValidationResult':
-        """Factory method for strategy/UI layer compatibility.
-
-        Args:
-            is_valid: Whether validation passed.
-            message: Single error message (converted to errors list).
-            error_code: Optional error code.
-
-        Returns:
-            ValidationResult instance.
-        """
-        errors = [message] if message else []
-        return cls(is_valid=is_valid, errors=errors, error_code=error_code)
-
     @property
     def message(self) -> str:
         """First error message (compatibility with UI/strategy layers).

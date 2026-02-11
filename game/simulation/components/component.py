@@ -112,8 +112,6 @@ class Component:
         self._hp_ratio_dirty: bool = True
         self._cached_hp_ratio: float = 1.0
 
-        # allowed_layers removed in refactor
-        # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
         self.major_classification = data.get('major_classification', "Unknown")
         self.is_active = True
