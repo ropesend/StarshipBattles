@@ -12,10 +12,22 @@ from game.strategy.data.empire import Empire
 from game.core.validation import ValidationResult
 
 
-class MockSession:
+class MockGalaxy:
+    """Minimal mock Galaxy for BuildQueueScreen tests."""
     def __init__(self):
+        self.systems = {}
+        self._global_hex_planets = {}
+        self.fleets_by_id = {}
+
+    def get_planets_at_global_hex(self, hex_coord):
+        return self._global_hex_planets.get(hex_coord, [])
+
+
+class MockSession:
+    def __init__(self, galaxy=None, empire=None):
         self.savegame_path = "test_savegame"
-        self.current_empire = Empire(1, "Test Empire", (255, 0, 0))
+        self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
+        self.galaxy = galaxy or MockGalaxy()
 
     def handle_command(self, cmd):
         """Mock command handler."""
@@ -153,15 +165,17 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
     """Test that BuildQueueScreen handles None savegame_path without crashing.
 
     PROJ-40: Updated to use DI injection for dependencies.
+    PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
     """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
 
+    hex_coord = HexCoord(5, 5)
     # Create test planet
     planet = Planet(
         name="Test Colony",
-        location=HexCoord(5, 5),
+        location=hex_coord,
         orbit_distance=3,
         mass=5.97e24,
         radius=6371000,
@@ -177,9 +191,15 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
         planet_type=PlanetType.CONTINENTAL
     )
     planet.owner_id = 1
+    planet.id = 100
+
+    # Create mock galaxy with planet
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
 
     # Create session with None savegame_path
-    session = MockSession()
+    session = MockSession(galaxy=galaxy, empire=empire)
     session.savegame_path = None
 
     # Should not crash - pass injected dependencies
@@ -190,7 +210,10 @@ def test_no_savegame_path_handled_gracefully(mock_design_library, mock_design_lo
         session,
         lambda: None,
         design_library=mock_design_library,
-        design_loader=mock_design_loader
+        design_loader=mock_design_loader,
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
     )
 
     # Should create with design_library injected
@@ -232,14 +255,44 @@ def test_drag_item_uses_1_turn_default(build_queue_screen):
     assert turns == 1
 
 
-def test_add_ship_to_queue_with_shipyard(build_queue_screen):
+def test_add_ship_to_queue_with_shipyard(mock_design_library, mock_design_loader):
     """Test that ships can be added when planet has a shipyard facility.
 
     Regression test for BUG-24: Ships couldn't be added to build queue
     even when planet had a space shipyard facility.
+
+    PROJ-109: Test creates screen with shipyard already present so queue source
+    for ships is created at initialization time.
     """
-    # Add a shipyard facility with correct design_data structure
-    # This mimics how _spawn_complex creates facilities
+    import pygame
+    import pygame_gui
+    from game.ui.screens.build_queue_screen import BuildQueueScreen
+
+    pygame.init()
+    screen = pygame.display.set_mode((1024, 768))
+    manager = pygame_gui.UIManager((1024, 768))
+
+    hex_coord = HexCoord(5, 5)
+    planet = Planet(
+        name="Test Colony",
+        location=hex_coord,
+        orbit_distance=3,
+        mass=5.97e24,
+        radius=6371000,
+        surface_area=5.1e14,
+        density=5515,
+        surface_gravity=9.81,
+        surface_pressure=101325,
+        surface_temperature=288,
+        surface_water=0.7,
+        tectonic_activity=0.1,
+        magnetic_field=1.0,
+        planet_type=PlanetType.CONTINENTAL
+    )
+    planet.owner_id = 1
+    planet.id = 100
+
+    # Add shipyard facility BEFORE creating screen
     shipyard = PlanetaryFacility(
         instance_id="test-shipyard-1",
         design_id="space_shipyard_complex",
@@ -251,35 +304,75 @@ def test_add_ship_to_queue_with_shipyard(build_queue_screen):
         },
         is_operational=True
     )
-    build_queue_screen.build_context.facilities.append(shipyard)
+    planet.facilities.append(shipyard)
 
     # Verify has_space_shipyard returns True
-    assert build_queue_screen.build_context.has_space_shipyard is True, \
+    assert planet.has_space_shipyard is True, \
         "has_space_shipyard should return True when shipyard facility exists"
 
-    # Try to add a ship
-    initial_queue_len = len(build_queue_screen.build_context.construction_queue)
-    build_queue_screen.controller.set_category("ship")
-    build_queue_screen.controller.add_to_queue("test_frigate", turns=1)
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
 
-    # Verify ship was added
-    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_len + 1, \
-        "Ship should be added to construction queue when shipyard exists"
-    assert build_queue_screen.build_context.construction_queue[-1]["type"] == "ship"
-    assert build_queue_screen.build_context.construction_queue[-1]["design_id"] == "test_frigate"
+    session = MockSession(galaxy=galaxy, empire=empire)
+
+    bq_screen = BuildQueueScreen(
+        manager,
+        planet,
+        session,
+        lambda: None,
+        design_library=mock_design_library,
+        design_loader=mock_design_loader,
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
+    )
+
+    # Should have 2 queue sources: planetary yard + shipyard
+    assert len(bq_screen.queue_sources) == 2, \
+        f"Should have 2 queue sources, got {len(bq_screen.queue_sources)}"
+
+    # Find and select the shipyard queue source (can_build_ships=True)
+    shipyard_source = next(
+        (s for s in bq_screen.queue_sources if s.can_build_ships), None
+    )
+    assert shipyard_source is not None, "Should have a shipyard queue source"
+    bq_screen._queue_selector._on_queue_selected(
+        bq_screen.queue_sources.index(shipyard_source)
+    )
+
+    # Try to add a ship
+    initial_queue_len = len(shipyard_source.construction_queue)
+    bq_screen.controller.set_category("ship")
+    bq_screen.controller.add_to_queue("test_frigate", turns=1)
+
+    # Verify ship was added to shipyard queue
+    assert len(shipyard_source.construction_queue) == initial_queue_len + 1, \
+        "Ship should be added to shipyard queue when shipyard exists"
+    assert shipyard_source.construction_queue[-1]["type"] == "ship"
+    assert shipyard_source.construction_queue[-1]["design_id"] == "test_frigate"
+
+    pygame.quit()
 
 
 def test_add_ship_fails_without_shipyard(build_queue_screen):
-    """Test that ships cannot be added without a shipyard facility."""
-    # Ensure no shipyard exists
-    build_queue_screen.build_context.facilities = []
-    assert build_queue_screen.build_context.has_space_shipyard is False
+    """Test that ships cannot be added when only planetary yard queue exists.
+
+    PROJ-109: The default build_queue_screen fixture creates a planet without
+    shipyard facilities, so only the "Planetary Yard" queue source exists
+    (can_build_ships=False). Ships should be rejected.
+    """
+    # Default fixture has no shipyard - verify single queue source
+    assert len(build_queue_screen.queue_sources) == 1, \
+        "Should have only planetary yard queue source"
+    assert build_queue_screen.active_queue_source.can_build_ships is False, \
+        "Planetary yard should not build ships"
 
     # Try to add a ship
-    initial_queue_len = len(build_queue_screen.build_context.construction_queue)
+    initial_queue_len = len(build_queue_screen.active_queue_source.construction_queue)
     build_queue_screen.controller.set_category("ship")
     build_queue_screen.controller.add_to_queue("test_frigate", turns=1)
 
     # Verify ship was NOT added
-    assert len(build_queue_screen.build_context.construction_queue) == initial_queue_len, \
+    assert len(build_queue_screen.active_queue_source.construction_queue) == initial_queue_len, \
         "Ship should NOT be added without a shipyard"

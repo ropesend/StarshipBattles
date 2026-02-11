@@ -8,23 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 3 Task 3.2 (Remove deprecated BattleScreen action flags)
-**Current Status:** PROJ-109 Phase 3 In Progress (Tasks 3.1-3.2 complete)
+**Last Completed:** PROJ-109 Phase 3 Task 3.3 (Remove BuildQueueScreen legacy single-context mode)
+**Current Status:** PROJ-109 Phase 3 In Progress (Tasks 3.1-3.3 complete)
 **Current Project:** PROJ-109
 **Current Phase:** Phase 3
 **Test Status:** 8249 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 3 Task 3.2 complete:
-  - Removed action_return_to_setup and action_return_to_test_lab flags from battle_screen.py
-  - Removed flag definitions from __init__ (lines 109-111)
-  - Removed flag resets from start() and start_with_controller()
-  - Simplified _trigger_return_to_setup() and _trigger_return_to_test_lab() to only use scene_callback
-  - Updated battle_ui.py to call _trigger_return_to_test_lab() instead of setting flag directly
-  - Removed flag resets from: test_lab/screen.py, test_execution_service.py
-  - Removed mock flag assignments from: test_visual_run.py (x2), fixtures/battle.py
-- Next: Task 3.3 (Remove BuildQueueScreen legacy single-context mode)
+- PROJ-109 Phase 3 Task 3.3 complete:
+  - Removed legacy single-context mode from BuildQueueScreen
+  - Made hex_coord, galaxy, empire required parameters with validation
+  - Deleted backward compat alias properties (queue_selector_panel, queue_selector_scrollable, queue_selector_buttons)
+  - Updated 8 test files with MockGalaxy class and required parameters:
+    - tests/integration/ui/build_queue_screen/conftest.py
+    - tests/integration/ui/build_queue_screen/test_queue_selector.py
+    - tests/integration/ui/build_queue_screen/test_portrait_logging.py
+    - tests/integration/ui/build_queue_screen/test_basics.py
+    - tests/integration/ui/test_build_queue_formatting.py
+    - tests/integration/ui/test_build_queue_drag_drop.py
+    - tests/repro_issues/test_bug_15_screenshot_strategy.py
+  - Updated test_add_ship_to_queue_with_shipyard to create shipyard before screen init
+- Next: Task 3.4 (Remove StrategyInputHandler legacy keydown fallback)
 
 ---
 
@@ -318,6 +323,7 @@
 | 2026-02-11 | PROJ-109 | Phase 2 | Complete | 8249 passed | pending | Removed 10 legacy shims, renamed legacy_components.py, fixed 4 comments, deleted 1 test |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.1 | Complete | 8249 passed | pending | Removed validation_result() function and ALL callers (larger scope than documented) |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.2 | Complete | 8249 passed | pending | Removed action_return_to_setup/action_return_to_test_lab flags, 6 files updated |
+| 2026-02-11 | PROJ-109 | Phase 3 Task 3.3 | Complete | 8249 passed | pending | Removed BuildQueueScreen legacy mode, 8 test files updated |
 
 ---
 

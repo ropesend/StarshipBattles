@@ -7,7 +7,6 @@ Tests cover:
 - Ctrl+click multi-select toggle
 - Queue display updates when switching queues
 - Multi-select message display
-- Queue source backward compatibility (single build_context)
 """
 
 import pytest
@@ -21,10 +20,27 @@ from game.strategy.data.build_queue_source import BuildQueueSource
 from game.core.validation import ValidationResult
 
 
-class MockSession:
+class MockGalaxy:
+    """Minimal mock Galaxy for BuildQueueScreen tests."""
     def __init__(self):
+        self.systems = {}
+        self._global_hex_planets = {}  # HexCoord -> List[Planet]
+        self.fleets_by_id = {}
+
+    def get_planets_at_global_hex(self, hex_coord):
+        """Return planets at a given global hex coordinate."""
+        return self._global_hex_planets.get(hex_coord, [])
+
+    def get_fleets_at(self, hex_coord):
+        """Return fleets at a given global hex coordinate."""
+        return []
+
+
+class MockSession:
+    def __init__(self, galaxy=None, empire=None):
         self.savegame_path = "test_savegame"
-        self.current_empire = Empire(1, "Test Empire", (255, 0, 0))
+        self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
+        self.galaxy = galaxy or MockGalaxy()
 
     def handle_command(self, cmd):
         return ValidationResult()
@@ -55,9 +71,10 @@ def build_queue_screen(mock_design_library, mock_design_loader):
     screen = pygame.display.set_mode((1920, 1080))
     manager = pygame_gui.UIManager((1920, 1080))
 
+    hex_coord = HexCoord(5, 5)
     planet = Planet(
         name="Test Colony",
-        location=HexCoord(5, 5),
+        location=hex_coord,
         orbit_distance=3,
         mass=5.97e24,
         radius=6371000,
@@ -74,7 +91,11 @@ def build_queue_screen(mock_design_library, mock_design_loader):
     planet.owner_id = 1
     planet.id = 100
 
-    session = MockSession()
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
+
+    session = MockSession(galaxy=galaxy, empire=empire)
     on_close = MagicMock()
 
     from game.ui.screens.build_queue_screen import BuildQueueScreen
@@ -84,7 +105,10 @@ def build_queue_screen(mock_design_library, mock_design_loader):
         session,
         on_close,
         design_library=mock_design_library,
-        design_loader=mock_design_loader
+        design_loader=mock_design_loader,
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
     )
 
     manager.update(0.1)
@@ -96,26 +120,26 @@ def build_queue_screen(mock_design_library, mock_design_loader):
 
 def test_queue_selector_panel_exists(build_queue_screen):
     """Test that queue selector panel is created."""
-    assert hasattr(build_queue_screen, 'queue_selector_panel')
-    assert build_queue_screen.queue_selector_panel is not None
+    assert build_queue_screen._queue_selector is not None
+    assert build_queue_screen._queue_selector.panel is not None
 
 
 def test_queue_selector_scrollable_exists(build_queue_screen):
     """Test that queue selector scrollable container is created."""
-    assert hasattr(build_queue_screen, 'queue_selector_scrollable')
-    assert build_queue_screen.queue_selector_scrollable is not None
+    assert build_queue_screen._queue_selector is not None
+    assert build_queue_screen._queue_selector.scrollable is not None
 
 
 def test_queue_selector_buttons_exist(build_queue_screen):
     """Test that queue selector buttons are created for each queue source."""
-    assert hasattr(build_queue_screen, 'queue_selector_buttons')
-    assert len(build_queue_screen.queue_selector_buttons) == len(build_queue_screen.queue_sources)
+    assert build_queue_screen._queue_selector is not None
+    assert len(build_queue_screen._queue_selector.buttons) == len(build_queue_screen.queue_sources)
 
 
 # --- Queue source initialization tests ---
 
 def test_single_build_context_creates_one_queue_source(build_queue_screen):
-    """Test that a single build_context creates one queue source in backward compat mode."""
+    """Test that a single planet at hex creates one queue source."""
     assert len(build_queue_screen.queue_sources) == 1
     source = build_queue_screen.queue_sources[0]
     assert isinstance(source, BuildQueueSource)
@@ -163,9 +187,10 @@ def test_multiple_queue_sources_create_buttons():
     screen = pygame.display.set_mode((1920, 1080))
     manager = pygame_gui.UIManager((1920, 1080))
 
+    hex_coord = HexCoord(5, 5)
     planet = Planet(
         name="Test Colony",
-        location=HexCoord(5, 5),
+        location=hex_coord,
         orbit_distance=3,
         mass=5.97e24,
         radius=6371000,
@@ -192,7 +217,11 @@ def test_multiple_queue_sources_create_buttons():
     )
     planet.facilities.append(shipyard)
 
-    session = MockSession()
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
+
+    session = MockSession(galaxy=galaxy, empire=empire)
 
     mock_lib = MagicMock()
     mock_lib.scan_designs.return_value = []
@@ -202,12 +231,15 @@ def test_multiple_queue_sources_create_buttons():
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
         manager, planet, session, lambda: None,
-        design_library=mock_lib, design_loader=MagicMock()
+        design_library=mock_lib, design_loader=MagicMock(),
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
     )
 
-    # Should have 1 legacy source (backward compat wraps build_context as single source)
-    assert len(bq.queue_sources) == 1
-    assert len(bq.queue_selector_buttons) == 1
+    # Should have 2 sources: planet base queue + shipyard facility queue
+    assert len(bq.queue_sources) == 2
+    assert len(bq._queue_selector.buttons) == 2
 
     pygame.quit()
 
@@ -218,9 +250,10 @@ def test_multi_select_sets_active_to_none():
     screen = pygame.display.set_mode((1920, 1080))
     manager = pygame_gui.UIManager((1920, 1080))
 
+    hex_coord = HexCoord(5, 5)
     planet = Planet(
         name="Test Colony",
-        location=HexCoord(5, 5),
+        location=hex_coord,
         orbit_distance=3,
         mass=5.97e24,
         radius=6371000,
@@ -237,7 +270,11 @@ def test_multi_select_sets_active_to_none():
     planet.owner_id = 1
     planet.id = 100
 
-    session = MockSession()
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
+
+    session = MockSession(galaxy=galaxy, empire=empire)
 
     mock_lib = MagicMock()
     mock_lib.scan_designs.return_value = []
@@ -247,7 +284,10 @@ def test_multi_select_sets_active_to_none():
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
         manager, planet, session, lambda: None,
-        design_library=mock_lib, design_loader=MagicMock()
+        design_library=mock_lib, design_loader=MagicMock(),
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
     )
 
     # Manually add a second queue source to test multi-select behavior
@@ -264,7 +304,6 @@ def test_multi_select_sets_active_to_none():
     bq._refresh_queue_selector()
 
     # Select both queues
-    # PROJ-86: Use selector's internal methods
     bq._queue_selector.selected_indices = {0}
     bq._queue_selector._on_queue_toggled(1)
 
@@ -285,9 +324,10 @@ def test_queue_display_shows_active_source_items():
     screen = pygame.display.set_mode((1920, 1080))
     manager = pygame_gui.UIManager((1920, 1080))
 
+    hex_coord = HexCoord(5, 5)
     planet = Planet(
         name="Test Colony",
-        location=HexCoord(5, 5),
+        location=hex_coord,
         orbit_distance=3,
         mass=5.97e24,
         radius=6371000,
@@ -304,7 +344,11 @@ def test_queue_display_shows_active_source_items():
     planet.owner_id = 1
     planet.id = 100
 
-    session = MockSession()
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
+
+    session = MockSession(galaxy=galaxy, empire=empire)
 
     mock_lib = MagicMock()
     mock_lib.scan_designs.return_value = []
@@ -314,7 +358,10 @@ def test_queue_display_shows_active_source_items():
     from game.ui.screens.build_queue_screen import BuildQueueScreen
     bq = BuildQueueScreen(
         manager, planet, session, lambda: None,
-        design_library=mock_lib, design_loader=MagicMock()
+        design_library=mock_lib, design_loader=MagicMock(),
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
     )
 
     # Add items to the active queue source
@@ -331,6 +378,6 @@ def test_queue_display_shows_active_source_items():
 
 def test_queue_selector_has_queue_source_index_tags(build_queue_screen):
     """Test that queue selector buttons are tagged with queue_source_index."""
-    for idx, btn in enumerate(build_queue_screen.queue_selector_buttons):
+    for idx, btn in enumerate(build_queue_screen._queue_selector.buttons):
         assert hasattr(btn, 'queue_source_index')
         assert btn.queue_source_index == idx

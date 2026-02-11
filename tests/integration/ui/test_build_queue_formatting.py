@@ -13,11 +13,24 @@ from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
 
 
-class MockSession:
+class MockGalaxy:
+    """Minimal mock Galaxy for BuildQueueScreen tests."""
     def __init__(self):
+        self.systems = {}
+        self._global_hex_planets = {}  # HexCoord -> List[Planet]
+        self.fleets_by_id = {}
+
+    def get_planets_at_global_hex(self, hex_coord):
+        """Return planets at a given global hex coordinate."""
+        return self._global_hex_planets.get(hex_coord, [])
+
+
+class MockSession:
+    def __init__(self, galaxy=None, empire=None):
         self.save_path = "test_savegame"
-        self.current_empire = Empire(1, "Test Empire", (255, 0, 0))
+        self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
         self.turn = 1
+        self.galaxy = galaxy or MockGalaxy()
 
     def handle_command(self, cmd):
         """Mock command handler."""
@@ -60,15 +73,17 @@ def build_queue_screen(mock_design_library, mock_design_loader):
     """Create BuildQueueScreen for testing.
 
     PROJ-40: Updated to use DI injection for dependencies.
+    PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
     """
     pygame.init()
     screen = pygame.display.set_mode((1024, 768))
     manager = pygame_gui.UIManager((1024, 768))
 
+    hex_coord = HexCoord(5, 5)
     # Create test planet
     planet = Planet(
         name="Test Colony",
-        location=HexCoord(5, 5),
+        location=hex_coord,
         orbit_distance=3,
         mass=5.97e24,
         radius=6371000,
@@ -85,8 +100,13 @@ def build_queue_screen(mock_design_library, mock_design_loader):
     planet.owner_id = 1
     planet.id = 100
 
+    # Create mock galaxy with planet
+    empire = Empire(1, "Test Empire", (255, 0, 0))
+    galaxy = MockGalaxy()
+    galaxy._global_hex_planets[hex_coord] = [planet]
+
     # Create mock session
-    session = MockSession()
+    session = MockSession(galaxy=galaxy, empire=empire)
 
     # Mock callback
     on_close = MagicMock()
@@ -99,7 +119,10 @@ def build_queue_screen(mock_design_library, mock_design_loader):
         session,
         on_close,
         design_library=mock_design_library,
-        design_loader=mock_design_loader
+        design_loader=mock_design_loader,
+        hex_coord=hex_coord,
+        galaxy=galaxy,
+        empire=empire
     )
 
     yield bq_screen

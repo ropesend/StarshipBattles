@@ -272,8 +272,10 @@ class TestBuildQueueScreenshotSupport:
         """
         BUG-15 Rev 5: Verify F12 KEYDOWN event triggers _take_screenshot via handle_event.
         PROJ-40: Updated to pass injected dependencies instead of patching imports.
+        PROJ-109: Updated to provide required hex_coord, galaxy, empire parameters.
         """
         from game.ui.screens.build_queue_screen import BuildQueueScreen
+        from game.core.hex_math import HexCoord
 
         mock_sm = MagicMock()
         mock_sm.enabled = True
@@ -284,16 +286,27 @@ class TestBuildQueueScreenshotSupport:
         mock_manager = MagicMock()
         mock_manager.get_root_container.return_value.get_container.return_value.get_size.return_value = (1280, 720)
 
+        hex_coord = HexCoord(5, 5)
         mock_planet = MagicMock()
         mock_planet.name = "Test Planet"
         mock_planet.owner_id = 1
+        mock_planet.id = 100
+        mock_planet.location = hex_coord
         mock_planet.construction_queue = []
         mock_planet.facilities = []
         mock_planet.context_type = "planet"
         mock_planet.has_space_shipyard = False
 
+        mock_empire = MagicMock()
+        mock_empire.id = 1
+        mock_empire.fleets = []
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+
         mock_session = MagicMock()
         mock_session.save_path = None
+        mock_session.galaxy = mock_galaxy
         # Mock current_empire with proper resource dicts to avoid MagicMock comparison issues
         mock_session.current_empire.resource_pool = {}
         mock_session.current_empire.max_storage = {}
@@ -323,7 +336,10 @@ class TestBuildQueueScreenshotSupport:
                 mock_session,
                 on_close_callback=lambda: None,
                 design_library=mock_design_library,
-                design_loader=mock_design_loader
+                design_loader=mock_design_loader,
+                hex_coord=hex_coord,
+                galaxy=mock_galaxy,
+                empire=mock_empire
             )
 
             # Create F12 KEYDOWN event

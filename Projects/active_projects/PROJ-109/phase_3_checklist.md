@@ -66,21 +66,21 @@
 
 ---
 
-### Task 3.3: Remove BuildQueueScreen legacy single-context mode [Medium]
+### Task 3.3: Remove BuildQueueScreen legacy single-context mode [Medium] - COMPLETE
 **Finding:** LEG-UI1-002
 **File:** `game/ui/screens/build_queue_screen.py:106-120, 274-277`
 **Callers:** All callers in `game/ui/screens/strategy_screen.py` already provide hex_coord
-**Tests:** `pytest tests/unit/ui/ -n 12`
+**Tests:** `pytest tests/integration/ui/build_queue_screen/ -n 12`
 
-- [ ] In `build_queue_screen.py`: Remove the `else` branch at lines 111-120 (the backward compat wrapping with `_legacy` ID)
-- [ ] Change the `if hex_coord is not None and galaxy is not None and empire is not None:` guard to always execute (remove the if)
-- [ ] Make `hex_coord`, `galaxy`, and `empire` required parameters (remove Optional, remove None defaults)
-- [ ] Delete backward compat test alias properties at lines 274-277: `queue_selector_panel`, `queue_selector_scrollable`, `queue_selector_buttons`
-- [ ] Also delete the sync at line 284: `self.queue_selector_buttons = self._queue_selector.buttons`
-- [ ] Grep test files for `queue_selector_panel`, `queue_selector_scrollable`, `queue_selector_buttons` and update to use `_queue_selector.panel`, `_queue_selector.scrollable`, `_queue_selector.buttons`
-- [ ] Verify: all callers in strategy_screen.py provide hex_coord, galaxy, empire
+- [x] In `build_queue_screen.py`: Remove the `else` branch at lines 111-120 (the backward compat wrapping with `_legacy` ID)
+- [x] Change the `if hex_coord is not None and galaxy is not None and empire is not None:` guard to always execute (remove the if)
+- [x] Make `hex_coord`, `galaxy`, and `empire` required parameters (remove Optional, remove None defaults)
+- [x] Delete backward compat test alias properties at lines 274-277: `queue_selector_panel`, `queue_selector_scrollable`, `queue_selector_buttons`
+- [x] Also delete the sync at line 284: `self.queue_selector_buttons = self._queue_selector.buttons`
+- [x] Grep test files for `queue_selector_panel`, `queue_selector_scrollable`, `queue_selector_buttons` and update to use `_queue_selector.panel`, `_queue_selector.scrollable`, `_queue_selector.buttons`
+- [x] Verify: all callers in strategy_screen.py provide hex_coord, galaxy, empire
 
-**Notes:**
+**Notes:** Required parameter validation added at top of __init__. Updated 8 test files with MockGalaxy class and required parameters. Also updated test_add_ship_to_queue_with_shipyard and test_add_ship_fails_without_shipyard tests to work with the new queue source architecture.
 
 ---
 

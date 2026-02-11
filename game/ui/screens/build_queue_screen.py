@@ -10,7 +10,7 @@ import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 import pygame_gui.windows
-from typing import TYPE_CHECKING, List, Optional, Callable, Set, Union
+from typing import TYPE_CHECKING, List, Optional, Callable, Set
 
 from game.core.config import UIConfig
 from game.core.constants import PLANET_RESOURCES
@@ -45,15 +45,15 @@ class BuildQueueScreen:
     def __init__(
         self,
         manager: pygame_gui.UIManager,
-        build_context: Union['Planet', 'Fleet', 'BuildContext'],
+        build_context,  # Planet, Fleet, or BuildContext
         session,
         on_close_callback: Callable,
         portrait_surface: Optional[pygame.Surface] = None,
         design_library: 'DesignLibrary' = None,
         design_loader: 'DesignLoaderAdapter' = None,
-        hex_coord: Optional['HexCoord'] = None,
-        galaxy: Optional['Galaxy'] = None,
-        empire: Optional['Empire'] = None,
+        hex_coord: 'HexCoord' = None,
+        galaxy: 'Galaxy' = None,
+        empire: 'Empire' = None,
         input_mapper: Optional['InputMapper'] = None
     ):
         """
@@ -67,10 +67,18 @@ class BuildQueueScreen:
             portrait_surface: Optional pygame Surface for context portrait
             design_library: Injected DesignLibrary instance (PROJ-40: DI pattern)
             design_loader: Injected DesignLoaderAdapter instance (PROJ-40: DI pattern)
-            hex_coord: Hex coordinate for multi-queue discovery (PROJ-69)
-            galaxy: Galaxy instance for planet lookup (PROJ-69)
-            empire: Empire instance for ownership check (PROJ-69)
+            hex_coord: Hex coordinate for multi-queue discovery (required)
+            galaxy: Galaxy instance for planet lookup (required)
+            empire: Empire instance for ownership check (required)
+            input_mapper: Optional InputMapper for keyboard shortcuts
         """
+        # Validate required parameters
+        if hex_coord is None:
+            raise ValueError("BuildQueueScreen requires hex_coord parameter")
+        if galaxy is None:
+            raise ValueError("BuildQueueScreen requires galaxy parameter")
+        if empire is None:
+            raise ValueError("BuildQueueScreen requires empire parameter")
         self.manager = manager
         self.build_context = build_context
         self.session = session
@@ -102,22 +110,10 @@ class BuildQueueScreen:
         if not hasattr(build_context, 'name'):
             log_warning("BuildQueueScreen: build_context missing 'name' attribute")
 
-        # PROJ-69: Populate queue sources from hex context or single build_context
-        if hex_coord is not None and galaxy is not None and empire is not None:
-            self.queue_sources: List[BuildQueueSource] = collect_build_queues_at_hex(
-                hex_coord, galaxy, empire
-            )
-        else:
-            # Backward compat: wrap single build_context as a BuildQueueSource
-            self.queue_sources = [BuildQueueSource(
-                queue_id=f"{build_context.context_type}_{getattr(build_context, 'id', 0)}_legacy",
-                display_name=getattr(build_context, 'name', 'Unknown'),
-                owner_entity=build_context,
-                construction_queue=build_context.construction_queue,
-                can_build_ships=build_context.has_space_shipyard,
-                can_build_complexes=True,
-                context_type=build_context.context_type,
-            )]
+        # PROJ-69: Populate queue sources from hex context
+        self.queue_sources: List[BuildQueueSource] = collect_build_queues_at_hex(
+            hex_coord, galaxy, empire
+        )
 
         # PROJ-69: Queue selection state (updated by BuildQueueSelector)
         self.selected_queue_indices: Set[int] = {0} if self.queue_sources else set()
@@ -162,10 +158,7 @@ class BuildQueueScreen:
         )
 
         # PROJ-69: Sync controller with initial queue selection
-        # Only set active queue source on controller when using hex-based multi-queue mode.
-        # In legacy mode (single build_context), the controller falls back to build_context
-        # which provides dynamic can_build_type() checks.
-        if hex_coord is not None and self.active_queue_source is not None:
+        if self.active_queue_source is not None:
             self.controller.set_active_queue(self.active_queue_source)
 
         # PROJ-63: Drag-drop handling extracted to dedicated class
@@ -271,17 +264,11 @@ class BuildQueueScreen:
             queue_sources=self.queue_sources,
             on_selection_changed=self._on_queue_selection_changed,
         )
-        # Alias for backward compatibility with tests
-        self.queue_selector_panel = self._queue_selector.panel
-        self.queue_selector_scrollable = self._queue_selector.scrollable
-        self.queue_selector_buttons = self._queue_selector.buttons
 
     def _refresh_queue_selector(self):
         """Rebuild queue selector UI elements to reflect current selection state."""
         if self._queue_selector:
             self._queue_selector.refresh()
-            # Sync buttons list for backward compatibility
-            self.queue_selector_buttons = self._queue_selector.buttons
 
     def _on_queue_selection_changed(
         self, active_source: Optional[BuildQueueSource], selected_indices: Set[int]

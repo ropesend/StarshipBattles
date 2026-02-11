@@ -22,8 +22,8 @@
 ## Current State
 **Last Updated:** 2026-02-11
 **Active Phase:** Phase 3 - Medium Complexity Removals
-**Last Action:** Task 3.2 complete - Removed deprecated BattleScreen action flags (action_return_to_setup, action_return_to_test_lab). Updated battle_ui.py to use scene_callback via _trigger_return_to_test_lab(). Removed 8 lines from battle_screen.py and updated 5 other files.
-**Next Action:** Task 3.3 - Remove BuildQueueScreen legacy single-context mode
+**Last Action:** Task 3.3 complete - Removed BuildQueueScreen legacy single-context mode. Made hex_coord, galaxy, empire required parameters with validation. Removed backward compat alias properties (queue_selector_panel, queue_selector_scrollable, queue_selector_buttons). Updated 8 test files with MockGalaxy and required parameters.
+**Next Action:** Task 3.4 - Remove StrategyInputHandler legacy keydown fallback
 **Blockers:** None
 
 ## Overview

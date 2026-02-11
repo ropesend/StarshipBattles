@@ -13,10 +13,22 @@ from game.strategy.data.empire import Empire
 from game.core.validation import ValidationResult
 
 
-class MockSession:
+class MockGalaxy:
+    """Minimal mock Galaxy for BuildQueueScreen tests."""
     def __init__(self):
+        self.systems = {}
+        self._global_hex_planets = {}
+        self.fleets_by_id = {}
+
+    def get_planets_at_global_hex(self, hex_coord):
+        return self._global_hex_planets.get(hex_coord, [])
+
+
+class MockSession:
+    def __init__(self, galaxy=None, empire=None):
         self.savegame_path = "test_savegame"
-        self.current_empire = Empire(1, "Test Empire", (255, 0, 0))
+        self.current_empire = empire or Empire(1, "Test Empire", (255, 0, 0))
+        self.galaxy = galaxy or MockGalaxy()
 
     def handle_command(self, cmd):
         """Mock command handler."""
@@ -35,10 +47,11 @@ class TestBuildQueuePortraitLogging:
         screen = pygame.display.set_mode((1024, 768))
         manager = pygame_gui.UIManager((1024, 768))
 
+        hex_coord = HexCoord(5, 5)
         # Create test planet
         planet = Planet(
             name="Test Colony",
-            location=HexCoord(5, 5),
+            location=hex_coord,
             orbit_distance=3,
             mass=5.97e24,
             radius=6371000,
@@ -55,7 +68,11 @@ class TestBuildQueuePortraitLogging:
         planet.owner_id = 1
         planet.id = 100
 
-        session = MockSession()
+        empire = Empire(1, "Test Empire", (255, 0, 0))
+        galaxy = MockGalaxy()
+        galaxy._global_hex_planets[hex_coord] = [planet]
+
+        session = MockSession(galaxy=galaxy, empire=empire)
         on_close = MagicMock()
 
         from game.ui.screens.build_queue_screen import BuildQueueScreen
@@ -65,7 +82,10 @@ class TestBuildQueuePortraitLogging:
             session,
             on_close,
             design_library=mock_design_library,
-            design_loader=mock_design_loader
+            design_loader=mock_design_loader,
+            hex_coord=hex_coord,
+            galaxy=galaxy,
+            empire=empire
         )
 
         # Create mock design
@@ -101,9 +121,10 @@ class TestBuildQueuePortraitLogging:
         screen = pygame.display.set_mode((1024, 768))
         manager = pygame_gui.UIManager((1024, 768))
 
+        hex_coord = HexCoord(5, 5)
         planet = Planet(
             name="Test Colony",
-            location=HexCoord(5, 5),
+            location=hex_coord,
             orbit_distance=3,
             mass=5.97e24,
             radius=6371000,
@@ -120,7 +141,11 @@ class TestBuildQueuePortraitLogging:
         planet.owner_id = 1
         planet.id = 100
 
-        session = MockSession()
+        empire = Empire(1, "Test Empire", (255, 0, 0))
+        galaxy = MockGalaxy()
+        galaxy._global_hex_planets[hex_coord] = [planet]
+
+        session = MockSession(galaxy=galaxy, empire=empire)
 
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         bq_screen = BuildQueueScreen(
@@ -129,7 +154,10 @@ class TestBuildQueuePortraitLogging:
             session,
             lambda: None,
             design_library=mock_design_library,
-            design_loader=mock_design_loader
+            design_loader=mock_design_loader,
+            hex_coord=hex_coord,
+            galaxy=galaxy,
+            empire=empire
         )
 
         mock_design = MagicMock()
