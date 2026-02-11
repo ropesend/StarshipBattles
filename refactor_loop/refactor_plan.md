@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-98 - Empire Build Yards Screen Enhancement - ALL PHASES + AUDIT PASSED
-**Current Status:** PROJ-98 Complete
+**Last Completed:** PROJ-99 Phase 1 - Economy Calculator
+**Current Status:** PROJ-99 Phase 1 Complete
 **Current Project:** PROJ-99
-**Current Phase:** Phase 1
-**Test Status:** 7648 passed
+**Current Phase:** Phase 2
+**Test Status:** 7672 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-98 Phase 4: Final verification complete
-- All 4 issues verified resolved via code grep
-- Audit passed: event handling, resource columns, sorting, filter toggles all working
-- 7648 tests passing, 4 warnings (existing pygame font warnings)
-- All previously-listed projects [x] complete
-- PROJ-99 and PROJ-100 added to plan, ready for execution
+- PROJ-99 Phase 1 complete: EmpireEconomyCalculator + EmpireEconomySnapshot
+- Created game/strategy/engine/empire_economy_calculator.py (222 lines)
+- Created tests/unit/strategy/engine/test_empire_economy_calculator.py (13 tests)
+- Calculator aggregates colony production (ResourceHarvester), maintenance (5% of build cost)
+- Handles both layer formats (dict with components key, direct list)
+- No pygame imports - pure strategy layer
+- Next: Phase 2 - Treasury Panel UI
 
 ---
 
@@ -317,7 +318,7 @@
 
 ---
 
-- [ ] **PROJ-99: Empire Panel Window**
+- [/] **PROJ-99: Empire Panel Window**
   - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-99/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-99/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -529,6 +530,7 @@
 | 2026-02-10 | PROJ-98 | Phase 3 | Complete | 7648 passed | pending | ColumnManager integration, sort_sources(), 12 new tests |
 | 2026-02-10 | PROJ-98 | Phase 4 | Complete | 7648 passed | pending | Final verification - all 4 issues confirmed fixed |
 | 2026-02-10 | PROJ-98 | Audit 1 | PASSED | 7648 passed | pending | All goals met: event handling, resource columns, sorting, filter toggles |
+| 2026-02-10 | PROJ-99 | Phase 1 | Complete | 7672 passed | pending | EmpireEconomyCalculator + EmpireEconomySnapshot, 13 tests |
 
 ---
 

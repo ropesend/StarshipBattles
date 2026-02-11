@@ -13,30 +13,51 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. TBD | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Replace Detail Panel with DesignReportPanel | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. New Columns | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. New Filters | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Multi-Select + Remove Ships | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-10 17:45
-**Active Phase:** Planning
-**Last Action:** Project created
-**Next Action:** Define project scope and phases
+**Last Updated:** 2026-02-10 18:30
+**Active Phase:** Planning Complete — Ready for Implementation
+**Last Action:** Plan approved by user
+**Next Action:** Begin Phase 1 — Replace ShipDetailPanel with DesignReportPanel
 **Blockers:** None
+**Context for Next Agent:** Baseline is 7648 tests passing. All design decisions documented in decisions.md. Phase checklists have full task details.
 
 ## Overview
-[2-3 sentence description of what this project accomplishes]
+Enhance the Fleet Report screen with: (1) Replace the right-side ShipDetailPanel with the shared DesignReportPanel used in Build Queue and Design Workshop, (2) Add 7 new data columns, (3) Add 2 new filter pairs, (4) Add multi-select ship removal that creates new fleets.
 
 ## Goals
-- [Goal 1]
-- [Goal 2]
+- Replace right-side detail panel with DesignReportPanel (same component as Build Queue/Workshop)
+- Add columns: Speed, Tonnage, Warp, Spaceyard, Transport, Resources, Cargo
+- Add filters: Has Spaceyard, Has Cargo (including population)
+- Add Ctrl+click multi-select and "Remove Selected" button that creates a new fleet from removed ships
+- Keep column/filter names concise and consistent
 
 ## Scope
-**In:** [What's included]
-**Out:** [What's explicitly excluded]
+**In:** Detail panel replacement, new columns, new filters, multi-select, ship removal to new fleet
+**Out:** Fleet splitting UI, fleet merge UI, drag-and-drop ship transfer, column width resizing
 
 ## Key Files
 | Component | File Path |
 |-----------|-----------|
-| [Name] | `path/to/file.py` |
+| Fleet Report Window | `game/ui/screens/fleet_report_window.py` |
+| ShipDetailPanel (to replace) | `game/ui/panels/ship_detail_panel.py` |
+| DesignReportPanel (replacement) | `game/ui/panels/design_report_panel.py` |
+| DesignStatsPanel (delegate) | `game/ui/panels/design_stats_panel.py` |
+| DesignLoaderAdapter | `game/ui/services/design_loader_adapter.py` |
+| SimulationDesignLoader | `game/simulation/services/design_loader.py` |
+| Column Manager | `game/ui/screens/column_manager.py` |
+| View Model | `game/ui/screens/fleet_report_view_model.py` |
+| Filters/Sort | `game/ui/screens/fleet_report_filters.py` |
+| Fleet model | `game/strategy/data/fleet.py` |
+| Fleet Capability Calculator | `game/strategy/data/fleet_capability_calculator.py` |
+| Empire | `game/strategy/data/empire.py` |
+| Strategy Window Manager | `game/ui/screens/strategy_window_manager.py` |
+| Fleet Speed Calculator | `game/strategy/services/fleet_speed_calculator.py` |
+| Ship Stats Calculator | `game/strategy/services/ship_stats_calculator.py` |
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
@@ -44,6 +65,6 @@
 
 ## Verification
 - [ ] All phase checklists complete
-- [ ] All tests passing
+- [ ] All tests passing (baseline 7648 + new tests)
 - [ ] Audit passed
 - [ ] User verified
