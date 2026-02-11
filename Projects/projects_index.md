@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-105 | Visual Regression Testing for UI Panels | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-104 | Cyclomatic Complexity Reduction - Critical Functions | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-102 | Strategic Superweapons and Special Orders | Plan Approved | 2026-02-10 | 2026-02-10 |
@@ -201,7 +202,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-105
+## Next Project ID: PROJ-106
 
 ---
 
