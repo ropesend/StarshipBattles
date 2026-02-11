@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional, Any, List
+from typing import Optional, List
 from enum import Enum, auto
+
+from game.core.hex_math import HexCoord
 
 class CommandType(Enum):
     ISSUE_ORDER = auto()
@@ -30,9 +32,9 @@ class IssueColonizeCommand(Command):
 class IssueMoveCommand(Command):
     """Command to move a fleet to a target hex."""
     fleet_id: int
-    target_hex: Any # HexCoord
+    target_hex: HexCoord
     
-    def __init__(self, fleet_id: int, target_hex: Any):
+    def __init__(self, fleet_id: int, target_hex: HexCoord):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -88,10 +90,10 @@ class QueueColonizeMissionCommand(Command):
     planet when it arrives at the target hex.
     """
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
     planet_id: Optional[int]  # None for 'colonize any/largest available planet'
 
-    def __init__(self, fleet_id: int, target_hex: Any, planet_id: Optional[int] = None):
+    def __init__(self, fleet_id: int, target_hex: HexCoord, planet_id: Optional[int] = None):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -178,10 +180,10 @@ class IssueStellerateStarCommand(Command):
 class IssueOpenWarpPointCommand(Command):
     """Command to issue an OPEN_WARP_POINT order to create a warp link."""
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
     target_system_name: str
 
-    def __init__(self, fleet_id: int, target_hex: Any, target_system_name: str):
+    def __init__(self, fleet_id: int, target_hex: HexCoord, target_system_name: str):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -230,10 +232,10 @@ class IssueSelfDestructCommand(Command):
 class QueueImplodePlanetMissionCommand(Command):
     """Command to queue a move-to-hex then implode planet mission."""
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
     planet_id: int
 
-    def __init__(self, fleet_id: int, target_hex: Any, planet_id: int):
+    def __init__(self, fleet_id: int, target_hex: HexCoord, planet_id: int):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -244,9 +246,9 @@ class QueueImplodePlanetMissionCommand(Command):
 class QueueStellerateStarMissionCommand(Command):
     """Command to queue a move-to-hex then stellerate star mission."""
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
 
-    def __init__(self, fleet_id: int, target_hex: Any):
+    def __init__(self, fleet_id: int, target_hex: HexCoord):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -256,10 +258,10 @@ class QueueStellerateStarMissionCommand(Command):
 class QueueOpenWarpPointMissionCommand(Command):
     """Command to queue a move-to-hex then open warp point mission."""
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
     target_system_name: str
 
-    def __init__(self, fleet_id: int, target_hex: Any, target_system_name: str):
+    def __init__(self, fleet_id: int, target_hex: HexCoord, target_system_name: str):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -270,10 +272,10 @@ class QueueOpenWarpPointMissionCommand(Command):
 class QueueCloseWarpPointMissionCommand(Command):
     """Command to queue a move-to-hex then close warp point mission."""
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
     warp_point_destination_id: str
 
-    def __init__(self, fleet_id: int, target_hex: Any, warp_point_destination_id: str):
+    def __init__(self, fleet_id: int, target_hex: HexCoord, warp_point_destination_id: str):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex
@@ -284,9 +286,9 @@ class QueueCloseWarpPointMissionCommand(Command):
 class QueueCreateDysonSphereMissionCommand(Command):
     """Command to queue a move-to-hex then create Dyson Sphere mission."""
     fleet_id: int
-    target_hex: Any  # HexCoord
+    target_hex: HexCoord
 
-    def __init__(self, fleet_id: int, target_hex: Any):
+    def __init__(self, fleet_id: int, target_hex: HexCoord):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
         self.target_hex = target_hex

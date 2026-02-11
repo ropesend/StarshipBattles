@@ -44,6 +44,8 @@ Example:
     result = session.handle_command(cmd)
 """
 import warnings
+from typing import Any, Dict
+
 from game.core.logger import log_info, log_debug, set_event_handler
 from game.strategy.events import Event, EventLog
 from game.strategy.engine.turn_engine import TurnEngine
@@ -260,7 +262,7 @@ class GameSession:
         """
         return self.galaxy.get_planet_by_id(planet_id)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Serialize GameSession to dict for save system.
 

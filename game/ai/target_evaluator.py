@@ -23,7 +23,7 @@ from game.core.constants import AttackType, LayerType
 logger = logging.getLogger(__name__)
 
 
-def _is_vector2_like(obj):
+def _is_vector2_like(obj) -> bool:
     """Check if object is a real Vector2-like object (not a MagicMock)."""
     # Check for MagicMock by looking for tell-tale attributes
     if hasattr(obj, '_mock_name') or hasattr(obj, 'assert_called'):
@@ -32,7 +32,7 @@ def _is_vector2_like(obj):
     return hasattr(obj, 'x') and hasattr(obj, 'y') and hasattr(obj, 'distance_to')
 
 
-def _get_position(entity):
+def _get_position(entity) -> 'Vector2':
     """Get position from entity, supporting both interface and direct access.
 
     Uses interface method get_position() if available and returns a real Vector2,
@@ -67,7 +67,7 @@ def _get_position(entity):
     return entity.position
 
 
-def _get_rotation(entity):
+def _get_rotation(entity) -> float:
     """Get rotation from entity, supporting both interface and direct access.
 
     Args:
@@ -98,7 +98,7 @@ def _get_rotation(entity):
     return entity.angle
 
 
-def _get_all_components(entity):
+def _get_all_components(entity) -> list:
     """Get all components from entity, supporting both interface and direct access."""
     if hasattr(entity, 'get_all_components') and callable(getattr(entity, 'get_all_components', None)):
         return entity.get_all_components()

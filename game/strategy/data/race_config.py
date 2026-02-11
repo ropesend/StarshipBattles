@@ -6,7 +6,7 @@ race configuration data including visual selections (flags, portraits, themes),
 environmental preferences, and descriptive text.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from datetime import datetime
 
 from game.core.json_utils import load_json, save_json
@@ -146,7 +146,7 @@ class RaceConfig:
                 if gas not in self.atmosphere_preferences:
                     self.atmosphere_preferences[gas] = 0.0
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize to JSON-compatible dictionary."""
         return {
             # Identity

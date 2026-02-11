@@ -65,7 +65,7 @@ class ShipStatsCalculator:
     def __init__(self, vehicle_classes):
         self.vehicle_classes = vehicle_classes
 
-    def calculate(self, ship):
+    def calculate(self, ship) -> None:
         """
         Recalculates all derived stats for the ship based on its components and class.
         """
@@ -149,7 +149,7 @@ class ShipStatsCalculator:
         # ---------------------------------------------
         self._phase_sensor_defense_scores(ship, component_pool)
 
-    def _phase_sensor_defense_scores(self, ship, component_pool):
+    def _phase_sensor_defense_scores(self, ship, component_pool) -> None:
         """Phase 5: Calculate to-hit, defense scores, and finalize resources.
 
         Computes defense score (size + maneuver + ECM), offensive modifiers,
@@ -217,7 +217,7 @@ class ShipStatsCalculator:
         # Combat Endurance Stats
         calculate_combat_endurance(ship, component_pool)
 
-    def _phase_physics_and_limits(self, ship):
+    def _phase_physics_and_limits(self, ship) -> None:
         """Phase 4: Apply physics formulas and check mass limits.
 
         Calculates acceleration, max speed, turn speed using inverse mass scaling.
@@ -244,7 +244,7 @@ class ShipStatsCalculator:
         ratio = actual_mass / ref_mass
         ship.radius = base_radius * (ratio ** (1/3.0))
 
-    def _phase_stats_aggregation(self, ship, component_pool):
+    def _phase_stats_aggregation(self, ship, component_pool) -> None:
         """Phase 3: Aggregate stats from active components.
 
         Iterates all active components and aggregates resource storage, generation,
@@ -371,7 +371,7 @@ class ShipStatsCalculator:
         ship.warp_max_tonnage = warp_max_tonnage
         ship.warp_energy_cost = warp_energy_cost
 
-    def _phase_resource_allocation(self, ship, component_pool, available_crew, available_life_support):
+    def _phase_resource_allocation(self, ship, component_pool, available_crew, available_life_support) -> None:
         """Phase 2: Allocate crew and life support to components.
 
         Deactivates components that cannot be crewed. Updates ship.crew_onboard,
@@ -409,7 +409,7 @@ class ShipStatsCalculator:
                     comp.is_active = False
                     comp.status = ComponentStatus.NO_CREW
 
-    def _phase_damage_check_and_supply(self, ship):
+    def _phase_damage_check_and_supply(self, ship) -> tuple[list, int, int]:
         """Phase 1: Check damage thresholds and gather crew/life support.
 
         Returns:
@@ -453,7 +453,7 @@ class ShipStatsCalculator:
 
         return component_pool, available_crew, available_life_support
 
-    def _priority_sort_key(self, c):
+    def _priority_sort_key(self, c) -> int:
         # Bridge (Command)
         if c.has_ability('CommandAndControl'): return 0
         # Engines (Movement)
@@ -463,7 +463,7 @@ class ShipStatsCalculator:
         # Others
         return 3
 
-    def _check_mass_limits(self, ship):
+    def _check_mass_limits(self, ship) -> None:
         ship.mass_limits_ok = True
         # Budget check (Max Mass)
         ship.max_mass_budget = 1000 # Default
@@ -486,7 +486,7 @@ class ShipStatsCalculator:
         if ship.mass > ship.max_mass_budget:
             ship.mass_limits_ok = False
 
-    def _initialize_resources(self, ship):
+    def _initialize_resources(self, ship) -> None:
         # Resource Initialization (Auto-fill on first load only, or when capacity increases)
         prev_max_fuel = getattr(ship, '_prev_max_fuel', 0)
         prev_max_ammo = getattr(ship, '_prev_max_ammo', 0)
@@ -530,13 +530,13 @@ class ShipStatsCalculator:
         ship._prev_max_energy = curr_max_energy
         ship._prev_max_shields = ship.max_shields
 
-    def calculate_ability_totals(self, components):
+    def calculate_ability_totals(self, components) -> dict:
         """Calculate total values for all abilities from components.
 
         Delegates to the extracted ability_aggregator module.
         """
         return calculate_ability_totals(components)
 
-    def _get_ability_total(self, component_list, ability_name):
+    def _get_ability_total(self, component_list, ability_name) -> float:
         """Calculate total value of a specific ability across provided components."""
         return get_ability_total(component_list, ability_name)

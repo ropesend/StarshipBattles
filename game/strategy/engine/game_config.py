@@ -4,7 +4,7 @@ Provides centralized configuration with sensible defaults.
 """
 import os
 from dataclasses import dataclass, field
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.race_config import RaceConfig
@@ -67,7 +67,7 @@ class PlayerConfig:
     # Full race configuration for habitability/growth calculations
     race_config: Optional['RaceConfig'] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize PlayerConfig to dict."""
         data = {
             'name': self.name,
@@ -175,7 +175,7 @@ class GameConfig:
             return os.path.join(self.asset_base_path, self.players[player_index].theme)
         return None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize GameConfig to dict."""
         return {
             'asset_base_path': self.asset_base_path,

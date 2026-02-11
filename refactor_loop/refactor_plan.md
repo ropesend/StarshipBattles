@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-107 Phase 1
-**Current Status:** PROJ-107 Phase 1 Complete
+**Last Completed:** PROJ-107 Phase 2
+**Current Status:** PROJ-107 Phase 2 Complete
 **Current Project:** PROJ-107
-**Current Phase:** Phase 2 (next)
+**Current Phase:** Phase 3 (next)
 **Test Status:** 8185 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-107 Phase 1 Complete — Error Code Standardization
-  - Added AI category to ErrorCode enum (A001 = AI_STATE_ERROR)
-  - Fixed StrategyManager to use ErrorCode.AI_STATE_ERROR.value
-  - Fixed 3 docstring examples in exceptions.py to use enum pattern
-  - Fixed ValidationResult docstring invalid E001 → VALIDATION_FAILED.value
-  - Added missing Formula codes F001, F002, F004 to ErrorCode enum
-  - Updated test_ai_exceptions.py to expect "A001"
+- PROJ-107 Phase 2 Complete — Type Hint & Return Type Standardization
+  - Task 2.1: Added `-> float` to AIController.get_engage_distance_multiplier
+  - Task 2.2: Added return types to 4 target_evaluator module functions
+  - Task 2.3: Added return types to 11 ShipStatsCalculator methods
+  - Task 2.4: Replaced 16 `target_hex: Any` with `HexCoord` in commands.py
+  - Task 2.5: Standardized 12 `to_dict()` methods to `Dict[str, Any]` across 9 files
+  - Task 2.6: Already complete - BattleUIService methods had types
   - 8185 tests passing
-- Next: Phase 2 (Type Hint & Return Type Standardization)
+- Next: Phase 3 (Naming & API Standardization)
 
 ---
 
@@ -169,7 +169,7 @@
 ---
 
 - [/] **PROJ-107: Consistency & API Standardization**
-  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 6 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -301,6 +301,7 @@
 | 2026-02-11 | PROJ-106 | Phase 6 | Complete | 8185 passed | pending | BattleUIService getattr 20+ → 3, LayerDefaults-derived radii, updated tests |
 | 2026-02-11 | PROJ-106 | Audit 1 | PASSED | 8185 passed | pending | All layer boundaries verified, private attributes clean, deferred findings documented |
 | 2026-02-11 | PROJ-107 | Phase 1 | Complete | 8185 passed | pending | Added AI error codes, fixed docstrings, added F001/F002/F004 |
+| 2026-02-11 | PROJ-107 | Phase 2 | Complete | 8185 passed | pending | Type hints: AI/sim/strategy, 16 HexCoord replacements, 12 to_dict standardized |
 
 ---
 

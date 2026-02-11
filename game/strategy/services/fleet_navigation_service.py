@@ -53,7 +53,7 @@ Architecture:
   - calculate_fleet_next_hex(fleet, galaxy) → HexCoord?
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from game.core.hex_math import HexCoord, hex_distance
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
@@ -107,7 +107,7 @@ class PathSegment:
     turn: int
     is_warp: bool
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for serialization.
 
         Note: The 'hex' field duplicates 'end' for consistency with internal

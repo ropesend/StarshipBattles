@@ -94,7 +94,7 @@ class AIController:
         strategy_id = self.ship.get_ai_strategy()
         return StrategyManager.instance().resolve_strategy(strategy_id)
 
-    def get_engage_distance_multiplier(self, policy):
+    def get_engage_distance_multiplier(self, policy) -> float:
         """Helper to get engage distance multiplier from policy."""
         val = policy.get('engage_distance', 'max_range')
         if val == 'max_range':

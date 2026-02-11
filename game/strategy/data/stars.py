@@ -3,6 +3,7 @@ import random
 import math
 from enum import Enum, auto
 from dataclasses import dataclass, field
+from typing import Dict, Any
 from game.core.hex_math import HexCoord, hex_ring
 
 # Constants
@@ -42,7 +43,7 @@ class Spectrum:
                 self.blue + self.green + self.red +
                 self.infrared + self.microwave + self.radio)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize Spectrum to dict."""
         return {
             'gamma_ray': self.gamma_ray,
@@ -86,7 +87,7 @@ class Star:
     # Location relative to system center (0,0,0)
     location: HexCoord = field(default_factory=lambda: HexCoord(0, 0))
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize Star to dict."""
         from game.core.hex_math import hex_to_dict
         return {

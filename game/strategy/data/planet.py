@@ -272,7 +272,7 @@ class Planet:
         }
         self.construction_queue.append(queue_item)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Serialize planet to dict for save system.
 

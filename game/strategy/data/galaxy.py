@@ -1,7 +1,7 @@
 import random
 import math
 from enum import Enum, auto
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
 from game.strategy.data.naming import NameRegistry
 import os
@@ -22,7 +22,7 @@ class WarpPoint:
         self.destination_id = destination_id
         self.location = location # HexCoord (Local to system)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize WarpPoint to dict."""
         from game.core.hex_math import hex_to_dict
         return {
@@ -60,7 +60,7 @@ class StarSystem:
         p_name = self.primary_star.name if self.primary_star else "Empty"
         return f"System('{self.name}', Loc:{self.global_location}, Stars:{star_count}, Primary:{p_name})"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize StarSystem to dict."""
         from game.core.hex_math import hex_to_dict
         result = {
@@ -643,7 +643,7 @@ class Galaxy:
                         region_pair = (min(region_i, region_j), max(region_i, region_j))
                         inter_region_links[region_pair] = inter_region_links.get(region_pair, 0) + 1
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize Galaxy to dict."""
         from game.core.hex_math import hex_to_dict
 

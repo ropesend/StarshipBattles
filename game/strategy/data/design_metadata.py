@@ -6,7 +6,7 @@ without loading the full ship data. Used by the design library system for filter
 sorting, and displaying designs in the UI.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from datetime import datetime
 import os
 import warnings
@@ -34,7 +34,7 @@ class DesignMetadata:
     theme_id: str = ""
     sprite_preview: Optional[str] = None  # Base64 encoded image (future)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Serialize to JSON"""
         return {
             "design_id": self.design_id,

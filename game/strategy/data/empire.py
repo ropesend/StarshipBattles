@@ -1,3 +1,6 @@
+from typing import Dict, Any
+
+
 class Empire:
     """
     Represents a player or AI faction.
@@ -131,7 +134,7 @@ class Empire:
         """
         return self.resource_pool.get(resource_type, 0.0)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Serialize Empire to dict.
 

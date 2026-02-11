@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Error Code Standardization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Type Hint & Return Type Standardization | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Type Hint & Return Type Standardization | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Naming & API Standardization | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Service DI & Return Type Standardization | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation API Consistency | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,9 +22,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** Phase 1 complete. Added AI error code category (A001), fixed 3 docstring examples, added missing F001/F002/F004 formula codes.
-**Next Action:** Begin Phase 2 - Type Hint & Return Type Standardization
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** Phase 2 complete. Added return type hints to AI, simulation, and strategy layers. Replaced 16 `Any` with `HexCoord` in commands.py. Standardized 12 `to_dict()` methods to `Dict[str, Any]`.
+**Next Action:** Begin Phase 3 - Naming & API Standardization
 **Blockers:** None
 **Test Baseline:** 8185 tests passing
 
