@@ -465,5 +465,120 @@ class TestSortShips:
         assert names == ["Battleship", "Cruiser", "Destroyer"]
 
 
+class TestSortShipsNewColumns:
+    """Test cases for new column sorting in PROJ-101 Phase 2."""
+
+    def test_sort_by_speed(self):
+        """Sort by ship speed."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+        from unittest.mock import patch
+
+        ships = [
+            make_mock_ship(design_name="Slow"),
+            make_mock_ship(design_name="Fast"),
+            make_mock_ship(design_name="Medium"),
+        ]
+
+        def mock_speed(ship):
+            speeds = {"Slow": 3, "Fast": 7, "Medium": 5}
+            return speeds[ship.name]
+
+        with patch('game.strategy.services.fleet_speed_calculator.FleetSpeedCalculator.calculate_ship_speed', side_effect=mock_speed):
+            result = sort_ships(ships, 'speed', descending=False)
+            assert [s.name for s in result] == ["Slow", "Medium", "Fast"]
+
+    def test_sort_by_tonnage(self):
+        """Sort by ship tonnage/mass."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+
+        ships = [
+            make_mock_ship(design_name="Medium", mass=2000),
+            make_mock_ship(design_name="Light", mass=500),
+            make_mock_ship(design_name="Heavy", mass=5000),
+        ]
+        result = sort_ships(ships, 'tonnage', descending=False)
+
+        masses = [s.get_calculated_stats()['mass'] for s in result]
+        assert masses == [500, 2000, 5000]
+
+    def test_sort_by_warp(self):
+        """Sort by warp capability (Yes=1, No=0)."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+
+        ships = [
+            make_mock_ship(design_name="NoWarp", mass=1000, warp_tonnage=None),
+            make_mock_ship(design_name="HasWarp", mass=1000, warp_tonnage=1500),
+            make_mock_ship(design_name="AlsoNoWarp", mass=1000, warp_tonnage=500),
+        ]
+        result = sort_ships(ships, 'warp', descending=True)
+
+        # HasWarp should be first (1), others second (0)
+        assert result[0].name == "HasWarp"
+
+    def test_sort_by_spaceyard(self):
+        """Sort by spaceyard capability."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+        from unittest.mock import patch
+
+        ships = [
+            make_mock_ship(design_name="NoYard"),
+            make_mock_ship(design_name="HasYard"),
+        ]
+
+        def mock_has_yard(ship):
+            return ship.name == "HasYard"
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
+            result = sort_ships(ships, 'spaceyard', descending=True)
+            assert result[0].name == "HasYard"
+
+    def test_sort_by_transport(self):
+        """Sort by transport capability (passenger capacity)."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+
+        ship_no_pax = make_mock_ship(design_name="Warship")
+        ship_no_pax.get_calculated_stats.return_value = {'mass': 1000, 'cargo_storage': {}}
+
+        ship_with_pax = make_mock_ship(design_name="Transport")
+        ship_with_pax.get_calculated_stats.return_value = {'mass': 1000, 'cargo_storage': {'passengers': 100}}
+
+        ships = [ship_no_pax, ship_with_pax]
+        result = sort_ships(ships, 'transport', descending=True)
+
+        assert result[0].name == "Transport"
+
+    def test_sort_by_cargo(self):
+        """Sort by cargo contents."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+
+        ship_empty = make_mock_ship(design_name="Empty")
+        ship_empty.cargo_contents = {}
+
+        ship_some = make_mock_ship(design_name="Some")
+        ship_some.cargo_contents = {'minerals': 50}
+
+        ship_full = make_mock_ship(design_name="Full")
+        ship_full.cargo_contents = {'minerals': 100, 'food': 50}
+
+        ships = [ship_some, ship_full, ship_empty]
+        result = sort_ships(ships, 'cargo', descending=True)
+
+        assert [s.name for s in result] == ["Full", "Some", "Empty"]
+
+    def test_sort_by_resources_returns_stable_order(self):
+        """Sort by resources column returns 0 for all (no meaningful sort)."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+
+        ships = [
+            make_mock_ship(design_name="A"),
+            make_mock_ship(design_name="B"),
+            make_mock_ship(design_name="C"),
+        ]
+        result = sort_ships(ships, 'resources', descending=False)
+
+        # Order should be stable (same as input) since all return 0
+        assert [s.name for s in result] == ["A", "B", "C"]
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

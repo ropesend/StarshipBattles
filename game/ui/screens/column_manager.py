@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Dict, Any, Optional
 
+from game.core.constants import ResourceType
+
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
 
@@ -20,6 +22,13 @@ DEFAULT_FLEET_COLUMNS = [
     {'id': 'name', 'width': 120, 'title': 'Name', 'visible': True},
     {'id': 'hp_pct', 'width': 80, 'title': 'HP %', 'visible': True},
     {'id': 'status', 'width': 100, 'title': 'Status', 'visible': True},
+    {'id': 'speed', 'width': 70, 'title': 'Spd', 'visible': False},
+    {'id': 'tonnage', 'width': 80, 'title': 'Tons', 'visible': False},
+    {'id': 'warp', 'width': 55, 'title': 'Warp', 'visible': False},
+    {'id': 'spaceyard', 'width': 60, 'title': 'Yard', 'visible': False},
+    {'id': 'transport', 'width': 65, 'title': 'Pax', 'visible': False},
+    {'id': 'resources', 'width': 130, 'title': 'Resources', 'visible': False},
+    {'id': 'cargo', 'width': 65, 'title': 'Cargo', 'visible': False},
 ]
 
 
@@ -153,6 +162,49 @@ class ColumnManager:
                 return "DAMAGED"
             else:
                 return "OK"
+
+        elif col_id == 'speed':
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy services
+            from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+            speed = FleetSpeedCalculator.calculate_ship_speed(ship)
+            return str(speed)
+
+        elif col_id == 'tonnage':
+            mass = ship.get_calculated_stats().get('mass', 0)
+            return f"{mass:,.0f}"
+
+        elif col_id == 'warp':
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy services
+            from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+            return "Yes" if ShipStatsCalculator.has_warp_capability(ship) else "No"
+
+        elif col_id == 'spaceyard':
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
+            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            return "Yes" if FleetCapabilityCalculator.ship_has_spaceyard(ship) else "No"
+
+        elif col_id == 'transport':
+            cargo_storage = ship.get_calculated_stats().get('cargo_storage', {})
+            has_passengers = cargo_storage.get('passengers', 0) > 0
+            return "Yes" if has_passengers else "No"
+
+        elif col_id == 'resources':
+            # Build compact string: "E:80 F:90 A:100"
+            parts = []
+            resource_abbrevs = [
+                (ResourceType.ENERGY, 'E'),
+                (ResourceType.FUEL, 'F'),
+                (ResourceType.AMMO, 'A'),
+            ]
+            for res_type, abbrev in resource_abbrevs:
+                pct = ship.get_resource_percentage(res_type)
+                if pct is not None and pct >= 0:
+                    parts.append(f"{abbrev}:{int(pct * 100)}")
+            return " ".join(parts) if parts else "--"
+
+        elif col_id == 'cargo':
+            total = sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
+            return str(total) if total > 0 else "--"
 
         return ""
 

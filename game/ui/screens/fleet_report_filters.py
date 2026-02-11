@@ -168,7 +168,7 @@ def sort_ships(
 
     Args:
         ships: List of ShipInstance objects
-        sort_column: Column ID to sort by ('serial', 'design', 'name', 'hp_pct', 'status')
+        sort_column: Column ID to sort by ('serial', 'design', 'name', 'hp_pct', 'status', etc.)
         descending: If True, sort in descending order
 
     Returns:
@@ -191,6 +191,26 @@ def sort_ships(
                 return 2
             elif ship.is_damaged():
                 return 1
+            return 0
+        elif sort_column == 'speed':
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy services
+            from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator
+            return FleetSpeedCalculator.calculate_ship_speed(ship)
+        elif sort_column == 'tonnage':
+            return ship.get_calculated_stats().get('mass', 0)
+        elif sort_column == 'warp':
+            return 1 if ShipStatsCalculator.has_warp_capability(ship) else 0
+        elif sort_column == 'spaceyard':
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
+            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            return 1 if FleetCapabilityCalculator.ship_has_spaceyard(ship) else 0
+        elif sort_column == 'transport':
+            cargo_storage = ship.get_calculated_stats().get('cargo_storage', {})
+            return 1 if cargo_storage.get('passengers', 0) > 0 else 0
+        elif sort_column == 'cargo':
+            return sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
+        elif sort_column == 'resources':
+            # No meaningful sort for combined column
             return 0
         return 0
 

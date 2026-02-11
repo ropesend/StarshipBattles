@@ -21,6 +21,29 @@ class FleetCapabilityCalculator:
     - Warp point usage capability
     """
 
+    @staticmethod
+    def ship_has_spaceyard(ship: 'ShipInstance') -> bool:
+        """
+        Check if a single ship has a space shipyard component.
+
+        Args:
+            ship: The ShipInstance to check.
+
+        Returns:
+            True if ship has a component with SpaceShipyard ability.
+        """
+        design_data = ship.design_data
+        for layer_data in design_data.get("layers", {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                if isinstance(comp, dict):
+                    if comp.get("id") == "fleet_space_yard":
+                        return True
+                    if "SpaceShipyard" in comp.get("abilities", {}):
+                        return True
+        return False
+
     def __init__(self, fleet: 'Fleet'):
         """
         Initialize calculator with fleet reference.

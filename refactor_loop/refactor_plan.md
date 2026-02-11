@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-101 Phase 1
-**Current Status:** PROJ-101 Phase 1 Complete
+**Last Completed:** PROJ-101 Phase 2
+**Current Status:** PROJ-101 Phase 2 Complete
 **Current Project:** PROJ-101
-**Current Phase:** Phase 2 — New Columns
-**Test Status:** 7713 passed
+**Current Phase:** Phase 3 — New Filters
+**Test Status:** 7742 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-101 Phase 1 COMPLETE
-- Replaced ShipDetailPanel with DesignReportPanel (350→750px)
-- Added DesignLoaderAdapter for ShipInstance→Ship conversion
-- Fixed _update_sidebar bug (→_update_summary)
-- Removed event forwarding block
-- 7713 tests passing
-- Next: Phase 2 — Add 7 new data columns
+- PROJ-101 Phase 2 COMPLETE
+- Added 7 new columns: speed, tonnage, warp, spaceyard, transport, resources, cargo
+- All hidden by default, togglable from sidebar
+- Added ship_has_spaceyard() static method to FleetCapabilityCalculator
+- Added column value extraction in column_manager.py
+- Added sort key handlers in fleet_report_filters.py
+- 29 new tests (7742 total)
+- Next: Phase 3 — Add filter pairs for Spaceyard and Cargo
 
 ---
 
@@ -557,6 +558,7 @@
 | 2026-02-10 | PROJ-100 | Phase 4 | Complete | 7713 passed | pending | 19 new tests: TestDropCargoMode, TestLoadCargoMode, TestCargoQuickDialog |
 | 2026-02-10 | PROJ-100 | Audit 1 | PASSED | 7713 passed | pending | All 5 goals verified, no issues |
 | 2026-02-10 | PROJ-101 | Phase 1 | Complete | 7713 passed | pending | ShipDetailPanel→DesignReportPanel, 350→750px, _update_sidebar bug fixed |
+| 2026-02-10 | PROJ-101 | Phase 2 | Complete | 7742 passed | pending | 7 new columns added, 29 new tests |
 
 ---
 

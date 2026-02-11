@@ -19,6 +19,54 @@ def make_ship_instance(name: str, design_data: dict = None):
     )
 
 
+class TestShipHasSpaceyard:
+    """Tests for ship_has_spaceyard() static method."""
+
+    def test_ship_has_spaceyard_with_fleet_space_yard_component(self):
+        """Ship with fleet_space_yard component returns True."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+
+        ship = make_ship_instance(
+            name="Yard Ship",
+            design_data={"layers": {"hull": [{"id": "fleet_space_yard"}]}}
+        )
+        assert FleetCapabilityCalculator.ship_has_spaceyard(ship) is True
+
+    def test_ship_has_spaceyard_with_ability_dict(self):
+        """Ship with SpaceShipyard ability returns True."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+
+        ship = make_ship_instance(
+            name="Yard Ship",
+            design_data={"layers": {"hull": [{"abilities": {"SpaceShipyard": {}}}]}}
+        )
+        assert FleetCapabilityCalculator.ship_has_spaceyard(ship) is True
+
+    def test_ship_has_spaceyard_without_yard(self):
+        """Ship without space yard returns False."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+
+        ship = make_ship_instance(
+            name="Normal Ship",
+            design_data={"layers": {"hull": [{"id": "laser"}]}}
+        )
+        assert FleetCapabilityCalculator.ship_has_spaceyard(ship) is False
+
+    def test_ship_has_spaceyard_empty_layers(self):
+        """Ship with empty layers returns False."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+
+        ship = make_ship_instance(name="Empty Ship", design_data={"layers": {}})
+        assert FleetCapabilityCalculator.ship_has_spaceyard(ship) is False
+
+    def test_ship_has_spaceyard_no_design_data(self):
+        """Ship with no design data returns False."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+
+        ship = make_ship_instance(name="No Design", design_data={})
+        assert FleetCapabilityCalculator.ship_has_spaceyard(ship) is False
+
+
 class TestFleetCapabilityCalculator:
     """Tests for FleetCapabilityCalculator."""
 

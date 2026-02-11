@@ -213,3 +213,239 @@ class TestColumnManager:
         col = mgr.get_column('status')
         value = mgr.get_column_value(ship, col)
         assert value == "DAMAGED"
+
+
+class TestNewColumns:
+    """Tests for new columns added in PROJ-101 Phase 2."""
+
+    def test_new_columns_exist_in_defaults(self):
+        """All 7 new columns exist in DEFAULT_FLEET_COLUMNS."""
+        from game.ui.screens.column_manager import DEFAULT_FLEET_COLUMNS
+
+        new_column_ids = ['speed', 'tonnage', 'warp', 'spaceyard', 'transport', 'resources', 'cargo']
+        existing_ids = [c['id'] for c in DEFAULT_FLEET_COLUMNS]
+
+        for col_id in new_column_ids:
+            assert col_id in existing_ids, f"Column {col_id} not found in defaults"
+
+    def test_new_columns_hidden_by_default(self):
+        """All 7 new columns are hidden by default."""
+        from game.ui.screens.column_manager import DEFAULT_FLEET_COLUMNS
+
+        new_column_ids = ['speed', 'tonnage', 'warp', 'spaceyard', 'transport', 'resources', 'cargo']
+
+        for col in DEFAULT_FLEET_COLUMNS:
+            if col['id'] in new_column_ids:
+                assert col.get('visible') is False, f"Column {col['id']} should be hidden by default"
+
+    def test_new_columns_have_required_properties(self):
+        """New columns have id, width, title, and visible properties."""
+        from game.ui.screens.column_manager import DEFAULT_FLEET_COLUMNS
+
+        new_column_ids = ['speed', 'tonnage', 'warp', 'spaceyard', 'transport', 'resources', 'cargo']
+
+        for col in DEFAULT_FLEET_COLUMNS:
+            if col['id'] in new_column_ids:
+                assert 'width' in col, f"Column {col['id']} missing width"
+                assert 'title' in col, f"Column {col['id']} missing title"
+                assert 'visible' in col, f"Column {col['id']} missing visible"
+                assert col['width'] > 0, f"Column {col['id']} has invalid width"
+
+
+class TestNewColumnValues:
+    """Tests for new column value extraction in PROJ-101 Phase 2."""
+
+    def test_get_column_value_speed(self):
+        """Get speed column value."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.services.fleet_speed_calculator.FleetSpeedCalculator.calculate_ship_speed', return_value=5):
+            col = mgr.get_column('speed')
+            value = mgr.get_column_value(ship, col)
+            assert value == "5"
+
+    def test_get_column_value_tonnage(self):
+        """Get tonnage column value with comma formatting."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.get_calculated_stats = Mock(return_value={'mass': 12500})
+
+        col = mgr.get_column('tonnage')
+        value = mgr.get_column_value(ship, col)
+        assert value == "12,500"
+
+    def test_get_column_value_tonnage_zero(self):
+        """Get tonnage column value when mass is zero."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.get_calculated_stats = Mock(return_value={'mass': 0})
+
+        col = mgr.get_column('tonnage')
+        value = mgr.get_column_value(ship, col)
+        assert value == "0"
+
+    def test_get_column_value_warp_yes(self):
+        """Get warp column value when ship has warp capability."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator.has_warp_capability', return_value=True):
+            col = mgr.get_column('warp')
+            value = mgr.get_column_value(ship, col)
+            assert value == "Yes"
+
+    def test_get_column_value_warp_no(self):
+        """Get warp column value when ship has no warp capability."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.services.ship_stats_calculator.ShipStatsCalculator.has_warp_capability', return_value=False):
+            col = mgr.get_column('warp')
+            value = mgr.get_column_value(ship, col)
+            assert value == "No"
+
+    def test_get_column_value_spaceyard_yes(self):
+        """Get spaceyard column value when ship has spaceyard."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', return_value=True):
+            col = mgr.get_column('spaceyard')
+            value = mgr.get_column_value(ship, col)
+            assert value == "Yes"
+
+    def test_get_column_value_spaceyard_no(self):
+        """Get spaceyard column value when ship has no spaceyard."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', return_value=False):
+            col = mgr.get_column('spaceyard')
+            value = mgr.get_column_value(ship, col)
+            assert value == "No"
+
+    def test_get_column_value_transport_yes(self):
+        """Get transport column value when ship has passenger capacity."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.get_calculated_stats = Mock(return_value={'cargo_storage': {'passengers': 100}})
+
+        col = mgr.get_column('transport')
+        value = mgr.get_column_value(ship, col)
+        assert value == "Yes"
+
+    def test_get_column_value_transport_no(self):
+        """Get transport column value when ship has no passenger capacity."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.get_calculated_stats = Mock(return_value={'cargo_storage': {}})
+
+        col = mgr.get_column('transport')
+        value = mgr.get_column_value(ship, col)
+        assert value == "No"
+
+    def test_get_column_value_resources_with_values(self):
+        """Get resources column value with resource percentages."""
+        from game.ui.screens.column_manager import ColumnManager
+        from game.core.constants import ResourceType
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        def mock_get_resource_pct(res_type):
+            if res_type == ResourceType.ENERGY:
+                return 0.8
+            elif res_type == ResourceType.FUEL:
+                return 0.9
+            elif res_type == ResourceType.AMMO:
+                return 1.0
+            return None
+
+        ship.get_resource_percentage = mock_get_resource_pct
+
+        col = mgr.get_column('resources')
+        value = mgr.get_column_value(ship, col)
+        assert "E:80" in value
+        assert "F:90" in value
+        assert "A:100" in value
+
+    def test_get_column_value_resources_empty(self):
+        """Get resources column value when ship has no resources."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.get_resource_percentage = Mock(return_value=None)
+
+        col = mgr.get_column('resources')
+        value = mgr.get_column_value(ship, col)
+        assert value == "--"
+
+    def test_get_column_value_cargo_with_contents(self):
+        """Get cargo column value when ship has cargo."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.cargo_contents = {'minerals': 50, 'food': 30}
+
+        col = mgr.get_column('cargo')
+        value = mgr.get_column_value(ship, col)
+        assert value == "80"
+
+    def test_get_column_value_cargo_empty(self):
+        """Get cargo column value when ship has no cargo."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.cargo_contents = {}
+
+        col = mgr.get_column('cargo')
+        value = mgr.get_column_value(ship, col)
+        assert value == "--"
+
+    def test_get_column_value_cargo_none(self):
+        """Get cargo column value when cargo_contents is None."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock
+
+        mgr = ColumnManager()
+        ship = Mock()
+        ship.cargo_contents = None
+
+        col = mgr.get_column('cargo')
+        value = mgr.get_column_value(ship, col)
+        assert value == "--"
