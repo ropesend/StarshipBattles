@@ -103,9 +103,11 @@ class SpaceShipyardAbility(Ability):
         if isinstance(data, dict):
             self.construction_speed_bonus = data.get("construction_speed_bonus", 1.0)
             self.max_ship_mass = data.get("max_ship_mass", 100000)
+            self.production_rates: Dict[str, float] = data.get("production_rates", {})
         else:
             self.construction_speed_bonus = 1.0
             self.max_ship_mass = 100000
+            self.production_rates: Dict[str, float] = {}
 
     def get_primary_value(self) -> float:
         """Return the construction speed bonus as primary value."""
@@ -113,7 +115,7 @@ class SpaceShipyardAbility(Ability):
 
     def get_ui_rows(self) -> List[Dict[str, str]]:
         """Return UI rows showing shipyard stats."""
-        return [
+        rows = [
             {
                 'label': 'Construction Bonus',
                 'value': f'{self.construction_speed_bonus:.1f}x',
@@ -125,3 +127,19 @@ class SpaceShipyardAbility(Ability):
                 'color_hint': '#FFFFFF'
             }
         ]
+        if self.production_rates:
+            # Show max rate if all rates are equal, otherwise show range
+            rates = list(self.production_rates.values())
+            if len(set(rates)) == 1:
+                rows.append({
+                    'label': 'Production Rate',
+                    'value': f'{int(rates[0]):,}/turn',
+                    'color_hint': '#00FF00'
+                })
+            else:
+                rows.append({
+                    'label': 'Production Rate',
+                    'value': f'{int(min(rates)):,}-{int(max(rates)):,}/turn',
+                    'color_hint': '#00FF00'
+                })
+        return rows

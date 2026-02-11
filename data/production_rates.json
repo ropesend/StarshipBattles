@@ -1,0 +1,23 @@
+{
+    "planetary_yard": {
+        "Metals": 2000,
+        "Organics": 2000,
+        "Radioactives": 2000,
+        "Vapors": 2000,
+        "Exotics": 2000
+    },
+    "space_shipyard": {
+        "Metals": 3000,
+        "Organics": 3000,
+        "Radioactives": 3000,
+        "Vapors": 3000,
+        "Exotics": 3000
+    },
+    "fleet_space_yard": {
+        "Metals": 3000,
+        "Organics": 3000,
+        "Radioactives": 3000,
+        "Vapors": 3000,
+        "Exotics": 3000
+    }
+}

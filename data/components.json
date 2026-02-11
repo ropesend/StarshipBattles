@@ -2028,7 +2028,14 @@
             "abilities": {
                 "SpaceShipyard": {
                     "construction_speed_bonus": 1.0,
-                    "max_ship_mass": 100000
+                    "max_ship_mass": 100000,
+                    "production_rates": {
+                        "Metals": 3000,
+                        "Organics": 3000,
+                        "Radioactives": 3000,
+                        "Vapors": 3000,
+                        "Exotics": 3000
+                    }
                 },
                 "CrewRequired": 100,
                 "ResourceStorage": {
@@ -2058,7 +2065,14 @@
             "abilities": {
                 "SpaceShipyard": {
                     "construction_speed_bonus": 1.0,
-                    "max_ship_mass": 100000
+                    "max_ship_mass": 100000,
+                    "production_rates": {
+                        "Metals": 3000,
+                        "Organics": 3000,
+                        "Radioactives": 3000,
+                        "Vapors": 3000,
+                        "Exotics": 3000
+                    }
                 },
                 "CrewRequired": 150,
                 "ResourceStorage": {
