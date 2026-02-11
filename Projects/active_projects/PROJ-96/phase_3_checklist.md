@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Rewrite `_refresh_ship_preview` for 3-column layout, 9 ships, smart top-down scaling, centered labels, tighter spacing.
 
 ---
@@ -16,53 +16,21 @@
 **File:** `game/ui/screens/race_setup_screen.py`
 **Tests:** `pytest tests/ --testmon` + visual test
 
-- [ ] Replace `ship_classes` list (lines 399-406) with:
-  ```python
-  ship_classes = [
-      "Fighter (Medium)", "Satellite (Medium)", "Escort",
-      "Frigate", "Cruiser", "Heavy Cruiser",
-      "Battleship", "Dreadnought", "Superdreadnought",
-  ]
-  ```
-- [ ] Define column count and sizes:
-  ```python
-  num_cols = 3
-  portrait_size = 160  # or use self.SHIP_PREVIEW_SIZE
-  image_gap = 5
-  col_width = container_width // num_cols
-  row_height = portrait_size + 35  # label(25) + gap(5) + image + bottom_pad(5)
-  row_spacing = 10
-  ```
-- [ ] Update scroll height calculation:
-  ```python
-  total_rows = (len(ship_classes) + num_cols - 1) // num_cols
-  scroll_height = 10 + total_rows * (row_height + row_spacing) + 20
-  ```
-- [ ] Update column/row iteration:
-  ```python
-  col = i % num_cols
-  if col == 0 and i > 0:
-      y += row_height + row_spacing
-  x = 10 + col * col_width
-  ```
-- [ ] Verify: 3 columns visible, 9 ships total
+- [x] Replace `ship_classes` list with 9 ship classes:
+  Fighter (Medium), Satellite (Medium), Escort, Frigate, Cruiser, Heavy Cruiser, Battleship, Dreadnought, Superdreadnought
+- [x] Define column count and sizes: num_cols=3, portrait_size=160, image_gap=5
+- [x] Update scroll height calculation for 3-column grid
+- [x] Update column/row iteration with num_cols and row_spacing
+- [x] Verify: 3 columns visible, 9 ships total
 
-**Notes:**
+**Notes:** Layout constants defined: portrait_size=160, image_gap=5, row_spacing=10
 
 ### Task 3.2: Center labels above image pairs [Simple]
 **File:** `game/ui/screens/race_setup_screen.py`
 **Tests:** Visual test
 
-- [ ] Update label creation (lines 433-438):
-  ```python
-  label = pygame_gui.elements.UILabel(
-      relative_rect=pygame.Rect(x, y, col_width - 10, 25),
-      text=ship_class,
-      manager=self.ui_manager,
-      container=container
-  )
-  ```
-- [ ] Verify: Labels centered above both images in each cell
+- [x] Update label creation with col_width-10 and height 25
+- [x] Verify: Labels centered above both images in each cell
 
 **Notes:** UILabel centers text by default
 
@@ -70,84 +38,42 @@
 **File:** `game/ui/screens/race_setup_screen.py`
 **Tests:** Visual test
 
-- [ ] Replace naive scaling (lines 446-449) with metrics-based scaling:
-  ```python
-  skin_surf = theme_manager.load_image(theme_id, ship_class)
-  if skin_surf:
-      img_width, img_height = skin_surf.get_size()
-      metrics = theme_manager.get_image_metrics(theme_id, ship_class)
+- [x] Replace naive scaling with metrics-based scaling using get_image_metrics()
+- [x] Scale so visible portion fits portrait_size, capped at 3.0x
+- [x] Crop to visible area using scaled metrics
+- [x] Verify: Top-down images appear at similar height to portraits
 
-      if metrics and metrics.width > 0 and metrics.height > 0:
-          # Scale so visible portion fits portrait_size
-          scale_factor = portrait_size / max(metrics.width, metrics.height)
-          scale_factor = min(scale_factor, 3.0)  # Cap to prevent blowup
-      else:
-          scale_factor = portrait_size / max(img_width, img_height)
-
-      new_w = max(1, int(img_width * scale_factor))
-      new_h = max(1, int(img_height * scale_factor))
-      scaled_skin = pygame.transform.smoothscale(skin_surf, (new_w, new_h))
-
-      # Crop to visible area
-      if metrics:
-          crop_x = max(0, int(metrics.x * scale_factor))
-          crop_y = max(0, int(metrics.y * scale_factor))
-          crop_w = min(int(metrics.width * scale_factor), new_w - crop_x)
-          crop_h = min(int(metrics.height * scale_factor), new_h - crop_y)
-          if crop_w > 0 and crop_h > 0:
-              cropped = scaled_skin.subsurface(pygame.Rect(crop_x, crop_y, crop_w, crop_h))
-              scaled_skin = cropped
-  ```
-- [ ] Verify: Top-down images appear at similar height to portraits
-
-**Notes:** `get_image_metrics()` returns a `pygame.Rect` with (x, y, width, height) of visible pixels. Located at `ship_theme_manager.py:207`.
+**Notes:** `get_image_metrics()` returns pygame.Rect with visible pixels bounding box
 
 ### Task 3.4: Tighter image layout within each cell [Simple]
 **File:** `game/ui/screens/race_setup_screen.py`
 **Tests:** Visual test
 
-- [ ] Calculate centered positions for the image pair:
-  ```python
-  # Total width of image pair
-  topdown_w = scaled_skin.get_width() if skin_surf else 0
-  pair_width = topdown_w + image_gap + portrait_size
-  pair_x = x + (col_width - pair_width) // 2
-  ```
-- [ ] Position top-down image at `(pair_x, y + 30, topdown_w, scaled_skin.get_height())`
-- [ ] Position portrait image at `(pair_x + topdown_w + image_gap, y + 30, portrait_size, portrait_size)`
-- [ ] Verify: Images are close together and centered under the label
+- [x] Calculate centered positions for the image pair
+- [x] Position top-down image at pair_x with actual dimensions
+- [x] Position portrait image at pair_x + topdown_w + image_gap
+- [x] Verify: Images are close together and centered under the label
 
-**Notes:**
+**Notes:** Images centered based on actual rendered widths
 
 ### Task 3.5: Use `ShipThemeManager.get_portrait_image()` and delete `_load_ship_portrait` [Simple]
 **File:** `game/ui/screens/race_setup_screen.py`
 **Tests:** `pytest tests/ --testmon`
 
-- [ ] Replace `self._load_ship_portrait(theme_id, ship_class)` (line 461) with:
-  ```python
-  portrait_surf = theme_manager.get_portrait_image(theme_id, ship_class)
-  ```
-- [ ] Scale the returned surface to `portrait_size`:
-  ```python
-  if portrait_surf:
-      p_w, p_h = portrait_surf.get_size()
-      p_scale = min(portrait_size / p_w, portrait_size / p_h)
-      scaled_portrait = pygame.transform.smoothscale(
-          portrait_surf, (int(p_w * p_scale), int(p_h * p_scale))
-      )
-  ```
-- [ ] Delete entire `_load_ship_portrait` method (lines 472-508)
-- [ ] Verify: Portraits still load and display correctly
+- [x] Replace `self._load_ship_portrait()` with `theme_manager.get_portrait_image()`
+- [x] Scale the returned surface to portrait_size
+- [x] Delete entire `_load_ship_portrait` method (37 lines removed)
+- [x] Verify: Portraits still load and display correctly
 
-**Notes:** `ShipThemeManager.get_portrait_image()` is at `ship_theme_manager.py:259`. It has proper caching and thread safety.
+**Notes:** Deleted duplicate code, now using centralized ShipThemeManager API
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `pytest tests/ --testmon` passes
-- [ ] Visual test: 3x3 grid, labels centered, top-down images appropriately sized
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 4
+- [x] All task checkboxes above are checked
+- [x] `pytest tests/ -n 12` passes (7593 passed)
+- [x] Visual test: 3x3 grid, labels centered, top-down images appropriately sized
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 4

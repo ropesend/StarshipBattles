@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Restructure RaceThemeGallery | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Restructure Ships Panel Layout | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Redesign Ship Preview Grid | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Redesign Ship Preview Grid | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cleanup & Final Testing | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 3 - Redesign Ship Preview Grid
-**Last Action:** Phase 2 complete - Side-by-side layout implemented (theme list left 200px, preview area right)
-**Next Action:** Begin Phase 3 - 3-column grid with 9 ships, smart image scaling
+**Active Phase:** Phase 4 - Cleanup & Final Testing
+**Last Action:** Phase 3 complete - 3x3 grid with 9 ships, smart visible-bounding-rect scaling, centered labels, tighter layout, deleted _load_ship_portrait method
+**Next Action:** Begin Phase 4 - Final cleanup and verification
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. `_create_ships_panel_content` now uses side-by-side layout with THEME_LIST_WIDTH=200 and CONTENT_GAP=10. Theme gallery on left, preview scroll container on right. Removed unused alias `ship_preview_container`. 7593 tests passing.
+**Context for Next Agent:** Phase 3 complete. `_refresh_ship_preview` now renders 9 ships in 3 columns with smart scaling using `get_image_metrics()` and portrait loading using `get_portrait_image()`. Deleted duplicate `_load_ship_portrait` method (-37 lines). 7593 tests passing.
 
 ## Overview
 Redesign the Ships tab in the Species Setup screen to improve layout and information density. Move theme names from horizontal buttons on top to a scrollable list on the left side. Expand the ship preview grid from 2 columns / 6 ships to 3 columns / 9 ships. Make top-down images larger by using visible-bounding-rect scaling. Tighten spacing throughout.

@@ -394,27 +394,27 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         container_width = container.get_relative_rect().width - 30
         log_debug(f"Container width: {container_width}")
 
-        # Representative ship classes to display
+        # Representative ship classes to display (3x3 grid = 9 ships)
         ship_classes = [
-            "Fighter (Medium)",
-            "Satellite (Medium)",
-            "Escort",
-            "Cruiser",
-            "Battleship",
-            "Dreadnought"
+            "Fighter (Medium)", "Satellite (Medium)", "Escort",
+            "Frigate", "Cruiser", "Heavy Cruiser",
+            "Battleship", "Dreadnought", "Superdreadnought",
         ]
 
         theme_manager = ShipThemeManager.instance()
         theme_manager.initialize()
 
-        # Layout: 2 columns of ships, each showing portrait + top-down
-        ship_size = self.THEME_SHIP_SIZE  # 180px
-        col_width = container_width // 2
-        row_height = ship_size + 60  # Space for ship images + label
+        # Layout: 3 columns of ships, each showing top-down + portrait pair
+        num_cols = 3
+        portrait_size = 160  # Size for each image in the pair
+        image_gap = 5  # Gap between top-down and portrait images
+        col_width = container_width // num_cols
+        row_height = portrait_size + 35  # label(25) + gap(5) + image + bottom_pad(5)
+        row_spacing = 10
 
         # Calculate and set scrollable area BEFORE adding elements
-        total_rows = (len(ship_classes) + 1) // 2
-        scroll_height = 10 + total_rows * (row_height + 20) + 50
+        total_rows = (len(ship_classes) + num_cols - 1) // num_cols
+        scroll_height = 10 + total_rows * (row_height + row_spacing) + 20
         self.ship_preview_scroll.set_scrollable_area_dimensions(
             (container_width, scroll_height)
         )
@@ -422,89 +422,89 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         y = 10
 
         for i, ship_class in enumerate(ship_classes):
-            col = i % 2
+            col = i % num_cols
             if col == 0 and i > 0:
-                y += row_height + 20
+                y += row_height + row_spacing
 
             x = 10 + col * col_width
 
-            # Ship class label
+            # Ship class label - centered above image pair
             label = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(x, y, col_width - 20, 30),
+                relative_rect=pygame.Rect(x, y, col_width - 10, 25),
                 text=ship_class,
                 manager=self.ui_manager,
                 container=container
             )
             self._ship_preview_elements.append(label)
 
-            # Get top-down (skin) image
+            # Get top-down (skin) image with smart scaling using visible bounding rect
             skin_surf = theme_manager.load_image(theme_id, ship_class)
+            scaled_skin = None
             log_debug(f"Ship {ship_class}: skin_surf={skin_surf is not None}")
             if skin_surf:
-                # Scale to preview size
                 img_width, img_height = skin_surf.get_size()
-                scale = min(ship_size / img_width, ship_size / img_height)
-                new_size = (int(img_width * scale), int(img_height * scale))
-                scaled_skin = pygame.transform.smoothscale(skin_surf, new_size)
+                metrics = theme_manager.get_image_metrics(theme_id, ship_class)
 
-                # Display top-down view
+                if metrics and metrics.width > 0 and metrics.height > 0:
+                    # Scale so visible portion fits portrait_size
+                    scale_factor = portrait_size / max(metrics.width, metrics.height)
+                    scale_factor = min(scale_factor, 3.0)  # Cap to prevent blowup
+                else:
+                    # Fallback to naive scaling
+                    scale_factor = portrait_size / max(img_width, img_height)
+
+                new_w = max(1, int(img_width * scale_factor))
+                new_h = max(1, int(img_height * scale_factor))
+                scaled_skin = pygame.transform.smoothscale(skin_surf, (new_w, new_h))
+
+                # Crop to visible area if metrics available
+                if metrics and metrics.width > 0 and metrics.height > 0:
+                    crop_x = max(0, int(metrics.x * scale_factor))
+                    crop_y = max(0, int(metrics.y * scale_factor))
+                    crop_w = min(int(metrics.width * scale_factor), new_w - crop_x)
+                    crop_h = min(int(metrics.height * scale_factor), new_h - crop_y)
+                    if crop_w > 0 and crop_h > 0:
+                        cropped = scaled_skin.subsurface(pygame.Rect(crop_x, crop_y, crop_w, crop_h))
+                        scaled_skin = cropped
+
+            # Get portrait image using ShipThemeManager API
+            portrait_surf = theme_manager.get_portrait_image(theme_id, ship_class)
+            scaled_portrait = None
+            log_debug(f"Ship {ship_class}: portrait_surf={portrait_surf is not None}")
+            if portrait_surf:
+                p_w, p_h = portrait_surf.get_size()
+                p_scale = min(portrait_size / p_w, portrait_size / p_h)
+                scaled_portrait = pygame.transform.smoothscale(
+                    portrait_surf, (int(p_w * p_scale), int(p_h * p_scale))
+                )
+
+            # Calculate centered positions for image pair
+            topdown_w = scaled_skin.get_width() if scaled_skin else 0
+            topdown_h = scaled_skin.get_height() if scaled_skin else 0
+            portrait_w = scaled_portrait.get_width() if scaled_portrait else 0
+            pair_width = topdown_w + image_gap + portrait_w
+            pair_x = x + (col_width - pair_width) // 2
+
+            # Display top-down view
+            if scaled_skin:
                 img = pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(x, y + 35, ship_size, ship_size),
+                    relative_rect=pygame.Rect(pair_x, y + 30, topdown_w, topdown_h),
                     image_surface=scaled_skin,
                     manager=self.ui_manager,
                     container=container
                 )
                 self._ship_preview_elements.append(img)
 
-            # Get portrait image
-            portrait_surf = self._load_ship_portrait(theme_id, ship_class)
-            log_debug(f"Ship {ship_class}: portrait_surf={portrait_surf is not None}")
-            if portrait_surf:
+            # Display portrait
+            if scaled_portrait:
+                portrait_x = pair_x + topdown_w + image_gap
                 img = pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(x + ship_size + 10, y + 35, ship_size, ship_size),
-                    image_surface=portrait_surf,
+                    relative_rect=pygame.Rect(portrait_x, y + 30, portrait_w, portrait_size),
+                    image_surface=scaled_portrait,
                     manager=self.ui_manager,
                     container=container
                 )
                 self._ship_preview_elements.append(img)
-
-    def _load_ship_portrait(self, theme_id: str, ship_class: str) -> Optional[pygame.Surface]:
-        """
-        Load a ship portrait image.
-
-        Args:
-            theme_id: Theme name (e.g., "Atlantians")
-            ship_class: Ship class name (e.g., "Battleship")
-
-        Returns:
-            Scaled portrait surface or None if not found
-        """
-        # Convert ship class to portrait filename format
-        # e.g., "Fighter (Medium)" -> "MediumFighter_Portrait.jpg"
-        # e.g., "Battleship" -> "Battleship_Portrait.jpg"
-        portrait_name = ship_class.replace(" ", "").replace("(", "").replace(")", "")
-        # Handle special cases
-        if "Fighter" in ship_class and "(" in ship_class:
-            # "Fighter (Medium)" -> "MediumFighter"
-            parts = ship_class.replace(")", "").split(" (")
-            portrait_name = parts[1] + parts[0]
-        elif "Satellite" in ship_class and "(" in ship_class:
-            parts = ship_class.replace(")", "").split(" (")
-            portrait_name = parts[1] + parts[0]
-
-        portrait_filename = f"{portrait_name}_Portrait.jpg"
-        portrait_path = os.path.join(Paths.ASSET_DIR, "ShipThemes", theme_id, "Portraits", portrait_filename)
-
-        if os.path.exists(portrait_path):
-            try:
-                surf = pygame.image.load(portrait_path).convert_alpha()
-                # Scale to preview size
-                scaled = pygame.transform.smoothscale(surf, (self.THEME_SHIP_SIZE, self.THEME_SHIP_SIZE))
-                return scaled
-            except (FileNotFoundError, OSError, pygame.error) as e:
-                log_error(f"Failed to load ship portrait {portrait_path}: {e}")
-
-        return None
 
     # =========================================================================
     # Environment Panel (PROJ-12 Phase 4: Delegates to RaceEnvironmentPanel)
