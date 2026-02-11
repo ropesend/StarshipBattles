@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. BuilderScreen.handle_event (CC 111→~15) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. BuilderScreen.handle_event (CC 111→13) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. ShipStatsCalculator.calculate (CC 62→~15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. StrategyInputHandler._handle_keydown_mapped (CC 50→~8) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. TargetEvaluator.evaluate (CC 49→~10) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -22,12 +22,12 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Plan Approved — Ready for Implementation
-**Last Action:** Plan complete with 6 phases, 30 tasks, all checklist files created
-**Next Action:** Begin Phase 1 — BuilderScreen.handle_event (CC 111 → ≤15)
+**Active Phase:** Phase 1 Complete
+**Last Action:** Extracted 11 sub-methods from BuilderScreen.handle_event, CC reduced from 111 to 13
+**Next Action:** Begin Phase 2 — ShipStatsCalculator.calculate (CC 62 → ≤15)
 **Blockers:** None
-**Context for Next Agent:** Use "Continue Project" prompt. Start with `phase_1_checklist.md`. Run `pytest tests/unit/builder/ -x -q` after each task.
-**Baseline:** 8167 tests passing, 0 failures, 11 warnings
+**Context for Next Agent:** Phase 1 complete. Start with `phase_2_checklist.md`. Run `pytest tests/unit/entities/test_ship_stats.py tests/unit/strategy/ship_stats/ -x -q` after each task.
+**Baseline:** 8167 tests passing, 0 failures
 
 ## Overview
 Reduce cyclomatic complexity in the 6 worst functions in the codebase (all CC ≥ 40) by extracting sub-methods within the same class. No new files, no API changes, no architectural restructuring — just mechanical decomposition of monolithic methods into focused private helpers.

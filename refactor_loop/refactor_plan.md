@@ -8,26 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-102 Audit 1 PASSED
-**Current Status:** PROJ-102 Complete - Awaiting User Verification
-**Current Project:** None (no pending projects)
-**Current Phase:** N/A
+**Last Completed:** PROJ-104 Phase 1 Complete
+**Current Status:** PROJ-104 Phase 1 Complete
+**Current Project:** PROJ-104
+**Current Phase:** Phase 2 (next)
 **Test Status:** 8167 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-102 COMPLETE - All 9 phases + Audit PASSED
-- Created: tests/integration/strategy/test_superweapon_integration.py (12 tests)
-- All goals verified:
-  - 6 strategic marker abilities
-  - 6 superweapon components
-  - 6 order types with serialization
-  - 11 command classes
-  - 6 keyboard shortcuts
-  - Turn execution logic
-  - UI workflows with dialogs
-  - Full test coverage (8167 tests)
-- Next: No pending projects in queue
+- PROJ-104 Phase 1 COMPLETE - BuilderScreen.handle_event CC reduced 111 → 13
+- Extracted 11 sub-methods:
+  - _handle_panel_action (dispatcher)
+  - _handle_select_component_type, _handle_select_group, _handle_select_individual
+  - _handle_remove_group, _handle_remove_individual, _handle_add_component
+  - _handle_button_pressed
+  - _handle_dropdown_changed, _handle_class_dropdown, _handle_vehicle_type_dropdown, _handle_ai_dropdown
+- All 8167 tests passing
+- Next: Phase 2 - ShipStatsCalculator.calculate (CC 62 → ≤15)
 
 ---
 
@@ -155,8 +152,8 @@
 
 ---
 
-- [ ] **PROJ-104: Cyclomatic Complexity Reduction - Critical Functions**
-  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-104: Cyclomatic Complexity Reduction - Critical Functions**
+  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-104/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-104/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -241,6 +238,7 @@
 | 2026-02-10 | PROJ-102 | Phase 8 | Complete | 8155 passed | pending | SuperweaponOperations module, has_ability, 27 new tests |
 | 2026-02-10 | PROJ-102 | Phase 9 | Complete | 8167 passed | pending | 6 full-flow integration + 6 serialization tests |
 | 2026-02-10 | PROJ-102 | Audit 1 | PASSED | 8167 passed | pending | All 8 goals verified, project complete |
+| 2026-02-10 | PROJ-104 | Phase 1 | Complete | 8167 passed | pending | BuilderScreen.handle_event CC 111→13, 11 sub-methods extracted |
 
 ---
 
