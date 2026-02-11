@@ -8,23 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-104 Phase 1 Complete
-**Current Status:** PROJ-104 Phase 1 Complete
+**Last Completed:** PROJ-104 Phase 2 Complete
+**Current Status:** PROJ-104 Phase 2 Complete
 **Current Project:** PROJ-104
-**Current Phase:** Phase 2 (next)
+**Current Phase:** Phase 3 (next)
 **Test Status:** 8167 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-104 Phase 1 COMPLETE - BuilderScreen.handle_event CC reduced 111 → 13
-- Extracted 11 sub-methods:
-  - _handle_panel_action (dispatcher)
-  - _handle_select_component_type, _handle_select_group, _handle_select_individual
-  - _handle_remove_group, _handle_remove_individual, _handle_add_component
-  - _handle_button_pressed
-  - _handle_dropdown_changed, _handle_class_dropdown, _handle_vehicle_type_dropdown, _handle_ai_dropdown
+- PROJ-104 Phase 2 COMPLETE - ShipStatsCalculator.calculate CC reduced 62 → 10
+- Extracted 5 phase methods:
+  - _phase_damage_check_and_supply (Phase 1)
+  - _phase_resource_allocation (Phase 2)
+  - _phase_stats_aggregation (Phase 3)
+  - _phase_physics_and_limits (Phase 4)
+  - _phase_sensor_defense_scores (Phase 5)
 - All 8167 tests passing
-- Next: Phase 2 - ShipStatsCalculator.calculate (CC 62 → ≤15)
+- Next: Phase 3 - StrategyInputHandler._handle_keydown_mapped (CC 50 → ≤8)
 
 ---
 
@@ -239,6 +239,7 @@
 | 2026-02-10 | PROJ-102 | Phase 9 | Complete | 8167 passed | pending | 6 full-flow integration + 6 serialization tests |
 | 2026-02-10 | PROJ-102 | Audit 1 | PASSED | 8167 passed | pending | All 8 goals verified, project complete |
 | 2026-02-10 | PROJ-104 | Phase 1 | Complete | 8167 passed | pending | BuilderScreen.handle_event CC 111→13, 11 sub-methods extracted |
+| 2026-02-10 | PROJ-104 | Phase 2 | Complete | 8167 passed | pending | ShipStatsCalculator.calculate CC 62→10, 5 phase methods extracted |
 
 ---
 

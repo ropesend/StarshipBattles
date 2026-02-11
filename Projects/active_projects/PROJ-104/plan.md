@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. BuilderScreen.handle_event (CC 111→13) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. ShipStatsCalculator.calculate (CC 62→~15) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. ShipStatsCalculator.calculate (CC 62→10) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. StrategyInputHandler._handle_keydown_mapped (CC 50→~8) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. TargetEvaluator.evaluate (CC 49→~10) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TestRunDetailsPanel.draw (CC 47→~8) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 1 Complete
-**Last Action:** Extracted 11 sub-methods from BuilderScreen.handle_event, CC reduced from 111 to 13
-**Next Action:** Begin Phase 2 — ShipStatsCalculator.calculate (CC 62 → ≤15)
+**Active Phase:** Phase 2 Complete
+**Last Action:** Extracted 5 phase methods from ShipStatsCalculator.calculate, CC reduced from 62 to 10
+**Next Action:** Begin Phase 3 — StrategyInputHandler._handle_keydown_mapped (CC 50 → ≤8)
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. Start with `phase_2_checklist.md`. Run `pytest tests/unit/entities/test_ship_stats.py tests/unit/strategy/ship_stats/ -x -q` after each task.
+**Context for Next Agent:** Phase 2 complete. Start with `phase_3_checklist.md`. Run `pytest tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py -x -q` after each task.
 **Baseline:** 8167 tests passing, 0 failures
 
 ## Overview
