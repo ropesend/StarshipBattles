@@ -6,6 +6,7 @@ Displays a single test run in collapsed card form.
 import pygame
 
 from game.core.constants import FONT_MAIN
+from game.ui.screens.test_lab.formatting_utils import format_value
 
 
 class TestRunCard:
@@ -148,8 +149,8 @@ class TestRunCard:
                     name = name[:22] + "..."
 
                 # Format values
-                exp_str = self._format_value_short(expected)
-                act_str = self._format_value_short(actual)
+                exp_str = format_value(expected, precision="compact")
+                act_str = format_value(actual, precision="compact")
 
                 # Color-code actual based on status
                 actual_color = self.pass_color if val_status == 'PASS' else self.fail_color
@@ -209,23 +210,6 @@ class TestRunCard:
             p_text = f"p={p_value:.4f}"
             p_surf = self.small_font.render(p_text, True, p_color)
             surface.blit(p_surf, (self.x + 10, self.y + 57))
-
-    def _format_value_short(self, value):
-        """Format value for compact display."""
-        if value is None:
-            return "None"
-        if isinstance(value, float):
-            if 0 < value < 1:
-                return f"{value:.1%}"
-            elif abs(value) < 0.001 and value != 0:
-                return f"{value:.2e}"
-            elif abs(value - round(value)) < 1e-9:
-                return f"{int(round(value))}"
-            elif abs(value) >= 100:
-                return f"{value:.1f}"
-            else:
-                return f"{value:.3f}"
-        return str(value)
 
     def _draw_propulsion_metrics(self, surface, metrics):
         """Draw propulsion-specific metrics on the card."""

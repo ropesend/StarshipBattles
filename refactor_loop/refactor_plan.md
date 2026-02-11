@@ -8,20 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-108 Phase 5
-**Current Status:** PROJ-108 Phase 5 Complete
+**Last Completed:** PROJ-108 Phase 6
+**Current Status:** PROJ-108 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-108
-**Current Phase:** Phase 6
-**Test Status:** 8237 passed
+**Current Phase:** Audit Cycle 1
+**Test Status:** 8260 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-108 Phase 5 complete: Simulation Deduplication
-  - Merged calculate_ability_totals_for_layer() into calculate_ability_totals() with layer/scope_filter params (~65 lines removed)
-  - Updated test_ability_aggregator_layers.py to use merged function with keyword args
-  - Added formula validation delegation in modifier_schema.validate_modifier_v2() to ModifierEffectEvaluator.validate_formula()
-  - Added get_ability_instances_by_class() utility generator for filtering abilities by class name
-- Next: Phase 6 - UI Deduplication (BaseGallery, BaseColumnManager, formatting utils)
+- PROJ-108 Phase 6 complete: UI Deduplication
+  - Created formatting_utils.py with format_value(value, precision) function (23 tests)
+  - Deleted _format_value() from test_run_details.py and _format_value_short() from test_run_card.py
+  - Extracted RESOURCE_ABBREVS and RESOURCE_ABBREVS_SHORT constants in build_queue_helpers.py
+  - Updated strategy_ui.py to use shared RESOURCE_ABBREVS constant
+  - Created BaseGallery abstract class (~240 lines)
+  - Refactored RacePortraitGallery and RaceFlagGallery to extend BaseGallery
+  - Task 6.4 (BaseColumnManager) SKIPPED - low ROI, different concerns
+- All 6 phases complete - trigger audit
 
 ---
 
@@ -309,6 +312,7 @@
 | 2026-02-11 | PROJ-108 | Phase 3 | Complete | 8237 passed | pending | ComponentInspector (5 funcs, 18 tests) + combat_utils (7 funcs, 20 tests) |
 | 2026-02-11 | PROJ-108 | Phase 4 | Complete | 8237 passed | pending | Migrated SuperweaponValidator, ColonizeValidator, FleetCapabilityCalculator, target_evaluator, controller; ~150 lines removed |
 | 2026-02-11 | PROJ-108 | Phase 5 | Complete | 8237 passed | pending | Merged ability_totals_for_layer (~65 lines), formula validation delegation, get_ability_instances_by_class utility |
+| 2026-02-11 | PROJ-108 | Phase 6 | Complete | 8260 passed | pending | formatting_utils (23 tests), RESOURCE_ABBREVS constant, BaseGallery (~240 lines), 2 galleries refactored |
 
 ---
 

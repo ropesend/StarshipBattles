@@ -5,6 +5,24 @@ Extracted from BuildQueueScreen (PROJ-86 Phase 8).
 """
 from game.core.constants import PLANET_RESOURCES
 
+# Resource abbreviations for compact UI display
+RESOURCE_ABBREVS = {
+    "Metals": "Met",
+    "Organics": "Org",
+    "Vapors": "Vap",
+    "Radioactives": "Rad",
+    "Exotics": "Exo",
+}
+
+# Short abbreviations for very compact displays (e.g., cost strings)
+RESOURCE_ABBREVS_SHORT = {
+    "Metals": "M",
+    "Organics": "O",
+    "Vapors": "V",
+    "Radioactives": "R",
+    "Exotics": "E",
+}
+
 
 def format_empire_resources(empire) -> str:
     """Format empire resource pool for display in build queue bottom bar.
@@ -15,13 +33,11 @@ def format_empire_resources(empire) -> str:
     Returns:
         Formatted string like "Met: 500/1000  Org: 200/500  Vap: 0"
     """
-    abbrevs = {"Metals": "Met", "Organics": "Org", "Vapors": "Vap",
-               "Radioactives": "Rad", "Exotics": "Exo"}
     parts = []
     for res in PLANET_RESOURCES:
         current = empire.resource_pool.get(res, 0.0)
         cap = empire.max_storage.get(res, 0.0)
-        abbr = abbrevs.get(res, res[:3])
+        abbr = RESOURCE_ABBREVS.get(res, res[:3])
         if cap > 0:
             parts.append(f"{abbr}: {int(current)}/{int(cap)}")
         elif current > 0:
@@ -38,12 +54,10 @@ def format_resource_cost(cost: dict) -> str:
     Returns:
         Compact string like "M:100 O:50 V:20"
     """
-    abbrevs = {"Metals": "M", "Organics": "O", "Vapors": "V",
-               "Radioactives": "R", "Exotics": "E"}
     parts = []
     for res in PLANET_RESOURCES:
         amount = cost.get(res, 0)
         if amount > 0:
-            abbr = abbrevs.get(res, res[0])
+            abbr = RESOURCE_ABBREVS_SHORT.get(res, res[0])
             parts.append(f"{abbr}:{int(amount)}")
     return " ".join(parts) if parts else ""

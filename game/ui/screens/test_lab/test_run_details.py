@@ -6,6 +6,7 @@ Displays detailed information for a selected test run.
 import pygame
 
 from game.core.constants import FONT_MAIN
+from game.ui.screens.test_lab.formatting_utils import format_value
 
 
 class TestRunDetailsPanel:
@@ -378,7 +379,7 @@ class TestRunDetailsPanel:
 
         # Show expected value (if present)
         if expected is not None:
-            exp_str = self._format_value(expected)
+            exp_str = format_value(expected, precision="full")
             exp_label = self.small_font.render("Expected:", True, label_color)
             exp_value = self.small_font.render(exp_str, True, expected_color)
             surface.blit(exp_label, (self.x + indent, y_offset))
@@ -387,7 +388,7 @@ class TestRunDetailsPanel:
 
         # Show actual value (color-coded green/red based on status)
         if actual is not None:
-            act_str = self._format_value(actual)
+            act_str = format_value(actual, precision="full")
             act_label = self.small_font.render("Actual:", True, label_color)
             act_value = self.small_font.render(act_str, True, actual_color)
             surface.blit(act_label, (self.x + indent, y_offset))
@@ -878,27 +879,6 @@ class TestRunDetailsPanel:
         y_offset += 18
 
         return y_offset
-
-    def _format_value(self, value):
-        """Format a value for display."""
-        if value is None:
-            return "None"
-        if isinstance(value, float):
-            # Check if it's a probability/percentage (between 0 and 1)
-            if 0 < value < 1:
-                return f"{value:.2%}"
-            # Check if it's a very small number
-            elif abs(value) < 0.0001 and value != 0:
-                return f"{value:.6e}"
-            # Check if it's essentially an integer
-            elif abs(value - round(value)) < 1e-9:
-                return f"{int(round(value))}"
-            else:
-                return f"{value:.4f}"
-        elif isinstance(value, int):
-            return str(value)
-        else:
-            return str(value)
 
     def _draw_scrollbar(self, surface):
         """Draw scrollbar indicator."""

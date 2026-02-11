@@ -19,6 +19,7 @@ import pygame_gui
 from game.core.config import UIConfig
 from game.core.paths import Paths
 from game.core.constants import PLANET_RESOURCES
+from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
 from game.ui.screens.strategy_menu_panel import StrategyMenuPanel, PANEL_WIDTH, PANEL_HEIGHT
 from game.ui.screens.strategy_window_manager import StrategyWindowManager
 from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
@@ -283,15 +284,11 @@ class StrategyUI:
         if empire is None:
             return
 
-        # Resource abbreviations for compact display
-        abbrevs = {"Metals": "Met", "Organics": "Org", "Vapors": "Vap",
-                   "Radioactives": "Rad", "Exotics": "Exo"}
-
         parts = []
         for res in PLANET_RESOURCES:
             current = empire.get_resource(res)
             cap = empire.max_storage.get(res, 0.0)
-            abbr = abbrevs.get(res, res[:3])
+            abbr = RESOURCE_ABBREVS.get(res, res[:3])
             if cap > 0:
                 parts.append(f"{abbr}: {int(current)}/{int(cap)}")
             elif current > 0:

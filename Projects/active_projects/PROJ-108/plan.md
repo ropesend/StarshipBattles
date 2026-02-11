@@ -18,13 +18,13 @@
 | 3. ComponentInspector + AI Utils | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Migrate Strategy + AI Callers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation Deduplication | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. UI Deduplication | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. UI Deduplication | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 5 Complete
-**Last Action:** Merged calculate_ability_totals_for_layer into calculate_ability_totals (~65 lines removed). Added formula validation delegation in modifier_schema. Added get_ability_instances_by_class utility.
-**Next Action:** Start Phase 6 (UI Deduplication)
+**Active Phase:** Phase 6 Complete - All phases complete, ready for audit
+**Last Action:** Phase 6 complete: format_value utility (23 tests), RESOURCE_ABBREVS constant, BaseGallery abstract class (~240 lines), both galleries refactored to extend BaseGallery. Task 6.4 skipped (low ROI).
+**Next Action:** Trigger audit (all phases complete)
 **Blockers:** None
 
 ## Overview

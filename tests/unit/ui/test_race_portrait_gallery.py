@@ -66,7 +66,7 @@ class TestRacePortraitGalleryCreation:
 
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
-            gallery.portrait_buttons = []
+            gallery.asset_buttons = []
 
             assert hasattr(gallery, 'portrait_buttons')
             assert isinstance(gallery.portrait_buttons, list)
@@ -87,7 +87,7 @@ class TestRacePortraitGalleryCreation:
 
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
-            gallery.portrait_scroll = None
+            gallery.scroll_container = None
 
             assert hasattr(gallery, 'portrait_scroll')
 
@@ -97,7 +97,7 @@ class TestRacePortraitGalleryCreation:
 
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
-            gallery.portrait_preview_panel = None
+            gallery.preview_panel = None
 
             assert hasattr(gallery, 'portrait_preview_panel')
 
@@ -116,9 +116,9 @@ class TestPortraitSelection:
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
-            gallery.portrait_buttons = []
+            gallery.asset_buttons = []
             gallery.portrait_preview_image = None
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
@@ -135,8 +135,8 @@ class TestPortraitSelection:
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
-            gallery.portrait_buttons = []
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.asset_buttons = []
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
@@ -158,9 +158,9 @@ class TestPortraitSelection:
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
-            gallery.portrait_buttons = []
+            gallery.asset_buttons = []
             gallery.portrait_preview_image = None
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
@@ -179,9 +179,9 @@ class TestPortraitSelection:
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
-            gallery.portrait_buttons = []
+            gallery.asset_buttons = []
             gallery.portrait_preview_image = None
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
@@ -206,7 +206,7 @@ class TestButtonHighlighting:
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
             gallery.portrait_preview_image = None
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
@@ -215,7 +215,7 @@ class TestButtonHighlighting:
             # Create mock buttons
             btn1 = MagicMock()
             btn2 = MagicMock()
-            gallery.portrait_buttons = [
+            gallery.asset_buttons = [
                 (btn1, MagicMock(), "portrait_001.png"),
                 (btn2, MagicMock(), "portrait_002.png"),
             ]
@@ -233,7 +233,7 @@ class TestButtonHighlighting:
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
             gallery.portrait_preview_image = None
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
@@ -243,7 +243,7 @@ class TestButtonHighlighting:
             btn1 = MagicMock()
             btn2 = MagicMock()
             btn3 = MagicMock()
-            gallery.portrait_buttons = [
+            gallery.asset_buttons = [
                 (btn1, MagicMock(), "portrait_001.png"),
                 (btn2, MagicMock(), "portrait_002.png"),
                 (btn3, MagicMock(), "portrait_003.png"),
@@ -271,20 +271,20 @@ class TestConfigurationBinding:
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.race_config = mock_race_config
             mock_race_config.portrait_id = "portrait_005.png"
-            gallery.portrait_buttons = []
+            gallery.asset_buttons = []
             gallery.portrait_preview_image = None
-            gallery.portrait_preview_panel = MagicMock()
+            gallery.preview_panel = MagicMock()
             gallery._asset_loader = MagicMock()
             gallery._asset_loader.load_portrait_full.return_value = None
             gallery.ui_manager = MagicMock()
             gallery.on_select_callback = None
 
-            # Mock on_portrait_selected to track call
-            gallery.on_portrait_selected = MagicMock()
+            # Mock on_asset_selected to track call (base class method)
+            gallery.on_asset_selected = MagicMock()
 
             gallery.set_from_config()
 
-            gallery.on_portrait_selected.assert_called_once_with("portrait_005.png")
+            gallery.on_asset_selected.assert_called_once_with("portrait_005.png")
 
     def test_set_from_config_no_portrait_id_no_selection(self, mock_race_config):
         """set_from_config does nothing if no portrait_id in config."""
