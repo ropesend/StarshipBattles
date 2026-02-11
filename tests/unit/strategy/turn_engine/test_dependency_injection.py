@@ -164,7 +164,7 @@ class TestFleetIteratorSafety:
         # Track which fleets get processed
         processed_fleets = []
 
-        def track_and_remove(fleet, empire, galaxy):
+        def track_and_remove(fleet, empire, galaxy, empires=None):
             processed_fleets.append(fleet.id)
             # Simulate colonization removing fleet2 when processing fleet1
             if fleet.id == 1 and fleet2 in mock_empire.fleets:

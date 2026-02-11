@@ -1,0 +1,159 @@
+{
+    "name": "Star Destroyer (HC)",
+    "ship_class": "Heavy Cruiser",
+    "vehicle_type": "Ship",
+    "theme_id": "Federation",
+    "team_id": 0,
+    "color": [
+        100,
+        100,
+        255
+    ],
+    "ai_strategy": "standard_ranged",
+    "layers": {
+        "CORE": [
+            {
+                "id": "bridge",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
+                ]
+            },
+            {
+                "id": "crew_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "life_support",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "OUTER": [
+            {
+                "id": "standard_engine",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 24.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "warp_drive",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "fuel_tank",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "battery",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "stellerator",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            }
+        ],
+        "ARMOR": []
+    },
+    "resources": {
+        "fuel": 100000.0,
+        "energy": 2000.0,
+        "ammo": 0.0
+    },
+    "expected_stats": {
+        "max_hp": 10000,
+        "max_fuel": 100000.0,
+        "max_energy": 2000.0,
+        "max_ammo": 0.0,
+        "max_speed": 5.0,
+        "acceleration_rate": 0.2,
+        "turn_speed": 0.0,
+        "total_thrust": 3600.0,
+        "strategic_movement": 2400.0,
+        "mass": 10500.0,
+        "armor_hp_pool": 0,
+        "warp_max_tonnage": 32000,
+        "warp_energy_cost": 5000,
+        "strategic_fuel_per_hex": 2400.0
+    },
+    "_metadata": {
+        "is_obsolete": false,
+        "times_built": 0,
+        "created_date": "2026-02-10T00:00:00.000000",
+        "last_modified": "2026-02-10T00:00:00.000000"
+    }
+}

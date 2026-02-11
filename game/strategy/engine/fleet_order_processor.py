@@ -476,13 +476,15 @@ class FleetOrderProcessor:
         fleet: Fleet,
         empire,
         galaxy,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        empires: Optional[List] = None
     ) -> bool:
         """
-        Process static orders at end of turn (COLONIZE, JOIN_FLEET, TRANSFER).
+        Process static orders at end of turn (COLONIZE, JOIN_FLEET, TRANSFER, superweapons).
 
         PROJ-55: Added component_registry for colony pod ship removal.
         PROJ-68: Added TRANSFER order processing.
+        PROJ-102: Added superweapon order processing.
 
         Args:
             fleet: Fleet to process
@@ -490,6 +492,7 @@ class FleetOrderProcessor:
             galaxy: Galaxy for validation
             component_registry: Optional component registry for colony pod lookup.
                                When provided, only the colony ship is removed.
+            empires: Optional list of all empires (needed for STELLERATE_STAR).
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise
@@ -524,6 +527,37 @@ class FleetOrderProcessor:
             self.process_transfer(fleet, empire, galaxy)
             # TRANSFER does not consume the fleet
             return False
+
+        # PROJ-102: Superweapon orders
+        elif order.type in (
+            OrderType.IMPLODE_PLANET,
+            OrderType.STELLERATE_STAR,
+            OrderType.OPEN_WARP_POINT,
+            OrderType.CLOSE_WARP_POINT,
+            OrderType.CREATE_DYSON_SPHERE,
+            OrderType.SELF_DESTRUCT,
+        ):
+            from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+            proc = SuperweaponOrderProcessor()
+
+            if order.type == OrderType.IMPLODE_PLANET:
+                result = proc.process_implode_planet(fleet, empire, galaxy, component_registry)
+            elif order.type == OrderType.STELLERATE_STAR:
+                result = proc.process_stellerate_star(
+                    fleet, empire, galaxy, empires or [], component_registry
+                )
+            elif order.type == OrderType.OPEN_WARP_POINT:
+                result = proc.process_open_warp_point(fleet, empire, galaxy, component_registry)
+            elif order.type == OrderType.CLOSE_WARP_POINT:
+                result = proc.process_close_warp_point(fleet, empire, galaxy, component_registry)
+            elif order.type == OrderType.CREATE_DYSON_SPHERE:
+                result = proc.process_create_dyson_sphere(fleet, empire, galaxy, component_registry)
+            elif order.type == OrderType.SELF_DESTRUCT:
+                result = proc.process_self_destruct(fleet, empire, galaxy)
+            else:
+                return False
+
+            return result.fleet_consumed
 
         return False
 

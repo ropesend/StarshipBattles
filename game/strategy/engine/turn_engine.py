@@ -264,12 +264,12 @@ class TurnEngine:
         for tick in range(1, 101):
             self._process_tick(tick, empires, galaxy, save_path)
 
-        # 2. End-of-Turn Orders (Static actions like Colonize)
+        # 2. End-of-Turn Orders (Static actions like Colonize, superweapons)
         for empire in empires:
             # Iterate copy since fleets may be modified during processing
             # (e.g., colonization can remove/dissolve fleets)
             for fleet in list(empire.fleets):
-                self._process_end_turn_orders(fleet, empire, galaxy)
+                self._process_end_turn_orders(fleet, empire, galaxy, empires)
 
         # 3. Production Phase (Colonies)
         self.process_production(empires, galaxy, save_path)
@@ -367,11 +367,12 @@ class TurnEngine:
         # PROJ-36: Delegate to ConflictResolutionEngine
         self.conflict_engine.resolve_all_conflicts(empires)
 
-    def _process_end_turn_orders(self, fleet, empire, galaxy):
-        """Process static orders like COLONIZE.
+    def _process_end_turn_orders(self, fleet, empire, galaxy, empires=None):
+        """Process static orders like COLONIZE and superweapon orders.
 
         PROJ-12 Phase 3: Delegates to FleetOrderProcessor.
         PROJ-55: Passes component_registry for colony pod ship removal.
+        PROJ-102: Passes empires for superweapon orders (e.g., STELLERATE_STAR).
 
         Returns:
             True if fleet was consumed/deleted by the order, False otherwise.
@@ -379,7 +380,9 @@ class TurnEngine:
         # PROJ-55: Pass component registry for colony pod ship removal
         component_registry = getattr(self._registries, 'components', None)
         return self.order_processor.process_end_turn_orders(
-            fleet, empire, galaxy, component_registry=component_registry
+            fleet, empire, galaxy,
+            component_registry=component_registry,
+            empires=empires
         )
 
 
