@@ -2,6 +2,7 @@
 Tests for BuildQueueSource dataclass and collect_build_queues_at_hex().
 
 PROJ-69 Phase 1: Verifies queue discovery logic at hex locations.
+PROJ-97 Phase 2: Updated for per-resource production rates (Dict[str, float]).
 """
 import pytest
 from unittest.mock import MagicMock
@@ -11,11 +12,27 @@ from game.strategy.data.build_queue_source import (
     collect_build_queues_at_hex,
     collect_all_build_queues_for_empire,
     _facility_is_shipyard,
+    get_default_production_rates,
 )
 from game.strategy.data.planet import Planet, PlanetaryFacility
 from game.strategy.data.fleet import Fleet
 from game.strategy.data.empire import Empire
 from game.core.hex_math import HexCoord
+
+
+# Expected production rates from data/production_rates.json
+EXPECTED_PLANETARY_RATES = {
+    "Metals": 2000, "Organics": 2000, "Radioactives": 2000,
+    "Vapors": 2000, "Exotics": 2000
+}
+EXPECTED_SHIPYARD_RATES = {
+    "Metals": 3000, "Organics": 3000, "Radioactives": 3000,
+    "Vapors": 3000, "Exotics": 3000
+}
+EXPECTED_FLEET_RATES = {
+    "Metals": 3000, "Organics": 3000, "Radioactives": 3000,
+    "Vapors": 3000, "Exotics": 3000
+}
 
 
 # ---------------------------------------------------------------------------
@@ -44,8 +61,28 @@ def _make_planet(name="Alpha Prime", hex_coord=HexCoord(5, 5), owner_id=0, plane
     return planet
 
 
-def _make_shipyard_facility(instance_id="yard-001", operational=True, queue=None) -> PlanetaryFacility:
-    """Create a shipyard facility."""
+def _make_shipyard_facility(
+    instance_id="yard-001",
+    operational=True,
+    queue=None,
+    production_rates=None,
+    construction_speed_bonus=None
+) -> PlanetaryFacility:
+    """Create a shipyard facility.
+
+    Args:
+        instance_id: Unique ID for the facility.
+        operational: Whether facility is operational.
+        queue: Construction queue list.
+        production_rates: Optional per-resource rates dict for SpaceShipyard ability.
+        construction_speed_bonus: Optional speed bonus multiplier.
+    """
+    shipyard_ability_data = {}
+    if production_rates is not None:
+        shipyard_ability_data["production_rates"] = production_rates
+    if construction_speed_bonus is not None:
+        shipyard_ability_data["construction_speed_bonus"] = construction_speed_bonus
+
     return PlanetaryFacility(
         instance_id=instance_id,
         design_id="orbital_shipyard",
@@ -53,7 +90,7 @@ def _make_shipyard_facility(instance_id="yard-001", operational=True, queue=None
         design_data={
             "layers": {
                 "hull": [
-                    {"id": "space_shipyard", "abilities": {"SpaceShipyard": {}}}
+                    {"id": "space_shipyard", "abilities": {"SpaceShipyard": shipyard_ability_data}}
                 ]
             }
         },
@@ -456,7 +493,7 @@ class TestBuildQueueSourceNewFields:
     """Test build_rate and planet_id fields added in PROJ-79."""
 
     def test_build_queue_source_has_build_rate_default(self):
-        """BuildQueueSource defaults build_rate to 2000.0."""
+        """BuildQueueSource defaults build_rate to empty dict."""
         source = BuildQueueSource(
             queue_id="test",
             display_name="Test",
@@ -466,7 +503,7 @@ class TestBuildQueueSourceNewFields:
             can_build_complexes=True,
             context_type="planet",
         )
-        assert source.build_rate == 2000.0
+        assert source.build_rate == {}
 
     def test_build_queue_source_has_planet_id_default(self):
         """BuildQueueSource defaults planet_id to None."""
@@ -482,7 +519,7 @@ class TestBuildQueueSourceNewFields:
         assert source.planet_id is None
 
     def test_collect_queues_sets_base_build_rate(self):
-        """Base (Planetary Yard) queue has build_rate = 2000.0."""
+        """Base (Planetary Yard) queue has per-resource build rates from JSON."""
         hex_coord = HexCoord(5, 5)
         planet = _make_planet(hex_coord=hex_coord, planet_id=99)
         galaxy = _make_galaxy({hex_coord: [planet]})
@@ -491,10 +528,10 @@ class TestBuildQueueSourceNewFields:
         sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
 
         assert len(sources) == 1
-        assert sources[0].build_rate == 2000.0
+        assert sources[0].build_rate == EXPECTED_PLANETARY_RATES
 
     def test_collect_queues_sets_shipyard_build_rate(self):
-        """Shipyard facility queue has build_rate = 3000.0 (default)."""
+        """Shipyard facility queue has per-resource rates from JSON defaults."""
         hex_coord = HexCoord(5, 5)
         planet = _make_planet(hex_coord=hex_coord, planet_id=99)
         planet.facilities.append(_make_shipyard_facility(instance_id="yard-001"))
@@ -506,27 +543,16 @@ class TestBuildQueueSourceNewFields:
         # Sources: base + shipyard
         assert len(sources) == 2
         shipyard_source = sources[1]
-        assert shipyard_source.build_rate == 3000.0
+        assert shipyard_source.build_rate == EXPECTED_SHIPYARD_RATES
 
     def test_collect_queues_sets_shipyard_build_rate_with_bonus(self):
-        """Shipyard with construction_speed_bonus applies multiplier."""
+        """Shipyard with construction_speed_bonus applies multiplier to all resources."""
         hex_coord = HexCoord(5, 5)
         planet = _make_planet(hex_coord=hex_coord, planet_id=99)
         # Create facility with construction_speed_bonus = 1.5
-        facility = PlanetaryFacility(
+        facility = _make_shipyard_facility(
             instance_id="yard-boosted",
-            design_id="boosted_yard",
-            name="Boosted Yard",
-            design_data={
-                "layers": {
-                    "hull": [
-                        {"id": "space_shipyard", "abilities": {
-                            "SpaceShipyard": {"construction_speed_bonus": 1.5}
-                        }}
-                    ]
-                }
-            },
-            is_operational=True,
+            construction_speed_bonus=1.5
         )
         planet.facilities.append(facility)
         galaxy = _make_galaxy({hex_coord: [planet]})
@@ -535,10 +561,12 @@ class TestBuildQueueSourceNewFields:
         sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
 
         shipyard_source = sources[1]
-        assert shipyard_source.build_rate == 4500.0  # 3000 * 1.5
+        # All resources should be 3000 * 1.5 = 4500
+        expected_boosted = {res: rate * 1.5 for res, rate in EXPECTED_SHIPYARD_RATES.items()}
+        assert shipyard_source.build_rate == expected_boosted
 
     def test_collect_queues_sets_fleet_build_rate(self):
-        """Fleet shipyard queue has build_rate = 3000.0."""
+        """Fleet shipyard queue has per-resource rates from JSON."""
         hex_coord = HexCoord(5, 5)
         fleet = _make_fleet_with_yard(location=hex_coord)
         galaxy = _make_galaxy({hex_coord: []})
@@ -547,7 +575,7 @@ class TestBuildQueueSourceNewFields:
         sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
 
         assert len(sources) == 1
-        assert sources[0].build_rate == 3000.0
+        assert sources[0].build_rate == EXPECTED_FLEET_RATES
 
     def test_collect_queues_sets_planet_id_for_planet_sources(self):
         """Planet-based sources have planet_id set to planet.id."""
@@ -574,3 +602,79 @@ class TestBuildQueueSourceNewFields:
         sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
 
         assert sources[0].planet_id is None
+
+    def test_collect_queues_uses_explicit_production_rates(self):
+        """Shipyard with explicit production_rates in design uses those rates."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord, planet_id=99)
+        # Create facility with custom production rates
+        custom_rates = {"Metals": 5000, "Organics": 4000, "Exotics": 1000}
+        facility = _make_shipyard_facility(
+            instance_id="yard-custom",
+            production_rates=custom_rates
+        )
+        planet.facilities.append(facility)
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        shipyard_source = sources[1]
+        assert shipyard_source.build_rate == custom_rates
+
+    def test_collect_queues_explicit_rates_with_bonus(self):
+        """Explicit production_rates combined with construction_speed_bonus."""
+        hex_coord = HexCoord(5, 5)
+        planet = _make_planet(hex_coord=hex_coord, planet_id=99)
+        # Custom rates with 2x bonus
+        custom_rates = {"Metals": 1000, "Organics": 500}
+        facility = _make_shipyard_facility(
+            instance_id="yard-custom-boosted",
+            production_rates=custom_rates,
+            construction_speed_bonus=2.0
+        )
+        planet.facilities.append(facility)
+        galaxy = _make_galaxy({hex_coord: [planet]})
+        empire = _make_empire(empire_id=0)
+
+        sources = collect_build_queues_at_hex(hex_coord, galaxy, empire)
+
+        shipyard_source = sources[1]
+        expected = {"Metals": 2000, "Organics": 1000}  # 1000*2, 500*2
+        assert shipyard_source.build_rate == expected
+
+
+# ---------------------------------------------------------------------------
+# Tests: get_default_production_rates (PROJ-97)
+# ---------------------------------------------------------------------------
+
+class TestGetDefaultProductionRates:
+    """Test get_default_production_rates() function."""
+
+    def test_planetary_yard_rates(self):
+        """planetary_yard returns 2000 for all resources."""
+        rates = get_default_production_rates("planetary_yard")
+        assert rates == EXPECTED_PLANETARY_RATES
+
+    def test_space_shipyard_rates(self):
+        """space_shipyard returns 3000 for all resources."""
+        rates = get_default_production_rates("space_shipyard")
+        assert rates == EXPECTED_SHIPYARD_RATES
+
+    def test_fleet_space_yard_rates(self):
+        """fleet_space_yard returns 3000 for all resources."""
+        rates = get_default_production_rates("fleet_space_yard")
+        assert rates == EXPECTED_FLEET_RATES
+
+    def test_unknown_yard_type_returns_empty(self):
+        """Unknown yard type returns empty dict."""
+        rates = get_default_production_rates("unknown_yard")
+        assert rates == {}
+
+    def test_returns_copy_not_reference(self):
+        """get_default_production_rates returns a copy, not original dict."""
+        rates1 = get_default_production_rates("planetary_yard")
+        rates2 = get_default_production_rates("planetary_yard")
+        rates1["Metals"] = 9999
+        # Original should be unchanged
+        assert rates2["Metals"] == 2000

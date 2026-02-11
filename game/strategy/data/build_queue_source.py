@@ -7,14 +7,50 @@ Each build queue source represents a single construction queue from either:
 - A fleet space yard queue (ships + complexes)
 
 Created as part of PROJ-69 Phase 1.
+Updated in PROJ-97: build_rate is now Dict[str, float] for per-resource rates.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+from game.core.json_utils import load_json
 
 if TYPE_CHECKING:
     from game.strategy.data.planet import PlanetaryFacility
+
+
+# Module-level cache for production rates JSON
+_production_rates_cache: Optional[Dict[str, Dict[str, float]]] = None
+
+
+def _load_production_rates() -> Dict[str, Dict[str, float]]:
+    """Load production rates from JSON file with caching.
+
+    Returns:
+        Dict mapping yard type to per-resource rates.
+    """
+    global _production_rates_cache
+    if _production_rates_cache is None:
+        try:
+            _production_rates_cache = load_json("data/production_rates.json")
+        except (FileNotFoundError, ValueError):
+            _production_rates_cache = {}
+    return _production_rates_cache
+
+
+def get_default_production_rates(yard_type: str) -> Dict[str, float]:
+    """Get default per-resource production rates for a yard type.
+
+    Args:
+        yard_type: One of "planetary_yard", "space_shipyard", "fleet_space_yard".
+
+    Returns:
+        Dict mapping resource name to max units per turn.
+        Empty dict if yard_type unknown or file missing.
+    """
+    rates = _load_production_rates()
+    return dict(rates.get(yard_type, {}))
 
 
 @dataclass
@@ -29,6 +65,8 @@ class BuildQueueSource:
         can_build_ships: Whether ships/fighters/satellites can be queued.
         can_build_complexes: Whether complexes can be queued.
         context_type: "planet" or "fleet" for UI branching.
+        build_rate: Per-resource production rates (units per turn).
+        planet_id: Planet ID for planet-based queues, None for fleet queues.
     """
     queue_id: str
     display_name: str
@@ -37,20 +75,22 @@ class BuildQueueSource:
     can_build_ships: bool
     can_build_complexes: bool
     context_type: str
-    build_rate: float = 2000.0
+    build_rate: Dict[str, float] = field(default_factory=dict)
     planet_id: Optional[int] = None
 
 
-def _get_facility_build_rate(facility: 'PlanetaryFacility') -> float:
-    """Extract build rate from a shipyard facility's design_data.
+def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, float]:
+    """Extract per-resource production rates from a shipyard facility's design_data.
 
-    Shipyards build at 3000 units/turn * construction_speed_bonus.
+    Reads production_rates from the SpaceShipyard ability data if present,
+    otherwise falls back to default rates. Applies construction_speed_bonus
+    as a multiplier to all rates.
 
     Args:
         facility: The planetary facility to check.
 
     Returns:
-        Build rate in units per turn.
+        Dict mapping resource name to max units per turn.
     """
     for layer_data in facility.design_data.get("layers", {}).values():
         if not isinstance(layer_data, list):
@@ -61,8 +101,16 @@ def _get_facility_build_rate(facility: 'PlanetaryFacility') -> float:
                 shipyard_data = abilities.get("SpaceShipyard", {})
                 if isinstance(shipyard_data, dict):
                     bonus = shipyard_data.get("construction_speed_bonus", 1.0)
-                    return 3000.0 * bonus
-    return 3000.0  # Default shipyard rate
+                    # Check for explicit production_rates in ability data
+                    explicit_rates = shipyard_data.get("production_rates", {})
+                    if explicit_rates:
+                        # Apply bonus to explicit rates
+                        return {res: rate * bonus for res, rate in explicit_rates.items()}
+                    # Fall back to default space_shipyard rates with bonus
+                    base_rates = get_default_production_rates("space_shipyard")
+                    return {res: rate * bonus for res, rate in base_rates.items()}
+    # Default if no SpaceShipyard ability found
+    return get_default_production_rates("space_shipyard")
 
 
 def _facility_is_shipyard(facility: PlanetaryFacility) -> bool:
@@ -126,7 +174,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
             can_build_ships=False,
             can_build_complexes=True,
             context_type="planet",
-            build_rate=2000.0,
+            build_rate=get_default_production_rates("planetary_yard"),
             planet_id=planet.id,
         ))
 
@@ -143,7 +191,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
                     can_build_ships=True,
                     can_build_complexes=True,
                     context_type="planet",
-                    build_rate=_get_facility_build_rate(facility),
+                    build_rate=_get_facility_production_rates(facility),
                     planet_id=planet.id,
                 ))
 
@@ -161,7 +209,7 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
             can_build_ships=True,
             can_build_complexes=True,
             context_type="fleet",
-            build_rate=3000.0,
+            build_rate=get_default_production_rates("fleet_space_yard"),
             planet_id=None,
         ))
 
@@ -196,7 +244,7 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
             can_build_ships=False,
             can_build_complexes=True,
             context_type="planet",
-            build_rate=2000.0,
+            build_rate=get_default_production_rates("planetary_yard"),
             planet_id=planet.id,
         ))
 
@@ -213,7 +261,7 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
                     can_build_ships=True,
                     can_build_complexes=True,
                     context_type="planet",
-                    build_rate=_get_facility_build_rate(facility),
+                    build_rate=_get_facility_production_rates(facility),
                     planet_id=planet.id,
                 ))
 
@@ -229,7 +277,7 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
             can_build_ships=True,
             can_build_complexes=True,
             context_type="fleet",
-            build_rate=3000.0,
+            build_rate=get_default_production_rates("fleet_space_yard"),
             planet_id=None,
         ))
 

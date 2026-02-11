@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. JSON Data & Ability Update | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. BuildQueueSource Per-Resource Rates | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. BuildQueueSource Per-Resource Rates | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Controller Turn Calc & Tick Capping | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Display Updates | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remove Shipyard ResourceStorage | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 2
-**Last Action:** Phase 1 complete - JSON data and ability update
-**Next Action:** Execute Phase 2 - BuildQueueSource per-resource rates
+**Active Phase:** Phase 3
+**Last Action:** Phase 2 complete - BuildQueueSource per-resource rates
+**Next Action:** Execute Phase 3 - Controller turn calc & tick capping
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete. production_rates.json created, SpaceShipyardAbility updated with production_rates field, components.json updated with production_rates in shipyard abilities. 9 new tests added. 7593 tests passing.
+**Context for Next Agent:** Phase 2 complete. BuildQueueSource.build_rate changed from float to Dict[str, float]. Added get_default_production_rates() and _get_facility_production_rates(). Updated collect_build_queues_at_hex() and collect_all_build_queues_for_empire(). 7 new tests added. 46 tests in test_build_queue_source.py pass. UI files (controller, empire_build_queue_window, build_queue_selector) need updating in Phases 3-4.
 
 ## Overview
 Change the build queue production system from a single uniform `build_rate: float` to per-resource production rates (`Dict[str, float]`). This allows each resource type to have a different maximum production rate per turn at each build yard. Also remove dead `ResourceStorage` abilities from shipyard components, and add `production_rates` data to the SpaceShipyard ability in JSON.

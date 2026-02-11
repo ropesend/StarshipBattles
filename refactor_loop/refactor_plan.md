@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-97 Phase 1 complete
-**Current Status:** PROJ-97 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-97 Phase 2 complete
+**Current Status:** PROJ-97 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-97
-**Current Phase:** Phase 2
-**Test Status:** 7593 passed (full suite)
+**Current Phase:** Phase 3
+**Test Status:** 46 passed in test_build_queue_source.py (UI tests need Phase 3-4 updates)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-97 Phase 1: JSON data and ability update complete
-- Created: data/production_rates.json (3 yard types, 5 resources each)
-- Modified: harvester.py SpaceShipyardAbility with production_rates field
-- Modified: components.json (space_shipyard, fleet_space_yard with production_rates)
-- Created: 9 new tests in test_production_rates.py
-- Next: Phase 2 - Change build_rate from float to Dict[str, float]
+- PROJ-97 Phase 2: BuildQueueSource per-resource rates complete
+- Modified: build_queue_source.py - build_rate now Dict[str, float]
+- Added: get_default_production_rates(), _get_facility_production_rates()
+- Updated: collect_build_queues_at_hex(), collect_all_build_queues_for_empire()
+- Added: 7 new tests in test_build_queue_source.py (46 total pass)
+- UI files break on int(source.build_rate) - expected, fix in Phase 3-4
+- Next: Phase 3 - Controller turn calc & tick capping
 
 ---
 
@@ -503,6 +504,7 @@
 | 2026-02-10 | PROJ-96 | Phase 4 | Complete | 7593 passed | pending | THEME_SHIP_SIZE dead code removed |
 | 2026-02-10 | PROJ-96 | Audit 1 | PASSED | 7593 passed | pending | 4 investigation agents verified all goals |
 | 2026-02-10 | PROJ-97 | Phase 1 | Complete | 7593 passed | pending | JSON data, ability update, 9 new tests |
+| 2026-02-10 | PROJ-97 | Phase 2 | Complete | 46 BQS tests | pending | build_rate Dict, loader functions, 7 new tests |
 
 ---
 
