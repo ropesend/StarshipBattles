@@ -14,6 +14,7 @@ from game.strategy.generation.planet_image_registry import PlanetImageRegistry
 if TYPE_CHECKING:
     from game.strategy.generation.placement_strategies import ISystemPlacementStrategy
     from game.strategy.generation.region_classifier import RegionClassifier
+    from game.strategy.data.fleet import Fleet
 
 # Planet and PlanetType moved to game.strategy.data.planet
 
@@ -124,17 +125,17 @@ class Galaxy:
         self.systems[system.global_location] = system
         self.name_map[system.name] = system
         
-    def get_system_by_name(self, name):
+    def get_system_by_name(self, name: str) -> Optional['StarSystem']:
         """Get system by name."""
         return self.name_map.get(name)
 
-    def get_system_of_object(self, obj):
+    def get_system_of_object(self, obj: Any) -> Optional['StarSystem']:
         """
         Find the system containing a given object (Fleet, Planet, etc).
-        
+
         Args:
             obj: Object with a 'location' attribute (HexCoord).
-        
+
         Returns:
             StarSystem or None.
         """
@@ -166,7 +167,7 @@ class Galaxy:
             
         return None
     
-    def register_planet(self, system, planet):
+    def register_planet(self, system: 'StarSystem', planet: 'Planet') -> None:
         """Register a planet with the galaxy, assigning ID and updating indexes."""
         # Assign unique ID
         planet.id = self._next_planet_id
@@ -184,15 +185,15 @@ class Galaxy:
             self._global_hex_planets[global_hex] = []
         self._global_hex_planets[global_hex].append(planet)
     
-    def get_planet_by_id(self, planet_id):
+    def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
         """O(1) lookup of planet by ID."""
         return self.planets_by_id.get(planet_id)
     
-    def get_system_of_planet(self, planet):
+    def get_system_of_planet(self, planet: 'Planet') -> Optional['StarSystem']:
         """O(1) reverse lookup: Planet -> StarSystem."""
         return self._planet_to_system.get(planet)
     
-    def get_planets_at_global_hex(self, global_hex):
+    def get_planets_at_global_hex(self, global_hex: HexCoord) -> List['Planet']:
         """O(1) spatial lookup: get all planets at a global hex coordinate."""
         return self._global_hex_planets.get(global_hex, [])
 
@@ -214,7 +215,7 @@ class Galaxy:
         """
         self.fleets_by_id.pop(fleet.id, None)
 
-    def get_fleet_by_id(self, fleet_id: int):
+    def get_fleet_by_id(self, fleet_id: int) -> Optional['Fleet']:
         """O(1) lookup of fleet by ID.
 
         Args:

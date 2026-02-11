@@ -44,7 +44,12 @@ Example:
     result = session.handle_command(cmd)
 """
 import warnings
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from game.core.hex_math import HexCoord
+    from game.strategy.data.fleet import Fleet
+    from game.strategy.data.empire import Empire
 
 from game.core.logger import log_info, log_debug, set_event_handler
 from game.strategy.events import Event, EventLog
@@ -154,20 +159,20 @@ class GameSession:
                 break
         return None
 
-    def process_turn(self):
+    def process_turn(self) -> None:
         """Advance the game simulation by one full turn."""
         log_info(f"GameSession: Processing Turn {self.turn_number}...")
         self.turn_engine.process_turn(self.empires, self.galaxy, self.save_path)
         self.turn_number += 1
 
-    def get_current_player_empire(self, player_index):
+    def get_current_player_empire(self, player_index: int) -> Optional['Empire']:
         """Get the empire object for the current human player index."""
         if 0 <= player_index < len(self.human_player_ids):
             p_id = self.human_player_ids[player_index]
             return next((e for e in self.empires if e.id == p_id), None)
         return None
 
-    def preview_fleet_path(self, fleet, target_hex):
+    def preview_fleet_path(self, fleet: 'Fleet', target_hex: 'HexCoord') -> Optional[List['HexCoord']]:
         """
         Calculate and return the path a fleet would take to target_hex,
         without modifying the fleet's state.
@@ -193,7 +198,7 @@ class GameSession:
              return path[1:]
         return path
 
-    def get_fleet_path_projection(self, fleet, max_turns=50):
+    def get_fleet_path_projection(self, fleet: 'Fleet', max_turns: int = 50) -> List[Dict[str, Any]]:
         """
         Get the projected movement segments for a fleet (for UI visualization).
 

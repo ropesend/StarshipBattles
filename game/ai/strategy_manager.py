@@ -24,7 +24,10 @@ class StrategyManager:
 
     Thread Safety:
         - Instance creation is thread-safe via double-checked locking
-        - Data loading is lazy (on first access) to avoid import-time side effects
+        - Data loading (load_data/ensure_loaded) is thread-safe via locking
+        - Once loaded, all read operations are safe without synchronization
+        - Note: clear() and reset() are NOT thread-safe and should only be used
+          in single-threaded test setup/teardown
 
     Usage:
         manager = StrategyManager.instance()
