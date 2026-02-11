@@ -10,8 +10,8 @@
 **Last Session:** 2026-02-10
 **Last Completed:** PROJ-98 - Empire Build Yards Screen Enhancement - ALL PHASES + AUDIT PASSED
 **Current Status:** PROJ-98 Complete
-**Current Project:** None (all projects complete)
-**Current Phase:** N/A
+**Current Project:** PROJ-99
+**Current Phase:** Phase 1
 **Test Status:** 7648 passed
 **Active Blockers:** None
 
@@ -20,7 +20,8 @@
 - All 4 issues verified resolved via code grep
 - Audit passed: event handling, resource columns, sorting, filter toggles all working
 - 7648 tests passing, 4 warnings (existing pygame font warnings)
-- All projects in Master Task List now [x] complete
+- All previously-listed projects [x] complete
+- PROJ-99 and PROJ-100 added to plan, ready for execution
 
 ---
 
@@ -312,6 +313,22 @@
   - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-98/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-98/plan.md)
   - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-99: Empire Panel Window**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-99/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-99/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-100: Cargo Transfer Orders Overhaul**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-100/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-100/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---

@@ -271,7 +271,7 @@ class TestCollectBuildQueuesAtHex:
 
         assert len(sources) == 2  # base + fleet
         fleet_source = sources[1]
-        assert fleet_source.queue_id == "fleet_100"
+        assert fleet_source.queue_id == "fleet_100_yard_1"
         assert "Shipyard" in fleet_source.display_name
         assert fleet_source.can_build_ships is True
         assert fleet_source.context_type == "fleet"
@@ -428,7 +428,7 @@ class TestCollectAllBuildQueuesForEmpire:
         sources = collect_all_build_queues_for_empire(empire)
 
         assert len(sources) == 1
-        assert sources[0].queue_id == "fleet_555"
+        assert sources[0].queue_id == "fleet_555_yard_1"
         assert "Shipyard" in sources[0].display_name
         assert sources[0].owner_entity is fleet
         assert sources[0].construction_queue is fleet.construction_queue
@@ -458,7 +458,7 @@ class TestCollectAllBuildQueuesForEmpire:
         assert "planet_2_base" in queue_ids
         assert "yard-a" in queue_ids
         assert "yard-b" in queue_ids
-        assert "fleet_300" in queue_ids
+        assert "fleet_300_yard_1" in queue_ids
         # Fleet without yard should NOT appear
         assert "fleet_400" not in queue_ids
 

@@ -146,6 +146,11 @@ class Fleet:
         return self._capabilities.has_space_shipyard
 
     @property
+    def space_shipyard_count(self) -> int:
+        """Count total fleet space yard components across all combat-capable ships."""
+        return self._capabilities.space_shipyard_count
+
+    @property
     def is_building(self) -> bool:
         """
         Check if fleet is currently executing a BUILD order.
@@ -297,8 +302,8 @@ class Fleet:
         ships_data = [s.to_dict() for s in self.ships]
 
         location_data = None
-        if hasattr(self.location, 'to_dict'):
-            location_data = self.location.to_dict()
+        if isinstance(self.location, HexCoord):
+            location_data = {'q': self.location.q, 'r': self.location.r}
         elif isinstance(self.location, tuple):
             location_data = list(self.location)
 
@@ -309,7 +314,7 @@ class Fleet:
             'speed': self.speed,
             'ships': ships_data,
             'orders': [o.to_dict() for o in self.orders],
-            'path': [list(p) if isinstance(p, tuple) else p for p in self.path],
+            'path': [{'q': p.q, 'r': p.r} if isinstance(p, HexCoord) else list(p) if isinstance(p, tuple) else p for p in self.path],
             'construction_queue': self.construction_queue,
         }
 
@@ -319,7 +324,9 @@ class Fleet:
         # ShipInstance imported at module level
 
         location = data.get('location')
-        if isinstance(location, list):
+        if isinstance(location, dict) and 'q' in location and 'r' in location:
+            location = HexCoord(location['q'], location['r'])
+        elif isinstance(location, list):
             location = HexCoord(location[0], location[1])
 
         fleet = cls(
@@ -335,7 +342,9 @@ class Fleet:
 
         # Restore path
         for p in data.get('path', []):
-            if isinstance(p, list):
+            if isinstance(p, dict) and 'q' in p and 'r' in p:
+                fleet.path.append(HexCoord(p['q'], p['r']))
+            elif isinstance(p, list):
                 fleet.path.append(HexCoord(p[0], p[1]))
             else:
                 fleet.path.append(p)

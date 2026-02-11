@@ -38,21 +38,24 @@ class FleetCapabilityCalculator:
         Returns True if any combat-capable ship has a component with
         SpaceShipyard ability (e.g., fleet_space_yard component).
         """
+        return self.space_shipyard_count > 0
+
+    @property
+    def space_shipyard_count(self) -> int:
+        """Count total fleet space yard components across all combat-capable ships."""
+        count = 0
         for ship in self._fleet.get_combat_capable_ships():
             design_data = ship.design_data
-            # Check all layers for space yard components
             for layer_data in design_data.get("layers", {}).values():
                 if not isinstance(layer_data, list):
                     continue
                 for comp in layer_data:
                     if isinstance(comp, dict):
-                        # Check component id (real designs)
                         if comp.get("id") == "fleet_space_yard":
-                            return True
-                        # Check abilities dict (test fixtures)
-                        if "SpaceShipyard" in comp.get("abilities", {}):
-                            return True
-        return False
+                            count += 1
+                        elif "SpaceShipyard" in comp.get("abilities", {}):
+                            count += 1
+        return count
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
         """

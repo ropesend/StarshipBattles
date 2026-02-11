@@ -407,14 +407,14 @@ class BuildQueueScreen:
         header_height = 22
         col_x = 10
 
-        # "Item" column label (aligned with portrait + name)
+        # "Item" column label (widened for design name + type on one line)
         ui.UILabel(
-            relative_rect=pygame.Rect(col_x, header_y, 150, header_height),
+            relative_rect=pygame.Rect(col_x, header_y, 450, header_height),
             text="Item",
             manager=self.manager,
             container=self.build_queue_panel
         )
-        col_x += 155
+        col_x += 455
 
         # "Turns" column label
         ui.UILabel(
@@ -426,7 +426,7 @@ class BuildQueueScreen:
         col_x += 50
 
         # Resource icon columns (PROJ-81: increased spacing from 28 to 55px)
-        self.queue_column_positions = {"Item": 10, "Turns": 165}
+        self.queue_column_positions = {"Item": 10, "Turns": 465}
         for resource in PLANET_RESOURCES:
             icon = self.resource_icons.get(resource)
             if icon:
@@ -723,19 +723,11 @@ class BuildQueueScreen:
                 )
 
             # PROJ-79: Columnar layout aligned with headers
-            # Design name (aligned with "Item" column)
+            # Design name and type on single line (BUG-81: widened item column)
             name_x = icon_size + 8
             ui.UILabel(
-                relative_rect=pygame.Rect(name_x, 4, 110, 20),
-                text=f"{design_id[:12]}",  # Truncate to fit 110px
-                manager=self.manager,
-                container=item_panel
-            )
-
-            # Type on second line
-            ui.UILabel(
-                relative_rect=pygame.Rect(name_x, 24, 110, 20),
-                text=f"{item_type}",
+                relative_rect=pygame.Rect(name_x, 14, 400, 20),
+                text=f"{design_id} ({item_type})",
                 manager=self.manager,
                 container=item_panel
             )

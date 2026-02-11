@@ -52,17 +52,14 @@ class TestFleetSerialization:
         assert fleet.ships[0].name == 'Destroyer'
 
     def test_roundtrip_serialization(self, make_ship_instance):
-        """Test serialization roundtrip preserves data."""
+        """Test serialization roundtrip preserves data (BUG-77 fix)."""
         original = Fleet("test_fleet", 0, HexCoord(3, -1), speed=8.0)
         original.ships.append(make_ship_instance(name="Cruiser"))
         original.ships.append(make_ship_instance(name="Frigate"))
 
         d = original.to_dict()
 
-        # Note: HexCoord doesn't have to_dict(), so location serializes as None
-        # Manually fix the location for roundtrip test
-        d['location'] = [3, -1]
-
+        # HexCoord should now serialize properly without manual fix
         restored = Fleet.from_dict(d)
 
         assert restored.id == original.id
@@ -73,17 +70,29 @@ class TestFleetSerialization:
         assert restored.ships[0].name == "Cruiser"
         assert restored.ships[1].name == "Frigate"
 
-    def test_to_dict_location_limitation(self):
-        """Document that HexCoord location serializes as None.
-
-        Note: Current implementation has a gap where HexCoord without to_dict()
-        results in None location. This test documents the current behavior.
-        """
+    def test_to_dict_serializes_hexcoord_location(self):
+        """Test that HexCoord location is properly serialized (BUG-77 fix)."""
         fleet = Fleet("f1", 0, HexCoord(2, 3))
         d = fleet.to_dict()
 
-        # HexCoord doesn't have to_dict and isn't a tuple, so location is None
-        assert d['location'] is None
+        # HexCoord should serialize as {'q': 2, 'r': 3}
+        assert d['location'] == {'q': 2, 'r': 3}
+
+    def test_from_dict_restores_hexcoord_dict_format(self):
+        """Test that {'q': ..., 'r': ...} location format is deserialized (BUG-77 fix)."""
+        d = {
+            'id': 'f1',
+            'owner_id': 0,
+            'location': {'q': 7, 'r': -3},
+            'speed': 5.0,
+            'ships': [],
+            'orders': [],
+            'path': [],
+        }
+
+        fleet = Fleet.from_dict(d)
+
+        assert fleet.location == HexCoord(7, -3)
 
     def test_repr(self, make_ship_instance):
         """Test fleet string representation."""
@@ -143,7 +152,6 @@ class TestFleetSerialization:
         original.add_order(FleetOrder(OrderType.MOVE, HexCoord(2, 2)))
 
         d = original.to_dict()
-        d['location'] = [0, 0]  # Fix HexCoord serialization gap
 
         restored = Fleet.from_dict(d)
 

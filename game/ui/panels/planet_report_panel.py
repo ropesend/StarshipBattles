@@ -341,11 +341,12 @@ class PlanetReportPanel:
         for i, resource_name in enumerate(PLANET_RESOURCES):
             col_x = label_col_width + 10 + i * col_w
 
-            # Icon header
+            # Icon header (centered within column)
             icon_surf = self._resource_icons.get(resource_name)
             if icon_surf:
+                icon_x = col_x + (col_w - 24) // 2
                 icon_image = UIImage(
-                    relative_rect=pygame.Rect(col_x, 2, 24, 24),
+                    relative_rect=pygame.Rect(icon_x, 2, 24, 24),
                     image_surface=icon_surf,
                     manager=self.manager,
                     container=self.resource_panel

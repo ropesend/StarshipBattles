@@ -35,12 +35,12 @@
 | BUG-74 | 2026-02-08 | Normal new games should have homeworld complexes pre-built like quickstart | Awaiting Confirmation | [BUG-74.md](active_bugs/BUG-74.md) |
 | BUG-75 | 2026-02-08 | Planet details panel dimensions mismatch in planets list vs strategy layer | Awaiting Confirmation | [BUG-75.md](active_bugs/BUG-75.md) |
 | BUG-76 | 2026-02-08 | Turn log does not show at start of each strategy layer turn | Awaiting Confirmation | [BUG-76.md](active_bugs/BUG-76.md) |
-| BUG-77 | 2026-02-08 | Ships/fleets missing after save and load | Pending | [BUG-77.md](active_bugs/BUG-77.md) |
-| BUG-78 | 2026-02-10 | Planet Production values display as 0; icons not centered | Pending | [BUG-78.md](active_bugs/BUG-78.md) |
-| BUG-79 | 2026-02-10 | Multiple Fleet Space Yard components only get 1 Build Yard entry | Pending | [BUG-79.md](active_bugs/BUG-79.md) |
-| BUG-80 | 2026-02-10 | Build Yards list - names/properties should be on 1 line | Pending | [BUG-80.md](active_bugs/BUG-80.md) |
-| BUG-81 | 2026-02-10 | Build Queue - item column too narrow, properties overflow | Pending | [BUG-81.md](active_bugs/BUG-81.md) |
+| BUG-77 | 2026-02-08 | Ships/fleets missing after save and load | Awaiting Confirmation | [BUG-77.md](active_bugs/BUG-77.md) |
+| BUG-78 | 2026-02-10 | Planet Production values display as 0; icons not centered | Awaiting Confirmation | [BUG-78.md](active_bugs/BUG-78.md) |
+| BUG-79 | 2026-02-10 | Multiple Fleet Space Yard components only get 1 Build Yard entry | Awaiting Confirmation | [BUG-79.md](active_bugs/BUG-79.md) |
+| BUG-80 | 2026-02-10 | Build Yards list - names/properties should be on 1 line | Awaiting Confirmation | [BUG-80.md](active_bugs/BUG-80.md) |
+| BUG-81 | 2026-02-10 | Build Queue - item column too narrow, properties overflow | Awaiting Confirmation | [BUG-81.md](active_bugs/BUG-81.md) |
 
 ## 3. Current Focus: None
-**Status:** All pending bugs fixed. BUG-73, BUG-74, BUG-75, BUG-76 set to Awaiting Confirmation. No pending bugs remain.
-Full test suite: 7340 passed, 4 failed (pre-existing failures in test_transfer_dialog.py, unrelated to fixes).
+**Status:** All pending bugs fixed. BUG-77, BUG-78, BUG-79, BUG-80, BUG-81 set to Awaiting Confirmation. No pending bugs remain.
+Full test suite: 7659 passed, 0 failures.

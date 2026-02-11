@@ -89,7 +89,7 @@ class BuildQueueSelector:
             element.kill()
         self.buttons.clear()
 
-        row_height = 55
+        row_height = 30
         row_width = self.panel.get_relative_rect().width - 20
         y_offset = 0
 
@@ -97,11 +97,10 @@ class BuildQueueSelector:
             is_selected = idx in self.selected_indices
             item_count = len(source.construction_queue)
 
-            # Display name with item count and build rate, selection prefix
+            # Display name with item count and build rate on single line
             prefix = "> " if is_selected else "  "
-            # Per-resource rates dict: show max rate for display
             rate_display = int(max(source.build_rate.values())) if source.build_rate else 0
-            label_text = f"{prefix}{source.display_name}\n{item_count} items | {rate_display}/turn"
+            label_text = f"{prefix}{source.display_name} ({item_count} items, {rate_display}/turn)"
 
             # Use object_id to distinguish selected vs unselected visually
             object_id = "#queue_selector_selected" if is_selected else "#queue_selector_item"

@@ -149,6 +149,9 @@ class StrategyDetailFormatter:
         if getattr(planet, 'owner_id', None) is None:
             return {}
 
+        from game.core.registry import get_default_registries
+        registries = get_default_registries()
+
         rates: Dict[str, float] = {}
         for facility in getattr(planet, 'facilities', []):
             if not getattr(facility, 'is_operational', True):
@@ -158,16 +161,36 @@ class StrategyDetailFormatter:
                 if not isinstance(layer_data, list):
                     continue
                 for comp in layer_data:
-                    harvester = None
-                    if isinstance(comp, dict):
-                        harvester = comp.get('abilities', {}).get('ResourceHarvester')
-                    if harvester and isinstance(harvester, dict):
+                    harvester = self._get_harvester_info(comp, registries)
+                    if harvester:
                         res_type = harvester.get('resource_type', '')
                         base_rate = harvester.get('base_harvest_rate', 0.0)
                         if res_type and base_rate > 0:
                             quality = planet.resources.get(res_type, {}).get('quality', 0.0)
                             rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
         return rates
+
+    @staticmethod
+    def _get_harvester_info(comp, registries) -> Optional[dict]:
+        """Extract ResourceHarvester info from a component entry.
+
+        Checks inline abilities first, then falls back to registry lookup.
+        """
+        if isinstance(comp, dict):
+            # Check inline abilities
+            harvester = comp.get('abilities', {}).get('ResourceHarvester')
+            if isinstance(harvester, dict):
+                return harvester
+            # Fall back to registry lookup by component ID
+            comp_id = comp.get('id')
+            if comp_id and registries is not None:
+                comp_def = registries.components.get(comp_id)
+                if comp_def is not None:
+                    abilities = getattr(comp_def, 'abilities', {}) or {}
+                    harvester = abilities.get('ResourceHarvester')
+                    if isinstance(harvester, dict):
+                        return harvester
+        return None
 
     # =========================================================================
     # Raw Data Popup

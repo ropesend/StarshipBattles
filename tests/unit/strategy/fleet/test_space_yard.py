@@ -266,3 +266,49 @@ class TestFleetCanBuildType:
         """Test unknown vehicle type returns False."""
         assert fleet_with_yard.can_build_type("unknown") is False
         assert fleet_with_yard.can_build_type("spaceship") is False
+
+
+class TestFleetSpaceShipyardCount:
+    """Test cases for Fleet.space_shipyard_count property (BUG-79)."""
+
+    @pytest.fixture
+    def make_yard_ship(self):
+        """Factory for creating ships with configurable yard count."""
+        def _make(name="Yard Ship", yard_count=1, is_combat_capable=True):
+            mock = MagicMock()
+            mock.name = name
+            mock.is_combat_capable.return_value = is_combat_capable
+            components = [{'id': 'fleet_space_yard'} for _ in range(yard_count)]
+            components.append({'id': 'reactor'})  # Non-yard component
+            mock.design_data = {
+                'name': name,
+                'vehicle_type': 'Ship',
+                'layers': {'core': components}
+            }
+            return mock
+        return _make
+
+    def test_empty_fleet_has_zero_yards(self, basic_fleet):
+        """Empty fleet has 0 space yards."""
+        assert basic_fleet.space_shipyard_count == 0
+
+    def test_fleet_with_one_yard_counts_one(self, basic_fleet, make_yard_ship):
+        """Fleet with one yard component counts 1."""
+        basic_fleet.ships.append(make_yard_ship(yard_count=1))
+        assert basic_fleet.space_shipyard_count == 1
+
+    def test_fleet_with_two_yards_on_one_ship(self, basic_fleet, make_yard_ship):
+        """Ship with 2 fleet_space_yard components counts 2 (BUG-79 core case)."""
+        basic_fleet.ships.append(make_yard_ship(yard_count=2))
+        assert basic_fleet.space_shipyard_count == 2
+
+    def test_fleet_with_yards_across_multiple_ships(self, basic_fleet, make_yard_ship):
+        """Yards across multiple ships are summed."""
+        basic_fleet.ships.append(make_yard_ship(name="Ship A", yard_count=1))
+        basic_fleet.ships.append(make_yard_ship(name="Ship B", yard_count=2))
+        assert basic_fleet.space_shipyard_count == 3
+
+    def test_destroyed_ship_yards_not_counted(self, basic_fleet, make_yard_ship):
+        """Yards on destroyed (non-combat-capable) ships are not counted."""
+        basic_fleet.ships.append(make_yard_ship(yard_count=2, is_combat_capable=False))
+        assert basic_fleet.space_shipyard_count == 0
