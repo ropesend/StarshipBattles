@@ -25,6 +25,8 @@
     "fleet.colonize": {"key": "K_c", "modifiers": []},
     "fleet.transfer": {"key": "K_t", "modifiers": []},
     "fleet.cancel_mode": {"key": "K_ESCAPE", "modifiers": []},
+    "fleet.drop_cargo": {"key": "K_d", "modifiers": []},
+    "fleet.load_cargo": {"key": "K_l", "modifiers": []},
 
     "detail_panel.orders": {"key": "K_o", "modifiers": []},
     "detail_panel.fleet_report": {"key": "K_f", "modifiers": []},

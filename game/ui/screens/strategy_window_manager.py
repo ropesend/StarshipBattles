@@ -337,6 +337,36 @@ class StrategyWindowManager:
         )
 
     # =========================================================================
+    # Cargo Quick Dialog
+    # =========================================================================
+
+    def open_cargo_quick_dialog(self, fleet, hex_coord, direction: str) -> None:
+        """Open the quick cargo drop/load dialog.
+
+        PROJ-100: Simplified dialog for D/L quick commands.
+
+        Args:
+            fleet: The fleet involved in the transfer.
+            hex_coord: The hex coordinate for the transfer.
+            direction: 'unload' for dropping cargo, 'load' for loading cargo.
+        """
+        from game.ui.screens.cargo_quick_dialog import CargoQuickDialog
+
+        win_w, win_h = 500, 450
+        win_rect = pygame.Rect(0, 0, win_w, win_h)
+        win_rect.center = (self.width // 2, self.height // 2)
+
+        CargoQuickDialog(
+            relative_rect=win_rect,
+            manager=self.manager,
+            fleet=fleet,
+            hex_coord=hex_coord,
+            direction=direction,
+            scene=self.scene,
+            input_mapper=self._mapper,
+        )
+
+    # =========================================================================
     # Planet Selection Prompt
     # =========================================================================
 

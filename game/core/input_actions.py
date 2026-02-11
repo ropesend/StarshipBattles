@@ -52,6 +52,8 @@ class InputAction(str, Enum):
     FLEET_JOIN = "fleet.join"
     FLEET_COLONIZE = "fleet.colonize"
     FLEET_TRANSFER = "fleet.transfer"
+    FLEET_DROP_CARGO = "fleet.drop_cargo"
+    FLEET_LOAD_CARGO = "fleet.load_cargo"
     FLEET_CANCEL_MODE = "fleet.cancel_mode"
 
     # --- Detail panel buttons ---
@@ -105,6 +107,8 @@ ACTION_DISPLAY_NAMES: Dict[InputAction, str] = {
     InputAction.FLEET_JOIN: "Join Fleet",
     InputAction.FLEET_COLONIZE: "Colonize",
     InputAction.FLEET_TRANSFER: "Transfer Cargo",
+    InputAction.FLEET_DROP_CARGO: "Drop Cargo",
+    InputAction.FLEET_LOAD_CARGO: "Load Cargo",
     InputAction.FLEET_CANCEL_MODE: "Cancel Mode",
     # Detail panel
     InputAction.DETAIL_PANEL_ORDERS: "Fleet Orders",
@@ -156,6 +160,8 @@ ACTION_GROUPS: Dict[str, List[InputAction]] = {
         InputAction.FLEET_JOIN,
         InputAction.FLEET_COLONIZE,
         InputAction.FLEET_TRANSFER,
+        InputAction.FLEET_DROP_CARGO,
+        InputAction.FLEET_LOAD_CARGO,
         InputAction.FLEET_CANCEL_MODE,
     ],
     "Detail Panel": [

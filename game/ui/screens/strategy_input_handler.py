@@ -110,7 +110,7 @@ class StrategyInputHandler:
         """Handle keyboard input using InputMapper (PROJ-71)."""
         # Build context list based on current state
         contexts = ["strategy", "global", "detail_panel"]
-        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET', 'TRANSFER'):
+        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO'):
             contexts.append("fleet")
 
         action = self._mapper.resolve(event, contexts)
@@ -146,8 +146,22 @@ class StrategyInputHandler:
             else:
                 log_debug("Select a fleet first for transfer.")
 
+        elif action == InputAction.FLEET_DROP_CARGO:
+            if self.scene.selected_fleet:
+                self.input_mode = 'DROP_CARGO'
+                log_debug("Input Mode: DROP_CARGO - Click target hex.")
+            else:
+                log_debug("Select a fleet first.")
+
+        elif action == InputAction.FLEET_LOAD_CARGO:
+            if self.scene.selected_fleet:
+                self.input_mode = 'LOAD_CARGO'
+                log_debug("Input Mode: LOAD_CARGO - Click target hex.")
+            else:
+                log_debug("Select a fleet first.")
+
         elif action == InputAction.FLEET_CANCEL_MODE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER'):
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
 
@@ -213,7 +227,7 @@ class StrategyInputHandler:
                 log_debug("Select a fleet first.")
 
         elif event.key == pygame.K_ESCAPE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER'):
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
 
@@ -265,6 +279,10 @@ class StrategyInputHandler:
             return self._handle_colonize_mode_click(mx, my, button)
         elif self.input_mode == 'TRANSFER':
             return self._handle_transfer_mode_click(mx, my, button)
+        elif self.input_mode == 'DROP_CARGO':
+            return self._handle_drop_cargo_mode_click(mx, my, button)
+        elif self.input_mode == 'LOAD_CARGO':
+            return self._handle_load_cargo_mode_click(mx, my, button)
         elif self.input_mode == 'SELECT':
             return self._handle_select_mode_click(mx, my, button)
 
@@ -367,6 +385,36 @@ class StrategyInputHandler:
             target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
             fleet = self.scene.selected_fleet
             self.scene.ui.open_transfer_dialog(fleet, target_hex)
+            self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_drop_cargo_mode_click(self, mx, my, button):
+        """Handle click in DROP_CARGO mode."""
+        if button == 1:  # Left Click
+            world_pos = self.scene.camera.screen_to_world((mx, my))
+            target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+            fleet = self.scene.selected_fleet
+            self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'unload')
+            self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
+        return False
+
+    def _handle_load_cargo_mode_click(self, mx, my, button):
+        """Handle click in LOAD_CARGO mode."""
+        if button == 1:  # Left Click
+            world_pos = self.scene.camera.screen_to_world((mx, my))
+            target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+            fleet = self.scene.selected_fleet
+            self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'load')
             self.input_mode = 'SELECT'
             return True
         elif button == 3:  # Right click cancels
