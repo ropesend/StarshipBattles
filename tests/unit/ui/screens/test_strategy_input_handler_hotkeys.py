@@ -234,21 +234,16 @@ class TestNewHotkeyButtonActions:
         mock_scene.ui.open_fleet_report_window.assert_not_called()
 
 
-class TestBackwardCompatWithoutMapper:
-    """When mapper is None, hardcoded behavior is preserved."""
+class TestNoMapperMeansNoKeyboardInput:
+    """Without mapper, keyboard input has no effect."""
 
-    def test_m_still_works_without_mapper(self, mock_scene):
-        """M key triggers MOVE even without mapper (backward compat)."""
+    def test_no_mapper_no_keyboard_input(self, mock_scene):
+        """When mapper is None, keyboard events are not handled."""
         handler = StrategyInputHandler(mock_scene)
         mock_scene.selected_fleet = MagicMock()
         handler.handle_event(_keydown(pygame.K_m))
-        assert handler.input_mode == 'MOVE'
-
-    def test_shift_g_still_works_without_mapper(self, mock_scene):
-        """Shift+G triggers galaxy zoom without mapper."""
-        handler = StrategyInputHandler(mock_scene)
-        handler.handle_event(_keydown(pygame.K_g, pygame.KMOD_SHIFT))
-        mock_scene._camera_nav.zoom_to_galaxy.assert_called_once()
+        # Without mapper, mode should remain SELECT (no keyboard handling)
+        assert handler.input_mode == 'SELECT'
 
 
 class TestStrategyScreenPassesMapper:

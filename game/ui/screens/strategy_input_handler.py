@@ -21,9 +21,8 @@ from game.core.hex_math import pixel_to_hex
 class StrategyInputHandler:
     """Routes input events for strategy scene.
 
-    When an InputMapper is provided, keyboard events are resolved through
-    the centralized binding table. Without a mapper, falls back to the
-    original hardcoded pygame key checks (backward compat).
+    Keyboard events are resolved through the centralized InputMapper binding
+    table (PROJ-71). An InputMapper must be provided for keyboard input to work.
     """
 
     def __init__(self, scene, input_mapper=None):
@@ -31,8 +30,8 @@ class StrategyInputHandler:
 
         Args:
             scene: StrategyScreen instance providing state and sub-modules.
-            input_mapper: Optional InputMapper for centralized keybinding
-                         resolution (PROJ-71).
+            input_mapper: InputMapper for centralized keybinding resolution.
+                         Required for keyboard input to function.
         """
         self.scene = scene
         self._mapper = input_mapper
@@ -100,11 +99,10 @@ class StrategyInputHandler:
             self.scene.cycle_selection('fleet', 1)
 
     def _handle_keydown(self, event):
-        """Handle keyboard input via InputMapper or legacy fallback."""
+        """Handle keyboard input via InputMapper."""
         if self._mapper:
             self._handle_keydown_mapped(event)
-        else:
-            self._handle_keydown_legacy(event)
+        # No mapper = no keyboard input (mapper is required)
 
     def _handle_keydown_mapped(self, event):
         """Handle keyboard input using InputMapper (PROJ-71)."""
@@ -312,85 +310,6 @@ class StrategyInputHandler:
             return True
 
         return False
-
-    def _handle_keydown_legacy(self, event):
-        """Handle keyboard input with hardcoded keys (backward compat)."""
-        if event.key == pygame.K_m:
-            if self.scene.selected_fleet:
-                self.input_mode = 'MOVE'
-                log_debug("Input Mode: MOVE - Click destination for fleet.")
-            else:
-                log_debug("Select a fleet first.")
-
-        elif event.key == pygame.K_j:
-            if self.scene.selected_fleet:
-                self.input_mode = 'JOIN'
-                log_debug("Input Mode: JOIN - Select fleet to join.")
-            else:
-                log_debug("Select a fleet first.")
-
-        elif event.key == pygame.K_ESCAPE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER', 'DROP_CARGO', 'LOAD_CARGO',
-                                   'IMPLODE_PLANET_TARGET', 'STELLERATE_STAR_TARGET', 'OPEN_WARP_TARGET',
-                                   'CLOSE_WARP_TARGET', 'DYSON_SPHERE_TARGET'):
-                self.input_mode = 'SELECT'
-                log_debug("Input Mode: SELECT")
-
-        elif event.key == pygame.K_c:
-            if self.scene.selected_fleet:
-                self.input_mode = 'COLONIZE_TARGET'
-                log_debug("Input Mode: COLONIZE - Select target planet.")
-            else:
-                log_debug("Select a fleet first.")
-
-        elif event.key == pygame.K_t:
-            if self.scene.selected_fleet:
-                self.input_mode = 'TRANSFER'
-                log_debug("Input Mode: TRANSFER - Click destination hex for transfer.")
-            else:
-                log_debug("Select a fleet first for transfer.")
-
-        # Quick Zoom Shortcuts
-        elif event.key == pygame.K_g and (event.mod & pygame.KMOD_SHIFT):
-            self.scene._camera_nav.zoom_to_galaxy()
-        elif event.key == pygame.K_s and (event.mod & pygame.KMOD_SHIFT):
-            self.scene._camera_nav.zoom_to_system()
-
-        # Screenshot Shortcuts
-        elif event.key == pygame.K_F12:
-            self._take_screenshot_full()
-        elif event.key == pygame.K_F11:
-            self._take_screenshot_viewport()
-
-        # Superweapon legacy key handlers
-        elif event.key == pygame.K_i and (event.mod & pygame.KMOD_CTRL):
-            if self.scene.selected_fleet:
-                self.input_mode = 'IMPLODE_PLANET_TARGET'
-                log_debug("Input Mode: IMPLODE_PLANET - Select target planet.")
-
-        elif event.key == pygame.K_s and (event.mod & pygame.KMOD_CTRL) and (event.mod & pygame.KMOD_SHIFT):
-            if self.scene.selected_fleet:
-                self.input_mode = 'STELLERATE_STAR_TARGET'
-                log_debug("Input Mode: STELLERATE_STAR - Select target star.")
-
-        elif event.key == pygame.K_w and (event.mod & pygame.KMOD_CTRL):
-            if self.scene.selected_fleet:
-                self.input_mode = 'OPEN_WARP_TARGET'
-                log_debug("Input Mode: OPEN_WARP_POINT - Select hex for warp point.")
-
-        elif event.key == pygame.K_l and (event.mod & pygame.KMOD_CTRL):
-            if self.scene.selected_fleet:
-                self.input_mode = 'CLOSE_WARP_TARGET'
-                log_debug("Input Mode: CLOSE_WARP_POINT - Select warp point to close.")
-
-        elif event.key == pygame.K_d and (event.mod & pygame.KMOD_CTRL):
-            if self.scene.selected_fleet:
-                self.input_mode = 'DYSON_SPHERE_TARGET'
-                log_debug("Input Mode: DYSON_SPHERE - Select target star.")
-
-        elif event.key == pygame.K_x and not (event.mod & (pygame.KMOD_CTRL | pygame.KMOD_SHIFT | pygame.KMOD_ALT)):
-            if self.scene.selected_fleet:
-                self.scene._superweapons.handle_self_destruct(self.scene.selected_fleet)
 
     def handle_click(self, mx, my, button):
         """

@@ -41,46 +41,34 @@ def mapper():
 class TestStrategyInputHandlerTransfer:
     """Tests for T key and TRANSFER mode in StrategyInputHandler."""
 
-    @pytest.fixture
-    def mock_scene(self):
-        scene = MagicMock()
-        scene.ui = MagicMock()
-        scene.ui.manager = MagicMock()
-        scene.ui.planet_list_window = None
-        scene.selected_fleet = None
-        scene.build_queue_screen = None
-        scene.camera = MagicMock()
-        scene.hex_size = 64
-        return scene
-
-    def test_t_key_sets_transfer_mode(self, mock_scene):
+    def test_t_key_sets_transfer_mode(self, mock_scene, mapper):
         """Pressing 'T' should set input_mode to TRANSFER if a fleet is selected."""
-        handler = StrategyInputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_fleet = MagicMock()
         mock_scene.selected_fleet = mock_fleet
 
-        event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_t})
+        event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_t, 'mod': 0})
         handler.handle_event(event)
 
         assert handler.input_mode == 'TRANSFER'
         mock_scene.ui.open_transfer_dialog.assert_not_called()
 
-    def test_t_key_ignored_if_no_fleet_selected(self, mock_scene):
+    def test_t_key_ignored_if_no_fleet_selected(self, mock_scene, mapper):
         """Pressing 'T' should do nothing if no fleet is selected."""
-        handler = StrategyInputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = None
 
-        event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_t})
+        event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_t, 'mod': 0})
         handler.handle_event(event)
 
         assert handler.input_mode == 'SELECT'
         mock_scene.ui.open_transfer_dialog.assert_not_called()
 
-    def test_transfer_mode_left_click_opens_dialog_at_clicked_hex(self, mock_scene):
+    def test_transfer_mode_left_click_opens_dialog_at_clicked_hex(self, mock_scene, mapper):
         """In TRANSFER mode, left click opens transfer dialog at clicked hex."""
         from game.core.hex_math import HexCoord
 
-        handler = StrategyInputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_fleet = MagicMock()
         mock_scene.selected_fleet = mock_fleet
         handler.input_mode = 'TRANSFER'
@@ -102,9 +90,9 @@ class TestStrategyInputHandlerTransfer:
             mock_scene.ui.open_transfer_dialog.assert_called_once_with(mock_fleet, target_hex)
             assert handler.input_mode == 'SELECT'
 
-    def test_transfer_mode_right_click_cancels_to_select(self, mock_scene):
+    def test_transfer_mode_right_click_cancels_to_select(self, mock_scene, mapper):
         """In TRANSFER mode, right click cancels back to SELECT mode."""
-        handler = StrategyInputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = MagicMock()
         handler.input_mode = 'TRANSFER'
 
@@ -117,13 +105,13 @@ class TestStrategyInputHandlerTransfer:
         assert handler.input_mode == 'SELECT'
         mock_scene.ui.open_transfer_dialog.assert_not_called()
 
-    def test_escape_cancels_transfer_mode(self, mock_scene):
+    def test_escape_cancels_transfer_mode(self, mock_scene, mapper):
         """Pressing ESC in TRANSFER mode returns to SELECT mode."""
-        handler = StrategyInputHandler(mock_scene)
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
         mock_scene.selected_fleet = MagicMock()
         handler.input_mode = 'TRANSFER'
 
-        event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_ESCAPE})
+        event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_ESCAPE, 'mod': 0})
         handler.handle_event(event)
 
         assert handler.input_mode == 'SELECT'

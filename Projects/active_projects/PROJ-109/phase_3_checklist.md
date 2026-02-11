@@ -84,20 +84,23 @@
 
 ---
 
-### Task 3.4: Remove StrategyInputHandler legacy keydown fallback [Medium]
+### Task 3.4: Remove StrategyInputHandler legacy keydown fallback [Medium] - COMPLETE
 **Finding:** LEG-UI1-005
 **File:** `game/ui/screens/strategy_input_handler.py:102-107, 316-394`
-**Tests:** `pytest tests/unit/ui/screens/ -n 12`
+**Tests:** `pytest tests/unit/ui/screens/ -n 12` (515 passed)
 
-- [ ] In `_handle_keydown()` (lines 102-107): Remove the `if/else` dispatch - always call `_handle_keydown_mapped(event)`
-- [ ] If `self._mapper` is None, simply return without handling (no legacy fallback)
-- [ ] Delete the entire `_handle_keydown_legacy()` method (lines 316-394, ~78 lines of duplicated key checks)
-- [ ] Update `__init__` to document that `input_mapper` is effectively required for keyboard input
-- [ ] Remove "backward compat" from the class docstring (line 26)
-- [ ] Verify: all callers that create StrategyInputHandler provide input_mapper
-- [ ] Check `StrategyScreen.__init__` always passes `input_mapper` to `StrategyInputHandler`
+- [x] In `_handle_keydown()` (lines 102-107): Remove the `if/else` dispatch - always call `_handle_keydown_mapped(event)`
+- [x] If `self._mapper` is None, simply return without handling (no legacy fallback)
+- [x] Delete the entire `_handle_keydown_legacy()` method (lines 316-394, ~78 lines of duplicated key checks)
+- [x] Update `__init__` to document that `input_mapper` is effectively required for keyboard input
+- [x] Remove "backward compat" from the class docstring (line 26)
+- [x] Verify: all callers that create StrategyInputHandler provide input_mapper
+- [x] Check `StrategyScreen.__init__` always passes `input_mapper` to `StrategyInputHandler`
+- [x] Update test_scene_protocol.py to pass input_mapper to StrategyScreen
+- [x] Update TestBackwardCompatWithoutMapper → TestNoMapperMeansNoKeyboardInput (tests new behavior)
+- [x] Update TestStrategyInputHandlerTransfer to use mapper fixture
 
-**Notes:**
+**Notes:** Deleted ~78 lines of legacy code. Updated 2 test files. All 8248 tests pass.
 
 ---
 

@@ -81,8 +81,10 @@ class TestISceneProtocolCompliance:
         """StrategyScreen implements IScene protocol."""
         from game.core.protocols import IScene
         from game.ui.screens.strategy_screen import StrategyScreen
+        from game.core.input_mapper import InputMapper
 
-        scene = StrategyScreen(800, 600, scene_callback=lambda action, **kw: None)
+        input_mapper = InputMapper()
+        scene = StrategyScreen(800, 600, scene_callback=lambda action, **kw: None, input_mapper=input_mapper)
         assert isinstance(scene, IScene), "StrategyScreen should implement IScene"
 
         assert hasattr(scene, 'handle_event')
