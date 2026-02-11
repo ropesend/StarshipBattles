@@ -293,10 +293,12 @@ class StrategyWindowManager:
         w, h = self.width * 0.9, self.height * 0.9
         rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
 
+        empire = self.scene.current_empire
         self.fleet_report_window = FleetReportWindow(
             rect,
             self.manager,
             fleet,
+            empire=empire,
             on_close_callback=self._on_fleet_report_closed,
         )
 

@@ -25,7 +25,7 @@ class FleetReportWindow(UIWindow):
     - Individual ship details with damage (right panel)
     """
 
-    def __init__(self, rect, manager, fleet, on_close_callback=None):
+    def __init__(self, rect, manager, fleet, empire=None, on_close_callback=None):
         """
         Initialize the Fleet Report Window.
 
@@ -33,6 +33,7 @@ class FleetReportWindow(UIWindow):
             rect: Window position and size (pygame.Rect)
             manager: pygame_gui UIManager
             fleet: Fleet object to display
+            empire: Empire object for fleet management operations
             on_close_callback: Function to call when window is closed
         """
         super().__init__(
@@ -43,6 +44,7 @@ class FleetReportWindow(UIWindow):
         )
 
         self.fleet = fleet
+        self.empire = empire
         self.on_close_callback = on_close_callback
 
         # --- Layout Constants ---
@@ -56,8 +58,9 @@ class FleetReportWindow(UIWindow):
         self.column_manager = ColumnManager()
         self._design_loader = DesignLoaderAdapter()
 
-        # Selection state
-        self.selected_ship = None
+        # Selection state - multi-select support
+        self.selected_indices: set = set()  # Indices into filtered_ships
+        self.selected_ship = None  # For detail panel (single ship when len(selected_indices) == 1)
 
         # Image cache for ship portraits and top-down sprites
         self._image_cache = {}  # {(ship_id, image_type): pygame.Surface}
@@ -386,6 +389,37 @@ class FleetReportWindow(UIWindow):
             self.column_buttons[col_id] = btn
             y += 30
 
+        y += 20
+
+        # --- Actions Section ---
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
+            text="ACTIONS",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 35
+
+        # Remove Selected button - creates new fleet from removed ships
+        self.btn_remove_selected = UIButton(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 32),
+            text="Remove Selected",
+            manager=self.ui_manager,
+            container=self.sidebar_panel,
+            object_id="#btn_remove_selected"
+        )
+        self.btn_remove_selected.disable()  # Disabled until selection exists
+
+    def _update_remove_button(self):
+        """Enable/disable remove button and update text based on selection."""
+        count = len(self.selected_indices)
+        if count > 0 and self.empire:
+            self.btn_remove_selected.enable()
+            self.btn_remove_selected.set_text(f"Remove Selected ({count})")
+        else:
+            self.btn_remove_selected.disable()
+            self.btn_remove_selected.set_text("Remove Selected")
+
     def _init_ship_list(self):
         """Initialize the center ship list panel."""
         panel_rect = self.list_panel.get_relative_rect()
@@ -601,9 +635,28 @@ class FleetReportWindow(UIWindow):
 
                 # Update column values
                 self._update_row_data(row, ship)
+
+                # Apply selection highlighting
+                self._apply_row_highlight(row, ship_index)
             else:
                 row['bg'].hide()
                 row['ship_index'] = -1
+
+    def _apply_row_highlight(self, row, ship_index: int):
+        """Apply visual highlighting to selected rows."""
+        bg_panel = row['bg']
+        is_selected = ship_index in self.selected_indices
+
+        # Use pygame_gui's background_colour property if available
+        if is_selected:
+            # Darker blue tint for selection
+            bg_panel.background_colour = pygame.Color(60, 80, 120)
+        else:
+            # Default panel background (dark grey)
+            bg_panel.background_colour = pygame.Color(35, 35, 35)
+
+        # Force redraw
+        bg_panel.rebuild()
 
     def _update_row_data(self, row, ship):
         """Update a single row with ship data."""
@@ -788,7 +841,7 @@ class FleetReportWindow(UIWindow):
         return handled
 
     def _handle_row_click(self, pos):
-        """Handle click on a ship row to select it."""
+        """Handle click on a ship row with Ctrl+click multi-select support."""
         # Check if click is within the list view panel
         list_rect = self.list_view_panel.get_abs_rect()
 
@@ -805,8 +858,31 @@ class FleetReportWindow(UIWindow):
             if row_rect.collidepoint(pos):
                 ship_index = row.get('ship_index', -1)
                 if 0 <= ship_index < len(filtered_ships):
-                    ship = filtered_ships[ship_index]
-                    self.select_ship(ship)
+                    mods = pygame.key.get_mods()
+                    ctrl_held = bool(mods & pygame.KMOD_CTRL)
+
+                    if ctrl_held:
+                        # Ctrl+click: toggle selection
+                        if ship_index in self.selected_indices:
+                            # Don't deselect if it's the last selected ship
+                            if len(self.selected_indices) > 1:
+                                self.selected_indices.discard(ship_index)
+                        else:
+                            self.selected_indices.add(ship_index)
+                    else:
+                        # Normal click: replace selection
+                        self.selected_indices = {ship_index}
+
+                    # Update detail panel based on selection
+                    if len(self.selected_indices) == 1:
+                        sole_idx = next(iter(self.selected_indices))
+                        self.selected_ship = filtered_ships[sole_idx]
+                    else:
+                        self.selected_ship = None
+
+                    self._update_detail_panel()
+                    self._update_remove_button()
+                    self._update_visible_rows()  # Refresh row highlighting
                     return True
 
         return False
@@ -818,9 +894,20 @@ class FleetReportWindow(UIWindow):
         self.refresh_list()
 
     def select_ship(self, ship):
-        """Select a ship to show in the detail panel."""
+        """Select a single ship to show in the detail panel (API for external callers)."""
+        # Find the ship's index in filtered ships
+        filtered_ships = self.view_model.get_filtered_ships()
+        for i, s in enumerate(filtered_ships):
+            if s is ship:
+                self.selected_indices = {i}
+                break
+        else:
+            self.selected_indices.clear()
+
         self.selected_ship = ship
         self._update_detail_panel()
+        self._update_remove_button()
+        self._update_visible_rows()
 
     def _update_detail_panel(self):
         """Update the detail panel with selected ship info."""
@@ -836,13 +923,63 @@ class FleetReportWindow(UIWindow):
             self.design_report_panel.show_placeholder()
 
     def _on_remove_ship(self, ship):
-        """Handle remove ship from fleet."""
-        if self.fleet.remove_ship(ship):
-            self.selected_ship = None
-            self.view_model = FleetListViewModel(self.fleet.ships)
-            self._update_detail_panel()
-            self.refresh_list()
-            self._update_summary()
+        """Handle remove single ship from fleet (legacy API)."""
+        if not self.empire:
+            # No empire, just remove ship without creating new fleet
+            if self.fleet.remove_ship(ship):
+                self._post_removal_refresh()
+            return
+
+        # Create a new fleet with the removed ship
+        if ship in self.fleet.ships:
+            self.fleet.remove_ship(ship)
+            new_fleet = self._create_fleet_for_ships([ship])
+            self.empire.add_fleet(new_fleet)
+            self._post_removal_refresh()
+
+    def _on_remove_selected_ships(self):
+        """Remove all selected ships and create a new fleet with them."""
+        if not self.empire or not self.selected_indices:
+            return
+
+        filtered_ships = self.view_model.get_filtered_ships()
+        ships_to_remove = [
+            filtered_ships[i] for i in sorted(self.selected_indices)
+            if 0 <= i < len(filtered_ships)
+        ]
+        if not ships_to_remove:
+            return
+
+        # Remove ships from source fleet
+        for ship in ships_to_remove:
+            self.fleet.remove_ship(ship)
+
+        # Create one new fleet with all removed ships
+        new_fleet = self._create_fleet_for_ships(ships_to_remove)
+        self.empire.add_fleet(new_fleet)
+        self._post_removal_refresh()
+
+    def _create_fleet_for_ships(self, ships):
+        """Create a new fleet containing the given ships at the source fleet's location."""
+        from game.strategy.data.fleet import Fleet
+
+        new_fleet_id = self.empire.get_next_fleet_id()
+        new_fleet = Fleet(new_fleet_id, self.fleet.owner_id, self.fleet.location, speed=0)
+
+        for ship in ships:
+            new_fleet.add_ship(ship)
+
+        return new_fleet
+
+    def _post_removal_refresh(self):
+        """Refresh UI state after ships have been removed."""
+        self.selected_indices.clear()
+        self.selected_ship = None
+        self.view_model.update_ships(self.fleet.ships)
+        self._update_detail_panel()
+        self.refresh_list()
+        self._update_summary()
+        self._update_remove_button()
 
     def update(self, time_delta: float):
         """Update UI elements and handle toggle button clicks."""
@@ -857,6 +994,10 @@ class FleetReportWindow(UIWindow):
         for col_id, btn in self.column_buttons.items():
             if btn.check_pressed():
                 self._toggle_column(col_id)
+
+        # Handle Remove Selected button
+        if hasattr(self, 'btn_remove_selected') and self.btn_remove_selected.check_pressed():
+            self._on_remove_selected_ships()
 
         # Handle header arrows and sort clicks
         if hasattr(self, 'header_widgets'):
