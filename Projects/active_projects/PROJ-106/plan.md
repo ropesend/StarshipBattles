@@ -17,15 +17,15 @@
 | 2. Remove Deprecated Legacy AI Paths | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Create Strategy Metadata Service | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Centralize SimulationDesignLoader Access | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Fix Research/UI Camera Dependency | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Fix Research/UI Camera Dependency | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. BattleUIService Contract Hardening | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Audit and Final Verification | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 5 (Fix Research/UI Camera Dependency)
-**Last Action:** Phase 4 Complete -- Routed all UI SimulationDesignLoader usage through DesignLoaderAdapter (3 call sites in strategy_screen.py, 2 TYPE_CHECKING imports updated)
-**Next Action:** Begin Phase 5 (create ICamera protocol, update research layer)
+**Active Phase:** Phase 6 (BattleUIService Contract Hardening)
+**Last Action:** Phase 5 Complete -- Created ICamera protocol in game.core.protocols, updated ResearchRenderer to use ICamera (clean), ResearchTreeScene retains Camera import for construction (acceptable per design.md)
+**Next Action:** Begin Phase 6 (replace defensive getattr() chains with direct attribute access)
 **Blockers:** None
 
 ## Overview

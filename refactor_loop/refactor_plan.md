@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-106 Phase 4 Complete
-**Current Status:** PROJ-106 Phase 4 Complete — Ready for Phase 5
+**Last Completed:** PROJ-106 Phase 5 Complete
+**Current Status:** PROJ-106 Phase 5 Complete — Ready for Phase 6
 **Current Project:** PROJ-106
-**Current Phase:** Phase 5 (Fix Research/UI Camera Dependency)
-**Test Status:** 8182 passed
+**Current Phase:** Phase 6 (BattleUIService Contract Hardening)
+**Test Status:** 8187 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-106 Phase 4 Complete — Centralized SimulationDesignLoader access in UI through DesignLoaderAdapter
-  - Task 4.1: Updated strategy_screen.py to use DesignLoaderAdapter in 3 methods (planet, entity, fleet build queues)
-  - Task 4.2: Updated build_queue_screen.py TYPE_CHECKING import and type hint
-  - Task 4.3: Updated build_queue_controller.py TYPE_CHECKING import and type hint
-  - Task 4.4: Verified only design_loader_adapter.py imports SimulationDesignLoader
-- All 8182 tests passing
-- Next: Phase 5 - Create ICamera protocol, update research layer to use protocol
+- PROJ-106 Phase 5 Complete — Created ICamera protocol for research layer
+  - Task 5.1: Created ICamera protocol in game/core/protocols.py with 8 methods/properties
+  - Task 5.2: ResearchTreeScene keeps Camera import (creates Camera internally)
+  - Task 5.3: ResearchRenderer now uses ICamera protocol (clean separation)
+  - Task 5.4: Verified - renderer clean, scene retains construction import (acceptable per design.md)
+  - Added 5 new tests in test_protocols.py::TestICameraProtocol
+- All 8187 tests passing
+- Next: Phase 6 - Replace defensive getattr() chains with direct attribute access in BattleUIService
 
 ---
 
@@ -295,6 +296,7 @@
 | 2026-02-11 | PROJ-106 | Phase 2 | Complete | 8164 passed | pending | Removed 3 legacy AI paths from BattleEngine, fixed test_framework/runner.py |
 | 2026-02-11 | PROJ-106 | Phase 3 | Complete | 8182 passed | pending | StrategyMetadataService in core, 8 UI files migrated, zero AI imports in UI |
 | 2026-02-11 | PROJ-106 | Phase 4 | Complete | 8182 passed | pending | SimulationDesignLoader routed through DesignLoaderAdapter, 3 strategy_screen.py methods + 2 TYPE_CHECKING |
+| 2026-02-11 | PROJ-106 | Phase 5 | Complete | 8187 passed | pending | ICamera protocol in core, ResearchRenderer uses ICamera, 5 new tests |
 
 ---
 

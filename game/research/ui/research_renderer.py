@@ -9,7 +9,7 @@ Draws:
 import pygame
 from typing import Dict, Tuple, Optional, TYPE_CHECKING
 
-from game.ui.renderer.camera import Camera
+from game.core.protocols import ICamera
 from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
 
@@ -41,7 +41,7 @@ class ResearchRenderer:
 
     def __init__(self, tech_tree: TechTree, tracker: ResearchTracker,
                  node_positions: Dict[str, Tuple[float, float]],
-                 camera: Camera, node_width: int, node_height: int):
+                 camera: ICamera, node_width: int, node_height: int):
         """
         Initialize the renderer.
 

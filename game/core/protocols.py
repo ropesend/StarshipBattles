@@ -464,3 +464,89 @@ class IResourceHolder(Protocol):
 def is_resource_holder(obj: Any) -> TypeGuard[IResourceHolder]:
     """Check if obj implements IResourceHolder protocol."""
     return isinstance(obj, IResourceHolder)
+
+
+# =============================================================================
+# Camera Protocol (PROJ-106)
+# =============================================================================
+
+@runtime_checkable
+class ICamera(Protocol):
+    """
+    Protocol for camera/viewport abstraction (PROJ-106).
+
+    Enables the research layer to depend on a camera interface without
+    importing the concrete Camera class from game.ui.renderer.
+
+    The camera handles:
+    - Coordinate transformations between world and screen space
+    - Viewport dimensions
+    - Zoom level for scaling
+    """
+    @property
+    def width(self) -> int:
+        """Viewport width in pixels."""
+        ...
+
+    @property
+    def height(self) -> int:
+        """Viewport height in pixels."""
+        ...
+
+    @property
+    def zoom(self) -> float:
+        """Current zoom level (1.0 = 100%)."""
+        ...
+
+    @property
+    def position(self) -> Any:
+        """Camera world position (center of viewport). Returns Vector2-like object."""
+        ...
+
+    def world_to_screen(self, world_pos: Any) -> Any:
+        """
+        Convert world coordinates to screen coordinates.
+
+        Args:
+            world_pos: Position in world space (tuple or Vector2-like)
+
+        Returns:
+            Position in screen space (Vector2-like)
+        """
+        ...
+
+    def screen_to_world(self, screen_pos: Any) -> Any:
+        """
+        Convert screen coordinates to world coordinates.
+
+        Args:
+            screen_pos: Position in screen space (tuple or Vector2-like)
+
+        Returns:
+            Position in world space (Vector2-like)
+        """
+        ...
+
+    def update(self, dt: float) -> None:
+        """
+        Update camera state (smooth zoom, target following, etc).
+
+        Args:
+            dt: Delta time in seconds
+        """
+        ...
+
+    def update_input(self, dt: float, events: list) -> None:
+        """
+        Process input events for camera control.
+
+        Args:
+            dt: Delta time in seconds
+            events: List of input events
+        """
+        ...
+
+
+def is_camera(obj: Any) -> TypeGuard[ICamera]:
+    """Check if obj implements ICamera protocol."""
+    return isinstance(obj, ICamera)

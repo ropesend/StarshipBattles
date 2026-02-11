@@ -327,3 +327,65 @@ class TestRuntimeCheckable:
             isinstance("test", ICombatant)
         except TypeError as e:
             pytest.fail(f"Protocol is not runtime_checkable: {e}")
+
+
+class TestICameraProtocol:
+    """Tests for the ICamera protocol (PROJ-106)."""
+
+    def test_icamera_protocol_importable(self):
+        """ICamera and is_camera should be importable."""
+        from game.core.protocols import ICamera, is_camera
+        assert ICamera is not None
+        assert callable(is_camera)
+
+    def test_icamera_is_runtime_checkable(self):
+        """ICamera should be runtime_checkable."""
+        from game.core.protocols import ICamera
+        # Should not raise TypeError
+        assert isinstance("not a camera", ICamera) is False
+
+    def test_camera_satisfies_icamera(self):
+        """Real Camera class should satisfy ICamera protocol."""
+        pytest.importorskip("pygame")
+        from game.core.protocols import ICamera, is_camera
+        from game.ui.renderer.camera import Camera
+
+        camera = Camera(width=800, height=600)
+        assert isinstance(camera, ICamera)
+        assert is_camera(camera)
+
+    def test_is_camera_returns_false_for_non_camera(self):
+        """is_camera should return False for non-Camera objects."""
+        from game.core.protocols import is_camera
+        assert is_camera("not a camera") is False
+        assert is_camera(None) is False
+        assert is_camera({}) is False
+
+    def test_icamera_interface_methods(self):
+        """Verify ICamera interface methods match Camera implementation."""
+        pytest.importorskip("pygame")
+        from game.ui.renderer.camera import Camera
+
+        camera = Camera(width=800, height=600)
+
+        # Test all methods/properties defined in ICamera
+        assert hasattr(camera, 'width')
+        assert hasattr(camera, 'height')
+        assert hasattr(camera, 'zoom')
+        assert hasattr(camera, 'position')
+        assert hasattr(camera, 'world_to_screen')
+        assert hasattr(camera, 'screen_to_world')
+        assert hasattr(camera, 'update')
+        assert hasattr(camera, 'update_input')
+
+        # Verify method signatures work
+        assert camera.width == 800
+        assert camera.height == 600
+        assert camera.zoom == 1.0
+        assert camera.position is not None
+
+        # Test coordinate transformations
+        screen_pos = camera.world_to_screen((0, 0))
+        assert screen_pos is not None
+        world_pos = camera.screen_to_world((400, 300))
+        assert world_pos is not None

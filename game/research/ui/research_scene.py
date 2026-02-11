@@ -6,11 +6,16 @@ Provides a full-screen interface with:
 - Node selection and detail view
 - RP allocation controls
 - Turn simulation with event logging
+
+PROJ-106: ResearchTreeScene creates its own Camera instance internally.
+This requires a runtime import from game.ui.renderer.camera for construction.
+ResearchRenderer receives the camera via ICamera protocol for type safety.
 """
 import pygame
 import pygame_gui
 
 from game.core.logger import log_info, log_debug
+# PROJ-106: Camera needed for construction, ICamera not used here (scene owns Camera)
 from game.ui.renderer.camera import Camera
 from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
