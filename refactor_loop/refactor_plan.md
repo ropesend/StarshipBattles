@@ -8,23 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-95 Audit Cycle 1 (PASSED)
-**Current Status:** PROJ-95 Audit PASSED - Awaiting User Verification
-**Current Project:** PROJ-95
-**Current Phase:** Complete
-**Test Status:** 7595 passed (full suite)
+**Last Completed:** PROJ-96 Phase 1
+**Current Status:** PROJ-96 Phase 1 Complete
+**Current Project:** PROJ-96
+**Current Phase:** Phase 2
+**Test Status:** 7593 passed (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-95 Audit PASSED: All 4 phases complete
-- Phase 1: ResourceType constants class, 18 prod files updated
-- Phase 2: is_destroyed→is_alive rename, 4 prod + 10 test files
-- Phase 3: None-means-full eliminated, 4 prod + 6 test files
-- Phase 4: All verification greps pass, 7595 tests passing
-- All string literal checks pass (only docstrings/examples remain)
-- Zero is_destroyed references in game/ or tests/
-- Zero None-means-full patterns in strategy layer
-- Next: PROJ-95 complete, no more projects in Master Task List
+- PROJ-96 Phase 1: RaceThemeGallery restructured to UIScrollingContainer
+- Added height parameter to constructor
+- Removed preview label/panel (no longer needed)
+- Call site updated in race_setup_screen.py
+- 12 gallery tests passing (removed 2 obsolete tests)
+- Next: Phase 2 - Restructure ships panel to side-by-side layout
 
 ---
 
@@ -296,6 +293,22 @@
 
 ---
 
+- [/] **PROJ-96: Species Setup Ships View Layout Redesign**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-96/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-96/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-97: Per-Resource Production Rate Limits for Build Queues**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-97/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-97/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
@@ -476,6 +489,7 @@
 | 2026-02-10 | PROJ-95 | Phase 2 | Complete | 7595 passed | pending | is_destroyed→is_alive, 4 prod + 10 test files |
 | 2026-02-10 | PROJ-95 | Phase 3 | Complete | 7595 passed | pending | None-means-full eliminated, 4 prod + 6 test files |
 | 2026-02-10 | PROJ-95 | Audit 1 | PASSED | 7595 passed | pending | All verification greps pass, no issues |
+| 2026-02-10 | PROJ-96 | Phase 1 | Complete | 7593 passed | pending | RaceThemeGallery→UIScrollingContainer, height param, -2 obsolete tests |
 
 ---
 

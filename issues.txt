@@ -1,20 +1,50 @@
+1) Planet Production values are reported to be 0 when they are not.  Also the icons should be centered on the columns.  Here is an image: C:\Dev\Starship Battles\output\screenshots\screenshot_20260209_193304_946970_strategy_viewport.png
 
+2) Build Yards - 
 
-4) 
+3) In the Species Setup, for the Ships view:
+- The portrait view images are the correct size, the top down images need to be larger, the visible portion of teh images should be about the same height as the portrait views
+- The images need to be closer together, and the labels should be centered above both the top down, and portrait view of the ships.  Currently the design labels are to the right of the portrait views.  We could probably put 3 views per line instead of 2, and show 9 designs instead of 6
+- The Names of the Various themes should be a scrollable list on the left side, They are currently on top of the design images.  The design images can be shifted to the right and made to be a little tighter together.
+- Here is a current image: "C:\Dev\Starship Battles\screenshots\2026-02-10 14-32-33.png"
 
-16) (Fleet Details) In the Fleet Details panel on the lower right, the following should be shown/possible:
- - The total number of hexes that the fleet can travel
- - a scrollable list of all ships in the fleet - this should be condensed, where it is the ship Design with a multiple so: Devastater x 3 if there are 3 devastators, the most massive vehicles should be 1st with the smaller ships listed below.
- - a list of all cargo - with quantities of each cargo item
- - a list of the current orders in the order that they will be completed
- 
+4) In the Build Yards List the Yard names and their properties should be on 1 line, not multiple lines, they do not fit on multiple lines.  Here is an image: C:\Dev\Starship Battles\output\screenshots\screenshot_20260210_145330_389696_build_queue.png
 
-
+C:\Dev\Starship Battles\output\screenshots\screenshot_20260210_150203_280788_build_queue.png
 
 
 
 
 Reported:
+
+1) When I save a game then load it later, all of the ships/fleets are missing.
+
+16) (Fleet Details) In the Fleet Details panel on the lower right, the following should be shown/possible:
+ - The total number of hexes that the fleet can travel
+ - a scrollable list of all ships in the fleet - this should be condensed, where it is the ship Design with a multiple so: Devastater x 3 if there are 3 devastators, the most massive vehicles should be 1st with the smaller ships listed below.
+ - a list of all cargo - with quantities of each cargo item
+ 
+The Planet details panel needs to have a better resources section:  It should be a separate panel within the planet report, where there are columns for each resource, headed by an icon for the respective resource found in: C:\Dev\Starship Battles\assets\Images\Resource Portraits
+And rows for: total quantity of the resouce on the planet, quality of the resource, current production - 0 if not a colony planet.
+This should be at the pbottom of the panel, and the scrollable panel will have to be shorter, and no longer contain any of the Resource information.
+
+1) In the species setup: When I select a homeworld type it still reports it as Custom
+
+2)  The normal new games should also have homeworld planets with the same complexes pre-built as the quickstart games.
+
+3) There are a bunch of isses with the Sector Build Queue Window
+ a) In the Sector Build queue window, none of the stats for the selected ship show in the right side panel, they are all just -- ()dashes) see this image: C:\Dev\Starship Battles\output\screenshots\screenshot_20260208_203259_243902_build_queue.png
+ b) None of the production costs are listed in the actual build queue: C:\Dev\Starship Battles\output\screenshots\screenshot_20260208_203357_941165_build_queue.png  This image also shows that the icons for resource cost will be too close together, they need to be spread out.
+ c) The klist of Build Yards is too narrow, it can be wider so that everything can be on one line, at least 2 to 3 times as wide.  Here it is currently: C:\Dev\Starship Battles\output\screenshots\screenshot_20260208_203542_049138_build_queue.png
+ d) The list that currently says Build Yard (singular) should say Build Queue - The name of the Build yard 
+ e) currently the design that is shown in the right hand panel is based only on the design selected from available designs, it also needs to be possible to select a design in the queue, th design on the right should then show that design.
+ f) the design details on the right do not indicate the name or vehicle type or class of the design and it needs to.
+ g) the rate of production still says 1 turn to produce designs that are more than 3000 of some resources.  it should say 2 turns for a design that costs 4500 metals, the design should show up about half way through the 2nd turns ticks
+
+
+4) The Planet details panel on the right side of the planets list should be the same dimensions as the one in the main strategy layer.
+
+5) The log is supposed to show at the start of each strategy layer turn
 
 We need to restructure the build queue, since there can be multiple build queues on a planet, and multiple build queues within a ship and fleet, when you go to the build queue you need te be able to seel the list of available build queues in that sector (hex) you can select one queue and see what is being constructed in that queue - this should behave almost identically to what we currently have.  You can select multiple queues, this won't show what is currently queued up, but it will allow adding to multiple queues at one time.  The added items will jest get added to teh end of each queue.  The list of build queues could become very long, so it should be a colum just to the right of the planet details panel, that extends from the top of the window to the bottom just above the bar that says close, this list will extend down to the right of the Available designs as well.  The current list of items in the build queue can be moved to the right and made more narrow.
 

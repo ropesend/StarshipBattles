@@ -346,6 +346,8 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
 
         # PROJ-12 Phase 4: Use RaceThemeGallery for theme selection
         # The gallery handles theme buttons and selection highlighting
+        # PROJ-96: Gallery now uses vertical scrolling list
+        theme_gallery_height = 200
         self._theme_gallery = RaceThemeGallery(
             panel=panel,
             manager=self.ui_manager,
@@ -353,12 +355,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             x=10,
             y=y,
             width=panel_width,
+            height=theme_gallery_height,
             on_select_callback=self._on_theme_selected
         )
-
-        # Calculate remaining height for ship preview area
-        # Account for theme gallery (approx 200px for label + preview + 4 theme buttons)
-        theme_gallery_height = 200
         y += theme_gallery_height + 10
 
         # Ship preview area (scrolling container for ship images)

@@ -37,6 +37,7 @@ class RaceThemeGallery:
         x: int,
         y: int,
         width: int,
+        height: int,
         on_select_callback: Optional[Callable[[str], None]] = None
     ):
         """
@@ -55,78 +56,67 @@ class RaceThemeGallery:
         self.ui_manager = manager
         self.race_config = race_config
         self.on_select_callback = on_select_callback
+        self.height = height
 
         # UI element references
         self.theme_buttons: List[Tuple[pygame_gui.elements.UIButton, str]] = []
-        self.theme_preview_panel: Optional[pygame_gui.elements.UIPanel] = None
-        self.theme_preview_label: Optional[pygame_gui.elements.UILabel] = None
+        self.theme_scroll: Optional[pygame_gui.elements.UIScrollingContainer] = None
 
         # Cache for discovered themes
         self._theme_cache: Optional[List[Tuple[str, Dict[str, pygame.Surface]]]] = None
 
-        self._create_content(x, y, width)
+        self._create_content(x, y, width, height)
 
-    def _create_content(self, x: int, y: int, width: int):
+    def _create_content(self, x: int, y: int, width: int, height: int):
         """Create all gallery content."""
-        # Label
-        pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(x, y, width, 25),
-            text="Select Ship Theme:",
-            manager=self.ui_manager,
-            container=self.panel
-        )
-        y += 25
-
-        # Preview area (shows selected theme name)
-        preview_height = 70
-        self.theme_preview_panel = pygame_gui.elements.UIPanel(
-            relative_rect=pygame.Rect(x, y, width, preview_height),
+        # Create scrolling container for theme buttons
+        self.theme_scroll = pygame_gui.elements.UIScrollingContainer(
+            relative_rect=pygame.Rect(x, y, width, height),
             manager=self.ui_manager,
             container=self.panel,
-            object_id="#theme_preview"
+            allow_scroll_x=False,
+            allow_scroll_y=True
         )
-        self.theme_preview_label = pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(5, 5, width - 10, 30),
-            text="No theme selected",
-            manager=self.ui_manager,
-            container=self.theme_preview_panel
-        )
-        y += preview_height + 5
 
-        # List of themes (not scrolling - only a few themes)
+        # List of themes
         themes = self._discover_themes()
         btn_height = 50
+        local_y = 0
 
         for theme_id, ship_surfs in themes:
             btn = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(x, y, width, btn_height),
+                relative_rect=pygame.Rect(0, local_y, width - 20, btn_height),
                 text=theme_id,
                 manager=self.ui_manager,
-                container=self.panel,
+                container=self.theme_scroll,
                 object_id=f"#theme_{self._sanitize_object_id(theme_id)}"
             )
             btn.theme_id = theme_id
 
             # Add ship preview images
             if "Escort" in ship_surfs:
-                img_x = x + width - 70
+                img_x = width - 90
                 pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(img_x, y + 5, 30, 40),
+                    relative_rect=pygame.Rect(img_x, local_y + 5, 30, 40),
                     image_surface=ship_surfs["Escort"],
                     manager=self.ui_manager,
-                    container=self.panel
+                    container=self.theme_scroll
                 )
             if "Battleship" in ship_surfs:
-                img_x = x + width - 35
+                img_x = width - 55
                 pygame_gui.elements.UIImage(
-                    relative_rect=pygame.Rect(img_x, y + 5, 30, 40),
+                    relative_rect=pygame.Rect(img_x, local_y + 5, 30, 40),
                     image_surface=ship_surfs["Battleship"],
                     manager=self.ui_manager,
-                    container=self.panel
+                    container=self.theme_scroll
                 )
 
             self.theme_buttons.append((btn, theme_id))
-            y += btn_height + 5
+            local_y += btn_height + 5
+
+        # Set scrollable area dimensions
+        total_height = local_y if local_y > 0 else height
+        self.theme_scroll.set_scrollable_area_dimensions((width - 20, total_height))
 
         # Pre-select if editing or default
         if self.race_config.theme_id:
@@ -177,10 +167,6 @@ class RaceThemeGallery:
         """
         self.race_config.theme_id = theme_id
         log_debug(f"Theme selected: {theme_id}")
-
-        # Update preview label
-        if self.theme_preview_label:
-            self.theme_preview_label.set_text(f"Selected: {theme_id}")
 
         # Update button highlights
         for btn, tid in self.theme_buttons:

@@ -63,25 +63,15 @@ class TestRaceThemeGalleryCreation:
             assert hasattr(gallery, 'theme_buttons')
             assert isinstance(gallery.theme_buttons, list)
 
-    def test_race_theme_gallery_has_preview_label(self):
-        """RaceThemeGallery has theme_preview_label attribute."""
+    def test_race_theme_gallery_has_scroll_container(self):
+        """RaceThemeGallery has theme_scroll attribute."""
         from game.ui.panels.race_theme_gallery import RaceThemeGallery
 
         with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
-            gallery.theme_preview_label = None
+            gallery.theme_scroll = None
 
-            assert hasattr(gallery, 'theme_preview_label')
-
-    def test_race_theme_gallery_has_preview_panel(self):
-        """RaceThemeGallery has theme_preview_panel attribute."""
-        from game.ui.panels.race_theme_gallery import RaceThemeGallery
-
-        with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceThemeGallery.__new__(RaceThemeGallery)
-            gallery.theme_preview_panel = None
-
-            assert hasattr(gallery, 'theme_preview_panel')
+            assert hasattr(gallery, 'theme_scroll')
 
 
 # =============================================================================
@@ -99,30 +89,11 @@ class TestThemeSelection:
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
             gallery.theme_buttons = []
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             gallery.on_theme_selected("terran")
 
             assert mock_race_config.theme_id == "terran"
-
-    def test_on_theme_selected_updates_preview_label(self, mock_race_config):
-        """Selecting a theme updates the preview label text."""
-        from game.ui.panels.race_theme_gallery import RaceThemeGallery
-
-        with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
-            gallery = RaceThemeGallery.__new__(RaceThemeGallery)
-            gallery.race_config = mock_race_config
-            gallery.theme_buttons = []
-            gallery.theme_preview_label = MagicMock()
-            gallery.on_select_callback = None
-
-            gallery.on_theme_selected("terran")
-
-            gallery.theme_preview_label.set_text.assert_called()
-            # Check that the text contains the theme name
-            call_args = gallery.theme_preview_label.set_text.call_args[0][0]
-            assert "terran" in call_args.lower()
 
     def test_on_theme_selected_calls_callback_if_provided(self, mock_race_config):
         """Selecting a theme calls the on_select callback if provided."""
@@ -132,7 +103,6 @@ class TestThemeSelection:
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
             gallery.theme_buttons = []
-            gallery.theme_preview_label = MagicMock()
 
             callback = MagicMock()
             gallery.on_select_callback = callback
@@ -149,7 +119,6 @@ class TestThemeSelection:
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
             gallery.theme_buttons = []
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             # Should not raise
@@ -170,7 +139,6 @@ class TestButtonHighlighting:
         with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             # Create mock buttons
@@ -193,7 +161,6 @@ class TestButtonHighlighting:
         with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             # Create mock buttons
@@ -229,7 +196,6 @@ class TestConfigurationBinding:
             gallery.race_config = mock_race_config
             mock_race_config.theme_id = "terran"
             gallery.theme_buttons = []
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             # Mock on_theme_selected to track call
@@ -270,7 +236,6 @@ class TestButtonClickHandling:
         with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             btn1 = MagicMock()
@@ -291,7 +256,6 @@ class TestButtonClickHandling:
         with patch.object(RaceThemeGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RaceThemeGallery.__new__(RaceThemeGallery)
             gallery.race_config = mock_race_config
-            gallery.theme_preview_label = MagicMock()
             gallery.on_select_callback = None
 
             btn1 = MagicMock()

@@ -4,6 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-98 | Empire Build Yards Screen Enhancement | Planning | 2026-02-10 | 2026-02-10 |
+| PROJ-97 | Per-Resource Production Rate Limits for Build Queues | Planning | 2026-02-10 | 2026-02-10 |
+| PROJ-96 | Species Setup Ships View Layout Redesign | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-95 | Resource API Consistency and Clean-Sheet Conventions | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-94 | Resource API Cleanup and Protocol Wiring | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-93 | Update Protocol Layer Type Annotations | Planning | 2026-02-10 | 2026-02-10 |
@@ -192,7 +195,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-96
+## Next Project ID: PROJ-99
 
 ---
 
