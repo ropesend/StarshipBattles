@@ -18,15 +18,15 @@
 | 3. Controller Turn Calc & Tick Capping | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI Display Updates | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Remove Shipyard ResourceStorage | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Integration Tests & Verification | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Integration Tests & Verification | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 6
-**Last Action:** Phase 5 complete - Removed ResourceStorage from shipyards
-**Next Action:** Execute Phase 6 - Integration Tests & Verification
+**Active Phase:** All Phases Complete - Ready for Audit
+**Last Action:** Phase 6 complete - Integration tests and full verification
+**Next Action:** Trigger audit
 **Blockers:** None
-**Context for Next Agent:** Phase 5 complete. Removed dead ResourceStorage abilities from space_shipyard and fleet_space_yard in components.json. 7602 tests pass with zero breakage. Ready for Phase 6 integration tests.
+**Context for Next Agent:** All 6 phases complete. 15 new integration tests in test_production_rates.py. 7617 tests pass. Ready for audit.
 
 ## Overview
 Change the build queue production system from a single uniform `build_rate: float` to per-resource production rates (`Dict[str, float]`). This allows each resource type to have a different maximum production rate per turn at each build yard. Also remove dead `ResourceStorage` abilities from shipyard components, and add `production_rates` data to the SpaceShipyard ability in JSON.
