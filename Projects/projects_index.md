@@ -4,7 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
-| PROJ-102 | Strategic Superweapons and Special Orders | Planning | 2026-02-10 | 2026-02-10 |
+| PROJ-102 | Strategic Superweapons and Special Orders | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-101 | Fleet Report Screen Enhancements | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-100 | Cargo Transfer Orders Overhaul | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-99 | Empire Panel Window | Planning | 2026-02-10 | 2026-02-10 |
