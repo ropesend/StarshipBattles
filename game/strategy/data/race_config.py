@@ -284,42 +284,57 @@ class RaceConfig:
         Returns:
             Tuple of (is_valid, error_message)
         """
+        for check in [
+            self._validate_required_fields,
+            self._validate_environment_ranges,
+            self._validate_aptitudes,
+            self._validate_identity_enums,
+            self._validate_homeworld_and_atmosphere,
+            self._validate_descriptions,
+        ]:
+            ok, msg = check()
+            if not ok:
+                return False, msg
+        return True, ""
+
+    # -- validation helpers (private) --
+
+    _ENVIRONMENT_RANGES = [
+        ("gravity_ideal", 0.1, 3.0, "Gravity ideal must be between 0.1 and 3.0"),
+        ("gravity_tolerance", 0.0, 1.0, "Gravity tolerance must be between 0.0 and 1.0"),
+        ("temperature_ideal", 200, 400, "Temperature ideal must be between 200K and 400K"),
+        ("temperature_tolerance", 0, 100, "Temperature tolerance must be between 0 and 100K"),
+        ("radiation_tolerance", -100, 100, "Radiation tolerance must be between -100 and 100"),
+        ("water_ideal", 0.0, 1.0, "Water ideal must be between 0.0 and 1.0"),
+        ("water_tolerance", 0.0, 1.0, "Water tolerance must be between 0.0 and 1.0"),
+    ]
+
+    _IDENTITY_ENUM_CHECKS = [
+        ("government_type", GOVERNMENT_TYPES, "government type"),
+        ("government_organization", GOVERNMENT_ORGANIZATIONS, "government organization"),
+        ("leader_title", LEADER_TITLES, "leader title"),
+        ("physical_type", PHYSICAL_TYPES, "physical type"),
+        ("society_type", SOCIETY_TYPES, "society type"),
+    ]
+
+    def _validate_required_fields(self) -> tuple[bool, str]:
         if not self.name or not self.name.strip():
             return False, "Race name is required"
-
         if not self.flag_id:
             return False, "Flag selection is required"
-
         if not self.portrait_id:
             return False, "Portrait selection is required"
-
         if not self.theme_id:
             return False, "Ship theme selection is required"
+        return True, ""
 
-        # Validate ranges
-        if not (0.1 <= self.gravity_ideal <= 3.0):
-            return False, "Gravity ideal must be between 0.1 and 3.0"
+    def _validate_environment_ranges(self) -> tuple[bool, str]:
+        for attr, lo, hi, msg in self._ENVIRONMENT_RANGES:
+            if not (lo <= getattr(self, attr) <= hi):
+                return False, msg
+        return True, ""
 
-        if not (0.0 <= self.gravity_tolerance <= 1.0):
-            return False, "Gravity tolerance must be between 0.0 and 1.0"
-
-        if not (200 <= self.temperature_ideal <= 400):
-            return False, "Temperature ideal must be between 200K and 400K"
-
-        if not (0 <= self.temperature_tolerance <= 100):
-            return False, "Temperature tolerance must be between 0 and 100K"
-
-        if not (-100 <= self.radiation_tolerance <= 100):
-            return False, "Radiation tolerance must be between -100 and 100"
-
-        # Validate water preferences
-        if not (0.0 <= self.water_ideal <= 1.0):
-            return False, "Water ideal must be between 0.0 and 1.0"
-
-        if not (0.0 <= self.water_tolerance <= 1.0):
-            return False, "Water tolerance must be between 0.0 and 1.0"
-
-        # Validate aptitudes (1-100 range)
+    def _validate_aptitudes(self) -> tuple[bool, str]:
         aptitude_fields = [
             ("strength", self.aptitude_strength),
             ("intelligence", self.aptitude_intelligence),
@@ -334,42 +349,31 @@ class RaceConfig:
         for apt_name, apt_value in aptitude_fields:
             if not (1 <= apt_value <= 100):
                 return False, f"Aptitude {apt_name} must be between 1 and 100"
+        return True, ""
 
-        # Validate identity fields if set (optional, but must be valid if provided)
-        if self.government_type and self.government_type not in GOVERNMENT_TYPES:
-            return False, f"Invalid government type: {self.government_type}"
+    def _validate_identity_enums(self) -> tuple[bool, str]:
+        for attr, valid_list, label in self._IDENTITY_ENUM_CHECKS:
+            value = getattr(self, attr)
+            if value and value not in valid_list:
+                return False, f"Invalid {label}: {value}"
+        return True, ""
 
-        if self.government_organization and self.government_organization not in GOVERNMENT_ORGANIZATIONS:
-            return False, f"Invalid government organization: {self.government_organization}"
-
-        if self.leader_title and self.leader_title not in LEADER_TITLES:
-            return False, f"Invalid leader title: {self.leader_title}"
-
-        if self.physical_type and self.physical_type not in PHYSICAL_TYPES:
-            return False, f"Invalid physical type: {self.physical_type}"
-
-        if self.society_type and self.society_type not in SOCIETY_TYPES:
-            return False, f"Invalid society type: {self.society_type}"
-
-        # Validate homeworld type if set
+    def _validate_homeworld_and_atmosphere(self) -> tuple[bool, str]:
         if self.homeworld_type:
             from game.strategy.data.planet import PlanetType
             valid_planet_types = [p.name for p in PlanetType]
             if self.homeworld_type not in valid_planet_types:
                 return False, f"Invalid homeworld type: {self.homeworld_type}"
-
-        # Validate atmosphere preferences
         for gas, value in self.atmosphere_preferences.items():
             if not (-100 <= value <= 100):
                 return False, f"Atmosphere preference for {gas} must be between -100 and 100"
+        return True, ""
 
-        # Validate description lengths
+    def _validate_descriptions(self) -> tuple[bool, str]:
         if len(self.bio_description) > 500:
             return False, "Biological description exceeds 500 characters"
-
         if len(self.socio_description) > 500:
             return False, "Sociological description exceeds 500 characters"
-
         return True, ""
 
     def is_complete(self) -> bool:

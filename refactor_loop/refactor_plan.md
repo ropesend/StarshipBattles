@@ -8,20 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Audit PASSED
-**Current Status:** PROJ-109 Complete - Moving to PROJ-110
+**Last Completed:** PROJ-110 Phase 1 Tasks 1.1-1.7
+**Current Status:** PROJ-110 Phase 1 In Progress
 **Current Project:** PROJ-110
-**Current Phase:** Phase 1
-**Test Status:** 8238 passed
+**Current Phase:** Phase 1 (Tasks 1.8-1.10 remaining)
+**Test Status:** 8394 passed (+156 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 complete:
-  - All 5 phases executed (37 tasks across phases)
-  - Audit Cycle 1 PASSED - all 6 goals verified
-  - Logger/Profiler proxies removed, SingletonMeta used
-  - All legacy code paths, migration code, and deprecated patterns removed
-- Next: PROJ-110 Phase 1 (Test Coverage - Core Systems)
+- PROJ-110 Phase 1 progress (7 of 10 tasks complete):
+  - Task 1.1: Hex math unit tests (43 tests) - test_hex_math_core.py
+  - Task 1.2: AI behaviors unit tests (41 tests) - test_behavior_units.py
+  - Task 1.3: Resource loading error paths (14 tests) - test_resource_loading.py
+  - Task 1.4: Input mapper coverage (17 new tests added to existing)
+  - Task 1.5: Paths module unit tests (18 tests) - test_paths_config.py
+  - Task 1.6: Screenshot manager (11 tests) - test_screenshot_manager.py
+  - Task 1.7: AI controller unit tests (14 tests) - test_ai_controller_unit.py
+- Next: Task 1.8 Strategy Manager, Task 1.9 Target Evaluator, Task 1.10 Research Service
 
 ---
 
@@ -189,8 +192,8 @@
 
 ---
 
-- [ ] **PROJ-110: Test Coverage - Core Systems**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-110: Test Coverage - Core Systems**
+  - **Phases:** 4 | **Status:** Phase 1 In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-110/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-110/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -321,6 +324,7 @@
 | 2026-02-11 | PROJ-109 | Phase 4 | Complete | 8239 passed | pending | Removed save migration, updated wrapper docstrings, removed transitional comments, removed coord format. Tasks 4.4/4.7/4.8 already done. |
 | 2026-02-11 | PROJ-109 | Phase 5 | Complete | 8238 passed | pending | Logger→SingletonMeta, _ProfilerProxy removed, target_evaluator audit (params used). All 5 phases complete. |
 | 2026-02-11 | PROJ-109 | Audit 1 | PASSED | 8238 passed | pending | All 6 goals verified: shims, dead code, deprecated params, migration, proxies, comments |
+| 2026-02-11 | PROJ-110 | Phase 1 Tasks 1.1-1.7 | In Progress | 8394 passed | pending | +156 tests: hex_math(43), behaviors(41), resources(14), input_mapper(17), paths(18), screenshot(11), ai_controller(14) |
 
 ---
 

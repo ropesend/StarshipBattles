@@ -828,16 +828,25 @@ class BuildQueueScreen:
             return True
         return False
 
+    def _get_active_queue(self) -> list:
+        """Return the active construction queue list.
+
+        Uses active_queue_source when a single queue is selected,
+        otherwise falls back to build_context's queue.
+
+        Returns:
+            The construction queue list for the active source.
+        """
+        if self.active_queue_source is not None:
+            return self.active_queue_source.construction_queue
+        return self.build_context.construction_queue
+
     def _handle_remove_hotkey(self) -> None:
         """Handle remove-from-queue via hotkey."""
         if len(self.selected_queue_indices) > 1:
             log_warning("Cannot remove items in multi-select mode")
             return
-        remove_queue = (
-            self.active_queue_source.construction_queue
-            if self.active_queue_source is not None
-            else self.build_context.construction_queue
-        )
+        remove_queue = self._get_active_queue()
         if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
             removed_item = remove_queue.pop(self.selected_queue_index)
             design_id = removed_item.get('design_id', 'Unknown')
@@ -889,6 +898,11 @@ class BuildQueueScreen:
         """
         Handle UI events for the build queue screen.
 
+        Dispatches to private helpers based on event type:
+        - UI_BUTTON_PRESSED -> _handle_button_press
+        - MOUSEBUTTONDOWN/MOUSEMOTION/MOUSEBUTTONUP -> _handle_drag_operations
+        - KEYDOWN -> _handle_keyboard_input
+
         Args:
             event: pygame event
         """
@@ -902,64 +916,81 @@ class BuildQueueScreen:
         self.manager.process_events(event)
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            # Category buttons - delegate to controller
-            if event.ui_element == self.btn_category_complex:
-                self.controller.set_category("complex")
-                self._refresh_items_list()
-            elif event.ui_element == self.btn_category_ship:
-                self.controller.set_category("ship")
-                self._refresh_items_list()
-            elif event.ui_element == self.btn_category_satellite:
-                self.controller.set_category("satellite")
-                self._refresh_items_list()
-            elif event.ui_element == self.btn_category_fighter:
-                self.controller.set_category("fighter")
-                self._refresh_items_list()
+            self._handle_button_press(event)
 
-            # Close button
-            elif event.ui_element == self.btn_close:
-                self._close()
+        # Drag-and-drop operations (always processed for active queue)
+        self._handle_drag_operations(event)
 
-            # Add to queue button - delegate to controller
-            elif event.ui_element == self.btn_add_to_queue:
-                if self.drag_handler.selected_design:
-                    self.controller.add_to_queue(self.drag_handler.selected_design)
+        # Keyboard input (InputMapper + screenshot keys)
+        if event.type == pygame.KEYDOWN:
+            self._handle_keyboard_input(event)
 
-            # Remove selected from queue button
-            elif event.ui_element == self.btn_remove_from_queue:
-                # PROJ-69: Disable remove in multi-select mode
-                if len(self.selected_queue_indices) > 1:
-                    log_warning("Cannot remove items in multi-select mode")
+    def _handle_button_press(self, event: pygame.event.Event) -> None:
+        """Handle all UI_BUTTON_PRESSED events.
+
+        Dispatches category buttons, close, add/remove queue actions,
+        and queue selector clicks.
+
+        Args:
+            event: A pygame_gui UI_BUTTON_PRESSED event.
+        """
+        # Category buttons - delegate to controller
+        if event.ui_element == self.btn_category_complex:
+            self.controller.set_category("complex")
+            self._refresh_items_list()
+        elif event.ui_element == self.btn_category_ship:
+            self.controller.set_category("ship")
+            self._refresh_items_list()
+        elif event.ui_element == self.btn_category_satellite:
+            self.controller.set_category("satellite")
+            self._refresh_items_list()
+        elif event.ui_element == self.btn_category_fighter:
+            self.controller.set_category("fighter")
+            self._refresh_items_list()
+
+        # Close button
+        elif event.ui_element == self.btn_close:
+            self._close()
+
+        # Add to queue button - delegate to controller
+        elif event.ui_element == self.btn_add_to_queue:
+            if self.drag_handler.selected_design:
+                self.controller.add_to_queue(self.drag_handler.selected_design)
+
+        # Remove selected from queue button
+        elif event.ui_element == self.btn_remove_from_queue:
+            # PROJ-69: Disable remove in multi-select mode
+            if len(self.selected_queue_indices) > 1:
+                log_warning("Cannot remove items in multi-select mode")
+            else:
+                remove_queue = self._get_active_queue()
+                if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
+                    removed_item = remove_queue.pop(self.selected_queue_index)
+                    design_id = removed_item.get('design_id', 'Unknown')
+                    log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
+                    self.selected_queue_index = None
+                    self._refresh_queue_display()
                 else:
-                    # Use active queue source's construction_queue
-                    remove_queue = (
-                        self.active_queue_source.construction_queue
-                        if self.active_queue_source is not None
-                        else self.build_context.construction_queue
-                    )
-                    if self.selected_queue_index is not None and self.selected_queue_index < len(remove_queue):
-                        removed_item = remove_queue.pop(self.selected_queue_index)
-                        design_id = removed_item.get('design_id', 'Unknown')
-                        log_info(f"Removed {design_id} from queue at index {self.selected_queue_index}")
-                        self.selected_queue_index = None
-                        self._refresh_queue_display()
-                    else:
-                        log_warning("No queue item selected to remove")
+                    log_warning("No queue item selected to remove")
 
-            # PROJ-69/PROJ-86: Queue selector button clicks (delegated to selector)
-            elif self._queue_selector and self._queue_selector.handle_button_click(
-                event.ui_element, bool(pygame.key.get_mods() & pygame.KMOD_CTRL)
-            ):
-                pass  # Handled by selector
-        # Design selection and drag handled via drag_handler
+        # PROJ-69/PROJ-86: Queue selector button clicks (delegated to selector)
+        elif self._queue_selector and self._queue_selector.handle_button_click(
+            event.ui_element, bool(pygame.key.get_mods() & pygame.KMOD_CTRL)
+        ):
+            pass  # Handled by selector
 
+    def _handle_drag_operations(self, event: pygame.event.Event) -> None:
+        """Handle MOUSEBUTTONDOWN/MOUSEMOTION/MOUSEBUTTONUP for drag-and-drop.
+
+        Delegates to BuildQueueDragHandler for design selection and
+        queue reordering via drag operations.
+
+        Args:
+            event: A pygame mouse event.
+        """
         # PROJ-69: Determine active queue and multi-select state for drag handler
         multi_select = len(self.selected_queue_indices) > 1
-        active_queue = (
-            self.active_queue_source.construction_queue
-            if self.active_queue_source is not None
-            else self.build_context.construction_queue
-        )
+        active_queue = self._get_active_queue()
 
         # Handle Drag Start (on mouse down for immediate dragging)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -989,17 +1020,25 @@ class BuildQueueScreen:
                     if design_id:
                         self.controller.refresh_design_report(design_id)
 
-        # Handle keyboard events via InputMapper, then screenshots
-        if event.type == pygame.KEYDOWN:
-            if self._handle_keydown(event):
-                return
-            log_debug(f"BuildQueueScreen: Reached keyboard handler section, key={event.key}")
-            if event.key == pygame.K_F12:
-                log_info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
-                self._take_screenshot()
-            elif event.key == pygame.K_F11:
-                log_info("BuildQueueScreen: F11 matched, calling _take_screenshot()")
-                self._take_screenshot()
+    def _handle_keyboard_input(self, event: pygame.event.Event) -> None:
+        """Handle keyboard events via InputMapper delegation and screenshot keys.
+
+        First delegates to _handle_keydown for mapped actions (close, add,
+        remove, category shortcuts). If unhandled, checks for F11/F12
+        screenshot keys.
+
+        Args:
+            event: A pygame KEYDOWN event.
+        """
+        if self._handle_keydown(event):
+            return
+        log_debug(f"BuildQueueScreen: Reached keyboard handler section, key={event.key}")
+        if event.key == pygame.K_F12:
+            log_info("BuildQueueScreen: F12 matched, calling _take_screenshot()")
+            self._take_screenshot()
+        elif event.key == pygame.K_F11:
+            log_info("BuildQueueScreen: F11 matched, calling _take_screenshot()")
+            self._take_screenshot()
 
     def _take_screenshot(self):
         """Take a screenshot of the current screen including the build queue."""

@@ -106,6 +106,20 @@ class ShipSerializer:
             log_error(traceback.format_exc())
             raise
 
+    # Data-driven stat verification table: (key, getter, tolerance)
+    _STAT_CHECKS = [
+        ('max_hp',            lambda s: s.max_hp,                                                       1),
+        ('max_fuel',          lambda s: s.resources.get_max_value("fuel"),                               1),
+        ('max_energy',        lambda s: s.resources.get_max_value("energy"),                             1),
+        ('max_ammo',          lambda s: s.resources.get_max_value("ammo"),                               1),
+        ('max_speed',         lambda s: s.max_speed,                                                     0.1),
+        ('acceleration_rate', lambda s: s.acceleration_rate,                                             0.001),
+        ('turn_speed',        lambda s: s.turn_speed,                                                    0.1),
+        ('total_thrust',      lambda s: s.total_thrust,                                                  1),
+        ('mass',              lambda s: s.mass,                                                          1),
+        ('armor_hp_pool',     lambda s: s.layers[LayerType.ARMOR].max_hp_pool if LayerType.ARMOR in s.layers else 0, 1),
+    ]
+
     @staticmethod
     def from_dict(data: Dict[str, Any], *, registries: 'GameRegistries') -> 'Ship':
         """
@@ -128,19 +142,9 @@ class ShipSerializer:
         # MUST remain a runtime import — ship.py imports ShipSerializer at module level
         from game.simulation.entities.ship import Ship
 
-        # PROJ-42 Phase 4: Check format version (v1.x had string component format, no longer supported)
-        version = data.get("_format_version", "1.0")
-        # Allow v1.x data that happens to use dict format (graceful migration)
-        # Version check is informational - the dict check in component loading is the actual enforcement
-
         name = data.get("name", "Unnamed")
         color_val = data.get("color", (200, 200, 200))
-        # Ensure color is tuple
-        color: tuple
-        if isinstance(color_val, list):
-            color = tuple(color_val)
-        else:
-            color = color_val  # type: ignore
+        color = tuple(color_val) if isinstance(color_val, list) else color_val
 
         # PROJ-38: Pass registries to Ship constructor
         s = Ship(name, 0, 0, color, data.get("team_id", 0),
@@ -148,96 +152,78 @@ class ShipSerializer:
                 theme_id=data.get("theme_id", "Federation"),
                 registries=registries)
         s.ai_strategy = data.get("ai_strategy", "standard_ranged")
-        
+
+        ShipSerializer._load_components(s, data, registries)
+        s.recalculate_stats()
+        ShipSerializer._restore_resources(s, data.get('resources', {}))
+        ShipSerializer._verify_stats(s, data.get('expected_stats', {}))
+
+        return s
+
+    @staticmethod
+    def _load_components(ship: 'Ship', data: Dict[str, Any], registries: 'GameRegistries') -> None:
+        """Load and configure all components from serialized layer data."""
+        comps = registries.components
+        mods = registries.modifiers
+
         for l_name, comps_list in data.get("layers", {}).items():
-            layer_type = None
             try:
                 layer_type = LayerType[l_name]
             except KeyError:
                 continue
-                
-            # Skip if this layer is not defined in the ship's class
-            if layer_type not in s.layers:
+
+            if layer_type not in ship.layers:
                 continue
-            
+
             for c_entry in comps_list:
-                # PROJ-42 Phase 4: Removed legacy string format support
-                # Components must be dict format: {"id": "...", "modifiers": [...]}
                 if not isinstance(c_entry, dict):
                     raise ValueError(f"Component entry must be dict, got {type(c_entry).__name__}")
 
                 comp_id = c_entry.get("id", "")
-                modifiers_data = c_entry.get("modifiers", [])
+                if comp_id not in comps:
+                    continue
 
-                # PROJ-50: Use registries directly (strict DI)
-                comps = registries.components
-                mods = registries.modifiers
+                new_comp = comps[comp_id].clone()
+                new_comp._registries = registries
 
-                if comp_id in comps:
-                    # PROJ-50: Clone component and ensure it has registries
-                    new_comp = comps[comp_id].clone()
-                    new_comp._registries = registries
+                for m_dat in c_entry.get("modifiers", []):
+                    mid = m_dat['id']
+                    if mid in mods:
+                        new_comp.add_modifier(mid, m_dat['value'])
+                    else:
+                        log_warning(f"ShipSerializer: Modifier '{mid}' not found in registry, skipping")
 
-                    # Apply Modifiers
-                    for m_dat in modifiers_data:
-                        mid = m_dat['id']
-                        mval = m_dat['value']
-                        if mid in mods:
-                            new_comp.add_modifier(mid, mval)
-                        else:
-                            log_warning(f"ShipSerializer: Modifier '{mid}' not found in registry, skipping")
+                ship.add_component(new_comp, layer_type)
 
-                    s.add_component(new_comp, layer_type)
-        
-        s.recalculate_stats()
-    
-        # Restore resource values if saved
-        saved_resources = data.get('resources', {})
-        if saved_resources:
-            for resource_name, value in saved_resources.items():
-                if value is not None:
-                    s.resources.set_value(resource_name, value)
-        
-        # Verify loaded stats match expected stats (if saved)
-        # PROJ-42 Phase 4: This is intentional data integrity verification, NOT a backward
-        # compatibility fallback. Warnings indicate component definitions or formulas changed
-        # since the ship was saved. The _loading_warnings attribute helps debugging.
-        expected = data.get('expected_stats', {})
-        if expected:
-            mismatches = []
-            if expected.get('max_hp') and abs(s.max_hp - expected['max_hp']) > 1:
-                mismatches.append(f"max_hp: got {s.max_hp}, expected {expected['max_hp']}")
-            
-            val = s.resources.get_max_value("fuel")
-            if expected.get('max_fuel') and abs(val - expected['max_fuel']) > 1:
-                mismatches.append(f"max_fuel: got {val}, expected {expected['max_fuel']}")
-            
-            val = s.resources.get_max_value("energy")
-            if expected.get('max_energy') and abs(val - expected['max_energy']) > 1:
-                mismatches.append(f"max_energy: got {val}, expected {expected['max_energy']}")
-            
-            val = s.resources.get_max_value("ammo")
-            if expected.get('max_ammo') and abs(val - expected['max_ammo']) > 1:
-                mismatches.append(f"max_ammo: got {val}, expected {expected['max_ammo']}")
-            if expected.get('max_speed') and abs(s.max_speed - expected['max_speed']) > 0.1:
-                mismatches.append(f"max_speed: got {s.max_speed:.1f}, expected {expected['max_speed']:.1f}")
-            if expected.get('acceleration_rate') and abs(s.acceleration_rate - expected['acceleration_rate']) > 0.001:
-                mismatches.append(f"acceleration_rate: got {s.acceleration_rate:.3f}, expected {expected['acceleration_rate']:.3f}")
-            if expected.get('turn_speed') and abs(s.turn_speed - expected['turn_speed']) > 0.1:
-                mismatches.append(f"turn_speed: got {s.turn_speed:.1f}, expected {expected['turn_speed']:.1f}")
-            if expected.get('total_thrust') and abs(s.total_thrust - expected['total_thrust']) > 1:
-                mismatches.append(f"total_thrust: got {s.total_thrust}, expected {expected['total_thrust']}")
-            if expected.get('mass') and abs(s.mass - expected['mass']) > 1:
-                mismatches.append(f"mass: got {s.mass}, expected {expected['mass']}")
-            armor_hp = s.layers[LayerType.ARMOR].max_hp_pool if LayerType.ARMOR in s.layers else 0
-            if expected.get('armor_hp_pool') and abs(armor_hp - expected['armor_hp_pool']) > 1:
-                mismatches.append(f"armor_hp_pool: got {armor_hp}, expected {expected['armor_hp_pool']}")
-            
-            s._loading_warnings = mismatches
-            
-            if mismatches:
-                log_warning(f"Ship '{s.name}' stats mismatch after loading!")
-                for m in mismatches:
-                    log_warning(f"  - {m}")
-        
-        return s
+    @staticmethod
+    def _restore_resources(ship: 'Ship', saved_resources: Dict[str, Any]) -> None:
+        """Restore resource values from saved data."""
+        if not saved_resources:
+            return
+        for resource_name, value in saved_resources.items():
+            if value is not None:
+                ship.resources.set_value(resource_name, value)
+
+    @staticmethod
+    def _verify_stats(ship: 'Ship', expected: Dict[str, Any]) -> None:
+        """Verify loaded stats match expected stats and log mismatches.
+
+        Uses the data-driven _STAT_CHECKS table instead of per-stat if-blocks.
+        """
+        if not expected:
+            return
+
+        mismatches = []
+        for key, getter, tolerance in ShipSerializer._STAT_CHECKS:
+            exp_val = expected.get(key)
+            if exp_val:
+                actual = getter(ship)
+                if abs(actual - exp_val) > tolerance:
+                    mismatches.append(f"{key}: got {actual}, expected {exp_val}")
+
+        ship._loading_warnings = mismatches
+
+        if mismatches:
+            log_warning(f"Ship '{ship.name}' stats mismatch after loading!")
+            for m in mismatches:
+                log_warning(f"  - {m}")

@@ -489,3 +489,154 @@ class TestInputMapperEdgeCases:
         result = m.resolve(event, contexts=["fleet"])
         # M no longer maps to fleet.move since it was overridden
         assert result is None
+
+
+# =============================================================================
+# Additional Coverage Tests (TCG-FND-004)
+# =============================================================================
+
+class TestConflictDetectionExpanded:
+    """Additional tests for conflict detection edge cases."""
+
+    def test_get_conflicts_same_key_overlapping_context(self, mapper):
+        """Fleet/strategy contexts conflict (both can be active together)."""
+        # Find an action in strategy context with a specific key
+        # K_g + Shift is strategy.zoom_galaxy
+        binding = KeyBinding(key="K_g", modifiers=frozenset({"shift"}))
+        conflicts = mapper.get_conflicts(binding, context="strategy")
+        assert InputAction.STRATEGY_ZOOM_GALAXY in conflicts
+
+    def test_get_conflicts_same_key_nonoverlapping_context(self, mapper):
+        """build_queue/transfer don't conflict (never active together)."""
+        # These contexts are isolated and don't overlap
+        binding = KeyBinding(key="K_a", modifiers=frozenset())
+        conflicts = mapper.get_conflicts(binding, context="transfer")
+        # build_queue.add should NOT appear as conflict in transfer context
+        assert InputAction.BUILD_QUEUE_ADD not in conflicts
+
+    def test_get_conflicts_with_modifiers(self, mapper):
+        """Same key, same modifiers = conflict."""
+        # Ctrl+S is strategy.save_game
+        binding = KeyBinding(key="K_s", modifiers=frozenset({"ctrl"}))
+        conflicts = mapper.get_conflicts(binding, context="strategy")
+        assert InputAction.STRATEGY_SAVE_GAME in conflicts
+
+    def test_get_conflicts_no_conflicts_for_different_keys(self, mapper):
+        """Different keys never conflict."""
+        # Use a key that definitely isn't bound
+        binding = KeyBinding(key="K_BACKSLASH", modifiers=frozenset())
+        conflicts = mapper.get_conflicts(binding, context="fleet")
+        # No actions should be using backslash
+        assert len(conflicts) == 0
+
+
+class TestContextOverlap:
+    """Tests for context overlap detection."""
+
+    def test_contexts_overlap_global_always_true(self, mapper):
+        """global overlaps with any context."""
+        # Try to bind to a key used by global action
+        binding = KeyBinding(key="K_F12", modifiers=frozenset())
+        # When checking from any context, global should conflict
+        conflicts = mapper.get_conflicts(binding, context="fleet")
+        assert InputAction.GLOBAL_SCREENSHOT_FULL in conflicts
+
+        conflicts = mapper.get_conflicts(binding, context="build_queue")
+        assert InputAction.GLOBAL_SCREENSHOT_FULL in conflicts
+
+    def test_contexts_overlap_fleet_strategy(self, mapper):
+        """fleet and strategy overlap (both can be active together)."""
+        # If we bind something in fleet context that uses same key as strategy action,
+        # they should conflict since these contexts overlap
+        from game.core.input_mapper import _CONTEXT_OVERLAP
+        assert "strategy" in _CONTEXT_OVERLAP.get("fleet", set())
+        assert "fleet" in _CONTEXT_OVERLAP.get("strategy", set())
+
+    def test_contexts_overlap_build_queue_isolated(self, mapper):
+        """build_queue doesn't overlap fleet."""
+        from game.core.input_mapper import _CONTEXT_OVERLAP
+        assert "fleet" not in _CONTEXT_OVERLAP.get("build_queue", set())
+
+    def test_contexts_overlap_none_context_always_true(self, mapper):
+        """None context treated as overlap with everything."""
+        # When context is None, all same-key actions should conflict
+        binding = KeyBinding(key="K_m", modifiers=frozenset())
+        conflicts = mapper.get_conflicts(binding, context=None)
+        # Should find fleet.move
+        assert InputAction.FLEET_MOVE in conflicts
+
+    def test_contexts_overlap_same_context(self, mapper):
+        """fleet overlaps with itself."""
+        from game.core.input_mapper import _CONTEXT_OVERLAP
+        assert "fleet" in _CONTEXT_OVERLAP.get("fleet", set())
+
+
+class TestModifierExtraction:
+    """Tests for modifier extraction from pygame events."""
+
+    def test_extract_modifiers_ctrl(self, make_keydown):
+        """KMOD_CTRL -> frozenset({'ctrl'})."""
+        from game.core.input_mapper import InputMapper
+        event = make_keydown(pygame.K_a, pygame.KMOD_CTRL)
+        mods = InputMapper._extract_modifiers(event.mod)
+        assert mods == frozenset({"ctrl"})
+
+    def test_extract_modifiers_shift(self, make_keydown):
+        """KMOD_SHIFT -> frozenset({'shift'})."""
+        from game.core.input_mapper import InputMapper
+        event = make_keydown(pygame.K_a, pygame.KMOD_SHIFT)
+        mods = InputMapper._extract_modifiers(event.mod)
+        assert mods == frozenset({"shift"})
+
+    def test_extract_modifiers_alt(self, make_keydown):
+        """KMOD_ALT -> frozenset({'alt'})."""
+        from game.core.input_mapper import InputMapper
+        event = make_keydown(pygame.K_a, pygame.KMOD_ALT)
+        mods = InputMapper._extract_modifiers(event.mod)
+        assert mods == frozenset({"alt"})
+
+    def test_extract_modifiers_multiple(self, make_keydown):
+        """KMOD_CTRL|KMOD_SHIFT -> frozenset({'ctrl', 'shift'})."""
+        from game.core.input_mapper import InputMapper
+        event = make_keydown(pygame.K_a, pygame.KMOD_CTRL | pygame.KMOD_SHIFT)
+        mods = InputMapper._extract_modifiers(event.mod)
+        assert mods == frozenset({"ctrl", "shift"})
+
+    def test_extract_modifiers_none(self, make_keydown):
+        """0 -> frozenset()."""
+        from game.core.input_mapper import InputMapper
+        mods = InputMapper._extract_modifiers(0)
+        assert mods == frozenset()
+
+
+class TestLookupTable:
+    """Tests for lookup table building and resolution."""
+
+    def test_build_lookup_multiple_actions_same_key(self, mapper, make_keydown):
+        """Multiple actions indexed correctly when sharing key+modifiers."""
+        # ESC is used by multiple contexts (fleet.cancel_mode, build_queue.close, etc.)
+        # These should all be in the lookup
+        event = make_keydown(pygame.K_ESCAPE)
+
+        # With fleet context, should get fleet action
+        result = mapper.resolve(event, contexts=["fleet"])
+        assert result is not None
+
+        # With build_queue context, should get build_queue action
+        result = mapper.resolve(event, contexts=["build_queue"])
+        assert result is not None
+
+    def test_resolve_returns_first_matching_context(self, mapper, make_keydown):
+        """Context filter picks correct action from multiple possibilities."""
+        # Test that when multiple actions share a key, context filtering works
+        event = make_keydown(pygame.K_ESCAPE)
+
+        # Fleet context should return fleet action
+        result = mapper.resolve(event, contexts=["fleet"])
+        if result:
+            assert "fleet" in result.value or "global" in result.value
+
+        # Build queue context should return build_queue action
+        result = mapper.resolve(event, contexts=["build_queue"])
+        if result:
+            assert "build_queue" in result.value or "global" in result.value

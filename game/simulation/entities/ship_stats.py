@@ -251,125 +251,130 @@ class ShipStatsCalculator:
         thrust, shields, hangar capacity, and other combat stats.
         """
         # Local accumulators for atomic updates (prevents premature clamping)
-        total_max_fuel = 0
-        total_max_ammo = 0
-        total_max_energy = 0
-        total_energy_gen = 0
-        total_ammo_gen = 0
-        total_thrust = 0
-        total_strategic_movement = 0  # Strategic layer movement points
-        total_turn_speed = 0
-        total_max_shields = 0
-        total_shield_regen = 0
-        total_shield_cost = 0
-        warp_max_tonnage = 0  # Maximum tonnage for warp jump (largest drive wins)
-        warp_energy_cost = 0  # Total energy cost per warp jump
+        acc = {
+            'max_fuel': 0, 'max_ammo': 0, 'max_energy': 0,
+            'energy_gen': 0, 'ammo_gen': 0,
+            'thrust': 0, 'strategic_movement': 0, 'turn_speed': 0,
+            'maneuver_points': 0,
+            'max_shields': 0, 'shield_regen': 0, 'shield_cost': 0,
+            'warp_max_tonnage': 0, 'warp_energy_cost': 0,
+        }
 
         for comp in component_pool:
             if not comp.is_active:
                 continue
 
-            # Generic Ability Handling
-            # Using Ability Instances (New System)
-            if hasattr(comp, 'ability_instances'):
-                for ability in comp.ability_instances:
-                    ab_cls = ability.__class__.__name__
-                    if ab_cls == 'ResourceStorage':
-                        res_type = getattr(ability, 'resource_type', '')
-                        max_amt = getattr(ability, 'max_amount', 0.0)
-                        if res_type == ResourceType.FUEL:
-                            total_max_fuel += max_amt
-                        elif res_type == ResourceType.AMMO:
-                            total_max_ammo += max_amt
-                        elif res_type == ResourceType.ENERGY:
-                            total_max_energy += max_amt
+            self._aggregate_resource_abilities(comp, acc)
+            self._aggregate_propulsion_abilities(comp, acc)
+            self._aggregate_defense_abilities(ship, comp, acc)
+            self._aggregate_hangar_abilities(ship, comp)
 
-                    # Resource Generation
-                    elif ab_cls == 'ResourceGeneration':
-                        res_type = getattr(ability, 'resource_type', '')
-                        rate = getattr(ability, 'rate', 0.0)
-                        if res_type == ResourceType.ENERGY:
-                            total_energy_gen += rate
-                        elif res_type == ResourceType.AMMO:
-                            total_ammo_gen += rate
-
-            # Aggregate stats from ability instances
-
-            # Thrust from CombatPropulsion abilities
-            for ab in comp.get_abilities('CombatPropulsion'):
-                total_thrust += ab.thrust_force
-
-            # Strategic movement from StrategicMovement abilities
-            for ab in comp.get_abilities('StrategicMovement'):
-                total_strategic_movement += ab.movement_points
-
-            # WarpJump capability - use the largest warp drive
-            for ab in comp.get_abilities('WarpJump'):
-                tonnage = getattr(ab, 'max_tonnage', 0)
-                if tonnage > warp_max_tonnage:
-                    warp_max_tonnage = tonnage
-                # Accumulate energy costs from all warp drives
-                warp_energy_cost += getattr(ab, 'energy_cost', 0)
-
-            # Turn speed from ManeuveringThruster abilities
-            for ab in comp.get_abilities('ManeuveringThruster'):
-                total_turn_speed += ab.turn_rate
-                ship.total_maneuver_points += ab.turn_rate
-
-            # Armor HP pool (using ability-based detection)
-            if comp.abilities.get('Armor', False):
-                if LayerType.ARMOR in ship.layers:
-                    ship.layers[LayerType.ARMOR].max_hp_pool += comp.max_hp
-
-            # Shields from ShieldProjection abilities
-            for ab in comp.get_abilities('ShieldProjection'):
-                total_max_shields += ab.capacity
-
-            # Shield regen from ShieldRegeneration abilities
-            for ab in comp.get_abilities('ShieldRegeneration'):
-                total_shield_regen += ab.rate
-
-            # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
-            if comp.has_ability('ShieldRegeneration'):
-                for ab in comp.ability_instances:
-                    if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == ResourceType.ENERGY:
-                        total_shield_cost += getattr(ab, 'amount', 0.0)
-                        break
-
-            # Hangar stats (still uses VehicleLaunch ability from abilities dict)
-            if comp.has_ability('VehicleLaunch') or 'VehicleLaunch' in comp.abilities:
-                vl = comp.abilities.get('VehicleLaunch', {})
-                ship.fighter_capacity += comp.abilities.get('VehicleStorage', 0)
-                ship.fighters_per_wave += 1
-                max_mass = vl.get('max_launch_mass', 0) if isinstance(vl, dict) else 0
-                if max_mass > ship.fighter_size_cap:
-                    ship.fighter_size_cap = max_mass
-
-                cycle = vl.get('cycle_time', 5.0) if isinstance(vl, dict) else 5.0
-                if cycle > ship.launch_cycle:
-                    ship.launch_cycle = cycle
-
-            # Check for generic abilities that affect stats
-            # MultiplexTracking
+            # MultiplexTracking (only 3 lines, uses max not sum)
             mt = comp.abilities.get('MultiplexTracking', 0)
             if mt > 0:
                 if mt > ship.max_targets:
                     ship.max_targets = mt
 
-        # Apply Accumulated Totals Atomically
-        ship.resources.register_storage(ResourceType.FUEL, total_max_fuel)
-        ship.resources.register_storage(ResourceType.AMMO, total_max_ammo)
-        ship.resources.register_storage(ResourceType.ENERGY, total_max_energy)
-        ship.resources.register_generation(ResourceType.ENERGY, total_energy_gen)
-        ship.resources.register_generation(ResourceType.AMMO, total_ammo_gen)
-        ship.total_thrust = total_thrust
-        ship.total_strategic_movement = total_strategic_movement
-        ship.turn_speed = total_turn_speed
-        ship.max_shields = total_max_shields
-        ship.shield_regen_rate = total_shield_regen
-        ship.shield_regen_cost = total_shield_cost
-        ship.warp_max_tonnage = warp_max_tonnage
-        ship.warp_energy_cost = warp_energy_cost
+        self._apply_aggregated_stats(ship, acc)
+
+    def _aggregate_resource_abilities(self, comp, acc) -> None:
+        """Aggregate ResourceStorage and ResourceGeneration abilities."""
+        if hasattr(comp, 'ability_instances'):
+            for ability in comp.ability_instances:
+                ab_cls = ability.__class__.__name__
+                if ab_cls == 'ResourceStorage':
+                    res_type = getattr(ability, 'resource_type', '')
+                    max_amt = getattr(ability, 'max_amount', 0.0)
+                    if res_type == ResourceType.FUEL:
+                        acc['max_fuel'] += max_amt
+                    elif res_type == ResourceType.AMMO:
+                        acc['max_ammo'] += max_amt
+                    elif res_type == ResourceType.ENERGY:
+                        acc['max_energy'] += max_amt
+
+                elif ab_cls == 'ResourceGeneration':
+                    res_type = getattr(ability, 'resource_type', '')
+                    rate = getattr(ability, 'rate', 0.0)
+                    if res_type == ResourceType.ENERGY:
+                        acc['energy_gen'] += rate
+                    elif res_type == ResourceType.AMMO:
+                        acc['ammo_gen'] += rate
+
+    def _aggregate_propulsion_abilities(self, comp, acc) -> None:
+        """Aggregate CombatPropulsion, StrategicMovement, WarpJump, ManeuveringThruster."""
+        # Thrust from CombatPropulsion abilities
+        for ab in comp.get_abilities('CombatPropulsion'):
+            acc['thrust'] += ab.thrust_force
+
+        # Strategic movement from StrategicMovement abilities
+        for ab in comp.get_abilities('StrategicMovement'):
+            acc['strategic_movement'] += ab.movement_points
+
+        # WarpJump capability - use the largest warp drive
+        for ab in comp.get_abilities('WarpJump'):
+            tonnage = getattr(ab, 'max_tonnage', 0)
+            if tonnage > acc['warp_max_tonnage']:
+                acc['warp_max_tonnage'] = tonnage
+            # Accumulate energy costs from all warp drives
+            acc['warp_energy_cost'] += getattr(ab, 'energy_cost', 0)
+
+        # Turn speed from ManeuveringThruster abilities
+        for ab in comp.get_abilities('ManeuveringThruster'):
+            acc['turn_speed'] += ab.turn_rate
+            acc['maneuver_points'] += ab.turn_rate
+
+    def _aggregate_defense_abilities(self, ship, comp, acc) -> None:
+        """Aggregate Armor HP pool, ShieldProjection, ShieldRegeneration, shield energy cost."""
+        # Armor HP pool (using ability-based detection)
+        if comp.abilities.get('Armor', False):
+            if LayerType.ARMOR in ship.layers:
+                ship.layers[LayerType.ARMOR].max_hp_pool += comp.max_hp
+
+        # Shields from ShieldProjection abilities
+        for ab in comp.get_abilities('ShieldProjection'):
+            acc['max_shields'] += ab.capacity
+
+        # Shield regen from ShieldRegeneration abilities
+        for ab in comp.get_abilities('ShieldRegeneration'):
+            acc['shield_regen'] += ab.rate
+
+        # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
+        if comp.has_ability('ShieldRegeneration'):
+            for ab in comp.ability_instances:
+                if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == ResourceType.ENERGY:
+                    acc['shield_cost'] += getattr(ab, 'amount', 0.0)
+                    break
+
+    def _aggregate_hangar_abilities(self, ship, comp) -> None:
+        """Aggregate VehicleLaunch, VehicleStorage, and launch cycle (directly mutates ship)."""
+        if comp.has_ability('VehicleLaunch') or 'VehicleLaunch' in comp.abilities:
+            vl = comp.abilities.get('VehicleLaunch', {})
+            ship.fighter_capacity += comp.abilities.get('VehicleStorage', 0)
+            ship.fighters_per_wave += 1
+            max_mass = vl.get('max_launch_mass', 0) if isinstance(vl, dict) else 0
+            if max_mass > ship.fighter_size_cap:
+                ship.fighter_size_cap = max_mass
+
+            cycle = vl.get('cycle_time', 5.0) if isinstance(vl, dict) else 5.0
+            if cycle > ship.launch_cycle:
+                ship.launch_cycle = cycle
+
+    def _apply_aggregated_stats(self, ship, acc) -> None:
+        """Atomic application of accumulated totals to ship."""
+        ship.resources.register_storage(ResourceType.FUEL, acc['max_fuel'])
+        ship.resources.register_storage(ResourceType.AMMO, acc['max_ammo'])
+        ship.resources.register_storage(ResourceType.ENERGY, acc['max_energy'])
+        ship.resources.register_generation(ResourceType.ENERGY, acc['energy_gen'])
+        ship.resources.register_generation(ResourceType.AMMO, acc['ammo_gen'])
+        ship.total_thrust = acc['thrust']
+        ship.total_strategic_movement = acc['strategic_movement']
+        ship.turn_speed = acc['turn_speed']
+        ship.total_maneuver_points = acc['maneuver_points']
+        ship.max_shields = acc['max_shields']
+        ship.shield_regen_rate = acc['shield_regen']
+        ship.shield_regen_cost = acc['shield_cost']
+        ship.warp_max_tonnage = acc['warp_max_tonnage']
+        ship.warp_energy_cost = acc['warp_energy_cost']
 
     def _phase_resource_allocation(self, ship, component_pool, available_crew, available_life_support) -> None:
         """Phase 2: Allocate crew and life support to components.

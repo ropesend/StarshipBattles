@@ -630,65 +630,91 @@ class TestLabScreen:
                 self._continue_batch_test()
                 continue
 
-            # Handle confirmation dialog first (if open)
-            if self.confirmation_dialog and self.confirmation_dialog.is_open:
-                self.confirmation_dialog.handle_event(event)
-                if not self.confirmation_dialog.is_open:
-                    self.confirmation_dialog = None
-                continue  # Don't process other events while dialog is open
+            # Dispatch to dialog, panel, and scroll/mouse handlers
+            if self._handle_dialog_events(event):
+                continue
+            if self._handle_panel_events(event):
+                continue
+            self._handle_scroll_and_mouse(event)
 
-            # Handle JSON popup (if open)
-            if self.json_popup and self.json_popup.is_open:
-                self.json_popup.handle_event(event)
-                if not self.json_popup.is_open:
-                    self.json_popup = None
-                continue  # Don't process other events while popup is open
+    def _handle_dialog_events(self, event):
+        """Handle events for confirmation dialog, JSON popup, and battle state viewer.
 
-            # Handle battle state viewer (if open)
-            if self.battle_state_viewer and self.battle_state_viewer.visible:
-                self.battle_state_viewer.handle_event(event)
-                continue  # Don't process other events while viewer is open
+        Returns:
+            True if the event was consumed by a dialog.
+        """
+        # Handle confirmation dialog first (if open)
+        if self.confirmation_dialog and self.confirmation_dialog.is_open:
+            self.confirmation_dialog.handle_event(event)
+            if not self.confirmation_dialog.is_open:
+                self.confirmation_dialog = None
+            return True  # Don't process other events while dialog is open
 
-            # Handle ship panel events (scrolling)
-            if self.tabbed_ship_panel:
-                if self.tabbed_ship_panel.handle_event(event):
-                    continue  # Event consumed by tabbed panel
-            for panel in self.ship_panels:
-                if panel.handle_event(event):
-                    continue  # Event consumed by panel
+        # Handle JSON popup (if open)
+        if self.json_popup and self.json_popup.is_open:
+            self.json_popup.handle_event(event)
+            if not self.json_popup.is_open:
+                self.json_popup = None
+            return True  # Don't process other events while popup is open
 
-            # Handle component panel events (scrolling, dropdown clicks)
-            for panel in self.component_panels:
-                if panel.handle_event(event):
-                    continue  # Event consumed by panel
+        # Handle battle state viewer (if open)
+        if self.battle_state_viewer and self.battle_state_viewer.visible:
+            self.battle_state_viewer.handle_event(event)
+            return True  # Don't process other events while viewer is open
 
-            # Handle results panel events (scrolling, card selection, clear buttons)
-            if self.results_panel:
-                if self.results_panel.handle_event(event):
-                    continue  # Event consumed by panel
+        return False
 
-            # Handle test details panel events (scrolling)
-            if self.test_details_panel:
-                if self.test_details_panel.handle_event(event):
-                    continue  # Event consumed by panel
+    def _handle_panel_events(self, event):
+        """Handle events for tabbed ship panel, ship panels, component panels,
+        results panel, and test details panel.
 
-            # Handle mouse wheel for test list scrolling
-            if event.type == pygame.MOUSEWHEEL:
-                mx, my = pygame.mouse.get_pos()
-                if self.test_list_panel_rect and self.test_list_panel_rect.collidepoint(mx, my):
-                    self.test_list_scroll_offset -= event.y * 40  # 40px per scroll tick
-                    self.test_list_scroll_offset = max(0, min(self.test_list_scroll_offset, self.test_list_max_scroll))
-                    continue  # Event consumed
+        Returns:
+            True if the event was consumed by a panel.
+        """
+        # Handle ship panel events (scrolling)
+        if self.tabbed_ship_panel:
+            if self.tabbed_ship_panel.handle_event(event):
+                return True  # Event consumed by tabbed panel
+        for panel in self.ship_panels:
+            if panel.handle_event(event):
+                return True  # Event consumed by panel
 
-            # Handle mouse motion for hover effects
-            if event.type == pygame.MOUSEMOTION:
-                mx, my = event.pos
-                self._update_hover_state(mx, my)
+        # Handle component panel events (scrolling, dropdown clicks)
+        for panel in self.component_panels:
+            if panel.handle_event(event):
+                return True  # Event consumed by panel
 
-            # Handle mouse clicks
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mx, my = event.pos
-                self._handle_click(mx, my)
+        # Handle results panel events (scrolling, card selection, clear buttons)
+        if self.results_panel:
+            if self.results_panel.handle_event(event):
+                return True  # Event consumed by panel
+
+        # Handle test details panel events (scrolling)
+        if self.test_details_panel:
+            if self.test_details_panel.handle_event(event):
+                return True  # Event consumed by panel
+
+        return False
+
+    def _handle_scroll_and_mouse(self, event):
+        """Handle MOUSEWHEEL, MOUSEMOTION, and MOUSEBUTTONDOWN events."""
+        # Handle mouse wheel for test list scrolling
+        if event.type == pygame.MOUSEWHEEL:
+            mx, my = pygame.mouse.get_pos()
+            if self.test_list_panel_rect and self.test_list_panel_rect.collidepoint(mx, my):
+                self.test_list_scroll_offset -= event.y * 40  # 40px per scroll tick
+                self.test_list_scroll_offset = max(0, min(self.test_list_scroll_offset, self.test_list_max_scroll))
+                return  # Event consumed
+
+        # Handle mouse motion for hover effects
+        if event.type == pygame.MOUSEMOTION:
+            mx, my = event.pos
+            self._update_hover_state(mx, my)
+
+        # Handle mouse clicks
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mx, my = event.pos
+            self._handle_click(mx, my)
 
     def _update_hover_state(self, mx, my):
         """Update hover state for categories and tests."""
@@ -732,7 +758,22 @@ class TestLabScreen:
 
     def _handle_click(self, mx, my):
         """Handle click events for categories and tests."""
-        # Check "All Tests" click
+        if self._check_category_clicks(mx, my):
+            return
+        if self._check_tag_filter_clicks(mx, my):
+            return
+        if self._check_test_item_click(mx, my):
+            return
+        if self._check_action_button_clicks(mx, my):
+            return
+        self._check_seed_mode_clicks(mx, my)
+
+    def _check_category_clicks(self, mx, my):
+        """Check clicks on the 'All Tests' button and category list.
+
+        Returns:
+            True if a click was handled.
+        """
         category_x = 20
         category_y = self.header_height + 20
 
@@ -742,7 +783,7 @@ class TestLabScreen:
         if all_tests_rect.collidepoint(mx, my):
             self.selected_category = None
             self.selected_test_id = None
-            return
+            return True
 
         # Check category click (starts after "All Tests" button)
         category_start_y = all_tests_y + 50
@@ -755,27 +796,43 @@ class TestLabScreen:
                 else:
                     self.selected_category = category
                 self.selected_test_id = None  # Clear test selection
-                return
+                return True
 
+        return False
+
+    def _check_tag_filter_clicks(self, mx, my):
+        """Check clicks on tag filter buttons, clear button, and run all tests button.
+
+        Returns:
+            True if a click was handled.
+        """
         # Check tag filter clicks
         # Left-click: cycle through states (neutral -> include -> exclude -> neutral)
         for tag, rect in self.tag_filter_rects.items():
             if rect.collidepoint(mx, my):
                 self.controller.ui_state.cycle_tag_state(tag)
-                return
+                return True
 
         # Check tag filter clear button
         if hasattr(self, 'tag_clear_rect') and self.tag_clear_rect:
             if self.tag_clear_rect.collidepoint(mx, my):
                 self.controller.ui_state.clear_tag_filters()
-                return
+                return True
 
         # Check "Run Tests" button click (in test list panel)
         if self.run_all_tests_btn_rect and self.run_all_tests_btn_rect.collidepoint(mx, my):
             if not self.batch_running:
                 self._on_run_all_tests()
-            return
+            return True
 
+        return False
+
+    def _check_test_item_click(self, mx, my):
+        """Check clicks on test items in the scrollable test list.
+
+        Returns:
+            True if a click was handled.
+        """
         # Check test click (accounting for scroll offset)
         test_list_x = 20 + self.category_width + 20
         test_list_y = self.header_height + 20 + 40  # +40 for header offset
@@ -796,34 +853,52 @@ class TestLabScreen:
                     self._create_ship_panels(test_id)
                     # Create results panel for the selected test
                     self._create_results_panel(test_id)
-                    return
+                    return True
 
+        return False
+
+    def _check_action_button_clicks(self, mx, my):
+        """Check clicks on Run Test, Run Headless, and Update Expected buttons.
+
+        Returns:
+            True if a click was handled.
+        """
         # Check Run Test button click (in metadata panel)
         if self.run_test_btn_rect and self.run_test_btn_rect.collidepoint(mx, my):
             self._on_run()
-            return
+            return True
 
         # Check Run Headless button click (in metadata panel)
         if self.run_headless_btn_rect and self.run_headless_btn_rect.collidepoint(mx, my):
             self._on_run_headless()
-            return
+            return True
 
         # Check "Update Expected Values" button click
         if self.update_expected_button_visible and self.update_expected_button_rect:
             if self.update_expected_button_rect.collidepoint(mx, my):
                 self._handle_update_expected_values()
-                return
+                return True
 
+        return False
+
+    def _check_seed_mode_clicks(self, mx, my):
+        """Check clicks on seed mode buttons and seed input area.
+
+        Returns:
+            True if a click was handled.
+        """
         # Check seed mode button clicks
         for mode_id, rect in self.seed_mode_rects.items():
             if rect.collidepoint(mx, my):
                 self.controller.ui_state.set_seed_mode(mode_id)
-                return
+                return True
 
         # Check seed input click (for custom mode)
         if self.seed_input_rect and self.seed_input_rect.collidepoint(mx, my):
             self._prompt_for_custom_seed()
-            return
+            return True
+
+        return False
 
     def _prompt_for_custom_seed(self):
         """Prompt user to enter a custom seed value."""
