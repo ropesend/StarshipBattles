@@ -298,7 +298,7 @@ class ShipState:
 
                     # Apply damage state AFTER adding (to override default HP)
                     new_comp.current_hp = comp_state.current_hp
-                    new_comp._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty
+                    new_comp.mark_hp_cache_dirty()  # PROJ-49: Mark cache dirty
                     new_comp.is_active = comp_state.is_active
 
         ship.recalculate_stats()

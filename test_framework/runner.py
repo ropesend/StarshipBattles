@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from game.core.paths import Paths
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
+from game.simulation.factories.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship_loader import initialize_ship_data
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
@@ -26,6 +27,9 @@ class TestRunner:
 
     def __init__(self):
         self.engine = BattleEngine()
+        # Inject ai_factory to support legacy scenarios that call engine.start()
+        # without ai_controllers (PROJ-106: layer violation fix)
+        self.engine._ai_factory = AIControllerFactory(self.engine.grid)
         self.current_scenario = None
         self.test_log = []  # Store log of all test executions
         
@@ -93,7 +97,9 @@ class TestRunner:
         # 2. Setup Engine
         from game.simulation.systems.battle_engine import BattleLogger
         battle_logger = BattleLogger(enabled=True)
-        self.engine = BattleEngine(logger=battle_logger) # Fresh engine with logging
+        self.engine = BattleEngine(logger=battle_logger)  # Fresh engine with logging
+        # Inject ai_factory to support legacy scenarios (PROJ-106)
+        self.engine._ai_factory = AIControllerFactory(self.engine.grid)
 
         # 3. Scenario Setup
         scenario.setup(self.engine)

@@ -172,6 +172,11 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
 
 
     @property
+    def registries(self) -> GameRegistries:
+        """Get the registries instance (read-only access)."""
+        return self._registries
+
+    @property
     def mass(self) -> float:
         """Total mass (cached, updated by recalculate_stats)."""
         return self._cached_mass

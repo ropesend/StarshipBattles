@@ -222,7 +222,7 @@ class ShipCombatEngine:
         missing = target.max_hp - target.current_hp
         amount_to_apply = min(missing, repair_amount)
         target.current_hp += amount_to_apply
-        target._hp_ratio_dirty = True  # PROJ-49: Mark cache dirty after HP change
+        target.mark_hp_cache_dirty()  # PROJ-49: Mark cache dirty after HP change
 
         # Restore status if HP above threshold
         # PROJ-49: Use cached hp_ratio property

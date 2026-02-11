@@ -18,6 +18,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 from game.core.json_utils import load_json_required
 from game.core.logger import log_info, log_error
 from game.core.exceptions import PersistenceException, ValidationException
+from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
 
 if TYPE_CHECKING:
@@ -66,11 +67,9 @@ class SimulationDesignLoader:
         Returns:
             Ship object with stats recalculated, or None on error
         """
-        import pygame
-
         try:
             ship = Ship.from_dict(design_data, registries=self._registries)
-            ship.position = pygame.math.Vector2(center_x, center_y)
+            ship.position = Vector2(center_x, center_y)
             ship.recalculate_stats()
             return ship
         except (KeyError, TypeError, ValueError) as e:

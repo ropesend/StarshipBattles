@@ -130,15 +130,13 @@ class BattleUIService:
         # Convert resources
         resources = []
         ship_resources = getattr(ship, 'resources', None)
-        if ship_resources and hasattr(ship_resources, '_resources'):
-            res_dict = getattr(ship_resources, '_resources', {})
-            if res_dict:
-                for res in res_dict.values():
-                    resources.append(ResourceDTO(
-                        name=res.name,
-                        current_value=res.current_value,
-                        max_value=res.max_value
-                    ))
+        if ship_resources:
+            for res in ship_resources.get_all_resources():
+                resources.append(ResourceDTO(
+                    name=res.name,
+                    current_value=res.current_value,
+                    max_value=res.max_value
+                ))
 
         # Convert components
         components = []

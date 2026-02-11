@@ -7,25 +7,23 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-10
-**Last Completed:** PROJ-104 Audit PASSED
-**Current Status:** PROJ-104 Complete — Awaiting User Verification
-**Current Project:** PROJ-106 (next in queue)
-**Current Phase:** Not Started
-**Test Status:** 8167 passed
+**Last Session:** 2026-02-11
+**Last Completed:** PROJ-106 Phase 2 Complete
+**Current Status:** PROJ-106 Phase 2 Complete — Ready for Phase 3
+**Current Project:** PROJ-106
+**Current Phase:** Phase 3 (Create Strategy Metadata Service)
+**Test Status:** 8164 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-104 AUDIT PASSED — All 6 CC targets met
-  - BuilderScreen.handle_event: 111 → 13 (target ≤15) ✓
-  - ShipStatsCalculator.calculate: 62 → 10 (target ≤15) ✓
-  - StrategyInputHandler._handle_keydown_mapped: 50 → 8 (target ≤8) ✓
-  - TargetEvaluator.evaluate: 49 → 10 (target ≤10) ✓
-  - TestRunDetailsPanel.draw: 47 → 5 (target ≤8) ✓
-  - FormationEditorScreen.handle_event: 45 → 9 (target ≤10) ✓
-- All 8167 tests passing
-- No new files created, no public API changes
-- All projects in Master Task List now complete
+- PROJ-106 Phase 2 Complete — Removed deprecated legacy AI paths
+  - Task 2.1: Audited all BattleEngine.start() call sites - all use ai_factory or ai_controllers
+  - Task 2.2: Audited add_ship_mid_battle() call sites - all use ai_factory
+  - Task 2.3: Removed 3 legacy paths in battle_engine.py (start, add_ship_mid_battle, fighter launch)
+  - Task 2.3: Fixed test_framework/runner.py to inject AIControllerFactory
+  - Task 2.4: Verified only ai_factory.py has runtime AI imports in simulation layer
+- All 8164 tests passing
+- Next: Phase 3 - Create StrategyMetadataService for UI to get strategy names without importing from game.ai
 
 ---
 
@@ -161,8 +159,8 @@
 
 ---
 
-- [ ] **PROJ-106: Architecture Layer Violations**
-  - **Phases:** 7 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-106: Architecture Layer Violations**
+  - **Phases:** 7 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-106/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-106/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -294,6 +292,8 @@
 | 2026-02-10 | PROJ-104 | Phase 5 | Complete | 8167 passed | pending | TestRunDetailsPanel.draw CC 47→5, 7 draw methods extracted |
 | 2026-02-10 | PROJ-104 | Phase 6 | Complete | 8167 passed | pending | FormationEditorScreen.handle_event CC 45→9, 7 handlers extracted |
 | 2026-02-10 | PROJ-104 | Audit 1 | PASSED | 8167 passed | pending | All 6 CC targets met, no issues |
+| 2026-02-11 | PROJ-106 | Phase 1 | Complete | 8164 passed | pending | pygame removed, Ship.registries, Component.mark_hp_cache_dirty(), BattleUIService fixed |
+| 2026-02-11 | PROJ-106 | Phase 2 | Complete | 8164 passed | pending | Removed 3 legacy AI paths from BattleEngine, fixed test_framework/runner.py |
 
 ---
 

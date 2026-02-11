@@ -9,10 +9,10 @@ The adapter encapsulates:
 - Loading Ship objects from design data dictionaries
 - Loading Ship objects from design files
 """
-from typing import Optional, Tuple, Any, TYPE_CHECKING
+from typing import Optional, Tuple, Any
 
-if TYPE_CHECKING:
-    from game.simulation.services.design_loader import SimulationDesignLoader as SimulationDesignLoaderType
+from game.simulation.services.design_loader import SimulationDesignLoader
+from game.core.registry import get_default_registries
 
 
 class DesignLoaderAdapter:
@@ -38,9 +38,7 @@ class DesignLoaderAdapter:
                        Required if design_loader is None.
         """
         if design_loader is None:
-            from game.simulation.services.design_loader import SimulationDesignLoader
             if registries is None:
-                from game.core.registry import get_default_registries
                 registries = get_default_registries()
             design_loader = SimulationDesignLoader(registries=registries)
         self._loader = design_loader

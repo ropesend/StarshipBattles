@@ -13,8 +13,8 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Simple Encapsulation Fixes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Remove Deprecated Legacy AI Paths | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 1. Simple Encapsulation Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Remove Deprecated Legacy AI Paths | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Create Strategy Metadata Service | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Centralize SimulationDesignLoader Access | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Fix Research/UI Camera Dependency | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -23,9 +23,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Planning Complete -- ready for Phase 1
-**Last Action:** Protocol 01 deep-dive and detailed planning
-**Next Action:** Begin Phase 1 (simple encapsulation fixes)
+**Active Phase:** Phase 3 (Create Strategy Metadata Service)
+**Last Action:** Phase 2 Complete -- Removed legacy AI paths from BattleEngine, fixed test_framework/runner.py
+**Next Action:** Begin Phase 3 (create StrategyMetadataService)
 **Blockers:** None
 
 ## Overview

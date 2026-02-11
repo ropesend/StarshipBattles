@@ -36,14 +36,14 @@ def mock_ship():
     ship.source_file = "ships/test.json"
     ship.layers = {}
 
-    # Mock resources
+    # Mock resources using proper public API
     mock_resource = Mock()
     mock_resource.name = "fuel"
     mock_resource.current_value = 50.0
     mock_resource.max_value = 100.0
 
     ship.resources = Mock()
-    ship.resources._resources = {"fuel": mock_resource}
+    ship.resources.get_all_resources.return_value = [mock_resource]
 
     return ship
 

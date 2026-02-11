@@ -112,7 +112,6 @@ class Component:
         self._hp_ratio_dirty: bool = True
         self._cached_hp_ratio: float = 1.0
 
-
         # allowed_layers removed in refactor
         # self.allowed_layers = [LayerType.from_string(l) for l in data['allowed_layers']]
         self.allowed_vehicle_types = data.get('allowed_vehicle_types', ["Ship"])
@@ -244,6 +243,14 @@ class Component:
         if self._health_mgr is None:
             self._health_mgr = ComponentHealthManager(self)
         return self._health_mgr
+
+    def mark_hp_cache_dirty(self) -> None:
+        """Mark HP ratio cache as dirty for recalculation.
+
+        Public API for external code to invalidate the HP ratio cache
+        without accessing the private _hp_ratio_dirty attribute.
+        """
+        self._hp_ratio_dirty = True
 
     @property
     def hp_ratio(self) -> float:
