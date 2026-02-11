@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Fix Event Handling | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Resource Consumption Columns | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Resource Consumption Columns | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Column Sorting & Reordering | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Final Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** Fixed process_event() to use pygame_gui.UI_BUTTON_PRESSED instead of pygame.USEREVENT
-**Next Action:** Begin Phase 2 - Add resource consumption columns
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** Added 10 resource columns (5 rate + 5 total) with formatters, wired to _get_column_value
+**Next Action:** Begin Phase 3 - Column Sorting & Reordering
 **Blockers:** None
-**Baseline:** 7621 tests passing, 0 failures (+4 new event handling tests)
+**Baseline:** 7636 tests passing, 0 failures (+15 new resource column tests)
 
 ## Overview
 The Empire Build Yards window shows all space yards across the empire. Four issues need fixing: (1) column visibility toggles don't respond to clicks, (2) no column sorting or reordering, (3) filter toggles don't respond to clicks, and (4) missing resource consumption columns. Issues #1 and #3 share the same root cause (wrong pygame event type). Issue #2 requires integrating the existing ColumnManager pattern. Issue #4 requires 10 new columns showing per-resource construction costs.

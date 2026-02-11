@@ -24,6 +24,18 @@ DEFAULT_COLUMNS: List[Dict[str, Any]] = [
     {'id': 'turns_left', 'width': 80, 'title': 'Turns', 'visible': True},
     {'id': 'capabilities', 'width': 100, 'title': 'Can Build', 'visible': True},
     {'id': 'build_rate', 'width': 80, 'title': 'Build Rate', 'visible': True},
+    # Resource consumption rate columns (per-turn)
+    {'id': 'res_metals_rate', 'width': 70, 'title': 'Met/t', 'visible': True},
+    {'id': 'res_organics_rate', 'width': 70, 'title': 'Org/t', 'visible': True},
+    {'id': 'res_vapors_rate', 'width': 70, 'title': 'Vap/t', 'visible': True},
+    {'id': 'res_radioactives_rate', 'width': 70, 'title': 'Rad/t', 'visible': True},
+    {'id': 'res_exotics_rate', 'width': 70, 'title': 'Exo/t', 'visible': True},
+    # Resource total cost columns
+    {'id': 'res_metals_total', 'width': 70, 'title': 'Met Tot', 'visible': True},
+    {'id': 'res_organics_total', 'width': 70, 'title': 'Org Tot', 'visible': True},
+    {'id': 'res_vapors_total', 'width': 70, 'title': 'Vap Tot', 'visible': True},
+    {'id': 'res_radioactives_total', 'width': 70, 'title': 'Rad Tot', 'visible': True},
+    {'id': 'res_exotics_total', 'width': 70, 'title': 'Exo Tot', 'visible': True},
 ]
 
 

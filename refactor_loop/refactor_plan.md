@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-98 Phase 1 - Fix Event Handling
-**Current Status:** PROJ-98 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-98 Phase 2 - Resource Consumption Columns
+**Current Status:** PROJ-98 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-98
-**Current Phase:** Phase 2 (next)
-**Test Status:** 7621 passed
+**Current Phase:** Phase 3 (next)
+**Test Status:** 7636 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-98 Phase 1: Fixed process_event() to use pygame_gui.UI_BUTTON_PRESSED
-- Added 4 new TestProcessEvent tests verifying column toggle, filter toggle, apply button clicks
-- Changed import to include `import pygame_gui` module directly
-- Removed legacy getattr/user_type string checking pattern
-- Next: Phase 2 - Add resource consumption columns
+- PROJ-98 Phase 2: Added 10 resource columns (5 rate + 5 total) for Metals, Organics, Vapors, Radioactives, Exotics
+- Added get_resource_rate_text() and get_resource_total_text() formatters
+- Added RESOURCE_RATE_COLS and RESOURCE_TOTAL_COLS mappings to window
+- Extended _get_column_value() to handle new column IDs
+- 15 new tests: 11 formatter tests + 4 window column value tests
+- Next: Phase 3 - Column Sorting & Reordering
 
 ---
 
@@ -508,6 +509,7 @@
 | 2026-02-10 | PROJ-97 | Phase 6 | Complete | 7617 passed | ad7bb4e1 | 15 integration tests |
 | 2026-02-10 | PROJ-97 | Audit 1 | PASSED | 7617 passed | pending | 4 investigation agents verified all 6 phases |
 | 2026-02-10 | PROJ-98 | Phase 1 | Complete | 7621 passed | pending | Fixed event handling: pygame_gui.UI_BUTTON_PRESSED, 4 new tests |
+| 2026-02-10 | PROJ-98 | Phase 2 | Complete | 7636 passed | pending | 10 resource columns, 15 new tests (5 rate + 5 total formatters) |
 
 ---
 

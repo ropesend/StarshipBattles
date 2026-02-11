@@ -61,8 +61,16 @@ class TestFilterManagerInit:
         """Columns list is populated with expected column IDs."""
         mgr = BuildQueueFilterManager()
         col_ids = [c['id'] for c in mgr.columns]
-        expected = ['location', 'system', 'sector', 'queue_count',
-                    'first_item', 'turns_left', 'capabilities', 'build_rate']
+        expected = [
+            'location', 'system', 'sector', 'queue_count',
+            'first_item', 'turns_left', 'capabilities', 'build_rate',
+            # Resource rate columns
+            'res_metals_rate', 'res_organics_rate', 'res_vapors_rate',
+            'res_radioactives_rate', 'res_exotics_rate',
+            # Resource total columns
+            'res_metals_total', 'res_organics_total', 'res_vapors_total',
+            'res_radioactives_total', 'res_exotics_total',
+        ]
         assert col_ids == expected
 
     def test_columns_are_deep_copied(self):

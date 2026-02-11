@@ -32,7 +32,25 @@ from game.ui.screens.empire_build_queue_formatter import (
     get_system_name,
     get_sector_text,
     get_turns_left_text,
+    get_resource_rate_text,
+    get_resource_total_text,
 )
+
+# Resource column ID to resource name mappings
+RESOURCE_RATE_COLS = {
+    'res_metals_rate': 'Metals',
+    'res_organics_rate': 'Organics',
+    'res_vapors_rate': 'Vapors',
+    'res_radioactives_rate': 'Radioactives',
+    'res_exotics_rate': 'Exotics',
+}
+RESOURCE_TOTAL_COLS = {
+    'res_metals_total': 'Metals',
+    'res_organics_total': 'Organics',
+    'res_vapors_total': 'Vapors',
+    'res_radioactives_total': 'Radioactives',
+    'res_exotics_total': 'Exotics',
+}
 from game.ui.screens.empire_build_queue_filter_manager import BuildQueueFilterManager
 
 if TYPE_CHECKING:
@@ -549,6 +567,10 @@ class EmpireBuildQueueWindow(UIWindow):
                 max_rate = max(source.build_rate.values())
                 return f"{int(max_rate)}/turn"
             return "N/A"
+        if col_id in RESOURCE_RATE_COLS:
+            return get_resource_rate_text(source, RESOURCE_RATE_COLS[col_id])
+        if col_id in RESOURCE_TOTAL_COLS:
+            return get_resource_total_text(source, RESOURCE_TOTAL_COLS[col_id])
         return ""
 
     def toggle_column_visibility(self, col_id: str) -> bool:

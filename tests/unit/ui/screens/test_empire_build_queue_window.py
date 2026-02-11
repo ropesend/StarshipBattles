@@ -368,6 +368,12 @@ class TestColumnConfiguration:
         expected = {
             'location', 'system', 'sector', 'queue_count',
             'first_item', 'turns_left', 'capabilities', 'build_rate',
+            # Resource rate columns
+            'res_metals_rate', 'res_organics_rate', 'res_vapors_rate',
+            'res_radioactives_rate', 'res_exotics_rate',
+            # Resource total columns
+            'res_metals_total', 'res_organics_total', 'res_vapors_total',
+            'res_radioactives_total', 'res_exotics_total',
         }
         assert expected.issubset(col_ids), f"Missing columns: {expected - col_ids}"
 
@@ -413,7 +419,7 @@ class TestGetVisibleColumns:
         assert 'build_rate' in visible_ids
         assert 'location' in visible_ids
         assert 'queue_count' in visible_ids
-        assert len(visible) == 8  # All 8 columns
+        assert len(visible) == 18  # All 18 columns (8 original + 10 resource)
 
 
 class TestGetColumnValue:
@@ -489,6 +495,33 @@ class TestGetColumnValue:
         source = _make_source()
         win = _make_window(sources=[source])
         assert win._get_column_value(source, 'nonexistent') == ""
+
+    def test_resource_rate_column_with_cost_per_tick(self):
+        """Resource rate columns return formatted per-turn consumption."""
+        items = [{"design_id": "cruiser", "cost_per_tick": {"Metals": 20.0}}]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        # 20 per tick * 100 = 2000 per turn
+        assert win._get_column_value(source, 'res_metals_rate') == "2,000"
+
+    def test_resource_rate_column_empty_queue(self):
+        """Resource rate column returns dash for empty queue."""
+        source = _make_source(queue_items=[])
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'res_metals_rate') == "-"
+
+    def test_resource_total_column_with_total_cost(self):
+        """Resource total columns return formatted total cost."""
+        items = [{"design_id": "cruiser", "total_cost": {"Organics": 5000}}]
+        source = _make_source(queue_items=items)
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'res_organics_total') == "5k"
+
+    def test_resource_total_column_empty_queue(self):
+        """Resource total column returns dash for empty queue."""
+        source = _make_source(queue_items=[])
+        win = _make_window(sources=[source])
+        assert win._get_column_value(source, 'res_vapors_total') == "-"
 
 
 class TestColumnToggle:

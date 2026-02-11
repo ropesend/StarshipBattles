@@ -129,3 +129,53 @@ def get_turns_left_text(source: BuildQueueSource) -> str:
     first = source.construction_queue[0]
     turns = first.get("turns_remaining", "?")
     return f"{turns}t"
+
+
+def get_resource_rate_text(source: BuildQueueSource, resource_name: str) -> str:
+    """Return per-turn resource consumption rate for first queue item.
+
+    Args:
+        source: The build queue source.
+        resource_name: Name of the resource (e.g. 'Metals', 'Organics').
+
+    Returns:
+        Formatted per-turn rate (cost_per_tick * 100), or '-' if empty/legacy.
+    """
+    if not source.construction_queue:
+        return "-"
+    first = source.construction_queue[0]
+    cost_per_tick = first.get("cost_per_tick")
+    if cost_per_tick is None:
+        return "-"
+    rate = cost_per_tick.get(resource_name, 0.0)
+    per_turn = rate * 100  # 100 ticks per turn
+    if per_turn == 0:
+        return "0"
+    return f"{int(per_turn):,}"
+
+
+def get_resource_total_text(source: BuildQueueSource, resource_name: str) -> str:
+    """Return total resource cost for first queue item with k/M suffix.
+
+    Args:
+        source: The build queue source.
+        resource_name: Name of the resource (e.g. 'Metals', 'Organics').
+
+    Returns:
+        Formatted total cost with suffix, or '-' if empty/legacy.
+    """
+    if not source.construction_queue:
+        return "-"
+    first = source.construction_queue[0]
+    total_cost = first.get("total_cost")
+    if total_cost is None:
+        return "-"
+    amount = total_cost.get(resource_name, 0)
+    if amount == 0:
+        return "0"
+    # Format k/M
+    if amount >= 1000000:
+        return f"{amount / 1000000:.1f}M"
+    if amount >= 1000:
+        return f"{amount // 1000}k"
+    return str(int(amount))
