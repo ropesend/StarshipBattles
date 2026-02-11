@@ -4,7 +4,7 @@ PROJ-87 Phase 4: Encapsulates fleet capability queries like space yards,
 warp capability, and build type checking.
 """
 
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
@@ -149,3 +149,54 @@ class FleetCapabilityCalculator:
             if not ShipStatsCalculator.has_warp_capability(ship):
                 return ship
         return None
+
+    def has_ability(self, ability_name: str) -> bool:
+        """
+        Check if any combat-capable ship in fleet has the specified ability.
+
+        Args:
+            ability_name: Name of the ability to check for (e.g., "DestroyPlanet").
+
+        Returns:
+            True if any ship has the ability, False otherwise.
+        """
+        return len(self.ships_with_ability(ability_name)) > 0
+
+    def ships_with_ability(self, ability_name: str) -> List['ShipInstance']:
+        """
+        Get all combat-capable ships in fleet that have the specified ability.
+
+        Args:
+            ability_name: Name of the ability to check for (e.g., "SelfDestruct").
+
+        Returns:
+            List of ShipInstance objects that have the ability.
+        """
+        result = []
+        for ship in self._fleet.get_combat_capable_ships():
+            if self._ship_has_ability(ship, ability_name):
+                result.append(ship)
+        return result
+
+    @staticmethod
+    def _ship_has_ability(ship: 'ShipInstance', ability_name: str) -> bool:
+        """
+        Check if a single ship has the specified ability.
+
+        Args:
+            ship: The ShipInstance to check.
+            ability_name: Name of the ability to check for.
+
+        Returns:
+            True if ship has the ability, False otherwise.
+        """
+        design_data = ship.design_data
+        for layer_data in design_data.get("layers", {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                if isinstance(comp, dict):
+                    abilities = comp.get("abilities", {})
+                    if ability_name in abilities:
+                        return True
+        return False

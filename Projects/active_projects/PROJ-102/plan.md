@@ -20,16 +20,16 @@
 | 5. Command Handlers | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Order Processing (Turn Execution) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Input Actions & Key Bindings | Complete | [phase_7_checklist.md](phase_7_checklist.md) |
-| 8. UI Module - Superweapon Operations | Not Started | [phase_8_checklist.md](phase_8_checklist.md) |
+| 8. UI Module - Superweapon Operations | Complete | [phase_8_checklist.md](phase_8_checklist.md) |
 | 9. Integration Tests | Not Started | [phase_9_checklist.md](phase_9_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 8 - UI Module - Superweapon Operations
-**Last Action:** Phase 7 complete - Added 6 InputAction values, key bindings, input mode handlers, click routing, 39 new tests
-**Next Action:** Begin Phase 8 - Create superweapon operations UI module
+**Active Phase:** Phase 9 - Integration Tests
+**Last Action:** Phase 8 complete - Created SuperweaponOperations module with 6 designation handlers, helper methods, wired into StrategyScreen
+**Next Action:** Begin Phase 9 - Integration tests
 **Blockers:** None
-**Context for Next Agent:** Added FLEET_IMPLODE_PLANET, FLEET_STELLERATE_STAR, FLEET_OPEN_WARP_POINT, FLEET_CLOSE_WARP_POINT, FLEET_CREATE_DYSON_SPHERE, FLEET_SELF_DESTRUCT to InputAction enum. Added key bindings to default_keybindings.json. Added 5 input modes (IMPLODE_PLANET_TARGET, STELLERATE_STAR_TARGET, OPEN_WARP_TARGET, CLOSE_WARP_TARGET, DYSON_SPHERE_TARGET) with click routing to _superweapons handlers. Added legacy key handlers. Created test_superweapon_input_actions.py (18 tests) and test_superweapon_input_modes.py (21 tests). 8128 tests passing (+188 Phase 7 tests). Next: Phase 8 - create SuperweaponOperations UI module.
+**Context for Next Agent:** Created game/ui/screens/strategy_superweapons.py with SuperweaponOperations class. Added has_ability() and ships_with_ability() to FleetCapabilityCalculator. Wired _superweapons into StrategyScreen. 21 new SuperweaponOperations tests + 7 new capability tests = 27 Phase 8 tests. 8155 tests passing. Next: Phase 9 - Integration tests for full superweapon workflows.
 
 ## Overview
 Add 7 strategic superweapon abilities to the game: Destroy Planet, Destroy Star, Open Warp Point, Close Warp Point, Create Dyson Sphere, and Self-Destruct. Each feature includes a new ability class, component JSON definition, keyboard shortcut, strategy map order, command handler, and turn execution processing. These are galaxy-altering powers that follow the existing ability/component/order/command pipeline.

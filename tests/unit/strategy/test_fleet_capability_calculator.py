@@ -290,6 +290,146 @@ class TestFleetCapabilityCalculator:
             assert limiting.name == "NoWarp"
 
 
+class TestHasAbility:
+    """Tests for has_ability() and ships_with_ability() methods (PROJ-102)."""
+
+    def test_has_ability_returns_true_when_ship_has_ability(self):
+        """has_ability returns True when any ship has the ability."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        ship = make_ship_instance(
+            name="Planet Killer",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"DestroyPlanet": {}}}]
+                }
+            }
+        )
+        fleet.add_ship(ship)
+        calc = FleetCapabilityCalculator(fleet)
+
+        assert calc.has_ability("DestroyPlanet") is True
+
+    def test_has_ability_returns_false_when_no_ship_has_ability(self):
+        """has_ability returns False when no ship has the ability."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        ship = make_ship_instance(
+            name="Normal Ship",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"WarpJump": {}}}]
+                }
+            }
+        )
+        fleet.add_ship(ship)
+        calc = FleetCapabilityCalculator(fleet)
+
+        assert calc.has_ability("DestroyPlanet") is False
+
+    def test_has_ability_returns_false_for_empty_fleet(self):
+        """has_ability returns False for empty fleet."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        calc = FleetCapabilityCalculator(fleet)
+
+        assert calc.has_ability("DestroyPlanet") is False
+
+    def test_ships_with_ability_returns_matching_ships(self):
+        """ships_with_ability returns list of ships with the ability."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        ship1 = make_ship_instance(
+            name="Self Destruct Ship",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"SelfDestruct": {}}}]
+                }
+            }
+        )
+        ship2 = make_ship_instance(
+            name="Normal Ship",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"WarpJump": {}}}]
+                }
+            }
+        )
+        ship3 = make_ship_instance(
+            name="Another Self Destruct",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"SelfDestruct": {}}}]
+                }
+            }
+        )
+        fleet.add_ship(ship1)
+        fleet.add_ship(ship2)
+        fleet.add_ship(ship3)
+        calc = FleetCapabilityCalculator(fleet)
+
+        result = calc.ships_with_ability("SelfDestruct")
+        assert len(result) == 2
+        assert ship1 in result
+        assert ship3 in result
+        assert ship2 not in result
+
+    def test_ships_with_ability_returns_empty_list_when_no_matches(self):
+        """ships_with_ability returns empty list when no ships have ability."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        ship = make_ship_instance(
+            name="Normal Ship",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"WarpJump": {}}}]
+                }
+            }
+        )
+        fleet.add_ship(ship)
+        calc = FleetCapabilityCalculator(fleet)
+
+        result = calc.ships_with_ability("SelfDestruct")
+        assert result == []
+
+    def test_ship_has_ability_checks_all_layers(self):
+        """_ship_has_ability checks abilities in all layers."""
+        from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        ship = make_ship_instance(
+            name="Multi Layer",
+            design_data={
+                "layers": {
+                    "hull": [{"abilities": {"WarpJump": {}}}],
+                    "systems": [{"abilities": {"DestroyPlanet": {}}}]
+                }
+            }
+        )
+        fleet.add_ship(ship)
+        calc = FleetCapabilityCalculator(fleet)
+
+        assert calc.has_ability("DestroyPlanet") is True
+        assert calc.has_ability("WarpJump") is True
+
+
 class TestFleetCapabilityCalculatorDelegation:
     """Test that Fleet properly delegates to FleetCapabilityCalculator."""
 

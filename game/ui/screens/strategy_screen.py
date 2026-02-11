@@ -33,6 +33,7 @@ from game.ui.screens.strategy_renderer import StrategyRenderer
 from game.ui.screens.strategy_camera_nav import CameraNavigator
 from game.ui.screens.strategy_fleet_ops import FleetOperations
 from game.ui.screens.strategy_colonization import ColonizationSystem
+from game.ui.screens.strategy_superweapons import SuperweaponOperations
 from game.ui.screens.strategy_input_handler import StrategyInputHandler
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
@@ -114,6 +115,7 @@ class StrategyScreen:
         self._camera_nav = CameraNavigator(self)
         self._fleet_ops = FleetOperations(self, self._facade)
         self._colonization = ColonizationSystem(self, self._facade)
+        self._superweapons = SuperweaponOperations(self, self._facade)
         self._input = StrategyInputHandler(self, input_mapper=input_mapper)
 
     # =========================================================================
