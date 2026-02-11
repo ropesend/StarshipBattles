@@ -522,108 +522,27 @@ class FormationEditorScreen:
     def handle_event(self, event: pygame.event.Event) -> None:
         """Process pygame events for the formation editor."""
         self.ui_manager.process_events(event)
-        
+
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            if event.ui_element == self.snap_btn:
-                self.snap_enabled = not self.snap_enabled
-                self.snap_btn.set_text(f"Snap: {'ON' if self.snap_enabled else 'OFF'}")
-            elif event.ui_element == self.clone_btn:
-                self.clone_selection()
-            elif event.ui_element == self.delete_btn:
-                self.delete_selected()
-            elif event.ui_element == self.save_btn:
-                self.save_formation()
-            elif event.ui_element == self.load_btn:
-                self.load_formation()
-            elif event.ui_element == self.rotation_mode_btn:
-                self._toggle_rotation_mode()
-            elif event.ui_element == self.return_btn:
-                self.on_return_menu()
-            elif event.ui_element == self.clear_btn:
-                self.clear_all()
-            elif event.ui_element == self.circle_btn:
-                self.generate_shape('circle')
-            elif event.ui_element == self.disc_btn:
-                self.generate_shape('disc')
-            elif event.ui_element == self.x_btn:
-                self.generate_shape('x')
-            elif event.ui_element == self.line_btn:
-                self.generate_shape('line')
-            elif event.ui_element == self.renumber_mode_btn:
-                self.renumber_mode = not self.renumber_mode
-                self.renumber_mode_btn.set_text(f"Renumber: {'ON' if self.renumber_mode else 'OFF'}")
-                if self.renumber_mode:
-                    self.state = 'IDLE' 
-                    
+            self._handle_button_pressed(event)
+
         elif event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
-            if event.ui_element == self.count_slider:
-                val = int(event.value)
-                self.shape_count = val
-                self.core.shape_count = val
-                self.count_entry.set_text(str(val))
-            elif event.ui_element == self.renumber_slider:
-                val = int(event.value)
-                self.renumber_target = val
-                self.renumber_entry.set_text(str(val))
-        
+            self._handle_slider_moved(event)
+
         elif event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-            if event.ui_element == self.count_entry:
-                try:
-                    val = int(event.text)
-                    val = max(2, min(100, val))
-                    self.shape_count = val
-                    self.core.shape_count = val
-                    self.count_slider.set_current_value(val)
-                except ValueError:
-                    self.count_entry.set_text(str(self.shape_count))
-            elif event.ui_element == self.renumber_entry:
-                try:
-                    val = int(event.text)
-                    val = max(1, min(len(self.arrows), val))
-                    self.renumber_target = val
-                    self.renumber_slider.set_current_value(val)
-                except ValueError:
-                    self.renumber_entry.set_text(str(self.renumber_target))
+            self._handle_text_entry(event)
 
         elif event.type == pygame.MOUSEWHEEL:
-            if event.y > 0: self.camera_zoom *= 1.1
-            elif event.y < 0: self.camera_zoom /= 1.1
-                
+            self._handle_mousewheel(event)
+
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                mx, my = pygame.mouse.get_pos()
-                if self.canvas_rect.collidepoint((mx, my)):
-                    wx, wy = self.screen_to_world(mx, my)
-                    if self.snap_enabled:
-                        wx = self.snap(wx)
-                        wy = self.snap(wy)
-                    self.add_arrow((wx, wy))
+            self._handle_keydown(event)
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if not self.canvas_rect.collidepoint(event.pos): return
-            
-            # Check Up/Down Arrow Clicks first (Screen Space UI)
-            if len(self.selected_indices) == 1:
-                idx = list(self.selected_indices)[0]
-                res = self._check_renumber_arrows(event.pos, idx)
-                if res == 'up': # Decrease Index (Move to 1)
-                     self.move_arrow(idx, max(0, idx - 1))
-                     return
-                elif res == 'down': # Increment Index (Move to End)
-                     self.move_arrow(idx, min(len(self.arrows) - 1, idx + 1))
-                     return
-
-            if event.button == 3: # Right click -> Pan
-                self.input_handler.start_panning(event.pos, self.camera_pan)
-            elif event.button == 1: # Left click
-                self._handle_left_down(event.pos)
+            self._handle_mouse_button_down(event)
 
         elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                self._handle_left_up(event.pos)
-            elif event.button == 3:
-                if self.state == 'PANNING':
-                    self.state = 'IDLE'
+            self._handle_mouse_button_up(event)
 
         elif event.type == pygame.MOUSEMOTION:
             self._handle_mouse_motion(event.pos)
@@ -723,6 +642,118 @@ class FormationEditorScreen:
                 if not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]):
                     self.selected_indices = set()
                      
+    def _handle_mousewheel(self, event: pygame.event.Event) -> None:
+        """Handle MOUSEWHEEL events for zooming."""
+        if event.y > 0:
+            self.camera_zoom *= 1.1
+        elif event.y < 0:
+            self.camera_zoom /= 1.1
+
+    def _handle_keydown(self, event: pygame.event.Event) -> None:
+        """Handle KEYDOWN events."""
+        if event.key == pygame.K_SPACE:
+            mx, my = pygame.mouse.get_pos()
+            if self.canvas_rect.collidepoint((mx, my)):
+                wx, wy = self.screen_to_world(mx, my)
+                if self.snap_enabled:
+                    wx = self.snap(wx)
+                    wy = self.snap(wy)
+                self.add_arrow((wx, wy))
+
+    def _handle_mouse_button_up(self, event: pygame.event.Event) -> None:
+        """Handle MOUSEBUTTONUP events."""
+        if event.button == 1:
+            self._handle_left_up(event.pos)
+        elif event.button == 3:
+            if self.state == 'PANNING':
+                self.state = 'IDLE'
+
+    def _handle_slider_moved(self, event: pygame.event.Event) -> None:
+        """Handle UI_HORIZONTAL_SLIDER_MOVED events."""
+        if event.ui_element == self.count_slider:
+            val = int(event.value)
+            self.shape_count = val
+            self.core.shape_count = val
+            self.count_entry.set_text(str(val))
+        elif event.ui_element == self.renumber_slider:
+            val = int(event.value)
+            self.renumber_target = val
+            self.renumber_entry.set_text(str(val))
+
+    def _handle_text_entry(self, event: pygame.event.Event) -> None:
+        """Handle UI_TEXT_ENTRY_FINISHED events."""
+        if event.ui_element == self.count_entry:
+            try:
+                val = int(event.text)
+                val = max(2, min(100, val))
+                self.shape_count = val
+                self.core.shape_count = val
+                self.count_slider.set_current_value(val)
+            except ValueError:
+                self.count_entry.set_text(str(self.shape_count))
+        elif event.ui_element == self.renumber_entry:
+            try:
+                val = int(event.text)
+                val = max(1, min(len(self.arrows), val))
+                self.renumber_target = val
+                self.renumber_slider.set_current_value(val)
+            except ValueError:
+                self.renumber_entry.set_text(str(self.renumber_target))
+
+    def _handle_mouse_button_down(self, event: pygame.event.Event) -> None:
+        """Handle MOUSEBUTTONDOWN events on the canvas."""
+        if not self.canvas_rect.collidepoint(event.pos):
+            return
+
+        # Check Up/Down Arrow Clicks first (Screen Space UI)
+        if len(self.selected_indices) == 1:
+            idx = list(self.selected_indices)[0]
+            res = self._check_renumber_arrows(event.pos, idx)
+            if res == 'up':  # Decrease Index (Move to 1)
+                self.move_arrow(idx, max(0, idx - 1))
+                return
+            elif res == 'down':  # Increment Index (Move to End)
+                self.move_arrow(idx, min(len(self.arrows) - 1, idx + 1))
+                return
+
+        if event.button == 3:  # Right click -> Pan
+            self.input_handler.start_panning(event.pos, self.camera_pan)
+        elif event.button == 1:  # Left click
+            self._handle_left_down(event.pos)
+
+    def _handle_button_pressed(self, event: pygame.event.Event) -> None:
+        """Handle UI_BUTTON_PRESSED events."""
+        if event.ui_element == self.snap_btn:
+            self.snap_enabled = not self.snap_enabled
+            self.snap_btn.set_text(f"Snap: {'ON' if self.snap_enabled else 'OFF'}")
+        elif event.ui_element == self.clone_btn:
+            self.clone_selection()
+        elif event.ui_element == self.delete_btn:
+            self.delete_selected()
+        elif event.ui_element == self.save_btn:
+            self.save_formation()
+        elif event.ui_element == self.load_btn:
+            self.load_formation()
+        elif event.ui_element == self.rotation_mode_btn:
+            self._toggle_rotation_mode()
+        elif event.ui_element == self.return_btn:
+            self.on_return_menu()
+        elif event.ui_element == self.clear_btn:
+            self.clear_all()
+        elif event.ui_element == self.circle_btn:
+            self.generate_shape('circle')
+        elif event.ui_element == self.disc_btn:
+            self.generate_shape('disc')
+        elif event.ui_element == self.x_btn:
+            self.generate_shape('x')
+        elif event.ui_element == self.line_btn:
+            self.generate_shape('line')
+        elif event.ui_element == self.renumber_mode_btn:
+            self.renumber_mode = not self.renumber_mode
+            self.renumber_mode_btn.set_text(f"Renumber: {'ON' if self.renumber_mode else 'OFF'}")
+            if self.renumber_mode:
+                self.state = 'IDLE'
+
     def _toggle_rotation_mode(self):
         self.core.toggle_rotation_mode()
         self.update_info()

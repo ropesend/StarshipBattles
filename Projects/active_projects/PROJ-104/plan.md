@@ -18,15 +18,15 @@
 | 3. StrategyInputHandler._handle_keydown_mapped (CC 50→8) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. TargetEvaluator.evaluate (CC 49→10) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. TestRunDetailsPanel.draw (CC 47→5) | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. FormationEditorScreen.handle_event (CC 45→~10) | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. FormationEditorScreen.handle_event (CC 45→9) | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 5 Complete
-**Last Action:** Extracted 6 draw methods from draw(), CC reduced from 47 to 5
-**Next Action:** Begin Phase 6 — FormationEditorScreen.handle_event (CC 45 → ≤10)
+**Active Phase:** All Phases Complete — Ready for Audit
+**Last Action:** Phase 6 complete — FormationEditorScreen.handle_event CC reduced 45 → 9
+**Next Action:** Trigger Audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** Phase 5 complete. Start with `phase_6_checklist.md`. Run `pytest tests/unit/builder/test_formation_editor_logic.py tests/unit/ui/test_formation_input_handler.py -x -q` after each task.
+**Context for Next Agent:** All 6 phases complete. All functions reduced to target CC. Ready for audit.
 **Baseline:** 8167 tests passing, 0 failures
 
 ## Overview
