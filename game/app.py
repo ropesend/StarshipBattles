@@ -23,7 +23,7 @@ from Tools.formation_editor import FormationEditorScreen
 from game.ui.screens.test_lab import TestLabScreen
 from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
-from game.core.profiling import PROFILER, profile_action
+from game.core.profiling import Profiler, profile_action
 from game.core.protocols import IScene
 from game.core.input_mapper import InputMapper
 from game.core.input_actions import InputAction
@@ -531,7 +531,7 @@ class Game:
                 if action == InputAction.GLOBAL_EXIT:
                     self.show_exit_dialog = True
                 elif action == InputAction.GLOBAL_TOGGLE_PROFILER:
-                    active = PROFILER.toggle()
+                    active = Profiler.instance().toggle()
                     log_info(f"Profiling {'ENABLED' if active else 'DISABLED'}")
             elif event.type == pygame.VIDEORESIZE:
                 self._handle_resize(event.w, event.h)
@@ -663,7 +663,7 @@ class Game:
             # BattleScreen handles headless mode internally
             if not self.battle_scene.headless_mode:
                 self.active_scene.draw(self.screen)
-                self.battle_scene.draw_hud(self.screen, self.font_med, PROFILER.is_active())
+                self.battle_scene.draw_hud(self.screen, self.font_med, Profiler.instance().is_active())
         else:
             self.active_scene.draw(self.screen)
 
@@ -702,7 +702,7 @@ def main():
             f.write(error_msg)
         raise e
 
-    PROFILER.save_history()
+    Profiler.instance().save_history()
 
 
 if __name__ == "__main__":

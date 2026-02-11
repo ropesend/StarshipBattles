@@ -1,37 +1,31 @@
 import logging
 import os
-import threading
 from typing import Any, Callable, Optional
 
 from game.core.paths import Paths
+from game.core.singleton import SingletonMeta
 
 
-class Logger:
-    _instance = None
-    _lock = threading.Lock()
+class Logger(metaclass=SingletonMeta):
+    """Singleton logger for the game.
 
-    def __new__(cls):
-        if cls._instance is None:
-            with cls._lock:
-                # Double-check after acquiring lock
-                if cls._instance is None:
-                    cls._instance = super(Logger, cls).__new__(cls)
-                    cls._instance._initialized = False
-        return cls._instance
+    Thread Safety:
+        - Instance creation is thread-safe via SingletonMeta
+
+    Usage:
+        logger = Logger.instance()
+        logger.info("message")
+
+        # Or via convenience functions:
+        from game.core.logger import log_info
+        log_info("message")
+
+    Testing:
+        - Use reset() to destroy instance completely
+    """
 
     def __init__(self):
-        if self._initialized:
-            return
-        self._initialized = True
         self.setup()
-
-    @classmethod
-    def reset(cls):
-        """Reset the singleton instance for testing purposes."""
-        with cls._lock:
-            if cls._instance is not None:
-                cls._instance._initialized = False
-                cls._instance = None
 
     def setup(self):
         self.enabled = True
@@ -65,23 +59,29 @@ class Logger:
     def set_enabled(self, enabled: bool) -> None:
         self.enabled = enabled
 
-# Global accessor
-_logger = Logger()
-
 def log_debug(msg: str) -> None:
-    _logger.log(msg)
+    """Log a debug message."""
+    Logger.instance().log(msg)
+
 
 def log_info(msg: str) -> None:
-    _logger.info(msg)
+    """Log an info message."""
+    Logger.instance().info(msg)
+
 
 def log_warning(msg: str) -> None:
-    _logger.warning(msg)
+    """Log a warning message."""
+    Logger.instance().warning(msg)
+
 
 def log_error(msg: str) -> None:
-    _logger.error(msg)
+    """Log an error message."""
+    Logger.instance().error(msg)
+
 
 def set_logging(enabled: bool) -> None:
-    _logger.set_enabled(enabled)
+    """Enable or disable logging."""
+    Logger.instance().set_enabled(enabled)
 
 # Event Logging for Simulation/Tests
 _event_handler = None
@@ -105,4 +105,4 @@ def log_event(event_type: str, **kwargs: Any) -> None:
         try:
             _event_handler(event_type, **kwargs)
         except Exception as e:  # Intentional broad catch: event handler isolation prevents handler bugs from crashing callers
-            _logger.error(f"Event handler error for {event_type}: {e}")
+            Logger.instance().error(f"Event handler error for {event_type}: {e}")

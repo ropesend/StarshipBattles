@@ -34,80 +34,77 @@ class TestSingletonBehavior:
         """Reset should clear the singleton instance."""
         from game.core.logger import Logger
 
-        logger1 = Logger()
+        logger1 = Logger.instance()
         instance_id1 = id(logger1)
 
         Logger.reset()
 
-        logger2 = Logger()
+        logger2 = Logger.instance()
         instance_id2 = id(logger2)
 
         # After reset, we get a new instance
-        assert Logger._instance is not None
+        assert instance_id1 != instance_id2
 
-    def test_initialized_flag_prevents_double_setup(self):
-        """Once initialized, calling __init__ again should not re-setup."""
+    def test_singleton_returns_same_instance(self):
+        """Multiple calls to Logger() should return same instance."""
         from game.core.logger import Logger
 
         Logger.reset()
-        logger1 = Logger()
-        original_logger = logger1.logger
+        logger1 = Logger.instance()
+        logger2 = Logger.instance()
 
-        # Call __init__ again (happens when calling Logger() twice)
-        logger1.__init__()
-
-        # Should still have the same underlying logger
-        assert logger1.logger is original_logger
+        # Should be the same instance
+        assert logger1 is logger2
 
 
 class TestGlobalFunctions:
     """Tests for the global logging functions."""
 
-    def test_log_debug_uses_global_logger(self):
-        """log_debug should use the global _logger instance."""
-        from game.core.logger import log_debug, _logger
+    def test_log_debug_uses_singleton(self):
+        """log_debug should use Logger.instance()."""
+        from game.core.logger import log_debug, Logger
 
-        with patch.object(_logger, 'log') as mock_log:
+        with patch.object(Logger.instance(), 'log') as mock_log:
             log_debug("test message")
 
             mock_log.assert_called_once_with("test message")
 
-    def test_log_info_uses_global_logger(self):
-        """log_info should use the global _logger instance."""
-        from game.core.logger import log_info, _logger
+    def test_log_info_uses_singleton(self):
+        """log_info should use Logger.instance()."""
+        from game.core.logger import log_info, Logger
 
-        with patch.object(_logger, 'info') as mock_info:
+        with patch.object(Logger.instance(), 'info') as mock_info:
             log_info("test message")
 
             mock_info.assert_called_once_with("test message")
 
-    def test_log_warning_uses_global_logger(self):
-        """log_warning should use the global _logger instance."""
-        from game.core.logger import log_warning, _logger
+    def test_log_warning_uses_singleton(self):
+        """log_warning should use Logger.instance()."""
+        from game.core.logger import log_warning, Logger
 
-        with patch.object(_logger, 'warning') as mock_warning:
+        with patch.object(Logger.instance(), 'warning') as mock_warning:
             log_warning("test message")
 
             mock_warning.assert_called_once_with("test message")
 
-    def test_log_error_uses_global_logger(self):
-        """log_error should use the global _logger instance."""
-        from game.core.logger import log_error, _logger
+    def test_log_error_uses_singleton(self):
+        """log_error should use Logger.instance()."""
+        from game.core.logger import log_error, Logger
 
-        with patch.object(_logger, 'error') as mock_error:
+        with patch.object(Logger.instance(), 'error') as mock_error:
             log_error("test message")
 
             mock_error.assert_called_once_with("test message")
 
-    def test_set_logging_uses_global_logger(self):
-        """set_logging should set enabled on the global _logger."""
-        from game.core.logger import set_logging, _logger
+    def test_set_logging_uses_singleton(self):
+        """set_logging should set enabled on Logger.instance()."""
+        from game.core.logger import set_logging, Logger
 
         set_logging(False)
-        assert _logger.enabled is False
+        assert Logger.instance().enabled is False
 
         set_logging(True)
-        assert _logger.enabled is True
+        assert Logger.instance().enabled is True
 
 
 class TestEdgeCases:

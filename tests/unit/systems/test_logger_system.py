@@ -1,7 +1,7 @@
 """Tests for Logger singleton and utility functions."""
 import threading
 
-from game.core.logger import Logger, log_debug, log_info, log_error, set_logging, _logger
+from game.core.logger import Logger, log_debug, log_info, log_error, set_logging
 
 
 class TestLoggerSingleton:
@@ -14,10 +14,11 @@ class TestLoggerSingleton:
 
         assert logger1 is logger2
 
-    def test_global_logger_exists(self):
-        """The global _logger should exist and be a Logger."""
-        assert _logger is not None
-        assert isinstance(_logger, Logger)
+    def test_instance_returns_singleton(self):
+        """Logger.instance() should return the singleton."""
+        logger = Logger.instance()
+        assert logger is not None
+        assert isinstance(logger, Logger)
 
 
 class TestLoggerFunctions:
@@ -25,20 +26,22 @@ class TestLoggerFunctions:
 
     def test_set_logging_disables(self):
         """set_logging(False) should disable logging."""
-        original = _logger.enabled
+        logger = Logger.instance()
+        original = logger.enabled
 
         set_logging(False)
-        assert _logger.enabled is False
+        assert logger.enabled is False
 
         # Restore
         set_logging(original)
 
     def test_set_logging_enables(self):
         """set_logging(True) should enable logging."""
-        original = _logger.enabled
+        logger = Logger.instance()
+        original = logger.enabled
 
         set_logging(True)
-        assert _logger.enabled is True
+        assert logger.enabled is True
 
         # Restore
         set_logging(original)
@@ -127,9 +130,11 @@ class TestLoggerThreadSafety:
         # (the actual object may be the same, but it should be reinitialized)
         assert hasattr(logger2, 'enabled')
 
-    def test_logger_has_lock(self):
-        """Logger class should have a lock for thread safety."""
-        assert hasattr(Logger, '_lock')
+    def test_logger_is_thread_safe(self):
+        """Logger class should be thread-safe via SingletonMeta."""
+        # SingletonMeta provides thread-safety with per-class locks
+        from game.core.singleton import SingletonMeta
+        assert isinstance(Logger, SingletonMeta)
 
     def test_concurrent_logger_access(self):
         """Multiple threads accessing Logger should not cause race conditions."""

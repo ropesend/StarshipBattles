@@ -8,24 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 4 Complete (all 8 tasks)
-**Current Status:** PROJ-109 Phase 5 Ready
+**Last Completed:** PROJ-109 Phase 5 Complete (all 3 tasks)
+**Current Status:** PROJ-109 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-109
-**Current Phase:** Phase 5
-**Test Status:** 8239 passed
+**Current Phase:** Audit Cycle 1
+**Test Status:** 8238 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 4 complete:
-  - Task 4.1: Removed save game version migration (MIGRATABLE_VERSIONS, _can_migrate_version), deleted test file
-  - Task 4.2: Updated load_components_data docstring, load_components() now passes registries explicitly
-  - Task 4.3: Removed "thin wrapper...backward compatibility" framing from load_modifiers/load_vehicle_classes
-  - Task 4.4: Already done in PROJ-106 (BattleEngine now raises ValueError)
-  - Task 4.5: Removed "(transitional)" comments from simulation adapters
-  - Task 4.6: Removed coord serialization format from FleetOrder (both to_dict and from_dict)
-  - Task 4.7: Already done (comment says "optional fields")
-  - Task 4.8: Already done (no MagicMock detection in target_evaluator)
-- Next: Phase 5 Task 5.1 (Logger proxy removal)
+- PROJ-109 Phase 5 complete:
+  - Task 5.1: Logger converted to SingletonMeta, removed _logger global, updated convenience functions to use Logger.instance()
+  - Task 5.2: Removed _ProfilerProxy class, PROFILER global; updated app.py and test files to use Profiler.instance()
+  - Task 5.3: Audited target_evaluator parameters - ALL are actively used (stat_helpers, ship_capabilities_cache), original finding was incorrect
+  - Updated test files: test_singleton.py, test_logger_system.py, test_decorators.py, test_profiler_perf.py
+- Next: Run Audit Cycle 1
 
 ---
 
@@ -323,6 +319,7 @@
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.4 | Complete | 8248 passed | pending | Removed _handle_keydown_legacy (-78 lines), 2 test files updated |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.5-3.8 | Complete | 8248 passed | pending | Simplified _sync_from_stats_panel, removed DesignMetadata legacy mass, required fields, fixed RaceConfig comment |
 | 2026-02-11 | PROJ-109 | Phase 4 | Complete | 8239 passed | pending | Removed save migration, updated wrapper docstrings, removed transitional comments, removed coord format. Tasks 4.4/4.7/4.8 already done. |
+| 2026-02-11 | PROJ-109 | Phase 5 | Complete | 8238 passed | pending | Logger→SingletonMeta, _ProfilerProxy removed, target_evaluator audit (params used). All 5 phases complete. |
 
 ---
 

@@ -3,7 +3,7 @@ import os
 import time
 import uuid
 from unittest.mock import patch
-from game.core.profiling import Profiler, profile_action, profile_block, PROFILER
+from game.core.profiling import Profiler, profile_action, profile_block
 from game.core.json_utils import load_json
 
 
@@ -11,8 +11,9 @@ from game.core.json_utils import load_json
 def profiler_setup():
     """Set up a fresh profiler state for each test."""
     Profiler.reset()
-    PROFILER.active = False
-    PROFILER.records = []
+    profiler = Profiler.instance()
+    profiler.active = False
+    profiler.records = []
     test_file = f"test_profiling_history_{uuid.uuid4().hex[:8]}.json"
     if os.path.exists(test_file):
         os.remove(test_file)
@@ -30,8 +31,9 @@ def profiler_setup():
 def json_utils_setup():
     """Set up for JSON utils tests."""
     Profiler.reset()
-    PROFILER.active = False
-    PROFILER.records = []
+    profiler = Profiler.instance()
+    profiler.active = False
+    profiler.records = []
     test_file = f"test_profiling_json_utils_{uuid.uuid4().hex[:8]}.json"
 
     yield test_file
@@ -62,9 +64,10 @@ class TestProfilingJsonUtils:
         test_file = json_utils_setup
         mock_save_json.return_value = True
 
-        PROFILER.start()
-        PROFILER.record("test_action", 0.1)
-        PROFILER.save_history(test_file)
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.record("test_action", 0.1)
+        profiler.save_history(test_file)
 
         mock_save_json.assert_called_once()
         # Verify the filename was passed
@@ -83,9 +86,10 @@ class TestProfilingJsonUtils:
         with open(test_file, 'w') as f:
             f.write('[{"session_id": "old", "records": []}]')
 
-        PROFILER.start()
-        PROFILER.record("test_action", 0.1)
-        PROFILER.save_history(test_file)
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.record("test_action", 0.1)
+        profiler.save_history(test_file)
 
         # Should have called load_json to load existing history
         mock_load.assert_called_once_with(test_file, default=[])
@@ -97,42 +101,45 @@ class TestProfiling:
         p1 = Profiler.instance()
         p2 = Profiler.instance()
         assert p1 is p2
-        # PROFILER proxy delegates to same instance
-        assert p1 is Profiler.instance()
 
     def test_toggling(self, profiler_setup):
-        assert not PROFILER.is_active()
-        PROFILER.start()
-        assert PROFILER.is_active()
-        PROFILER.stop()
-        assert not PROFILER.is_active()
-        PROFILER.toggle()
-        assert PROFILER.is_active()
+        profiler = Profiler.instance()
+        assert not profiler.is_active()
+        profiler.start()
+        assert profiler.is_active()
+        profiler.stop()
+        assert not profiler.is_active()
+        profiler.toggle()
+        assert profiler.is_active()
 
     def test_recording(self, profiler_setup):
-        PROFILER.start()
-        PROFILER.record("test_action", 0.1)
-        assert len(PROFILER.records) == 1
-        assert PROFILER.records[0]['name'] == "test_action"
-        assert abs(PROFILER.records[0]['duration_ms'] - 100.0) < 0.1
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.record("test_action", 0.1)
+        assert len(profiler.records) == 1
+        assert profiler.records[0]['name'] == "test_action"
+        assert abs(profiler.records[0]['duration_ms'] - 100.0) < 0.1
 
     def test_recording_inactive(self, profiler_setup):
-        PROFILER.stop()
-        PROFILER.record("test_action", 0.1)
-        assert len(PROFILER.records) == 0
+        profiler = Profiler.instance()
+        profiler.stop()
+        profiler.record("test_action", 0.1)
+        assert len(profiler.records) == 0
 
     def test_context_manager(self, profiler_setup):
-        PROFILER.start()
+        profiler = Profiler.instance()
+        profiler.start()
         with profile_block("block_action"):
             time.sleep(0.02)  # 20ms sleep for more reliable timing
 
-        assert len(PROFILER.records) == 1
-        assert PROFILER.records[0]['name'] == "block_action"
+        assert len(profiler.records) == 1
+        assert profiler.records[0]['name'] == "block_action"
         # Allow for system timer imprecision - 20ms sleep should be > 15ms
-        assert PROFILER.records[0]['duration_ms'] > 15.0
+        assert profiler.records[0]['duration_ms'] > 15.0
 
     def test_decorator(self, profiler_setup):
-        PROFILER.start()
+        profiler = Profiler.instance()
+        profiler.start()
 
         @profile_action("func_action")
         def slow_func():
@@ -140,27 +147,28 @@ class TestProfiling:
 
         slow_func()
 
-        assert len(PROFILER.records) == 1
-        assert PROFILER.records[0]['name'] == "func_action"
+        assert len(profiler.records) == 1
+        assert profiler.records[0]['name'] == "func_action"
 
     def test_save_history(self, profiler_setup):
         test_file = profiler_setup
-        PROFILER.start()
-        PROFILER.record("action1", 0.1)
-        PROFILER.save_history(test_file)
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.record("action1", 0.1)
+        profiler.save_history(test_file)
 
         assert os.path.exists(test_file)
         data = load_json(test_file)
         assert len(data) == 1
-        assert data[0]['session_id'] == PROFILER.session_id
+        assert data[0]['session_id'] == profiler.session_id
         assert len(data[0]['records']) == 1
 
         # Test append
-        PROFILER.records = []  # Clear memory
+        profiler.records = []  # Clear memory
         # Simulate new session
-        PROFILER.session_id = "session_2"
-        PROFILER.record("action2", 0.2)
-        PROFILER.save_history(test_file)
+        profiler.session_id = "session_2"
+        profiler.record("action2", 0.2)
+        profiler.save_history(test_file)
 
         data = load_json(test_file)
         assert len(data) == 2

@@ -1,46 +1,36 @@
-"""Tests for profiling decorators, context managers, and proxy."""
+"""Tests for profiling decorators and context managers."""
 import pytest
 import time
 
 
-class TestProfilerProxy:
-    """Tests for the ProfilerProxy class."""
+class TestProfilerSingleton:
+    """Tests for the Profiler singleton pattern."""
 
-    def test_proxy_delegates_getattr(self):
-        """PROFILER proxy should delegate attribute access."""
-        from game.core.profiling import PROFILER, Profiler
+    def test_singleton_returns_same_instance(self):
+        """Profiler.instance() should return same instance."""
+        from game.core.profiling import Profiler
 
         # Reset to ensure fresh state
         Profiler.reset()
 
-        # Access through proxy
-        assert PROFILER.active is False
-        PROFILER.start()
-        assert PROFILER.active is True
+        instance1 = Profiler.instance()
+        instance2 = Profiler.instance()
 
-    def test_proxy_delegates_setattr(self):
-        """PROFILER proxy should delegate attribute setting."""
-        from game.core.profiling import PROFILER, Profiler
+        assert instance1 is instance2
 
-        Profiler.reset()
-        instance = Profiler.instance()
-
-        PROFILER.active = True
-        assert instance.active is True
-
-        PROFILER.active = False
-        assert instance.active is False
-
-    def test_proxy_works_with_methods(self):
-        """PROFILER proxy should work with method calls."""
-        from game.core.profiling import PROFILER, Profiler
+    def test_singleton_methods_work(self):
+        """Profiler singleton should work with method calls."""
+        from game.core.profiling import Profiler
 
         Profiler.reset()
+        profiler = Profiler.instance()
 
-        PROFILER.start()
-        PROFILER.record("test", 0.1)
+        assert profiler.active is False
+        profiler.start()
+        assert profiler.active is True
+        profiler.record("test", 0.1)
 
-        assert len(PROFILER.records) == 1
+        assert len(profiler.records) == 1
 
 
 class TestProfileDecorator:

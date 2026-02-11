@@ -102,47 +102,37 @@ class Profiler(metaclass=SingletonMeta):
             log_error(f"Failed to save profiling history to {filename}")
 
 # Global accessor for backwards compatibility (lazy, not module-level instantiation)
-class _ProfilerProxy:
-    """Proxy that delegates to Profiler.instance() for lazy initialization."""
-
-    def __getattr__(self, name):
-        return getattr(Profiler.instance(), name)
-
-    def __setattr__(self, name, value):
-        setattr(Profiler.instance(), name, value)
-
-
-PROFILER = _ProfilerProxy()
-
-
 def profile_action(name: str):
     """Decorator to profile a function."""
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not PROFILER.is_active():
+            profiler = Profiler.instance()
+            if not profiler.is_active():
                 return func(*args, **kwargs)
-            
+
             t0 = time.perf_counter()
             try:
                 result = func(*args, **kwargs)
             finally:
                 t1 = time.perf_counter()
-                PROFILER.record(name, t1 - t0)
+                profiler.record(name, t1 - t0)
             return result
         return wrapper
     return decorator
 
+
 @contextmanager
 def profile_block(name: str):
     """Context manager to profile a block of code."""
-    if not PROFILER.is_active():
+    profiler = Profiler.instance()
+    if not profiler.is_active():
         yield
         return
-        
+
     t0 = time.perf_counter()
     try:
         yield
     finally:
         t1 = time.perf_counter()
-        PROFILER.record(name, t1 - t0)
+        profiler.record(name, t1 - t0)
