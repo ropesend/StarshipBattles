@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Replace Detail Panel with DesignReportPanel | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Replace Detail Panel with DesignReportPanel | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. New Columns | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. New Filters | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Multi-Select + Remove Ships | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-10 18:30
-**Active Phase:** Planning Complete — Ready for Implementation
-**Last Action:** Plan approved by user
-**Next Action:** Begin Phase 1 — Replace ShipDetailPanel with DesignReportPanel
+**Last Updated:** 2026-02-10
+**Active Phase:** Phase 2 — New Columns
+**Last Action:** Phase 1 complete — replaced ShipDetailPanel with DesignReportPanel (350→750px), added DesignLoaderAdapter, fixed _update_sidebar bug
+**Next Action:** Begin Phase 2 — Add 7 new data columns
 **Blockers:** None
-**Context for Next Agent:** Baseline is 7648 tests passing. All design decisions documented in decisions.md. Phase checklists have full task details.
+**Context for Next Agent:** 7713 tests passing. All changes in fleet_report_window.py only. Phase 1 replaced detail panel, Phase 2 adds columns.
 
 ## Overview
 Enhance the Fleet Report screen with: (1) Replace the right-side ShipDetailPanel with the shared DesignReportPanel used in Build Queue and Design Workshop, (2) Add 7 new data columns, (3) Add 2 new filter pairs, (4) Add multi-select ship removal that creates new fleets.

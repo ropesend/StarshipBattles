@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-100 Audit Passed
-**Current Status:** PROJ-100 Complete - Awaiting User Verification
+**Last Completed:** PROJ-101 Phase 1
+**Current Status:** PROJ-101 Phase 1 Complete
 **Current Project:** PROJ-101
-**Current Phase:** Ready to start
+**Current Phase:** Phase 2 — New Columns
 **Test Status:** 7713 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-100 Audit PASSED
-- All 5 goals verified: T mode, dialog size, D/L modes, keybinding convention
-- 19 new tests added in Phase 4
+- PROJ-101 Phase 1 COMPLETE
+- Replaced ShipDetailPanel with DesignReportPanel (350→750px)
+- Added DesignLoaderAdapter for ShipInstance→Ship conversion
+- Fixed _update_sidebar bug (→_update_summary)
+- Removed event forwarding block
 - 7713 tests passing
-- Next: PROJ-101 Fleet Report Screen Enhancements
+- Next: Phase 2 — Add 7 new data columns
 
 ---
 
@@ -332,9 +334,17 @@
 
 ---
 
-- [ ] **PROJ-101: Fleet Report Screen Enhancements**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-101: Fleet Report Screen Enhancements**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-101/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-101/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-102: Strategic Superweapons and Special Orders**
+  - **Phases:** 9 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-102/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-102/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
@@ -546,6 +556,7 @@
 | 2026-02-10 | PROJ-100 | Phase 3 | Complete | 7694 passed | pending | CargoQuickDialog, D/L keys, DROP_CARGO/LOAD_CARGO modes |
 | 2026-02-10 | PROJ-100 | Phase 4 | Complete | 7713 passed | pending | 19 new tests: TestDropCargoMode, TestLoadCargoMode, TestCargoQuickDialog |
 | 2026-02-10 | PROJ-100 | Audit 1 | PASSED | 7713 passed | pending | All 5 goals verified, no issues |
+| 2026-02-10 | PROJ-101 | Phase 1 | Complete | 7713 passed | pending | ShipDetailPanel→DesignReportPanel, 350→750px, _update_sidebar bug fixed |
 
 ---
 

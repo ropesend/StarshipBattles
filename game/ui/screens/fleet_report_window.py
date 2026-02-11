@@ -12,7 +12,8 @@ from game.ui.screens.fleet_report_filters import calculate_fleet_stats
 from game.ui.screens.fleet_report_view_model import FleetListViewModel
 from game.ui.screens.column_manager import ColumnManager
 from game.ui.utils import scale_image_by_visible_portion, scale_image_to_fit
-from game.ui.panels.ship_detail_panel import ShipDetailPanel
+from game.ui.panels.design_report_panel import DesignReportPanel
+from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 from game.ui.assets import ShipThemeManager
 
 
@@ -46,13 +47,14 @@ class FleetReportWindow(UIWindow):
 
         # --- Layout Constants ---
         self.sidebar_width = 300  # Left panel for summary + filters
-        self.detail_width = 350   # Right panel for ship details
+        self.detail_width = 750   # Right panel for ship details (DesignReportPanel)
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
         # --- State Managers ---
         self.view_model = FleetListViewModel(fleet.ships)
         self.column_manager = ColumnManager()
+        self._design_loader = DesignLoaderAdapter()
 
         # Selection state
         self.selected_ship = None
@@ -361,16 +363,15 @@ class FleetReportWindow(UIWindow):
         self._rebuild_row_pool()
 
     def _init_detail_panel(self):
-        """Initialize the right detail panel with ShipDetailPanel."""
-        # Create the ship detail panel filling the detail_panel container
+        """Initialize the right detail panel with DesignReportPanel."""
+        # Create the design report panel filling the detail_panel container
         panel_rect = self.detail_panel.get_relative_rect()
         detail_rect = pygame.Rect(0, 0, panel_rect.width, panel_rect.height)
 
-        self.ship_detail_panel = ShipDetailPanel(
+        self.design_report_panel = DesignReportPanel(
             manager=self.ui_manager,
             rect=detail_rect,
-            container=self.detail_panel,
-            on_remove_ship=self._on_remove_ship
+            container=self.detail_panel
         )
 
     def _rebuild_headers(self):
@@ -722,11 +723,6 @@ class FleetReportWindow(UIWindow):
             if self._handle_row_click(event.pos):
                 handled = True
 
-        # Forward events to ship detail panel for layer toggle buttons
-        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
-            if self.ship_detail_panel.process_event(event):
-                handled = True
-
         return handled
 
     def _handle_row_click(self, pos):
@@ -766,7 +762,16 @@ class FleetReportWindow(UIWindow):
 
     def _update_detail_panel(self):
         """Update the detail panel with selected ship info."""
-        self.ship_detail_panel.update_ship(self.selected_ship)
+        if self.selected_ship:
+            ship_obj = self._design_loader.load_ship_from_design_data(
+                self.selected_ship.design_data, 0, 0
+            )
+            if ship_obj:
+                self.design_report_panel.update_design(ship_obj)
+            else:
+                self.design_report_panel.show_placeholder()
+        else:
+            self.design_report_panel.show_placeholder()
 
     def _on_remove_ship(self, ship):
         """Handle remove ship from fleet."""
@@ -775,7 +780,7 @@ class FleetReportWindow(UIWindow):
             self.view_model = FleetListViewModel(self.fleet.ships)
             self._update_detail_panel()
             self.refresh_list()
-            self._update_sidebar()
+            self._update_summary()
 
     def update(self, time_delta: float):
         """Update UI elements and handle toggle button clicks."""
@@ -845,9 +850,9 @@ class FleetReportWindow(UIWindow):
 
     def kill(self):
         """Clean up when window is closed."""
-        # Clean up ship detail panel
-        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
-            self.ship_detail_panel.kill()
+        # Clean up design report panel
+        if hasattr(self, 'design_report_panel') and self.design_report_panel:
+            self.design_report_panel.kill()
 
         if self.on_close_callback:
             self.on_close_callback()
