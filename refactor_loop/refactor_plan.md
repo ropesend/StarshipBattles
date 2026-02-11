@@ -8,20 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 3 Complete (all 8 tasks)
-**Current Status:** PROJ-109 Phase 4 Ready
+**Last Completed:** PROJ-109 Phase 4 Complete (all 8 tasks)
+**Current Status:** PROJ-109 Phase 5 Ready
 **Current Project:** PROJ-109
-**Current Phase:** Phase 4
-**Test Status:** 8248 passed
+**Current Phase:** Phase 5
+**Test Status:** 8239 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 3 complete (Tasks 3.5-3.8):
-  - Task 3.5: Simplified _sync_from_stats_panel() - kept rows_map sync (tests use it), removed unused syncs
-  - Task 3.6: Removed DesignMetadata legacy mass fallback (data.get("mass")), updated test
-  - Task 3.7: Made design_id/name required in DesignMetadata.from_dict()
-  - Task 3.8: Fixed misleading "legacy" comment on RaceConfig.name (field is actively used)
-- Next: Phase 4 Task 4.1 (Remove SaveGameService format migration)
+- PROJ-109 Phase 4 complete:
+  - Task 4.1: Removed save game version migration (MIGRATABLE_VERSIONS, _can_migrate_version), deleted test file
+  - Task 4.2: Updated load_components_data docstring, load_components() now passes registries explicitly
+  - Task 4.3: Removed "thin wrapper...backward compatibility" framing from load_modifiers/load_vehicle_classes
+  - Task 4.4: Already done in PROJ-106 (BattleEngine now raises ValueError)
+  - Task 4.5: Removed "(transitional)" comments from simulation adapters
+  - Task 4.6: Removed coord serialization format from FleetOrder (both to_dict and from_dict)
+  - Task 4.7: Already done (comment says "optional fields")
+  - Task 4.8: Already done (no MagicMock detection in target_evaluator)
+- Next: Phase 5 Task 5.1 (Logger proxy removal)
 
 ---
 
@@ -318,6 +322,7 @@
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.3 | Complete | 8249 passed | pending | Removed BuildQueueScreen legacy mode, 8 test files updated |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.4 | Complete | 8248 passed | pending | Removed _handle_keydown_legacy (-78 lines), 2 test files updated |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.5-3.8 | Complete | 8248 passed | pending | Simplified _sync_from_stats_panel, removed DesignMetadata legacy mass, required fields, fixed RaceConfig comment |
+| 2026-02-11 | PROJ-109 | Phase 4 | Complete | 8239 passed | pending | Removed save migration, updated wrapper docstrings, removed transitional comments, removed coord format. Tasks 4.4/4.7/4.8 already done. |
 
 ---
 

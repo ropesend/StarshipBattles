@@ -49,8 +49,7 @@ class SimulationBattleResolver(IBattleResolver):
             fleet1: First fleet (assigned to team 0)
             fleet2: Second fleet (assigned to team 1)
             seed: Optional random seed for deterministic battles
-            registries: Optional GameRegistries for DI. If None, uses global fallback
-                        (transitional - will be required in Phase 6).
+            registries: Optional GameRegistries for DI. If None, uses global provider.
 
         Returns:
             BattleResult containing winner, tick count, and survivors

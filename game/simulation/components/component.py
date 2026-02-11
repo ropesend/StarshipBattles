@@ -476,13 +476,10 @@ def load_components_data(
     """
     Pure function to load components from JSON file.
 
-    PROJ-50: Accepts registries parameter for strict DI. If not provided,
-    creates a minimal registries from provider for bootstrap loading.
-
     Args:
         file_path: Path to the components JSON file
-        registries: Optional GameRegistries for DI. If None, creates minimal
-                   registries from provider for component loading (bootstrap).
+        registries: GameRegistries for DI. If None, creates registries from
+                   the default provider.
 
     Returns:
         Dict[str, Component]: Component objects keyed by their ID
@@ -500,8 +497,7 @@ def load_components_data(
             log_error(f"components file not found at {abs_path}")
             return {}
 
-    # PROJ-50: Create bootstrap registries if not provided
-    # This is used during initial loading when full registries isn't available yet
+    # Build registries from provider if not provided
     if registries is None:
         provider = get_default_registry_provider()
         registries = GameRegistries(
@@ -551,15 +547,15 @@ def load_components(file_path="data/components.json"):
     """
     Load components from JSON and populate the global registry.
 
-    This is a thin wrapper around load_components_data() for backward
-    compatibility. New code should prefer DI via load_components_data().
+    Wrapper around load_components_data() that also populates the registry.
     """
     import os
     import copy
+    from game.core.registry import GameRegistries
 
     cache_mgr = ComponentCacheManager.instance()
-    # PROJ-50: Use provider directly (module-level initialization path)
-    comps = get_default_registry_provider().get_components()
+    provider = get_default_registry_provider()
+    comps = provider.get_components()
 
     # If cache exists and matches file_path, hydrate Registry from cache (Fast Path)
     if cache_mgr.component_cache is not None and cache_mgr.last_component_file == file_path:
@@ -567,8 +563,14 @@ def load_components(file_path="data/components.json"):
             comps[c_id] = comp.clone()
         return
 
-    # Slow Path: Load from Disk using pure function
-    result = load_components_data(file_path)
+    # Slow Path: Load from Disk using pure function with explicit registries
+    registries = GameRegistries(
+        components=comps,
+        modifiers=provider.get_modifiers(),
+        vehicle_classes=provider.get_vehicle_classes(),
+        resources={}
+    )
+    result = load_components_data(file_path, registries=registries)
     if not result:
         return
 
@@ -644,8 +646,7 @@ def load_modifiers(file_path="data/modifiers.json"):
     """
     Load modifiers from JSON and populate the global registry.
 
-    This is a thin wrapper around load_modifiers_data() for backward
-    compatibility. New code should prefer DI via load_modifiers_data().
+    Wrapper around load_modifiers_data() that also populates the registry.
     """
     import os
     import copy

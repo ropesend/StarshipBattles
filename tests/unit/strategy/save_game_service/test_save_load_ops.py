@@ -174,7 +174,7 @@ class TestSaveGameServiceVersion:
         turns_folder = os.path.join(save_folder, "turns")
         os.makedirs(turns_folder)
 
-        # Incompatible version metadata (not in MIGRATABLE_VERSIONS)
+        # Incompatible version metadata (only current version accepted)
         metadata = {
             'version': '0.5.0',
             'timestamp': '2026-01-01T00:00:00',

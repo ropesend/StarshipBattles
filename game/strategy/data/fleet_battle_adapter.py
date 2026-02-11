@@ -49,8 +49,7 @@ class FleetBattleAdapter:
         Args:
             team_id: Team assignment for battle (0 or 1)
             formation_positions: Optional list of (x, y) positions for ships
-            registries: Optional GameRegistries for DI. If None, uses global fallback
-                        (transitional - will be required in Phase 6).
+            registries: Optional GameRegistries for DI. If None, uses global provider.
 
         Returns:
             List of Ship objects ready for battle

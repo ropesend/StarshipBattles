@@ -101,8 +101,7 @@ def load_vehicle_classes(file_path: str = None, layers_file_path: Optional[str] 
     """
     Load vehicle class definitions from JSON and populate the global registry.
 
-    This is a thin wrapper around load_vehicle_classes_data() for backward
-    compatibility. New code should prefer DI via load_vehicle_classes_data().
+    Wrapper around load_vehicle_classes_data() that also populates the registry.
     """
     if file_path is None:
         file_path = Paths.VEHICLE_CLASSES_FILE

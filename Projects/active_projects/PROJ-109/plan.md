@@ -16,14 +16,14 @@
 | 1. Dead Code Deletion (8 tasks) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Simple Shim Removals (10 tasks) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Medium Complexity Removals (8 tasks) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Complex Legacy Eradication (8 tasks) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Complex Legacy Eradication (8 tasks) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Foundation Cleanup (3 tasks) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 4 - Complex Legacy Eradication
-**Last Action:** Phase 3 complete (all 8 tasks). Tasks 3.5-3.8 done: simplified _sync_from_stats_panel, removed DesignMetadata legacy mass fallback, made design_id/name required, fixed misleading "legacy" comment on RaceConfig.name.
-**Next Action:** Task 4.1 - Remove SaveGameService format migration
+**Active Phase:** Phase 5 - Foundation Cleanup
+**Last Action:** Phase 4 complete (8 tasks): Removed save game migration, updated load_components/modifiers/vehicle_classes wrappers, removed transitional DI comments, removed FleetOrder coord format. Tasks 4.4/4.7/4.8 were already done.
+**Next Action:** Task 5.1 - Logger proxy removal
 **Blockers:** None
 
 ## Overview

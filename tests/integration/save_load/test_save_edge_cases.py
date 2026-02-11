@@ -131,16 +131,6 @@ class TestVersionCompatibility:
         assert loaded_session is None
         assert "incompatible" in message.lower() or "version" in message.lower()
 
-    def test_migratable_version_loads(self, temp_save_folder):
-        """Migratable older versions are accepted."""
-        # This test verifies the migratable version list
-        migratable = SaveGameService.MIGRATABLE_VERSIONS
-
-        for version in migratable:
-            is_compatible = SaveGameService._is_compatible_version(version)
-            assert is_compatible, f"Version {version} should be compatible (migratable)"
-
-
 class TestSaveManagement:
     """Tests for save listing and deletion."""
 
