@@ -37,7 +37,6 @@ class ShipThemeManager(metaclass=SingletonMeta):
         # Cache for portrait images
         self.portraits = {}  # {theme_name: {class_name: surface}}
 
-        self.base_path = None
         self.default_theme = "Federation"
         self.discovery_complete = False
         self._init_lock = threading.Lock()
@@ -54,14 +53,12 @@ class ShipThemeManager(metaclass=SingletonMeta):
                 self.discovery_complete = False
                 log_info("ShipThemeManager caches cleared.")
 
-    def initialize(self, base_path=None):
+    def initialize(self):
         """Discover all themes from assets/ShipThemes without loading images."""
         with self._init_lock:
             if self.discovery_complete and self.theme_data:
                 return # Already initialized
-                
-            # base_path is now deprecated/ignored in favor of Paths.ASSET_DIR
-            self.base_path = base_path 
+
             themes_dir = os.path.join(Paths.ASSET_DIR, "ShipThemes")
             
             if not os.path.exists(themes_dir):

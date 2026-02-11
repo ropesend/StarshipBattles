@@ -43,7 +43,7 @@ def pygame_setup():
 class TestSliderIncrement:
     def test_range_mount_increment(self, pygame_setup, mock_component_service):
         """Test that the Range Mount slider is initialized with 0.1 increment."""
-        from game.ui.screens.builder.legacy_components import ModifierEditorPanel
+        from game.ui.screens.builder.modifier_editor import ModifierEditorPanel
 
         manager, container = pygame_setup
         preset_manager = MagicMock()

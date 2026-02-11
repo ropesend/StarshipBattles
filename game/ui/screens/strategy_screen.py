@@ -102,7 +102,6 @@ class StrategyScreen:
         self.last_selected_system = None
 
         self.turn_processing = False
-        self.action_open_design = False
         self.current_player_index = 0
         self._quit_confirm_dialog = None
 
@@ -136,17 +135,6 @@ class StrategyScreen:
     @property
     def systems(self):
         return self.session.systems
-
-    @property
-    def turn_engine(self):
-        import warnings
-        warnings.warn(
-            "Direct turn_engine access is deprecated. Use facade.can_colonize() "
-            "or other facade validation methods instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        return self.session.turn_engine
 
     @property
     def player_empire(self):
@@ -625,10 +613,6 @@ class StrategyScreen:
 
         if self.scene_callback:
             self.scene_callback("open_builder", context_data=context_data)
-        else:
-            # Fallback for legacy flag-based transition (deprecated)
-            self.workshop_context_data = context_data
-            self.action_open_design = True
 
     def on_menu_option(self, option: str):
         """Dispatch menu option from the strategy menu panel.

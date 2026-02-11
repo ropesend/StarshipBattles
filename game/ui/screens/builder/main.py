@@ -42,7 +42,7 @@ from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.planet_list_presets import PresetManager
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
 from game.simulation.systems.persistence import ShipIO
-from game.ui.screens.builder.legacy_components import ModifierEditorPanel
+from game.ui.screens.builder.modifier_editor import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
 from .left_panel import BuilderLeftPanel
 from .right_panel import BuilderRightPanel
@@ -123,11 +123,10 @@ class BuilderScreen:
         self._state_manager = BuilderStateManager(self.ship)
         self._state_manager.on_selection_changed_callback = self._on_state_selection_changed
         
-        base_path = os.path.dirname(os.path.abspath(__file__))
         with profile_block("Builder: Init Managers"):
             self.preset_manager = PresetManager()
             self.theme_manager = ShipThemeManager.instance()
-            self.theme_manager.initialize(base_path)
+            self.theme_manager.initialize()
         
         # Layout
         self.left_panel_width = 450

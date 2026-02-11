@@ -248,9 +248,8 @@ class TestStrategyUIEventLogIntegration:
         scene._facade = MagicMock()
         scene._facade.get_all_events.return_value = _sample_events()
         scene._facade.get_turn_events.return_value = _sample_events()[:2]
-        # _has_modal_open checks these scene attributes
+        # _has_modal_open checks this scene attribute
         scene.build_queue_screen = None
-        scene.action_open_design = False
 
         ui.scene = scene
         ui.width = 1920

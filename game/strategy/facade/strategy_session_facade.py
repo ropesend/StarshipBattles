@@ -432,7 +432,7 @@ class StrategySessionFacade:
             provider = get_default_registry_provider()
             component_registry = provider.get_components()
         except (RuntimeError, AttributeError, ImportError):
-            # If no registry available, return empty (legacy behavior)
+            # Defensive fallback - return empty dict if registry unavailable
             return {}
 
         # Calculate available and committed pods

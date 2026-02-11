@@ -345,9 +345,8 @@ class TestMenuPanelModal:
         ui.transfer_dialog = None
         ui.build_queue_list_window = None
         ui.empire_build_queue_window = None
-        # scene.build_queue_screen and scene.action_open_design also checked
+        # scene.build_queue_screen also checked
         scene.build_queue_screen = None
-        scene.action_open_design = False
 
         assert ui._has_modal_open() is False
 

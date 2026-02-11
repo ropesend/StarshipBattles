@@ -120,12 +120,7 @@ class WorkshopViewModel:
     def primary_selection(self) -> Optional[Tuple[LayerType, int, Component]]:
         """The primary (last) selected component, or None if nothing selected."""
         return self._selected_components[-1] if self._selected_components else None
-    
-    @property
-    def selected_component(self) -> Optional[Tuple[LayerType, int, Component]]:
-        """Alias for primary_selection for backward compatibility."""
-        return self.primary_selection
-        
+
     def select_component(self, new_selection, append: bool = False, toggle: bool = False):
         """
         Handle selection changes.

@@ -155,7 +155,7 @@ class Empire:
             'resource_pool': dict(self.resource_pool),
             'max_storage': dict(self.max_storage),
         }
-        # Include race visual identity if set (backwards compatibility)
+        # Include race visual identity if set (optional fields)
         if self.flag_id:
             data['flag_id'] = self.flag_id
         if self.portrait_id:

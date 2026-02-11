@@ -17,8 +17,8 @@ class TestShipClasses:
         project_root = str(get_project_root())
         initialize_ship_data(project_root)
         self.theme_manager = ShipThemeManager.instance()
-        # Initialize theme manager with project root to load themes
-        self.theme_manager.initialize(project_root)
+        # Initialize theme manager to load themes
+        self.theme_manager.initialize()
 
         yield
 

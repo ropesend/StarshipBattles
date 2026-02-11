@@ -101,7 +101,7 @@ class TestShipThemeLogic:
         mock_load.return_value = dummy_surface
 
         # Run initialize
-        self.manager.initialize("/fake/base/path")
+        self.manager.initialize()
 
         # Verify no errors logged (e.g. convert_alpha failure)
         mock_log.assert_not_called()
@@ -151,7 +151,7 @@ class TestShipThemeLogic:
         mock_load.return_value = surf
 
         # Initialize
-        self.manager.initialize("/fake/base/path")
+        self.manager.initialize()
 
         # Verify no errors logged
         mock_log.assert_not_called()
@@ -182,7 +182,7 @@ class TestShipThemeLogic:
         mock_load_json.return_value = None
 
         # Initialize shouldn't crash
-        self.manager.initialize("/fake/base/path")
+        self.manager.initialize()
 
         # With load_json returning None, the code returns early without error
         # Verify no theme was discovered

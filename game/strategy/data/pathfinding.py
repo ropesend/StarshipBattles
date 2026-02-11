@@ -175,7 +175,7 @@ def find_hybrid_path(galaxy, start_hex, end_hex, fleet=None):
     """
     # Check if fleet can use warp points
     can_use_warp = True
-    if fleet is not None and hasattr(fleet, 'can_use_warp'):
+    if fleet is not None:
         can_use_warp = fleet.can_use_warp()
         log_debug(f"find_hybrid_path: fleet={fleet.id}, can_use_warp={can_use_warp}")
 
@@ -314,7 +314,7 @@ def _extract_chaser_info(chaser: Union['Fleet', 'NavigationState']) -> tuple:
             chaser.location,
             chaser.speed,
             getattr(chaser, 'id', 'unknown'),
-            chaser.can_use_warp() if hasattr(chaser, 'can_use_warp') else True
+            chaser.can_use_warp()
         )
 
 

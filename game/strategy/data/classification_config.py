@@ -13,11 +13,11 @@ class ClassificationConfig:
     Configuration container for planet classification thresholds.
 
     Loads values from astrophysics.json or uses hardcoded defaults
-    for backward compatibility if the file is not available.
+    if the file is not available.
     """
 
     # Hardcoded defaults matching original planet_gen.py values
-    # These ensure backward compatibility if JSON loading fails
+    # Used if JSON loading fails
     DEFAULT_MASS = {
         "dwarf_max": 2.0e23,
         "giant_min": 6.0e24,

@@ -117,7 +117,7 @@ class ProductionEngine:
 
                 # Facility queues (shipyards)
                 for facility in colony.facilities:
-                    if hasattr(facility, 'construction_queue') and facility.construction_queue:
+                    if facility.construction_queue:
                         self._process_queue_tick_with_completion(
                             facility.construction_queue, empire, tick, galaxy, save_path,
                             colony_or_fleet=colony, harvesting_engine=harvesting_engine,

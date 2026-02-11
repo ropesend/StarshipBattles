@@ -43,7 +43,6 @@ Example:
     cmd = IssueMoveCommand(fleet_id=fleet.id, target_hex=destination)
     result = session.handle_command(cmd)
 """
-import warnings
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -65,30 +64,10 @@ class GameSession:
     Owns the Galaxy, Empires, and the Turn Engine.
     Running completely decoupled from the UI/Rendering layer.
     """
-    def __init__(self, config: GameConfig = None, galaxy_radius: int = None, system_count: int = None):
+    def __init__(self, config: GameConfig = None):
         # Use provided config or create default
         if config is None:
             config = GameConfig()
-
-        # Deprecation warning for legacy parameters (PROJ-22)
-        # These parameters override config values, which violates config immutability.
-        # Use GameConfig(galaxy_radius=X, system_count=Y) instead.
-        if galaxy_radius is not None:
-            warnings.warn(
-                "galaxy_radius parameter is deprecated. "
-                "Use GameConfig(galaxy_radius=...) instead.",
-                DeprecationWarning,
-                stacklevel=2
-            )
-            config.galaxy_radius = galaxy_radius
-        if system_count is not None:
-            warnings.warn(
-                "system_count parameter is deprecated. "
-                "Use GameConfig(system_count=...) instead.",
-                DeprecationWarning,
-                stacklevel=2
-            )
-            config.system_count = system_count
 
         self.config = config
         self.turn_number = 1
@@ -112,7 +91,7 @@ class GameSession:
             i for i, p in enumerate(config.players) if p.is_human
         ]
 
-        # Convenience references for backward compatibility
+        # Convenience references for common empires
         self.player_empire = self.empires[0] if len(self.empires) > 0 else None
         self.enemy_empire = self.empires[1] if len(self.empires) > 1 else None
 

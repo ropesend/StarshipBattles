@@ -14,16 +14,16 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Dead Code Deletion (8 tasks) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Simple Shim Removals (10 tasks) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Simple Shim Removals (10 tasks) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Medium Complexity Removals (8 tasks) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Complex Legacy Eradication (8 tasks) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Foundation Cleanup (3 tasks) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 2 - Simple Shim Removals
-**Last Action:** Phase 1 complete - deleted 8 dead methods/functions, 2 commented lines, 3 unused getters, 2 buttons lists, fixed 2 misleading comments. Deleted 10 obsolete tests.
-**Next Action:** Begin Phase 2 (Simple Shim Removals)
+**Active Phase:** Phase 3 - Medium Complexity Removals
+**Last Action:** Phase 2 complete - removed deprecated GameSession params, hasattr() checks, base_path param, turn_engine property, selected_component alias, action_open_design flag, renamed legacy_components.py, fixed misleading comments, removed migration guide. Deleted 1 obsolete test.
+**Next Action:** Begin Phase 3 (Medium Complexity Removals)
 **Blockers:** None
 
 ## Overview

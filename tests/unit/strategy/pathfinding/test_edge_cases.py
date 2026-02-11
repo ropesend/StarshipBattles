@@ -65,21 +65,6 @@ class TestPathfindingEdgeCases:
         assert path[0] == start
         assert path[-1] == end
 
-    def test_fleet_without_can_use_warp_method(self, mock_galaxy):
-        """Fleet object without can_use_warp attribute works."""
-        galaxy, _, _, _ = mock_galaxy
-
-        fleet = MagicMock(spec=[])  # No methods
-        fleet.location = HexCoord(0, 0)
-
-        start = HexCoord(0, 0)
-        end = HexCoord(10, 10)
-
-        # Should not raise
-        path = find_hybrid_path(galaxy, start, end, fleet=fleet)
-
-        assert path is not None
-
     def test_galaxy_with_no_warp_points(self):
         """Systems with no warp points still work."""
         galaxy = MagicMock()

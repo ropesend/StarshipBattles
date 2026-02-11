@@ -75,10 +75,6 @@ class StrategyEventRouter:
         if wm.empire_panel_window is not None:
             return True
 
-        # Check if workshop is being opened
-        if hasattr(self.ui.scene, 'action_open_design') and self.ui.scene.action_open_design:
-            return True
-
         return False
 
     def on_ui_selection(self, obj) -> None:

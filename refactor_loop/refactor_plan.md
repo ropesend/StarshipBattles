@@ -8,24 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 1 (Dead Code Deletion)
-**Current Status:** PROJ-109 Phase 1 Complete
+**Last Completed:** PROJ-109 Phase 2 (Simple Shim Removals)
+**Current Status:** PROJ-109 Phase 2 Complete
 **Current Project:** PROJ-109
-**Current Phase:** Phase 2
-**Test Status:** 8250 passed
+**Current Phase:** Phase 3
+**Test Status:** 8249 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 1 complete:
-  - Deleted _find_nearest_edge, _is_at_map_edge from BattleController
-  - Deleted from_tuple, to_tuple from ComponentRef
-  - Deleted ValidationResult.create() classmethod
-  - Deleted commented allowed_layers code from Component
-  - Deleted get_zero, get_fuel_recharge, get_ammo_recharge from stats_config
-  - Deleted self.buttons lists from TestLabScreen
-  - Fixed 2 misleading "legacy"/"backwards-compatible" comments
-  - Deleted 10 obsolete tests
-- Next: Phase 2 (Simple Shim Removals)
+- PROJ-109 Phase 2 complete:
+  - Removed deprecated galaxy_radius/system_count params from GameSession
+  - Removed hasattr() defensive checks for Fleet.can_use_warp and Facility.construction_queue
+  - Removed deprecated base_path param from ShipThemeManager.initialize()
+  - Removed deprecated turn_engine property from StrategyScreen
+  - Removed selected_component alias from WorkshopViewModel
+  - Removed action_open_design flag and fallback code path
+  - Renamed legacy_components.py to modifier_editor.py
+  - Fixed 4 misleading "backward compatibility" comments
+  - Removed migration guide from fleet_navigation_service.py docstring
+  - Deleted 1 obsolete test (test_fleet_without_can_use_warp_method)
+- Next: Phase 3 (Medium Complexity Removals)
 
 ---
 
@@ -316,6 +318,7 @@
 | 2026-02-11 | PROJ-108 | Phase 6 | Complete | 8260 passed | pending | formatting_utils (23 tests), RESOURCE_ABBREVS constant, BaseGallery (~240 lines), 2 galleries refactored |
 | 2026-02-11 | PROJ-108 | Audit 1 | PASSED | 8260 passed | pending | All goals verified: SingletonMeta (7), ComponentInspector (3), combat_utils (2), BaseGallery (2), formatting (23 tests) |
 | 2026-02-11 | PROJ-109 | Phase 1 | Complete | 8250 passed | pending | Deleted 8 dead methods, 3 getters, 2 button lists, 10 tests; fixed 2 comments |
+| 2026-02-11 | PROJ-109 | Phase 2 | Complete | 8249 passed | pending | Removed 10 legacy shims, renamed legacy_components.py, fixed 4 comments, deleted 1 test |
 
 ---
 
