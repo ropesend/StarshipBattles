@@ -129,6 +129,27 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
             if not is_warp_capable and not show_not_warp:
                 continue
 
+        # Spaceyard capability filter
+        show_has_yard = filter_state.get('show_has_spaceyard', True)
+        show_no_yard = filter_state.get('show_no_spaceyard', True)
+        if not show_has_yard or not show_no_yard:
+            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            has_yard = FleetCapabilityCalculator.ship_has_spaceyard(ship)
+            if has_yard and not show_has_yard:
+                continue
+            if not has_yard and not show_no_yard:
+                continue
+
+        # Cargo filter (includes population)
+        show_has_cargo = filter_state.get('show_has_cargo', True)
+        show_no_cargo = filter_state.get('show_no_cargo', True)
+        if not show_has_cargo or not show_no_cargo:
+            has_cargo = bool(ship.cargo_contents) and sum(ship.cargo_contents.values()) > 0
+            if has_cargo and not show_has_cargo:
+                continue
+            if not has_cargo and not show_no_cargo:
+                continue
+
         # Destroyed filter
         if not ship.is_alive:
             if not filter_state.get('show_destroyed', True):

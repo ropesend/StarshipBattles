@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-101 Phase 2
-**Current Status:** PROJ-101 Phase 2 Complete
+**Last Completed:** PROJ-101 Phase 3
+**Current Status:** PROJ-101 Phase 3 Complete
 **Current Project:** PROJ-101
-**Current Phase:** Phase 3 — New Filters
-**Test Status:** 7742 passed
+**Current Phase:** Phase 4 — Multi-Select + Remove Ships
+**Test Status:** 7760 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-101 Phase 2 COMPLETE
-- Added 7 new columns: speed, tonnage, warp, spaceyard, transport, resources, cargo
-- All hidden by default, togglable from sidebar
-- Added ship_has_spaceyard() static method to FleetCapabilityCalculator
-- Added column value extraction in column_manager.py
-- Added sort key handlers in fleet_report_filters.py
-- 29 new tests (7742 total)
-- Next: Phase 3 — Add filter pairs for Spaceyard and Cargo
+- PROJ-101 Phase 3 COMPLETE
+- Added 4 new filter state attributes in FleetListViewModel
+- Added toggle handlers for has_spaceyard, no_spaceyard, has_cargo, no_cargo
+- Added filter logic in filter_ships() for spaceyard capability (via FleetCapabilityCalculator) and cargo contents
+- Added SPACEYARD and CARGO filter sections in sidebar UI
+- 18 new tests (7760 total)
+- Next: Phase 4 — Add Ctrl+click multi-select and "Remove Selected" button
 
 ---
 
@@ -559,6 +558,7 @@
 | 2026-02-10 | PROJ-100 | Audit 1 | PASSED | 7713 passed | pending | All 5 goals verified, no issues |
 | 2026-02-10 | PROJ-101 | Phase 1 | Complete | 7713 passed | pending | ShipDetailPanel→DesignReportPanel, 350→750px, _update_sidebar bug fixed |
 | 2026-02-10 | PROJ-101 | Phase 2 | Complete | 7742 passed | pending | 7 new columns added, 29 new tests |
+| 2026-02-10 | PROJ-101 | Phase 3 | Complete | 7760 passed | pending | Spaceyard+cargo filter pairs, 18 new tests |
 
 ---
 

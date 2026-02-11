@@ -39,6 +39,10 @@ class FleetListViewModel:
         self.filter_show_destroyed = False  # Destroyed hidden by default
         self.filter_show_warp_capable = True
         self.filter_show_not_warp_capable = True
+        self.filter_show_has_spaceyard = True
+        self.filter_show_no_spaceyard = True
+        self.filter_show_has_cargo = True
+        self.filter_show_no_cargo = True
 
         # Sort state
         self.sort_column_id = 'serial'
@@ -87,6 +91,18 @@ class FleetListViewModel:
         elif filter_id == 'not_warp_capable':
             self.filter_show_not_warp_capable = not self.filter_show_not_warp_capable
             result = self.filter_show_not_warp_capable
+        elif filter_id == 'has_spaceyard':
+            self.filter_show_has_spaceyard = not self.filter_show_has_spaceyard
+            result = self.filter_show_has_spaceyard
+        elif filter_id == 'no_spaceyard':
+            self.filter_show_no_spaceyard = not self.filter_show_no_spaceyard
+            result = self.filter_show_no_spaceyard
+        elif filter_id == 'has_cargo':
+            self.filter_show_has_cargo = not self.filter_show_has_cargo
+            result = self.filter_show_has_cargo
+        elif filter_id == 'no_cargo':
+            self.filter_show_no_cargo = not self.filter_show_no_cargo
+            result = self.filter_show_no_cargo
         else:
             return False
 
@@ -124,6 +140,10 @@ class FleetListViewModel:
             'show_destroyed': self.filter_show_destroyed,
             'show_warp_capable': self.filter_show_warp_capable,
             'show_not_warp_capable': self.filter_show_not_warp_capable,
+            'show_has_spaceyard': self.filter_show_has_spaceyard,
+            'show_no_spaceyard': self.filter_show_no_spaceyard,
+            'show_has_cargo': self.filter_show_has_cargo,
+            'show_no_cargo': self.filter_show_no_cargo,
         }
 
     def get_filtered_ships(self) -> List[ShipInstance]:
@@ -175,6 +195,10 @@ class FleetListViewModel:
             'destroyed': 'Destroyed',
             'warp_capable': 'Warp Capable',
             'not_warp_capable': 'Not Warp Capable',
+            'has_spaceyard': 'Has Yard',
+            'no_spaceyard': 'No Yard',
+            'has_cargo': 'Has Cargo',
+            'no_cargo': 'No Cargo',
         }
         return labels.get(filter_id, filter_id)
 

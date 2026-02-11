@@ -297,6 +297,68 @@ class FleetReportWindow(UIWindow):
 
         y += 10
 
+        # Spaceyard filter section
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="SPACEYARD",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        spaceyard_filter_configs = [
+            ('has_spaceyard', 'Has Yard'),
+            ('no_spaceyard', 'No Yard'),
+        ]
+
+        for filter_id, label in spaceyard_filter_configs:
+            is_on = self.view_model.is_filter_enabled(filter_id)
+            btn_text = f"[{label}]" if is_on else label
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                text=btn_text,
+                manager=self.ui_manager,
+                container=self.sidebar_panel,
+                object_id=f"#filter_{filter_id}"
+            )
+            if is_on:
+                btn.select()
+            self.filter_buttons[filter_id] = btn
+            y += 30
+
+        y += 10
+
+        # Cargo filter section
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="CARGO",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        cargo_filter_configs = [
+            ('has_cargo', 'Has Cargo'),
+            ('no_cargo', 'No Cargo'),
+        ]
+
+        for filter_id, label in cargo_filter_configs:
+            is_on = self.view_model.is_filter_enabled(filter_id)
+            btn_text = f"[{label}]" if is_on else label
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                text=btn_text,
+                manager=self.ui_manager,
+                container=self.sidebar_panel,
+                object_id=f"#filter_{filter_id}"
+            )
+            if is_on:
+                btn.select()
+            self.filter_buttons[filter_id] = btn
+            y += 30
+
+        y += 10
+
         # --- Column Configuration Section ---
         UILabel(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),

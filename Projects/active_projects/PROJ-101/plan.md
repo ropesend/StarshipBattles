@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Replace Detail Panel with DesignReportPanel | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. New Columns | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. New Filters | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. New Filters | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Multi-Select + Remove Ships | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 3 — New Filters
-**Last Action:** Phase 2 complete — Added 7 new columns (speed, tonnage, warp, spaceyard, transport, resources, cargo) with extraction and sorting
-**Next Action:** Begin Phase 3 — Add filter pairs for Spaceyard and Cargo
+**Active Phase:** Phase 4 — Multi-Select + Remove Ships
+**Last Action:** Phase 3 complete — Added spaceyard and cargo filter pairs
+**Next Action:** Begin Phase 4 — Add Ctrl+click multi-select and "Remove Selected" button
 **Blockers:** None
-**Context for Next Agent:** 7742 tests passing (baseline 7713 + 29 new). Modified: column_manager.py, fleet_report_filters.py, fleet_capability_calculator.py, 3 test files.
+**Context for Next Agent:** 7760 tests passing (baseline 7742 + 18 new). Modified: fleet_report_view_model.py (filter state), fleet_report_filters.py (filter logic), fleet_report_window.py (UI buttons), 2 test files.
 
 ## Overview
 Enhance the Fleet Report screen with: (1) Replace the right-side ShipDetailPanel with the shared DesignReportPanel used in Build Queue and Design Workshop, (2) Add 7 new data columns, (3) Add 2 new filter pairs, (4) Add multi-select ship removal that creates new fleets.

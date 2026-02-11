@@ -199,3 +199,87 @@ class TestFleetListViewModelWarpFilters:
         assert view_model.filter_show_not_warp_capable is True
         view_model.toggle_filter('not_warp_capable')
         assert view_model.filter_show_not_warp_capable is False
+
+
+class TestFleetListViewModelSpaceyardFilters:
+    """Test spaceyard capability filtering."""
+
+    @pytest.fixture
+    def view_model(self):
+        """Create FleetListViewModel instance."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+        return FleetListViewModel([])
+
+    def test_init_spaceyard_filters_default(self, view_model):
+        """ViewModel initializes with spaceyard filters enabled by default."""
+        assert view_model.filter_show_has_spaceyard is True
+        assert view_model.filter_show_no_spaceyard is True
+
+    def test_toggle_has_spaceyard_filter(self, view_model):
+        """Toggle has_spaceyard filter."""
+        assert view_model.filter_show_has_spaceyard is True
+        view_model.toggle_filter('has_spaceyard')
+        assert view_model.filter_show_has_spaceyard is False
+        view_model.toggle_filter('has_spaceyard')
+        assert view_model.filter_show_has_spaceyard is True
+
+    def test_toggle_no_spaceyard_filter(self, view_model):
+        """Toggle no_spaceyard filter."""
+        assert view_model.filter_show_no_spaceyard is True
+        view_model.toggle_filter('no_spaceyard')
+        assert view_model.filter_show_no_spaceyard is False
+
+    def test_get_filter_state_includes_spaceyard(self, view_model):
+        """get_filter_state includes spaceyard filter keys."""
+        state = view_model.get_filter_state()
+        assert 'show_has_spaceyard' in state
+        assert 'show_no_spaceyard' in state
+        assert state['show_has_spaceyard'] is True
+        assert state['show_no_spaceyard'] is True
+
+    def test_get_filter_label_spaceyard(self, view_model):
+        """get_filter_label returns correct labels for spaceyard filters."""
+        assert view_model.get_filter_label('has_spaceyard') == 'Has Yard'
+        assert view_model.get_filter_label('no_spaceyard') == 'No Yard'
+
+
+class TestFleetListViewModelCargoFilters:
+    """Test cargo filtering."""
+
+    @pytest.fixture
+    def view_model(self):
+        """Create FleetListViewModel instance."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+        return FleetListViewModel([])
+
+    def test_init_cargo_filters_default(self, view_model):
+        """ViewModel initializes with cargo filters enabled by default."""
+        assert view_model.filter_show_has_cargo is True
+        assert view_model.filter_show_no_cargo is True
+
+    def test_toggle_has_cargo_filter(self, view_model):
+        """Toggle has_cargo filter."""
+        assert view_model.filter_show_has_cargo is True
+        view_model.toggle_filter('has_cargo')
+        assert view_model.filter_show_has_cargo is False
+        view_model.toggle_filter('has_cargo')
+        assert view_model.filter_show_has_cargo is True
+
+    def test_toggle_no_cargo_filter(self, view_model):
+        """Toggle no_cargo filter."""
+        assert view_model.filter_show_no_cargo is True
+        view_model.toggle_filter('no_cargo')
+        assert view_model.filter_show_no_cargo is False
+
+    def test_get_filter_state_includes_cargo(self, view_model):
+        """get_filter_state includes cargo filter keys."""
+        state = view_model.get_filter_state()
+        assert 'show_has_cargo' in state
+        assert 'show_no_cargo' in state
+        assert state['show_has_cargo'] is True
+        assert state['show_no_cargo'] is True
+
+    def test_get_filter_label_cargo(self, view_model):
+        """get_filter_label returns correct labels for cargo filters."""
+        assert view_model.get_filter_label('has_cargo') == 'Has Cargo'
+        assert view_model.get_filter_label('no_cargo') == 'No Cargo'

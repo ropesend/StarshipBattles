@@ -580,5 +580,213 @@ class TestSortShipsNewColumns:
         assert [s.name for s in result] == ["A", "B", "C"]
 
 
+class TestFilterShipsSpaceyard:
+    """Test cases for spaceyard capability filtering in filter_ships."""
+
+    def test_filter_hide_has_spaceyard(self):
+        """Hide ships with spaceyards when filter is off."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+        from unittest.mock import patch
+
+        ship_with_yard = make_mock_ship(design_name="Carrier")
+        ship_with_yard.cargo_contents = {}
+        ship_no_yard = make_mock_ship(design_name="Destroyer")
+        ship_no_yard.cargo_contents = {}
+        ships = [ship_with_yard, ship_no_yard]
+
+        def mock_has_yard(ship):
+            return ship.name == "Carrier"
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_spaceyard': False,
+            'show_no_spaceyard': True,
+        }
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
+            result = filter_ships(ships, filter_state)
+
+        assert len(result) == 1
+        assert result[0].name == "Destroyer"
+
+    def test_filter_hide_no_spaceyard(self):
+        """Hide ships without spaceyards when filter is off."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+        from unittest.mock import patch
+
+        ship_with_yard = make_mock_ship(design_name="Carrier")
+        ship_with_yard.cargo_contents = {}
+        ship_no_yard = make_mock_ship(design_name="Destroyer")
+        ship_no_yard.cargo_contents = {}
+        ships = [ship_with_yard, ship_no_yard]
+
+        def mock_has_yard(ship):
+            return ship.name == "Carrier"
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_spaceyard': True,
+            'show_no_spaceyard': False,
+        }
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_spaceyard', side_effect=mock_has_yard):
+            result = filter_ships(ships, filter_state)
+
+        assert len(result) == 1
+        assert result[0].name == "Carrier"
+
+    def test_filter_show_all_spaceyard_states(self):
+        """With both spaceyard filters enabled, all ships pass."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ship_with_yard = make_mock_ship(design_name="Carrier")
+        ship_with_yard.cargo_contents = {}
+        ship_no_yard = make_mock_ship(design_name="Destroyer")
+        ship_no_yard.cargo_contents = {}
+        ships = [ship_with_yard, ship_no_yard]
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_spaceyard': True,
+            'show_no_spaceyard': True,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 2
+
+
+class TestFilterShipsCargo:
+    """Test cases for cargo filtering in filter_ships."""
+
+    def test_filter_hide_has_cargo(self):
+        """Hide ships with cargo when filter is off."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ship_with_cargo = make_mock_ship(design_name="Freighter")
+        ship_with_cargo.cargo_contents = {'minerals': 100}
+
+        ship_no_cargo = make_mock_ship(design_name="Warship")
+        ship_no_cargo.cargo_contents = {}
+
+        ships = [ship_with_cargo, ship_no_cargo]
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_cargo': False,
+            'show_no_cargo': True,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 1
+        assert result[0].name == "Warship"
+
+    def test_filter_hide_no_cargo(self):
+        """Hide ships without cargo when filter is off."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ship_with_cargo = make_mock_ship(design_name="Freighter")
+        ship_with_cargo.cargo_contents = {'minerals': 100}
+
+        ship_no_cargo = make_mock_ship(design_name="Warship")
+        ship_no_cargo.cargo_contents = {}
+
+        ships = [ship_with_cargo, ship_no_cargo]
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_cargo': True,
+            'show_no_cargo': False,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 1
+        assert result[0].name == "Freighter"
+
+    def test_filter_cargo_with_population(self):
+        """Cargo filter includes population as cargo."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ship_with_pax = make_mock_ship(design_name="Transport")
+        ship_with_pax.cargo_contents = {'population': 500}
+
+        ship_empty = make_mock_ship(design_name="Scout")
+        ship_empty.cargo_contents = {}
+
+        ships = [ship_with_pax, ship_empty]
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_cargo': False,
+            'show_no_cargo': True,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 1
+        assert result[0].name == "Scout"
+
+    def test_filter_cargo_zero_value_treated_as_no_cargo(self):
+        """Ship with cargo dict but zero values treated as no cargo."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ship_zero = make_mock_ship(design_name="EmptyHold")
+        ship_zero.cargo_contents = {'minerals': 0, 'food': 0}
+
+        ships = [ship_zero]
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_cargo': False,
+            'show_no_cargo': True,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 1  # Treated as no cargo
+
+    def test_filter_show_all_cargo_states(self):
+        """With both cargo filters enabled, all ships pass."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ship_with_cargo = make_mock_ship(design_name="Freighter")
+        ship_with_cargo.cargo_contents = {'minerals': 100}
+
+        ship_no_cargo = make_mock_ship(design_name="Warship")
+        ship_no_cargo.cargo_contents = {}
+
+        ships = [ship_with_cargo, ship_no_cargo]
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_has_cargo': True,
+            'show_no_cargo': True,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 2
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
