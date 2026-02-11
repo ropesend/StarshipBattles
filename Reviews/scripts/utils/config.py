@@ -19,6 +19,7 @@ VALID_REVIEW_TYPES = [
     "tech-debt",
     "consistency",
     "update",
+    "sweep",
 ]
 
 # Review type display names
@@ -32,6 +33,7 @@ REVIEW_TYPE_NAMES = {
     "tech-debt": "Technical Debt Review",
     "consistency": "Consistency Review",
     "update": "Update Review",
+    "sweep": "Sweep Review",
 }
 
 # Valid review statuses

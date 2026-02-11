@@ -1,0 +1,34 @@
+# Sweep Shard Definitions
+#
+# Used by the /sweep-all skill to split the codebase into manageable chunks.
+# Each shard defines a name, finding ID suffix, and the directories it covers.
+
+## Shard: UI-Screens
+- **ID Suffix:** UI1
+- **Directories:** game/ui/screens/, game/ui/panels/
+- **~LOC:** 33,000
+- **Description:** All screen implementations and panel components
+
+## Shard: UI-Framework
+- **ID Suffix:** UI2
+- **Directories:** game/ui/ (root-level files only), game/ui/services/, game/ui/renderer/, game/ui/interfaces/, game/ui/orchestration/, game/ui/assets/, game/ui/components/, game/ui/utils/
+- **~LOC:** 17,000
+- **Description:** UI framework infrastructure, services, rendering, and shared components
+
+## Shard: Simulation
+- **ID Suffix:** SIM
+- **Directories:** game/simulation/ (all subdirectories)
+- **~LOC:** 15,000
+- **Description:** Combat simulation engine, components, abilities, formulas, entities
+
+## Shard: Strategy
+- **ID Suffix:** STR
+- **Directories:** game/strategy/ (all subdirectories)
+- **~LOC:** 21,000
+- **Description:** Galaxy map, fleet management, production, turn engine, orders
+
+## Shard: Foundation
+- **ID Suffix:** FND
+- **Directories:** game/core/, game/ai/, game/research/, game/engine/
+- **~LOC:** 9,000
+- **Description:** Core registries, AI controllers, research system, engine layer

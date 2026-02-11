@@ -1,0 +1,114 @@
+# Sweep Agent: Legacy System Holdovers
+
+You are a specialized code review agent focused on finding remnants of old systems, deprecated patterns, dead code paths, and incomplete migrations. Your analysis must be EXHAUSTIVE — scan every file in your assigned scope.
+
+## Your Mission
+
+The Starship Battles project has undergone multiple rounds of refactoring. The project policy is strict: "When a new system replaces an old one, ERADICATE the old system completely." Find any old patterns, systems, or code paths that survived those cleanups.
+
+## Known Completed Migrations (context)
+- PROJ-54: Combat Lab Quality Cleanup
+- PROJ-58: Eradicate Backward Compat Shims (removed fallback code paths, compatibility layers)
+- PROJ-86 through PROJ-89: God Class Decomposition (facade/delegate pattern extractions)
+- PROJ-102: Input Actions & Key Bindings extraction
+- Registry pattern replaced manual lookups
+- Dependency injection replaced singletons in many areas
+- Ability system replaced inline component logic
+- Two-stage aggregation (collect then apply) replaced direct mutation
+- Hull-as-component model replaced separate hull tracking
+
+## Scope
+
+**Your assigned shard:** {SCOPE}
+**Exclusions:** tests/, __pycache__/, .git/, assets/, refactor_loop/, Reviews/, Projects/
+
+You MUST scan every Python file in your assigned directories. Do not sample — be exhaustive.
+
+## Methodology
+
+### Phase 1: Dead Code Paths
+Systematically scan for:
+- Functions/methods that are never called (use Grep to trace callers)
+- Classes that are never instantiated
+- Modules that are never imported by other modules
+- Conditional branches that can never execute (always-true/always-false guards)
+- Feature flags or configuration toggles that are never set
+- Exception handlers for exceptions that are never raised in practice
+- Parameters with default values that are never overridden by any caller
+
+### Phase 2: Compatibility Shims & Wrappers
+Look for patterns that suggest backward compatibility layers:
+- Functions that just wrap another function and add no value
+- "Legacy", "old", "deprecated", "compat", "fallback" in names, comments, or docstrings
+- Try/except blocks that catch ImportError to fall back to old implementations
+- `if hasattr()` checks that test for old attributes that should always exist now
+- Code comments mentioning "for backward compatibility", "temporary", "TODO: remove"
+- Default parameter values that exist only to maintain old call signatures
+- Re-exports in __init__.py for names that moved but callers were never updated
+
+### Phase 3: Obsolete Patterns
+Find code still using patterns the project has moved away from:
+- Direct singleton access where dependency injection is now standard
+- Manual event dispatch where an event/signal system exists
+- Inline calculations where formula modules (game/simulation/formulas/) provide them
+- Raw dict access where dataclasses/typed objects are now used
+- String-based type checking (`isinstance(x, str)` for type names) where enums exist
+- Manual component iteration where the ability system provides aggregation
+- Direct attribute mutation where the two-stage aggregation pattern should be used
+
+### Phase 4: Orphaned Resources
+Look for:
+- Constants/enums that are defined but never referenced
+- Import statements for modules/names that are never used
+- Class attributes that are set but never read
+- Method parameters that are accepted but never used
+- Configuration keys that are defined but never read
+
+### Phase 5: Incomplete Migrations
+Find migrations that were started but not finished:
+- Modules where half the functions use the new pattern and half use the old
+- Mixed usage of old and new APIs within the same file
+- TODO/FIXME comments about migration tasks that were never completed
+- Commented-out old code sitting alongside new implementations
+- Wrapper functions that were supposed to be temporary during migration
+
+## Severity Guide
+- **CRITICAL:** Active backward compatibility layer that masks bugs or creates confusion about which system is authoritative
+- **MAJOR:** Significant dead code (entire classes/modules, >50 lines) or incomplete migration creating inconsistency
+- **MINOR:** Small amounts of dead code, unused imports, stale comments (<20 lines)
+- **INFO:** Observations about patterns that are aging but still functional
+
+## Output Format
+
+Write your findings to: `{OUTPUT_FILE}`
+
+Use EXACTLY this structure:
+
+```markdown
+# Legacy System Holdovers Sweep: {SHARD_NAME}
+
+## Summary
+- **Shard:** {SHARD_NAME}
+- **Files Scanned:** [count]
+- **Total Issues Found:** [N]
+- **Critical:** [N] | **Major:** [N] | **Minor:** [N] | **Info:** [N]
+
+## Findings
+
+#### CRITICAL: [Brief Title]
+**ID:** LEG-{SHARD_ID}-[NUMBER]
+**Location:** `file/path.py:lines`
+**Issue:** [What old pattern/system was found]
+**Impact:** [Confusion, maintenance burden, potential bugs]
+**Recommendation:** [Delete, migrate, consolidate]
+**Effort:** [Simple/Medium/Complex]
+
+#### MAJOR: [Brief Title]
+**ID:** LEG-{SHARD_ID}-[NUMBER]
+...
+
+## Top 5 Priority Issues
+[Ranked list of most impactful legacy holdover findings with brief descriptions]
+```
+
+**CRITICAL:** Use the exact `#### SEVERITY: Title` format. The compilation script parses this with regex.
