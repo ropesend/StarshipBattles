@@ -8,26 +8,28 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 2 (Simple Shim Removals)
-**Current Status:** PROJ-109 Phase 2 Complete
+**Last Completed:** PROJ-109 Phase 3 Task 3.1 (Remove validation_result() function)
+**Current Status:** PROJ-109 Phase 3 In Progress (Task 3.1 complete)
 **Current Project:** PROJ-109
 **Current Phase:** Phase 3
 **Test Status:** 8249 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 2 complete:
-  - Removed deprecated galaxy_radius/system_count params from GameSession
-  - Removed hasattr() defensive checks for Fleet.can_use_warp and Facility.construction_queue
-  - Removed deprecated base_path param from ShipThemeManager.initialize()
-  - Removed deprecated turn_engine property from StrategyScreen
-  - Removed selected_component alias from WorkshopViewModel
-  - Removed action_open_design flag and fallback code path
-  - Renamed legacy_components.py to modifier_editor.py
-  - Fixed 4 misleading "backward compatibility" comments
-  - Removed migration guide from fleet_navigation_service.py docstring
-  - Deleted 1 obsolete test (test_fleet_without_can_use_warp_method)
-- Next: Phase 3 (Medium Complexity Removals)
+- PROJ-109 Phase 3 Task 3.1 complete:
+  - Removed validation_result() convenience function from game/core/validation.py
+  - Updated ALL callers across game/ (much larger scope than documented):
+    - game/ui/screens/race_validator.py (8 calls)
+    - game/strategy/facade/strategy_session_facade.py (3 calls)
+    - game/strategy/validation/transfer_validator.py (rewrite)
+    - game/strategy/validation/colonize_validator.py (rewrite)
+    - game/strategy/validation/superweapon_validator.py (rewrite)
+    - game/strategy/engine/command_handlers.py (rewrite)
+    - game/strategy/engine/superweapon_command_handlers.py (rewrite)
+  - Updated test files using validation_result() to use ValidationResult() directly
+  - Updated test assertions expecting success messages to check for empty errors
+  - Updated ValidationResult docstring to remove "Pattern 2" references
+- Next: Task 3.2 (Remove deprecated BattleScreen action flags)
 
 ---
 
@@ -319,6 +321,7 @@
 | 2026-02-11 | PROJ-108 | Audit 1 | PASSED | 8260 passed | pending | All goals verified: SingletonMeta (7), ComponentInspector (3), combat_utils (2), BaseGallery (2), formatting (23 tests) |
 | 2026-02-11 | PROJ-109 | Phase 1 | Complete | 8250 passed | pending | Deleted 8 dead methods, 3 getters, 2 button lists, 10 tests; fixed 2 comments |
 | 2026-02-11 | PROJ-109 | Phase 2 | Complete | 8249 passed | pending | Removed 10 legacy shims, renamed legacy_components.py, fixed 4 comments, deleted 1 test |
+| 2026-02-11 | PROJ-109 | Phase 3 Task 3.1 | Complete | 8249 passed | pending | Removed validation_result() function and ALL callers (larger scope than documented) |
 
 ---
 

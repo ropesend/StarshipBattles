@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock, MagicMock
 from game.core.hex_math import HexCoord
-from game.core.validation import ValidationResult, validation_result
+from game.core.validation import ValidationResult
 
 
 class TestCanColonize:
@@ -30,9 +30,7 @@ class TestCanColonize:
         mock_galaxy.systems = {HexCoord(5, 5): mock_system}
 
         mock_turn_engine = Mock()
-        mock_turn_engine.validate_colonize_order.return_value = validation_result(
-            True, "Planet is valid for colonization."
-        )
+        mock_turn_engine.validate_colonize_order.return_value = ValidationResult()
 
         mock_session = Mock()
         mock_session.empires = [mock_empire]
@@ -67,8 +65,8 @@ class TestCanColonize:
         mock_galaxy.systems = {HexCoord(5, 5): mock_system}
 
         mock_turn_engine = Mock()
-        mock_turn_engine.validate_colonize_order.return_value = validation_result(
-            False, "Planet already owned.", "ALREADY_OWNED"
+        mock_turn_engine.validate_colonize_order.return_value = ValidationResult(
+            is_valid=False, errors=["Planet already owned."], error_code="ALREADY_OWNED"
         )
 
         mock_session = Mock()
@@ -116,9 +114,7 @@ class TestCanColonize:
         mock_galaxy.systems = {}
 
         mock_turn_engine = Mock()
-        mock_turn_engine.validate_colonize_order.return_value = validation_result(
-            True, "Colonization valid."
-        )
+        mock_turn_engine.validate_colonize_order.return_value = ValidationResult()
 
         mock_session = Mock()
         mock_session.empires = [mock_empire]

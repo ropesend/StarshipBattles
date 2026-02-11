@@ -7,7 +7,7 @@ and create fleet orders.
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 from game.core.hex_math import HexCoord
-from game.core.validation import validation_result
+from game.core.validation import ValidationResult
 from game.strategy.data.fleet import FleetOrder, OrderType
 
 
@@ -79,7 +79,7 @@ class TestImplodePlanetCommandHandler:
         handler = ImplodePlanetCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_implode_planet.return_value = validation_result(True, "Valid")
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             result = handler.execute(mock_session, cmd)
 
         assert result.is_valid
@@ -93,7 +93,7 @@ class TestImplodePlanetCommandHandler:
         handler = ImplodePlanetCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_implode_planet.return_value = validation_result(True, "Valid")
+            mock_validator.validate_implode_planet.return_value = ValidationResult()
             handler.execute(mock_session, cmd)
 
         assert len(mock_fleet.orders) == 1
@@ -122,8 +122,8 @@ class TestImplodePlanetCommandHandler:
         handler = ImplodePlanetCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_implode_planet.return_value = validation_result(
-                False, "No ship in fleet has DestroyPlanet ability."
+            mock_validator.validate_implode_planet.return_value = ValidationResult(
+                is_valid=False, errors=["No ship in fleet has DestroyPlanet ability."]
             )
             result = handler.execute(mock_session, cmd)
 
@@ -147,7 +147,7 @@ class TestStellerateStarCommandHandler:
         handler = StellerateStarCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_stellerate_star.return_value = validation_result(True, "Valid")
+            mock_validator.validate_stellerate_star.return_value = ValidationResult()
             result = handler.execute(mock_session, cmd)
 
         assert result.is_valid
@@ -161,7 +161,7 @@ class TestStellerateStarCommandHandler:
         handler = StellerateStarCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_stellerate_star.return_value = validation_result(True, "Valid")
+            mock_validator.validate_stellerate_star.return_value = ValidationResult()
             handler.execute(mock_session, cmd)
 
         assert len(mock_fleet.orders) == 1
@@ -202,7 +202,7 @@ class TestOpenWarpPointCommandHandler:
         handler = OpenWarpPointCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_open_warp_point.return_value = validation_result(True, "Valid")
+            mock_validator.validate_open_warp_point.return_value = ValidationResult()
             result = handler.execute(mock_session, cmd)
 
         assert result.is_valid
@@ -220,7 +220,7 @@ class TestOpenWarpPointCommandHandler:
         handler = OpenWarpPointCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_open_warp_point.return_value = validation_result(True, "Valid")
+            mock_validator.validate_open_warp_point.return_value = ValidationResult()
             handler.execute(mock_session, cmd)
 
         assert len(mock_fleet.orders) == 1
@@ -245,7 +245,7 @@ class TestCloseWarpPointCommandHandler:
         handler = CloseWarpPointCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_close_warp_point.return_value = validation_result(True, "Valid")
+            mock_validator.validate_close_warp_point.return_value = ValidationResult()
             result = handler.execute(mock_session, cmd)
 
         assert result.is_valid
@@ -259,7 +259,7 @@ class TestCloseWarpPointCommandHandler:
         handler = CloseWarpPointCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_close_warp_point.return_value = validation_result(True, "Valid")
+            mock_validator.validate_close_warp_point.return_value = ValidationResult()
             handler.execute(mock_session, cmd)
 
         assert len(mock_fleet.orders) == 1
@@ -283,7 +283,7 @@ class TestCreateDysonSphereCommandHandler:
         handler = CreateDysonSphereCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_create_dyson_sphere.return_value = validation_result(True, "Valid")
+            mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
             result = handler.execute(mock_session, cmd)
 
         assert result.is_valid
@@ -297,7 +297,7 @@ class TestCreateDysonSphereCommandHandler:
         handler = CreateDysonSphereCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_create_dyson_sphere.return_value = validation_result(True, "Valid")
+            mock_validator.validate_create_dyson_sphere.return_value = ValidationResult()
             handler.execute(mock_session, cmd)
 
         assert len(mock_fleet.orders) == 1
@@ -322,7 +322,7 @@ class TestSelfDestructCommandHandler:
         handler = SelfDestructCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_self_destruct.return_value = validation_result(True, "Valid")
+            mock_validator.validate_self_destruct.return_value = ValidationResult()
             result = handler.execute(mock_session, cmd)
 
         assert result.is_valid
@@ -337,7 +337,7 @@ class TestSelfDestructCommandHandler:
         handler = SelfDestructCommandHandler()
 
         with patch('game.strategy.engine.superweapon_command_handlers.SuperweaponValidator') as mock_validator:
-            mock_validator.validate_self_destruct.return_value = validation_result(True, "Valid")
+            mock_validator.validate_self_destruct.return_value = ValidationResult()
             handler.execute(mock_session, cmd)
 
         assert len(mock_fleet.orders) == 1

@@ -5,7 +5,7 @@ PROJ-36: Extracted from TurnEngine to centralize validation.
 PROJ-55: Added colony pod detection and chain validation.
 """
 from typing import Dict, Any, Optional
-from game.core.validation import ValidationResult, validation_result
+from game.core.validation import ValidationResult
 from game.strategy.services.component_inspector import iterate_design_components
 
 
@@ -39,7 +39,7 @@ class ColonizeValidator:
         """
         # 1. Base Validation: Fleet must exist
         if not fleet:
-            return validation_result(False, "Fleet does not exist.")
+            return ValidationResult(is_valid=False, errors=["Fleet does not exist."])
 
         # 2. Get System/Location Context - Use O(1) spatial index
         # Get all planets at the fleet's global hex location
@@ -50,20 +50,20 @@ class ColonizeValidator:
         if target_planet is None:
             # "Any Planet"
             if not valid_candidates:
-                return validation_result(False, "No colonizable planets at this location.", "NO_CANDIDATES")
-            return validation_result(True, "Valid candidate found.")
+                return ValidationResult(is_valid=False, errors=["No colonizable planets at this location."], error_code="NO_CANDIDATES")
+            return ValidationResult()
 
         else:
             # Specific Planet
             if target_planet.owner_id is not None:
-                return validation_result(False, f"Planet {target_planet.name} is already owned.", "ALREADY_OWNED")
+                return ValidationResult(is_valid=False, errors=[f"Planet {target_planet.name} is already owned."], error_code="ALREADY_OWNED")
 
             # Check if planet is in valid candidates (verifies location)
             # We strictly check reference equality or ID equality if we had IDs
             if target_planet not in valid_candidates:
                 # Determine detailed reason for better feedback
                 # If owner is none (checked above), then it must be location.
-                return validation_result(False, f"Planet {target_planet.name} is not at fleet location.", "WRONG_LOCATION")
+                return ValidationResult(is_valid=False, errors=[f"Planet {target_planet.name} is not at fleet location."], error_code="WRONG_LOCATION")
 
             # 4. Check for colony pod (PROJ-55)
             if component_registry is not None:
@@ -75,10 +75,10 @@ class ColonizeValidator:
                 )
 
                 if ship_with_pod is None:
-                    return validation_result(
-                        False,
-                        f"No ship in fleet has {planet_type_str} colony pod",
-                        "NO_COLONY_POD"
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[f"No ship in fleet has {planet_type_str} colony pod"],
+                        error_code="NO_COLONY_POD"
                     )
 
                 # Check chain limits - ensure not over-committed
@@ -89,13 +89,13 @@ class ColonizeValidator:
                 committed_count = committed.get(planet_type_str, 0)
 
                 if committed_count >= available_count:
-                    return validation_result(
-                        False,
-                        f"All {planet_type_str} colony pods already assigned",
-                        "COLONY_POD_EXHAUSTED"
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[f"All {planet_type_str} colony pods already assigned"],
+                        error_code="COLONY_POD_EXHAUSTED"
                     )
 
-            return validation_result(True, "Planet is valid for colonization.")
+            return ValidationResult()
 
     @staticmethod
     def find_ship_with_colony_pod(

@@ -11,7 +11,7 @@ Usage:
 from typing import Any, TYPE_CHECKING
 
 from game.core.logger import log_info
-from game.core.validation import validation_result, ValidationResult
+from game.core.validation import ValidationResult
 from game.strategy.data.fleet import FleetOrder, OrderType
 from game.strategy.data.pathfinding import find_hybrid_path
 from game.strategy.validation import SuperweaponValidator
@@ -32,12 +32,12 @@ class ImplodePlanetCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            return validation_result(False, "Planet not found.")
+            return ValidationResult(is_valid=False, errors=["Planet not found."])
 
         # 3. Validate
         result = SuperweaponValidator.validate_implode_planet(
@@ -61,7 +61,7 @@ class StellerateStarCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Validate
         result = SuperweaponValidator.validate_stellerate_star(
@@ -85,7 +85,7 @@ class OpenWarpPointCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Validate
         result = SuperweaponValidator.validate_open_warp_point(
@@ -113,7 +113,7 @@ class CloseWarpPointCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Validate
         result = SuperweaponValidator.validate_close_warp_point(
@@ -137,7 +137,7 @@ class CreateDysonSphereCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Validate
         result = SuperweaponValidator.validate_create_dyson_sphere(
@@ -161,7 +161,7 @@ class SelfDestructCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Validate
         result = SuperweaponValidator.validate_self_destruct(fleet, cmd.ship_ids)
@@ -187,12 +187,12 @@ class ImplodePlanetMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            return validation_result(False, "Planet not found.")
+            return ValidationResult(is_valid=False, errors=["Planet not found."])
 
         # 3. Determine start hex
         start_hex = fleet.location
@@ -204,7 +204,7 @@ class ImplodePlanetMissionCommandHandler:
         # 4. Calculate path
         path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
         if not path:
-            return validation_result(False, "No path found to target.")
+            return ValidationResult(is_valid=False, errors=["No path found to target."])
 
         # 5. Queue MOVE order if not already at target
         if start_hex != cmd.target_hex:
@@ -222,7 +222,7 @@ class ImplodePlanetMissionCommandHandler:
         fleet.add_order(action_order)
 
         log_info(f"GameSession: Queued IMPLODE_PLANET mission for Fleet {fleet.id}")
-        return validation_result(True, "Implode planet mission queued.")
+        return ValidationResult()
 
 
 class StellerateStarMissionCommandHandler:
@@ -233,7 +233,7 @@ class StellerateStarMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Determine start hex
         start_hex = fleet.location
@@ -245,7 +245,7 @@ class StellerateStarMissionCommandHandler:
         # 3. Calculate path
         path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
         if not path:
-            return validation_result(False, "No path found to target.")
+            return ValidationResult(is_valid=False, errors=["No path found to target."])
 
         # 4. Queue MOVE order if not already at target
         if start_hex != cmd.target_hex:
@@ -263,7 +263,7 @@ class StellerateStarMissionCommandHandler:
         fleet.add_order(action_order)
 
         log_info(f"GameSession: Queued STELLERATE_STAR mission for Fleet {fleet.id}")
-        return validation_result(True, "Stellerate star mission queued.")
+        return ValidationResult()
 
 
 class OpenWarpPointMissionCommandHandler:
@@ -274,7 +274,7 @@ class OpenWarpPointMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Determine start hex
         start_hex = fleet.location
@@ -286,7 +286,7 @@ class OpenWarpPointMissionCommandHandler:
         # 3. Calculate path
         path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
         if not path:
-            return validation_result(False, "No path found to target.")
+            return ValidationResult(is_valid=False, errors=["No path found to target."])
 
         # 4. Queue MOVE order if not already at target
         if start_hex != cmd.target_hex:
@@ -308,7 +308,7 @@ class OpenWarpPointMissionCommandHandler:
         fleet.add_order(action_order)
 
         log_info(f"GameSession: Queued OPEN_WARP_POINT mission for Fleet {fleet.id}")
-        return validation_result(True, "Open warp point mission queued.")
+        return ValidationResult()
 
 
 class CloseWarpPointMissionCommandHandler:
@@ -319,7 +319,7 @@ class CloseWarpPointMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Determine start hex
         start_hex = fleet.location
@@ -331,7 +331,7 @@ class CloseWarpPointMissionCommandHandler:
         # 3. Calculate path
         path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
         if not path:
-            return validation_result(False, "No path found to target.")
+            return ValidationResult(is_valid=False, errors=["No path found to target."])
 
         # 4. Queue MOVE order if not already at target
         if start_hex != cmd.target_hex:
@@ -349,7 +349,7 @@ class CloseWarpPointMissionCommandHandler:
         fleet.add_order(action_order)
 
         log_info(f"GameSession: Queued CLOSE_WARP_POINT mission for Fleet {fleet.id}")
-        return validation_result(True, "Close warp point mission queued.")
+        return ValidationResult()
 
 
 class CreateDysonSphereMissionCommandHandler:
@@ -360,7 +360,7 @@ class CreateDysonSphereMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Determine start hex
         start_hex = fleet.location
@@ -372,7 +372,7 @@ class CreateDysonSphereMissionCommandHandler:
         # 3. Calculate path
         path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
         if not path:
-            return validation_result(False, "No path found to target.")
+            return ValidationResult(is_valid=False, errors=["No path found to target."])
 
         # 4. Queue MOVE order if not already at target
         if start_hex != cmd.target_hex:
@@ -390,4 +390,4 @@ class CreateDysonSphereMissionCommandHandler:
         fleet.add_order(action_order)
 
         log_info(f"GameSession: Queued CREATE_DYSON_SPHERE mission for Fleet {fleet.id}")
-        return validation_result(True, "Create Dyson Sphere mission queued.")
+        return ValidationResult()

@@ -18,7 +18,7 @@ from game.strategy.engine.command_handlers import (
     TransferCommandHandler,
     create_default_registry,
 )
-from game.core.validation import validation_result
+from game.core.validation import ValidationResult
 
 
 class TestCommandHandlerRegistry:
@@ -28,7 +28,7 @@ class TestCommandHandlerRegistry:
         """Registry dispatches to registered handler."""
         registry = CommandHandlerRegistry()
         mock_handler = Mock()
-        mock_handler.execute.return_value = validation_result(True, "OK")
+        mock_handler.execute.return_value = ValidationResult()
 
         registry.register('TestCommand', mock_handler)
         mock_session = Mock()
@@ -103,7 +103,7 @@ class TestColonizeCommandHandler:
         mock_session = Mock()
         mock_session.empires = [mock_empire]
         mock_session.galaxy.get_planet_by_id.return_value = mock_planet
-        mock_session.turn_engine.validate_colonize_order.return_value = validation_result(True, "OK")
+        mock_session.turn_engine.validate_colonize_order.return_value = ValidationResult()
         mock_session._find_colony_at_fleet.return_value = None
 
         mock_cmd = Mock(fleet_id=1, planet_id=10)
@@ -439,7 +439,7 @@ class TestTransferCommandHandler:
         )
 
         with patch('game.strategy.validation.TransferValidator') as mock_validator:
-            mock_validator.validate.return_value = validation_result(True, "OK")
+            mock_validator.validate.return_value = ValidationResult()
             result = handler.execute(mock_session, mock_cmd)
 
         assert result.is_valid

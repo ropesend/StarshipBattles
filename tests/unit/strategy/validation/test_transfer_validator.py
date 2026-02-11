@@ -55,7 +55,7 @@ class TestTransferValidatorLoad:
         )
 
         assert result.is_valid
-        assert "valid" in result.message.lower()
+        assert result.errors == []
 
     def test_load_no_cargo_space_fails(self):
         """Load fails when fleet has no available cargo capacity."""
@@ -98,7 +98,7 @@ class TestTransferValidatorUnload:
         )
 
         assert result.is_valid
-        assert "valid" in result.message.lower()
+        assert result.errors == []
 
     def test_unload_no_cargo_to_unload_fails(self):
         """Unload fails when fleet has no cargo of this type."""

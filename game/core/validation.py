@@ -68,14 +68,8 @@ class ValidationResult:
     by all layers (simulation, strategy, UI). It provides a unified
     interface for validation results across the codebase.
 
-    Supports two construction patterns for backward compatibility:
-
-    Pattern 1 (simulation layer - list of errors):
+    Construction:
         result = ValidationResult(is_valid=False, errors=["Error 1", "Error 2"])
-
-    Pattern 2 (strategy/UI layer - single message):
-        result = ValidationResult(is_valid=False, message="Error message")
-        result = ValidationResult(False, "Error message", "ERROR_CODE")
 
     Attributes:
         is_valid: True if validation passed, False otherwise.
@@ -150,19 +144,3 @@ class ValidationResult:
         self.warnings.extend(other.warnings)
 
 
-def validation_result(is_valid: bool, message: str = "", error_code: Optional[str] = None) -> ValidationResult:
-    """Convenience function to create ValidationResult with strategy/UI pattern.
-
-    This function provides backward compatibility with code that creates
-    ValidationResult using positional arguments: ValidationResult(False, "message")
-
-    Args:
-        is_valid: Whether validation passed.
-        message: Single error message.
-        error_code: Optional error code.
-
-    Returns:
-        ValidationResult instance with message in errors list.
-    """
-    errors = [message] if message else []
-    return ValidationResult(is_valid=is_valid, errors=errors, error_code=error_code)

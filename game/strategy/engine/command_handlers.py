@@ -15,7 +15,7 @@ Usage:
 from typing import Protocol, Dict, Any, TYPE_CHECKING
 
 from game.core.logger import log_info
-from game.core.validation import validation_result, ValidationResult
+from game.core.validation import ValidationResult
 
 if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
@@ -65,7 +65,7 @@ class CommandHandlerRegistry:
         """
         handler = self._handlers.get(command_name)
         if handler is None:
-            return validation_result(False, f"Unknown command type: {command_name}")
+            return ValidationResult(is_valid=False, errors=[f"Unknown command type: {command_name}"])
         return handler.execute(session, command)
 
 
@@ -90,7 +90,7 @@ class ColonizeCommandHandler:
                 break
 
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # Resolve Planet
         target_planet = None
@@ -132,7 +132,7 @@ class MoveCommandHandler:
         # 1. Resolve Fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Validation / Pathfinding
         path = session.preview_fleet_path(fleet, cmd.target_hex)
@@ -141,7 +141,7 @@ class MoveCommandHandler:
             if fleet.location == cmd.target_hex:
                 pass  # Already there - no-op
             else:
-                return validation_result(False, "Target is unreachable or invalid.")
+                return ValidationResult(is_valid=False, errors=["Target is unreachable or invalid."])
 
         # 3. Apply
         order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
@@ -151,7 +151,7 @@ class MoveCommandHandler:
         if len(fleet.orders) == 1:
             fleet.path = path
 
-        return validation_result(True, "Move order issued.")
+        return ValidationResult()
 
 
 class BuildShipCommandHandler:
@@ -162,12 +162,12 @@ class BuildShipCommandHandler:
         # 1. Resolve Planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            return validation_result(False, "Planet not found.")
+            return ValidationResult(is_valid=False, errors=["Planet not found."])
 
         # 2. Apply
         planet.add_production(cmd.design_name, 1)
 
-        return validation_result(True, f"Started construction of {cmd.design_name}.")
+        return ValidationResult()
 
 
 class InterceptCommandHandler:
@@ -180,19 +180,19 @@ class InterceptCommandHandler:
         # 1. Resolve source fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Resolve target fleet
         target_fleet = session._get_fleet_by_id(cmd.target_fleet_id)
         if not target_fleet:
-            return validation_result(False, "Target fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Target fleet not found."])
 
         # 3. Create MOVE_TO_FLEET order
         order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
         fleet.add_order(order)
 
         log_info(f"GameSession: Issued Intercept Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
-        return validation_result(True, "Intercept order issued.")
+        return ValidationResult()
 
 
 class JoinCommandHandler:
@@ -205,12 +205,12 @@ class JoinCommandHandler:
         # 1. Resolve source fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Resolve target fleet
         target_fleet = session._get_fleet_by_id(cmd.target_fleet_id)
         if not target_fleet:
-            return validation_result(False, "Target fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Target fleet not found."])
 
         # 3. Create MOVE_TO_FLEET order first
         move_order = FleetOrder(OrderType.MOVE_TO_FLEET, target=target_fleet)
@@ -221,7 +221,7 @@ class JoinCommandHandler:
         fleet.add_order(join_order)
 
         log_info(f"GameSession: Issued Join Fleet Order for Fleet {fleet.id} -> Fleet {target_fleet.id}")
-        return validation_result(True, "Join fleet order issued.")
+        return ValidationResult()
 
 
 class ColonizeMissionCommandHandler:
@@ -235,14 +235,14 @@ class ColonizeMissionCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Resolve planet (None is valid - means "any planet")
         planet = None
         if cmd.planet_id is not None:
             planet = session._get_planet_by_id(cmd.planet_id)
             if not planet:
-                return validation_result(False, "Planet not found.")
+                return ValidationResult(is_valid=False, errors=["Planet not found."])
 
         # 3. Determine start hex (current location or last order target)
         start_hex = fleet.location
@@ -254,7 +254,7 @@ class ColonizeMissionCommandHandler:
         # 4. Calculate path
         path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
         if not path:
-            return validation_result(False, "No path found to target.")
+            return ValidationResult(is_valid=False, errors=["No path found to target."])
 
         # 5. Auto-load population from colony at fleet's current location (BUG-70)
         origin_colony = session._find_colony_at_fleet(fleet)
@@ -286,7 +286,7 @@ class ColonizeMissionCommandHandler:
 
         planet_name = planet.name if planet else "Any Planet"
         log_info(f"GameSession: Queued Colonize Mission for Fleet {fleet.id} -> {planet_name}")
-        return validation_result(True, "Colonize mission queued.")
+        return ValidationResult()
 
 
 class ClearOrdersCommandHandler:
@@ -297,14 +297,14 @@ class ClearOrdersCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Clear orders and path
         fleet.orders = []
         fleet.path = []
 
         log_info(f"GameSession: Cleared orders for Fleet {fleet.id}")
-        return validation_result(True, "Fleet orders cleared.")
+        return ValidationResult()
 
 
 class TransferCommandHandler:
@@ -318,7 +318,7 @@ class TransferCommandHandler:
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
-            return validation_result(False, "Fleet not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         # 2. Find owning empire
         owning_empire = None
@@ -328,12 +328,12 @@ class TransferCommandHandler:
                 break
 
         if not owning_empire:
-            return validation_result(False, "Fleet owner not found.")
+            return ValidationResult(is_valid=False, errors=["Fleet owner not found."])
 
         # 3. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
-            return validation_result(False, "Planet not found.")
+            return ValidationResult(is_valid=False, errors=["Planet not found."])
 
         # 4. Validate
         result = TransferValidator.validate(

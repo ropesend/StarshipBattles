@@ -148,7 +148,7 @@ class TestInterceptCommandHandler:
         result = session.handle_command(cmd)
 
         assert result.is_valid is True
-        assert "Intercept" in result.message or "intercept" in result.message.lower()
+        assert result.errors == []
         assert len(fleet.orders) == 1
         assert fleet.orders[0].type == OrderType.MOVE_TO_FLEET
         assert fleet.orders[0].target == target_fleet

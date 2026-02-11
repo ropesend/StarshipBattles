@@ -4,7 +4,7 @@ TransferValidator - Validates TRANSFER orders for fleets.
 PROJ-68: Validates cargo transfer operations between fleets and colonies.
 """
 from typing import Any, Dict
-from game.core.validation import ValidationResult, validation_result
+from game.core.validation import ValidationResult
 
 
 class TransferValidator:
@@ -34,7 +34,7 @@ class TransferValidator:
             fleet: The Fleet object attempting the transfer
             planet: The Planet object (colony)
             cargo_type: Type of cargo to transfer (e.g., 'passengers')
-            direction: 'load' (colony→fleet) or 'unload' (fleet→colony)
+            direction: 'load' (colony->fleet) or 'unload' (fleet->colony)
             amount: Units to transfer (0 = all available)
 
         Returns:
@@ -51,44 +51,44 @@ class TransferValidator:
         """
         # 1. Validate fleet exists
         if not fleet:
-            return validation_result(False, "Fleet does not exist.", "FLEET_NOT_FOUND")
+            return ValidationResult(is_valid=False, errors=["Fleet does not exist."], error_code="FLEET_NOT_FOUND")
 
         # 2. Validate planet exists
         if not planet:
-            return validation_result(False, "Planet does not exist.", "PLANET_NOT_FOUND")
+            return ValidationResult(is_valid=False, errors=["Planet does not exist."], error_code="PLANET_NOT_FOUND")
 
         # 3. Validate direction
         if direction not in TransferValidator.VALID_DIRECTIONS:
-            return validation_result(
-                False,
-                f"Invalid direction '{direction}'. Must be 'load' or 'unload'.",
-                "INVALID_DIRECTION"
+            return ValidationResult(
+                is_valid=False,
+                errors=[f"Invalid direction '{direction}'. Must be 'load' or 'unload'."],
+                error_code="INVALID_DIRECTION"
             )
 
         # 4. Validate cargo_type
         if cargo_type not in TransferValidator.VALID_CARGO_TYPES:
-            return validation_result(
-                False,
-                f"Invalid cargo type '{cargo_type}'.",
-                "INVALID_CARGO_TYPE"
+            return ValidationResult(
+                is_valid=False,
+                errors=[f"Invalid cargo type '{cargo_type}'."],
+                error_code="INVALID_CARGO_TYPE"
             )
 
         # 5. Validate fleet is at planet location
         # Use galaxy to find planet's global hex
         planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
         if planet not in planets_at_hex:
-            return validation_result(
-                False,
-                f"Fleet is not at {planet.name}'s location.",
-                "NOT_AT_PLANET"
+            return ValidationResult(
+                is_valid=False,
+                errors=[f"Fleet is not at {planet.name}'s location."],
+                error_code="NOT_AT_PLANET"
             )
 
         # 6. Validate planet is colonized
         if planet.owner_id is None:
-            return validation_result(
-                False,
-                f"Planet {planet.name} is not colonized.",
-                "NOT_COLONIZED"
+            return ValidationResult(
+                is_valid=False,
+                errors=[f"Planet {planet.name} is not colonized."],
+                error_code="NOT_COLONIZED"
             )
 
         # 7. Direction-specific validation
@@ -105,7 +105,7 @@ class TransferValidator:
         amount: int,
         species_id: str = None
     ) -> ValidationResult:
-        """Validate a load operation (colony → fleet)."""
+        """Validate a load operation (colony -> fleet)."""
         # For passengers, check fleet has cargo capacity
         if cargo_type == "passengers":
             capacity = fleet.get_fleet_cargo_capacity("passengers")
@@ -113,30 +113,30 @@ class TransferValidator:
             available_space = capacity - current
 
             if available_space <= 0:
-                return validation_result(
-                    False,
-                    "Fleet has no available passenger capacity.",
-                    "NO_CARGO_SPACE"
+                return ValidationResult(
+                    is_valid=False,
+                    errors=["Fleet has no available passenger capacity."],
+                    error_code="NO_CARGO_SPACE"
                 )
 
             # Check colony has population
             if planet.total_population <= 0:
-                return validation_result(
-                    False,
-                    f"{planet.name} has no population to load.",
-                    "NO_POPULATION"
+                return ValidationResult(
+                    is_valid=False,
+                    errors=[f"{planet.name} has no population to load."],
+                    error_code="NO_POPULATION"
                 )
 
             if species_id:
                 has_species = any(p.race_id == species_id and p.count > 0 for p in planet.populations)
                 if not has_species:
-                    return validation_result(
-                        False,
-                        f"{planet.name} has no {species_id} population to load.",
-                        "NO_POPULATION"
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[f"{planet.name} has no {species_id} population to load."],
+                        error_code="NO_POPULATION"
                     )
 
-        return validation_result(True, "Transfer load is valid.")
+        return ValidationResult()
 
     @staticmethod
     def _validate_unload(
@@ -146,15 +146,15 @@ class TransferValidator:
         amount: int,
         species_id: str = None
     ) -> ValidationResult:
-        """Validate an unload operation (fleet → colony)."""
+        """Validate an unload operation (fleet -> colony)."""
         # Check fleet has cargo to unload
         if cargo_type == "passengers":
             current_cargo = fleet.get_fleet_cargo_current("passengers")
             if current_cargo <= 0:
-                return validation_result(
-                    False,
-                    "Fleet has no passengers to unload.",
-                    "NO_CARGO_TO_UNLOAD"
+                return ValidationResult(
+                    is_valid=False,
+                    errors=["Fleet has no passengers to unload."],
+                    error_code="NO_CARGO_TO_UNLOAD"
                 )
 
-        return validation_result(True, "Transfer unload is valid.")
+        return ValidationResult()

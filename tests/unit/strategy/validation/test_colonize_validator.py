@@ -115,7 +115,7 @@ class TestColonizeValidatorAnyPlanet:
         result = ColonizeValidator.validate(mock_galaxy, mock_fleet, None)
 
         assert result.is_valid is True
-        assert "candidate" in result.message.lower()
+        assert result.errors == []
 
     def test_validate_any_no_candidates(self, mock_galaxy, mock_fleet):
         """Colonize 'Any' fails when no unowned planets at location."""

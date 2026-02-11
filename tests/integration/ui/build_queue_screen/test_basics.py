@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 from game.strategy.data.planet import Planet, PlanetType, PlanetaryFacility
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
-from game.core.validation import validation_result
+from game.core.validation import ValidationResult
 
 
 class MockSession:
@@ -19,7 +19,7 @@ class MockSession:
 
     def handle_command(self, cmd):
         """Mock command handler."""
-        return validation_result(True, "Command processed")
+        return ValidationResult()
 
 
 def test_build_queue_screen_initializes(build_queue_screen):

@@ -6,7 +6,7 @@ instead of directly accessing session internals.
 import pytest
 from unittest.mock import Mock, MagicMock
 from game.core.hex_math import HexCoord
-from game.core.validation import validation_result
+from game.core.validation import ValidationResult
 
 
 class TestColonizationSystemInit:
@@ -75,8 +75,8 @@ class TestOnColonizeClick:
         mock_scene.systems = []
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = validation_result(True, "OK")
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.handle_command.return_value = ValidationResult()
         # PROJ-55: Mock pod filtering - must provide pod for planet type
         mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
 
@@ -114,7 +114,7 @@ class TestIssueColonizeOrder:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -139,7 +139,7 @@ class TestIssueColonizeOrder:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -160,7 +160,7 @@ class TestIssueColonizeOrder:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(False, "Already owned")
+        mock_facade.handle_command.return_value = ValidationResult(is_valid=False, errors=["Already owned"])
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -187,7 +187,7 @@ class TestQueueColonizeMission:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -217,7 +217,7 @@ class TestQueueColonizeMission:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -240,7 +240,7 @@ class TestQueueColonizeMission:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(False, "No path found")
+        mock_facade.handle_command.return_value = ValidationResult(is_valid=False, errors=["No path found"])
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -281,7 +281,7 @@ class TestQueueColonizeMission:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -308,7 +308,7 @@ class TestQueueColonizeMission:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         system = ColonizationSystem(mock_scene, mock_facade)
 
@@ -453,8 +453,8 @@ class TestOnColonizeClickPodFiltering:
 
         mock_facade = Mock()
         # Facade says both are valid (base validation passes)
-        mock_facade.can_colonize.return_value = validation_result(True, "OK")
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.can_colonize.return_value = ValidationResult()
+        mock_facade.handle_command.return_value = ValidationResult()
         # But remaining pods only has Continental
         mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
 
@@ -502,7 +502,7 @@ class TestOnColonizeClickPodFiltering:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = validation_result(True, "OK")
+        mock_facade.can_colonize.return_value = ValidationResult()
         # No remaining pods (1 pod, 1 already committed)
         mock_facade.get_fleet_remaining_pods.return_value = {}
 
@@ -534,7 +534,7 @@ class TestOnColonizeClickPodFiltering:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = validation_result(True, "OK")
+        mock_facade.can_colonize.return_value = ValidationResult()
         # No pods at all
         mock_facade.get_fleet_remaining_pods.return_value = {}
 
@@ -583,7 +583,7 @@ class TestPlanetTypeDisplay:
         mock_scene.systems = [mock_star_system]
 
         mock_facade = Mock()
-        mock_facade.can_colonize.return_value = validation_result(True, "OK")
+        mock_facade.can_colonize.return_value = ValidationResult()
         # Both pod types available
         mock_facade.get_fleet_remaining_pods.return_value = {
             'ICE_DWARF': 1, 'CONTINENTAL': 1

@@ -5,30 +5,38 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Remove backward compatibility code with multiple callers requiring careful migration.
 
 ---
 
 ## Tasks
 
-### Task 3.1: Remove validation_result() convenience function [Medium]
+### Task 3.1: Remove validation_result() convenience function [Medium] - COMPLETE
 **Finding:** LEG-FND-004 (partial) + LEG-FND-001 (partial)
 **File:** `game/core/validation.py:168-183`
 **Callers:**
 - `game/ui/screens/race_validator.py` (8 calls)
-- `tests/unit/ui/test_race_validator.py` (1 call)
-**Tests:** `pytest tests/unit/ui/test_race_validator.py tests/unit/core/ -n 12`
+- `game/strategy/facade/strategy_session_facade.py` (3 calls)
+- `game/strategy/validation/transfer_validator.py` (many calls)
+- `game/strategy/validation/colonize_validator.py` (many calls)
+- `game/strategy/validation/superweapon_validator.py` (many calls)
+- `game/strategy/engine/command_handlers.py` (many calls)
+- `game/strategy/engine/superweapon_command_handlers.py` (many calls)
+- Multiple test files
+**Tests:** `pytest tests/ -n 12` (all 8249 passed)
 
-- [ ] In `game/ui/screens/race_validator.py`: replace all `validation_result(is_valid=False, message="...")` calls with `ValidationResult(is_valid=False, errors=["..."])`
-- [ ] In `game/ui/screens/race_validator.py`: replace all `validation_result(is_valid=True)` calls with `ValidationResult()`
-- [ ] In `tests/unit/ui/test_race_validator.py:128`: update the test call similarly
-- [ ] Update imports in race_validator.py: change `from game.core.validation import validation_result` to `from game.core.validation import ValidationResult`
-- [ ] Delete the `validation_result()` function from `game/core/validation.py` (lines 168-183)
-- [ ] Update the docstring on ValidationResult class to remove "Pattern 2" references (lines 71-78)
-- [ ] Verify: `grep -r "validation_result" game/` returns no hits
+- [x] In `game/ui/screens/race_validator.py`: replace all `validation_result(is_valid=False, message="...")` calls with `ValidationResult(is_valid=False, errors=["..."])`
+- [x] In `game/ui/screens/race_validator.py`: replace all `validation_result(is_valid=True)` calls with `ValidationResult()`
+- [x] In `tests/unit/ui/test_race_validator.py:128`: update the test call similarly
+- [x] Update imports in race_validator.py: change `from game.core.validation import validation_result` to `from game.core.validation import ValidationResult`
+- [x] Update ALL other callers of validation_result() in game/ and tests/
+- [x] Delete the `validation_result()` function from `game/core/validation.py` (lines 168-183)
+- [x] Update the docstring on ValidationResult class to remove "Pattern 2" references (lines 71-78)
+- [x] Verify: `grep -r "validation_result(" game/` returns no hits
+- [x] Updated test assertions that expected success messages to check for empty errors instead
 
-**Notes:**
+**Notes:** Scope was much larger than initially documented - the function was used throughout the strategy layer, not just in race_validator.
 
 ---
 

@@ -10,7 +10,7 @@ needs attention.
 """
 from typing import TYPE_CHECKING
 
-from game.core.validation import ValidationResult, validation_result
+from game.core.validation import ValidationResult
 from game.strategy.data.race_point_budget import RacePointBudget
 
 if TYPE_CHECKING:
@@ -50,43 +50,43 @@ class RaceValidator:
         # Name is required
         name = race_config.name
         if not name or (isinstance(name, str) and not name.strip()):
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message="Species name is required (set in Identity tab)"
+                errors=["Species name is required (set in Identity tab)"]
             )
 
         # Flag selection required
         if not race_config.flag_id:
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message="Please select a flag (Visuals tab)"
+                errors=["Please select a flag (Visuals tab)"]
             )
 
         # Portrait selection required
         if not race_config.portrait_id:
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message="Please select a portrait (Visuals tab)"
+                errors=["Please select a portrait (Visuals tab)"]
             )
 
         # Theme selection required
         if not race_config.theme_id:
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message="Please select a ship theme (Ships tab)"
+                errors=["Please select a ship theme (Ships tab)"]
             )
 
         # Validate water preferences in range
         if not (0.0 <= race_config.water_ideal <= 1.0):
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message="Water ideal must be between 0% and 100% (Environment tab)"
+                errors=["Water ideal must be between 0% and 100% (Environment tab)"]
             )
 
         if not (0.0 <= race_config.water_tolerance <= 1.0):
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message="Water tolerance must be between 0% and 100% (Environment tab)"
+                errors=["Water tolerance must be between 0% and 100% (Environment tab)"]
             )
 
         # Validate aptitudes in range (1-100)
@@ -103,18 +103,18 @@ class RaceValidator:
         ]
         for apt_name, apt_value in aptitude_fields:
             if not (1 <= apt_value <= 100):
-                return validation_result(
+                return ValidationResult(
                     is_valid=False,
-                    message=f"Aptitude {apt_name} must be between 1 and 100 (Aptitudes tab)"
+                    errors=[f"Aptitude {apt_name} must be between 1 and 100 (Aptitudes tab)"]
                 )
 
         # Validate budget
         if not self._budget.is_within_budget(race_config):
             remaining = self._budget.get_remaining_points(race_config)
-            return validation_result(
+            return ValidationResult(
                 is_valid=False,
-                message=f"Species is over point budget by {abs(remaining)} points. "
-                        f"Reduce aptitudes or tolerance on the Aptitudes tab."
+                errors=[f"Species is over point budget by {abs(remaining)} points. "
+                        f"Reduce aptitudes or tolerance on the Aptitudes tab."]
             )
 
         return ValidationResult(is_valid=True)

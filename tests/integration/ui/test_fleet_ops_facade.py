@@ -6,7 +6,7 @@ instead of directly accessing session internals.
 import pytest
 from unittest.mock import Mock, MagicMock, patch
 from game.core.hex_math import HexCoord
-from game.core.validation import validation_result
+from game.core.validation import ValidationResult
 
 
 class TestFleetOperationsInit:
@@ -59,7 +59,7 @@ class TestExecuteMove:
         mock_scene = Mock()
         mock_facade = Mock()
         mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0), HexCoord(2, 0)]
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -79,7 +79,7 @@ class TestExecuteMove:
         mock_scene = Mock()
         mock_facade = Mock()
         mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0)]
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -122,7 +122,7 @@ class TestExecuteMove:
         mock_scene = Mock()
         mock_facade = Mock()
         mock_facade.get_fleet_path_preview.return_value = [HexCoord(1, 0)]
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -144,7 +144,7 @@ class TestExecuteIntercept:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -167,7 +167,7 @@ class TestExecuteIntercept:
 
         mock_scene = Mock()
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
 
@@ -194,7 +194,7 @@ class TestHandleJoinDesignation:
         mock_scene.hex_size = 60
 
         mock_facade = Mock()
-        mock_facade.handle_command.return_value = validation_result(True, "OK")
+        mock_facade.handle_command.return_value = ValidationResult()
 
         ops = FleetOperations(mock_scene, mock_facade)
 

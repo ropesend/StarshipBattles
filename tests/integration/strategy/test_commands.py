@@ -77,7 +77,7 @@ class TestCommands:
 
         res = turn_engine.validate_colonize_order(galaxy, fleet, planet)
         assert res.is_valid
-        assert res.message == "Planet is valid for colonization."
+        assert res.errors == []
 
     def test_issue_colonize_command_validation_fail_owned(self):
         turn_engine = TurnEngine()

@@ -123,9 +123,9 @@ class TestValidationResult:
 
     def test_validation_result_has_message_field(self):
         """ValidationResult has message property."""
-        from game.core.validation import validation_result
+        from game.core.validation import ValidationResult
 
-        result = validation_result(is_valid=False, message="Error")
+        result = ValidationResult(is_valid=False, errors=["Error"])
 
         assert result.message == "Error"
 

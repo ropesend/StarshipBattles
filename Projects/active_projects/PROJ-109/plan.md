@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Dead Code Deletion (8 tasks) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Simple Shim Removals (10 tasks) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Medium Complexity Removals (8 tasks) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Medium Complexity Removals (8 tasks) | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Complex Legacy Eradication (8 tasks) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Foundation Cleanup (3 tasks) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
 **Active Phase:** Phase 3 - Medium Complexity Removals
-**Last Action:** Phase 2 complete - removed deprecated GameSession params, hasattr() checks, base_path param, turn_engine property, selected_component alias, action_open_design flag, renamed legacy_components.py, fixed misleading comments, removed migration guide. Deleted 1 obsolete test.
-**Next Action:** Begin Phase 3 (Medium Complexity Removals)
+**Last Action:** Task 3.1 complete - Removed validation_result() convenience function from game/core/validation.py and ALL callers across game/ and tests/. This was a much larger scope task than documented - the function was used throughout the strategy layer, not just in race_validator.
+**Next Action:** Task 3.2 - Remove deprecated BattleScreen action flags
 **Blockers:** None
 
 ## Overview
