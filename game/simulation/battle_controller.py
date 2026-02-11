@@ -845,35 +845,3 @@ def create_hypothetical_battle(
     return controller
 
 
-def run_hypothetical_from_instances(
-    instances1: List['ShipInstance'],
-    instances2: List['ShipInstance'],
-    seed: Optional[int] = None,
-) -> 'BattleResults':
-    """
-    Run a hypothetical battle from ShipInstance lists.
-
-    Convenience function for strategy layer "what-if" simulations.
-    Clones ship instances so originals are never modified.
-
-    Args:
-        instances1: ShipInstances for team 0 (will be cloned)
-        instances2: ShipInstances for team 1 (will be cloned)
-        seed: Random seed for determinism
-
-    Returns:
-        BattleResults with outcome (source instances unchanged)
-    """
-    # Clone instances
-    cloned1 = [inst.clone() for inst in instances1]
-    cloned2 = [inst.clone() for inst in instances2]
-
-    # Convert to ships
-    ships1 = [inst.to_ship((20000, 50000 + i * 2000), 0) for i, inst in enumerate(cloned1)]
-    ships2 = [inst.to_ship((80000, 50000 + i * 2000), 1) for i, inst in enumerate(cloned2)]
-
-    # Run battle
-    controller = create_hypothetical_battle(ships1, ships2, seed)
-    results = controller.run_headless()
-
-    return results

@@ -1,0 +1,45 @@
+digraph layers {
+  rankdir=BT;
+  node [shape=box, style=filled, fontsize=14];
+  edge [fontsize=10];
+  "ai" [label="ai
+(26 modules)", fillcolor="#E0F7FA"];
+  "app" [label="app
+(1 modules)", fillcolor="#FFCCBC"];
+  "core" [label="core
+(382 modules)", fillcolor="#E8F5E9"];
+  "engine" [label="engine
+(10 modules)", fillcolor="#E3F2FD"];
+  "exit_dialog" [label="exit_dialog
+(2 modules)", fillcolor="#D7CCC8"];
+  "game" [label="game
+(1 modules)", fillcolor="#FFFFFF"];
+  "research" [label="research
+(32 modules)", fillcolor="#F3E5F5"];
+  "simulation" [label="simulation
+(170 modules)", fillcolor="#FFF3E0"];
+  "strategy" [label="strategy
+(269 modules)", fillcolor="#FCE4EC"];
+  "ui" [label="ui
+(410 modules)", fillcolor="#FFF9C4"];
+  "ui" -> "core" [label="189", color="black", penwidth=18.9];
+  "ui" -> "strategy" [label="77", color="black", penwidth=7.7];
+  "strategy" -> "core" [label="60", color="black", penwidth=6.0];
+  "simulation" -> "core" [label="49", color="black", penwidth=4.9];
+  "ui" -> "simulation" [label="18", color="black", penwidth=1.8];
+  "app" -> "ui" [label="14", color="black", penwidth=1.4];
+  "ai" -> "core" [label="12", color="black", penwidth=1.2];
+  "app" -> "core" [label="10", color="black", penwidth=1.0];
+  "ui" -> "ai" [label="9", color="black", penwidth=1.0];
+  "research" -> "core" [label="6", color="black", penwidth=1.0];
+  "strategy" -> "simulation" [label="5", color="black", penwidth=1.0];
+  "engine" -> "core" [label="4", color="black", penwidth=1.0];
+  "research" -> "ui" [label="2", color="red", penwidth=1.0];
+  "simulation" -> "ai" [label="2", color="red", penwidth=1.0];
+  "simulation" -> "engine" [label="2", color="black", penwidth=1.0];
+  "app" -> "exit_dialog" [label="1", color="black", penwidth=1.0];
+  "app" -> "research" [label="1", color="black", penwidth=1.0];
+  "app" -> "simulation" [label="1", color="black", penwidth=1.0];
+  "app" -> "strategy" [label="1", color="black", penwidth=1.0];
+  "ui" -> "engine" [label="1", color="black", penwidth=1.0];
+}

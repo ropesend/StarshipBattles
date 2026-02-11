@@ -342,43 +342,6 @@ def format_fleet_info(fleet) -> str:
     return text
 
 
-def format_sector_environment_info(env) -> str:
-    """
-    Format sector environment information as HTML.
-
-    Args:
-        env: SectorEnvironment object with calculate_radiation method
-
-    Returns:
-        HTML string with environment details
-    """
-    spec = env.calculate_radiation()
-
-    text = f"<b>Local Environment</b><br>"
-    text += f"<b>System:</b> {env.system.name}<br>"
-    text += f"<b>Local:</b> {env.local_hex}<br>"
-    text += f"<br><b>Total Incident Radiation:</b><br>"
-    text += f"{spec.get_total_output():.2e} W/m^2 (relative)<br>"
-
-    return text
-
-
-def format_warp_point_info(warp_point) -> str:
-    """
-    Format warp point information as HTML.
-
-    Args:
-        warp_point: WarpPoint object
-
-    Returns:
-        HTML string with warp point details
-    """
-    text = f"<b>Warp Point</b><br>"
-    text += f"<b>To:</b> {warp_point.destination_id}<br>"
-    text += f"<b>Local Loc:</b> {warp_point.location}<br>"
-    return text
-
-
 def get_label_for_object(obj) -> str:
     """
     Get a display label for any game object.

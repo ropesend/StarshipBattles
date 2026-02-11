@@ -72,27 +72,6 @@ def calculate_center_width(screen_width: int) -> int:
     return screen_width - PANEL_WIDTHS.component_palette - PANEL_WIDTHS.right_panel
 
 
-def calculate_schematic_rect(screen_width: int, screen_height: int):
-    """
-    Calculate the rect for the schematic view.
-    
-    Args:
-        screen_width: Total screen width
-        screen_height: Total screen height
-        
-    Returns:
-        pygame.Rect for the schematic view area
-    """
-    import pygame
-    
-    x = PANEL_WIDTHS.component_palette + PANEL_WIDTHS.layer_panel
-    y = 0
-    width = screen_width - x - PANEL_WIDTHS.right_panel
-    height = screen_height - PANEL_HEIGHTS.bottom_bar - PANEL_HEIGHTS.weapons_report
-    
-    return pygame.Rect(x, y, width, height)
-
-
 def calculate_dynamic_layer_width(screen_width: int) -> int:
     """
     Calculate a responsive layer panel width based on available space.

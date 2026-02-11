@@ -153,6 +153,3 @@ class TestErrorCodeMinimumSet:
         """SAVE_FAILED code exists."""
         assert ErrorCode.SAVE_FAILED.value == "P001"
 
-    def test_syntax_error_exists(self):
-        """SYNTAX_ERROR code exists."""
-        assert ErrorCode.SYNTAX_ERROR.value == "F001"

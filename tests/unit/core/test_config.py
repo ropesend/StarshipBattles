@@ -68,12 +68,6 @@ class TestPhysicsConfig:
 
         assert PhysicsConfig.TICK_RATE == 0.01
 
-    def test_speed_values(self):
-        """Speed values are correct."""
-        from game.core.config import PhysicsConfig
-
-        assert PhysicsConfig.DEFAULT_MAX_SPEED == 1000.0
-        assert isinstance(PhysicsConfig.DEFAULT_MAX_SPEED, float)
 
 
 class TestBattleConfig:
@@ -100,8 +94,8 @@ class TestUIConfig:
         """Panel dimension values exist."""
         from game.core.config import UIConfig
 
-        assert hasattr(UIConfig, 'BUILDER_PANEL_WIDTH')
-        assert isinstance(UIConfig.BUILDER_PANEL_WIDTH, int)
+        assert hasattr(UIConfig, 'PANEL_PADDING')
+        assert isinstance(UIConfig.PANEL_PADDING, int)
 
     def test_toast_dimensions(self):
         """Toast notification dimensions exist and have correct values."""
@@ -117,10 +111,3 @@ class TestUIConfig:
         assert UIConfig.CONFIRM_DIALOG_WIDTH == 400
         assert UIConfig.CONFIRM_DIALOG_HEIGHT == 200
 
-    def test_relative_rect_offsets(self):
-        """Standard relative rect offsets exist."""
-        from game.core.config import UIConfig
-
-        # Common pattern: relative_rect=pygame.Rect(10, 5, width, height)
-        assert UIConfig.RECT_OFFSET_SMALL == 5
-        assert UIConfig.RECT_OFFSET_MEDIUM == 10

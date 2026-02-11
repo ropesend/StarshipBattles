@@ -22,10 +22,6 @@ class DisplayConfig:
     DEFAULT_WIDTH: int = 3840
     DEFAULT_HEIGHT: int = 2160
 
-    # Explicit 4K resolution constants
-    RESOLUTION_4K_WIDTH: int = 3840
-    RESOLUTION_4K_HEIGHT: int = 2160
-
     # Secondary (windowed) resolution
     WINDOWED_WIDTH: int = 2560
     WINDOWED_HEIGHT: int = 1600
@@ -60,7 +56,6 @@ class AIConfig:
     FLEE_DISTANCE: int = 1000
 
     # Formation settings
-    FORMATION_SLOWDOWN_THRESHOLD: float = 0.5
     FORMATION_ENGINE_THROTTLE: float = 0.9
     FORMATION_SLOWDOWN_THROTTLE: float = 0.75
 
@@ -96,13 +91,6 @@ class PhysicsConfig:
 
     # Tick rate (seconds per tick)
     TICK_RATE: float = 0.01
-
-    # Speed limits
-    DEFAULT_MAX_SPEED: float = 1000.0
-
-    # Angle thresholds for movement decisions
-    THRUST_ANGLE_THRESHOLD: float = 30.0
-    ROTATION_ANGLE_THRESHOLD: float = 5.0
 
     # Drag coefficients (applied per tick to prevent infinite drift)
     DEFAULT_LINEAR_DRAG: float = 0.5
@@ -161,22 +149,13 @@ class UIConfig:
         - game.ui.screens.builder_utils: Builder-specific layout constants
     """
 
-    # Builder panel dimensions
-    BUILDER_PANEL_WIDTH: int = 300
-    BUILDER_PANEL_HEIGHT: int = 600
-
     # Default panel margins
-    PANEL_MARGIN: int = 10
     PANEL_PADDING: int = 5
 
     # Panel gaps and spacing
     PANEL_GAP: int = 5
     ELEMENT_SPACING: int = 16
     INDENT: int = 20
-
-    # Standard rect offsets (for pygame.Rect positioning)
-    RECT_OFFSET_SMALL: int = 5
-    RECT_OFFSET_MEDIUM: int = 10
 
     # Toast notification dimensions
     TOAST_WIDTH: int = 300
@@ -190,28 +169,12 @@ class UIConfig:
     FONT_TITLE: int = 28
     FONT_NAME: int = 22
     FONT_STAT: int = 18
-    FONT_BODY: int = 12
-    FONT_HEADER: int = 16
-    FONT_LARGE: int = 36
-    FONT_XLARGE: int = 48
-    FONT_XXLARGE: int = 64
-
     # Battle screen panel dimensions
     STATS_PANEL_WIDTH: int = 450
     SEEKER_PANEL_WIDTH: int = 300
 
     # Strategy screen dimensions
     STRATEGY_SIDEBAR_WIDTH: int = 600
-    STRATEGY_BUTTON_WIDTH: int = 150
-    STRATEGY_BUTTON_HEIGHT: int = 35
-
-    # Common button dimensions
-    BUTTON_WIDTH_SMALL: int = 150
-    BUTTON_WIDTH_MEDIUM: int = 250
-    BUTTON_WIDTH_LARGE: int = 300
-    BUTTON_HEIGHT_SMALL: int = 35
-    BUTTON_HEIGHT_MEDIUM: int = 50
-    BUTTON_HEIGHT_LARGE: int = 60
 
     # Progress/stat bar dimensions
     BAR_WIDTH: int = 120
@@ -221,20 +184,8 @@ class UIConfig:
     # Ship entry dimensions in panels
     SHIP_ENTRY_HEIGHT: int = 25
 
-    # Window dimensions (dialogs/popups)
-    DIALOG_WIDTH_SMALL: int = 300
-    DIALOG_WIDTH_MEDIUM: int = 500
-    DIALOG_WIDTH_LARGE: int = 800
-    DIALOG_HEIGHT_SMALL: int = 150
-    DIALOG_HEIGHT_MEDIUM: int = 300
-    DIALOG_HEIGHT_LARGE: int = 500
-
-    # Scroll settings
-    SCROLL_SPEED: int = 30
-
     # Panel transparency (alpha values 0-255)
     PANEL_ALPHA: int = 230
-    OVERLAY_ALPHA: int = 180
 
     # Battle screen
     GRID_SPACING: int = 5000
@@ -247,12 +198,3 @@ class UIConfig:
     HEADER_HEIGHT: int = 40
 
 
-class TestConfig:
-    """Configuration specific to testing."""
-
-    # Random seed for deterministic tests
-    DEFAULT_RANDOM_SEED: int = 42
-
-    # Timeout values (milliseconds)
-    DEFAULT_TIMEOUT_MS: int = 5000
-    LONG_TIMEOUT_MS: int = 30000

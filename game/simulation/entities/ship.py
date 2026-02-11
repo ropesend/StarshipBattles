@@ -1,6 +1,5 @@
 import random
 import math
-import typing
 from typing import Callable, List, Dict, Tuple, Optional, Any, Union, Set, Iterator
 
 from game.engine.physics import PhysicsBody

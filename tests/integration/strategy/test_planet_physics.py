@@ -1,7 +1,7 @@
 import pytest
 import math
 from game.strategy.data.planet_gen import (
-    PlanetGenerator, MASS_EARTH, MASS_JUPITER, MASS_MOON, GASES,
+    PlanetGenerator, MASS_EARTH, MASS_JUPITER, MASS_MOON,
     calculate_radius_density_from_mass, calculate_escape_velocity,
     generate_atmosphere
 )

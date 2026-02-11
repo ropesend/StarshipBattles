@@ -56,7 +56,6 @@ Example Usage:
     else:
         # Insufficient fuel - component disabled
 """
-import typing
 from typing import Dict, List, Optional, Any, Union
 from game.core.config import PhysicsConfig
 

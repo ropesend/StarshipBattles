@@ -26,7 +26,6 @@ from typing import (
     Tuple,
     Dict,
     Any,
-    TypeVar,
     TYPE_CHECKING,
 )
 
@@ -355,10 +354,6 @@ class IScene(Protocol):
         """Handle window resize to new dimensions."""
         ...
 
-
-def is_scene(obj: Any) -> TypeGuard[IScene]:
-    """Check if obj satisfies the IScene Protocol."""
-    return isinstance(obj, IScene)
 
 
 # =============================================================================

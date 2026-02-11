@@ -156,19 +156,3 @@ class StrategyManager:
             'targeting': t_pol,
             'movement': m_pol
         }
-
-
-def get_strategy_names():
-    """Return list of available strategy IDs for UI."""
-    manager = StrategyManager.instance()
-    manager.ensure_loaded()
-    return list(manager.strategies.keys())
-
-
-def reset_strategy_manager():
-    """
-    Reset the StrategyManager for test isolation.
-
-    Clears all loaded data but keeps the singleton instance.
-    """
-    StrategyManager.instance().clear()

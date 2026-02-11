@@ -1,0 +1,61 @@
+digraph circular_deps {
+  rankdir=LR;
+  node [shape=box, style=filled, fillcolor="#FFECB3", fontsize=11];
+  edge [color="red", penwidth=2];
+  subgraph cluster_game_simulation_battle_controller {
+    label="game.simulation.battle_controller";
+    style=filled; fillcolor="#F5F5F5";
+    "game.simulation.battle_controller" [label="battle_controller"];
+  }
+  subgraph cluster_game_simulation_combat {
+    label="game.simulation.combat";
+    style=filled; fillcolor="#F5F5F5";
+    "game.simulation.combat.battle_mode_handler" [label="battle_mode_handler"];
+  }
+  subgraph cluster_game_simulation_components {
+    label="game.simulation.components";
+    style=filled; fillcolor="#F5F5F5";
+    "game.simulation.components.component" [label="component"];
+    "game.simulation.components.component_health_manager" [label="component_health_manager"];
+    "game.simulation.components.component_resource_manager" [label="component_resource_manager"];
+    "game.simulation.components.component_stats_calculator" [label="component_stats_calculator"];
+  }
+  subgraph cluster_game_strategy_data {
+    label="game.strategy.data";
+    style=filled; fillcolor="#F5F5F5";
+    "game.strategy.data.fleet" [label="fleet"];
+    "game.strategy.data.fleet_battle_adapter" [label="fleet_battle_adapter"];
+    "game.strategy.data.fleet_capability_calculator" [label="fleet_capability_calculator"];
+    "game.strategy.data.fleet_resource_aggregator" [label="fleet_resource_aggregator"];
+    "game.strategy.data.pathfinding" [label="pathfinding"];
+    "game.strategy.data.ship_cargo_manager" [label="ship_cargo_manager"];
+    "game.strategy.data.ship_display_formatter" [label="ship_display_formatter"];
+    "game.strategy.data.ship_instance" [label="ship_instance"];
+    "game.strategy.data.ship_resource_manager" [label="ship_resource_manager"];
+  }
+  subgraph cluster_game_strategy_services {
+    label="game.strategy.services";
+    style=filled; fillcolor="#F5F5F5";
+    "game.strategy.services.fleet_navigation_service" [label="fleet_navigation_service"];
+    "game.strategy.services.fleet_speed_calculator" [label="fleet_speed_calculator"];
+  }
+  subgraph cluster_game_ui_screens {
+    label="game.ui.screens";
+    style=filled; fillcolor="#F5F5F5";
+    "game.ui.screens.strategy_event_router" [label="strategy_event_router"];
+    "game.ui.screens.strategy_ui" [label="strategy_ui"];
+  }
+  "game.simulation.battle_controller" -> "game.simulation.combat.battle_mode_handler" [dir=both];
+  "game.simulation.components.component" -> "game.simulation.components.component_health_manager" [dir=both];
+  "game.simulation.components.component" -> "game.simulation.components.component_resource_manager" [dir=both];
+  "game.simulation.components.component" -> "game.simulation.components.component_stats_calculator" [dir=both];
+  "game.strategy.data.fleet" -> "game.strategy.data.fleet_battle_adapter" [dir=both];
+  "game.strategy.data.fleet" -> "game.strategy.data.fleet_capability_calculator" [dir=both];
+  "game.strategy.data.fleet" -> "game.strategy.data.fleet_resource_aggregator" [dir=both];
+  "game.strategy.data.fleet" -> "game.strategy.services.fleet_speed_calculator" [dir=both];
+  "game.strategy.data.pathfinding" -> "game.strategy.services.fleet_navigation_service" [dir=both];
+  "game.strategy.data.ship_cargo_manager" -> "game.strategy.data.ship_instance" [dir=both];
+  "game.strategy.data.ship_display_formatter" -> "game.strategy.data.ship_instance" [dir=both];
+  "game.strategy.data.ship_instance" -> "game.strategy.data.ship_resource_manager" [dir=both];
+  "game.ui.screens.strategy_event_router" -> "game.ui.screens.strategy_ui" [dir=both];
+}

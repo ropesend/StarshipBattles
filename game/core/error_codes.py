@@ -35,7 +35,7 @@ Programmatic handling::
     try:
         load_component(data)
     except ComponentException as e:
-        if e.code == ErrorCode.INVALID_COMPONENT.value:
+        if e.code == ErrorCode.COMPONENT_INVALID.value:
             # Handle specific error type
             pass
 
@@ -59,20 +59,11 @@ class ErrorCode(Enum):
     VALIDATION_FAILED = "V001"
     """General validation failure."""
 
-    INVALID_COMPONENT = "V002"
-    """Component configuration is invalid."""
-
     MISSING_REQUIRED = "V003"
     """Required field or value is missing."""
 
     OUT_OF_RANGE = "V004"
     """Value is outside allowed range."""
-
-    INVALID_TYPE = "V005"
-    """Value has wrong type."""
-
-    SCHEMA_VIOLATION = "V006"
-    """Data violates expected schema."""
 
     # =========================================================================
     # State Codes (S001-S099)
@@ -103,9 +94,6 @@ class ErrorCode(Enum):
     RESOURCE_LOAD_FAILED = "R003"
     """Failed to load resource."""
 
-    RESOURCE_ACCESS_DENIED = "R004"
-    """Access to resource was denied."""
-
     # =========================================================================
     # Persistence Codes (P001-P099)
     # =========================================================================
@@ -129,20 +117,8 @@ class ErrorCode(Enum):
     # Formula Codes (F001-F099)
     # =========================================================================
 
-    SYNTAX_ERROR = "F001"
-    """Formula has syntax error."""
-
-    UNDEFINED_VAR = "F002"
-    """Formula references undefined variable."""
-
     EVAL_ERROR = "F003"
     """Formula evaluation error."""
-
-    DIVISION_BY_ZERO = "F004"
-    """Formula resulted in division by zero."""
-
-    OVERFLOW = "F005"
-    """Formula result overflowed."""
 
     # =========================================================================
     # Component Codes (C001-C099)
@@ -153,9 +129,6 @@ class ErrorCode(Enum):
 
     COMPONENT_INVALID = "C002"
     """Component configuration is invalid."""
-
-    ABILITY_NOT_FOUND = "C003"
-    """Component ability does not exist."""
 
     SLOT_OCCUPIED = "C004"
     """Component slot is already occupied."""
