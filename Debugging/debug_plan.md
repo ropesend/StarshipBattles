@@ -8,19 +8,6 @@
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
 | BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | In-Progress | [BUG-46.md](active_bugs/BUG-46.md) |
-| BUG-49 | 2026-01-24 | Component Modifier Grid - hide irrelevant columns | Awaiting Confirmation | [BUG-49.md](active_bugs/BUG-49.md) |
-| BUG-50 | 2026-01-24 | Load Design Window - right edge clipped | Awaiting Confirmation | [BUG-50.md](active_bugs/BUG-50.md) |
-| BUG-52 | 2026-01-24 | Design Workshop - rightmost panel should extend full height | Awaiting Confirmation | [BUG-52.md](active_bugs/BUG-52.md) |
-| BUG-53 | 2026-01-24 | Load Design Panel - overwritten by Component Modifier Grid | Awaiting Confirmation | [BUG-53.md](active_bugs/BUG-53.md) |
-| BUG-54 | 2026-01-24 | Planet selection hitbox mismatch after angle increase | Awaiting Confirmation | [BUG-54.md](active_bugs/BUG-54.md) |
-| BUG-55 | 2026-01-24 | Build Queue - no selection indication | Awaiting Confirmation | [BUG-55.md](active_bugs/BUG-55.md) |
-| BUG-56 | 2026-02-07 | New Game Setup - Star system count selector (25-150) | Awaiting Confirmation | [BUG-56.md](active_bugs/BUG-56.md) |
-| BUG-57 | 2026-02-07 | Race Setup window too small | Awaiting Confirmation | [BUG-57.md](active_bugs/BUG-57.md) |
-| BUG-58 | 2026-02-07 | Race Setup - racial points not shown in Environment window | Awaiting Confirmation | [BUG-58.md](active_bugs/BUG-58.md) |
-| BUG-59 | 2026-02-07 | Game Setup + Race Setup visual theme mismatch | Awaiting Confirmation | [BUG-59.md](active_bugs/BUG-59.md) |
-| BUG-60 | 2026-02-07 | Rename all "Race" references to "Species" (code + UI) | Awaiting Confirmation | [BUG-60.md](active_bugs/BUG-60.md) |
-| BUG-61 | 2026-02-07 | Species Setup - aptitude range 1-100, exponential cost above 50 | Awaiting Confirmation | [BUG-61.md](active_bugs/BUG-61.md) |
-| BUG-62 | 2026-02-07 | Homeworld type should set default environmental preferences | Awaiting Confirmation | [BUG-62.md](active_bugs/BUG-62.md) |
 | BUG-63 | 2026-02-07 | Starting planet should match species ideal conditions | Awaiting Confirmation | [BUG-63.md](active_bugs/BUG-63.md) |
 | BUG-64 | 2026-02-07 | Design Workshop - component disappears in multi-layer placement | Awaiting Confirmation | [BUG-64.md](active_bugs/BUG-64.md) |
 | BUG-65 | 2026-02-07 | Design Workshop - modifiers should auto-select applicable ones | Awaiting Confirmation | [BUG-65.md](active_bugs/BUG-65.md) |

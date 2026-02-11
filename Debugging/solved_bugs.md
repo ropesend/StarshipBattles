@@ -654,3 +654,107 @@ There needs to be a visible indicator on the line that indicates if the ship is 
   - `game/ui/screens/workshop_event_router.py:190-235`
 
 ---
+
+## [BUG-49] - Component Modifier Grid - Hide Irrelevant Columns
+* **Date Solved:** 2026-01-24
+* **Original Issue:** Component Modifier Grid showed columns for stats that don't apply to the selected component (e.g., strategic movement for a Bridge).
+* **Solution Implemented:** Implemented data-driven column filtering using `_get_component_consumed_stats()` and `UNIVERSAL_STATS` constant. Grid now only shows columns for stats the component actually uses.
+* **Test Case:** `tests/unit/ui/test_modifier_impact_grid.py`
+
+---
+
+## [BUG-50] - Load Design Window - Right Edge Clipped
+* **Date Solved:** 2026-01-24
+* **Original Issue:** The right edge of design rows in the Load Design window was clipped by the scrollbar.
+* **Solution Implemented:** Changed row_width calculation to use list_container width minus 25px (for scrollbar + margins) instead of main_panel width.
+* **Test Case:** Design selector window tests
+
+---
+
+## [BUG-52] - Design Workshop - Rightmost Panel Should Extend Full Height
+* **Date Solved:** 2026-01-24
+* **Original Issue:** The rightmost panel in the Design Workshop had unused space at the bottom right; Requirements and Recommendations sections were smaller than needed.
+* **Solution Implemented:** Extended right_panel height to `self.height - self.bottom_bar_height` (full height minus bottom bar only).
+* **Test Case:** Workshop screen tests
+
+---
+
+## [BUG-53] - Load Design Panel - Overwritten by Component Modifier Grid
+* **Date Solved:** 2026-01-24
+* **Original Issue:** When the Load Design panel opened, the Component Modifier Grid drew over portions of it.
+* **Solution Implemented:** Added check in `draw()` to detect visible UIWindow instances; skips drawing `component_modifier_grid_panel` and `detail_panel` when modal windows are open.
+* **Test Case:** Workshop screen tests
+
+---
+
+## [BUG-54] - Planet Selection Hitbox Mismatch After Angle Increase
+* **Date Solved:** 2026-01-24
+* **Original Issue:** After increasing planet spread angles (BUG-35 Rev 5), clicking on smaller planets in multi-planet sectors used old positions for hit-testing.
+* **Solution Implemented:** Synchronized angle values in `strategy_input_handler.py` to match updated `strategy_renderer.py` Rev 5 values for all planet count cases.
+* **Test Case:** Strategy input handler tests
+
+---
+
+## [BUG-55] - Build Queue - No Selection Indication
+* **Date Solved:** 2026-01-24
+* **Original Issue:** No visual indication of which design was selected in the build queue; "Remove Selected" button didn't work.
+* **Solution Implemented:** Added `selected_queue_index` state, drag threshold (10px) to distinguish click-select from drag-reorder, blue highlight border for selected items, and "Remove Selected" button handler.
+* **Test Case:** `tests/ui/test_build_queue_drag_drop.py`
+
+---
+
+## [BUG-56] - New Game Setup - Star System Count Selector
+* **Date Solved:** 2026-02-07
+* **Original Issue:** No UI control existed for selecting star system count in new game setup.
+* **Solution Implemented:** Added `UIHorizontalSlider` (range 25-150, default 50, click_increment=5) with value label. Slider value flows through `build_game_config()` to `GameConfig.system_count`.
+* **Test Case:** New game setup tests (13 passed)
+
+---
+
+## [BUG-57] - Race Setup Window Too Small
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Race Setup window opened at 1400x900 from New Game Setup, while main menu version used 1800x1200.
+* **Solution Implemented:** Changed `setup_width` from 1400 to 1800 and `setup_height` from 900 to 1200 in `new_game_setup_screen.py`.
+* **Test Case:** UI sizing change only; no test changes needed
+
+---
+
+## [BUG-58] - Race Setup - Racial Points Not Displayed in Environment Window
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Racial points budget was only displayed in Aptitudes tab; Environment tab had no points indicator.
+* **Solution Implemented:** Added `points_label` UILabel and `_update_points_display()` method to `race_environment_panel.py`. Shows remaining points and environment cost, refreshes on slider changes.
+* **Test Case:** `tests/unit/ui/test_race_environment_panel.py` (29 passed)
+
+---
+
+## [BUG-59] - Game Setup + Race Setup Visual Theme Mismatch
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Menu scene used pygame_gui default styling while strategy layer and design workshop used `builder_theme.json`.
+* **Solution Implemented:** Changed `MenuScene` UIManager creation to load `builder_theme.json` from `Paths.DATA_DIR`, matching strategy and workshop screens.
+* **Test Case:** All 6519 tests pass
+
+---
+
+## [BUG-60] - Rename All "Race" References to "Species" (UI Text)
+* **Date Solved:** 2026-02-07
+* **Original Issue:** All user-facing UI text said "Race" instead of "Species".
+* **Solution Implemented:** Updated all user-visible UI strings across 6 files: race_setup_screen, race_browser_dialog, race_summary_panel, race_identity_panel, new_game_setup_screen, race_validator. Code-level renames deferred to separate project.
+* **Test Case:** All 6519 tests pass
+
+---
+
+## [BUG-61] - Species Setup - Aptitude Range 1-100 with Exponential Cost
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Aptitudes used 1-10 scale with base 5 and linear cost. Needed 1-100 with base 50 and exponential cost above 50.
+* **Solution Implemented:** Expanded scale to 1-100, base 50. Added `_single_aptitude_cost()` with exponential formula above 50: `max(1, int(2^((v-50)/10)))`. Updated race_config, race_point_budget, race_aptitudes_panel, population_engine, and race_validator.
+* **Test Case:** `test_race_config.py`, `test_race_point_budget.py`, `test_population_engine.py`, `test_race_aptitudes_panel.py`, `test_race_validator.py`
+
+---
+
+## [BUG-62] - Homeworld Type Should Set Default Environmental Preferences
+* **Date Solved:** 2026-02-07
+* **Original Issue:** Expected homeworld type selection to auto-populate environmental preferences.
+* **Solution Implemented:** **Already implemented.** Dropdown fires `apply_homeworld_preset()` which loads from `homeworld_presets.json` and updates all sliders. No changes needed.
+* **Test Case:** Race environment panel tests
+
+---
