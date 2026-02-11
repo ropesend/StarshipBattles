@@ -10,7 +10,7 @@ import pygame_gui
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIDropDownMenu, UITextBox, UIImage
 from pygame_gui.core import UIElement
 
-from game.ai.strategy_manager import StrategyManager
+from game.core.strategy_metadata import StrategyMetadataService
 from game.core.logger import log_warning
 from game.ui.panels.design_stats_panel import DesignStatsPanel
 
@@ -111,7 +111,7 @@ class BuilderRightPanel:
         # AI
         UILabel(pygame.Rect(10, y, 60, 25), "AI:", manager=self.manager, container=self.panel)
         
-        strategies = StrategyManager.instance().strategies
+        strategies = StrategyMetadataService.instance().strategies
         ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
         
         # Ensure we have at least one option
@@ -203,7 +203,7 @@ class BuilderRightPanel:
         self.class_dropdown = UIDropDownMenu(class_options, curr_class, class_rect, manager=self.manager, container=self.panel)
         
         # 5. Recreate AI
-        strategies = StrategyManager.instance().strategies
+        strategies = StrategyMetadataService.instance().strategies
         ai_options = [strat.get('name', sid.replace('_', ' ').title()) for sid, strat in strategies.items()]
         
         # Ensure we have at least one option

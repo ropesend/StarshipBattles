@@ -452,10 +452,10 @@ class WorkshopEventRouter:
     def _handle_ai_dropdown(self, event) -> bool:
         """Handle AI strategy dropdown change."""
         gui = self.gui
-        from game.ai.strategy_manager import StrategyManager
+        from game.core.strategy_metadata import StrategyMetadataService
         selected_name = event.text
-        manager = StrategyManager.instance()
-        for strategy_id, strat in manager.strategies.items():
+        service = StrategyMetadataService.instance()
+        for strategy_id, strat in service.strategies.items():
             if strat.get('name', '') == selected_name:
                 gui.viewmodel.set_ship_ai_strategy(strategy_id)
                 break

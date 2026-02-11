@@ -5,11 +5,11 @@ weapons, and components display in the battle UI.
 
 PROJ-40: Import LayerType from core/constants (canonical location).
 ComponentStatus import from simulation layer is acceptable for status display.
-StrategyManager is used for strategy name display - acceptable cross-layer access.
+StrategyMetadataService is used for strategy name display - core layer access.
 """
 import pygame
 from game.simulation.components.component_constants import ComponentStatus
-from game.ai.strategy_manager import StrategyManager
+from game.core.strategy_metadata import StrategyMetadataService
 from game.core.config import UIConfig
 from game.core.constants import CombatConstants, LayerType, ResourceType
 
@@ -240,7 +240,7 @@ def draw_ship_info_header(surface, ship, x_indent, y, font):
         surface.blit(text, (x_indent, y))
         y += UIConfig.ELEMENT_SPACING
 
-    strat_name = StrategyManager.instance().strategies.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
+    strat_name = StrategyMetadataService.instance().strategies.get(ship.ai_strategy, {}).get('name', ship.ai_strategy)
     text = font.render(f"AI: {strat_name}", True, (150, 200, 150))
     surface.blit(text, (x_indent, y))
     y += UIConfig.ELEMENT_SPACING

@@ -96,12 +96,12 @@ class WorkshopDataLoader:
     
     def clear_registries(self) -> None:
         """Clear all game data registries before loading new data."""
-        from game.ai.strategy_manager import StrategyManager
+        from game.core.strategy_metadata import StrategyMetadataService
 
         clear_registry()
 
-        # Clear StrategyManager data
-        StrategyManager.instance().clear()
+        # Clear StrategyMetadataService data
+        StrategyMetadataService.instance().clear()
     
     def load_all(self) -> LoadResult:
         """
@@ -157,32 +157,28 @@ class WorkshopDataLoader:
     
     def _load_strategies(self, result: LoadResult) -> None:
         """Load combat strategies with test mode detection."""
-        from game.ai.strategy_manager import StrategyManager
+        from game.core.strategy_metadata import StrategyMetadataService
 
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")
 
-        manager = StrategyManager.instance()
-        manager.clear()
+        service = StrategyMetadataService.instance()
+        service.clear()
 
         if os.path.exists(test_strat):
             # Test data mode - use test_ prefixed files
-            manager.load_data(
+            service.load_data(
                 self.directory,
-                targeting_file="test_targeting_policies.json",
-                movement_file="test_movement_policies.json",
                 strategy_file="test_combat_strategies.json"
             )
-            manager._loaded = True
-            log_info(f"Loaded strategies from test data in {self.directory}")
+            log_info(f"Loaded strategy metadata from test data in {self.directory}")
         else:
             # Production mode - try standard names
             strat_path, _ = self.find_file(["combatstrategies.json", "combat_strategies.json"])
             if strat_path:
                 base_dir = os.path.dirname(strat_path)
-                manager.load_data(base_dir)
-                manager._loaded = True
-                log_info(f"Loaded strategies from {strat_path}")
+                service.load_data(base_dir)
+                log_info(f"Loaded strategy metadata from {strat_path}")
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""

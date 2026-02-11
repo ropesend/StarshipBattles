@@ -22,6 +22,7 @@ class TestBuilderUISync:
         for UI components that still use the global pattern.
         """
         from game.ai.strategy_manager import StrategyManager
+        from game.core.strategy_metadata import StrategyMetadataService
         from tests.infrastructure.session_cache import SessionRegistryCache
 
         # PROJ-38: Hydrate registry singleton from fresh_registries fixture data
@@ -36,9 +37,14 @@ class TestBuilderUISync:
         # Load strategy data from session cache (strategies not in GameRegistries yet)
         cache = SessionRegistryCache.instance()
         cache.load_all_data()
+        strategies = cache.get_strategies()
+
+        # Populate both StrategyManager (for AI) and StrategyMetadataService (for UI)
         strat_mgr = StrategyManager.instance()
-        strat_mgr.strategies = cache.get_strategies()
+        strat_mgr.strategies = strategies
         strat_mgr._loaded = True
+
+        StrategyMetadataService.instance().set_strategies(strategies)
 
         # Re-initialize pygame - required because other tests may have called pygame.quit()
         # which destroys the session-scoped pygame state from root conftest.
@@ -129,8 +135,8 @@ class TestBuilderUISync:
         assert val == target_class
 
         # AI Strategy Name lookup
-        from game.ai.strategy_manager import StrategyManager
-        strat_name = StrategyManager.instance().strategies["kamikaze"]["name"]
+        from game.core.strategy_metadata import StrategyMetadataService
+        strat_name = StrategyMetadataService.instance().strategies["kamikaze"]["name"]
         val = self._get_option_value(self.panel.ai_dropdown.selected_option)
         assert val == strat_name
 

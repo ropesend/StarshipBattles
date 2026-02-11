@@ -2,7 +2,7 @@
 
 PROJ-43: Uses ShipFactory facade instead of direct Ship import.
 - ShipFactory: Creates and configures Ship instances via UI services layer
-- StrategyManager: Runtime - populates AI strategy dropdown options
+- StrategyMetadataService: Core layer - populates AI strategy dropdown options
 """
 import os
 import uuid
@@ -12,7 +12,7 @@ from tkinter import filedialog
 
 from game.core.logger import log_error
 from game.ui.services.ship_factory import ShipFactory
-from game.ai.strategy_manager import StrategyManager
+from game.core.strategy_metadata import StrategyMetadataService
 from game.core.json_utils import load_json_required
 from game.ui.screens.setup_data_io import (
     get_base_path, scan_ship_designs, scan_formations,
@@ -56,7 +56,7 @@ class BattleSetupScreen:
         self.team2 = []
         self.scroll_offset = 0
         self.ai_dropdown_open = None
-        self.ai_strategies = list(StrategyManager.instance().strategies.keys())
+        self.ai_strategies = list(StrategyMetadataService.instance().strategies.keys())
 
     def start(self, preserve_teams=False):
         """Initialize or reset the setup screen."""

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Create a strategy metadata service that provides strategy names and IDs without requiring UI to import from `game.ai.strategy_manager`. Currently 8 UI files import StrategyManager directly -- this phase eliminates all of them.
 
 ---
@@ -39,9 +39,9 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/core/strategy_metadata.py` (NEW)
 **Tests:** `tests/unit/core/test_strategy_metadata.py` (NEW)
 
-- [ ] Create `game/core/strategy_metadata.py` with class `StrategyMetadataService`
-- [ ] Implement as a simple singleton (matching existing patterns like StrategyManager)
-- [ ] Required public API:
+- [x] Create `game/core/strategy_metadata.py` with class `StrategyMetadataService`
+- [x] Implement as a simple singleton (matching existing patterns like StrategyManager)
+- [x] Required public API:
   - `instance()` -> StrategyMetadataService (classmethod, thread-safe)
   - `reset()` -> None (classmethod, for testing)
   - `clear()` -> None (reset data, preserve instance)
@@ -51,8 +51,8 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
   - `get_strategy_id_by_name(display_name: str)` -> Optional[str] (resolve name to ID)
   - `load_data(base_path, strategy_file)` -> None (load strategy metadata from JSON)
   - `set_strategies(strategies: dict)` -> None (set data directly, used by StrategyManager)
-- [ ] Write unit tests in `tests/unit/core/test_strategy_metadata.py`
-- [ ] Run tests: `pytest tests/unit/core/test_strategy_metadata.py -v`
+- [x] Write unit tests in `tests/unit/core/test_strategy_metadata.py`
+- [x] Run tests: `pytest tests/unit/core/test_strategy_metadata.py -v`
 
 ---
 
@@ -60,12 +60,12 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/ai/strategy_manager.py`
 **Tests:** `pytest tests/unit/ai/ -v`
 
-- [ ] In `StrategyManager.load_data()` (line 117), after loading strategies, call:
+- [x] In `StrategyManager.load_data()` (line 117), after loading strategies, call:
   `StrategyMetadataService.instance().set_strategies(self.strategies)`
-- [ ] In `StrategyManager.clear()` (line 89), also call:
+- [x] In `StrategyManager.clear()` (line 89), also call:
   `StrategyMetadataService.instance().clear()`
-- [ ] Add import: `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Run tests: `pytest tests/unit/ai/ -v`
+- [x] Add import: `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Run tests: `pytest tests/unit/ai/ -v`
 
 ---
 
@@ -73,10 +73,10 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/ui/screens/builder/right_panel.py`
 **Tests:** `pytest tests/unit/ui/ -v -k builder`
 
-- [ ] Replace `from game.ai.strategy_manager import StrategyManager` (line 13) with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Line 114: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Line 206: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Run tests: `pytest tests/unit/ui/ -v -k builder`
+- [x] Replace `from game.ai.strategy_manager import StrategyManager` (line 13) with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Line 114: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Line 206: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Run tests: `pytest tests/unit/ui/ -v -k builder`
 
 ---
 
@@ -84,9 +84,9 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/ui/screens/builder/main.py`
 **Tests:** `pytest tests/unit/ui/ -v -k builder`
 
-- [ ] Line 724: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Line 726: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Run tests: `pytest tests/unit/ui/ -v -k builder`
+- [x] Line 724: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Line 726: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Run tests: `pytest tests/unit/ui/ -v -k builder`
 
 ---
 
@@ -94,10 +94,10 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/ui/screens/setup_renderer.py`
 **Tests:** `pytest tests/unit/ui/ -v -k setup`
 
-- [ ] Line 10: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Line 98: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Line 197: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Run tests: `pytest tests/unit/ui/ -v -k setup`
+- [x] Line 10: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Line 98: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Line 197: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Run tests: `pytest tests/unit/ui/ -v -k setup`
 
 ---
 
@@ -105,9 +105,9 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/ui/screens/setup_screen.py`
 **Tests:** `pytest tests/unit/ui/ -v -k setup`
 
-- [ ] Line 15: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Line 59: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Run tests: `pytest tests/unit/ui/ -v -k setup`
+- [x] Line 15: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Line 59: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Run tests: `pytest tests/unit/ui/ -v -k setup`
 
 ---
 
@@ -115,9 +115,9 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 **File:** `game/ui/panels/ship_stats_renderer.py`
 **Tests:** `pytest tests/unit/ui/ -v -k stats`
 
-- [ ] Line 12: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Line 243: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
-- [ ] Run tests: `pytest tests/unit/ui/ -v`
+- [x] Line 12: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Line 243: Replace `StrategyManager.instance().strategies` with `StrategyMetadataService.instance().strategies`
+- [x] Run tests: `pytest tests/unit/ui/ -v`
 
 ---
 
@@ -127,12 +127,12 @@ Rejected -- StrategyManager has `ensure_loaded()`, default policies, and is tigh
 
 This file uses StrategyManager for more than just reading -- it calls `clear()` and `load_data()`.
 
-- [ ] Line 99: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Line 104: Replace `StrategyManager.instance().clear()` with `StrategyMetadataService.instance().clear()`
-- [ ] Line 160: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Lines 165-174: Replace `StrategyManager.instance()` usage with `StrategyMetadataService.instance()`
-- [ ] NOTE: The `load_data()` call on StrategyMetadataService must load the same strategy JSON data. Ensure the service's `load_data()` method supports the same `base_path` + file name parameters
-- [ ] Run tests: `pytest tests/unit/ui/ -v -k workshop`
+- [x] Line 99: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Line 104: Replace `StrategyManager.instance().clear()` with `StrategyMetadataService.instance().clear()`
+- [x] Line 160: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Lines 165-174: Replace `StrategyManager.instance()` usage with `StrategyMetadataService.instance()`
+- [x] NOTE: The `load_data()` call on StrategyMetadataService must load the same strategy JSON data. Ensure the service's `load_data()` method supports the same `base_path` + file name parameters
+- [x] Run tests: `pytest tests/unit/ui/ -v -k workshop`
 
 ---
 
@@ -140,29 +140,29 @@ This file uses StrategyManager for more than just reading -- it calls `clear()` 
 **File:** `game/ui/screens/workshop_event_router.py`
 **Tests:** `pytest tests/unit/ui/ -v -k workshop`
 
-- [ ] Line 455: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
-- [ ] Lines 457-463: Replace `StrategyManager.instance()` with `StrategyMetadataService.instance()`
-- [ ] Run tests: `pytest tests/unit/ui/ -v -k workshop`
+- [x] Line 455: Replace `from game.ai.strategy_manager import StrategyManager` with `from game.core.strategy_metadata import StrategyMetadataService`
+- [x] Lines 457-463: Replace `StrategyManager.instance()` with `StrategyMetadataService.instance()`
+- [x] Run tests: `pytest tests/unit/ui/ -v -k workshop`
 
 ---
 
 ### Task 3.10: Verify No AI Imports Remain in UI (except intentional) [Simple]
 
-- [ ] Grep for `from game.ai` in `game/ui/` directory
-- [ ] Only acceptable remaining imports:
+- [x] Grep for `from game.ai` in `game/ui/` directory
+- [x] Only acceptable remaining imports:
   - `game/ui/orchestration/battle_orchestrator.py` -- intentional cross-layer orchestration (ADR-UI2-010)
-- [ ] Verify zero `StrategyManager` references in `game/ui/`
-- [ ] Run full test suite: `pytest tests/ -n 12`
+- [x] Verify zero `StrategyManager` references in `game/ui/`
+- [x] Run full test suite: `pytest tests/ -n 12`
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] `StrategyMetadataService` created and tested in `game/core/`
-- [ ] All 8 UI files updated to use `StrategyMetadataService` instead of `StrategyManager`
-- [ ] Zero `from game.ai.strategy_manager` imports remain in `game/ui/`
-- [ ] Full test suite passes: `pytest tests/ -n 12` (8164+ tests)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] `StrategyMetadataService` created and tested in `game/core/`
+- [x] All 8 UI files updated to use `StrategyMetadataService` instead of `StrategyManager`
+- [x] Zero `from game.ai.strategy_manager` imports remain in `game/ui/`
+- [x] Full test suite passes: `pytest tests/ -n 12` (8182 tests)
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

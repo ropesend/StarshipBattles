@@ -14,6 +14,7 @@ from typing import Optional
 from game.core.logger import log_info
 from game.core.json_utils import load_json
 from game.core.exceptions import StateException
+from game.core.strategy_metadata import StrategyMetadataService
 
 
 class StrategyManager:
@@ -96,6 +97,8 @@ class StrategyManager:
         self.movement_policies = {}
         self.strategies = {}
         self._loaded = False
+        # Also clear the metadata service for UI layer
+        StrategyMetadataService.instance().clear()
 
     def ensure_loaded(self, base_path: str = "data"):
         """
@@ -126,6 +129,9 @@ class StrategyManager:
         # Load Strategies
         strategy_data = load_json(os.path.join(base_path, strategy_file), default={})
         self.strategies = strategy_data.get('strategies', {})
+
+        # Populate metadata service for UI layer
+        StrategyMetadataService.instance().set_strategies(self.strategies)
 
         log_info(f"StrategyManager loaded: {len(self.strategies)} strategies, {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
 

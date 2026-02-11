@@ -721,9 +721,9 @@ class BuilderScreen:
 
     def _handle_ai_dropdown(self, event) -> None:
         """Handle AI strategy dropdown changes."""
-        from game.ai.strategy_manager import StrategyManager
+        from game.core.strategy_metadata import StrategyMetadataService
         selected_name = event.text
-        for strategy_id, strat in StrategyManager.instance().strategies.items():
+        for strategy_id, strat in StrategyMetadataService.instance().strategies.items():
             if strat.get('name', '') == selected_name:
                 self.ship.ai_strategy = strategy_id
                 break
