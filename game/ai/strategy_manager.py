@@ -13,17 +13,16 @@ from typing import Optional
 
 from game.core.logger import log_info
 from game.core.json_utils import load_json
-from game.core.error_codes import ErrorCode
-from game.core.exceptions import StateException
 from game.core.strategy_metadata import StrategyMetadataService
+from game.core.singleton import SingletonMeta
 
 
-class StrategyManager:
+class StrategyManager(metaclass=SingletonMeta):
     """
     Singleton manager for combat strategies, targeting policies, and movement policies.
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
         - Data loading (load_data/ensure_loaded) is thread-safe via locking
         - Once loaded, all read operations are safe without synchronization
         - Note: clear() and reset() are NOT thread-safe and should only be used
@@ -37,23 +36,10 @@ class StrategyManager:
         - Use reset() to destroy instance completely
         - Use clear() to reset data but preserve instance
     """
-    _instance: Optional['StrategyManager'] = None
-    _lock = threading.Lock()
+    _data_lock = threading.Lock()
 
     def __init__(self):
-        """
-        Initialize the StrategyManager.
-
-        Raises:
-            StateException: If called directly instead of via instance()
-        """
-        if StrategyManager._instance is not None:
-            raise StateException(
-                "StrategyManager is a singleton. Use StrategyManager.instance()",
-                code=ErrorCode.AI_STATE_ERROR.value,
-                context={"class": "StrategyManager"}
-            )
-
+        """Initialize the StrategyManager."""
         self.targeting_policies = {}
         self.movement_policies = {}
         self.strategies = {}
@@ -63,33 +49,6 @@ class StrategyManager:
             'movement': {'behavior': 'kite', 'engage_distance': 'max_range', 'retreat_hp_threshold': 0.1, 'avoid_collisions': True},
             'strategy': {'name': 'Default', 'targeting_policy': 'standard', 'movement_policy': 'kite_max'}
         }
-
-    @classmethod
-    def instance(cls) -> 'StrategyManager':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton StrategyManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            cls._instance = None
 
     def clear(self):
         """
@@ -115,7 +74,7 @@ class StrategyManager:
         """
         if self._loaded:
             return
-        with self._lock:
+        with self._data_lock:
             if self._loaded:
                 return
             self.load_data(base_path)

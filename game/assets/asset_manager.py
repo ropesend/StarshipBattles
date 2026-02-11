@@ -1,18 +1,17 @@
 import os
 import pygame
-import threading
 from game.core.json_utils import load_json
 from game.core.logger import log_error, log_info, log_warning
 from game.core.paths import Paths
-from game.core.exceptions import StateException
+from game.core.singleton import SingletonMeta
 
 
-class AssetManager:
+class AssetManager(metaclass=SingletonMeta):
     """
     Singleton manager for game assets (images, etc.).
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
 
     Usage:
         manager = AssetManager.instance()
@@ -22,46 +21,12 @@ class AssetManager:
         - Use reset() to destroy instance completely
         - Use clear() to reset caches but preserve instance
     """
-    _instance = None
-    _lock = threading.Lock()
 
     def __init__(self):
-        if AssetManager._instance is not None:
-            raise StateException(
-                "AssetManager is a singleton. Use AssetManager.instance()",
-                code="AM001"
-            )
         self.assets = {}  # Cache: {key: Surface} or {key: [Surfaces]}
         self.manifest = {}
         self.manifest_path = Paths.ASSET_MANIFEST_FILE
         self.missing_texture = None
-
-    @classmethod
-    def instance(cls) -> 'AssetManager':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton AssetManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            cls._instance = None
 
     def clear(self):
         """Reset all caches. Used for test isolation."""

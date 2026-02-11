@@ -1,14 +1,15 @@
 import pygame
 import os
-import threading
 from game.core.logger import log_info, log_error
+from game.core.singleton import SingletonMeta
 
-class SpriteManager:
+
+class SpriteManager(metaclass=SingletonMeta):
     """
     Singleton manager for component sprite images.
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
 
     Usage:
         manager = SpriteManager.instance()
@@ -17,43 +18,11 @@ class SpriteManager:
     Testing:
         - Use reset() to destroy instance completely
     """
-    _instance = None
-    _lock = threading.Lock()
 
     def __init__(self):
-        if SpriteManager._instance is not None:
-            raise Exception("SpriteManager is a singleton. Use SpriteManager.instance()")
         self.atlas = None
         self.sprites = []
         self.tile_size = 36
-
-    @classmethod
-    def instance(cls) -> 'SpriteManager':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton SpriteManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            cls._instance = None
 
     def load_sprites(self, base_path):
         """

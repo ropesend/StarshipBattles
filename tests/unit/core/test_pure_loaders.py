@@ -10,12 +10,13 @@ import pytest
 import copy
 
 from game.core.registry import RegistryManager
+from game.core.singleton import SingletonMeta
 
 
 @pytest.fixture(autouse=True)
 def reset_registry():
     """Reset registry state before and after each test."""
-    original_instance = RegistryManager._instance
+    original_instance = SingletonMeta._instances.get(RegistryManager)
     RegistryManager.reset()
     yield
     RegistryManager.reset()

@@ -44,10 +44,10 @@ __all__ = [
 from dataclasses import dataclass
 import json
 from typing import Dict, Any, Optional
-import threading
 
 from game.core.exceptions import StateException, FrozenStateException
 from game.core.error_codes import ErrorCode
+from game.core.singleton import SingletonMeta
 
 
 # =============================================================================
@@ -120,18 +120,18 @@ def get_default_registries() -> GameRegistries:
         )
     return _default_registries
 
-class RegistryManager:
+class RegistryManager(metaclass=SingletonMeta):
     """
     Central singleton for managing global game state registries.
-    
+
     Replaces module-level globals to allow for clean state resets in testing.
-    
+
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
         - All dictionary operations use the same dict instances (no replacement)
         - Individual dict operations are atomic in CPython (GIL)
         - For cross-registry transactions, external synchronization is required
-    
+
     Usage:
         # Preferred: Use GameRegistries via DI (PROJ-38)
         from game.core.registry import get_default_registries
@@ -145,69 +145,26 @@ class RegistryManager:
         mgr = RegistryManager.instance()
         mgr.clear()  # For test isolation
         mgr.freeze() # For production initialization
-    
+
     Testing:
         - Use conftest.py's reset_game_state fixture (auto-applied)
         - Fixture calls clear() before/after each test
         - Never call reset() in production code
-    
+
     Attributes:
         components: Dict of component definitions keyed by ID
         modifiers: Dict of modifier definitions keyed by ID
         vehicle_classes: Dict of vehicle class definitions keyed by name
     """
-    _instance: Optional['RegistryManager'] = None
-    _lock = threading.Lock()
 
     def __init__(self):
-        """
-        Initialize the RegistryManager.
-
-        Raises:
-            StateException: If called directly instead of via instance()
-        """
-        if RegistryManager._instance is not None:
-             raise StateException(
-                 "RegistryManager is a singleton. Use RegistryManager.instance()",
-                 code=ErrorCode.INVALID_STATE.value,
-                 context={"class": "RegistryManager"}
-             )
-        
+        """Initialize the RegistryManager."""
         self.components: Dict[str, Any] = {}
         self.modifiers: Dict[str, Any] = {}
         self.vehicle_classes: Dict[str, Any] = {}
         self.resources: Dict[str, Any] = {}
         self._validator: Any = None
         self._frozen: bool = False
-
-    @classmethod
-    def instance(cls) -> 'RegistryManager':
-        """
-        Get the singleton instance, creating it if necessary.
-        
-        Thread-safe via double-checked locking pattern.
-        
-        Returns:
-            The singleton RegistryManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-    
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-        
-        WARNING: For testing only! This can cause stale reference hazards if
-        any code is holding references to the old instance's dictionaries.
-        
-        Prefer clear() for test isolation - it preserves dict identity while
-        emptying the contents.
-        """
-        cls._instance = None
 
     def freeze(self):
         """

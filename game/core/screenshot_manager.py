@@ -2,17 +2,18 @@ import os
 import datetime
 import subprocess
 import pygame
-import threading
 from game.core.constants import DEBUG_SCREENSHOTS
 from game.core.paths import Paths
 from game.core.logger import log_error, log_info, log_warning
+from game.core.singleton import SingletonMeta
 
-class ScreenshotManager:
+
+class ScreenshotManager(metaclass=SingletonMeta):
     """
     Singleton manager for capturing screenshots.
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
 
     Usage:
         manager = ScreenshotManager.instance()
@@ -21,41 +22,9 @@ class ScreenshotManager:
     Testing:
         - Use reset() to destroy instance completely
     """
-    _instance = None
-    _lock = threading.Lock()
 
     def __init__(self):
-        if ScreenshotManager._instance is not None:
-            raise RuntimeError("ScreenshotManager is a singleton. Use ScreenshotManager.instance()")
         self._setup()
-
-    @classmethod
-    def instance(cls) -> 'ScreenshotManager':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton ScreenshotManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            cls._instance = None
 
     def _setup(self):
         self.enabled = DEBUG_SCREENSHOTS

@@ -210,7 +210,7 @@ class TestRegistryIntegration:
     def test_registry_manager_resources_initialization(self):
         """RegistryManager initializes with empty resources dict."""
         # Reset to get fresh instance
-        RegistryManager._instance = None
+        RegistryManager.reset()
         registry = RegistryManager.instance()
 
         # Should start with empty resources

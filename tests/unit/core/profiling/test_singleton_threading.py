@@ -2,6 +2,8 @@
 import pytest
 import threading
 
+from game.core.singleton import SingletonMeta
+
 
 class TestSingletonBehavior:
     """Tests for Profiler singleton pattern."""
@@ -15,12 +17,13 @@ class TestSingletonBehavior:
 
         assert p1 is p2
 
-    def test_direct_instantiation_raises_exception(self, profiler):
-        """Direct instantiation should raise when singleton exists."""
+    def test_direct_instantiation_returns_same_object(self, profiler):
+        """Direct instantiation should return the same singleton (metaclass behavior)."""
         from game.core.profiling import Profiler
 
-        with pytest.raises(Exception, match="singleton"):
-            Profiler()
+        # With SingletonMeta, direct construction returns the singleton
+        p2 = Profiler()
+        assert p2 is profiler
 
     def test_reset_allows_new_instance(self):
         """reset() should allow creating a new instance."""
@@ -37,12 +40,13 @@ class TestSingletonBehavior:
         # New instance has new session ID
         assert session_id_1 != session_id_2
 
-    def test_has_thread_lock(self):
-        """Profiler class should have a lock for thread safety."""
+    def test_has_thread_lock_via_metaclass(self):
+        """Profiler should have a lock for thread safety via SingletonMeta."""
         from game.core.profiling import Profiler
 
-        assert hasattr(Profiler, '_lock')
-        assert isinstance(Profiler._lock, type(threading.Lock()))
+        # Lock is stored in SingletonMeta._locks, keyed by class
+        assert Profiler in SingletonMeta._locks
+        assert isinstance(SingletonMeta._locks[Profiler], type(threading.Lock()))
 
 
 class TestThreadSafety:

@@ -22,10 +22,12 @@ def reset_registry(request):
     Also saves/restores _default_registries module variable.
     """
     from game.core.registry import RegistryManager
+    from game.core.singleton import SingletonMeta
     import game.core.registry as registry_module
 
     # Store original instance AND its data to restore after test
-    original_instance = RegistryManager._instance
+    # With SingletonMeta, the instance is stored in SingletonMeta._instances
+    original_instance = SingletonMeta._instances.get(RegistryManager)
     original_default_registries = registry_module._default_registries
     original_data = None
     if original_instance is not None:
@@ -43,7 +45,10 @@ def reset_registry(request):
     yield
 
     # Restore original instance AND its data to prevent pollution
-    RegistryManager._instance = original_instance
+    if original_instance is not None:
+        SingletonMeta._instances[RegistryManager] = original_instance
+    elif RegistryManager in SingletonMeta._instances:
+        del SingletonMeta._instances[RegistryManager]
     registry_module._default_registries = original_default_registries
     if original_instance is not None and original_data is not None:
         # Restore the data that may have been cleared

@@ -12,9 +12,9 @@ class TestAssetManagerLogging:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         """Reset singleton for each test."""
-        AssetManager._instance = None
+        AssetManager.reset()
         yield
-        AssetManager._instance = None
+        AssetManager.reset()
 
     def test_asset_manager_does_not_import_logging_directly(self):
         """AssetManager should not use direct 'import logging' for its log calls."""
@@ -109,9 +109,9 @@ class TestAssetManager:
     def setup_teardown(self):
         # Reset singleton logic if possible or just use a fresh instance logic
         # Since _instance is used, we need to reset it to test initialization
-        AssetManager._instance = None
+        AssetManager.reset()
         yield
-        AssetManager._instance = None
+        AssetManager.reset()
 
     def test_singleton(self):
         am1 = get_asset_manager()
@@ -200,9 +200,9 @@ class TestGetStarColorKey:
     @pytest.fixture(autouse=True)
     def setup_teardown(self):
         """Reset singleton for each test."""
-        AssetManager._instance = None
+        AssetManager.reset()
         yield
-        AssetManager._instance = None
+        AssetManager.reset()
 
     def test_get_star_color_key_red(self):
         """Test red star detection: r>200, g<100."""

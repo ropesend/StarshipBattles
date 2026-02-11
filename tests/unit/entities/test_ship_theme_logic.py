@@ -30,15 +30,14 @@ class TestShipThemeLogic:
         ShipThemeManager.reset()
 
     def test_singleton_handling(self):
-        """Test that the singleton pattern works and enforces unique instance."""
+        """Test that the singleton pattern works and returns unique instance."""
         instance1 = ShipThemeManager.instance()
         instance2 = ShipThemeManager.instance()
         assert instance1 is instance2
 
-        # Test direct init raises exception
-        with pytest.raises(Exception) as exc_info:
-            ShipThemeManager()
-        assert "singleton" in str(exc_info.value)
+        # With SingletonMeta, direct construction returns the singleton
+        instance3 = ShipThemeManager()
+        assert instance1 is instance3
 
     def test_fallback_generation(self):
         """Test that fallback image is generated with expected properties."""

@@ -53,17 +53,15 @@ class TestStrategyManagerExceptions:
         """Clean up singleton after each test."""
         StrategyManager.reset()
 
-    def test_singleton_violation_raises_state_exception(self):
-        """Direct instantiation should raise StateException."""
+    def test_direct_instantiation_returns_singleton(self):
+        """Direct instantiation returns the singleton via SingletonMeta."""
         # First instance via normal method
-        StrategyManager.instance()
+        first = StrategyManager.instance()
 
-        # Attempting direct instantiation should raise StateException
-        with pytest.raises(StateException) as exc_info:
-            StrategyManager()
+        # With SingletonMeta, direct construction returns the singleton
+        second = StrategyManager()
 
-        assert exc_info.value.code == "A001"  # ErrorCode.AI_STATE_ERROR
-        assert "singleton" in str(exc_info.value).lower()
+        assert first is second
 
 
 class TestTargetEvaluatorFallbacks:

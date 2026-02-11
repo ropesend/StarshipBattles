@@ -1,6 +1,5 @@
 import time
 import uuid
-import threading
 from functools import wraps
 from typing import Dict, List, Optional
 from datetime import datetime
@@ -9,14 +8,15 @@ from contextlib import contextmanager
 from game.core.json_utils import load_json, save_json
 from game.core.logger import log_error, log_info
 from game.core.paths import Paths
+from game.core.singleton import SingletonMeta
 
 
-class Profiler:
+class Profiler(metaclass=SingletonMeta):
     """
     Singleton profiler for performance measurement.
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
 
     Usage:
         profiler = Profiler.instance()
@@ -28,44 +28,13 @@ class Profiler:
         - Use reset() to destroy instance completely
         - Use clear() to reset records but preserve instance
     """
-    _instance = None
-    _lock = threading.Lock()
 
     def __init__(self):
-        if Profiler._instance is not None:
-            raise RuntimeError("Profiler is a singleton. Use Profiler.instance()")
         self.active = False
         self.session_id = str(uuid.uuid4())
         self.records: List[Dict] = []
         self.start_time = None
         log_info(f"Profiler initialized with session ID: {self.session_id}")
-
-    @classmethod
-    def instance(cls) -> 'Profiler':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton Profiler instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            cls._instance = None
 
     def clear(self):
         """Reset all records. Used for test isolation."""

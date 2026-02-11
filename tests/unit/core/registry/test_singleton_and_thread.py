@@ -7,6 +7,7 @@ import threading
 from unittest.mock import MagicMock
 
 from game.core.registry import RegistryManager
+from game.core.singleton import SingletonMeta
 
 
 # =============================================================================
@@ -25,12 +26,13 @@ class TestSingletonBehavior:
 
         assert r1 is r2
 
-    def test_direct_instantiation_raises_exception(self, registry):
-        """Direct instantiation should raise when singleton exists."""
+    def test_direct_instantiation_returns_same_object(self, registry):
+        """Direct instantiation should return same singleton (metaclass behavior)."""
         from game.core.registry import RegistryManager
 
-        with pytest.raises(Exception, match="singleton"):
-            RegistryManager()
+        # With SingletonMeta, direct construction returns the singleton
+        r2 = RegistryManager()
+        assert r2 is registry
 
     def test_reset_allows_new_instance(self):
         """reset() should allow creating a new instance."""
@@ -47,22 +49,23 @@ class TestSingletonBehavior:
         # New instance has different id
         assert id1 != id2
 
-    def test_has_thread_lock(self):
-        """RegistryManager class should have a lock for thread safety."""
+    def test_has_thread_lock_via_metaclass(self):
+        """RegistryManager should have a lock for thread safety via SingletonMeta."""
         from game.core.registry import RegistryManager
 
-        assert hasattr(RegistryManager, '_lock')
-        assert isinstance(RegistryManager._lock, type(threading.Lock()))
+        # Lock is stored in SingletonMeta._locks, keyed by class
+        assert RegistryManager in SingletonMeta._locks
+        assert isinstance(SingletonMeta._locks[RegistryManager], type(threading.Lock()))
 
-    def test_reset_sets_instance_to_none(self):
-        """reset() should set _instance to None."""
+    def test_reset_removes_instance(self):
+        """reset() should remove instance from SingletonMeta."""
         from game.core.registry import RegistryManager
 
         RegistryManager.instance()
-        assert RegistryManager._instance is not None
+        assert RegistryManager in SingletonMeta._instances
 
         RegistryManager.reset()
-        assert RegistryManager._instance is None
+        assert RegistryManager not in SingletonMeta._instances
 
 
 # =============================================================================

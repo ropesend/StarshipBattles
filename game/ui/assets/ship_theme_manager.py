@@ -5,14 +5,15 @@ from game.core.logger import log_info, log_error
 from game.core.json_utils import load_json
 from game.core.profiling import profile_block
 from game.core.paths import Paths
-from game.core.exceptions import StateException
+from game.core.singleton import SingletonMeta
 
-class ShipThemeManager:
+
+class ShipThemeManager(metaclass=SingletonMeta):
     """
     Singleton manager for ship visual themes.
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
 
     Usage:
         manager = ShipThemeManager.instance()
@@ -22,39 +23,14 @@ class ShipThemeManager:
         - Use reset() to destroy instance completely
         - Use clear() to reset caches but preserve instance
     """
-    _instance = None
-    _lock = threading.Lock()
-
-    @classmethod
-    def instance(cls) -> 'ShipThemeManager':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton ShipThemeManager instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
 
     def __init__(self):
-        if ShipThemeManager._instance is not None:
-            raise StateException(
-                "ShipThemeManager is a singleton. Use ShipThemeManager.instance()",
-                code="STM001"
-            )
-             
         # self.themes acts as the image cache: {theme_name: {class_name: surface}}
-        self.themes = {}  
-        
+        self.themes = {}
+
         # Store paths and metadata for lazy loading
         self.theme_data = {}
-        
+
         # Cache for metrics
         self.image_metrics = {} # {theme_name: {class_name: rect}}
 
@@ -66,7 +42,7 @@ class ShipThemeManager:
         self.discovery_complete = False
         self._init_lock = threading.Lock()
         self._io_lock = threading.Lock() # For on-demand loading
-        
+
     def clear(self):
         """Reset all caches and state. Used for test isolation."""
         with self._init_lock:
@@ -78,19 +54,6 @@ class ShipThemeManager:
                 self.discovery_complete = False
                 log_info("ShipThemeManager caches cleared.")
 
-    @classmethod
-    def reset(cls):
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            if cls._instance is not None:
-                cls._instance.clear()  # Clean up state first
-                cls._instance = None
-        
     def initialize(self, base_path=None):
         """Discover all themes from assets/ShipThemes without loading images."""
         with self._init_lock:
