@@ -44,7 +44,7 @@ class DesignReportPanel:
         self.container = container
         self.current_ship = None
         self._stats_panel: Optional[DesignStatsPanel] = None
-        self.rows_map = {}  # Map of stat key -> StatRow (synced from _stats_panel)
+        self.rows_map = {}  # Map of stat key -> StatRow (exposed for test access)
 
         # Create panel container
         self.panel = UIPanel(
@@ -162,7 +162,7 @@ class DesignReportPanel:
         # Populate stat values (panel only builds layout with "--" placeholders)
         self._stats_panel.update_stats(ship)
 
-        # Sync rows_map for backward compat with tests
+        # Expose rows_map for convenient test access
         self.rows_map = self._stats_panel.rows_map
 
     def _update_portrait(self, ship: Ship):

@@ -80,7 +80,7 @@ class RaceConfig:
     """
     # Identity
     race_id: str = ""  # Unique identifier (generated if empty)
-    name: str = ""  # Display name (legacy, used as faction_name fallback)
+    name: str = ""  # Primary display name; used as fallback for faction_name and race_name
     faction_name: str = ""  # Full faction name (e.g., "Rossarian Empire")
     race_name: str = ""  # Species name (e.g., "Rossarian")
     race_name_plural: str = ""  # Plural form (e.g., "Rossarians")

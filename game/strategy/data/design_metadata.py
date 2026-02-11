@@ -54,10 +54,14 @@ class DesignMetadata:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'DesignMetadata':
-        """Deserialize from JSON"""
+        """Deserialize from JSON.
+
+        Required fields: design_id, name
+        Optional fields: all others with sensible defaults
+        """
         return cls(
-            design_id=data.get("design_id", ""),
-            name=data.get("name", "Unnamed"),
+            design_id=data["design_id"],
+            name=data["name"],
             ship_class=data.get("ship_class", "Unknown"),
             vehicle_type=data.get("vehicle_type", "Ship"),
             mass=data.get("mass", 0.0),
@@ -87,9 +91,9 @@ class DesignMetadata:
         vehicle_type = data.get("vehicle_type", "Ship")
         theme_id = data.get("theme_id", "")
 
-        # Mass is stored in expected_stats (saved designs) or top-level (legacy)
+        # Mass is stored in expected_stats
         expected_stats = data.get("expected_stats", {})
-        mass = expected_stats.get("mass", data.get("mass", 0.0))
+        mass = expected_stats.get("mass", 0.0)
 
         # Calculate combat power (simplified metric)
         combat_power = cls._calculate_combat_power(data)

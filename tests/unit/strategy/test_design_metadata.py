@@ -76,7 +76,6 @@ class TestDesignMetadata:
                 "name": "Test Fighter",
                 "ship_class": "Fighter",
                 "vehicle_type": "Fighter",
-                "mass": 50.0,
                 "theme_id": "Rebellion",
                 "layers": {
                     "core": [
@@ -88,6 +87,9 @@ class TestDesignMetadata:
                             "cost": {"metal": 10, "energy": 5}
                         }
                     ]
+                },
+                "expected_stats": {
+                    "mass": 50.0
                 },
                 "_metadata": {
                     "is_obsolete": False,

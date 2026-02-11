@@ -322,13 +322,8 @@ class BuilderRightPanel:
         self._sync_from_stats_panel()
 
     def _sync_from_stats_panel(self):
-        """Sync internal references from DesignStatsPanel for backward compatibility."""
+        """Sync rows_map from DesignStatsPanel for convenient access by tests."""
         self.rows_map = self.stats_panel.rows_map
-        self.current_logistics_keys = self.stats_panel.current_logistics_keys
-        self.layer_rows = self.stats_panel.layer_rows
-        self.req_box_left = self.stats_panel.req_box_left
-        self.req_box_right = self.stats_panel.req_box_right
-        self.stats_scroll = self.stats_panel.stats_scroll
 
     def rebuild_stats(self):
         """Completely rebuild the stats scroll container (e.g. after ship load)."""

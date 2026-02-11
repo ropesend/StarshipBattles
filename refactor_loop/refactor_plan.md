@@ -8,22 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 3 Task 3.4 (Remove StrategyInputHandler legacy keydown fallback)
-**Current Status:** PROJ-109 Phase 3 In Progress (Tasks 3.1-3.4 complete)
+**Last Completed:** PROJ-109 Phase 3 Complete (all 8 tasks)
+**Current Status:** PROJ-109 Phase 4 Ready
 **Current Project:** PROJ-109
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 8248 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 3 Task 3.4 complete:
-  - Removed _handle_keydown_legacy() method (~78 lines of duplicated key checks)
-  - Updated _handle_keydown() to only call mapped handler (no fallback)
-  - Updated class docstring to document mapper is required for keyboard input
-  - Updated tests/unit/ui/test_scene_protocol.py to pass input_mapper to StrategyScreen
-  - Converted TestBackwardCompatWithoutMapper → TestNoMapperMeansNoKeyboardInput
-  - Updated TestStrategyInputHandlerTransfer to use mapper fixture (5 tests)
-- Next: Task 3.5 (Remove BuilderRightPanel sync methods)
+- PROJ-109 Phase 3 complete (Tasks 3.5-3.8):
+  - Task 3.5: Simplified _sync_from_stats_panel() - kept rows_map sync (tests use it), removed unused syncs
+  - Task 3.6: Removed DesignMetadata legacy mass fallback (data.get("mass")), updated test
+  - Task 3.7: Made design_id/name required in DesignMetadata.from_dict()
+  - Task 3.8: Fixed misleading "legacy" comment on RaceConfig.name (field is actively used)
+- Next: Phase 4 Task 4.1 (Remove SaveGameService format migration)
 
 ---
 
@@ -319,6 +317,7 @@
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.2 | Complete | 8249 passed | pending | Removed action_return_to_setup/action_return_to_test_lab flags, 6 files updated |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.3 | Complete | 8249 passed | pending | Removed BuildQueueScreen legacy mode, 8 test files updated |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.4 | Complete | 8248 passed | pending | Removed _handle_keydown_legacy (-78 lines), 2 test files updated |
+| 2026-02-11 | PROJ-109 | Phase 3 Task 3.5-3.8 | Complete | 8248 passed | pending | Simplified _sync_from_stats_panel, removed DesignMetadata legacy mass, required fields, fixed RaceConfig comment |
 
 ---
 

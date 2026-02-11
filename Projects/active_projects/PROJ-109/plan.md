@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. Dead Code Deletion (8 tasks) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Simple Shim Removals (10 tasks) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Medium Complexity Removals (8 tasks) | In Progress | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Medium Complexity Removals (8 tasks) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Complex Legacy Eradication (8 tasks) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Foundation Cleanup (3 tasks) | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 3 - Medium Complexity Removals
-**Last Action:** Task 3.3 complete - Removed BuildQueueScreen legacy single-context mode. Made hex_coord, galaxy, empire required parameters with validation. Removed backward compat alias properties (queue_selector_panel, queue_selector_scrollable, queue_selector_buttons). Updated 8 test files with MockGalaxy and required parameters.
-**Next Action:** Task 3.4 - Remove StrategyInputHandler legacy keydown fallback
+**Active Phase:** Phase 4 - Complex Legacy Eradication
+**Last Action:** Phase 3 complete (all 8 tasks). Tasks 3.5-3.8 done: simplified _sync_from_stats_panel, removed DesignMetadata legacy mass fallback, made design_id/name required, fixed misleading "legacy" comment on RaceConfig.name.
+**Next Action:** Task 4.1 - Remove SaveGameService format migration
 **Blockers:** None
 
 ## Overview
