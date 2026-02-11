@@ -399,7 +399,238 @@ class BuilderScreen:
         
     def _show_error(self, msg):
         self.show_error(msg)
-        
+
+    def _handle_panel_action(self, act_type: str, data) -> None:
+        """Handle actions from left panel, layer panel, and modifier panel.
+
+        Dispatches to specific handlers based on action type.
+        """
+        if act_type == 'refresh_ui':
+            self.update_stats()
+
+        elif act_type == 'select_component_type':
+            self._handle_select_component_type(data)
+
+        elif act_type == 'select_group':
+            self._handle_select_group(data)
+
+        elif act_type == 'select_individual':
+            self._handle_select_individual(data)
+
+        elif act_type == 'remove_group':
+            self._handle_remove_group(data)
+
+        elif act_type == 'remove_individual':
+            self._handle_remove_individual(data)
+
+        elif act_type == 'add_group' or act_type == 'add_individual':
+            self._handle_add_component(act_type, data)
+
+        elif act_type == 'apply_preset':
+            self.template_modifiers = data
+            self.rebuild_modifier_ui()
+
+        elif act_type == 'clear_settings':
+            with profile_block("Builder: Clear Settings"):
+                self.controller.selected_component = None
+                self.template_modifiers = {}
+                self.on_selection_changed(None)
+                self.rebuild_modifier_ui()
+                logger.debug("Cleared settings or deselected component")
+
+        elif act_type == 'toggle_layer':
+            # Layer header toggle - already handled by callback
+            pass
+
+    def _handle_select_component_type(self, data) -> None:
+        """Handle component type selection from left panel."""
+        with profile_block("Builder: Select Component Type"):
+            c = data
+            # Clear Layer Panel Selection (avoid confusion)
+            self.layer_panel.selected_group_key = None
+            self.layer_panel.selected_component_id = None
+            self.on_selection_changed(None)  # Clear
+            self.layer_panel.rebuild()
+
+            self.controller.dragged_item = c.clone()
+            # Apply template modifiers (PROJ-43: via ComponentService)
+            for m_id, val in self.template_modifiers.items():
+                if self._component_service.is_modifier_allowed(m_id, c):
+                    self.controller.dragged_item.add_modifier(m_id)
+                    m = self.controller.dragged_item.get_modifier(m_id)
+                    if m:
+                        m.value = val
+            self.controller.dragged_item.recalculate_stats()
+
+            # Set as selected so modifiers panel updates
+            self.on_selection_changed(self.controller.dragged_item)
+
+    def _handle_select_group(self, data) -> None:
+        """Handle group selection from layer panel."""
+        with profile_block("Builder: Select Group"):
+            # Check modifier keys for multi-select
+            keys = pygame.key.get_pressed()
+            append = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+
+            if not append:
+                self.left_panel.deselect_all()
+
+            # data is group_key
+            comps = []
+            from game.ui.screens.builder.grouping_strategies import get_component_group_key
+            for layers in self.ship.layers.values():
+                for c in layers.components:
+                    if get_component_group_key(c) == data:
+                        comps.append(c)
+
+            self.on_selection_changed(comps, append=append)
+
+            # Rebuild layer panel now that builder state is updated
+            self.layer_panel.rebuild()
+
+    def _handle_select_individual(self, data) -> None:
+        """Handle individual component selection from layer panel."""
+        with profile_block("Builder: Select Individual"):
+            keys = pygame.key.get_pressed()
+            is_ctrl = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]
+            is_shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+
+            if not (is_ctrl or is_shift):
+                self.left_panel.deselect_all()
+
+            if is_shift and self.selected_component:
+                # Range Selection
+                start_comp = self.selected_component[2]
+                end_comp = data
+                range_comps = self.layer_panel.get_range_selection(start_comp, end_comp)
+                self.on_selection_changed(range_comps, append=is_ctrl, toggle=False)
+            else:
+                # Single Click (Toggle if Ctrl)
+                self.on_selection_changed(data, append=is_ctrl, toggle=is_ctrl)
+
+            # Rebuild layer panel now that builder state is updated
+            self.layer_panel.rebuild()
+
+    def _handle_remove_group(self, data) -> None:
+        """Handle removing one component from a group."""
+        from game.ui.screens.builder.grouping_strategies import get_component_group_key
+
+        # Unpack layer-targeted data
+        if isinstance(data, tuple) and len(data) == 2:
+            group_key, target_layer = data
+        else:
+            group_key = data
+            target_layer = None
+
+        found_layer = None
+        found_idx = -1
+
+        if target_layer is not None:
+            if target_layer in self.ship.layers:
+                comps = self.ship.layers[target_layer].components
+                for idx in range(len(comps)-1, -1, -1):
+                    c = comps[idx]
+                    if get_component_group_key(c) == group_key:
+                        found_layer = target_layer
+                        found_idx = idx
+                        break
+        else:
+            for l_type, layers in self.ship.layers.items():
+                comps = layers.components
+                for idx in range(len(comps)-1, -1, -1):
+                    c = comps[idx]
+                    if get_component_group_key(c) == group_key:
+                        found_layer = l_type
+                        found_idx = idx
+                        break
+                if found_layer:
+                    break
+
+        if found_layer:
+            self.ship.remove_component(found_layer, found_idx)
+            self.update_stats()
+
+    def _handle_remove_individual(self, data) -> None:
+        """Handle removing a specific component."""
+        # Unpack layer-targeted data
+        if isinstance(data, tuple) and len(data) == 2:
+            comp, target_layer = data
+        else:
+            comp = data
+            target_layer = None
+
+        removed = False
+        layers_to_search = [target_layer] if target_layer else list(self.ship.layers.keys())
+        for l_type in layers_to_search:
+            if l_type in self.ship.layers:
+                for idx, c in enumerate(self.ship.layers[l_type].components):
+                    if c is comp:
+                        self.ship.remove_component(l_type, idx)
+                        removed = True
+                        break
+            if removed:
+                break
+
+        if self.selected_components:
+            self.selected_components = [x for x in self.selected_components if x[2] is not comp]
+            self.on_selection_changed(self.selected_components)
+
+        self.update_stats()
+
+    def _handle_add_component(self, act_type: str, data) -> None:
+        """Handle adding a component (clone and add to correct layer)."""
+        target_comp = None
+        target_layer = None
+
+        if act_type == 'add_individual':
+            if isinstance(data, tuple) and len(data) == 2:
+                target_comp, target_layer = data
+            else:
+                target_comp = data
+        else:
+            if isinstance(data, tuple) and len(data) == 2:
+                group_key, target_layer = data
+            else:
+                group_key = data
+
+            from game.ui.screens.builder.grouping_strategies import get_component_group_key
+            if target_layer and target_layer in self.ship.layers:
+                for c in self.ship.layers[target_layer].components:
+                    if get_component_group_key(c) == group_key:
+                        target_comp = c
+                        break
+            if not target_comp:
+                for layers in self.ship.layers.values():
+                    for c in layers.components:
+                        if get_component_group_key(c) == group_key:
+                            target_comp = c
+                            break
+                    if target_comp:
+                        break
+
+        if target_comp:
+            new_comp = target_comp.clone()
+            for m in target_comp.modifiers:
+                new_comp.add_modifier(m.definition.id)
+                nm = new_comp.get_modifier(m.definition.id)
+                if nm:
+                    nm.value = m.value
+            new_comp.recalculate_stats()
+
+            if not target_layer:
+                for l_type, layers in self.ship.layers.items():
+                    if target_comp in layers.components:
+                        target_layer = l_type
+                        break
+
+            if target_layer:
+                validation = self._validation_service.validate_addition(self.ship, new_comp, target_layer)
+                if validation.is_valid:
+                    self.ship.add_component(new_comp, target_layer)
+                    self.update_stats()
+                else:
+                    self.show_error(f"Cannot add: {', '.join(validation.errors)}")
+
     def handle_event(self, event):
         self.ui_manager.process_events(event)
         

@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-104 | Cyclomatic Complexity Reduction - Critical Functions | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-102 | Strategic Superweapons and Special Orders | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-101 | Fleet Report Screen Enhancements | Plan Approved | 2026-02-10 | 2026-02-10 |
@@ -20,37 +21,37 @@
 | PROJ-90 | Untangle Circular Dependencies and Layer Violations | Planning | 2026-02-09 | 2026-02-09 |
 | PROJ-89 | God Class Decomposition - Remaining UI Tier | Planning | 2026-02-09 | 2026-02-09 |
 | PROJ-88 | God Class Decomposition - Simulation Core Tier | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-87 | God Class Decomposition - Strategy Data Tier | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-86 | Critical God Class Decomposition - UI Tier | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-85 | Eradicate Module-Level Mutable Global State | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-84 | Ship Layer Data Typed Structures | Awaiting Verification | 2026-02-09 | 2026-02-10 |
-| PROJ-83 | Eliminate Test Warning Noise | Plan Approved | 2026-02-09 | 2026-02-09 |
-| PROJ-82 | Planet Resources Panel Redesign | Planning | 2026-02-08 | 2026-02-08 |
-| PROJ-81 | Sector Build Queue Window Fixes | Planning | 2026-02-08 | 2026-02-08 |
-| PROJ-80 | Unify Design Details Panel | Planning | 2026-02-08 | 2026-02-08 |
-| PROJ-79 | Build Queue Screen Rework | Planning | 2026-02-08 | 2026-02-08 |
-| PROJ-78 | Quickstart Initial Complexes | Planning | 2026-02-08 | 2026-02-08 |
-| PROJ-77 | Event Log System | Plan Approved | 2026-02-07 | 2026-02-07 |
-| PROJ-76 | Empire-Wide Build Queue Window | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-75 | Resource Harvesting & Economy System | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-74 | Resupply System | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-73 | Rotating Warp Point Graphics | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-72 | Strategy Menu Button | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-71 | Strategy Layer Hotkey System | Plan Approved | 2026-02-07 | 2026-02-07 |
-| PROJ-70 | Fleet Details Panel Enhancement | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-69 | Multi Build Queue Restructure | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-68 | Population System & Generic Cargo | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-67 | Fleet Space Yards | Planning (Awaiting Approval) | 2026-02-07 | 2026-02-07 |
-| PROJ-66 | Race Setup Enhancement | Planning | 2026-02-07 | 2026-02-07 |
-| PROJ-65 | Game Class Scene Protocol Refactor | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-64 | Narrow Exception Handling | Planning | 2026-02-06 | 2026-02-06 |
-| PROJ-63 | Break Down build_queue_screen.py | Planning | 2026-02-06 | 2026-02-06 |
 | PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-86 | Critical God Class Decomposition - UI Tier | Archived | 2026-02-09 | 2026-02-10 |
+| PROJ-87 | God Class Decomposition - Strategy Data Tier | Archived | 2026-02-09 | 2026-02-10 |
+| PROJ-84 | Ship Layer Data Typed Structures | Archived | 2026-02-09 | 2026-02-10 |
+| PROJ-85 | Eradicate Module-Level Mutable Global State | Archived | 2026-02-09 | 2026-02-10 |
+| PROJ-83 | Eliminate Test Warning Noise | Archived | 2026-02-09 | 2026-02-10 |
+| PROJ-82 | Planet Resources Panel Redesign | Archived | 2026-02-08 | 2026-02-10 |
+| PROJ-81 | Sector Build Queue Window Fixes | Archived | 2026-02-08 | 2026-02-10 |
+| PROJ-79 | Build Queue Screen Rework | Archived | 2026-02-08 | 2026-02-10 |
+| PROJ-80 | Unify Design Details Panel | Archived | 2026-02-08 | 2026-02-10 |
+| PROJ-78 | Quickstart Initial Complexes | Archived | 2026-02-08 | 2026-02-10 |
+| PROJ-77 | Event Log System | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-76 | Empire-Wide Build Queue Window | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-75 | Resource Harvesting & Economy System | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-74 | Resupply System | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-73 | Rotating Warp Point Graphics | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-72 | Strategy Menu Button | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-71 | Strategy Layer Hotkey System | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-70 | Fleet Details Panel Enhancement | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-69 | Multi Build Queue Restructure | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-68 | Population System & Generic Cargo | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-67 | Fleet Space Yards | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-66 | Race Setup Enhancement | Archived | 2026-02-07 | 2026-02-10 |
+| PROJ-65 | Game Class Scene Protocol Refactor | Archived | 2026-02-06 | 2026-02-10 |
+| PROJ-64 | Narrow Exception Handling | Archived | 2026-02-06 | 2026-02-10 |
+| PROJ-63 | Break Down build_queue_screen.py | Archived | 2026-02-06 | 2026-02-10 |
 | PROJ-62 | Planet List Window Breakdown | Archived | 2026-02-06 | 2026-02-08 |
 | PROJ-61 | Workshop Screen Breakdown | Archived | 2026-02-06 | 2026-02-08 |
 | PROJ-60 | Break Down GalaxyTestScreen | Archived | 2026-02-06 | 2026-02-08 |
@@ -200,7 +201,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-104
+## Next Project ID: PROJ-105
 
 ---
 
