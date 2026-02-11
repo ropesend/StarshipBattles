@@ -45,3 +45,13 @@ Awaiting Confirmation
   - Scales based on visible height but keeps entire image (including transparent areas)
   - This maintains original aspect ratio like the Load Design screen
   - File modified: `game/ui/screens/fleet_report_window.py:650-686`
+
+---
+### ❌ Fix Rejected [2026-02-10 18:45]
+**Reason:** The image is still too small. Need to determine the dimensions of the visible portion and scale based on that. The top-down view should be the same height as the portrait view.
+**New Constraints:**
+- Determine the dimensions of the visible (non-transparent) portion of the top-down image
+- Scale based on those visible dimensions
+- The top-down view visible height must match the portrait view height
+- Reference screenshot: `output/screenshots/screenshot_20260210_184052_486643_strategy_viewport.png`
+---

@@ -7,7 +7,7 @@
 ## 2. Bug Queue
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | Awaiting Confirmation | [BUG-46.md](active_bugs/BUG-46.md) |
+| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | In-Progress | [BUG-46.md](active_bugs/BUG-46.md) |
 | BUG-49 | 2026-01-24 | Component Modifier Grid - hide irrelevant columns | Awaiting Confirmation | [BUG-49.md](active_bugs/BUG-49.md) |
 | BUG-50 | 2026-01-24 | Load Design Window - right edge clipped | Awaiting Confirmation | [BUG-50.md](active_bugs/BUG-50.md) |
 | BUG-52 | 2026-01-24 | Design Workshop - rightmost panel should extend full height | Awaiting Confirmation | [BUG-52.md](active_bugs/BUG-52.md) |
