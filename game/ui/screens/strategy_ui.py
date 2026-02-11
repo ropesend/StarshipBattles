@@ -379,3 +379,6 @@ class StrategyUI:
         """Open the cargo/population transfer dialog."""
         self._window_manager.open_transfer_dialog(source_fleet, hex_coord)
 
+    def open_empire_panel(self):
+        """Open the Empire Panel Window."""
+        self._window_manager.open_empire_panel()

@@ -60,6 +60,7 @@ def _make_strategy_ui():
     ui._window_manager.fleet_report_window = None
     ui._window_manager.transfer_dialog = None
     ui._window_manager.event_log_window = None
+    ui._window_manager.empire_panel_window = None
     ui._window_manager.ui_callbacks = {}
     ui._window_manager.process_ui_callbacks.return_value = False
 

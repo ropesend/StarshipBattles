@@ -271,6 +271,7 @@ class TestStrategyUIEventLogIntegration:
         ui._window_manager.fleet_report_window = None
         ui._window_manager.transfer_dialog = None
         ui._window_manager.event_log_window = None
+        ui._window_manager.empire_panel_window = None
 
         # PROJ-86 Phase 7: Event router
         from game.ui.screens.strategy_event_router import StrategyEventRouter

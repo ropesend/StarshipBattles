@@ -72,6 +72,8 @@ class StrategyEventRouter:
             return True
         if wm.event_log_window is not None:
             return True
+        if wm.empire_panel_window is not None:
+            return True
 
         # Check if workshop is being opened
         if hasattr(self.ui.scene, 'action_open_design') and self.ui.scene.action_open_design:
@@ -156,6 +158,8 @@ class StrategyEventRouter:
             ui.toggle_menu_panel()
         elif event.ui_element == ui.btn_events:
             ui.open_event_log()
+        elif event.ui_element == ui.btn_empire:
+            ui.open_empire_panel()
         elif event.ui_element == ui.btn_raw_data:
             ui.show_raw_data_popup()
         elif event.ui_element == ui.btn_colonize:
@@ -238,6 +242,8 @@ class StrategyEventRouter:
             wm._on_empire_build_queue_closed()
         elif event.ui_element == wm.event_log_window:
             wm._on_event_log_closed()
+        elif event.ui_element == wm.empire_panel_window:
+            wm._on_empire_panel_closed()
 
     def process_custom_events(self, event) -> None:
         """Process custom UI events from window callbacks.

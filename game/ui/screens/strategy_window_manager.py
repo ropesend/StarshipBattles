@@ -18,6 +18,7 @@ from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
 from game.ui.screens.empire_build_queue_window import EmpireBuildQueueWindow
 from game.ui.screens.event_log_window import EventLogWindow
+from game.ui.screens.empire_panel_window import EmpirePanelWindow
 
 if TYPE_CHECKING:
     from game.core.input_mapper import InputMapper
@@ -82,6 +83,7 @@ class StrategyWindowManager:
         self.fleet_orders_window = None
         self.fleet_report_window = None
         self.transfer_dialog = None
+        self.empire_panel_window = None
 
         # Callback map for dynamic prompt buttons
         self.ui_callbacks: dict = {}
@@ -228,6 +230,31 @@ class StrategyWindowManager:
     def _on_event_log_closed(self) -> None:
         """Callback when event log window is closed."""
         self.event_log_window = None
+
+    # =========================================================================
+    # Empire Panel Window
+    # =========================================================================
+
+    def open_empire_panel(self) -> None:
+        """Open the Empire Panel Window."""
+        if self.empire_panel_window:
+            self.empire_panel_window.kill()
+
+        empire = self.scene.current_empire
+
+        w, h = int(self.width * 0.9), int(self.height * 0.9)
+        rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+        self.empire_panel_window = EmpirePanelWindow(
+            rect,
+            self.manager,
+            empire,
+            on_close_callback=self._on_empire_panel_closed,
+        )
+
+    def _on_empire_panel_closed(self) -> None:
+        """Callback when empire panel window is closed."""
+        self.empire_panel_window = None
 
     # =========================================================================
     # Fleet Orders Window

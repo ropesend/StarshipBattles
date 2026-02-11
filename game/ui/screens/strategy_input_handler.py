@@ -173,6 +173,8 @@ class StrategyInputHandler:
             self.scene.on_design_click()
         elif action == InputAction.STRATEGY_OPEN_BUILD_QUEUES:
             self.scene.ui.open_build_queue_list()
+        elif action == InputAction.STRATEGY_OPEN_EMPIRE:
+            self.scene.ui.open_empire_panel()
         elif action == InputAction.STRATEGY_SAVE_GAME:
             self.scene.on_save_game_click()
         elif action == InputAction.STRATEGY_PREV_COLONY:
