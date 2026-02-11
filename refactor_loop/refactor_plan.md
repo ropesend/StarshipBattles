@@ -8,20 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-106 Audit PASSED
-**Current Status:** PROJ-106 Complete — Awaiting User Verification
-**Current Project:** PROJ-107 (next)
-**Current Phase:** Ready to start
+**Last Completed:** PROJ-107 Phase 1
+**Current Status:** PROJ-107 Phase 1 Complete
+**Current Project:** PROJ-107
+**Current Phase:** Phase 2 (next)
 **Test Status:** 8185 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-106 Audit PASSED — All architecture layer violations addressed
-  - Cross-layer import audit: ALL CLEAR (simulation, core, research, AI, strategy, UI layers verified)
-  - Private attribute audit: ALL CLEAR (_registries, _hp_ratio_dirty, _resources all within-module)
-  - Deferred findings documented in decisions.md
-  - 8185 tests passing, 0 failures
-- Next project: PROJ-107 (Consistency & API Standardization)
+- PROJ-107 Phase 1 Complete — Error Code Standardization
+  - Added AI category to ErrorCode enum (A001 = AI_STATE_ERROR)
+  - Fixed StrategyManager to use ErrorCode.AI_STATE_ERROR.value
+  - Fixed 3 docstring examples in exceptions.py to use enum pattern
+  - Fixed ValidationResult docstring invalid E001 → VALIDATION_FAILED.value
+  - Added missing Formula codes F001, F002, F004 to ErrorCode enum
+  - Updated test_ai_exceptions.py to expect "A001"
+  - 8185 tests passing
+- Next: Phase 2 (Type Hint & Return Type Standardization)
 
 ---
 
@@ -165,8 +168,8 @@
 
 ---
 
-- [ ] **PROJ-107: Consistency & API Standardization**
-  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-107: Consistency & API Standardization**
+  - **Phases:** 6 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -297,6 +300,7 @@
 | 2026-02-11 | PROJ-106 | Phase 5 | Complete | 8187 passed | pending | ICamera protocol in core, ResearchRenderer uses ICamera, 5 new tests |
 | 2026-02-11 | PROJ-106 | Phase 6 | Complete | 8185 passed | pending | BattleUIService getattr 20+ → 3, LayerDefaults-derived radii, updated tests |
 | 2026-02-11 | PROJ-106 | Audit 1 | PASSED | 8185 passed | pending | All layer boundaries verified, private attributes clean, deferred findings documented |
+| 2026-02-11 | PROJ-107 | Phase 1 | Complete | 8185 passed | pending | Added AI error codes, fixed docstrings, added F001/F002/F004 |
 
 ---
 

@@ -62,7 +62,7 @@ class TestStrategyManagerExceptions:
         with pytest.raises(StateException) as exc_info:
             StrategyManager()
 
-        assert exc_info.value.code == "AI001"
+        assert exc_info.value.code == "A001"  # ErrorCode.AI_STATE_ERROR
         assert "singleton" in str(exc_info.value).lower()
 
 

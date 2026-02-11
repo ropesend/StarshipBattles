@@ -12,30 +12,35 @@ Usage
 Basic usage::
 
     from game.core.exceptions import ValidationException
+    from game.core.error_codes import ErrorCode
 
     raise ValidationException(
         "Invalid component configuration",
-        code="V002",
+        code=ErrorCode.VALIDATION_FAILED.value,
         context={"component_id": "laser_1", "field": "damage"}
     )
 
 Exception chaining (preserve original cause)::
+
+    from game.core.error_codes import ErrorCode
 
     try:
         load_json(path)
     except json.JSONDecodeError as e:
         raise PersistenceException(
             f"Failed to parse save file: {path}",
-            code="P003",
+            code=ErrorCode.CORRUPT_DATA.value,
             context={"path": path}
         ) from e
 
 Catching and handling::
 
+    from game.core.error_codes import ErrorCode
+
     try:
         component = load_component(data)
     except ComponentException as e:
-        if e.code == "C002":  # COMPONENT_INVALID
+        if e.code == ErrorCode.COMPONENT_INVALID.value:
             log_warning(f"Invalid component: {e.context}")
             component = default_component
 

@@ -13,6 +13,7 @@ from typing import Optional
 
 from game.core.logger import log_info
 from game.core.json_utils import load_json
+from game.core.error_codes import ErrorCode
 from game.core.exceptions import StateException
 from game.core.strategy_metadata import StrategyMetadataService
 
@@ -46,7 +47,7 @@ class StrategyManager:
         if StrategyManager._instance is not None:
             raise StateException(
                 "StrategyManager is a singleton. Use StrategyManager.instance()",
-                code="AI001",
+                code=ErrorCode.AI_STATE_ERROR.value,
                 context={"class": "StrategyManager"}
             )
 

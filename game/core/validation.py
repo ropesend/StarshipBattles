@@ -86,7 +86,7 @@ class ValidationResult:
     Example:
         result = ValidationResult()
         if some_condition_fails:
-            result.add_error("Validation failed", code="E001")
+            result.add_error("Validation failed", code=ErrorCode.VALIDATION_FAILED.value)
         return result
     """
     is_valid: bool = True

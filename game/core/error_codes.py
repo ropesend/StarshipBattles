@@ -15,6 +15,7 @@ Categories
 - P: Persistence (P001-P099)
 - F: Formula (F001-F099)
 - C: Component (C001-C099)
+- A: AI (A001-A099)
 
 Usage
 =====
@@ -117,8 +118,17 @@ class ErrorCode(Enum):
     # Formula Codes (F001-F099)
     # =========================================================================
 
+    FORMULA_SYNTAX_ERROR = "F001"
+    """Formula syntax error."""
+
+    FORMULA_UNDEFINED_VAR = "F002"
+    """Undefined variable in formula."""
+
     EVAL_ERROR = "F003"
-    """Formula evaluation error."""
+    """Formula runtime evaluation error (division by zero, arithmetic errors)."""
+
+    FORMULA_GENERAL_ERROR = "F004"
+    """General formula evaluation failure."""
 
     # =========================================================================
     # Component Codes (C001-C099)
@@ -135,6 +145,13 @@ class ErrorCode(Enum):
 
     INCOMPATIBLE_COMPONENT = "C005"
     """Component is not compatible with target."""
+
+    # =========================================================================
+    # AI Codes (A001-A099)
+    # =========================================================================
+
+    AI_STATE_ERROR = "A001"
+    """AI system state error (e.g., singleton violation)."""
 
 
 # =============================================================================
