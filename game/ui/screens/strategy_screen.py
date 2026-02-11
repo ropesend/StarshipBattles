@@ -38,6 +38,7 @@ from game.ui.screens.strategy_input_handler import StrategyInputHandler
 from game.strategy.systems.save_game_service import SaveGameService
 from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 from game.ui.screens.race_asset_loader import RaceAssetLoader
+from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
 
 class StrategyScreen:
@@ -422,8 +423,6 @@ class StrategyScreen:
             if planet.owner_id == self.current_empire.id:
                 from game.ui.screens.build_queue_screen import BuildQueueScreen
                 from game.strategy.systems.design_library import DesignLibrary
-                from game.simulation.services.design_loader import SimulationDesignLoader
-                from game.core.registry import get_default_registries
 
                 # Hide main UI
                 self.ui.hide_ui()
@@ -435,7 +434,7 @@ class StrategyScreen:
                 savegame_path = getattr(self.session, 'save_path', None)
                 empire_id = planet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = SimulationDesignLoader(registries=get_default_registries())
+                design_loader = DesignLoaderAdapter()
 
                 # PROJ-69: Calculate hex coord for multi-queue discovery
                 parent_sys = self.session.galaxy.get_system_of_planet(planet)
@@ -540,8 +539,6 @@ class StrategyScreen:
 
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         from game.strategy.systems.design_library import DesignLibrary
-        from game.simulation.services.design_loader import SimulationDesignLoader
-        from game.core.registry import get_default_registries
 
         # Hide main UI
         self.ui.hide_ui()
@@ -553,7 +550,7 @@ class StrategyScreen:
         savegame_path = getattr(self.session, 'save_path', None)
         empire_id = self.current_empire.id
         design_library = DesignLibrary(savegame_path, empire_id)
-        design_loader = SimulationDesignLoader(registries=get_default_registries())
+        design_loader = DesignLoaderAdapter()
 
         # Create build queue screen with hex context
         self.build_queue_screen = BuildQueueScreen(
@@ -584,8 +581,6 @@ class StrategyScreen:
             if fleet.owner_id == self.current_empire.id and fleet.has_space_shipyard:
                 from game.ui.screens.build_queue_screen import BuildQueueScreen
                 from game.strategy.systems.design_library import DesignLibrary
-                from game.simulation.services.design_loader import SimulationDesignLoader
-                from game.core.registry import get_default_registries
 
                 # Hide main UI
                 self.ui.hide_ui()
@@ -597,7 +592,7 @@ class StrategyScreen:
                 savegame_path = getattr(self.session, 'save_path', None)
                 empire_id = fleet.owner_id
                 design_library = DesignLibrary(savegame_path, empire_id)
-                design_loader = SimulationDesignLoader(registries=get_default_registries())
+                design_loader = DesignLoaderAdapter()
 
                 # PROJ-69: Use fleet.location as hex_coord for multi-queue discovery
                 hex_coord = fleet.location

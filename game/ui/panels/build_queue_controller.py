@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.core.hex_math import HexCoord
     from game.strategy.systems.design_library import DesignLibrary
-    from game.simulation.services.design_loader import SimulationDesignLoader
+    from game.ui.services.design_loader_adapter import DesignLoaderAdapter
     from game.ui.panels.design_report_panel import DesignReportPanel
 
 # Category-to-build-capability mapping
@@ -54,7 +54,7 @@ class BuildQueueController:
         self,
         build_context: Union['Planet', 'Fleet', 'BuildContext'],
         design_library: 'DesignLibrary',
-        design_loader: 'SimulationDesignLoader',
+        design_loader: 'DesignLoaderAdapter',
         design_report: 'DesignReportPanel',
         on_queue_changed: Callable[[], None],
         hex_coord: Optional['HexCoord'] = None,
@@ -68,7 +68,7 @@ class BuildQueueController:
         Args:
             build_context: Planet or Fleet whose construction_queue is managed (fallback)
             design_library: For scanning/loading designs
-            design_loader: SimulationDesignLoader for creating ship objects
+            design_loader: DesignLoaderAdapter for creating ship objects
             design_report: DesignReportPanel for updating display
             on_queue_changed: Callback to trigger queue display refresh
             hex_coord: Hex coordinate for planet lookup (PROJ-79)

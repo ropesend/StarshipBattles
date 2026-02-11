@@ -16,16 +16,16 @@
 | 1. Simple Encapsulation Fixes | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Remove Deprecated Legacy AI Paths | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Create Strategy Metadata Service | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Centralize SimulationDesignLoader Access | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Centralize SimulationDesignLoader Access | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Fix Research/UI Camera Dependency | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. BattleUIService Contract Hardening | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Audit and Final Verification | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 4 (Centralize SimulationDesignLoader Access)
-**Last Action:** Phase 3 Complete -- Created StrategyMetadataService in game.core, updated all 8 UI files, zero AI imports remain in UI (except battle_orchestrator.py)
-**Next Action:** Begin Phase 4 (route SimulationDesignLoader through DesignLoaderAdapter)
+**Active Phase:** Phase 5 (Fix Research/UI Camera Dependency)
+**Last Action:** Phase 4 Complete -- Routed all UI SimulationDesignLoader usage through DesignLoaderAdapter (3 call sites in strategy_screen.py, 2 TYPE_CHECKING imports updated)
+**Next Action:** Begin Phase 5 (create ICamera protocol, update research layer)
 **Blockers:** None
 
 ## Overview

@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from game.strategy.data.galaxy import Galaxy
     from game.strategy.data.empire import Empire
     from game.strategy.systems.design_library import DesignLibrary
-    from game.simulation.services.design_loader import SimulationDesignLoader
+    from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
 
 class BuildQueueScreen:
@@ -50,7 +50,7 @@ class BuildQueueScreen:
         on_close_callback: Callable,
         portrait_surface: Optional[pygame.Surface] = None,
         design_library: 'DesignLibrary' = None,
-        design_loader: 'SimulationDesignLoader' = None,
+        design_loader: 'DesignLoaderAdapter' = None,
         hex_coord: Optional['HexCoord'] = None,
         galaxy: Optional['Galaxy'] = None,
         empire: Optional['Empire'] = None,
@@ -66,7 +66,7 @@ class BuildQueueScreen:
             on_close_callback: Function to call when screen closes
             portrait_surface: Optional pygame Surface for context portrait
             design_library: Injected DesignLibrary instance (PROJ-40: DI pattern)
-            design_loader: Injected SimulationDesignLoader instance (PROJ-40: DI pattern)
+            design_loader: Injected DesignLoaderAdapter instance (PROJ-40: DI pattern)
             hex_coord: Hex coordinate for multi-queue discovery (PROJ-69)
             galaxy: Galaxy instance for planet lookup (PROJ-69)
             empire: Empire instance for ownership check (PROJ-69)
