@@ -163,7 +163,6 @@ def create_mock_battle_screen(engine: Mock = None) -> Mock:
     scene.test_scenario = None
     scene.test_tick_count = 0
     scene.test_completed = False
-    scene.action_return_to_test_lab = False
     scene.camera = Mock()
     scene.camera.fit_objects = Mock()
     return scene

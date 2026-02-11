@@ -40,7 +40,7 @@
 
 ---
 
-### Task 3.2: Remove deprecated BattleScreen action flags [Medium]
+### Task 3.2: Remove deprecated BattleScreen action flags [Medium] - COMPLETE
 **Finding:** LEG-UI1-001, LEG-UI1-010
 **File:** `game/ui/screens/battle_screen.py`
 **Callers:**
@@ -51,18 +51,18 @@
 - `test_framework/services/test_execution_service.py`
 **Tests:** `pytest tests/unit/test_lab/ tests/unit/ui/test_battle_screen.py tests/unit/ui/test_battle_screen_extended.py -n 12`
 
-- [ ] In `battle_screen.py`: Remove `self.action_return_to_setup = False` and `self.action_return_to_test_lab = False` from `__init__` (lines 109-111)
-- [ ] In `battle_screen.py`: Remove reset of these flags in `start()` (lines 272-273) and `start_with_controller()` (lines 160-161)
-- [ ] In `battle_screen.py:_trigger_return_to_setup()`: Remove the `else: self.action_return_to_setup = True` branch (line 502) - keep only the `scene_callback` path
-- [ ] In `battle_screen.py:_trigger_return_to_test_lab()`: Remove the `else: self.action_return_to_test_lab = True` branch (line 509) - keep only the `scene_callback` path
-- [ ] Grep all files for `action_return_to_setup` and `action_return_to_test_lab`
-- [ ] In `test_lab/screen.py:457`: Remove `self.game.battle_scene.action_return_to_test_lab = False` line
-- [ ] Update any test files that read these flags to use scene_callback pattern instead
-- [ ] In `game/ui/screens/battle_ui.py`: grep for any references and update
-- [ ] In `test_framework/services/test_execution_service.py`: update if needed
-- [ ] Verify: `grep -r "action_return_to_setup\|action_return_to_test_lab" game/ tests/` returns no hits
+- [x] In `battle_screen.py`: Remove `self.action_return_to_setup = False` and `self.action_return_to_test_lab = False` from `__init__` (lines 109-111)
+- [x] In `battle_screen.py`: Remove reset of these flags in `start()` (lines 272-273) and `start_with_controller()` (lines 160-161)
+- [x] In `battle_screen.py:_trigger_return_to_setup()`: Remove the `else: self.action_return_to_setup = True` branch (line 502) - keep only the `scene_callback` path
+- [x] In `battle_screen.py:_trigger_return_to_test_lab()`: Remove the `else: self.action_return_to_test_lab = True` branch (line 509) - keep only the `scene_callback` path
+- [x] Grep all files for `action_return_to_setup` and `action_return_to_test_lab`
+- [x] In `test_lab/screen.py:457`: Remove `self.game.battle_scene.action_return_to_test_lab = False` line
+- [x] Update any test files that read these flags to use scene_callback pattern instead
+- [x] In `game/ui/screens/battle_ui.py`: Changed direct flag set to `_trigger_return_to_test_lab()` call
+- [x] In `test_framework/services/test_execution_service.py`: Removed flag reset
+- [x] Verify: `grep -r "action_return_to_setup\|action_return_to_test_lab" game/ tests/` returns no hits
 
-**Notes:**
+**Notes:** Removed 8 lines from battle_screen.py. Updated battle_ui.py to use scene_callback via _trigger_return_to_test_lab(). Removed flag resets from test_lab/screen.py, test_execution_service.py, test_visual_run.py (x2), and fixtures/battle.py.
 
 ---
 

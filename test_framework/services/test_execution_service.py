@@ -71,7 +71,6 @@ class TestExecutionService:
             battle_scene.test_scenario = scenario  # Pass scenario for update() calls
             battle_scene.test_tick_count = 0  # Reset tick counter
             battle_scene.test_completed = False  # Reset completed flag
-            battle_scene.action_return_to_test_lab = False
             logger.debug(f" AFTER: test_mode={battle_scene.test_mode}")
             logger.debug(f" Battle scene configured (paused=True, test_mode=True, scenario={scenario.metadata.test_id})")
 

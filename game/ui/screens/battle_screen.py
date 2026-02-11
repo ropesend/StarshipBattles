@@ -106,10 +106,6 @@ class BattleScreen:
         self.test_tick_count = 0  # Track ticks for max_ticks limit
         self.test_completed = False  # Flag indicating test has finished
 
-        # Actions for Game class (deprecated - use scene_callback)
-        self.action_return_to_setup = False
-        self.action_return_to_test_lab = False
-
         # Font for HUD (passed in or created)
         self._hud_font = None
 
@@ -157,8 +153,6 @@ class BattleScreen:
         # Reset visual state
         self.beams = []
         self.sim_tick_counter = 0
-        self.action_return_to_setup = False
-        self.action_return_to_test_lab = False
 
         # Get mode from controller config
         config = controller.config
@@ -269,8 +263,6 @@ class BattleScreen:
 
         self.beams = []
         self.sim_tick_counter = 0
-        self.action_return_to_setup = False
-        self.action_return_to_test_lab = False
         self.test_mode = test_mode
         self.test_scenario = test_scenario
         self.test_tick_count = 0
@@ -495,18 +487,14 @@ class BattleScreen:
             self.tick_rate_timer = 0.0
 
     def _trigger_return_to_setup(self):
-        """Trigger return to setup via callback or flag."""
+        """Trigger return to setup via scene_callback."""
         if self.scene_callback:
             self.scene_callback("return_to_setup")
-        else:
-            self.action_return_to_setup = True
 
     def _trigger_return_to_test_lab(self):
-        """Trigger return to Combat Lab via callback or flag."""
+        """Trigger return to Combat Lab via scene_callback."""
         if self.scene_callback:
             self.scene_callback("return_to_test_lab")
-        else:
-            self.action_return_to_test_lab = True
 
     def _cycle_focus_ship(self, direction):
         """Cycle camera focus through alive ships."""

@@ -8,28 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-109 Phase 3 Task 3.1 (Remove validation_result() function)
-**Current Status:** PROJ-109 Phase 3 In Progress (Task 3.1 complete)
+**Last Completed:** PROJ-109 Phase 3 Task 3.2 (Remove deprecated BattleScreen action flags)
+**Current Status:** PROJ-109 Phase 3 In Progress (Tasks 3.1-3.2 complete)
 **Current Project:** PROJ-109
 **Current Phase:** Phase 3
 **Test Status:** 8249 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-109 Phase 3 Task 3.1 complete:
-  - Removed validation_result() convenience function from game/core/validation.py
-  - Updated ALL callers across game/ (much larger scope than documented):
-    - game/ui/screens/race_validator.py (8 calls)
-    - game/strategy/facade/strategy_session_facade.py (3 calls)
-    - game/strategy/validation/transfer_validator.py (rewrite)
-    - game/strategy/validation/colonize_validator.py (rewrite)
-    - game/strategy/validation/superweapon_validator.py (rewrite)
-    - game/strategy/engine/command_handlers.py (rewrite)
-    - game/strategy/engine/superweapon_command_handlers.py (rewrite)
-  - Updated test files using validation_result() to use ValidationResult() directly
-  - Updated test assertions expecting success messages to check for empty errors
-  - Updated ValidationResult docstring to remove "Pattern 2" references
-- Next: Task 3.2 (Remove deprecated BattleScreen action flags)
+- PROJ-109 Phase 3 Task 3.2 complete:
+  - Removed action_return_to_setup and action_return_to_test_lab flags from battle_screen.py
+  - Removed flag definitions from __init__ (lines 109-111)
+  - Removed flag resets from start() and start_with_controller()
+  - Simplified _trigger_return_to_setup() and _trigger_return_to_test_lab() to only use scene_callback
+  - Updated battle_ui.py to call _trigger_return_to_test_lab() instead of setting flag directly
+  - Removed flag resets from: test_lab/screen.py, test_execution_service.py
+  - Removed mock flag assignments from: test_visual_run.py (x2), fixtures/battle.py
+- Next: Task 3.3 (Remove BuildQueueScreen legacy single-context mode)
 
 ---
 
@@ -322,6 +317,7 @@
 | 2026-02-11 | PROJ-109 | Phase 1 | Complete | 8250 passed | pending | Deleted 8 dead methods, 3 getters, 2 button lists, 10 tests; fixed 2 comments |
 | 2026-02-11 | PROJ-109 | Phase 2 | Complete | 8249 passed | pending | Removed 10 legacy shims, renamed legacy_components.py, fixed 4 comments, deleted 1 test |
 | 2026-02-11 | PROJ-109 | Phase 3 Task 3.1 | Complete | 8249 passed | pending | Removed validation_result() function and ALL callers (larger scope than documented) |
+| 2026-02-11 | PROJ-109 | Phase 3 Task 3.2 | Complete | 8249 passed | pending | Removed action_return_to_setup/action_return_to_test_lab flags, 6 files updated |
 
 ---
 

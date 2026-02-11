@@ -22,8 +22,8 @@
 ## Current State
 **Last Updated:** 2026-02-11
 **Active Phase:** Phase 3 - Medium Complexity Removals
-**Last Action:** Task 3.1 complete - Removed validation_result() convenience function from game/core/validation.py and ALL callers across game/ and tests/. This was a much larger scope task than documented - the function was used throughout the strategy layer, not just in race_validator.
-**Next Action:** Task 3.2 - Remove deprecated BattleScreen action flags
+**Last Action:** Task 3.2 complete - Removed deprecated BattleScreen action flags (action_return_to_setup, action_return_to_test_lab). Updated battle_ui.py to use scene_callback via _trigger_return_to_test_lab(). Removed 8 lines from battle_screen.py and updated 5 other files.
+**Next Action:** Task 3.3 - Remove BuildQueueScreen legacy single-context mode
 **Blockers:** None
 
 ## Overview

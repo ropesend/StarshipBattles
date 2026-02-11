@@ -24,7 +24,6 @@ class TestVisualRunFlow:
         game.battle_scene.test_scenario = None
         game.battle_scene.test_tick_count = 0
         game.battle_scene.test_completed = False
-        game.battle_scene.action_return_to_test_lab = False
         game.battle_scene.camera = Mock()
         game.battle_scene._battle_service = Mock()
 
@@ -113,7 +112,6 @@ class TestVisualRunFlow:
         mock_game.battle_scene.test_scenario = scenario
         mock_game.battle_scene.test_tick_count = 0
         mock_game.battle_scene.test_completed = False
-        mock_game.battle_scene.action_return_to_test_lab = False
         ships = engine.ships
         if ships:
             mock_game.battle_scene.camera.fit_objects(ships)
