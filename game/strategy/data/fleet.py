@@ -19,6 +19,13 @@ class OrderType(Enum):
     JOIN_FLEET = auto()
     BUILD = auto()
     TRANSFER = auto()
+    # Superweapon orders (PROJ-102)
+    IMPLODE_PLANET = auto()
+    STELLERATE_STAR = auto()
+    OPEN_WARP_POINT = auto()
+    CLOSE_WARP_POINT = auto()
+    CREATE_DYSON_SPHERE = auto()
+    SELF_DESTRUCT = auto()
 
 
 class FleetOrder:
@@ -36,6 +43,15 @@ class FleetOrder:
             if self.type == OrderType.TRANSFER:
                 # TRANSFER orders store a dict with direction, cargo_type, amount, planet_id
                 target_data = {'type': 'transfer', 'value': self.target}
+            elif self.type == OrderType.IMPLODE_PLANET and hasattr(self.target, 'id'):
+                # Planet reference for IMPLODE_PLANET (PROJ-102)
+                target_data = {'type': 'planet_ref', 'id': self.target.id}
+            elif self.type == OrderType.SELF_DESTRUCT and isinstance(self.target, list):
+                # Ship ID list for SELF_DESTRUCT (PROJ-102)
+                target_data = {'type': 'ship_id_list', 'value': self.target}
+            elif self.type == OrderType.OPEN_WARP_POINT and isinstance(self.target, dict):
+                # Warp parameters for OPEN_WARP_POINT (PROJ-102)
+                target_data = {'type': 'warp_params', 'value': self.target}
             elif hasattr(self.target, 'to_dict'):
                 target_data = self.target.to_dict()
             elif hasattr(self.target, 'id'):
@@ -376,6 +392,15 @@ class Fleet:
                         target = {'_fleet_ref': target_data['id']}
                     elif target_data.get('type') == 'transfer':
                         # TRANSFER order params dict (PROJ-68)
+                        target = target_data['value']
+                    elif target_data.get('type') == 'planet_ref':
+                        # Planet reference for IMPLODE_PLANET (PROJ-102)
+                        target = {'_planet_ref': target_data['id']}
+                    elif target_data.get('type') == 'ship_id_list':
+                        # Ship ID list for SELF_DESTRUCT (PROJ-102)
+                        target = target_data['value']
+                    elif target_data.get('type') == 'warp_params':
+                        # Warp parameters for OPEN_WARP_POINT (PROJ-102)
                         target = target_data['value']
                     elif target_data.get('type') == 'raw':
                         # Raw string fallback

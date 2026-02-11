@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional, Any, List
 from enum import Enum, auto
 
 class CommandType(Enum):
@@ -146,3 +146,147 @@ class IssueTransferCommand(Command):
         self.direction = direction
         self.amount = amount
         self.species_id = species_id
+
+
+# =============================================================================
+# Superweapon Commands (PROJ-102)
+# =============================================================================
+
+@dataclass
+class IssueImplodePlanetCommand(Command):
+    """Command to issue an IMPLODE_PLANET order to destroy a planet."""
+    fleet_id: int
+    planet_id: int
+
+    def __init__(self, fleet_id: int, planet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.planet_id = planet_id
+
+
+@dataclass
+class IssueStellerateStarCommand(Command):
+    """Command to issue a STELLERATE_STAR order to destroy the star at fleet location."""
+    fleet_id: int
+
+    def __init__(self, fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+
+
+@dataclass
+class IssueOpenWarpPointCommand(Command):
+    """Command to issue an OPEN_WARP_POINT order to create a warp link."""
+    fleet_id: int
+    target_hex: Any  # HexCoord
+    target_system_name: str
+
+    def __init__(self, fleet_id: int, target_hex: Any, target_system_name: str):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex
+        self.target_system_name = target_system_name
+
+
+@dataclass
+class IssueCloseWarpPointCommand(Command):
+    """Command to issue a CLOSE_WARP_POINT order to destroy a warp link."""
+    fleet_id: int
+    warp_point_destination_id: str
+
+    def __init__(self, fleet_id: int, warp_point_destination_id: str):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.warp_point_destination_id = warp_point_destination_id
+
+
+@dataclass
+class IssueCreateDysonSphereCommand(Command):
+    """Command to issue a CREATE_DYSON_SPHERE order to create a Dyson Sphere."""
+    fleet_id: int
+
+    def __init__(self, fleet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+
+
+@dataclass
+class IssueSelfDestructCommand(Command):
+    """Command to issue a SELF_DESTRUCT order to destroy selected ships."""
+    fleet_id: int
+    ship_ids: List[int]
+
+    def __init__(self, fleet_id: int, ship_ids: List[int]):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.ship_ids = ship_ids
+
+
+# =============================================================================
+# Superweapon Mission Commands (Move + Action) (PROJ-102)
+# =============================================================================
+
+@dataclass
+class QueueImplodePlanetMissionCommand(Command):
+    """Command to queue a move-to-hex then implode planet mission."""
+    fleet_id: int
+    target_hex: Any  # HexCoord
+    planet_id: int
+
+    def __init__(self, fleet_id: int, target_hex: Any, planet_id: int):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex
+        self.planet_id = planet_id
+
+
+@dataclass
+class QueueStellerateStarMissionCommand(Command):
+    """Command to queue a move-to-hex then stellerate star mission."""
+    fleet_id: int
+    target_hex: Any  # HexCoord
+
+    def __init__(self, fleet_id: int, target_hex: Any):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex
+
+
+@dataclass
+class QueueOpenWarpPointMissionCommand(Command):
+    """Command to queue a move-to-hex then open warp point mission."""
+    fleet_id: int
+    target_hex: Any  # HexCoord
+    target_system_name: str
+
+    def __init__(self, fleet_id: int, target_hex: Any, target_system_name: str):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex
+        self.target_system_name = target_system_name
+
+
+@dataclass
+class QueueCloseWarpPointMissionCommand(Command):
+    """Command to queue a move-to-hex then close warp point mission."""
+    fleet_id: int
+    target_hex: Any  # HexCoord
+    warp_point_destination_id: str
+
+    def __init__(self, fleet_id: int, target_hex: Any, warp_point_destination_id: str):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex
+        self.warp_point_destination_id = warp_point_destination_id
+
+
+@dataclass
+class QueueCreateDysonSphereMissionCommand(Command):
+    """Command to queue a move-to-hex then create Dyson Sphere mission."""
+    fleet_id: int
+    target_hex: Any  # HexCoord
+
+    def __init__(self, fleet_id: int, target_hex: Any):
+        self.type = CommandType.ISSUE_ORDER
+        self.fleet_id = fleet_id
+        self.target_hex = target_hex

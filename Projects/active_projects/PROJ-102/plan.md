@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Ability Classes & Components | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Order Types & Commands | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Order Types & Commands | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Data Model Extensions | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Validators | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Command Handlers | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -25,11 +25,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Phase 2 - Order Types & Commands
-**Last Action:** Phase 1 complete - Created 6 superweapon abilities + 6 components + 55 tests
-**Next Action:** Begin Phase 2 - Add OrderType enum values and command dataclasses
+**Active Phase:** Phase 3 - Data Model Extensions
+**Last Action:** Phase 2 complete - Added 6 OrderType values + 11 command dataclasses + 26 tests
+**Next Action:** Begin Phase 3 - Extend data models (PlanetType.DYSON_SPHERE, Galaxy cleanup methods, etc.)
 **Blockers:** None
-**Context for Next Agent:** Baseline is 7870 tests passing. Phase 1 added superweapons.py, updated abilities/__init__.py, added 6 components to components.json. Follow existing OrderType patterns in fleet.py and commands.py.
+**Context for Next Agent:** Baseline is 7896 tests passing (+26). Phase 2 added OrderType enum values (IMPLODE_PLANET, STELLERATE_STAR, etc.), serialization in FleetOrder.to_dict/from_dict, 6 direct commands, 5 mission commands to commands.py. Next: Phase 3 data model extensions.
 
 ## Overview
 Add 7 strategic superweapon abilities to the game: Destroy Planet, Destroy Star, Open Warp Point, Close Warp Point, Create Dyson Sphere, and Self-Destruct. Each feature includes a new ability class, component JSON definition, keyboard shortcut, strategy map order, command handler, and turn execution processing. These are galaxy-altering powers that follow the existing ability/component/order/command pipeline.
