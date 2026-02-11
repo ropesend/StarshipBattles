@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. T Key Input Mode + Keybinding Standardization | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. T Key Input Mode + Keybinding Standardization | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Transfer Dialog Size Fix | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Drop/Load Quick Commands | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Tests for Drop/Load | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-10
-**Active Phase:** Planning Complete - Ready for Implementation
-**Last Action:** Plan approved. All phase checklists created.
-**Next Action:** Begin Phase 1 - Change T key to input mode pattern
+**Active Phase:** Phase 1 Complete - Ready for Phase 2
+**Last Action:** T key now sets TRANSFER input mode; left-click opens dialog at clicked hex. Screen openers changed to Shift+P/E/R/D/B.
+**Next Action:** Begin Phase 2 - Transfer Dialog Size Fix
 **Blockers:** None
-**Context for Next Agent:** Baseline is 7648 tests passing. The T key currently opens the transfer dialog immediately; we need to change it to an input-mode-then-click pattern like M/J/C. Phase 1 also standardizes keybindings (screen openers → Shift+Key, fleet commands → plain key).
+**Context for Next Agent:** Phase 1 complete. Tests now 7694 passed. T key enters TRANSFER mode, click selects target hex, dialog opens with clicked coordinates. Screen openers now require Shift modifier.
 
 ## Overview
 Overhaul the cargo transfer order system to improve usability: (1) Change T key to use input-mode-then-click pattern for hex selection before opening the transfer dialog, (2) Fix transfer dialog clipping by increasing window size, (3) Add Drop (D) and Load (L) quick commands with simplified cargo dialogs, (4) Standardize keybindings so screen/menu openers use Shift+Key and fleet commands use plain keys.

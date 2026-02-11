@@ -41,9 +41,9 @@ class TestTooltipEnrichment:
         display = mapper.get_display_text(InputAction.STRATEGY_NEXT_TURN)
         assert display == "Enter"
 
-        # Test for Planets button (bound to P)
+        # Test for Planets button (bound to Shift+P)
         display = mapper.get_display_text(InputAction.STRATEGY_OPEN_PLANETS)
-        assert display == "P"
+        assert display == "Shift+P"
 
         # Test for zoom galaxy (bound to Shift+G)
         display = mapper.get_display_text(InputAction.STRATEGY_ZOOM_GALAXY)

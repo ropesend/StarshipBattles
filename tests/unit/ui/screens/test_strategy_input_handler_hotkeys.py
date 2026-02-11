@@ -82,14 +82,12 @@ class TestFleetActionsViaMapper:
         handler.handle_event(_keydown(pygame.K_c))
         assert handler.input_mode == 'COLONIZE_TARGET'
 
-    def test_t_triggers_transfer_dialog(self, mock_scene, mapper):
-        """Pressing T opens transfer dialog when fleet selected."""
+    def test_t_sets_transfer_mode(self, mock_scene, mapper):
+        """Pressing T sets input mode to TRANSFER when fleet selected."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        mock_fleet = MagicMock()
-        mock_fleet.location = (5, 5)
-        mock_scene.selected_fleet = mock_fleet
+        mock_scene.selected_fleet = MagicMock()
         handler.handle_event(_keydown(pygame.K_t))
-        mock_scene.ui.open_transfer_dialog.assert_called_once_with(mock_fleet, (5, 5))
+        assert handler.input_mode == 'TRANSFER'
 
     def test_escape_cancels_mode(self, mock_scene, mapper):
         """Pressing ESC resets input mode to SELECT."""
@@ -157,22 +155,22 @@ class TestNewHotkeyButtonActions:
         handler.handle_event(_keydown(pygame.K_RETURN))
         mock_scene.advance_turn.assert_called_once()
 
-    def test_p_opens_planets(self, mock_scene, mapper):
-        """P key opens planet list."""
+    def test_shift_p_opens_planets(self, mock_scene, mapper):
+        """Shift+P key opens planet list."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.handle_event(_keydown(pygame.K_p))
+        handler.handle_event(_keydown(pygame.K_p, pygame.KMOD_SHIFT))
         mock_scene.ui.open_planet_list.assert_called_once()
 
-    def test_d_opens_design(self, mock_scene, mapper):
-        """D key opens design workshop."""
+    def test_shift_d_opens_design(self, mock_scene, mapper):
+        """Shift+D key opens design workshop."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.handle_event(_keydown(pygame.K_d))
+        handler.handle_event(_keydown(pygame.K_d, pygame.KMOD_SHIFT))
         mock_scene.on_design_click.assert_called_once()
 
-    def test_b_opens_build_queues(self, mock_scene, mapper):
-        """B key opens build queue list."""
+    def test_shift_b_opens_build_queues(self, mock_scene, mapper):
+        """Shift+B key opens build queue list."""
         handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
-        handler.handle_event(_keydown(pygame.K_b))
+        handler.handle_event(_keydown(pygame.K_b, pygame.KMOD_SHIFT))
         mock_scene.ui.open_build_queue_list.assert_called_once()
 
     def test_ctrl_s_saves_game(self, mock_scene, mapper):

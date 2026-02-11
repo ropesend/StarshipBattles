@@ -110,7 +110,7 @@ class StrategyInputHandler:
         """Handle keyboard input using InputMapper (PROJ-71)."""
         # Build context list based on current state
         contexts = ["strategy", "global", "detail_panel"]
-        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET'):
+        if self.scene.selected_fleet or self.input_mode in ('MOVE', 'JOIN', 'COLONIZE_TARGET', 'TRANSFER'):
             contexts.append("fleet")
 
         action = self._mapper.resolve(event, contexts)
@@ -141,14 +141,13 @@ class StrategyInputHandler:
 
         elif action == InputAction.FLEET_TRANSFER:
             if self.scene.selected_fleet:
-                fleet = self.scene.selected_fleet
-                self.scene.ui.open_transfer_dialog(fleet, fleet.location)
-                log_debug(f"Opening Transfer Dialog for Fleet {fleet.id} at {fleet.location}")
+                self.input_mode = 'TRANSFER'
+                log_debug("Input Mode: TRANSFER - Click destination hex for transfer.")
             else:
                 log_debug("Select a fleet first for transfer.")
 
         elif action == InputAction.FLEET_CANCEL_MODE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN'):
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
 
@@ -214,7 +213,7 @@ class StrategyInputHandler:
                 log_debug("Select a fleet first.")
 
         elif event.key == pygame.K_ESCAPE:
-            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN'):
+            if self.input_mode in ('MOVE', 'COLONIZE_TARGET', 'JOIN', 'TRANSFER'):
                 self.input_mode = 'SELECT'
                 log_debug("Input Mode: SELECT")
 
@@ -227,9 +226,8 @@ class StrategyInputHandler:
 
         elif event.key == pygame.K_t:
             if self.scene.selected_fleet:
-                fleet = self.scene.selected_fleet
-                self.scene.ui.open_transfer_dialog(fleet, fleet.location)
-                log_debug(f"Opening Transfer Dialog for Fleet {fleet.id} at {fleet.location}")
+                self.input_mode = 'TRANSFER'
+                log_debug("Input Mode: TRANSFER - Click destination hex for transfer.")
             else:
                 log_debug("Select a fleet first for transfer.")
 
@@ -265,6 +263,8 @@ class StrategyInputHandler:
             return self._handle_join_mode_click(mx, my, button)
         elif self.input_mode == 'COLONIZE_TARGET':
             return self._handle_colonize_mode_click(mx, my, button)
+        elif self.input_mode == 'TRANSFER':
+            return self._handle_transfer_mode_click(mx, my, button)
         elif self.input_mode == 'SELECT':
             return self._handle_select_mode_click(mx, my, button)
 
@@ -358,6 +358,21 @@ class StrategyInputHandler:
             log_debug("Input Mode: SELECT")
             return True
 
+        return False
+
+    def _handle_transfer_mode_click(self, mx, my, button):
+        """Handle click in TRANSFER mode."""
+        if button == 1:  # Left Click
+            world_pos = self.scene.camera.screen_to_world((mx, my))
+            target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+            fleet = self.scene.selected_fleet
+            self.scene.ui.open_transfer_dialog(fleet, target_hex)
+            self.input_mode = 'SELECT'
+            return True
+        elif button == 3:  # Right click cancels
+            self.input_mode = 'SELECT'
+            log_debug("Input Mode: SELECT")
+            return True
         return False
 
     def _handle_select_mode_click(self, mx, my, button):

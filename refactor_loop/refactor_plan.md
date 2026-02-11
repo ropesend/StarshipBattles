@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-10
-**Last Completed:** PROJ-99 Audit PASSED
-**Current Status:** PROJ-99 Complete - Ready for PROJ-100
+**Last Completed:** PROJ-100 Phase 1
+**Current Status:** PROJ-100 Phase 1 Complete - Ready for Phase 2
 **Current Project:** PROJ-100
-**Current Phase:** Phase 1
-**Test Status:** 7691 passed
+**Current Phase:** Phase 2
+**Test Status:** 7694 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-99 complete: All 4 phases done, audit passed
-- Phase 4: Integrated EmpirePanelWindow into strategy UI
-- Added to: strategy_window_manager.py, strategy_event_router.py, strategy_ui.py, strategy_input_handler.py
-- Fixed 2 test mocks missing empire_panel_window field
-- Next: Start PROJ-100 Cargo Transfer Orders Overhaul
+- Phase 1 complete: T key input mode + keybinding standardization
+- T key now sets TRANSFER input mode (like M/J/C)
+- Left-click in TRANSFER mode opens dialog at clicked hex
+- Screen openers (P/E/R/D/B) now require Shift modifier
+- Updated 4 test files: transfer tests, hotkey tests, tooltip tests
+- Next: Phase 2 - Transfer Dialog Size Fix (600x500 → 750x600)
 
 ---
 
@@ -324,8 +325,8 @@
 
 ---
 
-- [ ] **PROJ-100: Cargo Transfer Orders Overhaul**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-100: Cargo Transfer Orders Overhaul**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-100/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-100/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -541,6 +542,7 @@
 | 2026-02-10 | PROJ-99 | Phase 3 | Complete | 7691 passed | pending | EmpirePanelWindow 3 tabs, 422 lines |
 | 2026-02-10 | PROJ-99 | Phase 4 | Complete | 7691 passed | pending | Integration: window manager, event router, keyboard shortcut |
 | 2026-02-10 | PROJ-99 | Audit 1 | PASSED | 7691 passed | pending | All 5 goals verified, 32 tests pass |
+| 2026-02-10 | PROJ-100 | Phase 1 | Complete | 7694 passed | pending | T key→TRANSFER mode, Shift+P/E/R/D/B screen openers |
 
 ---
 
