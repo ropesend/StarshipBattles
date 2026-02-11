@@ -19,6 +19,16 @@ from .resources import ResourceConsumption, ResourceStorage, ResourceGeneration
 # Cargo abilities
 from .cargo import CargoStorage
 
+# Superweapon abilities
+from .superweapons import (
+    DestroyPlanet,
+    DestroyStar,
+    OpenWarpPoint,
+    CloseWarpPoint,
+    CreateDysonSphere,
+    SelfDestruct,
+)
+
 # Propulsion abilities
 from .propulsion import CombatPropulsion, ManeuveringThruster, StrategicMovement, WarpJump
 
@@ -87,6 +97,13 @@ ABILITY_REGISTRY = {
     "SpaceShipyard": SpaceShipyardAbility,
     "EmpireStorage": EmpireStorageAbility,
     "CargoStorage": CargoStorage,
+    # Superweapon abilities
+    "DestroyPlanet": DestroyPlanet,
+    "DestroyStar": DestroyStar,
+    "OpenWarpPoint": OpenWarpPoint,
+    "CloseWarpPoint": CloseWarpPoint,
+    "CreateDysonSphere": CreateDysonSphere,
+    "SelfDestruct": SelfDestruct,
 }
 
 # Map registry shortcut names to their actual class names for instance matching
@@ -149,6 +166,13 @@ __all__ = [
     'EmpireStorageAbility',
     # Cargo
     'CargoStorage',
+    # Superweapons
+    'DestroyPlanet',
+    'DestroyStar',
+    'OpenWarpPoint',
+    'CloseWarpPoint',
+    'CreateDysonSphere',
+    'SelfDestruct',
     # Registry
     'ABILITY_REGISTRY',
     'ABILITY_CLASS_MAP',

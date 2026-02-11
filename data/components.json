@@ -2330,6 +2330,113 @@
                 "Organics": 100,
                 "Vapors": 50
             }
+        },
+        {
+            "id": "planet_imploder",
+            "name": "Planet Imploder",
+            "type": "Superweapon",
+            "mass": 2000,
+            "hp": 500,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "DestroyPlanet": true
+            },
+            "major_classification": "Superweapon",
+            "resource_cost": {
+                "Metals": 2000,
+                "Radioactives": 1000,
+                "Exotics": 500
+            }
+        },
+        {
+            "id": "stellerator",
+            "name": "Stellerator",
+            "type": "Superweapon",
+            "mass": 5000,
+            "hp": 800,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "DestroyStar": true
+            },
+            "major_classification": "Superweapon",
+            "resource_cost": {
+                "Metals": 5000,
+                "Radioactives": 3000,
+                "Exotics": 1500
+            }
+        },
+        {
+            "id": "quantum_tunneling_inverter",
+            "name": "Quantum Tunneling Inverter",
+            "type": "Superweapon",
+            "mass": 3000,
+            "hp": 600,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "OpenWarpPoint": true
+            },
+            "major_classification": "Superweapon",
+            "resource_cost": {
+                "Metals": 3000,
+                "Radioactives": 2000,
+                "Exotics": 1000
+            }
+        },
+        {
+            "id": "quantum_tunneling_diverter",
+            "name": "Quantum Tunneling Diverter",
+            "type": "Superweapon",
+            "mass": 2500,
+            "hp": 500,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "CloseWarpPoint": true
+            },
+            "major_classification": "Superweapon",
+            "resource_cost": {
+                "Metals": 2500,
+                "Radioactives": 1500,
+                "Exotics": 800
+            }
+        },
+        {
+            "id": "dyson_sphere_constructor",
+            "name": "Dyson Sphere Constructor",
+            "type": "Superweapon",
+            "mass": 8000,
+            "hp": 1000,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "CreateDysonSphere": true
+            },
+            "major_classification": "Superweapon",
+            "resource_cost": {
+                "Metals": 10000,
+                "Radioactives": 5000,
+                "Exotics": 3000
+            }
+        },
+        {
+            "id": "self_destruct_device",
+            "name": "Self-Destruct Device",
+            "type": "Superweapon",
+            "mass": 50,
+            "hp": 100,
+            "allowed_vehicle_types": ["Ship"],
+            "sprite_index": 230,
+            "abilities": {
+                "SelfDestruct": true
+            },
+            "major_classification": "Superweapon",
+            "resource_cost": {
+                "Metals": 50,
+                "Radioactives": 25
+            }
         }
     ]
 }
