@@ -127,16 +127,14 @@ class BattleUIService:
         Returns:
             ShipDTO with all ship data
         """
-        # Convert resources
+        # Convert resources - Ship.resources is always initialized in __init__
         resources = []
-        ship_resources = getattr(ship, 'resources', None)
-        if ship_resources:
-            for res in ship_resources.get_all_resources():
-                resources.append(ResourceDTO(
-                    name=res.name,
-                    current_value=res.current_value,
-                    max_value=res.max_value
-                ))
+        for res in ship.resources.get_all_resources():
+            resources.append(ResourceDTO(
+                name=res.name,
+                current_value=res.current_value,
+                max_value=res.max_value
+            ))
 
         # Convert components
         components = []
@@ -145,25 +143,22 @@ class BattleUIService:
             for comp in layer_data.components:
                 components.append(self._convert_component(comp, layer_name))
 
-        # Get target name
+        # Get target name - current_target is always initialized (may be None)
         current_target_name = None
-        current_target = getattr(ship, 'current_target', None)
-        if current_target and hasattr(current_target, 'name'):
-            current_target_name = current_target.name
+        if ship.current_target and hasattr(ship.current_target, 'name'):
+            current_target_name = ship.current_target.name
 
-        # Get secondary target names
+        # Get secondary target names - secondary_targets is always initialized (may be empty)
         secondary_target_names = []
-        for target in getattr(ship, 'secondary_targets', []):
+        for target in ship.secondary_targets:
             if hasattr(target, 'name'):
                 secondary_target_names.append(target.name)
 
         # Get ship id - use object id if no explicit id
         ship_id = str(getattr(ship, 'id', id(ship)))
 
-        # Get heading - Ship uses 'angle' internally, DTO exposes as 'heading'
-        heading = getattr(ship, 'heading', None)
-        if heading is None:
-            heading = getattr(ship, 'angle', 0.0)
+        # Ship uses 'angle' internally (from PhysicsBody), DTO exposes as 'heading'
+        heading = ship.angle
 
         return ShipDTO(
             id=ship_id,
@@ -173,24 +168,25 @@ class BattleUIService:
             velocity=Vector2(ship.velocity.x, ship.velocity.y),
             heading=heading,
             is_alive=ship.is_alive,
-            is_derelict=getattr(ship, 'is_derelict', False),
+            is_derelict=ship.is_derelict,
             hp=ship.hp,
             max_hp=ship.max_hp,
-            current_shields=getattr(ship, 'current_shields', 0.0),
-            max_shields=getattr(ship, 'max_shields', 0.0),
-            current_speed=getattr(ship, 'current_speed', 0.0),
+            current_shields=ship.current_shields,
+            max_shields=ship.max_shields,
+            current_speed=ship.current_speed,
             max_speed=ship.max_speed,
             mass=ship.mass,
-            total_thrust=getattr(ship, 'total_thrust', 0.0),
-            turn_speed=getattr(ship, 'turn_speed', 0.0),
-            total_shots_fired=getattr(ship, 'total_shots_fired', 0),
+            total_thrust=ship.total_thrust,
+            turn_speed=ship.turn_speed,
+            total_shots_fired=ship.total_shots_fired,
+            # crew_onboard/crew_required are dynamically set by ShipStatsCalculator, not in __init__
             crew_onboard=getattr(ship, 'crew_onboard', 0),
             crew_required=getattr(ship, 'crew_required', 0),
             current_target_name=current_target_name,
             secondary_target_names=secondary_target_names,
-            max_targets=getattr(ship, 'max_targets', 1),
-            ai_strategy=getattr(ship, 'ai_strategy', 'default'),
-            source_file=getattr(ship, 'source_file', None),
+            max_targets=ship.max_targets,
+            ai_strategy=ship.ai_strategy,
+            source_file=ship.source_file,
             resources=resources,
             components=components
         )

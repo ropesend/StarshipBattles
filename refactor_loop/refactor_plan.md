@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-106 Phase 5 Complete
-**Current Status:** PROJ-106 Phase 5 Complete — Ready for Phase 6
+**Last Completed:** PROJ-106 Phase 6 Complete
+**Current Status:** PROJ-106 Phase 6 Complete — Ready for Phase 7 (Audit)
 **Current Project:** PROJ-106
-**Current Phase:** Phase 6 (BattleUIService Contract Hardening)
-**Test Status:** 8187 passed
+**Current Phase:** Phase 7 (Audit and Final Verification)
+**Test Status:** 8185 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-106 Phase 5 Complete — Created ICamera protocol for research layer
-  - Task 5.1: Created ICamera protocol in game/core/protocols.py with 8 methods/properties
-  - Task 5.2: ResearchTreeScene keeps Camera import (creates Camera internally)
-  - Task 5.3: ResearchRenderer now uses ICamera protocol (clean separation)
-  - Task 5.4: Verified - renderer clean, scene retains construction import (acceptable per design.md)
-  - Added 5 new tests in test_protocols.py::TestICameraProtocol
-- All 8187 tests passing
-- Next: Phase 6 - Replace defensive getattr() chains with direct attribute access in BattleUIService
+- PROJ-106 Phase 6 Complete — BattleUIService contract hardening
+  - Task 6.1: Reduced getattr() calls from 20+ to 3 (crew_onboard, crew_required, ship.id)
+  - Task 6.2: Replaced hardcoded radius magic numbers with LayerDefaults-derived formulas
+  - Task 6.3: Skipped (optional) - pygame.math.Vector2 acceptable in UI layer
+  - Updated obsolete defensive fallback tests to match new direct access pattern
+- All 8185 tests passing (net -2 tests: merged 3 obsolete tests into 1 comprehensive test)
+- Next: Phase 7 - Final audit and verification
 
 ---
 
@@ -297,6 +296,7 @@
 | 2026-02-11 | PROJ-106 | Phase 3 | Complete | 8182 passed | pending | StrategyMetadataService in core, 8 UI files migrated, zero AI imports in UI |
 | 2026-02-11 | PROJ-106 | Phase 4 | Complete | 8182 passed | pending | SimulationDesignLoader routed through DesignLoaderAdapter, 3 strategy_screen.py methods + 2 TYPE_CHECKING |
 | 2026-02-11 | PROJ-106 | Phase 5 | Complete | 8187 passed | pending | ICamera protocol in core, ResearchRenderer uses ICamera, 5 new tests |
+| 2026-02-11 | PROJ-106 | Phase 6 | Complete | 8185 passed | pending | BattleUIService getattr 20+ → 3, LayerDefaults-derived radii, updated tests |
 
 ---
 

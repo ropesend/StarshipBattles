@@ -87,13 +87,22 @@ def draw_ship(surface, ship, camera):
         pygame.draw.circle(surface, LAYER_COLORS[LayerType.CORE], (cx, cy), scale(base_radius * LayerDefaults.CORE_RADIUS_PCT), 1)
 
         # Draw Components (Simplified visualization for Battle)
+        # Component dots are placed at the center of each layer ring
         if camera.zoom > 0.3:
             for ltype, data in ship.layers.items():
                 radius = 0
-                if ltype == LayerType.CORE: radius = base_radius * 0.1
-                elif ltype == LayerType.INNER: radius = base_radius * 0.35
-                elif ltype == LayerType.OUTER: radius = base_radius * 0.65
-                elif ltype == LayerType.ARMOR: radius = base_radius * 0.9
+                if ltype == LayerType.CORE:
+                    # Center of core: halfway from center to CORE boundary
+                    radius = base_radius * (LayerDefaults.CORE_RADIUS_PCT / 2)
+                elif ltype == LayerType.INNER:
+                    # Center of inner: midpoint between CORE and INNER boundaries
+                    radius = base_radius * ((LayerDefaults.CORE_RADIUS_PCT + LayerDefaults.INNER_RADIUS_PCT) / 2)
+                elif ltype == LayerType.OUTER:
+                    # Center of outer: midpoint between INNER and OUTER boundaries
+                    radius = base_radius * ((LayerDefaults.INNER_RADIUS_PCT + LayerDefaults.OUTER_RADIUS_PCT) / 2)
+                elif ltype == LayerType.ARMOR:
+                    # Center of armor: midpoint between OUTER and edge (1.0)
+                    radius = base_radius * ((LayerDefaults.OUTER_RADIUS_PCT + 1.0) / 2)
                 
                 comps = data.components
                 if not comps:

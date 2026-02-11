@@ -18,7 +18,6 @@ from game.ui.interfaces.battle_ui import (
     ResourceDTO,
 )
 from game.core.math import Vector2
-from game.simulation.entities.layer_data import LayerData
 
 
 class TestBattleUIServiceBattleState:
@@ -266,52 +265,52 @@ class TestBattleUIServiceRealProjectileIntegration:
 
 
 class TestBattleUIServiceDefensiveFallbacks:
-    """Tests verifying defensive getattr() fallbacks work correctly."""
+    """Tests verifying remaining defensive getattr() fallbacks work correctly.
 
-    def test_ship_without_optional_attributes_uses_defaults(self):
-        """Service handles ship missing optional attributes using defaults."""
+    Note: PROJ-106 Phase 6 removed most defensive getattr() calls since Ship's
+    interface is now stable. Only crew_onboard/crew_required remain as getattr()
+    since they're dynamically set by ShipStatsCalculator, not in Ship.__init__.
+    """
+
+    def test_ship_without_crew_attributes_uses_defaults(self):
+        """Service handles ship missing crew attributes (dynamically set by ShipStatsCalculator)."""
         mock_service = Mock()
         engine = Mock()
 
-        # Create a ship mock with only required attributes
-        # Use regular Mock (not spec) but configure specific attributes
-        ship = Mock()
-        ship.name = "Minimal Ship"
-        ship.team_id = 0
-        ship.position = Vector2(0, 0)
-        ship.velocity = Vector2(0, 0)
-        ship.heading = 0.0
-        ship.is_alive = True
-        ship.hp = 100.0
-        ship.max_hp = 100.0
-        ship.max_speed = 50.0
-        ship.mass = 1000.0
-        ship.layers = {}
-        # Configure Mock to raise AttributeError for optional attrs
-        ship.configure_mock(**{
-            'is_derelict': Mock(side_effect=AttributeError),
-            'current_shields': Mock(side_effect=AttributeError),
-            'max_shields': Mock(side_effect=AttributeError),
-        })
-        # But getattr needs to work differently - let's use a simpler approach
-        # Just don't set these attributes and let getattr handle defaults
-
-        # Use a SimpleNamespace-like approach for cleaner testing
-        class MinimalShip:
-            name = "Minimal Ship"
+        # Create ship that has all guaranteed attributes but NOT crew_onboard/crew_required
+        # (which are only set by ShipStatsCalculator.calculate(), not Ship.__init__)
+        class ShipWithoutCrewStats:
+            name = "Ship Without Crew Stats"
             team_id = 0
             position = Vector2(0, 0)
             velocity = Vector2(0, 0)
-            heading = 0.0
+            angle = 45.0  # Ship uses 'angle' from PhysicsBody
             is_alive = True
-            hp = 100.0
-            max_hp = 100.0
+            is_derelict = False
+            hp = 100
+            max_hp = 100
+            current_shields = 50.0
+            max_shields = 100.0
+            current_speed = 10.0
             max_speed = 50.0
             mass = 1000.0
+            total_thrust = 500.0
+            turn_speed = 30.0
+            total_shots_fired = 0
+            max_targets = 2
+            ai_strategy = "aggressive"
+            source_file = "test.json"
             layers = {}
-            # Optional attrs NOT defined - getattr should use defaults
+            current_target = None
+            secondary_targets = []
+            # crew_onboard and crew_required NOT defined - these are dynamic attrs
 
-        ship = MinimalShip()
+            class MockResources:
+                def get_all_resources(self):
+                    return []
+            resources = MockResources()
+
+        ship = ShipWithoutCrewStats()
 
         engine.ships = [ship]
         engine.projectiles = []
@@ -326,108 +325,15 @@ class TestBattleUIServiceDefensiveFallbacks:
 
         assert len(ships) == 1
         dto = ships[0]
-        # Should use fallback value (False)
+
+        # Verify all guaranteed attributes are accessed directly (not via getattr defaults)
         assert dto.is_derelict is False
-        # Should use fallback (0.0)
-        assert dto.current_shields == 0.0
-        assert dto.max_shields == 0.0
-        # Other defaults
-        assert dto.ai_strategy == 'default'
-        assert dto.max_targets == 1
+        assert dto.current_shields == 50.0
+        assert dto.max_shields == 100.0
+        assert dto.ai_strategy == "aggressive"
+        assert dto.max_targets == 2
+        assert dto.heading == 45.0  # Mapped from ship.angle
 
-    def test_ship_without_resources_attribute(self):
-        """Service handles ship missing resources attribute."""
-        mock_service = Mock()
-        engine = Mock()
-
-        # Create ship without resources attribute using class
-        class ShipWithoutResources:
-            name = "No Resources Ship"
-            team_id = 0
-            position = Vector2(0, 0)
-            velocity = Vector2(0, 0)
-            heading = 0.0
-            is_alive = True
-            hp = 100.0
-            max_hp = 100.0
-            max_speed = 50.0
-            mass = 1000.0
-            layers = {}
-            # Note: No resources attribute defined
-
-        ship = ShipWithoutResources()
-
-        engine.ships = [ship]
-        engine.projectiles = []
-        engine.recent_beams = []
-        engine.tick_counter = 0
-        engine.is_battle_over.return_value = False
-        engine.get_winner.return_value = None
-        mock_service.get_engine.return_value = engine
-
-        ui_service = BattleUIService(mock_service)
-        ships = ui_service.get_ships()
-
-        assert len(ships) == 1
-        dto = ships[0]
-        # Should have empty resources list
-        assert dto.resources == []
-
-    def test_component_without_status_attribute(self):
-        """Service handles component missing status attribute."""
-        mock_service = Mock()
-        engine = Mock()
-
-        # Create component without status using class
-        class MinimalComponent:
-            name = "Basic Component"
-            current_hp = 50.0
-            max_hp = 100.0
-            is_active = True
-            # Note: No status attribute, no has_ability method
-
-        comp = MinimalComponent()
-
-        # Create layer type enum-like object
-        class OuterLayer:
-            value = "outer"
-
-        layer_type = OuterLayer()
-
-        # Create ship with the component using class
-        class ShipWithComponent:
-            name = "Ship With Component"
-            team_id = 0
-            position = Vector2(0, 0)
-            velocity = Vector2(0, 0)
-            heading = 0.0
-            is_alive = True
-            hp = 100.0
-            max_hp = 100.0
-            max_speed = 50.0
-            mass = 1000.0
-            # Note: layers will be set below
-
-        ship = ShipWithComponent()
-        ship.layers = {layer_type: LayerData(components=[comp])}
-
-        engine.ships = [ship]
-        engine.projectiles = []
-        engine.recent_beams = []
-        engine.tick_counter = 0
-        engine.is_battle_over.return_value = False
-        engine.get_winner.return_value = None
-        mock_service.get_engine.return_value = engine
-
-        ui_service = BattleUIService(mock_service)
-        ships = ui_service.get_ships()
-
-        assert len(ships) == 1
-        dto = ships[0]
-        assert len(dto.components) == 1
-
-        comp_dto = dto.components[0]
-        # Should use fallback value "active"
-        assert comp_dto.status == "active"
-        # Should use fallback False since has_ability doesn't exist
-        assert comp_dto.has_weapon is False
+        # Only crew_onboard/crew_required should use getattr fallbacks
+        assert dto.crew_onboard == 0  # Fallback since not defined
+        assert dto.crew_required == 0  # Fallback since not defined

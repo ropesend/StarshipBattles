@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Reduce fragile getattr() chains in BattleUIService by defining explicit Ship interface attributes, and decouple game_renderer.py from simulation-layer enums by using pre-calculated values.
 
 ---
@@ -36,9 +36,9 @@ The real issue is the hardcoded radius percentages on lines 93-96 (0.1, 0.35, 0.
 **File:** `game/ui/services/battle_ui_service.py`
 **Tests:** `pytest tests/unit/ui/interfaces/test_battle_ui.py -v`
 
-- [ ] Review each getattr() call in `_convert_ship()` (lines 152-195)
-- [ ] For Ship properties that are guaranteed to exist (defined in `__init__`), replace `getattr(ship, 'prop', default)` with `ship.prop`
-- [ ] Known safe direct access (defined in Ship.__init__):
+- [x] Review each getattr() call in `_convert_ship()` (lines 152-195)
+- [x] For Ship properties that are guaranteed to exist (defined in `__init__`), replace `getattr(ship, 'prop', default)` with `ship.prop`
+- [x] Known safe direct access (defined in Ship.__init__):
   - `ship.is_derelict` (has `@property`, defaults to checking hp)
   - `ship.current_shields` (computed property on Ship)
   - `ship.max_shields` (computed property on Ship)
@@ -48,14 +48,15 @@ The real issue is the hardcoded radius percentages on lines 93-96 (0.1, 0.35, 0.
   - `ship.total_thrust` (cached property)
   - `ship.turn_speed` (cached property)
   - `ship.total_shots_fired` (initialized in Ship.__init__)
-  - `ship.crew_onboard` (initialized in Ship.__init__)
-  - `ship.crew_required` (cached stat)
+  - `ship.crew_onboard` - KEEP getattr (dynamically set by ShipStatsCalculator, not in __init__)
+  - `ship.crew_required` - KEEP getattr (dynamically set by ShipStatsCalculator, not in __init__)
   - `ship.max_targets` (initialized with CombatConstants.DEFAULT_MAX_TARGETS)
   - `ship.ai_strategy` (initialized in Ship.__init__)
   - `ship.source_file` (set during loading)
-- [ ] Keep getattr() ONLY for properties that might genuinely be missing (e.g., `source_file` which is set externally)
-- [ ] Also replace `heading = getattr(ship, 'heading', None)` pattern (lines 166-168) -- Ship uses `angle` not `heading`, so use `ship.angle` directly
-- [ ] Run tests: `pytest tests/unit/ui/interfaces/test_battle_ui.py -v`
+- [x] Keep getattr() ONLY for properties that might genuinely be missing (crew_onboard, crew_required, ship.id)
+- [x] Also replace `heading = getattr(ship, 'heading', None)` pattern -- Ship uses `angle` from PhysicsBody, use `ship.angle` directly
+- [x] Run tests: `pytest tests/unit/ui/interfaces/test_battle_ui.py -v` - 15 passed
+- [x] Updated obsolete defensive fallback tests in test_state_and_integration.py
 
 ---
 
@@ -63,11 +64,11 @@ The real issue is the hardcoded radius percentages on lines 93-96 (0.1, 0.35, 0.
 **File:** `game/ui/renderer/game_renderer.py`
 **Tests:** `pytest tests/ -v -k renderer`
 
-- [ ] Lines 93-96: Replace hardcoded radius percentages with LayerDefaults constants
-- [ ] Current: `0.1` (CORE), `0.35` (INNER), `0.65` (OUTER), `0.9` (ARMOR)
-- [ ] Replace with: `LayerDefaults.CORE_RADIUS_PCT`, `LayerDefaults.INNER_RADIUS_PCT`, `LayerDefaults.OUTER_RADIUS_PCT`, and `0.9` for ARMOR (check if LayerDefaults has ARMOR_RADIUS_PCT)
-- [ ] Note: Lines 84-87 already use `LayerDefaults.OUTER_RADIUS_PCT` etc. correctly -- this fix makes lines 93-96 consistent
-- [ ] Run tests: `pytest tests/ -v -k renderer`
+- [x] Lines 93-96: Replace hardcoded radius percentages with LayerDefaults-derived values
+- [x] Understood: hardcoded values (0.1, 0.35, 0.65, 0.9) were for component DOT positions (center of each layer), not layer boundaries
+- [x] Replaced with derived formulas: (boundary_inner + boundary_outer) / 2 for each layer
+- [x] Now uses LayerDefaults constants consistently for both boundary circles AND component positions
+- [x] Run tests: `pytest tests/ -v -k renderer` - 32 passed
 
 ---
 
@@ -75,20 +76,18 @@ The real issue is the hardcoded radius percentages on lines 93-96 (0.1, 0.35, 0.
 **File:** `game/ui/renderer/game_renderer.py`
 **Tests:** `pytest tests/ -v -k renderer`
 
-- [ ] Line 112: `comp_world_pos = ship.position + pygame.math.Vector2(off_x, off_y)` -- check if this can use `game.core.math.Vector2` instead
-- [ ] Note: This is in the UI layer where pygame is acceptable, but consistency is preferred
-- [ ] If ship.position is already a pygame.math.Vector2 from physics layer, then this is fine as-is
-- [ ] Decision: LOW PRIORITY. Only change if it causes no issues. Mark as optional.
-- [ ] Run tests: `pytest tests/ -v -k renderer`
+- [x] Line 112: `comp_world_pos = ship.position + pygame.math.Vector2(off_x, off_y)` -- reviewed
+- [x] Decision: SKIPPED (optional). pygame.math.Vector2 is acceptable in UI layer, ship.position is pygame.math.Vector2 from PhysicsBody
+- [x] No change needed - using pygame Vector2 in UI layer is architecturally correct
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] BattleUIService getattr() count reduced from 20+ to only genuinely uncertain properties
-- [ ] game_renderer.py uses LayerDefaults constants instead of magic numbers
-- [ ] Full test suite passes: `pytest tests/ -n 12` (8164+ tests)
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] BattleUIService getattr() count reduced from 20+ to 3 (crew_onboard, crew_required, ship.id)
+- [x] game_renderer.py uses LayerDefaults-derived constants instead of magic numbers
+- [x] Full test suite passes: `pytest tests/ -n 12` - 8185 passed
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

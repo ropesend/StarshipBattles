@@ -18,14 +18,14 @@
 | 3. Create Strategy Metadata Service | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Centralize SimulationDesignLoader Access | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Fix Research/UI Camera Dependency | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. BattleUIService Contract Hardening | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. BattleUIService Contract Hardening | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Audit and Final Verification | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 6 (BattleUIService Contract Hardening)
-**Last Action:** Phase 5 Complete -- Created ICamera protocol in game.core.protocols, updated ResearchRenderer to use ICamera (clean), ResearchTreeScene retains Camera import for construction (acceptable per design.md)
-**Next Action:** Begin Phase 6 (replace defensive getattr() chains with direct attribute access)
+**Active Phase:** Phase 7 (Audit and Final Verification)
+**Last Action:** Phase 6 Complete -- Reduced BattleUIService getattr() from 20+ to 3, replaced hardcoded radius values with LayerDefaults-derived formulas, updated obsolete tests
+**Next Action:** Begin Phase 7 (final audit and verification)
 **Blockers:** None
 
 ## Overview
