@@ -63,6 +63,7 @@ from game.core.constants import AttackType, CombatConstants
 from game.core.protocols import is_combatant
 from game.ai.target_evaluator import TargetEvaluator
 from game.ai.strategy_manager import StrategyManager
+from game.ai.combat_utils import get_hp_percent, is_in_pdc_arc
 
 class AIController:
     def __init__(self, ship, grid, enemy_team_id):
@@ -266,10 +267,10 @@ class AIController:
         return sorted_enemies[:count_needed]
 
     def _get_hp_percent(self, ship):
-        return TargetEvaluator._default_get_hp_percent(ship)
+        return get_hp_percent(ship)
 
     def _is_in_pdc_arc(self, target):
-        return TargetEvaluator._default_is_in_pdc_arc(self.ship, target)
+        return is_in_pdc_arc(self.ship, target)
 
     def update(self) -> None:
         """Execute one AI update cycle: target selection, behavior selection, movement."""

@@ -16,15 +16,15 @@
 | 1. SingletonMeta Foundation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Convert Singletons | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. ComponentInspector + AI Utils | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Migrate Strategy + AI Callers | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Migrate Strategy + AI Callers | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Simulation Deduplication | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. UI Deduplication | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 3 Complete
-**Last Action:** Created ComponentInspector utility (5 functions, 18 tests) + AI combat_utils module (7 functions, 20 tests)
-**Next Action:** Start Phase 4 (Migrate Strategy + AI Callers)
+**Active Phase:** Phase 4 Complete
+**Last Action:** Migrated all callers to use ComponentInspector and combat_utils. Removed ~150 lines of duplicate code from superweapon_validator.py, colonize_validator.py, fleet_capability_calculator.py, and target_evaluator.py.
+**Next Action:** Start Phase 5 (Simulation Deduplication)
 **Blockers:** None
 
 ## Overview

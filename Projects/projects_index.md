@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-111 | Test Coverage - UI and Framework | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-110 | Test Coverage - Core Systems | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-109 | Legacy Cleanup | Planning | 2026-02-11 | 2026-02-11 |
@@ -208,7 +209,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-112
+## Next Project ID: PROJ-113
 
 ---
 

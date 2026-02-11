@@ -6,35 +6,11 @@ PROJ-55: Added colony pod detection and chain validation.
 """
 from typing import Dict, Any, Optional
 from game.core.validation import ValidationResult, validation_result
+from game.strategy.services.component_inspector import iterate_design_components
 
 
 class ColonizeValidator:
     """Validates COLONIZE orders for fleets."""
-
-    @staticmethod
-    def _get_component_abilities(comp_def: Any) -> Dict[str, Any]:
-        """Extract abilities from a component definition.
-
-        Handles both dict format (test mocks) and Component objects (production).
-
-        Args:
-            comp_def: Either a dict with 'abilities' key or Component object
-
-        Returns:
-            Dict of abilities keyed by ability name
-        """
-        if comp_def is None:
-            return {}
-
-        # Try dict access first (test mocks, raw JSON)
-        if isinstance(comp_def, dict):
-            return comp_def.get('abilities', {})
-
-        # Try Component object access
-        if hasattr(comp_def, 'abilities'):
-            return getattr(comp_def, 'abilities', {})
-
-        return {}
 
     @staticmethod
     def validate(
@@ -140,29 +116,22 @@ class ColonizeValidator:
         """
         for ship in fleet.ships:
             design_data = getattr(ship, 'design_data', {})
-            layers = design_data.get('layers', {})
 
-            for layer_name, layer_components in layers.items():
-                if not isinstance(layer_components, list):
-                    continue
+            for _comp_entry, _comp_def, abilities in iterate_design_components(
+                design_data, component_registry
+            ):
+                if 'ColonizePlanet' in abilities:
+                    ability_data = abilities['ColonizePlanet']
+                    # Handle both string shorthand and dict format
+                    if isinstance(ability_data, str):
+                        pod_planet_type = ability_data
+                    elif isinstance(ability_data, dict):
+                        pod_planet_type = ability_data.get('planet_type', '')
+                    else:
+                        continue
 
-                for comp_entry in layer_components:
-                    comp_id = comp_entry.get('id', '') if isinstance(comp_entry, dict) else ''
-                    comp_def = component_registry.get(comp_id)
-                    abilities = ColonizeValidator._get_component_abilities(comp_def)
-
-                    if 'ColonizePlanet' in abilities:
-                        ability_data = abilities['ColonizePlanet']
-                        # Handle both string shorthand and dict format
-                        if isinstance(ability_data, str):
-                            pod_planet_type = ability_data
-                        elif isinstance(ability_data, dict):
-                            pod_planet_type = ability_data.get('planet_type', '')
-                        else:
-                            continue
-
-                        if pod_planet_type == planet_type_str:
-                            return ship
+                    if pod_planet_type == planet_type_str:
+                        return ship
 
         return None
 
@@ -186,28 +155,21 @@ class ColonizeValidator:
 
         for ship in fleet.ships:
             design_data = getattr(ship, 'design_data', {})
-            layers = design_data.get('layers', {})
 
-            for layer_name, layer_components in layers.items():
-                if not isinstance(layer_components, list):
-                    continue
+            for _comp_entry, _comp_def, abilities in iterate_design_components(
+                design_data, component_registry
+            ):
+                if 'ColonizePlanet' in abilities:
+                    ability_data = abilities['ColonizePlanet']
+                    # Handle both string shorthand and dict format
+                    if isinstance(ability_data, str):
+                        pod_planet_type = ability_data
+                    elif isinstance(ability_data, dict):
+                        pod_planet_type = ability_data.get('planet_type', '')
+                    else:
+                        continue
 
-                for comp_entry in layer_components:
-                    comp_id = comp_entry.get('id', '') if isinstance(comp_entry, dict) else ''
-                    comp_def = component_registry.get(comp_id)
-                    abilities = ColonizeValidator._get_component_abilities(comp_def)
-
-                    if 'ColonizePlanet' in abilities:
-                        ability_data = abilities['ColonizePlanet']
-                        # Handle both string shorthand and dict format
-                        if isinstance(ability_data, str):
-                            pod_planet_type = ability_data
-                        elif isinstance(ability_data, dict):
-                            pod_planet_type = ability_data.get('planet_type', '')
-                        else:
-                            continue
-
-                        pod_counts[pod_planet_type] = pod_counts.get(pod_planet_type, 0) + 1
+                    pod_counts[pod_planet_type] = pod_counts.get(pod_planet_type, 0) + 1
 
         return pod_counts
 

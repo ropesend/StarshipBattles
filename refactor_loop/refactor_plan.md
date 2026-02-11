@@ -8,21 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-108 Phase 3
-**Current Status:** PROJ-108 Phase 3 Complete
+**Last Completed:** PROJ-108 Phase 4
+**Current Status:** PROJ-108 Phase 4 Complete
 **Current Project:** PROJ-108
-**Current Phase:** Phase 4
+**Current Phase:** Phase 5
 **Test Status:** 8237 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-108 Phase 3 complete: ComponentInspector + AI Combat Utils created
-  - Created `game/strategy/services/component_inspector.py` (5 functions, 18 tests)
-    - get_component_abilities, iterate_design_components, ship_has_ability, find_ship_with_ability, count_ability
-  - Created `game/ai/combat_utils.py` (7 functions, 20 tests)
-    - is_vector2_like, get_position, get_rotation, get_all_components, safe_distance, get_hp_percent, is_in_pdc_arc
-  - All tests passing (8237 total, +38 new)
-- Next: Phase 4 - Migrate Strategy + AI Callers to use new utilities
+- PROJ-108 Phase 4 complete: Migrated all callers to shared utilities
+  - SuperweaponValidator: Deleted _get_component_abilities(), delegates to ComponentInspector
+  - ColonizeValidator: Uses iterate_design_components() for colony pod detection
+  - FleetCapabilityCalculator: Uses ship_has_ability() and count_ability()
+  - target_evaluator.py: Removed ~105 lines, now imports from combat_utils
+  - controller.py: Updated _get_hp_percent/_is_in_pdc_arc to use combat_utils
+  - Enhanced iterate_design_components to support inline abilities (backward compat)
+  - Updated test files that were testing deleted methods
+  - ~150 lines of duplicate code eliminated
+- Next: Phase 5 - Simulation Deduplication (ability aggregation, resource consumption)
 
 ---
 
@@ -308,6 +311,7 @@
 | 2026-02-11 | PROJ-108 | Phase 1 | Complete | 8199 passed | pending | SingletonMeta metaclass created, 14 tests |
 | 2026-02-11 | PROJ-108 | Phase 2 | Complete | 8199 passed | pending | 7 singletons converted, ~175 lines removed, 8 test files updated |
 | 2026-02-11 | PROJ-108 | Phase 3 | Complete | 8237 passed | pending | ComponentInspector (5 funcs, 18 tests) + combat_utils (7 funcs, 20 tests) |
+| 2026-02-11 | PROJ-108 | Phase 4 | Complete | 8237 passed | pending | Migrated SuperweaponValidator, ColonizeValidator, FleetCapabilityCalculator, target_evaluator, controller; ~150 lines removed |
 
 ---
 

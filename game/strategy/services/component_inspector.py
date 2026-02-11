@@ -47,6 +47,10 @@ def iterate_design_components(
     This is the canonical way to iterate over design components with their
     definitions and abilities. Handles various layer formats.
 
+    Supports both patterns:
+    1. Component ID lookup: comp_entry has 'id' field, abilities from registry
+    2. Inline abilities: comp_entry has 'abilities' field directly (test mocks)
+
     Args:
         design_data: Ship/facility design data dict with 'layers' key
         component_registry: Component registry for looking up definitions
@@ -55,7 +59,7 @@ def iterate_design_components(
         Tuple of (comp_entry, comp_def, abilities):
         - comp_entry: The raw component entry dict from design_data
         - comp_def: The component definition from registry (may be None)
-        - abilities: Dict of abilities from the component definition
+        - abilities: Dict of abilities from component definition OR inline
     """
     layers = design_data.get('layers', {})
 
@@ -72,11 +76,15 @@ def iterate_design_components(
                 # Handle string-only entries if they exist
                 comp_id = str(comp_entry) if comp_entry else ''
 
-            # Look up component definition
+            # Look up component definition from registry
             comp_def = component_registry.get(comp_id) if comp_id else None
 
-            # Get abilities from definition
+            # Get abilities from registry definition first
             abilities = get_component_abilities(comp_def)
+
+            # Fallback: check for inline abilities in comp_entry (test mocks)
+            if not abilities and isinstance(comp_entry, dict):
+                abilities = comp_entry.get('abilities', {})
 
             yield comp_entry, comp_def, abilities
 

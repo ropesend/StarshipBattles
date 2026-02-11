@@ -15,121 +15,16 @@ operating when possible:
 
 For fatal errors that indicate programming bugs, TargetingException is raised.
 """
-import logging
-
 from game.core.math import Vector2
 from game.core.constants import AttackType, LayerType
-
-logger = logging.getLogger(__name__)
-
-
-def _is_vector2_like(obj) -> bool:
-    """Check if object is a real Vector2-like object (not a MagicMock)."""
-    # Check for MagicMock by looking for tell-tale attributes
-    if hasattr(obj, '_mock_name') or hasattr(obj, 'assert_called'):
-        return False
-    # Check for Vector2-like interface
-    return hasattr(obj, 'x') and hasattr(obj, 'y') and hasattr(obj, 'distance_to')
-
-
-def _get_position(entity) -> 'Vector2':
-    """Get position from entity, supporting both interface and direct access.
-
-    Uses interface method get_position() if available and returns a real Vector2,
-    otherwise falls back to direct .position attribute.
-
-    Args:
-        entity: Ship or entity object with position data
-
-    Returns:
-        Vector2 position of the entity
-
-    Note:
-        Logs warnings on interface failures but continues with fallback
-        to maintain combat continuity.
-    """
-    entity_id = getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))
-
-    # Check for interface method first (ShipControllableAdapter case)
-    get_pos = getattr(entity, 'get_position', None)
-    if get_pos is not None and callable(get_pos):
-        try:
-            result = get_pos()
-            # Verify it's a real Vector2-like object (not a MagicMock)
-            if _is_vector2_like(result):
-                return result
-        except (AttributeError, TypeError) as e:
-            logger.warning(
-                "get_position() failed for entity %s: %s. Using fallback.",
-                entity_id, e
-            )
-    # Fall back to direct attribute access (raw Ship or mock with .position)
-    return entity.position
-
-
-def _get_rotation(entity) -> float:
-    """Get rotation from entity, supporting both interface and direct access.
-
-    Args:
-        entity: Ship or entity object with rotation data
-
-    Returns:
-        Rotation angle in degrees
-
-    Note:
-        Logs warnings on interface failures but continues with fallback
-        to maintain combat continuity.
-    """
-    entity_id = getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))
-
-    # Check for interface method first
-    get_rot = getattr(entity, 'get_rotation', None)
-    if get_rot is not None and callable(get_rot):
-        try:
-            result = get_rot()
-            if isinstance(result, (int, float)):
-                return result
-        except (AttributeError, TypeError) as e:
-            logger.warning(
-                "get_rotation() failed for entity %s: %s. Using fallback.",
-                entity_id, e
-            )
-    # Fall back to direct attribute access
-    return entity.angle
-
-
-def _get_all_components(entity) -> list:
-    """Get all components from entity, supporting both interface and direct access."""
-    if hasattr(entity, 'get_all_components') and callable(getattr(entity, 'get_all_components', None)):
-        return entity.get_all_components()
-    return []
-
-
-def _safe_distance(entity1, entity2) -> float:
-    """Safely calculate distance between two entities.
-
-    Args:
-        entity1: First entity (uses _get_position)
-        entity2: Second entity (uses direct .position)
-
-    Returns:
-        Distance between entities, or float('inf') if position unavailable
-    """
-    try:
-        pos1 = _get_position(entity1)
-        pos2 = getattr(entity2, 'position', None)
-        if pos1 is None or pos2 is None:
-            entity1_id = getattr(entity1, 'id', str(id(entity1)))
-            entity2_id = getattr(entity2, 'id', str(id(entity2)))
-            logger.warning(
-                "Cannot calculate distance: entity1=%s pos=%s, entity2=%s pos=%s",
-                entity1_id, pos1, entity2_id, pos2
-            )
-            return float('inf')
-        return pos1.distance_to(pos2)
-    except (AttributeError, TypeError) as e:
-        logger.warning("Distance calculation failed: %s", e)
-        return float('inf')
+from game.ai.combat_utils import (
+    get_position,
+    get_rotation,
+    get_all_components,
+    safe_distance,
+    get_hp_percent,
+    is_in_pdc_arc,
+)
 
 
 class TargetEvaluator:
@@ -156,7 +51,7 @@ class TargetEvaluator:
         if distance_cache and candidate in distance_cache:
             dist = distance_cache[candidate]
         else:
-            dist = _safe_distance(ship, candidate)
+            dist = safe_distance(ship, candidate)
 
         if r_type == 'nearest':
             # Closer is better (higher score)
@@ -360,11 +255,11 @@ class TargetEvaluator:
         """
         score = 0
 
-        # Use provided helpers or defaults
+        # Use provided helpers or defaults from combat_utils
         if stat_helpers is None:
             stat_helpers = {
-                'get_hp_percent': TargetEvaluator._default_get_hp_percent,
-                'is_in_pdc_arc': TargetEvaluator._default_is_in_pdc_arc
+                'get_hp_percent': get_hp_percent,
+                'is_in_pdc_arc': is_in_pdc_arc
             }
 
         for rule in rules:
@@ -398,62 +293,3 @@ class TargetEvaluator:
             score += val
 
         return score
-
-    @staticmethod
-    def _default_get_hp_percent(ship):
-        """Default HP percent calculation."""
-        # Use Ship helper method to get all components
-        components = _get_all_components(ship)
-        if not components:
-            return 1.0
-
-        total_max = sum(getattr(c, 'max_hp', 0) for c in components)
-        total_current = sum(getattr(c, 'current_hp', getattr(c, 'max_hp', 0)) for c in components)
-
-        return total_current / total_max if total_max > 0 else 1.0
-
-    @staticmethod
-    def _default_is_in_pdc_arc(ship, target):
-        """Default PDC arc check.
-
-        Args:
-            ship: The ship with PDC weapons
-            target: The potential target (typically a missile)
-
-        Returns:
-            True if target is within any PDC weapon's firing arc and range
-        """
-        import math
-
-        ship_pos = _get_position(ship)
-        target_pos = getattr(target, 'position', None)
-
-        if ship_pos is None or target_pos is None:
-            ship_id = getattr(ship, 'id', str(id(ship)))
-            target_id = getattr(target, 'id', str(id(target)))
-            logger.warning(
-                "PDC arc check failed: ship=%s pos=%s, target=%s pos=%s",
-                ship_id, ship_pos, target_id, target_pos
-            )
-            return False
-
-        for comp in ship.get_components_by_ability('WeaponAbility', operational_only=True):
-            if comp.has_pdc_ability():
-                weapon_ab = comp.get_ability('WeaponAbility')
-                dist = ship_pos.distance_to(target_pos)
-                if dist > weapon_ab.range:
-                    continue
-
-                vec_to_target = target_pos - ship_pos
-                if vec_to_target.length_squared() == 0:
-                    continue
-
-                angle_to_target = math.degrees(math.atan2(vec_to_target.y, vec_to_target.x)) % 360
-
-                ship_angle = _get_rotation(ship)
-                comp_facing = (ship_angle + weapon_ab.facing_angle) % 360
-                diff = (angle_to_target - comp_facing + 180) % 360 - 180
-
-                if abs(diff) <= (weapon_ab.firing_arc / 2):
-                    return True
-        return False

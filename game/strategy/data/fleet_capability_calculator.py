@@ -4,11 +4,17 @@ PROJ-87 Phase 4: Encapsulates fleet capability queries like space yards,
 warp capability, and build type checking.
 """
 
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from game.strategy.data.fleet import Fleet
     from game.strategy.data.ship_instance import ShipInstance
+
+
+def _get_default_component_registry() -> Dict[str, Any]:
+    """Get the default component registry for ability lookups."""
+    from game.core.registry import get_default_registries
+    return get_default_registries().components
 
 
 class FleetCapabilityCalculator:
@@ -32,17 +38,9 @@ class FleetCapabilityCalculator:
         Returns:
             True if ship has a component with SpaceShipyard ability.
         """
-        design_data = ship.design_data
-        for layer_data in design_data.get("layers", {}).values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                if isinstance(comp, dict):
-                    if comp.get("id") == "fleet_space_yard":
-                        return True
-                    if "SpaceShipyard" in comp.get("abilities", {}):
-                        return True
-        return False
+        from game.strategy.services.component_inspector import ship_has_ability
+        registry = _get_default_component_registry()
+        return ship_has_ability(ship, 'SpaceShipyard', registry)
 
     def __init__(self, fleet: 'Fleet'):
         """
@@ -66,18 +64,11 @@ class FleetCapabilityCalculator:
     @property
     def space_shipyard_count(self) -> int:
         """Count total fleet space yard components across all combat-capable ships."""
+        from game.strategy.services.component_inspector import count_ability
+        registry = _get_default_component_registry()
         count = 0
         for ship in self._fleet.get_combat_capable_ships():
-            design_data = ship.design_data
-            for layer_data in design_data.get("layers", {}).values():
-                if not isinstance(layer_data, list):
-                    continue
-                for comp in layer_data:
-                    if isinstance(comp, dict):
-                        if comp.get("id") == "fleet_space_yard":
-                            count += 1
-                        elif "SpaceShipyard" in comp.get("abilities", {}):
-                            count += 1
+            count += count_ability(ship, 'SpaceShipyard', registry)
         return count
 
     def can_build_type(self, vehicle_type: str, galaxy: Any = None) -> bool:
@@ -190,13 +181,6 @@ class FleetCapabilityCalculator:
         Returns:
             True if ship has the ability, False otherwise.
         """
-        design_data = ship.design_data
-        for layer_data in design_data.get("layers", {}).values():
-            if not isinstance(layer_data, list):
-                continue
-            for comp in layer_data:
-                if isinstance(comp, dict):
-                    abilities = comp.get("abilities", {})
-                    if ability_name in abilities:
-                        return True
-        return False
+        from game.strategy.services.component_inspector import ship_has_ability
+        registry = _get_default_component_registry()
+        return ship_has_ability(ship, ability_name, registry)

@@ -5,35 +5,14 @@ PROJ-102 Phase 4: Business logic validation for strategic superweapon orders.
 """
 from typing import Any, Dict, List, Optional
 from game.core.validation import ValidationResult, validation_result
+from game.strategy.services.component_inspector import (
+    find_ship_with_ability as _inspector_find_ship,
+    ship_has_ability,
+)
 
 
 class SuperweaponValidator:
     """Validates superweapon orders for fleets."""
-
-    @staticmethod
-    def _get_component_abilities(comp_def: Any) -> Dict[str, Any]:
-        """Extract abilities from a component definition.
-
-        Handles both dict format (test mocks) and Component objects (production).
-
-        Args:
-            comp_def: Either a dict with 'abilities' key or Component object
-
-        Returns:
-            Dict of abilities keyed by ability name
-        """
-        if comp_def is None:
-            return {}
-
-        # Try dict access first (test mocks, raw JSON)
-        if isinstance(comp_def, dict):
-            return comp_def.get('abilities', {})
-
-        # Try Component object access
-        if hasattr(comp_def, 'abilities'):
-            return getattr(comp_def, 'abilities', {})
-
-        return {}
 
     @staticmethod
     def find_ship_with_ability(
@@ -51,23 +30,7 @@ class SuperweaponValidator:
         Returns:
             The first ship with the ability, or None if not found.
         """
-        for ship in fleet.ships:
-            design_data = getattr(ship, 'design_data', {})
-            layers = design_data.get('layers', {})
-
-            for layer_name, layer_components in layers.items():
-                if not isinstance(layer_components, list):
-                    continue
-
-                for comp_entry in layer_components:
-                    comp_id = comp_entry.get('id', '') if isinstance(comp_entry, dict) else ''
-                    comp_def = component_registry.get(comp_id)
-                    abilities = SuperweaponValidator._get_component_abilities(comp_def)
-
-                    if ability_name in abilities:
-                        return ship
-
-        return None
+        return _inspector_find_ship(fleet.ships, ability_name, component_registry)
 
     @staticmethod
     def _find_system_at_location(galaxy, location) -> Optional[Any]:
@@ -378,27 +341,7 @@ class SuperweaponValidator:
 
             # Check ship has SelfDestruct ability
             if component_registry is not None:
-                has_ability = False
-                design_data = getattr(ship, 'design_data', {})
-                layers = design_data.get('layers', {})
-
-                for layer_name, layer_components in layers.items():
-                    if not isinstance(layer_components, list):
-                        continue
-
-                    for comp_entry in layer_components:
-                        comp_id = comp_entry.get('id', '') if isinstance(comp_entry, dict) else ''
-                        comp_def = component_registry.get(comp_id)
-                        abilities = SuperweaponValidator._get_component_abilities(comp_def)
-
-                        if 'SelfDestruct' in abilities:
-                            has_ability = True
-                            break
-
-                    if has_ability:
-                        break
-
-                if not has_ability:
+                if not ship_has_ability(ship, 'SelfDestruct', component_registry):
                     return validation_result(
                         False,
                         f"Ship '{ship_id}' does not have SelfDestruct ability."

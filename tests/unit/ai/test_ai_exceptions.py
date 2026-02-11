@@ -10,7 +10,8 @@ from unittest.mock import MagicMock, patch
 from game.core.exceptions import StateException, AIException, TargetingException
 from game.core.math import Vector2
 from game.ai.strategy_manager import StrategyManager
-from game.ai.target_evaluator import TargetEvaluator, _get_position, _get_rotation, _safe_distance
+from game.ai.target_evaluator import TargetEvaluator
+from game.ai.combat_utils import get_position, get_rotation, safe_distance, get_hp_percent, is_in_pdc_arc
 
 
 class TestAIExceptionHierarchy:
@@ -64,8 +65,8 @@ class TestStrategyManagerExceptions:
         assert first is second
 
 
-class TestTargetEvaluatorFallbacks:
-    """Test TargetEvaluator fallback behavior on errors."""
+class TestCombatUtilsFallbacks:
+    """Test combat_utils fallback behavior on errors."""
 
     def test_get_position_logs_and_falls_back_on_interface_error(self, caplog):
         """When get_position() fails, should log and fall back to .position."""
@@ -77,7 +78,7 @@ class TestTargetEvaluatorFallbacks:
         entity.get_position.side_effect = AttributeError("Mock error")
 
         with caplog.at_level(logging.WARNING):
-            result = _get_position(entity)
+            result = get_position(entity)
 
         # Should have fallen back to direct attribute
         assert result == Vector2(100, 200)
@@ -95,7 +96,7 @@ class TestTargetEvaluatorFallbacks:
         entity.get_rotation.side_effect = TypeError("Mock error")
 
         with caplog.at_level(logging.WARNING):
-            result = _get_rotation(entity)
+            result = get_rotation(entity)
 
         assert result == 45.0
         assert "get_rotation() failed" in caplog.text
@@ -110,15 +111,16 @@ class TestTargetEvaluatorFallbacks:
         entity2 = MagicMock()
         entity2.id = "ship2"
         entity2.position = None  # Missing position
+        entity2.get_position.return_value = None  # Interface also returns None
 
         with caplog.at_level(logging.WARNING):
-            result = _safe_distance(entity1, entity2)
+            result = safe_distance(entity1, entity2)
 
         assert result == float('inf')
         assert "Cannot calculate distance" in caplog.text
 
     def test_safe_distance_handles_attribute_error(self, caplog):
-        """_safe_distance should handle AttributeError gracefully."""
+        """safe_distance should handle AttributeError gracefully."""
         entity1 = MagicMock()
         entity1.id = "ship1"
         # Make get_position() fail and fallback position unavailable
@@ -128,15 +130,16 @@ class TestTargetEvaluatorFallbacks:
         entity2 = MagicMock()
         entity2.id = "ship2"
         entity2.position = Vector2(100, 100)
+        entity2.get_position.return_value = Vector2(100, 100)
 
         with caplog.at_level(logging.WARNING):
-            result = _safe_distance(entity1, entity2)
+            result = safe_distance(entity1, entity2)
 
         # When position is None, should return infinity
         assert result == float('inf')
 
 
-class TestTargetEvaluatorErrorContext:
+class TestCombatUtilsErrorContext:
     """Test that errors include proper context for debugging."""
 
     def test_pdc_arc_check_logs_on_missing_position(self, caplog):
@@ -149,9 +152,10 @@ class TestTargetEvaluatorErrorContext:
         target = MagicMock()
         target.id = "missile"
         target.position = None
+        target.get_position.return_value = None
 
         with caplog.at_level(logging.WARNING):
-            result = TargetEvaluator._default_is_in_pdc_arc(ship, target)
+            result = is_in_pdc_arc(ship, target)
 
         assert result is False
         assert "PDC arc check failed" in caplog.text
@@ -231,7 +235,7 @@ class TestFallbackBehaviorPreserved:
         ship = MagicMock()
         ship.get_all_components.return_value = []
 
-        result = TargetEvaluator._default_get_hp_percent(ship)
+        result = get_hp_percent(ship)
         assert result == 1.0
 
     def test_hp_calculation_handles_zero_max_hp(self):
@@ -244,5 +248,5 @@ class TestFallbackBehaviorPreserved:
         comp.current_hp = 0
         ship.get_all_components.return_value = [comp]
 
-        result = TargetEvaluator._default_get_hp_percent(ship)
+        result = get_hp_percent(ship)
         assert result == 1.0

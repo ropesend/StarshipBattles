@@ -13,6 +13,7 @@ import pytest
 import pygame
 from unittest.mock import MagicMock
 from game.ai.target_evaluator import TargetEvaluator
+from game.ai.combat_utils import get_hp_percent, is_in_pdc_arc
 from game.core.constants import AttackType
 
 
@@ -127,19 +128,19 @@ class TestCustomStatHelpers:
 # =============================================================================
 
 class TestDefaultStatHelpers:
-    """Tests for default stat helper implementations."""
+    """Tests for default stat helper implementations (now in combat_utils)."""
 
     def test_default_get_hp_percent_no_components(self):
-        """Default get_hp_percent should return 1.0 for no components."""
+        """get_hp_percent should return 1.0 for no components."""
         target = MagicMock()
         target.get_all_components = MagicMock(return_value=[])
 
-        result = TargetEvaluator._default_get_hp_percent(target)
+        result = get_hp_percent(target)
 
         assert result == 1.0
 
     def test_default_get_hp_percent_calculates_correctly(self):
-        """Default get_hp_percent should calculate HP correctly."""
+        """get_hp_percent should calculate HP correctly."""
         target = MagicMock()
         comp1 = MagicMock()
         comp1.max_hp = 100
@@ -151,16 +152,16 @@ class TestDefaultStatHelpers:
 
         target.get_all_components = MagicMock(return_value=[comp1, comp2])
 
-        result = TargetEvaluator._default_get_hp_percent(target)
+        result = get_hp_percent(target)
 
         # (50 + 25) / (100 + 100) = 0.375
         assert result == 0.375
 
     def test_default_is_in_pdc_arc_no_pdc_weapons(self, ship, target):
-        """Default is_in_pdc_arc should return False with no PDC weapons."""
+        """is_in_pdc_arc should return False with no PDC weapons."""
         ship.get_components_by_ability = MagicMock(return_value=[])
 
-        result = TargetEvaluator._default_is_in_pdc_arc(ship, target)
+        result = is_in_pdc_arc(ship, target)
 
         assert result is False
 
