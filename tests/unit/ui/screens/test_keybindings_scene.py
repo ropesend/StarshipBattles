@@ -6,6 +6,11 @@ Verifies the full-screen keybinding editor scene:
 - Key capture workflow
 - Conflict detection
 - Save/Reset/Close operations
+
+Event Testing Pattern Notes:
+- Key capture tests use MagicMock events for _handle_key_capture() since the method
+  only accesses .type, .key, and .mod attributes. This is intentional as these
+  internal methods don't require full pygame event semantics.
 """
 import os
 import json

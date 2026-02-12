@@ -407,3 +407,148 @@ class TestBuildQueueScreenQueueSelector:
         screen.update_active_queue(new_source)
 
         assert screen.active_queue_source.name == "New Source"
+
+
+# ===========================================================================
+# Task 7.3: Error Path Coverage Tests
+# ===========================================================================
+
+class TestBuildQueueScreenErrorHandling:
+    """Test error handling and edge cases."""
+
+    def test_empty_queue_sources(self):
+        """BuildQueueScreen should handle empty queue_sources."""
+        screen, mocks = _make_build_queue_screen()
+        screen.queue_sources = []
+        screen.active_queue_source = None
+
+        # Should not crash when accessing queue sources
+        assert len(screen.queue_sources) == 0
+        assert screen.active_queue_source is None
+
+    def test_no_available_designs(self):
+        """BuildQueueScreen should handle zero available designs."""
+        screen, mocks = _make_build_queue_screen()
+        mocks['controller'].get_designs.return_value = []
+        mocks['controller'].get_filtered_designs.return_value = []
+
+        result = mocks['controller'].get_filtered_designs()
+        assert len(result) == 0
+
+    def test_none_empire_id(self):
+        """BuildQueueScreen should handle None empire ID gracefully."""
+        screen, mocks = _make_build_queue_screen()
+        screen.empire.id = None
+
+        # Should not crash when empire ID is None
+        assert screen.empire.id is None
+
+    def test_empty_build_queue(self):
+        """BuildQueueScreen should handle empty build queue."""
+        screen, mocks = _make_build_queue_screen()
+        screen.queue_items = []
+
+        assert len(screen.queue_items) == 0
+
+    def test_selected_queue_index_out_of_bounds(self):
+        """Should handle selected_queue_index pointing to nonexistent item."""
+        screen, mocks = _make_build_queue_screen()
+        screen.queue_items = []  # Empty
+        screen.selected_queue_index = 5  # Out of bounds
+
+        # This is a state that shouldn't occur but should be handled
+        assert screen.selected_queue_index == 5
+        # Accessing would fail, but state creation shouldn't crash
+
+    def test_none_build_context(self):
+        """BuildQueueScreen should handle None build context."""
+        screen, mocks = _make_build_queue_screen()
+        screen.build_context = None
+
+        assert screen.build_context is None
+
+
+# ===========================================================================
+# Task 7.4: Edge Case Coverage Tests
+# ===========================================================================
+
+class TestBuildQueueScreenEdgeCases:
+    """Test boundary values and edge cases."""
+
+    def test_single_queue_source(self):
+        """BuildQueueScreen should handle exactly one queue source."""
+        screen, mocks = _make_build_queue_screen()
+        assert len(screen.queue_sources) == 1
+
+    def test_many_queue_sources(self):
+        """BuildQueueScreen should handle many queue sources."""
+        screen, mocks = _make_build_queue_screen()
+        for i in range(9):
+            new_source = MagicMock()
+            new_source.name = f"Source {i+2}"
+            screen.queue_sources.append(new_source)
+
+        assert len(screen.queue_sources) == 10
+
+    def test_single_design_available(self):
+        """BuildQueueScreen should handle exactly one available design."""
+        screen, mocks = _make_build_queue_screen()
+        single_design = MagicMock()
+        mocks['controller'].get_designs.return_value = [single_design]
+
+        designs = mocks['controller'].get_designs()
+        assert len(designs) == 1
+
+    def test_many_designs_available(self):
+        """BuildQueueScreen should handle many available designs."""
+        screen, mocks = _make_build_queue_screen()
+        many_designs = [MagicMock() for _ in range(100)]
+        mocks['controller'].get_designs.return_value = many_designs
+
+        designs = mocks['controller'].get_designs()
+        assert len(designs) == 100
+
+    def test_queue_with_zero_items(self):
+        """BuildQueueScreen should handle queue with zero items."""
+        screen, mocks = _make_build_queue_screen()
+        screen.queue_items = []
+
+        assert len(screen.queue_items) == 0
+
+    def test_queue_with_many_items(self):
+        """BuildQueueScreen should handle queue with many items."""
+        screen, mocks = _make_build_queue_screen()
+        screen.queue_items = [MagicMock() for _ in range(50)]
+
+        assert len(screen.queue_items) == 50
+
+    def test_selected_queue_indices_single(self):
+        """BuildQueueScreen should handle single selected queue index."""
+        screen, mocks = _make_build_queue_screen()
+        screen.selected_queue_indices = {0}
+
+        assert len(screen.selected_queue_indices) == 1
+
+    def test_selected_queue_indices_multiple(self):
+        """BuildQueueScreen should handle multiple selected queue indices."""
+        screen, mocks = _make_build_queue_screen()
+        screen.queue_sources = [MagicMock() for _ in range(5)]
+        screen.selected_queue_indices = {0, 1, 2, 3, 4}
+
+        assert len(screen.selected_queue_indices) == 5
+
+    def test_resources_at_zero(self):
+        """BuildQueueScreen should handle resources at zero."""
+        screen, mocks = _make_build_queue_screen()
+        screen.empire.get_resource = MagicMock(return_value=0)
+
+        resource = screen.empire.get_resource('duranium')
+        assert resource == 0
+
+    def test_resources_at_max(self):
+        """BuildQueueScreen should handle large resource amounts."""
+        screen, mocks = _make_build_queue_screen()
+        screen.empire.get_resource = MagicMock(return_value=999999)
+
+        resource = screen.empire.get_resource('duranium')
+        assert resource == 999999

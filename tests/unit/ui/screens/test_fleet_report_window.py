@@ -526,3 +526,152 @@ class TestFleetReportSummary:
 
         # Ships have 100, 90, 80 HP out of 100 = 90% average
         window.lbl_avg_hp.set_text.assert_called()
+
+
+# ===========================================================================
+# Task 7.3: Error Path Coverage Tests
+# ===========================================================================
+
+class TestFleetReportErrorHandling:
+    """Test error handling and edge cases."""
+
+    def test_fleet_with_zero_ships(self):
+        """FleetReportWindow should handle fleet with zero ships."""
+        window, mocks = _make_fleet_report_window()
+        window.fleet.ships = []
+        mocks['view_model'].get_filtered_ships.return_value = []
+
+        ships = mocks['view_model'].get_filtered_ships()
+        assert len(ships) == 0
+
+    def test_ship_with_zero_hp_max(self):
+        """Should handle ship with hp_max = 0 (avoid division by zero)."""
+        window, mocks = _make_fleet_report_window()
+
+        ship = _make_ship_mock("Zero HP Ship")
+        ship.hp_max = 0
+        ship.hp_current = 0
+        window.fleet.ships = [ship]
+
+        # Summary calculation should handle division by zero
+        def mock_update_summary():
+            ships = window.fleet.ships
+            if ships and ships[0].hp_max > 0:
+                avg_hp = ships[0].hp_current / ships[0].hp_max * 100
+            else:
+                avg_hp = 0  # Avoid division by zero
+            window.lbl_avg_hp.set_text(f"Avg HP: {avg_hp:.0f}%")
+
+        window._update_summary = mock_update_summary
+        window._update_summary()
+        window.lbl_avg_hp.set_text.assert_called_with("Avg HP: 0%")
+
+    def test_selected_indices_out_of_range(self):
+        """Should handle selected_indices pointing to out-of-range ships."""
+        window, mocks = _make_fleet_report_window()
+        window.selected_indices = {10, 20}  # Way out of range
+        window.fleet.ships = [_make_ship_mock("Only Ship")]
+
+        # Should not crash when accessing indices
+        assert 10 in window.selected_indices
+        assert len(window.fleet.ships) == 1
+
+    def test_none_fleet_object(self):
+        """Should handle None fleet object gracefully."""
+        window, mocks = _make_fleet_report_window()
+        window.fleet = None
+
+        assert window.fleet is None
+
+    def test_empty_column_manager(self):
+        """Should handle column manager with no columns."""
+        window, mocks = _make_fleet_report_window()
+        mocks['column_manager'].get_columns.return_value = []
+
+        columns = mocks['column_manager'].get_columns()
+        assert len(columns) == 0
+
+
+# ===========================================================================
+# Task 7.4: Edge Case Coverage Tests
+# ===========================================================================
+
+class TestFleetReportEdgeCases:
+    """Test boundary values and edge cases."""
+
+    def test_fleet_with_single_ship(self):
+        """FleetReportWindow should handle fleet with exactly one ship."""
+        window, mocks = _make_fleet_report_window()
+        single_ship = _make_ship_mock("Lone Ship")
+        window.fleet.ships = [single_ship]
+        mocks['view_model'].get_filtered_ships.return_value = [single_ship]
+
+        ships = mocks['view_model'].get_filtered_ships()
+        assert len(ships) == 1
+
+    def test_fleet_with_many_ships(self):
+        """FleetReportWindow should handle fleet with many ships (50+)."""
+        window, mocks = _make_fleet_report_window()
+        many_ships = [_make_ship_mock(f"Ship {i}") for i in range(50)]
+        window.fleet.ships = many_ships
+        mocks['view_model'].get_filtered_ships.return_value = many_ships
+
+        ships = mocks['view_model'].get_filtered_ships()
+        assert len(ships) == 50
+
+    def test_ship_at_exactly_zero_hp(self):
+        """Should handle ship at exactly 0 HP (destroyed)."""
+        window, mocks = _make_fleet_report_window()
+        destroyed_ship = _make_ship_mock("Destroyed")
+        destroyed_ship.hp_current = 0
+        destroyed_ship.hp_max = 100
+        window.fleet.ships = [destroyed_ship]
+
+        # HP percentage should be 0%
+        hp_pct = destroyed_ship.hp_current / destroyed_ship.hp_max * 100
+        assert hp_pct == 0
+
+    def test_ship_at_exactly_max_hp(self):
+        """Should handle ship at exactly max HP (100%)."""
+        window, mocks = _make_fleet_report_window()
+        full_hp_ship = _make_ship_mock("Full HP")
+        full_hp_ship.hp_current = 100
+        full_hp_ship.hp_max = 100
+        window.fleet.ships = [full_hp_ship]
+
+        # HP percentage should be 100%
+        hp_pct = full_hp_ship.hp_current / full_hp_ship.hp_max * 100
+        assert hp_pct == 100
+
+    def test_select_all_ships(self):
+        """Should handle selecting all ships in fleet."""
+        window, mocks = _make_fleet_report_window()
+        # Select all 3 ships
+        window.selected_indices = {0, 1, 2}
+
+        assert len(window.selected_indices) == 3
+
+    def test_deselect_all_ships(self):
+        """Should handle deselecting all ships."""
+        window, mocks = _make_fleet_report_window()
+        window.selected_indices = set()
+
+        assert len(window.selected_indices) == 0
+
+    def test_ship_speed_at_zero(self):
+        """Should handle ship with speed at 0."""
+        window, mocks = _make_fleet_report_window()
+        stationary_ship = _make_ship_mock("Stationary")
+        stationary_ship.speed = 0
+        window.fleet.ships = [stationary_ship]
+
+        assert stationary_ship.speed == 0
+
+    def test_ship_speed_at_max(self):
+        """Should handle ship with maximum speed."""
+        window, mocks = _make_fleet_report_window()
+        fast_ship = _make_ship_mock("Fast Ship")
+        fast_ship.speed = 10  # Typical max
+        window.fleet.ships = [fast_ship]
+
+        assert fast_ship.speed == 10

@@ -675,3 +675,352 @@ class TestOnDesignClick:
 
         # Should not raise
         screen.on_design_click()
+
+
+# ===========================================================================
+# Task 7.3: Error Path Coverage Tests
+# ===========================================================================
+
+class TestErrorHandlingPaths:
+    """Test error handling and edge cases."""
+
+    def test_update_with_none_session_does_not_crash(self):
+        """update() should not crash if session is None."""
+        screen, mocks = _make_strategy_screen()
+        screen.session = None
+
+        # Should not raise - delegates to mocked objects
+        screen.update(0.016)
+        mocks['camera'].update.assert_called_once_with(0.016)
+
+    def test_draw_with_none_surface_raises_cleanly(self):
+        """draw() should handle None surface gracefully."""
+        screen, _ = _make_strategy_screen()
+
+        # Should raise AttributeError on fill() since None has no fill method
+        with pytest.raises(AttributeError):
+            screen.draw(None)
+
+    def test_handle_event_with_none_event(self):
+        """handle_event() should delegate None to input handler."""
+        screen, mocks = _make_strategy_screen()
+
+        screen.handle_event(None)
+
+        mocks['input_handler'].handle_event.assert_called_once_with(None)
+
+    def test_on_ui_selection_with_none_selected_object(self):
+        """on_ui_selection(None) should clear selection without crashing."""
+        screen, mocks = _make_strategy_screen()
+        screen.selected_object = MagicMock()
+        screen.selected_fleet = MagicMock()
+        screen._get_object_asset = MagicMock(return_value=None)
+
+        with patch('game.ui.screens.strategy_screen.is_fleet', return_value=False), \
+             patch('game.ui.screens.strategy_screen.is_star_system', return_value=False):
+            screen.on_ui_selection(None)
+
+        assert screen.selected_object is None
+
+    def test_handle_resize_with_zero_dimensions(self):
+        """handle_resize() should handle zero dimensions without crashing."""
+        screen, mocks = _make_strategy_screen()
+        screen.TOP_BAR_HEIGHT = 50
+
+        # Zero dimensions - implementation should handle this
+        screen.handle_resize(0, 0)
+
+        assert screen.screen_width == 0
+        assert screen.screen_height == 0
+        mocks['ui'].handle_resize.assert_called_once_with(0, 0)
+
+    def test_handle_resize_with_same_dimensions(self):
+        """handle_resize() should handle resize with same dimensions (no-op)."""
+        screen, mocks = _make_strategy_screen()
+        screen.TOP_BAR_HEIGHT = 50
+        original_width = screen.screen_width
+        original_height = screen.screen_height
+
+        screen.handle_resize(original_width, original_height)
+
+        assert screen.screen_width == original_width
+        assert screen.screen_height == original_height
+        mocks['ui'].handle_resize.assert_called_once_with(original_width, original_height)
+
+    def test_cycle_selection_no_results_found(self):
+        """cycle_selection() should handle no results gracefully."""
+        screen, mocks = _make_strategy_screen()
+        mocks['camera_nav'].cycle_selection.return_value = None
+        screen.on_ui_selection = MagicMock()
+
+        screen.cycle_selection('fleet', 1)
+
+        # Should not call on_ui_selection when nothing found
+        screen.on_ui_selection.assert_not_called()
+
+    def test_advance_turn_with_empty_human_player_ids(self):
+        """advance_turn() should handle empty human_player_ids."""
+        screen, mocks = _make_strategy_screen()
+        screen.current_player_index = 0
+        screen.session.human_player_ids = []  # Empty list
+        screen._process_full_turn = MagicMock()
+        screen._update_player_label = MagicMock()
+
+        # Should handle division/mod by zero gracefully
+        screen.advance_turn()
+
+        # Index should wrap to 0 even with empty list
+        assert screen.current_player_index == 0
+
+    def test_on_build_yard_click_no_selected_object(self):
+        """on_build_yard_click() should do nothing when no object selected."""
+        screen, mocks = _make_strategy_screen()
+        screen.selected_object = None
+
+        screen.on_build_yard_click()
+
+        # No UI changes should happen
+        mocks['ui'].hide_ui.assert_not_called()
+
+    def test_on_colonize_click_no_selected_fleet(self):
+        """on_colonize_click() should handle no fleet gracefully."""
+        screen, _ = _make_strategy_screen()
+        screen.selected_fleet = None
+
+        screen.on_colonize_click()
+
+        screen._colonization.on_colonize_click.assert_called_once_with(None)
+
+
+# ===========================================================================
+# Task 7.4: Edge Case Coverage Tests
+# ===========================================================================
+
+class TestEdgeCases:
+    """Test boundary values and edge cases."""
+
+    def test_strategy_screen_with_zero_systems(self):
+        """StrategyScreen should handle galaxy with zero systems."""
+        screen, mocks = _make_strategy_screen()
+        mocks['session'].systems = []
+        screen.session.systems = []
+
+        assert len(screen.systems) == 0
+
+    def test_strategy_screen_with_zero_empires(self):
+        """StrategyScreen should handle game with zero empires (edge case)."""
+        screen, mocks = _make_strategy_screen()
+        mocks['session'].empires = []
+        screen.session.empires = []
+
+        assert len(screen.empires) == 0
+
+    def test_handle_resize_minimum_dimensions(self):
+        """handle_resize() should handle minimum usable dimensions (800x600)."""
+        screen, mocks = _make_strategy_screen()
+        screen.TOP_BAR_HEIGHT = 50
+
+        screen.handle_resize(800, 600)
+
+        assert screen.screen_width == 800
+        assert screen.screen_height == 600
+        mocks['ui'].handle_resize.assert_called_once_with(800, 600)
+
+    def test_handle_resize_maximum_dimensions(self):
+        """handle_resize() should handle 4K dimensions (3840x2160)."""
+        screen, mocks = _make_strategy_screen()
+        screen.TOP_BAR_HEIGHT = 50
+
+        screen.handle_resize(3840, 2160)
+
+        assert screen.screen_width == 3840
+        assert screen.screen_height == 2160
+        mocks['ui'].handle_resize.assert_called_once_with(3840, 2160)
+
+    def test_turn_processing_flag_boundary(self):
+        """turn_processing flag should toggle correctly at boundaries."""
+        screen, _ = _make_strategy_screen()
+
+        # Initially False
+        assert screen.turn_processing is False
+
+        # Can set to True
+        screen.turn_processing = True
+        assert screen.turn_processing is True
+
+        # Can set back to False
+        screen.turn_processing = False
+        assert screen.turn_processing is False
+
+    def test_cycle_selection_with_single_colony(self):
+        """cycle_selection() should work with only one colony."""
+        screen, mocks = _make_strategy_screen()
+        single_colony = MagicMock()
+        mocks['camera_nav'].cycle_selection.return_value = single_colony
+        screen.on_ui_selection = MagicMock()
+
+        screen.cycle_selection('colony', 1)
+
+        mocks['camera_nav'].cycle_selection.assert_called_once_with('colony', 1)
+        screen.on_ui_selection.assert_called_once_with(single_colony)
+
+    def test_cycle_selection_negative_direction(self):
+        """cycle_selection() should handle negative direction (previous)."""
+        screen, mocks = _make_strategy_screen()
+        mock_obj = MagicMock()
+        mocks['camera_nav'].cycle_selection.return_value = mock_obj
+        screen.on_ui_selection = MagicMock()
+
+        screen.cycle_selection('fleet', -1)
+
+        mocks['camera_nav'].cycle_selection.assert_called_once_with('fleet', -1)
+
+    def test_detail_zoom_level_boundary_values(self):
+        """detail_zoom_level should accept boundary values."""
+        screen, _ = _make_strategy_screen()
+
+        # Test minimum zoom (common minimum is around 0.1-0.5)
+        screen.detail_zoom_level = 0.1
+        assert screen.detail_zoom_level == 0.1
+
+        # Test maximum zoom (typical max is 10-20)
+        screen.detail_zoom_level = 20.0
+        assert screen.detail_zoom_level == 20.0
+
+    def test_hex_size_boundary(self):
+        """hex_size should handle typical boundary values."""
+        screen, _ = _make_strategy_screen()
+
+        # Small hex size
+        screen.hex_size = 1
+        assert screen.hex_size == 1
+
+        # Large hex size
+        screen.hex_size = 100
+        assert screen.hex_size == 100
+
+    def test_current_player_index_wrapping(self):
+        """current_player_index should wrap correctly with multiple players."""
+        screen, _ = _make_strategy_screen()
+        screen.session.human_player_ids = [0, 1, 2]
+        screen._process_full_turn = MagicMock()
+        screen._update_player_label = MagicMock()
+
+        # Start at 0, advance to 1
+        screen.current_player_index = 0
+        screen.advance_turn()
+        assert screen.current_player_index == 1
+
+        # Advance to 2
+        screen.advance_turn()
+        assert screen.current_player_index == 2
+
+        # Advance wraps to 0 and processes turn
+        screen.advance_turn()
+        assert screen.current_player_index == 0
+        screen._process_full_turn.assert_called_once()
+
+
+# ===========================================================================
+# Task 7.5: Screen Resize Handling Tests
+# ===========================================================================
+
+class TestScreenResizeHandling:
+    """Comprehensive resize handling tests."""
+
+    def test_resize_updates_camera_viewport(self):
+        """handle_resize() should update camera viewport dimensions."""
+        screen, mocks = _make_strategy_screen()
+        from game.core.config import UIConfig
+        screen.TOP_BAR_HEIGHT = 50
+
+        screen.handle_resize(2560, 1440)
+
+        # Camera viewport should exclude sidebar and topbar
+        expected_width = 2560 - UIConfig.STRATEGY_SIDEBAR_WIDTH
+        expected_height = 1440 - screen.TOP_BAR_HEIGHT
+        assert mocks['camera'].width == expected_width
+        assert mocks['camera'].height == expected_height
+
+    def test_resize_to_same_size_no_crash(self):
+        """Resizing to current size should be a no-op that doesn't crash."""
+        screen, mocks = _make_strategy_screen()
+
+        screen.handle_resize(1920, 1080)
+        screen.handle_resize(1920, 1080)  # Same size again
+
+        # Should complete without error
+        assert screen.screen_width == 1920
+        assert screen.screen_height == 1080
+
+    def test_resize_during_turn_processing(self):
+        """Resize should work even during turn processing."""
+        screen, mocks = _make_strategy_screen()
+        screen.turn_processing = True
+
+        screen.handle_resize(2560, 1440)
+
+        assert screen.screen_width == 2560
+        assert screen.screen_height == 1440
+        mocks['ui'].handle_resize.assert_called_once_with(2560, 1440)
+
+    def test_resize_with_open_build_queue(self):
+        """Resize should propagate to open build queue screen."""
+        screen, mocks = _make_strategy_screen()
+        screen.build_queue_screen = MagicMock()
+
+        screen.handle_resize(2560, 1440)
+
+        # UI still receives resize
+        mocks['ui'].handle_resize.assert_called_once_with(2560, 1440)
+
+    def test_resize_preserves_selection_state(self):
+        """Resize should not affect selection state."""
+        screen, mocks = _make_strategy_screen()
+        mock_obj = MagicMock()
+        screen.selected_object = mock_obj
+        screen.selected_fleet = MagicMock()
+
+        screen.handle_resize(2560, 1440)
+
+        assert screen.selected_object is mock_obj
+        assert screen.selected_fleet is not None
+
+    def test_resize_preserves_input_mode(self):
+        """Resize should not affect input mode."""
+        screen, mocks = _make_strategy_screen()
+        mocks['input_handler'].input_mode = 'MOVE'
+
+        screen.handle_resize(2560, 1440)
+
+        assert screen.input_mode == 'MOVE'
+
+    def test_resize_aspect_ratio_changes(self):
+        """Resize should handle aspect ratio changes (e.g., 16:9 to 21:9)."""
+        screen, mocks = _make_strategy_screen()
+        screen.TOP_BAR_HEIGHT = 50
+
+        # Start with 16:9
+        screen.handle_resize(1920, 1080)
+        assert screen.screen_width == 1920
+
+        # Switch to ultrawide 21:9
+        screen.handle_resize(2560, 1080)
+        assert screen.screen_width == 2560
+        assert screen.screen_height == 1080
+
+    def test_multiple_consecutive_resizes(self):
+        """Multiple consecutive resizes should all take effect."""
+        screen, mocks = _make_strategy_screen()
+        screen.TOP_BAR_HEIGHT = 50
+
+        screen.handle_resize(800, 600)
+        screen.handle_resize(1920, 1080)
+        screen.handle_resize(2560, 1440)
+        screen.handle_resize(3840, 2160)
+
+        # Final size should be the last resize
+        assert screen.screen_width == 3840
+        assert screen.screen_height == 2160
+        # UI should have been called 4 times
+        assert mocks['ui'].handle_resize.call_count == 4

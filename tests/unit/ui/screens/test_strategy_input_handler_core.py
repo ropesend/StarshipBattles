@@ -2,6 +2,12 @@
 
 Tests input mode transitions, click handling, and edge cases. Extends
 existing test_strategy_input_handler_hotkeys.py and test_strategy_input_handler_transfer.py.
+
+Event Testing Pattern Notes:
+- KEYDOWN/MOUSEBUTTONDOWN/MOUSEWHEEL: Use real pygame.event.Event() via _keydown() helper
+  or direct Event construction. Real events ensure correct attribute structure.
+- UI_BUTTON_PRESSED (pygame_gui): MagicMock acceptable since only .type and .ui_element
+  are needed, and the handler compares ui_element by identity, not pygame internals.
 """
 
 import pytest
