@@ -8,27 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-110 Phase 1 Complete
-**Current Status:** PROJ-110 Phase 1 Complete, Ready for Phase 2
+**Last Completed:** PROJ-110 Phase 2 Complete
+**Current Status:** PROJ-110 Phase 2 Complete, Ready for Phase 3
 **Current Project:** PROJ-110
-**Current Phase:** Phase 2 (Simulation - CRITICAL + MAJOR)
-**Test Status:** 8411 passed (+173 new tests total for Phase 1)
+**Current Phase:** Phase 3 (Strategy - CRITICAL + MAJOR)
+**Test Status:** 8633 passed (+222 new tests for Phase 2)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-110 Phase 1 COMPLETE (10 of 10 tasks):
-  - Task 1.1: Hex math unit tests (43 tests) - test_hex_math_core.py
-  - Task 1.2: AI behaviors unit tests (41 tests) - test_behavior_units.py
-  - Task 1.3: Resource loading error paths (14 tests) - test_resource_loading.py
-  - Task 1.4: Input mapper coverage (17 new tests added to existing)
-  - Task 1.5: Paths module unit tests (18 tests) - test_paths_config.py
-  - Task 1.6: Screenshot manager (11 tests) - test_screenshot_manager.py
-  - Task 1.7: AI controller unit tests (14 tests) - test_ai_controller_unit.py
-  - Task 1.8: Strategy manager (1 new test, rest covered by existing)
-  - Task 1.9: Target evaluator edge cases (15 tests) - test_target_evaluator_edge_cases.py
-  - Task 1.10: Research service (all items already covered by existing tests)
-- Fixed pre-existing test failure in test_sub_window_hotkeys.py (missing method binding)
-- Next: Begin Phase 2, Task 2.1 (Registry Loader Service tests)
+- PROJ-110 Phase 2 COMPLETE (9 of 9 tasks, +222 tests):
+  - Task 2.1: Registry Loader (16 tests) - test_registry_loader.py
+  - Task 2.2: Physics Constants (11 tests) - test_physics_constants.py
+  - Task 2.3: Battle Configuration (23 tests) - test_battle_config.py
+  - Task 2.4: Component Constants (22 tests) - test_component_constants.py
+  - Task 2.5: Modifier Schema (57 tests) - test_modifier_schema.py
+  - Task 2.6: Modifier Effects (31 tests) - test_modifier_effects.py
+  - Task 2.7: Marker Abilities (16 tests) - test_markers.py
+  - Task 2.8: Stat Keys (22 tests) - test_stat_keys.py
+  - Task 2.9: Modifiers (24 tests) - test_modifiers.py
+- Next: Begin Phase 3, Task 3.1 (Radiation Physics tests)
 
 ---
 
@@ -330,6 +328,7 @@
 | 2026-02-11 | PROJ-109 | Audit 1 | PASSED | 8238 passed | pending | All 6 goals verified: shims, dead code, deprecated params, migration, proxies, comments |
 | 2026-02-11 | PROJ-110 | Phase 1 Tasks 1.1-1.7 | Complete | 8394 passed | pending | +156 tests: hex_math(43), behaviors(41), resources(14), input_mapper(17), paths(18), screenshot(11), ai_controller(14) |
 | 2026-02-11 | PROJ-110 | Phase 1 Tasks 1.8-1.10 | Complete | 8411 passed | pending | +17 tests: target_evaluator(15), strategy_manager(1), test fix(1). Phase 1 complete. |
+| 2026-02-11 | PROJ-110 | Phase 2 Tasks 2.1-2.9 | Complete | 8633 passed | pending | +222 tests: simulation layer CRITICAL+MAJOR coverage. Phase 2 complete. |
 
 ---
 

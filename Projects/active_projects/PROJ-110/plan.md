@@ -14,15 +14,15 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Foundation - CRITICAL + MAJOR | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Simulation - CRITICAL + MAJOR | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Simulation - CRITICAL + MAJOR | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Strategy - CRITICAL + MAJOR | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. All Layers - MINOR | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** 2 (Simulation - CRITICAL + MAJOR)
-**Last Action:** Phase 1 complete (+173 tests). Tasks 1.8-1.10 complete (16 new tests this session + test fix)
-**Next Action:** Begin Phase 2, Task 2.1 (Registry Loader Service tests)
+**Active Phase:** 3 (Strategy - CRITICAL + MAJOR)
+**Last Action:** Phase 2 complete (+222 tests: registry_loader 16, physics_constants 11, battle_config 23, component_constants 22, modifier_schema 57, modifier_effects 31, markers 16, stat_keys 22, modifiers 24)
+**Next Action:** Begin Phase 3, Task 3.1 (Radiation Physics tests)
 **Blockers:** None
 
 ## Overview
