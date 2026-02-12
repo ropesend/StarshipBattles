@@ -19,28 +19,28 @@
 **Tests:** `pytest tests/unit/core/test_math_vector2.py`
 
 __getitem__ / __len__:
-- [ ] `test_getitem_index_0_returns_x` - v[0] == v.x
-- [ ] `test_getitem_index_1_returns_y` - v[1] == v.y
-- [ ] `test_getitem_index_2_raises_index_error` - v[2] raises IndexError
-- [ ] `test_len_returns_2` - len(v) == 2
+- [x] `test_getitem_index_0_returns_x` - v[0] == v.x
+- [x] `test_getitem_index_1_returns_y` - v[1] == v.y
+- [x] `test_getitem_index_2_raises_index_error` - v[2] raises IndexError
+- [x] `test_len_returns_2` - len(v) == 2
 
 normalize:
-- [ ] `test_normalize_zero_vector_returns_zero` - Vector2(0,0).normalize() == Vector2(0,0)
-- [ ] `test_normalize_unit_vector_unchanged` - Already unit-length stays same
+- [x] `test_normalize_zero_vector_returns_zero` - Vector2(0,0).normalize() == Vector2(0,0)
+- [x] `test_normalize_unit_vector_unchanged` - Already unit-length stays same
 
 rotate:
-- [ ] `test_rotate_negative_angle` - rotate(-90) correct
-- [ ] `test_rotate_360_returns_original` - rotate(360) ~= original
-- [ ] `test_rotate_720_returns_original` - rotate(720) ~= original
+- [x] `test_rotate_negative_angle` - rotate(-90) correct
+- [x] `test_rotate_360_returns_original` - rotate(360) ~= original
+- [x] `test_rotate_720_returns_original` - rotate(720) ~= original
 
 angle_to:
-- [ ] `test_angle_to_right` - (0,0).angle_to((1,0)) == 0
-- [ ] `test_angle_to_up` - (0,0).angle_to((0,-1)) == -90 (screen coords)
-- [ ] `test_angle_to_same_point` - angle_to self is 0
+- [x] `test_angle_to_right` - (0,0).angle_to((1,0)) == 0
+- [x] `test_angle_to_up` - (0,0).angle_to((0,-1)) == -90 (screen coords)
+- [x] `test_angle_to_same_point` - angle_to self is 0
 
 as_int_tuple:
-- [ ] `test_as_int_tuple_truncates` - (1.9, 2.1) -> (1, 2)
-- [ ] `test_as_int_tuple_negative` - (-0.5, -1.7) -> (0, -1)
+- [x] `test_as_int_tuple_truncates` - (1.9, 2.1) -> (1, 2)
+- [x] `test_as_int_tuple_negative` - (-0.5, -1.7) -> (0, -1)
 
 **Estimated tests: ~14**
 
@@ -55,24 +55,24 @@ as_int_tuple:
 Note: Must mock `Paths.BATTLE_LOG` and `os.makedirs` to avoid file I/O.
 
 Singleton:
-- [ ] `test_logger_singleton_same_instance` - Logger() is Logger()
-- [ ] `test_logger_reset_creates_new_instance` - After reset(), new instance
+- [x] `test_logger_singleton_same_instance` - Logger() is Logger()
+- [x] `test_logger_reset_creates_new_instance` - After reset(), new instance
 
 Enabled flag:
-- [ ] `test_set_enabled_false_suppresses_logs` - Messages not logged when disabled
-- [ ] `test_set_enabled_true_allows_logs` - Messages logged when enabled
+- [x] `test_set_enabled_false_suppresses_logs` - Messages not logged when disabled
+- [x] `test_set_enabled_true_allows_logs` - Messages logged when enabled
 
 Module-level functions:
-- [ ] `test_log_debug_delegates` - log_debug() calls _logger.log()
-- [ ] `test_log_info_delegates` - log_info() calls _logger.info()
-- [ ] `test_log_warning_delegates` - log_warning() calls _logger.warning()
-- [ ] `test_log_error_delegates` - log_error() calls _logger.error()
+- [x] `test_log_debug_delegates` - log_debug() calls _logger.log()
+- [x] `test_log_info_delegates` - log_info() calls _logger.info()
+- [x] `test_log_warning_delegates` - log_warning() calls _logger.warning()
+- [x] `test_log_error_delegates` - log_error() calls _logger.error()
 
 Event handler:
-- [ ] `test_set_event_handler_registers_callback` - Callback stored
-- [ ] `test_log_event_calls_handler` - Handler invoked with event_type and kwargs
-- [ ] `test_log_event_no_handler_no_crash` - No handler registered -> no error
-- [ ] `test_log_event_handler_exception_caught` - Exception in handler -> logged, not raised
+- [x] `test_set_event_handler_registers_callback` - Callback stored
+- [x] `test_log_event_calls_handler` - Handler invoked with event_type and kwargs
+- [x] `test_log_event_no_handler_no_crash` - No handler registered -> no error
+- [x] `test_log_event_handler_exception_caught` - Exception in handler -> logged, not raised
 
 **Estimated tests: ~12**
 
@@ -85,18 +85,18 @@ Event handler:
 **Tests:** `pytest tests/unit/core/test_profiling_edge_cases.py`
 
 save_history error paths:
-- [ ] `test_save_history_no_records_skips` - Empty records -> no file write
-- [ ] `test_save_history_io_error` - Mock save_json to return False -> logged
-- [ ] `test_save_history_appends_to_existing` - Existing history gets new session appended
+- [x] `test_save_history_no_records_skips` - Empty records -> no file write
+- [x] `test_save_history_io_error` - Mock save_json to return False -> logged
+- [x] `test_save_history_appends_to_existing` - Existing history gets new session appended
 
 profile_action decorator:
-- [ ] `test_profile_action_inactive_no_record` - Profiler inactive -> function runs, no record
-- [ ] `test_profile_action_active_records` - Profiler active -> record created
-- [ ] `test_profile_action_exception_still_records` - Function raises -> duration still recorded
+- [x] `test_profile_action_inactive_no_record` - Profiler inactive -> function runs, no record
+- [x] `test_profile_action_active_records` - Profiler active -> record created
+- [x] `test_profile_action_exception_still_records` - Function raises -> duration still recorded
 
 profile_block context manager:
-- [ ] `test_profile_block_inactive_no_record` - Inactive -> no recording
-- [ ] `test_profile_block_active_records` - Active -> records duration
+- [x] `test_profile_block_inactive_no_record` - Inactive -> no recording
+- [x] `test_profile_block_active_records` - Active -> records duration
 
 **Estimated tests: ~8**
 
@@ -109,19 +109,19 @@ profile_block context manager:
 **Tests:** `pytest tests/unit/core/test_validation_edge_cases.py`
 
 ValidationResult edge cases:
-- [ ] `test_init_with_none_errors_defaults_to_list` - errors=None -> []
-- [ ] `test_init_with_none_warnings_defaults_to_list` - warnings=None -> []
-- [ ] `test_message_property_empty_errors` - No errors -> ""
-- [ ] `test_message_property_first_error` - Returns errors[0]
-- [ ] `test_add_error_with_error_code_enum` - ErrorCode enum converted to string value
-- [ ] `test_add_error_second_code_ignored` - First code wins, second add_error code skipped
-- [ ] `test_merge_valid_into_invalid` - Valid merged into invalid stays invalid
-- [ ] `test_merge_invalid_into_valid` - Invalid merged into valid becomes invalid
-- [ ] `test_create_factory_empty_message` - create(True, "") -> no errors in list
+- [x] `test_init_with_none_errors_defaults_to_list` - errors=None -> []
+- [x] `test_init_with_none_warnings_defaults_to_list` - warnings=None -> []
+- [x] `test_message_property_empty_errors` - No errors -> ""
+- [x] `test_message_property_first_error` - Returns errors[0]
+- [x] `test_add_error_with_error_code_enum` - ErrorCode enum converted to string value
+- [x] `test_add_error_second_code_ignored` - First code wins, second add_error code skipped
+- [x] `test_merge_valid_into_invalid` - Valid merged into invalid stays invalid
+- [x] `test_merge_invalid_into_valid` - Invalid merged into valid becomes invalid
+- [x] `test_create_factory_empty_message` - create(True, "") -> no errors in list
 
 validation_result convenience function:
-- [ ] `test_validation_result_with_message` - Creates result with message in errors
-- [ ] `test_validation_result_no_message` - Creates valid result with empty errors
+- [x] `test_validation_result_with_message` - Creates result with message in errors
+- [x] `test_validation_result_no_message` - Creates valid result with empty errors
 
 **Estimated tests: ~11**
 
@@ -133,14 +133,14 @@ validation_result convenience function:
 **Existing:** `tests/unit/core/test_error_codes.py`
 **Tests:** `pytest tests/unit/core/test_error_codes_coverage.py`
 
-- [ ] `test_all_error_codes_unique_values` - No duplicate .value among all members
-- [ ] `test_all_codes_follow_naming_convention` - Each value matches X### pattern (letter + 3 digits)
-- [ ] `test_validation_codes_start_with_v` - V001-V099 pattern
-- [ ] `test_state_codes_start_with_s` - S001-S099 pattern
-- [ ] `test_resource_codes_start_with_r` - R001-R099 pattern
-- [ ] `test_persistence_codes_start_with_p` - P001-P099 pattern
-- [ ] `test_formula_codes_start_with_f` - F001-F099 pattern
-- [ ] `test_component_codes_start_with_c` - C001-C099 pattern
+- [x] `test_all_error_codes_unique_values` - No duplicate .value among all members
+- [x] `test_all_codes_follow_naming_convention` - Each value matches X### pattern (letter + 3 digits)
+- [x] `test_validation_codes_start_with_v` - V001-V099 pattern
+- [x] `test_state_codes_start_with_s` - S001-S099 pattern
+- [x] `test_resource_codes_start_with_r` - R001-R099 pattern
+- [x] `test_persistence_codes_start_with_p` - P001-P099 pattern
+- [x] `test_formula_codes_start_with_f` - F001-F099 pattern
+- [x] `test_component_codes_start_with_c` - C001-C099 pattern
 
 **Estimated tests: ~8**
 
@@ -153,19 +153,19 @@ validation_result convenience function:
 **Tests:** `pytest tests/unit/core/test_json_utils_edge_cases.py`
 
 load_json error paths:
-- [ ] `test_load_json_file_not_found_returns_default` - Missing file -> default
-- [ ] `test_load_json_invalid_json_returns_default` - Malformed JSON -> default
-- [ ] `test_load_json_io_error_returns_default` - Permission error -> default
-- [ ] `test_load_json_custom_default` - Custom default value returned on error
+- [x] `test_load_json_file_not_found_returns_default` - Missing file -> default
+- [x] `test_load_json_invalid_json_returns_default` - Malformed JSON -> default
+- [x] `test_load_json_io_error_returns_default` - Permission error -> default
+- [x] `test_load_json_custom_default` - Custom default value returned on error
 
 save_json error paths:
-- [ ] `test_save_json_io_error_returns_false` - Permission error -> False
-- [ ] `test_save_json_type_error_returns_false` - Non-serializable object -> False
-- [ ] `test_save_json_creates_parent_dirs` - Parent directories created
+- [x] `test_save_json_io_error_returns_false` - Permission error -> False
+- [x] `test_save_json_type_error_returns_false` - Non-serializable object -> False
+- [x] `test_save_json_creates_parent_dirs` - Parent directories created
 
 load_json_required:
-- [ ] `test_load_json_required_missing_raises_file_not_found` - Raises FileNotFoundError
-- [ ] `test_load_json_required_invalid_raises_decode_error` - Raises json.JSONDecodeError
+- [x] `test_load_json_required_missing_raises_file_not_found` - Raises FileNotFoundError
+- [x] `test_load_json_required_invalid_raises_decode_error` - Raises json.JSONDecodeError
 
 **Estimated tests: ~9**
 
@@ -178,18 +178,18 @@ load_json_required:
 **Tests:** `pytest tests/unit/core/test_config_edge_cases.py`
 
 DisplayConfig:
-- [ ] `test_default_resolution_tuple` - Returns (3840, 2160)
-- [ ] `test_windowed_resolution_tuple` - Returns (2560, 1600)
-- [ ] `test_test_resolution_tuple` - Returns (1440, 900)
+- [x] `test_default_resolution_tuple` - Returns (3840, 2160)
+- [x] `test_windowed_resolution_tuple` - Returns (2560, 1600)
+- [x] `test_test_resolution_tuple` - Returns (1440, 900)
 
 AIConfig boundary values:
-- [ ] `test_min_spacing_positive` - MIN_SPACING > 0
-- [ ] `test_flee_distance_greater_than_orbit` - FLEE_DISTANCE > DEFAULT_ORBIT_DISTANCE
-- [ ] `test_formation_throttle_0_to_1` - FORMATION_ENGINE_THROTTLE in (0, 1]
+- [x] `test_min_spacing_positive` - MIN_SPACING > 0
+- [x] `test_flee_distance_greater_than_orbit` - FLEE_DISTANCE > DEFAULT_ORBIT_DISTANCE
+- [x] `test_formation_throttle_0_to_1` - FORMATION_ENGINE_THROTTLE in (0, 1]
 
 PhysicsConfig:
-- [ ] `test_tick_rate_positive` - TICK_RATE > 0
-- [ ] `test_spatial_grid_cell_size_positive` - SPATIAL_GRID_CELL_SIZE > 0
+- [x] `test_tick_rate_positive` - TICK_RATE > 0
+- [x] `test_spatial_grid_cell_size_positive` - SPATIAL_GRID_CELL_SIZE > 0
 
 **Estimated tests: ~8**
 
@@ -204,10 +204,10 @@ PhysicsConfig:
 Note: First check existing tests in `tests/unit/ai/controllable_interface/`. If comprehensive, mark as already-covered.
 
 IControllable abstract contract:
-- [ ] `test_cannot_instantiate_icontrollable` - TypeError on ABC instantiation
-- [ ] `test_all_abstract_methods_present` - Check method names via __abstractmethods__
-- [ ] `test_concrete_subclass_must_implement_all` - Partial impl raises TypeError
-- [ ] `test_mock_implementation_satisfies_interface` - Full mock impl instantiates
+- [x] `test_cannot_instantiate_icontrollable` - TypeError on ABC instantiation
+- [x] `test_all_abstract_methods_present` - Check method names via __abstractmethods__
+- [x] `test_concrete_subclass_must_implement_all` - Partial impl raises TypeError
+- [x] `test_mock_implementation_satisfies_interface` - Full mock impl instantiates
 
 **Estimated tests: ~4**
 
@@ -220,15 +220,15 @@ IControllable abstract contract:
 **Tests:** `pytest tests/unit/research/test_research_tracker_edge_cases.py`
 
 NodeState serialization:
-- [ ] `test_node_state_roundtrip` - from_dict(to_dict()) preserves all fields
-- [ ] `test_node_state_from_dict_defaults` - Missing keys use defaults (0, 0.0, 0)
-- [ ] `test_node_state_zero_rp` - rp_allocation=0 serializes correctly
-- [ ] `test_node_state_max_chance` - current_chance=0.95 preserved
+- [x] `test_node_state_roundtrip` - from_dict(to_dict()) preserves all fields
+- [x] `test_node_state_from_dict_defaults` - Missing keys use defaults (0, 0.0, 0)
+- [x] `test_node_state_zero_rp` - rp_allocation=0 serializes correctly
+- [x] `test_node_state_max_chance` - current_chance=0.95 preserved
 
 ResearchTracker serialization:
-- [ ] `test_tracker_roundtrip_empty_states` - Empty node_states dict preserved
-- [ ] `test_tracker_roundtrip_with_states` - Multiple node states preserved
-- [ ] `test_session_seed_consistency` - Same seed produces same sequence
+- [x] `test_tracker_roundtrip_empty_states` - Empty node_states dict preserved
+- [x] `test_tracker_roundtrip_with_states` - Multiple node states preserved
+- [x] `test_session_seed_consistency` - Same seed produces same sequence
 
 **Estimated tests: ~7**
 
@@ -240,11 +240,11 @@ ResearchTracker serialization:
 **Existing:** `tests/unit/systems/test_physics.py`
 **Tests:** `pytest tests/unit/systems/test_physics_edge_cases.py`
 
-- [ ] `test_zero_velocity_stays_zero` - No force -> velocity remains 0
-- [ ] `test_very_small_velocity_not_lost` - 1e-10 velocity preserved after update
-- [ ] `test_large_force_velocity_reasonable` - Very large force doesn't produce infinity
-- [ ] `test_zero_mass_handling` - Division by zero protected (or documented behavior)
-- [ ] `test_drag_reduces_velocity` - After many ticks, velocity approaches 0
+- [x] `test_zero_velocity_stays_zero` - No force -> velocity remains 0
+- [x] `test_very_small_velocity_not_lost` - 1e-10 velocity preserved after update
+- [x] `test_large_force_velocity_reasonable` - Very large force doesn't produce infinity
+- [x] `test_zero_mass_handling` - Division by zero protected (or documented behavior)
+- [x] `test_drag_reduces_velocity` - After many ticks, velocity approaches 0
 
 **Estimated tests: ~5**
 
@@ -256,11 +256,11 @@ ResearchTracker serialization:
 **Existing:** `tests/unit/systems/test_spatial.py`, `tests/unit/systems/test_spatial_extended.py`
 **Tests:** `pytest tests/unit/systems/test_spatial_edge_cases.py`
 
-- [ ] `test_query_radius_at_cell_boundary` - Object exactly on cell boundary found
-- [ ] `test_query_negative_coordinates` - Objects at negative positions found
-- [ ] `test_query_empty_grid` - Empty grid returns []
-- [ ] `test_query_radius_zero` - radius=0 returns objects in same cell only
-- [ ] `test_insert_and_query_many_objects` - 100+ objects handled correctly
+- [x] `test_query_radius_at_cell_boundary` - Object exactly on cell boundary found
+- [x] `test_query_negative_coordinates` - Objects at negative positions found
+- [x] `test_query_empty_grid` - Empty grid returns []
+- [x] `test_query_radius_zero` - radius=0 returns objects in same cell only
+- [x] `test_insert_and_query_many_objects` - 100+ objects handled correctly
 
 **Estimated tests: ~5**
 
@@ -276,9 +276,9 @@ ResearchTracker serialization:
 
 Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cover get_ui_rows(), skip this.
 
-- [ ] `test_vehicle_launch_ui_rows_format` - get_ui_rows() returns formatted capacity/cycle text
-- [ ] `test_command_control_ui_rows` - Returns command status text
-- [ ] `test_structural_integrity_ui_rows` - Returns integrity info text
+- [x] `test_vehicle_launch_ui_rows_format` - get_ui_rows() returns formatted capacity/cycle text
+- [x] `test_command_control_ui_rows` - Returns command status text
+- [x] `test_structural_integrity_ui_rows` - Returns integrity info text
 
 **Estimated tests: ~3**
 
@@ -290,10 +290,10 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** `tests/unit/components/test_component_health_manager.py`
 **Tests:** `pytest tests/unit/components/test_component_health_edge_cases.py`
 
-- [ ] `test_take_damage_zero_hp_component` - Damage to 0-HP component returns True (destroyed)
-- [ ] `test_heal_past_max_hp` - Healing capped at max HP
-- [ ] `test_damage_threshold_50_percent` - Component at exactly 50% HP gets DAMAGED status
-- [ ] `test_damage_below_threshold_not_damaged` - Component at 51% HP stays operational
+- [x] `test_take_damage_zero_hp_component` - Damage to 0-HP component returns True (destroyed)
+- [x] `test_heal_past_max_hp` - Healing capped at max HP
+- [x] `test_damage_threshold_50_percent` - Component at exactly 50% HP gets DAMAGED status
+- [x] `test_damage_below_threshold_not_damaged` - Component at 51% HP stays operational
 
 **Estimated tests: ~4**
 
@@ -305,11 +305,11 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** Check `tests/unit/simulation/systems/` for existing resource tests
 **Tests:** `pytest tests/unit/simulation/systems/test_resource_manager_edge_cases.py`
 
-- [ ] `test_consume_more_than_available` - Returns False or clamps to 0
-- [ ] `test_regen_capped_at_max` - Regeneration doesn't exceed max_value
-- [ ] `test_register_storage_additive` - Multiple register_storage calls sum up
-- [ ] `test_set_value_at_max` - set_value(max) preserves exact value
-- [ ] `test_reset_stats_preserves_current` - reset_stats zeroes max but keeps current
+- [x] `test_consume_more_than_available` - Returns False or clamps to 0
+- [x] `test_regen_capped_at_max` - Regeneration doesn't exceed max_value
+- [x] `test_register_storage_additive` - Multiple register_storage calls sum up
+- [x] `test_set_value_at_max` - set_value(max) preserves exact value
+- [x] `test_reset_stats_preserves_current` - reset_stats zeroes max but keeps current
 
 **Estimated tests: ~5**
 
@@ -321,11 +321,11 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** `tests/unit/entities/test_ability_aggregator_layers.py`
 **Tests:** `pytest tests/unit/entities/test_ability_aggregator_scope.py`
 
-- [ ] `test_combat_layer_only_combat_abilities` - COMBAT layer filters non-combat
-- [ ] `test_strategic_layer_only_strategic_abilities` - STRATEGIC layer filters combat
-- [ ] `test_both_layer_abilities_in_combat` - BOTH-layer abilities included in combat
-- [ ] `test_both_layer_abilities_in_strategic` - BOTH-layer abilities included in strategic
-- [ ] `test_scope_filtering_sector` - SECTOR scope abilities filtered correctly
+- [x] `test_combat_layer_only_combat_abilities` - COMBAT layer filters non-combat
+- [x] `test_strategic_layer_only_strategic_abilities` - STRATEGIC layer filters combat
+- [x] `test_both_layer_abilities_in_combat` - BOTH-layer abilities included in combat
+- [x] `test_both_layer_abilities_in_strategic` - BOTH-layer abilities included in strategic
+- [x] `test_scope_filtering_sector` - SECTOR scope abilities filtered correctly
 
 **Estimated tests: ~5**
 
@@ -337,10 +337,10 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** `tests/unit/combat/test_combat_endurance.py`
 **Tests:** `pytest tests/unit/combat/test_combat_endurance_edge_cases.py`
 
-- [ ] `test_crew_shortage_reduces_endurance` - Low crew -> lower endurance
-- [ ] `test_fuel_shortage_reduces_endurance` - Low fuel -> lower endurance
-- [ ] `test_simultaneous_shortages_combined` - Multiple shortages compound
-- [ ] `test_full_resources_max_endurance` - All resources full -> max endurance
+- [x] `test_crew_shortage_reduces_endurance` - Low crew -> lower endurance
+- [x] `test_fuel_shortage_reduces_endurance` - Low fuel -> lower endurance
+- [x] `test_simultaneous_shortages_combined` - Multiple shortages compound
+- [x] `test_full_resources_max_endurance` - All resources full -> max endurance
 
 **Estimated tests: ~4**
 
@@ -352,10 +352,10 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** Check existing targeting/damage tests
 **Tests:** `pytest tests/unit/combat/test_targeting_edge_cases.py`
 
-- [ ] `test_zero_defense_score` - 0 defense -> higher hit chance
-- [ ] `test_maximum_range_accuracy_penalty` - At max range -> minimum accuracy
-- [ ] `test_point_blank_range_bonus` - Very close range -> accuracy bonus
-- [ ] `test_evasion_stacking` - Multiple evasion sources combine correctly
+- [x] `test_zero_defense_score` - 0 defense -> higher hit chance
+- [x] `test_maximum_range_accuracy_penalty` - At max range -> minimum accuracy
+- [x] `test_point_blank_range_bonus` - Very close range -> accuracy bonus
+- [x] `test_evasion_stacking` - Multiple evasion sources combine correctly
 
 **Estimated tests: ~4**
 
@@ -367,9 +367,9 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** `tests/unit/entities/test_ship_formation.py`
 **Tests:** `pytest tests/unit/entities/test_ship_formation_edge_cases.py`
 
-- [ ] `test_empty_formation_no_crash` - 0 ships -> empty offsets
-- [ ] `test_single_ship_formation` - 1 ship -> offset at center
-- [ ] `test_large_formation_all_unique_positions` - 20 ships -> no overlapping offsets
+- [x] `test_empty_formation_no_crash` - 0 ships -> empty offsets
+- [x] `test_single_ship_formation` - 1 ship -> offset at center
+- [x] `test_large_formation_all_unique_positions` - 20 ships -> no overlapping offsets
 
 **Estimated tests: ~3**
 
@@ -381,9 +381,9 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 **Existing:** Check existing projectile tests
 **Tests:** `pytest tests/unit/entities/test_projectile_edge_cases.py`
 
-- [ ] `test_very_fast_projectile_ccd` - Fast projectile doesn't phase through target
-- [ ] `test_stationary_target_hit` - Projectile hits stationary target at any speed
-- [ ] `test_projectile_lifetime_expiry` - Expired projectile removed
+- [x] `test_very_fast_projectile_ccd` - Fast projectile doesn't phase through target
+- [x] `test_stationary_target_hit` - Projectile hits stationary target at any speed
+- [x] `test_projectile_lifetime_expiry` - Expired projectile removed
 
 **Estimated tests: ~3**
 
@@ -397,10 +397,10 @@ Note: Depends on Phase 2 Task 2.7 completing first. If markers tests already cov
 
 Note: Check existing phase tests first. If `test_ship_stats_calculator_phases.py` already verifies ordering, mark as covered.
 
-- [ ] `test_phase_1_resets_before_aggregation` - Phase 1 zeroes stats before recalc
-- [ ] `test_phase_2_uses_phase_1_crew_count` - Crew deactivation uses correct count
-- [ ] `test_phase_3_only_active_components` - Inactive components excluded
-- [ ] `test_phase_5_uses_final_mass` - Physics uses post-modification mass
+- [x] `test_phase_1_resets_before_aggregation` - Phase 1 zeroes stats before recalc
+- [x] `test_phase_2_uses_phase_1_crew_count` - Crew deactivation uses correct count
+- [x] `test_phase_3_only_active_components` - Inactive components excluded
+- [x] `test_phase_5_uses_final_mass` - Physics uses post-modification mass
 
 **Estimated tests: ~4**
 
@@ -417,12 +417,12 @@ Note: Check existing phase tests first. If `test_ship_stats_calculator_phases.py
 Note: Check existing tests first. Existing files test data structures, destination/path, and projection. Focus on gaps.
 
 NavigationState:
-- [ ] `test_navigation_state_frozen` - Frozen dataclass cannot be modified
-- [ ] `test_navigation_state_from_fleet_correctness` - All fields populated from fleet
+- [x] `test_navigation_state_frozen` - Frozen dataclass cannot be modified
+- [x] `test_navigation_state_from_fleet_correctness` - All fields populated from fleet
 
 NavigationStep:
-- [ ] `test_navigation_step_creation` - next_hex, remaining_movement, warp_used stored
-- [ ] `test_navigation_step_no_movement` - remaining=0 step valid
+- [x] `test_navigation_step_creation` - next_hex, remaining_movement, warp_used stored
+- [x] `test_navigation_step_no_movement` - remaining=0 step valid
 
 **Estimated tests: ~4**
 
@@ -434,9 +434,9 @@ NavigationStep:
 **Existing:** Check existing `test_hybrid_and_intercept.py`
 **Tests:** `pytest tests/unit/strategy/pathfinding/test_intercept_edge_cases.py`
 
-- [ ] `test_intercept_faster_chaser` - Chaser faster than target -> intercept found
-- [ ] `test_intercept_slower_chaser` - Chaser slower -> no intercept or delayed
-- [ ] `test_intercept_same_speed` - Equal speed -> trailing intercept
+- [x] `test_intercept_faster_chaser` - Chaser faster than target -> intercept found
+- [x] `test_intercept_slower_chaser` - Chaser slower -> no intercept or delayed
+- [x] `test_intercept_same_speed` - Equal speed -> trailing intercept
 
 **Estimated tests: ~3**
 
@@ -450,10 +450,10 @@ NavigationStep:
 
 Note: If conflict resolution tests already exist in the directory, expand rather than create new.
 
-- [ ] `test_no_conflicts_returns_zero` - No contested hexes -> combats_resolved=0
-- [ ] `test_two_empires_same_hex_triggers_combat` - Contested hex detected
-- [ ] `test_three_empires_same_hex` - Multi-empire conflict handled
-- [ ] `test_fleet_destroyed_in_result` - Destroyed fleet ID in fleets_destroyed list
+- [x] `test_no_conflicts_returns_zero` - No contested hexes -> combats_resolved=0
+- [x] `test_two_empires_same_hex_triggers_combat` - Contested hex detected
+- [x] `test_three_empires_same_hex` - Multi-empire conflict handled
+- [x] `test_fleet_destroyed_in_result` - Destroyed fleet ID in fleets_destroyed list
 
 **Estimated tests: ~4**
 
@@ -465,9 +465,9 @@ Note: If conflict resolution tests already exist in the directory, expand rather
 **Existing:** `tests/unit/strategy/generation/test_astrophysics.py`
 **Tests:** `pytest tests/unit/strategy/generation/test_layout_scaling.py`
 
-- [ ] `test_scale_layout_preserves_positions` - Position fields unchanged by scaling
-- [ ] `test_scale_layout_scales_sigma` - sigma field scaled by factor
-- [ ] `test_scale_layout_scales_radius` - radius field scaled by factor
+- [x] `test_scale_layout_preserves_positions` - Position fields unchanged by scaling
+- [x] `test_scale_layout_scales_sigma` - sigma field scaled by factor
+- [x] `test_scale_layout_scales_radius` - radius field scaled by factor
 
 **Estimated tests: ~3**
 
@@ -479,10 +479,10 @@ Note: If conflict resolution tests already exist in the directory, expand rather
 **Existing:** `tests/unit/strategy/data/test_build_queue_source.py`
 **Tests:** `pytest tests/unit/strategy/data/test_build_queue_source_errors.py`
 
-- [ ] `test_load_production_rates_missing_file` - Returns {} on missing file
-- [ ] `test_load_production_rates_caching` - Second call uses cache
-- [ ] `test_collect_queues_no_shipyards` - No shipyard facilities -> empty list
-- [ ] `test_collect_queues_missing_facility_data` - Graceful handling of malformed data
+- [x] `test_load_production_rates_missing_file` - Returns {} on missing file
+- [x] `test_load_production_rates_caching` - Second call uses cache
+- [x] `test_collect_queues_no_shipyards` - No shipyard facilities -> empty list
+- [x] `test_collect_queues_missing_facility_data` - Graceful handling of malformed data
 
 **Estimated tests: ~4**
 
@@ -494,9 +494,9 @@ Note: If conflict resolution tests already exist in the directory, expand rather
 **Existing:** `tests/unit/strategy/adapters/test_simulation_adapter.py`
 **Tests:** `pytest tests/unit/strategy/adapters/test_simulation_adapter_edge_cases.py`
 
-- [ ] `test_resolve_empty_survivors` - Empty survivor list -> all ships destroyed
-- [ ] `test_resolve_null_ship_state` - NULL ship state in survivors handled
-- [ ] `test_registries_passed_to_battle_engine` - Registries forwarded correctly
+- [x] `test_resolve_empty_survivors` - Empty survivor list -> all ships destroyed
+- [x] `test_resolve_null_ship_state` - NULL ship state in survivors handled
+- [x] `test_registries_passed_to_battle_engine` - Registries forwarded correctly
 
 **Estimated tests: ~3**
 
@@ -508,10 +508,10 @@ Note: If conflict resolution tests already exist in the directory, expand rather
 **Existing:** `tests/unit/strategy/test_ship_display_formatter.py`
 **Tests:** `pytest tests/unit/strategy/test_ship_display_formatter_edge_cases.py`
 
-- [ ] `test_display_id_with_null_serial` - serial=None -> returns None
-- [ ] `test_status_text_destroyed` - is_alive=False -> "DESTROYED"
-- [ ] `test_resource_percentage_zero_max` - max_storage=0 -> no division by zero
-- [ ] `test_hp_display_zero_max` - max_hp=0 -> safe display
+- [x] `test_display_id_with_null_serial` - serial=None -> returns None
+- [x] `test_status_text_destroyed` - is_alive=False -> "DESTROYED"
+- [x] `test_resource_percentage_zero_max` - max_storage=0 -> no division by zero
+- [x] `test_hp_display_zero_max` - max_hp=0 -> safe display
 
 **Estimated tests: ~4**
 
@@ -519,9 +519,9 @@ Note: If conflict resolution tests already exist in the directory, expand rather
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All new tests pass: `pytest tests/unit/ -v --tb=short`
-- [ ] Full test suite still passes: `pytest tests/ -n 12`
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to project audit
+- [x] All task checkboxes above are checked
+- [x] All new tests pass: `pytest tests/unit/ -v --tb=short`
+- [x] Full test suite still passes: `pytest tests/ -n 12`
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to project audit
