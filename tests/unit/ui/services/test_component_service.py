@@ -183,3 +183,73 @@ class TestComponentService:
             service.get_all_components()
 
             mock_get.assert_called()
+
+
+class TestIsModifierAllowedEdgeCases:
+    """Additional edge case tests for is_modifier_allowed."""
+
+    def test_is_modifier_allowed_with_deny_types_not_in_list(self):
+        """Modifier allowed when component type NOT in deny_types."""
+        mock_provider = MagicMock()
+        mock_mod_def = MagicMock()
+        mock_mod_def.restrictions = {'deny_types': ['sensor', 'utility']}
+        mock_provider.get_modifiers.return_value = {'test_mod': mock_mod_def}
+
+        mock_component = MagicMock()
+        mock_component.type_str = 'weapon'  # Not in deny list
+
+        service = ComponentService(registry_provider=mock_provider)
+        result = service.is_modifier_allowed('test_mod', mock_component)
+
+        assert result is True
+
+    def test_is_modifier_allowed_with_multiple_restrictions(self):
+        """Test modifier with both allow_types and deny_types."""
+        mock_provider = MagicMock()
+        mock_mod_def = MagicMock()
+        # Allow weapons but deny sensors
+        mock_mod_def.restrictions = {
+            'allow_types': ['weapon', 'engine'],
+            'deny_types': ['sensor']
+        }
+        mock_provider.get_modifiers.return_value = {'test_mod': mock_mod_def}
+
+        mock_component = MagicMock()
+        mock_component.type_str = 'weapon'
+
+        service = ComponentService(registry_provider=mock_provider)
+        result = service.is_modifier_allowed('test_mod', mock_component)
+
+        assert result is True
+
+    def test_is_modifier_allowed_allow_abilities_from_data(self):
+        """Modifier allowed when component has ability in data.abilities."""
+        mock_provider = MagicMock()
+        mock_mod_def = MagicMock()
+        mock_mod_def.restrictions = {'allow_abilities': ['TurretAbility']}
+        mock_provider.get_modifiers.return_value = {'test_mod': mock_mod_def}
+
+        mock_component = MagicMock()
+        mock_component.type_str = 'weapon'
+        mock_component.abilities = {}  # Not in abilities dict
+        mock_component.data = {'abilities': {'TurretAbility': {}}}  # But in data.abilities
+
+        service = ComponentService(registry_provider=mock_provider)
+        result = service.is_modifier_allowed('test_mod', mock_component)
+
+        assert result is True
+
+    def test_is_modifier_allowed_empty_restrictions(self):
+        """Modifier with empty restrictions dict is allowed."""
+        mock_provider = MagicMock()
+        mock_mod_def = MagicMock()
+        mock_mod_def.restrictions = {}  # Empty dict
+        mock_provider.get_modifiers.return_value = {'test_mod': mock_mod_def}
+
+        mock_component = MagicMock()
+        mock_component.type_str = 'anything'
+
+        service = ComponentService(registry_provider=mock_provider)
+        result = service.is_modifier_allowed('test_mod', mock_component)
+
+        assert result is True

@@ -337,3 +337,319 @@ class TestBattleUIServiceDefensiveFallbacks:
         # Only crew_onboard/crew_required should use getattr fallbacks
         assert dto.crew_onboard == 0  # Fallback since not defined
         assert dto.crew_required == 0  # Fallback since not defined
+
+
+class TestBattleUIServiceNoneEngine:
+    """Additional tests for service behavior when engine is None."""
+
+    def test_get_winner_returns_none_when_no_engine(self):
+        """get_winner() returns None when no engine."""
+        service = Mock()
+        service.get_engine.return_value = None
+
+        ui_service = BattleUIService(service)
+        assert ui_service.get_winner() is None
+
+
+class TestBattleUIServiceConversionEdgeCases:
+    """Tests for edge cases in entity conversion."""
+
+    def test_convert_ship_with_secondary_targets(self):
+        """Ship with secondary targets includes their names."""
+        mock_service = Mock()
+        engine = Mock()
+
+        target1 = Mock()
+        target1.name = "Enemy 1"
+        target2 = Mock()
+        target2.name = "Enemy 2"
+
+        ship = Mock()
+        ship.id = "ship_1"
+        ship.name = "Test Ship"
+        ship.team_id = 0
+        ship.position = Vector2(0, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.angle = 0.0
+        ship.is_alive = True
+        ship.is_derelict = False
+        ship.hp = 100
+        ship.max_hp = 100
+        ship.current_shields = 50.0
+        ship.max_shields = 100.0
+        ship.current_speed = 10.0
+        ship.max_speed = 50.0
+        ship.mass = 1000.0
+        ship.total_thrust = 500.0
+        ship.turn_speed = 30.0
+        ship.total_shots_fired = 0
+        ship.crew_onboard = 10
+        ship.crew_required = 10
+        ship.max_targets = 3
+        ship.ai_strategy = "aggressive"
+        ship.source_file = "test.json"
+        ship.layers = {}
+        ship.current_target = None
+        ship.secondary_targets = [target1, target2]
+        ship.resources = Mock()
+        ship.resources.get_all_resources.return_value = []
+
+        engine.ships = [ship]
+        engine.projectiles = []
+        engine.recent_beams = []
+        engine.tick_counter = 0
+        engine.is_battle_over.return_value = False
+        engine.get_winner.return_value = None
+        mock_service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(mock_service)
+        ships = ui_service.get_ships()
+
+        assert len(ships[0].secondary_target_names) == 2
+        assert "Enemy 1" in ships[0].secondary_target_names
+        assert "Enemy 2" in ships[0].secondary_target_names
+
+    def test_convert_ship_with_derelict_status(self):
+        """Ship with is_derelict=True is converted correctly."""
+        mock_service = Mock()
+        engine = Mock()
+
+        ship = Mock()
+        ship.id = "ship_1"
+        ship.name = "Derelict Ship"
+        ship.team_id = 0
+        ship.position = Vector2(0, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.angle = 0.0
+        ship.is_alive = False
+        ship.is_derelict = True
+        ship.hp = 0
+        ship.max_hp = 100
+        ship.current_shields = 0.0
+        ship.max_shields = 100.0
+        ship.current_speed = 0.0
+        ship.max_speed = 50.0
+        ship.mass = 1000.0
+        ship.total_thrust = 0.0
+        ship.turn_speed = 0.0
+        ship.total_shots_fired = 0
+        ship.crew_onboard = 0
+        ship.crew_required = 10
+        ship.max_targets = 1
+        ship.ai_strategy = "none"
+        ship.source_file = "test.json"
+        ship.layers = {}
+        ship.current_target = None
+        ship.secondary_targets = []
+        ship.resources = Mock()
+        ship.resources.get_all_resources.return_value = []
+
+        engine.ships = [ship]
+        engine.projectiles = []
+        engine.recent_beams = []
+        engine.tick_counter = 0
+        engine.is_battle_over.return_value = True
+        engine.get_winner.return_value = 1
+        mock_service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(mock_service)
+        ships = ui_service.get_ships()
+
+        assert ships[0].is_derelict is True
+        assert ships[0].is_alive is False
+
+    def test_convert_component_with_status_enum(self):
+        """Component with status as enum is converted correctly."""
+        mock_service = Mock()
+        engine = Mock()
+
+        comp = Mock()
+        comp.name = "Engine"
+        comp.current_hp = 100.0
+        comp.max_hp = 100.0
+        comp.is_active = True
+        comp.status = Mock()
+        comp.status.name = "DAMAGED"  # Enum-style
+        comp.has_ability = Mock(return_value=False)
+        comp.shots_fired = 0
+        comp.shots_hit = 0
+
+        # Create a mock LayerData
+        from game.simulation.entities.layer_data import LayerData
+        layer_data = LayerData(components=[comp])
+
+        ship = Mock()
+        ship.id = "ship_1"
+        ship.name = "Test Ship"
+        ship.team_id = 0
+        ship.position = Vector2(0, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.angle = 0.0
+        ship.is_alive = True
+        ship.is_derelict = False
+        ship.hp = 100
+        ship.max_hp = 100
+        ship.current_shields = 50.0
+        ship.max_shields = 100.0
+        ship.current_speed = 10.0
+        ship.max_speed = 50.0
+        ship.mass = 1000.0
+        ship.total_thrust = 500.0
+        ship.turn_speed = 30.0
+        ship.total_shots_fired = 0
+        ship.crew_onboard = 10
+        ship.crew_required = 10
+        ship.max_targets = 1
+        ship.ai_strategy = "aggressive"
+        ship.source_file = "test.json"
+        layer_type = Mock()
+        layer_type.value = "outer"
+        ship.layers = {layer_type: layer_data}
+        ship.current_target = None
+        ship.secondary_targets = []
+        ship.resources = Mock()
+        ship.resources.get_all_resources.return_value = []
+
+        engine.ships = [ship]
+        engine.projectiles = []
+        engine.recent_beams = []
+        engine.tick_counter = 0
+        engine.is_battle_over.return_value = False
+        engine.get_winner.return_value = None
+        mock_service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(mock_service)
+        ships = ui_service.get_ships()
+
+        assert len(ships[0].components) == 1
+        assert ships[0].components[0].status == "damaged"
+
+    def test_convert_component_with_weapon_ability(self):
+        """Component with WeaponAbility is marked has_weapon=True."""
+        mock_service = Mock()
+        engine = Mock()
+
+        comp = Mock()
+        comp.name = "Laser Cannon"
+        comp.current_hp = 100.0
+        comp.max_hp = 100.0
+        comp.is_active = True
+        comp.status = Mock()
+        comp.status.name = "ACTIVE"
+        comp.has_ability = Mock(side_effect=lambda x: x == 'WeaponAbility')
+        comp.shots_fired = 15
+        comp.shots_hit = 10
+
+        from game.simulation.entities.layer_data import LayerData
+        layer_data = LayerData(components=[comp])
+
+        ship = Mock()
+        ship.id = "ship_1"
+        ship.name = "Test Ship"
+        ship.team_id = 0
+        ship.position = Vector2(0, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.angle = 0.0
+        ship.is_alive = True
+        ship.is_derelict = False
+        ship.hp = 100
+        ship.max_hp = 100
+        ship.current_shields = 50.0
+        ship.max_shields = 100.0
+        ship.current_speed = 10.0
+        ship.max_speed = 50.0
+        ship.mass = 1000.0
+        ship.total_thrust = 500.0
+        ship.turn_speed = 30.0
+        ship.total_shots_fired = 15
+        ship.crew_onboard = 10
+        ship.crew_required = 10
+        ship.max_targets = 1
+        ship.ai_strategy = "aggressive"
+        ship.source_file = "test.json"
+        layer_type = Mock()
+        layer_type.value = "outer"
+        ship.layers = {layer_type: layer_data}
+        ship.current_target = None
+        ship.secondary_targets = []
+        ship.resources = Mock()
+        ship.resources.get_all_resources.return_value = []
+
+        engine.ships = [ship]
+        engine.projectiles = []
+        engine.recent_beams = []
+        engine.tick_counter = 0
+        engine.is_battle_over.return_value = False
+        engine.get_winner.return_value = None
+        mock_service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(mock_service)
+        ships = ui_service.get_ships()
+
+        assert ships[0].components[0].has_weapon is True
+        assert ships[0].components[0].shots_fired == 15
+        assert ships[0].components[0].shots_hit == 10
+
+    def test_convert_projectile_with_target(self):
+        """Projectile with target includes target name."""
+        mock_service = Mock()
+        engine = Mock()
+
+        target = Mock()
+        target.name = "Target Ship"
+
+        proj = Mock()
+        proj.id = "proj_1"
+        proj.position = Vector2(100, 100)
+        proj.velocity = Vector2(50, 0)
+        proj.color = (255, 200, 50)
+        proj.radius = 4.0
+        proj.damage = 25.0
+        proj.hp = 10.0
+        proj.max_hp = 10.0
+        proj.status = "active"
+        proj.endurance = 5.0
+        proj.max_endurance = 10.0
+        proj.target = target
+        proj.max_speed = 100.0
+
+        engine.ships = []
+        engine.projectiles = [proj]
+        engine.recent_beams = []
+        engine.tick_counter = 0
+        engine.is_battle_over.return_value = False
+        engine.get_winner.return_value = None
+        mock_service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(mock_service)
+        projectiles = ui_service.get_projectiles()
+
+        assert len(projectiles) == 1
+        assert projectiles[0].target_name == "Target Ship"
+
+    def test_convert_beam_with_missing_keys(self):
+        """Beam with missing dict keys uses default values."""
+        mock_service = Mock()
+        engine = Mock()
+
+        # Beam dict with missing keys
+        beam = {}  # No start, end, or color
+
+        engine.ships = []
+        engine.projectiles = []
+        engine.recent_beams = [beam]
+        engine.tick_counter = 0
+        engine.is_battle_over.return_value = False
+        engine.get_winner.return_value = None
+        mock_service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(mock_service)
+        beams = ui_service.get_recent_beams()
+
+        assert len(beams) == 1
+        # Should use defaults
+        assert beams[0].start.x == 0
+        assert beams[0].start.y == 0
+        assert beams[0].end.x == 0
+        assert beams[0].end.y == 0
+        assert beams[0].color == (255, 255, 255)
