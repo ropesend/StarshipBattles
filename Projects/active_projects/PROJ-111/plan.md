@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. UI Framework Services | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Framework Complex (Singletons & Rendering) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Framework Complex (Singletons & Rendering) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle Layer (Screens & Panels) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Core Screens | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Strategy Support Screens | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -23,9 +23,9 @@
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 1 Complete - Ready for Phase 2
-**Last Action:** Phase 1 complete - added ~50 new tests for UI framework services (camera, BattleUIService, utils, components, colors, widgets, imports)
-**Next Action:** Begin Phase 2 (Framework Complex) - focus on GameRenderer and singleton mocking
+**Active Phase:** Phase 2 Complete - Ready for Phase 3
+**Last Action:** Phase 2 complete - added +50 new tests for framework complex (SpriteManager singleton/error/threading, ShipThemeManager singleton/caching/errors/threading, GameRenderer draw_ship/draw_hud/layers)
+**Next Action:** Begin Phase 3 (Battle Layer - BattleScreen, battle panels)
 **Blockers:** None
 
 ## Overview
