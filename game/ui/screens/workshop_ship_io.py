@@ -171,7 +171,7 @@ class WorkshopShipIO:
                 if design_data:
                     # Use adapter to create ship from design data
                     ship = self._design_loader_adapter.load_ship_from_design_data(
-                        design_data, self.width, self.height
+                        design_data, self.width // 2, self.height // 2
                     )
                     if ship:
                         log_info(f"Workshop: Successfully loaded design '{ship.name}'")
@@ -215,7 +215,7 @@ class WorkshopShipIO:
                 if design_data:
                     # Use adapter to create ship from design data
                     ship = self._design_loader_adapter.load_ship_from_design_data(
-                        design_data, self.width, self.height
+                        design_data, self.width // 2, self.height // 2
                     )
                     if ship:
                         self._weapons_report_panel_ref.set_target(ship)

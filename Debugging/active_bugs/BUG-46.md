@@ -55,3 +55,13 @@ Awaiting Confirmation
 - The top-down view visible height must match the portrait view height
 - Reference screenshot: `output/screenshots/screenshot_20260210_184052_486643_strategy_viewport.png`
 ---
+
+---
+### ❌ Fix Rejected [2026-02-11 19:15]
+**Reason:** Images are still too small for the top-down view. Need to use the visual portion of the image and scale based on that. The top-down view should be the same height as the portrait view.
+**New Constraints:**
+- Use the visual (non-transparent) portion of the image to determine scaling
+- Scale based on the visual portion dimensions, not the full image canvas
+- The resulting top-down view should be the same height as the portrait view
+- Reference screenshot: `output/screenshots/screenshot_20260211_191350_428934_strategy_viewport.png`
+---

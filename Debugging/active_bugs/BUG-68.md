@@ -38,3 +38,9 @@ Awaiting Confirmation
 - `Fleet.remove_ship()` method already existed with speed recalculation
 
 **Tests:** All 6519 tests pass.
+
+---
+### ❌ Fix Rejected [2026-02-11 00:00]
+**Reason:** No specific feedback provided; fix not confirmed by QA.
+**New Constraints:** None provided.
+---

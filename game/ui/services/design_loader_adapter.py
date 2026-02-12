@@ -24,7 +24,7 @@ class DesignLoaderAdapter:
 
     Usage:
         adapter = DesignLoaderAdapter()
-        ship = adapter.load_ship_from_design_data(design_data, width, height)
+        ship = adapter.load_ship_from_design_data(design_data, center_x, center_y)
         ship, message = adapter.load_ship_from_file(filepath, width, height)
     """
 
@@ -46,26 +46,26 @@ class DesignLoaderAdapter:
     def load_ship_from_design_data(
         self,
         design_data: dict,
-        width: int,
-        height: int
+        center_x: int = 0,
+        center_y: int = 0
     ) -> Optional[Any]:
         """Load a Ship object from design data.
 
         Creates a Ship object from a design data dictionary and positions it
-        at the center of the given screen dimensions.
+        at the specified coordinates.
 
         Args:
             design_data: Design data dictionary (as loaded from JSON).
-            width: Screen width for centering the ship.
-            height: Screen height for centering the ship.
+            center_x: X coordinate for ship positioning.
+            center_y: Y coordinate for ship positioning.
 
         Returns:
             Ship object with stats recalculated, or None on error.
         """
         return self._loader.load_ship_from_design_data(
             design_data,
-            center_x=width // 2,
-            center_y=height // 2
+            center_x=center_x,
+            center_y=center_y
         )
 
     def load_ship_from_file(

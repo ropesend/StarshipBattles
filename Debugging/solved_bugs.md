@@ -862,3 +862,12 @@ There needs to be a visible indicator on the line that indicates if the ship is 
 * **Test Case:** 169 build queue tests, 7659 full suite pass
 
 ---
+
+## [BUG-79] - Ships with Multiple Fleet Space Yard Components Only Get 1 Build Yard Entry
+* **Date Solved:** 2026-02-11
+* **Original Issue:** Ships with multiple Fleet Space Yard components only generated 1 Build Yard entry in the sector build queue screen instead of one per yard component.
+* **Solution Implemented:** Added `space_shipyard_count` property to `fleet_capability_calculator.py` and `fleet.py` to count all yard components. Updated `build_queue_source.py` to loop `range(yard_count)` instead of boolean check, creating one entry per yard with indexed queue IDs (`fleet_{id}_yard_{n}`).
+* **Test Case:** `tests/unit/strategy/fleet/test_space_yard.py::TestFleetSpaceShipyardCount` (5 tests)
+* **Notes:** 61/61 yard + build queue tests pass.
+
+---

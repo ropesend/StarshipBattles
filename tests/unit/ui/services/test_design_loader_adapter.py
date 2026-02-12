@@ -21,12 +21,12 @@ class TestDesignLoaderAdapter:
 
         adapter = DesignLoaderAdapter(design_loader=mock_loader)
         design_data = {"name": "Test Ship", "class": "corvette"}
-        result = adapter.load_ship_from_design_data(design_data, 1920, 1080)
+        result = adapter.load_ship_from_design_data(design_data, 960, 540)
 
         mock_loader.load_ship_from_design_data.assert_called_once_with(
             design_data,
-            center_x=1920 // 2,
-            center_y=1080 // 2
+            center_x=960,
+            center_y=540
         )
         assert result == mock_ship
 
@@ -88,8 +88,8 @@ class TestDesignLoaderAdapter:
         # Verify the adapter created a real loader
         assert isinstance(adapter._loader, SimulationDesignLoader)
 
-    def test_load_ship_from_design_data_with_default_dimensions(self):
-        """Test load_ship_from_design_data uses screen center for positioning."""
+    def test_load_ship_from_design_data_with_zero_position(self):
+        """Test load_ship_from_design_data passes zero coordinates to loader."""
         from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 
         mock_loader = MagicMock()

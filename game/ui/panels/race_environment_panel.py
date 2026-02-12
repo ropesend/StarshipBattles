@@ -380,7 +380,7 @@ class RaceEnvironmentPanel:
     def _create_atmosphere_section(self, y: int, width: int) -> int:
         """Create atmosphere preference controls."""
         pygame_gui.elements.UILabel(
-            relative_rect=pygame.Rect(10, y, 300, 25),
+            relative_rect=pygame.Rect(10, y, width, 25),
             text="Atmosphere Preferences (-100 toxic to +100 beneficial):",
             manager=self.ui_manager,
             container=self.panel,
@@ -400,7 +400,7 @@ class RaceEnvironmentPanel:
 
             # Gas label
             pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(x_offset, y_pos, 80, 22),
+                relative_rect=pygame.Rect(x_offset, y_pos, 110, 22),
                 text=f"{gas}:",
                 manager=self.ui_manager,
                 container=self.panel
@@ -408,7 +408,7 @@ class RaceEnvironmentPanel:
 
             # Slider: -100 to +100
             slider = pygame_gui.elements.UIHorizontalSlider(
-                relative_rect=pygame.Rect(x_offset + 85, y_pos, col_width - 145, 22),
+                relative_rect=pygame.Rect(x_offset + 115, y_pos, col_width - 175, 22),
                 start_value=self.race_config.atmosphere_preferences.get(gas, 0),
                 value_range=(-100, 100),
                 manager=self.ui_manager,

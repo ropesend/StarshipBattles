@@ -32,3 +32,9 @@ Awaiting Confirmation
 **Result:** Starting planets now have conditions matching the species' ideal environment, ensuring 100% habitability from the start.
 
 **Tests:** All 341 strategy/gameplay tests pass (294 strategy integration + 27 gameplay loop + 20 game session).
+
+---
+### ❌ Fix Rejected [2026-02-11 00:00]
+**Reason:** Starting planets should have exactly the conditions that are selected for the race at the start of the game, the homeworld should be ideal.
+**New Constraints:** None provided beyond the original requirement.
+---
