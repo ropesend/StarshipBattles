@@ -685,3 +685,61 @@ class TestComputePlanetRanges:
         assert 'gravity' in result
         assert 'temp' in result
         assert 'mass' in result
+
+
+# =============================================================================
+# PlanetListWindow Detail Panel Geometry Tests (BUG-80)
+# =============================================================================
+
+class TestDetailPanelGeometry:
+    """Tests for _detail_panel_geometry and dynamic panel sizing."""
+
+    def _make_window_stub(self, width=1600, height=900):
+        """Create a minimal stub with the attributes _detail_panel_geometry needs."""
+        from game.ui.screens.planet_list_window import PlanetListWindow
+        stub = Mock()
+        stub.rect = pygame.Rect(0, 0, width, height)
+        stub.detail_panel_width = 580
+        stub._detail_panel_geometry = PlanetListWindow._detail_panel_geometry.__get__(stub)
+        return stub
+
+    def test_panel_x_is_right_aligned(self):
+        """Panel X should be window_width - detail_panel_width - 10."""
+        stub = self._make_window_stub(width=1600)
+        x, y, h = stub._detail_panel_geometry()
+        assert x == 1600 - 580 - 10
+
+    def test_panel_y_is_below_title(self):
+        """Panel Y should be 60 (below title bar)."""
+        stub = self._make_window_stub()
+        x, y, h = stub._detail_panel_geometry()
+        assert y == 60
+
+    def test_panel_height_fills_window(self):
+        """Panel height should fill available space dynamically."""
+        stub = self._make_window_stub(height=900)
+        x, y, h = stub._detail_panel_geometry()
+        # height = max(450, 900 - 60 - 80) = max(450, 760) = 760
+        assert h == 760
+
+    def test_panel_height_minimum_450(self):
+        """Panel height should never be less than 450 (PlanetReportPanel minimum)."""
+        stub = self._make_window_stub(height=400)  # Very small window
+        x, y, h = stub._detail_panel_geometry()
+        assert h >= 450
+
+    def test_taller_window_gives_taller_panel(self):
+        """A taller window should produce a taller detail panel."""
+        small = self._make_window_stub(height=700)
+        large = self._make_window_stub(height=1200)
+        _, _, h_small = small._detail_panel_geometry()
+        _, _, h_large = large._detail_panel_geometry()
+        assert h_large > h_small
+
+    def test_wider_window_shifts_panel_right(self):
+        """A wider window should move the panel further right."""
+        narrow = self._make_window_stub(width=1200)
+        wide = self._make_window_stub(width=2000)
+        x_narrow, _, _ = narrow._detail_panel_geometry()
+        x_wide, _, _ = wide._detail_panel_geometry()
+        assert x_wide > x_narrow

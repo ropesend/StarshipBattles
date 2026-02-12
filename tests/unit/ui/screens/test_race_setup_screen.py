@@ -563,3 +563,52 @@ class TestRaceSetupNavigationButtons:
         screen._update_navigation_buttons()
 
         screen.btn_save.hide.assert_called()
+
+
+# ===========================================================================
+# BUG-81: Load Saved Species updates panel references
+# ===========================================================================
+
+class TestRaceSetupLoadSpecies:
+    """Test that loading a saved species updates all panels (BUG-81)."""
+
+    def test_on_race_selected_updates_panel_race_configs(self):
+        """Loading a race should update all panel race_config references."""
+        screen, mocks = _make_race_setup_screen()
+        old_config = screen.race_config
+
+        # Create a new "loaded" config
+        new_config = _make_race_config_mock()
+        new_config.name = "Loaded Species"
+
+        # Call _on_race_selected (the load handler)
+        screen._on_race_selected(new_config)
+
+        # Screen's race_config should be updated
+        assert screen.race_config is new_config
+        assert screen.race_config is not old_config
+
+        # All panels should have updated race_config reference
+        assert screen._identity_panel.race_config is new_config
+        assert screen._environment_panel.race_config is new_config
+        assert screen._aptitudes_panel.race_config is new_config
+        assert screen._description_panel.race_config is new_config
+        assert screen._flag_gallery.race_config is new_config
+        assert screen._portrait_gallery.race_config is new_config
+        assert screen._theme_gallery.race_config is new_config
+        assert screen._summary_panel.race_config is new_config
+
+    def test_on_race_selected_calls_set_from_config(self):
+        """Loading a race should call set_from_config on all panels."""
+        screen, mocks = _make_race_setup_screen()
+        new_config = _make_race_config_mock()
+
+        screen._on_race_selected(new_config)
+
+        screen._identity_panel.set_from_config.assert_called()
+        screen._environment_panel.set_from_config.assert_called()
+        screen._aptitudes_panel.set_from_config.assert_called()
+        screen._description_panel.set_from_config.assert_called()
+        screen._flag_gallery.set_from_config.assert_called()
+        screen._portrait_gallery.set_from_config.assert_called()
+        screen._theme_gallery.set_from_config.assert_called()

@@ -8,22 +8,30 @@ and can be used by any component that needs to display design images.
 Functions:
     load_portrait_thumbnail: Load a portrait image for a design.
     load_topdown_thumbnail: Load a top-down skin image for a design.
+    clear_thumbnail_cache: Clear the in-memory thumbnail cache.
 """
 from __future__ import annotations
 
 import os
 import pygame
-from typing import Optional, TYPE_CHECKING
+from typing import Dict, Optional, Tuple, TYPE_CHECKING
 
 from game.core.logger import log_warning
 
 if TYPE_CHECKING:
     from game.strategy.data.design_metadata import DesignMetadata
 
+# Module-level thumbnail cache: (design_id, size) -> Surface
+_portrait_cache: Dict[Tuple[str, int], pygame.Surface] = {}
+_topdown_cache: Dict[Tuple[str, int], Optional[pygame.Surface]] = {}
+
 
 def load_portrait_thumbnail(design: DesignMetadata, size: int = 50) -> pygame.Surface:
     """
     Load a portrait thumbnail for the design.
+
+    Results are cached in memory so repeated calls (e.g. on filter refresh)
+    return instantly.
 
     Args:
         design: Design metadata
@@ -32,6 +40,17 @@ def load_portrait_thumbnail(design: DesignMetadata, size: int = 50) -> pygame.Su
     Returns:
         pygame.Surface with the portrait or a placeholder
     """
+    cache_key = (design.design_id, size)
+    if cache_key in _portrait_cache:
+        return _portrait_cache[cache_key]
+
+    result = _load_portrait_thumbnail_uncached(design, size)
+    _portrait_cache[cache_key] = result
+    return result
+
+
+def _load_portrait_thumbnail_uncached(design: DesignMetadata, size: int) -> pygame.Surface:
+    """Load portrait thumbnail without cache lookup."""
     theme = design.theme_id or "Federation"
     ship_class = design.ship_class or "Unknown"
 
@@ -91,7 +110,7 @@ def load_topdown_thumbnail(design: DesignMetadata, target_height: int = 50) -> O
     Load a top-down (skin) thumbnail for the design.
 
     The image is sized based on its visible (non-transparent) portion,
-    scaled so the visible height matches target_height.
+    scaled so the visible height matches target_height. Results are cached.
 
     Args:
         design: Design metadata
@@ -100,6 +119,17 @@ def load_topdown_thumbnail(design: DesignMetadata, target_height: int = 50) -> O
     Returns:
         pygame.Surface with the top-down view, or None if not found
     """
+    cache_key = (design.design_id, target_height)
+    if cache_key in _topdown_cache:
+        return _topdown_cache[cache_key]
+
+    result = _load_topdown_thumbnail_uncached(design, target_height)
+    _topdown_cache[cache_key] = result
+    return result
+
+
+def _load_topdown_thumbnail_uncached(design: DesignMetadata, target_height: int) -> Optional[pygame.Surface]:
+    """Load top-down thumbnail without cache lookup."""
     theme = design.theme_id or "Federation"
     ship_class = design.ship_class or "Unknown"
 
@@ -131,17 +161,13 @@ def load_topdown_thumbnail(design: DesignMetadata, target_height: int = 50) -> O
     if loaded_img is None:
         return None
 
-    # Find the visible bounding box (non-transparent area)
-    bbox = _get_visible_bounding_box(loaded_img)
-    if bbox is None:
+    # Use pygame's native C-level bounding rect (replaces slow pixel-by-pixel scan)
+    bbox = loaded_img.get_bounding_rect(min_alpha=10)
+    if bbox.width <= 0 or bbox.height <= 0:
         return None
 
-    min_x, min_y, max_x, max_y = bbox
-    visible_width = max_x - min_x
-    visible_height = max_y - min_y
-
-    if visible_height <= 0 or visible_width <= 0:
-        return None
+    visible_width = bbox.width
+    visible_height = bbox.height
 
     # Calculate scale to make visible height match target_height
     scale = target_height / visible_height
@@ -152,8 +178,8 @@ def load_topdown_thumbnail(design: DesignMetadata, target_height: int = 50) -> O
     scaled_img = pygame.transform.smoothscale(loaded_img, (new_width, new_height))
 
     # Crop to the visible area (scaled)
-    scaled_min_x = int(min_x * scale)
-    scaled_min_y = int(min_y * scale)
+    scaled_min_x = int(bbox.x * scale)
+    scaled_min_y = int(bbox.y * scale)
     scaled_visible_w = int(visible_width * scale)
     scaled_visible_h = int(visible_height * scale)
 
@@ -164,33 +190,11 @@ def load_topdown_thumbnail(design: DesignMetadata, target_height: int = 50) -> O
     return final_surface
 
 
-def _get_visible_bounding_box(surface: pygame.Surface) -> Optional[tuple]:
+def clear_thumbnail_cache():
+    """Clear the in-memory thumbnail caches.
+
+    Call this when designs are modified or when starting a new game
+    to free memory.
     """
-    Find the bounding box of the visible (non-transparent) area of a surface.
-
-    Args:
-        surface: pygame.Surface with alpha channel
-
-    Returns:
-        Tuple (min_x, min_y, max_x, max_y) or None if fully transparent
-    """
-    width = surface.get_width()
-    height = surface.get_height()
-
-    min_x, min_y = width, height
-    max_x, max_y = 0, 0
-
-    # Check each pixel for non-transparent content
-    for y in range(height):
-        for x in range(width):
-            pixel = surface.get_at((x, y))
-            if pixel[3] > 10:  # Alpha > 10 (not fully transparent)
-                min_x = min(min_x, x)
-                min_y = min(min_y, y)
-                max_x = max(max_x, x)
-                max_y = max(max_y, y)
-
-    if max_x < min_x or max_y < min_y:
-        return None
-
-    return (min_x, min_y, max_x + 1, max_y + 1)
+    _portrait_cache.clear()
+    _topdown_cache.clear()

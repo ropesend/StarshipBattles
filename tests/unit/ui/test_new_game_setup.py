@@ -163,6 +163,40 @@ class TestNewGameSetupConfigBuilding:
         assert len(config.players[1].name) > 0
 
 
+class TestNewGameSetupRaceConfig:
+    """Tests for race_config propagation to PlayerConfig."""
+
+    def test_build_config_passes_race_config(self):
+        """Race config should be passed through to PlayerConfig."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+        from game.strategy.data.race_config import RaceConfig
+
+        race = RaceConfig(race_id="test_species", name="Test Species")
+        config = NewGameSetupScreen.build_game_config(
+            save_name="RaceTest",
+            player_count=1,
+            empire_names=["Test Empire"],
+            race_configs=[race]
+        )
+
+        assert config.players[0].race_config is not None, \
+            "race_config should be passed to PlayerConfig"
+        assert config.players[0].race_config.race_id == "test_species"
+
+    def test_build_config_none_race_config_when_no_race(self):
+        """PlayerConfig should have None race_config when no race provided."""
+        from game.ui.screens.new_game_setup_screen import NewGameSetupScreen
+
+        config = NewGameSetupScreen.build_game_config(
+            save_name="NoRaceTest",
+            player_count=1,
+            empire_names=["Test Empire"],
+            race_configs=None
+        )
+
+        assert config.players[0].race_config is None
+
+
 class TestNewGameSetupPlayerCount:
     """Tests for player count handling."""
 

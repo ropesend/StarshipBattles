@@ -101,6 +101,52 @@ class TestGameInitializer:
         )
         assert systems_with_warp > 0
 
+    def test_empire_always_has_race_config(self):
+        """Empires should always have a RaceConfig, even without explicit race setup (BUG-88)."""
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.engine.game_config import GameConfig, PlayerConfig
+        from game.strategy.data.race_config import RaceConfig
+
+        # Create players WITHOUT explicit race_config (simulates new game without race setup)
+        players = [
+            PlayerConfig(name="Test Empire", theme="Federation", color=(100, 100, 255)),
+        ]
+        config = GameConfig(system_count=5, players=players)
+        galaxy, empires = GameInitializer.initialize(config)
+
+        # Empire should have a default race_config with player name
+        assert empires[0].race_config is not None
+        assert isinstance(empires[0].race_config, RaceConfig)
+        assert empires[0].race_config.name == "Test Empire"
+
+    def test_empire_preserves_explicit_race_config(self):
+        """Empires with explicit race_config should keep it as-is (BUG-88)."""
+        from game.strategy.engine.game_initializer import GameInitializer
+        from game.strategy.engine.game_config import GameConfig, PlayerConfig
+        from game.strategy.data.race_config import RaceConfig
+
+        explicit_race = RaceConfig(
+            race_id="custom_species",
+            name="Custom Species",
+            faction_name="Custom Empire",
+            aptitude_strength=80
+        )
+        players = [
+            PlayerConfig(
+                name="Custom Species",
+                theme="Federation",
+                color=(100, 100, 255),
+                race_config=explicit_race
+            ),
+        ]
+        config = GameConfig(system_count=5, players=players)
+        galaxy, empires = GameInitializer.initialize(config)
+
+        # Should keep the explicit race config
+        assert empires[0].race_config is explicit_race
+        assert empires[0].race_config.race_id == "custom_species"
+        assert empires[0].race_config.aptitude_strength == 80
+
     def test_adjust_homeworld_to_race_sets_planet_type(self):
         """_adjust_homeworld_to_race should set planet type from race config."""
         from game.strategy.engine.game_initializer import GameInitializer

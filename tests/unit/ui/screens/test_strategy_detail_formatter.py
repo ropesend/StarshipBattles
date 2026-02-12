@@ -469,11 +469,11 @@ class TestResizeSupport:
 
 
 class TestGetHarvesterInfo:
-    """Tests for _get_harvester_info static method."""
+    """Tests for _get_harvester_info shared utility (moved to planet_report_panel)."""
 
     def test_inline_abilities(self):
         """Test extracts harvester from inline abilities."""
-        from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
+        from game.ui.panels.planet_report_panel import _get_harvester_info
 
         comp = {
             'id': 'harvester_01',
@@ -485,7 +485,7 @@ class TestGetHarvesterInfo:
             }
         }
 
-        result = StrategyDetailFormatter._get_harvester_info(comp, None)
+        result = _get_harvester_info(comp, None)
 
         assert result is not None
         assert result['resource_type'] == 'metal'
@@ -493,7 +493,7 @@ class TestGetHarvesterInfo:
 
     def test_no_harvester_ability(self):
         """Test returns None when no harvester ability."""
-        from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
+        from game.ui.panels.planet_report_panel import _get_harvester_info
 
         comp = {
             'id': 'weapon_01',
@@ -502,13 +502,13 @@ class TestGetHarvesterInfo:
             }
         }
 
-        result = StrategyDetailFormatter._get_harvester_info(comp, None)
+        result = _get_harvester_info(comp, None)
 
         assert result is None
 
     def test_registry_fallback(self):
         """Test falls back to registry lookup."""
-        from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
+        from game.ui.panels.planet_report_panel import _get_harvester_info
 
         comp = {'id': 'harvester_01'}
 
@@ -523,15 +523,15 @@ class TestGetHarvesterInfo:
         registries = Mock()
         registries.components.get = Mock(return_value=comp_def)
 
-        result = StrategyDetailFormatter._get_harvester_info(comp, registries)
+        result = _get_harvester_info(comp, registries)
 
         assert result is not None
         assert result['resource_type'] == 'energy'
 
     def test_non_dict_returns_none(self):
         """Test returns None for non-dict input."""
-        from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
+        from game.ui.panels.planet_report_panel import _get_harvester_info
 
-        result = StrategyDetailFormatter._get_harvester_info("not a dict", None)
+        result = _get_harvester_info("not a dict", None)
 
         assert result is None

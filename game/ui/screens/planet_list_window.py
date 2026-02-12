@@ -15,7 +15,7 @@ from game.ui.screens.planet_list_presets import PresetManager, capture_planet_li
 from game.ui.screens.planet_list_sidebar import build_sidebar
 from game.ui.screens.planet_list_columns import ColumnManager
 from game.ui.screens.planet_list_renderer import VirtualListRenderer
-from game.ui.panels.planet_report_panel import PlanetReportPanel
+from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 
 class PlanetListWindow(UIWindow):
     def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
@@ -439,26 +439,26 @@ class PlanetListWindow(UIWindow):
         if hasattr(self, 'asset_resolver') and self.asset_resolver:
             portrait_surface = self.asset_resolver(planet)
 
-        # Calculate panel position (right side of window)
-        window_width = self.rect.width
-        panel_x = window_width - self.detail_panel_width - 10
-        panel_y = 60  # Below window header
+        # Calculate panel position and dynamic height (right side of window)
+        panel_x, panel_y, panel_height = self._detail_panel_geometry()
 
         # Create planet report panel
         self.planet_detail_panel = PlanetReportPanel(
             manager=self.ui_manager,
-            rect=pygame.Rect(panel_x, panel_y, self.detail_panel_width, 400),
+            rect=pygame.Rect(panel_x, panel_y, self.detail_panel_width, panel_height),
             planet=planet,
             container=self,  # Window is the container
             portrait_surface=portrait_surface,
-            show_complexes=False  # Match strategy UI - no separate complexes column
+            show_complexes=False,  # Match strategy UI - no separate complexes column
+            production_rates=compute_planet_production(planet)
         )
 
         # Add Build Queue button if player owns planet
         if planet.owner_id == self.empire.id:
-            panel_height = self.planet_detail_panel.get_height_required()
+            required_height = self.planet_detail_panel.get_height_required()
+            btn_y = panel_y + min(panel_height, required_height) + 10
             self.btn_build_queue = UIButton(
-                relative_rect=pygame.Rect(panel_x, panel_y + panel_height + 10, 200, 30),
+                relative_rect=pygame.Rect(panel_x, btn_y, 200, 30),
                 text="Open Build Yard",
                 manager=self.ui_manager,
                 container=self,
@@ -467,6 +467,27 @@ class PlanetListWindow(UIWindow):
 
         # Update selection tracking
         self.selected_planet = planet
+
+    def _detail_panel_geometry(self):
+        """Calculate detail panel position and size relative to window.
+
+        Returns:
+            Tuple of (panel_x, panel_y, panel_height).
+        """
+        window_width = self.rect.width
+        window_height = self.rect.height
+        panel_x = window_width - self.detail_panel_width - 10
+        panel_y = 60  # Below window title bar
+        # Dynamic height: fill available space minus margins
+        panel_height = max(450, window_height - panel_y - 80)
+        return panel_x, panel_y, panel_height
+
+    def set_dimensions(self, dimensions, clamp_to_container=False):
+        """Handle window resize - reposition detail panel."""
+        super().set_dimensions(dimensions, clamp_to_container)
+        # Recreate the detail panel at new position if one is showing
+        if self.selected_planet is not None:
+            self._on_planet_selected(self.selected_planet)
 
     def kill(self):
         # Clean up renderer

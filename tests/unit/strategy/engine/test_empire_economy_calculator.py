@@ -465,3 +465,79 @@ class TestEmpireEconomyCalculator:
             assert snapshot.mining_production[res] == 0.0
             assert snapshot.tribute_expenses[res] == 0.0
             assert snapshot.construction_expenses[res] == 0.0
+
+    def test_registry_fallback_for_colony_production(self):
+        """Components without inline abilities resolve via registry lookup (BUG-87).
+
+        Real facility designs store components as {"id": "metal_harvester", "modifiers": [...]}
+        without inline abilities. The calculator must fall back to registry lookup.
+        """
+        # Facility with component ID but NO inline abilities (matches real design files)
+        facility = Mock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'OUTER': [
+                    {
+                        'id': 'metal_harvester',
+                        'modifiers': [{'id': 'simple_size_mount', 'value': 1.0}]
+                    }
+                ]
+            }
+        }
+
+        colony = Mock()
+        colony.facilities = [facility]
+        colony.resources = {'Metals': {'quality': 0.8, 'quantity': 5000}}
+
+        empire = Mock()
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        # Mock registry with component definition
+        registries = Mock()
+        comp_def = Mock()
+        comp_def.abilities = {
+            'ResourceHarvester': {
+                'resource_type': 'Metals',
+                'base_harvest_rate': 100.0
+            }
+        }
+        registries.components.get.return_value = comp_def
+
+        calculator = EmpireEconomyCalculator(registries=registries)
+        snapshot = calculator.calculate(empire)
+
+        # Production = 100.0 * 0.8 = 80.0
+        assert snapshot.colony_production['Metals'] == 80.0
+        assert snapshot.total_production['Metals'] == 80.0
+
+    def test_registry_fallback_with_no_registries_returns_zero(self):
+        """Without registries, components lacking inline abilities produce nothing (BUG-87)."""
+        facility = Mock()
+        facility.is_operational = True
+        facility.design_data = {
+            'layers': {
+                'OUTER': [
+                    {'id': 'metal_harvester', 'modifiers': []}
+                ]
+            }
+        }
+
+        colony = Mock()
+        colony.facilities = [facility]
+        colony.resources = {'Metals': {'quality': 0.8, 'quantity': 5000}}
+
+        empire = Mock()
+        empire.colonies = [colony]
+        empire.fleets = []
+        empire.resource_pool = {}
+        empire.max_storage = {}
+
+        # No registries provided - should gracefully return 0
+        calculator = EmpireEconomyCalculator()
+        snapshot = calculator.calculate(empire)
+
+        assert snapshot.colony_production['Metals'] == 0.0

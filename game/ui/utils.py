@@ -98,6 +98,8 @@ def get_visible_bounding_box(surface: pygame.Surface, alpha_threshold: int = 10)
     """
     Find the bounding box of the visible (non-transparent) area of a surface.
 
+    Uses pygame's native C-level get_bounding_rect() for performance.
+
     Args:
         surface: pygame.Surface with alpha channel
         alpha_threshold: Minimum alpha value to consider visible (default 10)
@@ -105,26 +107,10 @@ def get_visible_bounding_box(surface: pygame.Surface, alpha_threshold: int = 10)
     Returns:
         Tuple (min_x, min_y, max_x, max_y) or None if fully transparent
     """
-    width = surface.get_width()
-    height = surface.get_height()
-
-    min_x, min_y = width, height
-    max_x, max_y = 0, 0
-
-    # Check each pixel for non-transparent content
-    for y in range(height):
-        for x in range(width):
-            pixel = surface.get_at((x, y))
-            if pixel[3] > alpha_threshold:
-                min_x = min(min_x, x)
-                min_y = min(min_y, y)
-                max_x = max(max_x, x)
-                max_y = max(max_y, y)
-
-    if max_x <= min_x or max_y <= min_y:
+    bbox = surface.get_bounding_rect(min_alpha=alpha_threshold)
+    if bbox.width <= 0 or bbox.height <= 0:
         return None
-
-    return (min_x, min_y, max_x + 1, max_y + 1)
+    return (bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height)
 
 
 def scale_image_by_visible_portion(
@@ -134,10 +120,11 @@ def scale_image_by_visible_portion(
     placeholder_color: Tuple[int, int, int] = (50, 50, 50)
 ) -> pygame.Surface:
     """
-    Scale an image based on its visible (non-transparent) portion.
+    Scale an image based on its visible (non-transparent) portion, then crop
+    to the visible area so the result is tightly framed.
 
-    The visible height will match target_height, and the entire image scales
-    proportionally to maintain the original aspect ratio.
+    The visible height will match target_height, maintaining the original
+    aspect ratio of the visible content.
 
     Args:
         surface: Source surface with alpha channel
@@ -146,12 +133,11 @@ def scale_image_by_visible_portion(
         placeholder_color: Color of placeholder (default dark gray)
 
     Returns:
-        Scaled surface maintaining original aspect ratio
+        Cropped, scaled surface of the visible portion
     """
     # Find visible bounding box
     bbox = get_visible_bounding_box(surface)
     if bbox is None:
-        # Fully transparent - return placeholder
         placeholder = pygame.Surface((placeholder_width, target_height), pygame.SRCALPHA)
         placeholder.fill(placeholder_color)
         return placeholder
@@ -165,18 +151,15 @@ def scale_image_by_visible_portion(
         placeholder.fill(placeholder_color)
         return placeholder
 
-    # Calculate scale to make visible height match target_height
+    # Crop to visible area first, then scale
+    visible_rect = pygame.Rect(min_x, min_y, visible_width, visible_height)
+    cropped = surface.subsurface(visible_rect).copy()
+
+    # Scale cropped visible content to target_height, maintaining aspect ratio
     scale = target_height / visible_height
-    new_width = int(surface.get_width() * scale)
-    new_height = int(surface.get_height() * scale)
+    new_width = max(1, int(visible_width * scale))
 
-    if new_width <= 0 or new_height <= 0:
-        placeholder = pygame.Surface((placeholder_width, target_height), pygame.SRCALPHA)
-        placeholder.fill(placeholder_color)
-        return placeholder
-
-    # Scale the full image (maintains original aspect ratio)
-    return pygame.transform.smoothscale(surface, (new_width, new_height))
+    return pygame.transform.smoothscale(cropped, (new_width, target_height))
 
 
 def scale_image_to_fit(

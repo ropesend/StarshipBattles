@@ -54,11 +54,31 @@ class GameInitializer:
 
     @staticmethod
     def _create_empires(config: GameConfig) -> List[Empire]:
-        """Create Empire objects from player configuration."""
+        """Create Empire objects from player configuration.
+
+        If a player has no race_config, a default RaceConfig is created
+        using the player's name and theme (BUG-88).
+        """
+        from game.strategy.data.race_config import RaceConfig
+
         empires = []
         for i, player_cfg in enumerate(config.players):
             theme_path = config.get_player_theme_path(i)
             log_info(f"GameInitializer: Creating empire {i} with theme={player_cfg.theme}")
+
+            # Ensure every empire has a race_config (BUG-88)
+            race_config = player_cfg.race_config
+            if race_config is None:
+                race_config = RaceConfig(
+                    race_id=f"empire_{i}",
+                    name=player_cfg.name,
+                    faction_name=player_cfg.name,
+                    race_name=player_cfg.name,
+                    theme_id=player_cfg.theme,
+                    flag_id=player_cfg.flag_id,
+                    portrait_id=player_cfg.portrait_id,
+                )
+
             empire = Empire(
                 empire_id=i,
                 name=player_cfg.name,
@@ -67,7 +87,7 @@ class GameInitializer:
                 empire_theme_id=player_cfg.theme,
                 flag_id=player_cfg.flag_id,
                 portrait_id=player_cfg.portrait_id,
-                race_config=player_cfg.race_config
+                race_config=race_config
             )
             empires.append(empire)
         return empires
@@ -169,7 +189,7 @@ class GameInitializer:
                     if empire.race_config is not None:
                         initial_pop = SpeciesPopulation(
                             race_id=empire.race_config.race_id,
-                            count=10000,  # 10 million people
+                            count=home_planet.max_population,
                             happiness=0.7
                         )
                         home_planet.populations.append(initial_pop)

@@ -111,8 +111,9 @@ def _make_fleet_report_window():
     window.lbl_fuel_endurance = MagicMock()
     window.lbl_warp_jumps = MagicMock()
 
-    # Design report panel
-    window.design_report_panel = MagicMock()
+    # Ship detail panel
+    window.ship_detail_panel = MagicMock()
+    window.ship_detail_panel.process_event = MagicMock(return_value=False)
 
     # Scroll bar
     window.scroll_bar = MagicMock()
@@ -137,7 +138,7 @@ def _make_fleet_report_window():
         'empire': window.empire,
         'view_model': view_model,
         'column_manager': column_manager,
-        'design_report_panel': window.design_report_panel,
+        'ship_detail_panel': window.ship_detail_panel,
         'ui_manager': window.ui_manager,
     }
 
@@ -197,7 +198,7 @@ class TestFleetReportShipList:
         def mock_select_ship(s):
             window.selected_ship = s
             window.selected_indices = {0}
-            window.design_report_panel.update_design(MagicMock())
+            window.ship_detail_panel.update_ship(s)
 
         window.select_ship = mock_select_ship
         window.select_ship(ship)
@@ -419,32 +420,20 @@ class TestFleetReportDetailPanel:
         ship = window.fleet.ships[0]
         window.selected_ship = ship
 
-        def mock_update_detail_panel():
-            if window.selected_ship:
-                window.design_report_panel.update_design(MagicMock())
-            else:
-                window.design_report_panel.show_placeholder()
-
-        window._update_detail_panel = mock_update_detail_panel
+        # _update_detail_panel now delegates to ship_detail_panel.update_ship
         window._update_detail_panel()
 
-        mocks['design_report_panel'].update_design.assert_called()
+        mocks['ship_detail_panel'].update_ship.assert_called_once_with(ship)
 
     def test_detail_panel_placeholder_when_no_selection(self):
         """Detail panel should show placeholder when no ship selected."""
         window, mocks = _make_fleet_report_window()
         window.selected_ship = None
 
-        def mock_update_detail_panel():
-            if window.selected_ship:
-                window.design_report_panel.update_design(MagicMock())
-            else:
-                window.design_report_panel.show_placeholder()
-
-        window._update_detail_panel = mock_update_detail_panel
+        # _update_detail_panel passes None which shows placeholder
         window._update_detail_panel()
 
-        mocks['design_report_panel'].show_placeholder.assert_called()
+        mocks['ship_detail_panel'].update_ship.assert_called_once_with(None)
 
 
 # ===========================================================================

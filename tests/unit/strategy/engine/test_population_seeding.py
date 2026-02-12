@@ -35,8 +35,9 @@ class TestHomeColonyPopulationSeeding:
 
         home_colony = empire.colonies[0]
 
-        # Home colony should have population
-        assert home_colony.total_population > 0, "Home colony should have population"
+        # Home colony should have max population
+        assert home_colony.total_population == home_colony.max_population, \
+            "Home colony should be at max population"
 
     def test_initial_population_correct_race_id(self):
         """Initial population should match the empire's race_id."""
@@ -87,9 +88,9 @@ class TestHomeColonyPopulationSeeding:
         # Happiness should be positive (we use 0.7 as starting value)
         assert home_colony.populations[0].happiness >= 0.5
 
-    def test_no_race_config_no_population_seeded(self):
-        """Empire without race_config should not have population seeded."""
-        # Player without race_config
+    def test_no_explicit_race_config_gets_default_and_population(self):
+        """Empire without explicit race_config gets a default and has population seeded (BUG-88)."""
+        # Player without race_config - GameInitializer creates a default
         player = PlayerConfig(
             name="No Race Empire",
             theme="Federation",
@@ -106,11 +107,13 @@ class TestHomeColonyPopulationSeeding:
         session = GameSession(config=config)
         empire = session.empires[0]
 
-        # Empire should still have a colony
-        if len(empire.colonies) > 0:
-            home_colony = empire.colonies[0]
-            # But it should not have population
-            assert home_colony.total_population == 0
+        # Empire should have a race_config (auto-created by GameInitializer)
+        assert empire.race_config is not None
+
+        # Empire should have a colony with population seeded
+        assert len(empire.colonies) > 0
+        home_colony = empire.colonies[0]
+        assert home_colony.total_population > 0
 
 
 class TestQuickstartPopulationSeeding:

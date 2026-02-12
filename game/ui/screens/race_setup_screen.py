@@ -797,7 +797,16 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
         """Populate all UI elements from the current race_config.
 
         PROJ-66 Phase 6: Added identity and aptitudes panels.
+        BUG-81: Update panel race_config references before populating.
         """
+        # Update all panel race_config references to current config (BUG-81)
+        for panel in [self._identity_panel, self._flag_gallery,
+                      self._portrait_gallery, self._theme_gallery,
+                      self._environment_panel, self._aptitudes_panel,
+                      self._description_panel, self._summary_panel]:
+            if panel is not None:
+                panel.race_config = self.race_config
+
         # PROJ-66: Update identity panel (replaces old name_input)
         if self._identity_panel:
             self._identity_panel.set_from_config()

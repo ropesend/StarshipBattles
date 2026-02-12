@@ -615,7 +615,8 @@ class NewGameSetupScreen(pygame_gui.elements.UIWindow):
                 is_human=True,
                 race_id=race_id,
                 flag_id=flag_id,
-                portrait_id=portrait_id
+                portrait_id=portrait_id,
+                race_config=race
             ))
 
         return GameConfig(

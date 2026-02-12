@@ -17,7 +17,7 @@ from game.core.constants import PLANET_RESOURCES
 from game.core.input_actions import InputAction
 from game.core.logger import log_info, log_warning, log_debug
 from game.core.screenshot_manager import ScreenshotManager
-from game.ui.panels.planet_report_panel import PlanetReportPanel
+from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 from game.ui.panels.design_report_panel import DesignReportPanel
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
 from game.ui.panels.build_queue_drag_handler import BuildQueueDragHandler
@@ -202,7 +202,8 @@ class BuildQueueScreen:
                 planet=self.build_context,
                 container=self.background,
                 portrait_surface=self.portrait_surface,
-                show_complexes=False  # Match strategy UI - no separate complexes column
+                show_complexes=False,  # Match strategy UI - no separate complexes column
+                production_rates=compute_planet_production(self.build_context)
             )
             self.context_report = self.planet_report
         else:

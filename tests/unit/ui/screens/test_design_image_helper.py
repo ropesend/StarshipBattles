@@ -12,9 +12,11 @@ class TestLoadPortraitThumbnail:
     """Tests for load_portrait_thumbnail function."""
 
     def setup_method(self):
-        """Initialize pygame display for tests."""
+        """Initialize pygame display and clear thumbnail cache for tests."""
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        from game.ui.screens.design_image_helper import clear_thumbnail_cache
+        clear_thumbnail_cache()
 
     def teardown_method(self):
         """Clean up pygame."""
@@ -132,9 +134,11 @@ class TestLoadTopdownThumbnail:
     """Tests for load_topdown_thumbnail function."""
 
     def setup_method(self):
-        """Initialize pygame display for tests."""
+        """Initialize pygame display and clear thumbnail cache for tests."""
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        from game.ui.screens.design_image_helper import clear_thumbnail_cache
+        clear_thumbnail_cache()
 
     def teardown_method(self):
         """Clean up pygame."""
@@ -221,82 +225,76 @@ class TestLoadTopdownThumbnail:
         assert result is None
 
 
-class TestGetVisibleBoundingBox:
-    """Tests for _get_visible_bounding_box function."""
+class TestThumbnailCache:
+    """Tests for the thumbnail caching system (BUG-82)."""
 
     def setup_method(self):
-        """Initialize pygame display for tests."""
+        """Initialize pygame display and clear cache for tests."""
         pygame.init()
         pygame.display.set_mode((1, 1), pygame.NOFRAME)
+        from game.ui.screens.design_image_helper import clear_thumbnail_cache
+        clear_thumbnail_cache()
 
     def teardown_method(self):
         """Clean up pygame."""
         pygame.quit()
 
-    def test_fully_transparent_surface_returns_none(self):
-        """Fully transparent surface returns None."""
-        from game.ui.screens.design_image_helper import _get_visible_bounding_box
+    def test_portrait_cache_returns_same_surface(self):
+        """Portrait cache returns same surface on second call."""
+        from game.ui.screens.design_image_helper import load_portrait_thumbnail
 
-        surface = pygame.Surface((100, 100), pygame.SRCALPHA)
-        # Don't draw anything - fully transparent
+        design = Mock()
+        design.theme_id = "Federation"
+        design.ship_class = "Cruiser"
+        design.vehicle_type = "Ship"
+        design.design_id = "cache_test"
 
-        result = _get_visible_bounding_box(surface)
+        with patch('os.path.exists', return_value=False):
+            result1 = load_portrait_thumbnail(design, size=50)
+            result2 = load_portrait_thumbnail(design, size=50)
 
-        assert result is None
+        assert result1 is result2  # Same object from cache
 
-    def test_surface_with_visible_pixels_returns_correct_bounding_box(self):
-        """Surface with visible pixels returns correct bounding box."""
-        from game.ui.screens.design_image_helper import _get_visible_bounding_box
+    def test_topdown_cache_returns_same_surface(self):
+        """Top-down cache returns same surface on second call."""
+        from game.ui.screens.design_image_helper import load_topdown_thumbnail
 
-        surface = pygame.Surface((100, 100), pygame.SRCALPHA)
-        # Draw a rectangle from (10, 20) to (60, 80)
-        pygame.draw.rect(surface, (255, 0, 0, 255), (10, 20, 50, 60))
+        design = Mock()
+        design.theme_id = "Federation"
+        design.ship_class = "Cruiser"
+        design.design_id = "cache_test"
 
-        result = _get_visible_bounding_box(surface)
+        mock_img = pygame.Surface((100, 100), pygame.SRCALPHA)
+        pygame.draw.rect(mock_img, (255, 0, 0, 255), (25, 25, 50, 50))
 
-        assert result is not None
-        min_x, min_y, max_x, max_y = result
-        assert min_x == 10
-        assert min_y == 20
-        assert max_x == 60  # 10 + 50
-        assert max_y == 80  # 20 + 60
+        def exists_side_effect(path):
+            return "Cruiser.png" in path
 
-    def test_single_visible_pixel_returns_1x1_bounding_box(self):
-        """Single visible pixel returns 1x1 bounding box."""
-        from game.ui.screens.design_image_helper import _get_visible_bounding_box
+        with patch('os.path.exists', side_effect=exists_side_effect):
+            with patch('pygame.image.load', return_value=mock_img):
+                result1 = load_topdown_thumbnail(design, target_height=50)
+                result2 = load_topdown_thumbnail(design, target_height=50)
 
-        surface = pygame.Surface((100, 100), pygame.SRCALPHA)
-        # Set a single pixel at (50, 50) with full opacity
-        surface.set_at((50, 50), (255, 0, 0, 255))
+        assert result1 is result2  # Same object from cache
 
-        result = _get_visible_bounding_box(surface)
+    def test_clear_cache_resets_both_caches(self):
+        """clear_thumbnail_cache clears both portrait and topdown caches."""
+        from game.ui.screens.design_image_helper import (
+            load_portrait_thumbnail, clear_thumbnail_cache,
+            _portrait_cache, _topdown_cache
+        )
 
-        assert result is not None
-        min_x, min_y, max_x, max_y = result
-        assert min_x == 50
-        assert min_y == 50
-        assert max_x == 51  # min_x + 1
-        assert max_y == 51  # min_y + 1
-        assert (max_x - min_x) == 1
-        assert (max_y - min_y) == 1
+        design = Mock()
+        design.theme_id = "Federation"
+        design.ship_class = "Cruiser"
+        design.vehicle_type = "Ship"
+        design.design_id = "clear_test"
 
-    def test_ignores_nearly_transparent_pixels(self):
-        """Ignores pixels with alpha <= 10."""
-        from game.ui.screens.design_image_helper import _get_visible_bounding_box
+        with patch('os.path.exists', return_value=False):
+            load_portrait_thumbnail(design)
 
-        surface = pygame.Surface((100, 100), pygame.SRCALPHA)
-        # Set nearly transparent pixels (should be ignored)
-        surface.set_at((0, 0), (255, 0, 0, 5))
-        surface.set_at((99, 99), (255, 0, 0, 10))
-        # Set one visible pixel
-        surface.set_at((50, 50), (255, 0, 0, 255))
+        assert len(_portrait_cache) > 0
 
-        result = _get_visible_bounding_box(surface)
-
-        assert result is not None
-        min_x, min_y, max_x, max_y = result
-        # Should only find the visible pixel at (50, 50)
-        assert min_x == 50
-        assert min_y == 50
-        assert max_x == 51
-        assert max_y == 51
+        clear_thumbnail_cache()
+        assert len(_portrait_cache) == 0
+        assert len(_topdown_cache) == 0

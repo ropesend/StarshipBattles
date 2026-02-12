@@ -44,6 +44,18 @@ class FleetListViewModel:
         self.filter_show_has_cargo = True
         self.filter_show_no_cargo = True
 
+        # Special capability filters
+        self.filter_show_can_destroy_planet = True
+        self.filter_show_no_destroy_planet = True
+        self.filter_show_can_open_warp = True
+        self.filter_show_no_open_warp = True
+        self.filter_show_can_close_warp = True
+        self.filter_show_no_close_warp = True
+        self.filter_show_can_destroy_star = True
+        self.filter_show_no_destroy_star = True
+        self.filter_show_can_create_sphere = True
+        self.filter_show_no_create_sphere = True
+
         # Sort state
         self.sort_column_id = 'serial'
         self.sort_descending = False
@@ -103,6 +115,36 @@ class FleetListViewModel:
         elif filter_id == 'no_cargo':
             self.filter_show_no_cargo = not self.filter_show_no_cargo
             result = self.filter_show_no_cargo
+        elif filter_id == 'can_destroy_planet':
+            self.filter_show_can_destroy_planet = not self.filter_show_can_destroy_planet
+            result = self.filter_show_can_destroy_planet
+        elif filter_id == 'no_destroy_planet':
+            self.filter_show_no_destroy_planet = not self.filter_show_no_destroy_planet
+            result = self.filter_show_no_destroy_planet
+        elif filter_id == 'can_open_warp':
+            self.filter_show_can_open_warp = not self.filter_show_can_open_warp
+            result = self.filter_show_can_open_warp
+        elif filter_id == 'no_open_warp':
+            self.filter_show_no_open_warp = not self.filter_show_no_open_warp
+            result = self.filter_show_no_open_warp
+        elif filter_id == 'can_close_warp':
+            self.filter_show_can_close_warp = not self.filter_show_can_close_warp
+            result = self.filter_show_can_close_warp
+        elif filter_id == 'no_close_warp':
+            self.filter_show_no_close_warp = not self.filter_show_no_close_warp
+            result = self.filter_show_no_close_warp
+        elif filter_id == 'can_destroy_star':
+            self.filter_show_can_destroy_star = not self.filter_show_can_destroy_star
+            result = self.filter_show_can_destroy_star
+        elif filter_id == 'no_destroy_star':
+            self.filter_show_no_destroy_star = not self.filter_show_no_destroy_star
+            result = self.filter_show_no_destroy_star
+        elif filter_id == 'can_create_sphere':
+            self.filter_show_can_create_sphere = not self.filter_show_can_create_sphere
+            result = self.filter_show_can_create_sphere
+        elif filter_id == 'no_create_sphere':
+            self.filter_show_no_create_sphere = not self.filter_show_no_create_sphere
+            result = self.filter_show_no_create_sphere
         else:
             return False
 
@@ -144,6 +186,16 @@ class FleetListViewModel:
             'show_no_spaceyard': self.filter_show_no_spaceyard,
             'show_has_cargo': self.filter_show_has_cargo,
             'show_no_cargo': self.filter_show_no_cargo,
+            'show_can_destroy_planet': self.filter_show_can_destroy_planet,
+            'show_no_destroy_planet': self.filter_show_no_destroy_planet,
+            'show_can_open_warp': self.filter_show_can_open_warp,
+            'show_no_open_warp': self.filter_show_no_open_warp,
+            'show_can_close_warp': self.filter_show_can_close_warp,
+            'show_no_close_warp': self.filter_show_no_close_warp,
+            'show_can_destroy_star': self.filter_show_can_destroy_star,
+            'show_no_destroy_star': self.filter_show_no_destroy_star,
+            'show_can_create_sphere': self.filter_show_can_create_sphere,
+            'show_no_create_sphere': self.filter_show_no_create_sphere,
         }
 
     def get_filtered_ships(self) -> List[ShipInstance]:
@@ -199,6 +251,16 @@ class FleetListViewModel:
             'no_spaceyard': 'No Yard',
             'has_cargo': 'Has Cargo',
             'no_cargo': 'No Cargo',
+            'can_destroy_planet': 'Can Destroy Planet',
+            'no_destroy_planet': 'No Planet Destroyer',
+            'can_open_warp': 'Can Open Warp',
+            'no_open_warp': 'No Warp Opener',
+            'can_close_warp': 'Can Close Warp',
+            'no_close_warp': 'No Warp Closer',
+            'can_destroy_star': 'Can Destroy Star',
+            'no_destroy_star': 'No Star Destroyer',
+            'can_create_sphere': 'Can Create Sphere',
+            'no_create_sphere': 'No Sphere Builder',
         }
         return labels.get(filter_id, filter_id)
 

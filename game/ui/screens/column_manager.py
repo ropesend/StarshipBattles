@@ -29,7 +29,21 @@ DEFAULT_FLEET_COLUMNS = [
     {'id': 'transport', 'width': 65, 'title': 'Pax', 'visible': False},
     {'id': 'resources', 'width': 130, 'title': 'Resources', 'visible': False},
     {'id': 'cargo', 'width': 65, 'title': 'Cargo', 'visible': False},
+    {'id': 'can_destroy_planet', 'width': 75, 'title': 'DestrPlanet', 'visible': False},
+    {'id': 'can_open_warp', 'width': 75, 'title': 'OpenWarp', 'visible': False},
+    {'id': 'can_close_warp', 'width': 75, 'title': 'CloseWarp', 'visible': False},
+    {'id': 'can_destroy_star', 'width': 75, 'title': 'DestrStar', 'visible': False},
+    {'id': 'can_create_sphere', 'width': 75, 'title': 'Sphere', 'visible': False},
 ]
+
+# Special capability columns and their corresponding ability names
+SPECIAL_CAPABILITY_COLUMNS = {
+    'can_destroy_planet': 'DestroyPlanet',
+    'can_open_warp': 'OpenWarpPoint',
+    'can_close_warp': 'CloseWarpPoint',
+    'can_destroy_star': 'DestroyStar',
+    'can_create_sphere': 'CreateSphereWorld',
+}
 
 
 class ColumnManager:
@@ -205,6 +219,12 @@ class ColumnManager:
         elif col_id == 'cargo':
             total = sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
             return str(total) if total > 0 else "--"
+
+        elif col_id in SPECIAL_CAPABILITY_COLUMNS:
+            # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
+            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            ability_name = SPECIAL_CAPABILITY_COLUMNS[col_id]
+            return "Yes" if FleetCapabilityCalculator._ship_has_ability(ship, ability_name) else "No"
 
         return ""
 

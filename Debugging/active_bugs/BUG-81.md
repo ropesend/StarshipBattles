@@ -7,6 +7,22 @@ On the Species Setup Window the Load Saved Species from the summary tab does not
 ## Priority
 High
 
-## Status (Pending)
+## Status (Awaiting Confirmation)
 
 ## Work Log
+
+### Fix Applied (2026-02-11)
+
+**Root Cause:** When `_on_race_selected` set `self.race_config = loaded_config`, all sub-panels (identity, environment, aptitudes, description, galleries, summary) still held references to the OLD `race_config` object. When `set_from_config()` was called, panels read values from the stale reference and nothing changed visually.
+
+**Changes:**
+
+1. **`game/ui/screens/race_setup_screen.py`** (`_populate_ui_from_config`):
+   - Added loop to update `panel.race_config = self.race_config` on all 8 panels before calling their `set_from_config()` methods
+
+2. **`tests/unit/ui/screens/test_race_setup_screen.py`**:
+   - Added `TestRaceSetupLoadSpecies` class with 2 tests:
+     - `test_on_race_selected_updates_panel_race_configs` - verifies all panel references updated
+     - `test_on_race_selected_calls_set_from_config` - verifies all panels refreshed
+
+**Tests:** All tests pass.

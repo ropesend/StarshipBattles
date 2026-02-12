@@ -46,7 +46,7 @@ class EmpireEconomyCalculator:
     """Calculator for empire-wide production and expense aggregation.
 
     Usage:
-        calculator = EmpireEconomyCalculator()
+        calculator = EmpireEconomyCalculator(registries=get_default_registries())
         snapshot = calculator.calculate(empire)
         # Access snapshot.colony_production, snapshot.maintenance_expenses, etc.
 
@@ -56,6 +56,15 @@ class EmpireEconomyCalculator:
     """
 
     MAINTENANCE_RATE = 0.05  # 5% per turn
+
+    def __init__(self, *, registries=None):
+        """Initialize the calculator.
+
+        Args:
+            registries: Optional GameRegistries for resolving component
+                       abilities from plain component IDs in design_data.
+        """
+        self._registries = registries
 
     def calculate(self, empire) -> EmpireEconomySnapshot:
         """Calculate complete economic snapshot for an empire.
@@ -110,6 +119,7 @@ class EmpireEconomyCalculator:
         """Calculate total production from all colony facilities.
 
         Scans colonies -> facilities -> components for ResourceHarvester abilities.
+        Checks inline abilities first, then falls back to registry lookup.
         Production = base_harvest_rate * planet_resource_quality
 
         Args:
@@ -137,12 +147,8 @@ class EmpireEconomyCalculator:
                         continue
 
                     for comp in layer_data:
-                        if not isinstance(comp, dict):
-                            continue
-
-                        abilities = comp.get('abilities', {})
-                        harvester = abilities.get('ResourceHarvester')
-                        if not isinstance(harvester, dict):
+                        harvester = self._get_harvester_info(comp)
+                        if harvester is None:
                             continue
 
                         resource_type = harvester.get('resource_type', '')
@@ -162,6 +168,49 @@ class EmpireEconomyCalculator:
                             totals[resource_type] += production
 
         return totals
+
+    def _get_harvester_info(self, comp) -> 'Dict[str, any] | None':
+        """Extract ResourceHarvester info from a component entry.
+
+        Checks inline abilities first, then falls back to registry lookup.
+
+        Args:
+            comp: Component entry from design_data layers (dict or str).
+
+        Returns:
+            Dict with 'resource_type' and 'base_harvest_rate', or None.
+        """
+        if isinstance(comp, dict):
+            # Check inline abilities
+            abilities = comp.get('abilities', {})
+            harvester = abilities.get('ResourceHarvester')
+            if isinstance(harvester, dict):
+                return harvester
+            # Fall back to registry lookup by component ID
+            comp_id = comp.get('id')
+            if comp_id and self._registries is not None:
+                return self._lookup_harvester_in_registry(comp_id)
+        elif isinstance(comp, str) and self._registries is not None:
+            return self._lookup_harvester_in_registry(comp)
+        return None
+
+    def _lookup_harvester_in_registry(self, comp_id: str) -> 'Dict[str, any] | None':
+        """Look up harvester ability from the component registry.
+
+        Args:
+            comp_id: Component identifier to look up.
+
+        Returns:
+            Dict with harvester info or None.
+        """
+        comp_def = self._registries.components.get(comp_id)
+        if comp_def is None:
+            return None
+        abilities = getattr(comp_def, 'abilities', {}) or {}
+        harvester = abilities.get('ResourceHarvester')
+        if isinstance(harvester, dict):
+            return harvester
+        return None
 
     def _aggregate_maintenance(self, empire) -> Dict[str, float]:
         """Calculate total maintenance costs for facilities and ships.

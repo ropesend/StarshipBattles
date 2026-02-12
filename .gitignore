@@ -22,6 +22,9 @@ collect_log*.txt
 # pytest-testmon
 .testmondata*
 
+# Sharded test runner timing data
+.test_durations.json
+
 # Personal development tools
 VibeCodingHotkeys.ahk
 cleanup_nul.py

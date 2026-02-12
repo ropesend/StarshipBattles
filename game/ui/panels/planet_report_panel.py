@@ -445,3 +445,64 @@ class PlanetReportPanel:
         # Clean up main panel (contains all other elements)
         if hasattr(self, 'panel'):
             self.panel.kill()
+
+
+def compute_planet_production(planet) -> Dict[str, float]:
+    """Compute per-resource production rates for a colony planet.
+
+    Scans the planet's facilities for ResourceHarvester abilities and calculates
+    production = base_harvest_rate * planet_resource_quality.
+
+    This is a shared utility used by the strategy detail panel, build queue,
+    and planets list to display consistent production data.
+
+    Args:
+        planet: Planet object with facilities and resources.
+
+    Returns:
+        Dict mapping resource name to production rate per turn.
+    """
+    if getattr(planet, 'owner_id', None) is None:
+        return {}
+
+    from game.core.registry import get_default_registries
+    registries = get_default_registries()
+
+    rates: Dict[str, float] = {}
+    for facility in getattr(planet, 'facilities', []):
+        if not getattr(facility, 'is_operational', True):
+            continue
+        design_data = getattr(facility, 'design_data', {})
+        for layer_data in design_data.get('layers', {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                harvester = _get_harvester_info(comp, registries)
+                if harvester:
+                    res_type = harvester.get('resource_type', '')
+                    base_rate = harvester.get('base_harvest_rate', 0.0)
+                    if res_type and base_rate > 0:
+                        planet_resources = getattr(planet, 'resources', {})
+                        quality = planet_resources.get(res_type, {}).get('quality', 0.0)
+                        rates[res_type] = rates.get(res_type, 0.0) + base_rate * quality
+    return rates
+
+
+def _get_harvester_info(comp, registries) -> Optional[dict]:
+    """Extract ResourceHarvester info from a component entry.
+
+    Checks inline abilities first, then falls back to registry lookup.
+    """
+    if isinstance(comp, dict):
+        harvester = comp.get('abilities', {}).get('ResourceHarvester')
+        if isinstance(harvester, dict):
+            return harvester
+        comp_id = comp.get('id')
+        if comp_id and registries is not None:
+            comp_def = registries.components.get(comp_id)
+            if comp_def is not None:
+                abilities = getattr(comp_def, 'abilities', {}) or {}
+                harvester = abilities.get('ResourceHarvester')
+                if isinstance(harvester, dict):
+                    return harvester
+    return None

@@ -258,13 +258,8 @@ class TestGetVisibleBoundingBox:
         assert max_x == 50
         assert max_y == 50
 
-    def test_single_opaque_pixel_returns_none(self):
-        """Single opaque pixel returns None due to boundary check.
-
-        Note: get_visible_bounding_box returns None for single pixels because
-        the check `max_x <= min_x` is True when there's only one pixel.
-        This is current expected behavior.
-        """
+    def test_single_opaque_pixel_detected(self):
+        """Single opaque pixel is detected as a 1x1 bounding box."""
         from game.ui.utils import get_visible_bounding_box
 
         surface = pygame.Surface((100, 100), pygame.SRCALPHA)
@@ -273,8 +268,12 @@ class TestGetVisibleBoundingBox:
 
         result = get_visible_bounding_box(surface)
 
-        # Single pixel is treated as empty by this function
-        assert result is None
+        assert result is not None
+        min_x, min_y, max_x, max_y = result
+        assert min_x == 50
+        assert min_y == 50
+        assert max_x == 51
+        assert max_y == 51
 
     def test_small_opaque_region(self):
         """Small 2x2 opaque region returns correct rect."""
@@ -302,7 +301,7 @@ class TestScaleImageByVisiblePortion:
     """Tests for scale_image_by_visible_portion helper."""
 
     def test_basic_functionality(self):
-        """Basic scaling by visible portion works."""
+        """Scaling by visible portion crops and scales to target height."""
         from game.ui.utils import scale_image_by_visible_portion
 
         # Create surface with visible content in center
@@ -313,9 +312,10 @@ class TestScaleImageByVisiblePortion:
 
         result = scale_image_by_visible_portion(surface, target_height=100)
 
-        # Should produce a scaled result
+        # Visible portion is 50x50, scaled to height=100 means width=100 too
         assert result is not None
-        assert result.get_height() > 0
+        assert result.get_height() == 100
+        assert result.get_width() == 100  # Square aspect ratio preserved
 
     def test_empty_surface_returns_placeholder(self):
         """Empty surface returns placeholder."""

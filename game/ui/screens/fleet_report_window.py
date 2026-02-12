@@ -12,8 +12,7 @@ from game.ui.screens.fleet_report_filters import calculate_fleet_stats
 from game.ui.screens.fleet_report_view_model import FleetListViewModel
 from game.ui.screens.column_manager import ColumnManager
 from game.ui.utils import scale_image_by_visible_portion, scale_image_to_fit
-from game.ui.panels.design_report_panel import DesignReportPanel
-from game.ui.services.design_loader_adapter import DesignLoaderAdapter
+from game.ui.panels.ship_detail_panel import ShipDetailPanel
 from game.ui.assets import ShipThemeManager
 
 
@@ -49,15 +48,13 @@ class FleetReportWindow(UIWindow):
 
         # --- Layout Constants ---
         self.sidebar_width = 300  # Left panel for summary + filters
-        self.detail_width = 750   # Right panel for ship details (DesignReportPanel)
+        self.detail_width = 750   # Right panel for ship details (ShipDetailPanel)
         self.header_height = UIConfig.HEADER_HEIGHT
         self.row_height = UIConfig.ROW_HEIGHT_LARGE
 
         # --- State Managers ---
         self.view_model = FleetListViewModel(fleet.ships)
         self.column_manager = ColumnManager()
-        self._design_loader = DesignLoaderAdapter()
-
         # Selection state - multi-select support
         self.selected_indices: set = set()  # Indices into filtered_ships
         self.selected_ship = None  # For detail panel (single ship when len(selected_indices) == 1)
@@ -362,6 +359,45 @@ class FleetReportWindow(UIWindow):
 
         y += 10
 
+        # Special capabilities filter section
+        UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 25),
+            text="SPECIAL CAPABILITIES",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
+        y += 28
+
+        special_filter_configs = [
+            ('can_destroy_planet', 'Destroy Planet'),
+            ('no_destroy_planet', 'No Destroy Planet'),
+            ('can_open_warp', 'Open Warp'),
+            ('no_open_warp', 'No Open Warp'),
+            ('can_close_warp', 'Close Warp'),
+            ('no_close_warp', 'No Close Warp'),
+            ('can_destroy_star', 'Destroy Star'),
+            ('no_destroy_star', 'No Destroy Star'),
+            ('can_create_sphere', 'Create Sphere'),
+            ('no_create_sphere', 'No Create Sphere'),
+        ]
+
+        for filter_id, label in special_filter_configs:
+            is_on = self.view_model.is_filter_enabled(filter_id)
+            btn_text = f"[{label}]" if is_on else label
+            btn = UIButton(
+                relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 28),
+                text=btn_text,
+                manager=self.ui_manager,
+                container=self.sidebar_panel,
+                object_id=f"#filter_{filter_id}"
+            )
+            if is_on:
+                btn.select()
+            self.filter_buttons[filter_id] = btn
+            y += 30
+
+        y += 10
+
         # --- Column Configuration Section ---
         UILabel(
             relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 30),
@@ -459,15 +495,15 @@ class FleetReportWindow(UIWindow):
         self._rebuild_row_pool()
 
     def _init_detail_panel(self):
-        """Initialize the right detail panel with DesignReportPanel."""
-        # Create the design report panel filling the detail_panel container
+        """Initialize the right detail panel with ShipDetailPanel."""
         panel_rect = self.detail_panel.get_relative_rect()
         detail_rect = pygame.Rect(0, 0, panel_rect.width, panel_rect.height)
 
-        self.design_report_panel = DesignReportPanel(
+        self.ship_detail_panel = ShipDetailPanel(
             manager=self.ui_manager,
             rect=detail_rect,
-            container=self.detail_panel
+            container=self.detail_panel,
+            on_remove_ship=self._on_remove_ship
         )
 
     def _rebuild_headers(self):
@@ -818,6 +854,10 @@ class FleetReportWindow(UIWindow):
         """Handle UI events."""
         handled = super().process_event(event)
 
+        # Forward events to ship detail panel (remove button, layer toggles)
+        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel.process_event(event):
+            return True
+
         if event.type == pygame.USEREVENT:
             if hasattr(event, 'user_type') and event.user_type == 'ui_button_pressed':
                 # Check for header clicks (sorting)
@@ -910,17 +950,8 @@ class FleetReportWindow(UIWindow):
         self._update_visible_rows()
 
     def _update_detail_panel(self):
-        """Update the detail panel with selected ship info."""
-        if self.selected_ship:
-            ship_obj = self._design_loader.load_ship_from_design_data(
-                self.selected_ship.design_data, 0, 0
-            )
-            if ship_obj:
-                self.design_report_panel.update_design(ship_obj)
-            else:
-                self.design_report_panel.show_placeholder()
-        else:
-            self.design_report_panel.show_placeholder()
+        """Update the detail panel with selected ship instance."""
+        self.ship_detail_panel.update_ship(self.selected_ship)
 
     def _on_remove_ship(self, ship):
         """Handle remove single ship from fleet (legacy API)."""
@@ -1053,9 +1084,9 @@ class FleetReportWindow(UIWindow):
 
     def kill(self):
         """Clean up when window is closed."""
-        # Clean up design report panel
-        if hasattr(self, 'design_report_panel') and self.design_report_panel:
-            self.design_report_panel.kill()
+        # Clean up ship detail panel
+        if hasattr(self, 'ship_detail_panel') and self.ship_detail_panel:
+            self.ship_detail_panel.kill()
 
         if self.on_close_callback:
             self.on_close_callback()

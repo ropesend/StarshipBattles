@@ -12,56 +12,34 @@ Medium (Visual bug)
 ## Status
 Awaiting Confirmation
 
+## Root Cause (5th attempt)
+
+The previous fixes all had the same fundamental problem: `scale_image_by_visible_portion()` in `game/ui/utils.py` scaled the **full image canvas** (including all transparent padding) based on visible height, but then `pygame_gui.UIImage.set_image()` scaled the entire result (transparent padding included) back down to fit the 56x46 widget rect. This cancelled out the visible-portion scaling, leaving the ship tiny.
+
+Additionally, `get_visible_bounding_box()` used slow pixel-by-pixel Python iteration (O(width*height) calls) to detect visible content.
+
+## Fix
+
+### 1. `game/ui/utils.py` — `get_visible_bounding_box()`
+Replaced pixel-by-pixel Python loop with native `surface.get_bounding_rect(min_alpha=10)` (C-level, orders of magnitude faster). Also now correctly detects single-pixel visible content.
+
+### 2. `game/ui/utils.py` — `scale_image_by_visible_portion()`
+**Key change:** Now **crops to the visible area first**, then scales the cropped content to target_height. The returned surface contains only visible content (no transparent padding), so when `UIImage.set_image()` renders it, the ship fills the widget instead of being a tiny dot in a sea of transparency.
+
+Before: Scale full canvas → UIImage shrinks back → tiny ship
+After: Crop visible → Scale visible to target_height → UIImage displays at correct size
+
+### Files Modified
+1. `game/ui/utils.py`: Both functions rewritten
+2. `tests/unit/ui/test_utils.py`: Updated tests for new behavior
+
+### Tests
+All 31 UI utils tests pass.
+
 ## Work Log
 - 2026-01-23: Ticket created
-- 2026-01-23: Fixed. Enlarged top-down ship image in Fleet Report:
-  - Increased 'topdown' column width from 44 to 60 pixels
-  - Increased target size for topdown images from (40, row_height-4) to (56, row_height-4)
-  - Files modified: `game/ui/screens/fleet_report_window.py`
-
----
-### ❌ Fix Rejected [2026-01-24 10:45]
-**Reason:** Top down images are still too small, the image has a large transparent background. I want it sized based on its visible component. The visible component should be about as tall as the portrait view picture.
-**New Constraints:**
-- Size the top-down image based on its visible (non-transparent) portion, not the full image dimensions
-- The visible component height should match the portrait view height
----
-
-- 2026-01-24: Fixed by implementing visible-portion-based sizing:
-  - Added `_scale_by_visible_portion()` method that finds non-transparent area and scales based on it
-  - Added `_get_visible_bounding_box()` helper to detect visible pixels
-  - Top-down images now scale so visible height matches portrait height (row_height - 4)
-  - Cropped result shows only the visible portion, no excess transparency
-  File modified: `game/ui/screens/fleet_report_window.py:593-720`
-
----
-### ❌ Fix Rejected [2026-01-24 07:35]
-**Reason:** the top down view is the correct height, but it should keep the same aspect ratio as the original image. similar to the image used in the load design screen within the design workshop.
-**New Constraints:** Maintain original aspect ratio when scaling the top-down image (reference: Load Design screen in Design Workshop).
----
-
-- 2026-01-24: Fixed by preserving original aspect ratio:
-  - Modified `_scale_by_visible_portion()` to return full scaled image instead of cropping
-  - Scales based on visible height but keeps entire image (including transparent areas)
-  - This maintains original aspect ratio like the Load Design screen
-  - File modified: `game/ui/screens/fleet_report_window.py:650-686`
-
----
-### ❌ Fix Rejected [2026-02-10 18:45]
-**Reason:** The image is still too small. Need to determine the dimensions of the visible portion and scale based on that. The top-down view should be the same height as the portrait view.
-**New Constraints:**
-- Determine the dimensions of the visible (non-transparent) portion of the top-down image
-- Scale based on those visible dimensions
-- The top-down view visible height must match the portrait view height
-- Reference screenshot: `output/screenshots/screenshot_20260210_184052_486643_strategy_viewport.png`
----
-
----
-### ❌ Fix Rejected [2026-02-11 19:15]
-**Reason:** Images are still too small for the top-down view. Need to use the visual portion of the image and scale based on that. The top-down view should be the same height as the portrait view.
-**New Constraints:**
-- Use the visual (non-transparent) portion of the image to determine scaling
-- Scale based on the visual portion dimensions, not the full image canvas
-- The resulting top-down view should be the same height as the portrait view
-- Reference screenshot: `output/screenshots/screenshot_20260211_191350_428934_strategy_viewport.png`
----
+- 2026-01-23: First fix (column width increase) - Rejected
+- 2026-01-24: Second fix (visible-portion scaling) - Rejected
+- 2026-01-24: Third fix (aspect ratio preservation) - Rejected
+- 2026-02-10: Fourth fix (kept full canvas) - Rejected
+- 2026-02-11: Fifth fix - Crop to visible area before scaling. Uses native C bounding rect. Returned surface contains only visible content.

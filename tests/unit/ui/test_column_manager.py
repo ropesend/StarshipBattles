@@ -449,3 +449,84 @@ class TestNewColumnValues:
         col = mgr.get_column('cargo')
         value = mgr.get_column_value(ship, col)
         assert value == "--"
+
+
+class TestSpecialCapabilityColumns:
+    """Tests for special capability columns (BUG-83)."""
+
+    def test_special_capability_columns_exist_in_defaults(self):
+        """All 5 special capability columns exist in DEFAULT_FLEET_COLUMNS."""
+        from game.ui.screens.column_manager import DEFAULT_FLEET_COLUMNS
+
+        expected_ids = ['can_destroy_planet', 'can_open_warp', 'can_close_warp',
+                        'can_destroy_star', 'can_create_sphere']
+        existing_ids = [c['id'] for c in DEFAULT_FLEET_COLUMNS]
+
+        for col_id in expected_ids:
+            assert col_id in existing_ids, f"Column {col_id} not found in defaults"
+
+    def test_special_capability_columns_hidden_by_default(self):
+        """All 5 special capability columns are hidden by default."""
+        from game.ui.screens.column_manager import DEFAULT_FLEET_COLUMNS
+
+        special_ids = ['can_destroy_planet', 'can_open_warp', 'can_close_warp',
+                       'can_destroy_star', 'can_create_sphere']
+
+        for col in DEFAULT_FLEET_COLUMNS:
+            if col['id'] in special_ids:
+                assert col.get('visible') is False, f"Column {col['id']} should be hidden"
+
+    def test_special_capability_mapping_complete(self):
+        """SPECIAL_CAPABILITY_COLUMNS maps all 5 columns to ability names."""
+        from game.ui.screens.column_manager import SPECIAL_CAPABILITY_COLUMNS
+
+        assert 'can_destroy_planet' in SPECIAL_CAPABILITY_COLUMNS
+        assert SPECIAL_CAPABILITY_COLUMNS['can_destroy_planet'] == 'DestroyPlanet'
+        assert SPECIAL_CAPABILITY_COLUMNS['can_open_warp'] == 'OpenWarpPoint'
+        assert SPECIAL_CAPABILITY_COLUMNS['can_close_warp'] == 'CloseWarpPoint'
+        assert SPECIAL_CAPABILITY_COLUMNS['can_destroy_star'] == 'DestroyStar'
+        assert SPECIAL_CAPABILITY_COLUMNS['can_create_sphere'] == 'CreateSphereWorld'
+
+    def test_get_column_value_destroy_planet_yes(self):
+        """Ship with DestroyPlanet ability shows 'Yes'."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+                   return_value=True):
+            col = mgr.get_column('can_destroy_planet')
+            value = mgr.get_column_value(ship, col)
+            assert value == "Yes"
+
+    def test_get_column_value_destroy_planet_no(self):
+        """Ship without DestroyPlanet ability shows 'No'."""
+        from game.ui.screens.column_manager import ColumnManager
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+                   return_value=False):
+            col = mgr.get_column('can_destroy_planet')
+            value = mgr.get_column_value(ship, col)
+            assert value == "No"
+
+    def test_get_column_value_all_special_columns(self):
+        """All 5 special columns return 'Yes'/'No' based on ability check."""
+        from game.ui.screens.column_manager import ColumnManager, SPECIAL_CAPABILITY_COLUMNS
+        from unittest.mock import Mock, patch
+
+        mgr = ColumnManager()
+        ship = Mock()
+
+        for col_id in SPECIAL_CAPABILITY_COLUMNS:
+            with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+                       return_value=True):
+                col = mgr.get_column(col_id)
+                assert col is not None, f"Column {col_id} not found"
+                value = mgr.get_column_value(ship, col)
+                assert value == "Yes", f"Column {col_id} should return 'Yes'"

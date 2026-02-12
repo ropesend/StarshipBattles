@@ -788,5 +788,144 @@ class TestFilterShipsCargo:
         assert len(result) == 2
 
 
+class TestSpecialCapabilityFilter:
+    """Tests for special capability filtering (BUG-83)."""
+
+    def test_filter_hides_ships_with_ability(self):
+        """Filter can hide ships that have a special ability."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+        from unittest.mock import patch
+
+        ship_with = make_mock_ship(serial=1, design_name="Planet Killer")
+        ship_without = make_mock_ship(serial=2, design_name="Scout")
+
+        def mock_has_ability(ship, ability_name):
+            return ship.serial == 1 and ability_name == 'DestroyPlanet'
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_can_destroy_planet': False,  # Hide ships with ability
+            'show_no_destroy_planet': True,
+        }
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+                   side_effect=mock_has_ability):
+            result = filter_ships([ship_with, ship_without], filter_state)
+
+        assert len(result) == 1
+        assert result[0].serial == 2
+
+    def test_filter_hides_ships_without_ability(self):
+        """Filter can hide ships that lack a special ability."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+        from unittest.mock import patch
+
+        ship_with = make_mock_ship(serial=1, design_name="Planet Killer")
+        ship_without = make_mock_ship(serial=2, design_name="Scout")
+
+        def mock_has_ability(ship, ability_name):
+            return ship.serial == 1 and ability_name == 'DestroyPlanet'
+
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+            'show_can_destroy_planet': True,
+            'show_no_destroy_planet': False,  # Hide ships without ability
+        }
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+                   side_effect=mock_has_ability):
+            result = filter_ships([ship_with, ship_without], filter_state)
+
+        assert len(result) == 1
+        assert result[0].serial == 1
+
+    def test_filter_default_shows_all(self):
+        """Default filter state shows all ships regardless of special abilities."""
+        from game.ui.screens.fleet_report_filters import filter_ships
+
+        ships = [make_mock_ship(serial=i) for i in range(5)]
+
+        # Default filter state - all show flags True
+        filter_state = {
+            'show_damaged': True,
+            'show_undamaged': True,
+            'show_derelict': True,
+            'show_destroyed': True,
+        }
+
+        result = filter_ships(ships, filter_state)
+        assert len(result) == 5
+
+
+class TestSpecialCapabilitySort:
+    """Tests for special capability column sorting (BUG-83)."""
+
+    def test_sort_by_special_capability(self):
+        """Sort by special capability column puts 'Yes' ships first when descending."""
+        from game.ui.screens.fleet_report_filters import sort_ships
+        from unittest.mock import patch
+
+        ship1 = make_mock_ship(serial=1, design_name="Scout")
+        ship2 = make_mock_ship(serial=2, design_name="Planet Killer")
+        ship3 = make_mock_ship(serial=3, design_name="Frigate")
+
+        def mock_has_ability(ship, ability_name):
+            return ship.serial == 2 and ability_name == 'DestroyPlanet'
+
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+                   side_effect=mock_has_ability):
+            result = sort_ships([ship1, ship2, ship3], 'can_destroy_planet', descending=True)
+
+        # Ship2 (has ability, sort key=1) should be first when descending
+        assert result[0].serial == 2
+
+
+class TestViewModelSpecialFilters:
+    """Tests for FleetListViewModel special capability filter state (BUG-83)."""
+
+    def test_toggle_special_filter(self):
+        """Toggle special capability filter changes state."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+
+        vm = FleetListViewModel()
+        assert vm.filter_show_can_destroy_planet is True
+
+        result = vm.toggle_filter('can_destroy_planet')
+        assert result is False
+        assert vm.filter_show_can_destroy_planet is False
+
+    def test_special_filter_state_included(self):
+        """Special capability filters appear in get_filter_state()."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+
+        vm = FleetListViewModel()
+        state = vm.get_filter_state()
+
+        assert 'show_can_destroy_planet' in state
+        assert 'show_no_destroy_planet' in state
+        assert 'show_can_open_warp' in state
+        assert 'show_can_close_warp' in state
+        assert 'show_can_destroy_star' in state
+        assert 'show_can_create_sphere' in state
+
+    def test_special_filter_labels(self):
+        """Special capability filters have display labels."""
+        from game.ui.screens.fleet_report_view_model import FleetListViewModel
+
+        vm = FleetListViewModel()
+
+        assert vm.get_filter_label('can_destroy_planet') == 'Can Destroy Planet'
+        assert vm.get_filter_label('no_destroy_planet') == 'No Planet Destroyer'
+        assert vm.get_filter_label('can_open_warp') == 'Can Open Warp'
+        assert vm.get_filter_label('can_destroy_star') == 'Can Destroy Star'
+        assert vm.get_filter_label('can_create_sphere') == 'Can Create Sphere'
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

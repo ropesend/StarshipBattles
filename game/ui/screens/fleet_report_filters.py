@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Dict, Any, List
 
 from game.core.constants import ResourceType
 from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+from game.ui.screens.column_manager import SPECIAL_CAPABILITY_COLUMNS
 
 if TYPE_CHECKING:
     from game.strategy.data.ship_instance import ShipInstance
@@ -150,6 +151,26 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
             if not has_cargo and not show_no_cargo:
                 continue
 
+        # Special capability filters
+        _skip = False
+        for col_id, ability_name in SPECIAL_CAPABILITY_COLUMNS.items():
+            # Derive filter keys from column id: 'can_destroy_planet' -> show_can_destroy_planet / show_no_destroy_planet
+            # The "no" variant strips the "can_" prefix
+            show_has = filter_state.get(f'show_{col_id}', True)
+            no_key = col_id.replace('can_', 'no_', 1)
+            show_not = filter_state.get(f'show_{no_key}', True)
+            if not show_has or not show_not:
+                from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+                has_ability = FleetCapabilityCalculator._ship_has_ability(ship, ability_name)
+                if has_ability and not show_has:
+                    _skip = True
+                    break
+                if not has_ability and not show_not:
+                    _skip = True
+                    break
+        if _skip:
+            continue
+
         # Destroyed filter
         if not ship.is_alive:
             if not filter_state.get('show_destroyed', True):
@@ -233,6 +254,10 @@ def sort_ships(
         elif sort_column == 'resources':
             # No meaningful sort for combined column
             return 0
+        elif sort_column in SPECIAL_CAPABILITY_COLUMNS:
+            from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
+            ability_name = SPECIAL_CAPABILITY_COLUMNS[sort_column]
+            return 1 if FleetCapabilityCalculator._ship_has_ability(ship, ability_name) else 0
         return 0
 
     return sorted(ships, key=get_sort_key, reverse=descending)

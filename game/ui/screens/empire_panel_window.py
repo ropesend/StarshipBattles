@@ -178,7 +178,8 @@ class EmpirePanelWindow(UIWindow):
 
     def _build_treasury_tab(self, panel: UIPanel):
         """Build Treasury tab content using EmpireTreasuryPanel."""
-        calculator = EmpireEconomyCalculator()
+        from game.core.registry import get_default_registries
+        calculator = EmpireEconomyCalculator(registries=get_default_registries())
         snapshot = calculator.calculate(self.empire)
         self._treasury_panel = EmpireTreasuryPanel(
             panel,
