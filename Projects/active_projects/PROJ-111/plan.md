@@ -18,14 +18,14 @@
 | 3. Battle Layer (Screens & Panels) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Core Screens | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Strategy Support Screens | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
-| 6. Workshop, Setup, and Complex Screens | In Progress | [phase_6_checklist.md](phase_6_checklist.md) |
+| 6. Workshop, Setup, and Complex Screens | Complete | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Test Quality Improvements | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 6 In Progress
-**Last Action:** Added 128 new tests for Tasks 6.1-6.5: WorkshopScreen (27), RaceSetupScreen (25), FormationEditorScreen (30), FleetReportWindow (24), BuildQueueScreen (22)
-**Next Action:** Continue Phase 6 - Tasks 6.6-6.8 (DesignSelectorWindow, race assets, panel coverage)
+**Active Phase:** Phase 7 Not Started
+**Last Action:** Completed Phase 6 Tasks 6.6-6.8: DesignSelectorWindow (35 tests), race asset extensions (13 tests), panel coverage (46 tests)
+**Next Action:** Start Phase 7 - Test Quality Improvements
 **Blockers:** None
 
 ## Overview
