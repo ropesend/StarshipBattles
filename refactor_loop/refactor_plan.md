@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-11
-**Last Completed:** PROJ-111 Phase 5 Complete
-**Current Status:** PROJ-111 Phase 5 Complete - 2 phases remaining
+**Last Completed:** PROJ-111 Phase 6 Tasks 6.1-6.5 (128 tests)
+**Current Status:** PROJ-111 Phase 6 In Progress - Tasks 6.6-6.8 remaining
 **Current Project:** PROJ-111
-**Current Phase:** Phase 6 (Workshop, Setup, and Complex Screens)
-**Test Status:** 9462 passed
+**Current Phase:** Phase 6 (Workshop, Setup, and Complex Screens) - Tasks 6.6-6.8 remaining
+**Test Status:** 9590 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-111 Phase 5 Complete:
-  - Added +185 new tests for Strategy Support Screens
-  - strategy_detail_fmt: 48 tests (spectrum, atmosphere, labels, fleet info, ship groups, cargo, orders, planet/system/star info)
-  - strategy_detail_formatter: 29 tests (init, accessors, show_detail dispatch, compute_production, raw_data_popup, resize)
-  - strategy_superweapons: 39 tests (all 6 superweapon workflows, validation, error handling, command dispatch, helper methods)
-  - planet_list_components: 31 tests (PresetManager, capture/apply state, filter/sort, ColumnManager, gather_planets, ranges)
-  - strategy_window_manager: 38 tests (all window open/close/kill methods, callbacks, prompts)
-- Next: Start Phase 6 (Workshop, Setup, and Complex Screens)
+- PROJ-111 Phase 6 Tasks 6.1-6.5 Complete:
+  - test_workshop_screen.py: 27 tests (context init, event routing, viewmodel, ship I/O, data reloading, error handling, selection, lifecycle, buttons, update loop, clear design, apply loaded ship)
+  - test_race_setup_screen.py: 25 tests (tab navigation, data flow, race config creation, validation, panel components, editing mode, callbacks, highlighting, nav buttons)
+  - test_formation_editor_screen.py: 30 tests (lifecycle, file I/O, shape generation, integration, property delegation, core data ops, coordinate transforms, info update)
+  - test_fleet_report_window.py: 24 tests (init, ship list, filtering/sorting, multi-select, close behavior, viewmodel, column manager, detail panel, remove ships, summary)
+  - test_build_queue_screen.py: 22 tests (init, design filtering, queue ops, multi-queue PROJ-69, event handling, controller, portrait loader, queue selector)
+- Next: Continue Phase 6 - Tasks 6.6-6.8 (DesignSelectorWindow, race assets, panel coverage)
 
 ---
 
@@ -332,6 +331,7 @@
 | 2026-02-11 | PROJ-111 | Phase 1 | Complete | 8984 passed | pending | +60 tests: camera, BattleUIService, utils, components, colors, widgets, imports |
 | 2026-02-11 | PROJ-111 | Phase 2 | Complete | 9034 passed | pending | +50 tests: SpriteManager, ShipThemeManager, GameRenderer (singleton/error/threading/caching) |
 | 2026-02-11 | PROJ-111 | Phase 4 | Complete | 9277 passed | pending | +127 tests: StrategyScreen (49), StrategyInputHandler (39), StrategyRenderer (39) |
+| 2026-02-11 | PROJ-111 | Phase 6 T1-5 | In Progress | 9590 passed | pending | +128 tests: WorkshopScreen (27), RaceSetupScreen (25), FormationEditorScreen (30), FleetReportWindow (24), BuildQueueScreen (22) |
 
 ---
 
