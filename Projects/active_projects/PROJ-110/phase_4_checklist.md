@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete
 **Objective:** Add edge case and expansion tests for all MINOR findings across Foundation, Simulation, and Strategy layers (TCG-FND-011 through TCG-FND-021, TCG-SIM-010 through TCG-SIM-018, TCG-STR-009 through TCG-STR-015). Expected: ~95 new tests.
 
 ---
