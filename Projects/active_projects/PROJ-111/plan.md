@@ -17,15 +17,15 @@
 | 2. Framework Complex (Singletons & Rendering) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle Layer (Screens & Panels) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Strategy Core Screens | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Strategy Support Screens | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 5. Strategy Support Screens | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Workshop, Setup, and Complex Screens | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Test Quality Improvements | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 4 Complete - Ready for Phase 5
-**Last Action:** Phase 4 complete - added 127 new tests for strategy core screens (StrategyScreen 49 tests, StrategyInputHandler core 39 tests, StrategyRenderer 39 tests)
-**Next Action:** Begin Phase 5 (Strategy Support Screens)
+**Active Phase:** Phase 5 Complete - Ready for Phase 6
+**Last Action:** Phase 5 complete - added 185 new tests for strategy support screens (detail_fmt 48, detail_formatter 29, superweapons 39, planet_list_components 31, window_manager 38)
+**Next Action:** Begin Phase 6 (Workshop, Setup, and Complex Screens)
 **Blockers:** None
 
 ## Overview

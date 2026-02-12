@@ -1,0 +1,687 @@
+"""
+Unit tests for PlanetListWindow and related components.
+
+Tests window initialization, planet list population, column sorting,
+filter application, and preset system.
+"""
+import pytest
+from unittest.mock import Mock, MagicMock, patch
+import pygame
+
+
+# =============================================================================
+# Test Fixtures
+# =============================================================================
+
+@pytest.fixture
+def mock_galaxy():
+    """Create mock galaxy with planets."""
+    galaxy = Mock()
+
+    # Create planets
+    planet1 = Mock()
+    planet1.name = "Terra Prime"
+    planet1.planet_type = Mock()
+    planet1.planet_type.name = "Continental"
+    planet1.mass = 5.97e24
+    planet1.surface_gravity = 9.81
+    planet1.surface_temperature = 288
+    planet1.surface_water = 0.71
+    planet1.total_pressure_atm = 1.0
+    planet1.owner_id = 1
+    planet1.resources = {}
+
+    planet2 = Mock()
+    planet2.name = "Frost World"
+    planet2.planet_type = Mock()
+    planet2.planet_type.name = "Cryoplanet"
+    planet2.mass = 2.5e24
+    planet2.surface_gravity = 5.0
+    planet2.surface_temperature = 150
+    planet2.surface_water = 0.95
+    planet2.total_pressure_atm = 0.5
+    planet2.owner_id = None
+    planet2.resources = {}
+
+    planet3 = Mock()
+    planet3.name = "Desert Prime"
+    planet3.planet_type = Mock()
+    planet3.planet_type.name = "Arid"
+    planet3.mass = 4.0e24
+    planet3.surface_gravity = 7.0
+    planet3.surface_temperature = 350
+    planet3.surface_water = 0.05
+    planet3.total_pressure_atm = 0.8
+    planet3.owner_id = 2
+    planet3.resources = {}
+
+    system = Mock()
+    system.name = "Sol"
+    system.planets = [planet1, planet2, planet3]
+
+    galaxy.systems = {"Sol": system}
+    galaxy.get_empire = Mock(return_value=Mock(name="Enemy Empire"))
+
+    return galaxy
+
+
+@pytest.fixture
+def mock_empire():
+    """Create mock empire."""
+    empire = Mock()
+    empire.id = 1
+    empire.name = "Player Empire"
+    return empire
+
+
+# =============================================================================
+# PresetManager Tests
+# =============================================================================
+
+class TestPresetManager:
+    """Tests for PresetManager class."""
+
+    def test_init_loads_from_disk(self):
+        """Test initialization loads presets from disk."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            mock_load.return_value = {"TestPreset": {"filters": {}}}
+
+            manager = PresetManager()
+
+            mock_load.assert_called_once()
+            assert manager.presets == {"TestPreset": {"filters": {}}}
+
+    def test_get_preset_names_includes_default(self):
+        """Test get_preset_names includes Default."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            mock_load.return_value = {"Custom1": {}, "Custom2": {}}
+
+            manager = PresetManager()
+            names = manager.get_preset_names()
+
+            assert "Default" in names
+            assert "Custom1" in names
+            assert "Custom2" in names
+
+    def test_save_preset(self):
+        """Test save_preset saves and persists."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            with patch('game.ui.screens.planet_list_presets.save_json') as mock_save:
+                mock_load.return_value = {}
+
+                manager = PresetManager()
+                manager.save_preset("NewPreset", {"filters": {"name": "test"}})
+
+                assert "NewPreset" in manager.presets
+                mock_save.assert_called_once()
+
+    def test_get_preset_returns_preset(self):
+        """Test get_preset returns preset by name."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            mock_load.return_value = {"MyPreset": {"data": "value"}}
+
+            manager = PresetManager()
+            result = manager.get_preset("MyPreset")
+
+            assert result == {"data": "value"}
+
+    def test_get_preset_returns_none_for_missing(self):
+        """Test get_preset returns None for missing preset."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            mock_load.return_value = {}
+
+            manager = PresetManager()
+            result = manager.get_preset("NonExistent")
+
+            assert result is None
+
+    def test_has_preset(self):
+        """Test has_preset checks existence."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            mock_load.return_value = {"Exists": {}}
+
+            manager = PresetManager()
+
+            assert manager.has_preset("Exists") is True
+            assert manager.has_preset("NotExists") is False
+
+    def test_delete_preset(self):
+        """Test delete_preset removes preset."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            with patch('game.ui.screens.planet_list_presets.save_json') as mock_save:
+                mock_load.return_value = {"ToDelete": {}}
+
+                manager = PresetManager()
+                result = manager.delete_preset("ToDelete")
+
+                assert result is True
+                assert "ToDelete" not in manager.presets
+                mock_save.assert_called()
+
+    def test_delete_preset_nonexistent(self):
+        """Test delete_preset returns False for missing preset."""
+        from game.ui.screens.planet_list_presets import PresetManager
+
+        with patch('game.ui.screens.planet_list_presets.load_json') as mock_load:
+            mock_load.return_value = {}
+
+            manager = PresetManager()
+            result = manager.delete_preset("NonExistent")
+
+            assert result is False
+
+
+# =============================================================================
+# capture_planet_list_state Tests
+# =============================================================================
+
+class TestCapturePlanetListState:
+    """Tests for capture_planet_list_state function."""
+
+    def test_captures_columns(self):
+        """Test captures column visibility state."""
+        from game.ui.screens.planet_list_presets import capture_planet_list_state
+
+        columns = [
+            {'id': 'name', 'visible': True, 'title': 'Name'},
+            {'id': 'type', 'visible': False, 'title': 'Type'},
+        ]
+        txt_name_filter = Mock()
+        txt_name_filter.get_text = Mock(return_value="")
+        filter_types = {'Continental': True}
+        filter_owner = {'Player': True}
+        ui_filters = {
+            'gravity': {'min': Mock(get_current_value=Mock(return_value=0)), 'max': Mock(get_current_value=Mock(return_value=10))},
+            'temp': {'min': Mock(get_current_value=Mock(return_value=0)), 'max': Mock(get_current_value=Mock(return_value=500))},
+            'mass': {'min': Mock(get_current_value=Mock(return_value=0)), 'max': Mock(get_current_value=Mock(return_value=100))},
+        }
+
+        result = capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters)
+
+        assert 'columns' in result
+        assert len(result['columns']) == 2
+        assert result['columns'][0] == {'id': 'name', 'visible': True}
+        assert result['columns'][1] == {'id': 'type', 'visible': False}
+
+    def test_captures_filters(self):
+        """Test captures filter state."""
+        from game.ui.screens.planet_list_presets import capture_planet_list_state
+
+        columns = []
+        txt_name_filter = Mock()
+        txt_name_filter.get_text = Mock(return_value="terra")
+        filter_types = {'Continental': True, 'Arid': False}
+        filter_owner = {'Player': True, 'Enemy': False}
+        ui_filters = {
+            'gravity': {'min': Mock(get_current_value=Mock(return_value=0.5)), 'max': Mock(get_current_value=Mock(return_value=2.0))},
+            'temp': {'min': Mock(get_current_value=Mock(return_value=200)), 'max': Mock(get_current_value=Mock(return_value=400))},
+            'mass': {'min': Mock(get_current_value=Mock(return_value=0.1)), 'max': Mock(get_current_value=Mock(return_value=5.0))},
+        }
+
+        result = capture_planet_list_state(columns, txt_name_filter, filter_types, filter_owner, ui_filters)
+
+        assert result['filters']['name'] == "terra"
+        assert result['filters']['types'] == {'Continental': True, 'Arid': False}
+        assert result['filters']['owner'] == {'Player': True, 'Enemy': False}
+        assert result['filters']['ranges']['gravity'] == [0.5, 2.0]
+
+
+# =============================================================================
+# apply_planet_list_state Tests
+# =============================================================================
+
+class TestApplyPlanetListState:
+    """Tests for apply_planet_list_state function."""
+
+    def test_applies_column_visibility(self):
+        """Test applies column visibility from state."""
+        from game.ui.screens.planet_list_presets import apply_planet_list_state
+
+        state = {
+            'columns': [
+                {'id': 'name', 'visible': False},
+                {'id': 'type', 'visible': True},
+            ]
+        }
+        columns = [
+            {'id': 'name', 'visible': True, 'title': 'Name'},
+            {'id': 'type', 'visible': False, 'title': 'Type'},
+        ]
+        txt_name_filter = Mock()
+        filter_types = {}
+        ui_filters = {'columns': {}}
+
+        result = apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters)
+
+        assert result[0]['visible'] is False  # name changed to False
+        assert result[1]['visible'] is True   # type changed to True
+
+    def test_applies_name_filter(self):
+        """Test applies name filter from state."""
+        from game.ui.screens.planet_list_presets import apply_planet_list_state
+
+        state = {
+            'filters': {
+                'name': 'terra'
+            }
+        }
+        columns = []
+        txt_name_filter = Mock()
+        filter_types = {}
+        ui_filters = {}
+
+        apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters)
+
+        txt_name_filter.set_text.assert_called_with('terra')
+
+    def test_applies_type_filters(self):
+        """Test applies type filters from state."""
+        from game.ui.screens.planet_list_presets import apply_planet_list_state
+
+        state = {
+            'filters': {
+                'types': {'Continental': False, 'Arid': True}
+            }
+        }
+        columns = []
+        txt_name_filter = Mock()
+        filter_types = {'Continental': True, 'Arid': False}
+        ui_filters = {'types': {}}
+
+        apply_planet_list_state(state, columns, txt_name_filter, filter_types, ui_filters)
+
+        assert filter_types == {'Continental': False, 'Arid': True}
+
+
+# =============================================================================
+# filter_planets Tests (extending existing)
+# =============================================================================
+
+class TestFilterPlanets:
+    """Tests for filter_planets function."""
+
+    def test_filter_with_no_matching_planets(self):
+        """Test filter returns empty list when no planets match."""
+        from game.ui.screens.planet_list_filters import filter_planets
+
+        planet = Mock()
+        planet._cached_type_category = "Jovian"
+        planet._cached_name_lower = "jupiter"
+        planet._cached_gravity_g = 2.5
+        planet.surface_temperature = 125
+        planet._cached_mass_earth = 318.0
+        planet.owner_id = None
+
+        # Disable Jovian type
+        filter_types = {'Continental': True, 'Jovian': False}
+
+        result = filter_planets(
+            [planet], "", filter_types, 0, 100, 0, 1000, 0, 1000,
+            {'Player': True, 'Unowned': True}, Mock(id=1)
+        )
+
+        assert len(result) == 0
+
+    def test_filter_with_all_matching(self):
+        """Test filter returns all planets when all match."""
+        from game.ui.screens.planet_list_filters import filter_planets
+
+        planets = []
+        for i in range(5):
+            p = Mock()
+            p._cached_type_category = "Continental"
+            p._cached_name_lower = f"planet{i}"
+            p._cached_gravity_g = 1.0
+            p.surface_temperature = 288
+            p._cached_mass_earth = 1.0
+            p.owner_id = 1
+            planets.append(p)
+
+        filter_types = {'Continental': True}
+
+        result = filter_planets(
+            planets, "", filter_types, 0, 10, 0, 1000, 0, 100,
+            {'Player': True}, Mock(id=1)
+        )
+
+        assert len(result) == 5
+
+    def test_filter_by_name(self):
+        """Test filter by name substring."""
+        from game.ui.screens.planet_list_filters import filter_planets
+
+        p1 = Mock()
+        p1._cached_type_category = "Continental"
+        p1._cached_name_lower = "terra prime"
+        p1._cached_gravity_g = 1.0
+        p1.surface_temperature = 288
+        p1._cached_mass_earth = 1.0
+        p1.owner_id = 1
+
+        p2 = Mock()
+        p2._cached_type_category = "Continental"
+        p2._cached_name_lower = "mars colony"
+        p2._cached_gravity_g = 0.4
+        p2.surface_temperature = 220
+        p2._cached_mass_earth = 0.1
+        p2.owner_id = 1
+
+        filter_types = {'Continental': True}
+
+        result = filter_planets(
+            [p1, p2], "terra", filter_types, 0, 10, 0, 1000, 0, 100,
+            {'Player': True}, Mock(id=1)
+        )
+
+        assert len(result) == 1
+        assert result[0] == p1
+
+    def test_filter_reset_clears_filters(self):
+        """Test filter with empty/full ranges shows all."""
+        from game.ui.screens.planet_list_filters import filter_planets
+
+        p1 = Mock()
+        p1._cached_type_category = "Continental"
+        p1._cached_name_lower = "planet1"
+        p1._cached_gravity_g = 0.1
+        p1.surface_temperature = 50
+        p1._cached_mass_earth = 0.01
+        p1.owner_id = 1
+
+        p2 = Mock()
+        p2._cached_type_category = "Continental"
+        p2._cached_name_lower = "planet2"
+        p2._cached_gravity_g = 10.0
+        p2.surface_temperature = 1000
+        p2._cached_mass_earth = 100.0
+        p2.owner_id = 1
+
+        filter_types = {'Continental': True}
+
+        # Wide ranges that include all
+        result = filter_planets(
+            [p1, p2], "", filter_types, 0, 100, 0, 2000, 0, 500,
+            {'Player': True}, Mock(id=1)
+        )
+
+        assert len(result) == 2
+
+
+# =============================================================================
+# sort_planets Tests
+# =============================================================================
+
+class TestSortPlanets:
+    """Tests for sort_planets function."""
+
+    def test_sort_by_name_ascending(self):
+        """Test sort by name ascending."""
+        from game.ui.screens.planet_list_filters import sort_planets
+
+        p1 = Mock()
+        p1.name = "Zeta"
+        p1._cached_name_lower = "zeta"
+        p2 = Mock()
+        p2.name = "Alpha"
+        p2._cached_name_lower = "alpha"
+        p3 = Mock()
+        p3.name = "Beta"
+        p3._cached_name_lower = "beta"
+
+        planets = [p1, p2, p3]
+        columns = [{'id': 'name', 'attr': 'name', 'visible': True, 'width': 100, 'title': 'Name'}]
+
+        # sort_planets(planets, sort_column_id, sort_descending, columns)
+        result = sort_planets(planets, 'name', False, columns)  # False = ascending
+
+        assert result[0]._cached_name_lower == "alpha"
+        assert result[1]._cached_name_lower == "beta"
+        assert result[2]._cached_name_lower == "zeta"
+
+    def test_sort_by_name_descending(self):
+        """Test sort by name descending."""
+        from game.ui.screens.planet_list_filters import sort_planets
+
+        p1 = Mock()
+        p1.name = "Zeta"
+        p1._cached_name_lower = "zeta"
+        p2 = Mock()
+        p2.name = "Alpha"
+        p2._cached_name_lower = "alpha"
+
+        planets = [p1, p2]
+        columns = [{'id': 'name', 'attr': 'name', 'visible': True, 'width': 100, 'title': 'Name'}]
+
+        result = sort_planets(planets, 'name', True, columns)  # True = descending
+
+        assert result[0]._cached_name_lower == "zeta"
+        assert result[1]._cached_name_lower == "alpha"
+
+    def test_sort_by_numeric_attribute(self):
+        """Test sort by numeric attribute."""
+        from game.ui.screens.planet_list_filters import sort_planets
+
+        p1 = Mock()
+        p1.surface_temperature = 500
+        p2 = Mock()
+        p2.surface_temperature = 100
+        p3 = Mock()
+        p3.surface_temperature = 300
+
+        planets = [p1, p2, p3]
+        columns = [{'id': 'temp', 'attr': 'surface_temperature', 'visible': True, 'width': 100, 'title': 'Temp'}]
+
+        result = sort_planets(planets, 'temp', False, columns)  # False = ascending
+
+        assert result[0].surface_temperature == 100
+        assert result[1].surface_temperature == 300
+        assert result[2].surface_temperature == 500
+
+
+# =============================================================================
+# ColumnManager Tests
+# =============================================================================
+
+class TestColumnManager:
+    """Tests for ColumnManager class."""
+
+    def test_get_visible_columns(self):
+        """Test get_visible_columns returns only visible."""
+        from game.ui.screens.planet_list_columns import ColumnManager
+
+        columns = [
+            {'id': 'name', 'visible': True, 'title': 'Name', 'width': 100},
+            {'id': 'type', 'visible': False, 'title': 'Type', 'width': 100},
+            {'id': 'mass', 'visible': True, 'title': 'Mass', 'width': 100},
+        ]
+
+        manager = Mock()
+        container = Mock()
+        container.get_abs_rect = Mock(return_value=pygame.Rect(0, 0, 800, 50))
+
+        col_mgr = ColumnManager(columns, manager, container, header_height=30)
+        visible = col_mgr.get_visible_columns()
+
+        assert len(visible) == 2
+        assert visible[0]['id'] == 'name'
+        assert visible[1]['id'] == 'mass'
+
+    def test_toggle_visibility(self):
+        """Test toggle_visibility toggles column."""
+        from game.ui.screens.planet_list_columns import ColumnManager
+
+        columns = [
+            {'id': 'name', 'visible': True, 'title': 'Name', 'width': 100},
+        ]
+
+        manager = Mock()
+        container = Mock()
+        container.get_abs_rect = Mock(return_value=pygame.Rect(0, 0, 800, 50))
+
+        col_mgr = ColumnManager(columns, manager, container, header_height=30)
+        col_mgr.toggle_visibility('name')
+
+        assert columns[0]['visible'] is False
+
+        col_mgr.toggle_visibility('name')
+        assert columns[0]['visible'] is True
+
+    def test_set_sort_column(self):
+        """Test setting sort column updates state."""
+        from game.ui.screens.planet_list_columns import ColumnManager
+
+        columns = [
+            {'id': 'name', 'visible': True, 'title': 'Name', 'width': 100},
+            {'id': 'type', 'visible': True, 'title': 'Type', 'width': 100},
+        ]
+
+        manager = Mock()
+        container = Mock()
+        container.get_abs_rect = Mock(return_value=pygame.Rect(0, 0, 800, 50))
+
+        col_mgr = ColumnManager(columns, manager, container, header_height=30)
+
+        # Default is 'owner', descending=False
+        assert col_mgr.sort_column_id == 'owner'
+        assert col_mgr.sort_descending is False
+
+        # Change sort column
+        col_mgr.sort_column_id = 'name'
+        col_mgr.sort_descending = True
+
+        assert col_mgr.sort_column_id == 'name'
+        assert col_mgr.sort_descending is True
+
+    def test_get_visible_columns_empty(self):
+        """Test get_visible_columns returns empty list for no visible columns."""
+        from game.ui.screens.planet_list_columns import ColumnManager
+
+        columns = [
+            {'id': 'name', 'visible': False, 'title': 'Name', 'width': 100},
+            {'id': 'type', 'visible': False, 'title': 'Type', 'width': 100},
+        ]
+        manager = Mock()
+        container = Mock()
+        container.get_abs_rect = Mock(return_value=pygame.Rect(0, 0, 800, 50))
+
+        col_mgr = ColumnManager(columns, manager, container, header_height=30)
+        visible = col_mgr.get_visible_columns()
+
+        assert len(visible) == 0
+
+
+# =============================================================================
+# gather_planets Tests
+# =============================================================================
+
+class TestGatherPlanets:
+    """Tests for gather_planets function."""
+
+    def test_gathers_from_all_systems(self, mock_galaxy, mock_empire):
+        """Test gathers planets from all systems."""
+        from game.ui.screens.planet_list_filters import gather_planets
+
+        result = gather_planets(mock_galaxy, mock_empire)
+
+        assert len(result) == 3
+
+    def test_caches_type_category(self, mock_galaxy, mock_empire):
+        """Test caches _cached_type_category on planets."""
+        from game.ui.screens.planet_list_filters import gather_planets
+
+        result = gather_planets(mock_galaxy, mock_empire)
+
+        for planet in result:
+            assert hasattr(planet, '_cached_type_category')
+
+    def test_caches_name_lower(self, mock_galaxy, mock_empire):
+        """Test caches _cached_name_lower on planets."""
+        from game.ui.screens.planet_list_filters import gather_planets
+
+        result = gather_planets(mock_galaxy, mock_empire)
+
+        for planet in result:
+            assert hasattr(planet, '_cached_name_lower')
+            assert planet._cached_name_lower == planet.name.lower()
+
+    def test_caches_gravity_g(self, mock_galaxy, mock_empire):
+        """Test caches _cached_gravity_g on planets."""
+        from game.ui.screens.planet_list_filters import gather_planets
+
+        result = gather_planets(mock_galaxy, mock_empire)
+
+        for planet in result:
+            assert hasattr(planet, '_cached_gravity_g')
+
+
+# =============================================================================
+# compute_planet_ranges Tests
+# =============================================================================
+
+class TestComputePlanetRanges:
+    """Tests for compute_planet_ranges function."""
+
+    def test_computes_gravity_range(self):
+        """Test computes gravity range from planets."""
+        from game.ui.screens.planet_list_filters import compute_planet_ranges
+
+        p1 = Mock()
+        p1.surface_gravity = 4.9  # ~0.5g
+        p1.surface_temperature = 200
+        p1.mass = 3.0e24  # ~0.5 Earth mass
+
+        p2 = Mock()
+        p2.surface_gravity = 19.6  # ~2.0g
+        p2.surface_temperature = 400
+        p2.mass = 3.0e25  # ~5.0 Earth mass
+
+        result = compute_planet_ranges([p1, p2])
+
+        # Check gravity range is computed (min <= max)
+        assert result['gravity'][0] <= result['gravity'][1]
+
+    def test_computes_temp_range(self):
+        """Test computes temperature range from planets."""
+        from game.ui.screens.planet_list_filters import compute_planet_ranges
+
+        p1 = Mock()
+        p1.surface_gravity = 9.81
+        p1.surface_temperature = 100
+        p1.mass = 5.97e24
+
+        p2 = Mock()
+        p2.surface_gravity = 9.81
+        p2.surface_temperature = 500
+        p2.mass = 5.97e24
+
+        result = compute_planet_ranges([p1, p2])
+
+        # Check temp range is computed (min <= max)
+        assert result['temp'][0] <= result['temp'][1]
+        # Min should be at most 100, max at least 500
+        assert result['temp'][0] <= 100
+        assert result['temp'][1] >= 500
+
+    def test_empty_planets_returns_defaults(self):
+        """Test empty planet list returns default ranges."""
+        from game.ui.screens.planet_list_filters import compute_planet_ranges
+
+        result = compute_planet_ranges([])
+
+        assert 'gravity' in result
+        assert 'temp' in result
+        assert 'mass' in result
