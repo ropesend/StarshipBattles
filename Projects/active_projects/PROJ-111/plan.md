@@ -16,16 +16,16 @@
 | 1. UI Framework Services | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Framework Complex (Singletons & Rendering) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Battle Layer (Screens & Panels) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Strategy Core Screens | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Strategy Core Screens | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Strategy Support Screens | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 | 6. Workshop, Setup, and Complex Screens | Not Started | [phase_6_checklist.md](phase_6_checklist.md) |
 | 7. Test Quality Improvements | Not Started | [phase_7_checklist.md](phase_7_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-11
-**Active Phase:** Phase 3 Complete - Ready for Phase 4
-**Last Action:** Phase 3 complete - added 116 new tests for battle layer (BattleScreen simulation lifecycle/win-loss/events/ticks, ShipStatsPanel/SeekerMonitorPanel/BattleControlPanel extended, MenuScene, BattleSetupScreen)
-**Next Action:** Begin Phase 4 (Strategy Core Screens)
+**Active Phase:** Phase 4 Complete - Ready for Phase 5
+**Last Action:** Phase 4 complete - added 127 new tests for strategy core screens (StrategyScreen 49 tests, StrategyInputHandler core 39 tests, StrategyRenderer 39 tests)
+**Next Action:** Begin Phase 5 (Strategy Support Screens)
 **Blockers:** None
 
 ## Overview

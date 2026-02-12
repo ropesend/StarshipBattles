@@ -14,7 +14,14 @@
 | BUG-70 | 2026-02-07 | Colonize order should load population before moving | Awaiting Confirmation | [BUG-70.md](active_bugs/BUG-70.md) |
 | BUG-73 | 2026-02-08 | Species Setup - Homeworld type selection still reports "Custom" | Awaiting Confirmation | [BUG-73.md](active_bugs/BUG-73.md) |
 | BUG-79 | 2026-02-10 | Multiple Fleet Space Yard components only get 1 Build Yard entry | Awaiting Confirmation | [BUG-79.md](active_bugs/BUG-79.md) |
+| BUG-80 | 2026-02-11 | Planets List - Planet details panel dimensions and positioning | Pending | [BUG-80.md](active_bugs/BUG-80.md) |
+| BUG-81 | 2026-02-11 | Species Setup - Load Saved Species does nothing | Pending | [BUG-81.md](active_bugs/BUG-81.md) |
+| BUG-82 | 2026-02-11 | Design Workshop - Load Design window is very slow to open | Pending | [BUG-82.md](active_bugs/BUG-82.md) |
+| BUG-83 | 2026-02-11 | Fleet Report - Missing special capability columns and filters | Pending | [BUG-83.md](active_bugs/BUG-83.md) |
+| BUG-84 | 2026-02-11 | Warp Gate Close and Planet Destroyer orders not registering | Pending | [BUG-84.md](active_bugs/BUG-84.md) |
+| BUG-85 | 2026-02-11 | New game colonies report 0 population instead of max | Pending | [BUG-85.md](active_bugs/BUG-85.md) |
+| BUG-86 | 2026-02-11 | Build Queue planet details missing resource production numbers | Pending | [BUG-86.md](active_bugs/BUG-86.md) |
 
 ## 3. Current Focus: None
-**Status:** All pending bugs fixed. BUG-77, BUG-78, BUG-79, BUG-80, BUG-81 set to Awaiting Confirmation. No pending bugs remain.
+**Status:** 7 new bugs ingested (BUG-80 through BUG-86). No active work in progress.
 Full test suite: 7659 passed, 0 failures.
