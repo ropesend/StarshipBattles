@@ -814,3 +814,466 @@ class TestTickProcessingOrder:
         ]
 
         assert call_sequence == expected_order
+
+
+# =============================================================================
+# Test: Fighter Launch Processing
+# =============================================================================
+
+class TestFighterLaunchProcessing:
+    """Tests for LAUNCH attack type (fighter spawning) during tick."""
+
+    def test_launch_attack_spawns_fighter_ship(self, battle_engine_with_ships):
+        """LAUNCH attack should create a new fighter ship."""
+        engine = battle_engine_with_ships
+
+        # Set up factory for fighter creation
+        mock_factory = Mock()
+        mock_ai = Mock()
+        mock_ai.update = Mock()
+        mock_ai.ship = Mock()
+        mock_factory.create_for_ship = Mock(return_value=mock_ai)
+        engine._ai_factory = mock_factory
+
+        source_ship = engine.ships[0]
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(0, 0)
+        source_ship.angle = 0
+
+        # Create LAUNCH attack dict
+        launch_attack = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'fighter_class': 'Fighter (Small)',
+            'origin': pygame.math.Vector2(100, 100)
+        }
+
+        source_ship.just_fired_projectiles = [launch_attack]
+        initial_ship_count = len(engine.ships)
+
+        # Mock Ship class to avoid full initialization
+        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+            mock_fighter = Mock()
+            mock_fighter.team_id = source_ship.team_id
+            mock_fighter.velocity = pygame.math.Vector2(0, 0)
+            mock_fighter.angle = 0
+            mock_fighter.is_alive = True
+            mock_fighter.position = pygame.math.Vector2(100, 100)
+            mock_fighter.just_fired_projectiles = []
+            mock_fighter.update = Mock()
+            MockShip.return_value = mock_fighter
+
+            engine.update()
+
+            # Fighter should be added to ships
+            assert mock_fighter in engine.ships
+            assert len(engine.ships) == initial_ship_count + 1
+
+    def test_launch_attack_creates_ai_controller_for_fighter(
+        self, battle_engine_with_ships
+    ):
+        """LAUNCH attack should create AI controller for spawned fighter."""
+        engine = battle_engine_with_ships
+
+        mock_factory = Mock()
+        mock_ai = Mock()
+        mock_ai.update = Mock()
+        mock_ai.ship = Mock()
+        mock_factory.create_for_ship = Mock(return_value=mock_ai)
+        engine._ai_factory = mock_factory
+
+        source_ship = engine.ships[0]
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(0, 0)
+        source_ship.angle = 0
+
+        launch_attack = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'origin': pygame.math.Vector2(0, 0)
+        }
+
+        source_ship.just_fired_projectiles = [launch_attack]
+
+        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+            mock_fighter = Mock()
+            mock_fighter.team_id = source_ship.team_id
+            mock_fighter.velocity = pygame.math.Vector2(0, 0)
+            mock_fighter.angle = 0
+            mock_fighter.is_alive = True
+            mock_fighter.position = pygame.math.Vector2(0, 0)
+            mock_fighter.just_fired_projectiles = []
+            mock_fighter.update = Mock()
+            MockShip.return_value = mock_fighter
+
+            engine.update()
+
+            # Factory should be called to create AI for fighter
+            mock_factory.create_for_ship.assert_called_once()
+            # AI should be added to controllers
+            assert mock_ai in engine.ai_controllers
+
+    def test_launch_attack_fighter_inherits_team_id(self, battle_engine_with_ships):
+        """Spawned fighter should inherit team_id from source ship."""
+        engine = battle_engine_with_ships
+
+        mock_factory = Mock()
+        mock_ai = Mock()
+        mock_ai.update = Mock()
+        mock_ai.ship = Mock()
+        mock_factory.create_for_ship = Mock(return_value=mock_ai)
+        engine._ai_factory = mock_factory
+
+        source_ship = engine.ships[0]
+        source_ship.team_id = 0
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(0, 0)
+        source_ship.angle = 0
+
+        launch_attack = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'origin': pygame.math.Vector2(0, 0)
+        }
+
+        source_ship.just_fired_projectiles = [launch_attack]
+
+        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+            mock_fighter = Mock()
+            mock_fighter.team_id = source_ship.team_id  # Must match for enemy_team calc
+            mock_fighter.velocity = pygame.math.Vector2(0, 0)
+            mock_fighter.angle = 0
+            mock_fighter.is_alive = True
+            mock_fighter.position = pygame.math.Vector2(0, 0)
+            mock_fighter.just_fired_projectiles = []
+            mock_fighter.update = Mock()
+            MockShip.return_value = mock_fighter
+
+            engine.update()
+
+            # Verify Ship was called with correct team_id
+            MockShip.assert_called_once()
+            call_kwargs = MockShip.call_args[1]
+            assert call_kwargs['team_id'] == source_ship.team_id
+
+    def test_launch_attack_without_ai_factory_raises_error(
+        self, battle_engine_with_ships
+    ):
+        """LAUNCH without ai_factory should raise ValueError."""
+        engine = battle_engine_with_ships
+        engine._ai_factory = None
+
+        source_ship = engine.ships[0]
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(0, 0)
+        source_ship.angle = 0
+
+        launch_attack = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'origin': pygame.math.Vector2(0, 0)
+        }
+
+        source_ship.just_fired_projectiles = [launch_attack]
+
+        with patch('game.simulation.systems.battle_engine.Ship'):
+            with pytest.raises(ValueError, match="ai_factory"):
+                engine.update()
+
+    def test_launch_attack_fighter_velocity_boosted(self, battle_engine_with_ships):
+        """Spawned fighter should have launch velocity boost."""
+        engine = battle_engine_with_ships
+
+        mock_factory = Mock()
+        mock_ai = Mock()
+        mock_ai.update = Mock()
+        mock_ai.ship = Mock()
+        mock_factory.create_for_ship = Mock(return_value=mock_ai)
+        engine._ai_factory = mock_factory
+
+        source_ship = engine.ships[0]
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(10, 5)
+        source_ship.angle = 0  # Facing right
+
+        launch_attack = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'origin': pygame.math.Vector2(0, 0)
+        }
+
+        source_ship.just_fired_projectiles = [launch_attack]
+
+        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+            mock_fighter = Mock()
+            mock_fighter.team_id = 0
+            mock_fighter.velocity = pygame.math.Vector2(0, 0)
+            mock_fighter.angle = 0
+            mock_fighter.is_alive = True
+            mock_fighter.position = pygame.math.Vector2(0, 0)
+            mock_fighter.just_fired_projectiles = []
+            mock_fighter.update = Mock()
+            MockShip.return_value = mock_fighter
+
+            engine.update()
+
+            # Fighter velocity should be set (inherits + boost)
+            # Check that velocity was modified (not zero)
+            assert mock_fighter.velocity != pygame.math.Vector2(0, 0)
+
+
+# =============================================================================
+# Test: Unknown Attack Type Handling
+# =============================================================================
+
+class TestUnknownAttackTypeHandling:
+    """Tests for handling unknown or invalid attack types."""
+
+    def test_unknown_string_attack_type_ignored(self, battle_engine_with_ships):
+        """Unknown string attack types should be silently ignored."""
+        engine = battle_engine_with_ships
+
+        attack = Mock()
+        attack.type = 'unknown_type'
+        attack.position = pygame.math.Vector2(0, 0)
+
+        engine.ships[0].just_fired_projectiles = [attack]
+        engine.projectile_manager.add_projectile = Mock()
+        engine.collision_system.process_beam_attack = Mock()
+
+        # Should not raise
+        engine.update()
+
+        # Neither projectile nor beam should be processed
+        engine.projectile_manager.add_projectile.assert_not_called()
+        engine.collision_system.process_beam_attack.assert_not_called()
+
+    def test_none_attack_type_handled(self, battle_engine_with_ships):
+        """Attack with None type should be handled gracefully."""
+        engine = battle_engine_with_ships
+
+        attack = Mock()
+        attack.type = None
+        attack.position = pygame.math.Vector2(0, 0)
+
+        engine.ships[0].just_fired_projectiles = [attack]
+        engine.projectile_manager.add_projectile = Mock()
+
+        # Should not raise
+        engine.update()
+
+        # Should not add as projectile
+        engine.projectile_manager.add_projectile.assert_not_called()
+
+    def test_empty_just_fired_projectiles_handled(self, battle_engine_with_ships):
+        """Empty just_fired_projectiles should be handled gracefully."""
+        engine = battle_engine_with_ships
+
+        engine.ships[0].just_fired_projectiles = []
+        engine.ships[1].just_fired_projectiles = []
+
+        # Should not raise
+        engine.update()
+
+        # Tick counter should still increment
+        assert engine.tick_counter == 1
+
+
+# =============================================================================
+# Test: Dict-based Attack Processing
+# =============================================================================
+
+class TestDictBasedAttackProcessing:
+    """Tests for dictionary-style attack data handling."""
+
+    def test_dict_projectile_not_added_to_manager(self, battle_engine_with_ships):
+        """Dict-style projectile attacks should NOT be added to projectile manager.
+
+        Note: The engine checks 'if not is_dict' before adding projectiles.
+        This is intentional - dict attacks are older format, object attacks are new.
+        """
+        engine = battle_engine_with_ships
+
+        projectile_dict = {
+            'type': AttackType.PROJECTILE,
+            'position': (0, 0),
+            'velocity': (10, 0),
+            'damage': 10
+        }
+
+        engine.ships[0].just_fired_projectiles = [projectile_dict]
+        engine.projectile_manager.add_projectile = Mock()
+
+        engine.update()
+
+        # Dict projectiles are NOT added (code checks 'if not is_dict')
+        engine.projectile_manager.add_projectile.assert_not_called()
+
+    def test_dict_missile_not_added_to_manager(self, battle_engine_with_ships):
+        """Dict-style missile attacks should NOT be added to projectile manager."""
+        engine = battle_engine_with_ships
+
+        missile_dict = {
+            'type': AttackType.MISSILE,
+            'position': (0, 0),
+            'target': Mock()
+        }
+
+        engine.ships[0].just_fired_projectiles = [missile_dict]
+        engine.projectile_manager.add_projectile = Mock()
+
+        engine.update()
+
+        # Dict missiles are NOT added (code checks 'if not is_dict')
+        engine.projectile_manager.add_projectile.assert_not_called()
+
+    def test_dict_launch_attack_processed(self, battle_engine_with_ships):
+        """Dict-style LAUNCH attacks should still spawn fighters."""
+        engine = battle_engine_with_ships
+
+        mock_factory = Mock()
+        mock_ai = Mock()
+        mock_ai.update = Mock()
+        mock_ai.ship = Mock()
+        mock_factory.create_for_ship = Mock(return_value=mock_ai)
+        engine._ai_factory = mock_factory
+
+        source_ship = engine.ships[0]
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(0, 0)
+        source_ship.angle = 0
+
+        # LAUNCH is always dict-based
+        launch_dict = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'origin': pygame.math.Vector2(0, 0)
+        }
+
+        source_ship.just_fired_projectiles = [launch_dict]
+        initial_count = len(engine.ships)
+
+        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+            mock_fighter = Mock()
+            mock_fighter.team_id = 0
+            mock_fighter.velocity = pygame.math.Vector2(0, 0)
+            mock_fighter.angle = 0
+            mock_fighter.is_alive = True
+            mock_fighter.position = pygame.math.Vector2(0, 0)
+            mock_fighter.just_fired_projectiles = []
+            mock_fighter.update = Mock()
+            MockShip.return_value = mock_fighter
+
+            engine.update()
+
+            assert len(engine.ships) == initial_count + 1
+
+
+# =============================================================================
+# Test: Logger Integration
+# =============================================================================
+
+class TestLoggerIntegration:
+    """Tests for battle logger integration during tick processing."""
+
+    def test_projectile_fired_logged(self, battle_engine_with_ships):
+        """Projectile firing should be logged."""
+        engine = battle_engine_with_ships
+        engine.logger = Mock()
+        engine.logger.log = Mock()
+
+        projectile = Mock()
+        projectile.type = AttackType.PROJECTILE
+        projectile.position = pygame.math.Vector2(50, 50)
+
+        engine.ships[0].just_fired_projectiles = [projectile]
+        engine.projectile_manager.add_projectile = Mock()
+
+        engine.update()
+
+        # Verify log was called with projectile message
+        log_calls = [str(c) for c in engine.logger.log.call_args_list]
+        assert any('Projectile' in str(c) for c in log_calls)
+
+    def test_missile_fired_logged(self, battle_engine_with_ships):
+        """Missile firing should be logged."""
+        engine = battle_engine_with_ships
+        engine.logger = Mock()
+        engine.logger.log = Mock()
+
+        missile = Mock()
+        missile.type = AttackType.MISSILE
+        missile.target = Mock()
+
+        engine.ships[0].just_fired_projectiles = [missile]
+        engine.projectile_manager.add_projectile = Mock()
+
+        engine.update()
+
+        # Verify log was called with missile message
+        log_calls = [str(c) for c in engine.logger.log.call_args_list]
+        assert any('Missile' in str(c) for c in log_calls)
+
+    def test_fighter_launch_logged(self, battle_engine_with_ships):
+        """Fighter launch should be logged."""
+        engine = battle_engine_with_ships
+        engine.logger = Mock()
+        engine.logger.log = Mock()
+
+        mock_factory = Mock()
+        mock_ai = Mock()
+        mock_ai.update = Mock()
+        mock_ai.ship = Mock()
+        mock_factory.create_for_ship = Mock(return_value=mock_ai)
+        engine._ai_factory = mock_factory
+
+        source_ship = engine.ships[0]
+        source_ship.color = (255, 0, 0)
+        source_ship.theme_id = "test_theme"
+        source_ship.registries = Mock()
+        source_ship.velocity = pygame.math.Vector2(0, 0)
+        source_ship.angle = 0
+
+        launch_attack = {
+            'type': AttackType.LAUNCH,
+            'source': source_ship,
+            'hangar': Mock(),
+            'origin': pygame.math.Vector2(0, 0)
+        }
+
+        source_ship.just_fired_projectiles = [launch_attack]
+
+        with patch('game.simulation.systems.battle_engine.Ship') as MockShip:
+            mock_fighter = Mock()
+            mock_fighter.team_id = 0
+            mock_fighter.velocity = pygame.math.Vector2(0, 0)
+            mock_fighter.angle = 0
+            mock_fighter.is_alive = True
+            mock_fighter.position = pygame.math.Vector2(0, 0)
+            mock_fighter.just_fired_projectiles = []
+            mock_fighter.update = Mock()
+            MockShip.return_value = mock_fighter
+
+            engine.update()
+
+        # Verify log was called with LAUNCH message
+        log_calls = [str(c) for c in engine.logger.log.call_args_list]
+        assert any('LAUNCH' in str(c) for c in log_calls)
