@@ -21,7 +21,7 @@ from game.ui.screens.event_log_window import EventLogWindow
 from game.ui.screens.empire_panel_window import EmpirePanelWindow
 
 if TYPE_CHECKING:
-    from game.core.input_mapper import InputMapper
+    from game.ui.services.input_mapper import InputMapper
 
 
 class StrategyWindowManager:
@@ -172,6 +172,12 @@ class StrategyWindowManager:
             on_close_callback=self._on_empire_build_queue_closed,
             on_navigate_to_hex=self.scene.on_navigate_to_hex_build,
         )
+
+    def close_empire_build_queue_window(self) -> None:
+        """Close the empire build queue window if open."""
+        if self.empire_build_queue_window:
+            self.empire_build_queue_window.kill()
+            self.empire_build_queue_window = None
 
     def _on_empire_build_queue_closed(self) -> None:
         """Callback when empire build queue window is closed."""

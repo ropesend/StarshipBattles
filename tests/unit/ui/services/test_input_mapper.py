@@ -7,7 +7,7 @@ import pygame
 import pytest
 
 from game.core.input_actions import InputAction, KeyBinding
-from game.core.input_mapper import InputMapper
+from game.ui.services.input_mapper import InputMapper
 from game.core.paths import Paths
 
 
@@ -548,13 +548,13 @@ class TestContextOverlap:
         """fleet and strategy overlap (both can be active together)."""
         # If we bind something in fleet context that uses same key as strategy action,
         # they should conflict since these contexts overlap
-        from game.core.input_mapper import _CONTEXT_OVERLAP
+        from game.ui.services.input_mapper import _CONTEXT_OVERLAP
         assert "strategy" in _CONTEXT_OVERLAP.get("fleet", set())
         assert "fleet" in _CONTEXT_OVERLAP.get("strategy", set())
 
     def test_contexts_overlap_build_queue_isolated(self, mapper):
         """build_queue doesn't overlap fleet."""
-        from game.core.input_mapper import _CONTEXT_OVERLAP
+        from game.ui.services.input_mapper import _CONTEXT_OVERLAP
         assert "fleet" not in _CONTEXT_OVERLAP.get("build_queue", set())
 
     def test_contexts_overlap_none_context_always_true(self, mapper):
@@ -567,7 +567,7 @@ class TestContextOverlap:
 
     def test_contexts_overlap_same_context(self, mapper):
         """fleet overlaps with itself."""
-        from game.core.input_mapper import _CONTEXT_OVERLAP
+        from game.ui.services.input_mapper import _CONTEXT_OVERLAP
         assert "fleet" in _CONTEXT_OVERLAP.get("fleet", set())
 
 
@@ -576,35 +576,35 @@ class TestModifierExtraction:
 
     def test_extract_modifiers_ctrl(self, make_keydown):
         """KMOD_CTRL -> frozenset({'ctrl'})."""
-        from game.core.input_mapper import InputMapper
+        from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_CTRL)
         mods = InputMapper._extract_modifiers(event.mod)
         assert mods == frozenset({"ctrl"})
 
     def test_extract_modifiers_shift(self, make_keydown):
         """KMOD_SHIFT -> frozenset({'shift'})."""
-        from game.core.input_mapper import InputMapper
+        from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_SHIFT)
         mods = InputMapper._extract_modifiers(event.mod)
         assert mods == frozenset({"shift"})
 
     def test_extract_modifiers_alt(self, make_keydown):
         """KMOD_ALT -> frozenset({'alt'})."""
-        from game.core.input_mapper import InputMapper
+        from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_ALT)
         mods = InputMapper._extract_modifiers(event.mod)
         assert mods == frozenset({"alt"})
 
     def test_extract_modifiers_multiple(self, make_keydown):
         """KMOD_CTRL|KMOD_SHIFT -> frozenset({'ctrl', 'shift'})."""
-        from game.core.input_mapper import InputMapper
+        from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_CTRL | pygame.KMOD_SHIFT)
         mods = InputMapper._extract_modifiers(event.mod)
         assert mods == frozenset({"ctrl", "shift"})
 
     def test_extract_modifiers_none(self, make_keydown):
         """0 -> frozenset()."""
-        from game.core.input_mapper import InputMapper
+        from game.ui.services.input_mapper import InputMapper
         mods = InputMapper._extract_modifiers(0)
         assert mods == frozenset()
 

@@ -39,7 +39,7 @@ from game.core.constants import LayerType
 
 if TYPE_CHECKING:
     from game.core.hex_math import HexCoord
-    from game.simulation.entities.layer_data import LayerData
+    # Note: LayerData not imported - protocols use Any for cross-layer types
 
 
 # =============================================================================
@@ -415,8 +415,8 @@ class IPostBattleShip(Protocol):
         ...
 
     @property
-    def layers(self) -> Dict['LayerType', 'LayerData']:
-        """Ship layers containing components."""
+    def layers(self) -> Dict['LayerType', Any]:
+        """Ship layers containing components (LayerData instances)."""
         ...
 
     @property
@@ -458,7 +458,7 @@ class IResourceHolder(Protocol):
     def is_derelict(self) -> bool: ...
 
     @property
-    def layers(self) -> Dict['LayerType', 'LayerData']: ...
+    def layers(self) -> Dict['LayerType', Any]: ...
 
 
 def is_resource_holder(obj: Any) -> TypeGuard[IResourceHolder]:

@@ -16,7 +16,7 @@ from typing import Optional
 
 import pygame
 import pygame_gui
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.paths import Paths
 from game.core.constants import PLANET_RESOURCES
 from game.ui.screens.build_queue_helpers import RESOURCE_ABBREVS
@@ -355,6 +355,10 @@ class StrategyUI:
     def open_empire_build_queue_window(self):
         """Open the Empire-Wide Build Queue Window (PROJ-76)."""
         self._window_manager.open_empire_build_queue_window()
+
+    def close_empire_build_queue_window(self):
+        """Close the Empire-Wide Build Queue Window if open."""
+        self._window_manager.close_empire_build_queue_window()
 
     def open_event_log(self):
         """Open the Event Log Window showing all events (PROJ-77)."""

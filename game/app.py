@@ -25,7 +25,7 @@ from game.ui.screens.galaxy_test import GalaxyTestScreen
 from game.ui.screens.menu_scene import MenuScene
 from game.core.profiling import Profiler, profile_action
 from game.core.protocols import IScene
-from game.core.input_mapper import InputMapper
+from game.ui.services.input_mapper import InputMapper
 from game.core.input_actions import InputAction
 from game.exit_dialog import (
     draw_exit_dialog, handle_exit_dialog_click, handle_exit_dialog_cancel

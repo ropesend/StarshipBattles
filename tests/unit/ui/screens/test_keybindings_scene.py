@@ -22,7 +22,7 @@ import pygame
 import pygame_gui
 
 from game.core.input_actions import InputAction, KeyBinding, ACTION_GROUPS, ACTION_DISPLAY_NAMES
-from game.core.input_mapper import InputMapper
+from game.ui.services.input_mapper import InputMapper
 from game.core.paths import Paths
 
 

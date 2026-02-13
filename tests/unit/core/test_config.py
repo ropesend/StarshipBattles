@@ -88,26 +88,33 @@ class TestBattleConfig:
 
 
 class TestUIConfig:
-    """Tests for UIConfig."""
+    """Tests for UIConfig (now in game.ui.config)."""
 
     def test_panel_dimensions(self):
         """Panel dimension values exist."""
-        from game.core.config import UIConfig
+        from game.ui.config import UIConfig
 
         assert hasattr(UIConfig, 'PANEL_PADDING')
         assert isinstance(UIConfig.PANEL_PADDING, int)
 
     def test_toast_dimensions(self):
         """Toast notification dimensions exist and have correct values."""
-        from game.core.config import UIConfig
+        from game.ui.config import UIConfig
 
         assert UIConfig.TOAST_WIDTH == 300
         assert UIConfig.TOAST_HEIGHT == 60
 
     def test_confirmation_dialog_dimensions(self):
         """Confirmation dialog dimensions exist and have correct values."""
-        from game.core.config import UIConfig
+        from game.ui.config import UIConfig
 
         assert UIConfig.CONFIRM_DIALOG_WIDTH == 400
         assert UIConfig.CONFIRM_DIALOG_HEIGHT == 200
+
+    def test_backward_compat_import_from_core(self):
+        """UIConfig can still be imported from game.core.config for backward compat."""
+        from game.core.config import UIConfig
+
+        # Should work due to re-export
+        assert UIConfig.PANEL_PADDING == 5
 

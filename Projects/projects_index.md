@@ -4,6 +4,13 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-119 | Test Coverage -- Strategy and UI | Planning | 2026-02-12 | 2026-02-12 |
+| PROJ-118 | Test Coverage -- Core and Simulation | Planning | 2026-02-12 | 2026-02-12 |
+| PROJ-117 | Legacy Dead Code Eradication | Planning | 2026-02-12 | 2026-02-12 |
+| PROJ-116 | God Class Decomposition | Planning | 2026-02-12 | 2026-02-12 |
+| PROJ-115 | Duplication Elimination | Planning | 2026-02-12 | 2026-02-12 |
+| PROJ-114 | Consistency Standardization | Planning | 2026-02-12 | 2026-02-12 |
+| PROJ-113 | Architecture Layer Violations | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-111 | Test Coverage - UI and Framework | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-110 | Test Coverage - Core Systems | Planning | 2026-02-11 | 2026-02-11 |
@@ -209,7 +216,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-113
+## Next Project ID: PROJ-120
 
 ---
 

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pygame
 from typing import TYPE_CHECKING
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 from game.core.protocols import is_star, is_planet, is_fleet, is_warp_point, is_star_system
 from game.core.hex_math import hex_to_pixel
@@ -521,9 +521,7 @@ class StrategyScreen:
             return
 
         # Close the empire build queue window
-        if self.ui.empire_build_queue_window:
-            self.ui.empire_build_queue_window.kill()
-            self.ui._on_empire_build_queue_closed()
+        self.ui.close_empire_build_queue_window()
 
         from game.ui.screens.build_queue_screen import BuildQueueScreen
         from game.strategy.systems.design_library import DesignLibrary

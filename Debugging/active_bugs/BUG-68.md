@@ -8,7 +8,7 @@ In the Fleet Report I need to be able to select a ship, the Ship report should s
 Medium
 
 ## Status
-Awaiting Confirmation
+In-Progress
 
 ## Root Cause
 
@@ -46,3 +46,9 @@ All 56 fleet report window tests pass (37 main + 19 multi-select).
 - 2026-02-07: Original fix applied (added remove button to ShipDetailPanel)
 - 2026-02-11: Fix rejected - panel was wrong type (DesignReportPanel vs ShipDetailPanel)
 - 2026-02-11: Reworked - swapped DesignReportPanel for ShipDetailPanel, wired callbacks, forwarded events
+
+---
+### Fix Rejected [2026-02-11 12:00]
+**Reason:** 68
+**New Constraints:** None provided
+---

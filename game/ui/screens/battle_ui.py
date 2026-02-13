@@ -1,7 +1,7 @@
 import pygame
 import math
 from game.core.logger import log_debug
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
 class BattleUI:

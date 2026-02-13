@@ -7,7 +7,7 @@ PROJ-44: Refactored to use FleetListViewModel, ColumnManager, and image scaling 
 import pygame
 from pygame_gui.elements import UIWindow, UIPanel, UILabel, UIButton, UIVerticalScrollBar, UIImage
 
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.ui.screens.fleet_report_filters import calculate_fleet_stats
 from game.ui.screens.fleet_report_view_model import FleetListViewModel
 from game.ui.screens.column_manager import ColumnManager

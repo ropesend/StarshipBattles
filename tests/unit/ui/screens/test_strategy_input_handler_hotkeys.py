@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 import pygame
 
 from game.core.input_actions import InputAction, KeyBinding
-from game.core.input_mapper import InputMapper
+from game.ui.services.input_mapper import InputMapper
 from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
 

@@ -10,7 +10,7 @@ StrategyMetadataService is used for strategy name display - core layer access.
 import pygame
 from game.simulation.components.component_constants import ComponentStatus
 from game.core.strategy_metadata import StrategyMetadataService
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.constants import CombatConstants, LayerType, ResourceType
 
 

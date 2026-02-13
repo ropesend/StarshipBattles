@@ -16,7 +16,8 @@ import time
 from typing import Optional, List, TYPE_CHECKING
 
 from game.core.logger import log_debug, log_info, log_warning
-from game.core.config import UIConfig, PhysicsConfig
+from game.core.config import PhysicsConfig
+from game.ui.config import UIConfig
 from game.ui.renderer.game_renderer import draw_ship
 from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_ui import BattleUI

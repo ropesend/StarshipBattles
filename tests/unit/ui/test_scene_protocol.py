@@ -81,7 +81,7 @@ class TestISceneProtocolCompliance:
         """StrategyScreen implements IScene protocol."""
         from game.core.protocols import IScene
         from game.ui.screens.strategy_screen import StrategyScreen
-        from game.core.input_mapper import InputMapper
+        from game.ui.services.input_mapper import InputMapper
 
         input_mapper = InputMapper()
         scene = StrategyScreen(800, 600, scene_callback=lambda action, **kw: None, input_mapper=input_mapper)

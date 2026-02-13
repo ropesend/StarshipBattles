@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 
-from game.core.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import ScreenshotManager
 from game.core.registry import RegistryManager
 
 
@@ -27,10 +27,10 @@ def screenshot_manager():
 
 
 class TestScreenshotManager:
-    @patch('game.core.screenshot_manager.pygame.image.save')
-    @patch('game.core.screenshot_manager.pygame.display.get_surface')
-    @patch('game.core.screenshot_manager.os.path.exists')
-    @patch('game.core.screenshot_manager.os.makedirs')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.display.get_surface')
+    @patch('game.ui.services.screenshot_manager.os.path.exists')
+    @patch('game.ui.services.screenshot_manager.os.makedirs')
     def test_capture_full(self, mock_makedirs, mock_exists, mock_get_surface, mock_save, screenshot_manager):
         mock_exists.return_value = True
         mock_surface = MagicMock()
@@ -45,8 +45,8 @@ class TestScreenshotManager:
         assert "screenshot_" in filepath
         assert ".png" in filepath
 
-    @patch('game.core.screenshot_manager.pygame.image.save')
-    @patch('game.core.screenshot_manager.pygame.display.get_surface')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.display.get_surface')
     def test_capture_region(self, mock_get_surface, mock_save, screenshot_manager):
         mock_surface = MagicMock()
         mock_rect = MagicMock()
@@ -72,8 +72,8 @@ class TestScreenshotManager:
         assert saved_surface == mock_subsurface
         assert "region" in filepath
 
-    @patch('game.core.screenshot_manager.pygame.image.save')
-    @patch('game.core.screenshot_manager.pygame.display.get_surface')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.display.get_surface')
     def test_capture_step_sequence(self, mock_get_surface, mock_save, screenshot_manager):
         mock_surface = MagicMock()
         mock_get_surface.return_value = mock_surface

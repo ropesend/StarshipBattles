@@ -11,7 +11,7 @@ argument-hint: [optional: directory scope, e.g., game/simulation/]
 
 ## Overview
 
-This skill launches 25 Explore agents (5 sweep types x 5 module shards) in 5 sequential waves of 5 parallel agents each. Each agent exhaustively scans its assigned shard for one category of issues.
+This skill launches 25 general-purpose agents (5 sweep types x 5 module shards) in 5 sequential waves of 5 parallel agents each. Each agent exhaustively scans its assigned shard for one category of issues.
 
 ## Scope
 
@@ -76,7 +76,7 @@ Read all 5 sweep prompt files:
 For each wave (sweep type), launch 5 Explore agents **in a SINGLE message using 5 parallel Task tool calls**.
 
 **Agent configuration for each Task call:**
-- `subagent_type`: `Explore`
+- `subagent_type`: `general-purpose`
 - `description`: Short description like "DUP sweep: UI-Screens"
 - `prompt`: The sweep prompt file content with these placeholders replaced:
   - `{SCOPE}` -> The shard's directories (e.g., "game/ui/screens/ and game/ui/panels/")

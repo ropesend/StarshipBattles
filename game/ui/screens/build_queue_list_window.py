@@ -10,7 +10,7 @@ from pygame_gui.elements import UIWindow, UILabel
 from game.core.input_actions import InputAction
 
 if TYPE_CHECKING:
-    from game.core.input_mapper import InputMapper
+    from game.ui.services.input_mapper import InputMapper
 
 
 class BuildQueueListWindow(UIWindow):

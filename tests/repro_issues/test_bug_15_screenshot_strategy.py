@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 import pygame
 
-from game.core.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import ScreenshotManager
 
 
 class TestScreenshotStrategyLayerSupport:

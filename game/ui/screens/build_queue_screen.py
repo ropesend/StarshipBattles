@@ -12,11 +12,11 @@ import pygame_gui.elements as ui
 import pygame_gui.windows
 from typing import TYPE_CHECKING, List, Optional, Callable, Set
 
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.constants import PLANET_RESOURCES
 from game.core.input_actions import InputAction
 from game.core.logger import log_info, log_warning, log_debug
-from game.core.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import ScreenshotManager
 from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet_production
 from game.ui.panels.design_report_panel import DesignReportPanel
 from game.ui.panels.build_queue_portraits import BuildQueuePortraitLoader
@@ -28,7 +28,7 @@ from game.ui.screens.build_queue_helpers import format_empire_resources, format_
 from game.ui.screens.build_queue_selector import BuildQueueSelector
 
 if TYPE_CHECKING:
-    from game.core.input_mapper import InputMapper
+    from game.ui.services.input_mapper import InputMapper
     from game.strategy.data.build_context import BuildContext
     from game.strategy.data.planet import Planet
     from game.strategy.data.fleet import Fleet

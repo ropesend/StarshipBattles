@@ -6,7 +6,7 @@ binding table loaded from JSON. Supports user overrides, conflict detection,
 and save/reset operations.
 
 Usage:
-    from game.core.input_mapper import InputMapper
+    from game.ui.services.input_mapper import InputMapper
     from game.core.input_actions import InputAction
     from game.core.paths import Paths
 

@@ -206,6 +206,62 @@
 
 ---
 
+- [ ] **PROJ-113: Architecture Layer Violations**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-113/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-113/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-116: God Class Decomposition**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-116/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-116/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-117: Legacy Dead Code Eradication**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-117/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-117/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-115: Duplication Elimination**
+  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-115/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-115/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-114: Consistency Standardization**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-114/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-114/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-118: Test Coverage -- Core and Simulation**
+  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-118/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-118/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-119: Test Coverage -- Strategy and UI**
+  - **Phases:** 3 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-119/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-119/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |

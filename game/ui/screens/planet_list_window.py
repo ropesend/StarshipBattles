@@ -4,9 +4,9 @@ from game.core.constants import PLANET_RESOURCES
 from pygame_gui.elements import UIWindow, UIPanel, UIButton, UIDropDownMenu, UIVerticalScrollBar
 from pygame_gui import UI_TEXT_ENTRY_FINISHED, UI_BUTTON_PRESSED
 
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
-from game.core.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import ScreenshotManager
 from game.ui.screens.planet_list_filters import (
     gather_planets, filter_planets, sort_planets,
     compute_planet_ranges, get_system_name, get_owner_name, get_mass_earth, get_resource_str

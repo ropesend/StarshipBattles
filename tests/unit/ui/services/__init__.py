@@ -1,1 +1,1 @@
-"""Tests for UI services layer."""
+# UI services tests

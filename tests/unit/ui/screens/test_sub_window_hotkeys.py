@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch, PropertyMock, call
 import pygame
 
 from game.core.input_actions import InputAction, KeyBinding
-from game.core.input_mapper import InputMapper
+from game.ui.services.input_mapper import InputMapper
 
 
 # -----------------------------------------------------------------------

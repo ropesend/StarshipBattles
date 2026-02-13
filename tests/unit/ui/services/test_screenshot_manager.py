@@ -1,5 +1,5 @@
 """
-Unit tests for game/core/screenshot_manager.py
+Unit tests for game/ui/services/screenshot_manager.py
 
 Tests singleton behavior, capture functionality, and clipboard operations.
 All tests mock pygame and filesystem operations.
@@ -15,15 +15,15 @@ class TestScreenshotManagerSingleton:
     def test_instance_returns_same_object(self):
         """Two calls return same instance."""
         # Need to reset before test to ensure clean state
-        from game.core.screenshot_manager import ScreenshotManager
+        from game.ui.services.screenshot_manager import ScreenshotManager
         from game.core.singleton import SingletonMeta
 
         # Clear any existing instance
         if ScreenshotManager in SingletonMeta._instances:
             del SingletonMeta._instances[ScreenshotManager]
 
-        with patch('game.core.screenshot_manager.os.path.exists', return_value=True):
-            with patch('game.core.screenshot_manager.os.makedirs'):
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
                 instance1 = ScreenshotManager.instance()
                 instance2 = ScreenshotManager.instance()
 
@@ -35,15 +35,15 @@ class TestScreenshotManagerSingleton:
 
     def test_reset_allows_new_instance(self):
         """After reset(), instance() creates new object."""
-        from game.core.screenshot_manager import ScreenshotManager
+        from game.ui.services.screenshot_manager import ScreenshotManager
         from game.core.singleton import SingletonMeta
 
         # Clear any existing instance
         if ScreenshotManager in SingletonMeta._instances:
             del SingletonMeta._instances[ScreenshotManager]
 
-        with patch('game.core.screenshot_manager.os.path.exists', return_value=True):
-            with patch('game.core.screenshot_manager.os.makedirs'):
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
                 instance1 = ScreenshotManager.instance()
 
                 # Reset by removing from SingletonMeta
@@ -65,15 +65,15 @@ class TestScreenshotCapture:
     @pytest.fixture
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
-        from game.core.screenshot_manager import ScreenshotManager
+        from game.ui.services.screenshot_manager import ScreenshotManager
         from game.core.singleton import SingletonMeta
 
         # Clear any existing instance
         if ScreenshotManager in SingletonMeta._instances:
             del SingletonMeta._instances[ScreenshotManager]
 
-        with patch('game.core.screenshot_manager.os.path.exists', return_value=True):
-            with patch('game.core.screenshot_manager.os.makedirs'):
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
                 manager = ScreenshotManager.instance()
 
         yield manager
@@ -87,7 +87,7 @@ class TestScreenshotCapture:
         mock_manager.enabled = False
         mock_surface = Mock()
 
-        with patch('game.core.screenshot_manager.pygame') as mock_pygame:
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
             mock_manager.capture(surface=mock_surface)
 
         # pygame.image.save should not be called
@@ -97,9 +97,9 @@ class TestScreenshotCapture:
         """Logs warning when surface is None."""
         mock_manager.enabled = True
 
-        with patch('game.core.screenshot_manager.pygame') as mock_pygame:
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
             mock_pygame.display.get_surface.return_value = None
-            with patch('game.core.screenshot_manager.log_warning') as mock_log:
+            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
                 mock_manager.capture(surface=None)
 
         mock_log.assert_called()
@@ -110,8 +110,8 @@ class TestScreenshotCapture:
         mock_surface = Mock()
         mock_surface.get_rect.return_value = Mock(width=100, height=100)
 
-        with patch('game.core.screenshot_manager.pygame') as mock_pygame:
-            with patch('game.core.screenshot_manager.log_info'):
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            with patch('game.ui.services.screenshot_manager.log_info'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture(surface=mock_surface, label="test_label")
 
@@ -139,8 +139,8 @@ class TestScreenshotCapture:
         mock_sub = Mock()
         mock_surface.subsurface.return_value = mock_sub
 
-        with patch('game.core.screenshot_manager.pygame') as mock_pygame:
-            with patch('game.core.screenshot_manager.log_info'):
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            with patch('game.ui.services.screenshot_manager.log_info'):
                 with patch.object(mock_manager, '_copy_to_clipboard'):
                     mock_manager.capture(surface=mock_surface, region=region)
 
@@ -159,8 +159,8 @@ class TestScreenshotCapture:
         region = Mock()
         region.clip.return_value = Mock(width=0, height=0)
 
-        with patch('game.core.screenshot_manager.pygame'):
-            with patch('game.core.screenshot_manager.log_warning') as mock_log:
+        with patch('game.ui.services.screenshot_manager.pygame'):
+            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
                 mock_manager.capture(surface=mock_surface, region=region)
 
         mock_log.assert_called()
@@ -172,8 +172,8 @@ class TestScreenshotCapture:
         mock_surface = Mock()
         mock_surface.get_rect.return_value = Mock(width=100, height=100)
 
-        with patch('game.core.screenshot_manager.pygame.image.save', side_effect=IOError("test error")):
-            with patch('game.core.screenshot_manager.log_error') as mock_log:
+        with patch('game.ui.services.screenshot_manager.pygame.image.save', side_effect=IOError("test error")):
+            with patch('game.ui.services.screenshot_manager.log_error') as mock_log:
                 # Should not raise
                 mock_manager.capture(surface=mock_surface)
 
@@ -186,15 +186,15 @@ class TestClipboardOperations:
     @pytest.fixture
     def mock_manager(self):
         """Create a mock-patched ScreenshotManager."""
-        from game.core.screenshot_manager import ScreenshotManager
+        from game.ui.services.screenshot_manager import ScreenshotManager
         from game.core.singleton import SingletonMeta
 
         # Clear any existing instance
         if ScreenshotManager in SingletonMeta._instances:
             del SingletonMeta._instances[ScreenshotManager]
 
-        with patch('game.core.screenshot_manager.os.path.exists', return_value=True):
-            with patch('game.core.screenshot_manager.os.makedirs'):
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
                 manager = ScreenshotManager.instance()
 
         yield manager
@@ -219,8 +219,8 @@ class TestClipboardOperations:
 
     def test_clipboard_tkinter_failure_falls_back(self, mock_manager):
         """On Tkinter error, tries clip on Windows."""
-        with patch('game.core.screenshot_manager.os.name', 'nt'):
-            with patch('game.core.screenshot_manager.subprocess.run') as mock_run:
+        with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
+            with patch('game.ui.services.screenshot_manager.subprocess.run') as mock_run:
                 # Make tkinter import fail by having it raise an exception
                 with patch.dict('sys.modules', {'tkinter': None}):
                     # Simulate tkinter failure
@@ -234,8 +234,8 @@ class TestClipboardOperations:
         """subprocess.run with clip called on Windows when tkinter fails."""
         # This test verifies that when tkinter fails and we're on Windows,
         # the code attempts to use the clip command
-        with patch('game.core.screenshot_manager.os.name', 'nt'):
-            with patch('game.core.screenshot_manager.subprocess.run') as mock_run:
+        with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
+            with patch('game.ui.services.screenshot_manager.subprocess.run') as mock_run:
                 # Create a mock tkinter that raises on use
                 mock_tkinter = Mock()
                 mock_tk_instance = Mock()

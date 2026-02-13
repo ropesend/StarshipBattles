@@ -403,18 +403,7 @@ class AIController:
 
         if dmg:
             self.ship.set_in_formation(False)
-            try:
-                # Unwrap adapter if present: formation_members contains raw Ships,
-                # but self.ship may be a ShipControllableAdapter
-                own_ship = getattr(self.ship, 'ship', self.ship)
-                own_ship.formation.master.formation.members.remove(own_ship)
-            except (AttributeError, ValueError) as e:
-                # Expected when formation structure is already broken
-                ship_id = getattr(self.ship, 'id', getattr(self.ship, 'name', str(id(self.ship))))
-                logger.debug(
-                    "Formation cleanup for ship=%s encountered expected condition: %s",
-                    ship_id, e
-                )
+            self.ship.leave_formation()
             self.ship.set_formation_master(None)
             self.ship.set_turn_throttle(1.0)
             self.ship.set_throttle(1.0)

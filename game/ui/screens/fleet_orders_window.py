@@ -11,12 +11,12 @@ import pygame
 import pygame_gui
 from pygame_gui.windows import UIConfirmationDialog
 
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.input_actions import InputAction
 from game.strategy.data.fleet import OrderType
 
 if TYPE_CHECKING:
-    from game.core.input_mapper import InputMapper
+    from game.ui.services.input_mapper import InputMapper
 
 class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     """

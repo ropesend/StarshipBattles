@@ -25,7 +25,7 @@ from game.core.input_actions import (
     InputAction,
     KeyBinding,
 )
-from game.core.input_mapper import InputMapper
+from game.ui.services.input_mapper import InputMapper
 from game.core.logger import log_debug, log_info
 
 # ── Layout constants ────────────────────────────────────────────────

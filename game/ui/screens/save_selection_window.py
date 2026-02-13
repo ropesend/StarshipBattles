@@ -9,7 +9,7 @@ Supports:
 """
 import pygame
 import pygame_gui
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.logger import log_debug, log_info, log_warning
 
 

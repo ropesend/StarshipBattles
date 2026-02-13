@@ -7,9 +7,9 @@
 ## 2. Bug Queue
 | ID | Date Found | Description | Status | Spec File |
 | :--- | :--- | :--- | :--- | :--- |
-| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | Awaiting Confirmation | [BUG-46.md](active_bugs/BUG-46.md) |
+| BUG-46 | 2026-01-23 | Fleet Report ship top-down image too small | In-Progress | [BUG-46.md](active_bugs/BUG-46.md) |
 | BUG-63 | 2026-02-07 | Starting planet should match species ideal conditions | Awaiting Confirmation | [BUG-63.md](active_bugs/BUG-63.md) |
-| BUG-68 | 2026-02-07 | Fleet Report - ship selection + ship report + remove from fleet | Awaiting Confirmation | [BUG-68.md](active_bugs/BUG-68.md) |
+| BUG-68 | 2026-02-07 | Fleet Report - ship selection + ship report + remove from fleet | Deep Investigation | [BUG-68.md](active_bugs/BUG-68.md) |
 | BUG-69 | 2026-02-07 | Strategy view - scroll wheel zoom locks up intermittently | Awaiting Confirmation | [BUG-69.md](active_bugs/BUG-69.md) |
 | BUG-70 | 2026-02-07 | Colonize order should load population before moving | Awaiting Confirmation | [BUG-70.md](active_bugs/BUG-70.md) |
 | BUG-73 | 2026-02-08 | Species Setup - Homeworld type selection still reports "Custom" | Awaiting Confirmation | [BUG-73.md](active_bugs/BUG-73.md) |

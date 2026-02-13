@@ -1,0 +1,499 @@
+[
+  {
+    "id": "TCG-STR-001",
+    "severity": "Critical",
+    "title": "planet_gen.py Has No Dedicated Unit Test",
+    "location": "game/strategy/data/planet_gen.",
+    "effort": "Complex"
+  },
+  {
+    "id": "TCG-STR-002",
+    "severity": "Critical",
+    "title": "FleetOrderProcessor Transfer Logic Has T",
+    "location": "game/strategy/engine/fleet_ord",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-003",
+    "severity": "Critical",
+    "title": "GameSession.handle_command() Dispatch Ha",
+    "location": "game/strategy/engine/game_sess",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-001",
+    "severity": "Critical",
+    "title": "Entire builder/ subpackage has zero test",
+    "location": "game/ui/screens/builder/",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-002",
+    "severity": "Critical",
+    "title": "Entire test_lab/ subpackage has zero tes",
+    "location": "game/ui/screens/test_lab/",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-003",
+    "severity": "Critical",
+    "title": "Entire formation/ subpackage has zero te",
+    "location": "game/ui/screens/formation/",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-004",
+    "severity": "Critical",
+    "title": "BattleScreen and BattleUI have zero unit",
+    "location": "game/ui/screens/battle_screen.",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-004",
+    "severity": "Major",
+    "title": "FleetBattleAdapter Has Minimal Test Cove",
+    "location": "game/strategy/data/fleet_battl",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-005",
+    "severity": "Major",
+    "title": "FleetResourceAggregator Lacks Atomic Ope",
+    "location": "game/strategy/data/fleet_resou",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-006",
+    "severity": "Major",
+    "title": "QuickstartBuilder.spawn_initial_complexe",
+    "location": "game/strategy/quickstart_build",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-007",
+    "severity": "Major",
+    "title": "Superweapon Command Handlers Missing Err",
+    "location": "game/strategy/engine/superweap",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-008",
+    "severity": "Major",
+    "title": "DesignMetadata.from_design_file() and fr",
+    "location": "game/strategy/data/design_meta",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-009",
+    "severity": "Major",
+    "title": "ColonizeValidator Chain Validation Not T",
+    "location": "game/strategy/validation/colon",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-010",
+    "severity": "Major",
+    "title": "EmpireEconomyCalculator Registry Fallbac",
+    "location": "game/strategy/engine/empire_ec",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-011",
+    "severity": "Major",
+    "title": "TurnEngine._process_tick() Integration N",
+    "location": "game/strategy/engine/turn_engi",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-012",
+    "severity": "Major",
+    "title": "FleetCapabilityCalculator.can_build_type",
+    "location": "game/strategy/data/fleet_capab",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-013",
+    "severity": "Major",
+    "title": "ShipResourceManager Missing Boundary Tes",
+    "location": "game/strategy/data/ship_resour",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-005",
+    "severity": "Major",
+    "title": "battle_state_viewer.py has zero tests (6",
+    "location": "game/ui/screens/battle_state_v",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-006",
+    "severity": "Major",
+    "title": "galaxy_test/ subpackage has zero test co",
+    "location": "game/ui/screens/galaxy_test/",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-007",
+    "severity": "Major",
+    "title": "WorkshopViewModel has no direct tests (5",
+    "location": "game/ui/screens/workshop_viewm",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-008",
+    "severity": "Major",
+    "title": "FleetReportFilters and FleetReportViewMo",
+    "location": "game/ui/screens/fleet_report_f",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-009",
+    "severity": "Major",
+    "title": "ColumnManager has no tests (233 lines, p",
+    "location": "game/ui/screens/column_manager",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-010",
+    "severity": "Major",
+    "title": "setup_data_io.py has no tests (233 lines",
+    "location": "game/ui/screens/setup_data_io.",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-011",
+    "severity": "Major",
+    "title": "WorkshopShipIO has no tests (261 lines)",
+    "location": "game/ui/screens/workshop_ship_",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-012",
+    "severity": "Major",
+    "title": "16 panel files have no tests",
+    "location": "game/ui/panels/",
+    "effort": "Complex"
+  },
+  {
+    "id": "TCG-UI1-013",
+    "severity": "Major",
+    "title": "WorkshopEventRouter has no tests (496 li",
+    "location": "game/ui/screens/workshop_event",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-014",
+    "severity": "Major",
+    "title": "WorkshopDataLoader and WorkshopDataReloa",
+    "location": "game/ui/screens/workshop_data_",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-015",
+    "severity": "Major",
+    "title": "StrategyEventRouter, StrategyPanelManage",
+    "location": "game/ui/screens/strategy_event",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI2-001",
+    "severity": "Major",
+    "title": "ShipThemeManager.get_portrait_image() an",
+    "location": "game/ui/assets/ship_theme_mana",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-002",
+    "severity": "Major",
+    "title": "Slider Widget Tests Have Weak Assertions",
+    "location": "tests/unit/ui/test_ui_widgets.",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-003",
+    "severity": "Major",
+    "title": "test_no_duplicate_color_values Is a No-O",
+    "location": "tests/unit/ui/test_colors.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-004",
+    "severity": "Major",
+    "title": "Camera.update_input() Has No Direct Unit",
+    "location": "game/ui/renderer/camera.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI2-005",
+    "severity": "Major",
+    "title": "game_renderer.py draw_ship() Overlay Mod",
+    "location": "game/ui/renderer/game_renderer",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI2-006",
+    "severity": "Major",
+    "title": "ShipFactory.setup_formation() Does Not T",
+    "location": "game/ui/services/ship_factory.",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-007",
+    "severity": "Major",
+    "title": "Widgets Button.draw() and Slider.draw()",
+    "location": "game/ui/widgets.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-STR-014",
+    "severity": "Minor",
+    "title": "ShipDisplayFormatter.get_resource_percen",
+    "location": "game/strategy/data/ship_displa",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-015",
+    "severity": "Minor",
+    "title": "ShipCargoManager.load_cargo() and unload",
+    "location": "game/strategy/data/ship_cargo_",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-016",
+    "severity": "Minor",
+    "title": "SuperweaponOrderProcessor._find_system_a",
+    "location": "game/strategy/engine/superweap",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-017",
+    "severity": "Minor",
+    "title": "EventTypes Enum and EventLog Serializati",
+    "location": "game/strategy/events/event_typ",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-018",
+    "severity": "Minor",
+    "title": "Facade DTO from_* Methods Missing Edge C",
+    "location": "game/strategy/facade/dto/",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-019",
+    "severity": "Minor",
+    "title": "RegionClassifier Has No Test for Ring/Ba",
+    "location": "game/strategy/generation/regio",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-020",
+    "severity": "Minor",
+    "title": "placement_strategies.py DensityBasedPlac",
+    "location": "game/strategy/generation/place",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-021",
+    "severity": "Minor",
+    "title": "GameConfig and PlayerConfig Missing Vali",
+    "location": "game/strategy/engine/game_conf",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-016",
+    "severity": "Minor",
+    "title": "planet_list_presets.py, planet_list_side",
+    "location": "game/ui/screens/planet_list_pr",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-017",
+    "severity": "Minor",
+    "title": "builder_selection.py has no tests (110 l",
+    "location": "game/ui/screens/builder_select",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-018",
+    "severity": "Minor",
+    "title": "build_queue_helpers.py has no tests (63",
+    "location": "game/ui/screens/build_queue_he",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-019",
+    "severity": "Minor",
+    "title": "save_selection_window.py has no tests (3",
+    "location": "game/ui/screens/save_selection",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-020",
+    "severity": "Minor",
+    "title": "new_game_setup_screen.py has no tests (6",
+    "location": "game/ui/screens/new_game_setup",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-021",
+    "severity": "Minor",
+    "title": "empire_panel_window.py has no tests (526",
+    "location": "game/ui/screens/empire_panel_w",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-022",
+    "severity": "Minor",
+    "title": "race_browser_dialog.py has no tests (290",
+    "location": "game/ui/screens/race_browser_d",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-023",
+    "severity": "Minor",
+    "title": "build_queue_list_window.py and build_que",
+    "location": "game/ui/screens/build_queue_li",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-024",
+    "severity": "Minor",
+    "title": "race_asset_loader.py has no tests (276 l",
+    "location": "game/ui/screens/race_asset_loa",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-025",
+    "severity": "Minor",
+    "title": "workshop_context.py has no tests (158 li",
+    "location": "game/ui/screens/workshop_conte",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-008",
+    "severity": "Minor",
+    "title": "Camera.update() Target Following Does No",
+    "location": "game/ui/renderer/camera.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-009",
+    "severity": "Minor",
+    "title": "ValidationService Does Not Test Thread S",
+    "location": "game/ui/services/validation_se",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-010",
+    "severity": "Minor",
+    "title": "BattleUIService conftest mock_ship Uses",
+    "location": "tests/unit/ui/services/battle_",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-011",
+    "severity": "Minor",
+    "title": "Slider.handle_event() MOUSEBUTTONUP Retu",
+    "location": "game/ui/widgets.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-012",
+    "severity": "Minor",
+    "title": "ShipIOAdapter Does Not Test save_ship Ca",
+    "location": "game/ui/services/ship_io_adapt",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-013",
+    "severity": "Minor",
+    "title": "ComponentService.is_modifier_allowed() D",
+    "location": "game/ui/services/component_ser",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-014",
+    "severity": "Minor",
+    "title": "DesignLoaderAdapter Does Not Test Defaul",
+    "location": "game/ui/services/design_loader",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-015",
+    "severity": "Minor",
+    "title": "game_renderer.py draw_hud() Does Not Tes",
+    "location": "game/ui/renderer/game_renderer",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-022",
+    "severity": "Info",
+    "title": "Test Organization -- Some Test Files in",
+    "location": "Unknown",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-023",
+    "severity": "Info",
+    "title": "Validation Module Has No __init__.py Tes",
+    "location": "tests/unit/strategy/validation",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-STR-024",
+    "severity": "Info",
+    "title": "Heavy Mock Usage in FleetOrderProcessor",
+    "location": "tests/unit/strategy/test_fleet",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-026",
+    "severity": "Info",
+    "title": "Tests using inspect.getsource() verify s",
+    "location": "tests/unit/ui/screens/test_pla",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI1-027",
+    "severity": "Info",
+    "title": "Some tests use .called instead of .asser",
+    "location": "tests/unit/ui/screens/test_fle",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI1-028",
+    "severity": "Info",
+    "title": "Heavy mock usage in screen tests may mas",
+    "location": "Unknown",
+    "effort": "Complex"
+  },
+  {
+    "id": "TCG-UI1-029",
+    "severity": "Info",
+    "title": "No tests for StrategyFleetOps or Strateg",
+    "location": "game/ui/screens/strategy_fleet",
+    "effort": "Medium"
+  },
+  {
+    "id": "TCG-UI2-016",
+    "severity": "Info",
+    "title": "test_atlas_fallback_logic Is Empty (Pass",
+    "location": "tests/unit/ui/test_sprites.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-017",
+    "severity": "Info",
+    "title": "Inconsistent Import Patterns in Service",
+    "location": "Unknown",
+    "effort": "Simple"
+  },
+  {
+    "id": "TCG-UI2-018",
+    "severity": "Info",
+    "title": "BattleUIService Integration Tests Are Co",
+    "location": "tests/unit/ui/services/battle_",
+    "effort": "Simple"
+  }
+]

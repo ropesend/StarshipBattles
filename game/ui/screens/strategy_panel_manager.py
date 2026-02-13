@@ -15,7 +15,7 @@ import pygame
 import pygame_gui
 import pygame_gui.elements as ui
 
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.input_actions import InputAction
 from game.core.paths import Paths
 from game.ui.panels.strategy_widgets import SpectrumGraph, AtmosphereGraph

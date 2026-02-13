@@ -115,7 +115,7 @@ def reset_game_state(monkeypatch, request):
         from game.ui.assets import ShipThemeManager
         ShipThemeManager.reset()
 
-        from game.core.screenshot_manager import ScreenshotManager
+        from game.ui.services.screenshot_manager import ScreenshotManager
         ScreenshotManager.reset()
 
         from game.ui.renderer.sprites import SpriteManager

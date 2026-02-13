@@ -11,12 +11,12 @@ This enables:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 
 from game.core.constants import CombatConstants
 
-if TYPE_CHECKING:
-    from pygame.math import Vector2
+# Note: Vector2 type hints use Any to avoid pygame dependency in AI layer.
+# Methods returning positions/velocities return pygame.math.Vector2 at runtime.
 
 
 class IControllable(ABC):
@@ -38,12 +38,12 @@ class IControllable(ABC):
     # =========================================================================
 
     @abstractmethod
-    def get_position(self) -> 'Vector2':
+    def get_position(self) -> Any:
         """Get the current position of the entity."""
         pass
 
     @abstractmethod
-    def get_velocity(self) -> 'Vector2':
+    def get_velocity(self) -> Any:
         """Get the current velocity vector of the entity."""
         pass
 
@@ -122,7 +122,7 @@ class IControllable(ABC):
         pass
 
     @abstractmethod
-    def adjust_position(self, delta: 'Vector2') -> None:
+    def adjust_position(self, delta: Any) -> None:
         """Adjust position by a delta vector (for formation correction)."""
         pass
 
@@ -231,7 +231,7 @@ class IControllable(ABC):
         pass
 
     @abstractmethod
-    def get_formation_offset(self) -> Optional['Vector2']:
+    def get_formation_offset(self) -> Optional[Any]:
         """Get the formation offset relative to master."""
         pass
 
@@ -248,6 +248,15 @@ class IControllable(ABC):
     @abstractmethod
     def set_formation_master(self, master: Optional[Any]) -> None:
         """Set the formation master."""
+        pass
+
+    @abstractmethod
+    def leave_formation(self) -> None:
+        """Remove this entity from its current formation.
+
+        Handles cleanup of formation state including removing self from
+        the formation master's member list.
+        """
         pass
 
 
@@ -292,11 +301,11 @@ class ShipControllableAdapter(IControllable):
     # Position and Movement (Read)
     # =========================================================================
 
-    def get_position(self) -> 'Vector2':
+    def get_position(self) -> Any:
         """Get the current position of the ship."""
         return self._ship.position
 
-    def get_velocity(self) -> 'Vector2':
+    def get_velocity(self) -> Any:
         """Get the current velocity vector of the ship."""
         return self._ship.velocity
 
@@ -356,7 +365,7 @@ class ShipControllableAdapter(IControllable):
         """Set the rotation angle directly (for formation snapping)."""
         self._ship.angle = angle
 
-    def adjust_position(self, delta: 'Vector2') -> None:
+    def adjust_position(self, delta: Any) -> None:
         """Adjust position by a delta vector (for formation correction)."""
         self._ship.position += delta
 
@@ -440,7 +449,7 @@ class ShipControllableAdapter(IControllable):
         """Check if the ship is part of a formation."""
         return self._ship.formation.active
 
-    def get_formation_offset(self) -> Optional['Vector2']:
+    def get_formation_offset(self) -> Optional[Any]:
         """Get the formation offset relative to master."""
         return self._ship.formation.offset
 
@@ -455,3 +464,14 @@ class ShipControllableAdapter(IControllable):
     def set_formation_master(self, master: Optional[Any]) -> None:
         """Set the formation master."""
         self._ship.formation.master = master
+
+    def leave_formation(self) -> None:
+        """Remove this ship from its current formation."""
+        try:
+            master = self._ship.formation.master
+            if master and hasattr(master, 'formation') and hasattr(master.formation, 'members'):
+                if self._ship in master.formation.members:
+                    master.formation.members.remove(self._ship)
+        except (AttributeError, ValueError):
+            # Formation structure already broken or ship not in members
+            pass

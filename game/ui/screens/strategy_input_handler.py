@@ -11,10 +11,10 @@ from typing import Optional
 
 import pygame
 import pygame_gui
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.input_actions import InputAction
 from game.core.logger import log_debug, log_info, log_warning
-from game.core.screenshot_manager import ScreenshotManager
+from game.ui.services.screenshot_manager import ScreenshotManager
 from game.core.hex_math import pixel_to_hex
 
 

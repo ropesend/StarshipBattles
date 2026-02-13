@@ -19,7 +19,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UIWindow, UIPanel, UILabel, UIVerticalScrollBar, UITextEntryLine
 
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.logger import log_debug
 from game.strategy.data.build_queue_source import (
     BuildQueueSource,

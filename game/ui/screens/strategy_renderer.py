@@ -11,7 +11,7 @@ Cross-layer imports (acceptable for UI rendering):
 """
 import math
 import pygame
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.core.hex_math import hex_to_pixel, pixel_to_hex, HexCoord
 from game.strategy.data.fleet import OrderType
 from game.ui.colors import COLORS

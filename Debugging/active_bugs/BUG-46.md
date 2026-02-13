@@ -10,7 +10,7 @@ C:\Developer\StarshipBattles\screenshots\screenshot_20260123_202105_670002_strat
 Medium (Visual bug)
 
 ## Status
-Awaiting Confirmation
+In-Progress
 
 ## Root Cause (5th attempt)
 
@@ -43,3 +43,9 @@ All 31 UI utils tests pass.
 - 2026-01-24: Third fix (aspect ratio preservation) - Rejected
 - 2026-02-10: Fourth fix (kept full canvas) - Rejected
 - 2026-02-11: Fifth fix - Crop to visible area before scaling. Uses native C bounding rect. Returned surface contains only visible content.
+
+---
+### ❌ Fix Rejected [2026-02-11 20:55]
+**Reason:** The fix is only partially fixed, it is the right height, but it should be scaled keeping its aspect ratio intact, it has been scaled to be too wide now.
+**New Constraints:** Scale the top-down image keeping its original aspect ratio intact. Reference screenshot: `C:\Dev\Starship Battles\output\screenshots\screenshot_20260211_205501_018240_strategy_viewport.png`
+---

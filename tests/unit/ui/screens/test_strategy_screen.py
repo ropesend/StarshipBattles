@@ -541,7 +541,7 @@ class TestHandleResize:
     def test_handle_resize_updates_camera(self):
         """handle_resize() should update camera dimensions."""
         screen, mocks = _make_strategy_screen()
-        from game.core.config import UIConfig
+        from game.ui.config import UIConfig
         screen.TOP_BAR_HEIGHT = 50
 
         screen.handle_resize(2560, 1440)
@@ -931,7 +931,7 @@ class TestScreenResizeHandling:
     def test_resize_updates_camera_viewport(self):
         """handle_resize() should update camera viewport dimensions."""
         screen, mocks = _make_strategy_screen()
-        from game.core.config import UIConfig
+        from game.ui.config import UIConfig
         screen.TOP_BAR_HEIGHT = 50
 
         screen.handle_resize(2560, 1440)

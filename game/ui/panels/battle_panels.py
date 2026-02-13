@@ -1,6 +1,6 @@
 import pygame
 from game.core.profiling import profile_action
-from game.core.config import UIConfig
+from game.ui.config import UIConfig
 from game.ui.panels.ship_stats_renderer import (
     draw_stat_bar, draw_ship_info_header, draw_ship_vitals,
     draw_ship_resources, draw_ship_combat_stats, draw_ship_weapons,
