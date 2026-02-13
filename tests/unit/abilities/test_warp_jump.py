@@ -109,6 +109,88 @@ class TestWarpJumpAbility:
             WarpJump(mock_component, data)
 
 
+class TestWarpJumpEnergyCost:
+    """Tests for WarpJump energy cost functionality."""
+
+    @pytest.fixture
+    def mock_component(self):
+        mock = MagicMock()
+        mock.ship = MagicMock()
+        mock.stats = {}
+        return mock
+
+    def test_energy_cost_default_zero(self, mock_component):
+        """WarpJump should default energy_cost to 0 when not specified."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        ab = WarpJump(mock_component, 5000)  # Primitive shortcut
+        assert ab.energy_cost == 0.0
+
+    def test_energy_cost_from_dict(self, mock_component):
+        """WarpJump should read energy_cost from dict data."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        data = {'max_tonnage': 5000, 'energy_cost': 100}
+        ab = WarpJump(mock_component, data)
+
+        assert ab.energy_cost == 100.0
+
+    def test_energy_cost_default_when_omitted_from_dict(self, mock_component):
+        """WarpJump should default energy_cost to 0 when dict omits it."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        data = {'max_tonnage': 5000}  # energy_cost omitted
+        ab = WarpJump(mock_component, data)
+
+        assert ab.energy_cost == 0.0
+
+    def test_ui_rows_show_energy_cost_when_positive(self, mock_component):
+        """WarpJump should show energy cost in UI when energy_cost > 0."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        data = {'max_tonnage': 5000, 'energy_cost': 150}
+        ab = WarpJump(mock_component, data)
+        rows = ab.get_ui_rows()
+
+        labels = [r['label'] for r in rows]
+        assert 'Warp Energy' in labels
+
+    def test_ui_rows_hide_energy_cost_when_zero(self, mock_component):
+        """WarpJump should NOT show energy cost in UI when energy_cost is 0."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        data = {'max_tonnage': 5000, 'energy_cost': 0}
+        ab = WarpJump(mock_component, data)
+        rows = ab.get_ui_rows()
+
+        labels = [r['label'] for r in rows]
+        assert 'Warp Energy' not in labels
+
+    def test_can_jump_boundary_exact_mass(self, mock_component):
+        """can_jump() boundary test: exact mass equals max_tonnage."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        ab = WarpJump(mock_component, {'max_tonnage': 5000})
+
+        assert ab.can_jump(5000.0) is True
+        assert ab.can_jump(5000.001) is False
+
+    def test_can_jump_zero_mass(self, mock_component):
+        """can_jump() edge case: zero mass always succeeds."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        ab = WarpJump(mock_component, {'max_tonnage': 5000})
+        assert ab.can_jump(0) is True
+
+    def test_can_jump_zero_tonnage_drive(self, mock_component):
+        """can_jump() edge case: zero max_tonnage drive only allows zero mass."""
+        from game.simulation.components.abilities.propulsion import WarpJump
+
+        ab = WarpJump(mock_component, {'max_tonnage': 0})
+        assert ab.can_jump(0) is True
+        assert ab.can_jump(1) is False
+
+
 class TestWarpJumpRegistration:
     """Tests for WarpJump registration in ability system."""
 

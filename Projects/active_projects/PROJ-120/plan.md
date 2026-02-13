@@ -13,13 +13,13 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Simulation | In Progress (13/18) | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Simulation | In Progress (15/18) | [phase_1_checklist.md](phase_1_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-13 (Session 8)
+**Last Updated:** 2026-02-13 (Session 9)
 **Active Phase:** Phase 1
-**Last Action:** Completed Tasks 1.12 (REJECTED - no heat system) and 1.13 (16 complex formation tests)
-**Next Action:** Continue with Task 1.14 (BattleStateSerializer Version Migration)
+**Last Action:** Completed Tasks 1.14 (REJECTED - per project policy), 1.15 (17 new propulsion tests)
+**Next Action:** Continue with Task 1.16 (ProjectileManager Batch Update)
 **Blockers:** None
 
 ## Overview

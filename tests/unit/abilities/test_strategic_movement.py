@@ -124,6 +124,93 @@ class TestStrategicMovementAbility:
             StrategicMovement(mock_component, data)
 
 
+class TestStrategicMovementSyncData:
+    """Tests for StrategicMovement.sync_data() functionality."""
+
+    @pytest.fixture
+    def mock_component(self):
+        mock = MagicMock()
+        mock.ship = MagicMock()
+        mock.stats = {}
+        return mock
+
+    def test_sync_data_updates_from_primitive(self, mock_component):
+        """sync_data() should update movement points from primitive value."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        assert ab.movement_points == 100
+
+        ab.sync_data(200)
+
+        assert ab.base_movement_points == 200
+        assert ab.movement_points == 200
+
+    def test_sync_data_updates_from_dict(self, mock_component):
+        """sync_data() should update movement points from dict value."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        ab.sync_data({'value': 300})
+
+        assert ab.base_movement_points == 300
+        assert ab.movement_points == 300
+
+    def test_sync_data_non_dict_non_number_defaults_to_zero(self, mock_component):
+        """sync_data() with non-dict, non-number should default to 0."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        ab.sync_data("invalid")  # String, not number or dict
+
+        assert ab.base_movement_points == 0
+        assert ab.movement_points == 0
+
+    def test_sync_data_preserves_modifier_application(self, mock_component):
+        """sync_data() should properly reset movement_points before recalculate."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 100)
+        mock_component.stats = {'strategic_mult': 2.0}
+        ab.recalculate()
+        assert ab.movement_points == 200
+
+        # sync_data resets to base value
+        ab.sync_data(50)
+        assert ab.base_movement_points == 50
+        assert ab.movement_points == 50  # Not yet recalculated
+
+        # After recalculate, modifier applies to new base
+        ab.recalculate()
+        assert ab.movement_points == 100
+
+    def test_zero_movement_points_valid(self, mock_component):
+        """Zero movement points should be a valid value."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 0)
+        assert ab.base_movement_points == 0
+        assert ab.movement_points == 0
+        assert ab.get_primary_value() == 0
+
+    def test_negative_movement_points_handled(self, mock_component):
+        """Negative movement points should be stored (edge case)."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        # Negative value might occur from bad data - should store as-is
+        ab = StrategicMovement(mock_component, -50)
+        assert ab.base_movement_points == -50
+        assert ab.movement_points == -50
+
+    def test_float_movement_points_precision(self, mock_component):
+        """Float movement points should maintain precision."""
+        from game.simulation.components.abilities.propulsion import StrategicMovement
+
+        ab = StrategicMovement(mock_component, 123.456)
+        assert ab.base_movement_points == 123.456
+        assert ab.movement_points == 123.456
+
+
 class TestStrategicMovementRegistration:
     """Tests for StrategicMovement registration in ability system."""
 
