@@ -12,7 +12,7 @@ Usage:
     registry.register('IssueColonizeCommand', ColonizeCommandHandler())
     result = registry.dispatch('IssueColonizeCommand', session, command)
 """
-from typing import Protocol, Dict, Any, TYPE_CHECKING
+from typing import Protocol, Dict, Any, TYPE_CHECKING, runtime_checkable
 
 from game.core.logger import log_info
 from game.core.validation import ValidationResult
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from game.strategy.engine.game_session import GameSession
 
 
+@runtime_checkable
 class ICommandHandler(Protocol):
     """Protocol for command handlers."""
 

@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 from datetime import datetime
 
 from game.core.json_utils import load_json, save_json
+from game.core.validation import ValidationResult
 
 
 # Government types for race factions
@@ -277,13 +278,14 @@ class RaceConfig:
             return None
         return cls.from_dict(data)
 
-    def validate(self) -> tuple[bool, str]:
+    def validate(self) -> ValidationResult:
         """
         Validate the race configuration.
 
         Returns:
-            Tuple of (is_valid, error_message)
+            ValidationResult with is_valid, errors, and warnings.
         """
+        result = ValidationResult()
         for check in [
             self._validate_required_fields,
             self._validate_environment_ranges,
@@ -294,8 +296,9 @@ class RaceConfig:
         ]:
             ok, msg = check()
             if not ok:
-                return False, msg
-        return True, ""
+                result.add_error(msg)
+                return result
+        return result
 
     # -- validation helpers (private) --
 
@@ -378,5 +381,4 @@ class RaceConfig:
 
     def is_complete(self) -> bool:
         """Check if all required fields are filled."""
-        is_valid, _ = self.validate()
-        return is_valid
+        return self.validate().is_valid

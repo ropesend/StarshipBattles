@@ -4,8 +4,6 @@ BuildContext Protocol - Abstract interface for build queue producers.
 Created as part of PROJ-67 Phase 4 to allow BuildQueueScreen and BuildQueueController
 to work with both Planet and Fleet build contexts.
 """
-from __future__ import annotations
-
 from typing import Any, List, Dict, Protocol, runtime_checkable
 
 

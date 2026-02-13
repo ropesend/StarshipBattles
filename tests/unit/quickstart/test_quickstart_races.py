@@ -61,8 +61,8 @@ class TestQuickstartRacesValid:
     def test_race_passes_validation(self, race_name, race_data):
         """Each quickstart race should pass RaceConfig validation."""
         config = RaceConfig.from_dict(race_data)
-        is_valid, message = config.validate()
-        assert is_valid, f"{race_name} validation failed: {message}"
+        result = config.validate()
+        assert result.is_valid, f"{race_name} validation failed: {result.first_error}"
 
     def test_race_is_complete(self, race_name, race_data):
         """Each quickstart race should be complete."""

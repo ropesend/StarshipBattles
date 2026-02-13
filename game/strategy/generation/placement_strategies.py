@@ -6,16 +6,13 @@ Provides different algorithms for placing star systems in a galaxy:
 - DensityBasedPlacementStrategy: Placement guided by density fields
 """
 
-import logging
 import random
 from typing import Protocol, Set, Optional, runtime_checkable
 
 from game.core.hex_math import HexCoord
+from game.core.logger import log_debug
 from game.strategy.data.spatial_index import SpatialIndex
 from game.strategy.generation.density.density_map import DensityMap
-
-
-log = logging.getLogger(__name__)
 
 
 @runtime_checkable
@@ -116,7 +113,7 @@ class RandomPlacementStrategy:
 
             return coord
 
-        log.debug(f"RandomPlacementStrategy failed after {max_attempts} attempts")
+        log_debug(f"RandomPlacementStrategy failed after {max_attempts} attempts")
         return None
 
 
@@ -207,5 +204,5 @@ class DensityBasedPlacementStrategy:
 
             return coord
 
-        log.debug(f"DensityBasedPlacementStrategy failed after {max_attempts} attempts")
+        log_debug(f"DensityBasedPlacementStrategy failed after {max_attempts} attempts")
         return None

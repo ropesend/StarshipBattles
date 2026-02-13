@@ -94,8 +94,6 @@ class MaintenanceEngine:
         events = engine.process_maintenance(empires)
     """
 
-    MAINTENANCE_RATE = 0.05  # 5% per turn
-
     def __init__(self):
         """Initialize the maintenance engine."""
         pass
@@ -244,7 +242,7 @@ class MaintenanceEngine:
         Returns:
             Dict mapping resource type to maintenance cost amount.
         """
-        return calculate_maintenance_cost(design_data, self.MAINTENANCE_RATE)
+        return calculate_maintenance_cost(design_data, MAINTENANCE_RATE)
 
     def _cleanup_empty_fleets(self, empire, fleets_with_scuttles: set) -> None:
         """Remove fleets that became empty due to maintenance scuttling.

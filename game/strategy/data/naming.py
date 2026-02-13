@@ -64,7 +64,7 @@ class NameRegistry:
         return name
 
     @staticmethod
-    def to_roman(n):
+    def to_roman(n: int) -> str:
         """Convert integer to Roman numeral (1-3999)."""
         if not (0 < n < 4000):
             return str(n)

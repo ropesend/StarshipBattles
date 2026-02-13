@@ -38,7 +38,8 @@ class Spectrum:
     microwave: float            # 1 mm - 1 m
     radio: float                # > 1 m
 
-    def get_total_output(self):
+    def get_total_output(self) -> float:
+        """Calculate total electromagnetic output across all spectrum bands."""
         return (self.gamma_ray + self.xray + self.ultraviolet +
                 self.blue + self.green + self.red +
                 self.infrared + self.microwave + self.radio)
@@ -124,7 +125,7 @@ class StarGenerator:
     def __init__(self):
         pass
 
-    def _generate_mass(self, is_primary=True, primary_mass=None):
+    def _generate_mass(self, is_primary: bool = True, primary_mass: float = None) -> float:
         """
         Generates mass using a log-normal distribution.
         If not primary, ensures mass < primary_mass.
@@ -146,7 +147,7 @@ class StarGenerator:
             
             return mass
 
-    def _determine_type_and_radius(self, mass, age_ratio=0.5):
+    def _determine_type_and_radius(self, mass: float, age_ratio: float = 0.5) -> tuple:
         """
         Determine type and radius based on mass and random evolution factor.
         Returns (StarType, Radius_Solar, Temperature_K, Luminosity_Solar, Color)
@@ -219,7 +220,7 @@ class StarGenerator:
 
         return star_type, radius, temperature, luminosity, color
 
-    def _kelvin_to_rgb(self, temp):
+    def _kelvin_to_rgb(self, temp: float) -> tuple:
         """Approximate RGB from Kelvin."""
         temp = temp / 100
         

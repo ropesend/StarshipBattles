@@ -5,12 +5,12 @@ Combines multiple density primitives with weights to create
 complex galaxy layouts.
 """
 
-import logging
 import random
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict, Any
 
 from game.core.hex_math import HexCoord
+from game.core.logger import log_info, log_warning
 from game.strategy.generation.density.primitives.density_primitive import (
     DensityPrimitive,
     clamp_density,
@@ -21,9 +21,6 @@ from game.strategy.generation.density.primitives.spiral_arm import SpiralArmPrim
 from game.strategy.generation.density.primitives.linear import LinearPrimitive
 from game.strategy.generation.density.primitives.noise import NoisePrimitive
 from game.strategy.generation.density.primitives.geometric import GeometricPrimitive
-
-
-log = logging.getLogger(__name__)
 
 
 # Mapping from primitive type names to classes
@@ -63,7 +60,7 @@ class DensityMap:
             weight: Weight for this primitive (default 1.0)
         """
         if weight <= 0:
-            log.warning(f"Ignoring primitive with non-positive weight: {weight}")
+            log_warning(f"Ignoring primitive with non-positive weight: {weight}")
             return
         self._primitives.append((primitive, weight))
         self._total_weight += weight
@@ -134,7 +131,7 @@ class DensityMap:
             if rng.random() < density:
                 return HexCoord(q, r)
 
-        log.warning(f"DensityMap.sample() failed after {max_attempts} attempts")
+        log_warning(f"DensityMap.sample() failed after {max_attempts} attempts")
         return None
 
     def get_coverage_estimate(self, sample_count: int = 1000, rng: Optional[random.Random] = None) -> float:
@@ -212,7 +209,7 @@ class DensityMap:
 
             density_map.add_primitive(primitive, weight)
 
-        log.info(f"Created DensityMap with {len(density_map._primitives)} primitives")
+        log_info(f"Created DensityMap with {len(density_map._primitives)} primitives")
         return density_map
 
     def __len__(self) -> int:

@@ -16,17 +16,15 @@ Fits into TurnEngine's process_turn() as a turn-start phase
 (before the subturn loop).
 """
 
-import logging
 from typing import List, Optional, TYPE_CHECKING
 
+from game.core.logger import log_debug
 from game.core.registry import GameRegistries
 from game.strategy.interfaces.engines import IHarvestingEngine
 
 if TYPE_CHECKING:
     from game.strategy.data.empire import Empire
     from game.strategy.data.planet import Planet, PlanetaryFacility
-
-logger = logging.getLogger(__name__)
 
 
 def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
@@ -51,14 +49,14 @@ def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> Opt
         # Also check by component ID via registry
         comp_id = comp.get('id')
         if comp_id and registries is not None:
-            return lookup_harvester_in_registry(comp_id, registries)
+            return get_harvester_from_registry(comp_id, registries)
     elif isinstance(comp, str) and registries is not None:
-        return lookup_harvester_in_registry(comp, registries)
+        return get_harvester_from_registry(comp, registries)
     return None
 
 
-def lookup_harvester_in_registry(comp_id: str, registries: GameRegistries) -> Optional[dict]:
-    """Look up harvester ability from the component registry.
+def get_harvester_from_registry(comp_id: str, registries: GameRegistries) -> Optional[dict]:
+    """Get harvester ability from the component registry.
 
     Args:
         comp_id: Component identifier to look up
@@ -189,13 +187,13 @@ class HarvestingEngine(IHarvestingEngine):
             # Also check by component ID via registry
             comp_id = comp.get('id')
             if comp_id and self._registries is not None:
-                return self._lookup_storage_in_registry(comp_id)
+                return self._get_storage_from_registry(comp_id)
         elif isinstance(comp, str) and self._registries is not None:
-            return self._lookup_storage_in_registry(comp)
+            return self._get_storage_from_registry(comp)
         return None
 
-    def _lookup_storage_in_registry(self, comp_id: str) -> Optional[dict]:
-        """Look up storage ability from the component registry.
+    def _get_storage_from_registry(self, comp_id: str) -> Optional[dict]:
+        """Get storage ability from the component registry.
 
         Args:
             comp_id: Component identifier to look up
@@ -259,10 +257,10 @@ class HarvestingEngine(IHarvestingEngine):
         """
         return get_harvester_info(comp, self._registries)
 
-    def _lookup_harvester_in_registry(self, comp_id: str) -> Optional[dict]:
+    def _get_harvester_from_registry(self, comp_id: str) -> Optional[dict]:
         """Look up harvester ability from the component registry.
 
-        Delegates to module-level lookup_harvester_in_registry() function.
+        Delegates to module-level get_harvester_from_registry() function.
 
         Args:
             comp_id: Component identifier to look up
@@ -272,7 +270,7 @@ class HarvestingEngine(IHarvestingEngine):
         """
         if self._registries is None:
             return None
-        return lookup_harvester_in_registry(comp_id, self._registries)
+        return get_harvester_from_registry(comp_id, self._registries)
 
     def _harvest_resource(
         self,
@@ -315,11 +313,8 @@ class HarvestingEngine(IHarvestingEngine):
         # Add to empire pool
         empire.add_resources(resource_type, actual_harvest)
 
-        logger.debug(
-            "Harvested %.1f %s from %s (quality=%.2f, remaining=%.1f)",
-            actual_harvest,
-            resource_type,
-            getattr(colony, 'name', 'unknown'),
-            quality,
-            resource_data['quantity'],
+        log_debug(
+            f"Harvested {actual_harvest:.1f} {resource_type} from "
+            f"{getattr(colony, 'name', 'unknown')} (quality={quality:.2f}, "
+            f"remaining={resource_data['quantity']:.1f})"
         )

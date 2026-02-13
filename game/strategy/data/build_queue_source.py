@@ -9,8 +9,6 @@ Each build queue source represents a single construction queue from either:
 Created as part of PROJ-69 Phase 1.
 Updated in PROJ-97: build_rate is now Dict[str, float] for per-resource rates.
 """
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 

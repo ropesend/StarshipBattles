@@ -850,9 +850,9 @@ class RaceSetupScreen(pygame_gui.elements.UIWindow):
             return
 
         # Full validation (may have warnings for missing env preferences)
-        is_valid, error = self.race_config.validate()
-        if not is_valid:
-            log_warning(f"Saving race with validation warnings: {error}")
+        validation_result = self.race_config.validate()
+        if not validation_result.is_valid:
+            log_warning(f"Saving race with validation warnings: {validation_result.first_error}")
 
         # Save to library
         success, message = self.race_library.save_race(self.race_config)
