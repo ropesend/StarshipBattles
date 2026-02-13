@@ -33,10 +33,9 @@ class BuilderLeftPanel:
             container=self.panel
         )
         
-        # Scroll Container 
+        # Scroll Container
         # Shifted down to room for Bulk Add UI
-        self.list_y = 125 # Was 80
-        self.list_y = 125 # Was 80
+        self.list_y = 125
         container_height = rect.height - 130 # Full height minus offsets
         self.scroll_container = UIScrollingContainer(
             relative_rect=pygame.Rect(5, self.list_y, rect.width - 10, container_height),

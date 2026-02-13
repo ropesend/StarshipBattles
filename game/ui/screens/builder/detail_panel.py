@@ -159,9 +159,6 @@ class ComponentDetailPanel:
                 # Skip fully registered Ability Classes (handled by get_ui_rows)
                 if k in ABILITY_REGISTRY:
                     continue
-                # Skip legacy shims (if they still exist in data)
-                if k in ["ProjectileWeapon", "BeamWeapon", "Armor"]:
-                    continue
                     
                 if not shown_header:
                     lines.append("<br>Abilities:")

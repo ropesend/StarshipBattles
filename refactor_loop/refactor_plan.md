@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-117 Phase 3 - UI-Framework
-**Current Status:** PROJ-117 Phase 3 Complete
+**Last Completed:** PROJ-117 Phase 4 - UI-Screens
+**Current Status:** PROJ-117 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-117
-**Current Phase:** Phase 4 (UI-Screens)
+**Current Phase:** Audit
 **Test Status:** 9754 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-117 Phase 3 Complete (12 UI-Framework findings):
-  - 3 fixes: Deleted widgets.py (legacy unused, -19 tests), deleted atlas fallback in sprites.py, removed hasattr on LayerType.value
-  - 4 false positives: draw_hud/bar used, BattleOrchestrator used, show_overlay used, interfaces/__init__.py used, Ship.id getattr correct
-  - 5 acceptable: Singleton patterns (ShipThemeManager, SpriteManager), defensive getattr, xdist race fix
-- Next: PROJ-117 Phase 4 (UI-Screens findings)
+- PROJ-117 Phase 4 Complete (16 UI-Screens findings):
+  - 5 fixes: Removed legacy aliases from race_flag_gallery.py, removed deprecated handle_click/handle_scroll from battle_screen.py, removed legacy shim skip list from detail_panel.py, removed stale comment from battle_screen.py, removed duplicate assignment from left_panel.py
+  - 5 false positives: Files don't exist (new_game_setup.py, stats_panel.py), incorrect paths (workshop_event_handlers.py), no hasattr guards found for _facade, legacy BuilderScreen intentionally kept
+  - 6 acceptable: Tuple format used in builder, dual keybinds intentional UX, defensive hasattr acceptable, rendering optimization acceptable, internal deprecated properties valid, game parameter required for test_lab
+- Next: Run PROJ-117 Audit per Protocol 04
 
 ---
 

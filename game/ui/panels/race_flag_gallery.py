@@ -161,23 +161,3 @@ class RaceFlagGallery(BaseGallery):
             )
             self.flag_preview_images.append(img)
 
-    # --- Legacy compatibility aliases ---
-
-    @property
-    def flag_buttons(self):
-        """Alias for asset_buttons for backward compatibility."""
-        return self.asset_buttons
-
-    @property
-    def flag_scroll(self):
-        """Alias for scroll_container for backward compatibility."""
-        return self.scroll_container
-
-    @property
-    def flag_preview_panel(self):
-        """Alias for preview_panel for backward compatibility."""
-        return self.preview_panel
-
-    def on_flag_selected(self, flag_id: str):
-        """Handle flag selection (alias for on_asset_selected)."""
-        self.on_asset_selected(flag_id)

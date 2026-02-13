@@ -510,7 +510,6 @@ class BattleScreen:
         new_idx = (current_idx + direction) % len(alive_ships)
         self.camera.target = alive_ships[new_idx]
 
-    # Note: method removed duplicate update_visuals here (it was in orig file twice?)
 
     def is_battle_over(self):
         """Check if the battle has ended."""
@@ -568,34 +567,6 @@ class BattleScreen:
         # Battle end UI / Controls
         self.ui.control_panel.draw(screen)
     
-    def handle_click(self, mx, my, button, screen_size):
-        """Handle mouse clicks. Returns True if click was handled.
-
-        DEPRECATED: Use handle_event() instead for IScene compliance.
-        """
-        result = self.ui.handle_click(mx, my, button)
-
-        if isinstance(result, tuple) and result[0] == "focus_ship":
-            self.camera.target = result[1]
-            return True
-
-        if result == "end_battle":
-            self._battle_service.reset()
-            self._trigger_return_to_setup()
-            return True
-
-        # If UI didn't handle it and it's a left click, clear focus
-        if not result and button == 1:
-            self.camera.target = None
-
-        return result
-
-    def handle_scroll(self, scroll_y, screen_height):
-        """Handle mouse wheel scrolling on stats panel.
-
-        DEPRECATED: Use handle_event() instead for IScene compliance.
-        """
-        self.ui.handle_scroll(scroll_y, screen_height)
 
     def draw_hud(self, screen, font=None, profiler_active=False):
         """Draw battle HUD elements (tick counters, speed indicator).
