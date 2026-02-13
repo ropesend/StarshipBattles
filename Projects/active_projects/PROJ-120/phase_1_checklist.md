@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (17/18)
+**Status:** Complete (18/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -275,21 +275,26 @@ All 2450 simulation tests passing.
 
 ### Task 1.18: TCG-SIM-018 - Simulation Integration Tests Sparse [N]
 **File:** `tests/integration/`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/integration/fleet_combat/test_damage_pipeline.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Created comprehensive damage pipeline integration tests (11 tests) covering:
+- TestDamagePipelineEndToEnd (5 tests): Weapon fire, projectile spawning, component destruction, ship destruction, damage stat reduction
+- TestCombatDeterminism (2 tests): Same seed produces same outcome, different seeds can vary
+- TestMultiTargetCombat (2 tests): Multiple ships engage targets, battle tracks all ship outcomes
+- TestDamageTypes (2 tests): Shield absorption, unshielded ship properties
+Tests verify end-to-end combat flow: battle setup, weapon systems, projectile lifecycle, damage tracking, ship state management.
 
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase
