@@ -1,3 +1,13 @@
+"""
+ShipIO - Ship file Input/Output operations.
+
+Moved from game.simulation.systems.persistence to game.ui.services as part of PROJ-113
+to fix layer violation: tkinter is a UI framework and doesn't belong in simulation layer.
+
+This module handles:
+- Saving ship designs to JSON files via file dialog
+- Loading ship designs from JSON files via file dialog
+"""
 import json
 import os
 import tkinter
@@ -21,28 +31,29 @@ except Exception as e:  # Intentional broad catch: Tkinter init is platform-depe
     log_warning(f"Tkinter initialization failed, file dialogs will be unavailable: {e}")
     tk_root = None
 
+
 class ShipIO:
     """Handles ship file Input/Output operations."""
-    
+
     # Configurable default directory (can be changed by builder)
     default_ships_folder = "ships"
-    
+
     @staticmethod
     def save_ship(ship):
         """Save ship design to file. Returns True if successful."""
         if not tk_root:
             return False, "Tkinter not initialized"
-            
+
         try:
             data = ship.to_dict()
             ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
-                
+
             # Sanitize filename
             safe_name = "".join([c for c in ship.name if c.isalpha() or c.isdigit() or c in (' ', '-', '_')]).strip()
             if not safe_name: safe_name = "New Ship"
-            
+
             filename = filedialog.asksaveasfilename(
                 initialdir=ships_folder,
                 initialfile=safe_name,
@@ -50,13 +61,13 @@ class ShipIO:
                 filetypes=[("JSON Files", "*.json")],
                 title="Save Ship Design"
             )
-            
+
             if filename:
                 if save_json(filename, data, indent=4):
                     return True, f"Saved ship to {os.path.basename(filename)}"
                 return False, "Failed to save ship file"
             return False, None  # Cancelled
-            
+
         except PermissionError as e:
             log_error(f"ShipIO: Permission denied saving ship: {e}")
             return False, "Save failed: Permission denied"
@@ -75,32 +86,32 @@ class ShipIO:
         """Load ship design from file. Returns (Ship, message) or (None, error/message)."""
         if not tk_root:
             return None, "Tkinter not initialized"
-            
+
         try:
             ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
-                
+
             filename = filedialog.askopenfilename(
                 initialdir=ships_folder,
                 filetypes=[("JSON Files", "*.json")],
                 title="Load Ship Design"
             )
-            
+
             if filename:
                 data = load_json_required(filename)
                 new_ship = Ship.from_dict(data)
                 new_ship.position = Vector2(screen_width // 2, screen_height // 2)
                 new_ship.recalculate_stats()
-                
+
                 msg = f"Loaded ship from {os.path.basename(filename)}"
                 if getattr(new_ship, '_loading_warnings', []):
                     warn_count = len(new_ship._loading_warnings)
                     msg += f"\nSafe Loaded with {warn_count} stat mismatches (auto-corrected)."
-                
+
                 return new_ship, msg
             return None, None  # Cancelled
-            
+
         except json.JSONDecodeError as e:
             log_error(f"ShipIO: Corrupt JSON in ship file: {e}")
             return None, "Load failed: File contains invalid JSON"

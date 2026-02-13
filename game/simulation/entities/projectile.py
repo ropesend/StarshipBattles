@@ -57,7 +57,8 @@ class Projectile(PhysicsBody):
         self.hp = kwargs.get('hp', 1) # Missiles can be shot down
         self.max_hp = self.hp  # Store initial value for UI
         self.radius = kwargs.get('radius', 3)
-        self.color = kwargs.get('color', (255, 255, 0))
+        # PROJ-113: Removed color property - visual properties belong in UI layer
+        # Color is now determined by BattleUIService based on projectile type
         self.source_weapon = source_weapon
         
         # Turn direction commitment for stable guidance (prevents oscillation)

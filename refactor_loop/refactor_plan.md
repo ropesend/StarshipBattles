@@ -8,24 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-113 Phase 1 (Foundation layer violations)
-**Current Status:** PROJ-113 Phase 1 Complete - Ready for Phase 2
+**Last Completed:** PROJ-113 Phase 2 (Simulation layer violations)
+**Current Status:** PROJ-113 Phase 2 Complete - Ready for Phase 3
 **Current Project:** PROJ-113
-**Current Phase:** Phase 2 (Simulation)
+**Current Phase:** Phase 3 (Strategy)
 **Test Status:** 9773 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-113 Phase 1 Complete (12 tasks):
-  - Moved input_mapper.py to game/ui/services/ (19 files updated)
-  - Moved screenshot_manager.py to game/ui/services/ (9 files updated)
-  - Moved UIConfig to game/ui/config.py (18+ files updated)
-  - Fixed protocols.py TYPE_CHECKING import (LayerData → Any)
-  - Fixed controllable.py TYPE_CHECKING import (Vector2 → Any)
-  - Fixed collision.py TYPE_CHECKING import (Ship → Any)
-  - Added leave_formation() method to IControllable interface
-  - Several findings were FALSE POSITIVES (research.ui IS a UI layer)
-- Next: Begin Phase 2 (Simulation layer findings)
+- PROJ-113 Phase 2 Complete (11 tasks):
+  - FIXED (3): ShipIO moved to UI layer, battle_config TYPE_CHECKING fixed, projectile color moved to UI
+  - FALSE POSITIVES (6): AIControllerFactory (by design), battle_engine TYPE_CHECKING (correct pattern), design_loader (clean params), ship.py late imports (internal cycle), modifier_introspection (exports data for UI)
+  - INFO ONLY (2): battle_state.py large (intended), game.engine deps (correct architecture)
+  - DEFERRED (1): color_hint in abilities (50+ files, separate project)
+- Files created: game/ui/services/ship_io.py
+- Files deleted: game/simulation/systems/persistence.py
+- Next: Begin Phase 3 (Strategy layer findings)
 
 ---
 
@@ -395,6 +393,7 @@
 | 2026-02-11 | PROJ-111 | Phase 7 | Complete | 9741 passed | pending | +57 tests: assertion quality, event patterns, error paths (21), edge cases (28), resize (8). All phases complete |
 | 2026-02-11 | PROJ-111 | Audit 1 | PASSED | 9741 passed | pending | All 7 phases verified: P1-2 (113), P3-4 (223), P5-6 (414), P7 (57) |
 | 2026-02-12 | PROJ-113 | Phase 1 | Complete | 9773 passed | pending | 12 FND violations: moved input_mapper, screenshot_manager, UIConfig to UI layer; removed TYPE_CHECKING cross-layer imports; added leave_formation() |
+| 2026-02-12 | PROJ-113 | Phase 2 | Complete | 9773 passed | pending | 11 SIM findings: 3 FIXED (ShipIO→UI, battle_config, projectile color), 6 FALSE POSITIVES, 2 INFO, 1 DEFERRED (color_hint) |
 
 ---
 

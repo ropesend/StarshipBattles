@@ -6,13 +6,13 @@ Other modules can now import these without importing the full BattleController.
 """
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Tuple, Any, TYPE_CHECKING
+from typing import Optional, Tuple, Any
 
 from game.simulation.systems.battle_end_conditions import BattleEndMode
 from game.core.constants import SimulationConstants
 
-if TYPE_CHECKING:
-    from test_framework.scenario import CombatScenario
+# PROJ-113: Removed TYPE_CHECKING import from test_framework to fix layer violation.
+# CombatScenario type hint replaced with Any - test_framework is not part of game layers.
 
 
 class BattleMode(Enum):
@@ -38,8 +38,8 @@ class BattleConfig:
     allow_retreat: bool = False
     allow_reinforcements: bool = False
 
-    # For test mode
-    test_scenario: Optional['CombatScenario'] = None
+    # For test mode (CombatScenario from test_framework)
+    test_scenario: Optional[Any] = None
 
     # For strategy mode
     source_fleets: Optional[Tuple[Any, Any]] = None

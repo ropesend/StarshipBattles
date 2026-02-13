@@ -12,7 +12,8 @@ class TestBuilderRefactor(unittest.TestCase):
         try:
             import game.ui.screens.builder.main as builder_gui
             from game.ui.screens.planet_list_presets import PresetManager
-            import game.simulation.systems.persistence as ship_io
+            # PROJ-113: ShipIO moved to UI layer
+            import game.ui.services.ship_io as ship_io
         except ImportError as e:
             self.fail(f"Failed to import modules: {e}")
 

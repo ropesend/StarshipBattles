@@ -3,7 +3,10 @@ Ship IO Adapter for UI layer.
 
 PROJ-43: This adapter provides a facade for ship file I/O operations,
 allowing UI code to work with ship persistence without directly importing
-from game.simulation.systems.persistence.
+from the ShipIO class.
+
+PROJ-113: ShipIO moved from game.simulation.systems.persistence to
+game.ui.services.ship_io to fix layer violation (tkinter is UI framework).
 
 The adapter encapsulates:
 - Setting the ships folder location
@@ -13,15 +16,14 @@ The adapter encapsulates:
 from typing import Optional, Tuple, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from game.simulation.systems.persistence import ShipIO as ShipIOType
+    from game.ui.services.ship_io import ShipIO as ShipIOType
 
 
 class ShipIOAdapter:
     """Adapter for ship file I/O operations.
 
     This class provides a clean interface for UI code to save and load
-    ship designs without directly using the ShipIO class from the
-    simulation layer.
+    ship designs using the ShipIO class.
 
     Return Value Convention:
         - save operations: Tuple[bool, Optional[str]] where bool=success
@@ -47,7 +49,7 @@ class ShipIOAdapter:
                 If None, uses the real ShipIO class.
         """
         if ship_io_class is None:
-            from game.simulation.systems.persistence import ShipIO
+            from game.ui.services.ship_io import ShipIO
             ship_io_class = ShipIO
         self._ship_io = ship_io_class
 

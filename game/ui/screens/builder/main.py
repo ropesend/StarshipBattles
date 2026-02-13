@@ -41,7 +41,7 @@ from game.ui.services.validation_service import ValidationService
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.planet_list_presets import PresetManager
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
-from game.simulation.systems.persistence import ShipIO
+from game.ui.services.ship_io import ShipIO
 from game.ui.screens.builder.modifier_editor import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
 from .left_panel import BuilderLeftPanel

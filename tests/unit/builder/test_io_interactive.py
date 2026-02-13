@@ -1,9 +1,9 @@
 from unittest.mock import patch, MagicMock, mock_open
 import os
-from game.simulation.systems.persistence import ShipIO
+from game.ui.services.ship_io import ShipIO
 
 
-@patch('game.simulation.systems.persistence.tk_root', True)
+@patch('game.ui.services.ship_io.tk_root', True)
 class TestShipIOInteractive:
 
     @staticmethod
@@ -14,10 +14,10 @@ class TestShipIOInteractive:
         mock_ship.to_dict.return_value = {"name": "Test Ship", "components": []}
         return mock_ship
 
-    @patch('game.simulation.systems.persistence.filedialog.asksaveasfilename')
-    @patch('game.simulation.systems.persistence.save_json')
-    @patch('game.simulation.systems.persistence.os.makedirs')
-    @patch('game.simulation.systems.persistence.os.path.exists')
+    @patch('game.ui.services.ship_io.filedialog.asksaveasfilename')
+    @patch('game.ui.services.ship_io.save_json')
+    @patch('game.ui.services.ship_io.os.makedirs')
+    @patch('game.ui.services.ship_io.os.path.exists')
     def test_save_ship_success(self, mock_exists, mock_makedirs, mock_save_json, mock_asksaveas):
         """Test success flow for saving a ship."""
         mock_ship = self.create_mock_ship()
@@ -42,7 +42,7 @@ class TestShipIOInteractive:
         assert call_args[0][0] == "/path/to/test_ship.json"
         assert call_args[0][1]['name'] == "Test Ship"
 
-    @patch('game.simulation.systems.persistence.filedialog.asksaveasfilename')
+    @patch('game.ui.services.ship_io.filedialog.asksaveasfilename')
     @patch('builtins.open', new_callable=mock_open)
     def test_save_ship_cancel(self, mock_file_open, mock_asksaveas):
         """Test cancelling the save dialog."""
@@ -55,8 +55,8 @@ class TestShipIOInteractive:
         assert message is None
         mock_file_open.assert_not_called()
 
-    @patch('game.simulation.systems.persistence.filedialog.asksaveasfilename')
-    @patch('game.simulation.systems.persistence.save_json')
+    @patch('game.ui.services.ship_io.filedialog.asksaveasfilename')
+    @patch('game.ui.services.ship_io.save_json')
     def test_save_ship_failure(self, mock_save_json, mock_asksaveas):
         """Test file write failure."""
         mock_ship = self.create_mock_ship()
@@ -68,9 +68,9 @@ class TestShipIOInteractive:
         assert success is False
         assert "Failed to save" in message
 
-    @patch('game.simulation.systems.persistence.filedialog.askopenfilename')
-    @patch('game.simulation.systems.persistence.load_json_required')
-    @patch('game.simulation.systems.persistence.os.makedirs')
+    @patch('game.ui.services.ship_io.filedialog.askopenfilename')
+    @patch('game.ui.services.ship_io.load_json_required')
+    @patch('game.ui.services.ship_io.os.makedirs')
     def test_load_ship_corrupt(self, mock_makedirs, mock_load_json_required, mock_askopen):
         """Test loading a corrupt JSON file."""
         mock_askopen.return_value = "/path/to/corrupt.json"
@@ -82,8 +82,8 @@ class TestShipIOInteractive:
         assert ship is None
         assert "Load failed" in message
 
-    @patch('game.simulation.systems.persistence.filedialog.askopenfilename')
-    @patch('game.simulation.systems.persistence.load_json_required')
+    @patch('game.ui.services.ship_io.filedialog.askopenfilename')
+    @patch('game.ui.services.ship_io.load_json_required')
     @patch('game.simulation.entities.ship.Ship.from_dict')
     def test_load_ship_success(self, mock_from_dict, mock_load_json_required, mock_askopen):
         """"Test success flow for loading."""
@@ -104,7 +104,7 @@ class TestShipIOInteractive:
         # Verify recalculate_stats called
         mock_loaded_ship.recalculate_stats.assert_called_once()
 
-    @patch('game.simulation.systems.persistence.filedialog.askopenfilename')
+    @patch('game.ui.services.ship_io.filedialog.askopenfilename')
     def test_load_ship_cancel(self, mock_askopen):
         """Test cancelling the load dialog."""
         mock_askopen.return_value = ""

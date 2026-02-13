@@ -5,8 +5,11 @@ converting simulation domain objects to DTOs for safe UI consumption.
 
 The service wraps a BattleService instance and provides read-only
 access to battle state through immutable DTOs.
+
+PROJ-113: Added PROJECTILE_COLORS mapping to move visual properties
+from simulation layer to UI layer.
 """
-from typing import List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from game.ui.interfaces.battle_ui import (
     IBattleUI,
@@ -17,10 +20,20 @@ from game.ui.interfaces.battle_ui import (
     ResourceDTO,
 )
 from game.core.math import Vector2
+from game.core.constants import AttackType
 
 if TYPE_CHECKING:
     from game.simulation.services import BattleService
     from game.simulation.entities.ship import Ship
+
+# PROJ-113: Projectile color mapping moved from simulation to UI layer
+# Maps AttackType to RGB color tuple
+PROJECTILE_COLORS: Dict[AttackType, Tuple[int, int, int]] = {
+    AttackType.PROJECTILE: (255, 200, 50),   # Golden yellow for standard projectiles
+    AttackType.MISSILE: (255, 50, 50),       # Red for missiles/seekers
+    AttackType.BEAM: (100, 200, 255),        # Light blue for beams
+}
+DEFAULT_PROJECTILE_COLOR: Tuple[int, int, int] = (255, 200, 50)
 
 
 class BattleUIService:
@@ -241,11 +254,15 @@ class BattleUIService:
         # Get projectile id
         proj_id = str(getattr(proj, 'id', id(proj)))
 
+        # PROJ-113: Get color from type mapping (UI concern, not simulation)
+        proj_type = getattr(proj, 'type', None)
+        color = PROJECTILE_COLORS.get(proj_type, DEFAULT_PROJECTILE_COLOR)
+
         return ProjectileDTO(
             id=proj_id,
             position=Vector2(proj.position.x, proj.position.y),
             velocity=Vector2(proj.velocity.x, proj.velocity.y),
-            color=getattr(proj, 'color', (255, 200, 50)),
+            color=color,
             radius=getattr(proj, 'radius', 4.0),
             damage=proj.damage,
             hp=getattr(proj, 'hp', 0.0),

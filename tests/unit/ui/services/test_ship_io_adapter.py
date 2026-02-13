@@ -98,7 +98,7 @@ class TestShipIOAdapter:
     def test_adapter_uses_real_ship_io_when_none_provided(self):
         """Test adapter falls back to real ShipIO when none injected."""
         from game.ui.services.ship_io_adapter import ShipIOAdapter
-        from game.simulation.systems.persistence import ShipIO
+        from game.ui.services.ship_io import ShipIO
 
         adapter = ShipIOAdapter()
 

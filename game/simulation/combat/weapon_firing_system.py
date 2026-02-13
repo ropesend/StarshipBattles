@@ -264,6 +264,7 @@ class WeaponFiringSystem:
         speed = seeker_ab.projectile_speed / 100.0
         p_vel = launch_vec * speed + ship.velocity
 
+        # PROJ-113: Removed color - visual properties now in UI layer
         return Projectile(
             owner=ship,
             position=Vector2(ship.position),
@@ -276,7 +277,6 @@ class WeaponFiringSystem:
             max_speed=speed,
             target=target,
             hp=getattr(seeker_ab, 'missile_hp', 1),
-            color=(255, 50, 50),
             source_weapon=comp
         )
 
@@ -293,6 +293,7 @@ class WeaponFiringSystem:
         speed = projectile_ab.projectile_speed / 100.0
         p_vel = aim_vec.normalize() * speed + ship.velocity
 
+        # PROJ-113: Removed color - visual properties now in UI layer
         return Projectile(
             owner=ship,
             position=Vector2(ship.position),
@@ -301,7 +302,6 @@ class WeaponFiringSystem:
             range_val=projectile_ab.range,
             endurance=None,
             proj_type=AttackType.PROJECTILE,
-            color=(255, 200, 50),
             source_weapon=comp,
             target=target
         )
