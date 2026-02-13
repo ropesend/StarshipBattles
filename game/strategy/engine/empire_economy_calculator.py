@@ -11,7 +11,15 @@ This is a read-only calculation - it doesn't modify any game state.
 from dataclasses import dataclass, field
 from typing import Dict
 
+from typing import Optional
+
 from game.core.constants import PLANET_RESOURCES
+from game.core.registry import GameRegistries
+from game.strategy.engine.maintenance_engine import (
+    MAINTENANCE_RATE,
+    calculate_maintenance_cost,
+)
+from game.strategy.engine.harvesting_engine import get_harvester_info
 
 
 @dataclass
@@ -56,16 +64,16 @@ class EmpireEconomyCalculator:
     - MaintenanceEngine: 5% of total resource_cost
     """
 
-    MAINTENANCE_RATE = 0.05  # 5% per turn
+    # Use shared MAINTENANCE_RATE from maintenance_engine module
 
-    def __init__(self, *, registries=None):
+    def __init__(self, *, registries: Optional[GameRegistries] = None) -> None:
         """Initialize the calculator.
 
         Args:
             registries: Optional GameRegistries for resolving component
                        abilities from plain component IDs in design_data.
         """
-        self._registries = registries
+        self._registries: Optional[GameRegistries] = registries
 
     def calculate(self, empire) -> EmpireEconomySnapshot:
         """Calculate complete economic snapshot for an empire.
@@ -148,7 +156,7 @@ class EmpireEconomyCalculator:
                         continue
 
                     for comp in layer_data:
-                        harvester = self._get_harvester_info(comp)
+                        harvester = get_harvester_info(comp, self._registries)
                         if harvester is None:
                             continue
 
@@ -169,49 +177,6 @@ class EmpireEconomyCalculator:
                             totals[resource_type] += production
 
         return totals
-
-    def _get_harvester_info(self, comp) -> 'Dict[str, any] | None':
-        """Extract ResourceHarvester info from a component entry.
-
-        Checks inline abilities first, then falls back to registry lookup.
-
-        Args:
-            comp: Component entry from design_data layers (dict or str).
-
-        Returns:
-            Dict with 'resource_type' and 'base_harvest_rate', or None.
-        """
-        if isinstance(comp, dict):
-            # Check inline abilities
-            abilities = comp.get('abilities', {})
-            harvester = abilities.get('ResourceHarvester')
-            if isinstance(harvester, dict):
-                return harvester
-            # Fall back to registry lookup by component ID
-            comp_id = comp.get('id')
-            if comp_id and self._registries is not None:
-                return self._lookup_harvester_in_registry(comp_id)
-        elif isinstance(comp, str) and self._registries is not None:
-            return self._lookup_harvester_in_registry(comp)
-        return None
-
-    def _lookup_harvester_in_registry(self, comp_id: str) -> 'Dict[str, any] | None':
-        """Look up harvester ability from the component registry.
-
-        Args:
-            comp_id: Component identifier to look up.
-
-        Returns:
-            Dict with harvester info or None.
-        """
-        comp_def = self._registries.components.get(comp_id)
-        if comp_def is None:
-            return None
-        abilities = getattr(comp_def, 'abilities', {}) or {}
-        harvester = abilities.get('ResourceHarvester')
-        if isinstance(harvester, dict):
-            return harvester
-        return None
 
     def _aggregate_maintenance(self, empire) -> Dict[str, float]:
         """Calculate total maintenance costs for facilities and ships.
@@ -257,12 +222,7 @@ class EmpireEconomyCalculator:
     def _calculate_maintenance_cost(self, design_data: Dict) -> Dict[str, float]:
         """Calculate maintenance cost from a design's resource costs.
 
-        Maintenance is MAINTENANCE_RATE (5%) of the total build cost,
-        which is the sum of resource_cost across all layers and components.
-
-        Handles two layer formats:
-        - Dict format: {"CORE": {"components": [...]}}
-        - List format: {"HULL": [{"id": "comp_a", ...}]}
+        Delegates to shared calculate_maintenance_cost() function.
 
         Args:
             design_data: Design data dict containing layers with components.
@@ -270,27 +230,4 @@ class EmpireEconomyCalculator:
         Returns:
             Dict mapping resource type to maintenance cost amount.
         """
-        total_build_cost: Dict[str, float] = {}
-
-        for layer in design_data.get('layers', {}).values():
-            # Handle both formats: dict with "components" key, or direct list
-            if isinstance(layer, dict):
-                components = layer.get('components', [])
-            elif isinstance(layer, list):
-                components = layer
-            else:
-                continue
-
-            for component in components:
-                if not isinstance(component, dict):
-                    continue
-                comp_cost = component.get('resource_cost', {})
-                for res, amount in comp_cost.items():
-                    total_build_cost[res] = total_build_cost.get(res, 0) + amount
-
-        # Apply maintenance rate
-        maintenance: Dict[str, float] = {}
-        for res, amount in total_build_cost.items():
-            maintenance[res] = amount * self.MAINTENANCE_RATE
-
-        return maintenance
+        return calculate_maintenance_cost(design_data, MAINTENANCE_RATE)

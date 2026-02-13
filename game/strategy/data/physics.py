@@ -1,25 +1,32 @@
-import math
+from typing import TYPE_CHECKING, List
+
 from game.strategy.data.stars import Spectrum
 from game.core.hex_math import HexCoord, hex_distance
+
+if TYPE_CHECKING:
+    from game.strategy.data.stars import Star
+    from game.strategy.data.star_system import StarSystem
+
 
 class SectorEnvironment:
     """
     Represents the environmental conditions of a specific sector (Hex) in a system.
     """
-    def __init__(self, local_hex, system):
-        self.local_hex = local_hex # HexCoord (Local)
-        self.system = system # StarSystem
-        
-    def calculate_radiation(self):
+
+    def __init__(self, local_hex: HexCoord, system: 'StarSystem') -> None:
+        self.local_hex: HexCoord = local_hex
+        self.system: 'StarSystem' = system
+
+    def calculate_radiation(self) -> Spectrum:
         """
         Calculate total incident radiation from all stars in the system.
         """
         return calculate_incident_radiation(self.local_hex, self.system.stars)
 
-def calculate_incident_radiation(target_local_hex, stars):
+def calculate_incident_radiation(target_local_hex: HexCoord, stars: List['Star']) -> Spectrum:
     """
     Calculate the total incident radiation at a target hex from a list of stars.
-    
+
     Physics Model:
     - Falloff: 1 / r^2.1 (Inverse 2.1 Power Law per user request)
     - Distance Unit: 1 Hex (Orbit of Mercury equivalent)

@@ -283,3 +283,258 @@ class TestIsInPdcArc:
         result = is_in_pdc_arc(ship, target)
 
         assert result is False
+
+
+# =============================================================================
+# TCG-FND-017: is_in_pdc_arc Edge Cases
+# =============================================================================
+
+class TestIsInPdcArcEdgeCases:
+    """TCG-FND-017: Tests for is_in_pdc_arc edge cases.
+
+    Tests cover:
+    - Target at same position as ship (zero-length vector)
+    - Target directly behind the ship (180 degrees)
+    - Target at exact arc boundary
+    """
+
+    def _create_pdc_ship(self, position, rotation, pdc_range, facing_angle, firing_arc):
+        """Helper to create a ship with PDC weapon."""
+        weapon_ability = Mock()
+        weapon_ability.range = pdc_range
+        weapon_ability.facing_angle = facing_angle
+        weapon_ability.firing_arc = firing_arc
+
+        pdc_comp = Mock()
+        pdc_comp.has_pdc_ability = Mock(return_value=True)
+        pdc_comp.get_ability = Mock(return_value=weapon_ability)
+
+        ship = Mock()
+        ship.get_position = Mock(return_value=position)
+        ship.get_rotation = Mock(return_value=rotation)
+        ship.get_components_by_ability = Mock(return_value=[pdc_comp])
+
+        return ship
+
+    def test_target_at_same_position_returns_false(self):
+        """Target at same position as ship returns False (zero-length vector).
+
+        This tests the guard: if vec_to_target.length_squared() == 0: continue
+        """
+        ship = self._create_pdc_ship(
+            position=Vector2(100, 100),
+            rotation=0,
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=90
+        )
+
+        # Target at exact same position as ship
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(100, 100))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # Should return False - can't determine angle to target at same position
+        assert result is False
+
+    def test_target_directly_behind_ship_returns_false(self):
+        """Target 180 degrees behind ship is outside 90-degree forward arc."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,  # Facing right (positive X)
+            pdc_range=100,
+            facing_angle=0,  # Weapon faces ship's forward direction
+            firing_arc=90    # 45 degrees each side of forward
+        )
+
+        # Target directly behind ship (negative X)
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(-50, 0))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # 180 degrees from facing is outside 90-degree arc
+        assert result is False
+
+    def test_target_at_exact_arc_boundary_inside(self):
+        """Target at exactly half the firing arc should be in arc."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,  # Facing right (positive X)
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=90  # 45 degrees each side
+        )
+
+        # Target at exactly 45 degrees (the boundary)
+        # With atan2, 45 degrees above the X axis
+        import math
+        dist = 50
+        x = dist * math.cos(math.radians(45))
+        y = dist * math.sin(math.radians(45))
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(x, y))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # At exactly 45 degrees with 90-degree arc (45 each side), should be in
+        assert result is True
+
+    def test_target_just_outside_arc_boundary(self):
+        """Target just outside the firing arc boundary returns False."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,  # Facing right (positive X)
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=90  # 45 degrees each side
+        )
+
+        # Target at 50 degrees (just outside 45-degree boundary)
+        import math
+        dist = 50
+        x = dist * math.cos(math.radians(50))
+        y = dist * math.sin(math.radians(50))
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(x, y))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # At 50 degrees with 45-degree half-arc, should be outside
+        assert result is False
+
+    def test_target_in_rear_arc_with_rear_facing_weapon(self):
+        """Target behind ship is in arc if weapon faces rear."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,  # Ship facing right (positive X)
+            pdc_range=100,
+            facing_angle=180,  # Weapon faces rear
+            firing_arc=90
+        )
+
+        # Target behind the ship
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(-50, 0))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # Target is behind ship, weapon faces rear - should be in arc
+        assert result is True
+
+    def test_rotated_ship_with_target_in_arc(self):
+        """Ship rotation affects arc calculation correctly."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=90,  # Ship facing up (positive Y)
+            pdc_range=100,
+            facing_angle=0,  # Weapon faces ship's forward
+            firing_arc=90
+        )
+
+        # Target above ship (in front when ship faces up)
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(0, 50))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # Target is in front of rotated ship - should be in arc
+        assert result is True
+
+    def test_rotated_ship_with_target_behind(self):
+        """Ship rotation affects arc - target behind rotated ship."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=90,  # Ship facing up (positive Y)
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=90
+        )
+
+        # Target below ship (behind when ship faces up)
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(0, -50))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # Target is behind rotated ship - should not be in arc
+        assert result is False
+
+    def test_wide_firing_arc_covers_180_degrees(self):
+        """180-degree firing arc covers front hemisphere."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=180  # 90 degrees each side
+        )
+
+        # Target at 89 degrees (just within 90-degree half-arc)
+        import math
+        dist = 50
+        x = dist * math.cos(math.radians(89))
+        y = dist * math.sin(math.radians(89))
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(x, y))
+
+        result = is_in_pdc_arc(ship, target)
+
+        assert result is True
+
+    def test_very_narrow_firing_arc(self):
+        """Very narrow firing arc (10 degrees) still works."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=10  # Only 5 degrees each side
+        )
+
+        # Target directly in front (0 degrees)
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(50, 0))
+
+        result = is_in_pdc_arc(ship, target)
+
+        assert result is True
+
+    def test_target_at_exact_range_boundary(self):
+        """Target at exactly max range is still within range."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=90
+        )
+
+        # Target at exactly 100 units away (the max range)
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(100, 0))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # At exact range boundary, dist (100) is not > range (100), so should pass range check
+        assert result is True
+
+    def test_target_just_past_range_boundary(self):
+        """Target just past max range returns False."""
+        ship = self._create_pdc_ship(
+            position=Vector2(0, 0),
+            rotation=0,
+            pdc_range=100,
+            facing_angle=0,
+            firing_arc=90
+        )
+
+        # Target at 100.1 units away (just past max range)
+        target = Mock()
+        target.get_position = Mock(return_value=Vector2(100.1, 0))
+
+        result = is_in_pdc_arc(ship, target)
+
+        # Just past range - should fail
+        assert result is False

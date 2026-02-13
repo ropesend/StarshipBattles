@@ -3,6 +3,7 @@ import pytest
 import sys
 import os
 import pygame
+from unittest.mock import patch
 
 
 from game.ui.renderer.camera import Camera
@@ -346,3 +347,206 @@ class TestCameraEdgeCases:
         # Should center on the single object
         assert camera.position.x == pytest.approx(500, abs=0.1)
         assert camera.position.y == pytest.approx(500, abs=0.1)
+
+
+class TestCameraUpdateInput:
+    """Tests for Camera.update_input() keyboard and mouse handling."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
+        pygame.display.set_mode((800, 600))
+        yield
+
+    def _mock_keys(self, pressed=None):
+        """Create a mock key state dict-like object."""
+        pressed = pressed or {}
+
+        class MockKeyState:
+            def __init__(self, pressed_keys):
+                self._pressed = pressed_keys
+
+            def __getitem__(self, key):
+                return self._pressed.get(key, False)
+
+        return MockKeyState(pressed)
+
+    def test_keyboard_panning_wasd(self):
+        """WASD keys should pan the camera."""
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+        original_pos = pygame.math.Vector2(camera.position)
+
+        # Mock key state - W pressed (up = negative y)
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_w: True})), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera.update_input(0.1, [])  # 100ms
+
+            # Camera should have moved up (negative y)
+            assert camera.position.y < original_pos.y
+
+    def test_keyboard_panning_arrows(self):
+        """Arrow keys should pan the camera."""
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_RIGHT: True})), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera.update_input(0.1, [])
+
+            # Camera should have moved right (positive x)
+            assert camera.position.x > 0
+
+    def test_keyboard_pan_clears_target(self):
+        """Manual keyboard panning should clear target follow."""
+        camera = Camera(800, 600)
+        camera.target = MockTarget(500, 500)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_a: True})), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera.update_input(0.1, [])
+
+            assert camera.target is None
+
+    def test_mouse_wheel_zoom_in(self):
+        """Mouse wheel scroll up should zoom in."""
+        camera = Camera(800, 600)
+        camera.zoom = 1.0
+        camera.target_zoom = 1.0
+
+        wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=1)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
+             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+
+            camera.update_input(0.1, [wheel_event])
+
+            # target_zoom should increase
+            assert camera.target_zoom > 1.0
+
+    def test_mouse_wheel_zoom_out(self):
+        """Mouse wheel scroll down should zoom out."""
+        camera = Camera(800, 600)
+        camera.zoom = 1.0
+        camera.target_zoom = 1.0
+
+        wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=-1)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
+             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+
+            camera.update_input(0.1, [wheel_event])
+
+            # target_zoom should decrease
+            assert camera.target_zoom < 1.0
+
+    def test_zoom_clamped_to_max(self):
+        """Zoom should not exceed max_zoom."""
+        camera = Camera(800, 600)
+        camera.zoom = camera.max_zoom
+        camera.target_zoom = camera.max_zoom
+
+        # Try to zoom in past max
+        wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=1)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
+             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+
+            camera.update_input(0.1, [wheel_event])
+
+            assert camera.target_zoom <= camera.max_zoom
+
+    def test_zoom_clamped_to_min(self):
+        """Zoom should not go below min_zoom."""
+        camera = Camera(800, 600)
+        camera.zoom = camera.min_zoom
+        camera.target_zoom = camera.min_zoom
+
+        # Try to zoom out past min
+        wheel_event = pygame.event.Event(pygame.MOUSEWHEEL, y=-1)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)), \
+             patch('pygame.mouse.get_pos', return_value=(400, 300)):
+
+            camera.update_input(0.1, [wheel_event])
+
+            assert camera.target_zoom >= camera.min_zoom
+
+    def test_middle_mouse_drag_panning(self):
+        """Middle mouse button drag should pan camera."""
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+        camera.zoom = 1.0
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, True, False)), \
+             patch('pygame.mouse.get_rel', return_value=(50, 30)):
+
+            camera.update_input(0.1, [])
+
+            # Camera should move opposite to drag direction
+            assert camera.position.x == pytest.approx(-50, abs=1)
+            assert camera.position.y == pytest.approx(-30, abs=1)
+
+    def test_middle_mouse_drag_clears_target(self):
+        """Middle mouse drag should clear target follow."""
+        camera = Camera(800, 600)
+        camera.target = MockTarget(500, 500)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, True, False)), \
+             patch('pygame.mouse.get_rel', return_value=(10, 10)):
+
+            camera.update_input(0.1, [])
+
+            assert camera.target is None
+
+    def test_no_input_no_change(self):
+        """No input should not change camera position."""
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(100, 200)
+        original = pygame.math.Vector2(camera.position)
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys()), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera.update_input(0.1, [])
+
+            assert camera.position.x == original.x
+            assert camera.position.y == original.y
+
+    def test_pan_speed_scales_with_zoom(self):
+        """Pan speed should be faster when zoomed out."""
+        camera1 = Camera(800, 600)
+        camera1.position = pygame.math.Vector2(0, 0)
+        camera1.zoom = 1.0
+
+        camera2 = Camera(800, 600)
+        camera2.position = pygame.math.Vector2(0, 0)
+        camera2.zoom = 0.5  # Zoomed out
+
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_d: True})), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera1.update_input(0.1, [])
+            camera2.update_input(0.1, [])
+
+            # Zoomed-out camera should pan further
+            assert camera2.position.x > camera1.position.x

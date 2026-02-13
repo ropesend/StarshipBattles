@@ -14,7 +14,8 @@ def mock_ship():
     ship.team_id = 0
     ship.position = Vector2(100, 200)
     ship.velocity = Vector2(10, 5)
-    ship.heading = 1.5
+    # Ship uses 'angle' internally (from PhysicsBody), DTO exposes as 'heading'
+    ship.angle = 1.5
     ship.is_alive = True
     ship.is_derelict = False
     ship.hp = 80.0

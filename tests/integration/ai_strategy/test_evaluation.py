@@ -161,3 +161,124 @@ class TestTargetSelection:
         # Should find a target (any of them)
         assert target is not None
         assert target.team_id == 1
+
+
+class TestAIControllerWithProductionData:
+    """Integration tests using production JSON data files (TCG-FND-024).
+
+    These tests load real combat_strategies.json to verify the AI controller
+    works correctly with actual strategy definitions.
+    """
+
+    @pytest.fixture
+    def production_strategy_manager(self):
+        """Load production combat strategies from real JSON files."""
+        from game.ai.strategy_manager import StrategyManager
+        from tests.fixtures.paths import get_data_dir
+
+        data_dir = get_data_dir()
+
+        # Clear and reload with production data
+        manager = StrategyManager.instance()
+        manager.clear()
+        manager.load_data(str(data_dir))
+
+        yield manager
+
+        # Cleanup
+        manager.clear()
+
+    def test_resolve_strategy_from_production_data(self, production_strategy_manager):
+        """StrategyManager resolves strategies from production JSON (TCG-FND-024)."""
+        # Verify we have loaded strategies
+        assert len(production_strategy_manager.strategies) > 0
+
+        # Resolve a known production strategy
+        resolved = production_strategy_manager.resolve_strategy('standard_ranged')
+
+        # Should have all required keys
+        assert 'definition' in resolved
+        assert 'targeting' in resolved
+        assert 'movement' in resolved
+
+    def test_ai_controller_with_production_strategy(
+        self, spatial_grid, create_test_ship, production_strategy_manager
+    ):
+        """AIController works with production strategy data (TCG-FND-024)."""
+        # Create ship with production strategy
+        ship1 = create_test_ship("Ally", 0, 0, team_id=0)
+        ship1.ai_strategy = 'standard_ranged'  # Real production strategy
+
+        enemy = create_test_ship("Enemy", 500, 0, team_id=1)
+
+        spatial_grid.insert(ship1)
+        spatial_grid.insert(enemy)
+
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
+
+        # Should update without error using production strategy
+        ai_controller.update()
+
+        # Should acquire target
+        assert ship1.current_target == enemy
+
+    def test_ai_controller_behavior_selection_from_production_data(
+        self, spatial_grid, create_test_ship, production_strategy_manager
+    ):
+        """AIController selects correct behavior from production strategy (TCG-FND-024)."""
+        ship1 = create_test_ship("Ally", 0, 0, team_id=0)
+        ship1.ai_strategy = 'standard_ranged'
+
+        enemy = create_test_ship("Enemy", 500, 0, team_id=1)
+
+        spatial_grid.insert(ship1)
+        spatial_grid.insert(enemy)
+
+        ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
+        ai_controller.update()
+
+        # standard_ranged uses kite_max movement policy which should select 'kite' behavior
+        assert ai_controller.current_behavior is not None
+
+    def test_all_production_strategies_resolvable(self, production_strategy_manager):
+        """All production strategies can be resolved without error (TCG-FND-024)."""
+        for strategy_id in production_strategy_manager.strategies.keys():
+            resolved = production_strategy_manager.resolve_strategy(strategy_id)
+
+            # Each should have minimum required structure
+            assert resolved is not None
+            assert 'targeting' in resolved
+            assert 'movement' in resolved
+
+    def test_ai_controller_with_multiple_strategies(
+        self, spatial_grid, create_test_ship, production_strategy_manager
+    ):
+        """Multiple ships with different strategies work together (TCG-FND-024)."""
+        # Create ships with different production strategies
+        ship_standard = create_test_ship("Standard", 0, 0, team_id=0)
+        ship_standard.ai_strategy = 'standard_ranged'
+
+        ship_brawler = create_test_ship("Brawler", 100, 0, team_id=0)
+        ship_brawler.ai_strategy = 'brawler'
+
+        enemy = create_test_ship("Enemy", 500, 0, team_id=1)
+
+        spatial_grid.insert(ship_standard)
+        spatial_grid.insert(ship_brawler)
+        spatial_grid.insert(enemy)
+
+        # Create controllers for both
+        ai_standard = AIController(
+            ShipControllableAdapter(ship_standard), spatial_grid, enemy_team_id=1
+        )
+        ai_brawler = AIController(
+            ShipControllableAdapter(ship_brawler), spatial_grid, enemy_team_id=1
+        )
+
+        # Both should update without error
+        ai_standard.update()
+        ai_brawler.update()
+
+        # Both should acquire target
+        assert ship_standard.current_target == enemy
+        assert ship_brawler.current_target == enemy

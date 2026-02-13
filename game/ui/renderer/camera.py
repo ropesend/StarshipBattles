@@ -1,11 +1,12 @@
 """Camera module for viewport management and coordinate transformations."""
+from typing import List, Optional, Tuple, Any
 import pygame
 
 
 class Camera:
     """Handles viewport panning, zooming, and coordinate transformations."""
     
-    def __init__(self, width, height, offset_x=0, offset_y=0):
+    def __init__(self, width: int, height: int, offset_x: int = 0, offset_y: int = 0) -> None:
         self.width = width
         self.height = height
         self.offset_x = offset_x
@@ -21,7 +22,7 @@ class Camera:
         self._zoom_anchor_world = None
         self._zoom_anchor_screen = None
         
-    def update(self, dt):
+    def update(self, dt: float) -> None:
         """
         Update camera state including smooth zoom interpolation and target following.
 
@@ -58,7 +59,7 @@ class Camera:
                  pass # Keep looking at dead ship position
              self.position = pygame.math.Vector2(self.target.position)
              
-    def update_input(self, dt, events):
+    def update_input(self, dt: float, events: List[pygame.event.Event]) -> None:
         """
         Process keyboard and mouse input for camera control.
 
@@ -112,7 +113,7 @@ class Camera:
                 
                 self.target_zoom = max(self.min_zoom, min(self.max_zoom, self.target_zoom))
 
-    def world_to_screen(self, world_pos):
+    def world_to_screen(self, world_pos: pygame.math.Vector2) -> pygame.math.Vector2:
         """Convert world coordinates to screen coordinates."""
         # Center of the VIEWPORT (not screen)
         screen_center = pygame.math.Vector2(self.width / 2, self.height / 2)
@@ -121,7 +122,7 @@ class Camera:
         # Result is relative to Viewport Top-Left. Add viewport offset.
         return screen_center + offset + pygame.math.Vector2(self.offset_x, self.offset_y)
 
-    def screen_to_world(self, screen_pos):
+    def screen_to_world(self, screen_pos: Tuple[int, int]) -> pygame.math.Vector2:
         """Convert screen coordinates to world coordinates."""
         # Remove Viewport Offset first to get coordinate relative to Viewport
         local_pos = pygame.math.Vector2(screen_pos) - pygame.math.Vector2(self.offset_x, self.offset_y)
@@ -130,7 +131,7 @@ class Camera:
         offset = local_pos - screen_center
         return self.position + (offset / self.zoom)
 
-    def fit_objects(self, objects):
+    def fit_objects(self, objects: List[Any]) -> None:
         """Adjust camera to fit all objects in view."""
         if not objects:
             return

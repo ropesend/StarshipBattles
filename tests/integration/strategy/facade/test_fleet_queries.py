@@ -2,6 +2,7 @@
 import pytest
 from unittest.mock import Mock, MagicMock
 from game.core.hex_math import HexCoord
+from tests.integration.strategy.facade.conftest import create_mock_session_with_fleet_lookup
 
 
 class TestGetFleet:
@@ -27,9 +28,8 @@ class TestGetFleet:
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
 
-        # Create mock session
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
+        # Create mock session with fleet lookup support
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet(101)
@@ -47,8 +47,7 @@ class TestGetFleet:
         mock_empire = Mock()
         mock_empire.fleets = []
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet(9999)
@@ -77,8 +76,7 @@ class TestGetFleet:
         mock_empire2 = Mock()
         mock_empire2.fleets = [mock_fleet]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire1, mock_empire2]
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire1, mock_empire2])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet(202)
@@ -173,9 +171,9 @@ class TestGetFleetPathPreview:
 
         expected_path = [HexCoord(1, 0), HexCoord(2, 0), HexCoord(3, 0)]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.preview_fleet_path.return_value = expected_path
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], preview_fleet_path=Mock(return_value=expected_path)
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_path_preview(101, HexCoord(3, 0))
@@ -190,8 +188,7 @@ class TestGetFleetPathPreview:
         mock_empire = Mock()
         mock_empire.fleets = []
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_path_preview(9999, HexCoord(3, 0))
@@ -209,9 +206,9 @@ class TestGetFleetPathPreview:
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.preview_fleet_path.return_value = None
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], preview_fleet_path=Mock(return_value=None)
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_path_preview(101, HexCoord(100, 100))
@@ -238,9 +235,9 @@ class TestGetFleetPathProjection:
             {"turn": 2, "hex": HexCoord(2, 0), "status": "arrived"},
         ]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.get_fleet_path_projection.return_value = expected_projection
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], get_fleet_path_projection=Mock(return_value=expected_projection)
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_path_projection(101, max_turns=10)
@@ -255,8 +252,7 @@ class TestGetFleetPathProjection:
         mock_empire = Mock()
         mock_empire.fleets = []
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_path_projection(9999)

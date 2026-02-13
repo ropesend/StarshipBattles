@@ -76,8 +76,10 @@ class StrategySessionFacade:
 
     # --- Fleet Queries ---
 
-    def _find_fleet_by_id(self, fleet_id: int):
-        """Internal helper to find a fleet by ID across all empires.
+    def _get_fleet_by_id(self, fleet_id: int):
+        """Internal helper to get a fleet by ID across all empires.
+
+        Delegates to GameSession._get_fleet_by_id() for O(1) lookup with fallback.
 
         Args:
             fleet_id: The fleet ID to find
@@ -85,14 +87,10 @@ class StrategySessionFacade:
         Returns:
             The Fleet domain object if found, None otherwise
         """
-        for empire in self._session.empires:
-            for fleet in empire.fleets:
-                if fleet.id == fleet_id:
-                    return fleet
-        return None
+        return self._session._get_fleet_by_id(fleet_id)
 
-    def _find_empire_by_id(self, empire_id: int):
-        """Internal helper to find an empire by ID.
+    def _get_empire_by_id(self, empire_id: int):
+        """Internal helper to get an empire by ID.
 
         Args:
             empire_id: The empire ID to find
@@ -114,7 +112,7 @@ class StrategySessionFacade:
         Returns:
             FleetInfo DTO if found, None otherwise
         """
-        fleet = self._find_fleet_by_id(fleet_id)
+        fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return None
         return FleetInfo.from_fleet(fleet)
@@ -150,7 +148,7 @@ class StrategySessionFacade:
         Returns:
             List of HexCoords representing the path, or None if invalid
         """
-        fleet = self._find_fleet_by_id(fleet_id)
+        fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return None
         return self._session.preview_fleet_path(fleet, target_hex)
@@ -167,7 +165,7 @@ class StrategySessionFacade:
         Returns:
             List of dicts with turn-by-turn movement info
         """
-        fleet = self._find_fleet_by_id(fleet_id)
+        fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return []
         return self._session.get_fleet_path_projection(fleet, max_turns)
@@ -201,8 +199,8 @@ class StrategySessionFacade:
 
     # --- Planet Queries ---
 
-    def _find_planet_by_id(self, planet_id: int):
-        """Internal helper to find a planet by ID across all systems.
+    def _get_planet_by_id(self, planet_id: int):
+        """Internal helper to get a planet by ID across all systems.
 
         Args:
             planet_id: The planet ID to find
@@ -225,7 +223,7 @@ class StrategySessionFacade:
         Returns:
             PlanetInfo DTO if found, None otherwise
         """
-        planet = self._find_planet_by_id(planet_id)
+        planet = self._get_planet_by_id(planet_id)
         if planet is None:
             return None
         return PlanetInfo.from_planet(planet)
@@ -266,7 +264,7 @@ class StrategySessionFacade:
         Returns:
             EmpireInfo DTO if found, None otherwise
         """
-        empire = self._find_empire_by_id(empire_id)
+        empire = self._get_empire_by_id(empire_id)
         if empire is None:
             return None
         return EmpireInfo.from_empire(empire)
@@ -280,7 +278,7 @@ class StrategySessionFacade:
         Returns:
             List of ColonySummary DTOs for the empire's colonies
         """
-        empire = self._find_empire_by_id(empire_id)
+        empire = self._get_empire_by_id(empire_id)
         if empire is None:
             return []
         return [ColonySummary.from_planet(planet) for planet in empire.colonies]
@@ -294,7 +292,7 @@ class StrategySessionFacade:
         Returns:
             List of FleetSummary DTOs for the empire's fleets
         """
-        empire = self._find_empire_by_id(empire_id)
+        empire = self._get_empire_by_id(empire_id)
         if empire is None:
             return []
         return [FleetSummary.from_fleet(fleet) for fleet in empire.fleets]
@@ -369,13 +367,13 @@ class StrategySessionFacade:
         Returns:
             ValidationResult indicating whether colonization is valid
         """
-        fleet = self._find_fleet_by_id(fleet_id)
+        fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
         planet = None
         if planet_id is not None:
-            planet = self._find_planet_by_id(planet_id)
+            planet = self._get_planet_by_id(planet_id)
             if planet is None:
                 return ValidationResult(is_valid=False, errors=["Planet not found."])
 
@@ -395,7 +393,7 @@ class StrategySessionFacade:
         Returns:
             ValidationResult indicating whether the move is valid
         """
-        fleet = self._find_fleet_by_id(fleet_id)
+        fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
@@ -423,7 +421,7 @@ class StrategySessionFacade:
         from game.core.registry import get_default_registry_provider
         from game.strategy.validation.colonize_validator import ColonizeValidator
 
-        fleet = self._find_fleet_by_id(fleet_id)
+        fleet = self._get_fleet_by_id(fleet_id)
         if fleet is None:
             return {}
 

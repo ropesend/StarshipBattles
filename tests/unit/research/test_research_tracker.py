@@ -473,3 +473,123 @@ class TestResearchTrackerEdgeCases:
 
         state = NodeState.from_dict(data)
         assert state.current_level == 2
+
+
+# =============================================================================
+# TCG-FND-019: spread_rp_evenly with Pre-Computed tech_levels
+# =============================================================================
+
+class TestSpreadRPEvenlyPrecomputedTechLevels:
+    """TCG-FND-019: Tests for spread_rp_evenly() with pre-computed tech_levels.
+
+    The method accepts an optional tech_levels parameter for performance.
+    All existing tests call it without this parameter, always using the
+    default path that calls get_all_tech_levels(). These tests verify
+    the pre-computed path works correctly.
+    """
+
+    def test_spread_rp_with_precomputed_tech_levels_matches_auto(self, research_tracker, mock_tech_tree):
+        """Pre-computed tech_levels produces same result as automatic path."""
+        # First, use automatic path
+        count_auto = research_tracker.spread_rp_evenly(mock_tech_tree)
+        alloc_a_auto = research_tracker.get_state('node_a').rp_allocation
+        alloc_b_auto = research_tracker.get_state('node_b').rp_allocation
+
+        # Reset allocations
+        research_tracker.clear_all_allocations()
+
+        # Now use pre-computed tech_levels
+        tech_levels = research_tracker.get_all_tech_levels()
+        count_precomputed = research_tracker.spread_rp_evenly(mock_tech_tree, tech_levels=tech_levels)
+        alloc_a_precomputed = research_tracker.get_state('node_a').rp_allocation
+        alloc_b_precomputed = research_tracker.get_state('node_b').rp_allocation
+
+        # Results should be identical
+        assert count_auto == count_precomputed
+        assert alloc_a_auto == alloc_a_precomputed
+        assert alloc_b_auto == alloc_b_precomputed
+
+    def test_spread_rp_with_explicit_tech_levels_dict(self, research_tracker, mock_tech_tree):
+        """spread_rp_evenly uses provided tech_levels dict."""
+        # Provide explicit tech_levels
+        explicit_tech_levels = {
+            'node_a': 0,
+            'node_b': 0,
+            'node_c': 5,  # Completed
+            'node_d': 0   # Locked
+        }
+
+        count = research_tracker.spread_rp_evenly(mock_tech_tree, tech_levels=explicit_tech_levels)
+
+        # Should still distribute to available nodes
+        assert count == 2
+        assert research_tracker.get_state('node_a').rp_allocation == 100
+        assert research_tracker.get_state('node_b').rp_allocation == 100
+
+    def test_spread_rp_with_empty_tech_levels_dict(self, research_tracker, mock_tech_tree):
+        """spread_rp_evenly with empty tech_levels dict still works."""
+        # Empty dict - node.get_status will be called with empty tech_levels
+        count = research_tracker.spread_rp_evenly(mock_tech_tree, tech_levels={})
+
+        # Mock nodes return hardcoded status values, so result should be same
+        assert count == 2
+
+    def test_precomputed_tech_levels_avoids_get_all_tech_levels(self, research_tracker, mock_tech_tree):
+        """Pre-computed tech_levels avoids calling get_all_tech_levels()."""
+        from unittest.mock import patch
+
+        tech_levels = {'node_a': 1, 'node_b': 2}
+
+        with patch.object(research_tracker, 'get_all_tech_levels') as mock_get:
+            research_tracker.spread_rp_evenly(mock_tech_tree, tech_levels=tech_levels)
+
+            # get_all_tech_levels should NOT be called
+            mock_get.assert_not_called()
+
+    def test_default_path_calls_get_all_tech_levels(self, research_tracker, mock_tech_tree):
+        """Default path (no tech_levels) calls get_all_tech_levels()."""
+        from unittest.mock import patch
+
+        with patch.object(research_tracker, 'get_all_tech_levels', return_value={}) as mock_get:
+            research_tracker.spread_rp_evenly(mock_tech_tree)
+
+            # get_all_tech_levels SHOULD be called
+            mock_get.assert_called_once()
+
+    def test_precomputed_with_populated_tracker(self, populated_tracker, mock_tech_tree):
+        """Pre-computed tech_levels works with populated tracker."""
+        # Get the current tech levels from populated tracker
+        tech_levels = populated_tracker.get_all_tech_levels()
+
+        # Should have levels from the populated state
+        assert tech_levels['node_a'] == 1
+        assert tech_levels['node_b'] == 0
+        assert tech_levels['node_c'] == 2
+
+        # Spread with pre-computed levels
+        count = populated_tracker.spread_rp_evenly(mock_tech_tree, tech_levels=tech_levels)
+
+        # Should work correctly
+        assert count == 2
+        assert populated_tracker.get_total_allocated() == populated_tracker.rp_budget
+
+    def test_precomputed_tech_levels_passed_to_get_status(self, research_tracker):
+        """Verify tech_levels is actually passed to node.get_status()."""
+        from unittest.mock import MagicMock, call
+
+        # Create a tree with a single node that we can inspect
+        tree = MagicMock()
+        node = MagicMock()
+        node.id = 'test_node'
+        node.get_status.return_value = 'available'
+        tree.nodes = {'test_node': node}
+
+        explicit_levels = {'test_node': 5, 'other_node': 3}
+
+        research_tracker.spread_rp_evenly(tree, tech_levels=explicit_levels)
+
+        # Verify get_status was called with our explicit tech_levels
+        node.get_status.assert_called()
+        # The second argument to get_status should be our tech_levels
+        call_args = node.get_status.call_args
+        assert call_args[0][1] == explicit_levels

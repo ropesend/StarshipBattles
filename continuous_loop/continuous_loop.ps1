@@ -21,7 +21,20 @@
 #   - Never force-pushes or destructively modifies main
 #   - Rate limit detection with 15-minute sleep + retry
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
+
+# ═══════════════════════════════════════════════════════
+# TRANSCRIPT LOGGING
+# ═══════════════════════════════════════════════════════
+
+$LOG_DIR = "continuous_loop/logs"
+if (-not (Test-Path $LOG_DIR)) {
+    New-Item -ItemType Directory -Path $LOG_DIR -Force | Out-Null
+}
+$logTimestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$LOG_FILE = "$LOG_DIR/continuous_loop_$logTimestamp.log"
+Start-Transcript -Path $LOG_FILE -Append
+Write-Host "[LOG] Transcript started: $LOG_FILE"
 
 # ═══════════════════════════════════════════════════════
 # CONFIGURATION
@@ -43,15 +56,17 @@ $POPULATE_SCRIPT = "continuous_loop/populate_cycle_plan.py"
 
 $CLAUDE_TEMP_DIR = "$env:LOCALAPPDATA\Temp\claude\C--Dev-Starship-Battles"
 
-# Rate limit patterns
+# Rate limit patterns (text patterns only - bare "429"/"529" caused false positives
+# matching test counts like "5290 tests passed" or finding IDs like "DUP-UI1-429")
 $RATE_LIMIT_PATTERNS = @(
     "rate.limit",
     "rate_limit",
     "overloaded",
     "too many requests",
     "Resource has been exhausted",
-    "429",
-    "529"
+    "HTTP 429",
+    "status.+429",
+    "error.+529"
 )
 
 # ═══════════════════════════════════════════════════════
@@ -119,7 +134,7 @@ function Save-CycleState ($state) {
 
 function Test-RateLimit ($output) {
     foreach ($pattern in $RATE_LIMIT_PATTERNS) {
-        if ($output -match [regex]::Escape($pattern)) {
+        if ($output -match $pattern) {
             return $true
         }
     }
@@ -129,7 +144,18 @@ function Test-RateLimit ($output) {
 function Clear-ClaudeTempFiles {
     if (Test-Path $CLAUDE_TEMP_DIR) {
         try {
+            # Clean task queue
             Remove-Item -Path "$CLAUDE_TEMP_DIR\tasks\*" -Force -ErrorAction SilentlyContinue
+
+            # Purge old session directories (UUID-named) older than 1 hour.
+            # Stale sessions from crashed CLI invocations can accumulate and
+            # cause EPERM errors or prevent new sessions from starting.
+            $cutoff = (Get-Date).AddHours(-1)
+            Get-ChildItem -Path $CLAUDE_TEMP_DIR -Directory -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -match "^[0-9a-f]{8}-" -and $_.LastWriteTime -lt $cutoff } |
+                ForEach-Object {
+                    Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                }
         }
         catch { }
     }
@@ -185,9 +211,11 @@ function Get-FindingsCount ($reviewFolder) {
 }
 
 function Get-LatestReviewFolder {
+    # Sort by Name (YYYY-MM-DD prefix) not LastWriteTime, which can be
+    # changed by OS indexing/antivirus and cause wrong folder selection.
     $folders = Get-ChildItem "Reviews/results" -Directory -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -match "sweep" } |
-        Sort-Object LastWriteTime -Descending
+        Sort-Object Name -Descending
     if ($folders.Count -gt 0) {
         return $folders[0].FullName
     }
@@ -209,7 +237,12 @@ foreach ($file in @($SWEEP_WORKER, $INNER_LOOP_SCRIPT, $POPULATE_SCRIPT)) {
 }
 
 $state = Load-CycleState
-$startTime = [DateTime]::Parse($state.start_time)
+
+# Reset start_time on fresh launch so the runtime limit counts from NOW,
+# not from a previous (possibly crashed) run's original start time.
+$state.start_time = (Get-Date).ToString("o")
+Save-CycleState $state
+$startTime = Get-Date
 
 Write-Banner "Continuous Improvement Loop Starting"
 Write-Info "Max cycles: $MAX_CYCLES"
@@ -298,6 +331,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
     $state.current_cycle++
     $cycleNum = $state.current_cycle
     $branchName = "sweep-cycle-$cycleNum"
+    $cycleStartTime = (Get-Date).ToString("o")
 
     Write-Banner "CYCLE $cycleNum / $MAX_CYCLES"
 
@@ -475,11 +509,18 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
 
             # Still merge what we have
             git add -A
-            git commit -m "[Sweep] Cycle $cycleNum: partial (circuit breaker)" --allow-empty 2>$null
+            git commit -m "[Sweep] Cycle $cycleNum partial (circuit breaker)" --allow-empty 2>$null
             git checkout main
             git merge $branchName --no-ff -m "Merge sweep-cycle-$cycleNum (partial - circuit breaker)"
             break
         }
+
+        # Not at circuit breaker yet - abandon this cycle's branch and retry next cycle
+        Write-Warn "Abandoning cycle $cycleNum branch. Will retry in next cycle."
+        git add -A
+        git commit -m "[Sweep] Cycle $cycleNum partial (inner loop failed)" --allow-empty 2>$null
+        git checkout main 2>$null
+        continue
     }
     else {
         $state.consecutive_failures = 0
@@ -490,7 +531,24 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
     git add -A
     git commit -m "Sweep cycle $cycleNum complete" --allow-empty 2>$null
 
-    # ── Step G: Merge to main ──
+    # ── Step G: Test gate before merge ──
+    Write-Info "Running test gate before merge..."
+    $testOutput = & pytest tests/ -n 12 "--tb=no" -q 2>&1 | Out-String
+    $testExitCode = $LASTEXITCODE
+    if ($testExitCode -ne 0) {
+        Write-ErrorLog "Test gate FAILED (exit code $testExitCode). Refusing to merge broken code."
+        Write-Host $testOutput
+        $state.status = "failed_test_gate"
+        $state.consecutive_failures++
+        Save-CycleState $state
+
+        # Abandon branch, return to main for next cycle
+        git checkout main 2>$null
+        continue
+    }
+    Write-Success "Test gate passed"
+
+    # ── Step H: Merge to main ──
     $state.status = "merging"
     Save-CycleState $state
 
@@ -508,17 +566,30 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
 
     Write-Success "Merged $branchName to main"
 
-    # ── Step H: Record cycle results ──
+    # ── Step I: Record cycle results ──
+    $qualityScore = $null
+    $qualityFile = "$WORKSPACE\continuous_loop\quality_scores.jsonl"
+    if (Test-Path $qualityFile) {
+        try {
+            $lastLine = Get-Content $qualityFile -Tail 1
+            if ($lastLine) {
+                $qualityScore = ($lastLine | ConvertFrom-Json).overall.score
+            }
+        }
+        catch { }
+    }
+
     $cycleRecord = [PSCustomObject]@{
         cycle              = $cycleNum
         branch             = $branchName
-        started            = $state.start_time
+        started            = $cycleStartTime
         completed          = (Get-Date).ToString("o")
         review_folder      = if ($reviewFolder) { Split-Path $reviewFolder -Leaf } else { "unknown" }
         findings_count     = $findingsCount
         projects_created   = $projectsCreated
         projects_completed = if ($innerSuccess) { $projectsCreated } else { 0 }
         projects_failed    = if ($innerSuccess) { 0 } else { $projectsCreated }
+        quality_score      = $qualityScore
     }
     $state.cycles += $cycleRecord
     $state.status = "idle"
@@ -552,3 +623,6 @@ Write-Info "Total findings processed: $totalFindings"
 Write-Info "Total projects created: $totalProjects"
 Write-Info "Final status: $($state.status)"
 Write-Info "State file: $STATE_FILE"
+Write-Info "Log file: $LOG_FILE"
+
+Stop-Transcript

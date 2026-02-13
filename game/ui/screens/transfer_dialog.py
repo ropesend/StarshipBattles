@@ -1,3 +1,8 @@
+"""
+Transfer Dialog - Resource and cargo transfer between fleets and planets.
+
+Handles transfer commands for moving resources between ships and colonies.
+"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional

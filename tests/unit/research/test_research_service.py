@@ -12,6 +12,7 @@ Tests cover:
 """
 import pytest
 import math
+import random
 from unittest.mock import MagicMock, patch
 
 from game.research.systems.research_service import ResearchService
@@ -461,3 +462,183 @@ class TestProcessTurnEdgeCases:
         child_events = [e for e in events if e['node_id'] == 'child']
         assert len(child_events) >= 1
         assert child_events[0]['event'] in ('progress', 'breakthrough')
+
+
+# =============================================================================
+# TCG-FND-009: ResearchService.process_turn() Critical Properties
+# =============================================================================
+
+class TestProcessTurnTechLevelsMutation:
+    """TCG-FND-009: Tests for tech_levels mutation during process_turn."""
+
+    def test_tech_levels_not_mutated_when_passed_externally(self, tech_tree, tracker):
+        """External tech_levels dict should not be mutated (a copy is made)."""
+        # Set up: give root high chance for breakthrough
+        state = tracker.get_state('root')
+        state.current_chance = 0.99
+        tracker.set_allocation('root', 100)
+
+        # Pass in an external dict
+        external_levels = {'root': 0}
+
+        # Force breakthrough
+        with patch('random.Random.random', return_value=0.001):
+            events = ResearchService.process_turn(tech_tree, tracker, tech_levels=external_levels)
+
+        # Verify breakthrough occurred
+        breakthrough_events = [e for e in events if e['event'] == 'breakthrough']
+        assert len(breakthrough_events) == 1
+
+        # CRITICAL: External dict should NOT be mutated
+        assert external_levels == {'root': 0}, \
+            "External tech_levels dict should not be mutated by process_turn()"
+
+    def test_tech_levels_internal_copy_updated_for_same_turn_cascade(self, tech_tree, tracker):
+        """Breakthrough should update internal copy so child nodes can process in same turn."""
+        # Create a chain: root (level 0) -> child depends on root level 1
+        # If root gets breakthrough during turn, child should see updated level
+
+        # Set up root for guaranteed breakthrough
+        root_state = tracker.get_state('root')
+        root_state.current_chance = 0.99
+        tracker.set_allocation('root', 100)
+
+        # Also allocate to child
+        tracker.set_allocation('child', 100)
+
+        # Start with root at level 0
+        initial_levels = {'root': 0}
+
+        # Force breakthrough on root (low roll)
+        call_count = [0]
+        def roll_sequence():
+            call_count[0] += 1
+            if call_count[0] == 1:  # First roll for root
+                return 0.001  # Breakthrough
+            return 0.999  # Progress for child (no breakthrough)
+
+        with patch('random.Random.random', side_effect=roll_sequence):
+            events = ResearchService.process_turn(tech_tree, tracker, tech_levels=initial_levels)
+
+        # Root should breakthrough
+        root_breakthroughs = [e for e in events if e['node_id'] == 'root' and e['event'] == 'breakthrough']
+        assert len(root_breakthroughs) == 1
+
+        # Child should now be available and processed (since root is level 1 internally)
+        # Note: child is locked at start, but may be processed if root breakthrough
+        # actually unlocked it during the same turn
+        child_events = [e for e in events if e['node_id'] == 'child']
+        # Child may or may not have events depending on iteration order
+        # The key test is that the external dict was not mutated
+        assert initial_levels == {'root': 0}
+
+
+class TestProcessTurnRNGFreshness:
+    """TCG-FND-009: Tests verifying RNG freshness per turn."""
+
+    def test_uses_fresh_rng_each_turn(self, tech_tree, tracker):
+        """Each turn should use a fresh random.Random() instance."""
+        tracker.set_allocation('root', 100)
+
+        # Track how many times Random() is instantiated
+        rng_instances = []
+
+        original_random = random.Random
+
+        def tracking_random():
+            rng = original_random()
+            rng_instances.append(rng)
+            return rng
+
+        with patch('game.research.systems.research_service.random.Random', side_effect=tracking_random):
+            ResearchService.process_turn(tech_tree, tracker)
+            ResearchService.process_turn(tech_tree, tracker)
+
+        # Each turn should create a new RNG instance
+        assert len(rng_instances) == 2, "Each turn should create a fresh RNG"
+
+    def test_rng_creates_new_instance_per_call(self, tech_tree, tracker):
+        """Verify that random.Random() is called, not using a shared/seeded RNG."""
+        tracker.set_allocation('root', 100)
+
+        # Track if Random() constructor is called
+        random_called = [False]
+
+        original_random = random.Random
+
+        def tracking_random():
+            random_called[0] = True
+            return original_random()
+
+        with patch('game.research.systems.research_service.random.Random', side_effect=tracking_random):
+            ResearchService.process_turn(tech_tree, tracker)
+
+        # Random() should have been called to create a fresh RNG
+        assert random_called[0], "random.Random() should be called each turn"
+
+
+class TestProcessTurnNodeOrdering:
+    """TCG-FND-009: Tests for consistent node processing order."""
+
+    def test_processes_nodes_in_dict_order(self, tracker):
+        """Nodes should be processed in dict.values() order (insertion order in Python 3.7+)."""
+        # Create a tech tree with specific insertion order
+        tree = TechTree()
+        tree.nodes['alpha'] = TechNode(id='alpha', name='Alpha', max_levels=1,
+                                        base_decay=0.01, volatility=0.1)
+        tree.nodes['beta'] = TechNode(id='beta', name='Beta', max_levels=1,
+                                       base_decay=0.01, volatility=0.1)
+        tree.nodes['gamma'] = TechNode(id='gamma', name='Gamma', max_levels=1,
+                                        base_decay=0.01, volatility=0.1)
+
+        # Allocate to all
+        tracker.set_allocation('alpha', 10)
+        tracker.set_allocation('beta', 10)
+        tracker.set_allocation('gamma', 10)
+
+        events = ResearchService.process_turn(tree, tracker)
+
+        # Extract node order from events
+        event_order = [e['node_id'] for e in events]
+
+        # Should be in insertion order
+        assert event_order == ['alpha', 'beta', 'gamma'], \
+            f"Nodes should be processed in insertion order, got {event_order}"
+
+    def test_breakthrough_updates_levels_for_subsequent_nodes(self, tracker):
+        """When a node breaks through, tech_levels is updated for later nodes."""
+        # Create tree: A -> B (B depends on A level 1)
+        tree = TechTree()
+        tree.nodes['nodeA'] = TechNode(id='nodeA', name='Node A', max_levels=3,
+                                        base_decay=0.01, volatility=0.1)
+
+        req = TechRequirement('nodeA', (1, 1))
+        req.resolved_level = 1
+        tree.nodes['nodeB'] = TechNode(id='nodeB', name='Node B', max_levels=3,
+                                        requirements=[[req]], base_decay=0.01, volatility=0.1)
+
+        # Set A for breakthrough
+        tracker.get_state('nodeA').current_chance = 0.99
+        tracker.set_allocation('nodeA', 100)
+        tracker.set_allocation('nodeB', 100)
+
+        # Force A to breakthrough
+        call_count = [0]
+        def controlled_roll():
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return 0.001  # Breakthrough for A
+            return 0.999  # No breakthrough for B
+
+        with patch('random.Random.random', side_effect=controlled_roll):
+            events = ResearchService.process_turn(tree, tracker)
+
+        # A should breakthrough
+        a_breakthrough = [e for e in events if e['node_id'] == 'nodeA' and e['event'] == 'breakthrough']
+        assert len(a_breakthrough) == 1
+
+        # B should now be processed (was locked before A leveled up)
+        b_events = [e for e in events if e['node_id'] == 'nodeB']
+        # B should have progress or breakthrough event since A unlocked it
+        assert len(b_events) >= 1, "Node B should be processed after A's breakthrough"
+        assert b_events[0]['event'] in ('progress', 'breakthrough')

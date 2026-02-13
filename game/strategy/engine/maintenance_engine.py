@@ -21,6 +21,53 @@ from typing import List, Dict
 from game.core.logger import log_info, log_warning
 
 
+# Shared maintenance rate used by both MaintenanceEngine and EmpireEconomyCalculator
+MAINTENANCE_RATE = 0.05  # 5% per turn
+
+
+def calculate_maintenance_cost(design_data: Dict, rate: float = MAINTENANCE_RATE) -> Dict[str, float]:
+    """Calculate maintenance cost from a design's resource costs.
+
+    Maintenance is a percentage of the total build cost, which is
+    the sum of resource_cost across all layers and components.
+
+    Handles two layer formats:
+    - Dict format: {"CORE": {"components": [...]}}
+    - List format: {"HULL": [{"id": "comp_a", ...}]}
+
+    Args:
+        design_data: Design data dict containing layers with components.
+        rate: Maintenance rate to apply (default: 5% = 0.05).
+
+    Returns:
+        Dict mapping resource type to maintenance cost amount.
+    """
+    total_build_cost: Dict[str, float] = {}
+
+    for layer in design_data.get('layers', {}).values():
+        # Handle both formats: dict with "components" key, or direct list
+        if isinstance(layer, dict):
+            components = layer.get('components', [])
+        elif isinstance(layer, list):
+            components = layer
+        else:
+            continue
+
+        for component in components:
+            if not isinstance(component, dict):
+                continue
+            comp_cost = component.get('resource_cost', {})
+            for res, amount in comp_cost.items():
+                total_build_cost[res] = total_build_cost.get(res, 0) + amount
+
+    # Apply maintenance rate
+    maintenance: Dict[str, float] = {}
+    for res, amount in total_build_cost.items():
+        maintenance[res] = amount * rate
+
+    return maintenance
+
+
 @dataclass
 class ScuttleEvent:
     """Record of an entity being scuttled due to maintenance failure."""
@@ -189,12 +236,7 @@ class MaintenanceEngine:
     def _calculate_maintenance_cost(self, design_data: Dict) -> Dict[str, float]:
         """Calculate maintenance cost from a design's resource costs.
 
-        Maintenance is MAINTENANCE_RATE (5%) of the total build cost,
-        which is the sum of resource_cost across all layers and components.
-
-        Handles two layer formats:
-        - Dict format: {"CORE": {"components": [...]}}
-        - List format: {"HULL": [{"id": "comp_a", ...}]}
+        Delegates to module-level calculate_maintenance_cost() function.
 
         Args:
             design_data: Design data dict containing layers with components.
@@ -202,30 +244,7 @@ class MaintenanceEngine:
         Returns:
             Dict mapping resource type to maintenance cost amount.
         """
-        total_build_cost: Dict[str, float] = {}
-
-        for layer in design_data.get('layers', {}).values():
-            # Handle both formats: dict with "components" key, or direct list
-            if isinstance(layer, dict):
-                components = layer.get('components', [])
-            elif isinstance(layer, list):
-                components = layer
-            else:
-                continue
-
-            for component in components:
-                if not isinstance(component, dict):
-                    continue
-                comp_cost = component.get('resource_cost', {})
-                for res, amount in comp_cost.items():
-                    total_build_cost[res] = total_build_cost.get(res, 0) + amount
-
-        # Apply maintenance rate
-        maintenance: Dict[str, float] = {}
-        for res, amount in total_build_cost.items():
-            maintenance[res] = amount * self.MAINTENANCE_RATE
-
-        return maintenance
+        return calculate_maintenance_cost(design_data, self.MAINTENANCE_RATE)
 
     def _cleanup_empty_fleets(self, empire, fleets_with_scuttles: set) -> None:
         """Remove fleets that became empty due to maintenance scuttling.

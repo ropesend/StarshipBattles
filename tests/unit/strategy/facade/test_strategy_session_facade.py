@@ -52,6 +52,14 @@ class TestFleetQueries:
         """Create facade with mock session."""
         session = Mock()
         session.empires = empires or []
+        # Mock _get_fleet_by_id to search empires (like real implementation)
+        def get_fleet_by_id(fleet_id):
+            for empire in session.empires:
+                for fleet in empire.fleets:
+                    if fleet.id == fleet_id:
+                        return fleet
+            return None
+        session._get_fleet_by_id = get_fleet_by_id
         return StrategySessionFacade(session)
 
     def test_get_fleet_found(self):
@@ -106,6 +114,7 @@ class TestFleetQueries:
         session = Mock()
         session.empires = [empire]
         session.preview_fleet_path = Mock(return_value=[HexCoord(0, 0), HexCoord(1, 0)])
+        session._get_fleet_by_id = Mock(return_value=fleet)
 
         facade = StrategySessionFacade(session)
         target_hex = HexCoord(5, 5)
@@ -133,6 +142,7 @@ class TestFleetQueries:
             {"turn": 1, "hex": HexCoord(1, 0)},
             {"turn": 2, "hex": HexCoord(2, 0)},
         ])
+        session._get_fleet_by_id = Mock(return_value=fleet)
 
         facade = StrategySessionFacade(session)
         result = facade.get_fleet_path_projection(1, max_turns=10)
@@ -481,10 +491,22 @@ class TestValidationQueries:
         planet.name = f"Planet {planet_id}"
         return planet
 
+    def _make_session_with_fleet_lookup(self, empires: list = None):
+        """Create mock session with _get_fleet_by_id support."""
+        session = Mock()
+        session.empires = empires or []
+        def get_fleet_by_id(fleet_id):
+            for empire in session.empires:
+                for fleet in empire.fleets:
+                    if fleet.id == fleet_id:
+                        return fleet
+            return None
+        session._get_fleet_by_id = get_fleet_by_id
+        return session
+
     def test_can_colonize_fleet_not_found(self):
         """Returns invalid result when fleet not found."""
-        session = Mock()
-        session.empires = []
+        session = self._make_session_with_fleet_lookup([])
 
         facade = StrategySessionFacade(session)
 
@@ -498,8 +520,7 @@ class TestValidationQueries:
         fleet = self._make_mock_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
 
-        session = Mock()
-        session.empires = [empire]
+        session = self._make_session_with_fleet_lookup([empire])
         session.galaxy = Mock()
         session.galaxy.systems = {}
 
@@ -519,8 +540,7 @@ class TestValidationQueries:
         system = Mock()
         system.planets = [planet]
 
-        session = Mock()
-        session.empires = [empire]
+        session = self._make_session_with_fleet_lookup([empire])
         session.galaxy = Mock()
         session.galaxy.systems = {HexCoord(0, 0): system}
         session.turn_engine = Mock()
@@ -537,8 +557,7 @@ class TestValidationQueries:
 
     def test_can_move_to_fleet_not_found(self):
         """Returns invalid result when fleet not found."""
-        session = Mock()
-        session.empires = []
+        session = self._make_session_with_fleet_lookup([])
 
         facade = StrategySessionFacade(session)
 
@@ -552,8 +571,7 @@ class TestValidationQueries:
         fleet = self._make_mock_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
 
-        session = Mock()
-        session.empires = [empire]
+        session = self._make_session_with_fleet_lookup([empire])
         session.preview_fleet_path = Mock(return_value=None)
 
         facade = StrategySessionFacade(session)
@@ -568,8 +586,7 @@ class TestValidationQueries:
         fleet = self._make_mock_fleet(1)
         empire = self._make_mock_empire(1, fleets=[fleet])
 
-        session = Mock()
-        session.empires = [empire]
+        session = self._make_session_with_fleet_lookup([empire])
         session.preview_fleet_path = Mock(return_value=[HexCoord(0, 0), HexCoord(1, 0)])
 
         facade = StrategySessionFacade(session)

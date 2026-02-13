@@ -90,6 +90,30 @@ class TestShipResourceManager:
         assert result is False
         assert mock_ship_instance.resource_levels['ammo'] == 50
 
+    def test_consume_resource_zero_amount(self, resource_manager, mock_ship_instance):
+        """Consuming zero amount succeeds without changing resource."""
+        mock_ship_instance.resource_levels['ammo'] = 50
+        result = resource_manager.consume_resource('ammo', 0)
+        assert result is True
+        assert mock_ship_instance.resource_levels['ammo'] == 50
+
+    def test_consume_resource_exact_amount(self, resource_manager, mock_ship_instance):
+        """Consuming exact remaining amount succeeds."""
+        mock_ship_instance.resource_levels['ammo'] = 30
+        result = resource_manager.consume_resource('ammo', 30)
+        assert result is True
+        assert mock_ship_instance.resource_levels['ammo'] == 0
+
+    def test_consume_resource_nonexistent_type(self, resource_manager, mock_ship_instance):
+        """Consuming nonexistent resource type fails gracefully."""
+        result = resource_manager.consume_resource('nonexistent', 10)
+        assert result is False
+
+    def test_get_current_resource_nonexistent(self, resource_manager, mock_ship_instance):
+        """Get current resource for nonexistent type returns 0."""
+        result = resource_manager.get_current_resource('nonexistent')
+        assert result == 0.0
+
     # --- Cost Calculation Tests ---
 
     def test_get_all_resource_costs_per_hex(self, resource_manager):
@@ -139,6 +163,56 @@ class TestShipResourceManager:
         # fuel is already at max (1000) in resource_levels
         result = resource_manager.resupply('fuel', 100)
         assert result == 0
+
+    def test_resupply_negative_amount(self, resource_manager, mock_ship_instance):
+        """Resupply with negative amount effectively removes resource."""
+        mock_ship_instance.resource_levels['fuel'] = 500
+        result = resource_manager.resupply('fuel', -100)
+        # Negative amount reduces current level (400), but capped at 0 minimum
+        assert result == -100
+        assert mock_ship_instance.resource_levels['fuel'] == 400
+
+    def test_resupply_zero_capacity(self, resource_manager, mock_ship_instance):
+        """Resupply when max capacity is 0 returns 0."""
+        # Set up a resource with 0 capacity
+        mock_ship_instance.get_calculated_stats.return_value['resource_storage'] = {
+            'special': 0,
+        }
+        mock_ship_instance.resource_levels['special'] = 0
+        result = resource_manager.resupply('special', 100)
+        assert result == 0
+        assert mock_ship_instance.resource_levels['special'] == 0
+
+    def test_resupply_nonexistent_resource(self, resource_manager, mock_ship_instance):
+        """Resupply nonexistent resource returns 0 (no capacity)."""
+        result = resource_manager.resupply('nonexistent', 100)
+        assert result == 0
+
+    # --- Cost Methods Empty Stats ---
+
+    def test_get_all_resource_costs_per_hex_empty(self, mock_ship_instance):
+        """Get per-hex costs when stats have empty dict."""
+        from game.strategy.data.ship_resource_manager import ShipResourceManager
+        mock_ship_instance.get_calculated_stats.return_value = {}
+        manager = ShipResourceManager(mock_ship_instance)
+        result = manager.get_all_resource_costs_per_hex()
+        assert result == {}
+
+    def test_get_all_resource_costs_per_turn_empty(self, mock_ship_instance):
+        """Get per-turn costs when stats have empty dict."""
+        from game.strategy.data.ship_resource_manager import ShipResourceManager
+        mock_ship_instance.get_calculated_stats.return_value = {}
+        manager = ShipResourceManager(mock_ship_instance)
+        result = manager.get_all_resource_costs_per_turn()
+        assert result == {}
+
+    def test_get_warp_resource_costs_empty(self, mock_ship_instance):
+        """Get warp costs when stats have empty dict."""
+        from game.strategy.data.ship_resource_manager import ShipResourceManager
+        mock_ship_instance.get_calculated_stats.return_value = {}
+        manager = ShipResourceManager(mock_ship_instance)
+        result = manager.get_warp_resource_costs()
+        assert result == {}
 
 
 class TestShipResourceManagerIntegration:

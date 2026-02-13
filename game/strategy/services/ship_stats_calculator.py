@@ -38,18 +38,17 @@ FULL_HP_REQUIRED_ABILITIES = {'WarpJump'}
 
 
 class ShipStatsCalculator:
-    """
-    Service for calculating ship statistics from component definitions.
+    """Service for calculating ship statistics from component definitions.
 
-    PROJ-42: Simplified to instance-only methods (removed static calling patterns).
+    All methods are instance methods requiring initialized registries.
+    This ensures consistent behavior and enables proper dependency injection.
 
     Usage:
-        # With explicit DI (required)
         service = ShipStatsCalculator(registries=game_registries)
         stats = service.calculate_stats(design_data)
 
-    This replaces reading from expected_stats with dynamic calculation
-    that respects component damage state.
+    Stats are dynamically calculated from component definitions,
+    respecting component damage state and toggles.
     """
 
     def __init__(self, registries: GameRegistries):
@@ -75,15 +74,7 @@ class ShipStatsCalculator:
         component_damage: Optional[Dict[str, int]] = None,
         component_toggles: Optional[Dict[str, bool]] = None
     ) -> Dict[str, Any]:
-        """
-        Calculate all ship stats from design data and component damage.
-
-        PROJ-42: Simplified to instance-only method (removed static calling pattern).
-
-        Usage:
-            service = ShipStatsCalculator(registries=...)
-            stats = service.calculate_stats(design_data)
-            stats = service.calculate_stats(design_data, component_damage={}, component_toggles={})
+        """Calculate all ship stats from design data and component damage.
 
         Args:
             design_data: Serialized ship design containing 'layers' dict

@@ -1,3 +1,8 @@
+"""
+Battle UI - Handles all UI rendering and interaction for the BattleScreen.
+
+Provides HUD elements, ship stats panels, seeker monitors, and battle control panel.
+"""
 import pygame
 import math
 from game.core.logger import log_debug

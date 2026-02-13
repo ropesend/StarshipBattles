@@ -1,3 +1,8 @@
+"""
+Design Workshop Screen - MVVM-based ship design editor.
+
+Production version of the ship builder with dependency injection and MVVM architecture.
+"""
 import os
 
 import pygame

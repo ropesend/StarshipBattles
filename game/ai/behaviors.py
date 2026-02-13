@@ -60,6 +60,7 @@ Example:
     behavior = KiteBehavior(controller)
     behavior.update(target, strategy={'engage_distance': 0.8})
 """
+import random
 from typing import Any, Dict
 
 from game.core.config import AIConfig, PhysicsConfig
@@ -449,7 +450,6 @@ class ErraticBehavior(AIBehavior):
         self.next_change_interval: float = 1.0
         
     def enter(self) -> None:
-        import random
         self.direction_timer = 0.0
         self.current_direction = random.choice([-1, 1])
         self.next_change_interval = random.uniform(
@@ -458,8 +458,6 @@ class ErraticBehavior(AIBehavior):
         )
 
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
-        import random
-
         # Update timer
         self.direction_timer += PhysicsConfig.TICK_RATE
 

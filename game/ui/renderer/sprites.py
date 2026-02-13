@@ -23,10 +23,13 @@ class SpriteManager(metaclass=SingletonMeta):
         self.sprites = []
         self.tile_size = 36
 
-    def load_sprites(self, base_path):
-        """
-        Loads sprites from assets/Images/Components if available.
+    def load_sprites(self, base_path: str) -> None:
+        """Load sprites from assets/Images/Components if available.
+
         Checks for 'Tiles' subdirectory first, then falls back to base directory.
+
+        Args:
+            base_path: Base path of the game installation.
         """
         components_dir = os.path.join(base_path, "assets", "Images", "Components")
         tiles_dir = os.path.join(components_dir, "Tiles")
@@ -38,7 +41,12 @@ class SpriteManager(metaclass=SingletonMeta):
         else:
             log_error(f"No sprite directory found at {tiles_dir} or {components_dir}")
 
-    def _load_from_directory(self, directory):
+    def _load_from_directory(self, directory: str) -> None:
+        """Load sprites from a specific directory.
+
+        Args:
+            directory: Path to directory containing sprite files.
+        """
         log_info(f"Loading sprites from {directory}")
         # Reset sprites
         self.sprites = []
@@ -90,7 +98,15 @@ class SpriteManager(metaclass=SingletonMeta):
                 
         log_info(f"Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
 
-    def get_sprite(self, index):
+    def get_sprite(self, index: int) -> "pygame.Surface | None":
+        """Get a sprite by its index.
+
+        Args:
+            index: The sprite index (0-based).
+
+        Returns:
+            The sprite Surface, or None if index is out of range.
+        """
         if 0 <= index < len(self.sprites):
             return self.sprites[index]
-        return None # Should handle missing sprite ideally
+        return None

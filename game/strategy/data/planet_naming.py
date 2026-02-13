@@ -1,39 +1,31 @@
 """
 Planet naming utilities for system body generation.
 
-Functions for converting numbers to Roman numerals and generating
-planet/moon names following astronomical naming conventions.
+Functions for generating planet/moon names following astronomical
+naming conventions. Uses NameRegistry.to_roman for numeral conversion.
 """
 import string
 from typing import List, Dict, TYPE_CHECKING
 
+from game.strategy.data.naming import NameRegistry
+
 if TYPE_CHECKING:
     from game.strategy.data.planet import Planet
-
-
-# Roman numeral conversion values and symbols
-_ROMAN_VALUES = [10, 9, 5, 4, 1]
-_ROMAN_SYMBOLS = ["X", "IX", "V", "IV", "I"]
 
 
 def to_roman(n: int) -> str:
     """
     Convert an integer to Roman numeral representation.
 
+    Delegates to NameRegistry.to_roman() for consistent implementation.
+
     Args:
-        n: Integer to convert (1-39 supported)
+        n: Integer to convert (1-3999 supported)
 
     Returns:
         Roman numeral string (e.g., 1 -> "I", 4 -> "IV", 9 -> "IX")
     """
-    roman_num = ''
-    i = 0
-    while n > 0:
-        for _ in range(n // _ROMAN_VALUES[i]):
-            roman_num += _ROMAN_SYMBOLS[i]
-            n -= _ROMAN_VALUES[i]
-        i += 1
-    return roman_num
+    return NameRegistry.to_roman(n)
 
 
 def assign_body_names(bodies: List['Planet'], system_name: str) -> None:

@@ -187,3 +187,170 @@ class TestShipThemeLogic:
         # With load_json returning None, the code returns early without error
         # Verify no theme was discovered
         assert len(self.manager.theme_data) == 0
+
+
+class TestShipClassToPortraitName:
+    """Tests for _ship_class_to_portrait_name() parsing logic."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
+        pygame.display.set_mode((1, 1))
+        ShipThemeManager.reset()
+        self.manager = ShipThemeManager.instance()
+        yield
+        patch.stopall()
+        ShipThemeManager.reset()
+
+    def test_simple_class_name(self):
+        """Simple class names pass through unchanged."""
+        assert self.manager._ship_class_to_portrait_name("Battleship") == "Battleship"
+        assert self.manager._ship_class_to_portrait_name("Escort") == "Escort"
+        assert self.manager._ship_class_to_portrait_name("Frigate") == "Frigate"
+
+    def test_parenthetical_format(self):
+        """Parenthetical format (e.g., 'Fighter (Medium)') converts to prefix format."""
+        assert self.manager._ship_class_to_portrait_name("Fighter (Medium)") == "MediumFighter"
+        assert self.manager._ship_class_to_portrait_name("Fighter (Heavy)") == "HeavyFighter"
+        assert self.manager._ship_class_to_portrait_name("Fighter (Light)") == "LightFighter"
+        assert self.manager._ship_class_to_portrait_name("Satellite (Heavy)") == "HeavySatellite"
+
+    def test_space_separated_names(self):
+        """Space-separated names have spaces removed."""
+        assert self.manager._ship_class_to_portrait_name("Light Cruiser") == "LightCruiser"
+        assert self.manager._ship_class_to_portrait_name("Heavy Cruiser") == "HeavyCruiser"
+        assert self.manager._ship_class_to_portrait_name("Battle Cruiser") == "BattleCruiser"
+
+    def test_edge_cases(self):
+        """Edge cases for portrait name conversion."""
+        # Empty string
+        assert self.manager._ship_class_to_portrait_name("") == ""
+        # Single word
+        assert self.manager._ship_class_to_portrait_name("Destroyer") == "Destroyer"
+        # Multiple spaces
+        assert self.manager._ship_class_to_portrait_name("Super Heavy Cruiser") == "SuperHeavyCruiser"
+
+
+class TestGetPortraitImage:
+    """Tests for get_portrait_image() loading and caching."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
+        pygame.display.set_mode((1, 1))
+        ShipThemeManager.reset()
+        self.manager = ShipThemeManager.instance()
+        yield
+        patch.stopall()
+        ShipThemeManager.reset()
+
+    def test_returns_none_when_not_initialized(self):
+        """get_portrait_image returns None when discovery not complete."""
+        result = self.manager.get_portrait_image("AnyTheme", "AnyClass")
+        assert result is None
+
+    @patch('game.ui.assets.ship_theme_manager.os.scandir')
+    @patch('game.ui.assets.ship_theme_manager.os.path.exists')
+    @patch('game.ui.assets.ship_theme_manager.load_json')
+    @patch('game.ui.assets.ship_theme_manager.pygame.image.load')
+    def test_returns_none_for_missing_portrait(
+        self, mock_load, mock_load_json, mock_exists, mock_scandir
+    ):
+        """get_portrait_image returns None when portrait file doesn't exist."""
+        theme_name = "TestTheme"
+        ship_class = "Battleship"
+
+        # Setup minimal theme discovery
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = "/themes/TestTheme"
+        mock_entry.name = theme_name
+        mock_scandir.return_value = [mock_entry]
+
+        mock_load_json.return_value = {
+            "name": theme_name,
+            "images": {"Battleship": "Skins/Battleship.png"}
+        }
+
+        def exists_side_effect(path):
+            # Theme dir and ship image exist, but NOT portrait
+            if "ShipThemes" in path or "theme.json" in path:
+                return True
+            if "Battleship.png" in path and "Portrait" not in path:
+                return True
+            return False
+        mock_exists.side_effect = exists_side_effect
+
+        # Mock ship image loading
+        surf = pygame.Surface((50, 50))
+        mock_load.return_value = surf
+
+        self.manager.initialize()
+
+        # Portrait doesn't exist, should return None
+        result = self.manager.get_portrait_image(theme_name, ship_class)
+        assert result is None
+
+    @patch('game.ui.assets.ship_theme_manager.os.scandir')
+    @patch('game.ui.assets.ship_theme_manager.os.path.exists')
+    @patch('game.ui.assets.ship_theme_manager.load_json')
+    @patch('game.ui.assets.ship_theme_manager.pygame.image.load')
+    def test_loads_and_caches_portrait(
+        self, mock_load, mock_load_json, mock_exists, mock_scandir
+    ):
+        """get_portrait_image loads portrait from disk and caches it."""
+        theme_name = "TestTheme"
+        ship_class = "Escort"
+
+        mock_entry = MagicMock()
+        mock_entry.is_dir.return_value = True
+        mock_entry.path = "/themes/TestTheme"
+        mock_entry.name = theme_name
+        mock_scandir.return_value = [mock_entry]
+
+        mock_load_json.return_value = {
+            "name": theme_name,
+            "images": {"Escort": "Skins/Escort.png"}
+        }
+
+        # All paths exist
+        mock_exists.return_value = True
+
+        # Create distinct surfaces to verify caching
+        ship_surface = pygame.Surface((50, 50))
+        portrait_surface = pygame.Surface((200, 300))
+
+        def load_side_effect(path):
+            if "Portrait" in path:
+                return portrait_surface
+            return ship_surface
+        mock_load.side_effect = load_side_effect
+
+        self.manager.initialize()
+
+        # First call loads from disk
+        result1 = self.manager.get_portrait_image(theme_name, ship_class)
+        # Verify it loaded a portrait (size matches)
+        assert result1.get_size() == (200, 300)
+
+        # Second call returns cached version (no additional load calls)
+        initial_call_count = mock_load.call_count
+        result2 = self.manager.get_portrait_image(theme_name, ship_class)
+        assert result2 is result1
+        assert mock_load.call_count == initial_call_count  # No additional loads
+
+    @patch('game.ui.assets.ship_theme_manager.os.path.exists')
+    def test_falls_back_to_default_theme(self, mock_exists):
+        """get_portrait_image falls back to default theme for unknown theme."""
+        # Portrait doesn't exist for the default theme fallback
+        mock_exists.return_value = False
+
+        # Manually mark discovery complete with empty theme data
+        self.manager.discovery_complete = True
+        self.manager.theme_data = {}
+
+        # Should not crash, returns None (no theme data to fall back to)
+        result = self.manager.get_portrait_image("UnknownTheme", "Escort")
+        assert result is None

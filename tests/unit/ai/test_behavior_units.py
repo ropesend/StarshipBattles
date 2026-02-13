@@ -633,3 +633,111 @@ class TestErraticBehavior:
         assert behavior.direction_timer == 0.0
         assert behavior.current_direction in [-1, 1]
         assert behavior.next_change_interval > 0
+
+    def test_erratic_enter_resets_timer(self, mock_controller, mock_target):
+        """enter() resets direction_timer to 0.0 (TCG-FND-023)."""
+        behavior = ErraticBehavior(mock_controller)
+
+        # Simulate some updates to advance timer
+        behavior.direction_timer = 5.0
+        behavior.current_direction = 0
+
+        # Call enter to reset
+        behavior.enter()
+
+        assert behavior.direction_timer == 0.0
+        assert behavior.current_direction in [-1, 1]  # Should be randomized
+
+    def test_erratic_enter_sets_random_interval(self, mock_controller):
+        """enter() sets next_change_interval within configured bounds (TCG-FND-023)."""
+        from game.core.config import AIConfig
+
+        behavior = ErraticBehavior(mock_controller)
+
+        # Call enter multiple times and check bounds
+        for _ in range(10):
+            behavior.enter()
+            assert AIConfig.ERRATIC_TURN_INTERVAL_MIN <= behavior.next_change_interval
+            assert behavior.next_change_interval <= AIConfig.ERRATIC_TURN_INTERVAL_MAX
+
+    def test_erratic_update_increments_timer(self, mock_controller, mock_target):
+        """update() increments direction_timer by TICK_RATE (TCG-FND-023)."""
+        from game.core.config import PhysicsConfig
+
+        behavior = ErraticBehavior(mock_controller)
+        behavior.enter()
+        initial_timer = behavior.direction_timer
+        behavior.next_change_interval = 100.0  # Prevent direction change
+
+        behavior.update(mock_target, {})
+
+        assert behavior.direction_timer == initial_timer + PhysicsConfig.TICK_RATE
+
+    def test_erratic_update_direction_change_resets_timer(self, mock_controller, mock_target):
+        """update() resets timer when direction changes (TCG-FND-023)."""
+        behavior = ErraticBehavior(mock_controller)
+        behavior.enter()
+
+        # Set timer to exceed next change interval
+        behavior.direction_timer = 10.0
+        behavior.next_change_interval = 0.5
+
+        behavior.update(mock_target, {})
+
+        # Timer should reset after direction change
+        assert behavior.direction_timer == 0.0
+
+    def test_erratic_update_respects_strategy_intervals(self, mock_controller, mock_target):
+        """update() uses strategy's turn_interval_min/max if provided (TCG-FND-023)."""
+        behavior = ErraticBehavior(mock_controller)
+        behavior.enter()
+
+        # Force a direction change
+        behavior.direction_timer = 10.0
+        behavior.next_change_interval = 0.5
+
+        strategy = {
+            'turn_interval_min': 5.0,
+            'turn_interval_max': 10.0
+        }
+        behavior.update(mock_target, strategy)
+
+        # New interval should be within strategy bounds
+        assert 5.0 <= behavior.next_change_interval <= 10.0
+
+    def test_erratic_update_always_thrusts_forward(self, mock_controller, mock_target):
+        """update() always calls thrust_forward (TCG-FND-023)."""
+        behavior = ErraticBehavior(mock_controller)
+        behavior.enter()
+
+        # Test with current_direction = 0 (no rotation)
+        behavior.current_direction = 0
+        behavior.next_change_interval = 100.0  # Prevent change
+
+        behavior.update(mock_target, {})
+
+        mock_controller.ship.thrust_forward.assert_called()
+
+    def test_erratic_update_rotates_when_direction_nonzero(self, mock_controller, mock_target):
+        """update() calls rotate when current_direction is nonzero (TCG-FND-023)."""
+        behavior = ErraticBehavior(mock_controller)
+        behavior.enter()
+
+        behavior.current_direction = 1
+        behavior.next_change_interval = 100.0  # Prevent change
+
+        behavior.update(mock_target, {})
+
+        mock_controller.ship.rotate.assert_called_with(1)
+
+    def test_erratic_update_no_rotate_when_direction_zero(self, mock_controller, mock_target):
+        """update() does not call rotate when current_direction is 0 (TCG-FND-023)."""
+        behavior = ErraticBehavior(mock_controller)
+        behavior.enter()
+
+        behavior.current_direction = 0
+        behavior.next_change_interval = 100.0  # Prevent change
+
+        behavior.update(mock_target, {})
+
+        mock_controller.ship.rotate.assert_not_called()
