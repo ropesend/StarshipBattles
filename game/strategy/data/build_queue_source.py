@@ -113,12 +113,11 @@ def _get_facility_production_rates(facility: 'PlanetaryFacility') -> Dict[str, f
     return get_default_production_rates("space_shipyard")
 
 
-def _facility_is_shipyard(facility: PlanetaryFacility) -> bool:
+def _facility_is_shipyard(facility: 'PlanetaryFacility') -> bool:
     """Check if a planetary facility is a space shipyard.
 
-    Reuses the same detection logic as Planet.has_space_shipyard:
-    scans design_data layers for component id 'space_shipyard' or
-    SpaceShipyard ability.
+    Delegates to PlanetaryFacility.is_shipyard property which checks
+    design_data layers for component id 'space_shipyard' or SpaceShipyard ability.
 
     Args:
         facility: The planetary facility to check.
@@ -126,19 +125,74 @@ def _facility_is_shipyard(facility: PlanetaryFacility) -> bool:
     Returns:
         True if the facility is an operational space shipyard.
     """
-    if not facility.is_operational:
-        return False
+    return facility.is_shipyard
 
-    for layer_data in facility.design_data.get("layers", {}).values():
-        if not isinstance(layer_data, list):
-            continue
-        for comp in layer_data:
-            if isinstance(comp, dict):
-                if comp.get("id") == "space_shipyard":
-                    return True
-                if "SpaceShipyard" in comp.get("abilities", {}):
-                    return True
-    return False
+
+def _collect_planet_sources(planet, sources: List[BuildQueueSource]) -> None:
+    """Collect build queue sources from a single planet.
+
+    Adds the base planetary yard queue and any shipyard facility queues
+    to the provided sources list.
+
+    Args:
+        planet: Planet instance to collect queues from.
+        sources: List to append BuildQueueSource objects to.
+    """
+    # Base queue (complexes only)
+    sources.append(BuildQueueSource(
+        queue_id=f"planet_{planet.id}_base",
+        display_name=f"{planet.name} - Planetary Yard",
+        owner_entity=planet,
+        construction_queue=planet.construction_queue,
+        can_build_ships=False,
+        can_build_complexes=True,
+        context_type="planet",
+        build_rate=get_default_production_rates("planetary_yard"),
+        planet_id=planet.id,
+    ))
+
+    # Shipyard facility queues
+    shipyard_index = 0
+    for facility in planet.facilities:
+        if _facility_is_shipyard(facility):
+            shipyard_index += 1
+            sources.append(BuildQueueSource(
+                queue_id=facility.instance_id,
+                display_name=f"{planet.name} - Shipyard {shipyard_index}",
+                owner_entity=planet,
+                construction_queue=facility.construction_queue,
+                can_build_ships=True,
+                can_build_complexes=True,
+                context_type="planet",
+                build_rate=_get_facility_production_rates(facility),
+                planet_id=planet.id,
+            ))
+
+
+def _collect_fleet_sources(fleet, sources: List[BuildQueueSource]) -> None:
+    """Collect build queue sources from a single fleet.
+
+    Adds one queue source per space yard component in the fleet.
+
+    Args:
+        fleet: Fleet instance to collect queues from.
+        sources: List to append BuildQueueSource objects to.
+    """
+    yard_count = fleet.space_shipyard_count
+    for yard_idx in range(yard_count):
+        yard_num = yard_idx + 1
+        display_suffix = f" - Shipyard {yard_num}" if yard_count > 1 else " - Shipyard"
+        sources.append(BuildQueueSource(
+            queue_id=f"fleet_{fleet.id}_yard_{yard_num}",
+            display_name=f"{fleet.name}{display_suffix}",
+            owner_entity=fleet,
+            construction_queue=fleet.construction_queue,
+            can_build_ships=True,
+            can_build_complexes=True,
+            context_type="fleet",
+            build_rate=get_default_production_rates("fleet_space_yard"),
+            planet_id=None,
+        ))
 
 
 def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSource]:
@@ -164,56 +218,13 @@ def collect_build_queues_at_hex(hex_coord, galaxy, empire) -> List[BuildQueueSou
     for planet in galaxy.get_planets_at_global_hex(hex_coord):
         if planet.owner_id != empire.id:
             continue
-
-        # Base queue (complexes only)
-        sources.append(BuildQueueSource(
-            queue_id=f"planet_{planet.id}_base",
-            display_name=f"{planet.name} - Planetary Yard",
-            owner_entity=planet,
-            construction_queue=planet.construction_queue,
-            can_build_ships=False,
-            can_build_complexes=True,
-            context_type="planet",
-            build_rate=get_default_production_rates("planetary_yard"),
-            planet_id=planet.id,
-        ))
-
-        # Shipyard facility queues
-        shipyard_index = 0
-        for facility in planet.facilities:
-            if _facility_is_shipyard(facility):
-                shipyard_index += 1
-                sources.append(BuildQueueSource(
-                    queue_id=facility.instance_id,
-                    display_name=f"{planet.name} - Shipyard {shipyard_index}",
-                    owner_entity=planet,
-                    construction_queue=facility.construction_queue,
-                    can_build_ships=True,
-                    can_build_complexes=True,
-                    context_type="planet",
-                    build_rate=_get_facility_production_rates(facility),
-                    planet_id=planet.id,
-                ))
+        _collect_planet_sources(planet, sources)
 
     # Fleet queues (one entry per space yard component)
     for fleet in empire.fleets:
         if fleet.location != hex_coord:
             continue
-        yard_count = fleet.space_shipyard_count
-        for yard_idx in range(yard_count):
-            yard_num = yard_idx + 1
-            display_suffix = f" - Shipyard {yard_num}" if yard_count > 1 else " - Shipyard"
-            sources.append(BuildQueueSource(
-                queue_id=f"fleet_{fleet.id}_yard_{yard_num}",
-                display_name=f"{fleet.name}{display_suffix}",
-                owner_entity=fleet,
-                construction_queue=fleet.construction_queue,
-                can_build_ships=True,
-                can_build_complexes=True,
-                context_type="fleet",
-                build_rate=get_default_production_rates("fleet_space_yard"),
-                planet_id=None,
-            ))
+        _collect_fleet_sources(fleet, sources)
 
     return sources
 
@@ -237,52 +248,10 @@ def collect_all_build_queues_for_empire(empire) -> List[BuildQueueSource]:
 
     # Planet queues
     for planet in empire.colonies:
-        # Base queue (complexes only)
-        sources.append(BuildQueueSource(
-            queue_id=f"planet_{planet.id}_base",
-            display_name=f"{planet.name} - Planetary Yard",
-            owner_entity=planet,
-            construction_queue=planet.construction_queue,
-            can_build_ships=False,
-            can_build_complexes=True,
-            context_type="planet",
-            build_rate=get_default_production_rates("planetary_yard"),
-            planet_id=planet.id,
-        ))
-
-        # Shipyard facility queues
-        shipyard_index = 0
-        for facility in planet.facilities:
-            if _facility_is_shipyard(facility):
-                shipyard_index += 1
-                sources.append(BuildQueueSource(
-                    queue_id=facility.instance_id,
-                    display_name=f"{planet.name} - Shipyard {shipyard_index}",
-                    owner_entity=planet,
-                    construction_queue=facility.construction_queue,
-                    can_build_ships=True,
-                    can_build_complexes=True,
-                    context_type="planet",
-                    build_rate=_get_facility_production_rates(facility),
-                    planet_id=planet.id,
-                ))
+        _collect_planet_sources(planet, sources)
 
     # Fleet queues (one entry per space yard component)
     for fleet in empire.fleets:
-        yard_count = fleet.space_shipyard_count
-        for yard_idx in range(yard_count):
-            yard_num = yard_idx + 1
-            display_suffix = f" - Shipyard {yard_num}" if yard_count > 1 else " - Shipyard"
-            sources.append(BuildQueueSource(
-                queue_id=f"fleet_{fleet.id}_yard_{yard_num}",
-                display_name=f"{fleet.name}{display_suffix}",
-                owner_entity=fleet,
-                construction_queue=fleet.construction_queue,
-                can_build_ships=True,
-                can_build_complexes=True,
-                context_type="fleet",
-                build_rate=get_default_production_rates("fleet_space_yard"),
-                planet_id=None,
-            ))
+        _collect_fleet_sources(fleet, sources)
 
     return sources

@@ -95,6 +95,30 @@ class PlanetaryFacility:
         self.resource_levels[ResourceType.FUEL] = current - withdrawn
         return withdrawn
 
+    @property
+    def is_shipyard(self) -> bool:
+        """Check if this facility is a space shipyard.
+
+        Scans design_data layers for component id 'space_shipyard' or
+        SpaceShipyard ability.
+
+        Returns:
+            True if the facility is an operational space shipyard.
+        """
+        if not self.is_operational:
+            return False
+
+        for layer_data in self.design_data.get("layers", {}).values():
+            if not isinstance(layer_data, list):
+                continue
+            for comp in layer_data:
+                if isinstance(comp, dict):
+                    if comp.get("id") == "space_shipyard":
+                        return True
+                    if "SpaceShipyard" in comp.get("abilities", {}):
+                        return True
+        return False
+
 
 @dataclass
 class SpeciesPopulation:
@@ -212,23 +236,7 @@ class Planet:
     @property
     def has_space_shipyard(self) -> bool:
         """Check if planet has operational space shipyard."""
-        for facility in self.facilities:
-            if not facility.is_operational:
-                continue
-            # Check design_data for space_shipyard component
-            # Design JSON uses direct list format: layers[layer_name] = [comp1, comp2, ...]
-            for layer_data in facility.design_data.get("layers", {}).values():
-                if not isinstance(layer_data, list):
-                    continue
-                for comp in layer_data:
-                    if isinstance(comp, dict):
-                        # Check component id (real saved designs)
-                        if comp.get("id") == "space_shipyard":
-                            return True
-                        # Check abilities dict (test fixtures)
-                        if "SpaceShipyard" in comp.get("abilities", {}):
-                            return True
-        return False
+        return any(facility.is_shipyard for facility in self.facilities)
 
     @property
     def context_type(self) -> str:

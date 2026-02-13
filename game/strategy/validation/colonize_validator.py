@@ -3,10 +3,45 @@ ColonizeValidator - Validates COLONIZE orders for fleets.
 
 PROJ-36: Extracted from TurnEngine to centralize validation.
 PROJ-55: Added colony pod detection and chain validation.
+PROJ-127: Extracted _iterate_colony_pods helper to reduce duplication.
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Iterator, Optional, Tuple
 from game.core.validation import ValidationResult
 from game.strategy.services.component_inspector import iterate_design_components
+
+
+def _iterate_colony_pods(
+    fleet,
+    component_registry: Dict[str, Any]
+) -> Iterator[Tuple[Any, str]]:
+    """Iterate over colony pod abilities in a fleet's ships.
+
+    Yields (ship, planet_type_str) tuples for each ColonizePlanet ability found.
+
+    Args:
+        fleet: The Fleet object
+        component_registry: Component registry dict for ability lookup
+
+    Yields:
+        Tuple of (ship object, planet_type string).
+    """
+    for ship in fleet.ships:
+        design_data = getattr(ship, 'design_data', {})
+
+        for _comp_entry, _comp_def, abilities in iterate_design_components(
+            design_data, component_registry
+        ):
+            if 'ColonizePlanet' in abilities:
+                ability_data = abilities['ColonizePlanet']
+                # Handle both string shorthand and dict format
+                if isinstance(ability_data, str):
+                    pod_planet_type = ability_data
+                elif isinstance(ability_data, dict):
+                    pod_planet_type = ability_data.get('planet_type', '')
+                else:
+                    continue
+
+                yield ship, pod_planet_type
 
 
 class ColonizeValidator:
@@ -114,25 +149,9 @@ class ColonizeValidator:
         Returns:
             The first ship with a matching colony pod, or None if not found.
         """
-        for ship in fleet.ships:
-            design_data = getattr(ship, 'design_data', {})
-
-            for _comp_entry, _comp_def, abilities in iterate_design_components(
-                design_data, component_registry
-            ):
-                if 'ColonizePlanet' in abilities:
-                    ability_data = abilities['ColonizePlanet']
-                    # Handle both string shorthand and dict format
-                    if isinstance(ability_data, str):
-                        pod_planet_type = ability_data
-                    elif isinstance(ability_data, dict):
-                        pod_planet_type = ability_data.get('planet_type', '')
-                    else:
-                        continue
-
-                    if pod_planet_type == planet_type_str:
-                        return ship
-
+        for ship, pod_planet_type in _iterate_colony_pods(fleet, component_registry):
+            if pod_planet_type == planet_type_str:
+                return ship
         return None
 
     @staticmethod
@@ -153,23 +172,8 @@ class ColonizeValidator:
         """
         pod_counts: Dict[str, int] = {}
 
-        for ship in fleet.ships:
-            design_data = getattr(ship, 'design_data', {})
-
-            for _comp_entry, _comp_def, abilities in iterate_design_components(
-                design_data, component_registry
-            ):
-                if 'ColonizePlanet' in abilities:
-                    ability_data = abilities['ColonizePlanet']
-                    # Handle both string shorthand and dict format
-                    if isinstance(ability_data, str):
-                        pod_planet_type = ability_data
-                    elif isinstance(ability_data, dict):
-                        pod_planet_type = ability_data.get('planet_type', '')
-                    else:
-                        continue
-
-                    pod_counts[pod_planet_type] = pod_counts.get(pod_planet_type, 0) + 1
+        for _ship, pod_planet_type in _iterate_colony_pods(fleet, component_registry):
+            pod_counts[pod_planet_type] = pod_counts.get(pod_planet_type, 0) + 1
 
         return pod_counts
 

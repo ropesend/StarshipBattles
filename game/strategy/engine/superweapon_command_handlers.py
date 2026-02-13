@@ -179,6 +179,46 @@ class SelfDestructCommandHandler:
 # Mission Command Handlers (Move + Action)
 # =============================================================================
 
+def _setup_mission_move(session: 'GameSession', fleet, target_hex) -> ValidationResult:
+    """Shared setup logic for mission commands: calculate path and queue MOVE order.
+
+    Determines the start hex based on existing orders, calculates the path,
+    and queues a MOVE order if the fleet is not already at the target.
+
+    Args:
+        session: GameSession for path calculation.
+        fleet: Fleet to move.
+        target_hex: Destination hex coordinate.
+
+    Returns:
+        ValidationResult - invalid if no path found, valid otherwise.
+    """
+    # Determine start hex from last MOVE order if any
+    start_hex = fleet.location
+    if fleet.orders:
+        last = fleet.orders[-1]
+        if last.type == OrderType.MOVE:
+            start_hex = last.target
+
+    # Calculate path
+    path = find_hybrid_path(session.galaxy, start_hex, target_hex)
+    if not path:
+        return ValidationResult(is_valid=False, errors=["No path found to target."])
+
+    # Queue MOVE order if not already at target
+    if start_hex != target_hex:
+        move_order = FleetOrder(OrderType.MOVE, target=target_hex)
+        fleet.add_order(move_order)
+
+        # Set path immediately if it's the first order
+        if len(fleet.orders) == 1:
+            if path and path[0] == fleet.location:
+                path = path[1:]
+            fleet.path = path
+
+    return ValidationResult()
+
+
 class ImplodePlanetMissionCommandHandler:
     """Handler for QueueImplodePlanetMissionCommand."""
 
@@ -194,30 +234,12 @@ class ImplodePlanetMissionCommandHandler:
         if not planet:
             return ValidationResult(is_valid=False, errors=["Planet not found."])
 
-        # 3. Determine start hex
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        # 3. Setup move
+        move_result = _setup_mission_move(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-        # 4. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult(is_valid=False, errors=["No path found to target."])
-
-        # 5. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
-
-            # Set path immediately if it's the first order
-            if len(fleet.orders) == 1:
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
-
-        # 6. Queue IMPLODE_PLANET order
+        # 4. Queue IMPLODE_PLANET order
         action_order = FleetOrder(OrderType.IMPLODE_PLANET, target=planet)
         fleet.add_order(action_order)
 
@@ -235,30 +257,12 @@ class StellerateStarMissionCommandHandler:
         if not fleet:
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
-        # 2. Determine start hex
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        # 2. Setup move
+        move_result = _setup_mission_move(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-        # 3. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult(is_valid=False, errors=["No path found to target."])
-
-        # 4. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
-
-            # Set path immediately if it's the first order
-            if len(fleet.orders) == 1:
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
-
-        # 5. Queue STELLERATE_STAR order
+        # 3. Queue STELLERATE_STAR order
         action_order = FleetOrder(OrderType.STELLERATE_STAR, target=None)
         fleet.add_order(action_order)
 
@@ -276,30 +280,12 @@ class OpenWarpPointMissionCommandHandler:
         if not fleet:
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
-        # 2. Determine start hex
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        # 2. Setup move
+        move_result = _setup_mission_move(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-        # 3. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult(is_valid=False, errors=["No path found to target."])
-
-        # 4. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
-
-            # Set path immediately if it's the first order
-            if len(fleet.orders) == 1:
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
-
-        # 5. Queue OPEN_WARP_POINT order with target dict
+        # 3. Queue OPEN_WARP_POINT order with target dict
         target_dict = {
             'target_hex': cmd.target_hex,
             'target_system_name': cmd.target_system_name
@@ -321,30 +307,12 @@ class CloseWarpPointMissionCommandHandler:
         if not fleet:
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
-        # 2. Determine start hex
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        # 2. Setup move
+        move_result = _setup_mission_move(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-        # 3. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult(is_valid=False, errors=["No path found to target."])
-
-        # 4. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
-
-            # Set path immediately if it's the first order
-            if len(fleet.orders) == 1:
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
-
-        # 5. Queue CLOSE_WARP_POINT order
+        # 3. Queue CLOSE_WARP_POINT order
         action_order = FleetOrder(OrderType.CLOSE_WARP_POINT, target=cmd.warp_point_destination_id)
         fleet.add_order(action_order)
 
@@ -362,30 +330,12 @@ class CreateDysonSphereMissionCommandHandler:
         if not fleet:
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
 
-        # 2. Determine start hex
-        start_hex = fleet.location
-        if fleet.orders:
-            last = fleet.orders[-1]
-            if last.type == OrderType.MOVE:
-                start_hex = last.target
+        # 2. Setup move
+        move_result = _setup_mission_move(session, fleet, cmd.target_hex)
+        if not move_result.is_valid:
+            return move_result
 
-        # 3. Calculate path
-        path = find_hybrid_path(session.galaxy, start_hex, cmd.target_hex)
-        if not path:
-            return ValidationResult(is_valid=False, errors=["No path found to target."])
-
-        # 4. Queue MOVE order if not already at target
-        if start_hex != cmd.target_hex:
-            move_order = FleetOrder(OrderType.MOVE, target=cmd.target_hex)
-            fleet.add_order(move_order)
-
-            # Set path immediately if it's the first order
-            if len(fleet.orders) == 1:
-                if path and path[0] == fleet.location:
-                    path = path[1:]
-                fleet.path = path
-
-        # 5. Queue CREATE_DYSON_SPHERE order
+        # 3. Queue CREATE_DYSON_SPHERE order
         action_order = FleetOrder(OrderType.CREATE_DYSON_SPHERE, target=None)
         fleet.add_order(action_order)
 

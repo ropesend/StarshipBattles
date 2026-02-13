@@ -5,6 +5,8 @@ Pure functions that calculate how suitable a planet is for a given species
 based on environmental factors like gravity, temperature, atmosphere, etc.
 
 All factor functions return a float from 0.0 (uninhabitable) to 1.0 (ideal).
+
+PROJ-127: Extracted _gaussian_factor helper to reduce duplication.
 """
 from typing import Dict, TYPE_CHECKING
 import math
@@ -16,6 +18,26 @@ if TYPE_CHECKING:
 
 # Standard gravity in m/s²
 STANDARD_GRAVITY_MS2 = 9.81
+
+
+def _gaussian_factor(value: float, ideal: float, tolerance: float, min_sigma: float = 0.01) -> float:
+    """Calculate a Gaussian habitability factor centered on an ideal value.
+
+    Uses Gaussian falloff: exp(-0.5 * (deviation/sigma)^2)
+    This gives 1.0 at ideal, ~0.61 at 1 sigma, ~0.14 at 2 sigma.
+
+    Args:
+        value: Actual value from the planet.
+        ideal: Species' ideal value.
+        tolerance: Tolerance range (used as sigma).
+        min_sigma: Minimum sigma to prevent division by zero.
+
+    Returns:
+        Factor from 0.0 to 1.0
+    """
+    deviation = abs(value - ideal)
+    sigma = max(tolerance, min_sigma)
+    return math.exp(-0.5 * (deviation / sigma) ** 2)
 
 # Factor weights for geometric mean calculation
 # These determine relative importance of each factor
@@ -36,8 +58,7 @@ def calculate_gravity_factor(
     """
     Calculate gravity habitability factor.
 
-    Uses a Gaussian-like falloff centered on ideal gravity.
-    Within tolerance, factor stays high. Outside tolerance, drops rapidly.
+    Uses Gaussian falloff centered on ideal gravity.
 
     Args:
         planet_gravity_ms2: Planet's surface gravity in m/s²
@@ -49,19 +70,7 @@ def calculate_gravity_factor(
     """
     # Convert planet gravity to g units
     planet_g = planet_gravity_ms2 / STANDARD_GRAVITY_MS2
-
-    # Calculate deviation from ideal
-    deviation = abs(planet_g - ideal_gravity_g)
-
-    # Use tolerance as standard deviation for Gaussian falloff
-    # sigma determines how quickly factor drops outside tolerance
-    sigma = max(tolerance_g, 0.01)  # Prevent division by zero
-
-    # Gaussian: exp(-0.5 * (x/sigma)^2)
-    # This gives 1.0 at ideal, ~0.61 at 1 sigma, ~0.14 at 2 sigma
-    factor = math.exp(-0.5 * (deviation / sigma) ** 2)
-
-    return factor
+    return _gaussian_factor(planet_g, ideal_gravity_g, tolerance_g)
 
 
 def calculate_temperature_factor(
@@ -82,11 +91,7 @@ def calculate_temperature_factor(
     Returns:
         Factor from 0.0 to 1.0
     """
-    deviation = abs(planet_temp_k - ideal_temp_k)
-    sigma = max(tolerance_k, 1.0)  # Minimum 1K to prevent division issues
-
-    factor = math.exp(-0.5 * (deviation / sigma) ** 2)
-    return factor
+    return _gaussian_factor(planet_temp_k, ideal_temp_k, tolerance_k, min_sigma=1.0)
 
 
 def calculate_water_factor(
@@ -107,11 +112,7 @@ def calculate_water_factor(
     Returns:
         Factor from 0.0 to 1.0
     """
-    deviation = abs(planet_water - ideal_water)
-    sigma = max(tolerance, 0.01)
-
-    factor = math.exp(-0.5 * (deviation / sigma) ** 2)
-    return factor
+    return _gaussian_factor(planet_water, ideal_water, tolerance)
 
 
 def calculate_atmosphere_factor(
