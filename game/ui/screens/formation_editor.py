@@ -1,3 +1,8 @@
+"""
+Formation Editor - Screen for creating and editing fleet formations.
+
+Allows players to arrange ships in tactical formations for combat deployment.
+"""
 from __future__ import annotations
 
 import pygame

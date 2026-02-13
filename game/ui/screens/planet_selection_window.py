@@ -1,3 +1,8 @@
+"""
+Planet Selection Window - Simple planet selection dialog.
+
+Used for selecting a planet from a list, typically for targeting or transfer operations.
+"""
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UISelectionList, UIButton, UILabel

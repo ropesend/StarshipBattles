@@ -1,3 +1,8 @@
+"""
+Planet List Window - Displays a filterable, sortable list of planets.
+
+Provides comprehensive planet management with filtering, sorting, and presets.
+"""
 import pygame
 import pygame_gui.windows
 from game.core.constants import PLANET_RESOURCES

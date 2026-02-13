@@ -18,6 +18,7 @@ managed by a dedicated BuilderStateManager class for better testability and
 reduced complexity.
 """
 import json
+import logging
 import math
 import tkinter
 from tkinter import filedialog
@@ -52,6 +53,11 @@ from .schematic_view import SchematicView
 from .interaction_controller import InteractionController
 from .event_bus import EventBus
 from .state_manager import BuilderStateManager
+from .detail_panel import ComponentDetailPanel
+from game.ui.colors import COLORS
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 # Initialize Tkinter root and hide it (for filedialog)
 try:
@@ -59,20 +65,12 @@ try:
     tk_root.withdraw()
 except (tkinter.TclError, RuntimeError) as e:
     # TclError occurs when display unavailable; RuntimeError when Tcl not initialized
-    import logging
     logging.getLogger(__name__).debug(f"Tkinter not available: {e}")
     tk_root = None
 
 # Colors
-from game.ui.colors import COLORS
 BG_COLOR = COLORS['bg_deep']
 PANEL_BG = '#14181f'
-
-import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-from .detail_panel import ComponentDetailPanel
 
 
 
