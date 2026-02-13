@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-137 | UI Pattern Consolidation | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-136 | Test Coverage - UI Components | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-135 | Test Coverage - Strategy Engine | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-134 | Legacy Code Cleanup | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-133 | Consistency Standardization | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-132 | Architecture Layer Violations | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-131 | test-coverage-strategy-ui | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-130 | test-coverage-core-systems | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-129 | legacy-system-cleanup | Planning | 2026-02-13 | 2026-02-13 |
@@ -228,7 +234,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-132
+## Next Project ID: PROJ-138
 
 ---
 
