@@ -55,7 +55,7 @@ class TestLabScreen:
         """Initialize test lab screen.
 
         Args:
-            game: Game instance (for legacy compatibility, provides battle_scene access)
+            game: Game instance providing screen, battle_scene, and state management.
             scene_callback: Callback function for scene transitions.
                            Called with (action, **kwargs) where action is:
                            - "start_test_battle": Start visual test battle with scenario kwarg

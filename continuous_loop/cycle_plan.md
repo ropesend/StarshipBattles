@@ -8,48 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-121 Phase 4 (10/12 tasks)
-**Current Status:** PROJ-121 Phase 4 in progress (2 tasks remaining)
+**Last Completed:** PROJ-121 Phase 4 (12/12 tasks) - ALL PHASES COMPLETE
+**Current Status:** PROJ-121 ready for audit
 **Current Project:** PROJ-121
-**Current Phase:** Phase 4 (UI-Screens)
+**Current Phase:** AUDIT (all 4 phases complete)
 **Test Status:** 11867 tests passing (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-121 Phase 4 IN PROGRESS: 10/12 tasks complete
-  - Task 4.1: REMOVED legacy aliases from RacePortraitGallery, updated tests
-  - Task 4.2: DELETED BuilderScreen + BuilderStateManager (DEAD CODE!)
-  - Task 4.3: DELETED ComponentRef (dead code), kept tuple format (active)
-  - Task 4.4: REJECTED - false positive in validation
-  - Task 4.5: DOWNGRADED - multi-select already exists
-  - Task 4.6: REVIEWED - fallback mode is intentional defensive coding
-  - Task 4.7: UPDATED misleading comment in right_panel.py
-  - Task 4.8: REMOVED dead backward compat paths from workshop_event_router
-  - Task 4.9: PENDING - test_lab legacy game parameter (MEDIUM)
-  - Task 4.10: ALREADY RESOLVED - state_manager.py deleted in 4.2
-  - Task 4.11: PENDING - strategy_screen deprecated properties (COMPLEX)
-  - Task 4.12: REMOVED dead legacy key filtering code
-- Full test suite: 11867 passed
-- Next: Continue Phase 4 (Tasks 4.9, 4.11 remaining)
-- Files DELETED this session:
-  - game/ui/screens/builder/main.py (BuilderScreen dead code)
-  - game/ui/screens/builder/state_manager.py (only used by dead BuilderScreen)
-  - game/ui/screens/builder/component_ref.py (ComponentRef never adopted)
-  - tests/unit/builder/test_builder_state_manager.py
-  - tests/unit/builder/test_component_ref.py
+- PROJ-121 ALL PHASES COMPLETE
+  - Phase 1: Foundation (7 tasks)
+  - Phase 2: Simulation (8 tasks)
+  - Phase 3: UI-Framework (10 tasks)
+  - Phase 4: UI-Screens (12 tasks)
+- This session completed Phase 4:
+  - Task 4.9: RESOLVED - Updated misleading "legacy compatibility" comment in test_lab/screen.py
+  - Task 4.11: RESOLVED - Updated misleading "deprecated" comment in strategy_screen.py
 - Files MODIFIED this session:
-  - game/ui/panels/race_portrait_gallery.py (removed legacy aliases)
-  - game/ui/screens/builder/__init__.py (removed dead exports)
-  - game/ui/screens/builder/detail_panel.py (removed dead ComponentRef handling)
-  - game/ui/screens/builder/right_panel.py (updated comment)
-  - game/ui/screens/workshop_event_router.py (removed backward compat paths)
-  - game/ui/screens/builder/stats_config.py (removed dead filtering)
-  - tests/unit/ui/test_race_portrait_gallery.py (use modern API)
-  - tests/unit/builder/test_layer_targeted_actions.py (removed dead tests)
-  - tests/unit/builder/test_builder_drag_drop_real.py (use tuple format)
-  - tests/unit/builder/test_builder_structure_features.py (use tuple format)
-  - tests/unit/test_builder_refactor.py (updated imports)
-  - tests/unit/_verify_builder_imports.py (removed dead import)
+  - game/ui/screens/test_lab/screen.py (clarified game param docstring)
+  - game/ui/screens/strategy_screen.py (clarified properties section comment)
+- Full test suite: 11867 passed
+- NEXT: Trigger audit per Protocol 04
 
 ---
 
@@ -126,6 +105,7 @@
 | 2026-02-13 | PROJ-121 | Phase 2 | Complete | 11918 pass | - | 8 tasks: 4 implemented, 4 reviewed |
 | 2026-02-13 | PROJ-121 | Phase 3 | Complete | 11907 pass | - | 10 tasks: 5 implemented, 5 reviewed |
 | 2026-02-13 | PROJ-121 | Phase 4 (10/12) | In Progress | 11867 pass | - | Major: DELETED BuilderScreen+StateManager+ComponentRef dead code |
+| 2026-02-13 | PROJ-121 | Phase 4 (12/12) | Complete | 11867 pass | - | Final 2 tasks: clarified misleading comments |
 
 ---
 

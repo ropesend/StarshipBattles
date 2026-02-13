@@ -119,9 +119,8 @@ class StrategyScreen:
         self._input = StrategyInputHandler(self, input_mapper=input_mapper)
 
     # =========================================================================
-    # Properties (delegate to session)
-    # NOTE: These are deprecated for external access. Use facade methods instead.
-    # Internal use within StrategyScene is still valid.
+    # Properties (delegate to session for internal convenience)
+    # External callers should use the facade for cross-layer communication.
     # =========================================================================
 
     @property
