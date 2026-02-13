@@ -75,6 +75,10 @@ class SimulationConstants:
     DEFAULT_MAX_TICKS = 100000        # Maximum ticks before battle timeout
     ABSOLUTE_MAX_TICKS = 1_000_000    # Hard ceiling to prevent infinite loops (safety net)
 
+    # Projectile/Combat constants
+    PROJECTILE_SPEED_SCALE = 100.0    # Divisor to convert projectile_speed stat to world units/tick
+    SEEKER_MAX_RANGE_MULTIPLIER = 2.0  # Seekers can track targets up to 2x their theoretical range
+
 
 # Resource Types
 # PROJ-11: Moved from game.strategy.data.planet to eliminate simulation->strategy dependency

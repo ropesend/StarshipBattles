@@ -114,7 +114,7 @@ def mock_resource_consumption_ability():
     def _create(resource_name, amount, trigger='constant'):
         ability = MagicMock()
         ability.__class__.__name__ = 'ResourceConsumption'
-        ability.resource_name = resource_name
+        ability.resource_type = resource_name
         ability.amount = amount
         ability.trigger = trigger
         return ability

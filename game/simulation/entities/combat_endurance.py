@@ -3,15 +3,21 @@
 This module calculates endurance times for Fuel, Ammo, and Energy,
 as well as DPS and other combat-related statistics.
 """
+from typing import TYPE_CHECKING, List
+
 from game.core.constants import ResourceType
 
+if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship
+    from game.simulation.components.component import Component
 
-def calculate_combat_endurance(ship, component_pool):
+
+def calculate_combat_endurance(ship: 'Ship', component_pool: List['Component']) -> None:
     """Calculate endurance times for Fuel, Ammo, and Energy.
 
     Args:
-        ship: The ship to calculate endurance for
-        component_pool: List of all components on the ship
+        ship: The ship to calculate endurance for.
+        component_pool: List of all components on the ship.
     """
     # Rate = Sum of ResourceConsumption(fuel, constant)
     # A. Fuel
@@ -40,15 +46,15 @@ def calculate_combat_endurance(ship, component_pool):
                 if ab_cls == 'ResourceConsumption':
                     # Constant Consumption (Generic)
                     trigger = getattr(ab, 'trigger', 'constant')
-                    resource_name = getattr(ab, 'resource_name', '')
+                    resource_type = getattr(ab, 'resource_type', '')
                     amount = getattr(ab, 'amount', 0.0)
 
                     if trigger == 'constant':
-                        if resource_name == ResourceType.FUEL:
+                        if resource_type == ResourceType.FUEL:
                             c_fuel += amount
-                        elif resource_name == ResourceType.ENERGY:
+                        elif resource_type == ResourceType.ENERGY:
                             c_energy += amount
-                        elif resource_name == ResourceType.AMMO:
+                        elif resource_type == ResourceType.AMMO:
                             c_ammo += amount
 
                     # Activation Costs (Energy/Ammo) -> Convert to Rate
@@ -65,9 +71,9 @@ def calculate_combat_endurance(ship, component_pool):
 
                         if reload_t > 0:
                             rate = ab.amount / reload_t
-                            if ab.resource_name == ResourceType.AMMO:
+                            if ab.resource_type == ResourceType.AMMO:
                                 c_ammo += rate
-                            elif ab.resource_name == ResourceType.ENERGY:
+                            elif ab.resource_type == ResourceType.ENERGY:
                                 c_energy += rate
 
         # Add to Potentials (Always)
@@ -128,7 +134,7 @@ def calculate_combat_endurance(ship, component_pool):
     _calculate_cached_summary(ship)
 
 
-def _calculate_cached_summary(ship):
+def _calculate_cached_summary(ship: 'Ship') -> None:
     """Calculate and cache the ship's summary statistics."""
     dps = 0
 

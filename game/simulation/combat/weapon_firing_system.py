@@ -14,7 +14,7 @@ import math
 from typing import TYPE_CHECKING, List, Optional, Any, Dict
 
 from game.core.math import Vector2
-from game.core.constants import AttackType, CombatConstants
+from game.core.constants import AttackType, CombatConstants, SimulationConstants
 from game.simulation.entities.projectile import Projectile
 
 if TYPE_CHECKING:
@@ -259,7 +259,7 @@ class WeaponFiringSystem:
             if abs(diff) <= (weapon_ab.firing_arc / 2):
                 launch_vec = aim_vec.normalize() if aim_vec.length() > 0 else launch_vec
 
-        speed = seeker_ab.projectile_speed / 100.0
+        speed = seeker_ab.projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
         p_vel = launch_vec * speed + ship.velocity
 
         # PROJ-113: Removed color - visual properties now in UI layer
@@ -288,7 +288,7 @@ class WeaponFiringSystem:
         """Create a standard (non-seeking) projectile."""
         projectile_ab = comp.get_ability('ProjectileWeaponAbility')
 
-        speed = projectile_ab.projectile_speed / 100.0
+        speed = projectile_ab.projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
         p_vel = aim_vec.normalize() * speed + ship.velocity
 
         # PROJ-113: Removed color - visual properties now in UI layer

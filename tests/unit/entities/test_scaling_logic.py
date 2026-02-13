@@ -21,7 +21,7 @@ class TestScalingLogic:
         base_cons = 0
         from game.simulation.components.abilities.resources import ResourceConsumption
         for ab in engine.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'fuel':
                 base_cons = ab.amount
                 break
 
@@ -30,7 +30,7 @@ class TestScalingLogic:
 
         new_cons = 0
         for ab in engine.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'fuel':
                 new_cons = ab.amount
                 break
 
@@ -40,7 +40,7 @@ class TestScalingLogic:
         rg = create_component("railgun", registries=loaded_data)
         base_ammo = 0
         for ab in rg.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'ammo':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'ammo':
                 base_ammo = ab.amount
                 break
 
@@ -49,7 +49,7 @@ class TestScalingLogic:
 
         new_ammo = 0
         for ab in rg.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'ammo':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'ammo':
                 new_ammo = ab.amount
                 break
 
@@ -59,7 +59,7 @@ class TestScalingLogic:
         lc = create_component("laser_cannon", registries=loaded_data)
         base_energy = 0
         for ab in lc.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'energy':
                 base_energy = ab.amount
                 break
 
@@ -68,7 +68,7 @@ class TestScalingLogic:
 
         new_energy = 0
         for ab in lc.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'energy':
                 new_energy = ab.amount
                 break
 

@@ -340,7 +340,7 @@ class ShipStatsCalculator:
         # Shield energy cost from ResourceConsumption(energy) abilities on shield regen components
         if comp.has_ability('ShieldRegeneration'):
             for ab in comp.ability_instances:
-                if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_name', '') == ResourceType.ENERGY:
+                if ab.__class__.__name__ == 'ResourceConsumption' and getattr(ab, 'resource_type', '') == ResourceType.ENERGY:
                     acc['shield_cost'] += getattr(ab, 'amount', 0.0)
                     break
 

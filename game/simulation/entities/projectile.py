@@ -5,6 +5,12 @@ from game.core.constants import AttackType
 from game.core.config import PhysicsConfig
 from game.core.exceptions import ValidationException
 
+# Guidance system constants
+# When the target is within this angle of 180° (directly behind), commit to turn direction
+# to prevent oscillation. Value of 45 means commit when target is >135° off-boresight.
+TURN_COMMITMENT_THRESHOLD_DEG = 45
+
+
 class Projectile(PhysicsBody):
     def __init__(self, owner, position, velocity, damage, range_val, endurance, proj_type, source_weapon=None, **kwargs):
         super().__init__(position.x, position.y)
@@ -158,13 +164,8 @@ class Projectile(PhysicsBody):
                 elif angle_diff < -180:
                     angle_diff += 360
                     
-                max_turn = self.turn_rate * dt * 100 # turn_rate is deg/sec? wait. 
-                # In components.json: "turn_rate": 90 (deg/sec assumed?)
-                # In battle.py: max_turn = p['turn_rate'] / 100.0 (Degrees per tick)
-                # If dt=0.01 (1 tick), then max_turn should be turn_rate * dt
-                # Yes.
-                
-                max_turn_step = self.turn_rate * 0.01 # Fixed 1 tick
+                # Turn rate is degrees per second, convert to degrees per tick
+                max_turn_step = self.turn_rate * PhysicsConfig.TICK_RATE
                 
                 if abs(angle_diff) > max_turn_step:
                     rotation = max_turn_step if angle_diff > 0 else -max_turn_step
@@ -174,9 +175,7 @@ class Projectile(PhysicsBody):
                 # Commit to turn direction near ±180° to prevent oscillation
                 # When target is behind us, angle_to can flip between +179 and -180
                 # causing flip-flop turning. Lock to previous direction instead.
-                # Commit to turn direction when target is generally behind (>135 degrees offset)
-                # This prevents flip-flopping efficiently for rear-aspect launches.
-                if abs(abs(angle_diff) - 180) < 45:  # Within 45° of 180 (i.e. > 135°)
+                if abs(abs(angle_diff) - 180) < TURN_COMMITMENT_THRESHOLD_DEG:
                     if self.last_turn_direction != 0:
                         rotation = abs(rotation) * self.last_turn_direction
                 

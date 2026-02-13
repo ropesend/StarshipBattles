@@ -185,7 +185,7 @@ def get_resource_consumption(ship, res_name):
             if hasattr(comp, 'ability_instances'):
                 for ability in comp.ability_instances:
                     if isinstance(ability, ResourceConsumption):
-                        if ability.resource_name == res_name and ability.trigger == 'constant':
+                        if ability.resource_type == res_name and ability.trigger == 'constant':
                             total += ability.amount
     return total
 
@@ -367,7 +367,7 @@ def _get_constant_consumption(ship, res_name):
                 if hasattr(comp, 'ability_instances'):
                     for ability in comp.ability_instances:
                         if isinstance(ability, ResourceConsumption):
-                            if ability.resource_name == res_name and ability.trigger == 'constant':
+                            if ability.resource_type == res_name and ability.trigger == 'constant':
                                 total += ability.amount
     except (TypeError, AttributeError):
         # Handle mock objects or missing attributes

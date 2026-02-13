@@ -10,7 +10,7 @@ class ShipPhysicsMixin:
     - angle, angular_velocity, turn_speed
     """
     
-    def update_physics_movement(self):
+    def update_physics_movement(self) -> None:
         """
         Update ship physics for one tick.
 
@@ -64,18 +64,20 @@ class ShipPhysicsMixin:
         self.angle %= 360
         self.angular_velocity = 0
 
-    def thrust_forward(self):
+    def thrust_forward(self) -> None:
         """
-        Apply thrust input. 
+        Apply thrust input.
         Note: Actual fuel consumption happens in Ship.update -> Component.update.
         This simply flags the desire to move.
         """
         self.is_thrusting = True
-        
-    def rotate(self, direction):
+
+    def rotate(self, direction: int) -> None:
         """
         Rotate the ship.
-        direction: -1 for left, 1 for right
+
+        Args:
+            direction: -1 for left (counter-clockwise), 1 for right (clockwise)
         """
         turn_per_tick = (self.turn_speed * getattr(self, 'turn_throttle', 1.0)) / 100.0
         self.angle += direction * turn_per_tick

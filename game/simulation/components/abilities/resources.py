@@ -23,7 +23,7 @@ class ResourceConsumption(Ability):
 
     def __init__(self, component, data: Dict[str, Any]):
         super().__init__(component, data)
-        self.resource_name = data.get('resource', '')
+        self.resource_type = data.get('resource', '')
         self.amount = data.get('amount', 0.0)
         self._base_amount = self.amount
         self.trigger = data.get('trigger', 'constant')  # 'constant' or 'activation'
@@ -31,7 +31,7 @@ class ResourceConsumption(Ability):
     def sync_data(self, data: Any):
         super().sync_data(data)
         if isinstance(data, dict):
-            self.resource_name = data.get('resource', self.resource_name)
+            self.resource_type = data.get('resource', self.resource_type)
             self.amount = data.get('amount', 0.0)
             self._base_amount = self.amount
             self.trigger = data.get('trigger', 'constant')
@@ -68,7 +68,7 @@ class ResourceConsumption(Ability):
         if self.trigger == 'constant':
             registry = self._get_resource_registry(resources)
             if registry:
-                res = registry.get_resource(self.resource_name)
+                res = registry.get_resource(self.resource_type)
                 if res:
                     # Constant consumption is per second, multiply by tick duration
                     cost = self.amount * PhysicsConfig.TICK_RATE
@@ -87,7 +87,7 @@ class ResourceConsumption(Ability):
         """
         registry = self._get_resource_registry(resources)
         if registry:
-            res = registry.get_resource(self.resource_name)
+            res = registry.get_resource(self.resource_type)
             if res:
                 return res.consume(self.amount)
             else:
@@ -102,7 +102,7 @@ class ResourceConsumption(Ability):
         """
         registry = self._get_resource_registry(resources)
         if registry:
-            res = registry.get_resource(self.resource_name)
+            res = registry.get_resource(self.resource_type)
             if res:
                 return res.has_sufficient(self.amount)
             else:
@@ -130,14 +130,14 @@ class ResourceConsumption(Ability):
 
         # Color mapping based on resource type
         color = '#FFFFFF'
-        if self.resource_name == ResourceType.FUEL:
+        if self.resource_type == ResourceType.FUEL:
             color = '#FFA500'  # Orange
-        elif self.resource_name == ResourceType.ENERGY:
+        elif self.resource_type == ResourceType.ENERGY:
             color = '#64C8FF'  # Light Blue
-        elif self.resource_name == ResourceType.AMMO:
+        elif self.resource_type == ResourceType.AMMO:
             color = '#C8C832'  # Dirty Yellow
 
-        label_text = f"{self.resource_name.title()} {'Cost' if self.trigger != 'constant' else 'Use'}"
+        label_text = f"{self.resource_type.title()} {'Cost' if self.trigger != 'constant' else 'Use'}"
         # Handle both numeric and formula string amounts
         if isinstance(self.amount, str):
             value_str = f"{self.amount}{trigger_str}"

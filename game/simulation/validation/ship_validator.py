@@ -346,13 +346,13 @@ class ResourceDependencyRule(DesignValidationRule):
             for ab in c.ability_instances:
                 # Check Consumption
                 if isinstance(ab, ResourceConsumption):
-                    res_name = ab.resource_name
+                    res_name = ab.resource_type
                     if res_name:
                         needed_resources.add(res_name)
 
                 # Check Storage
                 elif isinstance(ab, ResourceStorage):
-                    res_name = getattr(ab, 'resource_type', getattr(ab, 'resource_name', None))
+                    res_name = ab.resource_type
                     # Use max_amount for capacity check (V2 standard)
                     capacity = getattr(ab, 'max_amount', 0)
 

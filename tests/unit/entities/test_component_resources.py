@@ -33,7 +33,7 @@ class TestComponentCapabilities:
         found = False
         for ab in c.ability_instances:
             if isinstance(ab, ResourceConsumption):
-                if ab.resource_name == 'fuel' and ab.amount == 5.0 and ab.trigger == 'constant':
+                if ab.resource_type == 'fuel' and ab.amount == 5.0 and ab.trigger == 'constant':
                     found = True
         assert found, "Fuel Ability failed to instantiate"
 
@@ -96,7 +96,7 @@ class TestComponentCapabilities:
         found = False
         for ab in c.ability_instances:
             if isinstance(ab, ResourceConsumption):
-                if ab.resource_name == 'energy' and ab.amount == 10.0 and ab.trigger == 'activation':
+                if ab.resource_type == 'energy' and ab.amount == 10.0 and ab.trigger == 'activation':
                     found = True
         assert found, "Energy Activation ability failed to instantiate"
 

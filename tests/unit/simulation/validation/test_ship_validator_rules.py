@@ -642,7 +642,7 @@ class TestResourceDependencyRule:
         from game.simulation.components.abilities.resources import ResourceConsumption, ResourceStorage
 
         consumer = Mock(spec=ResourceConsumption)
-        consumer.resource_name = "fuel"
+        consumer.resource_type = "fuel"
 
         storage = Mock(spec=ResourceStorage)
         storage.resource_type = "fuel"
@@ -665,7 +665,7 @@ class TestResourceDependencyRule:
         from game.simulation.components.abilities.resources import ResourceConsumption
 
         consumer = Mock(spec=ResourceConsumption)
-        consumer.resource_name = "fuel"
+        consumer.resource_type = "fuel"
 
         comp = Mock()
         comp.ability_instances = [consumer]

@@ -78,7 +78,7 @@ class TestResourceConsumptionInit:
         }
         ability = ResourceConsumption(mock_component, data)
 
-        assert ability.resource_name == 'fuel'
+        assert ability.resource_type == 'fuel'
         assert ability.amount == 10.0
         assert ability._base_amount == 10.0
         assert ability.trigger == 'activation'
@@ -88,7 +88,7 @@ class TestResourceConsumptionInit:
         data = {}
         ability = ResourceConsumption(mock_component, data)
 
-        assert ability.resource_name == ''
+        assert ability.resource_type == ''
         assert ability.amount == 0.0
         assert ability.trigger == 'constant'
 
@@ -646,7 +646,7 @@ class TestSyncData:
 
         ability.sync_data({'resource': 'energy', 'amount': 5.0, 'trigger': 'constant'})
 
-        assert ability.resource_name == 'energy'
+        assert ability.resource_type == 'energy'
         assert ability.amount == 5.0
         assert ability.trigger == 'constant'
 
@@ -668,7 +668,7 @@ class TestSyncData:
 
         ability.sync_data({'amount': 20.0})
 
-        assert ability.resource_name == 'fuel'  # Preserved
+        assert ability.resource_type == 'fuel'  # Preserved
         assert ability.amount == 20.0
 
 

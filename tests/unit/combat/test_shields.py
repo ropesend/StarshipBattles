@@ -60,7 +60,7 @@ class TestShields:
         from game.simulation.components.abilities.resources import ResourceConsumption
         cost = 0
         for ab in self.regenerator.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'energy':
                 cost = ab.amount
                 break
         assert cost == 30.0

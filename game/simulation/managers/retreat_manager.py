@@ -100,7 +100,7 @@ class RetreatManager:
             self.retreating_ships[ship_id] = RetreatState(
                 method=RetreatMethod.WARP,
                 charge_ticks=0,
-                required_ticks=500,  # ~5 seconds at 100 TPS
+                required_ticks=SimulationConstants.WARP_CHARGE_TICKS,
                 interruptible=True,
             )
             log_debug(f"Ship {ship.name} charging warp drive")

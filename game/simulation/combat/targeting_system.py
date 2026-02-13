@@ -13,7 +13,7 @@ import math
 from typing import TYPE_CHECKING, List, Optional, Tuple, Any
 
 from game.core.math import Vector2
-from game.core.constants import AttackType
+from game.core.constants import AttackType, SimulationConstants
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -164,7 +164,7 @@ class TargetingSystem:
             if comp.has_ability('SeekerWeaponAbility'):
                 seeker_ab = comp.get_ability('SeekerWeaponAbility')
                 dist = ship.position.distance_to(candidate.position)
-                max_range = seeker_ab.projectile_speed * seeker_ab.endurance * 2.0
+                max_range = seeker_ab.projectile_speed * seeker_ab.endurance * SimulationConstants.SEEKER_MAX_RANGE_MULTIPLIER
                 if dist <= max_range:
                     return candidate
             else:
@@ -210,7 +210,7 @@ class TargetingSystem:
             t = self.solve_lead(
                 ship.position, ship.velocity,
                 target.position, t_vel,
-                projectile_speed / 100.0
+                projectile_speed / SimulationConstants.PROJECTILE_SPEED_SCALE
             )
 
             if t > 0:

@@ -14,10 +14,11 @@ Usage:
     success = reload_registries_from_directory(manager, "data/")
 """
 import json
-import logging
 import os
 from pathlib import Path
 from typing import Union, TYPE_CHECKING
+
+from game.core.logger import log_info, log_warning, log_error
 
 # These imports are legal here - Simulation layer can import its own modules
 from game.simulation.components.component import load_modifiers, load_components
@@ -57,14 +58,12 @@ def reload_registries_from_directory(
     """
     registry_manager._check_frozen()
 
-    logger = logging.getLogger("StarshipBattles")
-
     # Normalize path
     if isinstance(data_dir, str):
         data_dir = Path(data_dir)
 
     if not data_dir.exists() or not data_dir.is_dir():
-        logger.warning(f"RegistryLoader: Directory does not exist: {data_dir}")
+        log_warning(f"RegistryLoader: Directory does not exist: {data_dir}")
         return False
 
     # Clear all registries first (preserves dict identity)
@@ -93,18 +92,18 @@ def reload_registries_from_directory(
     if mod_path:
         try:
             load_modifiers(str(mod_path))
-            logger.info(f"RegistryLoader: Loaded modifiers from {mod_path}")
+            log_info(f"RegistryLoader: Loaded modifiers from {mod_path}")
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            logger.error(f"RegistryLoader: Failed to load modifiers: {e}")
+            log_error(f"RegistryLoader: Failed to load modifiers: {e}")
 
     # Load components
     comp_path = find_file("components.json")
     if comp_path:
         try:
             load_components(str(comp_path))
-            logger.info(f"RegistryLoader: Loaded components from {comp_path}")
+            log_info(f"RegistryLoader: Loaded components from {comp_path}")
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            logger.error(f"RegistryLoader: Failed to load components: {e}")
+            log_error(f"RegistryLoader: Failed to load components: {e}")
 
     # Load vehicle classes (check multiple possible names)
     vclass_path = find_file("vehicleclasses.json", "classes.json")
@@ -113,11 +112,11 @@ def reload_registries_from_directory(
         try:
             if vlayer_path:
                 load_vehicle_classes(str(vclass_path), layers_file_path=str(vlayer_path))
-                logger.info(f"RegistryLoader: Loaded classes from {vclass_path} with layers from {vlayer_path}")
+                log_info(f"RegistryLoader: Loaded classes from {vclass_path} with layers from {vlayer_path}")
             else:
                 load_vehicle_classes(str(vclass_path))
-                logger.info(f"RegistryLoader: Loaded classes from {vclass_path}")
+                log_info(f"RegistryLoader: Loaded classes from {vclass_path}")
         except (FileNotFoundError, OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
-            logger.error(f"RegistryLoader: Failed to load vehicle classes: {e}")
+            log_error(f"RegistryLoader: Failed to load vehicle classes: {e}")
 
     return True

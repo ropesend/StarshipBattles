@@ -126,12 +126,12 @@ class TestComponentCloning:
         clone_cost = 0
 
         for ab in laser.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'energy':
                 original_cost = ab.amount
                 break
 
         for ab in clone.ability_instances:
-            if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':
+            if isinstance(ab, ResourceConsumption) and ab.resource_type == 'energy':
                 clone_cost = ab.amount
                 break
 
