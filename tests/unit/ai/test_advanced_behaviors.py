@@ -57,11 +57,10 @@ class TestAdvancedBehaviors:
         kite.update(advanced_setup['target'], strategy)
 
         # Check navigate_to call
-        # navigate_to(target_pos, stop_dist=opt_dist, precise=True)
+        # navigate_to(target_pos, stop_dist=opt_dist)
         advanced_setup['mock_controller'].navigate_to.assert_called_with(
             advanced_setup['target'].position,
-            stop_dist=1000.0,  # max_range * 1.0
-            precise=True
+            stop_dist=1000.0  # max_range * 1.0
         )
 
         # Scenario 2: Target too close (500 < 1000)

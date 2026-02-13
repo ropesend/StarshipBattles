@@ -110,16 +110,8 @@ class TestRamBehavior:
         behavior.update(mock_target, {})
 
         mock_controller.navigate_to.assert_called_once_with(
-            mock_target.position, stop_dist=0, precise=False
+            mock_target.position, stop_dist=0
         )
-
-    def test_ram_precise_is_false(self, mock_controller, mock_target):
-        """precise=False in navigate_to call."""
-        behavior = RamBehavior(mock_controller)
-        behavior.update(mock_target, {})
-
-        call_args = mock_controller.navigate_to.call_args
-        assert call_args.kwargs.get('precise') is False
 
 
 # =============================================================================
@@ -243,7 +235,7 @@ class TestKiteBehavior:
         behavior.update(mock_target, {'avoid_collisions': True})
 
         mock_controller.navigate_to.assert_called_once_with(
-            avoid_pos, stop_dist=0, precise=False
+            avoid_pos, stop_dist=0
         )
 
     def test_kite_collision_avoidance_disabled(self, mock_controller, mock_target):

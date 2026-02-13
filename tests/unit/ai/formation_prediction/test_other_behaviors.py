@@ -58,7 +58,7 @@ class TestOtherBehaviors:
 
         # Should navigate to target
         mock_controller.navigate_to.assert_called_once_with(
-            target.position, stop_dist=0, precise=False
+            target.position, stop_dist=0
         )
 
     def test_attack_run_behavior_approach(self, mock_controller, pygame_init):

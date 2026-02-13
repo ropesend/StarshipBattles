@@ -99,7 +99,7 @@ class AIBehavior:
 class RamBehavior(AIBehavior):
     def update(self, target: Any, strategy: Dict[str, Any]) -> None:
         # Ram target, no avoidance
-        self.controller.navigate_to(target.position, stop_dist=0, precise=False)
+        self.controller.navigate_to(target.position, stop_dist=0)
 
 class FleeBehavior(AIBehavior):
     FLEE_DISTANCE: int = AIConfig.FLEE_DISTANCE
@@ -113,7 +113,7 @@ class FleeBehavior(AIBehavior):
         ship_pos = self.controller.ship.get_position()
         flee_dir = _flee_direction(ship_pos, target.position)
         flee_pos = ship_pos + flee_dir * self.FLEE_DISTANCE
-        self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
+        self.controller.navigate_to(flee_pos, stop_dist=0)
 
 class KiteBehavior(AIBehavior):
     """Maintain optimal weapon range from target.
@@ -140,7 +140,7 @@ class KiteBehavior(AIBehavior):
         if strategy.get('avoid_collisions', self.DEFAULT_AVOIDANCE):
             override_pos = self.controller.check_avoidance()
             if override_pos:
-                self.controller.navigate_to(override_pos, stop_dist=0, precise=False)
+                self.controller.navigate_to(override_pos, stop_dist=0)
                 return
         
         # Get engage distance multiplier logic
@@ -156,12 +156,12 @@ class KiteBehavior(AIBehavior):
 
         if dist > opt_dist:
             # Close in
-            self.controller.navigate_to(target.position, stop_dist=opt_dist, precise=True)
+            self.controller.navigate_to(target.position, stop_dist=opt_dist)
         else:
             # Kite - maintain distance
             kite_dir = _flee_direction(ship_pos, target.position)
             kite_pos = target.position + kite_dir * opt_dist
-            self.controller.navigate_to(kite_pos, stop_dist=0, precise=True)
+            self.controller.navigate_to(kite_pos, stop_dist=0)
 
 class AttackRunBehavior(AIBehavior):
     """Hit-and-run attack pattern with approach/retreat cycles.
@@ -213,7 +213,7 @@ class AttackRunBehavior(AIBehavior):
         dist = ship_pos.distance_to(target.position)
 
         if self.attack_state == 'approach':
-            self.controller.navigate_to(target.position, stop_dist=approach_dist, precise=False)
+            self.controller.navigate_to(target.position, stop_dist=approach_dist)
 
             if dist < approach_dist * self.APPROACH_HYSTERESIS:
                 self.attack_state = 'retreat'
@@ -226,7 +226,7 @@ class AttackRunBehavior(AIBehavior):
             flee_dir = _flee_direction(ship_pos, target.position)
             flee_pos = ship_pos + flee_dir * self.FLEE_DISTANCE
 
-            self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
+            self.controller.navigate_to(flee_pos, stop_dist=0)
 
             if self.attack_timer <= 0 and dist > retreat_dist:
                 self.attack_state = 'approach'
@@ -396,7 +396,7 @@ class FormationBehavior(AIBehavior):
 
             target_pos = predicted_master_pos + pred_offset
 
-            self.controller.navigate_to(target_pos, stop_dist=self.NAVIGATE_STOP_DIST, precise=True)
+            self.controller.navigate_to(target_pos, stop_dist=self.NAVIGATE_STOP_DIST)
 
 
 # =============================================================================
@@ -516,5 +516,5 @@ class OrbitBehavior(AIBehavior):
 
         # Navigate to a point along the movement direction
         target_pos = ship_pos + move_dir * AIConfig.ORBIT_TARGET_OFFSET
-        self.controller.navigate_to(target_pos, stop_dist=0, precise=False)
+        self.controller.navigate_to(target_pos, stop_dist=0)
 

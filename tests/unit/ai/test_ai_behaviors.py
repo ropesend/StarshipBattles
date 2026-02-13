@@ -55,8 +55,7 @@ class TestKiteBehavior:
         # Since dist (2000) > opt_dist (800), it should call navigate_to with stop_dist=opt_dist
         kite_setup['controller'].navigate_to.assert_called_with(
             kite_setup['target'].position,
-            stop_dist=800.0,
-            precise=True
+            stop_dist=800.0
         )
 
     def test_opt_dist_min_clamp(self, kite_setup):
@@ -68,8 +67,7 @@ class TestKiteBehavior:
 
         kite_setup['controller'].navigate_to.assert_called_with(
             kite_setup['target'].position,
-            stop_dist=150,
-            precise=True
+            stop_dist=150
         )
 
     def test_branching_close_in(self, kite_setup):
@@ -82,8 +80,7 @@ class TestKiteBehavior:
         # Should navigate TO target with stop_dist = opt_dist
         kite_setup['controller'].navigate_to.assert_called_with(
             kite_setup['target'].position,
-            stop_dist=500.0,
-            precise=True
+            stop_dist=500.0
         )
 
     def test_branching_kite_maintain(self, kite_setup):
@@ -110,7 +107,6 @@ class TestKiteBehavior:
         target_pos = args[0]
         assert target_pos == pygame.math.Vector2(-200, 0)
         assert kwargs['stop_dist'] == 0
-        assert kwargs['precise'] is True
 
     def test_collision_avoidance_trigger(self, kite_setup):
         """Verify collision avoidance overrides kiting logic."""
@@ -121,8 +117,7 @@ class TestKiteBehavior:
         kite_setup['controller'].check_avoidance.assert_called()
         kite_setup['controller'].navigate_to.assert_called_with(
             pygame.math.Vector2(50, 50),
-            stop_dist=0,
-            precise=False
+            stop_dist=0
         )
 
     def test_collision_avoidance_disabled(self, kite_setup):
@@ -341,6 +336,5 @@ class TestRamBehavior:
 
         ram_setup['controller'].navigate_to.assert_called_with(
             ram_setup['target'].position,
-            stop_dist=0,
-            precise=False
+            stop_dist=0
         )

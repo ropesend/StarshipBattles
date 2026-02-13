@@ -343,7 +343,7 @@ class AIController:
                 self.current_behavior.update(target, behavior_context)
 
     def _handle_formation_master(self):
-        # (Same logic as original, just encapsulated)
+        """Limit turn/throttle when leading a formation to keep members together."""
         diam = self.ship.get_radius() * 2
         max_radius = 0
         # formation_members contains raw Ships, not adapters
@@ -431,7 +431,7 @@ class AIController:
             return self.ship.get_position() + vec.normalize() * BattleConfig.AVOIDANCE_TARGET_DISTANCE
         return None
 
-    def navigate_to(self, target_pos, stop_dist: float = 0, precise: bool = False) -> None:
+    def navigate_to(self, target_pos, stop_dist: float = 0) -> None:
         """Navigate ship toward target position using rotation and thrust."""
         ship_pos = self.ship.get_position()
         distance = ship_pos.distance_to(target_pos)
