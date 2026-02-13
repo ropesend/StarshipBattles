@@ -38,8 +38,6 @@ The AI package uses defensive programming for combat robustness:
 - Fallback behavior is used when possible
 
 **Exception Types (from game.core.exceptions):**
-- AIException: Base class for AI-related errors
-- TargetingException: Targeting system failures
 - StateException: Used for singleton violations
 
 **Logging Patterns:**

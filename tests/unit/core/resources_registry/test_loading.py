@@ -1,7 +1,7 @@
 """
 Tests for Resource Registry Loading (game/core/resources.py)
 
-Tests the load_resources function for happy path, error handling,
+Tests the load_resources_data function for happy path, error handling,
 edge cases, and logging behavior.
 
 Test Groups:
@@ -15,7 +15,7 @@ import os
 import pytest
 from unittest.mock import patch
 
-from game.core.resources import load_resources
+from game.core.resources import load_resources_data
 from game.core.registry import RegistryManager
 
 
@@ -28,14 +28,12 @@ class TestHappyPath:
 
     def test_load_resources_basic_happy_path(self, sample_resources_file):
         """Load resources from a valid JSON file successfully."""
-        load_resources(sample_resources_file)
+        result = load_resources_data(sample_resources_file)
 
-        registry = RegistryManager.instance()
-
-        assert len(registry.resources) == 3
-        assert "fuel" in registry.resources
-        assert "energy" in registry.resources
-        assert "ammo" in registry.resources
+        assert len(result) == 3
+        assert "fuel" in result
+        assert "energy" in result
+        assert "ammo" in result
 
     def test_load_resources_uses_default_path(self, tmp_path, monkeypatch):
         """When no filepath is provided, use the default data/resources.json path."""
@@ -48,7 +46,7 @@ class TestHappyPath:
             mock_exists.return_value = True
             mock_load.return_value = resources_data
 
-            load_resources()  # No filepath argument
+            load_resources_data()  # No filepath argument
 
             # Verify the default path was used
             mock_exists.assert_called()
@@ -62,14 +60,13 @@ class TestHappyPath:
         custom_data = {"resources": [{"id": "custom_fuel", "custom_field": True}]}
         custom_path.write_text(json.dumps(custom_data))
 
-        load_resources(str(custom_path))
+        result = load_resources_data(str(custom_path))
 
-        registry = RegistryManager.instance()
-        assert "custom_fuel" in registry.resources
-        assert registry.resources["custom_fuel"]["custom_field"] is True
+        assert "custom_fuel" in result
+        assert result["custom_fuel"]["custom_field"] is True
 
     def test_load_resources_preserves_all_fields(self, tmp_path):
-        """All fields from resource definitions are preserved in the registry."""
+        """All fields from resource definitions are preserved in the result."""
         resources_data = {
             "resources": [
                 {
@@ -86,10 +83,8 @@ class TestHappyPath:
         filepath = tmp_path / "resources.json"
         filepath.write_text(json.dumps(resources_data))
 
-        load_resources(str(filepath))
-
-        registry = RegistryManager.instance()
-        plasma = registry.resources["plasma"]
+        result = load_resources_data(str(filepath))
+        plasma = result["plasma"]
 
         assert plasma["id"] == "plasma"
         assert plasma["name"] == "Plasma Energy"
@@ -107,10 +102,9 @@ class TestHappyPath:
         # Ensure it's actually absolute
         assert os.path.isabs(str(abs_path))
 
-        load_resources(str(abs_path))
+        result = load_resources_data(str(abs_path))
 
-        registry = RegistryManager.instance()
-        assert "abs_resource" in registry.resources
+        assert "abs_resource" in result
 
 
 # =============================================================================
@@ -122,15 +116,13 @@ class TestErrorHandling:
 
     def test_load_resources_missing_file_uses_defaults(self):
         """When file doesn't exist, fall back to default resources."""
-        load_resources("nonexistent_file_12345.json")
-
-        registry = RegistryManager.instance()
+        result = load_resources_data("nonexistent_file_12345.json")
 
         # Should have default resources
-        assert "fuel" in registry.resources
-        assert "energy" in registry.resources
-        assert "ammo" in registry.resources
-        assert len(registry.resources) == 3
+        assert "fuel" in result
+        assert "energy" in result
+        assert "ammo" in result
+        assert len(result) == 3
 
     def test_load_resources_missing_file_abs_path_fallback(self, tmp_path, monkeypatch):
         """When relative path fails, try absolute path based on module location."""
@@ -139,25 +131,22 @@ class TestErrorHandling:
             # First call (relative) returns False, second call (absolute) returns True
             mock_exists.side_effect = [False, False]
 
-            load_resources("data/resources.json")
+            result = load_resources_data("data/resources.json")
 
             # Should fall back to defaults since neither path exists
-            registry = RegistryManager.instance()
-            assert "fuel" in registry.resources
+            assert "fuel" in result
 
     def test_load_resources_malformed_json_uses_defaults(self, tmp_path):
         """When JSON is malformed, fall back to default resources."""
         malformed_file = tmp_path / "malformed.json"
         malformed_file.write_text("{ not valid json }")
 
-        load_resources(str(malformed_file))
-
-        registry = RegistryManager.instance()
+        result = load_resources_data(str(malformed_file))
 
         # Should have default resources
-        assert "fuel" in registry.resources
-        assert "energy" in registry.resources
-        assert "ammo" in registry.resources
+        assert "fuel" in result
+        assert "energy" in result
+        assert "ammo" in result
 
     def test_load_resources_invalid_json_exception_handling(self, tmp_path):
         """Exception from invalid JSON is caught and handled gracefully."""
@@ -165,25 +154,22 @@ class TestErrorHandling:
         invalid_file.write_text("totally not json {{{{")
 
         # Should not raise an exception
-        load_resources(str(invalid_file))
+        result = load_resources_data(str(invalid_file))
 
         # Should have defaults
-        registry = RegistryManager.instance()
-        assert len(registry.resources) == 3
+        assert len(result) == 3
 
     def test_load_resources_empty_file_uses_defaults(self, tmp_path):
         """When file is empty, fall back to default resources."""
         empty_file = tmp_path / "empty.json"
         empty_file.write_text("")
 
-        load_resources(str(empty_file))
-
-        registry = RegistryManager.instance()
+        result = load_resources_data(str(empty_file))
 
         # Should have default resources
-        assert "fuel" in registry.resources
-        assert "energy" in registry.resources
-        assert "ammo" in registry.resources
+        assert "fuel" in result
+        assert "energy" in result
+        assert "ammo" in result
 
 
 # =============================================================================
@@ -198,30 +184,28 @@ class TestEdgeCases:
         filepath = tmp_path / "resources.json"
         filepath.write_text(json.dumps({"resources": []}))
 
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
-        assert len(registry.resources) == 0
+        assert len(result) == 0
 
     def test_load_resources_missing_resources_key_silent_failure(self, tmp_path):
         """
-        BUG DOC: Missing 'resources' key silently results in empty registry.
+        BUG DOC: Missing 'resources' key silently results in empty result.
 
         When the JSON file doesn't have a 'resources' key, the code uses
         data.get('resources', []) which returns an empty list, resulting
         in no resources being loaded. This is silent - no warning is logged.
 
         Expected behavior: Should either warn about missing key or fail explicitly.
-        Actual behavior: Silently returns empty registry.
+        Actual behavior: Silently returns empty result.
         """
         filepath = tmp_path / "resources.json"
         filepath.write_text(json.dumps({"other_key": "value"}))
 
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
         # BUG: No resources loaded and no warning given
-        assert len(registry.resources) == 0
+        assert len(result) == 0
 
     def test_load_resources_null_resources_value(self, tmp_path):
         """When resources value is null, handle gracefully."""
@@ -230,11 +214,10 @@ class TestEdgeCases:
 
         # Should not crash - will iterate over None which may raise TypeError
         # The exception handler should catch this and use defaults
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
         # Falls back to defaults due to exception
-        assert "fuel" in registry.resources
+        assert "fuel" in result
 
     def test_load_resources_resources_not_array(self, tmp_path):
         """When resources is not an array, handle gracefully."""
@@ -243,12 +226,11 @@ class TestEdgeCases:
 
         # Iterating over a dict iterates over keys, not causing obvious error
         # but not loading resources correctly either
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
         # Iterating over dict yields strings (keys), which don't have .get()
         # This should trigger exception handler and fall back to defaults
-        assert "fuel" in registry.resources
+        assert "fuel" in result
 
     def test_load_resources_resource_missing_id_field(self, tmp_path):
         """Resources without an id field are silently skipped."""
@@ -260,12 +242,11 @@ class TestEdgeCases:
             ]
         }))
 
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
         # Only the valid resource should be loaded
-        assert len(registry.resources) == 1
-        assert "valid_resource" in registry.resources
+        assert len(result) == 1
+        assert "valid_resource" in result
 
     def test_load_resources_resource_null_id(self, tmp_path):
         """Resources with null id are skipped (falsy check)."""
@@ -277,12 +258,11 @@ class TestEdgeCases:
             ]
         }))
 
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
         # Only the valid resource should be loaded
-        assert len(registry.resources) == 1
-        assert "valid_resource" in registry.resources
+        assert len(result) == 1
+        assert "valid_resource" in result
 
     def test_load_resources_resource_empty_string_id(self, tmp_path):
         """Resources with empty string id are skipped (falsy check)."""
@@ -294,12 +274,11 @@ class TestEdgeCases:
             ]
         }))
 
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
         # Only the valid resource should be loaded (empty string is falsy)
-        assert len(registry.resources) == 1
-        assert "valid_resource" in registry.resources
+        assert len(result) == 1
+        assert "valid_resource" in result
 
     def test_load_resources_duplicate_ids_last_wins(self, tmp_path):
         """When duplicate IDs exist, the last one wins."""
@@ -312,12 +291,11 @@ class TestEdgeCases:
             ]
         }))
 
-        load_resources(str(filepath))
+        result = load_resources_data(str(filepath))
 
-        registry = RegistryManager.instance()
-        assert len(registry.resources) == 1
+        assert len(result) == 1
         # Last definition should win
-        assert registry.resources["fuel"]["version"] == 3
+        assert result["fuel"]["version"] == 3
 
     def test_load_resources_duplicate_ids_warning(self, tmp_path):
         """
@@ -335,7 +313,7 @@ class TestEdgeCases:
         }))
 
         with patch('game.core.resources.log_warning') as mock_warning:
-            load_resources(str(filepath))
+            load_resources_data(str(filepath))
 
             # Currently no warning is issued for duplicates
             # This documents the current behavior (potential bug)
@@ -354,20 +332,20 @@ class TestEdgeCases:
 class TestLogging:
     """Tests for logging behavior during resource loading."""
 
-    def test_load_resources_logs_success_info(self, sample_resources_file):
-        """Successful load logs info message with resource count."""
+    def test_load_resources_no_info_log_on_success(self, sample_resources_file):
+        """Successful load does not log info (pure function)."""
         with patch('game.core.resources.log_info') as mock_info:
-            load_resources(sample_resources_file)
+            result = load_resources_data(sample_resources_file)
 
-            mock_info.assert_called_once()
-            call_args = str(mock_info.call_args)
-            assert "3" in call_args  # 3 resources loaded
-            assert "resource" in call_args.lower()
+            # Pure function should not log success (caller handles that)
+            mock_info.assert_not_called()
+            # But should still return data
+            assert len(result) == 3
 
     def test_load_resources_logs_missing_file_warning(self):
         """Missing file logs a warning message."""
         with patch('game.core.resources.log_warning') as mock_warning:
-            load_resources("nonexistent_file_xyz.json")
+            load_resources_data("nonexistent_file_xyz.json")
 
             mock_warning.assert_called_once()
             call_args = str(mock_warning.call_args)
@@ -379,7 +357,7 @@ class TestLogging:
         malformed_file.write_text("{ invalid }")
 
         with patch('game.core.resources.log_warning') as mock_warning:
-            load_resources(str(malformed_file))
+            load_resources_data(str(malformed_file))
 
             mock_warning.assert_called_once()
             call_args = str(mock_warning.call_args)

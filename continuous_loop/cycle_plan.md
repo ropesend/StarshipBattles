@@ -8,24 +8,37 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Complete - Audit PASSED
-**Current Status:** PROJ-120 archived, next project: PROJ-121
+**Last Completed:** PROJ-121 Phase 1 Complete
+**Current Status:** PROJ-121 Phase 1 complete, Phase 2 ready
 **Current Project:** PROJ-121
-**Current Phase:** Not started
-**Test Status:** 11939 tests passing (full suite)
+**Current Phase:** Phase 2 (Simulation)
+**Test Status:** 11919 tests passing (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-120 COMPLETE: All 18 tasks + Audit PASSED
-  - Pre-audit validation: PASSED
-  - Full test suite: 11939 passed
-  - All task implementations verified
-  - No concerns found
-- Next: Start PROJ-121 (Legacy Eradication)
+- PROJ-121 Phase 1 COMPLETE: 7 tasks (4 implemented, 3 reviewed as appropriate)
+  - Task 1.1: DELETED AIException/TargetingException (unused)
+  - Task 1.2: DELETED load_resources() wrapper, updated to DI pattern
+  - Task 1.3: Updated ValidationResult.message docstring
+  - Task 1.4: REVIEWED - getattr() patterns valid for mixed entity types
+  - Task 1.5: REVIEWED - raw Ship access documented as intentional
+  - Task 1.6: RENAMED DEBUG_SCREENSHOTS to ENABLE_SCREENSHOTS
+  - Task 1.7: REVIEWED - singletons legitimate for global infrastructure
+- Full test suite: 11919 passed
+- Next: Begin Phase 2 (Simulation module tasks)
 - Files modified this session:
-  - tests/integration/fleet_combat/test_damage_pipeline.py (created, 11 tests)
-  - Projects/active_projects/PROJ-120/plan.md (audit passed)
-  - Projects/active_projects/PROJ-120/phase_1_checklist.md (complete)
+  - game/core/exceptions.py (removed AIException, TargetingException)
+  - game/core/resources.py (removed load_resources wrapper)
+  - game/core/validation.py (updated docstring)
+  - game/core/constants.py (renamed DEBUG_SCREENSHOTS)
+  - game/app.py (updated to use load_resources_data DI pattern)
+  - game/ai/__init__.py (updated docstring)
+  - game/ui/services/screenshot_manager.py (use ENABLE_SCREENSHOTS)
+  - tests/unit/ai/test_ai_exceptions.py (DELETED)
+  - tests/unit/core/resources_registry/*.py (updated to use load_resources_data)
+  - tests/unit/core/test_resource_loading.py (updated)
+  - tests/integration/resource_system/test_resource_pipeline.py (updated)
+  - tests/unit/strategy/conftest.py (updated)
 
 ---
 
@@ -41,8 +54,8 @@
 
 ---
 
-- [ ] **PROJ-121: PROJ-B_legacy-eradication**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-121: PROJ-B_legacy-eradication**
+  - **Phases:** 4 | **Status:** In Progress (Phase 1 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-121/plan.md](Projects/active_projects/PROJ-121/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -98,6 +111,7 @@
 | 2026-02-13 | PROJ-120 | Phase 1 (17/18) | In Progress | 2450 pass | - | Task 1.17 complete - test organization |
 | 2026-02-13 | PROJ-120 | Phase 1 (18/18) | Complete | 2490 pass | 1db5688d | Task 1.18 complete - damage pipeline tests |
 | 2026-02-13 | PROJ-120 | Audit Cycle 1 | PASSED | 11939 pass | - | All tasks verified, no concerns |
+| 2026-02-13 | PROJ-121 | Phase 1 | Complete | 11919 pass | - | 7 tasks: 4 implemented, 3 reviewed |
 
 ---
 

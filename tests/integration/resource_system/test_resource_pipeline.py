@@ -7,7 +7,8 @@ Tests custom resource types, per-turn consumption, and auto-disable chains.
 import pytest
 import json
 
-from game.core.resources import load_resources
+from game.core.resources import load_resources_data
+from game.core.registry import RegistryManager
 from game.strategy.data.fleet import Fleet
 from game.core.hex_math import HexCoord
 from game.strategy.engine.turn_engine import TurnEngine
@@ -38,7 +39,8 @@ class TestCustomResourceTypeFullPipeline:
         resources_file = tmp_path / "test_resources.json"
         resources_file.write_text(json.dumps(custom_resources))
 
-        load_resources(str(resources_file))
+        # Use DI pattern: load data then update registry
+        RegistryManager.instance().resources.update(load_resources_data(str(resources_file)))
 
         # Verify custom resource is loaded
         assert 'plasma' in registry.resources

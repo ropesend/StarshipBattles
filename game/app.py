@@ -9,7 +9,7 @@ from game.core.config import DisplayConfig
 from game.core.paths import Paths
 from game.ui.utils import create_centered_rect
 from game.simulation.components.component import load_components, load_modifiers
-from game.core.resources import load_resources
+from game.core.resources import load_resources_data
 from game.core.registry import GameRegistries, set_default_registries, RegistryManager
 from pygame_gui.elements import UIButton
 from game.ui.screens.workshop_screen import DesignWorkshopScreen
@@ -94,7 +94,9 @@ class Game:
         # Load game data
         load_components(Paths.COMPONENTS_FILE)
         load_modifiers(Paths.MODIFIERS_FILE)
-        load_resources(Paths.RESOURCES_FILE)
+        # PROJ-121: Use DI-friendly load_resources_data() directly
+        resources_registry = RegistryManager.instance().resources
+        resources_registry.update(load_resources_data(Paths.RESOURCES_FILE))
 
         # Initialize ship data
         from game.simulation.entities.ship_loader import initialize_ship_data

@@ -34,7 +34,7 @@ def temp_resources_json(tmp_path):
 @pytest.fixture
 def custom_resource_registry(reset_resource_registry, temp_resources_json):
     """Registry with custom 'glag' resource loaded."""
-    from game.core.resources import load_resources
+    from game.core.resources import load_resources_data
 
     filepath = temp_resources_json([
         {"id": "fuel"},
@@ -42,8 +42,9 @@ def custom_resource_registry(reset_resource_registry, temp_resources_json):
         {"id": "ammo"},
         {"id": "glag", "display_name": "Glag Units"},
     ])
-    load_resources(filepath)
-    return RegistryManager.instance()
+    registry = RegistryManager.instance()
+    registry.resources.update(load_resources_data(filepath))
+    return registry
 
 
 class MockComponent:

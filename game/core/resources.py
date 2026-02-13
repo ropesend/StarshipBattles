@@ -96,19 +96,3 @@ def load_resources_data(file_path: str = "data/resources.json") -> dict:
         # Malformed data structure (e.g., resources is not a list)
         log_warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
         return copy.deepcopy(_get_default_resources())
-
-
-def load_resources(file_path: str = "data/resources.json") -> None:
-    """
-    Load resource definitions from JSON into the resource registry.
-
-    This is a thin wrapper around load_resources_data() for backward
-    compatibility. New code should prefer DI via load_resources_data().
-
-    Args:
-        file_path: Path to the resources JSON file. Defaults to data/resources.json.
-    """
-    resources = RegistryManager.instance().resources
-    loaded_data = load_resources_data(file_path)
-    resources.update(loaded_data)
-    log_info(f"Loaded {len(resources)} resource types")

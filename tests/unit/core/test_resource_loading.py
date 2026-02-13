@@ -11,7 +11,6 @@ from game.core.resources import (
     _get_default_resources,
     _resolve_resource_path,
     load_resources_data,
-    load_resources,
 )
 from game.core.constants import ResourceType
 
@@ -139,14 +138,14 @@ class TestLoadResourcesData:
 
 
 # =============================================================================
-# load_resources Tests (Registry Integration)
+# load_resources_data Integration Tests
 # =============================================================================
 
-class TestLoadResources:
-    """Tests for load_resources function (updates registry)."""
+class TestLoadResourcesData:
+    """Tests for load_resources_data function (pure DI pattern)."""
 
-    def test_load_resources_updates_registry(self, tmp_path):
-        """Registry populated on success."""
+    def test_load_resources_data_returns_data(self, tmp_path):
+        """Returns parsed resource data."""
         test_file = tmp_path / "resources.json"
         test_data = {
             "resources": [
@@ -155,55 +154,31 @@ class TestLoadResources:
         }
         test_file.write_text(json.dumps(test_data))
 
-        mock_resources = {}
-        mock_registry = MagicMock()
-        mock_registry.resources = mock_resources
+        result = load_resources_data(str(test_file))
 
-        with patch('game.core.resources._resolve_resource_path', return_value=str(test_file)):
-            with patch('game.core.resources.RegistryManager.instance', return_value=mock_registry):
-                load_resources(str(test_file))
+        assert "test_resource" in result
+        assert result["test_resource"]["name"] == "Test"
 
-        assert "test_resource" in mock_resources
-
-    def test_load_resources_file_not_found_uses_defaults(self):
-        """Registry gets defaults when file not found."""
-        mock_resources = MagicMock(spec=dict)
-        mock_registry = MagicMock()
-        mock_registry.resources = mock_resources
-
+    def test_load_resources_data_file_not_found_returns_defaults(self):
+        """Returns defaults when file not found."""
         with patch('game.core.resources._resolve_resource_path', return_value="/some/path.json"):
-            with patch('game.core.resources.RegistryManager.instance', return_value=mock_registry):
-                with patch('game.core.resources.load_json_required', side_effect=FileNotFoundError("test")):
-                    load_resources()
+            with patch('game.core.resources.load_json_required', side_effect=FileNotFoundError("test")):
+                result = load_resources_data()
 
-        mock_resources.update.assert_called()
-        call_args = mock_resources.update.call_args[0][0]
-        assert ResourceType.FUEL in call_args
+        assert ResourceType.FUEL in result
 
-    def test_load_resources_invalid_json_uses_defaults(self):
-        """Registry gets defaults on invalid JSON."""
-        mock_resources = MagicMock(spec=dict)
-        mock_registry = MagicMock()
-        mock_registry.resources = mock_resources
-
+    def test_load_resources_data_invalid_json_returns_defaults(self):
+        """Returns defaults on invalid JSON."""
         with patch('game.core.resources._resolve_resource_path', return_value="/some/path.json"):
-            with patch('game.core.resources.RegistryManager.instance', return_value=mock_registry):
-                with patch('game.core.resources.load_json_required',
-                          side_effect=json.JSONDecodeError("test", "doc", 0)):
-                    load_resources()
+            with patch('game.core.resources.load_json_required',
+                      side_effect=json.JSONDecodeError("test", "doc", 0)):
+                result = load_resources_data()
 
-        mock_resources.update.assert_called()
+        assert ResourceType.FUEL in result
 
-    def test_load_resources_missing_file_uses_defaults(self):
-        """Unresolvable path uses defaults."""
-        mock_resources = MagicMock(spec=dict)
-        mock_registry = MagicMock()
-        mock_registry.resources = mock_resources
-
+    def test_load_resources_data_missing_file_returns_defaults(self):
+        """Unresolvable path returns defaults."""
         with patch('game.core.resources._resolve_resource_path', return_value=None):
-            with patch('game.core.resources.RegistryManager.instance', return_value=mock_registry):
-                load_resources()
+            result = load_resources_data()
 
-        mock_resources.update.assert_called()
-        call_args = mock_resources.update.call_args[0][0]
-        assert ResourceType.FUEL in call_args
+        assert ResourceType.FUEL in result

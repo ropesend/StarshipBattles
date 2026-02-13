@@ -9,8 +9,8 @@ __all__ = [
     'SimulationConstants',
     'PLANET_RESOURCES',
     'ResourceType',
-    # Debug flags
-    'DEBUG_SCREENSHOTS',
+    # Feature flags
+    'ENABLE_SCREENSHOTS',
     # PROJ-113: Colors and FONT_MAIN moved to game.ui.colors
 ]
 
@@ -37,8 +37,9 @@ class GameState(IntEnum):
 
 # PROJ-113: Colors (WHITE, BLACK, BLUE, RED, GREEN) and FONT_MAIN moved to game.ui.colors
 
-# Debug Flags
-DEBUG_SCREENSHOTS = True
+# Feature Flags
+# PROJ-121: Renamed from DEBUG_SCREENSHOTS - this is a feature toggle, not debug
+ENABLE_SCREENSHOTS = True
 
 
 # Layer Defaults - radius percentages for ship layer zones

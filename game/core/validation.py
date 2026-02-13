@@ -98,11 +98,11 @@ class ValidationResult:
 
     @property
     def message(self) -> str:
-        """First error message (compatibility with UI/strategy layers).
+        """First error message for display purposes.
 
         Returns the first error message if any errors exist, otherwise
-        returns an empty string. This provides backwards compatibility
-        with code that expects a single message property.
+        returns an empty string. Use this for simple single-message display
+        scenarios (dialogs, logs). For multiple errors, iterate `.errors`.
         """
         return self.errors[0] if self.errors else ""
 

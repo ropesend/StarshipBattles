@@ -2,7 +2,7 @@ import os
 import datetime
 import subprocess
 import pygame
-from game.core.constants import DEBUG_SCREENSHOTS
+from game.core.constants import ENABLE_SCREENSHOTS
 from game.core.paths import Paths
 from game.core.logger import log_error, log_info, log_warning
 from game.core.singleton import SingletonMeta
@@ -27,7 +27,7 @@ class ScreenshotManager(metaclass=SingletonMeta):
         self._setup()
 
     def _setup(self):
-        self.enabled = DEBUG_SCREENSHOTS
+        self.enabled = ENABLE_SCREENSHOTS
         self.base_dir = Paths.SCREENSHOTS_DIR
         if self.enabled and not os.path.exists(self.base_dir):
             try:
