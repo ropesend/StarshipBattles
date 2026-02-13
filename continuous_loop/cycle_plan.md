@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-132 Phase 3 Strategy
-**Current Status:** Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-132 Phase 4 UI-Framework
+**Current Status:** Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-132
-**Current Phase:** Phase 4
-**Test Status:** 11885 passed, 2 warnings
+**Current Phase:** Phase 5
+**Test Status:** 11885 passed, 8 warnings
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 3 completed: 5 findings addressed (2 fixed, 3 accepted as-is)
-- ADR-STR-001/002: Galaxy and ProductionEngine under 800-line threshold, accepted
-- ADR-STR-003: Moved hex_to_dict/hex_from_dict to module level in galaxy.py
-- ADR-STR-004: ShipInstance late imports documented in ARCHITECTURE.md, accepted
-- ADR-STR-005: Fixed outdated docstring in ShipStatsCalculator (strategy->simulation is valid)
-- Files modified: game/strategy/data/galaxy.py, game/strategy/services/ship_stats_calculator.py
-- Next: Phase 4 - UI-Framework findings
+- Phase 4 completed: 1 finding addressed (accepted as-is)
+- ADR-UI2-001: ShipIO imports Ship from simulation - accepted as-is
+  - ARCHITECTURE.md explicitly allows UI→Simulation imports (lines 35-37)
+  - ShipIO is a bridge service that must return Ship objects to UI
+  - Adding protocol abstraction adds complexity without benefit
+  - Service's core logic (tkinter file dialogs) cannot be unit tested anyway
+- No code changes, only documentation/decision updates
+- Next: Phase 5 - UI-Screens findings
 
 ---
 
@@ -85,6 +86,7 @@
 | 2026-02-13 | PROJ-132 | Phase 1 | Complete | 11885 passed | 5a1131c1 | Camera DI fix, 2 findings accepted as-is |
 | 2026-02-13 | PROJ-132 | Phase 2 | Complete | 11885 passed | 80f4f85b | Factory functions to UI, TYPE_CHECKING fix, 2 accepted as-is |
 | 2026-02-13 | PROJ-132 | Phase 3 | Complete | 11885 passed | 2284de71 | hex imports moved, 3 accepted, 1 doc fix |
+| 2026-02-13 | PROJ-132 | Phase 4 | Complete | 11885 passed | a1572f1d | ADR-UI2-001 accepted (UI→Sim allowed) |
 
 ---
 

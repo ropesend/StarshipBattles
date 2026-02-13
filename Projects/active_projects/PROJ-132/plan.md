@@ -16,14 +16,14 @@
 | 1. Foundation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Simulation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Strategy | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. UI-Framework | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. UI-Framework | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. UI-Screens | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - ADR-STR-001/002 accepted as-is (under 800-line threshold), ADR-STR-003 fixed (moved hex imports to module level), ADR-STR-004 accepted (documented intentional), ADR-STR-005 fixed (updated outdated documentation)
-**Next Action:** Begin Phase 4 UI-Framework tasks
+**Active Phase:** Phase 5
+**Last Action:** Phase 4 complete - ADR-UI2-001 accepted as-is (ARCHITECTURE.md allows UI→Simulation imports, adding protocol abstraction adds complexity without benefit)
+**Next Action:** Begin Phase 5 UI-Screens tasks
 **Blockers:** None
 
 ## Overview
