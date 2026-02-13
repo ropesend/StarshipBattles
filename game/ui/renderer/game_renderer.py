@@ -74,7 +74,7 @@ def draw_ship(surface, ship, camera):
             drawn_image = True
             
     # Draw Overlay Circles (Collision Radius)
-    # "I want to have a empty circle that should represent the radius of the vesle when the ovelay is on"
+    # Shows collision radius and layer boundaries when overlay mode is active
     show_overlay = getattr(camera, 'show_overlay', False) 
     
     if show_overlay:
