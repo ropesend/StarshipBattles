@@ -8,6 +8,7 @@ import pygame
 import math
 from game.core.constants import LayerType  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale
+from game.ui.renderer.game_renderer import LAYER_COLORS
 
 from game.ui.colors import COLORS
 SHIP_VIEW_BG = COLORS['bg_deep']
@@ -101,12 +102,8 @@ class SchematicView:
         for ltype, data in sorted_layers:
             pct = data.radius_pct
             r = int(max_r * pct)
-            color = (100, 100, 100)
-            if ltype.name == "ARMOR": color = (100, 100, 100)
-            elif ltype.name == "OUTER": color = (200, 50, 50)
-            elif ltype.name == "INNER": color = (50, 50, 200)
-            elif ltype.name == "CORE": color = (200, 200, 200)
-            
+            color = LAYER_COLORS.get(ltype, (100, 100, 100))
+
             pygame.draw.circle(screen, color, (cx, cy), r, 2)
 
             # Label
