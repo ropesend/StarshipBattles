@@ -24,10 +24,10 @@ class Logger(metaclass=SingletonMeta):
         - Use reset() to destroy instance completely
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.setup()
 
-    def setup(self):
+    def setup(self) -> None:
         self.enabled = True
         self.logger = logging.getLogger("StarshipBattles")
         self.logger.setLevel(logging.DEBUG)

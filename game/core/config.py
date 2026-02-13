@@ -85,6 +85,10 @@ class AIConfig:
     ORBIT_RADIAL_COMPONENT: float = 0.5
     ORBIT_TARGET_OFFSET: int = 200
 
+    # Navigation thresholds (degrees)
+    NAVIGATION_ROTATION_DEADBAND: float = 5.0   # Don't rotate if within this angle
+    NAVIGATION_THRUST_ANGLE_MAX: float = 30.0   # Only thrust if facing target within this angle
+
 
 class PhysicsConfig:
     """Physics simulation configuration."""

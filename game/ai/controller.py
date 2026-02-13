@@ -441,10 +441,10 @@ class AIController:
         current_angle = self.ship.get_rotation() % 360
         ang_diff = angle_diff(current_angle, target_angle)
 
-        if abs(ang_diff) > 5:
+        if abs(ang_diff) > AIConfig.NAVIGATION_ROTATION_DEADBAND:
             direction = 1 if ang_diff > 0 else -1
             self.ship.rotate(direction)
 
         eff_stop_dist = stop_dist
-        if abs(ang_diff) < 30 and distance > eff_stop_dist:
+        if abs(ang_diff) < AIConfig.NAVIGATION_THRUST_ANGLE_MAX and distance > eff_stop_dist:
             self.ship.thrust_forward()
