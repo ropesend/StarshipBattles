@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-129 Phase 1 - Foundation
-**Current Status:** Phase 1 complete, Phase 2 next
+**Last Completed:** PROJ-129 Phase 2 - Simulation
+**Current Status:** Phase 2 complete, Phase 3 next
 **Current Project:** PROJ-129
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 11872 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-129 Phase 1 complete
-- Task 1.1 (LEG-FND-003): ACCEPTABLE - raw Ship access in FormationBehavior is documented/intentional
-- Task 1.2 (LEG-FND-004): ACCEPTABLE - SingletonMeta usage is legitimate for global services
-- Task 1.3 (LEG-FND-005): RESOLVED - Removed unused AI_STATE_ERROR and TestAICodes
-- Tests: 11872 passed (1 less due to removed test class)
-- Next: Start PROJ-129 Phase 2 (Simulation)
+- PROJ-129 Phase 2 complete - all 3 findings ACCEPTABLE, no code changes
+- Task 2.1 (LEG-SIM-006): ACCEPTABLE - documented [KNOWN_ISSUE] fallback for test isolation in ability_manager.py
+- Task 2.2 (LEG-SIM-007): ACCEPTABLE - performance optimization pattern with defensive fallback in component.py
+- Task 2.3 (LEG-SIM-009): ACCEPTABLE - TechPresetLoader is planned infrastructure for standalone workshop mode
+- Tests: 11872 passed
+- Next: Start PROJ-129 Phase 3 (Strategy)
 
 ---
 
@@ -100,6 +100,7 @@
 | 2026-02-13 | PROJ-128 | Phase 5 | Complete | 11873 pass | pending | 2 RESOLVED (type hints, docstring), 10 ACCEPTABLE, 4 FALSE POSITIVE, 3 INFO |
 | 2026-02-13 | PROJ-128 | Audit 1 | PASSED | 11873 pass | pending | All 8 spot checks verified, project complete |
 | 2026-02-13 | PROJ-129 | Phase 1 | Complete | 11872 pass | pending | 1 RESOLVED (AI_STATE_ERROR), 2 ACCEPTABLE |
+| 2026-02-13 | PROJ-129 | Phase 2 | Complete | 11872 pass | pending | All 3 ACCEPTABLE - no code changes needed |
 
 ---
 
