@@ -8,20 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-129 Phase 2 - Simulation
-**Current Status:** Phase 2 complete, Phase 3 next
+**Last Completed:** PROJ-129 Phase 3 - Strategy
+**Current Status:** Phase 3 complete, Phase 4 next
 **Current Project:** PROJ-129
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 11872 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-129 Phase 2 complete - all 3 findings ACCEPTABLE, no code changes
-- Task 2.1 (LEG-SIM-006): ACCEPTABLE - documented [KNOWN_ISSUE] fallback for test isolation in ability_manager.py
-- Task 2.2 (LEG-SIM-007): ACCEPTABLE - performance optimization pattern with defensive fallback in component.py
-- Task 2.3 (LEG-SIM-009): ACCEPTABLE - TechPresetLoader is planned infrastructure for standalone workshop mode
+- PROJ-129 Phase 3 complete - all 10 findings ACCEPTABLE, no code changes needed
+- Task 3.1: ACCEPTABLE - FleetOrderProcessor legacy branch is parameter-driven API design
+- Task 3.2: ACCEPTABLE - GameSession fleet lookup fallback is test isolation pattern
+- Task 3.3: ACCEPTABLE - ProductionEngine handles queue items without cost tracking (valid state)
+- Task 3.4: ACCEPTABLE - PathSegment 'hex' alias is internal API consistency
+- Task 3.5: ACCEPTABLE - Planet.from_dict defaults are standard optional field handling
+- Task 3.6: ACCEPTABLE - RaceConfig.from_dict defaults match dataclass defaults
+- Task 3.7: ACCEPTABLE - DesignMetadata old format detection is defensive programming
+- Task 3.8: ACCEPTABLE - sprite_preview is future feature placeholder
+- Task 3.9: ACCEPTABLE - FleetOrderProcessor try/except is test mock compatibility
+- Task 3.10: ACCEPTABLE - _ChaserProxy is proper adapter pattern (PROJ-42 reviewed)
 - Tests: 11872 passed
-- Next: Start PROJ-129 Phase 3 (Strategy)
+- Next: Start PROJ-129 Phase 4 (UI-Framework)
 
 ---
 
@@ -101,6 +108,7 @@
 | 2026-02-13 | PROJ-128 | Audit 1 | PASSED | 11873 pass | pending | All 8 spot checks verified, project complete |
 | 2026-02-13 | PROJ-129 | Phase 1 | Complete | 11872 pass | pending | 1 RESOLVED (AI_STATE_ERROR), 2 ACCEPTABLE |
 | 2026-02-13 | PROJ-129 | Phase 2 | Complete | 11872 pass | pending | All 3 ACCEPTABLE - no code changes needed |
+| 2026-02-13 | PROJ-129 | Phase 3 | Complete | 11872 pass | pending | All 10 ACCEPTABLE - no code changes needed |
 
 ---
 
