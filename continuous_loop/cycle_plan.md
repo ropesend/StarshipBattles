@@ -8,33 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-133 Phase 3 - all 15 findings accepted as-is
-**Current Status:** PROJ-133 Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-133 Phase 4 - 2 fixes, 7 accepted as-is
+**Current Status:** PROJ-133 Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-133
-**Current Phase:** Phase 4
+**Current Phase:** Phase 5
 **Test Status:** 11885 passed, 2 warnings
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-133 Phase 3 complete
-- All 15 strategy module findings accepted as-is (false positives):
-  - CON-STR-001: Validators use consistent ValidationResult pattern
-  - CON-STR-002: Engines are stateless by design (empty __init__ intentional)
-  - CON-STR-003: Docstrings use consistent Google-style format
-  - CON-STR-004: Method verb prefixes semantically consistent (get_/find_)
-  - CON-STR-005: TYPE_CHECKING correctly used in pathfinding.py
-  - CON-STR-006: component_registry parameter naming consistent
-  - CON-STR-007: Boolean naming follows Python conventions (is_/has_/can_)
-  - CON-STR-008: HarvestingEngine uses clean helper pattern, no duplication
-  - CON-STR-009: __init__.py exports well-organized by category
-  - CON-STR-010: Project references use consistent PROJ-XX format
-  - CON-STR-011: Type hints present on all public functions
-  - CON-STR-012: radius=50 is documented default parameter
-  - CON-STR-014: Event system uses Enums (not string constants)
-  - DUP-STR-004: Ability lookup consolidated by PROJ-108
-  - DUP-STR-005: Superweapon ship removal is correct domain logic
+- PROJ-133 Phase 4 complete
+- 2 fixes applied:
+  - CON-UI2-004: Converted :param docstrings to Google Args style in screenshot_manager.py
+  - CON-UI2-010: Changed `pygame.Surface | None` to `Optional[pygame.Surface]` in sprites.py
+- 7 findings accepted as-is (design decisions or false positives):
+  - CON-UI2-001: DI pattern intentionally varies (documented in ComponentService)
+  - CON-UI2-002: Parameter naming IS consistent (all use `registry_provider`)
+  - CON-UI2-003: Singleton type hints consistent (all follow same pattern)
+  - CON-UI2-005: Static methods appropriate for file dialog utility
+  - CON-UI2-007: Error handling varies by use case (return tuple vs raise)
+  - CON-UI2-009: Rendering magic numbers local to renderer, appropriate
+  - CON-UI2-012: Module-level Tkinter init appropriate for file dialogs
+- Files modified: screenshot_manager.py, sprites.py
 - Tests passing: 11885
-- Next: Start PROJ-133 Phase 4
+- Next: Start PROJ-133 Phase 5
 
 ---
 
@@ -103,6 +99,7 @@
 | 2026-02-13 | PROJ-133 | Phase 1 | Complete | 11885 passed | pending | 8 findings accepted as-is (false positives) |
 | 2026-02-13 | PROJ-133 | Phase 2 | Complete | 11885 passed | pending | 14 findings accepted as-is (false positives) |
 | 2026-02-13 | PROJ-133 | Phase 3 | Complete | 11885 passed | pending | 15 findings accepted as-is (false positives) |
+| 2026-02-13 | PROJ-133 | Phase 4 | Complete | 11885 passed | pending | 2 fixes, 7 accepted as-is |
 
 ---
 

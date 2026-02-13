@@ -38,11 +38,12 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 self.enabled = False
 
     def capture(self, surface=None, region=None, label=None):
-        """
-        Capture a screenshot.
-        :param surface: The surface to capture. If None, captures the main display.
-        :param region: Optional pygame.Rect to crop the screenshot.
-        :param label: Optional label to append to the filename.
+        """Capture a screenshot.
+
+        Args:
+            surface: The surface to capture. If None, captures the main display.
+            region: Optional pygame.Rect to crop the screenshot.
+            label: Optional label to append to the filename.
         """
         if not self.enabled:
             return
@@ -116,16 +117,16 @@ class ScreenshotManager(metaclass=SingletonMeta):
                     log_warning(f"Clipboard copy failed (clip): {clip_err}")
 
     def capture_strategy_layer(self, scene, include_ui=True, include_subwindows=True, label=None):
-        """
-        Capture a screenshot of the strategy layer with control over which layers are included.
+        """Capture a screenshot of the strategy layer with control over which layers are included.
 
         This method renders the strategy scene to a temporary surface and captures it,
         allowing selective inclusion of UI panels and sub-windows.
 
-        :param scene: The StrategyScreen instance to capture.
-        :param include_ui: Whether to include UI panels (sidebar, top bar). Default True.
-        :param include_subwindows: Whether to include modal sub-windows. Default True.
-        :param label: Optional label to append to the filename.
+        Args:
+            scene: The StrategyScreen instance to capture.
+            include_ui: Whether to include UI panels (sidebar, top bar). Default True.
+            include_subwindows: Whether to include modal sub-windows. Default True.
+            label: Optional label to append to the filename.
         """
         if not self.enabled:
             return

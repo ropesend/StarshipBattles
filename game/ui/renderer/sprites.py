@@ -1,5 +1,6 @@
 import pygame
 import os
+from typing import Optional
 from game.core.logger import log_info, log_error
 from game.core.singleton import SingletonMeta
 
@@ -98,7 +99,7 @@ class SpriteManager(metaclass=SingletonMeta):
                 
         log_info(f"Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
 
-    def get_sprite(self, index: int) -> "pygame.Surface | None":
+    def get_sprite(self, index: int) -> Optional[pygame.Surface]:
         """Get a sprite by its index.
 
         Args:
