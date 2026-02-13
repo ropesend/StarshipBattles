@@ -8,24 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-127 Phase 4 Complete
-**Current Status:** Phase 4 complete - Ready for Phase 5
+**Last Completed:** PROJ-127 Audit Cycle 1 PASSED
+**Current Status:** Project complete, awaiting user verification
 **Current Project:** PROJ-127
-**Current Phase:** Phase 5
+**Current Phase:** Audit Complete
 **Test Status:** 11873 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 4 complete: 4 DUP-UI2 findings analyzed
-- 0 RESOLVED (no code changes needed)
-- 3 ACCEPTABLE:
-  - DUP-UI2-004: utils.py already has centralized transform helpers; direct pygame.transform calls are simple one-liners
-  - DUP-UI2-005: ValidationService is intentional facade pattern (PROJ-43) for layer separation
-  - DUP-UI2-006: Camera.world_to_screen/screen_to_world ARE the centralized transforms - 14 files use them correctly
-- 1 INFO:
-  - DUP-UI2-007: colors.py exists with centralized constants; inline (255,255,255) is cosmetic optional cleanup
-- Files modified: none
-- Next: Begin Phase 5 (Other findings)
+- Phase 5 complete: 6 UNK findings analyzed
+- All 6 ACCEPTABLE/INFO (no code changes needed):
+  - UNK-08: K/M formatting inline in strategy_detail_fmt.py - localized, clear
+  - UNK-09: RaceThemeGallery vs BaseGallery - different structures, no benefit to forcing inheritance
+  - UNK-10: Window cleanup patterns - consistent enough across 11 files
+  - UNK-11: Dropdown recreation - standard pygame_gui usage, diverse parameters
+  - UNK-13: Ship Stats Renderer already extracted (ship_stats_renderer.py exists)
+  - UNK-14: Strategy Detail Formatters properly separated (fmt.py + formatter.py)
+- Audit: Verified all 7 code changes (get_entity_id, helpers in strategy layer)
+- Project Summary: 36 findings analyzed, 7 RESOLVED with code changes, 29 ACCEPTABLE/INFO
+- Next: Mark PROJ-127 complete, start PROJ-128
 
 ---
 
@@ -41,10 +42,10 @@
 
 ---
 
-- [/] **PROJ-127: code-duplication-reduction**
-  - **Phases:** 5 | **Status:** In Progress (Phase 1 Complete) | **Priority:** Medium
+- [x] **PROJ-127: code-duplication-reduction**
+  - **Phases:** 5 | **Status:** Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-127/plan.md](Projects/active_projects/PROJ-127/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -95,6 +96,8 @@
 | 2026-02-13 | PROJ-127 | Phase 2 | Complete | 11873 pass | pending | All 8 findings ACCEPTABLE/INFO - no code changes needed |
 | 2026-02-13 | PROJ-127 | Phase 3 | Complete | 11873 pass | pending | 5 RESOLVED (helpers extracted), 7 ACCEPTABLE, 1 INFO |
 | 2026-02-13 | PROJ-127 | Phase 4 | Complete | 11873 pass | pending | All 4 ACCEPTABLE/INFO - no code changes needed |
+| 2026-02-13 | PROJ-127 | Phase 5 | Complete | 11873 pass | pending | All 6 ACCEPTABLE/INFO - no code changes needed |
+| 2026-02-13 | PROJ-127 | Audit 1 | PASSED | 11873 pass | pending | All code changes verified, project complete |
 
 ---
 
