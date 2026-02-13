@@ -213,6 +213,7 @@ class TestProcessStellerateStar:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.get_all_fleets_in_system.return_value = [(MagicMock(), mock_fleet)]
 
         processor = SuperweaponOrderProcessor()
@@ -248,6 +249,7 @@ class TestProcessStellerateStar:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.get_all_fleets_in_system.return_value = [(MagicMock(), mock_fleet)]
 
         processor = SuperweaponOrderProcessor()
@@ -285,6 +287,7 @@ class TestProcessStellerateStar:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         empire1 = MagicMock()
         empire1.id = 0
@@ -330,6 +333,7 @@ class TestProcessStellerateStar:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.get_all_fleets_in_system.return_value = [(MagicMock(), mock_fleet)]
 
         processor = SuperweaponOrderProcessor()
@@ -381,6 +385,7 @@ class TestProcessOpenWarpPoint:
         mock_galaxy.systems = {
             current_system.global_location: current_system,
         }
+        mock_galaxy.get_system_at_location.return_value = current_system
         mock_galaxy.name_map = {
             'Alpha': current_system,
             'Beta': target_system,
@@ -427,6 +432,7 @@ class TestProcessOpenWarpPoint:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {current_system.global_location: current_system}
+        mock_galaxy.get_system_at_location.return_value = current_system
         mock_galaxy.name_map = {'Alpha': current_system, 'Beta': target_system}
 
         processor = SuperweaponOrderProcessor()
@@ -466,6 +472,7 @@ class TestProcessCloseWarpPoint:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {current_system.global_location: current_system}
+        mock_galaxy.get_system_at_location.return_value = current_system
 
         processor = SuperweaponOrderProcessor()
         empire = MagicMock()
@@ -500,6 +507,7 @@ class TestProcessCloseWarpPoint:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {current_system.global_location: current_system}
+        mock_galaxy.get_system_at_location.return_value = current_system
 
         processor = SuperweaponOrderProcessor()
         empire = MagicMock()
@@ -535,6 +543,7 @@ class TestProcessCreateDysonSphere:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.register_planet = MagicMock()
 
         processor = SuperweaponOrderProcessor()
@@ -580,6 +589,7 @@ class TestProcessCreateDysonSphere:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.register_planet = MagicMock()
 
         processor = SuperweaponOrderProcessor()
@@ -617,6 +627,7 @@ class TestProcessCreateDysonSphere:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.register_planet = MagicMock()
 
         processor = SuperweaponOrderProcessor()
@@ -656,6 +667,7 @@ class TestProcessCreateDysonSphere:
 
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.register_planet = MagicMock()
 
         processor = SuperweaponOrderProcessor()

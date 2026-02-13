@@ -20,6 +20,8 @@ def mock_galaxy():
     galaxy = MagicMock()
     galaxy.systems = {}
     galaxy.name_map = {}
+    # Default: no system at any location (tests override as needed)
+    galaxy.get_system_at_location.return_value = None
     return galaxy
 
 
@@ -238,6 +240,7 @@ class TestValidateStellerateStar:
         mock_fleet.location = mock_system.global_location
 
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         result = SuperweaponValidator.validate_stellerate_star(
             mock_galaxy, mock_fleet, mock_component_registry
@@ -256,6 +259,7 @@ class TestValidateStellerateStar:
         mock_fleet.location = mock_system.global_location
 
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         result = SuperweaponValidator.validate_stellerate_star(
             mock_galaxy, mock_fleet, mock_component_registry
@@ -306,6 +310,7 @@ class TestValidateOpenWarpPoint:
         target_system.name = "Target System"
 
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.name_map = {
             "Test System": mock_system,
             "Target System": target_system
@@ -328,6 +333,7 @@ class TestValidateOpenWarpPoint:
         mock_fleet.location = mock_system.global_location
 
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.name_map = {"Test System": mock_system}
 
         result = SuperweaponValidator.validate_open_warp_point(
@@ -356,6 +362,7 @@ class TestValidateOpenWarpPoint:
         target_system.name = "Target System"
 
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
         mock_galaxy.name_map = {
             "Test System": mock_system,
             "Target System": target_system
@@ -413,6 +420,7 @@ class TestValidateCloseWarpPoint:
 
         mock_fleet.location = mock_system.global_location + warp_point.location
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         result = SuperweaponValidator.validate_close_warp_point(
             mock_galaxy, mock_fleet, "Other System", mock_component_registry
@@ -432,6 +440,7 @@ class TestValidateCloseWarpPoint:
 
         mock_system.warp_points = []
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         result = SuperweaponValidator.validate_close_warp_point(
             mock_galaxy, mock_fleet, "Other System", mock_component_registry
@@ -479,6 +488,7 @@ class TestValidateCreateDysonSphere:
         mock_fleet.location = mock_system.global_location
 
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         result = SuperweaponValidator.validate_create_dyson_sphere(
             mock_galaxy, mock_fleet, mock_component_registry
@@ -498,6 +508,7 @@ class TestValidateCreateDysonSphere:
 
         mock_system.stars = []  # No stars
         mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
 
         result = SuperweaponValidator.validate_create_dyson_sphere(
             mock_galaxy, mock_fleet, mock_component_registry

@@ -280,6 +280,44 @@ class Galaxy:
                 if wp.destination_id != system_a_name
             ]
 
+    def get_system_at_location(self, location: HexCoord) -> Optional['StarSystem']:
+        """Find the star system containing a given global hex location.
+
+        Checks if the location is:
+        - At a system's global_location
+        - At a planet within a system
+        - At a star within a system
+        - At a warp point within a system
+
+        Args:
+            location: Global HexCoord to search for.
+
+        Returns:
+            StarSystem if location is within a system, None if in deep space.
+        """
+        # Direct system location check (fast path)
+        if location in self.systems:
+            return self.systems[location]
+
+        # Check if location is within a system (at a planet, star, or warp point)
+        for sys_location, system in self.systems.items():
+            # Check planets
+            for planet in system.planets:
+                if sys_location + planet.location == location:
+                    return system
+
+            # Check stars
+            for star in system.stars:
+                if hasattr(star, 'location') and sys_location + star.location == location:
+                    return system
+
+            # Check warp points
+            for wp in system.warp_points:
+                if sys_location + wp.location == location:
+                    return system
+
+        return None
+
     def get_all_fleets_in_system(self, system: 'StarSystem', empires: List) -> List[tuple]:
         """Find all fleets from all empires at any hex within a system.
 

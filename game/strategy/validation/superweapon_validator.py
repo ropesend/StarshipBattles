@@ -33,42 +33,6 @@ class SuperweaponValidator:
         return _inspector_find_ship(fleet.ships, ability_name, component_registry)
 
     @staticmethod
-    def _find_system_at_location(galaxy, location) -> Optional[Any]:
-        """Find the star system at a given location.
-
-        Checks both direct system location and planet/warp point offsets.
-
-        Args:
-            galaxy: The Galaxy object
-            location: HexCoord to check
-
-        Returns:
-            StarSystem at location, or None if in deep space.
-        """
-        # Direct system location check
-        if location in galaxy.systems:
-            return galaxy.systems[location]
-
-        # Check if location is within a system (at a planet, star, or warp point)
-        for sys_location, system in galaxy.systems.items():
-            # Check planets
-            for planet in getattr(system, 'planets', []):
-                if sys_location + planet.location == location:
-                    return system
-
-            # Check stars
-            for star in getattr(system, 'stars', []):
-                if hasattr(star, 'location') and sys_location + star.location == location:
-                    return system
-
-            # Check warp points
-            for wp in getattr(system, 'warp_points', []):
-                if sys_location + wp.location == location:
-                    return system
-
-        return None
-
-    @staticmethod
     def validate_implode_planet(
         galaxy,
         fleet,
@@ -131,7 +95,7 @@ class SuperweaponValidator:
                 )
 
         # Check fleet is at a star system
-        system = SuperweaponValidator._find_system_at_location(galaxy, fleet.location)
+        system = galaxy.get_system_at_location(fleet.location)
         if system is None:
             return ValidationResult(
                 is_valid=False,
@@ -177,9 +141,7 @@ class SuperweaponValidator:
                 )
 
         # Check fleet is at a star system
-        current_system = SuperweaponValidator._find_system_at_location(
-            galaxy, fleet.location
-        )
+        current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
             return ValidationResult(
                 is_valid=False,
@@ -234,9 +196,7 @@ class SuperweaponValidator:
                 )
 
         # Check fleet is at a star system
-        current_system = SuperweaponValidator._find_system_at_location(
-            galaxy, fleet.location
-        )
+        current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
             return ValidationResult(
                 is_valid=False,
@@ -288,9 +248,7 @@ class SuperweaponValidator:
                 )
 
         # Check fleet is at a star system
-        current_system = SuperweaponValidator._find_system_at_location(
-            galaxy, fleet.location
-        )
+        current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
             return ValidationResult(
                 is_valid=False,

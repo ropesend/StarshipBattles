@@ -44,39 +44,6 @@ class SuperweaponOrderProcessor:
         """Initialize the superweapon order processor."""
         pass
 
-    def _find_system_at_location(self, galaxy: Galaxy, location: HexCoord) -> Optional[StarSystem]:
-        """Find the star system containing a given global hex location.
-
-        Args:
-            galaxy: The Galaxy object
-            location: Global HexCoord to search for
-
-        Returns:
-            StarSystem if location is within a system, None otherwise.
-        """
-        # Direct system location check
-        if location in galaxy.systems:
-            return galaxy.systems[location]
-
-        # Check if location is within a system (at a planet, star, or warp point)
-        for sys_location, system in galaxy.systems.items():
-            # Check planets
-            for planet in getattr(system, 'planets', []):
-                if sys_location + planet.location == location:
-                    return system
-
-            # Check stars
-            for star in getattr(system, 'stars', []):
-                if hasattr(star, 'location') and sys_location + star.location == location:
-                    return system
-
-            # Check warp points
-            for wp in getattr(system, 'warp_points', []):
-                if sys_location + wp.location == location:
-                    return system
-
-        return None
-
     def process_implode_planet(
         self,
         fleet: Fleet,
@@ -188,7 +155,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No STELLERATE_STAR order")
 
         # Find system at fleet location
-        system = self._find_system_at_location(galaxy, fleet.location)
+        system = galaxy.get_system_at_location(fleet.location)
         if system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
@@ -267,7 +234,7 @@ class SuperweaponOrderProcessor:
         target_system_name = params.get('target_system_name', '')
 
         # Find current system
-        current_system = self._find_system_at_location(galaxy, fleet.location)
+        current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
@@ -368,7 +335,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No destination specified")
 
         # Find current system
-        current_system = self._find_system_at_location(galaxy, fleet.location)
+        current_system = galaxy.get_system_at_location(fleet.location)
         if current_system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
@@ -438,7 +405,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No CREATE_DYSON_SPHERE order")
 
         # Find system at fleet location
-        system = self._find_system_at_location(galaxy, fleet.location)
+        system = galaxy.get_system_at_location(fleet.location)
         if system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
