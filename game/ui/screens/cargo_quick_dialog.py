@@ -55,7 +55,7 @@ class CargoQuickDialog(UIWindow):
         self.hex_coord = hex_coord
         self.direction = direction
         self.scene = scene
-        self.facade = scene._facade
+        self.facade = scene.facade
         self._mapper = input_mapper
 
         # Cargo items with their sliders: list of {label, type, species_id, max, slider, lbl_val, btn_all}

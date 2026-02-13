@@ -197,8 +197,8 @@ class StrategyWindowManager:
             self.event_log_window.kill()
 
         events = (
-            self.scene._facade.get_all_events()
-            if hasattr(self.scene, "_facade")
+            self.scene.facade.get_all_events()
+            if hasattr(self.scene, "facade")
             else []
         )
 

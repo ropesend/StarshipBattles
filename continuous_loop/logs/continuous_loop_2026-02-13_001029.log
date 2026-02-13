@@ -1651,3 +1651,148 @@ Aborting
 
 
 [09:20:30 LOOP] Running codebase sweep (attempt 1/3)...
+```
+Starting sweep...
+Review folder: Reviews/results/2026-02-13_092036_sweep_full-codebase-sweep
+Wave 1/5 complete (Duplication). 5/5 agents succeeded.
+Wave 2/5 complete (Legacy Holdovers). 5/5 agents succeeded.
+Wave 3/5 complete (Consistency). 5/5 agents succeeded.
+Wave 4/5 complete (Architecture Drift). 5/5 agents succeeded.
+Wave 5/5 complete (Test Coverage). 5/5 agents succeeded.
+Compiled: 268 findings (15 Critical, 94 Major, 114 Minor, 45 Info)
+Validation complete. 5/5 validators finished.
+Validated: 268 -> 221 findings (47 rejected, 45 downgraded, 17.5% rejection rate)
+Proceeding to project generation with 221 validated findings...
+Quality: 59/100 (Needs Improvement) [+6] | FND:49(+3) SIM:75(+27) STR:59(+2) UI1:63(+6) UI2:31(-17)
+Projects generated: 6 proposals
+Auto-approved ALL: PROJ-132, PROJ-133, PROJ-134, PROJ-135, PROJ-136, PROJ-137
+Committed: dc1ce7c8
+Sweep complete. 6 projects created. Exiting.
+```
+[10:25:14 LOOP] Sweep completed successfully
+[10:25:14 LOOP] Findings count: 146
+[10:25:14 LOOP] 6 projects created. Proceeding to execution.
+[10:25:14 LOOP] Building cycle_plan.md from approved projects...
+
+
+git : Microsoft Windows [Version 10.0.26200.7840]
+At C:\Dev\Starship Battles\continuous_loop\continuous_loop.ps1:461 char:5
++     git commit -m "[Sweep] Cycle ${cycleNum}: $findingsCount findings ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Microsoft Windo...0.0.26200.7840]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Dev\Starship Battles>
+
+[10:25:14 LOOP] Starting inner loop for project execution...
+[INNER] Starting Continuous Loop Inner Loop
+[INNER] Plan file: continuous_loop/cycle_plan.md
+[INNER] Worker prompt: continuous_loop/CYCLE_WORKER.md
+
+
+[INNER] =========================================
+[INNER] Iteration 1
+[INNER] =========================================
+
+[INNER] Checking for next work item...
+[INNER] Starting Claude CLI session...
+
+**Loop Phase Complete:**
+
+```
+Modified: game/research/ui/research_scene.py
+Modified: tests/unit/research/test_research_scene_di.py (new)
+Modified: tests/unit/research/research_scene/test_callbacks.py
+Modified: tests/unit/research/research_scene/test_initialization.py
+Modified: tests/unit/research/research_scene/test_interaction.py
+Tests: 11885 passed (+3 new)
+Commit: 5a1131c1
+Phase 1 complete
+Exiting
+```
+
+[INNER] Claude session completed
+[INNER] Changes detected in git
+[INNER] Waiting 10s before next iteration...
+
+[INNER] =========================================
+[INNER] Iteration 2
+[INNER] =========================================
+
+[INNER] Checking for next work item...
+[INNER] Starting Claude CLI session...
+
+Loop Phase Complete.
+
+**Summary:**
+- Modified: `game/ui/services/battle_factories.py` (NEW), `game/ui/services/__init__.py`, `game/simulation/battle_controller.py`, `game/simulation/systems/battle_engine.py`
+- Modified tests: `test_utilities.py`, `test_damage_pipeline.py`, `test_combat_workflow.py`
+- Updated: `plan.md`, `phase_2_checklist.md`, `decisions.md`, `cycle_plan.md`
+- Tests: 11885 passed, 2 warnings
+- Commit: ebf5aff8
+
+Phase 2 complete. Exiting.
+
+[INNER] Claude session completed
+[INNER] Changes detected in git
+[INNER] Waiting 10s before next iteration...
+
+[INNER] =========================================
+[INNER] Iteration 3
+[INNER] =========================================
+
+[INNER] Checking for next work item...
+[INNER] Starting Claude CLI session...
+
+Loop Phase Complete: PROJ-132 Phase 3 Strategy
+
+**Summary:**
+- Modified: `game/strategy/data/galaxy.py` (hex imports to module level)
+- Modified: `game/strategy/services/ship_stats_calculator.py` (documentation fix)
+- Tests: 11885 passed, 2 warnings
+- Commit: 22a3c039
+
+**Findings addressed:**
+- ADR-STR-001: Galaxy class accepted (736 lines, under 800 threshold)
+- ADR-STR-002: ProductionEngine accepted (731 lines, under threshold)
+- ADR-STR-003: Fixed - moved hex_to_dict/hex_from_dict to module level
+- ADR-STR-004: Accepted - documented in ARCHITECTURE.md
+- ADR-STR-005: Fixed - updated outdated documentation
+
+Phase 3 complete. Exiting.
+
+[INNER] Claude session completed
+[INNER] Changes detected in git
+[INNER] Waiting 10s before next iteration...
+
+[INNER] =========================================
+[INNER] Iteration 4
+[INNER] =========================================
+
+[INNER] Checking for next work item...
+[INNER] Starting Claude CLI session...
+
+**Summary:**
+- Modified: Projects/active_projects/PROJ-132/decisions.md
+- Modified: Projects/active_projects/PROJ-132/phase_4_checklist.md
+- Modified: Projects/active_projects/PROJ-132/plan.md
+- Modified: continuous_loop/cycle_plan.md
+- Tests: 11885 passed, 8 warnings
+- Commit: 117376c6
+
+**Phase 4 complete** - ADR-UI2-001 accepted as-is (UIΓåÆSimulation import is architecturally valid)
+
+Loop Phase Complete. Exiting.
+
+[INNER] Claude session completed
+[INNER] Changes detected in git
+[INNER] Waiting 10s before next iteration...
+
+[INNER] =========================================
+[INNER] Iteration 5
+[INNER] =========================================
+
+[INNER] Checking for next work item...
+[INNER] Starting Claude CLI session...
+

@@ -154,6 +154,15 @@ class StrategyScreen:
         return next((e for e in self.empires if e.id == current_player_id), self.empires[0])
 
     @property
+    def facade(self):
+        """Public accessor for the strategy session facade.
+
+        Used by dialogs and child components that need to issue commands
+        or query game state through the facade pattern.
+        """
+        return self._facade
+
+    @property
     def input_mode(self):
         return self._input.input_mode
 

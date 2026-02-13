@@ -131,11 +131,7 @@ class TestLabValidationManager:
             }
 
             # Extract weapon data from first component with BeamWeaponAbility
-            components_cache = self.data_extractor._components_cache
-            if components_cache is None:
-                # Load components.json
-                self.data_extractor.load_component("dummy")  # This will populate cache
-                components_cache = self.data_extractor._components_cache
+            components_cache = self.data_extractor.get_components_cache()
 
             for comp_id in component_ids:
                 comp_data = components_cache.get(comp_id) if components_cache else None

@@ -8,22 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-132 Phase 4 UI-Framework
-**Current Status:** Phase 4 complete, ready for Phase 5
+**Last Completed:** PROJ-132 Phase 5 UI-Screens
+**Current Status:** All 5 phases complete, ready for audit
 **Current Project:** PROJ-132
-**Current Phase:** Phase 5
-**Test Status:** 11885 passed, 8 warnings
+**Current Phase:** Audit
+**Test Status:** 11885 passed, 11 warnings
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 4 completed: 1 finding addressed (accepted as-is)
-- ADR-UI2-001: ShipIO imports Ship from simulation - accepted as-is
-  - ARCHITECTURE.md explicitly allows UI→Simulation imports (lines 35-37)
-  - ShipIO is a bridge service that must return Ship objects to UI
-  - Adding protocol abstraction adds complexity without benefit
-  - Service's core logic (tkinter file dialogs) cannot be unit tested anyway
-- No code changes, only documentation/decision updates
-- Next: Phase 5 - UI-Screens findings
+- Phase 5 completed: 11 findings addressed
+- Code fixes (5):
+  - ADR-UI1-005: Added public `facade` property to StrategyScreen
+  - ADR-UI1-006: Added public `trigger_return_to_test_lab()` to BattleScreen
+  - ADR-UI1-009: Added public `get_components_cache()` to TestLabDataExtractor
+  - ADR-UI1-011: Use existing `clear_selection()` in workshop_data_reloader
+  - Updated test mocks to include public accessors
+- Accepted as-is (6):
+  - ADR-UI1-001-004: God classes already decomposed into modules
+  - ADR-UI1-007-008: Internal coupling patterns in decomposed screens
+  - ADR-UI1-012: pygame_gui dialog handling pattern
+- Files modified: strategy_screen.py, battle_screen.py, battle_ui.py, cargo_quick_dialog.py, transfer_dialog.py, strategy_window_manager.py, data_extractor.py, validation_manager.py, screen.py, workshop_data_reloader.py
+- Next: Run audit (Protocol 04)
 
 ---
 
@@ -32,9 +37,9 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-132: Architecture Layer Violations**
-  - **Phases:** 5 | **Status:** Phase 3 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** All Phases Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-132/plan.md](Projects/active_projects/PROJ-132/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** Ready | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -87,6 +92,7 @@
 | 2026-02-13 | PROJ-132 | Phase 2 | Complete | 11885 passed | 80f4f85b | Factory functions to UI, TYPE_CHECKING fix, 2 accepted as-is |
 | 2026-02-13 | PROJ-132 | Phase 3 | Complete | 11885 passed | 2284de71 | hex imports moved, 3 accepted, 1 doc fix |
 | 2026-02-13 | PROJ-132 | Phase 4 | Complete | 11885 passed | a1572f1d | ADR-UI2-001 accepted (UI→Sim allowed) |
+| 2026-02-13 | PROJ-132 | Phase 5 | Complete | 11885 passed | f1d1af37 | 5 fixes, 6 accepted as-is |
 
 ---
 

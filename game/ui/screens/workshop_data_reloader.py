@@ -179,7 +179,7 @@ class WorkshopDataReloader:
         # Center View
         self.view.selected_component = None
         self.controller.selected_component = None
-        self.viewmodel._selected_components = []
+        self.viewmodel.clear_selection()
 
         # Update dropdowns via right_panel method
         classes = self._get_vehicle_classes()

@@ -208,3 +208,17 @@ class TestLabDataExtractor:
             }
 
         return self._components_cache.get(component_id)
+
+    def get_components_cache(self):
+        """Get the components cache dictionary.
+
+        Ensures the cache is populated before returning. This provides
+        public access to the cache without exposing the private attribute.
+
+        Returns:
+            Dict[str, Dict]: Mapping of component ID to component data
+        """
+        if self._components_cache is None:
+            # Trigger cache population by loading a dummy component
+            self.load_component("__ensure_cache__")
+        return self._components_cache or {}

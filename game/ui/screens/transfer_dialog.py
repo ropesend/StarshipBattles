@@ -30,7 +30,7 @@ class TransferDialog(UIWindow):
         self.source_fleet = source_fleet
         self.hex_coord = hex_coord
         self.scene = scene
-        self.facade = scene._facade
+        self.facade = scene.facade
         self._mapper = input_mapper
         
         # UI State

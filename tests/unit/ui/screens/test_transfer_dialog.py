@@ -26,6 +26,7 @@ class TestTransferDialog:
     def mock_scene(self):
         scene = MagicMock()
         scene._facade = MagicMock()
+        scene.facade = scene._facade  # Public accessor
         return scene
 
     @pytest.fixture

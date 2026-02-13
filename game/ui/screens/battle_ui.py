@@ -95,7 +95,7 @@ class BattleUI:
             log_debug(f"Return button rect: {button_rect}")
             if button_rect.collidepoint(mx, my):
                 log_debug(f"Return to Combat Lab button clicked!")
-                self.scene._trigger_return_to_test_lab()
+                self.scene.trigger_return_to_test_lab()
                 return True
             else:
                 log_debug(f"Click was not on return button")
