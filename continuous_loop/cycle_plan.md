@@ -8,21 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Phase 1 Tasks 1.1-1.3
-**Current Status:** In progress - Phase 1 partially complete (3/18 tasks)
+**Last Completed:** PROJ-120 Phase 1 Task 1.4 (BattleController edge case tests)
+**Current Status:** In progress - Phase 1 partially complete (4/18 tasks)
 **Current Project:** PROJ-120
 **Current Phase:** Phase 1
-**Test Status:** 2330 simulation tests passing
+**Test Status:** 2362 simulation tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Completed Task 1.1: Projectile Entity unit tests (37 tests) - NEW FILE
-- Completed Task 1.2: ShipStatQuerier tests (45 tests) - ALREADY EXISTS
-- Completed Task 1.3: ShipValidator rules tests (50 tests) - NEW FILE
-- Next: Task 1.4 (BattleController edge case tests)
+- Completed Task 1.4: BattleController edge case tests (32 new tests)
+- Total BattleController tests now 134 (was 102)
+- Next: Task 1.5 (DamageCalculator armor penetration edge tests)
 - Files created:
-  - tests/unit/simulation/entities/test_projectile.py
-  - tests/unit/simulation/validation/test_ship_validator_rules.py
+  - tests/unit/simulation/battle_controller/test_edge_cases.py
 
 ---
 
@@ -82,7 +80,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-13 | PROJ-120 | Phase 1 (3/18) | In Progress | 2330 pass | TBD | Tasks 1.1-1.3 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (3/18) | In Progress | 2330 pass | 47a927b2 | Tasks 1.1-1.3 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (4/18) | In Progress | 2362 pass | pending | Task 1.4 complete |
 
 ---
 

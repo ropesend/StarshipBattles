@@ -47,15 +47,26 @@
 **Notes:** Created comprehensive unit tests (50 tests) for all validation rules: LayerConstraintRule, UniqueComponentRule, ExclusiveGroupRule, MountDependencyRule, LayerRestrictionDefinitionRule, MassBudgetRule, ClassRequirementsRule, ResourceDependencyRule, ShipDesignValidator. Also tests helper functions and RestrictionPrefixes constants.
 
 ### Task 1.4: TCG-SIM-004 - BattleController Missing Edge Case Tests [Medium]
-**File:** `game/simulation/battle_control`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/battle_controller.py`
+**Tests:** `pytest tests/unit/simulation/battle_controller/test_edge_cases.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Created comprehensive edge case tests (32 tests) in new test_edge_cases.py file covering:
+- apply_results_to_fleets edge cases (4 tests)
+- add_reinforcements with no engine (3 tests)
+- load_state with projectile restoration (4 tests)
+- mode_handler property access (3 tests)
+- Multiple reconfiguration scenarios (3 tests)
+- Callback edge cases (3 tests)
+- _retreat_allowed logic (4 tests)
+- _reinforcements_allowed logic (3 tests)
+- _update_retreats (2 tests)
+- get_results edge cases (3 tests)
+Total BattleController tests now: 134 (was 102)
 
 ### Task 1.5: TCG-SIM-005 - DamageCalculator Armor Penetration Edge [Simple]
 **File:** `game/simulation/combat/damage_`
