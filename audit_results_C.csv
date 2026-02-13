@@ -1,0 +1,11 @@
+TestFilePath,Verdict,Reason,SUT_Path
+tests/unit/strategy/test_auto_save.py,KEEP,Tests active save system,game/strategy/systems/save_game_service.py
+tests/unit/strategy/test_command_handlers.py,KEEP,Tests active command handlers,game/strategy/engine/command_handlers.py
+tests/unit/strategy/test_component_inspector.py,KEEP,Tests active component inspector,game/strategy/services/component_inspector.py
+tests/unit/strategy/test_design_metadata.py,KEEP,Tests active design metadata,game/strategy/data/design_metadata.py
+tests/unit/strategy/test_engine_event_emission.py,KEEP,Tests active event emission,game/strategy/engine/production_engine.py
+tests/unit/strategy/test_fleet_battle_adapter.py,KEEP,Tests active battle adapter,game/strategy/data/fleet_battle_adapter.py
+tests/unit/strategy/test_fleet_capability_calculator.py,KEEP,Tests active capability calculator,game/strategy/data/fleet_capability_calculator.py
+tests/unit/strategy/test_fleet_order_processor.py,KEEP,Tests active order processor,game/strategy/engine/fleet_order_processor.py
+tests/unit/strategy/test_fleet_report_filters.py,KEEP,Tests active report filters,game/ui/screens/fleet_report_filters.py
+tests/unit/strategy/test_fleet_resource_aggregator.py,KEEP,Tests active resource aggregator,game/strategy/data/fleet_resource_aggregator.py
