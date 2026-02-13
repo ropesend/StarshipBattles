@@ -23,8 +23,8 @@ from game.simulation.components.component import load_components, create_compone
 from game.simulation.systems.battle_engine import BattleEngine
 from game.ai.controller import AIController
 
-from test_logger import ComponentTestLogger, TestEventType, enable_test_logging
-from test_log_parser import TestLogParser
+from component_logger import ComponentTestLogger, TestEventType, enable_test_logging
+from log_parser import TestLogParser
 
 
 class TestGrid:

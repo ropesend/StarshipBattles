@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (16/18)
+**Status:** In Progress (17/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -254,14 +254,24 @@ Total tests: 60 (was 46)
 
 ### Task 1.17: TCG-SIM-017 - Test Organization Inconsistency [N]
 **File:** `tests/unit/simulation/`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/simulation/`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Addressed INFO-level organizational inconsistency:
+1. Moved manager tests to proper subdirectory:
+   - test_battle_state_manager.py → managers/
+   - test_retreat_manager.py → managers/
+2. Moved service test to proper subdirectory:
+   - test_simulation_design_loader.py → services/
+3. Renamed non-test utility files (were confusingly named test_*):
+   - test_logger.py → component_logger.py (utility class, not tests)
+   - test_log_parser.py → log_parser.py (utility class, not tests)
+4. Updated all import references in __init__.py, run_component_tests.py, and documentation
+All 2450 simulation tests passing.
 
 ### Task 1.18: TCG-SIM-018 - Simulation Integration Tests Sparse [N]
 **File:** `tests/integration/`

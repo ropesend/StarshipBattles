@@ -34,7 +34,8 @@ tests/
 ├── simulation/              # Simulation-based component tests (this spec)
 │   ├── __init__.py
 │   ├── run_component_tests.py   # Test runner script
-│   ├── test_log_parser.py       # Log parsing utilities
+│   ├── log_parser.py            # Log parsing utilities
+│   ├── component_logger.py      # Structured event logging
 │   ├── test_configs/            # Test configuration JSONs
 │   │   ├── ENG-001.json
 │   │   ├── PROJ360-001.json
@@ -643,10 +644,10 @@ All scenarios must be tested at **4 facing angles**:
 
 ### Phase 0.5: Test Harness (in `tests/simulation/`)
 - [x] Create `tests/simulation/` directory structure ✅
-- [x] Implement toggleable test logging system (`test_logger.py`) ✅
+- [x] Implement toggleable test logging system (`component_logger.py`) ✅
 - [x] Create log event types (SHIP_SPAWN, SHIP_VELOCITY, WEAPON_FIRE, HIT, MISS, etc.) ✅
 - [x] Integrate logging into test runner (disabled by default) ✅
-- [x] Create `tests/simulation/test_log_parser.py` for log verification ✅
+- [x] Create `tests/simulation/log_parser.py` for log verification ✅
 - [x] Create `tests/simulation/run_component_tests.py` ✅
 - [x] Create test configuration format (JSON in `tests/simulation/test_configs/`) ✅
 - [x] Create `tests/simulation/output/logs/` directory ✅

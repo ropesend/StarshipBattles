@@ -286,3 +286,42 @@ Loop Phase Complete. Exiting.
 [INNER] Checking for next work item...
 [INNER] Starting Claude CLI session...
 
+**Summary:**
+
+Modified:
+- `tests/unit/abilities/test_strategic_movement.py` (+7 tests)
+- `tests/unit/abilities/test_warp_jump.py` (+9 tests)
+- `Projects/active_projects/PROJ-120/phase_1_checklist.md`
+- `Projects/active_projects/PROJ-120/plan.md`
+- `continuous_loop/cycle_plan.md`
+
+Tests: 531 passed (abilities/entities subset), 40 propulsion tests total
+Commit: d1868db3
+
+Phase 1: 15/18 tasks complete (2 REJECTED per project policy, 1 newly complete)
+
+Loop Phase Complete. Exiting.
+
+[INNER] Claude session completed
+[INNER] Changes detected in git
+[INNER] Waiting 10s before next iteration...
+
+[INNER] =========================================
+[INNER] Iteration 10
+[INNER] =========================================
+
+[INNER] Checking for next work item...
+[INNER] Starting Claude CLI session...
+
+Modified: tests/unit/simulation/test_projectile_manager.py (+14 tests)
+Modified: Projects/active_projects/PROJ-120/phase_1_checklist.md
+Modified: Projects/active_projects/PROJ-120/plan.md
+Modified: continuous_loop/cycle_plan.md
+Tests: 2554 passed (simulation/combat), 60 passed (projectile_manager)
+Commit: c188e422
+Task 1.16 complete
+Exiting
+
+[INNER] Claude session completed
+[INNER] Changes detected in git
+[INNER] Waiting 10s before next iteration...

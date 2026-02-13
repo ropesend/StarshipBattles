@@ -8,22 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Phase 1 Task 1.16 complete
-**Current Status:** In progress - Phase 1 partially complete (16/18 tasks)
+**Last Completed:** PROJ-120 Phase 1 Task 1.17 complete
+**Current Status:** In progress - Phase 1 partially complete (17/18 tasks)
 **Current Project:** PROJ-120
 **Current Phase:** Phase 1
-**Test Status:** 2554 simulation/combat tests passing
+**Test Status:** 2450 simulation tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 1.16 (TCG-SIM-016): Added 14 new ProjectileManager batch update tests
-  - TestBatchUpdateMultipleHits (2 tests): Multiple projectiles hitting different ships, same ship
-  - TestBatchMarkAndSweepRemoval (5 tests): Alternating patterns, order preservation, edge cases
-  - TestBatchUpdateLargeScale (3 tests): 100 projectiles, all survive, no stale references
-  - TestBatchUpdateWithHitsAndDeaths (2 tests): Mixed hit/expire removal, sequential checking
-- Next: Task 1.17 (Test Organization Inconsistency)
+- Task 1.17 (TCG-SIM-017): Test Organization Inconsistency - COMPLETE
+  - Moved manager tests to managers/ subdirectory
+  - Moved service test to services/ subdirectory
+  - Renamed confusingly-named utility files (test_logger.py → component_logger.py, test_log_parser.py → log_parser.py)
+  - Updated all import references
+- Next: Task 1.18 (Simulation Integration Tests Sparse)
 - Files modified:
-  - tests/unit/simulation/test_projectile_manager.py (+14 tests, now 60 total)
+  - tests/unit/simulation/managers/test_battle_state_manager.py (moved)
+  - tests/unit/simulation/managers/test_retreat_manager.py (moved)
+  - tests/unit/simulation/services/test_simulation_design_loader.py (moved)
+  - tests/unit/simulation/component_logger.py (renamed from test_logger.py)
+  - tests/unit/simulation/log_parser.py (renamed from test_log_parser.py)
+  - tests/unit/simulation/__init__.py (updated imports)
+  - tests/unit/simulation/run_component_tests.py (updated imports)
+  - tests/unit/data/component_test_specifications.md (updated docs)
 
 ---
 
@@ -93,6 +100,7 @@
 | 2026-02-13 | PROJ-120 | Phase 1 (13/18) | In Progress | 2438 pass | 472953fa | Tasks 1.12 (REJECTED), 1.13 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (15/18) | In Progress | 531 pass | d1868db3 | Tasks 1.14 (REJECTED), 1.15 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (16/18) | In Progress | 2554 pass | - | Task 1.16 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (17/18) | In Progress | 2450 pass | - | Task 1.17 complete - test organization |
 
 ---
 
