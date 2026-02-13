@@ -506,13 +506,17 @@ class TestAttackProcessing:
 
         engine.collision_system.process_beam_attack.assert_called_once()
 
-    def test_string_attack_types_converted_to_enum(self, battle_engine_with_ships):
-        """String attack types should be converted to AttackType enum."""
+    def test_string_attack_types_not_processed(self, battle_engine_with_ships):
+        """String attack types are NOT converted - all attack types must use AttackType enum.
+
+        PROJ-121: Removed string-to-enum migration support. All attack creation
+        paths now use AttackType enum directly. String types are ignored.
+        """
         engine = battle_engine_with_ships
 
-        # Create attack with string type (legacy format)
+        # Create attack with string type (invalid - not using AttackType enum)
         projectile = Mock()
-        projectile.type = 'projectile'  # String instead of enum
+        projectile.type = 'projectile'  # String instead of enum - will be ignored
         projectile.position = pygame.math.Vector2(0, 0)
 
         engine.ships[0].just_fired_projectiles = [projectile]
@@ -520,8 +524,8 @@ class TestAttackProcessing:
 
         engine.update()
 
-        # Should still be processed correctly
-        engine.projectile_manager.add_projectile.assert_called_once()
+        # String types are no longer converted - attack should NOT be processed
+        engine.projectile_manager.add_projectile.assert_not_called()
 
     def test_dict_attack_types_handled(self, battle_engine_with_ships):
         """Dictionary-style attacks should be handled correctly."""
@@ -683,17 +687,9 @@ class TestEdgeCases:
         # Ship should still be updated
         mock_ship.update.assert_called_once()
 
-    def test_ship_with_no_just_fired_projectiles_attr(
-        self, battle_engine_with_ships
-    ):
-        """Ships without just_fired_projectiles attribute should be handled."""
-        engine = battle_engine_with_ships
-
-        # Remove the attribute from one ship
-        del engine.ships[0].just_fired_projectiles
-
-        # Should not raise
-        engine.update()
+    # PROJ-121: Removed test_ship_with_no_just_fired_projectiles_attr
+    # Ships are now guaranteed to have just_fired_projectiles initialized in __init__
+    # No defensive hasattr check needed - attribute is always present
 
     def test_many_projectiles_processed(self, battle_engine_with_ships):
         """Large number of projectiles should be handled."""

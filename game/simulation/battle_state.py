@@ -312,10 +312,7 @@ class ShipState:
         ship.current_shields = self.current_shields
         ship.is_alive = self.is_alive
         ship.is_derelict = self.is_derelict
-
-        # Store retreat status if we add it to Ship
-        if hasattr(ship, 'retreat_status'):
-            ship.retreat_status = self.retreat_status
+        ship.retreat_status = self.retreat_status
 
         return ship
 

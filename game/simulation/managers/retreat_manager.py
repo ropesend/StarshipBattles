@@ -167,8 +167,7 @@ class RetreatManager:
     def _handle_ship_escaped(self, ship: 'Ship', ship_id: str) -> None:
         """Handle a ship successfully escaping."""
         ship.is_alive = False
-        if hasattr(ship, 'retreat_status'):
-            ship.retreat_status = "escaped"
+        ship.retreat_status = "escaped"
 
         self.escaped_ships.append(ship_id)
 

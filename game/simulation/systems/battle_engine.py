@@ -404,23 +404,15 @@ class BattleEngine:
         # 3. Process Attacks
         new_attacks = []
         for s in alive_ships:
-            if hasattr(s, 'just_fired_projectiles') and s.just_fired_projectiles:
+            if s.just_fired_projectiles:
                 new_attacks.extend(s.just_fired_projectiles)
                 s.just_fired_projectiles = []
         
         for attack in new_attacks:
             # Normalize access to type
             is_dict = isinstance(attack, dict)
-            raw_type = attack.get('type') if is_dict else attack.type
-            
-            # Map string types to Enum if necessary (migration support)
-            attack_type = raw_type
-            if isinstance(raw_type, str):
-                 try:
-                     attack_type = AttackType(raw_type)
-                 except ValueError:
-                     pass # Unknown type string, keep as is
-            
+            attack_type = attack.get('type') if is_dict else attack.type
+
             if attack_type == AttackType.PROJECTILE or attack_type == AttackType.MISSILE:
                 if not is_dict:
                     self.projectile_manager.add_projectile(attack)

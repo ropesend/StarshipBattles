@@ -80,7 +80,7 @@ def run_battle_simulation(num_ships_per_team=10, num_ticks=300):
         
         # Collect attacks
         for s in alive_ships:
-            if hasattr(s, 'just_fired_projectiles') and s.just_fired_projectiles:
+            if s.just_fired_projectiles:
                 for attack in s.just_fired_projectiles:
                     if attack['type'] == 'projectile':
                         projectiles.append({

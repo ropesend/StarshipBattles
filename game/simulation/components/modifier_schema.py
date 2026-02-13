@@ -23,18 +23,17 @@ def is_v2_format(modifier: Dict[str, Any]) -> bool:
     """
     Validate that a modifier uses V2 format.
 
-    This function is used for validation purposes to ensure all loaded
-    modifiers conform to the V2 format specification. V1 format is no
-    longer supported in production.
-
     V2 format: 'effects' is an array of effect objects with 'stat' and 'formula'
-    V1 format (deprecated): 'effects' is a dict with 'special' key or direct stat keys
+    V1 format is no longer supported.
 
     Args:
         modifier: The modifier definition dict
 
     Returns:
-        True if V2 format, False otherwise (V1 or invalid format)
+        True if V2 format
+
+    Raises:
+        ValueError: If modifier uses deprecated V1 format (dict-based effects)
     """
     effects = modifier.get('effects')
     if effects is None:
@@ -44,9 +43,13 @@ def is_v2_format(modifier: Dict[str, Any]) -> bool:
     if isinstance(effects, list):
         return True
 
-    # V1 format: effects is a dict (with 'special' or direct stats)
+    # V1 format is no longer supported - raise error to surface data issues
     if isinstance(effects, dict):
-        return False
+        mod_id = modifier.get('id', 'unknown')
+        raise ValueError(
+            f"Modifier '{mod_id}' uses deprecated V1 format (dict-based effects). "
+            f"V1 format is no longer supported. Convert to V2 array format."
+        )
 
     return False
 

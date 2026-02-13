@@ -5,8 +5,7 @@ import sys
 import os
 import pygame
 
-
-
+from game.core.constants import AttackType
 from game.ui.screens.battle_screen import BattleScreen
 from game.simulation.entities.ship import Ship, LayerType
 from game.simulation.entities.ship_loader import initialize_ship_data
@@ -95,9 +94,9 @@ class TestBattleScreen:
         self.scene.sim_paused = False
         self.scene._accumulator = 0.017  # Pre-fill for 1 tick
 
-        # Mock projectile
+        # Mock projectile with AttackType enum (PROJ-121: string types no longer supported)
         proj = MagicMock()
-        proj.type = 'projectile'
+        proj.type = AttackType.PROJECTILE
         proj.is_alive = True
         proj.position = pygame.Vector2(0,0)
         proj.velocity = pygame.Vector2(10,0)
@@ -120,7 +119,7 @@ class TestBattleScreen:
         self.scene._accumulator = 0.017  # Pre-fill for 1 tick
 
         proj = MagicMock()
-        proj.type = 'projectile'
+        proj.type = AttackType.PROJECTILE
         proj.is_alive = False  # Already dead
         proj.position = pygame.Vector2(0,0)
         proj.velocity = pygame.Vector2(0,0)

@@ -28,15 +28,17 @@ class TestIsV2Format:
         modifier = {'effects': [{'stat': 'damage_mult', 'formula': 'param'}]}
         assert is_v2_format(modifier) is True
 
-    def test_v1_format_dict_effects_false(self):
-        """{'effects': {}} returns False."""
-        modifier = {'effects': {}}
-        assert is_v2_format(modifier) is False
+    def test_v1_format_dict_effects_raises(self):
+        """{'effects': {}} raises ValueError (V1 deprecated)."""
+        modifier = {'id': 'test', 'effects': {}}
+        with pytest.raises(ValueError, match="deprecated V1 format"):
+            is_v2_format(modifier)
 
-    def test_v1_format_dict_with_data_false(self):
-        """{'effects': {'special': ...}} returns False."""
-        modifier = {'effects': {'special': 'some_handler'}}
-        assert is_v2_format(modifier) is False
+    def test_v1_format_dict_with_data_raises(self):
+        """{'effects': {'special': ...}} raises ValueError (V1 deprecated)."""
+        modifier = {'id': 'test', 'effects': {'special': 'some_handler'}}
+        with pytest.raises(ValueError, match="deprecated V1 format"):
+            is_v2_format(modifier)
 
     def test_no_effects_key_false(self):
         """{} returns False."""

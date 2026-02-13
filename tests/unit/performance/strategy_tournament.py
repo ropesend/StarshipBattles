@@ -118,7 +118,7 @@ def run_battle(strategy_a, strategy_b, ship_json_path, seed=None):
         
         # Collect and process projectiles
         for s in alive_ships:
-            if hasattr(s, 'just_fired_projectiles') and s.just_fired_projectiles:
+            if s.just_fired_projectiles:
                 for attack in list(s.just_fired_projectiles):
                     # Handle both dict and object (Projectile)
                     is_dict = isinstance(attack, dict)

@@ -8,37 +8,38 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-121 Phase 1 Complete
-**Current Status:** PROJ-121 Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-121 Phase 2 Complete
+**Current Status:** PROJ-121 Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-121
-**Current Phase:** Phase 2 (Simulation)
-**Test Status:** 11919 tests passing (full suite)
+**Current Phase:** Phase 3 (UI-Framework)
+**Test Status:** 11918 tests passing (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-121 Phase 1 COMPLETE: 7 tasks (4 implemented, 3 reviewed as appropriate)
-  - Task 1.1: DELETED AIException/TargetingException (unused)
-  - Task 1.2: DELETED load_resources() wrapper, updated to DI pattern
-  - Task 1.3: Updated ValidationResult.message docstring
-  - Task 1.4: REVIEWED - getattr() patterns valid for mixed entity types
-  - Task 1.5: REVIEWED - raw Ship access documented as intentional
-  - Task 1.6: RENAMED DEBUG_SCREENSHOTS to ENABLE_SCREENSHOTS
-  - Task 1.7: REVIEWED - singletons legitimate for global infrastructure
-- Full test suite: 11919 passed
-- Next: Begin Phase 2 (Simulation module tasks)
+- PROJ-121 Phase 2 COMPLETE: 8 tasks (4 implemented, 4 reviewed as appropriate)
+  - Task 2.1: REMOVED string-to-enum migration support code in battle_engine.py
+  - Task 2.2: CHANGED is_v2_format() to raise ValueError on V1 format (no longer silent)
+  - Task 2.3: REMOVED hasattr check for just_fired_projectiles (always initialized)
+  - Task 2.4: ADDED retreat_status to Ship.__init__, removed hasattr checks
+  - Task 2.5: REVIEWED - Fallback patterns in ship.py are legitimate defensive coding
+  - Task 2.6: REVIEWED - Module Identity Drift workaround is documented tech debt
+  - Task 2.7: REVIEWED - Component fallback delegation is legitimate defensive coding
+  - Task 2.8: REVIEWED - describe() method IS used in tests (not dead code)
+- Full test suite: 11918 passed
+- Next: Begin Phase 3 (UI-Framework module tasks)
 - Files modified this session:
-  - game/core/exceptions.py (removed AIException, TargetingException)
-  - game/core/resources.py (removed load_resources wrapper)
-  - game/core/validation.py (updated docstring)
-  - game/core/constants.py (renamed DEBUG_SCREENSHOTS)
-  - game/app.py (updated to use load_resources_data DI pattern)
-  - game/ai/__init__.py (updated docstring)
-  - game/ui/services/screenshot_manager.py (use ENABLE_SCREENSHOTS)
-  - tests/unit/ai/test_ai_exceptions.py (DELETED)
-  - tests/unit/core/resources_registry/*.py (updated to use load_resources_data)
-  - tests/unit/core/test_resource_loading.py (updated)
-  - tests/integration/resource_system/test_resource_pipeline.py (updated)
-  - tests/unit/strategy/conftest.py (updated)
+  - game/simulation/systems/battle_engine.py (removed migration code, hasattr check)
+  - game/simulation/components/modifier_schema.py (raise on V1 format)
+  - game/simulation/entities/ship.py (added retreat_status)
+  - game/simulation/managers/retreat_manager.py (removed hasattr)
+  - game/simulation/battle_state.py (removed hasattr)
+  - tests/unit/simulation/systems/test_battle_engine_tick.py (updated for new behavior)
+  - tests/unit/simulation/components/test_modifier_schema.py (updated tests)
+  - tests/unit/refactor/test_modifier_json_schema.py (updated tests)
+  - tests/unit/performance/stress_test.py (removed hasattr)
+  - tests/unit/performance/strategy_tournament.py (removed hasattr)
+  - tests/unit/performance/profile_simulation.py (removed hasattr)
+  - tests/unit/ui/test_battle_screen.py (use AttackType enum)
 
 ---
 
@@ -112,6 +113,7 @@
 | 2026-02-13 | PROJ-120 | Phase 1 (18/18) | Complete | 2490 pass | 1db5688d | Task 1.18 complete - damage pipeline tests |
 | 2026-02-13 | PROJ-120 | Audit Cycle 1 | PASSED | 11939 pass | - | All tasks verified, no concerns |
 | 2026-02-13 | PROJ-121 | Phase 1 | Complete | 11919 pass | - | 7 tasks: 4 implemented, 3 reviewed |
+| 2026-02-13 | PROJ-121 | Phase 2 | Complete | 11918 pass | - | 8 tasks: 4 implemented, 4 reviewed |
 
 ---
 

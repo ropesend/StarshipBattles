@@ -65,7 +65,7 @@ def run_stress_test():
                     s.comp_trigger_pulled = False
                 
                 # Collect and process projectiles
-                if hasattr(s, 'just_fired_projectiles') and s.just_fired_projectiles:
+                if s.just_fired_projectiles:
                     for attack in list(s.just_fired_projectiles):
                         is_dict = isinstance(attack, dict)
                         a_type = attack.get('type') if is_dict else getattr(attack, 'type', None)

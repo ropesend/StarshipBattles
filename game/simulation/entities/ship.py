@@ -137,7 +137,8 @@ class Ship(PhysicsBody, ShipPhysicsMixin):
         self.is_alive: bool = True
         self.is_derelict: bool = False
         self.bridge_destroyed: bool = False
-        
+        self.retreat_status: Optional[str] = None  # Set by RetreatManager: "escaped", etc.
+
         # AI Strategy
         self.ai_strategy: str = "standard_ranged"
         self.source_file: Optional[str] = None
