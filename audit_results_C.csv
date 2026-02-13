@@ -127,3 +127,35 @@ tests/unit/simulation/managers/test_retreat_manager.py,KEEP,Tests active Retreat
 tests/unit/simulation/ship_combat_engine/test_cooldowns.py,KEEP,Tests active ShipCombatEngine cooldowns,game/simulation/entities/ship_combat_engine.py
 tests/unit/simulation/ship_combat_engine/test_creation_and_lead.py,KEEP,Tests active ShipCombatEngine creation,game/simulation/entities/ship_combat_engine.py
 tests/unit/simulation/ship_combat_engine/test_targeting.py,KEEP,Tests active ShipCombatEngine targeting,game/simulation/entities/ship_combat_engine.py
+tests/unit/simulation/combat/test_battle_mode_handlers.py,KEEP,Tests active BattleModeHandlers,game/simulation/combat/battle_mode_handler.py
+tests/unit/simulation/combat/test_damage_calculator.py,KEEP,Tests active DamageCalculator,game/simulation/combat/damage_calculator.py
+tests/unit/simulation/combat/test_targeting_system.py,KEEP,Tests active TargetingSystem,game/simulation/combat/targeting_system.py
+tests/unit/simulation/combat/test_weapon_firing_system.py,KEEP,Tests active WeaponFiringSystem,game/simulation/combat/weapon_firing_system.py
+tests/unit/simulation/abilities/test_cargo_storage.py,KEEP,Tests active CargoStorage ability,game/simulation/components/abilities/cargo.py
+tests/unit/simulation/abilities/test_empire_storage.py,KEEP,Tests active EmpireStorage ability,game/simulation/components/abilities/harvester.py
+tests/unit/simulation/entities/test_ability_aggregator.py,KEEP,Tests active AbilityAggregator logic,game/simulation/entities/ability_aggregator.py
+tests/unit/simulation/entities/test_combat_endurance.py,KEEP,Tests active CombatEndurance logic,game/simulation/entities/combat_endurance.py
+tests/unit/simulation/entities/test_layer_data.py,KEEP,Tests active LayerData dataclass,game/simulation/entities/layer_data.py
+tests/unit/simulation/entities/test_projectile.py,KEEP,Tests active Projectile entity,game/simulation/entities/projectile.py
+tests/unit/simulation/entities/test_ship_formation.py,KEEP,Tests active ShipFormation logic,game/simulation/entities/ship_formation.py
+tests/unit/simulation/entities/test_ship_loader.py,KEEP,Tests active ShipLoader logic,game/simulation/entities/ship_loader.py
+tests/unit/simulation/entities/test_ship_physics.py,KEEP,Tests active ShipPhysicsMixin,game/simulation/entities/ship_physics.py
+tests/unit/simulation/entities/test_ship_serialization.py,KEEP,Tests active ShipSerializer,game/simulation/entities/ship_serialization.py
+tests/unit/simulation/armor_mechanics/test_damage_mechanics.py,KEEP,Tests active armor/shield interaction,game/simulation/armor_mechanics/damage_mechanics.py
+tests/unit/simulation/armor_mechanics/test_damage_reduction.py,KEEP,Tests active armor reduction,game/simulation/armor_mechanics/damage_mechanics.py
+tests/unit/simulation/factories/test_ai_factory.py,KEEP,Tests active AIControllerFactory,game/ai/ai_factory.py
+tests/unit/simulation/battle_controller/test_config.py,KEEP,Tests active BattleConfig,game/simulation/battle_config.py
+tests/unit/simulation/battle_controller/test_initialization.py,KEEP,Tests active BattleController init,game/simulation/battle_controller.py
+tests/unit/simulation/battle_controller/test_state.py,KEEP,Tests active BattleController state,game/simulation/battle_controller.py
+tests/unit/simulation/battle_controller/test_utilities.py,KEEP,Tests active BattleController utils,game/simulation/battle_controller.py
+tests/unit/simulation/battle_controller/test_execution.py,KEEP,Tests active BattleController execution,game/simulation/battle_controller.py
+tests/unit/simulation/battle_controller/test_mechanics.py,KEEP,Tests active BattleController mechanics,game/simulation/battle_controller.py
+tests/unit/simulation/battle_controller/test_edge_cases.py,KEEP,Tests active BattleController edge cases,game/simulation/battle_controller.py
+tests/unit/simulation/interfaces/test_ai_controller_interface.py,KEEP,Tests active IAIController protocol,game/simulation/interfaces/ai_controller.py
+tests/unit/simulation/projectile_guidance/test_guidance_behavior.py,KEEP,Tests active guidance behavior,game/simulation/projectile_guidance.py
+tests/unit/simulation/projectile_guidance/test_guidance_core.py,KEEP,Tests active guidance core,game/simulation/projectile_guidance.py
+tests/unit/simulation/services/test_battle_service.py,KEEP,Tests active BattleService,game/simulation/services/battle_service.py
+tests/unit/simulation/services/test_modifier_service.py,KEEP,Tests active ModifierService,game/simulation/services/modifier_service.py
+tests/unit/simulation/services/test_registry_loader.py,KEEP,Tests active registry_loader,game/simulation/services/registry_loader.py
+tests/unit/simulation/services/test_simulation_design_loader.py,KEEP,Tests active SimulationDesignLoader,game/simulation/services/design_loader.py
+tests/unit/simulation/services/test_vehicle_design_service.py,KEEP,Tests active VehicleDesignService,game/simulation/services/vehicle_design_service.py
