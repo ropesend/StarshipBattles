@@ -63,6 +63,7 @@ Example:
     px, py = hex_to_pixel(dest, size=50)
 """
 import math
+from typing import List, Tuple
 
 
 class HexCoord:
@@ -72,37 +73,37 @@ class HexCoord:
     """
     __slots__ = ('q', 'r', 's')
 
-    def __init__(self, q, r):
-        self.q = q
-        self.r = r
-        self.s = -q - r
+    def __init__(self, q: int, r: int) -> None:
+        self.q: int = q
+        self.r: int = r
+        self.s: int = -q - r
 
     @property
-    def cube(self):
+    def cube(self) -> Tuple[int, int, int]:
         return (self.q, self.r, self.s)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HexCoord):
             return False
         return self.q == other.q and self.r == other.r
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.q, self.r))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"HexCoord({self.q}, {self.r})"
 
-    def __add__(self, other):
+    def __add__(self, other: 'HexCoord') -> 'HexCoord':
         if isinstance(other, HexCoord):
             return HexCoord(self.q + other.q, self.r + other.r)
         return NotImplemented
 
-    def __sub__(self, other):
+    def __sub__(self, other: 'HexCoord') -> 'HexCoord':
         if isinstance(other, HexCoord):
             return HexCoord(self.q - other.q, self.r - other.r)
         return NotImplemented
 
-    def neighbors(self):
+    def neighbors(self) -> List['HexCoord']:
         """Return the 6 direct neighbors."""
         directions = [
             HexCoord(1, 0), HexCoord(1, -1), HexCoord(0, -1),
@@ -111,7 +112,7 @@ class HexCoord:
         return [self + d for d in directions]
 
 
-def hex_distance(a, b):
+def hex_distance(a: HexCoord, b: HexCoord) -> int:
     """Calculate grid distance between two hexes."""
     # Convert vectors to cube coords for easy distance
     # distance = max(|dq|, |dr|, |ds|)
@@ -119,7 +120,7 @@ def hex_distance(a, b):
     return max(abs(vec.q), abs(vec.r), abs(vec.s))
 
 
-def hex_to_pixel(hex_coord, size):
+def hex_to_pixel(hex_coord: HexCoord, size: float) -> Tuple[float, float]:
     """
     Convert axial hex coords to flat-topped pixel coordinates.
     size: radius of the hex (center to corner)
@@ -132,7 +133,7 @@ def hex_to_pixel(hex_coord, size):
     return x, y
 
 
-def pixel_to_hex(x, y, size):
+def pixel_to_hex(x: float, y: float, size: float) -> 'HexCoord':
     """
     Convert pixel coordinates back to axial hex coords.
     Uses rounding to find nearest integer hex.
@@ -143,7 +144,7 @@ def pixel_to_hex(x, y, size):
     return _hex_round(q_float, r_float, s_float)
 
 
-def _hex_round(q, r, s):
+def _hex_round(q: float, r: float, s: float) -> HexCoord:
     """Round partial cube coordinates to nearest valid integer hex."""
     qi = round(q)
     ri = round(r)
@@ -163,7 +164,7 @@ def _hex_round(q, r, s):
     return HexCoord(qi, ri)
 
 
-def hex_ring(radius):
+def hex_ring(radius: int) -> List[HexCoord]:
     """
     Return all HexCoords at distance 'radius' from (0,0).
 
@@ -193,7 +194,7 @@ def hex_ring(radius):
     return results
 
 
-def hex_lerp(a, b, t):
+def hex_lerp(a: HexCoord, b: HexCoord, t: float) -> HexCoord:
     """Linear interpolation between two HexCoords."""
     # We need floating point lerp on the cube coords
     # HexCoord only stores q, r. s is derived.
@@ -208,7 +209,7 @@ def hex_lerp(a, b, t):
 
     return _hex_round(q, r, s)
 
-def hex_linedraw(a, b):
+def hex_linedraw(a: HexCoord, b: HexCoord) -> List[HexCoord]:
     """Return list of hexes forming a line from a to b."""
     N = hex_distance(a, b)
     results = []

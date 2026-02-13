@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum, IntEnum
 
 __all__ = [
     'AttackType',
@@ -21,7 +21,7 @@ class AttackType(Enum):
     BEAM = "beam"
     LAUNCH = "launch"
 
-from enum import IntEnum
+
 class GameState(IntEnum):
     MENU = 0
     BUILDER = 1

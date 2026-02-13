@@ -42,7 +42,6 @@ __all__ = [
     'set_validator',
 ]
 from dataclasses import dataclass
-import json
 from typing import Dict, Any, Optional
 
 from game.core.exceptions import StateException, FrozenStateException

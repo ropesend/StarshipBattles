@@ -9,7 +9,7 @@ Exception Handling
 
 import os
 import threading
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from game.core.logger import log_info
 from game.core.json_utils import load_json
@@ -80,7 +80,13 @@ class StrategyManager(metaclass=SingletonMeta):
             self.load_data(base_path)
             self._loaded = True
 
-    def load_data(self, base_path="data", targeting_file="targeting_policies.json", movement_file="movement_policies.json", strategy_file="combat_strategies.json"):
+    def load_data(
+        self,
+        base_path: str = "data",
+        targeting_file: str = "targeting_policies.json",
+        movement_file: str = "movement_policies.json",
+        strategy_file: str = "combat_strategies.json"
+    ) -> None:
         # Load Targeting Policies
         targeting_data = load_json(os.path.join(base_path, targeting_file), default={})
         self.targeting_policies = targeting_data.get('policies', {})
@@ -98,22 +104,22 @@ class StrategyManager(metaclass=SingletonMeta):
 
         log_info(f"StrategyManager loaded: {len(self.strategies)} strategies, {len(self.targeting_policies)} targeting, {len(self.movement_policies)} movement")
 
-    def get_strategy(self, strategy_id):
+    def get_strategy(self, strategy_id: str) -> Dict[str, Any]:
         """Get a strategy definition by ID. Triggers lazy loading if needed."""
         self.ensure_loaded()
         return self.strategies.get(strategy_id, self.defaults['strategy'])
 
-    def get_targeting_policy(self, policy_id):
+    def get_targeting_policy(self, policy_id: str) -> Dict[str, Any]:
         """Get a targeting policy by ID. Triggers lazy loading if needed."""
         self.ensure_loaded()
         return self.targeting_policies.get(policy_id, self.defaults['targeting'])
 
-    def get_movement_policy(self, policy_id):
+    def get_movement_policy(self, policy_id: str) -> Dict[str, Any]:
         """Get a movement policy by ID. Triggers lazy loading if needed."""
         self.ensure_loaded()
         return self.movement_policies.get(policy_id, self.defaults['movement'])
 
-    def resolve_strategy(self, strategy_id):
+    def resolve_strategy(self, strategy_id: str) -> Dict[str, Any]:
         """Returns fully resolved strategy object with policy data embedded (helper)."""
         strat_def = self.get_strategy(strategy_id)
 
