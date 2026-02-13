@@ -2,6 +2,8 @@ import random
 import math
 from enum import Enum, auto
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
+# hex_to_pixel/pixel_to_hex: Used for geometric calculations (angles, distances),
+# not rendering. These convert hex coords to/from Cartesian for trigonometry.
 from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, pixel_to_hex
 from game.strategy.data.naming import NameRegistry
 import os

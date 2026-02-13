@@ -121,4 +121,4 @@ class FleetBattleAdapter:
         self._fleet.ships = new_ships
 
         # Recalculate speed (ships may have been destroyed or damaged)
-        self._fleet._trigger_speed_recalculation()
+        self._fleet.trigger_speed_recalculation()

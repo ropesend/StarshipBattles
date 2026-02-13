@@ -193,7 +193,7 @@ class TestFleetBattleAdapter:
         fleet.add_ship(ship)
         adapter = FleetBattleAdapter(fleet)
 
-        with patch.object(fleet, '_trigger_speed_recalculation') as mock_recalc:
+        with patch.object(fleet, 'trigger_speed_recalculation') as mock_recalc:
             adapter.update_from_battle_results([])
             mock_recalc.assert_called_once()
 

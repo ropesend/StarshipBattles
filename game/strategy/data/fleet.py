@@ -119,22 +119,25 @@ class Fleet:
     def add_ship(self, ship: ShipInstance):
         """Add a ShipInstance to the fleet."""
         self.ships.append(ship)
-        self._trigger_speed_recalculation()
+        self.trigger_speed_recalculation()
 
     def remove_ship(self, ship: ShipInstance) -> bool:
         """Remove a ship from the fleet. Returns True if found and removed."""
         if ship in self.ships:
             self.ships.remove(ship)
-            self._trigger_speed_recalculation()
+            self.trigger_speed_recalculation()
             return True
         return False
 
-    def _trigger_speed_recalculation(self):
+    def trigger_speed_recalculation(self) -> None:
         """
         Trigger fleet speed recalculation based on current ship composition.
 
         Fleet speed is the minimum of all combat-capable ships' speeds,
         ensuring the fleet moves at the pace of its slowest member.
+
+        This is a public method because external delegates (FleetBattleAdapter)
+        need to trigger recalculation after modifying the ship roster.
         """
         # INTENTIONAL LATE IMPORT: Edge operation (only on ship add/remove)
         # See docs/ARCHITECTURE.md "Intentional Late Imports" section
@@ -309,7 +312,7 @@ class Fleet:
         self.clear_orders()
 
         # Recalculate speed for the target fleet (new composition)
-        other_fleet._trigger_speed_recalculation()
+        other_fleet.trigger_speed_recalculation()
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize for save game."""

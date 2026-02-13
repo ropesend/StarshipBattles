@@ -32,7 +32,10 @@ class DesignMetadata:
 
     # Thumbnail data (optional)
     theme_id: str = ""
-    sprite_preview: Optional[str] = None  # Base64 encoded image (future)
+    # NOTE: When sprite_preview is implemented, the preview image should be
+    # stored in a separate UI cache, not in this strategy-layer metadata.
+    # This field exists as a placeholder for save file compatibility.
+    sprite_preview: Optional[str] = None  # Reserved for future use
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to JSON"""

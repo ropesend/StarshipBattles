@@ -12,6 +12,7 @@ from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from game.strategy.data.design_metadata import DesignMetadata
 from game.core.json_utils import load_json_required, save_json
+from game.core.logger import log_info, log_debug, log_error, log_warning
 
 
 class DesignLibrary:
@@ -25,8 +26,6 @@ class DesignLibrary:
             savegame_path: Path to the savegame directory (None if no savegame)
             empire_id: ID of the empire this library belongs to
         """
-        from game.core.logger import log_info, log_debug, log_error
-
         self.savegame_path = savegame_path
         self.empire_id = empire_id
 
@@ -69,8 +68,6 @@ class DesignLibrary:
             List of DesignMetadata objects for all designs in the library
             (empty list if no savegame path)
         """
-        from game.core.logger import log_debug, log_error, log_warning
-
         # Return empty list if no designs folder
         if self.designs_folder is None:
             log_warning("scan_designs: designs_folder is None, returning empty list")
@@ -121,8 +118,6 @@ class DesignLibrary:
         Returns:
             Tuple of (success: bool, message: str)
         """
-        from game.core.logger import log_info, log_error, log_debug
-
         log_info(f"DesignLibrary.save_design called for '{design_name}'")
         log_debug(f"  designs_folder: {self.designs_folder}")
         log_debug(f"  empire_id: {self.empire_id}")
@@ -219,15 +214,12 @@ class DesignLibrary:
         try:
             return load_json_required(filepath)
         except json.JSONDecodeError as e:
-            from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Corrupt JSON in design '{design_id}' at '{filepath}': {e}")
             return None
         except (PermissionError, OSError) as e:
-            from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Cannot read design '{design_id}' from '{filepath}': {e}")
             return None
         except (KeyError, TypeError, ValueError, AttributeError) as e:
-            from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Unexpected error loading design '{design_id}' from '{filepath}': {e}")
             return None
 
@@ -267,7 +259,6 @@ class DesignLibrary:
         except (PermissionError, OSError) as e:
             return False, f"Failed to update design: {str(e)}"
         except (KeyError, TypeError, ValueError, AttributeError) as e:
-            from game.core.logger import log_error
             log_error(f"DesignLibrary: Unexpected error marking design '{design_id}' obsolete: {e}")
             return False, f"Failed to update design: {str(e)}"
 
@@ -303,15 +294,12 @@ class DesignLibrary:
             return True
 
         except json.JSONDecodeError as e:
-            from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Corrupt JSON in design '{design_id}': {e}")
             return False
         except (PermissionError, OSError) as e:
-            from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Cannot update design '{design_id}': {e}")
             return False
         except (KeyError, TypeError, ValueError, AttributeError) as e:
-            from game.core.logger import log_warning
             log_warning(f"DesignLibrary: Unexpected error incrementing built count for '{design_id}': {e}")
             return False
 
@@ -399,7 +387,6 @@ class DesignLibrary:
         except OSError as e:
             return False, f"Failed to delete design: {str(e)}"
         except (RuntimeError, IOError) as e:
-            from game.core.logger import log_error
             log_error(f"DesignLibrary: Unexpected error deleting design '{design_id}': {e}")
             return False, f"Failed to delete design: {str(e)}"
 

@@ -23,6 +23,10 @@ def _get_default_asset_path() -> str:
 
 # Theme defaults for auto-assignment based on player number
 # Format: (theme_id, default_color)
+# ARCHITECTURE NOTE: Colors here are game-semantic identifiers for empires,
+# stored in save games, and used consistently across UI. Moving to UI layer
+# would require save format changes. Colors are intentionally kept simple
+# (RGB tuples) rather than pygame-specific types.
 THEME_DEFAULTS = [
     ("Federation", (0, 100, 255)),    # Blue
     ("Atlantians", (0, 200, 150)),    # Teal

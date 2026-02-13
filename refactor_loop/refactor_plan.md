@@ -8,22 +8,29 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-113 Phase 2 (Simulation layer violations)
-**Current Status:** PROJ-113 Phase 2 Complete - Ready for Phase 3
+**Last Completed:** PROJ-113 Phase 3 (Strategy layer violations)
+**Current Status:** PROJ-113 Phase 3 Complete - Ready for Phase 4
 **Current Project:** PROJ-113
-**Current Phase:** Phase 3 (Strategy)
+**Current Phase:** Phase 4 (UI-Framework)
 **Test Status:** 9773 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-113 Phase 2 Complete (11 tasks):
-  - FIXED (3): ShipIO moved to UI layer, battle_config TYPE_CHECKING fixed, projectile color moved to UI
-  - FALSE POSITIVES (6): AIControllerFactory (by design), battle_engine TYPE_CHECKING (correct pattern), design_loader (clean params), ship.py late imports (internal cycle), modifier_introspection (exports data for UI)
-  - INFO ONLY (2): battle_state.py large (intended), game.engine deps (correct architecture)
-  - DEFERRED (1): color_hint in abilities (50+ files, separate project)
-- Files created: game/ui/services/ship_io.py
-- Files deleted: game/simulation/systems/persistence.py
-- Next: Begin Phase 3 (Strategy layer findings)
+- PROJ-113 Phase 3 Complete (8 tasks):
+  - FIXED (4):
+    - trigger_speed_recalculation() made public (was _trigger_speed_recalculation)
+    - hex_to_pixel/pixel_to_hex clarifying comment added
+    - design_library.py logger imports moved to module level (10 lazy → 1 top-level)
+    - EmpireEconomyCalculator "display-ready" renamed to "snapshot"
+  - FALSE POSITIVES (2):
+    - Galaxy lazy import (intentional, documented)
+    - Pervasive lazy imports (most are intentional for circular deps)
+  - DOCUMENTED (2):
+    - ShipDisplayFormatter (architectural justification - avoids circular dep)
+    - THEME_DEFAULTS colors (game-semantic identifiers in save files)
+    - sprite_preview field (preventive comment for future)
+- Files modified: fleet.py, fleet_battle_adapter.py, galaxy.py, game_config.py, empire_economy_calculator.py, design_metadata.py, ship_display_formatter.py, design_library.py, ARCHITECTURE.md
+- Next: Begin Phase 4 (UI-Framework findings)
 
 ---
 
@@ -394,6 +401,7 @@
 | 2026-02-11 | PROJ-111 | Audit 1 | PASSED | 9741 passed | pending | All 7 phases verified: P1-2 (113), P3-4 (223), P5-6 (414), P7 (57) |
 | 2026-02-12 | PROJ-113 | Phase 1 | Complete | 9773 passed | pending | 12 FND violations: moved input_mapper, screenshot_manager, UIConfig to UI layer; removed TYPE_CHECKING cross-layer imports; added leave_formation() |
 | 2026-02-12 | PROJ-113 | Phase 2 | Complete | 9773 passed | pending | 11 SIM findings: 3 FIXED (ShipIO→UI, battle_config, projectile color), 6 FALSE POSITIVES, 2 INFO, 1 DEFERRED (color_hint) |
+| 2026-02-12 | PROJ-113 | Phase 3 | Complete | 9773 passed | pending | 8 STR findings: 4 FIXED (trigger_speed_recalc, hex comments, design_library imports, economy docs), 2 FALSE POSITIVES, 2 DOCUMENTED |
 
 ---
 

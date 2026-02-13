@@ -150,7 +150,7 @@ ShipSerializer are now module-level imports). The remaining late imports are doc
 ### Fleet Module (game/strategy/data/fleet.py)
 
 3. **Line 133: `from game.strategy.services.fleet_speed_calculator import FleetSpeedCalculator`**
-   - Location: `_trigger_speed_recalculation()`
+   - Location: `trigger_speed_recalculation()`
    - Purpose: FleetSpeedCalculator may have transitive dependencies
    - Rationale: Edge operation (only called when ships added/removed)
 

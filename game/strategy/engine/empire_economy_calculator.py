@@ -2,8 +2,8 @@
 EmpireEconomyCalculator - Aggregates empire-wide production and expense data.
 
 PROJ-99 Phase 1: Pure strategy-layer class that calculates production from
-facilities, maintenance from facilities and ships, and provides a display-ready
-snapshot of the empire economy.
+facilities, maintenance from facilities and ships, and provides a snapshot
+of the empire economy.
 
 This is a read-only calculation - it doesn't modify any game state.
 """
@@ -16,8 +16,9 @@ from game.core.constants import PLANET_RESOURCES
 
 @dataclass
 class EmpireEconomySnapshot:
-    """Display-ready snapshot of empire economic state.
+    """Snapshot of empire economic state.
 
+    Contains aggregated production and expense data for the empire.
     All fields are Dict[str, float] mapping resource type to amount.
     Default factory ensures each can be instantiated empty.
     """

@@ -1,7 +1,16 @@
 """
 ShipDisplayFormatter - Handles display formatting for ShipInstance.
 
-Extracted from ShipInstance to separate UI/display concerns from data layer.
+Extracted from ShipInstance to separate UI/display concerns from core data logic.
+
+ARCHITECTURE NOTE: This class provides presentation-layer formatting (status text,
+HP display strings, resource percentages) but lives in the strategy layer because:
+1. Moving to game.ui would create a circular dependency (ShipInstance imports this)
+2. These methods are pure string formatting with no pygame/UI framework dependencies
+3. The strategy-layer location allows reuse in tests and non-UI contexts (e.g., logging)
+
+The formatting logic is stateless and read-only - it only reads from ShipInstance.
+If localization is needed in the future, consider making format strings configurable.
 """
 from typing import Optional, TYPE_CHECKING
 
@@ -11,11 +20,13 @@ if TYPE_CHECKING:
 
 class ShipDisplayFormatter:
     """
-    Formats ShipInstance data for display.
+    Formats ShipInstance data for human-readable display.
 
-    Extracted to separate display/UI concerns from core ShipInstance logic.
-    These methods are UI concerns that don't belong in the data layer.
+    Extracted from ShipInstance to separate presentation formatting from core
+    game logic. These methods produce display strings for UI consumption.
+
     Uses facade pattern: ShipInstance creates and delegates to this formatter.
+    The formatter is read-only and has no pygame/UI framework dependencies.
     """
 
     def __init__(self, ship_instance: 'ShipInstance') -> None:
