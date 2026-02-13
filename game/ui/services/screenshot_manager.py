@@ -115,14 +115,6 @@ class ScreenshotManager(metaclass=SingletonMeta):
                 except Exception as clip_err:  # Intentional broad catch: subprocess clipboard fallback, platform-dependent
                     log_warning(f"Clipboard copy failed (clip): {clip_err}")
 
-    def capture_step(self, step_name, surface=None):
-        """
-        Capture a step in a sequence for debugging draw order.
-        :param step_name: Name of the step (e.g., "1_background", "2_layer_1").
-        :param surface: Optional surface to capture.
-        """
-        self.capture(surface=surface, label=f"STEP_{step_name}")
-
     def capture_strategy_layer(self, scene, include_ui=True, include_subwindows=True, label=None):
         """
         Capture a screenshot of the strategy layer with control over which layers are included.

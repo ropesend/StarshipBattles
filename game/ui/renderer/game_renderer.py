@@ -6,7 +6,7 @@ Cross-layer imports (acceptable for rendering):
 """
 import pygame
 import math
-from game.core.constants import LayerType, LayerDefaults, ResourceType  # Canonical location for LayerType
+from game.core.constants import LayerType, LayerDefaults  # Canonical location for LayerType
 from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
 
 
@@ -142,83 +142,3 @@ def draw_ship(surface, ship, camera):
         return
 
 
-def draw_bar(surface, x, y, w, h, pct, color):
-    """Draw a progress bar with background and border."""
-    pct = max(0, min(1, pct))
-    pygame.draw.rect(surface, (50, 50, 50), (x, y, w, h))
-    pygame.draw.rect(surface, color, (x, y, w * pct, h))
-    pygame.draw.rect(surface, (200, 200, 200), (x, y, w, h), 1)
-
-
-def draw_hud(surface, ship, x, y):
-    """Draw ship HUD with stats and component list."""
-    font_title = pygame.font.SysFont("Arial", 16, bold=True)
-    font_med = pygame.font.SysFont("Arial", 14)
-    font_small = pygame.font.SysFont("Arial", 12)
-    
-    # Header
-    status_color = (100, 255, 100) if ship.is_alive else (255, 50, 50)
-    name_text = font_title.render(f"{ship.name}", True, status_color)
-    surface.blit(name_text, (x, y))
-    y += 20
-    
-    # Physics Stats
-    if ship.mass > 0:
-        accel = ship.total_thrust / ship.mass
-        top_speed = accel / ship.drag if ship.drag > 0 else 0
-        
-        stats_text = f"Top Speed: {int(top_speed)}"
-        accel_text = f"Accel: {accel:.1f}"
-        
-        s_surf = font_med.render(stats_text, True, (200, 200, 255))
-        a_surf = font_med.render(accel_text, True, (200, 200, 255))
-        surface.blit(s_surf, (x, y))
-        surface.blit(a_surf, (x + 120, y))
-        y += 20
-    
-    # Resources
-    draw_bar(surface, x, y, 100, 8, ship.resources.get_value(ResourceType.FUEL) / ship.resources.get_max_value(ResourceType.FUEL) if ship.resources.get_max_value(ResourceType.FUEL) > 0 else 0, (255, 165, 0))
-    surface.blit(font_small.render("Fuel", True, (200, 200, 200)), (x + 105, y - 2))
-    y += 12
-    draw_bar(surface, x, y, 100, 8, ship.resources.get_value(ResourceType.AMMO) / ship.resources.get_max_value(ResourceType.AMMO) if ship.resources.get_max_value(ResourceType.AMMO) > 0 else 0, (255, 50, 50))
-    surface.blit(font_small.render("Ammo", True, (200, 200, 200)), (x + 105, y - 2))
-    y += 12
-    draw_bar(surface, x, y, 100, 8, ship.resources.get_value(ResourceType.ENERGY) / ship.resources.get_max_value(ResourceType.ENERGY) if ship.resources.get_max_value(ResourceType.ENERGY) > 0 else 0, (50, 100, 255))
-    surface.blit(font_small.render("Energy", True, (200, 200, 200)), (x + 105, y - 2))
-    y += 20
-    
-    # Component List
-    layer_order = [LayerType.ARMOR, LayerType.OUTER, LayerType.INNER, LayerType.CORE]
-    
-    for ltype in layer_order:
-        l_text = font_med.render(f"[{ltype.name}]", True, (150, 150, 150))
-        surface.blit(l_text, (x, y))
-        y += 18
-        
-        components = ship.layers[ltype].components
-        if not components:
-            none_text = font_small.render("  (Empty)", True, (100, 100, 100))
-            surface.blit(none_text, (x, y))
-            y += 14
-            continue
-            
-        for comp in components:
-            c_color = (200, 200, 200)
-            if not comp.is_active:
-                c_color = (80, 80, 80)
-            elif comp.current_hp < comp.max_hp * 0.5:
-                c_color = (255, 100, 100)
-                
-            c_name = font_small.render(f"  {comp.name}", True, c_color)
-            surface.blit(c_name, (x, y))
-            
-            if comp.max_hp > 0:
-                bx = x + 120
-                pct = comp.current_hp / comp.max_hp
-                bar_color = (50, 200, 50) if comp.is_active else (50, 50, 50)
-                if pct < 0.5: bar_color = (200, 200, 50)
-                if pct < 0.2: bar_color = (200, 50, 50)
-                
-                draw_bar(surface, bx, y + 2, 60, 6, pct, bar_color)
-            
-            y += 14

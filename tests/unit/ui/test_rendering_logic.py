@@ -7,10 +7,9 @@ import pygame
 # Add parent dir to path
 
 
-from game.ui.renderer.game_renderer import draw_ship, draw_hud, draw_bar, LAYER_COLORS
+from game.ui.renderer.game_renderer import draw_ship, LAYER_COLORS
 from game.simulation.entities.ship import LayerType
 from game.simulation.entities.layer_data import LayerData
-from game.core.constants import ResourceType
 
 
 class TestRenderingLogic:
@@ -97,47 +96,6 @@ class TestRenderingLogic:
 
         assert found_weapon_color, "Weapon color (Red) not found"
         assert found_engine_color, "Engine color (Green) not found"
-
-    def test_draw_hud_stats(self):
-        """Verify HUD pulls stats from ship properties."""
-        mock_font_inst = MagicMock()
-        mock_text_surf = MagicMock()
-        mock_font_inst.render.return_value = mock_text_surf
-        self.mock_font.SysFont.return_value = mock_font_inst
-
-        self.ship.mass = 1000
-        self.ship.total_thrust = 5000
-        self.ship.drag = 0.5
-        # Configure resources mock to return values
-        resources_data = {
-            'fuel': {'current': 50, 'max': 100},
-            'ammo': {'current': 10, 'max': 20},
-            'energy': {'current': 100, 'max': 100}
-        }
-
-        def get_value_side_effect(name):
-            return resources_data.get(name, {}).get('current', 0)
-
-        def get_max_value_side_effect(name):
-            return resources_data.get(name, {}).get('max', 0)
-
-        self.ship.resources.get_value.side_effect = get_value_side_effect
-        self.ship.resources.get_max_value.side_effect = get_max_value_side_effect
-
-
-        draw_hud(self.mock_surface, self.ship, 10, 10)
-
-        calls = mock_font_inst.render.call_args_list
-        found_accel = False
-
-        for c in calls:
-            if len(c.args) > 0:
-                text = c.args[0]
-                if "Accel: 5.0" in text:
-                    found_accel = True
-                    break
-
-        assert found_accel, "Acceleration stat text not found in HUD render calls"
 
 
 class TestDrawShipBehavior:
@@ -270,157 +228,6 @@ class TestDrawShipBehavior:
             draw_ship(surface, ship, camera)
             # Should still draw (not culled)
             assert mock_draw.circle.called
-
-
-class TestDrawHudBehavior:
-    """Tests for draw_hud() function behavior."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        yield
-
-    def _create_mock_ship(self):
-        """Create a mock ship with required HUD attributes."""
-        ship = MagicMock()
-        ship.name = "Test Ship"
-        ship.is_alive = True
-        ship.mass = 1000
-        ship.total_thrust = 5000
-        ship.drag = 0.5
-        ship.layers = {
-            LayerType.CORE: LayerData(),
-            LayerType.INNER: LayerData(),
-            LayerType.OUTER: LayerData(),
-            LayerType.ARMOR: LayerData()
-        }
-
-        # Setup resources
-        ship.resources.get_value.side_effect = lambda r: {
-            ResourceType.FUEL: 50,
-            ResourceType.AMMO: 10,
-            ResourceType.ENERGY: 100
-        }.get(r, 0)
-        ship.resources.get_max_value.side_effect = lambda r: {
-            ResourceType.FUEL: 100,
-            ResourceType.AMMO: 20,
-            ResourceType.ENERGY: 100
-        }.get(r, 0)
-
-        return ship
-
-    def test_draw_hud_renders_ship_name(self):
-        """Test draw_hud renders ship name text."""
-        ship = self._create_mock_ship()
-        surface = MagicMock()
-
-        with patch('game.ui.renderer.game_renderer.pygame.font') as mock_font, \
-             patch('game.ui.renderer.game_renderer.pygame.draw'):
-            mock_font_inst = MagicMock()
-            mock_font_inst.render.return_value = MagicMock()
-            mock_font.SysFont.return_value = mock_font_inst
-
-            draw_hud(surface, ship, 10, 10)
-
-            # Check that ship name was rendered
-            render_calls = [str(call) for call in mock_font_inst.render.call_args_list]
-            name_rendered = any("Test Ship" in str(call) for call in render_calls)
-            assert name_rendered, "Ship name should be rendered"
-
-    def test_draw_hud_renders_hp_bar(self):
-        """Test draw_hud renders HP bar via draw_bar calls."""
-        ship = self._create_mock_ship()
-        surface = MagicMock()
-
-        with patch('game.ui.renderer.game_renderer.pygame.font') as mock_font, \
-             patch('game.ui.renderer.game_renderer.pygame.draw') as mock_draw:
-            mock_font_inst = MagicMock()
-            mock_font_inst.render.return_value = MagicMock()
-            mock_font.SysFont.return_value = mock_font_inst
-
-            draw_hud(surface, ship, 10, 10)
-
-            # draw_bar uses pygame.draw.rect
-            assert mock_draw.rect.called, "Should draw resource bars"
-
-    def test_draw_hud_with_zero_hp_ship(self):
-        """Test draw_hud with dead ship (is_alive=False) shows different color."""
-        ship = self._create_mock_ship()
-        ship.is_alive = False
-        surface = MagicMock()
-
-        with patch('game.ui.renderer.game_renderer.pygame.font') as mock_font, \
-             patch('game.ui.renderer.game_renderer.pygame.draw'):
-            mock_font_inst = MagicMock()
-            mock_font_inst.render.return_value = MagicMock()
-            mock_font.SysFont.return_value = mock_font_inst
-
-            draw_hud(surface, ship, 10, 10)
-
-            # Check that red color (255, 50, 50) was used for dead ship
-            render_calls = mock_font_inst.render.call_args_list
-            dead_color_used = any(
-                call.args[2] == (255, 50, 50)
-                for call in render_calls
-                if len(call.args) >= 3
-            )
-            assert dead_color_used, "Dead ship should use red color"
-
-    def test_draw_hud_resource_display(self):
-        """Test draw_hud displays fuel, energy, ammo."""
-        ship = self._create_mock_ship()
-        surface = MagicMock()
-
-        with patch('game.ui.renderer.game_renderer.pygame.font') as mock_font, \
-             patch('game.ui.renderer.game_renderer.pygame.draw'):
-            mock_font_inst = MagicMock()
-            mock_font_inst.render.return_value = MagicMock()
-            mock_font.SysFont.return_value = mock_font_inst
-
-            draw_hud(surface, ship, 10, 10)
-
-            render_calls = [str(call) for call in mock_font_inst.render.call_args_list]
-            # Check that resource labels are rendered
-            assert any("Fuel" in str(call) for call in render_calls)
-            assert any("Ammo" in str(call) for call in render_calls)
-            assert any("Energy" in str(call) for call in render_calls)
-
-
-class TestDrawBar:
-    """Tests for draw_bar() utility function."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        os.environ['SDL_VIDEODRIVER'] = 'dummy'
-        pygame.init()
-        pygame.display.set_mode((1, 1), pygame.NOFRAME)
-        yield
-
-    def test_draw_bar_basic(self):
-        """Test draw_bar draws background, fill, and border."""
-        surface = MagicMock()
-
-        with patch('game.ui.renderer.game_renderer.pygame.draw') as mock_draw:
-            draw_bar(surface, 10, 20, 100, 10, 0.5, (255, 0, 0))
-
-            # Should draw 3 rects: background, fill, border
-            assert mock_draw.rect.call_count == 3
-
-    def test_draw_bar_clamped_percentage(self):
-        """Test draw_bar clamps percentage to 0-1 range."""
-        surface = MagicMock()
-
-        with patch('game.ui.renderer.game_renderer.pygame.draw') as mock_draw:
-            # Test > 1.0 (should clamp to 1.0)
-            draw_bar(surface, 0, 0, 100, 10, 1.5, (255, 0, 0))
-
-            # Test < 0.0 (should clamp to 0.0)
-            draw_bar(surface, 0, 0, 100, 10, -0.5, (255, 0, 0))
-
-            # Should not crash and draw normally
-            assert mock_draw.rect.call_count == 6  # 3 per call
 
 
 class TestLayerColors:

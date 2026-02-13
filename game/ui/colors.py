@@ -6,9 +6,6 @@ PROJ-113: Moved basic colors (WHITE, BLACK, etc.) and FONT_MAIN from core to UI 
 # Basic colors for UI rendering
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
 
 # Default font
 FONT_MAIN = "Arial"

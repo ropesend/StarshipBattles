@@ -71,15 +71,3 @@ class TestScreenshotManager:
         saved_surface, filepath = args
         assert saved_surface == mock_subsurface
         assert "region" in filepath
-
-    @patch('game.ui.services.screenshot_manager.pygame.image.save')
-    @patch('game.ui.services.screenshot_manager.pygame.display.get_surface')
-    def test_capture_step_sequence(self, mock_get_surface, mock_save, screenshot_manager):
-        mock_surface = MagicMock()
-        mock_get_surface.return_value = mock_surface
-
-        screenshot_manager.capture_step("1_setup")
-
-        args, _ = mock_save.call_args
-        _, filepath = args
-        assert "STEP_1_setup" in filepath

@@ -8,38 +8,37 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-121 Phase 2 Complete
-**Current Status:** PROJ-121 Phase 2 complete, Phase 3 ready
+**Last Completed:** PROJ-121 Phase 3 Complete
+**Current Status:** PROJ-121 Phase 3 complete, Phase 4 ready
 **Current Project:** PROJ-121
-**Current Phase:** Phase 3 (UI-Framework)
-**Test Status:** 11918 tests passing (full suite)
+**Current Phase:** Phase 4 (UI-Screens)
+**Test Status:** 11907 tests passing (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-121 Phase 2 COMPLETE: 8 tasks (4 implemented, 4 reviewed as appropriate)
-  - Task 2.1: REMOVED string-to-enum migration support code in battle_engine.py
-  - Task 2.2: CHANGED is_v2_format() to raise ValueError on V1 format (no longer silent)
-  - Task 2.3: REMOVED hasattr check for just_fired_projectiles (always initialized)
-  - Task 2.4: ADDED retreat_status to Ship.__init__, removed hasattr checks
-  - Task 2.5: REVIEWED - Fallback patterns in ship.py are legitimate defensive coding
-  - Task 2.6: REVIEWED - Module Identity Drift workaround is documented tech debt
-  - Task 2.7: REVIEWED - Component fallback delegation is legitimate defensive coding
-  - Task 2.8: REVIEWED - describe() method IS used in tests (not dead code)
-- Full test suite: 11918 passed
-- Next: Begin Phase 3 (UI-Framework module tasks)
+- PROJ-121 Phase 3 COMPLETE: 10 tasks (5 implemented, 5 reviewed as false positives/appropriate)
+  - Task 3.1: REMOVED draw_hud/draw_bar from game_renderer.py and tests
+  - Task 3.2: REVIEWED - create_ai_for_ship IS used in tests (not dead code)
+  - Task 3.3: REMOVED capture_step from ScreenshotManager and tests
+  - Task 3.4: REMOVED duplicate exception handlers in ShipIO
+  - Task 3.5: REVIEWED - "legacy behavior" comment describes valid code path
+  - Task 3.6: REMOVED unused BLUE/RED/GREEN color constants
+  - Task 3.7: MIGRATED builder/main.py to use ShipIOAdapter
+  - Task 3.8: REVIEWED - getattr() patterns are legitimate defensive coding
+  - Task 3.9: REVIEWED - Singletons appropriate for asset managers
+  - Task 3.10: REVIEWED - _CONTEXT_OVERLAP contexts ARE used
+- Full test suite: 11907 passed
+- Next: Begin Phase 4 (UI-Screens module tasks)
 - Files modified this session:
-  - game/simulation/systems/battle_engine.py (removed migration code, hasattr check)
-  - game/simulation/components/modifier_schema.py (raise on V1 format)
-  - game/simulation/entities/ship.py (added retreat_status)
-  - game/simulation/managers/retreat_manager.py (removed hasattr)
-  - game/simulation/battle_state.py (removed hasattr)
-  - tests/unit/simulation/systems/test_battle_engine_tick.py (updated for new behavior)
-  - tests/unit/simulation/components/test_modifier_schema.py (updated tests)
-  - tests/unit/refactor/test_modifier_json_schema.py (updated tests)
-  - tests/unit/performance/stress_test.py (removed hasattr)
-  - tests/unit/performance/strategy_tournament.py (removed hasattr)
-  - tests/unit/performance/profile_simulation.py (removed hasattr)
-  - tests/unit/ui/test_battle_screen.py (use AttackType enum)
+  - game/ui/renderer/game_renderer.py (removed draw_hud, draw_bar)
+  - game/ui/services/screenshot_manager.py (removed capture_step)
+  - game/ui/services/ship_io.py (removed duplicate exception handlers)
+  - game/ui/colors.py (removed BLUE, RED, GREEN)
+  - game/ui/screens/test_lab/screen.py (removed unused imports)
+  - game/ui/screens/builder/main.py (migrated to ShipIOAdapter)
+  - tests/unit/ui/test_rendering_logic.py (removed dead tests)
+  - tests/unit/ui/services/test_screenshot_manager.py (removed dead tests)
+  - tests/unit/test_screenshot_manager.py (removed dead tests)
 
 ---
 
@@ -114,6 +113,7 @@
 | 2026-02-13 | PROJ-120 | Audit Cycle 1 | PASSED | 11939 pass | - | All tasks verified, no concerns |
 | 2026-02-13 | PROJ-121 | Phase 1 | Complete | 11919 pass | - | 7 tasks: 4 implemented, 3 reviewed |
 | 2026-02-13 | PROJ-121 | Phase 2 | Complete | 11918 pass | - | 8 tasks: 4 implemented, 4 reviewed |
+| 2026-02-13 | PROJ-121 | Phase 3 | Complete | 11907 pass | - | 10 tasks: 5 implemented, 5 reviewed |
 
 ---
 

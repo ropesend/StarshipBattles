@@ -77,9 +77,6 @@ class ShipIO:
         except (TypeError, ValueError) as e:
             log_error(f"ShipIO: Serialization error saving ship: {e}")
             return False, "Save failed: Invalid ship data"
-        except (OSError, PermissionError) as e:
-            log_error(f"ShipIO: Unexpected error saving ship: {e}")
-            return False, f"Save failed: {str(e)}"
 
     @staticmethod
     def load_ship(screen_width, screen_height):
@@ -124,6 +121,6 @@ class ShipIO:
         except OSError as e:
             log_error(f"ShipIO: OS error loading ship: {e}")
             return None, f"Load failed: {str(e)}"
-        except (OSError, PermissionError, json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+        except (TypeError, ValueError) as e:
             log_error(f"ShipIO: Unexpected error loading ship: {e}")
             return None, f"Load failed: {str(e)}"

@@ -42,7 +42,7 @@ from game.ui.services.validation_service import ValidationService
 from game.ui.renderer.sprites import SpriteManager
 from game.ui.screens.planet_list_presets import PresetManager
 from game.ui.screens.workshop_data_loader import WorkshopDataLoader
-from game.ui.services.ship_io import ShipIO
+from game.ui.services.ship_io_adapter import ShipIOAdapter
 from game.ui.screens.builder.modifier_editor import ModifierEditorPanel
 from game.ui.assets import ShipThemeManager
 from .left_panel import BuilderLeftPanel
@@ -92,6 +92,7 @@ class BuilderScreen:
         self._component_service = ComponentService()
         self._vehicle_class_service = VehicleClassService(self._registry_provider)
         self._validation_service = ValidationService()
+        self._ship_io_adapter = ShipIOAdapter()
 
         # UI Manager
         import os
@@ -928,7 +929,7 @@ class BuilderScreen:
         with profile_block("Builder: Load Standard Data"):
             directory = os.path.join(os.getcwd(), "data")
             self._reload_data(directory)
-            ShipIO.default_ships_folder = "ships"
+            self._ship_io_adapter.set_ships_folder("ships")
             self.show_error("Loaded Standard Data • Ships: ships/")
 
     def _load_test_data(self):
@@ -936,7 +937,7 @@ class BuilderScreen:
         with profile_block("Builder: Load Test Data"):
             directory = os.path.join(os.getcwd(), "tests", "data")
             self._reload_data(directory)
-            ShipIO.default_ships_folder = os.path.join("tests", "data", "ships")
+            self._ship_io_adapter.set_ships_folder(os.path.join("tests", "data", "ships"))
             self.show_error("Loaded Test Data • Ships: tests/data/ships/")
 
     def _reload_data(self, directory: str):
@@ -1054,13 +1055,13 @@ class BuilderScreen:
 
     @profile_action("Builder: Save Ship")
     def _save_ship(self):
-        success, message = ShipIO.save_ship(self.ship)
+        success, message = self._ship_io_adapter.save_ship(self.ship)
         if success: print(message)
         elif message: self.show_error(message)
 
     @profile_action("Builder: Load Ship")
     def _load_ship(self):
-        new_ship, message = ShipIO.load_ship(self.width, self.height)
+        new_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
         if new_ship:
             self.ship = new_ship
             # Update state manager with new ship
@@ -1112,7 +1113,7 @@ class BuilderScreen:
             self.weapons_report_panel.clear_target()
 
     def _on_select_target_pressed(self):
-        target_ship, message = ShipIO.load_ship(self.width, self.height)
+        target_ship, message = self._ship_io_adapter.load_ship(self.width, self.height)
         if target_ship:
             self.weapons_report_panel.set_target(target_ship)
             logger.info(f"Selected target: {target_ship.name}")
