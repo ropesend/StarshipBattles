@@ -9,3 +9,29 @@ tests/unit/strategy/test_fleet_capability_calculator.py,KEEP,Tests active capabi
 tests/unit/strategy/test_fleet_order_processor.py,KEEP,Tests active order processor,game/strategy/engine/fleet_order_processor.py
 tests/unit/strategy/test_fleet_report_filters.py,KEEP,Tests active report filters,game/ui/screens/fleet_report_filters.py
 tests/unit/strategy/test_fleet_resource_aggregator.py,KEEP,Tests active resource aggregator,game/strategy/data/fleet_resource_aggregator.py
+tests/unit/strategy/test_fleet_speed_calculator.py,KEEP,Tests active speed calculator,game/strategy/services/fleet_speed_calculator.py
+tests/unit/strategy/test_game_config.py,KEEP,Tests active game config,game/strategy/engine/game_config.py
+tests/unit/strategy/test_game_session.py,KEEP,Tests active game session,game/strategy/engine/game_session.py
+tests/unit/strategy/test_game_session_events.py,KEEP,Tests active session events,game/strategy/engine/game_session.py
+tests/unit/strategy/test_hex_math.py,KEEP,Tests active hex math,game/core/hex_math.py
+tests/unit/strategy/test_quickstart_builder.py,KEEP,Tests active quickstart builder,game/strategy/quickstart_builder.py
+tests/unit/strategy/test_ship_cargo_manager.py,KEEP,Tests active cargo manager,game/strategy/data/ship_cargo_manager.py
+tests/unit/strategy/test_ship_detail_panel.py,KEEP,Tests active detail panel logic,game/ui/panels/ship_detail_panel.py
+tests/unit/strategy/test_ship_display_formatter.py,KEEP,Tests active display formatter,game/strategy/data/ship_display_formatter.py
+tests/unit/strategy/test_ship_display_formatter_edge_cases.py,KEEP,Tests active display formatter edge cases,game/strategy/data/ship_display_formatter.py
+tests/unit/strategy/test_ship_resource_manager.py,KEEP,Tests active resource manager,game/strategy/data/ship_resource_manager.py
+tests/unit/strategy/test_ship_serial_numbering.py,KEEP,Tests active serial numbering,game/strategy/data/ship_instance.py
+tests/unit/strategy/ship_instance/test_capacity_levels.py,KEEP,Tests active capacity levels,game/strategy/data/ship_instance.py
+tests/unit/strategy/ship_instance/test_component_toggles.py,KEEP,Tests active component toggles,game/strategy/data/ship_instance.py
+tests/unit/strategy/ship_instance/test_convenience_methods.py,KEEP,Tests active convenience methods,game/strategy/data/ship_instance.py
+tests/unit/strategy/ship_instance/test_cost_queries.py,KEEP,Tests active cost queries,game/strategy/data/ship_instance.py
+tests/unit/strategy/ship_instance/test_serialization.py,KEEP,Tests active serialization,game/strategy/data/ship_instance.py
+tests/unit/strategy/data/test_build_context.py,KEEP,Tests active build context protocol,game/strategy/data/build_context.py
+tests/unit/strategy/data/test_build_queue_source.py,KEEP,Tests active build queue source,game/strategy/data/build_queue_source.py
+tests/unit/strategy/data/test_build_queue_source_errors.py,KEEP,Tests active build queue source errors,game/strategy/data/build_queue_source.py
+tests/unit/strategy/data/test_cargo_tracking.py,KEEP,Tests active cargo tracking,game/strategy/data/ship_instance.py
+tests/unit/strategy/data/test_classification_config.py,KEEP,Tests active classification config,game/strategy/data/classification_config.py
+tests/unit/strategy/data/test_empire_resources.py,KEEP,Tests active empire resources,game/strategy/data/empire.py
+tests/unit/strategy/data/test_facility_construction_queue.py,KEEP,Tests active facility queue,game/strategy/data/planet.py
+tests/unit/strategy/data/test_facility_resource_tracking.py,KEEP,Tests active facility resource tracking,game/strategy/data/planet.py
+tests/unit/strategy/data/test_fleet_battle_adapter.py,KEEP,Tests active fleet battle adapter (newer),game/strategy/data/fleet_battle_adapter.py

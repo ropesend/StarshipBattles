@@ -1,0 +1,123 @@
+TestFilePath,Verdict,Reason,SUT_Path
+tests/unit/ui/conftest.py,KEEP,Active test,game/ui/renderer/sprites.py
+tests/unit/ui/test_battle_orchestrator.py,DELETE,Tests dead code: game/ui/orchestration/__init__.py,game/ui/orchestration/__init__.py
+tests/unit/ui/test_battle_panels.py,DELETE,Tests dead code: game/ui/panels/__init__.py,game/ui/panels/__init__.py
+tests/unit/ui/test_battle_panels_extended.py,DELETE,Tests dead code: game/ui/panels/__init__.py,game/ui/panels/__init__.py
+tests/unit/ui/test_battle_screen.py,KEEP,Active test,game/core/constants.py
+tests/unit/ui/test_battle_screen_extended.py,KEEP,Active test,game/ui/screens/battle_screen.py
+tests/unit/ui/test_battle_screen_simulation.py,KEEP,Active test,game/ui/screens/battle_screen.py
+tests/unit/ui/test_camera.py,KEEP,Active test,game/ui/renderer/camera.py
+tests/unit/ui/test_colors.py,KEEP,Active test,game/ui/colors.py
+tests/unit/ui/test_column_manager.py,KEEP,Active test,game/ui/screens/column_manager.py
+tests/unit/ui/test_detail_panel_rendering.py,KEEP,Active test,game/ui/screens/builder/detail_panel.py
+tests/unit/ui/test_empire_asset_loading.py,KEEP,Active test,game/ui/screens/strategy_screen.py
+tests/unit/ui/test_fleet_list_view_model.py,KEEP,Active test,game/ui/screens/fleet_report_view_model.py
+tests/unit/ui/test_formation_input_handler.py,DELETE,Tests dead code: game/ui/screens/formation/input_handler.py,game/ui/screens/formation/input_handler.py
+tests/unit/ui/test_formation_renderer.py,DELETE,Tests dead code: game/ui/screens/formation/renderer.py,game/ui/screens/formation/renderer.py
+tests/unit/ui/test_lab_formatting_utils.py,KEEP,Active test,game/ui/screens/test_lab/formatting_utils.py
+tests/unit/ui/test_modifier_impact_grid.py,KEEP,Active test,game/ui/panels/modifier_impact_grid.py
+tests/unit/ui/test_new_game_setup.py,KEEP,Active test,game/ui/screens/new_game_setup_screen.py
+tests/unit/ui/test_overlay.py,KEEP,Active test,
+tests/unit/ui/test_race_asset_loader.py,KEEP,Active test,game/ui/screens/race_asset_loader.py
+tests/unit/ui/test_race_browser_dialog.py,KEEP,Active test,game/ui/screens/race_browser_dialog.py
+tests/unit/ui/test_race_description_panel.py,KEEP,Active test,game/ui/panels/race_description_panel.py
+tests/unit/ui/test_race_environment_panel.py,KEEP,Active test,game/ui/panels/race_environment_panel.py
+tests/unit/ui/test_race_flag_gallery.py,KEEP,Active test,game/ui/panels/race_flag_gallery.py
+tests/unit/ui/test_race_portrait_gallery.py,KEEP,Active test,game/ui/panels/race_portrait_gallery.py
+tests/unit/ui/test_race_summary_panel.py,KEEP,Active test,game/ui/panels/race_summary_panel.py
+tests/unit/ui/test_race_theme_gallery.py,KEEP,Active test,game/ui/panels/race_theme_gallery.py
+tests/unit/ui/test_race_validator.py,KEEP,Active test,game/ui/screens/race_validator.py
+tests/unit/ui/test_rendering_logic.py,KEEP,Active test,game/ui/renderer/game_renderer.py
+tests/unit/ui/test_save_selection.py,DELETE,Tests dead code: game/core/__init__.py,game/core/__init__.py
+tests/unit/ui/test_scene_protocol.py,KEEP,Active test,game/core/protocols.py
+tests/unit/ui/test_slider_snap_logic.py,KEEP,Active test,
+tests/unit/ui/test_sprites.py,KEEP,Active test,game/ui/renderer/sprites.py
+tests/unit/ui/test_sprite_loading.py,KEEP,Active test,game/ui/renderer/sprites.py
+tests/unit/ui/test_star_color_mapping.py,KEEP,Active test,game/ui/screens/strategy_screen.py
+tests/unit/ui/test_stats_render.py,KEEP,Active test,game/simulation/entities/ship.py
+tests/unit/ui/test_structure_visibility.py,KEEP,Active test,game/simulation/entities/ship.py
+tests/unit/ui/test_superweapon_operations.py,KEEP,Active test,game/ui/screens/strategy_superweapons.py
+tests/unit/ui/test_theme_discovery.py,KEEP,Active test,game/ui/assets/__init__.py
+tests/unit/ui/test_ui_dynamic_update.py,KEEP,Active test,game/simulation/entities/ship.py
+tests/unit/ui/test_ui_imports.py,DELETE,Tests dead code: game/ui/__init__.py,game/ui/__init__.py
+tests/unit/ui/test_ui_stats.py,KEEP,Active test,game/simulation/entities/ship.py
+tests/unit/ui/test_utils.py,KEEP,Active test,game/ui/utils.py
+tests/unit/ui/test_weapons_report_layout.py,KEEP,Active test,game/ui/screens/builder/weapons_panel.py
+tests/unit/ui/battle_state_viewer/conftest.py,KEEP,Active test,
+tests/unit/ui/battle_state_viewer/test_json_diff.py,KEEP,Active test,
+tests/unit/ui/battle_state_viewer/test_ui_logic.py,KEEP,Active test,
+tests/unit/ui/battle_state_viewer/test_viewer_ui.py,KEEP,Active test,
+tests/unit/ui/interfaces/test_battle_ui.py,KEEP,Active test,game/ui/interfaces/battle_ui.py
+tests/unit/ui/left_panel/conftest.py,KEEP,Active test,
+tests/unit/ui/left_panel/test_bulk_add.py,KEEP,Active test,
+tests/unit/ui/left_panel/test_selection_hover.py,KEEP,Active test,
+tests/unit/ui/left_panel/test_sorting_filtering.py,KEEP,Active test,
+tests/unit/ui/mocks/mock_battle_ui_service.py,KEEP,Active test,game/ui/interfaces/battle_ui.py
+tests/unit/ui/panels/test_build_queue_controller.py,KEEP,Active test,game/ui/panels/build_queue_controller.py
+tests/unit/ui/panels/test_build_queue_portraits.py,KEEP,Active test,game/ui/panels/build_queue_portraits.py
+tests/unit/ui/panels/test_compute_planet_production.py,KEEP,Active test,game/ui/panels/planet_report_panel.py
+tests/unit/ui/panels/test_design_stats_panel.py,KEEP,Active test,game/ui/panels/design_stats_panel.py
+tests/unit/ui/panels/test_empire_treasury_panel.py,KEEP,Active test,game/core/constants.py
+tests/unit/ui/panels/test_race_aptitudes_panel.py,KEEP,Active test,game/strategy/data/race_config.py
+tests/unit/ui/panels/test_race_identity_panel.py,KEEP,Active test,game/ui/panels/race_identity_panel.py
+tests/unit/ui/panels/test_ship_stats_renderer.py,KEEP,Active test,game/simulation/components/component_constants.py
+tests/unit/ui/schematic_view/conftest.py,KEEP,Active test,
+tests/unit/ui/schematic_view/test_geometry.py,KEEP,Active test,
+tests/unit/ui/schematic_view/test_rendering_logic.py,KEEP,Active test,
+tests/unit/ui/screens/test_builder_selection.py,KEEP,Active test,game/ui/screens/builder_selection.py
+tests/unit/ui/screens/test_build_queue_helpers.py,KEEP,Active test,game/ui/screens/build_queue_helpers.py
+tests/unit/ui/screens/test_build_queue_list_window.py,KEEP,Active test,game/ui/screens/build_queue_list_window.py
+tests/unit/ui/screens/test_build_queue_screen.py,KEEP,Active test,game/ui/screens/build_queue_screen.py
+tests/unit/ui/screens/test_cargo_quick_dialog.py,KEEP,Active test,game/ui/screens/cargo_quick_dialog.py
+tests/unit/ui/screens/test_design_image_helper.py,KEEP,Active test,game/ui/screens/design_image_helper.py
+tests/unit/ui/screens/test_design_selector_window.py,KEEP,Active test,game/ui/screens/design_selector_window.py
+tests/unit/ui/screens/test_empire_build_queue_filter_manager.py,KEEP,Active test,game/ui/screens/empire_build_queue_filter_manager.py
+tests/unit/ui/screens/test_empire_build_queue_formatter.py,KEEP,Active test,game/ui/screens/empire_build_queue_formatter.py
+tests/unit/ui/screens/test_empire_build_queue_window.py,KEEP,Active test,game/strategy/data/build_queue_source.py
+tests/unit/ui/screens/test_event_log_window.py,KEEP,Active test,game/ui/screens/event_log_window.py
+tests/unit/ui/screens/test_fleet_detail_fmt.py,KEEP,Active test,game/ui/screens/strategy_detail_fmt.py
+tests/unit/ui/screens/test_fleet_report_window.py,KEEP,Active test,game/ui/screens/fleet_report_window.py
+tests/unit/ui/screens/test_fleet_report_window_multi_select.py,KEEP,Active test,game/ui/screens/fleet_report_window.py
+tests/unit/ui/screens/test_formation_editor_screen.py,DELETE,Tests dead code: game/ui/screens/formation_editor.py,game/ui/screens/formation_editor.py
+tests/unit/ui/screens/test_keybindings_scene.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/screens/test_menu_scene.py,KEEP,Active test,game/ui/screens/menu_scene.py
+tests/unit/ui/screens/test_planet_list_components.py,KEEP,Active test,game/ui/screens/planet_list_presets.py
+tests/unit/ui/screens/test_planet_list_filters.py,KEEP,Active test,game/strategy/data/planet.py
+tests/unit/ui/screens/test_planet_production_display.py,KEEP,Active test,game/ui/screens/strategy_detail_formatter.py
+tests/unit/ui/screens/test_planet_selection_window.py,DELETE,Tests dead code: game/ui/screens/__init__.py,game/ui/screens/__init__.py
+tests/unit/ui/screens/test_race_setup_screen.py,KEEP,Active test,game/ui/screens/race_setup_screen.py
+tests/unit/ui/screens/test_race_validator.py,KEEP,Active test,game/ui/screens/race_validator.py
+tests/unit/ui/screens/test_setup_data_io.py,KEEP,Active test,game/ui/screens/setup_data_io.py
+tests/unit/ui/screens/test_setup_screen.py,KEEP,Active test,game/ui/screens/setup_screen.py
+tests/unit/ui/screens/test_strategy_detail_fmt.py,DELETE,Tests dead code: game/ui/screens/__init__.py,game/ui/screens/__init__.py
+tests/unit/ui/screens/test_strategy_detail_formatter.py,KEEP,Active test,game/ui/screens/strategy_detail_formatter.py
+tests/unit/ui/screens/test_strategy_input_handler_core.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/screens/test_strategy_input_handler_hotkeys.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/screens/test_strategy_input_handler_transfer.py,KEEP,Active test,game/ui/services/input_mapper.py
+tests/unit/ui/screens/test_strategy_menu_actions.py,KEEP,Active test,game/ui/screens/strategy_screen.py
+tests/unit/ui/screens/test_strategy_menu_panel.py,KEEP,Active test,game/ui/screens/strategy_menu_panel.py
+tests/unit/ui/screens/test_strategy_renderer.py,KEEP,Active test,game/ui/screens/strategy_renderer.py
+tests/unit/ui/screens/test_strategy_renderer_animation.py,KEEP,Active test,game/ui/screens/strategy_renderer.py
+tests/unit/ui/screens/test_strategy_screen.py,KEEP,Active test,game/ui/screens/strategy_screen.py
+tests/unit/ui/screens/test_strategy_superweapons.py,KEEP,Active test,game/ui/screens/strategy_superweapons.py
+tests/unit/ui/screens/test_strategy_ui_menu.py,DELETE,Tests dead code: game/ui/screens/__init__.py,game/ui/screens/__init__.py
+tests/unit/ui/screens/test_strategy_ui_tooltips.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/screens/test_strategy_window_manager.py,KEEP,Active test,game/ui/screens/strategy_window_manager.py
+tests/unit/ui/screens/test_sub_window_hotkeys.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/screens/test_superweapon_input_modes.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/screens/test_transfer_dialog.py,KEEP,Active test,game/ui/screens/transfer_dialog.py
+tests/unit/ui/screens/test_workshop_screen.py,KEEP,Active test,game/ui/screens/workshop_context.py
+tests/unit/ui/services/test_component_service.py,KEEP,Active test,game/ui/services/component_service.py
+tests/unit/ui/services/test_design_loader_adapter.py,KEEP,Active test,game/ui/services/design_loader_adapter.py
+tests/unit/ui/services/test_input_mapper.py,KEEP,Active test,game/core/input_actions.py
+tests/unit/ui/services/test_screenshot_manager.py,KEEP,Active test,game/ui/services/screenshot_manager.py
+tests/unit/ui/services/test_ship_factory.py,KEEP,Active test,game/core/registry.py
+tests/unit/ui/services/test_ship_io.py,KEEP,Active test,game/ui/services/ship_io.py
+tests/unit/ui/services/test_ship_io_adapter.py,KEEP,Active test,game/ui/services/ship_io_adapter.py
+tests/unit/ui/services/test_validation_service.py,KEEP,Active test,game/ui/services/validation_service.py
+tests/unit/ui/services/test_vehicle_class_service.py,KEEP,Active test,game/ui/services/vehicle_class_service.py
+tests/unit/ui/services/battle_ui_service/conftest.py,KEEP,Active test,game/core/math.py
+tests/unit/ui/services/battle_ui_service/test_conversion.py,KEEP,Active test,game/ui/services/battle_ui_service.py
+tests/unit/ui/services/battle_ui_service/test_state_and_integration.py,KEEP,Active test,game/ui/services/battle_ui_service.py
+tests/unit/ui/test_lab_scene/test_logic.py,KEEP,Active test,
+tests/unit/ui/test_lab_scene/test_ui_components.py,KEEP,Active test,
