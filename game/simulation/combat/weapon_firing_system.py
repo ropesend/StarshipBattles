@@ -210,9 +210,7 @@ class WeaponFiringSystem:
         aim_pos, aim_vec = self._targeting.calculate_firing_solution(ship, comp, target)
 
         if comp.has_ability('BeamWeaponAbility'):
-            # Beam attack - instant hit
-            if not hasattr(comp, 'shots_hit'):
-                comp.shots_hit = 0
+            # Beam attack - instant hit (shots_hit initialized in Component.__init__)
             comp.shots_hit += 1
 
             attacks.append({

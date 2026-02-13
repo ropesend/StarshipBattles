@@ -56,19 +56,12 @@ def calculate_combat_endurance(ship, component_pool):
                         # Get fire rate (1/reload)
                         # Look for associated WeaponAbility to get accurate reload time
                         reload_t = 1.0
-                        found_weapon = False
 
-                        # Try to find WeaponAbility on component
-                        if hasattr(c, 'ability_instances'):
-                            for inst in c.ability_instances:
-                                if inst.__class__.__name__ in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
-                                    reload_t = getattr(inst, 'reload_time', 1.0)
-                                    found_weapon = True
-                                    break
-
-                        # Fallback to component attribute (Legacy)
-                        if not found_weapon:
-                            reload_t = getattr(c, 'reload_time', 1.0)
+                        # Find WeaponAbility on component (all components have ability_instances)
+                        for inst in c.ability_instances:
+                            if inst.__class__.__name__ in ['WeaponAbility', 'ProjectileWeaponAbility', 'BeamWeaponAbility', 'SeekerWeaponAbility']:
+                                reload_t = getattr(inst, 'reload_time', 1.0)
+                                break
 
                         if reload_t > 0:
                             rate = ab.amount / reload_t

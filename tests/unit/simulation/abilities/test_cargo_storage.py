@@ -196,11 +196,12 @@ class TestCargoStorageLayer:
     """Test CargoStorage layer attribute."""
 
     def test_cargo_storage_layer_strategic(self):
-        """CargoStorage has strategic layer."""
+        """CargoStorage has strategic layer (AbilityLayer.STRATEGIC enum)."""
+        from game.simulation.components.abilities.base import AbilityLayer
         component = MagicMock()
         ability = CargoStorage(component, {"cargo_type": "passengers", "capacity": 1000})
 
-        assert ability.layer == 'strategic'
+        assert ability.layer == AbilityLayer.STRATEGIC
 
 
 class TestShipStatsCargoStorage:

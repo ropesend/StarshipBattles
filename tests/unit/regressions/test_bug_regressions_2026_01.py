@@ -6,7 +6,8 @@ from game.simulation.components.component_constants import ComponentStatus
 from game.simulation.validation.ship_validator import ResourceDependencyRule
 from game.core.validation import ValidationResult
 from game.simulation.entities.ship import Ship
-from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability, ResourceStorage, ResourceConsumption
+from game.simulation.components.abilities import ABILITY_REGISTRY, create_ability
+from game.simulation.components.abilities.resources import ResourceStorage, ResourceConsumption
 from game.simulation.components.abilities import CrewRequired
 
 

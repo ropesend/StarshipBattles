@@ -283,6 +283,7 @@ class TestFindValidTarget:
     def test_find_valid_target_non_pdc_skips_missiles(self):
         """find_valid_target non-PDC weapons skip missile targets."""
         from game.simulation.combat.targeting_system import TargetingSystem
+        from game.core.constants import AttackType
 
         system = TargetingSystem()
 
@@ -293,7 +294,7 @@ class TestFindValidTarget:
         missile = MagicMock()
         missile.is_alive = True
         missile.team_id = 1
-        missile.type = 'missile'
+        missile.type = AttackType.MISSILE
 
         weapon = MagicMock()
         weapon.has_pdc_ability = MagicMock(return_value=False)
@@ -306,6 +307,7 @@ class TestFindValidTarget:
     def test_find_valid_target_pdc_targets_missiles(self):
         """find_valid_target PDC weapons can target missiles."""
         from game.simulation.combat.targeting_system import TargetingSystem
+        from game.core.constants import AttackType
 
         system = TargetingSystem()
 
@@ -319,7 +321,7 @@ class TestFindValidTarget:
         missile.team_id = 1
         missile.position = Vector2(50, 0)
         missile.velocity = Vector2(0, 0)
-        missile.type = 'missile'
+        missile.type = AttackType.MISSILE
 
         weapon = MagicMock()
         weapon.has_ability = lambda name: name in ['WeaponAbility', 'ProjectileWeaponAbility']

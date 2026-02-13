@@ -19,7 +19,7 @@ class TestScalingLogic:
 
         # Get base consumption
         base_cons = 0
-        from game.simulation.systems.resource_manager import ResourceConsumption
+        from game.simulation.components.abilities.resources import ResourceConsumption
         for ab in engine.ability_instances:
             if isinstance(ab, ResourceConsumption) and ab.resource_name == 'fuel':
                 base_cons = ab.amount

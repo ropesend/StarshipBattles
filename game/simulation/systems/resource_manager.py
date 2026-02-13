@@ -206,17 +206,3 @@ class ResourceRegistry:
     def get_all_resources(self) -> List['ResourceState']:
         """Return list of all registered ResourceState objects."""
         return list(self._resources.values())
-
-
-# --- Ability System ---
-
-# --- Ability System ---
-# Forwarding to new module
-from game.simulation.components.abilities import (
-    Ability, 
-    ResourceConsumption, 
-    ResourceStorage, 
-    ResourceGeneration, 
-    ABILITY_REGISTRY, 
-    create_ability
-)

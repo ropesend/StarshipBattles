@@ -6,7 +6,7 @@ PROJ-68: Added generic cargo system - passengers first, extensible to other type
 
 from typing import Any, Dict, List
 
-from .base import Ability
+from .base import Ability, AbilityLayer
 from .stat_keys import AbilityStatBinding, StatKey
 
 
@@ -26,7 +26,7 @@ class CargoStorage(Ability):
     PROJ-68: Initial implementation for passenger transport.
     """
 
-    layer = 'strategic'  # AbilityLayer.STRATEGIC - cargo only relevant in strategy layer
+    layer = AbilityLayer.STRATEGIC  # Cargo only relevant in strategy layer
 
     STAT_BINDINGS: List[AbilityStatBinding] = [
         AbilityStatBinding(StatKey.CAPACITY_MULT, 'capacity', 'multiply', '_base_capacity'),

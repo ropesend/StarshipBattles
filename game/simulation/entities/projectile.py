@@ -85,7 +85,7 @@ class Projectile(PhysicsBody):
                  self.is_alive = False
                  self.status = 'miss'
                  # Log Expiration (Seeker or Timed Projectile)
-                 if self.type == AttackType.MISSILE or self.type == 'missile':
+                 if self.type == AttackType.MISSILE:
                      log_event("SEEKER_EXPIRE", 
                                seeker_id=str(id(self)), 
                                reason="lifetime",
@@ -93,7 +93,7 @@ class Projectile(PhysicsBody):
                  return
 
         # Guidance Logic (if missile)
-        if (self.type == AttackType.MISSILE or self.type == 'missile') and self.target and self.target.is_alive:
+        if (self.type == AttackType.MISSILE) and self.target and self.target.is_alive:
             self._update_guidance(dt)
             
         # Physics Update (from PhysicsBody)
@@ -104,7 +104,7 @@ class Projectile(PhysicsBody):
             self.is_alive = False
             self.status = 'miss'
             # Log Range Expiration
-            if self.type == AttackType.MISSILE or self.type == 'missile':
+            if self.type == AttackType.MISSILE:
                 log_event("SEEKER_EXPIRE", 
                           seeker_id=str(id(self)), 
                           reason="max_range",

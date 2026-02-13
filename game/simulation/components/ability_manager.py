@@ -161,8 +161,7 @@ class AbilityManager:
         Returns:
             New list of ability instances
         """
-        from game.simulation.systems.resource_manager import ABILITY_REGISTRY, create_ability
-        from game.simulation.components.abilities import ABILITY_CLASS_MAP
+        from game.simulation.components.abilities import ABILITY_REGISTRY, create_ability
 
         # 1. Map existing instances for quick lookup
         # Key: (ability_type_name, index_in_that_type)
@@ -183,12 +182,7 @@ class AbilityManager:
 
             # Get the target class for this registry entry
             target = ABILITY_REGISTRY[name]
-            target_cls_name = None
-            if isinstance(target, type):
-                target_cls_name = target.__name__
-            else:
-                # Use centralized map for shortcut factories (lambdas)
-                target_cls_name = ABILITY_CLASS_MAP.get(name)
+            target_cls_name = target.__name__ if isinstance(target, type) else None
 
             for item in items:
                 # Heuristic: Match by Target Class Name if known

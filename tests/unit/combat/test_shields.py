@@ -57,7 +57,7 @@ class TestShields:
         assert self.ship.shield_regen_rate == 60.0
 
         # Verify cost via Ability
-        from game.simulation.systems.resource_manager import ResourceConsumption
+        from game.simulation.components.abilities.resources import ResourceConsumption
         cost = 0
         for ab in self.regenerator.ability_instances:
             if isinstance(ab, ResourceConsumption) and ab.resource_name == 'energy':

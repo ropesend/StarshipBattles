@@ -71,7 +71,7 @@ class ShipStatsCalculator:
         """
         # Import local to avoid circular dep if needed, or top level if safe.
         # resources.py likely imports NOTHING from ship_stats.
-        from game.simulation.systems.resource_manager import ResourceStorage, ResourceGeneration
+        from game.simulation.components.abilities.resources import ResourceStorage, ResourceGeneration
 
         # 1. Reset Base Calculations
         ship.current_mass = 0
@@ -111,7 +111,6 @@ class ShipStatsCalculator:
 
         ship.max_shields = 0
         ship.shield_regen_rate = 0
-        ship.shield_regen_cost = 0
         ship.shield_regen_cost = 0
         ship.repair_rate = 0
         if LayerType.ARMOR in ship.layers:

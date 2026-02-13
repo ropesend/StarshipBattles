@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-117 Phase 1 - Foundation
-**Current Status:** PROJ-117 Phase 1 Complete
+**Last Completed:** PROJ-117 Phase 2 - Simulation
+**Current Status:** PROJ-117 Phase 2 Complete
 **Current Project:** PROJ-117
-**Current Phase:** Phase 2 (Simulation)
+**Current Phase:** Phase 3 (UI-Framework)
 **Test Status:** 9773 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-117 Phase 1 Complete (14 Foundation findings):
-  - 7 fixes: StrategyMetadataService→SingletonMeta, deleted dead AIController attrs, deleted LayerType.from_string(), removed TypeGuard shim, deleted _get_hp_percent/_is_in_pdc_arc wrappers, updated profiling comment
-  - 7 false positives/intentional: load_resources (active), path resolution (needed), base protocols (building blocks), capture_step (test util), colors (already migrated), FONT_MAIN (migrated), DEBUG_SCREENSHOTS (intentional)
-  - Updated 2 integration tests that patched removed methods
-- Next: PROJ-117 Phase 2 (Simulation findings)
+- PROJ-117 Phase 2 Complete (23 Simulation findings):
+  - 12 fixes: Deleted ABILITY_CLASS_MAP, migrated resource imports (11 files), deleted dict-format branch, fixed missile type checks (AttackType enum), removed ResourceDependencyRule fallback, removed WeaponAbility hasattr, added shots_hit/shots_fired init, removed combat_endurance fallback, CargoStorage layer→enum, deleted duplicate shield_regen_cost
+  - 2 already fixed: persistence.py moved to UI layer previously
+  - 9 deferred/acceptable: Module-level loaders use singleton fallback intentionally, designs.py is test infra, PROJ-41 blocker, is_v2_format naming correct, FORMULA_* are docs, module identity drift needs larger refactor, Ship.base_mass vestigial but harmless, INFO items acceptable
+- Next: PROJ-117 Phase 3 (UI-Framework findings)
 
 ---
 
@@ -221,7 +221,7 @@
 ---
 
 - [/] **PROJ-117: Legacy Dead Code Eradication**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-117/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-117/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -398,6 +398,7 @@
 | 2026-02-12 | PROJ-116 | Phases 1-3 | Complete | 9773 passed | pending | All 19 findings investigated - ALL ALREADY ADDRESSED by PROJ-87/88/89/104 or ACCEPTABLE |
 | 2026-02-12 | PROJ-116 | Audit 1 | PASSED | 9773 passed | pending | No code changes. Verified: Sim decomposed (PROJ-88), Strategy decomposed (PROJ-87), UI decomposed (PROJ-89/104) |
 | 2026-02-12 | PROJ-117 | Phase 1 | Complete | 9773 passed | pending | 14 findings: 7 fixes, 7 false positives. StrategyMetadataService→SingletonMeta, deleted dead AIController attrs/wrappers, removed TypeGuard shim |
+| 2026-02-12 | PROJ-117 | Phase 2 | Complete | 9773 passed | pending | 23 findings: 12 fixes, 2 already fixed, 9 deferred. Deleted ABILITY_CLASS_MAP, migrated resource imports (11 files), fixed missile type checks (AttackType enum), removed dead code branches |
 
 ---
 

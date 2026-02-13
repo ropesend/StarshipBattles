@@ -28,7 +28,7 @@ class TestComponents:
         tank = create_component('fuel_tank', registries=fresh_registries)
 
         # Verify ResourceStorage ability exists
-        from game.simulation.systems.resource_manager import ResourceStorage
+        from game.simulation.components.abilities.resources import ResourceStorage
         found_storage = False
         for ab in tank.ability_instances:
             if isinstance(ab, ResourceStorage) and ab.resource_type == 'fuel':

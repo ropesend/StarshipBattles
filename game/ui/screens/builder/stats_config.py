@@ -177,7 +177,7 @@ def get_resource_consumption(ship, res_name):
             return val
 
     # Fallback: Calculate constant consumption from component abilities
-    from game.simulation.systems.resource_manager import ResourceConsumption
+    from game.simulation.components.abilities.resources import ResourceConsumption
     total = 0
     # Iterate all components in all layers
     for layer in ship.layers.values():
@@ -359,7 +359,7 @@ STATS_FIGHTER_SUPPORT = STATS_CONFIG.get('fightersupport', [])
 
 def _get_constant_consumption(ship, res_name):
     """Get constant consumption rate for a resource (excludes activation-based)."""
-    from game.simulation.systems.resource_manager import ResourceConsumption
+    from game.simulation.components.abilities.resources import ResourceConsumption
     total = 0
     try:
         for layer in ship.layers.values():

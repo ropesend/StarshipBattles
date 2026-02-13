@@ -147,7 +147,7 @@ class ProjectileManager:
 
         Returns True if interception occurred.
         """
-        is_missile = (p.type == AttackType.MISSILE) or (p.type == 'missile')
+        is_missile = p.type == AttackType.MISSILE
 
         if not is_missile or not p.target or not isinstance(p.target, type(p)):
             return False
@@ -170,6 +170,5 @@ class ProjectileManager:
         p.is_alive = False
         p.status = 'hit'
         if hasattr(p, 'source_weapon') and p.source_weapon:
-            if not hasattr(p.source_weapon, 'shots_hit'):
-                p.source_weapon.shots_hit = 0
+            # shots_hit initialized in Component.__init__
             p.source_weapon.shots_hit += 1

@@ -121,7 +121,7 @@ class TestComponentCloning:
         assert isinstance(clone, Component)
         assert clone.has_ability('BeamWeaponAbility')
         # Verify energy cost via abilities
-        from game.simulation.systems.resource_manager import ResourceConsumption
+        from game.simulation.components.abilities.resources import ResourceConsumption
         original_cost = 0
         clone_cost = 0
 

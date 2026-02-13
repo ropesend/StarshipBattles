@@ -149,24 +149,18 @@ class WeaponAbility(Ability):
             self.reload_time = self._base_reload
 
     def recalculate(self):
-        pass
-
         # Apply modifiers to base stats using get_effective_stat for multi-ability support
-        if hasattr(self, '_base_damage'):
-            self.damage = self._base_damage * self.get_effective_stat('damage_mult', 1.0)
-        if hasattr(self, '_base_range'):
-            self.range = self._base_range * self.get_effective_stat('range_mult', 1.0)
-        if hasattr(self, '_base_reload'):
-            self.reload_time = self._base_reload * self.get_effective_stat('reload_mult', 1.0)
+        self.damage = self._base_damage * self.get_effective_stat('damage_mult', 1.0)
+        self.range = self._base_range * self.get_effective_stat('range_mult', 1.0)
+        self.reload_time = self._base_reload * self.get_effective_stat('reload_mult', 1.0)
 
         # Apply Arc Modifiers
-        if hasattr(self, '_base_firing_arc'):
-            # Check for override first (`arc_set`) then additive (`arc_add`)
-            arc_set = self.get_effective_stat('arc_set', None)
-            if arc_set is not None:
-                self.firing_arc = arc_set
-            else:
-                self.firing_arc = self._base_firing_arc + self.get_effective_stat('arc_add', 0.0)
+        # Check for override first (`arc_set`) then additive (`arc_add`)
+        arc_set = self.get_effective_stat('arc_set', None)
+        if arc_set is not None:
+            self.firing_arc = arc_set
+        else:
+            self.firing_arc = self._base_firing_arc + self.get_effective_stat('arc_add', 0.0)
 
         # Sync facing_angle from properties (if not already overridden)
         if 'facing_angle' in self.component.stats.get('properties', {}):

@@ -339,45 +339,25 @@ class ResourceDependencyRule(DesignValidationRule):
 
         all_components = ship.get_all_components()
 
-        from game.simulation.systems.resource_manager import ResourceConsumption, ResourceStorage
+        from game.simulation.components.abilities.resources import ResourceConsumption, ResourceStorage
 
         for c in all_components:
-            # Use V2 Ability Instances for robust state checking
-            if hasattr(c, 'ability_instances'):
-                for ab in c.ability_instances:
-                    # Check Consumption
-                    if isinstance(ab, ResourceConsumption):
-                        res_name = ab.resource_name
-                        if res_name:
-                            needed_resources.add(res_name)
+            # All components have ability_instances (initialized in Component.__init__)
+            for ab in c.ability_instances:
+                # Check Consumption
+                if isinstance(ab, ResourceConsumption):
+                    res_name = ab.resource_name
+                    if res_name:
+                        needed_resources.add(res_name)
 
-                    # Check Storage
-                    elif isinstance(ab, ResourceStorage):
-                        res_name = getattr(ab, 'resource_type', getattr(ab, 'resource_name', None))
-                        # Use max_amount for capacity check (V2 standard)
-                        capacity = getattr(ab, 'max_amount', 0)
+                # Check Storage
+                elif isinstance(ab, ResourceStorage):
+                    res_name = getattr(ab, 'resource_type', getattr(ab, 'resource_name', None))
+                    # Use max_amount for capacity check (V2 standard)
+                    capacity = getattr(ab, 'max_amount', 0)
 
-                        if capacity > 0 and res_name:
-                            stored_resources.add(res_name)
-            else:
-                # Fallback for raw data or uninitialized components
-                abilities = getattr(c, 'abilities', {})
-                if 'ResourceConsumption' in abilities:
-                    for cons in abilities['ResourceConsumption']:
-                        if not isinstance(cons, dict):
-                            continue
-                        res_name = cons.get('resource')
-                        if res_name:
-                            needed_resources.add(res_name)
-
-                if 'ResourceStorage' in abilities:
-                    for store in abilities['ResourceStorage']:
-                        if not isinstance(store, dict):
-                            continue
-                        res_name = store.get('resource')
-                        capacity = store.get('amount', 0)
-                        if capacity > 0 and res_name:
-                            stored_resources.add(res_name)
+                    if capacity > 0 and res_name:
+                        stored_resources.add(res_name)
 
         # Warnings for missing storage
         missing = needed_resources - stored_resources

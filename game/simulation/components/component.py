@@ -148,6 +148,10 @@ class Component:
         self._ability_index = {}  # PERF: Fast lookup by ability class name
         self._is_operational = True # Tracks if component has resources to operate
 
+        # Combat statistics (weapons)
+        self.shots_fired = 0
+        self.shots_hit = 0
+
         # Instantiate Abilities
         self._instantiate_abilities()
 

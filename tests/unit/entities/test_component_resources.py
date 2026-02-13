@@ -1,6 +1,8 @@
 import pytest
 from game.simulation.components.component import Component
-from game.simulation.systems.resource_manager import ResourceConsumption, ABILITY_REGISTRY, ResourceState, ResourceRegistry
+from game.simulation.systems.resource_manager import ResourceState, ResourceRegistry
+from game.simulation.components.abilities.resources import ResourceConsumption
+from game.simulation.components.abilities import ABILITY_REGISTRY
 
 
 class MockShip:
@@ -52,7 +54,7 @@ class TestComponentCapabilities:
         c = Component(data, registries=fresh_registries)
 
         # Initial Check
-        from game.simulation.systems.resource_manager import ResourceStorage
+        from game.simulation.components.abilities.resources import ResourceStorage
         storage = next((ab for ab in c.ability_instances if isinstance(ab, ResourceStorage)), None)
         assert storage is not None
         assert storage.max_amount == 100.0

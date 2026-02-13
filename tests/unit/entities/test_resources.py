@@ -1,5 +1,6 @@
 import pytest
-from game.simulation.systems.resource_manager import ResourceState, ResourceRegistry, ResourceConsumption
+from game.simulation.systems.resource_manager import ResourceState, ResourceRegistry
+from game.simulation.components.abilities.resources import ResourceConsumption
 from collections import namedtuple
 
 # Mock Component/Ship for Ability testing

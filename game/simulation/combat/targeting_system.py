@@ -13,6 +13,7 @@ import math
 from typing import TYPE_CHECKING, List, Optional, Tuple, Any
 
 from game.core.math import Vector2
+from game.core.constants import AttackType
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
@@ -155,8 +156,8 @@ class TargetingSystem:
 
             # PDC check - non-PDC weapons should not fire at missiles
             is_pdc = comp.has_pdc_ability()
-            t_type = getattr(candidate, 'type', 'ship')
-            if t_type == 'missile' and not is_pdc:
+            t_type = getattr(candidate, 'type', None)
+            if t_type == AttackType.MISSILE and not is_pdc:
                 continue
 
             # Validate firing solution

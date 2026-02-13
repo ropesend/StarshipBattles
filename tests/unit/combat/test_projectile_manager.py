@@ -75,6 +75,7 @@ class TestProjectileManager:
         assert proj.status == 'hit'
 
     def test_missile_interception(self):
+        from game.core.constants import AttackType
         manager = ProjectileManager()
         missile = DummyProjectile(
             position=Vector2(50, 50),
@@ -83,14 +84,14 @@ class TestProjectileManager:
             damage=10,
             team_id=0
         )
-        missile.type = 'missile'
+        missile.type = AttackType.MISSILE
 
         target_missile = DummyProjectile(
             position=Vector2(60, 50),
             radius=2,
             team_id=1
         )
-        target_missile.type = 'missile'
+        target_missile.type = AttackType.MISSILE
 
         missile.target = target_missile
 

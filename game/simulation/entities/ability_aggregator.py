@@ -131,11 +131,6 @@ def calculate_ability_totals(
 
                     ability_groups[ability_name][group_key].append(value)
 
-            # Handle Dict
-            elif isinstance(comp.ability_instances, dict):
-                # ... (omitted for brevity, assume debug print sufficient in list block)
-                pass
-
         # 2. Process Raw Dictionary (skipped when layer filtering is active)
         # Layer filtering requires ability instances with applies_to_layer() method
         if layer is not None:

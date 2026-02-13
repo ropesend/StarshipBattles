@@ -83,8 +83,8 @@ class TestShotTracking:
 
         mock_weapon = MagicMock()
         mock_weapon.get_ability.return_value = None  # No special ability
-        # Remove shots_hit so it tests creation
-        del mock_weapon.shots_hit
+        # Initialize shots_hit (now done in Component.__init__)
+        mock_weapon.shots_hit = 0
 
         proj = MagicMock()
         proj.position = Vector2(100, 0)
@@ -102,7 +102,7 @@ class TestShotTracking:
         projectile_manager.add_projectile(proj)
         projectile_manager.update(mock_grid)
 
-        # shots_hit should be created and set to 1
+        # shots_hit should be incremented to 1
         assert mock_weapon.shots_hit == 1
 
     def test_multiple_hits_accumulate(self, projectile_manager, mock_grid, mock_target_ship):

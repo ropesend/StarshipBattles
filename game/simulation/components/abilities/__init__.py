@@ -106,9 +106,6 @@ ABILITY_REGISTRY = {
     "SelfDestruct": SelfDestruct,
 }
 
-# Map registry shortcut names to their actual class names for instance matching
-# (Legacy shortcuts removed - use ResourceStorage/ResourceConsumption/ResourceGeneration directly)
-ABILITY_CLASS_MAP = {}
 
 
 def create_ability(name: str, component, data: Any) -> Optional[Ability]:
@@ -175,6 +172,5 @@ __all__ = [
     'SelfDestruct',
     # Registry
     'ABILITY_REGISTRY',
-    'ABILITY_CLASS_MAP',
     'create_ability',
 ]
