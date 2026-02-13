@@ -170,3 +170,69 @@ class TestShipDisplayFormatter:
 
         # With key in resource_storage but value 0, should return 0
         assert formatter.get_resource_percentage('fuel') == 0.0
+
+    def test_get_resource_percentage_negative_max(self, mock_ship_instance):
+        """Test get_resource_percentage with negative max capacity returns 0."""
+        from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+        mock_ship_instance.resource_levels = {'fuel': 100}
+        mock_ship_instance.get_calculated_stats = Mock(return_value={
+            'max_hp': 100,
+            'resource_storage': {'fuel': -10}
+        })
+        formatter = ShipDisplayFormatter(mock_ship_instance)
+
+        # Negative max should return 0 (guards against division by negative)
+        assert formatter.get_resource_percentage('fuel') == 0.0
+
+    def test_get_resource_percentage_nonexistent_resource(self, mock_ship_instance):
+        """Test get_resource_percentage for resource not in resource_levels."""
+        from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+        mock_ship_instance.resource_levels = {}  # Empty
+        formatter = ShipDisplayFormatter(mock_ship_instance)
+
+        # Resource not tracked returns 0.0
+        assert formatter.get_resource_percentage('nonexistent') == 0.0
+
+    def test_get_resource_display_negative_max(self, mock_ship_instance):
+        """Test get_resource_display with negative max returns N/A."""
+        from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+        mock_ship_instance.get_calculated_stats = Mock(return_value={
+            'max_hp': 100,
+            'resource_storage': {'fuel': -10}
+        })
+        formatter = ShipDisplayFormatter(mock_ship_instance)
+
+        assert formatter.get_resource_display('fuel') == "N/A"
+
+    def test_get_resource_display_zero_max(self, mock_ship_instance):
+        """Test get_resource_display with zero max returns N/A."""
+        from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+        mock_ship_instance.get_calculated_stats = Mock(return_value={
+            'max_hp': 100,
+            'resource_storage': {'fuel': 0}
+        })
+        formatter = ShipDisplayFormatter(mock_ship_instance)
+
+        assert formatter.get_resource_display('fuel') == "N/A"
+
+    def test_get_hp_display_zero_max_hp(self, mock_ship_instance):
+        """Test get_hp_display with zero max HP."""
+        from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+        mock_ship_instance.current_hp = 0
+        mock_ship_instance.get_calculated_stats = Mock(return_value={
+            'max_hp': 0,
+            'resource_storage': {}
+        })
+        formatter = ShipDisplayFormatter(mock_ship_instance)
+
+        assert formatter.get_hp_display() == "0/0"
+
+    def test_get_display_id_fallback_to_design_id(self, mock_ship_instance):
+        """Test get_display_id uses design_id when name not in design_data."""
+        from game.strategy.data.ship_display_formatter import ShipDisplayFormatter
+        mock_ship_instance.design_data = {}  # No 'name' key
+        mock_ship_instance.design_id = 'fallback_design'
+        mock_ship_instance.serial = 123
+        formatter = ShipDisplayFormatter(mock_ship_instance)
+
+        assert formatter.get_display_id() == "fallback_design-000123"
