@@ -129,8 +129,7 @@ class BattleConfig:
     FIGHTER_LAUNCH_SPEED: int = 100
 
 
-# UIConfig has been moved to game.ui.config
-# Re-export for backward compatibility during migration
-from game.ui.config import UIConfig
+# UIConfig has been moved to game.ui.config (PROJ-113)
+# Import from game.ui.config directly
 
 

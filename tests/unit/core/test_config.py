@@ -111,10 +111,10 @@ class TestUIConfig:
         assert UIConfig.CONFIRM_DIALOG_WIDTH == 400
         assert UIConfig.CONFIRM_DIALOG_HEIGHT == 200
 
-    def test_backward_compat_import_from_core(self):
-        """UIConfig can still be imported from game.core.config for backward compat."""
-        from game.core.config import UIConfig
+    def test_uiconfig_location(self):
+        """UIConfig is in game.ui.config, not game.core.config (PROJ-113)."""
+        from game.ui.config import UIConfig
 
-        # Should work due to re-export
+        # UIConfig is properly located in UI layer
         assert UIConfig.PANEL_PADDING == 5
 

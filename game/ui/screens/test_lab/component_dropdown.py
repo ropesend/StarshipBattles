@@ -5,7 +5,7 @@ Provides a dropdown menu for selecting ship components.
 
 import pygame
 
-from game.core.constants import FONT_MAIN
+from game.ui.colors import FONT_MAIN
 
 
 class ComponentDropdown:

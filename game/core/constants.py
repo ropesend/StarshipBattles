@@ -9,12 +9,9 @@ __all__ = [
     'SimulationConstants',
     'PLANET_RESOURCES',
     'ResourceType',
-    # Colors
-    'WHITE', 'BLACK', 'BLUE', 'RED', 'GREEN',
-    # Font
-    'FONT_MAIN',
     # Debug flags
     'DEBUG_SCREENSHOTS',
+    # PROJ-113: Colors and FONT_MAIN moved to game.ui.colors
 ]
 
 
@@ -38,16 +35,7 @@ class GameState(IntEnum):
     GALAXY_TEST = 9
     KEYBINDINGS = 10
 
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-
-# Fonts
-FONT_MAIN = "Arial"
-
+# PROJ-113: Colors (WHITE, BLACK, BLUE, RED, GREEN) and FONT_MAIN moved to game.ui.colors
 
 # Debug Flags
 DEBUG_SCREENSHOTS = True

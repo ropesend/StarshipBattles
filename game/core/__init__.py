@@ -102,8 +102,8 @@ from game.core.config import (
     AIConfig,
     PhysicsConfig,
     BattleConfig,
-    UIConfig,
 )
+# PROJ-113: UIConfig moved to game.ui.config
 
 # Paths
 from game.core.paths import Paths

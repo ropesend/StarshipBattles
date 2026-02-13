@@ -5,7 +5,7 @@ Provides ship display panels: simple, tabbed, and component panels.
 
 import pygame
 
-from game.core.constants import FONT_MAIN
+from game.ui.colors import FONT_MAIN
 from .json_viewer import ScrollableJSONViewer
 from .component_dropdown import ComponentDropdown
 

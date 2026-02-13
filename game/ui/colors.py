@@ -1,6 +1,19 @@
+"""UI Colors and Style Constants.
+
+PROJ-113: Moved basic colors (WHITE, BLACK, etc.) and FONT_MAIN from core to UI layer.
+"""
+
+# Basic colors for UI rendering
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+
+# Default font
+FONT_MAIN = "Arial"
 
 # StarshipBattles UI Style Guide Colors
-
 COLORS = {
     # Backgrounds
     'bg_deep': (18, 21, 26),

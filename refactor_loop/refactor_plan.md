@@ -8,30 +8,32 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-113 Phase 4 (UI-Framework)
-**Current Status:** PROJ-113 Phase 4 Complete - Ready for Phase 5
+**Last Completed:** PROJ-113 Phase 5 (UI-Screens)
+**Current Status:** PROJ-113 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-113
-**Current Phase:** Phase 5 (UI-Screens)
+**Current Phase:** Audit Cycle 1
 **Test Status:** 9773 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-113 Phase 4 Complete (10 tasks):
-  - ALREADY FIXED in Phase 1 (4):
-    - 4.1, 4.2, 4.7: ScreenshotManager/InputMapper moved to game/ui/services/
-    - 4.6: controllable.py uses Any type hint for Vector2 (no pygame dep in AI)
-  - FALSE POSITIVE (2):
-    - 4.3: game_renderer imports from core.constants (correct layer)
-    - 4.4: ShipFactory pygame use acceptable (already in UI layer)
-  - ARCHITECTURAL PATTERN (2):
-    - 4.5: DesignLoaderAdapter wraps SimulationDesignLoader (correct facade)
-    - 4.8: ValidationService wraps simulation validator (correct facade)
-  - ACCEPTABLE (1):
-    - 4.9: game_renderer lazy import UI→UI (avoids circular dep)
-  - INFO (1):
-    - 4.10: Facade/adapter pattern consistently implemented
-- Files modified: phase_4_checklist.md (documentation only, no code changes needed)
-- Next: Begin Phase 5 (UI-Screens findings)
+- PROJ-113 Phase 5 Complete (11 tasks):
+  - FIXED (2):
+    - 5.5: Removed UIConfig backward-compat shim from game.core.config
+    - 5.6: Moved colors (WHITE/BLACK/BLUE/RED/GREEN) and FONT_MAIN to game.ui.colors
+  - ALREADY FIXED (1):
+    - 5.2: tkinter already only in UI layer (fixed in Phase 2)
+  - FALSE POSITIVE (1):
+    - 5.3: StrategyEventRouter→StrategyUI._window_manager (UI→UI internal decomposition)
+  - ACCEPTABLE (7):
+    - 5.1: test_framework imports (test infrastructure package)
+    - 5.4: _temp_* cache attributes (UI performance pattern)
+    - 5.7: column_manager late imports (UI→Strategy correct direction)
+    - 5.8: tkinter Tk() init (standard dialog pattern in UI)
+    - 5.9: test_framework deep chains (test infrastructure)
+    - 5.10: UI→UI late imports (circular avoidance)
+    - 5.11: battle_state access (proper layer usage)
+- Files modified: 12 files (config, constants, colors, test_lab imports)
+- Next: Trigger Audit Cycle 1 (all 5 phases complete)
 
 ---
 
@@ -404,6 +406,7 @@
 | 2026-02-12 | PROJ-113 | Phase 2 | Complete | 9773 passed | pending | 11 SIM findings: 3 FIXED (ShipIO→UI, battle_config, projectile color), 6 FALSE POSITIVES, 2 INFO, 1 DEFERRED (color_hint) |
 | 2026-02-12 | PROJ-113 | Phase 3 | Complete | 9773 passed | pending | 8 STR findings: 4 FIXED (trigger_speed_recalc, hex comments, design_library imports, economy docs), 2 FALSE POSITIVES, 2 DOCUMENTED |
 | 2026-02-12 | PROJ-113 | Phase 4 | Complete | 9773 passed | pending | 10 UI2 findings: 4 ALREADY FIXED (Phase 1), 2 FALSE POSITIVE, 2 ARCHITECTURAL PATTERN, 1 ACCEPTABLE, 1 INFO |
+| 2026-02-12 | PROJ-113 | Phase 5 | Complete | 9773 passed | pending | 11 UI1 findings: 2 FIXED (UIConfig shim, colors→UI), 1 ALREADY FIXED, 1 FALSE POSITIVE, 7 ACCEPTABLE |
 
 ---
 

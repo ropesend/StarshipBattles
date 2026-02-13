@@ -9,7 +9,7 @@ import pygame_gui
 import os
 import sys
 
-from game.core.constants import WHITE, BLACK, BLUE, FONT_MAIN
+from game.ui.colors import WHITE, BLACK, BLUE, FONT_MAIN
 from game.core.config import DisplayConfig
 WIDTH, HEIGHT = DisplayConfig.DEFAULT_WIDTH, DisplayConfig.DEFAULT_HEIGHT
 from game.core.json_utils import load_json

@@ -5,7 +5,7 @@ Displays detailed information for a selected test run.
 
 import pygame
 
-from game.core.constants import FONT_MAIN
+from game.ui.colors import FONT_MAIN
 from game.ui.screens.test_lab.formatting_utils import format_value
 
 

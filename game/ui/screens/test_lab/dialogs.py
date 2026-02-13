@@ -8,7 +8,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
-from game.core.constants import FONT_MAIN
+from game.ui.colors import FONT_MAIN
 
 
 class JSONPopup:

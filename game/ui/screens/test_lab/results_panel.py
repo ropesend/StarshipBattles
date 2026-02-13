@@ -5,7 +5,7 @@ Displays test run history with run selection.
 
 import pygame
 
-from game.core.constants import FONT_MAIN
+from game.ui.colors import FONT_MAIN
 from .test_run_card import TestRunCard
 
 
