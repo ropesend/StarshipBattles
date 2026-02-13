@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Phase 1 Task 1.4 (BattleController edge case tests)
-**Current Status:** In progress - Phase 1 partially complete (4/18 tasks)
+**Last Completed:** PROJ-120 Phase 1 Tasks 1.5-1.6 (TCG-SIM-005 REJECTED, TCG-SIM-006 complete)
+**Current Status:** In progress - Phase 1 partially complete (6/18 tasks)
 **Current Project:** PROJ-120
 **Current Phase:** Phase 1
-**Test Status:** 2362 simulation tests passing
+**Test Status:** 2378 simulation tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Completed Task 1.4: BattleController edge case tests (32 new tests)
-- Total BattleController tests now 134 (was 102)
-- Next: Task 1.5 (DamageCalculator armor penetration edge tests)
-- Files created:
-  - tests/unit/simulation/battle_controller/test_edge_cases.py
+- Task 1.5 (TCG-SIM-005): REJECTED - validation report shows comprehensive edge case tests already exist (1160 lines). No additional work needed.
+- Task 1.6 (TCG-SIM-006): Added 16 new tests to WeaponFiringSystem (28 total, was 12)
+- Next: Task 1.7 (TargetingSystem Missing AI Priority Tests)
+- Files modified:
+  - tests/unit/simulation/combat/test_weapon_firing_system.py (+16 tests)
 
 ---
 
@@ -81,7 +81,8 @@
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-13 | PROJ-120 | Phase 1 (3/18) | In Progress | 2330 pass | 47a927b2 | Tasks 1.1-1.3 complete |
-| 2026-02-13 | PROJ-120 | Phase 1 (4/18) | In Progress | 2362 pass | pending | Task 1.4 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (4/18) | In Progress | 2362 pass | 6b252597 | Task 1.4 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (6/18) | In Progress | 2378 pass | 2c399111 | Tasks 1.5-1.6 complete |
 
 ---
 

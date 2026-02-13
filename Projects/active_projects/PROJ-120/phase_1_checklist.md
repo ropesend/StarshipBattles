@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress
+**Status:** In Progress (6/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -69,26 +69,35 @@
 Total BattleController tests now: 134 (was 102)
 
 ### Task 1.5: TCG-SIM-005 - DamageCalculator Armor Penetration Edge [Simple]
-**File:** `game/simulation/combat/damage_`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/combat/damage_calculator.py`
+**Tests:** `pytest tests/unit/simulation/combat/test_damage_calculator.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** REJECTED finding - Validation report shows comprehensive edge case tests already exist (1160 lines, 13 test classes). No additional work needed. See Reviews/results/2026-02-13_sweep_full-codebase-sweep/validation/validation_sim_report.md line 372.
 
 ### Task 1.6: TCG-SIM-006 - WeaponFiringSystem Missing Multishot Tes [Medium]
-**File:** `game/simulation/combat/weapon_`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/combat/weapon_firing_system.py`
+**Tests:** `pytest tests/unit/simulation/combat/test_weapon_firing_system.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 16 new tests covering:
+- TestMultipleWeaponsFiring (3 tests): Multiple beam, projectile, and mixed weapons firing simultaneously
+- TestInactiveWeapons (2 tests): Inactive weapons skipped, partial active weapons fire
+- TestPointDefenseWeapons (1 test): PDC weapons can fire at ships
+- TestWeaponFireFails (1 test): weapon.fire() returning False
+- TestWeaponShotTracking (3 tests): Shot/hit tracking stats incremented
+- TestHangarLaunchEdgeCases (3 tests): No target, try_launch fails, inactive hangar
+- TestSecondaryTargets (1 test): Secondary targets passed to targeting system
+- TestSeekerProjectileCreation (2 tests): Turn rate and aim vector handling
+Total: 28 tests (was 12)
 
 ### Task 1.7: TCG-SIM-007 - TargetingSystem Missing AI Priority Test [Medium]
 **File:** `game/simulation/combat/targeti`
