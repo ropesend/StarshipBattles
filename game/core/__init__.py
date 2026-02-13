@@ -33,7 +33,8 @@ Validation (game.core.validation):
     ValidationResult, IValidationRule
 
 Configuration (game.core.config):
-    DisplayConfig, AIConfig, PhysicsConfig, BattleConfig, UIConfig
+    DisplayConfig, AIConfig, PhysicsConfig, BattleConfig
+    (UIConfig is in game.ui.config - PROJ-113)
 
 Paths (game.core.paths):
     Paths
@@ -140,8 +141,8 @@ __all__ = [
     'log_debug', 'log_info', 'log_warning', 'log_error', 'set_logging',
     # Validation
     'ValidationResult', 'IValidationRule',
-    # Configuration
-    'DisplayConfig', 'AIConfig', 'PhysicsConfig', 'BattleConfig', 'UIConfig',
+    # Configuration (UIConfig moved to game.ui.config - PROJ-113)
+    'DisplayConfig', 'AIConfig', 'PhysicsConfig', 'BattleConfig',
     # Paths
     'Paths',
     # Protocols
