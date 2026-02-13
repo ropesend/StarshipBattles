@@ -1,339 +1,230 @@
-# Consistency Violations Sweep Report
+# Consistency Violations Sweep: UI-Screens
 
-**Shard:** `game/ui/screens/`, `game/ui/panels/`
-**Date:** 2026-02-13
-**Reviewer:** Claude Opus 4.5 (Sweep Agent)
-
----
-
-## Executive Summary
-
-This report analyzes consistency violations across the UI screens and panels modules. The analysis covered 100+ Python files across `game/ui/screens/` (including subdirectories: `builder/`, `formation/`, `galaxy_test/`, `test_lab/`) and `game/ui/panels/`.
-
-**Files Analyzed:** 100+ files
-**Total Violations Found:** 23
-- CRITICAL: 0
-- MAJOR: 4
-- MINOR: 14
-- INFO: 5
+## Summary
+- **Shard:** UI-Screens (game/ui/screens/, game/ui/panels/)
+- **Files Scanned:** 127 (102 in screens, 25 in panels)
+- **Total Issues Found:** 23
+- **Critical:** 0 | **Major:** 4 | **Minor:** 14 | **Info:** 5
 
 ---
 
-## Phase 1: Naming Convention Analysis
-
-### 1.1 Class Naming Patterns
-
-**Dominant Pattern:** PascalCase with descriptive suffixes indicating purpose.
-- Screen classes: `*Screen` (e.g., `BattleScreen`, `StrategyScreen`, `SetupScreen`)
-- Window classes: `*Window` (e.g., `FleetReportWindow`, `FleetOrdersWindow`)
-- Panel classes: `*Panel` (e.g., `BattlePanel`, `ShipStatsPanel`, `UIPanel`)
-- Scene classes: `*Scene` (e.g., `MenuScene`, `KeybindingsScene`)
-- Gallery classes: `*Gallery` (e.g., `RacePortraitGallery`, `RaceFlagGallery`)
-- Router/Manager classes: `*Router`, `*Manager` (e.g., `StrategyEventRouter`, `StrategyWindowManager`)
-
-#### MINOR: Mixed Screen/Scene Terminology
-- **ID:** NC-001
-- **Location:** `game/ui/screens/menu_scene.py`, `game/ui/screens/keybindings_scene.py`
-- **Issue:** Uses `*Scene` suffix while most similar classes use `*Screen` suffix
-- **Impact:** Inconsistent terminology makes it harder to understand class hierarchy
-- **Recommendation:** Standardize on either `*Scene` or `*Screen` for IScene implementations. The project appears to use Scene for IScene implementations and Screen for pygame_gui windows.
-- **Effort:** Low
-
-### 1.2 Method Naming Patterns
-
-**Dominant Pattern:** `snake_case` for all methods with specific prefixes:
-- Event handlers: `handle_*`, `on_*`, `process_*`
-- Creation methods: `_create_*`, `_init_*`, `_build_*`
-- Update methods: `update_*`, `refresh_*`, `_update_*`
-- Private methods: Leading underscore `_method_name`
-
-#### MINOR: Inconsistent Event Handler Prefixes
-- **ID:** NC-002
-- **Location:** Multiple files across `game/ui/screens/`
-- **Issue:** Mixed use of `handle_*`, `on_*`, and `process_*` for event handling
-  - `handle_event()` in `MenuScene`, `KeybindingsScene`
-  - `process_event()` in `NewGameSetupScreen`, `RaceSetupScreen`
-  - `on_*` callbacks like `on_asset_selected()`, `on_ui_selection()`
-- **Impact:** Unclear distinction between method purposes
-- **Recommendation:** Establish convention: `handle_*` for external events, `process_*` for pygame_gui events, `on_*` for callbacks
-- **Effort:** Medium
-
-### 1.3 File Naming Patterns
-
-**Dominant Pattern:** `snake_case.py` with descriptive names
-
-#### MINOR: Inconsistent Module Naming for Related Components
-- **ID:** NC-003
-- **Location:** `game/ui/screens/`
-- **Issue:** Related helper modules use inconsistent prefixes
-  - Strategy modules: `strategy_ui.py`, `strategy_event_router.py`, `strategy_window_manager.py` (consistent)
-  - Workshop modules: `workshop_context.py`, `workshop_data_loader.py`, `workshop_viewmodel.py` (consistent)
-  - Build queue modules: `build_queue_screen.py`, `build_queue_helpers.py`, `build_queue_selector.py` (consistent)
-  - Empire build queue: `empire_build_queue_window.py`, `empire_build_queue_formatter.py`, `empire_build_queue_filter_manager.py` (consistent but different prefix)
-- **Impact:** Minor confusion when searching for related files
-- **Recommendation:** Continue current pattern - this is actually well-organized
-- **Effort:** N/A (informational)
-
----
-
-## Phase 2: Structural Pattern Analysis
-
-### 2.1 Class Structure Patterns
-
-**Dominant Pattern:** Classes follow consistent structure:
-1. Class docstring
-2. Class constants
-3. `__init__` method
-4. Abstract/protocol methods (if applicable)
-5. Public methods grouped by feature
-6. Private helper methods
+## Findings
 
 #### MAJOR: Inconsistent Constructor Parameter Ordering
-- **ID:** SP-001
-- **Location:** Multiple panel and screen constructors
-- **Issue:** Constructor parameters have inconsistent ordering across similar classes
-  - `BaseGallery.__init__(panel, manager, race_config, x, y, width, height, ...)`
-  - `RaceEnvironmentPanel.__init__(panel, manager, race_config)` (no position params)
-  - `BattlePanel.__init__(scene, x, y, w, h)` (scene first, no manager)
-  - `FleetReportWindow.__init__(rect, manager, fleet, empire, ...)` (rect first)
-- **Impact:** Makes it harder to remember parameter order; increases error likelihood
-- **Recommendation:** Standardize: `(container/parent, manager, position_rect, ...other_params)`
-- **Effort:** High (many files affected)
+**ID:** CON-UI1-001
+**Location:** Multiple panel and screen constructors across `game/ui/screens/` and `game/ui/panels/`
+**Issue:** Constructor parameters have inconsistent ordering across similar classes:
+- `BaseGallery.__init__(panel, manager, race_config, x, y, width, height, ...)`
+- `RaceEnvironmentPanel.__init__(panel, manager, race_config)` (no position params)
+- `BattlePanel.__init__(scene, x, y, w, h)` (scene first, no manager)
+- `FleetReportWindow.__init__(rect, manager, fleet, empire, ...)` (rect first)
+**Impact:** Makes it harder to remember parameter order; increases error likelihood when creating new instances.
+**Recommendation:** Standardize constructor order: `(container/parent, manager, position_rect, ...domain_params, ...optional_callbacks)`
+**Effort:** Complex (many files affected, but can be done incrementally)
 
-### 2.2 UI Manager Access Patterns
+#### MAJOR: Incomplete God Class Decomposition (test_lab/screen.py)
+**ID:** CON-UI1-002
+**Location:** `game/ui/screens/test_lab/screen.py` (~1900 lines)
+**Issue:** Test Lab screen is still a large monolithic class despite having helper modules. Contrast with strategy screen which successfully applied PROJ-86 decomposition pattern.
+**Impact:** Harder to maintain and test; higher cognitive load when working in this module.
+**Recommendation:** Apply PROJ-86 decomposition pattern - extract event router, panel manager, state manager as separate classes.
+**Effort:** Complex
 
-**Dominant Pattern:** `self.ui_manager` or `self.manager` for pygame_gui manager reference
+#### MAJOR: Direct Singleton Access Instead of Dependency Injection
+**ID:** CON-UI1-003
+**Location:**
+- `game/ui/screens/race_setup_screen.py:404` - `ShipThemeManager.instance()`
+- `game/ui/screens/fleet_report_window.py:735` - `ShipThemeManager.instance()`
+- `game/ui/panels/ship_stats_renderer.py:243` - `StrategyMetadataService.instance()`
+**Issue:** Some files access singletons directly instead of receiving dependencies through constructor injection, violating the DI principle from CLAUDE.md.
+**Impact:** Harder to test in isolation; creates hidden dependencies; violates project conventions.
+**Recommendation:** Pass `theme_manager` or service instances as constructor parameters. Already done correctly in newer code like `BuildQueueScreen`.
+**Effort:** Medium
+
+#### MAJOR: Mixed Event Handler Naming (handle_event vs process_event)
+**ID:** CON-UI1-004
+**Location:** Multiple files across game/ui/screens/ and game/ui/panels/
+**Issue:** Two different method names are used for handling pygame events:
+- `handle_event(self, event)` - Used in 37 files (IScene protocol implementations, custom panels)
+- `process_event(self, event)` - Used in 17 files (pygame_gui UIWindow subclasses)
+**Impact:** Cognitive overhead when working across files. However, this appears to be an intentional split based on class hierarchy.
+**Recommendation:** Document this as intentional pattern: pygame_gui UIWindow subclasses use `process_event` (inherited API), while IScene implementations use `handle_event`. Add clarifying comments in base classes.
+**Effort:** Simple (documentation only)
+
+#### MINOR: Inconsistent Event Handler Return Type Annotations
+**ID:** CON-UI1-005
+**Location:**
+- `game/ui/screens/battle_state_viewer.py:308` - `def handle_event(self, event) -> bool:`
+- `game/ui/screens/battle_screen.py:303` - `def handle_event(self, event):` (no annotation)
+- `game/ui/screens/formation_editor.py:527` - `def handle_event(self, event) -> None:`
+**Issue:** The `handle_event` method has inconsistent return type patterns: some return `bool`, some return `None` implicitly, some have explicit type annotations.
+**Impact:** Callers cannot rely on consistent return type; reduces static analysis effectiveness.
+**Recommendation:** Establish convention: IScene `handle_event` returns `None`, panel/widget `handle_event` returns `bool` for event consumption. Add annotations to all implementations.
+**Effort:** Medium
+
+#### MINOR: Mixed Screen/Scene Class Naming Suffix
+**ID:** CON-UI1-006
+**Location:** `game/ui/screens/menu_scene.py`, `game/ui/screens/keybindings_scene.py`
+**Issue:** Uses `*Scene` suffix while most similar classes use `*Screen` suffix (BattleScreen, StrategyScreen, etc.)
+**Impact:** Inconsistent terminology makes class hierarchy less clear.
+**Recommendation:** The pattern appears intentional: `*Scene` for IScene protocol implementations, `*Screen` for screen-specific implementations. Document this distinction.
+**Effort:** Simple (documentation)
 
 #### MINOR: Inconsistent UI Manager Attribute Names
-- **ID:** SP-002
-- **Location:** Multiple files
-- **Issue:** Different names for the pygame_gui manager reference
-  - `self.ui_manager` in `BaseGallery`, `RaceSetupScreen`, `FleetReportWindow`
-  - `self.manager` in `StrategyUI` (line 57), some panels
-  - `self._ui_manager` in `KeybindingsScene`
-- **Impact:** Inconsistent access patterns across related classes
-- **Recommendation:** Standardize on `self.ui_manager` for public, `self._ui_manager` for private
-- **Effort:** Medium
-
-### 2.3 Initialization Patterns
-
-**Dominant Pattern:** `_create_*` or `_init_*` methods called from `__init__`
-
-#### INFO: Two Initialization Naming Conventions
-- **ID:** SP-003
-- **Location:** Across all UI classes
-- **Issue:** Both `_create_*` and `_init_*` prefixes used for initialization
-  - `_create_ui()`, `_create_buttons()` - used in `MenuScene`, `RaceSetupScreen`
-  - `_init_layout()`, `_init_sidebar()` - used in `FleetReportWindow`
-  - `_build_ui()`, `_build_action_rows()` - used in `KeybindingsScene`
-- **Impact:** Slight confusion about method purpose
-- **Recommendation:** Consider standardizing: `_create_*` for building UI elements, `_init_*` for setup logic
-- **Effort:** Low
-
----
-
-## Phase 3: API Design Consistency
-
-### 3.1 Callback Patterns
-
-**Dominant Pattern:** `on_*_callback` parameter names for callbacks
-
-#### MINOR: Mixed Callback Parameter Names
-- **ID:** API-001
-- **Location:** Multiple constructors
-- **Issue:** Inconsistent callback parameter naming
-  - `on_select_callback` in `BaseGallery`
-  - `on_complete_callback` in `RaceSetupScreen`
-  - `on_close_callback` in `FleetReportWindow`
-  - `on_start_callback`, `on_cancel_callback` in `NewGameSetupScreen`
-- **Impact:** Minor cognitive overhead
-- **Recommendation:** This is acceptable - names describe purpose. Consider documenting the pattern.
-- **Effort:** N/A (acceptable variation)
-
-### 3.2 Event Processing Return Values
-
-**Dominant Pattern:** Return `bool` indicating whether event was handled
-
-#### MINOR: Inconsistent Event Handler Return Types
-- **ID:** API-002
-- **Location:** `BattlePanel.handle_click()` vs other panels
-- **Issue:** `handle_click()` returns different types
-  - `BattlePanel.handle_click()` returns `False` or action tuples like `("focus_ship", ship_id)`
-  - `ShipStatsPanel.handle_click()` returns `True`, `False`, or `("focus_ship", ship_id)`
-  - `BattleControlPanel.handle_click()` returns `"end_battle"` or `False`
-- **Impact:** Callers must handle multiple return types
-- **Recommendation:** Standardize: return `bool` for consumed, emit events for actions
-- **Effort:** Medium
-
-### 3.3 Configuration Loading Patterns
-
-**Dominant Pattern:** `set_from_config()` method to populate UI from data
-
-#### INFO: Consistent Pattern
-- **ID:** API-003
-- **Location:** All gallery and panel classes
-- **Issue:** None - this is a positive finding
-- **Impact:** Good consistency for loading saved race configurations
-- **Recommendation:** Continue this pattern
-- **Effort:** N/A
-
----
-
-## Phase 4: Project Pattern Adherence
-
-### 4.1 Facade/Delegate Pattern
-
-**Dominant Pattern:** Large screens decomposed into helper classes (PROJ-86 pattern)
-
-#### INFO: Good Pattern Adoption
-- **ID:** PP-001
-- **Location:** `strategy_ui.py`, `strategy_event_router.py`, `strategy_window_manager.py`
-- **Issue:** None - this is a positive finding showing god class decomposition
-- **Impact:** Good maintainability
-- **Recommendation:** Continue applying this pattern to other large screens
-- **Effort:** N/A
-
-#### MAJOR: Incomplete God Class Decomposition
-- **ID:** PP-002
-- **Location:** `game/ui/screens/test_lab/screen.py` (~1900 lines)
-- **Issue:** Test Lab screen is still a large monolithic class despite having helper modules
-- **Impact:** Harder to maintain and test
-- **Recommendation:** Apply PROJ-86 decomposition pattern - extract event router, panel manager, etc.
-- **Effort:** High
-
-### 4.2 Type Hints
-
-**Dominant Pattern:** Full type hints on method signatures
+**ID:** CON-UI1-007
+**Location:** Multiple files
+**Issue:** Different names for pygame_gui manager reference:
+- `self.ui_manager` in `BaseGallery`, `RaceSetupScreen`, `FleetReportWindow`
+- `self.manager` in `StrategyUI`, some panels
+- `self._ui_manager` in `KeybindingsScene`
+**Impact:** Inconsistent access patterns across related classes.
+**Recommendation:** Standardize on `self.ui_manager` for public access, `self._ui_manager` for private. Update over time as files are touched.
+**Effort:** Medium
 
 #### MINOR: Inconsistent Type Hint Coverage
-- **ID:** PP-003
-- **Location:** `game/ui/screens/builder/components.py`, `game/ui/panels/battle_panels.py`
-- **Issue:** Some older files lack type hints
-  - `ComponentListItem.__init__` has no type hints
-  - `BattlePanel` methods lack return type hints
-  - Newer files like `BaseGallery`, `StrategyEventRouter` have complete type hints
-- **Impact:** Reduced IDE support and documentation
-- **Recommendation:** Add type hints to files missing them
-- **Effort:** Medium
-
-### 4.3 Docstrings
-
-**Dominant Pattern:** Module and class docstrings with PROJ-XX references
-
-#### MINOR: Missing Module Docstrings
-- **ID:** PP-004
-- **Location:** Several files
-- **Issue:** Some files lack module-level docstrings
-  - `game/ui/screens/builder/components.py` - no module docstring
-  - Most files have good docstrings with project references (PROJ-12, PROJ-43, PROJ-86, etc.)
-- **Impact:** Reduced discoverability
-- **Recommendation:** Add module docstrings to files missing them
-- **Effort:** Low
-
-### 4.4 Import Organization
-
-**Dominant Pattern:**
-1. `from __future__ import annotations`
-2. Standard library imports
-3. Third-party imports (pygame, pygame_gui)
-4. Local imports
+**ID:** CON-UI1-008
+**Location:** `game/ui/screens/builder/components.py`, `game/ui/panels/battle_panels.py`
+**Issue:** Some older files lack type hints while newer files have complete coverage.
+- `ComponentListItem.__init__` has no type hints
+- `BattlePanel` methods lack return type hints
+- Newer files like `BaseGallery`, `StrategyEventRouter` have complete type hints
+**Impact:** Reduced IDE support and static analysis in older files.
+**Recommendation:** Add type hints to files missing them during maintenance work.
+**Effort:** Medium
 
 #### MINOR: Inconsistent Future Annotations Usage
-- **ID:** PP-005
-- **Location:** Multiple files
-- **Issue:** Some files use `from __future__ import annotations`, others don't
-  - Used in: `strategy_ui.py`, `strategy_event_router.py`, `keybindings_scene.py`
-  - Not used in: `battle_panels.py`, `ship_stats_renderer.py`, `menu_scene.py`
-- **Impact:** Inconsistent forward reference handling
-- **Recommendation:** Add `from __future__ import annotations` to all files for PEP 563 compliance
-- **Effort:** Low
+**ID:** CON-UI1-009
+**Location:** Multiple files
+**Issue:** Some files use `from __future__ import annotations`, others don't:
+- Used in: `strategy_ui.py`, `strategy_event_router.py`, `keybindings_scene.py`, `ship_detail_panel.py`
+- Not used in: `battle_panels.py`, `ship_stats_renderer.py`, `menu_scene.py`
+**Impact:** Inconsistent forward reference handling; affects type annotation parsing.
+**Recommendation:** Add `from __future__ import annotations` to all files for PEP 563 compliance.
+**Effort:** Simple
 
-### 4.5 Dependency Injection
+#### MINOR: Inconsistent Event Handler Return Values
+**ID:** CON-UI1-010
+**Location:** `BattlePanel.handle_click()`, `ShipStatsPanel.handle_click()`, `BattleControlPanel.handle_click()`
+**Issue:** `handle_click()` returns different types:
+- `BattlePanel.handle_click()` returns `False` or action tuples like `("focus_ship", ship_id)`
+- `ShipStatsPanel.handle_click()` returns `True`, `False`, or `("focus_ship", ship_id)`
+- `BattleControlPanel.handle_click()` returns `"end_battle"` or `False`
+**Impact:** Callers must handle multiple return types; defensive coding required.
+**Recommendation:** Standardize: return `bool` for consumed, emit events via callback for actions.
+**Effort:** Medium
 
-**Dominant Pattern:** Constructor injection for dependencies
+#### MINOR: Two Initialization Method Naming Conventions
+**ID:** CON-UI1-011
+**Location:** Across UI classes
+**Issue:** Both `_create_*` and `_init_*` prefixes used for initialization helpers:
+- `_create_ui()`, `_create_buttons()` in `MenuScene`, `RaceSetupScreen`
+- `_init_layout()`, `_init_sidebar()` in `FleetReportWindow`
+- `_build_ui()`, `_build_action_rows()` in `KeybindingsScene`
+**Impact:** Slight confusion about method purpose.
+**Recommendation:** Standardize: `_create_*` for building UI elements, `_init_*` for setup logic, `_build_*` for section construction.
+**Effort:** Simple
 
-#### MAJOR: Direct Singleton Access in Some Files
-- **ID:** PP-006
-- **Location:** `game/ui/screens/race_setup_screen.py`, `game/ui/screens/fleet_report_window.py`
-- **Issue:** Some files access singletons directly instead of injection
-  - `ShipThemeManager.instance()` called in `_refresh_ship_preview()` (race_setup_screen.py:404)
-  - `ShipThemeManager.instance()` called in `_get_ship_image()` (fleet_report_window.py:735)
-  - `StrategyMetadataService.instance()` in `ship_stats_renderer.py:243`
-- **Impact:** Harder to test, violates DI principle from CLAUDE.md
-- **Recommendation:** Pass theme_manager as constructor parameter
-- **Effort:** Medium
-
----
-
-## Phase 5: Per-Module Internal Consistency
-
-### 5.1 builder/ Subdirectory
-
-#### INFO: Well-Organized Module Structure
-- **ID:** MOD-001
-- **Location:** `game/ui/screens/builder/`
-- **Issue:** None - positive finding
-- **Impact:** Good separation of concerns with `EventBus`, `StateManager`, component panels
-- **Recommendation:** Use as reference for other complex UI modules
-- **Effort:** N/A
-
-### 5.2 test_lab/ Subdirectory
-
-#### MINOR: Mixed Responsibility in screen.py
-- **ID:** MOD-002
-- **Location:** `game/ui/screens/test_lab/screen.py`
-- **Issue:** Main screen file handles too many responsibilities despite helper modules
-- **Impact:** Large file size (~1900 lines)
-- **Recommendation:** Further decomposition following the builder/ pattern
-- **Effort:** High
-
-### 5.3 panels/ Directory
+#### MINOR: Missing Module Docstrings
+**ID:** CON-UI1-012
+**Location:** `game/ui/screens/builder/components.py`, several other files
+**Issue:** Some files lack module-level docstrings. Most files have good docstrings with project references (PROJ-12, PROJ-43, PROJ-86, etc.)
+**Impact:** Reduced discoverability and context.
+**Recommendation:** Add module docstrings to files missing them.
+**Effort:** Simple
 
 #### MINOR: Inconsistent Panel Base Class Usage
-- **ID:** MOD-003
-- **Location:** `game/ui/panels/`
-- **Issue:** Mix of inheritance patterns
-  - `BattlePanel` is a custom base class for battle UI
-  - `BaseGallery` is an ABC for gallery panels
-  - Other panels like `RaceEnvironmentPanel` are standalone classes
-- **Impact:** Inconsistent API surface
-- **Recommendation:** Document which panels should inherit from base classes
-- **Effort:** Low
+**ID:** CON-UI1-013
+**Location:** `game/ui/panels/`
+**Issue:** Mix of inheritance patterns:
+- `BattlePanel` is a custom base class for battle UI
+- `BaseGallery` is an ABC for gallery panels
+- Other panels like `RaceEnvironmentPanel` are standalone classes
+**Impact:** Inconsistent API surface across panels.
+**Recommendation:** Document which panels should inherit from base classes and when.
+**Effort:** Simple (documentation)
 
-### 5.4 Error Handling Patterns
+#### MINOR: Mixed Responsibility in test_lab Subdirectory
+**ID:** CON-UI1-014
+**Location:** `game/ui/screens/test_lab/screen.py`
+**Issue:** Main screen file handles too many responsibilities despite having helper modules. Related to CON-UI1-002.
+**Impact:** Large file size (~1900 lines), harder to navigate.
+**Recommendation:** Further decomposition following the builder/ pattern which is well-organized.
+**Effort:** Complex
 
-**Dominant Pattern:** Use `log_debug`, `log_warning`, `log_error` from `game.core.logger`
+#### INFO: Good Pattern Adoption - Facade/Delegate Pattern
+**ID:** CON-UI1-015
+**Location:** `strategy_ui.py`, `strategy_event_router.py`, `strategy_window_manager.py`
+**Issue:** None - this is a positive finding showing successful god class decomposition (PROJ-86 pattern).
+**Impact:** Good maintainability achieved for strategy module.
+**Recommendation:** Continue applying this pattern to other large screens (test_lab, workshop).
+**Effort:** N/A
 
-#### MINOR: Inconsistent Error Logging
-- **ID:** MOD-004
-- **Location:** Multiple files
-- **Issue:** Some files use print statements or no logging
-  - Most files properly use `log_debug`, `log_info`, `log_warning`, `log_error`
-  - `builder/event_bus.py` correctly uses `log_error` for exception handling
-- **Impact:** Potential debugging difficulties
-- **Recommendation:** Audit all files for proper logging usage
-- **Effort:** Low
+#### INFO: Consistent Callback Naming Pattern
+**ID:** CON-UI1-016
+**Location:** All panel and screen constructors
+**Issue:** None - callback parameter naming is consistent: `on_*_callback` pattern used throughout.
+- `on_select_callback` in `BaseGallery`
+- `on_close_callback` in `FleetReportWindow`
+- `on_complete_callback` in `RaceSetupScreen`
+**Impact:** Good consistency.
+**Recommendation:** Maintain current convention.
+**Effort:** N/A
+
+#### INFO: Good Class Naming Suffix Consistency
+**ID:** CON-UI1-017
+**Location:** All UI files
+**Issue:** None - class naming suffixes are highly consistent:
+- Screens: `*Screen` (BattleScreen, StrategyScreen)
+- Windows: `*Window` (FleetReportWindow, EmpireBuildQueueWindow)
+- Panels: `*Panel` (ShipDetailPanel, PlanetReportPanel)
+- Renderers: `*Renderer` (StrategyRenderer)
+- Handlers: `*Handler` (StrategyInputHandler)
+**Impact:** Good discoverability and organization.
+**Recommendation:** Maintain current convention.
+**Effort:** N/A
+
+#### INFO: Well-Organized builder/ Module Structure
+**ID:** CON-UI1-018
+**Location:** `game/ui/screens/builder/`
+**Issue:** None - positive finding. Good separation with `EventBus`, `StateManager`, component panels.
+**Impact:** Good maintainability.
+**Recommendation:** Use as reference for other complex UI modules.
+**Effort:** N/A
+
+#### INFO: Consistent Logging Pattern
+**ID:** CON-UI1-019
+**Location:** 53 files across screens/ and panels/
+**Issue:** None - logging uses centralized `log_debug`, `log_info`, `log_warning`, `log_error` from `game.core.logger` consistently.
+**Impact:** Good debugging capability.
+**Recommendation:** Maintain current convention.
+**Effort:** N/A
 
 ---
 
-## Summary of Recommended Actions
+## Top 5 Priority Issues
 
-### High Priority (MAJOR)
-1. **SP-001**: Standardize constructor parameter ordering across panels and screens
-2. **PP-002**: Decompose test_lab/screen.py following PROJ-86 pattern
-3. **PP-006**: Replace singleton access with dependency injection
+1. **CON-UI1-003: Direct Singleton Access** - Violates DI principle from CLAUDE.md. Medium effort to fix by passing dependencies through constructors. Should be addressed during normal maintenance.
 
-### Medium Priority (MINOR)
-4. **NC-002**: Document event handler naming conventions
-5. **SP-002**: Standardize UI manager attribute names
-6. **API-002**: Standardize event handler return types
-7. **PP-003**: Add type hints to older files
-8. **PP-005**: Add `from __future__ import annotations` consistently
+2. **CON-UI1-001: Inconsistent Constructor Parameter Ordering** - High cognitive overhead when creating instances. Complex effort but can be done incrementally. Consider establishing a documented standard.
 
-### Low Priority (INFO/MINOR)
-9. **PP-004**: Add missing module docstrings
-10. **MOD-003**: Document panel base class usage patterns
-11. **MOD-004**: Audit logging consistency
+3. **CON-UI1-002: Incomplete God Class Decomposition (test_lab)** - 1900-line file is hard to maintain. Complex effort but would significantly improve maintainability. Apply PROJ-86 pattern.
+
+4. **CON-UI1-004: Mixed Event Handler Naming** - Document the intentional split between `handle_event` (IScene) and `process_event` (UIWindow) to clarify for future developers.
+
+5. **CON-UI1-005: Inconsistent Return Type Annotations** - Add type annotations to `handle_event` methods across all implementations for better static analysis.
+
+---
+
+## Positive Patterns Observed
+
+- **Class naming suffixes** are highly consistent (Panel, Screen, Window, Handler, Renderer)
+- **Callback parameter naming** consistently uses `on_*_callback` pattern
+- **Logging** uses centralized log_* functions from game.core.logger
+- **Facade/Delegate pattern** successfully applied to strategy module (PROJ-86)
+- **BaseGallery abstraction** provides good reuse for asset selection galleries
+- **Event routing separation** well-implemented in strategy screens
+- **Boolean naming** consistently uses is_/has_/can_/show_ prefixes
+- **Method verb prefixes** are consistent (get_, load_, _handle_, _update_)
 
 ---
 
@@ -341,15 +232,15 @@ This report analyzes consistency violations across the UI screens and panels mod
 
 The UI modules show generally good consistency with the project's established patterns. The main areas for improvement are:
 
-1. **Constructor parameter ordering** varies significantly and should be standardized
-2. **God class decomposition** has been applied well to strategy screens (PROJ-86) but test_lab still needs work
-3. **Dependency injection** is partially applied - some singleton access remains
-4. **Type hints** are present in newer code but missing from older files
+1. **Dependency Injection** - Some singleton access violates project DI conventions
+2. **Constructor parameter ordering** - Varies significantly and should be standardized
+3. **God class decomposition** - Applied well to strategy screens but test_lab still needs work
+4. **Type hints** - Present in newer code but missing from older files
 
-The codebase demonstrates good adoption of:
+The codebase demonstrates excellent adoption of:
 - Facade/Delegate pattern for complex screens
 - BaseGallery abstraction for asset selection
-- Event routing separation (StrategyEventRouter, etc.)
-- Consistent callback patterns
+- Event routing separation
+- Consistent callback and naming patterns
 
-Overall code quality is high, with most violations being MINOR consistency issues rather than CRITICAL problems.
+Overall code quality is high, with most violations being MINOR consistency issues rather than CRITICAL problems. The identified MAJOR issues are well-scoped and can be addressed incrementally during normal maintenance work.

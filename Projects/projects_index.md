@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-131 | test-coverage-strategy-ui | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-130 | test-coverage-core-systems | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-129 | legacy-system-cleanup | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-128 | codebase-consistency | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-127 | code-duplication-reduction | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-126 | architecture-layer-fixes | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-125 | PROJ-F_code-consistency | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-124 | PROJ-E_ui-test-coverage | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-123 | PROJ-D_architecture-cleanup | Planning | 2026-02-13 | 2026-02-13 |
@@ -222,7 +228,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-126
+## Next Project ID: PROJ-132
 
 ---
 

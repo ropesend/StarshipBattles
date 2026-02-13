@@ -2,7 +2,7 @@
 
 ## Summary
 - **Shard:** UI-Framework
-- **Files Scanned:** 21
+- **Files Scanned:** 22
 - **Total Issues Found:** 5
 - **Critical:** 0 | **Major:** 2 | **Minor:** 2 | **Info:** 1
 
@@ -52,13 +52,38 @@
 
 ### Phase 1: Import Graph Analysis
 
-All 21 files were scanned for imports. The UI layer correctly uses:
+All 22 files were scanned for imports. The UI layer correctly uses:
 - `game.core.*` imports - VALID (Core depends on nothing)
 - `game.simulation.*` imports - VALID (UI can depend on Simulation)
 - `game.ai.*` imports - VALID (UI can depend on AI)
 - `game.engine.*` imports - VALID (UI can depend on Engine)
 
 No violations of the layer hierarchy were found. All imports follow the allowed dependency directions.
+
+**Import Summary by File:**
+
+| File | Core Imports | Simulation Imports | AI Imports | Pygame |
+|------|-------------|-------------------|------------|--------|
+| ui/__init__.py | - | - | - | - |
+| ui/utils.py | - | - | - | Yes |
+| ui/config.py | - | - | - | - |
+| ui/colors.py | - | - | - | - |
+| ui/services/validation_service.py | LayerType (TYPE_CHECKING) | ship_loader | - | - |
+| ui/services/vehicle_class_service.py | IRegistryProvider | - | - | - |
+| ui/services/component_service.py | registry, protocols | - | - | - |
+| ui/services/ship_factory.py | registry (lazy) | Ship (lazy) | - | Yes |
+| ui/services/design_loader_adapter.py | registry | design_loader | - | - |
+| ui/services/ship_io_adapter.py | - | - | - | - |
+| ui/services/battle_ui_service.py | math, constants | BattleService (TYPE_CHECKING) | - | - |
+| ui/services/screenshot_manager.py | constants, paths, logger, singleton | - | - | Yes |
+| ui/services/ship_io.py | math, json_utils, logger | Ship | - | - |
+| ui/services/input_mapper.py | input_actions, json_utils, logger, paths | - | - | Yes |
+| ui/renderer/camera.py | - | - | - | Yes |
+| ui/renderer/sprites.py | logger, singleton | - | - | Yes |
+| ui/renderer/game_renderer.py | constants | - | - | Yes |
+| ui/interfaces/battle_ui.py | math | - | - | - |
+| ui/orchestration/battle_orchestrator.py | - | Ship (TYPE_CHECKING) | controller, interfaces | - |
+| ui/assets/ship_theme_manager.py | logger, json_utils, profiling, paths, singleton | - | - | Yes |
 
 ### Phase 2: Pygame Boundary Violations
 
@@ -76,19 +101,34 @@ This is the expected location for pygame usage. No pygame imports found outside 
 
 No circular dependencies detected in this shard. The UI layer imports from lower layers without any back-references.
 
+TYPE_CHECKING blocks are used correctly in:
+- `validation_service.py` - LayerType from core
+- `ship_factory.py` - Ship, GameRegistries from simulation/core
+- `battle_ui_service.py` - BattleService, Ship from simulation
+- `battle_orchestrator.py` - Ship from simulation
+
+These are for type hints only and do not indicate circular dependency issues.
+
 ### Phase 4: God Classes and Inappropriate Intimacy
 
-One potential god class identified (ShipThemeManager). Other classes are well-focused:
-- Services (validation, component, vehicle_class) are single-purpose facades
-- BattleUIService correctly converts domain objects to DTOs
-- Camera and rendering utilities are cohesive
+One potential god class identified (ShipThemeManager, 314 lines). Other classes are well-focused:
+
+| Class | Lines | Methods | Assessment |
+|-------|-------|---------|------------|
+| ShipThemeManager | 314 | 15 | Approaching god-class |
+| InputMapper | 379 | 14 | Acceptable - cohesive |
+| BattleUIService | 294 | 11 | Clean - DTO conversion |
+| Camera | 156 | 8 | Clean - single purpose |
+| ScreenshotManager | 180 | 4 | Clean - single purpose |
+| ShipFactory | 189 | 6 | Clean - factory pattern |
 
 ### Phase 5: Data Flow Violations
 
 No data flow violations detected:
 - DTOs in battle_ui.py correctly separate UI concerns from simulation
-- Colors defined in PROJECTILE_COLORS are UI-specific (correct layer)
+- Colors defined in PROJECTILE_COLORS (battle_ui_service.py:31-36) are UI-specific (correct layer)
 - No screen coordinates flowing into non-UI logic
+- config.py properly contains UI-only layout constants
 
 ### Phase 6: Dependency Direction Violations
 
@@ -96,6 +136,7 @@ No dependency direction violations:
 - No lower-layer code registering UI callbacks
 - No simulation code handling UI exceptions
 - Services correctly wrap simulation layer functionality
+- BattleOrchestrator is documented intentional cross-layer coordinator
 
 ## Top 5 Priority Issues
 

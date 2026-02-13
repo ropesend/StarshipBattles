@@ -2,153 +2,170 @@
 
 ## Summary
 - **Shard:** Simulation
-- **Files Scanned:** 71
-- **Total Issues Found:** 9
-- **Critical:** 1 | **Major:** 3 | **Minor:** 4 | **Info:** 1
+- **Files Scanned:** 70
+- **Sweep Cycle:** 2 (Verification of Cycle 1 findings)
+- **Date:** 2026-02-13
+- **Total Issues Found:** 4
+- **Critical:** 0 | **Major:** 0 | **Minor:** 3 | **Info:** 1
 
-## Findings
+## Status of Previous Findings (Cycle 1)
 
-#### CRITICAL: String-to-Enum Migration Support Code in BattleEngine
-**ID:** LEG-SIM-001
-**Location:** `game/simulation/systems/battle_engine.py:416-422`
-**Issue:** The battle engine contains migration support code that converts string attack types to Enum values. Comment explicitly states this is "migration support". The code path handles the case where `raw_type` is a string and converts it to `AttackType(raw_type)`.
-**Impact:** This backward compatibility layer suggests some code path is still passing string attack types instead of using the proper `AttackType` enum. This creates confusion about which format is authoritative and adds unnecessary runtime overhead.
-**Code:**
-```python
-# Map string types to Enum if necessary (migration support)
-attack_type = raw_type
-if isinstance(raw_type, str):
-     try:
-         attack_type = AttackType(raw_type)
-     except ValueError:
-         pass # Unknown type string, keep as is
-```
-**Recommendation:** Trace all attack creation paths and ensure they use `AttackType` enum directly. Remove this migration support code once all call sites are updated.
-**Effort:** Medium
+### RESOLVED Issues
+
+#### LEG-SIM-001 (was CRITICAL): String-to-Enum Migration Support Code
+**Status:** RESOLVED
+**Evidence:** Grep search for "migration support" and "isinstance(raw_type, str)" returns no matches.
+The string-to-enum migration support code has been removed from `battle_engine.py`.
 
 ---
 
-#### MAJOR: V1 Modifier Format Validation Code Still Present
-**ID:** LEG-SIM-002
-**Location:** `game/simulation/components/modifier_schema.py:47-49`
-**Issue:** The `is_v2_format()` function explicitly checks for and rejects V1 format modifiers. Per the docstring, "V1 format (dict-based effects with 'special' handlers) is no longer supported." However, the code still contains logic to detect V1 format:
+#### LEG-SIM-002 (was MAJOR): V1 Modifier Format Validation Code
+**Status:** RESOLVED - Correctly Implemented
+**Evidence:** The `modifier_schema.py` file (lines 46-52) now raises an explicit ValueError when V1 format is detected:
 ```python
-# V1 format: effects is a dict (with 'special' or direct stats)
 if isinstance(effects, dict):
-    return False
+    mod_id = modifier.get('id', 'unknown')
+    raise ValueError(
+        f"Modifier '{mod_id}' uses deprecated V1 format (dict-based effects). "
+        f"V1 format is no longer supported. Convert to V2 array format."
+    )
 ```
-**Impact:** If V1 format is truly no longer supported, this detection code is dead code. If it's being used for validation errors, the function should raise an exception rather than silently returning False.
-**Recommendation:** Since V1 is deprecated, either: (1) Remove V1 detection entirely and assume all inputs are V2, or (2) Raise a clear exception when V1 format is detected to surface any remaining V1 data files.
-**Effort:** Simple
+This is the correct behavior - the code no longer silently returns False but raises a clear exception to surface any V1 data files.
 
 ---
 
-#### MAJOR: Defensive hasattr Check for Always-Present Attribute
-**ID:** LEG-SIM-003
-**Location:** `game/simulation/systems/battle_engine.py:407`
-**Issue:** The code `if hasattr(s, 'just_fired_projectiles') and s.just_fired_projectiles:` performs a hasattr check on an attribute that is always initialized in `Ship.__init__` (line 158: `self.just_fired_projectiles: List[Any] = []`).
-**Impact:** This defensive pattern suggests uncertainty about whether the attribute exists, which could indicate: (1) incomplete migration from an older API, (2) defensive coding for non-Ship entities, or (3) unnecessary caution. It adds minor runtime overhead and reduces code clarity.
-**Recommendation:** If all objects in `self.ships` are guaranteed to be `Ship` instances, remove the hasattr check. If non-Ship entities are possible, add type hints and explicit checks.
-**Effort:** Simple
-
----
-
-#### MAJOR: retreat_status Attribute Accessed via hasattr Pattern
-**ID:** LEG-SIM-004
-**Location:** `game/simulation/managers/retreat_manager.py:170-171`, `game/simulation/battle_state.py:317`
-**Issue:** Multiple places check `if hasattr(ship, 'retreat_status'):` before accessing the attribute. This suggests `retreat_status` is not a standard attribute on the Ship class, which creates inconsistency.
-**Code:**
+#### LEG-SIM-003 (was MAJOR): Defensive hasattr Check for just_fired_projectiles
+**Status:** RESOLVED
+**Evidence:** Grep search for "hasattr.*just_fired_projectiles" returns no matches.
+Line 407 of `battle_engine.py` now directly accesses `s.just_fired_projectiles` without hasattr check:
 ```python
-# retreat_manager.py:170
-if hasattr(ship, 'retreat_status'):
-    ship.retreat_status = "escaped"
-
-# battle_state.py:317
-if hasattr(ship, 'retreat_status'):
+if s.just_fired_projectiles:
+    new_attacks.extend(s.just_fired_projectiles)
 ```
-**Impact:** Optional attributes accessed via hasattr create implicit contracts that are hard to maintain. Either all ships should have this attribute (add to Ship.__init__), or a separate retreat state tracking system should be used.
-**Recommendation:** Add `retreat_status` as a formal attribute on Ship with a default value (e.g., `None` or `"active"`), then remove hasattr checks.
-**Effort:** Simple
 
 ---
 
-#### MINOR: Fallback Pattern Comment Suggesting Incomplete DI Migration
-**ID:** LEG-SIM-005
-**Location:** `game/simulation/entities/ship.py:340, 345, 395`
-**Issue:** Multiple comments in Ship class reference "fallback" patterns:
-- Line 340: `# PROJ-42: Use registries (always set via fallback in __init__)`
-- Line 345: `# Fallback if no layers defined in vehicle class`
-- Line 395: `# Fallback if no mass limits defined`
-These suggest defensive coding for edge cases that may no longer occur now that strict DI is enforced (per PROJ-50).
-**Impact:** These fallbacks may be dead code paths if strict DI ensures registries are always provided with complete data.
-**Recommendation:** Review whether these fallback paths are ever executed in production. If not, consider raising exceptions instead to surface data configuration issues early.
-**Effort:** Simple
+#### LEG-SIM-004 (was MAJOR): retreat_status hasattr Pattern
+**Status:** RESOLVED
+**Evidence:**
+1. `retreat_status` is now a formal attribute on Ship class (line 140): `self.retreat_status: Optional[str] = None`
+2. Grep for "hasattr.*retreat_status" returns no matches - all hasattr checks have been removed
+3. Direct attribute access is now used throughout
 
 ---
 
-#### MINOR: Ability Manager Fallback for Module Identity Drift
+### REMAINING Issues
+
+#### MINOR: Module Identity Drift Fallback in AbilityManager
 **ID:** LEG-SIM-006
-**Location:** `game/simulation/components/ability_manager.py:57`
-**Issue:** Code comment reads `# [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.` This indicates a workaround for a testing infrastructure issue rather than production code.
-**Impact:** Test-specific workarounds in production code reduce clarity and may mask real issues. This suggests the test infrastructure could be improved.
-**Recommendation:** Investigate the Module Identity Drift issue in tests and fix the root cause. Then remove this fallback from production code.
+**Location:** `game/simulation/components/ability_manager.py:57-65`
+**Issue:** Code contains a fallback for "Module Identity Drift in tests":
+```python
+# [KNOWN_ISSUE] Fallback for Module Identity Drift in tests.
+# When test modules reload ability classes, isinstance() fails due to
+# different class objects. This __name__ check provides test isolation.
+# Ref: Phase 2 Task 2.5 audit - documented as intentional tech debt.
+else:
+    for cls in ab.__class__.mro():
+        if cls.__name__ == ability_name:
+            found.append(ab)
+            break
+```
+**Status:** Still present, documented as intentional tech debt
+**Impact:** Test-specific workaround in production code reduces clarity
+**Recommendation:** Track in backlog for future test infrastructure improvement
 **Effort:** Medium
 
 ---
 
-#### MINOR: Component Fallback Delegation Pattern
+#### MINOR: Component Ability Index Fallback Pattern
 **ID:** LEG-SIM-007
-**Location:** `game/simulation/components/component.py:200-222`
-**Issue:** Three methods (`get_ability`, `get_ability_value`, `get_ability_state`) have nearly identical structure with "fallback" delegation to AbilityManager:
+**Location:** `game/simulation/components/component.py:199-223`
+**Issue:** Three methods use hasattr pattern with fallback:
 ```python
+if hasattr(self, '_ability_index') and ability_name in self._ability_index:
+    return list(self._ability_index[ability_name])
 # Fallback: delegate to AbilityManager (for edge cases)
+return AbilityManager.get_abilities(ability_name, self.ability_instances)
 ```
-This pattern is repeated three times, suggesting the `_ability_index` optimization may not be complete or the fallback is unnecessary.
-**Impact:** If `_ability_index` is always properly populated, these fallbacks are dead code. If not, the index population logic has a bug.
-**Recommendation:** Verify that `_ability_index` is always populated correctly. If so, convert fallbacks to assertions or remove them.
+**Status:** Still present
+**Impact:** If `_ability_index` is always populated, fallbacks are dead code
+**Recommendation:** Verify `_ability_index` is always set; convert fallbacks to assertions
 **Effort:** Simple
 
 ---
 
-#### MINOR: Unused AbilityStatBinding.describe() Method
-**ID:** LEG-SIM-008
-**Location:** `game/simulation/components/abilities/stat_keys.py:170-177`
-**Issue:** The `AbilityStatBinding.describe()` method is defined but grep found no callers in the codebase. This appears to be dead code.
-**Code:**
+#### MINOR: Duplicate Exception Handling in design_loader.py
+**ID:** LEG-SIM-NEW-001
+**Location:** `game/simulation/services/design_loader.py:118-133`
+**Issue:** The final except clause catches exceptions already caught by earlier clauses:
 ```python
-def describe(self) -> str:
-    """Return a human-readable description of this binding."""
-    op_desc = {
-        'multiply': 'multiplied by',
-        'add': 'increased by',
-        'set': 'set to',
-    }
-    return f"{self.attribute_name} is {op_desc[self.operation]} {self.stat_key.value}"
+    except json.JSONDecodeError as e:  # Line 118
+        ...
+    except (KeyError, TypeError, ValueError) as e:  # Line 122
+        ...
+    except OSError as e:  # Line 126
+        ...
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:  # Line 130 - DEAD CODE
+        ...
 ```
-**Impact:** Minor dead code. The method was likely added for debugging/introspection but never integrated into the UI or logging.
-**Recommendation:** Either integrate this into the modifier introspection system or remove it.
+Line 130-133 catches the same exceptions as lines 118-128 and will never execute.
+**Impact:** Dead code, minor code smell
+**Recommendation:** Remove the duplicate exception handling block
 **Effort:** Simple
 
 ---
 
-#### INFO: TechPresetLoader Used Only in Tests
+#### INFO: TechPresetLoader Only Used in Tests
 **ID:** LEG-SIM-009
 **Location:** `game/simulation/systems/tech_preset_loader.py`
-**Issue:** The `TechPresetLoader` class is defined in the simulation layer but grep shows it's only used in test files and documentation. It was designed for "standalone workshop mode" but may not be actively used in production.
-**Impact:** The class is well-tested and documented, so this is not a problem. However, it may be a candidate for moving to a test utilities package if it's truly only used for testing.
-**Recommendation:** No action required. If this is actively used in standalone workshop mode, add a usage reference. If not, consider marking as test-only utility.
-**Effort:** N/A
+**Issue:** Well-documented utility class for standalone workshop mode; usage may be limited to tests.
+**Status:** Still present, no action needed
+**Recommendation:** Document intended use case if actively used in production standalone mode
+
+---
+
+## False Positive Clarifications
+
+#### AbilityStatBinding.describe() - NOT Dead Code
+**Location:** `game/simulation/components/abilities/stat_keys.py:170-177`
+**Previous Concern:** Was flagged as potentially unused
+**Clarification:** Grep shows `.describe()` is actively called in:
+- `modifier_introspection.py:72` - `effects_preview.append(effect.describe())`
+- `modifier_introspection.py:142` - `effect_descriptions = [e.describe() for e in effects]`
+- `modifier_introspection.py:229` - `effect_line = f"  * {effect.describe()}"`
+- `modifier_effects.py:93` - `'description': self.describe()`
+
+This method IS used and should NOT be removed.
 
 ---
 
 ## Top 5 Priority Issues
 
-1. **LEG-SIM-001 (CRITICAL):** String-to-Enum migration support in BattleEngine - This is an active backward compatibility layer that should be removed once all attack creation paths use AttackType enum directly.
+1. **LEG-SIM-NEW-001 (MINOR):** Duplicate exception handling in design_loader.py - Simple cleanup, dead code removal.
 
-2. **LEG-SIM-004 (MAJOR):** retreat_status hasattr pattern - This creates an implicit contract that's hard to maintain. Adding retreat_status as a formal Ship attribute would improve code clarity.
+2. **LEG-SIM-007 (MINOR):** Component ability index fallback pattern - Verify if fallbacks are needed.
 
-3. **LEG-SIM-002 (MAJOR):** V1 Modifier Format detection code - If V1 is truly deprecated, this should either be removed or converted to raise exceptions when V1 format is encountered.
+3. **LEG-SIM-006 (MINOR):** Module Identity Drift workaround - Documented tech debt, track in backlog.
 
-4. **LEG-SIM-003 (MAJOR):** just_fired_projectiles hasattr check - Unnecessary defensive code for an always-present attribute.
+4. (Resolved) All previous CRITICAL/MAJOR issues have been addressed.
 
-5. **LEG-SIM-006 (MINOR):** Module Identity Drift workaround - Test infrastructure issue leaking into production code should be addressed at the root.
+5. (Resolved) Migration patterns are complete.
+
+---
+
+## Conclusion
+
+**Cycle 2 Assessment:** The `game/simulation/` directory is in excellent condition.
+
+Key improvements since Cycle 1:
+- String-to-Enum migration code removed (CRITICAL resolved)
+- retreat_status added as formal Ship attribute (MAJOR resolved)
+- hasattr defensive patterns removed (MAJOR resolved)
+- V1 modifier rejection now raises exceptions (MAJOR resolved)
+
+Remaining items are MINOR issues with low impact:
+- One piece of dead code (duplicate exception handling)
+- Two documented fallback patterns for edge cases/tests
+
+The codebase demonstrates clean migration practices with proper error handling for deprecated formats.

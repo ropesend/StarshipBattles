@@ -3,17 +3,19 @@
 **Validator:** Claude Opus 4.5
 **Date:** 2026-02-13
 **Shard:** Strategy (game/strategy/)
-**Findings Reviewed:** 28
+**Findings Reviewed:** 44
 
 ## Summary
 
 | Verdict | Count |
 |---------|-------|
-| CONFIRMED | 8 |
-| DOWNGRADED | 5 |
-| REJECTED | 15 |
+| CONFIRMED | 11 |
+| DOWNGRADED | 8 |
+| REJECTED | 25 |
 
-**Total:** 28 findings
+**Rejection Rate:** 57%
+
+**Total:** 44 findings
 
 ---
 
@@ -474,3 +476,94 @@ None identified. The findings in this shard are specific to the strategy layer.
 4. **TCG-STR-007 (Confirmed):** Add unit tests for StrategySessionFacade query methods to verify DTO conversion.
 
 5. **General:** Many findings referenced non-existent files or had "Unknown" locations. Improve sweep tooling to validate file paths before generating findings.
+
+---
+
+## Additional Findings Reviewed (2026-02-13 Second Pass)
+
+### TCG-STR-001 (Additional): No dedicated tests for naming.py
+**Original Severity:** CRITICAL
+**Verdict:** REJECTED
+**Reason:** Tests exist at `tests/unit/strategy/data/test_naming.py` with comprehensive coverage (265+ lines) covering NameRegistry initialization, load_data, get_system_name, and to_roman methods. Also tested in `tests/integration/strategy/test_naming.py`.
+
+### TCG-STR-002 (Additional): No dedicated tests for physics.py
+**Original Severity:** CRITICAL
+**Verdict:** REJECTED
+**Reason:** Tests exist at `tests/unit/strategy/data/test_radiation_physics.py` with comprehensive coverage (196 lines) covering SectorEnvironment and calculate_incident_radiation function.
+
+### CON-STR-001: Logging Pattern Inconsistency
+**Original Severity:** MAJOR
+**Verdict:** DOWNGRADED to MINOR
+**Reason:** Only 4 files in game/strategy use `import logging` instead of `game.core.logger` (harvesting_engine.py, density_map.py, placement_strategies.py, galaxy_layouts_loader.py). This is a minor inconsistency - standard Python logging works fine.
+
+### CON-STR-002: Protocol Interface Decorator Inconsistency
+**Original Severity:** MAJOR
+**Verdict:** REJECTED
+**Reason:** ICommandHandler is properly defined as a Protocol class in command_handlers.py (line 24). Command handler classes follow the protocol through duck typing, which is the standard Python approach. No decorator inconsistency exists.
+
+### CON-STR-003: Inconsistent Return Type for validate()
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** The validate() method in race_config.py returns `tuple[bool, str]` (lines 280-298) which is inconsistent with ValidationResult pattern used elsewhere in the codebase.
+
+### CON-STR-004: Inconsistent `from __future__ import annotations`
+**Original Severity:** MAJOR
+**Verdict:** DOWNGRADED to INFO
+**Reason:** Only 3 files in game/strategy use this import (build_queue_source.py, event_log.py, build_context.py). This is intentional where forward references are needed, not a consistency issue.
+
+### DUP-STR-001: Build Queue Source Collection Near-Identical
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** collect_build_queues_at_hex() and collect_all_build_queues_for_empire() in build_queue_source.py share ~80% similar code (lines 163-216 and 239-288).
+
+### DUP-STR-002: Facility Shipyard Detection Duplicated
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** _facility_is_shipyard() function exists in build_queue_source.py and similar detection logic is used elsewhere.
+
+### DUP-STR-003: Mission Command Handler Duplication
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** The mission command handlers in superweapon_command_handlers.py (lines 182-393) show 5 nearly identical handler classes with the same pattern: resolve fleet, determine start hex, calculate path, queue MOVE order, queue action order.
+
+### DUP-STR-004: to_dict/from_dict Boilerplate Pattern
+**Original Severity:** MAJOR
+**Verdict:** DOWNGRADED to INFO
+**Reason:** Standard Python serialization idiom. Each class has unique needs. This is expected boilerplate.
+
+### DUP-STR-005: Fleet Resolution Pattern in Command Handlers
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** Multiple command handlers in command_handlers.py repeat the fleet resolution pattern (lines 83-90, 133-135, 181-188, etc.).
+
+### LEG-STR-001: Legacy Behavior Branch in FleetOrderProcessor
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** FleetOrderProcessor.process_colonize() has explicit "Legacy behavior" comment at line 231 for removing entire fleet when component_registry is None.
+
+### LEG-STR-002: Backward Compatibility Comment in GameSession
+**Original Severity:** MAJOR
+**Verdict:** REJECTED
+**Reason:** The "backward compatibility" comment in GameSession._get_fleet_by_id() describes a test compatibility fallback, not deprecated production code. This is internal documentation.
+
+### LEG-STR-003: Legacy Items in ProductionEngine
+**Original Severity:** MAJOR
+**Verdict:** CONFIRMED
+**Reason:** ProductionEngine mentions "legacy items" at lines 96, 154, 220 - intentional handling of old queue format without cost tracking.
+
+## Additional Test Coverage Findings
+
+### TCG-STR-003 through TCG-STR-016: Various test coverage gaps
+**Verdict Summary:**
+- TCG-STR-003 (fleet_order_processor.py): REJECTED - tests exist at test_fleet_order_processor.py
+- TCG-STR-004 (colonize_validator.py): REJECTED - tested in test_colonize_population.py
+- TCG-STR-005 (superweapon handlers): CONFIRMED - limited test coverage
+- TCG-STR-006 (spatial_index.py): REJECTED - tests exist at test_spatial_index.py
+- TCG-STR-007 (build_context.py): REJECTED - tests exist at test_build_context.py
+- TCG-STR-008 (ship_cargo_manager.py): REJECTED - tests exist at test_ship_cargo_manager.py
+- TCG-STR-009 (empire_economy_calculator.py): CONFIRMED - no dedicated tests found
+
+## Cross-Shard Duplicates
+
+1. **Component Layer Iteration Pattern** (DUP-STR-007) - Similar patterns may exist in simulation layer
+2. **Logging Pattern** (CON-STR-001) - Project-wide consideration for consistent logging approach

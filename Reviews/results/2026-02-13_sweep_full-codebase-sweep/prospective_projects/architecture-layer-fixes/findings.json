@@ -1,0 +1,205 @@
+[
+  {
+    "id": "ADR-SIM-001",
+    "severity": "Critical",
+    "title": "AI Layer Imports in Simulation Factory",
+    "location": "game/simulation/factories/ai_factory.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-001",
+    "severity": "Critical",
+    "title": "Test Framework Coupling in Production UI",
+    "location": "game/ui/screens/test_lab/screen.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-002",
+    "severity": "Critical",
+    "title": "Test Framework Import in Battle Screen",
+    "location": "game/ui/screens/battle_screen.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-SIM-002",
+    "severity": "Major",
+    "title": "TYPE_CHECKING Import of AI Controller",
+    "location": "game/simulation/systems/battle_engine.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-SIM-003",
+    "severity": "Major",
+    "title": "God Class - BattleController",
+    "location": "game/simulation/battle_controller.py",
+    "effort": "Complex"
+  },
+  {
+    "id": "ADR-SIM-004",
+    "severity": "Major",
+    "title": "God Class - Ship Entity",
+    "location": "game/simulation/entities/ship.py",
+    "effort": "Complex"
+  },
+  {
+    "id": "ADR-SIM-005",
+    "severity": "Major",
+    "title": "Documented Circular Import in Ship.add_component",
+    "location": "game/simulation/entities/ship.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI2-002",
+    "severity": "Major",
+    "title": "God Class Potential in ShipThemeManager",
+    "location": "game/ui/assets/ship_theme_manager.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-003",
+    "severity": "Major",
+    "title": "God Class - TestLabScreen (1908 lines, 75 methods)",
+    "location": "game/ui/screens/test_lab/screen.py",
+    "effort": "Complex"
+  },
+  {
+    "id": "ADR-UI1-004",
+    "severity": "Major",
+    "title": "God Class - StrategyScreen (811 lines, 45 methods)",
+    "location": "game/ui/screens/strategy_screen.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-005",
+    "severity": "Major",
+    "title": "God Class - BuilderMain (1121 lines, 44 methods)",
+    "location": "game/ui/screens/builder/main.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-006",
+    "severity": "Major",
+    "title": "God Class - BuildQueueScreen (1098 lines, 31 methods)",
+    "location": "game/ui/screens/build_queue_screen.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-007",
+    "severity": "Major",
+    "title": "Circular Dependency Workarounds (Late Imports)",
+    "location": "game/ui/screens/column_manager.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "ADR-UI1-008",
+    "severity": "Major",
+    "title": "Private Attribute Access - StrategyEventRouter",
+    "location": "game/ui/screens/strategy_event_router.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-009",
+    "severity": "Major",
+    "title": "Private Attribute Access - WorkshopEventRouter",
+    "location": "game/ui/screens/workshop_event_router.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-010",
+    "severity": "Major",
+    "title": "Direct ViewModel State Mutation",
+    "location": "game/ui/screens/workshop_screen.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-FND-003",
+    "severity": "Minor",
+    "title": "behaviors.py File Growing Large",
+    "location": "game/ai/behaviors.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-SIM-006",
+    "severity": "Minor",
+    "title": "Possible Circular Import Comment in ship_stats.py",
+    "location": "game/simulation/entities/ship_stats.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI2-003",
+    "severity": "Minor",
+    "title": "Lazy Import Pattern in ship_factory.py",
+    "location": "game/ui/services/ship_factory.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-011",
+    "severity": "Minor",
+    "title": "Simulation Layer TYPE_CHECKING Imports",
+    "location": "Multiple files",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-012",
+    "severity": "Minor",
+    "title": "Planet Filter Cached Attributes",
+    "location": "game/ui/screens/planet_list_filters.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-013",
+    "severity": "Minor",
+    "title": "Strategy Renderer Temporary Attributes",
+    "location": "game/ui/screens/strategy_renderer.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-014",
+    "severity": "Minor",
+    "title": "FleetCapabilityCalculator Private Method Access",
+    "location": "game/ui/screens/column_manager.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-015",
+    "severity": "Minor",
+    "title": "InputMapper Private Method Access",
+    "location": "game/ui/screens/keybindings_scene.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-SIM-007",
+    "severity": "Info",
+    "title": "Heavy Use of TYPE_CHECKING for Forward References",
+    "location": "Multiple files",
+    "effort": "N/A"
+  },
+  {
+    "id": "ADR-UI2-005",
+    "severity": "Info",
+    "title": "BattleOrchestrator Correctly Documents Concerns",
+    "location": "game/ui/orchestration/battle_orchestrator.py",
+    "effort": "N/A"
+  },
+  {
+    "id": "ADR-UI1-016",
+    "severity": "Info",
+    "title": "Test Lab Executor Private Field Access",
+    "location": "game/ui/screens/test_lab/test_executor.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-017",
+    "severity": "Info",
+    "title": "Deep Object Chain in StrategyUI",
+    "location": "game/ui/screens/strategy_ui.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "ADR-UI1-018",
+    "severity": "Info",
+    "title": "Large Method Counts in UI Screens",
+    "location": "Multiple screens",
+    "effort": "N/A"
+  }
+]

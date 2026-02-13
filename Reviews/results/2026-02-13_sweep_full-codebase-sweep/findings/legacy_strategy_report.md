@@ -1,191 +1,101 @@
-# Legacy Code Sweep Report: game/strategy/
+# Legacy System Holdovers Sweep: Strategy
 
-**Scope:** `game/strategy/` (all subdirectories)
-**Date:** 2026-02-13
-**Agent:** Sweep Agent (Legacy Holdovers)
-
----
-
-## Executive Summary
-
-Scanned 60+ Python files in `game/strategy/`. Found **2 MINOR** findings and **5 INFO** items. The strategy module is generally well-maintained with no critical or major legacy issues. Most "backward compatibility" mentions are intentional adapter patterns or save format requirements rather than obsolete code.
-
----
+## Summary
+- **Shard:** Strategy
+- **Files Scanned:** 89
+- **Total Issues Found:** 10
+- **Critical:** 0 | **Major:** 3 | **Minor:** 5 | **Info:** 2
 
 ## Findings
 
-### MINOR Issues
+#### MAJOR: Legacy Behavior Branch in FleetOrderProcessor.process_colonize
+**ID:** LEG-STR-001
+**Location:** `game/strategy/engine/fleet_order_processor.py:180,231`
+**Issue:** The `process_colonize` method has an explicit "legacy behavior" branch when `component_registry` is None that removes the entire fleet instead of just the colony ship.
+**Impact:** Code maintains two code paths - the modern one (remove only colony ship) and legacy one (remove entire fleet). The comment explicitly says "Legacy behavior: remove entire fleet".
+**Recommendation:** Audit all callers to ensure they always pass component_registry, then remove the legacy branch. If tests are the only callers without registry, update those tests.
+**Effort:** Medium
 
-#### MINOR: Save metadata duplicates turn_number field for compatibility
-**File:** `C:\Dev\Starship Battles\game\strategy\systems\save_game_service.py`
-**Lines:** 87-88
+#### MAJOR: Backward Compatibility Comment in GameSession._get_fleet_by_id
+**ID:** LEG-STR-002
+**Location:** `game/strategy/engine/game_session.py:210-227`
+**Issue:** Method has explicit "Falls back to O(n) empire iteration for backward compatibility with tests" comment. The fallback path duplicates lookup logic.
+**Impact:** Creates confusion about which path is authoritative. O(n) fallback may mask bugs in the O(1) path if tests only exercise the fallback.
+**Recommendation:** Update all tests to properly register fleets with Galaxy, remove the O(n) fallback.
+**Effort:** Medium
 
-```python
-'latest_turn_number': game_session.turn_number,
-'turn_number': game_session.turn_number,  # For compatibility
-```
+#### MAJOR: Legacy Items in ProductionEngine
+**ID:** LEG-STR-003
+**Location:** `game/strategy/engine/production_engine.py:96,154,220-221`
+**Issue:** Multiple code paths handle "legacy items without cost tracking" - items that lack the new `cost_per_tick` and `resources_consumed` fields from PROJ-75. Comments explicitly state "Legacy items without cost tracking - fall back to old behavior".
+**Impact:** Two code paths must be maintained - one for legacy queue items (turn-based decrement only) and one for new items (tick-based resource consumption).
+**Recommendation:** Verify no legacy queue items exist in current saves, remove legacy handling code paths.
+**Effort:** Medium
 
-**Impact:** Minor data redundancy. The comment suggests `turn_number` is kept for older code that may still read this field instead of `latest_turn_number`.
+#### MINOR: Backward Compatibility Comment in FleetNavigationService
+**ID:** LEG-STR-004
+**Location:** `game/strategy/services/fleet_navigation_service.py:410-411`
+**Issue:** Method `project_path_as_dicts` docstring explicitly states "for backward compatibility" as its purpose.
+**Impact:** Low - the method is thin wrapper returning dicts from PathSegment objects. The comment suggests this was meant to be temporary.
+**Recommendation:** Verify all callers can use `project_path()` directly with PathSegment objects, deprecate dict conversion.
+**Effort:** Simple
 
-**Recommendation:** Per CLAUDE.md "Save files are disposable", this compatibility field can be removed. Update any code reading `turn_number` to use `latest_turn_number` and remove the duplicate field.
+#### MINOR: Backward Compat Default in Planet.from_dict
+**ID:** LEG-STR-005
+**Location:** `game/strategy/data/planet.py:355`
+**Issue:** Comment explicitly states "default empty for backward compat" for deserializing populations list.
+**Impact:** Low - this is save file deserialization defensiveness, not runtime behavior. Old saves without populations field will work.
+**Recommendation:** Since project policy states "save files are disposable", this compat layer could be removed along with any old saves.
+**Effort:** Simple
 
----
+#### MINOR: Backward Compat Defaults in RaceConfig.from_dict
+**ID:** LEG-STR-006
+**Location:** `game/strategy/data/race_config.py:198`
+**Issue:** Method docstring explicitly mentions "backward-compatible defaults" for deserialization.
+**Impact:** Low - provides sensible defaults for missing fields during deserialization. Standard defensive coding for save file loading.
+**Recommendation:** This is acceptable defensive coding for configuration files. Mark as acceptable if race configs are user-editable content (not disposable saves).
+**Effort:** N/A (acceptable pattern for config files)
 
-#### MINOR: _get_fleet_by_id has O(n) fallback for backward compatibility
-**File:** `C:\Dev\Starship Battles\game\strategy\engine\game_session.py`
-**Lines:** 208-232
+#### MINOR: Old Layer Format Detection in DesignMetadata
+**ID:** LEG-STR-007
+**Location:** `game/strategy/data/design_metadata.py:176-178,221`
+**Issue:** Code detects and warns about "Old format" for layer data structure, then silently produces empty results for old formats.
+**Impact:** Old design files with incorrect layer format produce incorrect combat_power and resource_cost calculations with only a warning.
+**Recommendation:** If old format designs exist, either migrate them or fail loudly. Do not silently produce wrong data.
+**Effort:** Simple
 
-```python
-def _get_fleet_by_id(self, fleet_id: int):
-    """
-    Find fleet by ID, using Galaxy registry for O(1) lookup with fallback.
+#### MINOR: Save Compatibility Field in DesignMetadata
+**ID:** LEG-STR-008
+**Location:** `game/strategy/data/design_metadata.py:36-38`
+**Issue:** Comment states `sprite_preview` field "exists as a placeholder for save file compatibility".
+**Impact:** Low - unused field consuming space in metadata. Comment suggests it is kept for file format stability.
+**Recommendation:** Either implement the feature or remove the field. Per project policy, save files are disposable.
+**Effort:** Simple
 
-    PROJ-87 Phase 6: Tries galaxy.get_fleet_by_id() first for O(1) performance.
-    Falls back to O(n) empire iteration for backward compatibility with tests
-    that don't register fleets with the galaxy.
-    ...
-    """
-    # Try O(1) registry lookup first
-    fleet = self.galaxy.get_fleet_by_id(fleet_id)
-    if fleet is not None:
-        return fleet
+#### INFO: Test Mock Compatibility in FleetOrderProcessor
+**ID:** LEG-STR-009
+**Location:** `game/strategy/engine/fleet_order_processor.py:429,456-458`
+**Issue:** Code explicitly wrapped in try/except "for mock compatibility in tests" when calling fleet methods.
+**Impact:** Masks potential production bugs if these methods fail. Test mocks should properly implement the interface.
+**Recommendation:** Update test mocks to properly implement fleet cargo methods, remove try/except guards.
+**Effort:** Simple
 
-    # Fallback to O(n) iteration (for backward compatibility)
-    for emp in self.empires:
-        for f in emp.fleets:
-            if f.id == fleet_id:
-                return f
-    return None
-```
+#### INFO: Intercept Function Accepts Both Fleet and NavigationState
+**ID:** LEG-STR-010
+**Location:** `game/strategy/data/pathfinding.py:392`
+**Issue:** Comment states function "Supports both for backward compatibility and pure function usage" for accepting both Fleet and NavigationState.
+**Impact:** None - this is explicitly an adapter pattern comment (line 283-288 has detailed explanation that this is "intentional adapter pattern (not legacy compatibility)").
+**Recommendation:** No action needed - the code correctly identifies this as a proper adapter pattern, not legacy compatibility.
+**Effort:** N/A
 
-**Impact:** Performance fallback exists to support tests that don't properly register fleets. This is a known workaround for test infrastructure gaps.
+## Top 5 Priority Issues
 
-**Recommendation:** Fix test fixtures to properly register fleets with the galaxy, then remove the O(n) fallback. The comment explicitly states this is for "backward compatibility with tests" - not production code.
+1. **LEG-STR-001 (MAJOR):** FleetOrderProcessor has explicit "legacy behavior" branch removing entire fleet. Update callers to always pass component_registry, remove legacy path.
 
----
+2. **LEG-STR-002 (MAJOR):** GameSession._get_fleet_by_id has O(n) fallback "for backward compatibility with tests". Update tests to use proper fleet registration.
 
-### INFO Items (Not Requiring Action)
+3. **LEG-STR-003 (MAJOR):** ProductionEngine maintains dual code paths for legacy queue items without cost tracking fields. Verify no legacy items exist, remove old path.
 
-#### INFO: PlayerConfig backwards compatibility comment is valid serialization logic
-**File:** `C:\Dev\Starship Battles\game\strategy\engine\game_config.py`
-**Lines:** 82-88
+4. **LEG-STR-007 (MINOR):** DesignMetadata silently produces wrong calculations for old layer formats. Either migrate old files or fail loudly.
 
-```python
-# Only include race fields if set (backwards compatibility)
-if self.race_id:
-    data['race_id'] = self.race_id
-if self.flag_id:
-    data['flag_id'] = self.flag_id
-```
-
-**Assessment:** This is valid optional field serialization, not a compatibility shim. Race fields were added later and shouldn't be serialized when empty. No action needed.
-
----
-
-#### INFO: FleetOrderProcessor legacy behavior is intentional API design
-**File:** `C:\Dev\Starship Battles\game\strategy\engine\fleet_order_processor.py`
-**Lines:** 178-181, 230-232
-
-```python
-component_registry: Optional component registry for colony pod lookup.
-               When provided, only the colony ship is removed.
-               When None, entire fleet is removed (legacy behavior).
-...
-# Legacy behavior: remove entire fleet
-empire.remove_fleet(fleet)
-```
-
-**Assessment:** This is not dead code. It's intentional API design where `component_registry=None` triggers simpler behavior. The "legacy" label is a misnomer - this is the default behavior when component-level tracking isn't needed. No action required.
-
----
-
-#### INFO: project_path_as_dicts backward compatibility is intentional API
-**File:** `C:\Dev\Starship Battles\game\strategy\services\fleet_navigation_service.py`
-**Lines:** 403-423
-
-```python
-def project_path_as_dicts(self, fleet: 'Fleet', galaxy, max_turns: int = 10) -> List[Dict]:
-    """
-    Project fleet path and return as list of dicts for backward compatibility.
-    ...
-    """
-```
-
-**Assessment:** The docstring mentions "backward compatibility" but review of callers shows this is the primary API for UI consumption (pathfinding.project_fleet_path delegates to it). The dict format is the expected interface, not a legacy shim. No action needed.
-
----
-
-#### INFO: expected_stats fallback in ShipStatsCalculator is intentional
-**File:** `C:\Dev\Starship Battles\game\strategy\services\ship_stats_calculator.py`
-**Lines:** 129-143
-
-```python
-# Fallback to expected_stats if no components found in layers
-# This handles test fixtures and designs without component registry entries
-if not components_found:
-    expected = design_data.get('expected_stats', {})
-    return {
-        'max_hp': expected.get('max_hp', 0),
-        ...
-    }
-```
-
-**Assessment:** This is intentional fallback for test fixtures and lightweight designs. The comment explicitly documents the purpose. The stats calculator needs to handle designs that don't have full component data. No action needed.
-
----
-
-#### INFO: DesignMetadata sprite_preview placeholder is documented future work
-**File:** `C:\Dev\Starship Battles\game\strategy\data\design_metadata.py`
-**Lines:** 35-38
-
-```python
-# NOTE: When sprite_preview is implemented, the preview image should be
-# stored in a separate UI cache, not in this strategy-layer metadata.
-# This field exists as a placeholder for save file compatibility.
-sprite_preview: Optional[str] = None  # Reserved for future use
-```
-
-**Assessment:** This is explicitly documented as a placeholder for forward compatibility, not legacy code. The comment correctly notes that the actual implementation should go in UI layer. No action needed now.
-
----
-
-## Non-Findings (Reviewed and Cleared)
-
-The following patterns were reviewed and determined to NOT be legacy issues:
-
-1. **Production engine "legacy items" comments** (`production_engine.py:96,154,220`) - Refers to queue items without cost-tracking fields, which is valid data state during migration.
-
-2. **_ChaserProxy adapter** (`pathfinding.py:275-296`) - Explicitly documented as "intentional adapter pattern (not legacy compatibility)" per PROJ-42 review.
-
-3. **RaceConfig backward-compatible defaults** (`race_config.py:198`) - Standard defensive deserialization, not a shim.
-
-4. **Planet.from_dict empty populations default** (`planet.py:355`) - Standard empty list default for optional field.
-
-5. **FleetBattleAdapter "legacy strings" comment** (`fleet_battle_adapter.py:47`) - Documents that old string-based ship data format is no longer supported, which is correct behavior.
-
-6. **Fleet order target formats** (`fleet.py:374-408`) - Multiple serialization formats for different order types, all actively used.
-
-7. **Design obsolete/mark_obsolete methods** (`design_library.py`) - This is a feature (designs can be marked obsolete), not legacy code.
-
----
-
-## Summary Statistics
-
-| Severity | Count |
-|----------|-------|
-| CRITICAL | 0 |
-| MAJOR | 0 |
-| MINOR | 2 |
-| INFO | 5 |
-
-**Total findings requiring action:** 2 (both MINOR)
-
----
-
-## Recommendations
-
-1. **Low Priority:** Remove `turn_number` compatibility field from save metadata once confirmed no code depends on it.
-
-2. **Low Priority:** Update test infrastructure to register fleets properly with galaxy, then remove O(n) fallback in `_get_fleet_by_id`.
-
-The strategy module shows good code hygiene with minimal legacy debt. The PROJ-87 decomposition (God Class Decomposition) and related migrations appear complete. No critical or major issues found.
+5. **LEG-STR-004 (MINOR):** FleetNavigationService.project_path_as_dicts exists "for backward compatibility". Evaluate if callers can use PathSegment directly.

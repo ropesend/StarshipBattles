@@ -4,62 +4,39 @@
 - **Shard:** UI-Screens (game/ui/screens/, game/ui/panels/)
 - **Production Files Scanned:** 134 (109 in screens/, 25 in panels/)
 - **Test Files Cross-Referenced:** 51 (43 in tests/unit/ui/screens/, 8 in tests/unit/ui/panels/)
-- **Total Issues Found:** 32
-- **Critical:** 4 | **Major:** 15 | **Minor:** 10 | **Info:** 3
+- **Total Issues Found:** 28
+- **Critical:** 2 | **Major:** 15 | **Minor:** 8 | **Info:** 3
+
+> **Review Note (2026-02-13):** Cross-referenced existing tests - BattleScreen HAS tests (test_battle_screen.py, test_battle_screen_extended.py), and BattlePanels HAS tests (test_battle_panels.py). Updated report to remove false positives.
 
 ## Findings
 
 ### Phase 1: Untested Modules
 
-#### CRITICAL: BattleScreen has no unit tests
-**ID:** TCG-UI1-001
-**Location:** `game/ui/screens/battle_screen.py` (production) / No test file exists
-**Issue:** BattleScreen is the primary combat visualization screen (633 lines) with complex event handling, simulation tick processing, test mode integration, and visual effects. It has zero unit test coverage.
-**Impact:** Regressions in combat visualization, tick rate, pause/resume, test mode, or camera behavior could go undetected. This is a core gameplay screen.
-**Recommendation:** Create `tests/unit/ui/screens/test_battle_screen.py` covering:
-- `start()` with various ship configurations
-- `handle_event()` keyboard shortcuts (pause, speed control, focus cycling)
-- `update()` tick accumulation logic in visual and headless modes
-- `is_battle_over()` / `get_winner()` state checks
-- Controller integration methods
-**Effort:** Complex
-
-#### CRITICAL: BattleUI has no unit tests
-**ID:** TCG-UI1-002
-**Location:** `game/ui/screens/battle_ui.py` (production) / No test file exists
-**Issue:** BattleUI (292 lines) manages all battle UI panels (stats, seekers, controls), click handling, and grid rendering. No tests exist for click dispatch, panel coordination, or return-to-test-lab flow.
-**Impact:** UI panel interactions, button clicks, and coordinate conversions in battle may fail silently.
-**Recommendation:** Create `tests/unit/ui/screens/test_battle_ui.py` covering:
-- `handle_click()` dispatch to correct panel
-- `_get_return_button_rect()` calculations
-- `handle_resize()` panel repositioning
-- `track_projectile()` seeker panel integration
-**Effort:** Medium
-
 #### CRITICAL: BattleStateViewer has no unit tests
-**ID:** TCG-UI1-003
+**ID:** TCG-UI1-001
 **Location:** `game/ui/screens/battle_state_viewer.py` (production) / No test file exists
-**Issue:** BattleStateViewer (688 lines) implements JSON diff visualization for battle state comparison. The `compute_json_diff()` function and `ScrollableJsonPanel` class have no test coverage despite being algorithmically complex.
-**Impact:** JSON diff logic errors could show incorrect change highlighting; scroll/resize handling bugs could cause UI crashes.
+**Issue:** BattleStateViewer (688 lines) implements JSON diff visualization for battle state comparison. The `compute_json_diff()` function and `ScrollableJsonPanel` class have no test coverage despite being algorithmically complex. This contains recursive diff computation, path-based change tracking, and complex UI state management.
+**Impact:** JSON diff logic errors could show incorrect change highlighting; scroll/resize handling bugs could cause UI crashes. This is a critical debugging tool for test scenario development.
 **Recommendation:** Create `tests/unit/ui/screens/test_battle_state_viewer.py` with:
-- `compute_json_diff()` tests for changed, added, removed values
-- `_mark_all_paths()` nested structure handling
-- `ScrollableJsonPanel.set_json_with_diff()` formatting
-- Event handling (scroll, drag, keyboard)
+- `compute_json_diff()` tests for changed, added, removed values across nested structures
+- `_mark_all_paths()` recursive path marking
+- `DIFF_IGNORE_KEYS` behavior (e.g., 'created_at' should be ignored)
+- `ScrollableJsonPanel.set_json_with_diff()` formatting edge cases
+- `handle_event()` scroll, drag, keyboard handling
 **Effort:** Medium
 
-#### CRITICAL: BattlePanels (ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel) have no unit tests
-**ID:** TCG-UI1-004
-**Location:** `game/ui/panels/battle_panels.py` (production) / No test file exists
-**Issue:** battle_panels.py (567 lines) contains three panel classes for battle UI that handle ship display, seeker tracking, and battle control buttons. No unit tests exist.
-**Impact:** Stats display, seeker monitoring, and battle end detection could regress without detection.
-**Recommendation:** Create `tests/unit/ui/panels/test_battle_panels.py` covering:
-- `ShipStatsPanel._get_ship_id()` ID resolution logic
-- `ShipStatsPanel._toggle_expanded()` expansion state
-- `SeekerMonitorPanel.add_seeker()` / `clear_inactive()`
-- `BattleControlPanel.draw()` battle state detection
-- Click handling for all three panels
-**Effort:** Medium
+#### CRITICAL: TestLabValidationManager has no unit tests
+**ID:** TCG-UI1-002
+**Location:** `game/ui/screens/test_lab/validation_manager.py` (production) / No test file exists
+**Issue:** TestLabValidationManager (311 lines) handles critical operations including `validate_all()` for static test validation, `build_context_from_files()` for extracting ship/weapon data, and most critically `apply_metadata_updates()` which WRITES to scenario source files. File-modifying code has zero test coverage.
+**Impact:** File-writing code without tests is high risk - could corrupt scenario files or lose test configurations. Validation logic bugs could cause false positives/negatives in test results.
+**Recommendation:** Create tests covering:
+- `validate_all()` with mock scenarios
+- `build_context_from_files()` data extraction
+- `apply_metadata_updates()` with mock file I/O (critical - tests file modification)
+- Error handling paths
+**Effort:** Complex
 
 #### MAJOR: BuilderScreen (legacy) has no unit tests
 **ID:** TCG-UI1-005
@@ -396,12 +373,12 @@ None have tests for window resize behavior.
 
 ## Top 5 Priority Issues
 
-1. **TCG-UI1-001 (CRITICAL):** BattleScreen has zero test coverage for the primary combat visualization - highest risk of undetected regressions in core gameplay.
+1. **TCG-UI1-002 (CRITICAL):** TestLabValidationManager writes to scenario files with zero test coverage - highest risk for data corruption in test infrastructure.
 
-2. **TCG-UI1-004 (CRITICAL):** BattlePanels (ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel) are completely untested - essential battle UI components.
+2. **TCG-UI1-001 (CRITICAL):** BattleStateViewer JSON diff logic untested - critical debugging tool could produce incorrect results showing false changes or missing real ones.
 
-3. **TCG-UI1-011 (MAJOR):** Builder submodules including interaction_controller and state_manager have no tests - ship design workflow at risk.
+3. **TCG-UI1-011 (MAJOR):** Builder submodules (19 files including interaction_controller, state_manager, modifier_logic) have no tests - ship design workflow at risk.
 
-4. **TCG-UI1-012 (MAJOR):** Combat Lab (test_lab) UI components have no tests - testing tool itself is untested.
+4. **TCG-UI1-012 (MAJOR):** Combat Lab (test_lab) UI components (14 files) have only 1 test file - testing tool itself is mostly untested.
 
-5. **TCG-UI1-018 (MAJOR):** DesignStatsPanel tests use bypass-init pattern that tests mocks instead of production code - false coverage.
+5. **TCG-UI1-018 (MAJOR):** DesignStatsPanel tests use bypass-init pattern that tests mocks instead of production code - provides false confidence in coverage.

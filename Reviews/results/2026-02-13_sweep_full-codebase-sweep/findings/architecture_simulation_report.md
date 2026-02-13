@@ -2,9 +2,10 @@
 
 ## Summary
 - **Shard:** Simulation
-- **Files Scanned:** 73
-- **Total Issues Found:** 6
-- **Critical:** 1 | **Major:** 3 | **Minor:** 1 | **Info:** 1
+- **Files Scanned:** 71
+- **Total Issues Found:** 7
+- **Critical:** 1 | **Major:** 4 | **Minor:** 1 | **Info:** 1
+- **Last Sweep:** 2026-02-13 (Cycle 2 - Exhaustive Verification)
 
 ## Findings
 
@@ -92,26 +93,53 @@ The decomposition into ShipPhysics, ShipFormation, ShipCombatEngine, ShipStats, 
 
 ---
 
-#### MINOR: Possible Circular Import Workaround
+#### MAJOR: Documented Circular Import in Ship.add_component
 **ID:** ADR-SIM-005
+**Location:** `game/simulation/entities/ship.py:491-492, 536-537`
+**Issue:** Ship entity has late imports with explicit circular dependency comment:
+```python
+# LATE IMPORT: services/__init__.py imports VehicleDesignService which imports Ship
+from game.simulation.services.modifier_service import ModifierService
+```
+This pattern appears twice - in both `add_component()` and `add_components_bulk()` methods.
+**Import Chain:**
+`Ship` <- `VehicleDesignService` <- `services/__init__.py` <- `ModifierService` (used in Ship)
+**Impact:**
+- Circular dependency requires workaround (late import)
+- Ship entity tightly coupled to ModifierService
+- Testing Ship in isolation requires ModifierService to be loadable
+- Initialization order constraints
+
+**Recommendation:**
+Break the cycle by:
+1. Inject ModifierService via constructor or parameter instead of importing internally
+2. Move `ensure_mandatory_modifiers` call to VehicleDesignService (higher-level orchestrator)
+3. Have Ship.add_component() be pure, with modifier application done externally
+
+**Effort:** Medium
+
+---
+
+#### MINOR: Possible Circular Import Comment in ship_stats.py
+**ID:** ADR-SIM-006
 **Location:** `game/simulation/entities/ship_stats.py:72`
-**Issue:** Comment indicates a local import to avoid circular dependency:
+**Issue:** Comment indicates awareness of potential circular dependency:
 ```python
 # Import local to avoid circular dep if needed, or top level if safe.
 ```
 **Impact:**
-- Indicates structural coupling that needed workaround
-- Local imports can cause subtle timing issues
+- Indicates structural coupling that may need workaround
+- Documentation of known coupling point
 
 **Recommendation:**
-Review the import structure and consider extracting shared types to break the cycle properly.
+Review the import structure and consider extracting shared types to break the cycle properly if issues arise.
 
 **Effort:** Simple
 
 ---
 
 #### INFO: Heavy Use of TYPE_CHECKING for Forward References
-**ID:** ADR-SIM-006
+**ID:** ADR-SIM-007
 **Location:** Multiple files (30+ files use TYPE_CHECKING)
 **Issue:** Extensive use of TYPE_CHECKING blocks across the simulation layer. While this is valid Python practice for forward references, the sheer volume (30+ files) suggests tight coupling between modules that could benefit from cleaner interfaces.
 **Observed Files:**
@@ -155,10 +183,10 @@ The simulation layer demonstrates several architectural strengths:
 
 1. **ADR-SIM-001 (CRITICAL)**: AI layer imports in simulation factory - breaks fundamental layer isolation, must be resolved by moving factory or using proper DI from engine layer.
 
-2. **ADR-SIM-003 (MAJOR)**: BattleController god class (848 lines) - core complexity hub needs continued decomposition.
+2. **ADR-SIM-005 (MAJOR)**: Documented circular import in Ship.add_component() - explicit comment documents Ship<->ModifierService cycle. Needs architectural fix via DI or moving orchestration up.
 
-3. **ADR-SIM-004 (MAJOR)**: Ship entity god class (809 lines) - central entity should continue extracting helper classes.
+3. **ADR-SIM-003 (MAJOR)**: BattleController god class (848 lines) - core complexity hub needs continued decomposition.
 
-4. **ADR-SIM-002 (MAJOR)**: TYPE_CHECKING AI imports - finish interface-based decoupling by removing all ai layer type references.
+4. **ADR-SIM-004 (MAJOR)**: Ship entity god class (810 lines) - central entity should continue extracting helper classes.
 
-5. **ADR-SIM-005 (MINOR)**: Circular import workaround in ship_stats.py - clean up structural coupling.
+5. **ADR-SIM-002 (MAJOR)**: TYPE_CHECKING AI imports - finish interface-based decoupling by removing all ai layer type references.

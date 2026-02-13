@@ -2,217 +2,219 @@
 
 ## Summary
 - **Shard:** Simulation
-- **Production Files Scanned:** 67
-- **Test Files Cross-Referenced:** 42
+- **Production Files Scanned:** 71
+- **Test Files Cross-Referenced:** 100
 - **Total Issues Found:** 18
 - **Critical:** 3 | **Major:** 7 | **Minor:** 6 | **Info:** 2
 
 ## Findings
 
-#### CRITICAL: Projectile Entity Has No Unit Tests
+#### CRITICAL: No Unit Tests for ship_stats.py (ShipStatsCalculator)
 **ID:** TCG-SIM-001
-**Location:** `game/simulation/entities/projectile.py` (production) / `tests/unit/simulation/entities/test_projectile*.py` (missing)
-**Issue:** The `Projectile` class which handles projectile physics, tracking, homing behavior, impact detection, and lifecycle has zero dedicated unit tests. Glob search for `test_projectile*.py` returned no files.
-**Impact:** Projectile physics bugs (speed, tracking, collision) would go undetected. Seeker missiles, torpedoes, and other guided munitions are critical combat mechanics. Regression risk is high for any changes to projectile behavior.
-**Recommendation:** Create comprehensive unit tests covering:
-- Projectile initialization with various weapon ability types
-- Movement and physics updates (straight-line and homing)
-- Lifetime/endurance expiration
-- Impact detection logic
-- Stealth level handling
-- Target acquisition and retargeting
-**Effort:** Medium
-
-#### CRITICAL: ShipStatQuerier Has No Unit Tests
-**ID:** TCG-SIM-002
-**Location:** `game/simulation/entities/ship_stat_querier.py` (production) / `tests/unit/simulation/entities/test_ship_stat_querier.py` (missing)
-**Issue:** `ShipStatQuerier` (extracted in PROJ-88) aggregates critical ship stats like `get_ability_total()`, `get_total_sensor_score()`, `get_total_ecm_score()`, and `max_weapon_range`. No dedicated unit tests exist.
-**Impact:** These methods directly affect combat calculations (hit/miss, damage). Stack group aggregation rules (MAX within group, MULTIPLY across groups) are complex and error-prone without tests.
-**Recommendation:** Create unit tests covering:
-- `get_ability_total()` with various ability types
-- Stack group rule verification (MAX within, MULTIPLY across)
-- `get_total_ability_value()` with operational_only flag
-- `max_weapon_range` calculation including SeekerWeapon endurance fallback
-- Edge cases: no components, no abilities, destroyed components
-**Effort:** Medium
-
-#### CRITICAL: ShipValidator Rules Have No Unit Tests
-**ID:** TCG-SIM-003
-**Location:** `game/simulation/validation/ship_validator.py` (production) / `tests/unit/simulation/validation/test_ship_validator*.py` (missing)
-**Issue:** All validation rules (LayerConstraintRule, UniqueComponentRule, ExclusiveGroupRule, MountDependencyRule, LayerRestrictionDefinitionRule, MassBudgetRule, ClassRequirementsRule, ResourceDependencyRule, ShipDesignValidator) have zero dedicated unit tests.
-**Impact:** Ship design validation is critical for player experience. Invalid designs being allowed or valid designs being rejected would be major bugs. The validation system has 9 distinct rule classes with complex interaction logic.
-**Recommendation:** Create comprehensive tests for each rule class:
-- Test each rule in isolation with various ship/component configurations
-- Test rule interaction via ShipDesignValidator
-- Test both validation success and failure paths
-- Test warning generation (ResourceDependencyRule)
-- Test edge cases: empty ship, max components, boundary values
+**Location:** `game/simulation/entities/ship_stats.py` (production) / Missing test file
+**Issue:** ShipStatsCalculator is a critical class with 547 lines of code containing 5 distinct calculation phases (damage check, resource allocation, stats aggregation, physics/limits, sensor/defense scores). No corresponding unit test file exists at `tests/unit/simulation/entities/test_ship_stats.py`. The class calculates core combat stats: acceleration, max_speed, turn_speed, shields, crew allocation, mass limits, defense scores, and combat endurance.
+**Impact:** High regression risk - changes to stat calculation could silently break combat mechanics, ship performance, and game balance. All 5 phases have complex conditional logic with no test coverage.
+**Recommendation:** Create comprehensive test suite covering:
+1. Phase 1: Damage threshold marking, crew/life support gathering
+2. Phase 2: Crew allocation with priority sorting, component deactivation
+3. Phase 3: Resource aggregation, thrust/shield/hangar stats
+4. Phase 4: Physics formulas (inverse mass scaling), mass budget validation
+5. Phase 5: Defense score calculation (size, maneuver, ECM), sensor scores
 **Effort:** Complex
 
-#### MAJOR: BattleController Missing Edge Case Tests
+#### CRITICAL: No Unit Tests for ship_stat_querier.py
+**ID:** TCG-SIM-002
+**Location:** `game/simulation/entities/ship_stat_querier.py` (production) / Missing test file
+**Issue:** ShipStatQuerier (150 lines) handles polymorphic ability queries including `get_ability_total()`, `get_total_ability_value()`, `get_total_sensor_score()`, `get_total_ecm_score()`, and `max_weapon_range` property. No corresponding test file exists. These methods use complex stack_group rules (MAX within group, MULTIPLY across groups).
+**Impact:** Sensor and ECM score calculations directly affect hit/miss resolution. Bugs in stacking rules would cause combat imbalances that are hard to detect.
+**Recommendation:** Create tests for:
+- `get_ability_total()` with various ability types and stack groups
+- `get_total_ability_value()` with operational_only=True/False
+- `max_weapon_range` with regular and seeker weapons
+- Edge cases: empty components, missing abilities, mixed ability types
+**Effort:** Medium
+
+#### CRITICAL: No Unit Tests for ship_validator_helper.py
+**ID:** TCG-SIM-003
+**Location:** `game/simulation/entities/ship_validator_helper.py` (production) / Missing test file
+**Issue:** ShipValidatorHelper (68 lines) handles design validation with `check_validity()`, `get_validation_warnings()`, and `get_missing_requirements()`. No unit tests exist. The class mediates between Ship and centralized ShipValidator.
+**Impact:** Invalid ship designs could pass validation, allowing players to create broken ships. Missing validation warnings would confuse players.
+**Recommendation:** Create tests covering:
+- `check_validity()` returns True for valid designs, False for invalid
+- `get_validation_warnings()` returns appropriate soft warnings
+- `get_missing_requirements()` returns empty list for valid, error list for invalid
+- Integration with ShipValidator for mass budget, required abilities
+**Effort:** Simple
+
+#### MAJOR: designs.py Lacks Any Test Coverage
 **ID:** TCG-SIM-004
-**Location:** `game/simulation/battle_controller.py` (production) / `tests/unit/simulation/test_battle_controller.py` (partial coverage)
-**Issue:** While BattleController has some test coverage, critical edge cases are untested:
-- Reinforcement arrival during active combat
-- Multiple simultaneous ship deaths
-- Battle pause/resume state transitions
-- Very large battles (100+ ships performance)
-- Zero-ship edge cases
-**Impact:** Battle state corruption under edge conditions could cause crashes or incorrect outcomes.
-**Recommendation:** Add edge case tests for battle lifecycle management
-**Effort:** Medium
+**Location:** `game/simulation/designs.py` (production) / Missing test file
+**Issue:** The `designs.py` module (69 lines) contains factory functions `create_brick()` and `create_interceptor()` for creating pre-configured ship designs. No tests verify these designs are valid, properly configured, or even loadable.
+**Impact:** Pre-built ship designs could become invalid after component changes, breaking quickstart battles and tutorials.
+**Recommendation:** Create tests that:
+- Verify each design function creates a valid ship
+- Run validation on created ships
+- Ensure expected components are present
+- Test designs work with current component registry
+**Effort:** Simple
 
-#### MAJOR: DamageCalculator Armor Penetration Edge Cases
+#### MAJOR: resource_manager.py (ResourceRegistry) Missing Edge Case Tests
 **ID:** TCG-SIM-005
-**Location:** `game/simulation/combat/damage_calculator.py` (production) / `tests/unit/simulation/combat/test_damage_calculator.py` (partial)
-**Issue:** While DamageCalculator has 47 test functions, some edge cases are not covered:
-- Armor piercing values greater than total armor
-- Exactly zero armor remaining
-- Multiple concurrent damage events on same tick
-- Damage types with zero base damage but additive bonuses
-**Impact:** Edge cases in damage calculation could cause exploits or balance issues.
-**Recommendation:** Add parametrized tests for boundary conditions
-**Effort:** Simple
+**Location:** `game/simulation/systems/resource_manager.py` (production) / `tests/unit/simulation/systems/test_resource_manager_edge_cases.py` (limited)
+**Issue:** ResourceRegistry has 209 lines with complex state management. The existing test file (`test_resource_manager_edge_cases.py`) has only 15 tests. Missing coverage for:
+- `register_storage()` called multiple times for same resource
+- `register_generation()` with negative rates
+- `reset_stats()` preserving current values while zeroing max/regen
+- `modify_value()` clamping to bounds
+- `set_max_value()` reducing max below current value
+- `update()` regeneration tick behavior
+**Impact:** Resource bugs could cause ships to have infinite fuel/energy or lose resources unexpectedly.
+**Recommendation:** Expand test suite to cover all public methods with boundary conditions (zero, negative, overflow).
+**Effort:** Medium
 
-#### MAJOR: WeaponFiringSystem Missing Multishot Tests
+#### MAJOR: battle_controller.py Missing State Transition Tests
 **ID:** TCG-SIM-006
-**Location:** `game/simulation/combat/weapon_firing_system.py` (production) / `tests/unit/simulation/combat/test_weapon_firing_system.py` (12 tests)
-**Issue:** The weapon firing system has only 12 tests. Missing coverage for:
-- Weapons with multiple shots per volley
-- Weapons with spread patterns
-- Point defense interception logic
-- Simultaneous firing from multiple ships
-**Impact:** Weapon firing bugs affect core gameplay loop.
-**Recommendation:** Add tests for multi-shot weapons and point defense
+**Location:** `game/simulation/battle_controller.py` (production) / `tests/unit/simulation/battle_controller/` (partial)
+**Issue:** BattleController tests exist across 7 files but lack comprehensive state transition testing. Missing:
+- Pause/resume state transitions
+- Time dilation changes during active combat
+- Battle end detection with edge cases (simultaneous deaths, retreat scenarios)
+- Retreat integration with RetreatManager
+**Impact:** State machine bugs could cause battles to become stuck or incorrectly determine winners.
+**Recommendation:** Add state machine tests verifying all valid transitions and rejection of invalid transitions.
 **Effort:** Medium
 
-#### MAJOR: TargetingSystem Missing AI Priority Tests
+#### MAJOR: formula_system.py Edge Cases Not Tested
 **ID:** TCG-SIM-007
-**Location:** `game/simulation/combat/targeting_system.py` (production) / `tests/unit/simulation/combat/test_targeting_system.py` (18 tests)
-**Issue:** Targeting system has 18 tests but lacks coverage for:
-- AI target priority scoring algorithms
-- Target switching behavior
-- Target out-of-range handling
-- Stealth/detection interaction
-**Impact:** AI targeting bugs make combat feel unbalanced or unfair.
-**Recommendation:** Add AI priority and target selection tests
-**Effort:** Medium
+**Location:** `game/simulation/formula_system.py` (production) / `tests/unit/simulation/test_formula_exceptions.py` (16 tests only)
+**Issue:** The formula system evaluates mathematical expressions for component stats. Only exception handling is tested (16 tests). Missing:
+- Complex nested expressions
+- Edge values (very large numbers, very small numbers)
+- Division by zero handling
+- Invalid variable references
+- Performance with long formulas
+**Impact:** Formula evaluation bugs could crash the game or produce incorrect component stats.
+**Recommendation:** Add tests for safe_evaluate_math_formula with complex inputs and edge cases.
+**Effort:** Simple
 
-#### MAJOR: BattleEngine Tick Processing Incomplete Coverage
+#### MAJOR: projectile_manager.py Missing Guidance System Integration Tests
 **ID:** TCG-SIM-008
-**Location:** `game/simulation/systems/battle_engine.py` (production) / `tests/unit/simulation/systems/test_battle_engine_tick.py` (exists)
-**Issue:** BattleEngine tick tests exist but don't cover:
-- Tick ordering guarantees (movement before firing, etc.)
-- Resource consumption timing
-- Cooldown timer edge cases (sub-tick precision)
-- Component damage during tick (mid-tick death)
-**Impact:** Combat timing bugs cause inconsistent behavior.
-**Recommendation:** Add tick ordering and timing tests
+**Location:** `game/simulation/projectile_manager.py` (production) / `tests/unit/simulation/test_projectile_manager.py` (60 tests)
+**Issue:** ProjectileManager (60 tests) is well-tested for basic operations, but guidance system integration (seeker missiles, homing behavior) lacks comprehensive tests. The `projectile_guidance/` tests (27 tests) test guidance in isolation but not the full integration path through ProjectileManager.
+**Impact:** Seeker missiles could fail to track targets or have incorrect flight paths.
+**Recommendation:** Add integration tests verifying:
+- Missile guidance updates during `update()` tick
+- Target acquisition and loss scenarios
+- Guidance system handoff between manager and projectile
 **Effort:** Medium
 
-#### MAJOR: FormulaSystem Overflow/Underflow Not Tested
+#### MAJOR: battle_state.py Serialization Round-Trip Gaps
 **ID:** TCG-SIM-009
-**Location:** `game/simulation/formula_system.py` (production) / `tests/unit/simulation/test_formula_exceptions.py` (partial)
-**Issue:** Formula exception tests cover syntax errors and division by zero, but not:
-- Integer overflow (very large numbers)
-- Float precision issues (very small decimals)
-- NaN/Infinity propagation
-- Deep recursion (nested function calls)
-**Impact:** Formula edge cases could cause crashes or incorrect stat calculations.
-**Recommendation:** Add boundary value tests for formula evaluation
-**Effort:** Simple
-
-#### MAJOR: Design System Serialization Roundtrip Gaps
-**ID:** TCG-SIM-010
-**Location:** `game/simulation/designs.py` (production) / `tests/unit/simulation/test_designs.py` (if exists)
-**Issue:** Ship design serialization needs tests for:
-- Roundtrip (save -> load -> save produces identical output)
-- Version compatibility (loading older save formats)
-- Corrupted data handling (missing fields, wrong types)
-- Very large designs (many components)
-**Impact:** Save/load bugs cause player data loss.
-**Recommendation:** Add roundtrip and corruption handling tests
+**Location:** `game/simulation/battle_state.py` (production) / `tests/unit/simulation/test_battle_state_serialization.py` (55 tests)
+**Issue:** While 55 tests exist for battle state serialization, the tests focus on happy paths. Missing:
+- Corrupted data handling
+- Version migration (old save format to new)
+- Partial state recovery
+- Maximum battle size stress testing
+**Impact:** Save/load bugs could corrupt battles or crash on edge case data.
+**Recommendation:** Add adversarial serialization tests with malformed inputs and stress tests.
 **Effort:** Medium
 
-#### MINOR: AbilityAggregator Missing Concurrent Modification Tests
+#### MAJOR: combat/damage_calculator.py Missing Armor Interaction Tests
+**ID:** TCG-SIM-010
+**Location:** `game/simulation/combat/damage_calculator.py` (production) / `tests/unit/simulation/combat/test_damage_calculator.py` (47 tests)
+**Issue:** DamageCalculator tests (47) cover basic damage flow but lack comprehensive tests for:
+- Emissive armor damage reduction with beam weapons
+- Crystalline armor damage reduction with kinetic weapons
+- Layer penetration order (shields -> armor -> hull)
+- Overkill damage propagation
+- Zero/negative damage edge cases
+**Impact:** Damage calculations are the core of combat - bugs here fundamentally break gameplay balance.
+**Recommendation:** Expand armor mechanics tests to cover all armor types and weapon type interactions.
+**Effort:** Medium
+
+#### MINOR: components/abilities/weapons.py Tests Split Across Files
 **ID:** TCG-SIM-011
-**Location:** `game/simulation/entities/ability_aggregator.py` (production) / `tests/unit/simulation/entities/test_ability_aggregator.py` (69 tests)
-**Issue:** AbilityAggregator has good coverage but lacks tests for:
-- Component removal during iteration
-- Concurrent ability activation
-- Ability with None values
-**Impact:** Edge case bugs in ability aggregation.
-**Recommendation:** Add concurrent modification edge cases
+**Location:** `game/simulation/components/abilities/weapons.py` (production) / Multiple test files
+**Issue:** Weapon ability tests are split between `test_weapons_isolation.py` (77 tests) and `test_weapons_integration.py` (28 tests). While coverage is good, the split organization makes it hard to verify complete coverage. Some specific weapon types (beam, projectile, seeker, PDC) may have gaps between the two files.
+**Impact:** Low - tests exist but organization could lead to duplicate effort or missed cases.
+**Recommendation:** Consider a test coverage matrix documenting which weapon types and scenarios each file covers.
 **Effort:** Simple
 
-#### MINOR: ShipCombatEngine Heat Management Not Tested
+#### MINOR: components/abilities/defense.py Tests Lack Stacking Rule Tests
 **ID:** TCG-SIM-012
-**Location:** `game/simulation/entities/ship_combat_engine.py` (production)
-**Issue:** Heat management, overheating, and cooling mechanics are not tested if ship_combat_engine is responsible for this logic.
-**Impact:** Heat-based gameplay mechanics may have bugs.
-**Recommendation:** Verify heat system testing or add if missing
+**Location:** `game/simulation/components/abilities/defense.py` (production) / `tests/unit/simulation/components/abilities/test_defense_*.py`
+**Issue:** Defense ability tests (103 tests across isolation and integration) lack explicit tests for stack_group rules. Defense abilities like ShieldProjection, Armor, EmissiveArmor have stacking rules that should be verified.
+**Impact:** Defense stacking bugs could make ships invulnerable or too fragile.
+**Recommendation:** Add explicit stacking rule tests for each defense ability type.
 **Effort:** Simple
 
-#### MINOR: ShipFormation Missing Complex Formation Tests
+#### MINOR: components/abilities/propulsion.py Missing Turn Rate Limit Tests
 **ID:** TCG-SIM-013
-**Location:** `tests/unit/simulation/entities/test_ship_formation.py` (60 tests)
-**Issue:** Formation tests exist but may not cover:
-- Very large formations (20+ ships)
-- Dynamic reformation during combat
-- Formation leader death handling
-**Impact:** Formation edge cases in large battles.
-**Recommendation:** Add stress tests for large formations
+**Location:** `game/simulation/components/abilities/propulsion.py` (production) / Limited test coverage
+**Issue:** ManeuveringThruster and CombatPropulsion abilities lack tests for:
+- Maximum turn rate clamping
+- Thrust contribution at various power levels
+- Strategic movement point calculations
+**Impact:** Ships could have unrealistic turning speeds or movement rates.
+**Recommendation:** Add boundary condition tests for propulsion ability values.
 **Effort:** Simple
 
-#### MINOR: BattleStateSerializer Version Migration Not Tested
+#### MINOR: services/design_loader.py Has No Tests
 **ID:** TCG-SIM-014
-**Location:** `tests/unit/simulation/test_battle_state_serialization.py` (exists)
-**Issue:** Serialization tests may not cover version migration if battle state format changes.
-**Impact:** Loading older battle states could fail.
-**Recommendation:** Add version compatibility tests if applicable
+**Location:** `game/simulation/services/design_loader.py` (production) / Missing test file
+**Issue:** DesignLoader service loads ship designs from files. No unit tests exist. While `test_simulation_design_loader.py` exists with 8 tests, it may not cover all DesignLoader functionality.
+**Impact:** Design loading bugs could cause ship designs to fail silently.
+**Recommendation:** Verify test coverage or add missing tests for DesignLoader methods.
 **Effort:** Simple
 
-#### MINOR: PropulsionAbility Strategic Movement Not Tested
+#### MINOR: interfaces/ai_controller.py Interface Tests Shallow
 **ID:** TCG-SIM-015
-**Location:** `game/simulation/components/abilities/propulsion.py` (production)
-**Issue:** While CombatPropulsion and ManeuveringThruster may have coverage, StrategicMovement and WarpJump abilities need verification for:
-- Movement point calculations
-- Warp tonnage limits
-- Energy cost consumption
-**Impact:** Strategic layer movement bugs.
-**Recommendation:** Verify or add strategic ability tests
+**Location:** `game/simulation/interfaces/ai_controller.py` (production) / `tests/unit/simulation/interfaces/test_ai_controller_interface.py` (8 tests)
+**Issue:** AIController interface tests (8) only verify interface contracts. Missing tests for:
+- Mock implementations adhering to interface
+- Error handling for invalid implementations
+- Thread safety considerations
+**Impact:** Low - interface testing is naturally limited but could be more robust.
+**Recommendation:** Add negative tests verifying interface enforcement.
 **Effort:** Simple
 
-#### MINOR: ProjectileManager Missing Batch Update Tests
+#### MINOR: validation/ship_validator.py Missing Complex Validation Scenarios
 **ID:** TCG-SIM-016
-**Location:** `game/simulation/projectile_manager.py` (production) / `tests/unit/simulation/test_projectile_manager.py` (exists)
-**Issue:** ProjectileManager tests exist but may not cover batch update scenarios with hundreds of projectiles.
-**Impact:** Performance degradation with many projectiles.
-**Recommendation:** Add stress/performance tests
+**Location:** `game/simulation/validation/ship_validator.py` (production) / `tests/unit/simulation/validation/test_ship_validator_rules.py` (50 tests)
+**Issue:** ShipValidator tests (50) cover individual rules but lack tests for:
+- Multiple simultaneous validation failures
+- Validation order independence
+- Custom rule registration
+- Performance with many components
+**Impact:** Complex invalid designs might pass validation or produce confusing error messages.
+**Recommendation:** Add tests for multi-rule failure scenarios and validation consistency.
 **Effort:** Simple
 
-#### INFO: Test Organization Inconsistency
+#### INFO: Test Organization Could Use Consolidation
 **ID:** TCG-SIM-017
-**Location:** `tests/unit/simulation/` (various)
-**Issue:** Some test files are in `tests/unit/simulation/` root while corresponding production code is in subdirectories. Example: `test_projectile_manager.py` is at root but `retreat_manager` is in `managers/`. This inconsistency makes it harder to find test coverage gaps.
-**Recommendation:** Consider mirroring production directory structure in tests more consistently.
-**Effort:** N/A (organizational)
+**Location:** Multiple test directories
+**Issue:** Simulation tests are spread across `tests/unit/simulation/` (75 files), `tests/integration/` (strategy-focused), and `simulation_tests/` (scenario-based). The `simulation_tests/` directory provides excellent scenario coverage but is separate from unit tests.
+**Impact:** None - this is organizational feedback.
+**Recommendation:** Document test organization in a README or consolidate scenario tests into integration test structure.
+**Effort:** N/A
 
-#### INFO: Simulation Integration Tests Sparse
+#### INFO: No Performance/Load Tests for Simulation Tick
 **ID:** TCG-SIM-018
-**Location:** `tests/integration/` and `simulation_tests/`
-**Issue:** While unit tests are extensive, integration tests that verify multi-system interactions (e.g., weapon fires -> projectile spawns -> travels -> impacts -> damage calculated -> component destroyed -> ship stats updated) are less common. The `simulation_tests/` directory exists but coverage of full combat flow paths should be verified.
-**Recommendation:** Consider adding more end-to-end combat simulation tests that verify entire damage pipelines.
-**Effort:** N/A (organizational)
+**Location:** `game/simulation/systems/battle_engine.py`
+**Issue:** No performance tests exist for battle simulation with many ships (100+), projectiles (1000+), or extended durations (10000+ ticks). The existing tests mock most dependencies.
+**Impact:** Performance regressions could go unnoticed until gameplay.
+**Recommendation:** Consider adding benchmark tests for simulation tick processing.
+**Effort:** N/A
 
 ## Top 5 Priority Issues
 
-1. **TCG-SIM-001: Projectile Entity Has No Unit Tests** - The Projectile class handles core combat physics and has zero tests. This is the highest risk gap as projectile behavior affects every ranged weapon in the game.
+1. **TCG-SIM-001 (CRITICAL)**: ShipStatsCalculator has zero test coverage despite being the central stat calculation system. This is the highest priority gap - all ship stats flow through this calculator.
 
-2. **TCG-SIM-003: ShipValidator Rules Have No Unit Tests** - Ship design validation affects the player's ability to build ships. Invalid validation logic could block valid designs or allow invalid ones, both major UX issues.
+2. **TCG-SIM-002 (CRITICAL)**: ShipStatQuerier handles ability aggregation with complex stacking rules but has no tests. Bugs here would affect combat balance calculations.
 
-3. **TCG-SIM-002: ShipStatQuerier Has No Unit Tests** - Stat aggregation directly affects combat calculations. Stack group rules are complex and bugs here would cause incorrect damage, hit chances, etc.
+3. **TCG-SIM-010 (MAJOR)**: DamageCalculator lacks armor interaction tests. Damage is core to combat - comprehensive tests for all armor types and weapon interactions are essential.
 
-4. **TCG-SIM-008: BattleEngine Tick Processing Incomplete Coverage** - Tick ordering and timing are fundamental to deterministic combat simulation. Gaps here could cause non-reproducible battle outcomes.
+4. **TCG-SIM-005 (MAJOR)**: ResourceRegistry edge cases (negative values, regeneration ticks, capacity changes) need better coverage to prevent resource bugs.
 
-5. **TCG-SIM-010: Design System Serialization Roundtrip Gaps** - Save/load bugs cause player data loss, which is unacceptable. Roundtrip testing is essential for any serialization system.
+5. **TCG-SIM-003 (CRITICAL)**: ShipValidatorHelper has no tests. Ship design validation is player-facing and needs verification.

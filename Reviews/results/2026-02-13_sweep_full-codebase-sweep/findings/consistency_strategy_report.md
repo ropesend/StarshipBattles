@@ -1,423 +1,254 @@
-# Consistency Review: game/strategy/
+# Consistency Violations Sweep: Strategy
 
-**Review Date:** 2026-02-13
-**Scope:** 95 Python files in `game/strategy/`
-**Reviewer:** Sweep Agent (Opus 4.5)
+## Summary
+- **Shard:** Strategy
+- **Files Scanned:** 95
+- **Total Issues Found:** 12
+- **Critical:** 0 | **Major:** 4 | **Minor:** 6 | **Info:** 2
+
+## Findings
+
+#### MAJOR: Logging Pattern Inconsistency - Mixed Module Logger vs Core Logger
+**ID:** CON-STR-001
+**Location:** Multiple files across `game/strategy/`
+**Issue:** The strategy layer uses two different logging patterns inconsistently:
+- **Pattern A (game.core.logger):** Used by 24 files - imports `log_info`, `log_warning`, `log_error`, `log_debug` from `game.core.logger`
+- **Pattern B (stdlib logging):** Used by 4 files - imports `logging` and creates module logger via `log = logging.getLogger(__name__)` or `logger = logging.getLogger(__name__)`
+
+Files using stdlib logging (minority pattern):
+- `game/strategy/generation/placement_strategies.py:18` - `log = logging.getLogger(__name__)`
+- `game/strategy/generation/loaders/galaxy_layouts_loader.py:15` - `log = logging.getLogger(__name__)`
+- `game/strategy/generation/density/density_map.py:26` - `log = logging.getLogger(__name__)`
+- `game/strategy/engine/harvesting_engine.py:29` - `logger = logging.getLogger(__name__)`
+
+**Impact:** Different logging configuration, inconsistent log output format, potential confusion about which logging interface to use in new code. The `harvesting_engine.py` also uses inconsistent variable naming (`logger` vs `log`).
+**Recommendation:** Standardize on `game.core.logger` module functions which is the dominant pattern (24 files). Refactor the 4 files using stdlib logging to use the core logger.
+**Effort:** Simple
 
 ---
 
-## Executive Summary
+#### MAJOR: Protocol Interface Decorator Inconsistency
+**ID:** CON-STR-002
+**Location:** `game/strategy/engine/command_handlers.py:24` vs other Protocol definitions
+**Issue:** The `ICommandHandler` Protocol class is NOT decorated with `@runtime_checkable`, while other Protocol classes in the strategy layer ARE decorated with `@runtime_checkable`.
 
-The strategy layer demonstrates strong overall consistency with well-established patterns. The codebase follows Registry pattern, Command/Handler pattern, DTO pattern for facade, and clean interface separation. Most deviations are MINOR or INFO level, with a few MAJOR items warranting attention.
+Files with `@runtime_checkable`:
+- `game/strategy/generation/placement_strategies.py:21-22` - `ISystemPlacementStrategy`
+- `game/strategy/data/build_context.py:12-13` - `BuildContext`
+- `game/strategy/generation/density/primitives/density_primitive.py:11-12` - `DensityPrimitive`
 
-**Findings by Severity:**
-- CRITICAL: 0
-- MAJOR: 4
-- MINOR: 12
-- INFO: 8
+File missing `@runtime_checkable`:
+- `game/strategy/engine/command_handlers.py:24` - `ICommandHandler(Protocol)` - no decorator
+
+**Impact:** Without `@runtime_checkable`, `isinstance()` checks against `ICommandHandler` will fail at runtime, while they work for other Protocol interfaces. This inconsistency could cause confusion and runtime errors.
+**Recommendation:** Add `@runtime_checkable` decorator to `ICommandHandler` to match the established pattern.
+**Effort:** Simple
 
 ---
 
-## MAJOR Findings
+#### MAJOR: Inconsistent Return Type for validate() Methods
+**ID:** CON-STR-003
+**Location:** `game/strategy/data/race_config.py:280`
+**Issue:** The `RaceConfig.validate()` method returns `tuple[bool, str]` while all other validator classes return `ValidationResult` from `game.core.validation`.
 
-### M1. Inconsistent Return Type: validate() Methods
+Validator pattern (dominant):
+- `ColonizeValidator.validate()` returns `ValidationResult`
+- `TransferValidator.validate()` returns `ValidationResult`
+- `SuperweaponValidator.validate()` returns `ValidationResult`
 
-**Location:** Multiple validator classes
-**Pattern Violated:** API design consistency - return type patterns
+Exception:
+- `RaceConfig.validate()` returns `tuple[bool, str]`
 
-**Files Affected:**
-- `validation/colonize_validator.py` - Returns `ValidationResult`
-- `validation/transfer_validator.py` - Returns `ValidationResult`
-- `validation/superweapon_validator.py` - Returns `ValidationResult`
-- `data/race_config.py` - Returns `tuple[bool, str]` (line 280)
-
-**Issue:** `RaceConfig.validate()` returns `tuple[bool, str]` while all other validators return `ValidationResult`. This breaks the consistent validator pattern and requires special handling at call sites.
-
+**Impact:** API inconsistency requiring special handling at call sites. Cannot use consistent validation result processing.
 **Recommendation:** Refactor `RaceConfig.validate()` to return `ValidationResult` for consistency with other validators.
+**Effort:** Medium
 
 ---
 
-### M2. Missing Type Hints on Public API Methods
+#### MAJOR: Inconsistent `from __future__ import annotations` Usage
+**ID:** CON-STR-004
+**Location:** `game/strategy/` - only 3 of 95 files use future annotations
+**Issue:** Only 3 files use `from __future__ import annotations`:
+- `game/strategy/events/event_log.py:3`
+- `game/strategy/data/build_queue_source.py:12`
+- `game/strategy/data/build_context.py:7`
 
-**Location:** Multiple files
-**Pattern Violated:** Type hint consistency for public APIs
+These files use Python 3.10+ style annotations like `dict[str, Any]` and `list[Event]` without the import in most files. However, these 3 files use the future import while 92 other files use `Dict`, `List`, `Optional` from `typing`.
 
-**Files Affected:**
-- `data/naming.py` - `to_roman(n)` missing return type hint (line 67)
-- `data/planet_gen.py` - Several methods missing full type hints (`_generate_surface_flags`, `_determine_type`)
-- `data/stars.py` - `StarGenerator` methods missing type hints (`_generate_mass`, `_determine_type_and_radius`, `_kelvin_to_rgb`)
-
-**Recommendation:** Add complete type hints to all public methods following the pattern established in newer files.
-
----
-
-### M3. Inconsistent Error Handling: Some Methods Use Exceptions, Others Return Validation
-
-**Location:** Multiple engine and service files
-**Pattern Violated:** Error handling pattern consistency
-
-**Examples:**
-- `data/classification_config.py:get_classification_config()` - Catches broad exception list and falls back silently (lines 140-144)
-- `data/naming.py:NameRegistry.load_data()` - Catches broad exceptions but only logs
-- `systems/design_library.py` - Mixed approach between raising and returning
-
-**Recommendation:** Establish clear convention: validators return ValidationResult, load operations should use Optional return or explicit exceptions with documented contract.
+**Impact:** Inconsistent annotation style across the codebase. The `event_log.py` file uses `list[Event]` and `dict[str, Any]` (lowercase) while most other files use `List[Event]` and `Dict[str, Any]` (capitalized from typing).
+**Recommendation:** Either standardize on using `from __future__ import annotations` everywhere and switch to lowercase type hints, OR remove the future import from these 3 files and use capitalized typing imports. The dominant pattern (92 files) uses capitalized typing imports.
+**Effort:** Medium
 
 ---
 
-### M4. Inconsistent Docstring Format in Validation Helpers
+#### MINOR: Method Naming Inconsistency - lookup_ vs get_ Pattern
+**ID:** CON-STR-005
+**Location:** `game/strategy/engine/harvesting_engine.py:60,197`
+**Issue:** The `lookup_harvester_in_registry()` and `_lookup_storage_in_registry()` functions use `lookup_` prefix while all other registry lookup operations use `get_` prefix.
 
-**Location:** `data/race_config.py`
-**Pattern Violated:** Docstring consistency
+Dominant pattern (~90 usages): `get_*`
+- `get_system_by_name`, `get_planet_by_id`, `get_fleet_by_id`, `get_race`, etc.
 
-**Issue:** Private validation helper methods (`_validate_required_fields`, `_validate_environment_ranges`, etc.) lack docstrings, while similar private methods in other files have them.
+Exception (2 usages): `lookup_*`
+- `lookup_harvester_in_registry()` at line 60
+- `_lookup_storage_in_registry()` at line 197
 
-**Recommendation:** Add brief docstrings to validation helper methods for consistency.
-
----
-
-## MINOR Findings
-
-### m1. Naming Convention: `_get_default_*` vs `get_default_*` Functions
-
-**Location:** Module-level functions
-**Pattern Violated:** Naming consistency for factory functions
-
-**Examples:**
-- `engine/game_config.py` - `_get_default_asset_path()` (private prefix)
-- `engine/game_config.py` - `_get_default_players()` (private prefix)
-- `data/fleet_capability_calculator.py` - `_get_default_component_registry()` (private prefix)
-
-**Observation:** These are module-level factory functions. The underscore prefix is technically correct since they're module-private, but could be public utilities. Consistent with codebase pattern.
+**Impact:** Cognitive overhead when choosing method names for new code.
+**Recommendation:** Replace `lookup_*` functions with `get_*` naming to match the dominant pattern.
+**Effort:** Simple
 
 ---
 
-### m2. Inconsistent Parameter Naming: `data` vs `data_dict` vs `config`
+#### MINOR: Missing Type Hints on Public API Methods
+**ID:** CON-STR-006
+**Location:** `game/strategy/data/naming.py:67`, `game/strategy/data/stars.py` multiple methods
+**Issue:** Several public methods lack return type annotations while the majority of the codebase has complete type hints.
 
-**Location:** `from_dict()` class methods
-**Pattern Violated:** Parameter naming consistency
+Examples missing type hints:
+- `NameRegistry.to_roman(n)` - no return type (line 67)
+- `StarGenerator._generate_mass()` - no return type (line 127)
+- `StarGenerator._determine_type_and_radius()` - no return type (line 149)
+- `StarGenerator._kelvin_to_rgb()` - no return type (line 222)
+- `Spectrum.get_total_output()` - no return type (line 41)
 
-**Examples:**
-- Most classes use `data` parameter
-- `engine/game_config.py:GameConfig.from_dict()` uses `data`
-- Pattern is consistent across codebase
-
-**Status:** Verified consistent - no action needed.
-
----
-
-### m3. Static Method vs Class Method Inconsistency
-
-**Location:** Validator classes
-**Pattern Violated:** Method type consistency
-
-**Issue:** All validator methods are `@staticmethod` but could benefit from being class methods if class-level configuration is added later. This is a minor design consideration.
-
-**Files:**
-- `validation/colonize_validator.py` - All static
-- `validation/transfer_validator.py` - All static
-- `validation/superweapon_validator.py` - All static
-
-**Recommendation:** Document that validators are intentionally stateless with static methods.
+**Impact:** Inconsistent documentation quality, IDE type inference issues.
+**Recommendation:** Add return type annotations to these methods.
+**Effort:** Simple
 
 ---
 
-### m4. Inconsistent Import Grouping Order
+#### MINOR: Missing Docstrings in stars.py Methods
+**ID:** CON-STR-007
+**Location:** `game/strategy/data/stars.py`
+**Issue:** Several methods in `stars.py` lack docstrings while the codebase convention is Google-style docstrings on all public methods.
 
-**Location:** Various files
-**Pattern Violated:** Import ordering (stdlib, third-party, local)
+Methods missing docstrings:
+- `Spectrum.get_total_output()` (line 41)
+- `Star.to_dict()` (line 90)
+- `Star.from_dict()` (line 107)
 
-**Examples with minor deviations:**
-- `data/physics.py` - TYPE_CHECKING import between stdlib and local
-- `data/stars.py` - Missing blank line between import groups
+Other serialization methods like `Planet.to_dict()` and `Fleet.to_dict()` have proper docstrings.
 
-**Recommendation:** Run isort or similar tool to standardize import ordering.
-
----
-
-### m5. Inconsistent Class Suffix Patterns
-
-**Location:** Various data classes
-**Pattern Violated:** Class naming conventions
-
-**Observation:** The codebase uses several suffixes consistently:
-- `*Engine` for turn processing engines (correct)
-- `*Calculator` for pure calculation classes (correct)
-- `*Processor` for order/command processors (correct)
-- `*Validator` for validation classes (correct)
-- `*Adapter` for layer bridges (correct)
-- `*Service` for services (correct)
-- `*Info` / `*Summary` for DTOs (correct)
-
-**Status:** Naming conventions are well-established and consistently followed.
+**Impact:** Inconsistent documentation quality.
+**Recommendation:** Add Google-style docstrings to these methods.
+**Effort:** Simple
 
 ---
 
-### m6. Missing `__all__` Export in Some `__init__.py` Files
+#### MINOR: Missing `__all__` Export in Package `__init__.py` Files
+**ID:** CON-STR-008
+**Location:** Multiple `__init__.py` files
+**Issue:** Several package `__init__.py` files are empty or lack `__all__` exports while others properly export their public API.
 
-**Location:** Package init files
-**Pattern Violated:** Module export consistency
+Files with proper exports:
+- `game/strategy/facade/dto/__init__.py` - has complete `__all__` list
+- `game/strategy/interfaces/__init__.py` - has exports
 
-**Files Missing `__all__`:**
-- `services/__init__.py` - Empty file
-- `data/__init__.py` - Empty file
-- `facade/__init__.py` - Has docstring but no exports
+Files missing exports:
+- `game/strategy/services/__init__.py` - empty file
+- `game/strategy/data/__init__.py` - empty file
+- `game/strategy/adapters/__init__.py` - empty file
 
-**Recommendation:** Add explicit `__all__` exports to all package init files for clarity.
+**Impact:** Unclear public API for these packages.
+**Recommendation:** Add explicit `__all__` exports to package init files.
+**Effort:** Simple
 
 ---
 
-### m7. Inconsistent Late Import Documentation
+#### MINOR: Inconsistent Engine Constructor DI Patterns
+**ID:** CON-STR-009
+**Location:** Engine classes in `game/strategy/engine/`
+**Issue:** Engine classes have different constructor patterns for dependency injection:
 
-**Location:** Various files with late imports
-**Pattern Violated:** Import documentation pattern
-
-**Good Example (documented):**
+**Pattern A - Required registries (strict):**
 ```python
-# INTENTIONAL LATE IMPORT: Query operation, service encapsulates warp logic
-# See docs/ARCHITECTURE.md "Intentional Late Imports" section
-from game.strategy.services.ship_stats_calculator import ShipStatsCalculator
+def __init__(self, *, registries: GameRegistries):
+    if registries is None:
+        raise TypeError("registries is required")
+```
+Used by: `ResupplyEngine`, `ResourceManagementEngine`, `ShipStatsCalculator`
+
+**Pattern B - Optional registries (lenient):**
+```python
+def __init__(self, *, registries: Optional[GameRegistries] = None):
+    self._registries = registries
+```
+Used by: `HarvestingEngine`, `EmpireEconomyCalculator`
+
+**Pattern C - No registries parameter:**
+Used by: `MaintenanceEngine`, `PopulationEngine`, `FleetMovementEngine`
+
+**Impact:** Inconsistent initialization behavior - some engines require registries, others allow None.
+**Recommendation:** Document the DI convention clearly. Pattern A should be used when registry is truly required.
+**Effort:** Simple (documentation)
+
+---
+
+#### MINOR: Duplicate MAINTENANCE_RATE Constant
+**ID:** CON-STR-010
+**Location:** `game/strategy/engine/maintenance_engine.py:25,97`
+**Issue:** The `MAINTENANCE_RATE = 0.05` constant is defined both at module level (line 25) AND as a class attribute (line 97) in `MaintenanceEngine`.
+
+```python
+# Module level
+MAINTENANCE_RATE = 0.05  # Line 25
+
+class MaintenanceEngine:
+    MAINTENANCE_RATE = 0.05  # Line 97 - duplicate
 ```
 
-**Examples Missing Documentation:**
-- Several files have late imports without the standard comment block
-- `engine/game_initializer.py` line 62 - late import of RaceConfig
-- Various validation methods with late imports
-
-**Recommendation:** Add consistent "INTENTIONAL LATE IMPORT" comments to all late imports.
+**Impact:** Minor confusion about which constant to reference. The class attribute shadows the module constant.
+**Recommendation:** Remove the duplicate class-level constant, use only the module-level constant.
+**Effort:** Simple
 
 ---
 
-### m8. Dataclass vs Regular Class Inconsistency
+#### INFO: Well-Established Consistent Patterns
+**ID:** CON-STR-011
+**Location:** Throughout `game/strategy/`
+**Issue:** None - this is positive observation.
 
-**Location:** Data model classes
-**Pattern Violated:** Class type consistency
+The strategy layer demonstrates excellent consistency in several areas:
+- **Command/Handler Pattern:** All handlers follow identical structure (resolve, validate, apply, return)
+- **DTO Pattern:** Frozen dataclasses with `from_*` factory methods
+- **Serialization Pattern:** `to_dict()` / `from_dict()` pairs on all domain objects
+- **Calculator Pattern:** Pure calculation logic extracted to `*Calculator` classes
+- **Validator Pattern:** Dedicated stateless validator classes with static methods
+- **Interface Pattern:** Protocol-based dependency inversion in `interfaces/`
 
-**Observation:**
-- DTOs correctly use `@dataclass(frozen=True)` pattern
-- Domain objects use `@dataclass` appropriately
-- Some configuration classes use plain classes where dataclasses would fit
-
-**Example:**
-- `ClassificationConfig` is a plain class storing config values - could be a dataclass
-
-**Status:** Generally consistent; this is a minor observation.
-
----
-
-### m9. Inconsistent Property vs Method Naming
-
-**Location:** Query methods on domain objects
-**Pattern Violated:** Naming pattern for computed values
-
-**Pattern Observed:**
-- Properties for simple computed values (`@property`)
-- Methods for operations that may have side effects or complex computation
-
-**Example Inconsistency:**
-- `Fleet.has_space_shipyard` is a property
-- `Fleet.can_use_warp()` is a method (delegates to calculator)
-- `Fleet.get_combat_capable_ships()` is a method
-
-**Recommendation:** Document convention: properties for O(1) lookups, methods for O(n) operations.
+**Recommendation:** Continue following these established patterns.
+**Effort:** N/A
 
 ---
 
-### m10. Missing Protocol Usage for Duck-Typed Parameters
+#### INFO: Consistent Class Naming Suffixes
+**ID:** CON-STR-012
+**Location:** Throughout `game/strategy/`
+**Issue:** None - this is positive observation.
 
-**Location:** Engine and processor classes
-**Pattern Violated:** Type safety with protocols
+The codebase uses consistent class naming suffixes:
+- `*Engine` for turn processing engines (7 classes)
+- `*Calculator` for pure calculation classes (4 classes)
+- `*Processor` for order/command processors (2 classes)
+- `*Validator` for validation classes (3 classes)
+- `*Adapter` for layer bridges (2 classes)
+- `*Service` for services (3 classes)
+- `*Info` / `*Summary` for DTOs (8 classes)
+- `*Result` for operation results (6 classes)
 
-**Issue:** Many methods accept `Any` type for parameters that actually expect specific duck-type interfaces.
-
-**Examples:**
-- `empire_economy_calculator.py:calculate(empire)` - empire param is `Any`
-- `command_handlers.py` - cmd param is `Any` (could be Protocol)
-- Various validator methods accept `Any` for galaxy, fleet, planet
-
-**Recommendation:** Define protocols for commonly duck-typed interfaces (Empire, Galaxy, Fleet, Planet protocols).
-
----
-
-### m11. Inconsistent Logging Patterns
-
-**Location:** Various files
-**Pattern Violated:** Logging consistency
-
-**Observation:** Codebase uses `game.core.logger` with consistent functions:
-- `log_info()` for information
-- `log_warning()` for warnings
-- `log_error()` for errors
-- `log_event()` for game events
-- `log_debug()` for debug info
-
-**Minor Issue:** Some files import all log functions, others only what they need.
-
-**Status:** Functional pattern is consistent; import style varies slightly.
+**Recommendation:** Continue following these naming conventions.
+**Effort:** N/A
 
 ---
 
-### m12. Optional Parameter Default Values
+## Top 5 Priority Issues
 
-**Location:** Various method signatures
-**Pattern Violated:** None vs Optional pattern consistency
+1. **CON-STR-001 (MAJOR):** Logging pattern inconsistency - 4 files use stdlib logging while 24 use core logger. Standardize on `game.core.logger`.
 
-**Observation:** Codebase consistently uses:
-- `param: Optional[Type] = None` pattern
-- `param: Type = None` (less explicit but acceptable)
+2. **CON-STR-002 (MAJOR):** `ICommandHandler` Protocol missing `@runtime_checkable` decorator, inconsistent with other Protocol definitions.
 
-**Status:** Generally consistent.
+3. **CON-STR-003 (MAJOR):** `RaceConfig.validate()` returns `tuple[bool, str]` while all other validators return `ValidationResult`.
 
----
+4. **CON-STR-004 (MAJOR):** Inconsistent `from __future__ import annotations` usage - 3 files use it while 92 don't, causing mixed annotation styles.
 
-## INFO Findings
-
-### i1. Well-Structured Facade Pattern
-
-**Location:** `facade/` directory
-**Pattern:** CQRS-lite with DTOs
-
-**Observation:** The facade pattern is well-implemented:
-- Commands for mutations
-- DTOs for reads (frozen dataclasses)
-- Clear separation of concerns
-- Consistent `from_*` factory methods on DTOs
-
-**Status:** Exemplary pattern implementation.
-
----
-
-### i2. Clean Interface Definitions
-
-**Location:** `interfaces/` directory
-**Pattern:** Dependency inversion with Protocol
-
-**Observation:** Interface definitions are clean and well-documented:
-- `IBattleResolver` for battle resolution abstraction
-- Engine interfaces (`IMovementEngine`, `IProductionEngine`, etc.)
-- Clear Protocol definitions
-
-**Status:** Good practice.
-
----
-
-### i3. Consistent Command Handler Pattern
-
-**Location:** `engine/command_handlers.py`, `engine/superweapon_command_handlers.py`
-**Pattern:** Command/Handler with registry dispatch
-
-**Observation:** All command handlers follow identical structure:
-1. Resolve entities
-2. Validate
-3. Apply if valid
-4. Return ValidationResult
-
-**Status:** Excellent consistency.
-
----
-
-### i4. Good Separation of Validation Logic
-
-**Location:** `validation/` directory
-**Pattern:** Dedicated validator classes
-
-**Observation:** Validators are properly extracted:
-- `ColonizeValidator` - colonization rules
-- `TransferValidator` - cargo transfer rules
-- `SuperweaponValidator` - superweapon rules
-
-**Status:** Clean separation.
-
----
-
-### i5. Density Primitive Pattern
-
-**Location:** `generation/density/primitives/`
-**Pattern:** Strategy pattern for density fields
-
-**Observation:** Well-designed composable density system:
-- Abstract `DensityPrimitive` base class
-- Concrete implementations (Radial, Ring, Spiral, etc.)
-- `DensityMap` composes primitives
-
-**Status:** Good extensible design.
-
----
-
-### i6. Consistent Serialization Pattern
-
-**Location:** Domain classes with `to_dict()` / `from_dict()`
-**Pattern:** JSON serialization
-
-**Observation:** All serializable classes follow pattern:
-- `to_dict()` instance method for serialization
-- `from_dict(cls, data)` classmethod for deserialization
-- Consistent field mapping
-
-**Status:** Good consistency.
-
----
-
-### i7. Event System Design
-
-**Location:** `events/` directory
-**Pattern:** Event log with typed events
-
-**Observation:** Clean event system:
-- `EventType` enum for event classification
-- `EventCategory` for grouping
-- `Event` dataclass for individual events
-- `EventLog` for aggregation
-
-**Status:** Well-designed.
-
----
-
-### i8. Calculator Extraction Pattern
-
-**Location:** Various `*_calculator.py` files
-**Pattern:** Extracted calculation logic
-
-**Observation:** Calculations properly extracted from domain objects:
-- `FleetCapabilityCalculator`
-- `FleetSpeedCalculator`
-- `EmpireEconomyCalculator`
-- `ShipStatsCalculator`
-
-**Status:** Good separation of concerns.
-
----
-
-## Summary of Established Patterns
-
-The `game/strategy/` layer demonstrates these consistent patterns:
-
-1. **Validation Pattern:** Validators return `ValidationResult` (with one exception)
-2. **Command/Handler Pattern:** Registry-based dispatch with consistent handler structure
-3. **DTO Pattern:** Frozen dataclasses with `from_*` factory methods
-4. **Calculator Pattern:** Extracted pure calculation logic
-5. **Interface Pattern:** Protocol-based dependency inversion
-6. **Serialization Pattern:** `to_dict()` / `from_dict()` pairs
-7. **Event Pattern:** Typed event logging
-8. **Density/Generation Pattern:** Composable primitives
-
----
-
-## Recommended Actions
-
-### Priority 1 (MAJOR)
-1. Refactor `RaceConfig.validate()` to return `ValidationResult`
-2. Add missing type hints to public methods in `naming.py`, `planet_gen.py`, `stars.py`
-
-### Priority 2 (MINOR)
-3. Add `__all__` exports to empty `__init__.py` files
-4. Add "INTENTIONAL LATE IMPORT" comments to undocumented late imports
-5. Add docstrings to `RaceConfig` validation helper methods
-
-### Priority 3 (Maintenance)
-6. Consider defining Protocol types for commonly duck-typed parameters
-7. Run import sorting tool for consistent import ordering
-
----
-
-*Report generated by Sweep Agent - Consistency Review*
+5. **CON-STR-005 (MINOR):** `lookup_` function naming should be replaced with `get_` to match the dominant registry lookup pattern.

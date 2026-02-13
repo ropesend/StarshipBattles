@@ -3,13 +3,42 @@
 ## Summary
 - **Shard:** Strategy (`game/strategy/`)
 - **Files Scanned:** 95
-- **Total Issues Found:** 11
-- **Critical:** 0 | **Major:** 5 | **Minor:** 4 | **Info:** 2
+- **Total Issues Found:** 14
+- **Critical:** 0 | **Major:** 7 | **Minor:** 5 | **Info:** 2
 
 ## Findings
 
-#### MAJOR: Mission Command Handler Duplication
+#### MAJOR: Build Queue Source Collection - Near-Identical Functions
 **ID:** DUP-STR-001
+**Location:** `game/strategy/data/build_queue_source.py:144-218` AND `game/strategy/data/build_queue_source.py:221-288`
+**Issue:** Functions `collect_build_queues_at_hex()` and `collect_all_build_queues_for_empire()` share ~70% identical code. Both functions:
+1. Create planet base queue BuildQueueSource objects (lines 169-179 vs 241-251)
+2. Create shipyard facility BuildQueueSource objects (lines 186-196 vs 258-268)
+3. Create fleet space yard BuildQueueSource objects (lines 206-216 vs 276-286)
+
+The only difference is the iteration source: one filters by hex location, the other iterates all empire assets.
+**Impact:** If the BuildQueueSource construction logic needs updating (e.g., new fields, different default values), both functions must be modified in parallel. Risk of drift where one gets updated and the other is forgotten.
+**Recommendation:** Extract private helper functions `_create_planet_queue_sources(planet)` and `_create_fleet_queue_sources(fleet)` that both public functions call. The hex-based function adds a location filter, the empire-wide function iterates without filtering.
+**Effort:** Simple
+
+---
+
+#### MAJOR: Facility Shipyard Detection - Duplicated Pattern
+**ID:** DUP-STR-002
+**Location:** `game/strategy/data/build_queue_source.py:116-141` AND `game/strategy/data/planet.py:213-231`
+**Issue:** The `_facility_is_shipyard()` helper and `Planet.has_space_shipyard` property contain nearly identical logic for detecting if a facility has a space shipyard:
+- Both iterate `facility.design_data.get("layers", {}).values()`
+- Both check `isinstance(layer_data, list)`
+- Both check `comp.get("id") == "space_shipyard"` OR `"SpaceShipyard" in comp.get("abilities", {})`
+- Both have the same `if not facility.is_operational` guard
+**Impact:** Maintenance burden when shipyard detection logic changes. The pattern could also diverge subtly causing bugs where one method detects shipyards differently.
+**Recommendation:** Create a single canonical function in `component_inspector.py` like `facility_has_shipyard(facility, component_registry=None)` that both locations call.
+**Effort:** Simple
+
+---
+
+#### MAJOR: Mission Command Handler Duplication
+**ID:** DUP-STR-003
 **Location:** `game/strategy/engine/superweapon_command_handlers.py:182-393` (5 handlers)
 **Issue:** Five mission command handlers (ImplodePlanetMission, StellerateStarMission, OpenWarpPointMission, CloseWarpPointMission, CreateDysonSphereMission) share nearly identical 20-line patterns for:
 1. Resolving fleet from session
@@ -23,16 +52,10 @@ Each handler differs only in the final action order type and target parameters.
 **Recommendation:** Extract a `_queue_mission_with_move()` helper method that accepts the action order type and target as parameters.
 **Effort:** Simple
 
-#### MAJOR: Direct vs Mission Command Validation Asymmetry
-**ID:** DUP-STR-002
-**Location:** `game/strategy/engine/superweapon_command_handlers.py:27-176` (direct handlers) vs `game/strategy/engine/superweapon_command_handlers.py:182-393` (mission handlers)
-**Issue:** Direct command handlers (ImplodePlanetCommandHandler, etc.) call validation via `SuperweaponValidator.validate_*()`, but the corresponding mission handlers skip validation entirely. They trust the path check is sufficient validation.
-**Impact:** Semantic duplication of validation intent. Mission handlers may queue invalid orders that fail later during turn execution.
-**Recommendation:** Mission handlers should also validate the final action will be valid at the destination, or document why validation is deferred.
-**Effort:** Medium
+---
 
 #### MAJOR: `to_dict` / `from_dict` Boilerplate Pattern
-**ID:** DUP-STR-003
+**ID:** DUP-STR-004
 **Location:** Multiple files including:
 - `game/strategy/data/fleet.py:320-385`
 - `game/strategy/data/empire.py:137-195`
@@ -49,8 +72,10 @@ Each handler differs only in the final action order type and target parameters.
 **Recommendation:** Use `dataclasses.asdict()` with custom handling for complex types, or adopt a serialization framework (e.g., `cattrs`, `marshmallow`, or custom `@serializable` decorator).
 **Effort:** Complex (requires serialization strategy decision)
 
+---
+
 #### MAJOR: Fleet Resolution Pattern in Command Handlers
-**ID:** DUP-STR-004
+**ID:** DUP-STR-005
 **Location:**
 - `game/strategy/engine/command_handlers.py:75-93` (ColonizeCommandHandler)
 - `game/strategy/engine/command_handlers.py:128-135` (MoveCommandHandler)
@@ -71,8 +96,10 @@ This 3-line block is repeated ~18 times across command handlers.
 2. Add `session.resolve_fleet_or_fail(cmd.fleet_id)` returning `(fleet, error_result)`
 **Effort:** Simple
 
+---
+
 #### MAJOR: ColonizeValidator Colony Pod Iteration Pattern
-**ID:** DUP-STR-005
+**ID:** DUP-STR-006
 **Location:** `game/strategy/validation/colonize_validator.py:100-174`
 **Issue:** Three methods duplicate nearly identical component iteration logic:
 - `find_ship_with_colony_pod()` - iterates ships/components looking for ColonizePlanet ability
@@ -84,8 +111,36 @@ The first two methods share ~25 lines of duplicate component iteration with abil
 **Recommendation:** Extract `_extract_colony_pod_planet_type(ability_data) -> str` helper. Consider using `component_inspector.iterate_design_components()` consistently.
 **Effort:** Simple
 
+---
+
+#### MAJOR: Component Layer Iteration Pattern - Repeated Boilerplate
+**ID:** DUP-STR-007
+**Location:** Multiple files (6+ occurrences):
+- `game/strategy/data/build_queue_source.py:95-111`
+- `game/strategy/data/build_queue_source.py:132-140`
+- `game/strategy/data/planet.py:53-65`
+- `game/strategy/data/planet.py:220-231`
+- `game/strategy/engine/resupply_engine.py:142-154`
+- `game/strategy/engine/production_engine.py:312-337`
+**Issue:** The pattern of iterating over facility/design components is repeated with minor variations:
+```python
+for layer_data in design_data.get("layers", {}).values():
+    if not isinstance(layer_data, list):
+        continue
+    for comp in layer_data:
+        comp_id = comp.get("id") if isinstance(comp, dict) else comp
+        comp_def = registry.get(comp_id)
+        # ... ability-specific logic
+```
+Each location reimplements the same iteration boilerplate before doing something different with the abilities found.
+**Impact:** When the component data structure changes, all locations need updates. Easy to introduce subtle bugs (e.g., some locations handle string-only entries, others don't).
+**Recommendation:** The `iterate_design_components()` function in `component_inspector.py` was created to address this, but several locations still use raw iteration. Migrate remaining locations to use the canonical iterator.
+**Effort:** Medium
+
+---
+
 #### MINOR: Gaussian Factor Calculation Pattern
-**ID:** DUP-STR-006
+**ID:** DUP-STR-008
 **Location:** `game/strategy/formulas/habitability.py:31-114`
 **Issue:** Three functions (`calculate_gravity_factor`, `calculate_temperature_factor`, `calculate_water_factor`) use identical Gaussian falloff calculation:
 ```python
@@ -97,8 +152,10 @@ factor = math.exp(-0.5 * (deviation / sigma) ** 2)
 **Recommendation:** Consider extracting `gaussian_factor(actual, ideal, tolerance, min_sigma)` helper. However, current explicit implementation is also acceptable for clarity.
 **Effort:** Simple
 
+---
+
 #### MINOR: Path Start Hex Determination Logic
-**ID:** DUP-STR-007
+**ID:** DUP-STR-009
 **Location:**
 - `game/strategy/engine/command_handlers.py:248-253` (ColonizeMissionCommandHandler)
 - `game/strategy/engine/superweapon_command_handlers.py:197-202` (ImplodePlanetMission)
@@ -118,8 +175,10 @@ if fleet.orders:
 **Recommendation:** Add `fleet.get_effective_location()` or `session.get_fleet_start_hex_for_order(fleet)` method.
 **Effort:** Simple
 
+---
+
 #### MINOR: Ship Ability Check Wrappers
-**ID:** DUP-STR-008
+**ID:** DUP-STR-010
 **Location:**
 - `game/strategy/data/fleet_capability_calculator.py:172-186` (`_ship_has_ability` method)
 - `game/strategy/validation/superweapon_validator.py:17-33` (`find_ship_with_ability` method)
@@ -128,8 +187,10 @@ if fleet.orders:
 **Recommendation:** Consider deprecating wrappers in favor of direct calls to `component_inspector` functions, or document them as intentional API facades.
 **Effort:** Simple
 
+---
+
 #### MINOR: Resource Dictionary Accumulation Pattern
-**ID:** DUP-STR-009
+**ID:** DUP-STR-011
 **Location:** `game/strategy/services/ship_stats_calculator.py:109-269`
 **Issue:** Multiple resource accumulation loops use identical `dict[key] = dict.get(key, 0) + value` pattern:
 - `resource_storage` accumulation
@@ -141,8 +202,26 @@ if fleet.orders:
 **Recommendation:** Consider `defaultdict(float)` for accumulators to eliminate `.get(key, 0)` pattern.
 **Effort:** Simple
 
+---
+
+#### MINOR: Fleet and Ship Delegation Pattern
+**ID:** DUP-STR-012
+**Location:**
+- `game/strategy/data/fleet.py:200-250` (15+ delegation methods)
+- `game/strategy/data/ship_instance.py:267-352` (10+ delegation methods)
+**Issue:** Both Fleet and ShipInstance classes have many thin delegation methods forwarding to their internal managers (FleetResourceAggregator, ShipResourceManager, etc.):
+```python
+def get_fleet_cargo_capacity(self, cargo_type: str) -> int:
+    return self._resource_agg.get_fleet_cargo_capacity(cargo_type)
+```
+**Impact:** Low risk - the delegation pattern is intentional for encapsulation (PROJ-87). However, creates maintenance overhead keeping signatures in sync.
+**Recommendation:** This is a design choice. Consider exposing managers directly for bulk operations or using `__getattr__` delegation. However, current explicit delegation is also acceptable.
+**Effort:** Medium (if changed)
+
+---
+
 #### INFO: Validated Design Component Iteration
-**ID:** DUP-STR-010
+**ID:** DUP-STR-013
 **Location:**
 - `game/strategy/services/component_inspector.py:41-89` (canonical implementation)
 - `game/strategy/services/ship_stats_calculator.py:366-401` (`_iterate_design_components` method)
@@ -151,22 +230,26 @@ if fleet.orders:
 **Recommendation:** This is a known pattern - the calculator predates the inspector consolidation (PROJ-108). Consider unifying when ShipStatsCalculator is next refactored. Document the relationship.
 **Effort:** Medium
 
+---
+
 #### INFO: Well-Consolidated Component Inspector
-**ID:** DUP-STR-011
+**ID:** DUP-STR-014
 **Location:** `game/strategy/services/component_inspector.py:1-164`
 **Issue:** This file represents GOOD consolidation. Previous duplication in ColonizeValidator and SuperweaponValidator was extracted into canonical functions (`iterate_design_components`, `ship_has_ability`, `find_ship_with_ability`, `count_ability`).
 **Impact:** Positive. This is the canonical location for component ability inspection.
 **Recommendation:** Continue using this module for new ability queries. Consider migrating `ShipStatsCalculator._iterate_design_components()` to use this.
 **Effort:** N/A (observation)
 
+---
+
 ## Top 5 Priority Issues
 
-1. **DUP-STR-001 (MAJOR): Mission Command Handler Duplication** - 5 handlers share 20-line patterns that should be extracted to a helper. Most impactful consolidation opportunity in terms of lines saved.
+1. **DUP-STR-001 (MAJOR): Build Queue Source Collection** - Two functions with 70% identical code for collecting build queues. Simple helper extraction would eliminate ~50 lines of duplication.
 
-2. **DUP-STR-003 (MAJOR): to_dict/from_dict Boilerplate** - ~400+ lines of manual serialization across 10+ classes. Adopting a serialization strategy would eliminate a major source of maintenance bugs.
+2. **DUP-STR-002 (MAJOR): Facility Shipyard Detection** - Same detection logic in two places (`_facility_is_shipyard` and `Planet.has_space_shipyard`). Should be a single function in `component_inspector.py`.
 
-3. **DUP-STR-004 (MAJOR): Fleet Resolution Pattern** - 18 repetitions of fleet resolution boilerplate. Simple decorator or helper would clean this up.
+3. **DUP-STR-007 (MAJOR): Component Layer Iteration** - 6+ locations with raw iteration boilerplate. The canonical `iterate_design_components()` exists but isn't used everywhere.
 
-4. **DUP-STR-005 (MAJOR): ColonizeValidator Pod Iteration** - Ability data format handling duplicated in 2 methods. Extract shared helper to ensure consistent handling.
+4. **DUP-STR-003 (MAJOR): Mission Command Handler Duplication** - 5 handlers share 20-line patterns that should be extracted to a helper.
 
-5. **DUP-STR-007 (MINOR): Path Start Hex Determination** - 6 repetitions of effective location calculation. Simple extraction to Fleet method.
+5. **DUP-STR-005 (MAJOR): Fleet Resolution Pattern** - 18 repetitions of fleet resolution boilerplate. Simple decorator or helper would clean this up.

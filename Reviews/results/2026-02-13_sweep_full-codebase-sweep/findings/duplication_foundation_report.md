@@ -3,28 +3,13 @@
 ## Summary
 - **Shard:** Foundation (game/core/, game/ai/, game/research/, game/engine/)
 - **Files Scanned:** 41
-- **Total Issues Found:** 8
-- **Critical:** 0 | **Major:** 3 | **Minor:** 4 | **Info:** 1
+- **Total Issues Found:** 7
+- **Critical:** 0 | **Major:** 2 | **Minor:** 4 | **Info:** 1
 
 ## Findings
 
-#### MAJOR: Clamp Function Duplication
-**ID:** DUP-FND-001
-**Location:** `game/core/math.py:187-203` AND `game/strategy/generation/density/primitives/density_primitive.py:36-45`
-**Issue:** Two implementations of clamp functionality exist:
-- `game/core/math.py` provides a general-purpose `clamp(value, min_val, max_val)` function
-- `game/strategy/generation/density/primitives/density_primitive.py` provides `clamp_density(value)` hardcoded to [0.0, 1.0] range
-
-While `clamp_density` is more specialized, it duplicates the core functionality and could be replaced with a simple call to `clamp(value, 0.0, 1.0)` from core.
-
-**Impact:** Low maintenance risk but violates DRY principle. Changes to clamping behavior would need to be made in two places.
-**Recommendation:** Replace `clamp_density` with a call to `clamp(value, 0.0, 1.0)` from `game.core.math`, or document the intentional difference.
-**Effort:** Simple
-
----
-
 #### MAJOR: Entity Position/State Access Patterns in AI
-**ID:** DUP-FND-002
+**ID:** DUP-FND-001
 **Location:** `game/ai/combat_utils.py:49-82` (get_position) AND `game/ai/combat_utils.py:84-112` (get_rotation)
 **Issue:** The `get_position()` and `get_rotation()` utility functions in `combat_utils.py` implement nearly identical patterns for safe entity attribute access:
 1. Try interface method (get_position/get_rotation)
@@ -45,7 +30,7 @@ Both functions share:
 ---
 
 #### MAJOR: Singleton Pattern Documentation/Structure Duplication
-**ID:** DUP-FND-003
+**ID:** DUP-FND-002
 **Location:** Multiple files using `metaclass=SingletonMeta`:
 - `game/core/logger.py` (Logger)
 - `game/core/registry.py` (RegistryManager)
@@ -67,7 +52,7 @@ Example: Both `StrategyManager.clear()` and `StrategyMetadataService.clear()` fo
 ---
 
 #### MINOR: Entity ID Extraction Pattern Duplication
-**ID:** DUP-FND-004
+**ID:** DUP-FND-003
 **Location:** `game/ai/combat_utils.py:65`, `game/ai/combat_utils.py:97`, `game/ai/combat_utils.py:143-144`, `game/ai/combat_utils.py:189-190`, `game/ai/controller.py:191`, `game/ai/controller.py:219`
 **Issue:** The pattern `getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))` for safely extracting an entity identifier is repeated 6+ times across the AI module.
 
@@ -78,7 +63,7 @@ Example: Both `StrategyManager.clear()` and `StrategyMetadataService.clear()` fo
 ---
 
 #### MINOR: Flee Direction Calculation
-**ID:** DUP-FND-005
+**ID:** DUP-FND-004
 **Location:** `game/ai/behaviors.py:70-84` (_flee_direction function)
 **Issue:** The `_flee_direction()` helper calculates a normalized direction vector away from a target. This pattern is used in multiple behaviors (FleeBehavior, KiteBehavior, AttackRunBehavior). While centralized in a function, the zero-length vector check and normalization is a common pattern that appears elsewhere in the codebase (e.g., weapon firing, projectile direction).
 
@@ -89,7 +74,7 @@ Example: Both `StrategyManager.clear()` and `StrategyMetadataService.clear()` fo
 ---
 
 #### MINOR: Tech Tree Validation Method Patterns
-**ID:** DUP-FND-006
+**ID:** DUP-FND-005
 **Location:** `game/research/data/tech_tree.py:191-263`
 **Issue:** The `validate_requirements()` and `detect_cycles()` methods in TechTree share:
 - Similar iteration patterns over nodes and requirements
@@ -105,7 +90,7 @@ The `validate()` method simply calls both and concatenates results.
 ---
 
 #### MINOR: Serialization to_dict/from_dict Patterns
-**ID:** DUP-FND-007
+**ID:** DUP-FND-006
 **Location:** `game/research/data/research_tracker.py` (NodeState and ResearchTracker), `game/core/input_actions.py` (KeyBinding)
 **Issue:** Multiple data classes implement `to_dict()` and `from_dict()` with similar patterns:
 ```python
@@ -126,7 +111,7 @@ def from_dict(cls, data: Dict[str, Any]) -> 'ClassName':
 ---
 
 #### INFO: Well-Consolidated Utilities
-**ID:** DUP-FND-008
+**ID:** DUP-FND-007
 **Location:** `game/core/` module
 **Issue:** No major issues found. The following are well-consolidated:
 - **Vector2** (`game/core/math.py`) - Single implementation used throughout
@@ -145,12 +130,12 @@ def from_dict(cls, data: Dict[str, Any]) -> 'ClassName':
 
 ## Top 5 Priority Issues
 
-1. **DUP-FND-002 (MAJOR)**: Entity position/rotation access pattern duplication in AI combat_utils - creates maintenance burden and inconsistency risk as new accessor methods are added.
+1. **DUP-FND-001 (MAJOR)**: Entity position/rotation access pattern duplication in AI combat_utils - creates maintenance burden and inconsistency risk as new accessor methods are added.
 
-2. **DUP-FND-003 (MAJOR)**: Singleton service pattern duplication - StrategyManager and StrategyMetadataService have overlapping data loading concerns that could be unified.
+2. **DUP-FND-002 (MAJOR)**: Singleton service pattern duplication - StrategyManager and StrategyMetadataService have overlapping data loading concerns that could be unified.
 
-3. **DUP-FND-004 (MINOR)**: Entity ID extraction pattern repeated 6+ times - simple fix that improves code clarity.
+3. **DUP-FND-003 (MINOR)**: Entity ID extraction pattern repeated 4+ times in AI module - simple fix that improves code clarity.
 
-4. **DUP-FND-001 (MAJOR)**: Clamp function duplication - minor but demonstrates pattern of local utility functions that could use core utilities.
+4. **DUP-FND-006 (MINOR)**: Serialization pattern duplication across 30+ files - architectural concern worth tracking for future refactoring.
 
-5. **DUP-FND-007 (MINOR)**: Serialization pattern duplication across 30+ files - architectural concern worth tracking for future refactoring.
+5. **DUP-FND-004 (MINOR)**: Flee direction calculation could be promoted to core/math if needed outside AI module.

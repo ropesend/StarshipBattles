@@ -1,157 +1,219 @@
 # Prospective Projects Summary
 
-**Sweep:** 2026-02-13_sweep_full-codebase-sweep
-**Total Findings:** 273
-**Projects Proposed:** 6
-**Date Generated:** 2026-02-13
+**Generated:** 2026-02-13
+**Source Sweep:** 2026-02-13_sweep_full-codebase-sweep
+**Total Findings:** 245
+**Total Projects Proposed:** 6
 
-## Overview
+## Executive Summary
 
-This document summarizes the prospective projects generated from the full codebase sweep. The 273 findings have been grouped into 6 coherent projects based on thematic coherence, shared files, shared fix strategies, and independent executability.
+Based on the comprehensive codebase sweep that identified 245 findings (10 Critical, 80 Major, 115 Minor, 40 Info), we propose 6 well-scoped projects organized by theme:
 
-## Finding Distribution
+| # | Project | Findings | Critical | Major | Est. Duration |
+|---|---------|----------|----------|-------|---------------|
+| 1 | [Architecture Layer Fixes](#1-architecture-layer-fixes) | 29 | 3 | 11 | 2-3 sprints |
+| 2 | [Codebase Consistency](#2-codebase-consistency) | 73 | 1 | 14 | 2-3 sprints |
+| 3 | [Code Duplication Reduction](#3-code-duplication-reduction) | 36 | 0 | 14 | 2 sprints |
+| 4 | [Legacy System Cleanup](#4-legacy-system-cleanup) | 20 | 0 | 3 | 1-2 sprints |
+| 5 | [Test Coverage: Core Systems](#5-test-coverage-core-systems) | 35 | 4 | 14 | 2-3 sprints |
+| 6 | [Test Coverage: Strategy and UI](#6-test-coverage-strategy-ui) | 52 | 4 | 21 | 3-4 sprints |
 
-| Severity | Count | % |
-|----------|-------|---|
-| Critical | 17 | 6% |
-| Major | 93 | 34% |
-| Minor | 109 | 40% |
-| Info | 54 | 20% |
+**Total Effort Estimate:** 12-17 sprints
 
-## Proposed Projects
+## Finding Coverage Verification
 
-### PROJ-A: Simulation Layer Test Coverage
-**Priority:** High | **Effort:** Medium-Complex | **Findings:** 18
+All 245 findings have been assigned to exactly one project:
 
-Addresses critical test coverage gaps in the simulation layer including Projectile entity, ShipStatQuerier, and ShipValidator rules - all with zero unit tests. These components handle core combat mechanics.
+| Sweep Type | Count | Assigned To |
+|------------|-------|-------------|
+| Architecture Drift (ADR) | 29 | Project 1: Architecture Layer Fixes |
+| Consistency Violations (CON) | 73 | Project 2: Codebase Consistency |
+| Duplication & Fragmentation (DUP) | 30 | Project 3: Code Duplication Reduction |
+| Legacy System Holdovers (LEG) | 20 | Project 4: Legacy System Cleanup |
+| Test Coverage Gaps (TCG-FND, TCG-SIM) | 35 | Project 5: Test Coverage Core Systems |
+| Test Coverage Gaps (TCG-STR, TCG-UI1, TCG-UI2) | 52 | Project 6: Test Coverage Strategy/UI |
+| Unknown (UNK) | 6 | Project 3: Code Duplication Reduction |
 
-**Critical Findings:** 3 | **Major:** 7 | **Minor:** 6 | **Info:** 2
-
-**Key Files:**
-- `game/simulation/entities/projectile.py`
-- `game/simulation/entities/ship_stat_querier.py`
-- `game/simulation/validation/ship_validator.py`
-
-**Overlap:** PROJ-118 (Test Coverage -- Core and Simulation)
-
----
-
-### PROJ-B: Legacy System Eradication
-**Priority:** High | **Effort:** Medium | **Findings:** 37
-
-Removes backward compatibility shims, deprecated code paths, and legacy API holdovers per the System Migration Policy. Includes string-to-enum migration code, backward compatibility aliases, and V1 format detection code.
-
-**Critical Findings:** 2 | **Major:** 14 | **Minor:** 19 | **Info:** 2
-
-**Key Files:**
-- `game/simulation/systems/battle_engine.py`
-- `game/ui/panels/race_portrait_gallery.py`
-- `game/ui/screens/builder/main.py`
-
-**Overlap:** PROJ-58 (Eradicate Backward Compatibility Shims)
+**Total: 245 findings assigned**
 
 ---
 
-### PROJ-C: UI God Class Decomposition
-**Priority:** High | **Effort:** Complex | **Findings:** 23
+## Project Details
 
-Decomposes large UI screens that exceed maintainability limits. TestLabScreen at 1908 lines/75 methods is the most severe case. Also addresses test framework coupling, private attribute access, and viewmodel mutation.
+### 1. Architecture Layer Fixes
 
-**Critical Findings:** 2 | **Major:** 14 | **Minor:** 4 | **Info:** 3
+**Directory:** `architecture-layer-fixes/`
+**Theme:** Architecture Drift (ADR)
+**Findings:** 29 (3 Critical, 11 Major, 8 Minor, 7 Info)
 
-**Key Files:**
-- `game/ui/screens/test_lab/screen.py` (1908 lines)
-- `game/ui/screens/builder/main.py` (1121 lines)
-- `game/ui/screens/build_queue_screen.py` (1098 lines)
-- `game/ui/screens/strategy_screen.py` (811 lines)
+**Key Issues:**
+- AI layer imports in simulation factory (CRITICAL)
+- Test framework coupling in production UI (CRITICAL)
+- Multiple god classes (800-1900 lines)
+- Circular dependency workarounds
 
-**Overlap:** None
+**Top Priorities:**
+1. Remove test framework imports from production code
+2. Fix simulation->AI layer violations
+3. Clean up private attribute access patterns
+4. Plan god class decomposition
 
----
-
-### PROJ-D: Architecture Cleanup - Layer Violations
-**Priority:** Medium | **Effort:** Medium | **Findings:** 24
-
-Fixes layer violations, standardizes singleton vs DI patterns, and establishes consistent conventions. Includes research UI importing from game.ui, simulation importing AI, and mixed singleton patterns.
-
-**Critical Findings:** 4 | **Major:** 9 | **Minor:** 7 | **Info:** 4
-
-**Key Files:**
-- `game/research/ui/research_scene.py`
-- `game/simulation/factories/ai_factory.py`
-- `game/core/registry.py`
-
-**Overlap:** None
+**Potential Overlaps:**
+- PROJ-123 (PROJ-D_architecture-cleanup) - Review for merge opportunity
 
 ---
 
-### PROJ-E: UI Layer Test Coverage
-**Priority:** Medium | **Effort:** Complex | **Findings:** 63
+### 2. Codebase Consistency
 
-Addresses comprehensive test coverage gaps across UI screens, panels, and services. BattleScreen, BattleUI, and BattlePanels have zero unit tests. Also includes strategy layer test gaps.
+**Directory:** `codebase-consistency/`
+**Theme:** Consistency Violations (CON)
+**Findings:** 73 (1 Critical, 14 Major, 41 Minor, 17 Info)
 
-**Critical Findings:** 6 | **Major:** 28 | **Minor:** 24 | **Info:** 5
+**Key Issues:**
+- Return type inconsistencies
+- Magic numbers in combat systems
+- Mixed naming conventions
+- Type hint gaps
+- Inconsistent DI patterns
 
-**Key Files:**
-- `game/ui/screens/battle_screen.py`
-- `game/ui/screens/battle_ui.py`
-- `game/ui/panels/battle_panels.py`
+**Top Priorities:**
+1. Fix ResourceRegistry return type inconsistency (CRITICAL)
+2. Extract magic numbers to named constants
+3. Standardize logging and DI patterns
+4. Complete type hint coverage
 
-**Overlap:** PROJ-119 (Test Coverage -- Strategy and UI), PROJ-105 (Visual Regression Testing)
+**Potential Overlaps:**
+- PROJ-125 (PROJ-F_code-consistency) - Direct overlap, review for merge
 
 ---
 
-### PROJ-F: Code Consistency and Duplication Cleanup
-**Priority:** Low-Medium | **Effort:** Medium | **Findings:** 108
+### 3. Code Duplication Reduction
 
-Establishes consistent coding conventions and consolidates duplicate code patterns. Includes naming inconsistencies, pattern inconsistencies, and code duplication in utilities.
+**Directory:** `code-duplication-reduction/`
+**Theme:** Duplication & Fragmentation (DUP) + Unknown (UNK)
+**Findings:** 36 (0 Critical, 14 Major, 18 Minor, 4 Info)
 
-**Critical Findings:** 0 | **Major:** 20 | **Minor:** 50 | **Info:** 38
+**Key Issues:**
+- Repeated to_dict/from_dict boilerplate
+- Team/component iteration patterns duplicated
+- Calculation utilities scattered
+- UI helper code fragmented
 
-**Key Files:**
-- Various across all layers
+**Top Priorities:**
+1. Create serialization base class/mixin
+2. Extract common iteration helpers
+3. Centralize calculation utilities
+4. Consolidate UI helper code
 
-**Overlap:** None
+**Potential Overlaps:**
+- None identified
+
+---
+
+### 4. Legacy System Cleanup
+
+**Directory:** `legacy-system-cleanup/`
+**Theme:** Legacy System Holdovers (LEG)
+**Findings:** 20 (0 Critical, 3 Major, 11 Minor, 6 Info)
+
+**Key Issues:**
+- "Legacy behavior" branches in strategy engine
+- Backward compatibility code for save files
+- Singleton patterns despite DI preference
+- Unused error codes
+
+**Top Priorities:**
+1. Remove legacy branches in FleetOrderProcessor
+2. Remove O(n) fallback in GameSession
+3. Remove legacy ProductionEngine code paths
+4. Clean up save file compatibility code
+
+**Potential Overlaps:**
+- PROJ-121 (PROJ-B_legacy-eradication) - Direct overlap
+- PROJ-58 (Eradicate Backward Compatibility Shims) - Related
+
+---
+
+### 5. Test Coverage: Core Systems
+
+**Directory:** `test-coverage-core-systems/`
+**Theme:** Test Coverage Gaps (TCG) - Foundation and Simulation
+**Findings:** 35 (4 Critical, 14 Major, 13 Minor, 4 Info)
+
+**Key Issues:**
+- CollisionSystem raycasting edge cases untested (CRITICAL)
+- ResearchService leaky bucket algorithm untested (CRITICAL)
+- Missing state transition tests
+- Sparse ability tests
+
+**Top Priorities:**
+1. Add CollisionSystem edge case tests
+2. Add ResearchService algorithm tests
+3. Add BattleController state transition tests
+4. Add damage calculator armor interaction tests
+
+**Potential Overlaps:**
+- PROJ-120 (PROJ-A_simulation-test-coverage) - Direct overlap
+- PROJ-118 (Test Coverage -- Core and Simulation) - Direct overlap
+
+---
+
+### 6. Test Coverage: Strategy and UI
+
+**Directory:** `test-coverage-strategy-ui/`
+**Theme:** Test Coverage Gaps (TCG) - Strategy, UI-Screens, UI-Framework
+**Findings:** 52 (4 Critical, 21 Major, 18 Minor, 9 Info)
+
+**Key Issues:**
+- Strategy data modules (naming, physics) have no tests (CRITICAL)
+- Major UI panels and screens lack tests (CRITICAL)
+- Test quality issues (bypass-init, over-mocking)
+- No integration tests for user flows
+
+**Top Priorities:**
+1. Add strategy data module tests
+2. Add BattleStateViewer and ValidationManager tests
+3. Add UI panel unit tests
+4. Add integration tests for critical flows
+
+**Potential Overlaps:**
+- PROJ-124 (PROJ-E_ui-test-coverage) - Direct overlap
+- PROJ-119 (Test Coverage -- Strategy and UI) - Direct overlap
 
 ---
 
 ## Recommended Execution Order
 
-1. **PROJ-A (Simulation Test Coverage)** - High priority, enables safer refactoring
-2. **PROJ-B (Legacy Eradication)** - High priority, reduces code to maintain
-3. **PROJ-C (God Class Decomposition)** - High priority, improves maintainability
-4. **PROJ-D (Architecture Cleanup)** - Medium priority, establishes patterns
-5. **PROJ-E (UI Test Coverage)** - Medium priority, improves confidence
-6. **PROJ-F (Code Consistency)** - Low priority, polish project
+Based on dependencies and impact, we recommend the following execution order:
 
-## Overlap with Existing Projects
+1. **Architecture Layer Fixes** - Fixes foundational issues that other projects depend on
+2. **Legacy System Cleanup** - Removes dead code before adding tests
+3. **Test Coverage: Core Systems** - Establishes safety net for core systems
+4. **Codebase Consistency** - Standardizes patterns before duplication work
+5. **Code Duplication Reduction** - Consolidates with consistent patterns
+6. **Test Coverage: Strategy and UI** - Final layer of testing
 
-| Existing Project | Status | Overlaps With |
-|-----------------|--------|---------------|
-| PROJ-119 | Planning | PROJ-A, PROJ-E |
-| PROJ-118 | Planning | PROJ-A |
-| PROJ-105 | Planning | PROJ-E |
-| PROJ-58 | Planning | PROJ-B |
+## Overlap Resolution Notes
 
-**Recommendations:**
-- Consider merging PROJ-A findings into PROJ-118 if scopes align
-- Consider merging PROJ-B findings into PROJ-58 if scopes align
-- PROJ-E strategy findings may belong in PROJ-119
+Several existing projects in `projects_index.md` may overlap with these proposals:
 
-## Finding Accounting
+| Existing Project | Overlaps With | Recommendation |
+|------------------|---------------|----------------|
+| PROJ-123 | Architecture Layer Fixes | Review and merge |
+| PROJ-125 | Codebase Consistency | Review and merge |
+| PROJ-121 | Legacy System Cleanup | Review and merge |
+| PROJ-58 | Legacy System Cleanup | May be subset |
+| PROJ-120 | Test Coverage Core | Review and merge |
+| PROJ-118 | Test Coverage Core | Review and merge |
+| PROJ-124 | Test Coverage Strategy/UI | Review and merge |
+| PROJ-119 | Test Coverage Strategy/UI | Review and merge |
+| PROJ-105 | Test Coverage Strategy/UI | May be follow-up |
 
-| Project | Findings | Critical | Major | Minor | Info |
-|---------|----------|----------|-------|-------|------|
-| PROJ-A | 18 | 3 | 7 | 6 | 2 |
-| PROJ-B | 37 | 2 | 14 | 19 | 2 |
-| PROJ-C | 23 | 2 | 14 | 4 | 3 |
-| PROJ-D | 24 | 4 | 9 | 7 | 4 |
-| PROJ-E | 63 | 6 | 28 | 24 | 5 |
-| PROJ-F | 108 | 0 | 20 | 50 | 38 |
-| **Total** | **273** | **17** | **92** | **110** | **54** |
-
-All 273 findings have been assigned to exactly one project.
+Before creating any project, review the existing project scope to determine if:
+1. The existing project covers the same ground (merge)
+2. The existing project is a subset (extend)
+3. The existing project is a superset (defer new proposal)
 
 ---
 
-*Generated: 2026-02-13*
+*Generated by Sweep Agent on 2026-02-13*

@@ -1,405 +1,243 @@
-# Test Coverage Gaps Report - Foundation Shard
+# Test Coverage Gaps Sweep: Foundation
 
-**Sweep Date:** 2026-02-13
-**Shard:** Foundation (game/core/, game/ai/, game/research/, game/engine/)
-**Auditor:** Claude Opus 4.5 (claude-opus-4-5-20251101)
-
----
-
-## Executive Summary
-
-This report analyzes test coverage for the Foundation modules of Starship Battles. The analysis followed a 6-phase methodology covering untested modules, undertested public APIs, critical path coverage, test quality issues, integration test gaps, and missing test categories.
-
-**Overall Assessment:** The Foundation shard has **good unit test coverage** for most modules, with comprehensive tests for AI behaviors, combat utilities, research systems, and core utilities. However, there are notable gaps in integration tests, UI component tests, and certain edge cases.
+## Summary
+- **Shard:** Foundation (game/core/, game/ai/, game/research/, game/engine/)
+- **Production Files Scanned:** 37
+- **Test Files Cross-Referenced:** 84
+- **Total Issues Found:** 18
+- **Critical:** 2 | **Major:** 7 | **Minor:** 7 | **Info:** 2
 
 ---
 
-## Phase 1: Untested Modules
+## Findings
 
-### game/core/
+### Critical Issues
 
-#### INFO: game/core/resources.py - No dedicated test file
-**File:** `C:\Dev\Starship Battles\game\core\resources.py`
+#### CRITICAL: CollisionSystem raycasting edge cases untested
+**ID:** TCG-FND-001
+**Location:** `game/engine/collision.py` (production) / `tests/unit/systems/test_collision_system.py` (partial coverage)
+**Issue:** While `test_collision_system.py` exists and tests basic beam hit/miss scenarios, the following critical edge cases are not tested:
+- Division by zero when direction vector has length 0 (`a == 0` guard at line 87-88)
+- Tangent hits where discriminant equals exactly 0 (edge of sphere)
+- Multiple valid intersection points (entry and exit) - test only checks first hit
+- Beam attack with `source` ship missing `get_total_sensor_score` attribute
+- Hit chance calculation edge cases (attack_score=0, defense_score=very high)
+**Impact:** Raycasting bugs could cause beams to miss when they should hit or vice versa - core combat mechanics
+**Recommendation:** Add tests for zero-length direction, tangent hits, sensor score edge cases, and verify both t1/t2 intersection handling
+**Effort:** Medium
 
-The `resources.py` module handles loading resource type definitions from JSON into the RegistryManager. While functions like `load_resources_data()` and `load_resources()` are defined, there is no dedicated `test_resources.py` file in `tests/unit/core/`.
-
-Related tests exist in:
-- `tests/unit/strategy/ship_stats/test_resources.py`
-- `tests/unit/entities/test_resources.py`
-
-These test resource-related functionality but not the core loading functions in `game/core/resources.py`.
-
-**Recommendation:** Add unit tests for:
-- `load_resources_data()` with missing files, invalid JSON, permission errors
-- `_resolve_resource_path()` path resolution logic
-- `_get_default_resources()` returns correct defaults
-
----
-
-### game/ai/
-
-#### INFO: game/ai/controller.py - Excellent coverage exists
-**File:** `C:\Dev\Starship Battles\game\ai\controller.py`
-
-The `AIController` class is thoroughly tested in `tests/unit/ai/test_ai_controller_unit.py` with 1149 lines of comprehensive tests covering:
-- Behavior selection logic
-- Engage distance multipliers
-- Formation handling
-- Target acquisition
-- Navigation
-- Avoidance
-
-**Status:** Well-covered
+#### CRITICAL: ResearchService leaky bucket algorithm edge cases untested
+**ID:** TCG-FND-002
+**Location:** `game/research/systems/research_service.py` (production) / `tests/unit/research/test_research_service.py` (partial)
+**Issue:** The stochastic research system has critical edge cases that are not explicitly tested:
+- Roll exactly at the breakthrough threshold (roll == current_chance)
+- MAX_CHANCE cap behavior when chance accumulates past 95%
+- Decay applied to locked nodes with accumulated chance (lines 77-91)
+- Price curve calculations with level=0 input
+- `tech_levels` mutation during turn processing (line 156)
+- Negative RP allocation protection in `calculate_added_chance`
+**Impact:** Research breakthrough probabilities could be incorrectly calculated, affecting game balance
+**Recommendation:** Add parametrized tests for boundary roll values, max chance capping, and level 0 edge cases
+**Effort:** Medium
 
 ---
 
-### game/research/
+### Major Issues
 
-#### MAJOR: game/research/data/tech_tree.py - Missing dedicated test file
-**File:** `C:\Dev\Starship Battles\game\research\data\tech_tree.py`
+#### MAJOR: AIController navigation and avoidance algorithms lack comprehensive testing
+**ID:** TCG-FND-003
+**Location:** `game/ai/controller.py` (production) / `tests/unit/ai/test_ai_controller_unit.py` (partial)
+**Issue:** Key AIController methods lack thorough unit tests:
+- `check_avoidance()` - collision avoidance logic
+- `navigate_to()` - navigation algorithm with stop_dist and precise parameters
+- `get_engage_distance_multiplier()` - strategy parameter parsing
+- `angle_to_target()` - angle calculation edge cases (same position, very large values)
+**Impact:** AI ships may behave unpredictably during combat, causing frustrating player experience
+**Recommendation:** Add unit tests for navigation with zero stop_dist, precise=True/False variations, avoidance with no nearby ships
+**Effort:** Medium
 
-The `TechTree` class contains significant functionality:
-- `load_from_json()` - JSON loading with validation
-- `resolve_all_requirements()` - Fuzzy requirement resolution
-- `calculate_depth()` - Layout depth calculation
-- `get_nodes_at_depth()`, `get_max_depth()` - Layout helpers
-- `validate_requirements()` - Requirement validation
-- `detect_cycles()` - Cycle detection in dependency graph
-- `validate()` - Combined validation
+#### MAJOR: TargetEvaluator rule evaluation missing edge case coverage
+**ID:** TCG-FND-004
+**Location:** `game/ai/target_evaluator.py` (production) / `tests/unit/ai/target_evaluator/` (partial)
+**Issue:** Specific evaluation rules lack edge case testing:
+- `_eval_distance_rule` with distance_cache=None and inf distance
+- `_eval_mass_rule` with mass=0 or negative mass
+- `_eval_speed_rule` with zero velocity vector
+- `_eval_damage_rule` with hp_percent=0.0 and hp_percent=1.0
+- `_eval_pdc_arc_rule` with non-missile entity type
+- Weight=0 and factor=0 combinations across all rule types
+**Impact:** Target selection bugs could cause AI to prioritize wrong targets
+**Recommendation:** Add parametrized tests for boundary values in each evaluation rule
+**Effort:** Simple
 
-No dedicated `test_tech_tree.py` exists. The `TechNode` class is tested in `test_tech_node.py`, but `TechTree` container logic is not covered.
+#### MAJOR: Behavior classes missing state transition and timer edge case tests
+**ID:** TCG-FND-005
+**Location:** `game/ai/behaviors.py` (production) / `tests/unit/ai/test_ai_behaviors.py` (partial)
+**Issue:** Several behaviors have untested state transitions:
+- `AttackRunBehavior`: State flip at exactly APPROACH_HYSTERESIS boundary, timer rollover with negative values
+- `FormationBehavior`: Master death during drift phase, rotation mode switching mid-flight
+- `OrbitBehavior`: dist=0 (same position as target) early return
+- `FleeBehavior`: flee direction calculation when ship and target at same position
+- `ErraticBehavior`: Random behavior reproducibility not tested with seeded RNG
+**Impact:** AI behaviors could get stuck in incorrect states or crash at edge cases
+**Recommendation:** Add state machine transition tests with boundary inputs
+**Effort:** Medium
 
-**Recommendation:** Create `tests/unit/research/test_tech_tree.py` covering:
-- JSON loading with valid/invalid/missing files
-- Fuzzy requirement resolution determinism
-- Depth calculation for various tree shapes
-- Cycle detection with cyclic/acyclic graphs
-- Validation error reporting
+#### MAJOR: TechTree validation methods lack test coverage for cycle detection
+**ID:** TCG-FND-006
+**Location:** `game/research/data/tech_tree.py` (production) / `tests/unit/research/tech_tree/` (partial)
+**Issue:** The `detect_cycles()` method (lines 208-252) lacks comprehensive testing:
+- No test for complex multi-node cycles (A->B->C->A)
+- No test for self-referencing nodes
+- Negated requirement cycle handling not tested
+- Large tree performance characteristics not verified
+**Impact:** Circular dependencies in tech tree could cause infinite loops or crashes
+**Recommendation:** Add tests for various cycle configurations and performance with large trees
+**Effort:** Simple
 
----
+#### MAJOR: TechRequirement fuzzy resolution edge cases untested
+**ID:** TCG-FND-007
+**Location:** `game/research/data/tech_node.py` (production) / `tests/unit/research/test_tech_node.py` (partial)
+**Issue:** `TechRequirement.resolve()` method lacks tests for:
+- level_range with min > max (invalid input)
+- level_range with min == max (deterministic resolution)
+- `is_met()` with resolved_level=None (pre-resolution state)
+- Negate=True requirement satisfaction logic edge cases
+**Impact:** Fuzzy requirement resolution could produce unexpected unlock conditions
+**Recommendation:** Add validation tests for level_range and pre-resolution state handling
+**Effort:** Simple
 
-#### MAJOR: game/research/ui/research_controls.py - No dedicated tests
-**File:** `C:\Dev\Starship Battles\game\research\ui\research_controls.py`
+#### MAJOR: ResearchTracker serialization roundtrip not fully tested
+**ID:** TCG-FND-008
+**Location:** `game/research/data/research_tracker.py` (production) / `tests/unit/research/test_research_tracker.py` (partial)
+**Issue:** `to_dict()` and `from_dict()` serialization lacks complete roundtrip testing:
+- NodeState with current_chance at MAX boundary (0.95)
+- Missing fields in deserialized data (defaults)
+- Auto_spread_enabled flag persistence
+- Turn log not serialized (transient data) - behavior not documented in tests
+**Impact:** Research progress could be lost or corrupted during save/load
+**Recommendation:** Add roundtrip tests with edge case values and verify transient data handling
+**Effort:** Simple
 
-The `ResearchControlPanel` class (471 lines) contains significant UI logic:
-- `_create_ui()` - Complex UI element creation
-- `handle_event()` - Event routing for buttons and sliders
-- `update_selected_node()` - Node detail display
-- `update_turn_log()` - Event log formatting
-- `_toggle_auto_spread()` - Auto-spread feature
-- `reset()` - Panel reset
-
-No tests exist for this module.
-
-**Recommendation:** Create `tests/unit/research/ui/test_research_controls.py` with mocked pygame_gui testing:
-- Button callbacks (next turn, reset, close)
-- Slider value changes (budget, allocation)
-- Event log formatting
-- Auto-spread toggle behavior
-
----
-
-#### MAJOR: game/research/ui/research_scene.py - No dedicated tests
-**File:** `C:\Dev\Starship Battles\game\research\ui\research_scene.py`
-
-The `ResearchTreeScene` class (381 lines) is a complex scene manager:
-- Layout calculation for node positioning
-- Camera management for pan/zoom
-- Node click handling and selection
-- Turn processing integration
-- Session reset functionality
-
-No tests exist for this module.
-
-**Recommendation:** Test the non-UI logic:
-- `_calculate_layout()` - Node position calculation
-- `_get_node_at_position()` - Hit testing
-- `_center_camera()` - Camera positioning
-- Callback wiring verification
-
----
-
-### game/engine/
-
-#### INFO: game/engine/spatial.py - Good coverage in tests/unit/systems/
-**File:** `C:\Dev\Starship Battles\game\engine\spatial.py`
-
-Tests exist in:
-- `tests/unit/systems/test_spatial.py`
-- `tests/unit/systems/test_spatial_extended.py`
-- `tests/unit/systems/test_spatial_edge_cases.py`
-
-**Status:** Well-covered
-
----
-
-#### INFO: game/engine/physics.py - Good coverage in tests/unit/systems/
-**File:** `C:\Dev\Starship Battles\game\engine\physics.py`
-
-Tests exist in:
-- `tests/unit/systems/test_physics.py`
-- `tests/unit/systems/test_physics_edge_cases.py`
-- `tests/unit/simulation/test_physics_constants.py`
-- `tests/unit/simulation/test_physics_formulas.py`
-
-**Status:** Well-covered
+#### MAJOR: SpatialGrid query_radius does not filter by actual distance
+**ID:** TCG-FND-009
+**Location:** `game/engine/spatial.py` (production) / `tests/unit/systems/test_spatial.py` (partial)
+**Issue:** The test `test_query_returns_candidates_not_exact_distance` documents that `query_radius` returns ALL objects in overlapping cells, not just those within exact radius. However:
+- No test verifies this is the intended behavior
+- No test for extremely large radius (performance/memory)
+- No test for very small cell_size relative to query radius
+- Callers must filter results themselves - no integration test verifies this pattern
+**Impact:** Callers could assume radius filtering is exact and get incorrect results
+**Recommendation:** Add documentation test and verify integration patterns filter correctly
+**Effort:** Simple
 
 ---
 
-#### INFO: game/engine/collision.py - Good coverage
-**File:** `C:\Dev\Starship Battles\game\engine\collision.py`
+### Minor Issues
 
-Tests exist in:
-- `tests/unit/engine/collision_edge_cases/test_ccd.py`
-- `tests/unit/engine/collision_edge_cases/test_damage_tracking.py`
-- `tests/unit/engine/collision_edge_cases/test_beam_ramming.py`
+#### MINOR: PhysicsBody x/y property setters not tested
+**ID:** TCG-FND-010
+**Location:** `game/engine/physics.py` (production) / `tests/unit/systems/test_physics.py` (partial)
+**Issue:** While `test_physics.py` tests initialization and movement, the x/y property setters (lines 67-80) are never directly tested:
+- `body.x = value` setter
+- `body.y = value` setter
+**Impact:** Low - properties are simple delegations, but untested code paths
+**Recommendation:** Add simple property setter tests for completeness
+**Effort:** Simple
 
-**Status:** Well-covered
+#### MINOR: ShipControllableAdapter formation methods return raw Ship objects
+**ID:** TCG-FND-011
+**Location:** `game/ai/interfaces/controllable.py` (production) / `tests/unit/ai/controllable_interface/` (partial)
+**Issue:** The adapter's `get_formation_master()` and `get_formation_members()` return raw Ship objects rather than adapters (documented in code comments at line 296-298). However:
+- No test explicitly verifies this is intentional
+- No test for mixed adapter/Ship access patterns
+**Impact:** Low - documented behavior, but could confuse future maintainers
+**Recommendation:** Add documentation test asserting return types are raw Ships
+**Effort:** Simple
 
----
+#### MINOR: Logger module singleton behavior not fully tested
+**ID:** TCG-FND-012
+**Location:** `game/core/logger.py` (production) / `tests/unit/core/logger/` (partial)
+**Issue:** Logger tests exist but missing:
+- Thread safety of singleton under concurrent access
+- Log level filtering behavior
+- Max message queue size handling (if any)
+**Impact:** Low - logger is infrastructure, unlikely to affect gameplay
+**Recommendation:** Add thread safety test for concurrent logging
+**Effort:** Simple
 
-## Phase 2: Undertested Public APIs
+#### MINOR: Config module edge cases for clamp values not tested
+**ID:** TCG-FND-013
+**Location:** `game/core/config.py` (production) / `tests/unit/core/test_config.py` (partial)
+**Issue:** Configuration classes contain many magic numbers and bounds. Not all bounds are explicitly tested:
+- ResearchTracker.MIN_RP_BUDGET and MAX_RP_BUDGET clamping
+- PhysicsConfig drag > 1 behavior
+- AIConfig boundary values
+**Impact:** Low - config values rarely change
+**Recommendation:** Add bounds verification tests for critical config values
+**Effort:** Simple
 
-### game/core/profiling.py
+#### MINOR: Error code enum completeness not verified
+**ID:** TCG-FND-014
+**Location:** `game/core/error_codes.py` (production) / `tests/unit/core/test_error_codes.py` (partial)
+**Issue:** While error codes are tested for uniqueness, there's no verification that:
+- All error codes are actually used somewhere
+- Error code ranges don't overlap between categories
+- Error messages exist for all codes
+**Impact:** Low - dead code detection for error codes
+**Recommendation:** Add test that searches codebase for error code usage
+**Effort:** Simple
 
-#### INFO: Profiler.toggle() not explicitly tested
-**File:** `C:\Dev\Starship Battles\game\core\profiling.py`
+#### MINOR: Profiling decorator edge cases not tested
+**ID:** TCG-FND-015
+**Location:** `game/core/profiling.py` (production) / `tests/unit/core/profiling/` (partial)
+**Issue:** Profiling decorator tests exist but missing:
+- Exception handling when profiled function raises
+- Nested decorator behavior
+- Profiling disabled state behavior
+**Impact:** Low - profiling is debug infrastructure
+**Recommendation:** Add exception propagation test for profiled functions
+**Effort:** Simple
 
-The `Profiler.toggle()` method that toggles profiling state and returns the new state is not explicitly tested in `test_profiling_edge_cases.py`.
-
-```python
-def toggle(self):
-    """Toggle profiling state."""
-    if self.active:
-        self.stop()
-    else:
-        self.start()
-    return self.active
-```
-
-**Recommendation:** Add test for toggle behavior and return value.
-
----
-
-### game/ai/target_evaluator.py
-
-#### INFO: TargetEvaluator._eval_speed_rule() - Partial coverage
-**File:** `C:\Dev\Starship Battles\game\ai\target_evaluator.py`
-
-The speed rules (`fastest`, `slowest`) are tested only indirectly through the main `evaluate()` function. Direct unit tests for `_eval_speed_rule()` are missing.
-
-**Recommendation:** Add explicit tests for speed rule scoring with various velocity values.
-
----
-
-### game/ai/target_evaluator.py
-
-#### INFO: TargetEvaluator._eval_least_armor_rule() - Not directly tested
-**File:** `C:\Dev\Starship Battles\game\ai\target_evaluator.py`
-
-The `least_armor` rule that scores targets by armor HP is not directly tested.
-
-```python
-@staticmethod
-def _eval_least_armor_rule(candidate, rule):
-    """Evaluate least_armor rule."""
-    armor_comps = candidate.get_components_by_layer(LayerType.ARMOR)
-    armor_hp = sum(getattr(c, 'hp', 0) for c in armor_comps)
-    val = -armor_hp * (weight if weight > 0 else -factor)
-    return (val, True)
-```
-
-**Recommendation:** Add test for least_armor rule with mocked armor components.
-
----
-
-### game/research/data/research_tracker.py
-
-#### INFO: ResearchTracker.spread_rp_evenly() - Complex logic partially tested
-**File:** `C:\Dev\Starship Battles\game\research\data\research_tracker.py`
-
-The auto-spread functionality that distributes RP evenly across available nodes has complex logic but test coverage focuses mainly on happy paths.
-
-**Recommendation:** Add edge case tests for:
-- All nodes at max level
-- Single available node
-- Budget smaller than node count
-- Nodes with different price multipliers
+#### MINOR: hex_ring negative radius input not tested
+**ID:** TCG-FND-016
+**Location:** `game/core/hex_math.py` (production) / `tests/unit/core/test_hex_math_core.py` (good coverage)
+**Issue:** Test `test_ring_radius_0` verifies `hex_ring(0)` returns `[HexCoord(0,0)]`. However:
+- No test for negative radius input
+- No test for very large radius (performance)
+**Impact:** Low - negative radius is likely programmer error
+**Recommendation:** Add assertion that negative radius raises ValueError or returns empty list
+**Effort:** Simple
 
 ---
 
-## Phase 3: Critical Path Coverage
+### Informational
 
-### AI Decision Making
+#### INFO: Research system UI rendering tests use mocking extensively
+**ID:** TCG-FND-017
+**Location:** `game/research/ui/research_renderer.py` / `tests/unit/research/test_research_renderer.py`
+**Issue:** Research renderer tests mock pygame extensively, which is appropriate but:
+- Tests verify method calls rather than rendered output
+- No visual regression testing infrastructure exists
+- UI tests are integration-style but in unit test folder
+**Impact:** None - appropriate test design for UI layer
+**Recommendation:** Consider separating UI integration tests into dedicated folder
+**Effort:** N/A
 
-#### INFO: AI targeting critical path - Well covered
-The critical path from `AIController.update()` -> `find_target()` -> `TargetEvaluator.evaluate()` is thoroughly tested with:
-- 15+ test classes in `test_ai_controller_unit.py`
-- 12+ test classes in `test_target_evaluator_edge_cases.py`
-- Comprehensive behavior tests in `test_behavior_units.py`
-
-**Status:** Good critical path coverage
-
----
-
-### Research Breakthrough Mechanics
-
-#### INFO: Research breakthrough critical path - Well covered
-The critical path for research breakthroughs in `ResearchService.process_turn()` is tested in `test_research_service.py` with:
-- Chance accumulation tests
-- Decay mechanics tests
-- Breakthrough event generation
-- Boundary condition tests
-
-**Status:** Good critical path coverage
+#### INFO: Test file organization follows production structure well
+**ID:** TCG-FND-018
+**Location:** Tests structure mirrors `game/` structure
+**Issue:** Test coverage organization is well-structured. Most production modules have corresponding test files. This sweep found coverage gaps primarily in edge cases rather than missing test files entirely.
+**Impact:** Positive - good test architecture
+**Recommendation:** Continue maintaining parallel structure as codebase grows
+**Effort:** N/A
 
 ---
 
-## Phase 4: Test Quality Issues
+## Top 5 Priority Issues
 
-### game/ai/test_ai_controller_unit.py
-
-#### MINOR: Excessive mocking may hide real issues
-**File:** `C:\Dev\Starship Battles\tests\unit\ai\test_ai_controller_unit.py`
-
-Many tests use heavy mocking which could mask integration issues:
-```python
-with patch('game.ai.controller.StrategyManager') as mock_sm:
-    with patch('game.ai.controller.TargetEvaluator.evaluate', return_value=50.0):
-        with patch('game.ai.controller.is_combatant', return_value=True):
-            with patch('game.ai.controller.get_hp_percent', return_value=0.5):
-```
-
-**Recommendation:** Add some integration-style tests using real collaborators where practical.
-
----
-
-### game/research/test_research_renderer.py
-
-#### INFO: Test isolation technique is good
-**File:** `C:\Dev\Starship Battles\tests\unit\research\test_research_renderer.py`
-
-The test file uses `importlib.util.spec_from_file_location` to bypass pygame_gui import issues under xdist. This is a good isolation technique but adds complexity.
-
-**Status:** Acceptable workaround for pygame/xdist issues
-
----
-
-## Phase 5: Integration Test Gaps
-
-#### MAJOR: No integration tests for AI module
-**Directory:** `tests/integration/ai/`
-
-No integration test directory exists for the AI module. The AI system integrates with:
-- Physics/spatial grid for target queries
-- Strategy system for behavior configuration
-- Ship component system for capability checks
-
-**Recommendation:** Create integration tests for:
-- AI controller with real spatial grid
-- Target evaluation with real ship components
-- Behavior execution with physics integration
-
----
-
-#### MAJOR: No integration tests for Research module
-**Directory:** `tests/integration/research/`
-
-No integration test directory exists for the research module. The research system integrates with:
-- JSON data loading
-- UI rendering
-- Session persistence
-
-**Recommendation:** Create integration tests for:
-- Full research session lifecycle
-- JSON loading with real data files
-- Multi-turn simulations
-
----
-
-#### INFO: No integration tests for Engine module
-**Directory:** `tests/integration/engine/`
-
-No integration test directory exists for the engine module. However, physics/collision integration is likely tested through simulation tests.
-
-**Status:** Lower priority - likely covered by simulation tests
-
----
-
-## Phase 6: Missing Test Categories
-
-### Performance/Stress Tests
-
-#### MINOR: No performance tests for SpatialGrid
-**File:** `C:\Dev\Starship Battles\game\engine\spatial.py`
-
-The `SpatialGrid.query_radius()` method is performance-critical for combat. No stress tests verify performance with large entity counts.
-
-**Recommendation:** Add performance tests with:
-- 1000+ entities
-- Various cell sizes
-- Large query radii
-
----
-
-### Regression Tests
-
-#### MINOR: No regression test suite for combat formulas
-The combat formula calculations in `game/simulation/formulas/` are critical for game balance. No dedicated regression suite exists to catch formula changes.
-
-**Recommendation:** Create golden file tests that verify formula outputs against known-good values.
-
----
-
-### Fuzz Testing
-
-#### INFO: No fuzz tests for JSON parsing
-JSON parsing in `game/core/json_utils.py` and data loaders could benefit from fuzz testing to catch edge cases in malformed input.
-
-**Recommendation:** Consider adding fuzz tests for critical JSON loaders (lower priority).
-
----
-
-## Summary by Severity
-
-### CRITICAL (0)
-None identified.
-
-### MAJOR (4)
-1. `game/research/data/tech_tree.py` - Missing dedicated test file
-2. `game/research/ui/research_controls.py` - No dedicated tests
-3. `game/research/ui/research_scene.py` - No dedicated tests
-4. No integration tests for AI module
-
-### MINOR (4)
-1. `Profiler.toggle()` not explicitly tested
-2. Excessive mocking in AI controller tests
-3. No performance tests for SpatialGrid
-4. No regression test suite for combat formulas
-
-### INFO (10)
-1. `game/core/resources.py` - No dedicated test file (related tests exist)
-2. `game/ai/controller.py` - Excellent coverage exists
-3. `game/engine/spatial.py` - Good coverage
-4. `game/engine/physics.py` - Good coverage
-5. `game/engine/collision.py` - Good coverage
-6. `TargetEvaluator._eval_speed_rule()` - Partial coverage
-7. `TargetEvaluator._eval_least_armor_rule()` - Not directly tested
-8. `ResearchTracker.spread_rp_evenly()` - Complex logic partially tested
-9. Research renderer test isolation technique is good
-10. No integration tests for Engine module (likely covered elsewhere)
-
----
-
-## Recommendations Priority Order
-
-1. **High Priority:** Create `tests/unit/research/test_tech_tree.py` for TechTree class
-2. **High Priority:** Create integration tests for AI module (`tests/integration/ai/`)
-3. **Medium Priority:** Add UI tests for ResearchControlPanel with mocked pygame_gui
-4. **Medium Priority:** Create integration tests for research session lifecycle
-5. **Low Priority:** Add performance tests for SpatialGrid
-6. **Low Priority:** Create regression test suite for combat formulas
-
----
-
-*Report generated by Test Coverage Gaps Sweep Agent*
+1. **TCG-FND-001 (CRITICAL):** CollisionSystem raycasting edge cases - core combat mechanic with division by zero guard untested
+2. **TCG-FND-002 (CRITICAL):** ResearchService leaky bucket boundary conditions - affects game balance for research progression
+3. **TCG-FND-003 (MAJOR):** AIController navigation/avoidance - AI behavior predictability during combat
+4. **TCG-FND-005 (MAJOR):** Behavior state transitions - AI could get stuck in incorrect states
+5. **TCG-FND-006 (MAJOR):** TechTree cycle detection - could cause infinite loops with invalid tech tree data

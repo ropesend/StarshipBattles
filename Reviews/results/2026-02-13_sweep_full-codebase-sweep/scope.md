@@ -1,19 +1,24 @@
 # Sweep Review Scope
 
-**Review Type:** Sweep Review (Continuous Improvement Loop - Cycle 1)
-**Date:** 2026-02-13
-**Scope:** `game/` (entire production codebase)
-**Agent Count:** 25 (5 sweep types × 5 shards)
-**Execution Model:** 5 waves of 5 parallel agents
+## Review Type
+Sweep Review (Continuous Improvement Loop - Cycle 2)
 
-## Excluded Directories
-- `tests/`
-- `__pycache__/`
-- `.git/`
-- `assets/`
-- `refactor_loop/`
-- `Reviews/`
-- `Projects/`
+## Scope
+`game/` (entire production codebase)
+
+## Exclusions
+- tests/
+- __pycache__/
+- .git/
+- assets/
+- refactor_loop/
+- Reviews/
+- Projects/
+
+## Agent Configuration
+- **Total Agents:** 25 (5 sweep types × 5 shards)
+- **Execution Model:** 5 waves of 5 parallel agents
+- **Validation:** 5 skeptical validator agents (1 per shard)
 
 ## Shard Definitions
 
@@ -25,42 +30,32 @@
 | Strategy | STR | `game/strategy/` (all subdirectories) |
 | Foundation | FND | `game/core/`, `game/ai/`, `game/research/`, `game/engine/` |
 
-## Agent Matrix (25 Agents)
+## Agent Matrix
 
-| Wave | Sweep Type | Prefix | Agents |
-|------|-----------|--------|--------|
-| 1 | Duplication & Fragmentation | DUP | DUP-UI1, DUP-UI2, DUP-SIM, DUP-STR, DUP-FND |
-| 2 | Legacy System Holdovers | LEG | LEG-UI1, LEG-UI2, LEG-SIM, LEG-STR, LEG-FND |
-| 3 | Consistency Violations | CON | CON-UI1, CON-UI2, CON-SIM, CON-STR, CON-FND |
-| 4 | Architecture Drift | ADR | ADR-UI1, ADR-UI2, ADR-SIM, ADR-STR, ADR-FND |
-| 5 | Test Coverage Gaps | TCG | TCG-UI1, TCG-UI2, TCG-SIM, TCG-STR, TCG-FND |
-
-## Output Files
-
-| Sweep Type | Shard | Output File |
-|-----------|-------|-------------|
-| Duplication | UI-Screens | `findings/duplication_ui_screens_report.md` |
-| Duplication | UI-Framework | `findings/duplication_ui_framework_report.md` |
-| Duplication | Simulation | `findings/duplication_simulation_report.md` |
-| Duplication | Strategy | `findings/duplication_strategy_report.md` |
-| Duplication | Foundation | `findings/duplication_foundation_report.md` |
-| Legacy | UI-Screens | `findings/legacy_ui_screens_report.md` |
-| Legacy | UI-Framework | `findings/legacy_ui_framework_report.md` |
-| Legacy | Simulation | `findings/legacy_simulation_report.md` |
-| Legacy | Strategy | `findings/legacy_strategy_report.md` |
-| Legacy | Foundation | `findings/legacy_foundation_report.md` |
-| Consistency | UI-Screens | `findings/consistency_ui_screens_report.md` |
-| Consistency | UI-Framework | `findings/consistency_ui_framework_report.md` |
-| Consistency | Simulation | `findings/consistency_simulation_report.md` |
-| Consistency | Strategy | `findings/consistency_strategy_report.md` |
-| Consistency | Foundation | `findings/consistency_foundation_report.md` |
-| Architecture | UI-Screens | `findings/architecture_ui_screens_report.md` |
-| Architecture | UI-Framework | `findings/architecture_ui_framework_report.md` |
-| Architecture | Simulation | `findings/architecture_simulation_report.md` |
-| Architecture | Strategy | `findings/architecture_strategy_report.md` |
-| Architecture | Foundation | `findings/architecture_foundation_report.md` |
-| Test Coverage | UI-Screens | `findings/test_coverage_ui_screens_report.md` |
-| Test Coverage | UI-Framework | `findings/test_coverage_ui_framework_report.md` |
-| Test Coverage | Simulation | `findings/test_coverage_simulation_report.md` |
-| Test Coverage | Strategy | `findings/test_coverage_strategy_report.md` |
-| Test Coverage | Foundation | `findings/test_coverage_foundation_report.md` |
+| Wave | Sweep Type | Prefix | Shard | Output File | Finding ID Format |
+|------|-----------|--------|-------|-------------|-------------------|
+| 1 | Duplication & Fragmentation | DUP | UI-Screens | `duplication_ui_screens_report.md` | DUP-UI1-XXX |
+| 1 | Duplication & Fragmentation | DUP | UI-Framework | `duplication_ui_framework_report.md` | DUP-UI2-XXX |
+| 1 | Duplication & Fragmentation | DUP | Simulation | `duplication_simulation_report.md` | DUP-SIM-XXX |
+| 1 | Duplication & Fragmentation | DUP | Strategy | `duplication_strategy_report.md` | DUP-STR-XXX |
+| 1 | Duplication & Fragmentation | DUP | Foundation | `duplication_foundation_report.md` | DUP-FND-XXX |
+| 2 | Legacy System Holdovers | LEG | UI-Screens | `legacy_ui_screens_report.md` | LEG-UI1-XXX |
+| 2 | Legacy System Holdovers | LEG | UI-Framework | `legacy_ui_framework_report.md` | LEG-UI2-XXX |
+| 2 | Legacy System Holdovers | LEG | Simulation | `legacy_simulation_report.md` | LEG-SIM-XXX |
+| 2 | Legacy System Holdovers | LEG | Strategy | `legacy_strategy_report.md` | LEG-STR-XXX |
+| 2 | Legacy System Holdovers | LEG | Foundation | `legacy_foundation_report.md` | LEG-FND-XXX |
+| 3 | Consistency Violations | CON | UI-Screens | `consistency_ui_screens_report.md` | CON-UI1-XXX |
+| 3 | Consistency Violations | CON | UI-Framework | `consistency_ui_framework_report.md` | CON-UI2-XXX |
+| 3 | Consistency Violations | CON | Simulation | `consistency_simulation_report.md` | CON-SIM-XXX |
+| 3 | Consistency Violations | CON | Strategy | `consistency_strategy_report.md` | CON-STR-XXX |
+| 3 | Consistency Violations | CON | Foundation | `consistency_foundation_report.md` | CON-FND-XXX |
+| 4 | Architecture Drift | ADR | UI-Screens | `architecture_ui_screens_report.md` | ADR-UI1-XXX |
+| 4 | Architecture Drift | ADR | UI-Framework | `architecture_ui_framework_report.md` | ADR-UI2-XXX |
+| 4 | Architecture Drift | ADR | Simulation | `architecture_simulation_report.md` | ADR-SIM-XXX |
+| 4 | Architecture Drift | ADR | Strategy | `architecture_strategy_report.md` | ADR-STR-XXX |
+| 4 | Architecture Drift | ADR | Foundation | `architecture_foundation_report.md` | ADR-FND-XXX |
+| 5 | Test Coverage Gaps | TCG | UI-Screens | `test_coverage_ui_screens_report.md` | TCG-UI1-XXX |
+| 5 | Test Coverage Gaps | TCG | UI-Framework | `test_coverage_ui_framework_report.md` | TCG-UI2-XXX |
+| 5 | Test Coverage Gaps | TCG | Simulation | `test_coverage_simulation_report.md` | TCG-SIM-XXX |
+| 5 | Test Coverage Gaps | TCG | Strategy | `test_coverage_strategy_report.md` | TCG-STR-XXX |
+| 5 | Test Coverage Gaps | TCG | Foundation | `test_coverage_foundation_report.md` | TCG-FND-XXX |

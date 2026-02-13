@@ -2,170 +2,191 @@
 
 ## Summary
 - **Shard:** UI-Framework
-- **Files Scanned:** 20
-- **Total Issues Found:** 12
-- **Critical:** 0 | **Major:** 4 | **Minor:** 6 | **Info:** 2
+- **Files Scanned:** 22
+- **Total Issues Found:** 7
+- **Critical:** 0 | **Major:** 2 | **Minor:** 4 | **Info:** 1
+
+## Scope Details
+Files analyzed in `game/ui/` (root files, services/, renderer/, interfaces/, orchestration/, assets/):
+- `game/ui/__init__.py`
+- `game/ui/utils.py`
+- `game/ui/config.py`
+- `game/ui/colors.py`
+- `game/ui/services/` (11 files)
+- `game/ui/renderer/` (4 files)
+- `game/ui/interfaces/` (2 files)
+- `game/ui/orchestration/` (2 files)
+- `game/ui/assets/` (2 files)
 
 ## Findings
 
-#### MAJOR: Duplicated Lazy DI Provider Resolution Pattern
+#### MAJOR: Dependency Injection Pattern Inconsistency Across Services
 **ID:** DUP-UI2-001
-**Location:** `game/ui/services/component_service.py:46-50` AND `game/ui/services/vehicle_class_service.py:50-52` AND `game/ui/services/validation_service.py:42-46` AND `game/ui/services/ship_factory.py:49-56`
-**Issue:** Four services implement nearly identical patterns for lazy dependency injection resolution:
-- `ComponentService._get_provider()` - resolves `IRegistryProvider` with fallback to `get_default_registry_provider()`
-- `VehicleClassService._get_provider()` - returns stored `_provider` (no fallback, required)
-- `ValidationService._get_validator()` - resolves validator with fallback to `get_or_create_validator()`
-- `ShipFactory._get_registries()` - resolves `GameRegistries` with method-level override > instance > global default
+**Location:** `game/ui/services/vehicle_class_service.py:36-52` AND `game/ui/services/component_service.py:31-50` AND `game/ui/services/ship_factory.py:40-56` AND `game/ui/services/design_loader_adapter.py:31-44`
+**Issue:** Four service classes implement nearly identical patterns for dependency injection with registry providers, but with inconsistent implementation approaches:
 
-Each uses slightly different semantics (some allow None fallback, some require, some support method-level override), but the core pattern is identical. This is a classic example of copy-paste drift where the pattern was duplicated and evolved independently.
-**Impact:** When the DI pattern needs updating (e.g., adding logging, error handling, or changing resolution order), four different files must be modified. Risk of inconsistent behavior across services.
-**Recommendation:** Create a base mixin or utility function `resolve_dependency(stored, fallback_factory)` that encapsulates the pattern. Services can use it with their specific fallback functions.
+1. **VehicleClassService**: Strict DI - raises ValueError if registry_provider is None
+2. **ComponentService**: Lazy DI - optional with `get_default_registry_provider()` fallback
+3. **ShipFactory**: Hybrid - optional with both method-level and instance-level override capability
+4. **DesignLoaderAdapter**: Lazy DI - optional with `get_default_registries()` fallback
+
+Each has a `_get_provider()` or `_get_registries()` method with similar boilerplate (5-8 lines each).
+
+**Impact:**
+- Cognitive overhead for developers understanding which pattern each service uses
+- Risk of inconsistent behavior when services are composed together
+- Approximately 25 lines of near-duplicate boilerplate across 4 services
+
+**Recommendation:** Create a base class or mixin that provides a standardized registry provider pattern. Either adopt strict DI across all services (PROJ-50 compliance) or document the lazy pattern as the standard with a shared implementation.
 **Effort:** Medium
 
-#### MAJOR: Directory Creation Pattern Duplicated in ShipIO
+---
+
+#### MAJOR: Image Bounding Box and Visible Area Scaling Logic Duplication
 **ID:** DUP-UI2-002
-**Location:** `game/ui/services/ship_io.py:49-51` AND `game/ui/services/ship_io.py:91-93`
-**Issue:** The `ShipIO` class duplicates the exact same directory creation pattern in both `save_ship()` and `load_ship()`:
-```python
-ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
-if not os.path.exists(ships_folder):
-    os.makedirs(ships_folder)
-```
-This 3-line block appears verbatim twice in the same file.
-**Impact:** If the directory path logic changes (e.g., using `Paths.SHIPS_DIR` instead of `os.getcwd()`), both locations must be updated. DRY violation within a single file.
-**Recommendation:** Extract to a private method `_ensure_ships_folder() -> str` that returns the folder path after ensuring it exists.
-**Effort:** Simple
+**Location:** `game/ui/utils.py:97-163` AND `game/ui/assets/ship_theme_manager.py:155-195` AND `game/ui/screens/design_image_helper.py:165-188`
+**Issue:** Three separate implementations of the same concept - finding the visible (non-transparent) portion of an image and scaling based on it:
 
-#### MAJOR: Singleton Manager Pattern Triplicated
+1. **utils.py**: `get_visible_bounding_box()` + `scale_image_by_visible_portion()` - uses `get_bounding_rect(min_alpha=10)`, crops first then scales
+2. **ship_theme_manager.py**: Uses `get_bounding_rect(min_alpha=20)` in `_load_single_image()`, `get_bounding_rect(min_alpha=1)` in `get_image_metrics()`
+3. **design_image_helper.py**: Uses `get_bounding_rect(min_alpha=10)` in `_load_topdown_thumbnail_uncached()`, scales full image then crops
+
+All three use pygame's `get_bounding_rect()` but with different alpha thresholds (1, 10, 20) and different scale-then-crop vs crop-then-scale approaches.
+
+**Impact:**
+- Different alpha thresholds may produce slightly different results for the same image
+- Two different approaches (crop-first vs scale-first) may produce quality differences
+- Approximately 40 lines of similar logic spread across 3 files
+
+**Recommendation:** Consolidate into a single utility function in `game/ui/utils.py` with configurable alpha threshold and a standardized approach (crop-then-scale is more memory efficient). Update callers to use the shared function.
+**Effort:** Medium
+
+---
+
+#### MINOR: Singleton Manager Pattern Repetition
 **ID:** DUP-UI2-003
-**Location:** `game/ui/assets/ship_theme_manager.py:11-25` AND `game/ui/services/screenshot_manager.py:11-24` AND `game/ui/renderer/sprites.py:7-20`
-**Issue:** Three manager classes (`ShipThemeManager`, `ScreenshotManager`, `SpriteManager`) implement identical singleton patterns with:
+**Location:** `game/ui/assets/ship_theme_manager.py:11-54` AND `game/ui/services/screenshot_manager.py:11-38` AND `game/ui/renderer/sprites.py:7-25`
+**Issue:** Three singleton managers follow the same pattern with near-identical structure:
 - `metaclass=SingletonMeta`
-- Same docstring structure ("Singleton manager for...", "Thread Safety:", "Usage:", "Testing:")
-- Instance creation via `.instance()` method
-- `reset()` method documented for testing
+- Thread locks (`_init_lock`, `_io_lock`)
+- `clear()` method for test isolation
+- Cache dictionaries initialized in `__init__`
 
-While using `SingletonMeta` is correct and consolidates the singleton logic, the documentation and boilerplate is copy-pasted. Additionally, all three implement similar caching/loading patterns with thread locks.
-**Impact:** Documentation drift (if one is updated, others may not be). The actual singleton pattern is properly centralized in `SingletonMeta`, but the manager code structure is duplicated.
-**Recommendation:** Create a `SingletonManagerMixin` or document a consistent template for manager classes. Consider whether all three need the same threading model.
-**Effort:** Medium
+The structure is consistent (good), but the documentation boilerplate for "Thread Safety", "Usage", and "Testing" is duplicated verbatim across all three.
 
-#### MAJOR: Service Adapter Wrapping Pattern
+**Impact:**
+- Approximately 15 lines of identical docstring content repeated 3 times
+- Low maintenance risk since SingletonMeta handles the complexity
+
+**Recommendation:** This is acceptable duplication - the pattern is well-established and the SingletonMeta already consolidates the implementation. Consider extracting the common docstring pattern into a template for consistency, but not a priority.
+**Effort:** Simple (low priority)
+
+---
+
+#### MINOR: Image Transform Operations Scattered Without Central Helper
 **ID:** DUP-UI2-004
-**Location:** `game/ui/services/ship_io_adapter.py:44-103` AND `game/ui/services/design_loader_adapter.py:31-87`
-**Issue:** Both adapter classes follow the identical structural pattern:
-1. Accept an optional dependency in `__init__`
-2. If None, import and instantiate the real implementation
-3. Store as `self._ship_io` / `self._loader`
-4. Delegate all methods to the wrapped instance
+**Location:** `game/ui/utils.py:66-94` provides centralized functions, but `game/ui/renderer/game_renderer.py:64-69` AND `game/ui/assets/ship_theme_manager.py:147-159` implement their own scaling
+**Issue:** While `game/ui/utils.py` provides `calculate_ship_image_scale()` and `scale_and_rotate_image()`, not all callers use them:
 
-The adapters exist purely to wrap simulation/IO classes for UI consumption, but the wrapping boilerplate is duplicated. Both also have similar return value conventions (tuples with success/object and message).
-**Impact:** When adding new adapter methods or changing the wrapping pattern, multiple files need identical changes.
-**Recommendation:** Consider a generic `LazyAdapter` base class that handles the import-and-cache pattern, allowing subclasses to only specify the import path and wrapped class.
-**Effort:** Medium
+1. `game_renderer.py` correctly uses the utility functions from `utils.py`
+2. `ship_theme_manager.py` directly calls `pygame.image.load().convert_alpha()` and caches without using the utils
 
-#### MINOR: Font Creation Throughout UI Without Centralization
+This is partially by design (ShipThemeManager is the source image loader), but there's opportunity to ensure consistency.
+
+**Impact:**
+- Minimal - the utils are available and mostly used
+- Some callers bypass the centralized functions for valid reasons
+
+**Recommendation:** Document that `game/ui/utils.py` is the canonical location for image transform operations. ShipThemeManager's direct usage is justified as the caching layer.
+**Effort:** Simple (documentation only)
+
+---
+
+#### MINOR: Validation Service Pattern Has Single-Purpose Wrapper
 **ID:** DUP-UI2-005
-**Location:** `game/ui/renderer/game_renderer.py:155-157` AND many other locations in screens/panels (excluded from this shard but noted as cross-cutting concern)
-**Issue:** Within the framework shard, `game_renderer.py` creates fonts inline:
-```python
-font_title = pygame.font.SysFont("Arial", 16, bold=True)
-font_med = pygame.font.SysFont("Arial", 14)
-font_small = pygame.font.SysFont("Arial", 12)
-```
-While `UIConfig` exists with `FONT_TITLE`, `FONT_NAME`, `FONT_STAT` size constants and `colors.py` has `FONT_MAIN = "Arial"`, they are not used consistently. The renderer creates its own fonts rather than using centralized constants.
-**Impact:** Font sizes/families are scattered. Changing the UI font requires hunting down every `pygame.font.SysFont` call.
-**Recommendation:** Create a `FontManager` or extend `UIConfig` with pre-built font objects (lazily initialized) that can be imported and used consistently.
-**Effort:** Simple (for framework scope)
+**Location:** `game/ui/services/validation_service.py:20-73`
+**Issue:** ValidationService is a thin wrapper that provides only two methods (`validate_addition`, `validate_design`) and simply delegates to the underlying validator. The entire class is 53 lines including docstrings, with only approximately 10 lines of actual logic.
 
-#### MINOR: Image Scaling Utility Functions Have Overlapping Purposes
+This pattern is duplicated in `game/ui/services/ship_io_adapter.py` (104 lines, approximately 20 lines of logic) and `game/ui/services/design_loader_adapter.py` (88 lines, approximately 15 lines of logic).
+
+**Impact:**
+- These are intentional adapter patterns for decoupling UI from simulation
+- The wrappers serve a valid architectural purpose (PROJ-43)
+- Low actual duplication - the pattern is justified
+
+**Recommendation:** No action needed. The adapter pattern is appropriate for layer isolation. The "duplication" is actually consistent application of an architectural pattern.
+**Effort:** N/A (by design)
+
+---
+
+#### MINOR: Camera Coordinate Transform Duplication in Formation Module
 **ID:** DUP-UI2-006
-**Location:** `game/ui/utils.py:32-64` AND `game/ui/utils.py:66-94` AND `game/ui/utils.py:116-163` AND `game/ui/utils.py:165-202`
-**Issue:** The `utils.py` module contains four scaling-related functions:
-- `calculate_ship_image_scale()` - calculates scale factor
-- `scale_and_rotate_image()` - scales and rotates
-- `scale_image_by_visible_portion()` - scales based on non-transparent bounds
-- `scale_image_to_fit()` - scales to fit within target, centered
+**Location:** `game/ui/renderer/camera.py:116-132` provides `world_to_screen()` and `screen_to_world()`, but `game/ui/screens/formation/renderer.py:70-100` reimplements similar transforms
+**Issue:** The Camera class provides coordinate transformation, but the formation renderer implements its own transforms with a different signature:
+- Camera: Uses pygame.math.Vector2, has offset support
+- FormationRenderer: Uses float tuples, simpler transform without offsets
 
-While not exact duplicates, these functions have overlapping concerns and some internal logic overlap (e.g., handling invalid dimensions, creating placeholder surfaces). The relationship between them is not immediately clear.
-**Impact:** Developers may use the wrong function or duplicate logic when the existing functions don't quite fit their needs.
-**Recommendation:** Document the function relationships clearly, or consider consolidating into a single class `ImageScaler` with clear method names indicating the transformation type.
-**Effort:** Simple
+The formation editor has its own `world_to_screen()` and `screen_to_world()` because it doesn't use the standard Camera class - it has a simpler pan/zoom model.
 
-#### MINOR: Placeholder Surface Creation Pattern
+**Impact:**
+- Different transform implementations may drift over time
+- The formation editor operates independently of battle scenes, so this is somewhat justified
+
+**Recommendation:** Consider whether FormationRenderer could use a Camera instance internally, or document that the two are intentionally independent systems.
+**Effort:** Medium (design decision needed)
+
+---
+
+#### INFO: Color Constants Could Be Centralized Further
 **ID:** DUP-UI2-007
-**Location:** `game/ui/utils.py:141-143` AND `game/ui/utils.py:150-152` AND `game/ui/assets/ship_theme_manager.py:208-213`
-**Issue:** Placeholder/fallback surface creation follows the same pattern in multiple places:
+**Location:** `game/ui/colors.py:7-45` AND `game/ui/renderer/game_renderer.py:14-19`
+**Issue:** Layer colors are defined in `game_renderer.py`:
 ```python
-placeholder = pygame.Surface((width, height), pygame.SRCALPHA)
-placeholder.fill(color)
+LAYER_COLORS = {
+    LayerType.ARMOR: (100, 100, 100),
+    LayerType.OUTER: (200, 50, 50),
+    LayerType.INNER: (50, 50, 200),
+    LayerType.CORE: (220, 220, 220)
+}
 ```
-In `utils.py`, this exact pattern appears twice within the same function. `ShipThemeManager._create_fallback_image()` creates a similar fallback with lines drawn on it.
-**Impact:** Minor - placeholder creation is simple. However, inconsistent placeholder appearances could confuse users during loading states.
-**Recommendation:** Create a shared `create_placeholder_surface(size, color, style='solid')` utility.
-**Effort:** Simple
 
-#### MINOR: Error Exception Handling Pattern in ShipIO
-**ID:** DUP-UI2-008
-**Location:** `game/ui/services/ship_io.py:71-82` AND `game/ui/services/ship_io.py:115-129`
-**Issue:** Both `save_ship()` and `load_ship()` have similar exception handling blocks catching multiple exception types with logging and message formatting. The patterns are similar:
-```python
-except PermissionError as e:
-    log_error(f"ShipIO: Permission denied {verb}ing ship: {e}")
-    return Error, f"{Verb} failed: Permission denied"
-except OSError as e:
-    log_error(f"ShipIO: OS error {verb}ing ship: {e}")
-    return Error, f"{Verb} failed: {str(e)}"
-```
-Additionally, both have a catch-all at the end that redundantly catches `OSError, PermissionError` again.
-**Impact:** Redundant exception handlers (OSError/PermissionError caught twice). Similar error formatting logic duplicated.
-**Recommendation:** Extract a helper `_handle_io_error(e, operation: str) -> Tuple[bool/None, str]` that formats the error message consistently. Remove the redundant catch-all handlers.
-**Effort:** Simple
+While `colors.py` defines the UI style guide colors. The layer colors could potentially live in `colors.py` for centralization, but they're render-specific.
 
-#### MINOR: Tkinter Initialization Error Handling
-**ID:** DUP-UI2-009
-**Location:** `game/ui/services/ship_io.py:21-32` AND `game/ui/services/screenshot_manager.py:95-116`
-**Issue:** Both modules have Tkinter-related code with broad exception handling:
-- `ship_io.py` initializes `tkinter.Tk()` at module level with try/except catching `TclError`, `RuntimeError`, and generic `Exception`
-- `screenshot_manager.py` has `_copy_to_clipboard()` with try/except for Tkinter clipboard operations
+**Impact:**
+- Layer colors are only used in one place (game_renderer.py)
+- No actual duplication, just an organizational observation
 
-The Tkinter initialization pattern is particularly concerning as it's at module level and can affect import behavior.
-**Impact:** Platform-dependent behavior scattered across files. Module-level side effects can cause issues during testing.
-**Recommendation:** Centralize Tkinter initialization into a single lazy-loading utility (e.g., `TkinterHelper.get_root()`) that all UI code can use safely.
-**Effort:** Medium
+**Recommendation:** No action needed. Layer colors are appropriately co-located with the rendering logic that uses them.
+**Effort:** N/A
 
-#### MINOR: Return Value Conventions Partially Documented
-**ID:** DUP-UI2-010
-**Location:** `game/ui/services/ship_io_adapter.py:28-36` (documented) vs `game/ui/services/ship_io.py` (not documented) AND `game/ui/services/design_loader_adapter.py` (partially documented)
-**Issue:** The tuple return pattern `(success/object, message)` with `message=None` for cancelled operations is documented in `ShipIOAdapter` but not consistently in `ShipIO` or `DesignLoaderAdapter`. The convention exists but is scattered.
-**Impact:** Developers must read code to understand return value semantics. Inconsistent null-handling expectations.
-**Recommendation:** Document the return convention in a central location (perhaps in a `ReturnConventions` section of `services/__init__.py` or a dedicated conventions doc).
-**Effort:** Simple
-
-#### INFO: Camera Zoom Clamping Pattern
-**ID:** DUP-UI2-011
-**Location:** `game/ui/renderer/camera.py:114` AND `game/ui/renderer/camera.py:155`
-**Issue:** The pattern `max(self.min_zoom, min(self.max_zoom, zoom_value))` appears twice in Camera class. This is the standard clamp pattern.
-**Impact:** Minimal - this is a simple clamping operation that's clear in context.
-**Recommendation:** Could add a `_clamp_zoom(value)` helper for clarity, but this is low priority. Python 3.9+ offers `math.clamp()` or `numpy.clip()`.
-**Effort:** Simple (optional)
-
-#### INFO: Vector2 Import and Usage Consistency
-**ID:** DUP-UI2-012
-**Location:** `game/ui/interfaces/battle_ui.py:13` AND `game/ui/services/battle_ui_service.py:24` AND `game/ui/services/ship_io.py:15`
-**Issue:** Vector2 is imported from `game.core.math` in some files and from `pygame.math` in others (e.g., `camera.py` uses `pygame.math.Vector2`). Within the framework shard, there's inconsistent usage.
-**Impact:** Minor confusion about which Vector2 to use. Both should be compatible, but inconsistency suggests lack of convention.
-**Recommendation:** Establish a convention: use `game.core.math.Vector2` for data/interface objects, `pygame.math.Vector2` for rendering operations.
-**Effort:** Simple
+---
 
 ## Top 5 Priority Issues
 
-1. **DUP-UI2-001 (MAJOR): Duplicated Lazy DI Provider Resolution Pattern** - Four services duplicate the same pattern with slight variations. This is the most impactful because it affects the core architecture and will require consistent updates as DI patterns evolve.
+1. **DUP-UI2-002 (MAJOR)** - Image bounding box/scaling logic is duplicated with inconsistent alpha thresholds across 3 files. Consolidation would eliminate subtle behavioral differences and reduce code.
 
-2. **DUP-UI2-004 (MAJOR): Service Adapter Wrapping Pattern** - Two adapters follow identical structural patterns. As more adapters are added (likely given the project's service architecture), this duplication will compound.
+2. **DUP-UI2-001 (MAJOR)** - DI pattern inconsistency across 4 services creates cognitive overhead and potential for bugs when services interact. Standardization would improve maintainability.
 
-3. **DUP-UI2-003 (MAJOR): Singleton Manager Pattern Triplicated** - Three managers share the same structure. While the singleton logic is properly centralized in `SingletonMeta`, the surrounding code and documentation patterns are duplicated.
+3. **DUP-UI2-006 (MINOR)** - Formation renderer coordinate transforms are separate from Camera class. Consider unifying if formation editor ever needs to integrate more tightly with other screens.
 
-4. **DUP-UI2-002 (MAJOR): Directory Creation Pattern Duplicated in ShipIO** - Within a single file, the same 3-line block is copy-pasted. This is the simplest fix with clear benefit.
+4. **DUP-UI2-003 (MINOR)** - Singleton docstring boilerplate is repeated but functional. Low priority to address.
 
-5. **DUP-UI2-009 (MINOR): Tkinter Initialization Error Handling** - Module-level Tkinter initialization can cause test isolation issues and platform-dependent behavior. Centralizing this would improve testability.
+5. **DUP-UI2-004 (MINOR)** - Image transform utility functions exist but aren't universally used. Documentation could clarify intended usage.
+
+---
+
+## Analysis Notes
+
+The UI framework layer is well-organized with clear separation of concerns:
+- **services/** provides adapter/facade patterns for decoupling from simulation
+- **renderer/** handles drawing and coordinate transforms
+- **interfaces/** defines protocols and DTOs for clean boundaries
+- **orchestration/** coordinates cross-layer operations
+- **assets/** manages visual resources
+
+The duplication found is generally either:
+1. Justified by architectural patterns (adapters, singletons)
+2. Semantic similarity that serves different contexts (formation vs battle cameras)
+3. Actual consolidation opportunities (image bounding/scaling logic)
+
+The codebase shows evidence of active refactoring (PROJ-43, PROJ-50, PROJ-113 references) with good progress on reducing duplication through shared patterns like SingletonMeta.

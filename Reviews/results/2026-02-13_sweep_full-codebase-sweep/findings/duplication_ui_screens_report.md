@@ -1,345 +1,413 @@
 # Duplication & Fragmentation Report: UI Screens and Panels
 
-**Sweep Date:** 2026-02-13
-**Scope:** `game/ui/screens/` and `game/ui/panels/`
-**Agent:** Duplication & Fragmentation Sweep
+**Scope:** `game/ui/screens/`, `game/ui/panels/`
+**Date:** 2026-02-13
+**Agent:** Sweep Agent - Duplication & Fragmentation (Sweep Cycle 2)
 
 ---
 
 ## Executive Summary
 
-This report identifies code duplication, near-duplicates, and fragmented implementations across the UI layer. The codebase shows evidence of **prior refactoring efforts** (PROJ-108, PROJ-12, DUP-UI1-002, DUP-UI1-005) that have already consolidated several patterns. However, remaining opportunities exist for further consolidation.
+This report identifies code duplication, near-duplication, copy-paste drift, and fragmented implementations within the UI layer (`game/ui/screens/` and `game/ui/panels/`). The analysis covers 65+ Python files totaling approximately 20,000+ lines of code.
 
-**Overall Assessment:** The UI layer is reasonably well-factored with some remaining MINOR and INFO-level issues.
+**Key Findings:**
+- 2 CRITICAL issues (significant duplication requiring immediate refactor)
+- 4 MAJOR issues (substantial patterns worth consolidating)
+- 5 MINOR issues (smaller duplications with low risk)
+- 3 INFO items (noted patterns, acceptable as-is)
+
+The codebase shows evidence of **prior refactoring efforts** (PROJ-108, PROJ-12, DUP-UI1-002, DUP-UI1-005) that have already consolidated several patterns, but significant opportunities remain.
 
 ---
 
 ## Findings
 
-### DUP-UI-001 [INFO] - Portrait/Image Loading with Placeholder Generation
+### CRITICAL
+
+#### CRITICAL: ID-Based Expansion Tracking Pattern Duplicated in Battle Panels
 
 **Files:**
-- `game/ui/panels/design_report_panel.py` (lines 168-264)
-- `game/ui/panels/ship_detail_panel.py` (lines 125-160)
-- `game/ui/screens/design_image_helper.py` (lines 52-105)
+- `C:\Dev\Starship Battles\game\ui\panels\battle_panels.py` (lines 59-86, 263-286)
 
 **Description:**
-Three locations implement similar portrait loading with placeholder generation:
-1. `DesignReportPanel._update_portrait()` - loads portrait with gradient fallback
-2. `ShipDetailPanel._get_scaled_image()` - scales images with placeholder icon
-3. `design_image_helper.py` - centralized portrait/topdown loading with cache
-
-**Analysis:**
-The `design_image_helper.py` module is the canonical implementation with proper caching. The panel-specific implementations have slightly different requirements (DesignReportPanel needs text overlay, ShipDetailPanel needs simple placeholder shapes).
-
-**Recommendation:**
-Consider extending `design_image_helper.py` with optional placeholder customization parameters rather than duplicating fallback logic.
-
-**Severity Justification:** INFO - The implementations serve different contexts with minor variations, and a central helper already exists.
-
----
-
-### DUP-UI-002 [INFO] - Section Header Rendering Pattern
-
-**Files:**
-- `game/ui/panels/ship_detail_panel.py` (lines 328-337) - `_add_section_header()`
-- `game/ui/panels/design_stats_panel.py` (lines 289-317) - `_build_section()`
-- `game/ui/screens/test_lab/screen.py` (lines 1506-1518) - `_draw_section()`
-
-**Description:**
-Multiple panels implement section header rendering with the pattern `"-- TITLE --"`:
-- `ShipDetailPanel` uses `f"-- {title} --"` with UILabel
-- `DesignStatsPanel` uses `f"-- {title} --"` with UILabel
-- `TestLabScreen` renders headers using pygame fonts directly
-
-**Analysis:**
-These are visually similar but use different rendering approaches (pygame_gui vs raw pygame). The pygame_gui panels could potentially share a common helper, but the TestLabScreen uses a fundamentally different drawing approach (manual pygame rendering).
-
-**Recommendation:**
-For pygame_gui panels, consider a shared `create_section_header()` factory function. Leave TestLabScreen's manual rendering as-is since it's a different paradigm.
-
-**Severity Justification:** INFO - The patterns are similar but serve different rendering systems.
-
----
-
-### DUP-UI-003 [MINOR] - HP/Damage Color Calculation Functions
-
-**Files:**
-- `game/ui/panels/ship_detail_panel.py` (lines 25-46) - `get_damage_color()`
-- `game/ui/panels/ship_stats_renderer.py` (lines 77-93) - `get_hp_bar_color()`
-
-**Description:**
-Two functions compute colors based on HP percentage:
+`ShipStatsPanel` and `SeekerMonitorPanel` both implement nearly identical ID-based expansion state tracking patterns:
 
 ```python
-# ship_detail_panel.py
-def get_damage_color(hp_percentage: float) -> Tuple[int, int, int]:
-    if hp_percentage <= 0:
-        return (100, 100, 100)  # Gray - destroyed
-    elif hp_percentage < 0.5:
-        return (200, 100, 100)  # Red
-    elif hp_percentage < 0.75:
-        return (200, 200, 100)  # Yellow
-    else:
-        return (100, 200, 100)  # Green
+# ShipStatsPanel (lines 59-86)
+def _get_ship_id(self, ship):
+    ship_id = getattr(ship, 'id', None)
+    if isinstance(ship_id, str):
+        return ship_id
+    ship_name = getattr(ship, 'name', None)
+    if isinstance(ship_name, str):
+        return ship_name
+    return str(id(ship))
 
-# ship_stats_renderer.py
-def get_hp_bar_color(hp_pct, is_active=True):
-    if not is_active:
-        return (100, 50, 50)
-    if hp_pct > 0.5:
-        return (0, 200, 0)
-    elif hp_pct > 0.2:
-        return (200, 200, 0)
-    return (200, 50, 50)
+def _is_expanded(self, ship):
+    return self._get_ship_id(ship) in self.expanded_ships
+
+def _toggle_expanded(self, ship):
+    ship_id = self._get_ship_id(ship)
+    if ship_id in self.expanded_ships:
+        self.expanded_ships.discard(ship_id)
+    else:
+        self.expanded_ships.add(ship_id)
+
+# SeekerMonitorPanel (lines 263-286) - nearly identical
+def _get_projectile_id(self, proj):
+    proj_id = getattr(proj, 'id', None)
+    if isinstance(proj_id, str):
+        return proj_id
+    return str(id(proj))
+
+def _is_seeker_expanded(self, proj):
+    return self._get_projectile_id(proj) in self.expanded_seekers
+
+def _toggle_seeker_expanded(self, proj):
+    proj_id = self._get_projectile_id(proj)
+    if proj_id in self.expanded_seekers:
+        self.expanded_seekers.discard(proj_id)
+    else:
+        self.expanded_seekers.add(proj_id)
 ```
 
-**Analysis:**
-Both functions serve the same purpose but use different thresholds and color values. The `ship_stats_renderer` version also handles an `is_active` parameter.
+**Impact:** ~40 lines of duplicated logic. Changes to expansion tracking must be synchronized manually.
 
-**Recommendation:**
-Consolidate into a single function in `ship_stats_renderer.py` (or a new `ui/colors.py` module) with configurable thresholds. Replace usages in `ship_detail_panel.py`.
-
-**Severity Justification:** MINOR - Different thresholds may cause inconsistent visual feedback across UI elements.
+**Recommendation:** Extract a reusable `ExpansionTracker` mixin or utility class that handles ID extraction and toggle state management. The base class `BattlePanel` is the natural place for this abstraction.
 
 ---
 
-### DUP-UI-004 [INFO] - UIScrollingContainer Setup Pattern
+#### CRITICAL: Multi-Select Row Click Handling Duplicated Across Windows
 
 **Files:**
-- `game/ui/panels/design_stats_panel.py` (lines 179-184)
-- `game/ui/panels/ship_detail_panel.py` (lines 92-96)
-- `game/ui/panels/builder_widgets.py` (lines 124-130)
-- `game/ui/panels/base_gallery.py` (lines 154-160)
-- `game/ui/screens/test_lab/screen.py` (multiple locations)
+- `C:\Dev\Starship Battles\game\ui\screens\fleet_report_window.py` (lines 883-928)
+- `C:\Dev\Starship Battles\game\ui\screens\empire_build_queue_window.py` (lines 304-337)
 
 **Description:**
-Many classes create UIScrollingContainer with similar boilerplate:
+Both windows implement nearly identical Ctrl+click multi-select logic:
+
 ```python
-self.scroll_container = UIScrollingContainer(
-    relative_rect=pygame.Rect(...),
-    manager=self.manager,
-    container=self.panel/self.container,
-    allow_scroll_x=False,  # Usually false
-    allow_scroll_y=True    # Usually true
+# FleetReportWindow._handle_row_click (lines 883-928)
+mods = pygame.key.get_mods()
+ctrl_held = bool(mods & pygame.KMOD_CTRL)
+
+if ctrl_held:
+    if ship_index in self.selected_indices:
+        if len(self.selected_indices) > 1:
+            self.selected_indices.discard(ship_index)
+    else:
+        self.selected_indices.add(ship_index)
+else:
+    self.selected_indices = {ship_index}
+
+# Update single selection tracking
+if len(self.selected_indices) == 1:
+    sole_idx = next(iter(self.selected_indices))
+    self.selected_ship = filtered_ships[sole_idx]
+else:
+    self.selected_ship = None
+
+# EmpireBuildQueueWindow.handle_row_click (lines 304-337) - nearly identical
+if ctrl_held:
+    if index in self.selected_indices:
+        if len(self.selected_indices) > 1:
+            self.selected_indices.discard(index)
+    else:
+        self.selected_indices.add(index)
+else:
+    self.selected_indices = {index}
+
+if len(self.selected_indices) == 1:
+    sole_idx = next(iter(self.selected_indices))
+    self.selected_index = sole_idx
+    self.selected_source = self.filtered_sources[sole_idx]
+else:
+    self.selected_index = -1
+    self.selected_source = None
+```
+
+**Impact:** ~50 lines duplicated. Selection behavior inconsistencies are likely if only one file is updated.
+
+**Recommendation:** Create a `MultiSelectMixin` or `SelectionController` class that encapsulates:
+- `selected_indices: Set[int]`
+- `handle_row_click(index, ctrl_held) -> None`
+- `get_single_selection() -> Optional[int]`
+
+---
+
+### MAJOR
+
+#### MAJOR: Window Open/Close Pattern Repeated in StrategyWindowManager
+
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\screens\strategy_window_manager.py` (entire file)
+
+**Description:**
+Each window type follows the same boilerplate pattern:
+
+```python
+def open_<window_type>(self) -> None:
+    if self.<window>:
+        self.<window>.kill()
+
+    # Calculate rect
+    w, h = <width>, <height>
+    rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+
+    self.<window> = <WindowClass>(
+        rect, self.manager, <args>,
+        on_close_callback=self._on_<window>_closed,
+    )
+
+def _on_<window>_closed(self) -> None:
+    self.<window> = None
+```
+
+This pattern is repeated 8+ times (planet_list, build_queue_list, empire_build_queue, event_log, fleet_orders, fleet_report, transfer_dialog, empire_panel).
+
+**Impact:** ~200 lines of boilerplate that could be reduced by 60-70%.
+
+**Recommendation:** Create a generic `_open_window()` helper method:
+```python
+def _open_window(self, attr_name: str, window_class, rect_scale: tuple, *args, **kwargs):
+    existing = getattr(self, attr_name)
+    if existing:
+        existing.kill()
+    w = int(self.width * rect_scale[0])
+    h = int(self.height * rect_scale[1])
+    rect = pygame.Rect((self.width - w) / 2, (self.height - h) / 2, w, h)
+    def on_close():
+        setattr(self, attr_name, None)
+    window = window_class(rect, self.manager, *args, on_close_callback=on_close, **kwargs)
+    setattr(self, attr_name, window)
+```
+
+---
+
+#### MAJOR: Timestamp Formatting Duplicated Within SaveSelectionWindow
+
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\screens\save_selection_window.py` (lines 146-151, 169-175)
+
+**Description:**
+The same datetime parsing and formatting logic appears twice in the same file:
+
+```python
+# First occurrence (lines 146-151)
+try:
+    from datetime import datetime
+    dt = datetime.fromisoformat(timestamp)
+    time_str = dt.strftime("%Y-%m-%d %H:%M")
+except ValueError as e:
+    log_warning(f"Failed to parse save timestamp '{timestamp}': {e}")
+    time_str = timestamp[:16] if len(timestamp) >= 16 else timestamp
+
+# Second occurrence (lines 169-175) - nearly identical
+try:
+    from datetime import datetime
+    dt = datetime.fromisoformat(turn_time)
+    turn_time_str = dt.strftime("%m-%d %H:%M")
+except ValueError as e:
+    log_warning(f"Failed to parse turn timestamp '{turn_time}': {e}")
+    turn_time_str = ""
+```
+
+**Impact:** Code maintenance issue. The import is inside the function (inefficient), and error handling differs slightly.
+
+**Recommendation:** Extract to a helper method at module level or as an instance method.
+
+---
+
+#### MAJOR: Scrollbar + List Panel Pattern Repeated Across Multiple Windows
+
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\screens\fleet_report_window.py` (lines 471-487)
+- `C:\Dev\Starship Battles\game\ui\screens\empire_build_queue_window.py` (lines 172-192)
+- `C:\Dev\Starship Battles\game\ui\screens\event_log_window.py` (lines 86-112)
+- `C:\Dev\Starship Battles\game\ui\screens\planet_list_window.py` (similar pattern)
+
+**Description:**
+Each window creates a scrollable list with nearly identical setup:
+
+```python
+# Create list panel
+self.list_panel = UIPanel(
+    relative_rect=pygame.Rect(x, y, width - scrollbar_width, height),
+    manager=self.ui_manager,
+    container=self,
+    anchors={'left': 'left', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
+)
+
+# Create scrollbar
+self.scroll_bar = UIVerticalScrollBar(
+    relative_rect=pygame.Rect(-scrollbar_width, y, scrollbar_width, height),
+    visible_percentage=1.0,
+    manager=self.ui_manager,
+    container=self,
+    anchors={'left': 'right', 'right': 'right', 'top': 'top', 'bottom': 'bottom'}
 )
 ```
 
-**Analysis:**
-This is standard pygame_gui usage rather than duplication. The parameters vary by context (different rects, containers).
+**Impact:** ~30 lines duplicated per window (4+ occurrences = 120+ lines).
 
-**Recommendation:**
-No action needed - this is idiomatic pygame_gui usage.
-
-**Severity Justification:** INFO - Standard library usage pattern, not problematic duplication.
+**Recommendation:** Create a `ScrollableListPanel` composite widget that encapsulates the list panel + scrollbar setup and provides common methods like `set_content_height()`, `get_visible_range()`, etc.
 
 ---
 
-### DUP-UI-005 [RESOLVED] - Gallery Base Class Extraction
+#### MAJOR: Filter Toggle Button Pattern Repeated
 
 **Files:**
-- `game/ui/panels/base_gallery.py`
-- `game/ui/panels/race_portrait_gallery.py`
-- `game/ui/panels/race_flag_gallery.py`
+- `C:\Dev\Starship Battles\game\ui\screens\fleet_report_window.py` (lines 244-265, 278-296, etc.)
+- `C:\Dev\Starship Battles\game\ui\screens\empire_build_queue_window.py` (lines 700-760)
 
 **Description:**
-This duplication was already identified and fixed (see PROJ-108 Phase 6, DUP-UI1-005 resolution). The `BaseGallery` abstract class now provides shared functionality for:
-- Scrollable thumbnail gallery
-- Preview area for selected asset
-- Button click handling
-- Selection highlighting
-
-**Analysis:**
-RacePortraitGallery and RaceFlagGallery now extend BaseGallery, implementing only asset-specific discovery and preview logic.
-
-**Status:** RESOLVED - No further action needed.
-
----
-
-### DUP-UI-006 [MINOR] - RaceThemeGallery Not Using BaseGallery
-
-**Files:**
-- `game/ui/panels/race_theme_gallery.py`
-- `game/ui/panels/base_gallery.py`
-
-**Description:**
-`RaceThemeGallery` (202 lines) has similar structure to `BaseGallery` subclasses but does not extend it:
-- Has `_create_content()` method
-- Has `_discover_themes()` method
-- Has `handle_button_click()` method
-- Has `set_from_config()` method
-- Has `_sanitize_object_id()` method (duplicate of BaseGallery line 215-217)
-
-**Analysis:**
-While RaceThemeGallery displays themes in a list (vs. thumbnail grid), it shares significant structural patterns with BaseGallery. The `_sanitize_object_id()` method is identical.
-
-**Recommendation:**
-Either:
-1. Extend BaseGallery with theme-specific overrides, OR
-2. Extract `_sanitize_object_id()` to a shared utility module
-
-**Severity Justification:** MINOR - Missed consolidation opportunity during PROJ-108.
-
----
-
-### DUP-UI-007 [INFO] - Value Formatting Utilities (Already Consolidated)
-
-**Files:**
-- `game/ui/screens/test_lab/formatting_utils.py`
-
-**Description:**
-The `format_value()` function was already extracted to consolidate duplicate formatting logic from `test_run_details.py` and `test_run_card.py` (see DUP-UI1-002 resolution).
-
-**Status:** RESOLVED - No further action needed.
-
----
-
-### DUP-UI-008 [MINOR] - Population/Number Formatting Duplication
-
-**Files:**
-- `game/ui/panels/planet_report_panel.py` (lines 303-310) - `_format_compact_number()`
-- `game/ui/screens/strategy_detail_fmt.py` (lines 102-113) - inline formatting
-
-**Description:**
-Both files implement K/M suffix formatting for large numbers:
+Both files create filter toggle buttons with nearly identical code:
 
 ```python
-# planet_report_panel.py
-def _format_compact_number(value: float) -> str:
-    if value >= 1_000_000:
-        return f"{value/1_000_000:.1f}M"
-    elif value >= 1_000:
-        return f"{value/1_000:.0f}K"
-    return str(int(value))
-
-# strategy_detail_fmt.py (inline)
-if total_pop >= 1_000_000:
-    pop_str = f"{total_pop / 1_000_000:.1f}M"
-elif total_pop >= 1_000:
-    pop_str = f"{total_pop / 1_000:.0f}K"
-else:
-    pop_str = str(total_pop)
+for filter_id, label in filter_configs:
+    is_on = self.view_model.is_filter_enabled(filter_id)
+    btn_text = f"[{label}]" if is_on else label
+    btn = UIButton(
+        relative_rect=pygame.Rect(x, y, width, height),
+        text=btn_text,
+        manager=self.ui_manager,
+        container=container,
+        object_id=f"#filter_{filter_id}"
+    )
+    if is_on:
+        btn.select()
+    self.filter_buttons[filter_id] = btn
+    y += spacing
 ```
 
-**Recommendation:**
-Extract `_format_compact_number()` to a shared formatting utility module (e.g., `game/ui/formatting.py` or `game/core/formatting.py`) and use it in `strategy_detail_fmt.py`.
+This pattern repeats 4+ times in FleetReportWindow and 3+ times in EmpireBuildQueueWindow.
 
-**Severity Justification:** MINOR - Small code duplication, easy to consolidate.
+**Impact:** ~100+ lines of duplicated filter button creation code.
+
+**Recommendation:** Create a `FilterButtonGroup` helper class or factory function.
 
 ---
 
-### DUP-UI-009 [INFO] - Graph Widget Base Classes
+### MINOR
+
+#### MINOR: HP/Damage Color Calculation Functions
 
 **Files:**
-- `game/ui/panels/strategy_widgets.py` (lines 4-14) - `DataGraph` base class
+- `C:\Dev\Starship Battles\game\ui\panels\ship_detail_panel.py` (lines 25-46) - `get_damage_color()`
+- `C:\Dev\Starship Battles\game\ui\panels\ship_stats_renderer.py` (lines 77-93) - `get_hp_bar_color()`
 
 **Description:**
-The `DataGraph` base class provides common functionality for `SpectrumGraph` and `AtmosphereGraph`:
-- Surface creation with background color
-- `clear()` method with border
-- `render()` abstract method
+Two functions compute colors based on HP percentage with different thresholds and color values.
 
-**Analysis:**
-This is good design - the base class properly extracts common graph functionality.
-
-**Status:** No issue - proper abstraction in place.
+**Recommendation:** Consolidate into a single function with configurable thresholds.
 
 ---
 
-### DUP-UI-010 [INFO] - Panel kill() Method Pattern
+#### MINOR: Population/Number Formatting Duplication
 
 **Files:**
-- `game/ui/panels/design_stats_panel.py` (lines 442-452)
-- `game/ui/panels/ship_detail_panel.py` (lines 442-447)
-- `game/ui/panels/design_report_panel.py` (lines 277-284)
-- Multiple other panels
+- `C:\Dev\Starship Battles\game\ui\panels\planet_report_panel.py` (lines 303-310) - `_format_compact_number()`
+- `C:\Dev\Starship Battles\game\ui\screens\strategy_detail_fmt.py` (lines 102-113) - inline formatting
 
 **Description:**
-Most panel classes implement a `kill()` method that:
-1. Cleans up child UI elements
-2. Kills the main panel container
-3. Resets internal state
+Both files implement K/M suffix formatting for large numbers.
 
-**Analysis:**
-This is a necessary lifecycle pattern for pygame_gui panels. Each panel has different internal state to clean up, so a common base class would not significantly reduce code.
-
-**Recommendation:**
-No action needed - this is proper resource cleanup.
-
-**Severity Justification:** INFO - Necessary lifecycle pattern with contextual variations.
+**Recommendation:** Extract to a shared formatting utility module.
 
 ---
 
-### DUP-UI-011 [INFO] - Text Wrapping Functions
+#### MINOR: RaceThemeGallery Not Using BaseGallery
 
 **Files:**
-- `game/ui/screens/test_lab/screen.py` (lines 1642-1668) - `_draw_wrapped_text()`
+- `C:\Dev\Starship Battles\game\ui\panels\race_theme_gallery.py`
+- `C:\Dev\Starship Battles\game\ui\panels\base_gallery.py`
 
 **Description:**
-TestLabScreen implements manual text wrapping for pygame rendering. This is specific to the manual-drawing approach used by TestLabScreen and doesn't have direct duplicates since other panels use pygame_gui's built-in text handling.
+`RaceThemeGallery` has similar structure to `BaseGallery` subclasses but does not extend it. The `_sanitize_object_id()` method (lines 215-217) is duplicated.
 
-**Status:** No issue - context-specific implementation.
+**Recommendation:** Evaluate integration with BaseGallery or extract shared utility.
 
 ---
 
-### DUP-UI-012 [INFO] - Resource Icon/Color Constants
+#### MINOR: Window Kill/Cleanup Pattern Slightly Inconsistent
 
 **Files:**
-- `game/ui/panels/ship_stats_renderer.py` (lines 17-27) - `RESOURCE_COLORS`
-- `game/ui/panels/strategy_widgets.py` (lines 100-110) - `GAS_COLORS`
+- Multiple window classes have varying cleanup patterns in `kill()` methods
 
 **Description:**
-Multiple files define color mappings for resources/gases. These serve different purposes (ship resources vs. atmospheric gases) and are appropriately separate.
+Most windows follow `on_close_callback -> super().kill()` but some add extra cleanup or omit callbacks.
 
-**Status:** No issue - different domains.
-
----
-
-## Summary Table
-
-| ID | Severity | Description | Status |
-|----|----------|-------------|--------|
-| DUP-UI-001 | INFO | Portrait/Image Loading with Placeholder | Central helper exists |
-| DUP-UI-002 | INFO | Section Header Rendering | Different rendering systems |
-| DUP-UI-003 | MINOR | HP/Damage Color Calculation | **Recommend consolidation** |
-| DUP-UI-004 | INFO | UIScrollingContainer Setup | Standard library pattern |
-| DUP-UI-005 | RESOLVED | Gallery Base Class | Fixed in PROJ-108 |
-| DUP-UI-006 | MINOR | RaceThemeGallery Not Using BaseGallery | **Recommend integration** |
-| DUP-UI-007 | RESOLVED | Value Formatting | Fixed in DUP-UI1-002 |
-| DUP-UI-008 | MINOR | Population/Number Formatting | **Recommend extraction** |
-| DUP-UI-009 | INFO | Graph Widget Base | Good abstraction |
-| DUP-UI-010 | INFO | Panel kill() Pattern | Necessary cleanup |
-| DUP-UI-011 | INFO | Text Wrapping Functions | Context-specific |
-| DUP-UI-012 | INFO | Resource/Gas Color Constants | Different domains |
+**Recommendation:** Standardize on a base pattern.
 
 ---
 
-## Actionable Recommendations
+#### MINOR: Dropdown Recreation Utility
 
-### Priority 1 (MINOR - Quick Wins)
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\screens\transfer_dialog.py` (lines 147-158)
 
-1. **DUP-UI-003:** Consolidate `get_damage_color()` and `get_hp_bar_color()` into a single function in `ship_stats_renderer.py` with configurable thresholds.
+**Description:**
+`_recreate_dropdown()` works around pygame_gui's lack of dropdown update method. Could be useful elsewhere.
 
-2. **DUP-UI-008:** Extract `_format_compact_number()` to a shared module and use it in `strategy_detail_fmt.py`.
-
-### Priority 2 (MINOR - Moderate Effort)
-
-3. **DUP-UI-006:** Evaluate whether `RaceThemeGallery` should extend `BaseGallery`. At minimum, extract `_sanitize_object_id()` to a shared utility.
-
-### No Action Required
-
-The remaining INFO-level findings are either:
-- Already resolved (PROJ-108, DUP-UI1-002, DUP-UI1-005)
-- Appropriate contextual variations
-- Standard library usage patterns
-- Proper abstractions already in place
+**Recommendation:** Move to a shared UI utility module if other dialogs need dynamic dropdowns.
 
 ---
 
-## Notes
+### INFO
 
-1. The codebase shows evidence of ongoing duplication cleanup (PROJ-108, DUP-UI1-002, DUP-UI1-005), indicating good maintainability practices.
+#### INFO: BaseGallery Already Extracted (RESOLVED)
 
-2. The TestLabScreen (1909 lines) uses manual pygame drawing rather than pygame_gui, which creates a natural boundary preventing consolidation with pygame_gui-based panels.
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\panels\base_gallery.py`
 
-3. Several potential duplications are actually appropriate because they serve different layers or rendering systems.
+**Description:**
+Good example of duplication already addressed. `BaseGallery` provides a shared abstract base for `RacePortraitGallery` and `RaceFlagGallery` (DUP-UI1-005 resolution).
+
+---
+
+#### INFO: Ship Stats Renderer Already Extracted
+
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\panels\ship_stats_renderer.py`
+
+**Description:**
+Drawing utilities for ship statistics have been properly extracted into a dedicated module.
+
+---
+
+#### INFO: Strategy Detail Formatters Properly Separated
+
+**Files:**
+- `C:\Dev\Starship Battles\game\ui\screens\strategy_detail_fmt.py`
+- `C:\Dev\Starship Battles\game\ui\screens\strategy_detail_formatter.py`
+
+**Description:**
+Intentional separation - `strategy_detail_fmt.py` has pure formatting functions, `strategy_detail_formatter.py` provides stateful wrapper.
+
+---
+
+## Summary Statistics
+
+| Severity | Count | Estimated Lines Affected |
+|----------|-------|--------------------------|
+| CRITICAL | 2     | ~90 lines                |
+| MAJOR    | 4     | ~450 lines               |
+| MINOR    | 5     | ~100 lines               |
+| INFO     | 3     | N/A (resolved/acceptable)|
+
+**Total Actionable Duplication:** ~640 lines across 11 distinct patterns
+
+---
+
+## Recommended Refactoring Priority
+
+1. **CRITICAL: Multi-Select Row Click** - Extract `SelectionController` (affects 2 windows, high bug risk)
+2. **CRITICAL: Expansion Tracking** - Extract `ExpansionTracker` mixin (affects battle panels)
+3. **MAJOR: Window Manager Boilerplate** - Create generic `_open_window()` helper
+4. **MAJOR: Scrollable List Pattern** - Create `ScrollableListPanel` composite
+5. **MAJOR: Filter Toggle Buttons** - Create `FilterButtonGroup` factory
+6. **MAJOR: Timestamp Formatting** - Quick local refactor in SaveSelectionWindow
+
+---
+
+*Report generated by Sweep Agent - Duplication & Fragmentation (Cycle 2)*
