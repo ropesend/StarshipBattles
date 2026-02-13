@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "is_vector2_like",
+    "get_entity_id",
     "get_position",
     "get_rotation",
     "get_all_components",
@@ -46,6 +47,22 @@ def is_vector2_like(obj: Any) -> bool:
     return hasattr(obj, 'x') and hasattr(obj, 'y') and hasattr(obj, 'distance_to')
 
 
+def get_entity_id(entity: Any) -> str:
+    """Get a string identifier for an entity, trying id, name, then object id.
+
+    This provides a consistent way to identify entities in log messages and
+    error handling, supporting various entity types that may have different
+    identifier attributes.
+
+    Args:
+        entity: Any entity object (ship, projectile, etc.)
+
+    Returns:
+        String identifier: entity.id, entity.name, or str(id(entity))
+    """
+    return getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))
+
+
 def get_position(entity: Any) -> Optional[Vector2]:
     """Get position from entity, supporting both interface and direct access.
 
@@ -62,8 +79,6 @@ def get_position(entity: Any) -> Optional[Vector2]:
         Logs warnings on interface failures but continues with fallback
         to maintain combat continuity.
     """
-    entity_id = getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))
-
     # Check for interface method first (ShipControllableAdapter case)
     get_pos = getattr(entity, 'get_position', None)
     if get_pos is not None and callable(get_pos):
@@ -75,7 +90,7 @@ def get_position(entity: Any) -> Optional[Vector2]:
         except (AttributeError, TypeError) as e:
             logger.warning(
                 "get_position() failed for entity %s: %s. Using fallback.",
-                entity_id, e
+                get_entity_id(entity), e
             )
     # Fall back to direct attribute access (raw Ship or mock with .position)
     return getattr(entity, 'position', None)
@@ -94,8 +109,6 @@ def get_rotation(entity: Any) -> float:
         Logs warnings on interface failures but continues with fallback
         to maintain combat continuity.
     """
-    entity_id = getattr(entity, 'id', getattr(entity, 'name', str(id(entity))))
-
     # Check for interface method first
     get_rot = getattr(entity, 'get_rotation', None)
     if get_rot is not None and callable(get_rot):
@@ -106,7 +119,7 @@ def get_rotation(entity: Any) -> float:
         except (AttributeError, TypeError) as e:
             logger.warning(
                 "get_rotation() failed for entity %s: %s. Using fallback.",
-                entity_id, e
+                get_entity_id(entity), e
             )
     # Fall back to direct attribute access
     return float(getattr(entity, 'angle', 0.0))
@@ -140,11 +153,9 @@ def safe_distance(entity1: Any, entity2: Any) -> float:
         pos1 = get_position(entity1)
         pos2 = get_position(entity2)
         if pos1 is None or pos2 is None:
-            entity1_id = getattr(entity1, 'id', str(id(entity1)))
-            entity2_id = getattr(entity2, 'id', str(id(entity2)))
             logger.warning(
                 "Cannot calculate distance: entity1=%s pos=%s, entity2=%s pos=%s",
-                entity1_id, pos1, entity2_id, pos2
+                get_entity_id(entity1), pos1, get_entity_id(entity2), pos2
             )
             return float('inf')
         return pos1.distance_to(pos2)
@@ -186,11 +197,9 @@ def is_in_pdc_arc(ship: Any, target: Any) -> bool:
     target_pos = get_position(target)
 
     if ship_pos is None or target_pos is None:
-        ship_id = getattr(ship, 'id', str(id(ship)))
-        target_id = getattr(target, 'id', str(id(target)))
         logger.warning(
             "PDC arc check failed: ship=%s pos=%s, target=%s pos=%s",
-            ship_id, ship_pos, target_id, target_pos
+            get_entity_id(ship), ship_pos, get_entity_id(target), target_pos
         )
         return False
 

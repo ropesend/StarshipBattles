@@ -8,6 +8,7 @@ from unittest.mock import Mock, MagicMock
 
 from game.ai.combat_utils import (
     is_vector2_like,
+    get_entity_id,
     get_position,
     get_rotation,
     get_all_components,
@@ -16,6 +17,37 @@ from game.ai.combat_utils import (
     is_in_pdc_arc,
 )
 from game.core.math import Vector2
+
+
+class TestGetEntityId:
+    """Tests for get_entity_id helper function."""
+
+    def test_with_id_attribute(self):
+        """get_entity_id returns id attribute when present."""
+        entity = Mock()
+        entity.id = "ship_001"
+
+        result = get_entity_id(entity)
+
+        assert result == "ship_001"
+
+    def test_with_name_fallback(self):
+        """get_entity_id falls back to name when id not present."""
+        entity = Mock(spec=['name'])
+        entity.name = "Destroyer"
+
+        result = get_entity_id(entity)
+
+        assert result == "Destroyer"
+
+    def test_with_object_id_fallback(self):
+        """get_entity_id falls back to id() when no id or name."""
+        entity = Mock(spec=[])  # No id or name attributes
+
+        result = get_entity_id(entity)
+
+        # Should be the string representation of the object id
+        assert result == str(id(entity))
 
 
 class TestIsVector2Like:

@@ -63,7 +63,7 @@ from game.core.constants import AttackType, CombatConstants
 from game.core.protocols import is_combatant
 from game.ai.target_evaluator import TargetEvaluator
 from game.ai.strategy_manager import StrategyManager
-from game.ai.combat_utils import get_hp_percent, is_in_pdc_arc
+from game.ai.combat_utils import get_entity_id, get_hp_percent, is_in_pdc_arc
 
 class AIController:
     def __init__(self, ship, grid, enemy_team_id):
@@ -188,7 +188,7 @@ class AIController:
             individual targets have invalid data.
         """
         scored_enemies = []
-        ship_id = getattr(self.ship, 'id', getattr(self.ship, 'name', str(id(self.ship))))
+        ship_id = get_entity_id(self.ship)
 
         # PERF: Pre-calculate distances once for all candidates
         # Avoids redundant distance calculations in TargetEvaluator
@@ -216,10 +216,9 @@ class AIController:
                 if score > -float('inf'):
                     scored_enemies.append((score, e))
             except (AttributeError, TypeError) as err:
-                target_id = getattr(e, 'id', getattr(e, 'name', str(id(e))))
                 logger.warning(
                     "Target evaluation failed for ship=%s target=%s: %s. Skipping target.",
-                    ship_id, target_id, err
+                    ship_id, get_entity_id(e), err
                 )
 
         scored_enemies.sort(key=lambda x: x[0], reverse=True)

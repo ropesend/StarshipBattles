@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-126 Audit Cycle 1 PASSED
-**Current Status:** PROJ-126 Complete - Ready for next project
+**Last Completed:** PROJ-127 Phase 1 Complete
+**Current Status:** Phase 1 complete - Ready for Phase 2
 **Current Project:** PROJ-127
-**Current Phase:** Phase 1
-**Test Status:** 11870 passed
+**Current Phase:** Phase 2
+**Test Status:** 11873 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-126 Audit PASSED - All code changes verified
-- AIControllerFactory properly in AI layer, old location removed
-- Protocol interface exists, 15 factory tests pass
-- Fixed Phase 4 deferred tasks (marked N/A properly)
-- Next: Start PROJ-127 code-duplication-reduction
+- Phase 1 complete: Extracted `get_entity_id()` helper in combat_utils.py
+- Refactored get_position(), get_rotation(), safe_distance(), is_in_pdc_arc() to use helper
+- Refactored controller.py to use get_entity_id()
+- Task 1.2, 1.3, 1.4: Marked ACCEPTABLE/DEFERRED (no code changes needed)
+- Added 3 new tests for get_entity_id()
+- Next: Begin Phase 2 (Simulation layer duplication)
 
 ---
 
@@ -36,8 +37,8 @@
 
 ---
 
-- [ ] **PROJ-127: code-duplication-reduction**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-127: code-duplication-reduction**
+  - **Phases:** 5 | **Status:** In Progress (Phase 1 Complete) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-127/plan.md](Projects/active_projects/PROJ-127/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -86,6 +87,7 @@
 | 2026-02-13 | PROJ-126 | Phase 3 | Complete | N/A | pending | FALSE POSITIVE/ACCEPTABLE - No code changes |
 | 2026-02-13 | PROJ-126 | Phase 4 | Complete | N/A | pending | 18 tasks: 4 ACCEPTABLE, 3 RESOLVED, 4 INFO, 7 DEFERRED |
 | 2026-02-13 | PROJ-126 | Audit 1 | PASSED | 11870 pass | pending | All verified, project complete |
+| 2026-02-13 | PROJ-127 | Phase 1 | Complete | 11873 pass | pending | get_entity_id() helper extracted, 3 tasks ACCEPTABLE/DEFERRED |
 
 ---
 
