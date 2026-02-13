@@ -54,7 +54,7 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from game.core.math import Vector2
+from game.core.math import Vector2, angle_diff
 from game.core.config import AIConfig, BattleConfig
 from game.ai.behaviors import (RamBehavior, FleeBehavior, KiteBehavior, AttackRunBehavior,
                           FormationBehavior, DoNothingBehavior, StraightLineBehavior,
@@ -440,12 +440,12 @@ class AIController:
         dy = target_pos.y - ship_pos.y
         target_angle = math.degrees(math.atan2(dy, dx)) % 360
         current_angle = self.ship.get_rotation() % 360
-        angle_diff = (target_angle - current_angle + 180) % 360 - 180
+        ang_diff = angle_diff(current_angle, target_angle)
 
-        if abs(angle_diff) > 5:
-            direction = 1 if angle_diff > 0 else -1
+        if abs(ang_diff) > 5:
+            direction = 1 if ang_diff > 0 else -1
             self.ship.rotate(direction)
 
         eff_stop_dist = stop_dist
-        if abs(angle_diff) < 30 and distance > eff_stop_dist:
+        if abs(ang_diff) < 30 and distance > eff_stop_dist:
             self.ship.thrust_forward()

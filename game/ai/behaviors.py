@@ -63,7 +63,24 @@ Example:
 from typing import Any, Dict
 
 from game.core.config import AIConfig, PhysicsConfig
-from game.core.math import Vector2
+from game.core.math import Vector2, angle_diff as calc_angle_diff
+
+
+def _flee_direction(from_pos: Vector2, away_from_pos: Vector2) -> Vector2:
+    """
+    Calculate normalized direction vector pointing away from a position.
+
+    Args:
+        from_pos: The position to flee from (ship position)
+        away_from_pos: The position to flee away from (target position)
+
+    Returns:
+        Normalized direction vector, defaults to (1, 0) if positions coincide
+    """
+    vec = from_pos - away_from_pos
+    if vec.length() == 0:
+        return Vector2(1, 0)
+    return vec.normalize()
 
 
 class AIBehavior:
@@ -93,11 +110,8 @@ class FleeBehavior(AIBehavior):
         self.controller.ship.set_trigger_pulled(fire_while_retreating)
 
         ship_pos = self.controller.ship.get_position()
-        vec = ship_pos - target.position
-        if vec.length() == 0:
-            vec = Vector2(1, 0)
-
-        flee_pos = ship_pos + vec.normalize() * self.FLEE_DISTANCE
+        flee_dir = _flee_direction(ship_pos, target.position)
+        flee_pos = ship_pos + flee_dir * self.FLEE_DISTANCE
         self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
 
 class KiteBehavior(AIBehavior):
@@ -144,11 +158,8 @@ class KiteBehavior(AIBehavior):
             self.controller.navigate_to(target.position, stop_dist=opt_dist, precise=True)
         else:
             # Kite - maintain distance
-            vec = ship_pos - target.position
-            if vec.length() == 0:
-                vec = Vector2(1, 0)
-
-            kite_pos = target.position + vec.normalize() * opt_dist
+            kite_dir = _flee_direction(ship_pos, target.position)
+            kite_pos = target.position + kite_dir * opt_dist
             self.controller.navigate_to(kite_pos, stop_dist=0, precise=True)
 
 class AttackRunBehavior(AIBehavior):
@@ -211,10 +222,8 @@ class AttackRunBehavior(AIBehavior):
             # Cycle-Based: 1 tick = 0.01 seconds. Decrement timer by 0.01.
             self.attack_timer -= self.TICK_DURATION
 
-            vec = ship_pos - target.position
-            if vec.length() == 0:
-                vec = Vector2(1, 0)
-            flee_pos = ship_pos + vec.normalize() * self.FLEE_DISTANCE
+            flee_dir = _flee_direction(ship_pos, target.position)
+            flee_pos = ship_pos + flee_dir * self.FLEE_DISTANCE
 
             self.controller.navigate_to(flee_pos, stop_dist=0, precise=False)
 
@@ -287,7 +296,7 @@ class FormationBehavior(AIBehavior):
         diameter = ship.get_radius() * 2
 
         # Match Master's rotation
-        angle_diff = (master.angle - ship.get_rotation() + 180) % 360 - 180
+        angle_diff = calc_angle_diff(ship.get_rotation(), master.angle)
 
         # Decision: Drift or Turn
         # Use a larger threshold for drift to allow agile ships to snap into position

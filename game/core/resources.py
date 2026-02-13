@@ -17,6 +17,7 @@ from game.core.registry import RegistryManager
 from game.core.json_utils import load_json_required
 from game.core.logger import log_warning, log_info
 from game.core.constants import ResourceType
+from game.core.paths import Paths
 
 
 def _get_default_resources() -> dict:
@@ -30,7 +31,7 @@ def _get_default_resources() -> dict:
 
 def _resolve_resource_path(file_path: str) -> Optional[str]:
     """
-    Resolve resource file path, trying relative then absolute paths.
+    Resolve resource file path using Paths.ROOT_DIR for project root.
 
     Args:
         file_path: Path to the resources JSON file (relative or absolute)
@@ -41,10 +42,8 @@ def _resolve_resource_path(file_path: str) -> Optional[str]:
     if os.path.exists(file_path):
         return file_path
 
-    # Try absolute path based on this file's location
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(os.path.dirname(base_dir))  # game/core -> game -> project
-    abs_path = os.path.join(project_root, file_path)
+    # Try absolute path using centralized Paths configuration
+    abs_path = os.path.join(Paths.ROOT_DIR, file_path)
 
     if os.path.exists(abs_path):
         return abs_path
@@ -69,6 +68,7 @@ def load_resources_data(file_path: str = "data/resources.json") -> dict:
 
     resolved_path = _resolve_resource_path(file_path)
     if resolved_path is None:
+        log_warning(f"Resources file not found at {file_path}, using defaults")
         return copy.deepcopy(_get_default_resources())
 
     try:
@@ -109,34 +109,6 @@ def load_resources(file_path: str = "data/resources.json") -> None:
         file_path: Path to the resources JSON file. Defaults to data/resources.json.
     """
     resources = RegistryManager.instance().resources
-
-    resolved_path = _resolve_resource_path(file_path)
-    if resolved_path is None:
-        log_warning(f"Resources file not found at {file_path}, using defaults")
-        resources.update(_get_default_resources())
-        return
-
-    try:
-        data = load_json_required(resolved_path)
-
-        # Parse resources list into dict keyed by ID
-        for res_def in data.get('resources', []):
-            res_id = res_def.get('id')
-            if res_id:
-                resources[res_id] = res_def
-
-        log_info(f"Loaded {len(resources)} resource types")
-
-    except FileNotFoundError:
-        log_warning(f"Resources file not found: {resolved_path}, using defaults")
-        resources.update(_get_default_resources())
-    except json.JSONDecodeError as e:
-        log_warning(f"Invalid JSON in resources file {resolved_path}: {e}, using defaults")
-        resources.update(_get_default_resources())
-    except (PermissionError, OSError) as e:
-        log_warning(f"Cannot read resources file {resolved_path}: {e}, using defaults")
-        resources.update(_get_default_resources())
-    except (TypeError, AttributeError) as e:
-        # Malformed data structure (e.g., resources is not a list)
-        log_warning(f"Malformed resources data in {resolved_path}: {e}, using defaults")
-        resources.update(_get_default_resources())
+    loaded_data = load_resources_data(file_path)
+    resources.update(loaded_data)
+    log_info(f"Loaded {len(resources)} resource types")
