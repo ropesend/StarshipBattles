@@ -432,7 +432,10 @@ class TestLabScreen:
     def _ensure_engine(self):
         """Ensure battle engine exists (create if needed)."""
         if self.game.battle_scene.engine is None:
-            self.game.battle_scene._battle_service.create_battle()
+            # PROJ-126: Use battle_scene's AI factory
+            self.game.battle_scene._battle_service.create_battle(
+                ai_factory=self.game.battle_scene._ai_factory
+            )
 
     def _switch_to_battle(self, scenario):
         """Configure battle scene for visual test mode and switch to battle state."""

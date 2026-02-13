@@ -23,6 +23,8 @@ from game.ui.renderer.camera import Camera
 from game.ui.screens.battle_ui import BattleUI
 from game.simulation.services import BattleService
 from game.ui.services.battle_ui_service import BattleUIService
+# PROJ-126: Import AI factory from AI layer (UI can depend on AI)
+from game.ai.ai_factory import AIControllerFactory
 
 if TYPE_CHECKING:
     from game.simulation.battle_controller import BattleController
@@ -67,8 +69,10 @@ class BattleScreen:
 
         # Battle Service (abstraction layer over BattleEngine)
         self._battle_service = BattleService()
+        # PROJ-126: Create AI factory and inject into battle service
+        self._ai_factory = AIControllerFactory()
         # Create initial battle so engine exists before start() is called
-        self._battle_service.create_battle()
+        self._battle_service.create_battle(ai_factory=self._ai_factory)
 
         # Battle UI Service (PROJ-43: Clean interface for UI to access battle state)
         # Provides DTOs instead of direct domain object access
@@ -248,7 +252,8 @@ class BattleScreen:
             log_info("=== STARTING HEADLESS BATTLE ===")
 
         # Use BattleService to set up and start the battle
-        self._battle_service.create_battle(seed=seed, enable_logging=True)
+        # PROJ-126: Reuse same AI factory instance
+        self._battle_service.create_battle(seed=seed, enable_logging=True, ai_factory=self._ai_factory)
 
         # Update UI service reference (PROJ-43)
         self._ui_service = BattleUIService(self._battle_service)

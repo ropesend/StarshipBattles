@@ -14,6 +14,7 @@ from game.simulation.battle_controller import (
     create_hypothetical_battle,
 )
 from game.simulation.battle_state import ShipState
+from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship
 
 
@@ -24,8 +25,9 @@ class TestFleetCombatWorkflow:
         """Test complete battle workflow: configure -> add ships -> start -> run."""
         team1, team2 = two_ship_teams
 
-        # Create controller
-        controller = BattleController()
+        # Create controller with AI factory (PROJ-126)
+        ai_factory = AIControllerFactory()
+        controller = BattleController(ai_factory=ai_factory)
 
         # Configure battle
         config = BattleConfig(
@@ -63,8 +65,9 @@ class TestFleetCombatWorkflow:
         """Test that headless battle respects max_ticks and returns results."""
         team1, team2 = two_ship_teams
 
-        # Create controller with short max_ticks
-        controller = BattleController()
+        # Create controller with short max_ticks (PROJ-126: inject AI factory)
+        ai_factory = AIControllerFactory()
+        controller = BattleController(ai_factory=ai_factory)
         config = BattleConfig(
             mode=BattleMode.MANUAL,
             seed=42,
@@ -112,7 +115,7 @@ class TestFleetCombatWorkflow:
                 )
             ]
 
-            controller = BattleController()
+            controller = BattleController(ai_factory=AIControllerFactory())
             config = BattleConfig(mode=BattleMode.MANUAL, seed=seed, max_ticks=max_ticks)
             controller.configure(config)
             controller.add_ships(fresh_team1, 0)
@@ -204,7 +207,7 @@ class TestFleetScaleCombat:
         """Test that multi-ship fleets can be configured."""
         team1, team2 = fleet_battle_teams
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=444, max_ticks=1000)
         controller.configure(config)
         controller.add_ships(team1, 0)
@@ -267,7 +270,7 @@ class TestBattleOutcome:
         """Test that battle results include winner field."""
         team1, team2 = two_ship_teams
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=777, max_ticks=1000)
         controller.configure(config)
         controller.add_ships(team1, 0)
@@ -283,7 +286,7 @@ class TestBattleOutcome:
         """Test that battle results contain ship state information."""
         team1, team2 = two_ship_teams
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=888, max_ticks=500)
         controller.configure(config)
         controller.add_ships(team1, 0)
@@ -305,7 +308,7 @@ class TestBattleOutcome:
         """Test that battle captures initial and final states."""
         team1, team2 = two_ship_teams
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=999, max_ticks=500)
         controller.configure(config)
         controller.add_ships(team1, 0)
@@ -340,7 +343,7 @@ class TestBattleEdgeCases:
             registries=fresh_registries,
         )]
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=111, max_ticks=500)
         controller.configure(config)
         controller.add_ships(team1, 0)
@@ -364,7 +367,7 @@ class TestBattleEdgeCases:
             registries=fresh_registries,
         )]
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=222, max_ticks=500)
         controller.configure(config)
         controller.add_ships(team1, 0)
@@ -392,7 +395,7 @@ class TestBattleEdgeCases:
         )]
 
         # Create controller with very short max_ticks
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(
             mode=BattleMode.MANUAL,
             seed=333,
@@ -412,7 +415,7 @@ class TestBattleEdgeCases:
         """Test that controller can be reset and reused."""
         team1, team2 = two_ship_teams
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
 
         # First battle
         config = BattleConfig(mode=BattleMode.MANUAL, seed=444)

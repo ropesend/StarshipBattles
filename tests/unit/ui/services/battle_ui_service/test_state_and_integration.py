@@ -127,9 +127,11 @@ class TestBattleUIServiceRealShipIntegration:
     def battle_service_with_real_ship(self, real_ship):
         """Create a real BattleService with a real ship."""
         from game.simulation.services import BattleService
+        from game.ai.ai_factory import AIControllerFactory
 
+        ai_factory = AIControllerFactory()
         battle_service = BattleService()
-        battle_service.create_battle()
+        battle_service.create_battle(ai_factory=ai_factory)
         battle_service.add_ship(real_ship, team_id=0)
         battle_service.start_battle()
         return battle_service
@@ -228,8 +230,11 @@ class TestBattleUIServiceRealProjectileIntegration:
         target.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
         target.recalculate_stats()
 
+        from game.ai.ai_factory import AIControllerFactory
+
+        ai_factory = AIControllerFactory()
         battle_service = BattleService()
-        battle_service.create_battle()
+        battle_service.create_battle(ai_factory=ai_factory)
         battle_service.add_ship(attacker, team_id=0)
         battle_service.add_ship(target, team_id=1)
         battle_service.start_battle()

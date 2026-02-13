@@ -1,10 +1,11 @@
 """
 Simulation layer factories.
 
-This package contains factory classes that create objects with dependencies
-from other layers, isolating cross-layer imports to a single location.
+PROJ-126: AIControllerFactory was moved to game/ai/ai_factory.py to fix
+the layer violation where simulation was importing from AI layer.
+
+This package is now empty but kept for potential future simulation-layer
+factories that don't have cross-layer dependencies.
 """
 
-from game.simulation.factories.ai_factory import AIControllerFactory
-
-__all__ = ['AIControllerFactory']
+__all__ = []

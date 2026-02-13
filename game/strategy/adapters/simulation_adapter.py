@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 from game.simulation.battle_controller import BattleController
 from game.simulation.battle_config import BattleConfig, BattleMode
 from game.simulation.services.battle_service import BattleService
+# PROJ-126: Import AI factory from AI layer (strategy can depend on AI)
+from game.ai.ai_factory import AIControllerFactory
 
 
 class SimulationBattleResolver(IBattleResolver):
@@ -89,7 +91,9 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         # Create battle controller
-        controller = BattleController(BattleService())
+        # PROJ-126: Inject AI factory from strategy layer (can depend on AI layer)
+        ai_factory = AIControllerFactory()
+        controller = BattleController(ai_factory=ai_factory)
 
         # Configure battle
         battle_seed = seed if seed is not None else random.randint(0, 1000000)

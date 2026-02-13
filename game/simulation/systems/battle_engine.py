@@ -71,8 +71,7 @@ from game.simulation.entities.ship import Ship
 
 if TYPE_CHECKING:
     from game.ai.controller import AIController
-    from game.simulation.factories.ai_factory import AIControllerFactory
-    from game.simulation.interfaces.ai_controller import IAIController
+    from game.simulation.interfaces.ai_controller import IAIController, IAIControllerFactory
 
 class BattleLogger:
     """Toggleable logger that writes battle events to file."""
@@ -167,7 +166,7 @@ class BattleEngine:
     def __init__(
         self,
         logger: Optional[BattleLogger] = None,
-        ai_factory: Optional['AIControllerFactory'] = None
+        ai_factory: Optional['IAIControllerFactory'] = None
     ):
         """
         Create a BattleEngine instance.
@@ -196,8 +195,11 @@ class BattleEngine:
         # Use provided logger or create a default one (disabled by default to avoid side effects unless requested)
         self.logger = logger if logger else BattleLogger(enabled=False)
 
-        # PROJ-43: AI factory for decoupled AI controller creation
+        # PROJ-43/PROJ-126: AI factory for decoupled AI controller creation
+        # Factory is injected, then we call set_grid() so it can create controllers
         self._ai_factory = ai_factory
+        if self._ai_factory is not None:
+            self._ai_factory.set_grid(self.grid)
 
     @property
     def projectiles(self) -> List[Any]:

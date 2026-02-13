@@ -17,6 +17,7 @@ from game.simulation.battle_controller import (
     create_manual_battle,
 )
 from game.simulation.systems.battle_engine import BattleEngine
+from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship
 
 
@@ -86,7 +87,7 @@ class TestDamagePipelineEndToEnd:
             registries=fresh_registries,
         )
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=123, max_ticks=1000)
         controller.configure(config)
         controller.add_ships([attacker], team_id=0)
@@ -251,7 +252,7 @@ class TestCombatDeterminism:
                 registries=fresh_registries,
             )
 
-            controller = BattleController()
+            controller = BattleController(ai_factory=AIControllerFactory())
             config = BattleConfig(mode=BattleMode.MANUAL, seed=seed, max_ticks=1000)
             controller.configure(config)
             controller.add_ships([attacker], team_id=0)
@@ -289,7 +290,7 @@ class TestCombatDeterminism:
                 registries=fresh_registries,
             )
 
-            controller = BattleController()
+            controller = BattleController(ai_factory=AIControllerFactory())
             config = BattleConfig(mode=BattleMode.MANUAL, seed=seed, max_ticks=1000)
             controller.configure(config)
             controller.add_ships([attacker], team_id=0)
@@ -375,7 +376,7 @@ class TestMultiTargetCombat:
             for i in range(2)
         ]
 
-        controller = BattleController()
+        controller = BattleController(ai_factory=AIControllerFactory())
         config = BattleConfig(mode=BattleMode.MANUAL, seed=777, max_ticks=5000)
         controller.configure(config)
         controller.add_ships(team1, team_id=0)

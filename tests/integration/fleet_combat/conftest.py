@@ -2,6 +2,7 @@
 Shared fixtures for fleet combat tests.
 
 PROJ-50: Updated to use fresh_registries for strict DI.
+PROJ-126: Updated to inject AIControllerFactory.
 """
 
 import pytest
@@ -9,13 +10,33 @@ import pytest
 from game.simulation.battle_controller import BattleController
 from game.simulation.battle_config import BattleConfig, BattleMode
 from game.simulation.services.battle_service import BattleService
+from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship
 
 
 @pytest.fixture
-def battle_service():
-    """Create a fresh BattleService."""
-    return BattleService()
+def ai_factory():
+    """Create an AIControllerFactory for tests."""
+    return AIControllerFactory()
+
+
+@pytest.fixture
+def battle_service(ai_factory):
+    """Create a fresh BattleService with AI factory injection."""
+    svc = BattleService()
+    # Store factory for injection
+    svc._test_ai_factory = ai_factory
+
+    # Wrap create_battle to inject factory
+    original_create_battle = svc.create_battle
+
+    def wrapped_create_battle(*args, **kwargs):
+        if 'ai_factory' not in kwargs:
+            kwargs['ai_factory'] = svc._test_ai_factory
+        return original_create_battle(*args, **kwargs)
+
+    svc.create_battle = wrapped_create_battle
+    return svc
 
 
 @pytest.fixture

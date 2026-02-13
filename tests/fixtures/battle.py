@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 from game.core.paths import Paths
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
-from game.simulation.factories.ai_factory import AIControllerFactory
+from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship
 
 
@@ -52,10 +52,9 @@ def create_battle_engine(enable_logging: bool = False, log_filename: str = None)
     if log_filename is None:
         log_filename = os.path.join(Paths.LOGS_DIR, "test_battle_log.txt")
     logger = BattleLogger(filename=log_filename, enabled=enable_logging)
-    engine = BattleEngine(logger=logger)
-    # Inject ai_factory to avoid DeprecationWarning for legacy path
-    factory = AIControllerFactory(engine.grid)
-    engine._ai_factory = factory
+    # PROJ-126: Create factory and inject to engine (engine calls set_grid automatically)
+    factory = AIControllerFactory()
+    engine = BattleEngine(logger=logger, ai_factory=factory)
     return engine
 
 

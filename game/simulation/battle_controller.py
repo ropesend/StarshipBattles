@@ -36,6 +36,7 @@ from game.core.logger import log_debug, log_info, log_warning
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
+    from game.simulation.interfaces.ai_controller import IAIControllerFactory
 
 
 class BattleController:
@@ -50,14 +51,23 @@ class BattleController:
     - Result collection and state extraction
     """
 
-    def __init__(self, service: Optional[BattleService] = None):
+    def __init__(
+        self,
+        service: Optional[BattleService] = None,
+        ai_factory: Optional['IAIControllerFactory'] = None
+    ):
         """
         Initialize BattleController.
 
         Args:
             service: BattleService instance (creates new one if not provided)
+            ai_factory: Optional AIControllerFactory for creating AI controllers.
+                       PROJ-126: Must be injected from higher layers (UI/strategy)
+                       to maintain proper layer dependencies (AI depends on simulation,
+                       not vice versa).
         """
         self._service = service or BattleService()
+        self._ai_factory = ai_factory
         self._config: Optional[BattleConfig] = None
         self._initial_state: Optional[BattleState] = None
         self._is_configured: bool = False
@@ -104,7 +114,8 @@ class BattleController:
 
         result = self._service.create_battle(
             seed=config.seed,
-            enable_logging=config.enable_logging
+            enable_logging=config.enable_logging,
+            ai_factory=self._ai_factory
         )
 
         if result.success:
@@ -458,7 +469,7 @@ class BattleController:
             self._retreat_manager = RetreatManager(map_bounds=self._config.map_bounds)
 
             # Create new battle
-            self._service.create_battle(seed=state.seed)
+            self._service.create_battle(seed=state.seed, ai_factory=self._ai_factory)
 
             # Restore ships from state
             for ship_id, ship_state in state.ships.items():
@@ -695,6 +706,19 @@ class BattleController:
 
 # === Factory Functions ===
 
+def _create_default_ai_factory() -> 'IAIControllerFactory':
+    """
+    Create a default AIControllerFactory for convenience factory functions.
+
+    PROJ-126: This uses a late import to avoid simulation->ai import at module level.
+    These factory functions are edge functions typically called from higher layers
+    (UI, strategy) that can import from AI layer. The late import here enables
+    tests and convenience usage without requiring explicit factory injection.
+    """
+    from game.ai.ai_factory import AIControllerFactory
+    return AIControllerFactory()
+
+
 def create_manual_battle(
     team1_ships: List['Ship'],
     team2_ships: List['Ship'],
@@ -713,7 +737,7 @@ def create_manual_battle(
     Returns:
         Configured and started BattleController
     """
-    controller = BattleController()
+    controller = BattleController(ai_factory=_create_default_ai_factory())
 
     config = BattleConfig(
         mode=BattleMode.MANUAL,
@@ -745,7 +769,7 @@ def create_test_battle(
     Returns:
         Configured BattleController (not started - scenario handles setup)
     """
-    controller = BattleController()
+    controller = BattleController(ai_factory=_create_default_ai_factory())
 
     config = BattleConfig(
         mode=BattleMode.TEST,
@@ -778,7 +802,7 @@ def create_strategy_battle(
     Returns:
         Configured BattleController (ships not yet added - call to_battle_ships on fleets)
     """
-    controller = BattleController()
+    controller = BattleController(ai_factory=_create_default_ai_factory())
 
     config = BattleConfig(
         mode=BattleMode.STRATEGY,
@@ -811,7 +835,7 @@ def create_hypothetical_battle(
     Returns:
         Configured and started BattleController
     """
-    controller = BattleController()
+    controller = BattleController(ai_factory=_create_default_ai_factory())
 
     config = BattleConfig(
         mode=BattleMode.HYPOTHETICAL,

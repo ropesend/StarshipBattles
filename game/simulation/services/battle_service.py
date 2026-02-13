@@ -9,10 +9,12 @@ from typing import List, Optional, Any, Dict, TYPE_CHECKING
 
 from game.simulation.systems.battle_engine import BattleEngine, BattleLogger
 from game.simulation.systems.battle_end_conditions import BattleEndCondition, BattleEndMode
-from game.simulation.factories.ai_factory import AIControllerFactory
 from game.core.logger import log_error, log_info
 
+# TYPE_CHECKING imports to avoid simulation->ai import at runtime
+# The actual factory is injected by callers from higher layers (UI, strategy)
 if TYPE_CHECKING:
+    from game.simulation.interfaces.ai_controller import IAIControllerFactory
     from game.simulation.entities.ship import Ship
 
 
@@ -50,7 +52,8 @@ class BattleService:
     def create_battle(
         self,
         seed: Optional[int] = None,
-        enable_logging: bool = False
+        enable_logging: bool = False,
+        ai_factory: Optional['IAIControllerFactory'] = None
     ) -> BattleServiceResult:
         """
         Create a new battle instance.
@@ -58,18 +61,20 @@ class BattleService:
         Args:
             seed: Random seed for reproducible battles
             enable_logging: Whether to enable battle logging to file
+            ai_factory: Optional AIControllerFactory for creating AI controllers.
+                       PROJ-126: Must be injected from higher layers (UI/strategy)
+                       to maintain proper layer dependencies (AI depends on simulation,
+                       not vice versa). If not provided, AI controllers won't be
+                       auto-created for fighter launches.
 
         Returns:
             BattleServiceResult with the created engine
         """
         try:
             logger = BattleLogger(enabled=enable_logging)
-            # PROJ-43: Create engine first (without factory), then create factory with its grid
-            # This allows BattleEngine to create AI controllers without internal imports
-            self._engine = BattleEngine(logger=logger)
-            ai_factory = AIControllerFactory(self._engine.grid)
-            # Set factory on engine after creation (since factory needs engine's grid)
-            self._engine._ai_factory = ai_factory
+            # PROJ-43/PROJ-126: Create engine with optional factory
+            # Factory is now injected from callers (UI/strategy layers)
+            self._engine = BattleEngine(logger=logger, ai_factory=ai_factory)
             self._team0_ships = []
             self._team1_ships = []
             self._is_started = False

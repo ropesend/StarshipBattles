@@ -23,10 +23,20 @@ def mock_service():
 
 
 @pytest.fixture
-def controller(mock_service):
-    """Create a BattleController with mock service."""
+def mock_ai_factory():
+    """Create a mock AI controller factory."""
+    factory = Mock()
+    factory.set_grid = Mock()
+    factory.create_for_ship = Mock()
+    factory.create_for_ships = Mock(return_value=[])
+    return factory
+
+
+@pytest.fixture
+def controller(mock_service, mock_ai_factory):
+    """Create a BattleController with mock service and AI factory."""
     from game.simulation.battle_controller import BattleController
-    return BattleController(service=mock_service)
+    return BattleController(service=mock_service, ai_factory=mock_ai_factory)
 
 
 @pytest.fixture

@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from game.core.paths import Paths
 from game.core.registry import RegistryManager
 from game.simulation.systems.battle_engine import BattleEngine
-from game.simulation.factories.ai_factory import AIControllerFactory
+from game.ai.ai_factory import AIControllerFactory
 from game.simulation.components.component import load_components, load_modifiers
 from game.simulation.entities.ship_loader import initialize_ship_data
 from simulation_tests.logging_config import get_logger, setup_combat_lab_logging
@@ -26,10 +26,9 @@ class TestRunner:
     __test__ = False  # Not a pytest test class
 
     def __init__(self):
-        self.engine = BattleEngine()
-        # Inject ai_factory to support legacy scenarios that call engine.start()
-        # without ai_controllers (PROJ-106: layer violation fix)
-        self.engine._ai_factory = AIControllerFactory(self.engine.grid)
+        # PROJ-126: Create factory and inject into engine - engine calls set_grid automatically
+        self._ai_factory = AIControllerFactory()
+        self.engine = BattleEngine(ai_factory=self._ai_factory)
         self.current_scenario = None
         self.test_log = []  # Store log of all test executions
         

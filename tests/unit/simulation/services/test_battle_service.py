@@ -10,12 +10,32 @@ from unittest.mock import Mock, patch, MagicMock
 from game.simulation.services.battle_service import BattleService, BattleServiceResult
 from game.simulation.entities.ship import Ship
 from game.simulation.systems.battle_end_conditions import BattleEndMode
+from game.ai.ai_factory import AIControllerFactory
 
 
 @pytest.fixture
-def service():
-    """Create a BattleService instance."""
-    return BattleService()
+def ai_factory():
+    """Create an AIControllerFactory for tests (PROJ-126)."""
+    return AIControllerFactory()
+
+
+@pytest.fixture
+def service(ai_factory):
+    """Create a BattleService instance with wrapped create_battle that injects factory."""
+    svc = BattleService()
+    # Store factory for injection
+    svc._test_ai_factory = ai_factory
+
+    # Wrap create_battle to inject factory
+    original_create_battle = svc.create_battle
+
+    def wrapped_create_battle(*args, **kwargs):
+        if 'ai_factory' not in kwargs:
+            kwargs['ai_factory'] = svc._test_ai_factory
+        return original_create_battle(*args, **kwargs)
+
+    svc.create_battle = wrapped_create_battle
+    return svc
 
 
 @pytest.fixture

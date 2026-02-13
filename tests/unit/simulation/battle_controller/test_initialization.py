@@ -64,12 +64,13 @@ class TestBattleControllerConfigure:
         assert controller._retreat_manager.retreating_ships == {}
         assert controller._retreat_manager.escaped_ships == []
 
-    def test_configure_calls_service_create_battle(self, controller, basic_config, mock_service):
+    def test_configure_calls_service_create_battle(self, controller, basic_config, mock_service, mock_ai_factory):
         """Configure calls service.create_battle with correct args."""
         controller.configure(basic_config)
         mock_service.create_battle.assert_called_once_with(
             seed=basic_config.seed,
-            enable_logging=basic_config.enable_logging
+            enable_logging=basic_config.enable_logging,
+            ai_factory=mock_ai_factory
         )
 
     def test_configure_sets_is_configured_on_success(self, controller, basic_config, mock_service):

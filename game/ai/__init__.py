@@ -87,6 +87,9 @@ from game.ai.strategy_manager import StrategyManager
 # Targeting
 from game.ai.target_evaluator import TargetEvaluator
 
+# Factory (PROJ-126: moved from simulation layer to fix layer violation)
+from game.ai.ai_factory import AIControllerFactory
+
 
 __all__ = [
     # Controller
@@ -105,4 +108,6 @@ __all__ = [
     'StrategyManager',
     # Targeting
     'TargetEvaluator',
+    # Factory
+    'AIControllerFactory',
 ]

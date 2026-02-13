@@ -8,18 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-126 Phase 1
-**Current Status:** Phase 1 Complete (advisory finding, no code change)
+**Last Completed:** PROJ-126 Phase 2 Tasks 2.1, 2.2
+**Current Status:** Phase 2 In Progress (2/7 tasks complete)
 **Current Project:** PROJ-126
 **Current Phase:** Phase 2
-**Test Status:** N/A (no code changes)
+**Test Status:** 11870 passed, 2 warnings
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 Task: ADR-FND-003 reviewed - behaviors.py (521 lines) is acceptable
-- Test behaviors clearly separated, comprehensive test coverage exists
-- Decision: No refactoring required, finding is advisory
-- Next: Begin Phase 2 (Simulation)
+- Completed ADR-SIM-001: Moved AIControllerFactory from simulation to AI layer
+- Completed ADR-SIM-002: Updated TYPE_CHECKING imports to use protocols
+- Created IAIControllerFactory protocol in simulation/interfaces/ai_controller.py
+- Factory uses two-phase initialization (set_grid pattern)
+- Updated all callers to inject factory from higher layers
+- Next: Continue with Task 2.3 (God Class - BattleController)
 
 ---
 
@@ -28,7 +30,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-126: architecture-layer-fixes**
-  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 4 | **Status:** Phase 2 In Progress (2/7 tasks) | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-126/plan.md](Projects/active_projects/PROJ-126/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -78,8 +80,9 @@
 ## Execution Log
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
-| 2026-02-13 | PROJ-126 | Phase 1 | Complete | N/A | pending | ADR-FND-003 advisory, no change |
 |-----------|---------|--------|--------|-------|--------|-------|
+| 2026-02-13 | PROJ-126 | Phase 1 | Complete | N/A | e2323a5f | ADR-FND-003 advisory, no change |
+| 2026-02-13 | PROJ-126 | Phase 2 Tasks 2.1-2.2 | In Progress | 11870 pass | pending | AIControllerFactory moved to AI layer |
 
 ---
 

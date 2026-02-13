@@ -137,10 +137,10 @@ class TestBattleEngineCore:
         BattleEngine wraps ships in ShipControllableAdapter, so the comparison
         ai.ship == ship must unwrap the adapter via ai.ship.ship == ship.
         """
-        from game.simulation.factories.ai_factory import AIControllerFactory
+        from game.ai.ai_factory import AIControllerFactory
         mock_logger = MagicMock()
-        engine = BattleEngine(logger=mock_logger)
-        engine._ai_factory = AIControllerFactory(engine.grid)
+        factory = AIControllerFactory()
+        engine = BattleEngine(logger=mock_logger, ai_factory=factory)
 
         # Create test ships
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), team_id=0, registries=fresh_registries)
@@ -212,11 +212,11 @@ class TestBattleEngineAIControllerInjection:
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
         from game.ui.orchestration import BattleOrchestrator
-        from game.simulation.factories.ai_factory import AIControllerFactory
+        from game.ai.ai_factory import AIControllerFactory
 
         mock_logger = MagicMock()
-        engine = BattleEngine(logger=mock_logger)
-        engine._ai_factory = AIControllerFactory(engine.grid)
+        factory = AIControllerFactory()
+        engine = BattleEngine(logger=mock_logger, ai_factory=factory)
 
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
         ship2 = Ship("Ship2", 100, 0, (0, 0, 255), registries=fresh_registries)
@@ -244,13 +244,12 @@ class TestBattleEngineAIFactory:
         """Verify start() uses ai_factory to create controllers when provided."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
-        from game.simulation.factories.ai_factory import AIControllerFactory
+        from game.ai.ai_factory import AIControllerFactory
 
         mock_logger = MagicMock()
-        engine = BattleEngine(logger=mock_logger)
 
-        # Create factory using engine's grid
-        factory = AIControllerFactory(engine.grid)
+        # Create factory - engine will call set_grid automatically
+        factory = AIControllerFactory()
         engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
 
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
@@ -268,13 +267,12 @@ class TestBattleEngineAIFactory:
         """Verify add_ship_mid_battle() uses ai_factory when no controller provided."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
-        from game.simulation.factories.ai_factory import AIControllerFactory
+        from game.ai.ai_factory import AIControllerFactory
 
         mock_logger = MagicMock()
 
-        # Create engine with factory
-        engine = BattleEngine(logger=mock_logger)
-        factory = AIControllerFactory(engine.grid)
+        # Create engine with factory - engine will call set_grid automatically
+        factory = AIControllerFactory()
         engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
 
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
@@ -296,14 +294,13 @@ class TestBattleEngineAIFactory:
         """Verify explicit ai_controllers parameter overrides factory."""
         from game.simulation.systems.battle_engine import BattleEngine
         from game.simulation.entities.ship import Ship
-        from game.simulation.factories.ai_factory import AIControllerFactory
+        from game.ai.ai_factory import AIControllerFactory
         from game.ui.orchestration import BattleOrchestrator
 
         mock_logger = MagicMock()
 
-        # Create engine with factory
-        engine = BattleEngine(logger=mock_logger)
-        factory = AIControllerFactory(engine.grid)
+        # Create engine with factory - engine will call set_grid automatically
+        factory = AIControllerFactory()
         engine_with_factory = BattleEngine(logger=mock_logger, ai_factory=factory)
 
         ship1 = Ship("Ship1", 0, 0, (255, 0, 0), registries=fresh_registries)
