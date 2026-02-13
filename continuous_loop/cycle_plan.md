@@ -8,20 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-127 Phase 1 Complete
-**Current Status:** Phase 1 complete - Ready for Phase 2
+**Last Completed:** PROJ-127 Phase 2 Complete
+**Current Status:** Phase 2 complete - Ready for Phase 3
 **Current Project:** PROJ-127
-**Current Phase:** Phase 2
-**Test Status:** 11873 passed
+**Current Phase:** Phase 3
+**Test Status:** 11873 passed (no code changes in Phase 2)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 complete: Extracted `get_entity_id()` helper in combat_utils.py
-- Refactored get_position(), get_rotation(), safe_distance(), is_in_pdc_arc() to use helper
-- Refactored controller.py to use get_entity_id()
-- Task 1.2, 1.3, 1.4: Marked ACCEPTABLE/DEFERRED (no code changes needed)
-- Added 3 new tests for get_entity_id()
-- Next: Begin Phase 2 (Simulation layer duplication)
+- Phase 2 complete: All 8 DUP-SIM findings analyzed
+- All findings marked ACCEPTABLE or INFO - no code changes required
+- DUP-SIM-001: Dataclass to_dict/from_dict - necessary serialization boilerplate
+- DUP-SIM-002: Resource ability classes - semantically different abilities
+- DUP-SIM-003: Team iteration pattern - simple comprehension with different conditions
+- DUP-SIM-004: Vector2 conversion - defensive interop code
+- DUP-SIM-005: Color mapping - context-specific usage
+- DUP-SIM-006: ship_id_map - necessary for serialization
+- DUP-SIM-007: Validation pattern - proper schema validation
+- DUP-SIM-008: Natural similarity (INFO) - acknowledged
+- Next: Begin Phase 3 (Strategy layer duplication)
 
 ---
 
@@ -88,6 +93,7 @@
 | 2026-02-13 | PROJ-126 | Phase 4 | Complete | N/A | pending | 18 tasks: 4 ACCEPTABLE, 3 RESOLVED, 4 INFO, 7 DEFERRED |
 | 2026-02-13 | PROJ-126 | Audit 1 | PASSED | 11870 pass | pending | All verified, project complete |
 | 2026-02-13 | PROJ-127 | Phase 1 | Complete | 11873 pass | pending | get_entity_id() helper extracted, 3 tasks ACCEPTABLE/DEFERRED |
+| 2026-02-13 | PROJ-127 | Phase 2 | Complete | 11873 pass | pending | All 8 findings ACCEPTABLE/INFO - no code changes needed |
 
 ---
 
