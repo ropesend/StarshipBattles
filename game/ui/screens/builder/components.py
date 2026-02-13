@@ -1,8 +1,33 @@
+"""Component list items for the ship builder UI.
+
+This module provides the ComponentListItem class for displaying individual
+components in the builder's component selection panel.
+"""
+from typing import Any, Optional
+
 import pygame
+from pygame_gui import UIManager
+from pygame_gui.core import UIContainer
 from pygame_gui.elements import UIPanel, UILabel, UIButton, UIImage
 
+
 class ComponentListItem:
-    def __init__(self, component, manager, container, y_pos, width, sprite_mgr, ship_context=None):
+    """A single item in the component selection list.
+
+    Displays a component's icon, name, and mass with hover tooltips
+    showing detailed component statistics.
+    """
+
+    def __init__(
+        self,
+        component: Any,
+        manager: UIManager,
+        container: UIContainer,
+        y_pos: int,
+        width: int,
+        sprite_mgr: Any,
+        ship_context: Optional[Any] = None
+    ) -> None:
         self.component = component
         self.height = 40
         self.rect = pygame.Rect(0, y_pos, width, self.height)
@@ -78,7 +103,8 @@ class ComponentListItem:
             anchors={'left': 'left', 'right': 'right', 'centerY': 'center'}
         )
 
-    def _generate_tooltip(self, c):
+    def _generate_tooltip(self, c: Any) -> str:
+        """Generate HTML tooltip text for the component."""
         lines = []
         # Header: Name + Classification
         classification = c.data.get('major_classification', 'Unknown')
@@ -128,19 +154,21 @@ class ComponentListItem:
 
         return "<br>".join(lines)
 
-    def set_selected(self, selected):
+    def set_selected(self, selected: bool) -> None:
+        """Set the selection state of this item."""
         if selected:
             self.button.select()
         else:
             self.button.unselect()
-    
-    def set_hovered(self, hovered):
+
+    def set_hovered(self, hovered: bool) -> None:
         """Set hover state flag (visual drawing handled by parent panel)."""
         self.is_hovered = hovered
-        
-    def get_abs_rect(self):
+
+    def get_abs_rect(self) -> pygame.Rect:
         """Get the absolute screen rect of this item's panel."""
         return self.panel.get_abs_rect()
-            
-    def kill(self):
+
+    def kill(self) -> None:
+        """Remove this item and its UI elements."""
         self.panel.kill()
