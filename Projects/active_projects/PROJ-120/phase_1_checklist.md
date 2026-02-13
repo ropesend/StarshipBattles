@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (8/18)
+**Status:** In Progress (9/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -132,14 +132,23 @@ Total: 50 tests (was 36)
 
 ### Task 1.9: TCG-SIM-009 - FormulaSystem Overflow/Underflow Not Tes [Simple]
 **File:** `game/simulation/formula_system`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/systems/test_formula_overflow_underflow.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Created comprehensive overflow/underflow edge case tests (38 tests) covering:
+- TestFloatOverflow (5 tests): Large exponent, float exponentiation overflow, infinity propagation
+- TestFloatUnderflow (4 tests): Very small division, exp(-1000), tiny multiplications, subnormal numbers
+- TestNaNHandling (4 tests): Invalid operations, NaN propagation, NaN in comparisons, 0*inf
+- TestInfinityDivision (4 tests): Finite/inf, inf/inf, inf/finite, negative infinity
+- TestMathDomainErrors (5 tests): sqrt(-1), log(0), log(-1), acos(2), asin(2)
+- TestSafeEvaluateOverflowUnderflow (4 tests): Large int result, NaN result, domain error default, underflow to zero
+- TestExtremeBoundaryValues (5 tests): float_info.max, float_info.min, epsilon precision, negative max, boundary addition
+- TestComplexOverflowScenarios (7 tests): Compound exponential, gamma overflow, float pow overflow, nested sqrt, alternating signs, pow vs ** difference
+Tests verify Python's formula_system behavior with extreme values including IEEE 754 infinity/NaN handling.
 
 ### Task 1.10: TCG-SIM-010 - Design System Serialization Roundtrip Ga [Medium]
 **File:** `game/simulation/designs.py`

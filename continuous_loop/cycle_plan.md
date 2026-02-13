@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Phase 1 Task 1.8 (TCG-SIM-008 complete)
-**Current Status:** In progress - Phase 1 partially complete (8/18 tasks)
+**Last Completed:** PROJ-120 Phase 1 Task 1.9 (TCG-SIM-009 complete)
+**Current Status:** In progress - Phase 1 partially complete (9/18 tasks)
 **Current Project:** PROJ-120
 **Current Phase:** Phase 1
-**Test Status:** 11833 tests passing
+**Test Status:** 11871 tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 1.8 (TCG-SIM-008): Added 14 new tests for BattleEngine tick processing
-- New test classes: TestFighterLaunchProcessing (6), TestUnknownAttackTypeHandling (3), TestDictBasedAttackProcessing (3), TestLoggerIntegration (2)
-- BattleEngine tick tests now: 50 (was 36)
-- Next: Task 1.9 (FormulaSystem Overflow/Underflow Not Tested)
+- Task 1.9 (TCG-SIM-009): Added 38 new overflow/underflow tests for FormulaSystem
+- New test file: tests/unit/systems/test_formula_overflow_underflow.py
+- Test classes: TestFloatOverflow (5), TestFloatUnderflow (4), TestNaNHandling (4), TestInfinityDivision (4), TestMathDomainErrors (5), TestSafeEvaluateOverflowUnderflow (4), TestExtremeBoundaryValues (5), TestComplexOverflowScenarios (7)
+- Tests cover IEEE 754 infinity/NaN, boundary values, domain errors, safe_evaluate behavior
+- Next: Task 1.10 (Design System Serialization Roundtrip Gaps)
 - Files modified:
-  - tests/unit/simulation/systems/test_battle_engine_tick.py (+14 tests)
+  - tests/unit/systems/test_formula_overflow_underflow.py (+38 tests)
 
 ---
 
@@ -86,6 +87,7 @@
 | 2026-02-13 | PROJ-120 | Phase 1 (6/18) | In Progress | 2378 pass | 2c399111 | Tasks 1.5-1.6 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (7/18) | In Progress | 11819 pass | ed8bd1fd | Task 1.7 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (8/18) | In Progress | 11833 pass | f951b8f0 | Task 1.8 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (9/18) | In Progress | 11871 pass | 2d751f44 | Task 1.9 complete |
 
 ---
 
