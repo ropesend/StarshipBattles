@@ -8,26 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-121 COMPLETE (Audit PASSED)
-**Current Status:** PROJ-121 complete, ready for PROJ-122
-**Current Project:** PROJ-122 (next)
-**Current Phase:** Not started
-**Test Status:** 11867 tests passing (full suite)
+**Last Completed:** PROJ-122 Phase 1 (Simulation module - FALSE POSITIVES)
+**Current Status:** PROJ-122 Phase 1 complete, ready for Phase 2
+**Current Project:** PROJ-122
+**Current Phase:** Phase 2 (Strategy)
+**Test Status:** 11867 tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-121 LEGACY ERADICATION - COMPLETE
-  - 4 phases, 37 tasks total
-  - Audit Cycle 1: PASSED (no issues found)
-  - Major accomplishments:
-    - Deleted dead code: AIException, TargetingException, load_resources() wrapper
-    - Deleted dead code: BuilderScreen, BuilderStateManager, ComponentRef
-    - Deleted dead code: draw_hud, draw_bar, capture_step, unused color constants
-    - Removed backward compatibility paths throughout
-    - Clarified misleading comments (deprecated, legacy compat)
-    - Hardened modifier schema to error on V1 format
-- Tests: 11867 passed
-- NEXT: Begin PROJ-122 (UI God Class Decomposition)
+- PROJ-122 Phase 1 - COMPLETE
+  - Task 1.1: ADR-SIM-003 BattleController - FALSE POSITIVE
+    - 849 lines with proper Strategy pattern, managers, service delegation
+    - Well-architected, not a god class
+  - Task 1.2: ADR-SIM-004 Ship - FALSE POSITIVE
+    - 811 lines with proper composition, mixins, delegation to helpers
+    - Well-architected, not a god class
+- Decisions logged in decisions.md
+- NEXT: Begin Phase 2 (Strategy module)
 
 ---
 
@@ -51,8 +48,8 @@
 
 ---
 
-- [ ] **PROJ-122: PROJ-C_ui-god-class-decomposition**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-122: PROJ-C_ui-god-class-decomposition**
+  - **Phases:** 5 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-122/plan.md](Projects/active_projects/PROJ-122/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -106,6 +103,7 @@
 | 2026-02-13 | PROJ-121 | Phase 4 (10/12) | In Progress | 11867 pass | - | Major: DELETED BuilderScreen+StateManager+ComponentRef dead code |
 | 2026-02-13 | PROJ-121 | Phase 4 (12/12) | Complete | 11867 pass | - | Final 2 tasks: clarified misleading comments |
 | 2026-02-13 | PROJ-121 | Audit Cycle 1 | PASSED | 11867 pass | 37fc5364 | All 37 tasks verified, no issues |
+| 2026-02-13 | PROJ-122 | Phase 1 | Complete | 11867 pass | - | FALSE POSITIVES: BattleController & Ship are well-architected |
 
 ---
 
