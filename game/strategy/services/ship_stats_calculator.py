@@ -3,14 +3,16 @@ Ship Stats Calculator - Calculates ship statistics from component definitions.
 
 PROJ-07: Strategy Layer Stats Calculation Refactor
 PROJ-38: Added constructor-based DI with GameRegistries support.
+PROJ-132: Documentation fix - Strategy importing from Simulation is valid.
 
 This service calculates ship stats dynamically from component definitions
 rather than reading from cached `expected_stats`. This ensures stats
 accurately reflect component damage state.
 
 Key design decisions:
-- Only imports from game.core.registry (no simulation layer coupling)
-- Damage model: gradual degradation to 30% HP, then inactive
+- Imports from game.core.registry and game.simulation (strategy depends on simulation)
+- Uses simulation formula_system and modifiers for consistent calculations
+- Damage model: gradual degradation to 50% HP threshold, then inactive
 - Special cases: Warp drives require 100% HP, Armor never degrades
 - Stats cached on ShipInstance with invalidation on damage change
 """

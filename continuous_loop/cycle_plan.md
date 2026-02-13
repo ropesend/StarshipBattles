@@ -8,18 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-132 Phase 2 Simulation
-**Current Status:** Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-132 Phase 3 Strategy
+**Current Status:** Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-132
-**Current Phase:** Phase 3
+**Current Phase:** Phase 4
 **Test Status:** 11885 passed, 2 warnings
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 2 completed: ADR-SIM-001 fixed (factory functions to UI layer), ADR-SIM-002 fixed (TYPE_CHECKING protocol only), ADR-SIM-005 and ADR-SIM-007 accepted as-is
-- Files modified: game/ui/services/battle_factories.py (new), game/ui/services/__init__.py, game/simulation/battle_controller.py, game/simulation/systems/battle_engine.py
-- Tests updated: tests/unit/simulation/battle_controller/test_utilities.py, tests/integration/fleet_combat/test_damage_pipeline.py, tests/integration/fleet_combat/test_combat_workflow.py
-- Next: Phase 3 - Strategy findings
+- Phase 3 completed: 5 findings addressed (2 fixed, 3 accepted as-is)
+- ADR-STR-001/002: Galaxy and ProductionEngine under 800-line threshold, accepted
+- ADR-STR-003: Moved hex_to_dict/hex_from_dict to module level in galaxy.py
+- ADR-STR-004: ShipInstance late imports documented in ARCHITECTURE.md, accepted
+- ADR-STR-005: Fixed outdated docstring in ShipStatsCalculator (strategy->simulation is valid)
+- Files modified: game/strategy/data/galaxy.py, game/strategy/services/ship_stats_calculator.py
+- Next: Phase 4 - UI-Framework findings
 
 ---
 
@@ -28,7 +31,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-132: Architecture Layer Violations**
-  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 3 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-132/plan.md](Projects/active_projects/PROJ-132/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -81,6 +84,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-13 | PROJ-132 | Phase 1 | Complete | 11885 passed | 5a1131c1 | Camera DI fix, 2 findings accepted as-is |
 | 2026-02-13 | PROJ-132 | Phase 2 | Complete | 11885 passed | 80f4f85b | Factory functions to UI, TYPE_CHECKING fix, 2 accepted as-is |
+| 2026-02-13 | PROJ-132 | Phase 3 | Complete | 11885 passed | 2284de71 | hex imports moved, 3 accepted, 1 doc fix |
 
 ---
 
