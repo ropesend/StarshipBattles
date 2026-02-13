@@ -15,14 +15,14 @@
 |-------|--------|-----------|
 | 1. Foundation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Simulation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. UI-Framework | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. UI-Framework | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. UI-Screens | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - 8 tasks: deleted dead factories package, clarified apply_results no-op, streamlined hasattr/getattr patterns, removed V1 modifier check, tightened projectile type validation, cleaned legacy comments
-**Next Action:** Begin Phase 3 tasks
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - 7 tasks: removed unused IBattleUI import, updated inaccurate docstrings; accepted as-is: registry fallback patterns (x3 - standard PROJ-50 DI), defensive getattr/hasattr patterns (x2 - support Mock objects and dynamic attributes), get_ships_folder test helper
+**Next Action:** Begin Phase 4 tasks
 **Blockers:** None
 
 ## Overview

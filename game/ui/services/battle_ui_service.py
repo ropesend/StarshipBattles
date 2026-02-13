@@ -1,6 +1,6 @@
 """BattleUIService - Adapter between BattleService and UI layer.
 
-PROJ-43 Phase 12: This service implements the IBattleUI protocol,
+PROJ-43 Phase 12: This service provides a UI-friendly interface to battle state,
 converting simulation domain objects to DTOs for safe UI consumption.
 
 The service wraps a BattleService instance and provides read-only
@@ -12,7 +12,6 @@ from simulation layer to UI layer.
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 from game.ui.interfaces.battle_ui import (
-    IBattleUI,
     ShipDTO,
     ComponentDTO,
     ProjectileDTO,
@@ -39,8 +38,8 @@ DEFAULT_PROJECTILE_COLOR: Tuple[int, int, int] = (255, 200, 50)
 class BattleUIService:
     """Service that provides UI-friendly access to battle state.
 
-    This service implements the IBattleUI protocol, converting
-    simulation domain objects to immutable DTOs for safe UI consumption.
+    This service converts simulation domain objects to immutable DTOs
+    for safe UI consumption.
 
     Usage:
         battle_service = BattleService()
