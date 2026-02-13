@@ -8,17 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-132 Phase 1 Foundation
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-132 Phase 2 Simulation
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-132
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 11885 passed, 2 warnings
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Phase 1 completed: ADR-FND-001 fixed (Camera DI), ADR-FND-002 and ADR-FND-003 accepted as-is
-- Files modified: game/research/ui/research_scene.py, tests/unit/research/test_research_scene_di.py (new), tests/unit/research/research_scene/test_callbacks.py, test_interaction.py, test_initialization.py
-- Next: Phase 2 - Simulation findings
+- Phase 2 completed: ADR-SIM-001 fixed (factory functions to UI layer), ADR-SIM-002 fixed (TYPE_CHECKING protocol only), ADR-SIM-005 and ADR-SIM-007 accepted as-is
+- Files modified: game/ui/services/battle_factories.py (new), game/ui/services/__init__.py, game/simulation/battle_controller.py, game/simulation/systems/battle_engine.py
+- Tests updated: tests/unit/simulation/battle_controller/test_utilities.py, tests/integration/fleet_combat/test_damage_pipeline.py, tests/integration/fleet_combat/test_combat_workflow.py
+- Next: Phase 3 - Strategy findings
 
 ---
 
@@ -27,7 +28,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-132: Architecture Layer Violations**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-132/plan.md](Projects/active_projects/PROJ-132/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -78,7 +79,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-13 | PROJ-132 | Phase 1 | Complete | 11885 passed | pending | Camera DI fix, 2 findings accepted as-is |
+| 2026-02-13 | PROJ-132 | Phase 1 | Complete | 11885 passed | 5a1131c1 | Camera DI fix, 2 findings accepted as-is |
+| 2026-02-13 | PROJ-132 | Phase 2 | Complete | 11885 passed | 80f4f85b | Factory functions to UI, TYPE_CHECKING fix, 2 accepted as-is |
 
 ---
 

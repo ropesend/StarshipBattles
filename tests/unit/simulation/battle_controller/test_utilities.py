@@ -2,16 +2,16 @@
 import pytest
 from unittest.mock import Mock, patch
 
-from game.simulation.battle_controller import (
-    BattleController,
-    BattleConfig,
-    BattleMode,
+from game.simulation.battle_controller import BattleController
+from game.simulation.battle_config import BattleConfig, BattleMode
+from game.simulation.services.battle_service import BattleServiceResult
+# PROJ-132: Factory functions moved to UI layer
+from game.ui.services.battle_factories import (
     create_manual_battle,
     create_test_battle,
     create_strategy_battle,
     create_hypothetical_battle,
 )
-from game.simulation.services.battle_service import BattleServiceResult
 
 
 class TestBattleControllerQueryMethods:
@@ -142,10 +142,11 @@ class TestBattleControllerReset:
 
 
 class TestFactoryFunctions:
-    """Tests for factory functions."""
+    """Tests for factory functions (PROJ-132: now in game.ui.services.battle_factories)."""
 
     def test_create_manual_battle_creates_controller(self):
         """create_manual_battle creates a configured controller."""
+        # Patch BattleService where BattleController imports it
         with patch('game.simulation.battle_controller.BattleService') as MockService:
             mock_service = Mock()
             mock_service.create_battle.return_value = BattleServiceResult(success=True)
@@ -206,6 +207,8 @@ class TestFactoryFunctions:
 
     def test_create_hypothetical_battle_clones_ships(self):
         """create_hypothetical_battle clones ships for isolation."""
+        # Patch BattleService in battle_controller (where BattleController uses it)
+        # Patch ShipSerializer at its source (late import in create_hypothetical_battle)
         with patch('game.simulation.battle_controller.BattleService') as MockService, \
              patch('game.simulation.entities.ship_serialization.ShipSerializer') as MockSerializer:
 

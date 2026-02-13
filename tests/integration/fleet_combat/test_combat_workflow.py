@@ -6,10 +6,10 @@ Tests complete battle workflow, determinism, damage tracking, and fleet scale co
 
 import pytest
 
-from game.simulation.battle_controller import (
-    BattleController,
-    BattleConfig,
-    BattleMode,
+from game.simulation.battle_controller import BattleController
+from game.simulation.battle_config import BattleConfig, BattleMode
+# PROJ-132: Factory functions moved to UI layer
+from game.ui.services.battle_factories import (
     create_manual_battle,
     create_hypothetical_battle,
 )

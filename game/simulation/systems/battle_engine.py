@@ -11,7 +11,7 @@ Battle Lifecycle:
     2. START: Initialize battle with ships
        engine.start(team1_ships, team2_ships, seed=42)
        - Assigns team IDs (0 and 1)
-       - Creates AIController for each ship
+       - Creates AI controller for each ship via injected factory
        - Initializes spatial grid and projectile manager
        - Starts logging session
 
@@ -70,7 +70,7 @@ from game.simulation.entities.projectile import Projectile
 from game.simulation.entities.ship import Ship
 
 if TYPE_CHECKING:
-    from game.ai.controller import AIController
+    # PROJ-132: Only import protocols from simulation layer, not concrete AI types
     from game.simulation.interfaces.ai_controller import IAIController, IAIControllerFactory
 
 class BattleLogger:
@@ -211,7 +211,7 @@ class BattleEngine:
         team2_ships: List['Ship'],
         seed: Optional[int] = None,
         end_condition: Optional[BattleEndCondition] = None,
-        ai_controllers: Optional[List['AIController']] = None
+        ai_controllers: Optional[List['IAIController']] = None
     ) -> None:
         """
         Initialize battle state with configurable end condition.
@@ -295,7 +295,7 @@ class BattleEngine:
         self,
         ship: 'Ship',
         team_id: int,
-        ai_controller: Optional['AIController'] = None
+        ai_controller: Optional['IAIController'] = None
     ) -> None:
         """
         Add a ship to the battle mid-combat (for reinforcements).

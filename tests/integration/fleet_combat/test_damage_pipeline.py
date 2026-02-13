@@ -10,12 +10,10 @@ TCG-SIM-018: Simulation Integration Tests - Damage Pipeline Coverage
 import pytest
 import math
 
-from game.simulation.battle_controller import (
-    BattleController,
-    BattleConfig,
-    BattleMode,
-    create_manual_battle,
-)
+from game.simulation.battle_controller import BattleController
+from game.simulation.battle_config import BattleConfig, BattleMode
+# PROJ-132: Factory functions moved to UI layer
+from game.ui.services.battle_factories import create_manual_battle
 from game.simulation.systems.battle_engine import BattleEngine
 from game.ai.ai_factory import AIControllerFactory
 from tests.fixtures.ships import create_test_ship
