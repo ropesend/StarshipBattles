@@ -483,3 +483,51 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-111: Test Coverage - UI & Framework**
+  - **Phases:** 7 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-111/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-111/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-113: Architecture Layer Violations**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-113/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-113/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-116: God Class Decomposition**
+  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-116/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-116/plan.md)
+  - **Audit:** PASSED (No code changes - findings already addressed by prior projects) | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-117: Legacy Dead Code Eradication**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-117/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-117/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-115: Duplication Elimination**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-115/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-115/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-114: Consistency Standardization**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-114/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-114/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---

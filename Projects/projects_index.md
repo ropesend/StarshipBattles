@@ -6,13 +6,7 @@
 |----|-------|--------|---------|--------------|
 | PROJ-119 | Test Coverage -- Strategy and UI | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-118 | Test Coverage -- Core and Simulation | Planning | 2026-02-12 | 2026-02-12 |
-| PROJ-117 | Legacy Dead Code Eradication | Planning | 2026-02-12 | 2026-02-12 |
-| PROJ-116 | God Class Decomposition | Planning | 2026-02-12 | 2026-02-12 |
-| PROJ-115 | Duplication Elimination | Planning | 2026-02-12 | 2026-02-12 |
-| PROJ-114 | Consistency Standardization | Planning | 2026-02-12 | 2026-02-12 |
-| PROJ-113 | Architecture Layer Violations | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-111 | Test Coverage - UI and Framework | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-105 | Visual Regression Testing for UI Panels | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
@@ -21,6 +15,12 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-114 | Consistency Standardization | Archived | 2026-02-12 | 2026-02-12 |
+| PROJ-115 | Duplication Elimination | Archived | 2026-02-12 | 2026-02-12 |
+| PROJ-117 | Legacy Dead Code Eradication | Archived | 2026-02-12 | 2026-02-12 |
+| PROJ-116 | God Class Decomposition | Archived | 2026-02-12 | 2026-02-12 |
+| PROJ-113 | Architecture Layer Violations | Archived | 2026-02-12 | 2026-02-12 |
+| PROJ-111 | Test Coverage - UI and Framework | Archived | 2026-02-11 | 2026-02-12 |
 | PROJ-110 | Test Coverage - Core Systems | Archived | 2026-02-11 | 2026-02-12 |
 | PROJ-109 | Legacy Cleanup | Archived | 2026-02-11 | 2026-02-12 |
 | PROJ-108 | Duplication Elimination | Archived | 2026-02-11 | 2026-02-12 |
