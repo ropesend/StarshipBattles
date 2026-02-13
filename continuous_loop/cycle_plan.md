@@ -8,21 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-134 Audit Cycle 1 PASSED
-**Current Status:** PROJ-134 complete, next project ready
+**Last Completed:** PROJ-135 Phase 1 - Foundation test coverage
+**Current Status:** PROJ-135 Phase 1 complete, Phase 2 ready
 **Current Project:** PROJ-135
-**Current Phase:** Phase 1
-**Test Status:** 11883 passed
+**Current Phase:** Phase 2
+**Test Status:** 11904 passed (+21 new tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-134 AUDIT PASSED:
-  - All 33 tasks verified across 4 phases
-  - Key fixes confirmed: factories deleted, dead params removed, V1 code removed
-  - Docstrings and comments cleaned up
-  - All accepted-as-is decisions validated
-  - Tests: 11883 passed
-- Next: Start PROJ-135 Phase 1 (Test Coverage - Strategy Engine)
+- PROJ-135 Phase 1 COMPLETE:
+  - Task 1.1: CollisionSystem tests - ACCEPTED-AS-IS (already has 30+ tests including integration)
+  - Task 1.2: TechTree.detect_cycles() - FIX: Created 21 new tests in test_cycle_detection.py
+  - Task 1.3: FleeBehavior tests - ACCEPTED-AS-IS (already has 4 unit tests)
+  - Tests: 11904 passed (was 11883, +21 new)
+- Next: Start PROJ-135 Phase 2 (Strategy engine test coverage)
 
 ---
 
@@ -54,8 +53,8 @@
 
 ---
 
-- [ ] **PROJ-135: Test Coverage - Strategy Engine**
-  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-135: Test Coverage - Strategy Engine**
+  - **Phases:** 2 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-135/plan.md](Projects/active_projects/PROJ-135/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -99,6 +98,7 @@
 | 2026-02-13 | PROJ-134 | Phase 3 | Complete | 11883 passed | pending | 7 tasks: 1 fix (IBattleUI import), 6 accepted as-is |
 | 2026-02-13 | PROJ-134 | Phase 4 | Complete | 11883 passed | pending | 12 tasks: 5 fixes (dead code, docstrings, comments), 7 accepted as-is |
 | 2026-02-13 | PROJ-134 | Audit 1 | PASSED | 11883 passed | pending | All 33 tasks verified, key fixes confirmed |
+| 2026-02-13 | PROJ-135 | Phase 1 | Complete | 11904 passed | pending | 21 new cycle detection tests, 2 accepted as-is |
 
 ---
 
