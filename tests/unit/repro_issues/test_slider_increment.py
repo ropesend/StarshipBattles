@@ -1,6 +1,7 @@
-"""Test slider increment behavior.
+"""Test slider increment behavior in ModifierControlRow.
 
 PROJ-43: Updated to use mock ComponentService instead of patching MODIFIER_REGISTRY.
+PROJ-129: Refactored to test ModifierControlRow directly (not legacy ModifierEditorPanel).
 """
 import pytest
 import pygame
@@ -42,28 +43,48 @@ def pygame_setup():
 
 class TestSliderIncrement:
     def test_range_mount_increment(self, pygame_setup, mock_component_service):
-        """Test that the Range Mount slider is initialized with 0.1 increment."""
-        from game.ui.screens.builder.modifier_editor import ModifierEditorPanel
+        """Test that the Range Mount slider is initialized with correct increment.
+
+        PROJ-129: Tests ModifierControlRow directly since that's where slider logic resides.
+        """
+        from game.ui.screens.builder.modifier_row import ModifierControlRow
+        from game.ui.screens.builder.modifier_config import MODIFIER_UI_CONFIG, DEFAULT_CONFIG
 
         manager, container = pygame_setup
-        preset_manager = MagicMock()
 
-        # PROJ-43: Pass mock service via constructor instead of patching global
-        panel = ModifierEditorPanel(
-            manager, container, 400, preset_manager, None,
-            component_service=mock_component_service
-        )
+        # Get config for range_mount
+        config = MODIFIER_UI_CONFIG.get('range_mount', DEFAULT_CONFIG)
 
-        # Setup template modifiers to include range_mount
-        template_modifiers = {'range_mount': 0}
+        # Mock modifier definition
+        mock_mod_def = MagicMock()
+        mock_mod_def.name = 'Range Mount'
+        mock_mod_def.type_str = 'linear'
+        mock_mod_def.min_val = 0
+        mock_mod_def.max_val = 3
+        mock_mod_def.restrictions = None
+
+        # Create mock component with modifiers
+        mock_component = MagicMock()
+        mock_component.modifiers = {'range_mount': 1.5}
 
         with patch('game.ui.screens.builder.modifier_row.UIHorizontalSlider') as MockSlider:
             # Mock the slider to avoid pygame_gui validation errors
             mock_slider_instance = MagicMock()
             MockSlider.return_value = mock_slider_instance
 
-            panel.rebuild(None, template_modifiers)
-            panel.layout(0)
+            # Create the row (note: parameter order per ModifierControlRow.__init__)
+            row = ModifierControlRow(
+                manager=manager,
+                container=container,
+                width=380,
+                mod_id='range_mount',
+                mod_def=mock_mod_def,
+                config=config,
+                on_change_callback=None
+            )
+
+            # Build UI to trigger slider creation
+            row.build_ui(y=0)
 
             # Verify slider creation
             found = False
