@@ -141,6 +141,87 @@ class TestPhysicsDirection:
 
         assert forward.length() == pytest.approx(1.0, abs=1e-5)
 
+    def test_forward_vector_angle_270(self, pygame_init):
+        """Angle 270 should point up (0, -1) in screen coords."""
+        body = PhysicsBody(0, 0, 270)
+        forward = body.forward_vector()
+
+        assert forward.x == pytest.approx(0.0, abs=1e-5)
+        assert forward.y == pytest.approx(-1.0, abs=1e-5)
+
+
+class TestApplyForceIntegration:
+    """Integration tests for apply_force -> update -> position pipeline (TCG-FND-001)."""
+
+    def test_apply_force_to_position_integration(self, pygame_init):
+        """Apply force, update, verify position change end-to-end."""
+        body = PhysicsBody(0, 0)
+        body.mass = 1.0
+        body.drag = 0  # Disable drag for predictable test
+
+        # Apply force of 10 units in +X direction
+        force = pygame.math.Vector2(10, 0)
+        body.apply_force(force)
+
+        # After update: acceleration -> velocity -> position
+        body.update()
+
+        # With mass=1, force=10, accel=10
+        # Velocity after update: 10
+        # Position after update: 10
+        assert body.velocity.x == pytest.approx(10.0, abs=1e-5)
+        assert body.position.x == pytest.approx(10.0, abs=1e-5)
+        assert body.position.y == pytest.approx(0.0, abs=1e-5)
+
+    def test_apply_force_with_fractional_mass(self, pygame_init):
+        """Force with mass=0.5 should produce 2x acceleration."""
+        body = PhysicsBody(0, 0)
+        body.mass = 0.5
+        body.drag = 0
+
+        body.apply_force(pygame.math.Vector2(10, 0))
+        body.update()
+
+        # accel = force / mass = 10 / 0.5 = 20
+        assert body.velocity.x == pytest.approx(20.0, abs=1e-5)
+        assert body.position.x == pytest.approx(20.0, abs=1e-5)
+
+    def test_multiple_forces_accumulate_before_update(self, pygame_init):
+        """Multiple forces accumulate into single velocity change."""
+        body = PhysicsBody(0, 0)
+        body.mass = 1.0
+        body.drag = 0
+
+        # Apply forces in different directions
+        body.apply_force(pygame.math.Vector2(10, 0))  # Right
+        body.apply_force(pygame.math.Vector2(0, 6))   # Down
+
+        # After update, velocity = sum of accelerations
+        body.update()
+
+        assert body.velocity.x == pytest.approx(10.0, abs=1e-5)
+        assert body.velocity.y == pytest.approx(6.0, abs=1e-5)
+        assert body.position.x == pytest.approx(10.0, abs=1e-5)
+        assert body.position.y == pytest.approx(6.0, abs=1e-5)
+
+    def test_apply_force_acceleration_resets_after_update(self, pygame_init):
+        """Acceleration should reset to zero after update."""
+        body = PhysicsBody(0, 0)
+        body.mass = 1.0
+        body.drag = 0
+
+        body.apply_force(pygame.math.Vector2(10, 5))
+        body.update()
+
+        # Acceleration should be reset
+        assert body.acceleration.x == 0
+        assert body.acceleration.y == 0
+
+        # Second update without force should not change velocity
+        initial_vel = body.velocity.copy()
+        body.update()
+        assert body.velocity == initial_vel
+
 
 class TestAbilityDrivenPhysics:
     """Refactored Tests for Ability-Driven Physics."""

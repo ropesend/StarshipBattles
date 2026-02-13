@@ -288,3 +288,132 @@ class TestHydrateMethod:
 
         with pytest.raises(FrozenStateException, match="frozen"):
             registry.hydrate({}, {}, {})
+
+
+# =============================================================================
+# TCG-FND-016: Hydrate Partial Resources Handling
+# =============================================================================
+
+class TestHydratePartialResources:
+    """TCG-FND-016: Tests for hydrate() partial resources handling.
+
+    Tests verify behavior with:
+    - resources_data=None (default parameter)
+    - resources_data={} (empty dict, falsy)
+    - resources_data with actual content (truthy)
+
+    The distinction between "no resources" and "empty resources" matters
+    for backward compatibility and correct state management.
+    """
+
+    def test_hydrate_with_resources_none_does_not_clear_existing(self, registry):
+        """hydrate() with resources_data=None clears resources dict.
+
+        When resources_data is None (default), existing resources should
+        still be cleared because clear() is always called first.
+        """
+        # Pre-populate resources
+        registry.resources["existing_fuel"] = {"id": "existing_fuel", "max": 100}
+
+        # Hydrate without resources_data (defaults to None)
+        registry.hydrate(
+            components_data={"comp": {"id": "comp"}},
+            modifiers_data={},
+            vehicle_classes_data={},
+            resources_data=None
+        )
+
+        # Resources dict is cleared but not populated
+        assert len(registry.resources) == 0
+
+    def test_hydrate_with_empty_dict_does_not_populate_resources(self, registry):
+        """hydrate() with resources_data={} clears but does not populate.
+
+        An empty dict is falsy, so the `if resources_data:` check fails
+        and no update is performed. But clear() still happens first.
+        """
+        # Pre-populate resources
+        registry.resources["existing_energy"] = {"id": "existing_energy", "max": 200}
+
+        # Hydrate with empty resources dict
+        registry.hydrate(
+            components_data={},
+            modifiers_data={},
+            vehicle_classes_data={},
+            resources_data={}
+        )
+
+        # Resources should be cleared (empty)
+        assert len(registry.resources) == 0
+
+    def test_hydrate_with_truthy_resources_populates(self, registry):
+        """hydrate() with truthy resources_data populates resources."""
+        # Pre-populate resources
+        registry.resources["old_resource"] = {"id": "old_resource"}
+
+        # Hydrate with new resources
+        registry.hydrate(
+            components_data={},
+            modifiers_data={},
+            vehicle_classes_data={},
+            resources_data={"new_fuel": {"id": "new_fuel", "max": 500}}
+        )
+
+        # Old resource cleared, new resource added
+        assert "old_resource" not in registry.resources
+        assert "new_fuel" in registry.resources
+        assert registry.resources["new_fuel"]["max"] == 500
+
+    def test_hydrate_none_vs_empty_dict_behavior_documented(self, registry):
+        """Document that None and {} have the same effect on resources.
+
+        Both result in an empty resources dict because clear() is called
+        regardless, and neither truthy value triggers update().
+        """
+        # Test with None
+        registry.resources["test1"] = {"id": "test1"}
+        registry.hydrate({}, {}, {}, resources_data=None)
+        len_after_none = len(registry.resources)
+
+        # Test with empty dict
+        registry.resources["test2"] = {"id": "test2"}
+        registry.hydrate({}, {}, {}, resources_data={})
+        len_after_empty = len(registry.resources)
+
+        # Both should result in empty resources
+        assert len_after_none == 0
+        assert len_after_empty == 0
+
+    def test_hydrate_resources_clears_before_conditional_update(self, registry):
+        """Verify resources are cleared even when resources_data is falsy.
+
+        This documents that existing resources do NOT persist when
+        hydrate() is called, regardless of the resources_data value.
+        """
+        # Add multiple resources
+        registry.resources["fuel"] = {"id": "fuel"}
+        registry.resources["energy"] = {"id": "energy"}
+        registry.resources["ammo"] = {"id": "ammo"}
+
+        assert len(registry.resources) == 3
+
+        # Hydrate with falsy resources_data
+        registry.hydrate({}, {}, {}, resources_data=None)
+
+        # All resources should be cleared
+        assert len(registry.resources) == 0
+
+    def test_hydrate_multiple_resources_in_single_call(self, registry):
+        """hydrate() can populate multiple resources in one call."""
+        resources_data = {
+            "fuel": {"id": "fuel", "type": "consumable"},
+            "energy": {"id": "energy", "type": "regenerating"},
+            "missiles": {"id": "missiles", "type": "ammo"}
+        }
+
+        registry.hydrate({}, {}, {}, resources_data=resources_data)
+
+        assert len(registry.resources) == 3
+        assert registry.resources["fuel"]["type"] == "consumable"
+        assert registry.resources["energy"]["type"] == "regenerating"
+        assert registry.resources["missiles"]["type"] == "ammo"

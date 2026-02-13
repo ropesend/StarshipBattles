@@ -5,21 +5,23 @@ An autonomous system that continuously reviews and improves the Starship Battles
 ## How It Works
 
 ```
-┌─── Cycle N ──────────────────────────────────────────┐
-│                                                      │
-│  1. Create branch: sweep-cycle-N                     │
-│  2. Run sweep-all (25 agents, 5 review categories)   │
-│  3. Auto-approve ALL projects                        │
-│  4. Build cycle_plan.md                              │
-│  5. Execute projects (one phase per CLI session)     │
-│  6. Merge branch to main                             │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌─── Cycle N ──────────────────────────────────────────────┐
+│                                                          │
+│  1. Create branch: sweep-cycle-N                         │
+│  2. Run sweep-all (25 agents, 5 review categories)       │
+│  3. Validate findings (5 skeptical agents, 1 per shard)  │
+│  4. Filter: keep only confirmed/downgraded findings      │
+│  5. Auto-approve ALL validated projects                  │
+│  6. Build cycle_plan.md                                  │
+│  7. Execute projects (one phase per CLI session)         │
+│  8. Merge branch to main                                 │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
          │
          └── Repeat with Cycle N+1
 ```
 
-Each cycle creates a git branch, performs a full codebase review, creates projects from findings, executes them all, then merges to main. The next sweep sees the improved code and finds new issues.
+Each cycle creates a git branch, performs a full codebase review, validates findings with skeptical agents, creates projects from confirmed findings, executes them all, then merges to main. The next sweep sees the improved code and finds new issues.
 
 ## Quick Start
 
@@ -60,11 +62,13 @@ $MAX_CONSECUTIVE_FAILURES = 3     # Circuit breaker threshold
 |------|---------|
 | `continuous_loop.ps1` | Outer loop orchestrator (manages cycles, branches) |
 | `inner_loop.ps1` | Inner loop (executes projects, one phase per session) |
-| `SWEEP_WORKER.md` | System prompt for sweep CLI sessions |
+| `SWEEP_WORKER.md` | System prompt for sweep CLI sessions (includes validation) |
 | `CYCLE_WORKER.md` | System prompt for project execution CLI sessions |
 | `populate_cycle_plan.py` | Builds cycle_plan.md from newly-created projects |
 | `cycle_plan.md` | Per-cycle project execution plan (auto-generated) |
 | `cycle_state.json` | Persistent state across cycles (auto-generated) |
+| `Reviews/Prompts/Sweep - Validate Findings.txt` | Prompt template for skeptical validator agents |
+| `Reviews/scripts/filter_validated_findings.py` | Applies validation verdicts to filter report.md |
 
 ## Architecture
 
@@ -80,6 +84,30 @@ $MAX_CONSECUTIVE_FAILURES = 3     # Circuit breaker threshold
 - Spawns Claude CLI sessions (one per project phase)
 - Each session reads `cycle_plan.md`, executes one phase, commits, exits
 - Loops until all cycle projects are complete
+
+### Skeptical Validation Layer
+
+After the 25 sweep agents produce findings, a second wave of 5 **skeptical validator agents** (one per shard) independently verify each finding against the actual source code. Only confirmed findings proceed to project generation.
+
+```
+25 sweep agents → compile_findings.py → report.md (unfiltered)
+                                              ↓
+5 validator agents (1/shard) → validation/*.md
+                                              ↓
+filter_validated_findings.py → report.md (validated only)
+                               report_unvalidated.md (backup)
+                               validation/validation_summary.json
+```
+
+Each validator:
+- Reads the actual source code at the stated location
+- Verifies the claim is accurate
+- Checks if the issue was already fixed
+- Assesses whether severity is appropriate
+- Detects common false positive patterns (TYPE_CHECKING imports, active decomposition projects, cross-sweep duplicates)
+- Renders a verdict: **CONFIRMED**, **DOWNGRADED(NewSeverity)**, or **REJECTED**
+
+Typically 15-25% of sweep findings are rejected as false positives, exaggerated, or already addressed.
 
 ### Relationship to Existing Systems
 

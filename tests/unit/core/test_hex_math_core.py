@@ -407,3 +407,185 @@ class TestHexSerialization:
             d = hex_to_dict(original)
             result = hex_from_dict(d)
             assert result == original
+
+
+# =============================================================================
+# TCG-FND-014: HexCoord Arithmetic TypeError Tests
+# =============================================================================
+
+class TestHexCoordArithmeticTypeError:
+    """TCG-FND-014: Tests for HexCoord arithmetic with non-HexCoord types.
+
+    Verifies that adding/subtracting non-HexCoord types raises TypeError,
+    documenting the explicit contract for type safety.
+    """
+
+    def test_add_int_raises_typeerror(self):
+        """HexCoord(1,0) + 5 raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord + 5
+
+    def test_add_tuple_raises_typeerror(self):
+        """HexCoord(1,0) + (1, 0) raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord + (1, 0)
+
+    def test_add_list_raises_typeerror(self):
+        """HexCoord(1,0) + [1, 0] raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord + [1, 0]
+
+    def test_add_string_raises_typeerror(self):
+        """HexCoord(1,0) + 'hex' raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord + "hex"
+
+    def test_sub_int_raises_typeerror(self):
+        """HexCoord(1,0) - 5 raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord - 5
+
+    def test_sub_tuple_raises_typeerror(self):
+        """HexCoord(1,0) - (1, 0) raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord - (1, 0)
+
+    def test_sub_none_raises_typeerror(self):
+        """HexCoord(1,0) - None raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord - None
+
+    def test_add_none_raises_typeerror(self):
+        """HexCoord(1,0) + None raises TypeError."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = coord + None
+
+    def test_radd_not_supported(self):
+        """5 + HexCoord(1,0) raises TypeError (no __radd__)."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = 5 + coord
+
+    def test_rsub_not_supported(self):
+        """5 - HexCoord(1,0) raises TypeError (no __rsub__)."""
+        coord = HexCoord(1, 0)
+        with pytest.raises(TypeError):
+            _ = 5 - coord
+
+
+# =============================================================================
+# TCG-FND-015: pixel_to_hex Rounding Edge Cases
+# =============================================================================
+
+class TestPixelToHexRoundingEdgeCases:
+    """TCG-FND-015: Tests for pixel_to_hex() rounding edge cases.
+
+    Verifies round-trip property for a wide range of hexes and tests
+    behavior at positions near hex boundaries.
+    """
+
+    def test_roundtrip_property_wide_range(self):
+        """Round-trip property holds for a wide range of coordinates."""
+        size = 50
+        # Test a grid of hex coordinates
+        for q in range(-20, 21, 5):
+            for r in range(-20, 21, 5):
+                original = HexCoord(q, r)
+                px, py = hex_to_pixel(original, size)
+                result = pixel_to_hex(px, py, size)
+                assert result == original, f"Roundtrip failed for {original}"
+
+    def test_roundtrip_at_various_sizes(self):
+        """Round-trip works correctly at various hex sizes."""
+        test_coords = [HexCoord(3, -2), HexCoord(-5, 7), HexCoord(0, 0)]
+
+        for size in [10, 25, 50, 100, 200]:
+            for original in test_coords:
+                px, py = hex_to_pixel(original, size)
+                result = pixel_to_hex(px, py, size)
+                assert result == original, f"Roundtrip failed for {original} at size {size}"
+
+    def test_pixel_near_hex_center_returns_that_hex(self):
+        """Pixel position near hex center rounds to that hex."""
+        size = 50
+        coord = HexCoord(3, -1)
+        center_x, center_y = hex_to_pixel(coord, size)
+
+        # Test small offsets around center
+        for dx in [-1.0, 0.0, 1.0]:
+            for dy in [-1.0, 0.0, 1.0]:
+                result = pixel_to_hex(center_x + dx, center_y + dy, size)
+                assert result == coord, f"Failed for offset ({dx}, {dy})"
+
+    def test_pixel_halfway_between_two_hexes(self):
+        """Pixel halfway between two hexes rounds to one of them consistently."""
+        size = 50
+        hex_a = HexCoord(0, 0)
+        hex_b = HexCoord(1, 0)
+
+        px_a, py_a = hex_to_pixel(hex_a, size)
+        px_b, py_b = hex_to_pixel(hex_b, size)
+
+        # Midpoint between the two hex centers
+        mid_x = (px_a + px_b) / 2
+        mid_y = (py_a + py_b) / 2
+
+        # The result should be one of the two adjacent hexes
+        result = pixel_to_hex(mid_x, mid_y, size)
+        assert result in [hex_a, hex_b], f"Midpoint rounded to unexpected hex: {result}"
+
+    def test_roundtrip_negative_coordinates(self):
+        """Round-trip works for negative q and r coordinates."""
+        size = 50
+        test_coords = [
+            HexCoord(-1, 0),
+            HexCoord(0, -1),
+            HexCoord(-5, -5),
+            HexCoord(-10, 3),
+            HexCoord(7, -12),
+        ]
+
+        for original in test_coords:
+            px, py = hex_to_pixel(original, size)
+            result = pixel_to_hex(px, py, size)
+            assert result == original, f"Roundtrip failed for {original}"
+
+    def test_roundtrip_origin(self):
+        """Round-trip at origin works correctly."""
+        size = 50
+        original = HexCoord(0, 0)
+        px, py = hex_to_pixel(original, size)
+
+        assert px == 0
+        assert py == 0
+
+        result = pixel_to_hex(px, py, size)
+        assert result == original
+
+    def test_pixel_to_hex_returns_hexcoord(self):
+        """pixel_to_hex returns a HexCoord instance."""
+        result = pixel_to_hex(100, 100, 50)
+        assert isinstance(result, HexCoord)
+
+    def test_roundtrip_stress_many_coordinates(self):
+        """Round-trip property tested on many coordinates (stress test)."""
+        size = 30
+        failures = []
+
+        for q in range(-50, 51):
+            for r in range(-50, 51):
+                original = HexCoord(q, r)
+                px, py = hex_to_pixel(original, size)
+                result = pixel_to_hex(px, py, size)
+                if result != original:
+                    failures.append((original, result))
+
+        assert len(failures) == 0, f"Round-trip failures: {failures[:10]}..."

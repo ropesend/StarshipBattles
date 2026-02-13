@@ -249,3 +249,207 @@ class TestClipboardOperations:
                 mock_run.assert_called_once()
                 call_args = mock_run.call_args
                 assert call_args[0][0] == ['clip']
+
+
+class TestCaptureStep:
+    """Tests for capture_step method (TCG-FND-021)."""
+
+    @pytest.fixture
+    def mock_manager(self):
+        """Create a mock-patched ScreenshotManager."""
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
+
+        # Clear any existing instance
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                manager = ScreenshotManager.instance()
+
+        yield manager
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+    def test_capture_step_calls_capture_with_step_label(self, mock_manager):
+        """capture_step calls capture with STEP_ prefix in label."""
+        mock_manager.enabled = True
+        mock_surface = Mock()
+        mock_surface.get_rect.return_value = Mock(width=100, height=100)
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            with patch('game.ui.services.screenshot_manager.log_info'):
+                with patch.object(mock_manager, '_copy_to_clipboard'):
+                    mock_manager.capture_step("background", surface=mock_surface)
+
+        # Verify save was called with filename containing STEP_
+        save_call = mock_pygame.image.save.call_args
+        assert save_call is not None
+        filepath = save_call[0][1]
+        assert "STEP_background" in filepath
+
+    def test_capture_step_disabled_does_nothing(self, mock_manager):
+        """capture_step does nothing when disabled."""
+        mock_manager.enabled = False
+        mock_surface = Mock()
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_manager.capture_step("test_step", surface=mock_surface)
+
+        mock_pygame.image.save.assert_not_called()
+
+    def test_capture_step_no_surface_uses_display(self, mock_manager):
+        """capture_step uses display surface when none provided."""
+        mock_manager.enabled = True
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_display_surface = Mock()
+            mock_display_surface.get_rect.return_value = Mock(width=100, height=100)
+            mock_pygame.display.get_surface.return_value = mock_display_surface
+
+            with patch('game.ui.services.screenshot_manager.log_info'):
+                with patch.object(mock_manager, '_copy_to_clipboard'):
+                    mock_manager.capture_step("test_step")
+
+        mock_pygame.image.save.assert_called_once()
+
+
+class TestCaptureStrategyLayer:
+    """Tests for capture_strategy_layer method (TCG-FND-021)."""
+
+    @pytest.fixture
+    def mock_manager(self):
+        """Create a mock-patched ScreenshotManager."""
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
+
+        # Clear any existing instance
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                manager = ScreenshotManager.instance()
+
+        yield manager
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+    @pytest.fixture
+    def mock_scene(self):
+        """Create a mock strategy scene."""
+        scene = Mock()
+        scene.screen_width = 1920
+        scene.screen_height = 1080
+        scene.SIDEBAR_WIDTH = 300
+        scene.TOP_BAR_HEIGHT = 40
+        scene._renderer = Mock()
+        scene.ui = Mock()
+        scene.build_queue_screen = None
+        return scene
+
+    def test_capture_strategy_layer_disabled_does_nothing(self, mock_manager, mock_scene):
+        """capture_strategy_layer does nothing when disabled."""
+        mock_manager.enabled = False
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_manager.capture_strategy_layer(mock_scene)
+
+        mock_pygame.Surface.assert_not_called()
+
+    def test_capture_strategy_layer_with_ui(self, mock_manager, mock_scene):
+        """capture_strategy_layer captures full screen with UI."""
+        mock_manager.enabled = True
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_surface = Mock()
+            mock_pygame.Surface.return_value = mock_surface
+
+            with patch('game.ui.services.screenshot_manager.log_info'):
+                with patch.object(mock_manager, '_copy_to_clipboard'):
+                    mock_manager.capture_strategy_layer(
+                        mock_scene,
+                        include_ui=True,
+                        label="test_capture"
+                    )
+
+        # Surface should be created with full screen dimensions
+        mock_pygame.Surface.assert_called_with((1920, 1080))
+
+        # Renderer should be called
+        mock_scene._renderer.draw.assert_called_once()
+
+        # UI should be drawn
+        mock_scene.ui.draw.assert_called_once()
+
+    def test_capture_strategy_layer_without_ui(self, mock_manager, mock_scene):
+        """capture_strategy_layer captures viewport only without UI."""
+        mock_manager.enabled = True
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_surface = Mock()
+            mock_pygame.Surface.return_value = mock_surface
+            mock_pygame.Rect = Mock(return_value=Mock())
+
+            with patch('game.ui.services.screenshot_manager.log_info'):
+                with patch.object(mock_manager, '_copy_to_clipboard'):
+                    mock_manager.capture_strategy_layer(
+                        mock_scene,
+                        include_ui=False
+                    )
+
+        # Surface should be created for viewport only (excluding sidebar and top bar)
+        # viewport_width = 1920 - 300 = 1620
+        # viewport_height = 1080 - 40 = 1040
+        calls = mock_pygame.Surface.call_args_list
+        # Should have at least one call for viewport surface
+        assert len(calls) >= 1
+
+    def test_capture_strategy_layer_with_subwindows(self, mock_manager, mock_scene):
+        """capture_strategy_layer includes subwindows when requested."""
+        mock_manager.enabled = True
+        mock_scene.build_queue_screen = Mock()
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_surface = Mock()
+            mock_pygame.Surface.return_value = mock_surface
+
+            with patch('game.ui.services.screenshot_manager.log_info'):
+                with patch.object(mock_manager, '_copy_to_clipboard'):
+                    mock_manager.capture_strategy_layer(
+                        mock_scene,
+                        include_ui=True,
+                        include_subwindows=True
+                    )
+
+        # Subwindow should be drawn
+        mock_scene.build_queue_screen.draw.assert_called_once()
+
+    def test_capture_strategy_layer_handles_invalid_dimensions(self, mock_manager):
+        """capture_strategy_layer handles invalid viewport dimensions gracefully."""
+        mock_manager.enabled = True
+
+        # Create scene with invalid dimensions (sidebar larger than screen)
+        scene = Mock()
+        scene.screen_width = 100
+        scene.screen_height = 1080
+        scene.SIDEBAR_WIDTH = 300  # Wider than screen!
+        scene.TOP_BAR_HEIGHT = 40
+        scene._renderer = Mock()
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            mock_surface = Mock()
+            mock_pygame.Surface.return_value = mock_surface
+            mock_pygame.Rect = Mock()
+
+            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+                # Should not raise even with invalid dimensions
+                mock_manager.capture_strategy_layer(scene, include_ui=False)
+
+            # Should log warning about invalid dimensions
+            mock_log.assert_called()

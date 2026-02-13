@@ -109,3 +109,133 @@ class TestStrategySystem:
         score_t2 = TargetEvaluator.evaluate(me, t2, rules)
 
         assert score_t1 > score_t2, "Target with weapons should be preferred despite distance"
+
+
+class TestResolveStrategyFallbackChain:
+    """TCG-FND-013: Tests for StrategyManager.resolve_strategy() default fallback chain.
+
+    Tests verify that:
+    - Valid strategy with valid policies works
+    - Strategy referencing missing targeting policy falls back to default
+    - Strategy referencing missing movement policy falls back to default
+    - Missing strategy falls back to full defaults
+    """
+
+    @pytest.fixture
+    def isolated_manager(self):
+        """Create an isolated StrategyManager with minimal test data."""
+        StrategyManager.reset()
+        manager = StrategyManager.instance()
+
+        # Manually set up test data instead of loading from files
+        manager.targeting_policies = {
+            'valid_targeting': {'name': 'ValidTargeting', 'rules': [{'type': 'nearest', 'weight': 50}]}
+        }
+        manager.movement_policies = {
+            'valid_movement': {'behavior': 'charge', 'engage_distance': 100}
+        }
+        manager.strategies = {
+            'valid_strategy': {
+                'name': 'ValidStrategy',
+                'targeting_policy': 'valid_targeting',
+                'movement_policy': 'valid_movement'
+            },
+            'strategy_missing_targeting': {
+                'name': 'MissingTargeting',
+                'targeting_policy': 'nonexistent_targeting_policy',
+                'movement_policy': 'valid_movement'
+            },
+            'strategy_missing_movement': {
+                'name': 'MissingMovement',
+                'targeting_policy': 'valid_targeting',
+                'movement_policy': 'nonexistent_movement_policy'
+            },
+            'strategy_missing_both': {
+                'name': 'MissingBoth',
+                'targeting_policy': 'typo_targeting',
+                'movement_policy': 'typo_movement'
+            }
+        }
+        manager._loaded = True
+
+        yield manager
+
+        StrategyManager.reset()
+
+    def test_resolve_valid_strategy_with_valid_policies(self, isolated_manager):
+        """Valid strategy with valid policies returns expected data."""
+        resolved = isolated_manager.resolve_strategy('valid_strategy')
+
+        assert resolved['definition']['name'] == 'ValidStrategy'
+        assert resolved['targeting']['name'] == 'ValidTargeting'
+        assert resolved['movement']['behavior'] == 'charge'
+
+    def test_resolve_strategy_with_missing_targeting_policy_uses_default(self, isolated_manager):
+        """Strategy referencing typo'd targeting policy falls back to default."""
+        resolved = isolated_manager.resolve_strategy('strategy_missing_targeting')
+
+        # Definition should be the strategy itself
+        assert resolved['definition']['name'] == 'MissingTargeting'
+
+        # Targeting should be the DEFAULT, not the nonexistent one
+        assert resolved['targeting']['name'] == 'Default'
+        assert resolved['targeting']['rules'] == [{'type': 'nearest', 'weight': 100}]
+
+        # Movement should still be valid
+        assert resolved['movement']['behavior'] == 'charge'
+
+    def test_resolve_strategy_with_missing_movement_policy_uses_default(self, isolated_manager):
+        """Strategy referencing typo'd movement policy falls back to default."""
+        resolved = isolated_manager.resolve_strategy('strategy_missing_movement')
+
+        # Definition should be the strategy itself
+        assert resolved['definition']['name'] == 'MissingMovement'
+
+        # Targeting should be valid
+        assert resolved['targeting']['name'] == 'ValidTargeting'
+
+        # Movement should be the DEFAULT
+        assert resolved['movement']['behavior'] == 'kite'
+        assert resolved['movement']['avoid_collisions'] is True
+
+    def test_resolve_strategy_with_both_policies_missing_uses_defaults(self, isolated_manager):
+        """Strategy referencing both typo'd policies falls back to defaults for both."""
+        resolved = isolated_manager.resolve_strategy('strategy_missing_both')
+
+        # Definition should be the strategy itself
+        assert resolved['definition']['name'] == 'MissingBoth'
+
+        # Both should be defaults
+        assert resolved['targeting']['name'] == 'Default'
+        assert resolved['movement']['behavior'] == 'kite'
+
+    def test_resolve_missing_strategy_uses_full_defaults(self, isolated_manager):
+        """Completely missing strategy falls back to default strategy and default policies."""
+        resolved = isolated_manager.resolve_strategy('completely_nonexistent_strategy')
+
+        # Definition should be the default strategy
+        assert resolved['definition']['name'] == 'Default'
+        assert resolved['definition']['targeting_policy'] == 'standard'
+        assert resolved['definition']['movement_policy'] == 'kite_max'
+
+        # Policies should also be defaults (since 'standard' and 'kite_max' don't exist)
+        assert resolved['targeting']['name'] == 'Default'
+        assert resolved['movement']['behavior'] == 'kite'
+
+    def test_default_policy_names_documented(self, isolated_manager):
+        """Verify that default policy objects contain expected field names.
+
+        This documents the contract for what fields default policies must have.
+        """
+        defaults = isolated_manager.defaults
+
+        # Default targeting must have 'name' and 'rules'
+        assert 'name' in defaults['targeting']
+        assert 'rules' in defaults['targeting']
+
+        # Default movement must have 'behavior'
+        assert 'behavior' in defaults['movement']
+
+        # Default strategy must have policy references
+        assert 'targeting_policy' in defaults['strategy']
+        assert 'movement_policy' in defaults['strategy']

@@ -482,3 +482,191 @@ class TestTechNodeEdgeCases:
 
         # Empty AND-group: all() of empty = True
         assert node.get_status(0, {}) == 'available'
+
+
+# =============================================================================
+# TCG-FND-010: TechNode.get_effective_price() Parametrized Tests
+# =============================================================================
+
+class TestGetEffectivePriceParametrized:
+    """TCG-FND-010: Comprehensive parametrized tests for all 6 price curves."""
+
+    # Test levels to cover: 1, 2, 5, 10
+    TEST_LEVELS = [1, 2, 5, 10]
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 1.0),
+        (2, 1.0),
+        (5, 1.0),
+        (10, 1.0),
+    ])
+    def test_flat_curve_base_1(self, level, expected):
+        """Flat curve returns base price regardless of level (base=1.0)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve="flat")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 2.5),
+        (2, 2.5),
+        (5, 2.5),
+        (10, 2.5),
+    ])
+    def test_flat_curve_base_2_5(self, level, expected):
+        """Flat curve with non-unit base price."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.5, price_curve="flat")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 1.5),    # 1 * (1 + 0.5 * 1) = 1.5
+        (2, 2.0),    # 1 * (1 + 0.5 * 2) = 2.0
+        (5, 3.5),    # 1 * (1 + 0.5 * 5) = 3.5
+        (10, 6.0),   # 1 * (1 + 0.5 * 10) = 6.0
+    ])
+    def test_linear_curve_base_1(self, level, expected):
+        """Linear curve: +50% per level (base=1.0)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve="linear")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 3.0),    # 2 * (1 + 0.5 * 1) = 3.0
+        (2, 4.0),    # 2 * (1 + 0.5 * 2) = 4.0
+        (5, 7.0),    # 2 * (1 + 0.5 * 5) = 7.0
+        (10, 12.0),  # 2 * (1 + 0.5 * 10) = 12.0
+    ])
+    def test_linear_curve_base_2(self, level, expected):
+        """Linear curve with base=2.0."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.0, price_curve="linear")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 1.2),    # 1 * (1 + 0.2 * 1^2) = 1.2
+        (2, 1.8),    # 1 * (1 + 0.2 * 4) = 1.8
+        (5, 6.0),    # 1 * (1 + 0.2 * 25) = 6.0
+        (10, 21.0),  # 1 * (1 + 0.2 * 100) = 21.0
+    ])
+    def test_quadratic_curve_base_1(self, level, expected):
+        """Quadratic curve: 1 + 0.2 * level^2 (base=1.0)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve="quadratic")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 2.4),     # 2 * (1 + 0.2 * 1) = 2.4
+        (2, 3.6),     # 2 * (1 + 0.2 * 4) = 3.6
+        (5, 12.0),    # 2 * (1 + 0.2 * 25) = 12.0
+        (10, 42.0),   # 2 * (1 + 0.2 * 100) = 42.0
+    ])
+    def test_quadratic_curve_base_2(self, level, expected):
+        """Quadratic curve with base=2.0."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.0, price_curve="quadratic")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 1.5),              # 1.5^1 = 1.5
+        (2, 2.25),             # 1.5^2 = 2.25
+        (5, 7.59375),          # 1.5^5 = 7.59375
+        (10, 57.6650390625),   # 1.5^10 ≈ 57.665
+    ])
+    def test_exponential_curve_base_1(self, level, expected):
+        """Exponential curve: 1.5^level (base=1.0)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve="exponential")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 3.0),                # 2 * 1.5^1 = 3.0
+        (2, 4.5),                # 2 * 1.5^2 = 4.5
+        (5, 15.1875),            # 2 * 1.5^5 = 15.1875
+        (10, 115.330078125),     # 2 * 1.5^10 ≈ 115.33
+    ])
+    def test_exponential_curve_base_2(self, level, expected):
+        """Exponential curve with base=2.0."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.0, price_curve="exponential")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 1 + math.log(2)),    # 1 + ln(2) ≈ 1.693
+        (2, 1 + math.log(3)),    # 1 + ln(3) ≈ 2.099
+        (5, 1 + math.log(6)),    # 1 + ln(6) ≈ 2.792
+        (10, 1 + math.log(11)),  # 1 + ln(11) ≈ 3.398
+    ])
+    def test_logarithmic_curve_base_1(self, level, expected):
+        """Logarithmic curve: 1 + log(1 + level) (base=1.0)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve="logarithmic")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 2 * (1 + math.log(2))),    # 2 * (1 + ln(2)) ≈ 3.386
+        (2, 2 * (1 + math.log(3))),    # 2 * (1 + ln(3)) ≈ 4.197
+        (5, 2 * (1 + math.log(6))),    # 2 * (1 + ln(6)) ≈ 5.584
+        (10, 2 * (1 + math.log(11))),  # 2 * (1 + ln(11)) ≈ 6.796
+    ])
+    def test_logarithmic_curve_base_2(self, level, expected):
+        """Logarithmic curve with base=2.0."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.0, price_curve="logarithmic")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 2.0),              # 1 + sqrt(1) = 2.0
+        (2, 1 + math.sqrt(2)), # 1 + sqrt(2) ≈ 2.414
+        (5, 1 + math.sqrt(5)), # 1 + sqrt(5) ≈ 3.236
+        (10, 1 + math.sqrt(10)), # 1 + sqrt(10) ≈ 4.162
+    ])
+    def test_sqrt_curve_base_1(self, level, expected):
+        """Square root curve: 1 + sqrt(level) (base=1.0)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve="sqrt")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("level,expected", [
+        (1, 4.0),                      # 2 * (1 + sqrt(1)) = 4.0
+        (2, 2 * (1 + math.sqrt(2))),   # 2 * (1 + sqrt(2)) ≈ 4.828
+        (5, 2 * (1 + math.sqrt(5))),   # 2 * (1 + sqrt(5)) ≈ 6.472
+        (10, 2 * (1 + math.sqrt(10))), # 2 * (1 + sqrt(10)) ≈ 8.325
+    ])
+    def test_sqrt_curve_base_2(self, level, expected):
+        """Square root curve with base=2.0."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.0, price_curve="sqrt")
+        assert node.get_effective_price(level) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("curve_name", [
+        "unknown",
+        "invalid_curve",
+        "FLAT",  # Case-sensitive
+        "",
+        "cubic",
+    ])
+    def test_unknown_curve_fallback_to_base_price(self, curve_name):
+        """Unknown curve types should fall back to base price (flat behavior)."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=2.5, price_curve=curve_name)
+
+        for level in self.TEST_LEVELS:
+            assert node.get_effective_price(level) == pytest.approx(2.5), \
+                f"Unknown curve '{curve_name}' at level {level} should return base price"
+
+    @pytest.mark.parametrize("curve,level", [
+        ("flat", 0),
+        ("linear", 0),
+        ("quadratic", 0),
+        ("exponential", 0),
+        ("logarithmic", 0),
+        ("sqrt", 0),
+    ])
+    def test_level_zero_handling(self, curve, level):
+        """All curves should handle level 0 gracefully."""
+        node = TechNode(id='test', name='Test', max_levels=10, price=1.0, price_curve=curve)
+        result = node.get_effective_price(level)
+        assert result >= 0, f"Level 0 on {curve} should return non-negative price"
+        assert math.isfinite(result), f"Level 0 on {curve} should return finite price"
+
+    @pytest.mark.parametrize("curve", [
+        "flat", "linear", "quadratic", "exponential", "logarithmic", "sqrt"
+    ])
+    def test_price_monotonically_increasing_or_flat(self, curve):
+        """For all curves, price should be monotonically increasing (or flat) with level."""
+        node = TechNode(id='test', name='Test', max_levels=20, price=1.0, price_curve=curve)
+
+        prev_price = node.get_effective_price(1)
+        for level in range(2, 11):
+            curr_price = node.get_effective_price(level)
+            assert curr_price >= prev_price, \
+                f"{curve} curve price should be monotonically increasing: " \
+                f"level {level-1} ({prev_price}) vs level {level} ({curr_price})"
+            prev_price = curr_price

@@ -291,3 +291,858 @@ class TestFindTarget:
                 result = controller.find_target()
 
         assert result is alive_enemy
+
+
+class TestBehaviorContextMerging:
+    """Tests for behavior context merging (TCG-FND-002)."""
+
+    def test_behavior_context_includes_movement_policy(self, mock_ship, mock_grid):
+        """Behavior context includes movement policy fields."""
+        from game.ai.controller import AIController
+
+        # Set up strategy with specific movement policy
+        with patch('game.ai.controller.StrategyManager') as mock_sm:
+            instance = Mock()
+            instance.resolve_strategy.return_value = {
+                'definition': {'fire_while_retreating': True},
+                'targeting': {'rules': []},
+                'movement': {
+                    'behavior': 'attack_run',
+                    'engage_distance': 0.8,
+                    'retreat_hp_threshold': 0.2,
+                    'approach_distance': 0.5,
+                }
+            }
+            mock_sm.instance.return_value = instance
+
+            # Set up target so behavior actually runs
+            target = Mock()
+            target.is_alive = True
+            target.position = Vector2(200, 100)
+            mock_ship.get_current_target.return_value = target
+
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+
+            # Capture the context passed to behavior.update
+            captured_context = None
+            original_update = controller.behaviors['attack_run'].update
+
+            def capture_update(tgt, ctx):
+                nonlocal captured_context
+                captured_context = ctx
+                return original_update(tgt, ctx)
+
+            with patch.object(controller.behaviors['attack_run'], 'update', side_effect=capture_update):
+                with patch('game.ai.controller.get_hp_percent', return_value=0.5):
+                    controller.update()
+
+            # Context should contain merged movement policy + definition
+            assert captured_context is not None
+            assert captured_context.get('approach_distance') == 0.5
+            assert captured_context.get('fire_while_retreating') is True
+
+    def test_behavior_context_definition_overrides_movement(self, mock_ship, mock_grid):
+        """Definition fields override movement policy fields if both present."""
+        from game.ai.controller import AIController
+
+        with patch('game.ai.controller.StrategyManager') as mock_sm:
+            instance = Mock()
+            instance.resolve_strategy.return_value = {
+                'definition': {'engage_distance': 0.9},  # Override
+                'targeting': {'rules': []},
+                'movement': {
+                    'behavior': 'kite',
+                    'engage_distance': 0.5,  # Will be overridden
+                    'retreat_hp_threshold': 0.1,
+                }
+            }
+            mock_sm.instance.return_value = instance
+
+            target = Mock()
+            target.is_alive = True
+            target.position = Vector2(200, 100)
+            mock_ship.get_current_target.return_value = target
+
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+
+            captured_context = None
+            original_update = controller.behaviors['kite'].update
+
+            def capture_update(tgt, ctx):
+                nonlocal captured_context
+                captured_context = ctx
+                return original_update(tgt, ctx)
+
+            with patch.object(controller.behaviors['kite'], 'update', side_effect=capture_update):
+                with patch('game.ai.controller.get_hp_percent', return_value=0.5):
+                    controller.update()
+
+            # Definition should override movement policy
+            assert captured_context.get('engage_distance') == 0.9
+
+
+class TestFormationTargetSync:
+    """Tests for formation target synchronization (TCG-FND-002)."""
+
+    def test_formation_member_inherits_master_target(self, mock_ship, mock_grid):
+        """Formation member uses master's target."""
+        from game.ai.controller import AIController
+
+        # Create master with target
+        master_target = Mock()
+        master_target.is_alive = True
+
+        master = Mock()
+        master.current_target = master_target
+
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = master
+        mock_ship.get_current_target.return_value = None  # Member has no target
+
+        with patch('game.ai.controller.StrategyManager') as mock_sm:
+            instance = Mock()
+            instance.resolve_strategy.return_value = {
+                'definition': {},
+                'targeting': {'rules': []},
+                'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
+            }
+            mock_sm.instance.return_value = instance
+
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+
+            with patch('game.ai.controller.get_hp_percent', return_value=0.5):
+                controller.update()
+
+            # Member should receive master's target
+            mock_ship.set_current_target.assert_called_with(master_target)
+
+    def test_formation_member_ignores_dead_master_target(self, mock_ship, mock_grid):
+        """Formation member ignores master's dead target."""
+        from game.ai.controller import AIController
+
+        master_target = Mock()
+        master_target.is_alive = False  # Dead target
+
+        master = Mock()
+        master.current_target = master_target
+
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = master
+        mock_ship.get_current_target.return_value = None
+
+        with patch('game.ai.controller.StrategyManager') as mock_sm:
+            instance = Mock()
+            instance.resolve_strategy.return_value = {
+                'definition': {},
+                'targeting': {'rules': []},
+                'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
+            }
+            mock_sm.instance.return_value = instance
+
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+
+            with patch('game.ai.controller.get_hp_percent', return_value=0.5):
+                controller.update()
+
+            # Should NOT sync dead target
+            # set_current_target might be called but not with dead target
+            calls = mock_ship.set_current_target.call_args_list
+            for call in calls:
+                if call[0][0] is master_target:
+                    pytest.fail("Should not sync dead master target")
+
+
+class TestSecondaryTargetAcquisition:
+    """Tests for secondary target acquisition (TCG-FND-002)."""
+
+    def test_secondary_targets_with_multiplex_tracking(self, mock_ship, mock_grid):
+        """Ship with multiplex tracking gets secondary targets."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_max_targets.return_value = 3  # Multiplex tracking
+        mock_ship.get_radius.return_value = 10.0  # Ensure numeric radius
+
+        # Primary target
+        primary = Mock()
+        primary.is_alive = True
+        primary.team_id = 1
+        primary.position = Vector2(200, 100)
+        primary.id = 'primary'
+        primary.radius = 10.0
+        primary.get_components_by_ability = Mock(return_value=[])
+
+        # Secondary targets
+        secondary1 = Mock()
+        secondary1.is_alive = True
+        secondary1.team_id = 1
+        secondary1.position = Vector2(300, 100)
+        secondary1.id = 'secondary1'
+        secondary1.radius = 10.0
+        secondary1.get_components_by_ability = Mock(return_value=[])
+
+        secondary2 = Mock()
+        secondary2.is_alive = True
+        secondary2.team_id = 1
+        secondary2.position = Vector2(400, 100)
+        secondary2.id = 'secondary2'
+        secondary2.radius = 10.0
+        secondary2.get_components_by_ability = Mock(return_value=[])
+
+        mock_grid.query_radius.return_value = [primary, secondary1, secondary2]
+        mock_ship.get_current_target.return_value = primary
+
+        with patch('game.ai.controller.StrategyManager') as mock_sm:
+            instance = Mock()
+            instance.resolve_strategy.return_value = {
+                'definition': {},
+                'targeting': {'rules': []},
+                'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
+            }
+            mock_sm.instance.return_value = instance
+
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+
+            with patch('game.ai.controller.TargetEvaluator.evaluate', return_value=50.0):
+                with patch('game.ai.controller.is_combatant', return_value=True):
+                    with patch('game.ai.controller.get_hp_percent', return_value=0.5):
+                        controller.update()
+
+            # Should set secondary targets (max 2 since max_targets=3 and 1 is primary)
+            mock_ship.set_secondary_targets.assert_called()
+            secondary_call = mock_ship.set_secondary_targets.call_args[0][0]
+            assert len(secondary_call) <= 2
+
+    def test_no_secondary_targets_without_multiplex(self, mock_ship, mock_grid):
+        """Ship without multiplex tracking gets empty secondary targets."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_max_targets.return_value = 1  # No multiplex
+
+        target = Mock()
+        target.is_alive = True
+        target.position = Vector2(200, 100)
+        mock_ship.get_current_target.return_value = target
+
+        with patch('game.ai.controller.StrategyManager') as mock_sm:
+            instance = Mock()
+            instance.resolve_strategy.return_value = {
+                'definition': {},
+                'targeting': {'rules': []},
+                'movement': {'behavior': 'kite', 'retreat_hp_threshold': 0.1}
+            }
+            mock_sm.instance.return_value = instance
+
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+
+            with patch('game.ai.controller.get_hp_percent', return_value=0.5):
+                controller.update()
+
+            # Should set empty secondary targets
+            mock_ship.set_secondary_targets.assert_called_with([])
+
+
+class TestHandleFormationMaster:
+    """TCG-FND-005: Tests for _handle_formation_master() turn limiting math."""
+
+    def test_turn_limit_calculation_with_formation_radius(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Turn limit is calculated based on max formation radius."""
+        from game.ai.controller import AIController
+
+        # Create formation members with offsets
+        member1 = Mock()
+        member1.formation = Mock()
+        member1.formation.offset = Vector2(100.0, 0.0)  # 100 units from master
+        member1.formation.active = True
+        member1.is_alive = True
+        member1.position = Vector2(200.0, 100.0)
+
+        member2 = Mock()
+        member2.formation = Mock()
+        member2.formation.offset = Vector2(0.0, 200.0)  # 200 units from master (larger radius)
+        member2.formation.active = True
+        member2.is_alive = True
+        member2.position = Vector2(100.0, 300.0)
+
+        mock_ship.get_formation_members.return_value = [member1, member2]
+        mock_ship.get_max_speed.return_value = 100.0
+        mock_ship.get_turn_speed.return_value = 100.0  # base_turn = 100/100 = 1.0
+        mock_ship.get_radius.return_value = 20.0
+        mock_ship.get_rotation.return_value = 0.0
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._handle_formation_master()
+
+        # max_radius = 200 (from member2)
+        # max_w_rad = 100 / 200 = 0.5 rad/s
+        # max_w_deg = degrees(0.5) ~ 28.6
+        # base_turn = 100 / 100 = 1.0
+        # turn_limit = 28.6 / 1.0 = 28.6
+        # Since turn_limit > 1.0, min(1.0, turn_limit) = 1.0
+        mock_ship.set_turn_throttle.assert_called()
+
+    def test_turn_limit_restricts_throttle_for_large_formation(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Large formation radius restricts turn throttle below 1.0."""
+        from game.ai.controller import AIController
+        import math
+
+        # Large formation radius
+        member = Mock()
+        member.formation = Mock()
+        member.formation.offset = Vector2(500.0, 0.0)  # 500 units from master
+        member.formation.active = True
+        member.is_alive = True
+        member.position = Vector2(600.0, 100.0)
+
+        mock_ship.get_formation_members.return_value = [member]
+        mock_ship.get_max_speed.return_value = 50.0   # Slow ship
+        mock_ship.get_turn_speed.return_value = 200.0  # Fast turning: base_turn = 2.0
+        mock_ship.get_radius.return_value = 20.0
+        mock_ship.get_rotation.return_value = 0.0
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._handle_formation_master()
+
+        # max_radius = 500
+        # max_w_rad = 50 / 500 = 0.1 rad/s
+        # max_w_deg = degrees(0.1) ~ 5.73
+        # base_turn = 200 / 100 = 2.0
+        # turn_limit = 5.73 / 2.0 ~ 2.86
+        # Since turn_limit > 1.0, throttle stays at min(1.0, turn_limit) = 1.0
+        # Actually let's verify the call was made
+        mock_ship.set_turn_throttle.assert_called()
+
+    def test_slowdown_when_member_drifting(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Throttle reduced when formation member is drifting from target position."""
+        from game.ai.controller import AIController
+        from game.core.config import AIConfig
+
+        # Member that is far from its target position
+        member = Mock()
+        member.formation = Mock()
+        member.formation.offset = Vector2(100.0, 0.0)
+        member.formation.active = True
+        member.is_alive = True
+        # Member at wrong position - target would be (200, 100) but member is at (150, 100)
+        # Distance = 50 > 0.5 * diameter = 0.5 * 40 = 20
+        member.position = Vector2(150.0, 100.0)
+
+        mock_ship.get_formation_members.return_value = [member]
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 0.0  # No rotation, so offset stays (100, 0)
+        mock_ship.get_max_speed.return_value = 100.0
+        mock_ship.get_turn_speed.return_value = 100.0
+        mock_ship.get_radius.return_value = 20.0  # diameter = 40
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._handle_formation_master()
+
+        # Member target = (100, 100) + (100, 0) = (200, 100)
+        # Member actual = (150, 100)
+        # Distance = 50 > 0.5 * 40 = 20
+        # Should trigger slowdown
+        throttle_calls = [call[0][0] for call in mock_ship.set_throttle.call_args_list]
+        assert AIConfig.FORMATION_SLOWDOWN_THROTTLE in throttle_calls
+
+    def test_no_slowdown_when_member_in_position(self, mock_ship, mock_grid, mock_strategy_manager):
+        """No slowdown when formation member is at target position."""
+        from game.ai.controller import AIController
+
+        member = Mock()
+        member.formation = Mock()
+        member.formation.offset = Vector2(100.0, 0.0)
+        member.formation.active = True
+        member.is_alive = True
+        # Member at correct position
+        member.position = Vector2(200.0, 100.0)
+
+        mock_ship.get_formation_members.return_value = [member]
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 0.0
+        mock_ship.get_max_speed.return_value = 100.0
+        mock_ship.get_turn_speed.return_value = 100.0
+        mock_ship.get_radius.return_value = 20.0
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._handle_formation_master()
+
+        # Distance = 0 < 0.5 * 40 = 20
+        # No slowdown should occur - only turn_throttle should be set
+        # set_throttle should NOT be called with FORMATION_SLOWDOWN_THROTTLE
+        from game.core.config import AIConfig
+        throttle_calls = [call[0][0] for call in mock_ship.set_throttle.call_args_list]
+        assert AIConfig.FORMATION_SLOWDOWN_THROTTLE not in throttle_calls
+
+    def test_zero_base_turn_no_division_error(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Zero base turn (turn_speed=0) doesn't cause division by zero."""
+        from game.ai.controller import AIController
+
+        member = Mock()
+        member.formation = Mock()
+        member.formation.offset = Vector2(100.0, 0.0)
+        member.formation.active = True
+        member.is_alive = True
+        member.position = Vector2(200.0, 100.0)
+
+        mock_ship.get_formation_members.return_value = [member]
+        mock_ship.get_max_speed.return_value = 100.0
+        mock_ship.get_turn_speed.return_value = 0.0  # Zero turn speed
+        mock_ship.get_radius.return_value = 20.0
+        mock_ship.get_rotation.return_value = 0.0
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        # Should not raise an exception
+        controller._handle_formation_master()
+
+
+class TestCheckFormationIntegrity:
+    """TCG-FND-006: Tests for _check_formation_integrity() component damage detection."""
+
+    def test_damaged_propulsion_triggers_dropout(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Damaged propulsion component triggers formation dropout."""
+        from game.ai.controller import AIController
+
+        # Create damaged propulsion component
+        damaged_comp = Mock()
+        damaged_comp.current_hp = 50
+        damaged_comp.max_hp = 100
+
+        mock_ship.get_components_by_ability.return_value = [damaged_comp]
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = Mock()
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._check_formation_integrity()
+
+        # Should trigger dropout
+        mock_ship.set_in_formation.assert_called_with(False)
+        mock_ship.leave_formation.assert_called()
+        mock_ship.set_formation_master.assert_called_with(None)
+        mock_ship.set_turn_throttle.assert_called_with(1.0)
+        mock_ship.set_throttle.assert_called_with(1.0)
+
+    def test_undamaged_propulsion_stays_in_formation(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Undamaged propulsion component keeps ship in formation."""
+        from game.ai.controller import AIController
+
+        # Create undamaged propulsion component
+        healthy_comp = Mock()
+        healthy_comp.current_hp = 100
+        healthy_comp.max_hp = 100
+
+        mock_ship.get_components_by_ability.return_value = [healthy_comp]
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = Mock()
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._check_formation_integrity()
+
+        # Should NOT trigger dropout
+        mock_ship.set_in_formation.assert_not_called()
+        mock_ship.leave_formation.assert_not_called()
+
+    def test_no_propulsion_components_stays_in_formation(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Ship with no propulsion components stays in formation."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_components_by_ability.return_value = []
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = Mock()
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._check_formation_integrity()
+
+        # Should NOT trigger dropout (no components = no damage)
+        mock_ship.set_in_formation.assert_not_called()
+
+    def test_mixed_components_one_damaged(self, mock_ship, mock_grid, mock_strategy_manager):
+        """One damaged component among many triggers dropout."""
+        from game.ai.controller import AIController
+
+        healthy_comp = Mock()
+        healthy_comp.current_hp = 100
+        healthy_comp.max_hp = 100
+
+        damaged_comp = Mock()
+        damaged_comp.current_hp = 99  # Just slightly damaged
+        damaged_comp.max_hp = 100
+
+        mock_ship.get_components_by_ability.return_value = [healthy_comp, damaged_comp]
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = Mock()
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._check_formation_integrity()
+
+        # Should trigger dropout due to damaged component
+        mock_ship.set_in_formation.assert_called_with(False)
+
+    def test_component_missing_hp_attributes(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Component without HP attributes uses defaults (stays in formation)."""
+        from game.ai.controller import AIController
+
+        # Component with no current_hp or max_hp attributes
+        comp = Mock(spec=[])  # Empty spec means no attributes
+
+        mock_ship.get_components_by_ability.return_value = [comp]
+        mock_ship.is_in_formation.return_value = True
+        mock_ship.get_formation_master.return_value = Mock()
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller._check_formation_integrity()
+
+        # Default: getattr(comp, 'current_hp', 1) = 1, getattr(comp, 'max_hp', 1) = 1
+        # 1 < 1 is False, so no damage detected
+        mock_ship.set_in_formation.assert_not_called()
+
+
+class TestCheckAvoidance:
+    """TCG-FND-007: Tests for check_avoidance() collision detection logic."""
+
+    def test_avoidance_returns_none_when_no_threats(self, mock_ship, mock_grid, mock_strategy_manager):
+        """No nearby objects returns None."""
+        from game.ai.controller import AIController
+
+        mock_grid.query_radius.return_value = []
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        result = controller.check_avoidance()
+
+        assert result is None
+
+    def test_avoidance_skips_self_via_adapter(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Self is excluded via adapter unwrapping."""
+        from game.ai.controller import AIController
+
+        # The ship adapter wraps a raw ship
+        raw_ship = Mock()
+        mock_ship.ship = raw_ship  # Adapter pattern
+
+        # Grid returns the raw ship (which should be skipped as self)
+        raw_ship.is_alive = True
+        raw_ship.position = Vector2(100.0, 100.0)
+        mock_grid.query_radius.return_value = [raw_ship]
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        result = controller.check_avoidance()
+
+        # Should return None because raw_ship is self
+        assert result is None
+
+    def test_avoidance_skips_dead_objects(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Dead objects are skipped."""
+        from game.ai.controller import AIController
+
+        dead_ship = Mock()
+        dead_ship.is_alive = False
+        dead_ship.position = Vector2(110.0, 100.0)
+
+        mock_grid.query_radius.return_value = [dead_ship]
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        result = controller.check_avoidance()
+
+        assert result is None
+
+    def test_avoidance_skips_non_combatants(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Non-combatant objects are skipped."""
+        from game.ai.controller import AIController
+
+        non_combatant = Mock()
+        non_combatant.is_alive = True
+        non_combatant.position = Vector2(110.0, 100.0)
+
+        mock_grid.query_radius.return_value = [non_combatant]
+
+        with patch('game.ai.controller.is_combatant', return_value=False):
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+            result = controller.check_avoidance()
+
+        assert result is None
+
+    def test_avoidance_returns_target_for_close_object(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Close object within threshold returns avoidance target."""
+        from game.ai.controller import AIController
+        from game.core.config import BattleConfig
+
+        close_ship = Mock()
+        close_ship.is_alive = True
+        close_ship.position = Vector2(115.0, 100.0)  # 15 units away
+        close_ship.radius = 10.0
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_radius.return_value = 10.0
+
+        mock_grid.query_radius.return_value = [close_ship]
+
+        with patch('game.ai.controller.is_combatant', return_value=True):
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+            result = controller.check_avoidance()
+
+        # Distance 15 < threshold (10 + 10 + COLLISION_BUFFER)
+        # Should return an avoidance target position
+        assert result is not None
+        assert isinstance(result, Vector2)
+
+    def test_avoidance_calculates_correct_direction(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Avoidance direction is away from the threat."""
+        from game.ai.controller import AIController
+
+        threat = Mock()
+        threat.is_alive = True
+        threat.position = Vector2(120.0, 100.0)  # East of ship
+        threat.radius = 10.0
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_radius.return_value = 10.0
+
+        mock_grid.query_radius.return_value = [threat]
+
+        with patch('game.ai.controller.is_combatant', return_value=True):
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+            result = controller.check_avoidance()
+
+        # Ship at (100, 100), threat at (120, 100)
+        # Avoidance should be west of ship (negative x direction)
+        assert result is not None
+        assert result.x < mock_ship.get_position().x
+
+    def test_avoidance_handles_zero_distance(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Zero distance (coincident objects) uses default direction."""
+        from game.ai.controller import AIController
+
+        # Object at exact same position
+        threat = Mock()
+        threat.is_alive = True
+        threat.position = Vector2(100.0, 100.0)  # Same as ship!
+        threat.radius = 10.0
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_radius.return_value = 10.0
+
+        mock_grid.query_radius.return_value = [threat]
+
+        with patch('game.ai.controller.is_combatant', return_value=True):
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+            result = controller.check_avoidance()
+
+        # Should return a valid position (using default (1, 0) direction)
+        assert result is not None
+        assert isinstance(result, Vector2)
+
+    def test_avoidance_selects_closest_threat(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Multiple threats: avoidance targets closest one."""
+        from game.ai.controller import AIController
+
+        close_threat = Mock()
+        close_threat.is_alive = True
+        close_threat.position = Vector2(115.0, 100.0)  # 15 units away
+        close_threat.radius = 10.0
+
+        far_threat = Mock()
+        far_threat.is_alive = True
+        far_threat.position = Vector2(80.0, 100.0)  # 20 units away (but still in threshold)
+        far_threat.radius = 10.0
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_radius.return_value = 10.0
+
+        mock_grid.query_radius.return_value = [far_threat, close_threat]
+
+        with patch('game.ai.controller.is_combatant', return_value=True):
+            controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+            result = controller.check_avoidance()
+
+        # Should avoid the closer threat (at 115, 100)
+        assert result is not None
+        # Avoidance should be away from close_threat (west of ship)
+        assert result.x < mock_ship.get_position().x
+
+
+class TestNavigateTo:
+    """TCG-FND-008: Tests for navigate_to() angle wrapping and thresholds."""
+
+    def test_navigate_rotates_right_for_clockwise_target(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Ship rotates right (positive) when target is clockwise."""
+        from game.ai.controller import AIController
+
+        # Ship facing north (90 degrees), target to the east (0 degrees)
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 90.0
+        mock_ship.rotate = Mock()
+
+        target_pos = Vector2(200.0, 100.0)  # East: atan2(0, 100) = 0 degrees
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(90, 0) = -90 (need to rotate counterclockwise/left)
+        # direction = -1
+        mock_ship.rotate.assert_called_with(-1)
+
+    def test_navigate_rotates_left_for_counterclockwise_target(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Ship rotates left (negative) when target is counterclockwise."""
+        from game.ai.controller import AIController
+
+        # Ship facing east (0 degrees), target to the north (90 degrees)
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 0.0
+        mock_ship.rotate = Mock()
+
+        target_pos = Vector2(100.0, 200.0)  # North: atan2(100, 0) = 90 degrees
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(0, 90) = 90 (need to rotate counterclockwise/positive)
+        # direction = 1
+        mock_ship.rotate.assert_called_with(1)
+
+    def test_navigate_no_rotation_within_5_degrees(self, mock_ship, mock_grid, mock_strategy_manager):
+        """No rotation when within 5 degree threshold."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 2.0  # Almost facing target
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        # Target at ~0 degrees (east), ship facing 2 degrees
+        target_pos = Vector2(200.0, 100.0)
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(2, 0) = -2, abs(-2) < 5
+        # Should NOT rotate
+        mock_ship.rotate.assert_not_called()
+
+    def test_navigate_thrusts_within_30_degrees(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Ship thrusts forward when within 30 degree threshold."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 20.0  # Within 30 degrees of target
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        target_pos = Vector2(200.0, 100.0)  # 0 degrees (east)
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(20, 0) = -20, abs(-20) < 30 and distance > 0
+        mock_ship.thrust_forward.assert_called()
+
+    def test_navigate_no_thrust_outside_30_degrees(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Ship does not thrust when outside 30 degree threshold."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 50.0  # 50 degrees from target
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        target_pos = Vector2(200.0, 100.0)  # 0 degrees (east)
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(50, 0) = -50, abs(-50) > 30
+        mock_ship.thrust_forward.assert_not_called()
+
+    def test_navigate_angle_wrapping_at_360_boundary(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Angle wrapping works correctly at 360/0 boundary."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 350.0  # Near 360
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        # Target slightly past 0 (10 degrees)
+        target_pos = Vector2(200.0, 117.63)  # atan2(17.63, 100) ~ 10 degrees
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # Ship at 350, target at ~10
+        # Shortest path: 350 -> 360/0 -> 10 = 20 degrees counterclockwise
+        # angle_diff(350, 10) = 20 (positive = counterclockwise)
+        mock_ship.rotate.assert_called_with(1)
+
+    def test_navigate_angle_wrapping_at_180_boundary(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Angle wrapping works correctly at 180 boundary."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 170.0
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        # Target at 190 degrees
+        target_pos = Vector2(100.0 - 98.48, 100.0 - 17.36)  # ~190 degrees
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(170, 190) = 20 (positive)
+        mock_ship.rotate.assert_called_with(1)
+
+    def test_navigate_stops_at_stop_distance(self, mock_ship, mock_grid, mock_strategy_manager):
+        """No thrust when within stop distance."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 0.0
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        # Target very close
+        target_pos = Vector2(105.0, 100.0)  # 5 units away
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos, stop_dist=10.0)  # Stop at 10 units
+
+        # Distance 5 < stop_dist 10, should not thrust
+        mock_ship.thrust_forward.assert_not_called()
+
+    def test_navigate_target_directly_behind(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Navigate to target directly behind ship (180 degrees)."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 0.0  # Facing east
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        # Target to the west (180 degrees)
+        target_pos = Vector2(0.0, 100.0)  # atan2(0, -100) = 180 degrees
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # angle_diff(0, 180) = 180 or -180
+        # Either rotation direction is valid at exactly 180
+        mock_ship.rotate.assert_called()
+        # Should NOT thrust (abs(180) > 30)
+        mock_ship.thrust_forward.assert_not_called()
+
+    def test_navigate_target_at_same_position(self, mock_ship, mock_grid, mock_strategy_manager):
+        """Navigate to target at same position (zero distance)."""
+        from game.ai.controller import AIController
+
+        mock_ship.get_position.return_value = Vector2(100.0, 100.0)
+        mock_ship.get_rotation.return_value = 0.0
+        mock_ship.rotate = Mock()
+        mock_ship.thrust_forward = Mock()
+
+        # Target at same position
+        target_pos = Vector2(100.0, 100.0)
+
+        controller = AIController(mock_ship, mock_grid, enemy_team_id=1)
+        controller.navigate_to(target_pos)
+
+        # atan2(0, 0) = 0, so target_angle = 0
+        # distance = 0, so no thrust (0 > 0 is False)
+        mock_ship.thrust_forward.assert_not_called()

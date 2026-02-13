@@ -149,6 +149,229 @@ class TestBeamRaycastingEdgeCases:
         target.combat_engine.take_damage.assert_not_called()
 
 
+class TestBeamRaycastingGeometry:
+    """Tests for ray-sphere intersection geometry (TCG-FND-003).
+
+    These tests verify the actual quadratic formula calculations rather than
+    mocking the hit chance. They validate that hit_dist is geometrically correct.
+    """
+
+    def test_ray_sphere_intersection_direct_hit(self, collision_system):
+        """Verify ray-sphere intersection math for direct hit.
+
+        Scenario: Beam origin at (0,0), direction (1,0), target at (100, 0) with radius 20.
+        Expected hit distance: 100 - 20 = 80 (entry point of sphere).
+        """
+        target = MagicMock()
+        target.position = Vector2(100, 0)
+        target.radius = 20
+        target.is_alive = True
+        target.total_defense_score = 0.0
+
+        # Create ability that records what hit_dist it receives
+        captured_hit_dist = []
+
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+
+        def capture_damage(dist):
+            captured_hit_dist.append(dist)
+            return 50
+
+        mock_ability.get_damage.side_effect = capture_damage
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        source_ship = MagicMock()
+        source_ship.get_total_sensor_score.return_value = 0.0
+
+        recent_beams = []
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),  # Unit vector pointing right
+            'range': 300,
+            'target': target,
+            'component': mock_component,
+            'source': source_ship
+        }
+
+        with patch('random.random', return_value=0.0):  # Guarantee hit
+            collision_system.process_beam_attack(attack, recent_beams)
+
+        # Verify hit_dist passed to get_damage is geometrically correct
+        # Entry point of sphere centered at (100,0) with radius 20 is at x=80
+        assert len(captured_hit_dist) == 1
+        assert captured_hit_dist[0] == pytest.approx(80.0, abs=0.1)
+
+        # Verify beam end point is at hit location
+        assert recent_beams[0]['end'].x == pytest.approx(80.0, abs=0.1)
+        assert recent_beams[0]['end'].y == pytest.approx(0.0, abs=0.1)
+
+    def test_ray_sphere_intersection_offset_target(self, collision_system):
+        """Verify ray-sphere intersection with offset target.
+
+        Scenario: Beam origin at (0,0), direction (1,0), target at (100, 10) with radius 20.
+        The ray passes below the target center but within the sphere.
+        """
+        import math
+
+        target = MagicMock()
+        target.position = Vector2(100, 10)  # Offset 10 units up
+        target.radius = 20
+        target.is_alive = True
+        target.total_defense_score = 0.0
+
+        captured_hit_dist = []
+
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+
+        def capture_damage(dist):
+            captured_hit_dist.append(dist)
+            return 50
+
+        mock_ability.get_damage.side_effect = capture_damage
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        source_ship = MagicMock()
+        source_ship.get_total_sensor_score.return_value = 0.0
+
+        recent_beams = []
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),
+            'range': 300,
+            'target': target,
+            'component': mock_component,
+            'source': source_ship
+        }
+
+        with patch('random.random', return_value=0.0):
+            collision_system.process_beam_attack(attack, recent_beams)
+
+        # Verify hit occurred and distance is reasonable
+        # Ray at y=0 intersects sphere at (100, 10) with r=20
+        # Using Pythagorean theorem: intersection at x = 100 - sqrt(20^2 - 10^2) = 100 - sqrt(300) ≈ 82.68
+        expected_dist = 100 - math.sqrt(400 - 100)
+        assert len(captured_hit_dist) == 1
+        assert captured_hit_dist[0] == pytest.approx(expected_dist, abs=0.5)
+
+    def test_ray_sphere_miss_out_of_range(self, collision_system):
+        """Verify ray misses when target is beyond beam range."""
+        target = MagicMock()
+        target.position = Vector2(500, 0)  # Target at 500 units
+        target.radius = 20
+        target.is_alive = True
+
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+        mock_ability.get_damage.return_value = 50
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        recent_beams = []
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),
+            'range': 300,  # Range is only 300
+            'target': target,
+            'component': mock_component
+        }
+
+        collision_system.process_beam_attack(attack, recent_beams)
+
+        # Should miss - entry point (480) is beyond range (300)
+        target.combat_engine.take_damage.assert_not_called()
+
+        # Beam should extend to full range
+        assert recent_beams[0]['end'].x == pytest.approx(300, abs=0.1)
+
+    def test_ray_sphere_miss_perpendicular(self, collision_system):
+        """Verify ray misses when it doesn't intersect sphere."""
+        target = MagicMock()
+        target.position = Vector2(100, 50)  # Target 50 units above ray path
+        target.radius = 20  # Radius only 20, so ray passes below
+        target.is_alive = True
+
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+        mock_ability.get_damage.return_value = 50
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        recent_beams = []
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),  # Ray goes right at y=0
+            'range': 300,
+            'target': target,
+            'component': mock_component
+        }
+
+        collision_system.process_beam_attack(attack, recent_beams)
+
+        # Ray at y=0 misses sphere at (100, 50) with r=20
+        # Closest approach is 50 units, which is > 20 radius
+        target.combat_engine.take_damage.assert_not_called()
+
+    def test_damage_pipeline_end_to_end(self, collision_system):
+        """Verify full damage pipeline: geometry -> hit chance -> damage.
+
+        Tests that get_damage receives correct distance, hit chance uses
+        correct attack/defense scores, and damage is applied correctly.
+        """
+        target = MagicMock()
+        target.position = Vector2(150, 0)
+        target.radius = 30
+        target.is_alive = True
+        target.total_defense_score = 5.0  # Target has defense
+
+        # Track all method calls
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 0.8
+
+        # Verify get_damage called with geometric hit distance
+        def verify_damage_call(dist):
+            # Entry point: 150 - 30 = 120
+            assert dist == pytest.approx(120.0, abs=0.5)
+            return 75
+
+        mock_ability.get_damage.side_effect = verify_damage_call
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        source_ship = MagicMock()
+        source_ship.get_total_sensor_score.return_value = 10.0  # Attacker has sensors
+
+        recent_beams = []
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),
+            'range': 300,
+            'target': target,
+            'component': mock_component,
+            'source': source_ship
+        }
+
+        with patch('random.random', return_value=0.5):  # 0.5 < 0.8 = hit
+            collision_system.process_beam_attack(attack, recent_beams)
+
+        # Verify hit chance was called with correct scores
+        mock_ability.calculate_hit_chance.assert_called_once()
+        call_args = mock_ability.calculate_hit_chance.call_args
+        assert call_args[0][0] == pytest.approx(120.0, abs=0.5)  # hit_dist
+        assert call_args[0][1] == 10.0  # attack_score
+        assert call_args[0][2] == 5.0   # defense_score
+
+        # Verify damage was applied
+        target.combat_engine.take_damage.assert_called_once_with(75)
+
 
 # =============================================================================
 # Test: Ramming Edge Cases
@@ -325,3 +548,144 @@ class TestRammingEdgeCases:
 
         # Rammer (50) < Target (default 100), so rammer destroyed
         ship.combat_engine.take_damage.assert_called()
+
+
+# =============================================================================
+# TCG-FND-020: Integration Tests with Real Ship Objects
+# =============================================================================
+
+
+class TestCollisionIntegrationWithRealShip:
+    """Integration tests using real Ship objects instead of mocks.
+
+    TCG-FND-020: Add integration tests that use real Ship instances
+    to verify collision system works with actual game entities.
+    """
+
+    def test_beam_attack_hits_real_ship(self, collision_system, fresh_registries):
+        """Beam weapon attack against a real Ship object.
+
+        Verifies that the collision system correctly processes beam attacks
+        against actual Ship instances with real combat engines.
+        """
+        from game.simulation.entities.ship import Ship
+        from game.simulation.components.component import create_component
+        from game.core.constants import LayerType
+        from pygame.math import Vector2
+        from unittest.mock import patch
+
+        # Create a real ship with components
+        target_ship = Ship(
+            name="TargetShip",
+            x=100, y=0,
+            color=(255, 0, 0),
+            team_id=1,
+            registries=fresh_registries
+        )
+
+        # Add crew support so components are active
+        crew = create_component('crew_quarters', registries=fresh_registries)
+        life = create_component('life_support', registries=fresh_registries)
+        if crew:
+            target_ship.add_component(crew, LayerType.CORE)
+        if life:
+            target_ship.add_component(life, LayerType.CORE)
+
+        # Add armor so the ship has HP to damage
+        armor = create_component('armor_plate', registries=fresh_registries)
+        if armor:
+            target_ship.add_component(armor, LayerType.ARMOR)
+
+        target_ship.recalculate_stats()
+        initial_hp = target_ship.hp
+
+        # Create mock beam ability
+        from unittest.mock import MagicMock
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+        mock_ability.get_damage.return_value = 50
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        recent_beams = []
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),
+            'range': 300,
+            'target': target_ship,
+            'component': mock_component,
+            'source': None
+        }
+
+        with patch('random.random', return_value=0.0):  # Guarantee hit
+            collision_system.process_beam_attack(attack, recent_beams)
+
+        # Verify damage was applied to the real ship
+        assert len(recent_beams) == 1
+        assert target_ship.hp < initial_hp, "Ship should have taken damage"
+
+    def test_ramming_collision_with_real_ships(self, collision_system, fresh_registries):
+        """Ramming collision between two real Ship objects.
+
+        Verifies that the collision system correctly handles ramming
+        between actual Ship instances with real HP calculations.
+        """
+        from game.simulation.entities.ship import Ship
+        from game.simulation.components.component import create_component
+        from game.core.constants import LayerType
+        from pygame.math import Vector2
+
+        # Create rammer ship
+        rammer = Ship(
+            name="Rammer",
+            x=0, y=0,
+            color=(255, 0, 0),
+            team_id=0,
+            registries=fresh_registries
+        )
+        rammer.ai_strategy = 'kamikaze'
+
+        # Create target ship
+        target = Ship(
+            name="Target",
+            x=15, y=0,  # Within collision range
+            color=(0, 255, 0),
+            team_id=1,
+            registries=fresh_registries
+        )
+
+        # Add components to both ships for HP
+        for ship in [rammer, target]:
+            crew = create_component('crew_quarters', registries=fresh_registries)
+            life = create_component('life_support', registries=fresh_registries)
+            armor = create_component('armor_plate', registries=fresh_registries)
+            if crew:
+                ship.add_component(crew, LayerType.CORE)
+            if life:
+                ship.add_component(life, LayerType.CORE)
+            if armor:
+                ship.add_component(armor, LayerType.ARMOR)
+            ship.recalculate_stats()
+
+        # Set up ramming target
+        rammer.current_target = target
+
+        # Record initial HP
+        rammer_initial_hp = rammer.hp
+        target_initial_hp = target.hp
+
+        # Process ramming
+        collision_system.process_ramming([rammer, target])
+
+        # Verify damage was applied
+        # At least one ship should have taken damage if collision occurred
+        # Note: Collision only occurs if distance < collision_radius
+        distance = rammer.position.distance_to(target.position)
+        collision_radius = rammer.radius + target.radius
+
+        if distance < collision_radius:
+            # Collision should have occurred - at least one ship damaged
+            damage_applied = (rammer.hp < rammer_initial_hp or
+                              target.hp < target_initial_hp)
+            assert damage_applied, "Ramming collision should apply damage"
