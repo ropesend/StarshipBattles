@@ -8,21 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-136 Phase 1 complete
-**Current Status:** Phase 1 complete, move to Phase 2
+**Last Completed:** PROJ-136 Phase 2 complete
+**Current Status:** Phase 2 complete, move to Phase 3
 **Current Project:** PROJ-136
-**Current Phase:** Phase 2
+**Current Phase:** Phase 3
 **Test Status:** 11904 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-136 Phase 1 COMPLETE:
-  - 4 findings, all accepted-as-is (coverage already exists):
-    - TCG-FND-001: PhysicsBody - tests in test_physics.py, test_physics_edge_cases.py
-    - TCG-FND-002: Research UI - tests in research_controls/, research_scene/, test_research_renderer.py
-    - TCG-FND-006: TargetEvaluator - tests in target_evaluator/, test_target_evaluator_edge_cases.py
-    - TCG-FND-007: AIControllerFactory - tests in test_ai_factory.py (error path line 55-66)
-- Next: Start PROJ-136 Phase 2 (Strategy)
+- PROJ-136 Phase 2 COMPLETE:
+  - 2 findings, all accepted-as-is (coverage already exists):
+    - TCG-STR-019: Planet Population Model - tests in test_population_model.py (17 tests)
+    - TCG-STR-020: FleetDTO Build Validation - tests in test_fleet_dto_build.py & test_fleet_dto.py (30 tests)
+- Next: Start PROJ-136 Phase 3 (UI-Framework)
 
 ---
 
@@ -103,6 +101,7 @@
 | 2026-02-13 | PROJ-135 | Phase 2 | Complete | 11904 passed | pending | 17 tasks accepted as-is (coverage exists) |
 | 2026-02-13 | PROJ-135 | Audit 1 | PASSED | 11904 passed | pending | All 20 findings verified, project complete |
 | 2026-02-13 | PROJ-136 | Phase 1 | Complete | 11904 passed | pending | 4 accepted as-is (coverage exists) |
+| 2026-02-13 | PROJ-136 | Phase 2 | Complete | 11904 passed | pending | 2 accepted as-is (coverage exists) |
 
 ---
 
