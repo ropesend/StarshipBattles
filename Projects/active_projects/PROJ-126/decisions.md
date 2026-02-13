@@ -14,3 +14,14 @@
 | 2026-02-13 | ADR-SIM-005: ACCEPTABLE | Documented late import in Ship.add_component() breaks circular dependency with services/__init__.py. Standard pattern with clear documentation. |
 | 2026-02-13 | ADR-SIM-006: ACCEPTABLE | Late imports in ship_stat_querier.py, ship_stats.py documented as "INTENTIONAL LATE IMPORT" with architecture doc reference. Standard pattern. |
 | 2026-02-13 | ADR-SIM-007: INFO ONLY | Heavy use of TYPE_CHECKING is standard Python practice. Severity "Info", Effort "N" - no action required. |
+| 2026-02-13 | ADR-UI1-001: ACCEPTABLE | test_framework is intentionally dual-purpose (pytest + Combat Lab). Docstrings explicitly state "bridges pytest and Combat Lab". Not a layer violation. |
+| 2026-02-13 | ADR-UI1-002: ACCEPTABLE | Defensive import with try/except in battle_screen.py:455-460. Already DOWNGRADED to MAJOR in validation. |
+| 2026-02-13 | ADR-UI1-003, 004, 006: DEFER | God Class findings for TestLabScreen (1908), StrategyScreen (811), BuildQueueScreen (1098) require separate refactoring projects. Beyond Phase 4 scope. |
+| 2026-02-13 | ADR-UI1-005: ALREADY RESOLVED | builder/main.py deleted in PROJ-121 Phase 4 (git: 1ac7c81b - Legacy UI eradication). |
+| 2026-02-13 | ADR-UI1-007: DEFER | Late imports for circular deps require architecture changes. |
+| 2026-02-13 | ADR-UI1-008, 009: DEFER | Private callback methods (_on_*_closed) are passed to window constructors - public API usage. Renaming requires coordinated change across multiple files. |
+| 2026-02-13 | ADR-UI1-010: DEFER | ViewModel state mutation requires interface design. |
+| 2026-02-13 | ADR-UI1-011: INFO ONLY | TYPE_CHECKING imports are standard Python practice. MINOR severity. |
+| 2026-02-13 | ADR-UI1-012, 013: ACCEPTABLE | Performance optimization patterns (_temp_* attrs) for cached values. Documented and intentional. |
+| 2026-02-13 | ADR-UI1-014, 015: ALREADY RESOLVED | _ship_has_ability and _extract_modifiers no longer exist in codebase. |
+| 2026-02-13 | ADR-UI1-016, 017, 018: INFO ONLY | Severity INFO findings - no action required per validation. |
