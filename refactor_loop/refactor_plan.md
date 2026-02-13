@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-117 Phase 4 - UI-Screens
-**Current Status:** PROJ-117 All Phases Complete - Ready for Audit
-**Current Project:** PROJ-117
-**Current Phase:** Audit
+**Last Completed:** PROJ-117 Audit Cycle 1 - PASSED
+**Current Status:** PROJ-117 Audit Complete - Awaiting User Verification
+**Current Project:** PROJ-115 (next)
+**Current Phase:** Ready to start
 **Test Status:** 9754 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-117 Phase 4 Complete (16 UI-Screens findings):
-  - 5 fixes: Removed legacy aliases from race_flag_gallery.py, removed deprecated handle_click/handle_scroll from battle_screen.py, removed legacy shim skip list from detail_panel.py, removed stale comment from battle_screen.py, removed duplicate assignment from left_panel.py
-  - 5 false positives: Files don't exist (new_game_setup.py, stats_panel.py), incorrect paths (workshop_event_handlers.py), no hasattr guards found for _facade, legacy BuilderScreen intentionally kept
-  - 6 acceptable: Tuple format used in builder, dual keybinds intentional UX, defensive hasattr acceptable, rendering optimization acceptable, internal deprecated properties valid, game parameter required for test_lab
-- Next: Run PROJ-117 Audit per Protocol 04
+- PROJ-117 Audit Cycle 1 PASSED:
+  - Phase 1: 7 fixes verified (StrategyMetadataService singleton, AIController attrs, TypeGuard shim, etc.)
+  - Phase 2: 12 fixes verified (ABILITY_CLASS_MAP deleted, resource imports fixed, missile enums, etc.)
+  - Phase 3: 3 fixes verified (widgets.py deleted, atlas fallback deleted, hasattr removed)
+  - Phase 4: 5 fixes verified (legacy aliases, deprecated methods, shim skip list, etc.)
+  - Minor finding: ILocatable/INamed/IOwnable protocols unused but harmless (documented, not blocking)
+- Next: Start PROJ-115 Duplication Elimination
 
 ---
 
@@ -220,10 +222,10 @@
 
 ---
 
-- [/] **PROJ-117: Legacy Dead Code Eradication**
-  - **Phases:** 4 | **Status:** Phase 2 Complete | **Priority:** Medium
+- [x] **PROJ-117: Legacy Dead Code Eradication**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-117/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-117/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -400,6 +402,8 @@
 | 2026-02-12 | PROJ-117 | Phase 1 | Complete | 9773 passed | pending | 14 findings: 7 fixes, 7 false positives. StrategyMetadataService→SingletonMeta, deleted dead AIController attrs/wrappers, removed TypeGuard shim |
 | 2026-02-12 | PROJ-117 | Phase 2 | Complete | 9773 passed | pending | 23 findings: 12 fixes, 2 already fixed, 9 deferred. Deleted ABILITY_CLASS_MAP, migrated resource imports (11 files), fixed missile type checks (AttackType enum), removed dead code branches |
 | 2026-02-12 | PROJ-117 | Phase 3 | Complete | 9754 passed | pending | 12 findings: 3 fixes (widgets.py deleted, atlas fallback deleted, hasattr removed), 4 false positives, 5 acceptable |
+| 2026-02-12 | PROJ-117 | Phase 4 | Complete | 9754 passed | pending | 16 findings: 5 fixes, 5 false positives, 6 acceptable |
+| 2026-02-12 | PROJ-117 | Audit 1 | PASSED | 9754 passed | pending | All 4 phases verified; minor finding documented (unused protocols) |
 
 ---
 

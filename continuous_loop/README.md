@@ -1,0 +1,143 @@
+# Continuous Improvement Loop
+
+An autonomous system that continuously reviews and improves the Starship Battles codebase by chaining the **sweep-all** code review pipeline with the **refactor loop** project execution engine.
+
+## How It Works
+
+```
+┌─── Cycle N ──────────────────────────────────────────┐
+│                                                      │
+│  1. Create branch: sweep-cycle-N                     │
+│  2. Run sweep-all (25 agents, 5 review categories)   │
+│  3. Auto-approve ALL projects                        │
+│  4. Build cycle_plan.md                              │
+│  5. Execute projects (one phase per CLI session)     │
+│  6. Merge branch to main                             │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+         │
+         └── Repeat with Cycle N+1
+```
+
+Each cycle creates a git branch, performs a full codebase review, creates projects from findings, executes them all, then merges to main. The next sweep sees the improved code and finds new issues.
+
+## Quick Start
+
+```powershell
+cd "C:\Dev\Starship Battles"
+.\continuous_loop\continuous_loop.ps1
+```
+
+That's it. The loop runs until one of the stopping conditions is met.
+
+## Stopping Conditions
+
+| Condition | Default | Effect |
+|-----------|---------|--------|
+| Max cycles | 10 | Graceful stop |
+| Max runtime | 48 hours | Graceful stop |
+| Diminishing returns | < 20 findings | Graceful stop |
+| Zero projects | Sweep creates 0 projects | Graceful stop |
+| Consecutive failures | 3 in a row | Circuit breaker |
+| Merge conflict | Git merge fails | Stop, manual fix needed |
+| Manual stop | Ctrl+C | Immediate |
+
+## Configuration
+
+Edit the top of `continuous_loop.ps1` to change defaults:
+
+```powershell
+$MAX_CYCLES = 10                  # Max sweep-execute cycles
+$MAX_RUNTIME_HOURS = 48           # Max total runtime
+$RATE_LIMIT_SLEEP_MINUTES = 15    # Sleep on rate limit
+$MIN_FINDINGS_THRESHOLD = 20      # Stop if fewer findings
+$MAX_CONSECUTIVE_FAILURES = 3     # Circuit breaker threshold
+```
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `continuous_loop.ps1` | Outer loop orchestrator (manages cycles, branches) |
+| `inner_loop.ps1` | Inner loop (executes projects, one phase per session) |
+| `SWEEP_WORKER.md` | System prompt for sweep CLI sessions |
+| `CYCLE_WORKER.md` | System prompt for project execution CLI sessions |
+| `populate_cycle_plan.py` | Builds cycle_plan.md from newly-created projects |
+| `cycle_plan.md` | Per-cycle project execution plan (auto-generated) |
+| `cycle_state.json` | Persistent state across cycles (auto-generated) |
+
+## Architecture
+
+### Two-Layer Design
+
+**Outer loop** (`continuous_loop.ps1`):
+- Manages the cycle lifecycle
+- Creates/merges git branches
+- Runs sweep via Claude CLI
+- Handles rate limits and crash recovery
+
+**Inner loop** (`inner_loop.ps1`):
+- Spawns Claude CLI sessions (one per project phase)
+- Each session reads `cycle_plan.md`, executes one phase, commits, exits
+- Loops until all cycle projects are complete
+
+### Relationship to Existing Systems
+
+This system is **completely independent** of:
+- `loop_runner.ps1` (still works for manual project execution)
+- `refactor_loop/refactor_plan.md` (not touched or read)
+- `refactor_loop/WORKER.md` (not used)
+
+It **reuses** these existing components:
+- All `Reviews/scripts/*.py` (sweep pipeline scripts)
+- All `Reviews/Prompts/*.txt` (review agent prompts)
+- All `Projects/scripts/*.py` (project management scripts)
+- `Projects/active_projects/` (projects are created here)
+- `Projects/protocols/*.md` (worker agents follow these)
+
+## Git Branching
+
+Each cycle creates a branch (`sweep-cycle-N`) and merges to main when done:
+
+```
+main ──○──────────○─────────────○──
+       │          ↑             ↑
+       └─ cycle-1 ┘             │
+                    └── cycle-2 ┘
+```
+
+To revert an entire cycle: `git revert -m 1 <merge-commit>`
+
+## Rate Limit Handling
+
+When Claude API rate limits are detected:
+1. The current operation is paused
+2. The system sleeps for 15 minutes (configurable)
+3. Execution resumes exactly where it left off
+
+Detection works at both levels:
+- **During sweep**: Outer loop retries the sweep session
+- **During project execution**: Inner loop exits with code 2, outer loop sleeps and restarts
+
+## Crash Recovery
+
+If the loop is interrupted (Ctrl+C, power loss, etc.), restart it:
+
+```powershell
+.\continuous_loop\continuous_loop.ps1
+```
+
+It reads `cycle_state.json` and resumes from the last known state:
+- If sweeping: Re-runs the sweep
+- If executing: Re-runs inner loop (picks up from cycle_plan.md)
+- If merging: May need manual git cleanup
+
+## Monitoring
+
+Watch `cycle_state.json` for real-time status:
+
+```powershell
+Get-Content continuous_loop/cycle_state.json | ConvertFrom-Json | Format-List
+```
+
+Or watch the PowerShell terminal output - all operations are logged with timestamps.
