@@ -315,3 +315,171 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-88: God Class Decomposition - Simulation Core Tier**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-88/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-88/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-90/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-90/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
+  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-91/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-91/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-89: God Class Decomposition - Remaining UI Tier**
+  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-89/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-89/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-92: Clean Up Residual Circular Dependency Artifacts**
+  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-92/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-92/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-93: Update Protocol Layer Type Annotations**
+  - **Phases:** 1 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-93/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-93/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-94: Resource API Cleanup and Protocol Wiring**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-94/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-94/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-95: Resource API Consistency and Clean-Sheet Conventions**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-95/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-95/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** PROJ-94
+
+---
+
+- [x] **PROJ-96: Species Setup Ships View Layout Redesign**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-96/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-96/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-97: Per-Resource Production Rate Limits for Build Queues**
+  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-97/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-97/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-98: Empire Build Yards Screen Enhancement**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-98/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-98/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-99: Empire Panel Window**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-99/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-99/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-100: Cargo Transfer Orders Overhaul**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-100/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-100/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-101: Fleet Report Screen Enhancements**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-101/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-101/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-102: Strategic Superweapons and Special Orders**
+  - **Phases:** 9 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-102/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-102/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-106: Architecture Layer Violations**
+  - **Phases:** 7 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-106/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-106/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-107: Consistency & API Standardization**
+  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-104: Cyclomatic Complexity Reduction - Critical Functions**
+  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-104/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-104/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-108: Duplication Elimination**
+  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-108/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-108/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-109: Legacy Cleanup**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-109/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-109/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-110: Test Coverage - Core Systems**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-110/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-110/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---

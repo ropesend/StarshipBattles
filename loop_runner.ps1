@@ -96,6 +96,13 @@ while ($iteration -lt $MAX_ITERATIONS) {
         if ($claudeExitCode -eq 0) {
             $success = $true
         }
+        elseif ($claudeOutput -match "prompt is too long" -or $claudeOutput -match "Conversation too long") {
+            # Context window overflow — not retryable, needs manual intervention
+            Write-ErrorLog "Context window overflow detected. The conversation exceeded the API token limit."
+            Write-Warning "Likely cause: refactor_loop/refactor_plan.md execution log is too large."
+            Write-Warning "Fix: Trim the execution log (archive old rows) and restart."
+            exit 1
+        }
         elseif ($claudeOutput -match "EPERM" -or $claudeOutput -match "operation not permitted" -or $claudeOutput -match "symlink") {
             $retryCount++
             Write-Warning "EPERM/symlink error detected (Windows file permission issue). Cleaning up..."

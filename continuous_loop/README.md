@@ -67,6 +67,8 @@ $MAX_CONSECUTIVE_FAILURES = 3     # Circuit breaker threshold
 | `populate_cycle_plan.py` | Builds cycle_plan.md from newly-created projects |
 | `cycle_plan.md` | Per-cycle project execution plan (auto-generated) |
 | `cycle_state.json` | Persistent state across cycles (auto-generated) |
+| `compute_quality_score.py` | Computes 0-100 quality scores per cycle, appends to JSONL archive |
+| `quality_scores.jsonl` | Append-only archive of quality scores over time (auto-generated) |
 | `Reviews/Prompts/Sweep - Validate Findings.txt` | Prompt template for skeptical validator agents |
 | `Reviews/scripts/filter_validated_findings.py` | Applies validation verdicts to filter report.md |
 
@@ -108,6 +110,26 @@ Each validator:
 - Renders a verdict: **CONFIRMED**, **DOWNGRADED(NewSeverity)**, or **REJECTED**
 
 Typically 15-25% of sweep findings are rejected as false positives, exaggerated, or already addressed.
+
+### Quality Scoring
+
+After each sweep, `compute_quality_score.py` produces a 0-100 quality score (higher = better) for the overall codebase and each of the 5 shards. Scores are appended to `quality_scores.jsonl` for trend tracking.
+
+**Formula:** Severity-weighted demerits (Critical=10, Major=3, Minor=1, Info=0.2) normalized by file count, mapped via exponential decay: `score = 100 * exp(-0.5 * demerits_per_file)`.
+
+| Score | Grade |
+|-------|-------|
+| 90-100 | Excellent |
+| 75-89 | Good |
+| 60-74 | Fair |
+| 40-59 | Needs Improvement |
+| 20-39 | Poor |
+| 0-19 | Critical |
+
+**Example output:**
+```
+Quality: 43/100 (Needs Improvement) [+19] | FND:22(+14) SIM:35(+11) STR:55(+15) UI1:52(+14) UI2:18(+14) | 210 findings (12C/98M/72m/28I) | 372 files
+```
 
 ### Relationship to Existing Systems
 

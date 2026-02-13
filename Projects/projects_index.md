@@ -13,35 +13,35 @@
 | PROJ-113 | Architecture Layer Violations | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-111 | Test Coverage - UI and Framework | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-110 | Test Coverage - Core Systems | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-109 | Legacy Cleanup | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-108 | Duplication Elimination | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-107 | Consistency and API Standardization | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-106 | Architecture Layer Violations | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-105 | Visual Regression Testing for UI Panels | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-104 | Cyclomatic Complexity Reduction - Critical Functions | Plan Approved | 2026-02-10 | 2026-02-10 |
 | PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-102 | Strategic Superweapons and Special Orders | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-101 | Fleet Report Screen Enhancements | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-100 | Cargo Transfer Orders Overhaul | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-99 | Empire Panel Window | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-98 | Empire Build Yards Screen Enhancement | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-97 | Per-Resource Production Rate Limits for Build Queues | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-96 | Species Setup Ships View Layout Redesign | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-95 | Resource API Consistency and Clean-Sheet Conventions | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-94 | Resource API Cleanup and Protocol Wiring | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-93 | Update Protocol Layer Type Annotations | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-92 | Clean Up Residual Circular Dependency Artifacts | Plan Approved | 2026-02-10 | 2026-02-10 |
-| PROJ-91 | Unify Resource/State Logic Between Strategy and Simulation Layers | Plan Approved | 2026-02-09 | 2026-02-09 |
-| PROJ-90 | Untangle Circular Dependencies and Layer Violations | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-89 | God Class Decomposition - Remaining UI Tier | Planning | 2026-02-09 | 2026-02-09 |
-| PROJ-88 | God Class Decomposition - Simulation Core Tier | Planning | 2026-02-09 | 2026-02-09 |
 | PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-110 | Test Coverage - Core Systems | Archived | 2026-02-11 | 2026-02-12 |
+| PROJ-109 | Legacy Cleanup | Archived | 2026-02-11 | 2026-02-12 |
+| PROJ-108 | Duplication Elimination | Archived | 2026-02-11 | 2026-02-12 |
+| PROJ-104 | Cyclomatic Complexity Reduction - Critical Functions | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-107 | Consistency and API Standardization | Archived | 2026-02-11 | 2026-02-12 |
+| PROJ-106 | Architecture Layer Violations | Archived | 2026-02-11 | 2026-02-12 |
+| PROJ-102 | Strategic Superweapons and Special Orders | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-101 | Fleet Report Screen Enhancements | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-100 | Cargo Transfer Orders Overhaul | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-99 | Empire Panel Window | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-98 | Empire Build Yards Screen Enhancement | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-97 | Per-Resource Production Rate Limits for Build Queues | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-96 | Species Setup Ships View Layout Redesign | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-95 | Resource API Consistency and Clean-Sheet Conventions | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-94 | Resource API Cleanup and Protocol Wiring | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-93 | Update Protocol Layer Type Annotations | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-92 | Clean Up Residual Circular Dependency Artifacts | Archived | 2026-02-10 | 2026-02-12 |
+| PROJ-89 | God Class Decomposition - Remaining UI Tier | Archived | 2026-02-09 | 2026-02-12 |
+| PROJ-91 | Unify Resource/State Logic Between Strategy and Simulation Layers | Archived | 2026-02-09 | 2026-02-12 |
+| PROJ-90 | Untangle Circular Dependencies and Layer Violations | Archived | 2026-02-09 | 2026-02-12 |
+| PROJ-88 | God Class Decomposition - Simulation Core Tier | Archived | 2026-02-09 | 2026-02-12 |
 | PROJ-86 | Critical God Class Decomposition - UI Tier | Archived | 2026-02-09 | 2026-02-10 |
 | PROJ-87 | God Class Decomposition - Strategy Data Tier | Archived | 2026-02-09 | 2026-02-10 |
 | PROJ-84 | Ship Layer Data Typed Structures | Archived | 2026-02-09 | 2026-02-10 |

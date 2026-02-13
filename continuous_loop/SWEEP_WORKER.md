@@ -209,6 +209,17 @@ python Reviews/scripts/generate_prospective_projects.py Reviews/results/{REVIEW_
 
 Verify `prospective_projects/` directory was created.
 
+### Step 11a: Compute Quality Score
+
+Run:
+```bash
+python continuous_loop/compute_quality_score.py Reviews/results/{REVIEW_FOLDER}
+```
+
+This computes a 0-100 quality score (overall + per-shard) and appends the result to `continuous_loop/quality_scores.jsonl`.
+
+**Announce the quality score summary line** (printed to stdout by the script).
+
 ### Step 12: Launch Project Generation Agent
 
 Read `Reviews/Prompts/Sweep - Generate Projects.txt`.
@@ -277,6 +288,7 @@ Compiled: 312 findings (38 Critical, 140 Major, 95 Minor, 39 Info)
 Validation complete. 5/5 validators finished.
 Validated: 312 -> 245 findings (52 rejected, 15 downgraded, 16.7% rejection rate)
 Proceeding to project generation with 245 validated findings...
+Quality: 43/100 (Needs Improvement) [+19] | FND:22(+14) SIM:35(+11) STR:55(+15) UI1:52(+14) UI2:18(+14)
 Projects generated: 5 proposals
 Auto-approved ALL: PROJ-120, PROJ-121, PROJ-122, PROJ-123, PROJ-124
 Committed: abc1234

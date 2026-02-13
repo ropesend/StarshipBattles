@@ -70,58 +70,58 @@
 
 ### Task 1.6: TCG-STR-006 - QuickstartBuilder.spawn_initial_complexe [Medium]
 **File:** `game/strategy/quickstart_build`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/strategy/test_quickstart_builder.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 14 tests for copy_quickstart_designs and spawn_initial_complexes methods. Tests cover: missing source dir, no design files, empire folder creation, file copying, copy errors, empty empires, no colonies, first colony usage, missing designs, PlanetaryFacility creation, operational status, multiple empires, unique instance IDs.
 
 ### Task 1.7: TCG-STR-007 - Superweapon Command Handlers Missing Err [Medium]
 **File:** `game/strategy/engine/superweap`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/strategy/engine/test_superweapon_command_handlers.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** ALREADY COVERED - Existing tests (597 lines, 31 tests) comprehensively cover all error handling: fleet not found, planet not found, validation failures, no path found.
 
 ### Task 1.8: TCG-STR-008 - DesignMetadata.from_design_file() and fr [Medium]
 **File:** `game/strategy/data/design_meta`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/strategy/test_design_metadata.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 19 tests for edge cases: from_dict missing fields, from_design_file missing data, from_ship missing attrs, combat power edge cases, resource cost edge cases, serialization edge cases.
 
 ### Task 1.9: TCG-STR-009 - ColonizeValidator Chain Validation Not T [Simple]
 **File:** `game/strategy/validation/colon`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/strategy/validation/test_colonize_validator.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** ALREADY COVERED - Existing tests (584 lines, 30+ tests) include full chain validation coverage: colony pod matching, available pods counting, committed pods counting, pod exhaustion, independent pod type tracking.
 
 ### Task 1.10: TCG-STR-010 - EmpireEconomyCalculator Registry Fallbac [Simple]
 **File:** `game/strategy/engine/empire_ec`
-**Tests:** `pytest tests/` (add appropriate test path)
+**Tests:** `pytest tests/unit/strategy/engine/test_empire_economy_calculator.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** ALREADY COVERED - Existing tests (544 lines, 21 tests) include registry fallback coverage: test_registry_fallback_for_colony_production and test_registry_fallback_with_no_registries_returns_zero.
 
 ### Task 1.11: TCG-STR-011 - TurnEngine._process_tick() Integration N [Medium]
 **File:** `game/strategy/engine/turn_engi`

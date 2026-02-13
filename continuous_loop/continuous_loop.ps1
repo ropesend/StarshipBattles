@@ -209,7 +209,12 @@ foreach ($file in @($SWEEP_WORKER, $INNER_LOOP_SCRIPT, $POPULATE_SCRIPT)) {
 }
 
 $state = Load-CycleState
-$startTime = [DateTime]::Parse($state.start_time)
+
+# Reset start_time on fresh launch so the runtime limit counts from NOW,
+# not from a previous (possibly crashed) run's original start time.
+$state.start_time = (Get-Date).ToString("o")
+Save-CycleState $state
+$startTime = Get-Date
 
 Write-Banner "Continuous Improvement Loop Starting"
 Write-Info "Max cycles: $MAX_CYCLES"
@@ -509,6 +514,18 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
     Write-Success "Merged $branchName to main"
 
     # ── Step H: Record cycle results ──
+    $qualityScore = $null
+    $qualityFile = "$WORKSPACE\continuous_loop\quality_scores.jsonl"
+    if (Test-Path $qualityFile) {
+        try {
+            $lastLine = Get-Content $qualityFile -Tail 1
+            if ($lastLine) {
+                $qualityScore = ($lastLine | ConvertFrom-Json).overall.score
+            }
+        }
+        catch { }
+    }
+
     $cycleRecord = [PSCustomObject]@{
         cycle              = $cycleNum
         branch             = $branchName
@@ -519,6 +536,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
         projects_created   = $projectsCreated
         projects_completed = if ($innerSuccess) { $projectsCreated } else { 0 }
         projects_failed    = if ($innerSuccess) { 0 } else { $projectsCreated }
+        quality_score      = $qualityScore
     }
     $state.cycles += $cycleRecord
     $state.status = "idle"

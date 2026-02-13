@@ -13,6 +13,7 @@ $ErrorActionPreference = "Stop"
 $PLAN_FILE = "continuous_loop/cycle_plan.md"
 $WORKER_PROMPT = "continuous_loop/CYCLE_WORKER.md"
 $WORKSPACE_DIR = "C:/Dev/Starship Battles"
+$TRIM_SCRIPT = "continuous_loop/trim_execution_log.py"
 $SLEEP_DURATION = 10
 $MAX_ITERATIONS = 1000
 $MAX_RETRIES = 3
@@ -133,6 +134,26 @@ while ($iteration -lt $MAX_ITERATIONS) {
             Write-Warn "Rate limit detected in Claude output"
             Write-Warn "Signaling outer loop to sleep and retry (exit code 2)"
             exit 2
+        }
+        elseif ($claudeOutput -match "prompt is too long" -or $claudeOutput -match "Conversation too long" -or $claudeOutput -match "context window" -or $claudeOutput -match "token limit") {
+            # Context window overflow - trim the execution log and retry
+            Write-Warn "Context window overflow detected. Trimming execution log..."
+            try {
+                python $TRIM_SCRIPT --plan-file $PLAN_FILE --keep 10
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Success "Execution log trimmed. Retrying..."
+                    $retryCount++
+                    Clear-ClaudeTempFiles
+                }
+                else {
+                    Write-ErrorLog "Failed to trim execution log. Cannot recover."
+                    exit 1
+                }
+            }
+            catch {
+                Write-ErrorLog "Trim script failed: $_"
+                exit 1
+            }
         }
         elseif ($claudeOutput -match "EPERM" -or $claudeOutput -match "operation not permitted" -or $claudeOutput -match "symlink") {
             $retryCount++
