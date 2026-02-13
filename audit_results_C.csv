@@ -92,3 +92,38 @@ tests/unit/strategy/test_ship_display_formatter.py,KEEP,Tests active ship displa
 tests/unit/strategy/test_ship_display_formatter_edge_cases.py,KEEP,Tests active ship display formatter edge cases,game/strategy/data/ship_display_formatter.py
 tests/unit/strategy/test_ship_resource_manager.py,KEEP,Tests active ship resource manager,game/strategy/data/ship_resource_manager.py
 tests/unit/strategy/test_ship_serial_numbering.py,KEEP,Tests active ship serial numbering,game/strategy/data/ship_instance.py
+tests/unit/simulation/test_battle_config.py,KEEP,Tests active BattleConfig,game/simulation/battle_config.py
+tests/unit/simulation/test_battle_state_serialization.py,KEEP,Tests active BattleState serialization,game/simulation/battle_state.py
+tests/unit/simulation/test_component_decoupling.py,KEEP,Tests active component decoupling logic,game/simulation/components/component.py
+tests/unit/simulation/test_formula_exceptions.py,KEEP,Tests active formula exception handling,game/simulation/formula_system.py
+tests/unit/simulation/test_layer_restriction_rule_refactor.py,KEEP,Tests active layer restriction rules,game/simulation/validation/ship_validator.py
+tests/unit/simulation/test_physics_constants.py,KEEP,Tests active physics constants,game/simulation/physics_constants.py
+tests/unit/simulation/test_physics_formulas.py,KEEP,Tests active physics formulas,game/simulation/physics_constants.py
+tests/unit/simulation/test_projectile_manager.py,KEEP,Tests active ProjectileManager,game/simulation/projectile_manager.py
+tests/unit/simulation/component_logger.py,KEEP,Test utility for component logging,N/A
+tests/unit/simulation/component_sim_tools.py,KEEP,Test utility for ship generation,N/A
+tests/unit/simulation/log_parser.py,KEEP,Test utility for log parsing,N/A
+tests/unit/simulation/run_component_tests.py,KEEP,Test runner for component tests,N/A
+tests/unit/simulation/update_test_ships.py,KEEP,Test data generator,N/A
+tests/unit/simulation/components/test_ability_manager.py,KEEP,Tests active AbilityManager,game/simulation/components/ability_manager.py
+tests/unit/simulation/components/test_component_constants.py,KEEP,Tests active component constants,game/simulation/components/component_constants.py
+tests/unit/simulation/components/test_component_health_manager.py,KEEP,Tests active ComponentHealthManager,game/simulation/components/component_health_manager.py
+tests/unit/simulation/components/test_component_resource_manager.py,KEEP,Tests active ComponentResourceManager,game/simulation/components/component_resource_manager.py
+tests/unit/simulation/components/test_component_stats_calculator.py,KEEP,Tests active ComponentStatsCalculator,game/simulation/components/component_stats_calculator.py
+tests/unit/simulation/components/test_modifier_effects.py,KEEP,Tests active ModifierEffect system,game/simulation/components/modifier_effects.py
+tests/unit/simulation/components/test_modifier_introspection.py,KEEP,Tests active ModifierIntrospection,game/simulation/components/modifier_introspection.py
+tests/unit/simulation/components/test_modifier_manager.py,KEEP,Tests active ModifierManager,game/simulation/components/modifier_manager.py
+tests/unit/simulation/components/test_modifier_schema.py,KEEP,Tests active modifier schema validation,game/simulation/components/modifier_schema.py
+tests/unit/simulation/components/test_modifiers.py,KEEP,Tests active modifiers logic,game/simulation/components/modifiers.py
+tests/unit/simulation/systems/test_battle_end_conditions.py,KEEP,Tests active BattleEndCondition,game/simulation/systems/battle_end_conditions.py
+tests/unit/simulation/systems/test_battle_engine_end_conditions.py,KEEP,Tests active BattleEngine end conditions,game/simulation/systems/battle_engine.py
+tests/unit/simulation/systems/test_battle_engine_tick.py,KEEP,Tests active BattleEngine tick logic,game/simulation/systems/battle_engine.py
+tests/unit/simulation/systems/test_resource_manager_edge_cases.py,KEEP,Tests active ResourceManager edge cases,game/simulation/systems/resource_manager.py
+tests/unit/simulation/systems/test_ship_stats_calculator_phases.py,KEEP,Tests active ShipStatsCalculator phases,game/simulation/entities/ship_stats.py
+tests/unit/simulation/systems/test_ship_stats_phase_ordering.py,KEEP,Tests active ShipStatsCalculator phase ordering,game/simulation/entities/ship_stats.py
+tests/unit/simulation/systems/test_tech_preset_loader.py,KEEP,Tests active TechPresetLoader,game/simulation/systems/tech_preset_loader.py
+tests/unit/simulation/managers/test_battle_state_manager.py,KEEP,Tests active BattleStateManager,game/simulation/managers/battle_state_manager.py
+tests/unit/simulation/managers/test_retreat_manager.py,KEEP,Tests active RetreatManager,game/simulation/managers/retreat_manager.py
+tests/unit/simulation/ship_combat_engine/test_cooldowns.py,KEEP,Tests active ShipCombatEngine cooldowns,game/simulation/entities/ship_combat_engine.py
+tests/unit/simulation/ship_combat_engine/test_creation_and_lead.py,KEEP,Tests active ShipCombatEngine creation,game/simulation/entities/ship_combat_engine.py
+tests/unit/simulation/ship_combat_engine/test_targeting.py,KEEP,Tests active ShipCombatEngine targeting,game/simulation/entities/ship_combat_engine.py
