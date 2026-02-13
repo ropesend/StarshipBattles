@@ -163,3 +163,13 @@ tests/unit/simulation/systems/test_battle_end_conditions.py,KEEP,Tests active Ba
 tests/unit/simulation/systems/test_battle_engine_end_conditions.py,KEEP,Tests active BattleEngine.is_battle_over,game/simulation/systems/battle_engine.py
 tests/unit/simulation/systems/test_battle_engine_tick.py,KEEP,Tests active BattleEngine.update,game/simulation/systems/battle_engine.py
 tests/unit/simulation/systems/test_resource_manager_edge_cases.py,KEEP,Tests active ResourceState/Registry,game/simulation/systems/resource_manager.py
+tests/unit/simulation/validation/test_base_rule.py,KEEP,Tests active ValidationRule system,game/simulation/validation/base.py
+tests/unit/simulation/validation/test_ship_validator_rules.py,KEEP,Tests active ShipDesignValidator rules,game/simulation/validation/ship_validator.py
+tests/unit/strategy/conflict_resolution/test_battle_resolver_integration.py,KEEP,Tests ConflictResolutionEngine resolver integration,game/strategy/engine/conflict_resolution_engine.py
+tests/unit/strategy/conflict_resolution/test_conflict_core.py,KEEP,Tests conflict engine existence,game/strategy/engine/conflict_resolution_engine.py
+tests/unit/strategy/conflict_resolution/test_core.py,KEEP,Tests ConflictResolutionEngine core logic,game/strategy/engine/conflict_resolution_engine.py
+tests/unit/strategy/design_library/test_basics.py,KEEP,Tests DesignLibrary basic operations,game/strategy/systems/design_library.py
+tests/unit/strategy/design_library/test_error_logging.py,KEEP,Tests DesignLibrary error handling,game/strategy/systems/design_library.py
+tests/unit/strategy/design_library/test_per_empire.py,KEEP,Tests DesignLibrary empire isolation,game/strategy/systems/design_library.py
+tests/unit/strategy/events/test_event_log.py,KEEP,Tests Event and EventLog,game/strategy/events/event_log.py
+tests/unit/strategy/events/test_event_types.py,KEEP,Tests event enums,game/strategy/events/event_types.py
