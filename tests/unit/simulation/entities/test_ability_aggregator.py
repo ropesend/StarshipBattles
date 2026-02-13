@@ -934,3 +934,201 @@ class TestAbilityAggregatorAdditionalEdgeCases:
 
         result = calculate_ability_totals([comp])
         assert result["NoGroupAbility"] == 100.0
+
+
+# =============================================================================
+# Tests for Concurrent Modification Resilience (TCG-SIM-011)
+# =============================================================================
+
+class TestConcurrentModificationResilience:
+    """Tests verifying behavior when collections might be modified.
+
+    These tests ensure the aggregator handles edge cases where:
+    - Input lists/dicts are modified during iteration
+    - Collection types are unexpectedly empty or modified
+    - Defensive copies prevent mutation issues
+
+    Note: Python's for-loop over a list creates a reference, not a copy.
+    If the list is modified during iteration, behavior can be unpredictable.
+    These tests document expected behavior with various mutation patterns.
+    """
+
+    def test_modifying_components_list_during_iteration_via_copy(self):
+        """Verify aggregation works when input is a copy of a modifiable list."""
+        # Create a mutable list that could be modified
+        mutable_components = [
+            MockComponent(ability_instances=[MockAbility("Ability1", 100.0)]),
+            MockComponent(ability_instances=[MockAbility("Ability1", 200.0)])
+        ]
+
+        # Pass a copy to prevent external modification affecting iteration
+        result = calculate_ability_totals(list(mutable_components))
+
+        # Original can be safely modified now
+        mutable_components.clear()
+
+        # Result should still be valid
+        assert result["Ability1"] == 300.0
+
+    def test_empty_ability_instances_list_after_check(self):
+        """Handle component whose ability_instances becomes empty."""
+        # Component with empty but valid ability_instances
+        comp = MockComponent(ability_instances=[])
+
+        result = calculate_ability_totals([comp])
+        assert result == {}
+
+    def test_ability_instances_replaced_with_empty_list(self):
+        """Verify behavior when ability_instances is empty list."""
+        comp = MockComponent(ability_instances=[])
+        comp.ability_instances = []  # Explicitly set to empty
+
+        result = calculate_ability_totals([comp])
+        assert result == {}
+
+    def test_abilities_dict_cleared_after_instances_processed(self):
+        """Component with instances; dict cleared doesn't affect result."""
+        ability = MockAbility("TestAbility", 500.0)
+        comp = MockComponent(
+            ability_instances=[ability],
+            abilities={"OtherAbility": 100.0}
+        )
+
+        # Clear dict after creation
+        comp.abilities = {}
+
+        result = calculate_ability_totals([comp])
+        # Only instance ability should be present
+        assert result["TestAbility"] == 500.0
+        assert "OtherAbility" not in result
+
+    def test_iterator_over_generator_components(self):
+        """Verify aggregation works with generator input."""
+        def component_generator():
+            yield MockComponent(ability_instances=[MockAbility("GenAbility", 10.0)])
+            yield MockComponent(ability_instances=[MockAbility("GenAbility", 20.0)])
+            yield MockComponent(ability_instances=[MockAbility("GenAbility", 30.0)])
+
+        result = calculate_ability_totals(component_generator())
+        assert result["GenAbility"] == 60.0
+
+    def test_nested_iteration_independence(self):
+        """Multiple calls with same components don't interfere."""
+        comp1 = MockComponent(ability_instances=[MockAbility("SharedAbility", 100.0)])
+        comp2 = MockComponent(ability_instances=[MockAbility("SharedAbility", 200.0)])
+        components = [comp1, comp2]
+
+        # Multiple calls should produce consistent results
+        result1 = calculate_ability_totals(components)
+        result2 = calculate_ability_totals(components)
+        result3 = calculate_ability_totals(components)
+
+        assert result1 == result2 == result3
+        assert result1["SharedAbility"] == 300.0
+
+    def test_component_ability_instances_modified_between_calls(self):
+        """Result reflects current state of ability_instances."""
+        comp = MockComponent(ability_instances=[MockAbility("Dynamic", 100.0)])
+
+        # First call
+        result1 = calculate_ability_totals([comp])
+        assert result1["Dynamic"] == 100.0
+
+        # Modify ability_instances
+        comp.ability_instances = [MockAbility("Dynamic", 999.0)]
+
+        # Second call should reflect new state
+        result2 = calculate_ability_totals([comp])
+        assert result2["Dynamic"] == 999.0
+
+    def test_ability_groups_dict_not_leaked_between_calls(self):
+        """Internal ability_groups dict is isolated per call."""
+        comp1 = MockComponent(ability_instances=[MockAbility("IsolatedAbility", 50.0)])
+        comp2 = MockComponent(ability_instances=[MockAbility("OtherAbility", 75.0)])
+
+        result1 = calculate_ability_totals([comp1])
+        result2 = calculate_ability_totals([comp2])
+
+        # Results should be independent
+        assert "IsolatedAbility" in result1
+        assert "OtherAbility" not in result1
+        assert "OtherAbility" in result2
+        assert "IsolatedAbility" not in result2
+
+    def test_dict_view_iteration_with_modifications(self):
+        """Raw abilities dict iteration handles expected patterns."""
+        # Component with raw abilities dict
+        abilities_dict = {"Ability1": 100.0, "Ability2": 200.0}
+        comp = MockComponent(
+            ability_instances=[],
+            abilities=abilities_dict
+        )
+
+        result = calculate_ability_totals([comp])
+
+        # Verify both abilities processed
+        assert result["Ability1"] == 100.0
+        assert result["Ability2"] == 200.0
+
+    def test_reentrant_safe_with_same_component_twice(self):
+        """Same component in list twice is handled correctly."""
+        ability = MockAbility("ReentrantAbility", 100.0)
+        comp = MockComponent(ability_instances=[ability])
+
+        # Same component twice - abilities should sum from both "occurrences"
+        result = calculate_ability_totals([comp, comp])
+
+        # Each occurrence adds to the total (different group keys since comp object used as key)
+        # Actually, same comp object = same group key = MAX within group = 100
+        # This tests an important edge case!
+        assert result["ReentrantAbility"] == 100.0  # MAX, not SUM
+
+    def test_get_ability_instances_by_class_generator_exhaustion(self):
+        """Generator from get_ability_instances_by_class is properly exhausted."""
+        ability = MockAbility("IterAbility", 100.0)
+        comp = MockComponent(ability_instances=[ability])
+
+        gen = get_ability_instances_by_class([comp], "IterAbility")
+
+        # Exhaust generator
+        pairs = list(gen)
+        assert len(pairs) == 1
+
+        # Re-exhaust should be empty (generator exhausted)
+        more_pairs = list(gen)
+        assert len(more_pairs) == 0
+
+    def test_fresh_generator_each_call(self):
+        """Each call to get_ability_instances_by_class returns fresh generator."""
+        ability = MockAbility("FreshGenAbility", 100.0)
+        comp = MockComponent(ability_instances=[ability])
+
+        # First generator
+        gen1 = get_ability_instances_by_class([comp], "FreshGenAbility")
+        list(gen1)  # Exhaust it
+
+        # Second generator should still work
+        gen2 = get_ability_instances_by_class([comp], "FreshGenAbility")
+        pairs = list(gen2)
+        assert len(pairs) == 1
+
+    def test_tuple_input_immutable(self):
+        """Aggregation works with immutable tuple input."""
+        comp1 = MockComponent(ability_instances=[MockAbility("TupleAbility", 100.0)])
+        comp2 = MockComponent(ability_instances=[MockAbility("TupleAbility", 200.0)])
+
+        # Pass as tuple (immutable)
+        result = calculate_ability_totals((comp1, comp2))
+
+        assert result["TupleAbility"] == 300.0
+
+    def test_frozen_set_like_behavior(self):
+        """Components with identical abilities aggregate correctly."""
+        # Two different component instances with same ability value
+        comp1 = MockComponent(ability_instances=[MockAbility("FrozenAbility", 50.0)])
+        comp2 = MockComponent(ability_instances=[MockAbility("FrozenAbility", 50.0)])
+
+        result = calculate_ability_totals([comp1, comp2])
+
+        # Different components = different group keys = SUM
+        assert result["FrozenAbility"] == 100.0

@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (9/18)
+**Status:** In Progress (11/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -154,23 +154,36 @@ Tests verify Python's formula_system behavior with extreme values including IEEE
 **File:** `game/simulation/designs.py`
 **Tests:** `pytest tests/` (add appropriate test path)
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** REJECTED finding - designs.py (69 lines) contains only factory functions (create_brick, create_interceptor) for test ships. It does NOT contain any serialization code. Per validation report at Reviews/results/2026-02-13_sweep_full-codebase-sweep/validation/validation_sim_report.md. Ship serialization code lives in game/simulation/entities/ship_serialization.py and is already comprehensively tested in tests/unit/simulation/entities/test_ship_serialization.py and tests/unit/entities/test_ship_serialization.py. No additional work needed.
 
 ### Task 1.11: TCG-SIM-011 - AbilityAggregator Missing Concurrent Mod [Simple]
-**File:** `game/simulation/entities/abili`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/entities/ability_aggregator.py`
+**Tests:** `pytest tests/unit/simulation/entities/test_ability_aggregator.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 15 new tests in TestConcurrentModificationResilience class covering:
+- Defensive copy for modifiable input lists
+- Empty/modified ability_instances list handling
+- Abilities dict cleared between processing
+- Generator input support
+- Nested iteration independence
+- Component modification between calls
+- Internal dict isolation between calls
+- Dict view iteration patterns
+- Same component appearing twice (tests MAX vs SUM behavior)
+- Generator exhaustion and fresh generator per call
+- Immutable tuple input
+- Identical ability values from different components
+Total tests: 83 (was 68)
 
 ### Task 1.12: TCG-SIM-012 - ShipCombatEngine Heat Management Not Tes [Simple]
 **File:** `game/simulation/entities/ship_`

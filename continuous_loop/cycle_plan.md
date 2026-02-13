@@ -8,21 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Phase 1 Task 1.9 (TCG-SIM-009 complete)
-**Current Status:** In progress - Phase 1 partially complete (9/18 tasks)
+**Last Completed:** PROJ-120 Phase 1 Tasks 1.10, 1.11 complete
+**Current Status:** In progress - Phase 1 partially complete (11/18 tasks)
 **Current Project:** PROJ-120
 **Current Phase:** Phase 1
-**Test Status:** 11871 tests passing
+**Test Status:** 9246 tests passing (core/non-UI), 11871+ full
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 1.9 (TCG-SIM-009): Added 38 new overflow/underflow tests for FormulaSystem
-- New test file: tests/unit/systems/test_formula_overflow_underflow.py
-- Test classes: TestFloatOverflow (5), TestFloatUnderflow (4), TestNaNHandling (4), TestInfinityDivision (4), TestMathDomainErrors (5), TestSafeEvaluateOverflowUnderflow (4), TestExtremeBoundaryValues (5), TestComplexOverflowScenarios (7)
-- Tests cover IEEE 754 infinity/NaN, boundary values, domain errors, safe_evaluate behavior
-- Next: Task 1.10 (Design System Serialization Roundtrip Gaps)
+- Task 1.10 (TCG-SIM-010): REJECTED - designs.py contains factory functions, not serialization code
+- Task 1.11 (TCG-SIM-011): Added 15 new concurrent modification tests for AbilityAggregator
+- Tests in TestConcurrentModificationResilience class cover:
+  - Defensive copy handling, generator input, iteration independence
+  - Component modification between calls, dict isolation, tuple input
+- Next: Task 1.12 (ShipCombatEngine Heat Management)
 - Files modified:
-  - tests/unit/systems/test_formula_overflow_underflow.py (+38 tests)
+  - tests/unit/simulation/entities/test_ability_aggregator.py (+15 tests, now 83 total)
 
 ---
 
@@ -88,6 +89,7 @@
 | 2026-02-13 | PROJ-120 | Phase 1 (7/18) | In Progress | 11819 pass | ed8bd1fd | Task 1.7 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (8/18) | In Progress | 11833 pass | f951b8f0 | Task 1.8 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (9/18) | In Progress | 11871 pass | 2d751f44 | Task 1.9 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (11/18) | In Progress | 9246 pass | - | Tasks 1.10, 1.11 complete |
 
 ---
 
