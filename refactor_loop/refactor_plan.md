@@ -8,195 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-118 Phase 1 Complete
-**Current Status:** PROJ-118 Phase 1 Complete - Proceed to Phase 2
-**Current Project:** PROJ-118
-**Current Phase:** Phase 2
-**Test Status:** 9866 passed (+112 tests)
+**Last Completed:** PROJ-118 Audit PASSED
+**Current Status:** PROJ-118 Complete - Ready for User Verification
+**Current Project:** PROJ-119
+**Current Phase:** Phase 1
+**Test Status:** 11501 passed (+1635 tests)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-118 Phase 1 COMPLETE: 24 Foundation findings addressed
-  - Added 112 new tests across multiple test files
-  - Tests cover: physics, AI controller, collision, spatial grid, research system
-  - Fixed: ErraticBehavior import moved to module level
-  - Key files: test_physics.py, test_ai_controller_unit.py, test_beam_ramming.py, test_spatial_edge_cases.py
-  - All agents completed successfully using parallel execution
-- Next: Phase 2 (Simulation module findings)
+- PROJ-118 AUDIT PASSED: All goals verified
+  - Phase 1 Foundation: 5/5 PASS (PhysicsBody, AIController, CollisionSystem, SpatialGrid, formation_master)
+  - Phase 2 Simulation: 8/8 PASS (BattleService, ProjectileManager, AbilityAggregator, physics/formation/serializer, services, DamageCalculator, BattleState, BattleEngine)
+  - Total: +1635 tests added across both phases
+- Next: PROJ-119 Phase 1
 
 ---
 
 ## Master Task List
 
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
-
-- [x] **PROJ-88: God Class Decomposition - Simulation Core Tier**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-88/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-88/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-90: Untangle Circular Dependencies and Layer Violations**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-90/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-90/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-91: Unify Resource/State Logic Between Strategy and Simulation Layers**
-  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-91/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-91/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-89: God Class Decomposition - Remaining UI Tier**
-  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-89/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-89/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-92: Clean Up Residual Circular Dependency Artifacts**
-  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-92/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-92/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-93: Update Protocol Layer Type Annotations**
-  - **Phases:** 1 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-93/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-93/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-94: Resource API Cleanup and Protocol Wiring**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-94/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-94/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-95: Resource API Consistency and Clean-Sheet Conventions**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-95/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-95/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** PROJ-94
-
----
-
-- [x] **PROJ-96: Species Setup Ships View Layout Redesign**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-96/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-96/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-97: Per-Resource Production Rate Limits for Build Queues**
-  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-97/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-97/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-98: Empire Build Yards Screen Enhancement**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-98/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-98/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-99: Empire Panel Window**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-99/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-99/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-100: Cargo Transfer Orders Overhaul**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-100/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-100/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-101: Fleet Report Screen Enhancements**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-101/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-101/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-102: Strategic Superweapons and Special Orders**
-  - **Phases:** 9 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-102/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-102/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-104: Cyclomatic Complexity Reduction - Critical Functions**
-  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-104/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-104/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-106: Architecture Layer Violations**
-  - **Phases:** 7 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-106/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-106/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-107: Consistency & API Standardization**
-  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-107/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-107/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-108: Duplication Elimination**
-  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-108/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-108/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-109: Legacy Cleanup**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-109/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-109/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-110: Test Coverage - Core Systems**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-110/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-110/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
 
 - [x] **PROJ-111: Test Coverage - UI & Framework**
   - **Phases:** 7 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
@@ -246,10 +76,10 @@
 
 ---
 
-- [ ] **PROJ-118: Test Coverage -- Core and Simulation**
-  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+- [x] **PROJ-118: Test Coverage -- Core and Simulation**
+  - **Phases:** 2 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-118/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-118/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -266,124 +96,6 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-10 | PROJ-88 | Phase 1 | Complete | 7488 passed | pending | Deleted ShipComponentManager (345 lines) + 5 test files (36 tests). Zero references remain. |
-| 2026-02-10 | PROJ-88 | Phase 2 | Complete | 7503 passed | pending | Extracted ShipStatQuerier (149 lines), Ship 870→812 (-58 lines), 15 new tests |
-| 2026-02-10 | PROJ-88 | Phase 3 | Complete | 7512 passed | pending | Extracted ShipValidatorHelper (67 lines), Ship 812→811 (-1 line), 9 new tests |
-| 2026-02-10 | PROJ-88 | Phase 4 | Complete | 7533 passed | pending | Extracted ComponentResourceManager (97 lines) + ComponentHealthManager (72 lines), Component 756→713 (-43 lines), 21 new tests |
-| 2026-02-10 | PROJ-88 | Phase 5 | Complete | 7540 passed | pending | IScene migration complete, removed legacy dispatch from app.py, 7 new tests |
-| 2026-02-10 | PROJ-88 | Audit 1 | PASSED | 7540 passed | pending | All 5 goals met, Ship -59, Component -43, app.py -14, new helpers 428 lines |
-| 2026-02-10 | PROJ-90 | Phase 1 | Complete | 7540 passed | pending | Created battle_config.py, eliminated 2 late imports, 11 files updated |
-| 2026-02-10 | PROJ-90 | Phase 2 | Complete | 7540 passed | pending | Created registry_loader.py (113 lines), removed method from RegistryManager, Core layer violation fixed |
-| 2026-02-10 | PROJ-90 | Phase 3 | Complete | 7540 passed | pending | Moved ShipCombatEngine+ShipSerializer to module level, ModifierService must stay late (real cycle) |
-| 2026-02-10 | PROJ-90 | Phase 4 | Complete | 7557 passed | pending | IPostBattleShip+IResourceReader protocols, ShipInstance/Fleet/BattleResult updated, 17 new tests |
-| 2026-02-10 | PROJ-90 | Phase 5 | Complete | 7557 passed | pending | ARCHITECTURE.md updated, removed unused Ship import from fleet.py |
-| 2026-02-10 | PROJ-90 | Audit 1 | PASSED | 7557 passed | pending | All 4 goals verified by investigation agents, all phases complete |
-| 2026-02-10 | PROJ-91 | Phase 1 | Complete | 7561 passed | pending | get_resource_names(), IResourceHolder, resupply fix, un-hardcode 3 bridge methods |
-| 2026-02-10 | PROJ-91 | Phase 2 | Complete | 7561 passed | pending | FleetResourceAggregator migrated, ResupplyEngine migrated, 4 test mocks updated |
-| 2026-02-10 | PROJ-91 | Phase 3 | Complete | 7557 passed | pending | Deleted 7 type-specific methods (-68 lines), 4 deprecated tests, cleaned mocks |
-| 2026-02-10 | PROJ-91 | Audit 1 | PASSED | 7557 passed | pending | All 6 goals verified, no issues found |
-| 2026-02-10 | PROJ-89 | Phase 1 | Complete | 7570 passed | pending | Extracted design_image_helper.py (196 lines), DSW -165 lines (-23%), 13 new tests |
-| 2026-02-10 | PROJ-89 | Phase 2 | Complete | 7593 passed | pending | Extracted empire_build_queue_formatter.py (131 lines), EBQW -79 lines (-8%), 23 new tests |
-| 2026-02-10 | PROJ-89 | Phase 3 | Complete | 7616 passed | pending | Extracted empire_build_queue_filter_manager.py (142 lines), EBQW -38 lines (-4%), 24 new tests |
-| 2026-02-10 | PROJ-89 | Audit 1 | PASSED | 7616 passed | e06a15c4 | All 5 goals verified: 477 lines extracted, DSW -27%, EBQW -12%, 60 new tests, 100% backward compat |
-| 2026-02-10 | PROJ-92 | Phases 1-3 | Complete | 7616 passed | ca7e2c48 | hex_math moved to core, 156 imports updated, 6 TYPE_CHECKING blocks removed |
-| 2026-02-10 | PROJ-92 | Audit 1 | PASSED | 7616 passed | pending | All 5 goals verified: layer violation fixed, zero old refs, clean migration |
-| 2026-02-10 | PROJ-93 | Phase 1 | Complete | 7616 passed | pending | IPostBattleShip + IResourceHolder layers typed, test strengthened |
-| 2026-02-10 | PROJ-93 | Audit 1 | PASSED | 7616 passed | pending | All 3 goals verified: protocol return types + test assertions |
-| 2026-02-10 | PROJ-94 | Phase 1 | Complete | 7616 passed | pending | Fixed 2 UI encapsulation, extracted _capture_resource_levels(), removed getattr |
-| 2026-02-10 | PROJ-94 | Phase 2 | Complete | 7595 passed | pending | Deleted 17 type-specific methods (167 lines), 21 tests |
-| 2026-02-10 | PROJ-94 | Phase 3 | Complete | 7595 passed | pending | Added get_resource_names to IResourceReader, typed IPostBattleShip.resources |
-| 2026-02-10 | PROJ-94 | Phase 4 | Complete | 7595 passed | pending | All verification greps pass, 175 lines removed |
-| 2026-02-10 | PROJ-94 | Audit 1 | PASSED | 7595 passed | pending | 4 investigation agents verified all goals, no issues |
-| 2026-02-10 | PROJ-95 | Phase 1 | Complete | 7595 passed | pending | ResourceType constants class, 18 prod files updated |
-| 2026-02-10 | PROJ-95 | Phase 2 | Complete | 7595 passed | pending | is_destroyed→is_alive, 4 prod + 10 test files |
-| 2026-02-10 | PROJ-95 | Phase 3 | Complete | 7595 passed | pending | None-means-full eliminated, 4 prod + 6 test files |
-| 2026-02-10 | PROJ-95 | Audit 1 | PASSED | 7595 passed | pending | All verification greps pass, no issues |
-| 2026-02-10 | PROJ-96 | Phase 1 | Complete | 7593 passed | pending | RaceThemeGallery→UIScrollingContainer, height param, -2 obsolete tests |
-| 2026-02-10 | PROJ-96 | Phase 2 | Complete | 7593 passed | pending | Side-by-side layout, theme list left 200px, preview right |
-| 2026-02-10 | PROJ-96 | Phase 3 | Complete | 7593 passed | pending | 3x3 grid, 9 ships, smart scaling, _load_ship_portrait deleted |
-| 2026-02-10 | PROJ-96 | Phase 4 | Complete | 7593 passed | pending | THEME_SHIP_SIZE dead code removed |
-| 2026-02-10 | PROJ-96 | Audit 1 | PASSED | 7593 passed | pending | 4 investigation agents verified all goals |
-| 2026-02-10 | PROJ-97 | Phase 1 | Complete | 7593 passed | pending | JSON data, ability update, 9 new tests |
-| 2026-02-10 | PROJ-97 | Phase 2 | Complete | 46 BQS tests | pending | build_rate Dict, loader functions, 7 new tests |
-| 2026-02-10 | PROJ-97 | Phase 3-4 | Complete | 7602 passed | pending | Controller+UI Dict rates, 9 new tests |
-| 2026-02-10 | PROJ-97 | Phase 5 | Complete | 7602 passed | pending | Removed ResourceStorage from shipyards |
-| 2026-02-10 | PROJ-97 | Phase 6 | Complete | 7617 passed | ad7bb4e1 | 15 integration tests |
-| 2026-02-10 | PROJ-97 | Audit 1 | PASSED | 7617 passed | pending | 4 investigation agents verified all 6 phases |
-| 2026-02-10 | PROJ-98 | Phase 1 | Complete | 7621 passed | pending | Fixed event handling: pygame_gui.UI_BUTTON_PRESSED, 4 new tests |
-| 2026-02-10 | PROJ-98 | Phase 2 | Complete | 7636 passed | pending | 10 resource columns, 15 new tests (5 rate + 5 total formatters) |
-| 2026-02-10 | PROJ-98 | Phase 3 | Complete | 7648 passed | pending | ColumnManager integration, sort_sources(), 12 new tests |
-| 2026-02-10 | PROJ-98 | Phase 4 | Complete | 7648 passed | pending | Final verification - all 4 issues confirmed fixed |
-| 2026-02-10 | PROJ-98 | Audit 1 | PASSED | 7648 passed | pending | All goals met: event handling, resource columns, sorting, filter toggles |
-| 2026-02-10 | PROJ-99 | Phase 1 | Complete | 7672 passed | pending | EmpireEconomyCalculator + EmpireEconomySnapshot, 13 tests |
-| 2026-02-10 | PROJ-99 | Phase 2 | Complete | 7691 passed | pending | EmpireTreasuryPanel + load_resource_icons, 19 tests |
-| 2026-02-10 | PROJ-99 | Phase 3 | Complete | 7691 passed | pending | EmpirePanelWindow 3 tabs, 422 lines |
-| 2026-02-10 | PROJ-99 | Phase 4 | Complete | 7691 passed | pending | Integration: window manager, event router, keyboard shortcut |
-| 2026-02-10 | PROJ-99 | Audit 1 | PASSED | 7691 passed | pending | All 5 goals verified, 32 tests pass |
-| 2026-02-10 | PROJ-100 | Phase 1 | Complete | 7694 passed | pending | T key→TRANSFER mode, Shift+P/E/R/D/B screen openers |
-| 2026-02-10 | PROJ-100 | Phase 2 | Complete | 7694 passed | pending | Transfer dialog size 600x500 → 750x600 |
-| 2026-02-10 | PROJ-100 | Phase 3 | Complete | 7694 passed | pending | CargoQuickDialog, D/L keys, DROP_CARGO/LOAD_CARGO modes |
-| 2026-02-10 | PROJ-100 | Phase 4 | Complete | 7713 passed | pending | 19 new tests: TestDropCargoMode, TestLoadCargoMode, TestCargoQuickDialog |
-| 2026-02-10 | PROJ-100 | Audit 1 | PASSED | 7713 passed | pending | All 5 goals verified, no issues |
-| 2026-02-10 | PROJ-101 | Phase 1 | Complete | 7713 passed | pending | ShipDetailPanel→DesignReportPanel, 350→750px, _update_sidebar bug fixed |
-| 2026-02-10 | PROJ-101 | Phase 2 | Complete | 7742 passed | pending | 7 new columns added, 29 new tests |
-| 2026-02-10 | PROJ-101 | Phase 3 | Complete | 7760 passed | pending | Spaceyard+cargo filter pairs, 18 new tests |
-| 2026-02-10 | PROJ-101 | Phase 4 | Complete | 7779 passed | c61a59dc | Multi-select + Remove Selected button, 19 new tests |
-| 2026-02-10 | PROJ-101 | Audit 1 | PASSED | 7779 passed | pending | All 4 goals verified, 0 issues |
-| 2026-02-10 | PROJ-102 | Phase 1 | Complete | 7870 passed | pending | 6 abilities, 6 components, 55 tests |
-| 2026-02-10 | PROJ-102 | Phase 2 | Complete | 7896 passed | pending | 6 OrderTypes, 11 commands, 26 tests |
-| 2026-02-10 | PROJ-102 | Phase 3 | Complete | 7871 passed | pending | DYSON_SPHERE, Galaxy cleanup, 6 EventTypes, 18 tests |
-| 2026-02-10 | PROJ-102 | Phase 4 | Complete | 7896 passed | pending | SuperweaponValidator, 7 validation methods, 25 tests |
-| 2026-02-10 | PROJ-102 | Phase 5 | Complete | 7921 passed | pending | 11 command handlers (6 direct + 5 mission), 25 tests |
-| 2026-02-10 | PROJ-102 | Phase 6 | Complete | 7940 passed | pending | SuperweaponOrderProcessor, 6 methods, 19 tests |
-| 2026-02-10 | PROJ-102 | Phase 7 | Complete | 8128 passed | pending | 6 InputActions, key bindings, 5 input modes, 39 tests |
-| 2026-02-10 | PROJ-102 | Phase 8 | Complete | 8155 passed | pending | SuperweaponOperations module, has_ability, 27 new tests |
-| 2026-02-10 | PROJ-102 | Phase 9 | Complete | 8167 passed | pending | 6 full-flow integration + 6 serialization tests |
-| 2026-02-10 | PROJ-102 | Audit 1 | PASSED | 8167 passed | pending | All 8 goals verified, project complete |
-| 2026-02-10 | PROJ-104 | Phase 1 | Complete | 8167 passed | pending | BuilderScreen.handle_event CC 111→13, 11 sub-methods extracted |
-| 2026-02-10 | PROJ-104 | Phase 2 | Complete | 8167 passed | pending | ShipStatsCalculator.calculate CC 62→10, 5 phase methods extracted |
-| 2026-02-10 | PROJ-104 | Phase 3 | Complete | 8167 passed | pending | StrategyInputHandler._handle_keydown_mapped CC 50→8, 4 category handlers extracted |
-| 2026-02-10 | PROJ-104 | Phase 4 | Complete | 8167 passed | pending | TargetEvaluator.evaluate CC 49→10, 8 rule handler methods extracted |
-| 2026-02-10 | PROJ-104 | Phase 5 | Complete | 8167 passed | pending | TestRunDetailsPanel.draw CC 47→5, 7 draw methods extracted |
-| 2026-02-10 | PROJ-104 | Phase 6 | Complete | 8167 passed | pending | FormationEditorScreen.handle_event CC 45→9, 7 handlers extracted |
-| 2026-02-10 | PROJ-104 | Audit 1 | PASSED | 8167 passed | pending | All 6 CC targets met, no issues |
-| 2026-02-11 | PROJ-106 | Phase 1 | Complete | 8164 passed | pending | pygame removed, Ship.registries, Component.mark_hp_cache_dirty(), BattleUIService fixed |
-| 2026-02-11 | PROJ-106 | Phase 2 | Complete | 8164 passed | pending | Removed 3 legacy AI paths from BattleEngine, fixed test_framework/runner.py |
-| 2026-02-11 | PROJ-106 | Phase 3 | Complete | 8182 passed | pending | StrategyMetadataService in core, 8 UI files migrated, zero AI imports in UI |
-| 2026-02-11 | PROJ-106 | Phase 4 | Complete | 8182 passed | pending | SimulationDesignLoader routed through DesignLoaderAdapter, 3 strategy_screen.py methods + 2 TYPE_CHECKING |
-| 2026-02-11 | PROJ-106 | Phase 5 | Complete | 8187 passed | pending | ICamera protocol in core, ResearchRenderer uses ICamera, 5 new tests |
-| 2026-02-11 | PROJ-106 | Phase 6 | Complete | 8185 passed | pending | BattleUIService getattr 20+ → 3, LayerDefaults-derived radii, updated tests |
-| 2026-02-11 | PROJ-106 | Audit 1 | PASSED | 8185 passed | pending | All layer boundaries verified, private attributes clean, deferred findings documented |
-| 2026-02-11 | PROJ-107 | Phase 1 | Complete | 8185 passed | pending | Added AI error codes, fixed docstrings, added F001/F002/F004 |
-| 2026-02-11 | PROJ-107 | Phase 2 | Complete | 8185 passed | pending | Type hints: AI/sim/strategy, 16 HexCoord replacements, 12 to_dict standardized |
-| 2026-02-11 | PROJ-107 | Phase 3 | Complete | 8185 passed | pending | Deleted add_ship_instance (6 refs), deleted _stat_* wrappers, renamed check_missiles, added is_alive docstring |
-| 2026-02-11 | PROJ-107 | Phase 4 | Complete | 8185 passed | pending | registries→registry_provider in ShipFactory/DesignLoaderAdapter, ShipIOAdapter return type docs |
-| 2026-02-11 | PROJ-107 | Phase 5 | Complete | 8185 passed | pending | BattleResult→BattleServiceResult (11 files), get_winner docs, ResourceRegistry docs, ValueError→StateException |
-| 2026-02-11 | PROJ-107 | Phase 6 | Complete | 8185 passed | pending | Thread safety docs, return type hints (10 methods), 13 deferred findings documented |
-| 2026-02-11 | PROJ-107 | Audit 1 | PASSED | 8185 passed | pending | All 4 goals verified: error codes, type hints, API naming, thread safety |
-| 2026-02-11 | PROJ-108 | Phase 1 | Complete | 8199 passed | pending | SingletonMeta metaclass created, 14 tests |
-| 2026-02-11 | PROJ-108 | Phase 2 | Complete | 8199 passed | pending | 7 singletons converted, ~175 lines removed, 8 test files updated |
-| 2026-02-11 | PROJ-108 | Phase 3 | Complete | 8237 passed | pending | ComponentInspector (5 funcs, 18 tests) + combat_utils (7 funcs, 20 tests) |
-| 2026-02-11 | PROJ-108 | Phase 4 | Complete | 8237 passed | pending | Migrated SuperweaponValidator, ColonizeValidator, FleetCapabilityCalculator, target_evaluator, controller; ~150 lines removed |
-| 2026-02-11 | PROJ-108 | Phase 5 | Complete | 8237 passed | pending | Merged ability_totals_for_layer (~65 lines), formula validation delegation, get_ability_instances_by_class utility |
-| 2026-02-11 | PROJ-108 | Phase 6 | Complete | 8260 passed | pending | formatting_utils (23 tests), RESOURCE_ABBREVS constant, BaseGallery (~240 lines), 2 galleries refactored |
-| 2026-02-11 | PROJ-108 | Audit 1 | PASSED | 8260 passed | pending | All goals verified: SingletonMeta (7), ComponentInspector (3), combat_utils (2), BaseGallery (2), formatting (23 tests) |
-| 2026-02-11 | PROJ-109 | Phase 1 | Complete | 8250 passed | pending | Deleted 8 dead methods, 3 getters, 2 button lists, 10 tests; fixed 2 comments |
-| 2026-02-11 | PROJ-109 | Phase 2 | Complete | 8249 passed | pending | Removed 10 legacy shims, renamed legacy_components.py, fixed 4 comments, deleted 1 test |
-| 2026-02-11 | PROJ-109 | Phase 3 Task 3.1 | Complete | 8249 passed | pending | Removed validation_result() function and ALL callers (larger scope than documented) |
-| 2026-02-11 | PROJ-109 | Phase 3 Task 3.2 | Complete | 8249 passed | pending | Removed action_return_to_setup/action_return_to_test_lab flags, 6 files updated |
-| 2026-02-11 | PROJ-109 | Phase 3 Task 3.3 | Complete | 8249 passed | pending | Removed BuildQueueScreen legacy mode, 8 test files updated |
-| 2026-02-11 | PROJ-109 | Phase 3 Task 3.4 | Complete | 8248 passed | pending | Removed _handle_keydown_legacy (-78 lines), 2 test files updated |
-| 2026-02-11 | PROJ-109 | Phase 3 Task 3.5-3.8 | Complete | 8248 passed | pending | Simplified _sync_from_stats_panel, removed DesignMetadata legacy mass, required fields, fixed RaceConfig comment |
-| 2026-02-11 | PROJ-109 | Phase 4 | Complete | 8239 passed | pending | Removed save migration, updated wrapper docstrings, removed transitional comments, removed coord format. Tasks 4.4/4.7/4.8 already done. |
-| 2026-02-11 | PROJ-109 | Phase 5 | Complete | 8238 passed | pending | Logger→SingletonMeta, _ProfilerProxy removed, target_evaluator audit (params used). All 5 phases complete. |
-| 2026-02-11 | PROJ-109 | Audit 1 | PASSED | 8238 passed | pending | All 6 goals verified: shims, dead code, deprecated params, migration, proxies, comments |
-| 2026-02-11 | PROJ-110 | Phase 1 Tasks 1.1-1.7 | Complete | 8394 passed | pending | +156 tests: hex_math(43), behaviors(41), resources(14), input_mapper(17), paths(18), screenshot(11), ai_controller(14) |
-| 2026-02-11 | PROJ-110 | Phase 1 Tasks 1.8-1.10 | Complete | 8411 passed | pending | +17 tests: target_evaluator(15), strategy_manager(1), test fix(1). Phase 1 complete. |
-| 2026-02-11 | PROJ-110 | Phase 2 Tasks 2.1-2.9 | Complete | 8633 passed | pending | +222 tests: simulation layer CRITICAL+MAJOR coverage. Phase 2 complete. |
-| 2026-02-11 | PROJ-110 | Phase 3 Tasks 3.1-3.8 | Complete | 8740 passed | pending | +107 tests: strategy layer CRITICAL+MAJOR coverage. Phase 3 complete. |
-| 2026-02-11 | PROJ-110 | Phase 4 Tasks 4.1-4.27 | Complete | 8924 passed | 7440dcd5 | +168 tests: All Layers MINOR coverage gaps. Phase 4 complete. |
-| 2026-02-11 | PROJ-110 | Audit 1 | PASSED | 8924 passed | pending | All 4 phases verified: P1 247 tests, P2 222 tests, P3 187 tests, P4 25 files |
 | 2026-02-11 | PROJ-111 | Phase 1 | Complete | 8984 passed | pending | +60 tests: camera, BattleUIService, utils, components, colors, widgets, imports |
 | 2026-02-11 | PROJ-111 | Phase 2 | Complete | 9034 passed | pending | +50 tests: SpriteManager, ShipThemeManager, GameRenderer (singleton/error/threading/caching) |
 | 2026-02-11 | PROJ-111 | Phase 4 | Complete | 9277 passed | pending | +127 tests: StrategyScreen (49), StrategyInputHandler (39), StrategyRenderer (39) |
@@ -416,6 +128,8 @@
 | 2026-02-12 | PROJ-114 | Phase 4 | Complete | 9754 pass | pending | 3 fixes (docstrings 6 files, logging, imports), 15 acceptable |
 | 2026-02-12 | PROJ-114 | Audit 1 | PASSED | 9754 pass | pending | All 4 phases verified by investigation agents |
 | 2026-02-13 | PROJ-118 | Phase 1 | Complete | 9866 pass | pending | 24 TCG-FND findings addressed, +112 tests (physics, AI, collision, spatial, research) |
+| 2026-02-13 | PROJ-118 | Phase 2 | Complete | 11501 pass | pending | 27 TCG-SIM findings addressed, +1635 tests total |
+| 2026-02-13 | PROJ-118 | Audit 1 | PASSED | 11501 pass | pending | Phase 1: 5/5 pass, Phase 2: 8/8 pass - all goals verified |
 
 ---
 
