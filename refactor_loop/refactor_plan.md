@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-117 Phase 2 - Simulation
-**Current Status:** PROJ-117 Phase 2 Complete
+**Last Completed:** PROJ-117 Phase 3 - UI-Framework
+**Current Status:** PROJ-117 Phase 3 Complete
 **Current Project:** PROJ-117
-**Current Phase:** Phase 3 (UI-Framework)
-**Test Status:** 9773 passed
+**Current Phase:** Phase 4 (UI-Screens)
+**Test Status:** 9754 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-117 Phase 2 Complete (23 Simulation findings):
-  - 12 fixes: Deleted ABILITY_CLASS_MAP, migrated resource imports (11 files), deleted dict-format branch, fixed missile type checks (AttackType enum), removed ResourceDependencyRule fallback, removed WeaponAbility hasattr, added shots_hit/shots_fired init, removed combat_endurance fallback, CargoStorage layer→enum, deleted duplicate shield_regen_cost
-  - 2 already fixed: persistence.py moved to UI layer previously
-  - 9 deferred/acceptable: Module-level loaders use singleton fallback intentionally, designs.py is test infra, PROJ-41 blocker, is_v2_format naming correct, FORMULA_* are docs, module identity drift needs larger refactor, Ship.base_mass vestigial but harmless, INFO items acceptable
-- Next: PROJ-117 Phase 3 (UI-Framework findings)
+- PROJ-117 Phase 3 Complete (12 UI-Framework findings):
+  - 3 fixes: Deleted widgets.py (legacy unused, -19 tests), deleted atlas fallback in sprites.py, removed hasattr on LayerType.value
+  - 4 false positives: draw_hud/bar used, BattleOrchestrator used, show_overlay used, interfaces/__init__.py used, Ship.id getattr correct
+  - 5 acceptable: Singleton patterns (ShipThemeManager, SpriteManager), defensive getattr, xdist race fix
+- Next: PROJ-117 Phase 4 (UI-Screens findings)
 
 ---
 
@@ -399,6 +399,7 @@
 | 2026-02-12 | PROJ-116 | Audit 1 | PASSED | 9773 passed | pending | No code changes. Verified: Sim decomposed (PROJ-88), Strategy decomposed (PROJ-87), UI decomposed (PROJ-89/104) |
 | 2026-02-12 | PROJ-117 | Phase 1 | Complete | 9773 passed | pending | 14 findings: 7 fixes, 7 false positives. StrategyMetadataService→SingletonMeta, deleted dead AIController attrs/wrappers, removed TypeGuard shim |
 | 2026-02-12 | PROJ-117 | Phase 2 | Complete | 9773 passed | pending | 23 findings: 12 fixes, 2 already fixed, 9 deferred. Deleted ABILITY_CLASS_MAP, migrated resource imports (11 files), fixed missile type checks (AttackType enum), removed dead code branches |
+| 2026-02-12 | PROJ-117 | Phase 3 | Complete | 9754 passed | pending | 12 findings: 3 fixes (widgets.py deleted, atlas fallback deleted, hasattr removed), 4 false positives, 5 acceptable |
 
 ---
 

@@ -20,7 +20,6 @@ class SpriteManager(metaclass=SingletonMeta):
     """
 
     def __init__(self):
-        self.atlas = None
         self.sprites = []
         self.tile_size = 36
 
@@ -28,7 +27,6 @@ class SpriteManager(metaclass=SingletonMeta):
         """
         Loads sprites from assets/Images/Components if available.
         Checks for 'Tiles' subdirectory first, then falls back to base directory.
-        Falls back to loading atlas from older path if not.
         """
         components_dir = os.path.join(base_path, "assets", "Images", "Components")
         tiles_dir = os.path.join(components_dir, "Tiles")
@@ -38,9 +36,7 @@ class SpriteManager(metaclass=SingletonMeta):
         elif os.path.exists(components_dir):
             self._load_from_directory(components_dir)
         else:
-             # Fallback to old atlas
-             atlas_path = os.path.join(base_path, "assets", "Images", "Components.bmp")
-             self._load_atlas_file(atlas_path)
+            log_error(f"No sprite directory found at {tiles_dir} or {components_dir}")
 
     def _load_from_directory(self, directory):
         log_info(f"Loading sprites from {directory}")
@@ -93,38 +89,6 @@ class SpriteManager(metaclass=SingletonMeta):
                 self.sprites[idx] = img
                 
         log_info(f"Loaded {len(loaded_sprites)} sprites from directory (max index {max_index})")
-
-    def _load_atlas_file(self, path):
-        if not os.path.exists(path):
-            log_error(f"Atlas file not found at {path}")
-            return
-            
-        try:
-            # For BMP, usually convert() is safer than convert_alpha() unless it's 32-bit BMP
-            self.atlas = pygame.image.load(path).convert() 
-            # Assume black is transparent for now? Or Magenta? 
-            # Let's auto-detect top-left pixel or just no transparency key for now
-            self.atlas.set_colorkey((0, 0, 0)) # Common for BMP sprites
-            
-            self._slice_sprites()
-            log_info(f"Loaded Atlas: {path} ({self.atlas.get_width()}x{self.atlas.get_height()})")
-
-        except (FileNotFoundError, OSError, pygame.error) as e:
-            import traceback
-            log_error(f"Exception loading atlas: {e}\n{traceback.format_exc()}")
-
-    def _slice_sprites(self):
-        self.sprites = []
-        if not self.atlas: return
-        
-        cols = self.atlas.get_width() // self.tile_size
-        rows = self.atlas.get_height() // self.tile_size
-        
-        # Assume generic grid order: left to right, top to bottom
-        for y in range(rows):
-            for x in range(cols):
-                rect = pygame.Rect(x * self.tile_size, y * self.tile_size, self.tile_size, self.tile_size)
-                self.sprites.append(self.atlas.subsurface(rect))
 
     def get_sprite(self, index):
         if 0 <= index < len(self.sprites):

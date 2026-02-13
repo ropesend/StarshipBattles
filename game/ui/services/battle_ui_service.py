@@ -152,7 +152,7 @@ class BattleUIService:
         # Convert components
         components = []
         for layer_type, layer_data in ship.layers.items():
-            layer_name = layer_type.value if hasattr(layer_type, 'value') else str(layer_type)
+            layer_name = layer_type.value  # LayerType is always an enum
             for comp in layer_data.components:
                 components.append(self._convert_component(comp, layer_name))
 

@@ -69,13 +69,6 @@ class TestUISubmoduleImports:
         from game.ui.colors import COLORS
         assert COLORS is not None
 
-    def test_widgets_import(self):
-        """game.ui.widgets should be importable."""
-        from game.ui.widgets import Button, Label, Slider
-        assert Button is not None
-        assert Label is not None
-        assert Slider is not None
-
     def test_battle_ui_interface_import(self):
         """game.ui.interfaces.battle_ui should be importable."""
         from game.ui.interfaces.battle_ui import IBattleUI, ShipDTO
