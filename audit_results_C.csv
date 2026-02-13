@@ -159,3 +159,7 @@ tests/unit/simulation/services/test_modifier_service.py,KEEP,Tests active Modifi
 tests/unit/simulation/services/test_registry_loader.py,KEEP,Tests active registry_loader,game/simulation/services/registry_loader.py
 tests/unit/simulation/services/test_simulation_design_loader.py,KEEP,Tests active SimulationDesignLoader,game/simulation/services/design_loader.py
 tests/unit/simulation/services/test_vehicle_design_service.py,KEEP,Tests active VehicleDesignService,game/simulation/services/vehicle_design_service.py
+tests/unit/simulation/systems/test_battle_end_conditions.py,KEEP,Tests active BattleEndCondition,game/simulation/systems/battle_end_conditions.py
+tests/unit/simulation/systems/test_battle_engine_end_conditions.py,KEEP,Tests active BattleEngine.is_battle_over,game/simulation/systems/battle_engine.py
+tests/unit/simulation/systems/test_battle_engine_tick.py,KEEP,Tests active BattleEngine.update,game/simulation/systems/battle_engine.py
+tests/unit/simulation/systems/test_resource_manager_edge_cases.py,KEEP,Tests active ResourceState/Registry,game/simulation/systems/resource_manager.py
