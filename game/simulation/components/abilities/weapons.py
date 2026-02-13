@@ -306,14 +306,6 @@ class BeamWeaponAbility(WeaponAbility):
 
         return chance
 
-    def get_damage(self, range_to_target: float = 0) -> float:
-        """Evaluate damage at a specific range. Returns base damage if no formula."""
-        if self.damage_formula:
-            from game.simulation.formula_system import safe_evaluate_math_formula
-            context = {'range_to_target': range_to_target}
-            return max(0.0, safe_evaluate_math_formula(self.damage_formula, context))
-        return self.damage
-
 
 class SeekerWeaponAbility(WeaponAbility):
     # Extend parent bindings with seeker-specific stats

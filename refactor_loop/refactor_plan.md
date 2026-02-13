@@ -8,20 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-115 Phase 3 Complete
-**Current Status:** PROJ-115 Phase 3 Complete - Ready for Phase 4
+**Last Completed:** PROJ-115 Phase 5 Complete
+**Current Status:** PROJ-115 All Phases Complete - Ready for Audit
 **Current Project:** PROJ-115
-**Current Phase:** Phase 4 (UI-Screens)
+**Current Phase:** Audit Pending
 **Test Status:** 9754 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-115 Phase 3 Complete (8 findings):
-  - 1 FIXED: schematic_view.py now imports LAYER_COLORS from game_renderer.py
-  - 1 ALREADY FIXED: Ship image scaling already centralized in ui/utils.py
-  - 6 ACCEPTABLE: Portrait loading (API exists), null-check guards, DI pattern, thumbnail loading, magic colors
-- Files modified: game/ui/screens/builder/schematic_view.py
-- Next: Start PROJ-115 Phase 4 (UI-Screens)
+- PROJ-115 Phase 5 Complete (21 findings investigated):
+  - 2 FIXED: BeamWeaponAbility.get_damage() duplicate removed, battle_ui.py missile enum
+  - 11 FALSE POSITIVE/ALREADY FIXED: Physics formulas, ability aggregation, modifier application, stats dicts, component loading, resource calcs
+  - 6 ACCEPTABLE: Hull auto-equip, superweapon markers, layer separation, formula systems, validation facades
+  - 2 DEFERRED: Ability constructor helper caused test failures (formula string edge cases)
+- Files modified: weapons.py, battle_ui.py
+- Next: Run audit per Protocol 04
 
 ---
 
@@ -230,9 +231,9 @@
 ---
 
 - [/] **PROJ-115: Duplication Elimination**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** All Phases Complete - Audit Pending | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-115/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-115/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** Pending | **Cycles:** 0/5
   - **Dependencies:** None
 
 ---
@@ -406,6 +407,8 @@
 | 2026-02-12 | PROJ-115 | Phase 1 | Complete | 9754 passed | pending | 4 fixes, 4 already fixed, 2 acceptable. _flee_direction helper, angle_diff usage, resources.py dedup |
 | 2026-02-12 | PROJ-115 | Phase 2 | Complete | 1772 str | pending | 1 fix (Galaxy.get_system_at_location), 9 acceptable/false positives |
 | 2026-02-12 | PROJ-115 | Phase 3 | Complete | 9754 pass | pending | 1 fix (LAYER_COLORS), 1 already fixed, 6 acceptable |
+| 2026-02-12 | PROJ-115 | Phase 4 | Complete | 9754 pass | N/A | 0 fixes (3 false positive, 1 already fixed, 6 acceptable) |
+| 2026-02-12 | PROJ-115 | Phase 5 | Complete | 9754 pass | pending | 2 fixes, 11 false positive/already fixed, 6 acceptable, 2 deferred |
 
 ---
 

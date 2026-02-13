@@ -1,6 +1,7 @@
 import pygame
 import math
 from game.core.logger import log_debug
+from game.core.constants import AttackType
 from game.ui.config import UIConfig
 from game.ui.panels.battle_panels import ShipStatsPanel, SeekerMonitorPanel, BattleControlPanel
 
@@ -32,7 +33,7 @@ class BattleUI:
 
     def track_projectile(self, proj):
         """Add a projectile to the tracker if it is a missile."""
-        if getattr(proj, 'type', '') == 'missile':
+        if getattr(proj, 'type', None) == AttackType.MISSILE:
             self.seeker_panel.add_seeker(proj)
 
     def handle_resize(self, width, height):
