@@ -278,7 +278,7 @@ Announce: "Sweep complete. {PROJECTS_COUNT} projects created. Exiting."
 Be vocal but concise:
 ```
 Starting sweep...
-Review folder: Reviews/results/2026-02-12_sweep_full-codebase-sweep
+Review folder: Reviews/results/2026-02-12_143022_sweep_full-codebase-sweep
 Wave 1/5 complete (Duplication). 5/5 agents succeeded.
 Wave 2/5 complete (Legacy Holdovers). 5/5 agents succeeded.
 Wave 3/5 complete (Consistency). 4/5 agents succeeded. (1 retry failed)

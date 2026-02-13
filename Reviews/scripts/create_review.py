@@ -279,11 +279,13 @@ def create_review(review_type: str, description: str, original: str = None) -> P
             print(f"       Expected at: {original_folder}")
             sys.exit(1)
 
-    # Create folder name
-    date = datetime.now().strftime("%Y-%m-%d")
-    date_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+    # Create folder name (include time to prevent same-day collisions)
+    now = datetime.now()
+    date = now.strftime("%Y-%m-%d")
+    date_time = now.strftime("%Y-%m-%d %H:%M")
+    time_suffix = now.strftime("%H%M%S")
     slug = slugify(description)
-    review_name = f"{date}_{review_type}_{slug}"
+    review_name = f"{date}_{time_suffix}_{review_type}_{slug}"
 
     print(f"\n{'=' * 50}")
     print(f"Creating New Review: {review_name}")
