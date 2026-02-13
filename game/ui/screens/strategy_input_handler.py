@@ -67,12 +67,12 @@ class StrategyInputHandler:
         if event.type == pygame.KEYDOWN:
             self._handle_keydown(event)
 
-        # Mouse Click Events (PROJ-88: folded from app.py legacy dispatch)
+        # Mouse Click Events (PROJ-88: moved from app.py)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = event.pos
             self.handle_click(mx, my, event.button)
 
-        # Mouse Wheel Events (PROJ-88: folded from app.py legacy dispatch)
+        # Mouse Wheel Events (PROJ-88: moved from app.py)
         elif event.type == pygame.MOUSEWHEEL:
             self._handle_scroll(event)
 

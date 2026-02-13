@@ -954,7 +954,7 @@ class FleetReportWindow(UIWindow):
         self.ship_detail_panel.update_ship(self.selected_ship)
 
     def _on_remove_ship(self, ship):
-        """Handle remove single ship from fleet (legacy API)."""
+        """Handle remove single ship from fleet via ShipDetailPanel callback."""
         if not self.empire:
             # No empire, just remove ship without creating new fleet
             if self.fleet.remove_ship(ship):

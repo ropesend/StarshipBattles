@@ -246,14 +246,6 @@ class TestLabScreen:
         """
         return self._data_extractor.load_component(component_id)
 
-    @property
-    def components_cache(self):
-        """Access component cache from data extractor.
-
-        Provides public access to the components cache for backward compatibility.
-        """
-        return self._data_extractor.get_components_cache()
-
     def _handle_update_expected_values(self):
         """
         Handle click on Update Expected Values button.

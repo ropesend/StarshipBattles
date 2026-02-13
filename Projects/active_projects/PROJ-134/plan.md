@@ -16,13 +16,13 @@
 | 1. Foundation | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Simulation | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. UI-Framework | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. UI-Screens | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. UI-Screens | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - 7 tasks: removed unused IBattleUI import, updated inaccurate docstrings; accepted as-is: registry fallback patterns (x3 - standard PROJ-50 DI), defensive getattr/hasattr patterns (x2 - support Mock objects and dynamic attributes), get_ships_folder test helper
-**Next Action:** Begin Phase 4 tasks
+**Active Phase:** Audit
+**Last Action:** Phase 4 complete - 12 tasks: 5 fixes (dead property, misleading docstrings, outdated comments), 7 accepted as-is (intentional patterns: DI, singleton, DTO, multi-mode controller)
+**Next Action:** Begin audit cycle
 **Blockers:** None
 
 ## Overview
@@ -83,7 +83,7 @@ Systematic remediation of findings from review: 2026-02-13_092036_sweep_full-cod
 - [decisions.md](decisions.md) - Full decisions log
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing
+- [x] All phase checklists complete
+- [x] All tests passing
 - [ ] Audit passed
 - [ ] User verified

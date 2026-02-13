@@ -43,7 +43,7 @@ class ShipPanel:
         return self.ship_viewer.handle_scroll(event)
 
     def update(self):
-        """Update hover states."""
+        """No-op; reserved for interface consistency."""
         pass
 
     def draw(self, surface):
@@ -132,7 +132,7 @@ class TabbedShipPanel:
         return False
 
     def update(self):
-        """Update hover states."""
+        """No-op; reserved for interface consistency."""
         pass
 
     def draw(self, surface):

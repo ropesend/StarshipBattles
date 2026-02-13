@@ -79,7 +79,7 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         max_energy += ship_max_energy
         total_energy += ship.resource_levels.get(ResourceType.ENERGY, 0)
 
-    # Warp capability counts - PROJ-40: Call ShipStatsCalculator directly
+    # Warp capability counts
     warp_capable_count = sum(1 for s in ships if ShipStatsCalculator.has_warp_capability(s))
 
     return {
@@ -122,7 +122,6 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
         show_not_warp = filter_state.get('show_not_warp_capable', True)
 
         # If either filter is off, we need to check warp capability
-        # PROJ-40: Call ShipStatsCalculator directly
         if not show_warp or not show_not_warp:
             is_warp_capable = ShipStatsCalculator.has_warp_capability(ship)
             if is_warp_capable and not show_warp:
