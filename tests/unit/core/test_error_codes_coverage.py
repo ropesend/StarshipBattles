@@ -150,17 +150,3 @@ class TestComponentCodes:
             assert 1 <= num <= 99, f"Component code {code.name} out of range"
 
 
-class TestAICodes:
-    """Tests for AI code category."""
-
-    def test_ai_codes_start_with_a(self):
-        """A001-A099 pattern for AI codes."""
-        ai_codes = [
-            ErrorCode.AI_STATE_ERROR,
-        ]
-        for code in ai_codes:
-            assert code.value.startswith("A"), (
-                f"AI code {code.name} should start with 'A'"
-            )
-            num = int(code.value[1:])
-            assert 1 <= num <= 99, f"AI code {code.name} out of range"

@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-128 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-128 complete, ready for user verification
-**Current Project:** PROJ-129 (next)
-**Current Phase:** Ready to start Phase 1
-**Test Status:** 11873 passed
+**Last Completed:** PROJ-129 Phase 1 - Foundation
+**Current Status:** Phase 1 complete, Phase 2 next
+**Current Project:** PROJ-129
+**Current Phase:** Phase 2
+**Test Status:** 11872 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-128 Audit Cycle 1 completed successfully
-- 8 spot checks verified: logger type hints, AIConfig constants, design_loader cleanup, resource_type rename, strategy logging, ValidationResult, UI type hints, module docstring
-- All 73 tasks categorized: RESOLVED with code changes, ACCEPTABLE (intentional design), FALSE POSITIVE, or INFO
-- Tests passing: 11873
-- Next: Start PROJ-129 legacy-system-cleanup Phase 1
+- PROJ-129 Phase 1 complete
+- Task 1.1 (LEG-FND-003): ACCEPTABLE - raw Ship access in FormationBehavior is documented/intentional
+- Task 1.2 (LEG-FND-004): ACCEPTABLE - SingletonMeta usage is legitimate for global services
+- Task 1.3 (LEG-FND-005): RESOLVED - Removed unused AI_STATE_ERROR and TestAICodes
+- Tests: 11872 passed (1 less due to removed test class)
+- Next: Start PROJ-129 Phase 2 (Simulation)
 
 ---
 
@@ -52,8 +53,8 @@
 
 ---
 
-- [ ] **PROJ-129: legacy-system-cleanup**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-129: legacy-system-cleanup**
+  - **Phases:** 4 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-129/plan.md](Projects/active_projects/PROJ-129/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -98,6 +99,7 @@
 | 2026-02-13 | PROJ-128 | Phase 4 | Complete | 11873 pass | pending | 1 RESOLVED, 9 ACCEPTABLE, 1 FALSE POSITIVE, 2 INFO |
 | 2026-02-13 | PROJ-128 | Phase 5 | Complete | 11873 pass | pending | 2 RESOLVED (type hints, docstring), 10 ACCEPTABLE, 4 FALSE POSITIVE, 3 INFO |
 | 2026-02-13 | PROJ-128 | Audit 1 | PASSED | 11873 pass | pending | All 8 spot checks verified, project complete |
+| 2026-02-13 | PROJ-129 | Phase 1 | Complete | 11872 pass | pending | 1 RESOLVED (AI_STATE_ERROR), 2 ACCEPTABLE |
 
 ---
 

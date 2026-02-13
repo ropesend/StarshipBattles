@@ -15,7 +15,6 @@ Categories
 - P: Persistence (P001-P099)
 - F: Formula (F001-F099)
 - C: Component (C001-C099)
-- A: AI (A001-A099)
 
 Usage
 =====
@@ -145,13 +144,6 @@ class ErrorCode(Enum):
 
     INCOMPATIBLE_COMPONENT = "C005"
     """Component is not compatible with target."""
-
-    # =========================================================================
-    # AI Codes (A001-A099)
-    # =========================================================================
-
-    AI_STATE_ERROR = "A001"
-    """AI system state error (e.g., singleton violation)."""
 
 
 # =============================================================================
