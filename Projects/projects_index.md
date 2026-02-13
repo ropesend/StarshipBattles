@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-125 | PROJ-F_code-consistency | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-124 | PROJ-E_ui-test-coverage | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-123 | PROJ-D_architecture-cleanup | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-122 | PROJ-C_ui-god-class-decomposition | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-121 | PROJ-B_legacy-eradication | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-120 | PROJ-A_simulation-test-coverage | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-119 | Test Coverage -- Strategy and UI | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-118 | Test Coverage -- Core and Simulation | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
@@ -216,7 +222,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-120
+## Next Project ID: PROJ-126
 
 ---
 

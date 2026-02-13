@@ -434,7 +434,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
 
         # Still merge sweep results (projects were created)
         git add -A
-        git commit -m "[Sweep] Cycle $cycleNum: $findingsCount findings (below threshold)" --allow-empty 2>$null
+        git commit -m "[Sweep] Cycle ${cycleNum}: $findingsCount findings (below threshold)" --allow-empty 2>$null
         git checkout main
         git merge $branchName --no-ff -m "Merge sweep-cycle-$cycleNum (final - diminishing returns)"
         break
@@ -458,7 +458,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
 
     # Commit the sweep results and plan
     git add -A
-    git commit -m "[Sweep] Cycle $cycleNum: $findingsCount findings, $projectsCreated projects queued" 2>$null
+    git commit -m "[Sweep] Cycle ${cycleNum}: $findingsCount findings, $projectsCreated projects queued" 2>$null
 
     # ── Step E: Execute projects (inner loop) ──
     $state.status = "executing"
