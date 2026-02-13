@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (15/18)
+**Status:** In Progress (16/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -237,15 +237,20 @@ Total tests: 76 (was 60)
 Total propulsion tests now: 40 (was 26)
 
 ### Task 1.16: TCG-SIM-016 - ProjectileManager Missing Batch Update T [Simple]
-**File:** `game/simulation/projectile_man`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/projectile_manager.py`
+**Tests:** `pytest tests/unit/simulation/test_projectile_manager.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 14 new batch update tests covering:
+- TestBatchUpdateMultipleHits (2 tests): Multiple projectiles hitting different ships, multiple projectiles hitting same ship
+- TestBatchMarkAndSweepRemoval (5 tests): Alternating alive/dead patterns, first/last half patterns, only first/last survives, order preservation
+- TestBatchUpdateLargeScale (3 tests): 100 projectiles half die, all survive, no stale references after removal
+- TestBatchUpdateWithHitsAndDeaths (2 tests): Mixed hit and expiration removal, sequential hit checking
+Total tests: 60 (was 46)
 
 ### Task 1.17: TCG-SIM-017 - Test Organization Inconsistency [N]
 **File:** `tests/unit/simulation/`

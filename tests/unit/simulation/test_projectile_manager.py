@@ -1106,3 +1106,448 @@ class TestProjectileManagerAdditionalEdgeCases:
         # Both should be removed (interceptor hit, target destroyed)
         active = manager.get_active_projectiles()
         assert interceptor not in active
+
+
+# ============================================================================
+# Batch Update Tests (PROJ-120 Task 1.16)
+# ============================================================================
+
+class TestBatchUpdateMultipleHits:
+    """Tests for multiple projectiles hitting different ships in same update."""
+
+    def test_multiple_projectiles_hit_different_ships(self, manager, mock_grid):
+        """Multiple projectiles can hit different ships in the same update cycle."""
+        # Create two ships
+        ship1 = MagicMock()
+        ship1.position = Vector2(100, 0)
+        ship1.velocity = Vector2(0, 0)
+        ship1.radius = 10
+        ship1.is_alive = True
+        ship1.team_id = 1
+        ship1.name = "Ship1"
+
+        ship2 = MagicMock()
+        ship2.position = Vector2(200, 0)
+        ship2.velocity = Vector2(0, 0)
+        ship2.radius = 10
+        ship2.is_alive = True
+        ship2.team_id = 1
+        ship2.name = "Ship2"
+
+        # Create two projectiles targeting different areas
+        proj1 = MagicMock()
+        proj1.position = Vector2(95, 0)
+        proj1.velocity = Vector2(10, 0)
+        proj1.is_alive = True
+        proj1.team_id = 0
+        proj1.type = AttackType.PROJECTILE
+        proj1.damage = 20
+        proj1.distance_traveled = 50
+        proj1.source_weapon = None
+        proj1.target = None
+
+        proj2 = MagicMock()
+        proj2.position = Vector2(195, 0)
+        proj2.velocity = Vector2(10, 0)
+        proj2.is_alive = True
+        proj2.team_id = 0
+        proj2.type = AttackType.PROJECTILE
+        proj2.damage = 30
+        proj2.distance_traveled = 50
+        proj2.source_weapon = None
+        proj2.target = None
+
+        # Setup grid to return appropriate ships for each query
+        def query_side_effect(pos, radius):
+            # Return ships near the queried position
+            if pos.x < 150:
+                return [ship1]
+            else:
+                return [ship2]
+
+        mock_grid.query_radius.side_effect = query_side_effect
+
+        manager.add_projectile(proj1)
+        manager.add_projectile(proj2)
+        manager.update(mock_grid)
+
+        # Both ships should receive damage
+        ship1.combat_engine.take_damage.assert_called_with(20)
+        ship2.combat_engine.take_damage.assert_called_with(30)
+        # Both projectiles should be marked hit
+        assert proj1.is_alive is False
+        assert proj2.is_alive is False
+
+    def test_multiple_projectiles_hit_same_ship(self, manager, mock_grid):
+        """Multiple projectiles can hit the same ship in the same update."""
+        ship = MagicMock()
+        ship.position = Vector2(100, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.radius = 20  # Large radius to hit both
+        ship.is_alive = True
+        ship.team_id = 1
+        ship.name = "BigShip"
+
+        # Create projectiles approaching from different angles
+        proj1 = MagicMock()
+        proj1.position = Vector2(95, 5)
+        proj1.velocity = Vector2(10, 0)
+        proj1.is_alive = True
+        proj1.team_id = 0
+        proj1.type = AttackType.PROJECTILE
+        proj1.damage = 15
+        proj1.distance_traveled = 25
+        proj1.source_weapon = None
+        proj1.target = None
+
+        proj2 = MagicMock()
+        proj2.position = Vector2(95, -5)
+        proj2.velocity = Vector2(10, 0)
+        proj2.is_alive = True
+        proj2.team_id = 0
+        proj2.type = AttackType.PROJECTILE
+        proj2.damage = 25
+        proj2.distance_traveled = 25
+        proj2.source_weapon = None
+        proj2.target = None
+
+        mock_grid.query_radius.return_value = [ship]
+
+        manager.add_projectile(proj1)
+        manager.add_projectile(proj2)
+        manager.update(mock_grid)
+
+        # Ship should receive damage twice
+        assert ship.combat_engine.take_damage.call_count == 2
+        # Verify both damage values were applied
+        calls = [call[0][0] for call in ship.combat_engine.take_damage.call_args_list]
+        assert 15 in calls
+        assert 25 in calls
+
+
+class TestBatchMarkAndSweepRemoval:
+    """Tests for the in-place mark-and-sweep removal algorithm."""
+
+    def test_alternating_alive_dead_projectiles(self, manager, mock_grid):
+        """Alternating pattern of alive/dead projectiles is handled correctly."""
+        projs = []
+        for i in range(10):
+            p = MagicMock()
+            p.position = Vector2(i * 100, 0)  # Spread out
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+
+            # Every other projectile dies
+            if i % 2 == 0:
+                p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+            projs.append(p)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        # Should have exactly 5 alive (odd indices)
+        active = manager.get_active_projectiles()
+        assert len(active) == 5
+        for i, p in enumerate(projs):
+            if i % 2 == 1:
+                assert p in active
+            else:
+                assert p not in active
+
+    def test_first_half_dead_second_half_alive(self, manager, mock_grid):
+        """First half of projectiles die, second half survive."""
+        alive_projs = []
+        dead_projs = []
+
+        for i in range(10):
+            p = MagicMock()
+            p.position = Vector2(i * 100, 0)
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+
+            if i < 5:
+                p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+                dead_projs.append(p)
+            else:
+                alive_projs.append(p)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        active = manager.get_active_projectiles()
+        assert len(active) == 5
+        for p in alive_projs:
+            assert p in active
+        for p in dead_projs:
+            assert p not in active
+
+    def test_only_first_survives(self, manager, mock_grid):
+        """Only the first projectile survives, rest die."""
+        first = MagicMock()
+        first.position = Vector2(0, 0)
+        first.velocity = Vector2(1, 0)
+        first.is_alive = True
+        first.team_id = 0
+        first.type = AttackType.PROJECTILE
+        first.target = None
+        manager.add_projectile(first)
+
+        for i in range(9):
+            p = MagicMock()
+            p.position = Vector2((i + 1) * 100, 0)
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+            p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        active = manager.get_active_projectiles()
+        assert len(active) == 1
+        assert first in active
+
+    def test_only_last_survives(self, manager, mock_grid):
+        """Only the last projectile survives, rest die."""
+        projs = []
+        for i in range(10):
+            p = MagicMock()
+            p.position = Vector2(i * 100, 0)
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+
+            if i < 9:
+                p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+            projs.append(p)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        active = manager.get_active_projectiles()
+        assert len(active) == 1
+        assert projs[9] in active
+
+    def test_removal_preserves_relative_order(self, manager, mock_grid):
+        """Surviving projectiles maintain their relative order."""
+        survivors = []
+        for i in range(10):
+            p = MagicMock()
+            p.position = Vector2(i * 100, 0)
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+            p.order_id = i  # Track original order
+
+            # Keep indices 1, 4, 7
+            if i in [1, 4, 7]:
+                survivors.append(p)
+            else:
+                p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        active = manager.get_active_projectiles()
+        assert len(active) == 3
+        # Verify order is preserved
+        assert active[0].order_id == 1
+        assert active[1].order_id == 4
+        assert active[2].order_id == 7
+
+
+class TestBatchUpdateLargeScale:
+    """Tests for batch updates with large numbers of projectiles."""
+
+    def test_batch_update_100_projectiles_half_die(self, manager, mock_grid):
+        """100 projectiles with half dying is handled efficiently."""
+        projs = []
+        for i in range(100):
+            p = MagicMock()
+            p.position = Vector2(i * 10, 0)
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+
+            if i % 2 == 0:
+                p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+            projs.append(p)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        assert len(manager.get_active_projectiles()) == 50
+
+    def test_batch_update_all_survive(self, manager, mock_grid):
+        """100 projectiles all surviving is handled."""
+        for i in range(100):
+            p = MagicMock()
+            p.position = Vector2(i * 10, 0)
+            p.velocity = Vector2(1, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        assert len(manager.get_active_projectiles()) == 100
+
+    def test_batch_removal_no_stale_references(self, manager, mock_grid):
+        """After batch removal, list has no gaps or stale references."""
+        projs = []
+        for i in range(20):
+            p = MagicMock()
+            p.position = Vector2(i * 50, 0)
+            p.velocity = Vector2(5, 0)
+            p.is_alive = True
+            p.team_id = 0
+            p.type = AttackType.PROJECTILE
+            p.target = None
+            p.name = f"proj_{i}"
+
+            # Kill random pattern
+            if i in [0, 3, 7, 11, 15, 19]:
+                p.update.side_effect = lambda p=p: setattr(p, 'is_alive', False)
+            else:
+                projs.append(p)
+            manager.add_projectile(p)
+
+        manager.update(mock_grid)
+
+        active = manager.get_active_projectiles()
+        # Should have exactly 14 survivors
+        assert len(active) == 14
+        # All should be alive
+        for p in active:
+            assert p.is_alive is True
+        # List should be contiguous (no None gaps)
+        for i, p in enumerate(active):
+            assert active[i] is not None
+
+
+class TestBatchUpdateWithHitsAndDeaths:
+    """Tests combining hits and natural deaths in same update."""
+
+    def test_mixed_hit_and_expire_removal(self, manager, mock_grid):
+        """Projectiles removed by both hit and expiration in same update."""
+        ship = MagicMock()
+        ship.position = Vector2(100, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.radius = 10
+        ship.is_alive = True
+        ship.team_id = 1
+        ship.name = "Target"
+
+        # Projectile that will hit
+        hitting = MagicMock()
+        hitting.position = Vector2(95, 0)
+        hitting.velocity = Vector2(10, 0)
+        hitting.is_alive = True
+        hitting.team_id = 0
+        hitting.type = AttackType.PROJECTILE
+        hitting.damage = 20
+        hitting.distance_traveled = 50
+        hitting.source_weapon = None
+        hitting.target = None
+
+        # Projectile that expires naturally
+        expiring = MagicMock()
+        expiring.position = Vector2(500, 500)  # Far from ship
+        expiring.velocity = Vector2(1, 0)
+        expiring.is_alive = True
+        expiring.team_id = 0
+        expiring.type = AttackType.PROJECTILE
+        expiring.target = None
+        expiring.update.side_effect = lambda: setattr(expiring, 'is_alive', False)
+
+        # Projectile that survives
+        surviving = MagicMock()
+        surviving.position = Vector2(1000, 1000)  # Far from ship
+        surviving.velocity = Vector2(1, 0)
+        surviving.is_alive = True
+        surviving.team_id = 0
+        surviving.type = AttackType.PROJECTILE
+        surviving.target = None
+
+        def query_side_effect(pos, radius):
+            if pos.x < 150:
+                return [ship]
+            return []
+
+        mock_grid.query_radius.side_effect = query_side_effect
+
+        manager.add_projectile(hitting)
+        manager.add_projectile(expiring)
+        manager.add_projectile(surviving)
+        manager.update(mock_grid)
+
+        active = manager.get_active_projectiles()
+        assert len(active) == 1
+        assert surviving in active
+        assert hitting not in active
+        assert expiring not in active
+
+    def test_projectile_hit_then_another_checked_but_misses(self, manager, mock_grid):
+        """First projectile hits ship, second is checked but misses."""
+        ship = MagicMock()
+        ship.position = Vector2(100, 0)
+        ship.velocity = Vector2(0, 0)
+        ship.radius = 10
+        ship.is_alive = True
+        ship.team_id = 1
+        ship.name = "Target"
+
+        # First projectile hits
+        proj1 = MagicMock()
+        proj1.position = Vector2(95, 0)
+        proj1.velocity = Vector2(10, 0)
+        proj1.is_alive = True
+        proj1.team_id = 0
+        proj1.type = AttackType.PROJECTILE
+        proj1.damage = 20
+        proj1.distance_traveled = 10
+        proj1.source_weapon = None
+        proj1.target = None
+
+        # Second projectile misses (far from ship)
+        proj2 = MagicMock()
+        proj2.position = Vector2(300, 0)
+        proj2.velocity = Vector2(10, 0)
+        proj2.is_alive = True
+        proj2.team_id = 0
+        proj2.type = AttackType.PROJECTILE
+        proj2.target = None
+
+        def query_side_effect(pos, radius):
+            # Ship only near first projectile
+            if pos.x < 150:
+                return [ship]
+            return []
+
+        mock_grid.query_radius.side_effect = query_side_effect
+
+        manager.add_projectile(proj1)
+        manager.add_projectile(proj2)
+        manager.update(mock_grid)
+
+        # First hit, second survives
+        ship.combat_engine.take_damage.assert_called_once_with(20)
+        active = manager.get_active_projectiles()
+        assert len(active) == 1
+        assert proj2 in active

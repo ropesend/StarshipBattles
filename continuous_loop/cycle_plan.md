@@ -8,24 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-120 Phase 1 Tasks 1.14, 1.15 complete
-**Current Status:** In progress - Phase 1 partially complete (15/18 tasks)
+**Last Completed:** PROJ-120 Phase 1 Task 1.16 complete
+**Current Status:** In progress - Phase 1 partially complete (16/18 tasks)
 **Current Project:** PROJ-120
 **Current Phase:** Phase 1
-**Test Status:** 531 abilities/entities tests passing
+**Test Status:** 2554 simulation/combat tests passing
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 1.14 (TCG-SIM-014): REJECTED - Per CLAUDE.md: "Save files are disposable. Old saves are not migrated."
-  - BattleState.version field is informational only, no migration logic exists or should exist
-  - 80+ serialization tests already cover version field preservation
-- Task 1.15 (TCG-SIM-015): Added 17 new propulsion ability tests
-  - TestStrategicMovementSyncData (7 tests): sync_data handling, modifier preservation, edge cases
-  - TestWarpJumpEnergyCost (9 tests): energy_cost parsing, UI display, can_jump boundary tests
-- Next: Task 1.16 (ProjectileManager Batch Update Tests)
+- Task 1.16 (TCG-SIM-016): Added 14 new ProjectileManager batch update tests
+  - TestBatchUpdateMultipleHits (2 tests): Multiple projectiles hitting different ships, same ship
+  - TestBatchMarkAndSweepRemoval (5 tests): Alternating patterns, order preservation, edge cases
+  - TestBatchUpdateLargeScale (3 tests): 100 projectiles, all survive, no stale references
+  - TestBatchUpdateWithHitsAndDeaths (2 tests): Mixed hit/expire removal, sequential checking
+- Next: Task 1.17 (Test Organization Inconsistency)
 - Files modified:
-  - tests/unit/abilities/test_strategic_movement.py (+7 tests)
-  - tests/unit/abilities/test_warp_jump.py (+9 tests, now 22 total)
+  - tests/unit/simulation/test_projectile_manager.py (+14 tests, now 60 total)
 
 ---
 
@@ -93,7 +91,8 @@
 | 2026-02-13 | PROJ-120 | Phase 1 (9/18) | In Progress | 11871 pass | 2d751f44 | Task 1.9 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (11/18) | In Progress | 9246 pass | - | Tasks 1.10, 1.11 complete |
 | 2026-02-13 | PROJ-120 | Phase 1 (13/18) | In Progress | 2438 pass | 472953fa | Tasks 1.12 (REJECTED), 1.13 complete |
-| 2026-02-13 | PROJ-120 | Phase 1 (15/18) | In Progress | 531 pass | - | Tasks 1.14 (REJECTED), 1.15 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (15/18) | In Progress | 531 pass | d1868db3 | Tasks 1.14 (REJECTED), 1.15 complete |
+| 2026-02-13 | PROJ-120 | Phase 1 (16/18) | In Progress | 2554 pass | - | Task 1.16 complete |
 
 ---
 
