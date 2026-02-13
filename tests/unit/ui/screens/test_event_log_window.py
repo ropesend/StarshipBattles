@@ -262,15 +262,15 @@ class TestStrategyUIEventLogIntegration:
         ui.menu_panel = None
 
         # PROJ-86: Window manager mock for modal tracking
-        ui._window_manager = MagicMock()
-        ui._window_manager.fleet_orders_window = None
-        ui._window_manager.planet_list_window = None
-        ui._window_manager.build_queue_list_window = None
-        ui._window_manager.empire_build_queue_window = None
-        ui._window_manager.fleet_report_window = None
-        ui._window_manager.transfer_dialog = None
-        ui._window_manager.event_log_window = None
-        ui._window_manager.empire_panel_window = None
+        ui.window_manager = MagicMock()
+        ui.window_manager.fleet_orders_window = None
+        ui.window_manager.planet_list_window = None
+        ui.window_manager.build_queue_list_window = None
+        ui.window_manager.empire_build_queue_window = None
+        ui.window_manager.fleet_report_window = None
+        ui.window_manager.transfer_dialog = None
+        ui.window_manager.event_log_window = None
+        ui.window_manager.empire_panel_window = None
 
         # PROJ-86 Phase 7: Event router
         from game.ui.screens.strategy_event_router import StrategyEventRouter
@@ -281,13 +281,13 @@ class TestStrategyUIEventLogIntegration:
     def test_event_log_window_attr_exists(self):
         """StrategyUI._window_manager should have event_log_window attribute."""
         ui, _ = self._make_strategy_ui()
-        assert hasattr(ui._window_manager, 'event_log_window')
-        assert ui._window_manager.event_log_window is None
+        assert hasattr(ui.window_manager, 'event_log_window')
+        assert ui.window_manager.event_log_window is None
 
     def test_has_modal_open_detects_event_log(self):
         """_has_modal_open() should return True when event_log_window is set."""
         ui, _ = self._make_strategy_ui()
-        ui._window_manager.event_log_window = MagicMock()
+        ui.window_manager.event_log_window = MagicMock()
         assert ui._has_modal_open() is True
 
     def test_has_modal_open_false_when_no_event_log(self):
@@ -298,31 +298,31 @@ class TestStrategyUIEventLogIntegration:
     def test_on_event_log_closed_clears_reference(self):
         """_on_event_log_closed() should set event_log_window to None via window manager."""
         ui, _ = self._make_strategy_ui()
-        ui._window_manager.event_log_window = MagicMock()
-        ui._window_manager._on_event_log_closed()
+        ui.window_manager.event_log_window = MagicMock()
+        ui.window_manager._on_event_log_closed()
         # Verify the method was called (it's now on window manager)
-        ui._window_manager._on_event_log_closed.assert_called()
+        ui.window_manager._on_event_log_closed.assert_called()
 
     def test_open_event_log_creates_window(self):
         """open_event_log() should delegate to window manager."""
         ui, scene = self._make_strategy_ui()
         ui.open_event_log()
         # Verify delegation to window manager
-        ui._window_manager.open_event_log.assert_called_once()
+        ui.window_manager.open_event_log.assert_called_once()
 
     def test_open_event_log_passes_all_events(self):
         """open_event_log() should delegate to window manager which fetches events."""
         ui, scene = self._make_strategy_ui()
         ui.open_event_log()
         # Verify delegation to window manager
-        ui._window_manager.open_event_log.assert_called_once()
+        ui.window_manager.open_event_log.assert_called_once()
 
     def test_open_event_log_kills_existing(self):
         """open_event_log() via window manager should handle existing window."""
         ui, scene = self._make_strategy_ui()
         # This is now handled internally by window manager
         ui.open_event_log()
-        ui._window_manager.open_event_log.assert_called_once()
+        ui.window_manager.open_event_log.assert_called_once()
 
     def test_open_event_log_with_events(self):
         """open_event_log_with_events() should delegate to window manager."""
@@ -330,7 +330,7 @@ class TestStrategyUIEventLogIntegration:
         specific_events = [_make_event()]
         ui.open_event_log_with_events(specific_events)
         # Verify delegation with specific events
-        ui._window_manager.open_event_log_with_events.assert_called_once_with(specific_events)
+        ui.window_manager.open_event_log_with_events.assert_called_once_with(specific_events)
 
 
 # ---------------------------------------------------------------------------

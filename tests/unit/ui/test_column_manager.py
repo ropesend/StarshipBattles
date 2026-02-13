@@ -495,7 +495,7 @@ class TestSpecialCapabilityColumns:
         mgr = ColumnManager()
         ship = Mock()
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
                    return_value=True):
             col = mgr.get_column('can_destroy_planet')
             value = mgr.get_column_value(ship, col)
@@ -509,7 +509,7 @@ class TestSpecialCapabilityColumns:
         mgr = ColumnManager()
         ship = Mock()
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
                    return_value=False):
             col = mgr.get_column('can_destroy_planet')
             value = mgr.get_column_value(ship, col)
@@ -524,7 +524,7 @@ class TestSpecialCapabilityColumns:
         ship = Mock()
 
         for col_id in SPECIAL_CAPABILITY_COLUMNS:
-            with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+            with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
                        return_value=True):
                 col = mgr.get_column(col_id)
                 assert col is not None, f"Column {col_id} not found"

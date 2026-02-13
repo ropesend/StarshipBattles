@@ -115,7 +115,12 @@ class WorkshopViewModel:
     def selected_components(self) -> List[Tuple[LayerType, int, Component]]:
         """List of currently selected components as (layer, index, component) tuples."""
         return self._selected_components
-    
+
+    @selected_components.setter
+    def selected_components(self, value: List[Tuple[LayerType, int, Component]]) -> None:
+        """Set the selected components list directly."""
+        self._selected_components = value
+
     @property
     def primary_selection(self) -> Optional[Tuple[LayerType, int, Component]]:
         """The primary (last) selected component, or None if nothing selected."""

@@ -255,7 +255,7 @@ class TestLabExecutor:
         self.test_history.add_run(test_id, scenario.results)
 
         # Log test execution (for UI vs headless comparison)
-        runner._log_test_execution(scenario, headless=True)
+        runner.log_test_execution(scenario, headless=True)
 
         # Update output log
         status = "PASSED" if scenario.passed else "FAILED"
@@ -363,7 +363,7 @@ class TestLabExecutor:
             self.test_history.add_run(test_id, scenario.results)
 
             # Log test execution
-            runner._log_test_execution(scenario, headless=True)
+            runner.log_test_execution(scenario, headless=True)
 
             # Update output log
             status = "PASSED" if scenario.passed else "FAILED"

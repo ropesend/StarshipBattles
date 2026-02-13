@@ -293,7 +293,7 @@ class TestFleetCapabilityCalculator:
 class TestHasAbility:
     """Tests for has_ability() and ships_with_ability() methods (PROJ-102)."""
 
-    def test_has_ability_returns_true_when_ship_has_ability(self):
+    def test_has_ability_returns_true_whenship_has_ability(self):
         """has_ability returns True when any ship has the ability."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
@@ -313,7 +313,7 @@ class TestHasAbility:
 
         assert calc.has_ability("DestroyPlanet") is True
 
-    def test_has_ability_returns_false_when_no_ship_has_ability(self):
+    def test_has_ability_returns_false_when_noship_has_ability(self):
         """has_ability returns False when no ship has the ability."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
@@ -407,8 +407,8 @@ class TestHasAbility:
         result = calc.ships_with_ability("SelfDestruct")
         assert result == []
 
-    def test_ship_has_ability_checks_all_layers(self):
-        """_ship_has_ability checks abilities in all layers."""
+    def testship_has_ability_checks_all_layers(self):
+        """ship_has_ability checks abilities in all layers."""
         from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
         from game.strategy.data.fleet import Fleet
         from game.core.hex_math import HexCoord

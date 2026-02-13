@@ -224,7 +224,7 @@ class ColumnManager:
             # INTENTIONAL LATE IMPORT: Avoid circular import with strategy data
             from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
             ability_name = SPECIAL_CAPABILITY_COLUMNS[col_id]
-            return "Yes" if FleetCapabilityCalculator._ship_has_ability(ship, ability_name) else "No"
+            return "Yes" if FleetCapabilityCalculator.ship_has_ability(ship, ability_name) else "No"
 
         return ""
 

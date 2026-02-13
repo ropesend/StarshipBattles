@@ -160,7 +160,7 @@ class InputMapper:
         return None
 
     @staticmethod
-    def _extract_modifiers(event_mod: int) -> FrozenSet[str]:
+    def extract_modifiers(event_mod: int) -> FrozenSet[str]:
         """Convert a pygame modifier bitmask to a frozenset of modifier names.
 
         Normalizes left/right variants (LSHIFT/RSHIFT -> "shift").
@@ -203,7 +203,7 @@ class InputMapper:
             return None
 
         key_int = event.key
-        mods = self._extract_modifiers(event.mod)
+        mods = self.extract_modifiers(event.mod)
         lookup_key = (key_int, mods)
 
         actions = self._lookup.get(lookup_key)

@@ -308,7 +308,7 @@ class DesignWorkshopScreen:
             self.viewmodel.selected_components, new_selection, self.viewmodel.ship,
             append=append, toggle=toggle
         )
-        self.viewmodel._selected_components = new_list
+        self.viewmodel.selected_components = new_list
 
         # Update primary selection
         self.selected_component = get_primary_selection(self.viewmodel.selected_components)
@@ -358,7 +358,7 @@ class DesignWorkshopScreen:
 
     @selected_components.setter
     def selected_components(self, value):
-        self.viewmodel._selected_components = value
+        self.viewmodel.selected_components = value
 
     @property
     def available_components(self):
@@ -393,7 +393,7 @@ class DesignWorkshopScreen:
         # Note: Full panel recreation would require significant refactoring
         # For now, the workshop handles resize gracefully but may need manual reload
 
-    def _execute_pending_action(self):
+    def execute_pending_action(self):
         """Execute the action stored in self.pending_action."""
         if hasattr(self, 'pending_action') and self.pending_action:
             act, data = self.pending_action
@@ -512,11 +512,11 @@ class DesignWorkshopScreen:
             x = (self.width - err_surf.get_width()) // 2
             screen.blit(err_surf, (x, 50))
 
-    def _save_ship(self):
+    def save_ship(self):
         """Save ship design (delegates to WorkshopShipIO)."""
         self.ship_io.save_ship()
 
-    def _load_ship(self):
+    def load_ship(self):
         """Load ship design (delegates to WorkshopShipIO)."""
         self.ship_io.load_ship()
 
@@ -533,7 +533,7 @@ class DesignWorkshopScreen:
         self.rebuild_modifier_ui()
         log_info(message)
 
-    def _show_clear_confirmation(self):
+    def show_clear_confirmation(self):
         self.pending_action = ('clear_design', None)
         self.confirm_dialog = UIConfirmationDialog(
             rect=pygame.Rect((self.width // 2 - 150, self.height // 2 - 100), (300, 200)),
@@ -596,7 +596,7 @@ class DesignWorkshopScreen:
         if hasattr(self, 'weapons_report_panel'):
             self.weapons_report_panel.clear_target()
 
-    def _on_select_target_pressed(self):
+    def on_select_target_pressed(self):
         """Select target ship (delegates to WorkshopShipIO)."""
         self.ship_io.select_target()
 

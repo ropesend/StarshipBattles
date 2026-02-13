@@ -294,11 +294,11 @@ class WorkshopEventRouter:
         if event.ui_element == gui.start_btn:
             gui.on_start_battle(None)
         elif event.ui_element == gui.save_btn:
-            gui._save_ship()
+            gui.save_ship()
         elif event.ui_element == gui.load_btn:
-            gui._load_ship()
+            gui.load_ship()
         elif event.ui_element == gui.clear_btn:
-            gui._show_clear_confirmation()
+            gui.show_clear_confirmation()
         elif event.ui_element == gui.arc_toggle_btn:
             gui.show_firing_arcs = not gui.show_firing_arcs
             gui.arc_toggle_btn.set_text("Hide Firing Arcs" if gui.show_firing_arcs else "Show Firing Arcs")
@@ -307,7 +307,7 @@ class WorkshopEventRouter:
             gui.hull_toggle_btn.set_text("Hide Hull" if showing else "Show Hull")
             gui.layer_panel.rebuild()
         elif event.ui_element == gui.target_btn:
-            gui._on_select_target_pressed()
+            gui.on_select_target_pressed()
         elif hasattr(gui, 'std_data_btn') and event.ui_element == gui.std_data_btn:
             gui.data_reloader.load_standard_data()
         elif hasattr(gui, 'test_data_btn') and event.ui_element == gui.test_data_btn:
@@ -362,7 +362,7 @@ class WorkshopEventRouter:
                 window_title="Confirm Refit"
             )
         else:
-            gui._execute_pending_action()
+            gui.execute_pending_action()
         
         return True
     
@@ -391,7 +391,7 @@ class WorkshopEventRouter:
                 window_title="Confirm Type Change"
             )
         else:
-            gui._execute_pending_action()
+            gui.execute_pending_action()
         
         return True
     
@@ -413,7 +413,7 @@ class WorkshopEventRouter:
         """Handle confirmation dialog confirmed events."""
         gui = self.gui
         if event.ui_element == gui.confirm_dialog:
-            gui._execute_pending_action()
+            gui.execute_pending_action()
             return True
         return False
     

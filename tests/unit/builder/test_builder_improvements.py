@@ -93,7 +93,7 @@ class TestBuilderImprovements:
 
         # PROJ-43: Mock the adapter's load_ship method (not ShipIO directly)
         builder._ship_io_adapter.load_ship = MagicMock(return_value=(mock_ship, "Success"))
-        builder._load_ship()
+        builder.load_ship()
 
         # Verification
         assert builder.ship == mock_ship

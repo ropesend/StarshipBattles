@@ -574,38 +574,38 @@ class TestContextOverlap:
 class TestModifierExtraction:
     """Tests for modifier extraction from pygame events."""
 
-    def test_extract_modifiers_ctrl(self, make_keydown):
+    def testextract_modifiers_ctrl(self, make_keydown):
         """KMOD_CTRL -> frozenset({'ctrl'})."""
         from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_CTRL)
-        mods = InputMapper._extract_modifiers(event.mod)
+        mods = InputMapper.extract_modifiers(event.mod)
         assert mods == frozenset({"ctrl"})
 
-    def test_extract_modifiers_shift(self, make_keydown):
+    def testextract_modifiers_shift(self, make_keydown):
         """KMOD_SHIFT -> frozenset({'shift'})."""
         from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_SHIFT)
-        mods = InputMapper._extract_modifiers(event.mod)
+        mods = InputMapper.extract_modifiers(event.mod)
         assert mods == frozenset({"shift"})
 
-    def test_extract_modifiers_alt(self, make_keydown):
+    def testextract_modifiers_alt(self, make_keydown):
         """KMOD_ALT -> frozenset({'alt'})."""
         from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_ALT)
-        mods = InputMapper._extract_modifiers(event.mod)
+        mods = InputMapper.extract_modifiers(event.mod)
         assert mods == frozenset({"alt"})
 
-    def test_extract_modifiers_multiple(self, make_keydown):
+    def testextract_modifiers_multiple(self, make_keydown):
         """KMOD_CTRL|KMOD_SHIFT -> frozenset({'ctrl', 'shift'})."""
         from game.ui.services.input_mapper import InputMapper
         event = make_keydown(pygame.K_a, pygame.KMOD_CTRL | pygame.KMOD_SHIFT)
-        mods = InputMapper._extract_modifiers(event.mod)
+        mods = InputMapper.extract_modifiers(event.mod)
         assert mods == frozenset({"ctrl", "shift"})
 
-    def test_extract_modifiers_none(self, make_keydown):
+    def testextract_modifiers_none(self, make_keydown):
         """0 -> frozenset()."""
         from game.ui.services.input_mapper import InputMapper
-        mods = InputMapper._extract_modifiers(0)
+        mods = InputMapper.extract_modifiers(0)
         assert mods == frozenset()
 
 

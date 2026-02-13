@@ -57,7 +57,7 @@ class StrategyEventRouter:
             return True
 
         # Check window manager for open windows (PROJ-86)
-        wm = self.ui._window_manager
+        wm = self.ui.window_manager
         if wm.fleet_orders_window is not None:
             return True
         if wm.planet_list_window is not None:
@@ -97,11 +97,11 @@ class StrategyEventRouter:
         """
         self.ui.manager.process_events(event)
         # PROJ-86: Use window manager for UI callbacks
-        self.ui._window_manager.process_ui_callbacks(event)
+        self.ui.window_manager.process_ui_callbacks(event)
 
         # Pass generic events to orders window if active (e.g. for confirmation dialogs)
-        if self.ui._window_manager.fleet_orders_window:
-            self.ui._window_manager.fleet_orders_window.handle_global_event(event)
+        if self.ui.window_manager.fleet_orders_window:
+            self.ui.window_manager.fleet_orders_window.handle_global_event(event)
 
         # Close menu panel on Escape
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and self.ui.menu_panel:
@@ -224,7 +224,7 @@ class StrategyEventRouter:
         Args:
             event: The pygame_gui window close event.
         """
-        wm = self.ui._window_manager
+        wm = self.ui.window_manager
 
         if event.ui_element == wm.fleet_orders_window:
             wm.fleet_orders_window = None
@@ -248,7 +248,7 @@ class StrategyEventRouter:
             event: The pygame event to check for custom UI callbacks.
         """
         # Custom UI callbacks are processed via window manager
-        self.ui._window_manager.process_ui_callbacks(event)
+        self.ui.window_manager.process_ui_callbacks(event)
 
     def handle_click(self, mx: int, my: int, button: int) -> bool:
         """Handle mouse clicks.

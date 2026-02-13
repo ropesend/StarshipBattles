@@ -811,7 +811,7 @@ class TestSpecialCapabilityFilter:
             'show_no_destroy_planet': True,
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -838,7 +838,7 @@ class TestSpecialCapabilityFilter:
             'show_no_destroy_planet': False,  # Hide ships without ability
         }
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
                    side_effect=mock_has_ability):
             result = filter_ships([ship_with, ship_without], filter_state)
 
@@ -878,7 +878,7 @@ class TestSpecialCapabilitySort:
         def mock_has_ability(ship, ability_name):
             return ship.serial == 2 and ability_name == 'DestroyPlanet'
 
-        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator._ship_has_ability',
+        with patch('game.strategy.data.fleet_capability_calculator.FleetCapabilityCalculator.ship_has_ability',
                    side_effect=mock_has_ability):
             result = sort_ships([ship1, ship2, ship3], 'can_destroy_planet', descending=True)
 

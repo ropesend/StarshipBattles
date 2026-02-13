@@ -165,12 +165,12 @@ class FleetCapabilityCalculator:
         """
         result = []
         for ship in self._fleet.get_combat_capable_ships():
-            if self._ship_has_ability(ship, ability_name):
+            if self.ship_has_ability(ship, ability_name):
                 result.append(ship)
         return result
 
     @staticmethod
-    def _ship_has_ability(ship: 'ShipInstance', ability_name: str) -> bool:
+    def ship_has_ability(ship: 'ShipInstance', ability_name: str) -> bool:
         """
         Check if a single ship has the specified ability.
 

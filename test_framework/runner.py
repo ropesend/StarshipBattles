@@ -144,11 +144,11 @@ class TestRunner:
 
         # 6. Log results if enabled
         if log_results:
-            self._log_test_execution(scenario, headless)
+            self.log_test_execution(scenario, headless)
 
         return scenario
 
-    def _log_test_execution(self, scenario, headless):
+    def log_test_execution(self, scenario, headless):
         """
         Log test execution results for comparison between UI and headless modes.
 

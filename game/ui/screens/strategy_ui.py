@@ -137,7 +137,7 @@ class StrategyUI:
         )
 
         # PROJ-86: Initialize window manager
-        self._window_manager = StrategyWindowManager(
+        self.window_manager = StrategyWindowManager(
             scene=self.scene,
             manager=self.manager,
             width=self.width,
@@ -226,7 +226,7 @@ class StrategyUI:
         self._detail_formatter.update_graphs(self.spectrum_graph, self.atmosphere_graph)
 
         # PROJ-86: Update window manager with new dimensions
-        self._window_manager.handle_resize(width, height)
+        self.window_manager.handle_resize(width, height)
 
     def show_system_info(self, system_obj, contents):
         """Populate Top List (System) using Tree View."""
@@ -338,52 +338,52 @@ class StrategyUI:
 
     def prompt_planet_selection(self, planets, on_select):
         """Open a modal window to select a planet."""
-        self._window_manager.prompt_planet_selection(planets, on_select)
+        self.window_manager.prompt_planet_selection(planets, on_select)
 
     def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
         """Dialog to choose between moving to the sector or intercepting the fleet."""
-        self._window_manager.prompt_move_choice(fleet, target_hex, on_move_sector, on_intercept_fleet)
+        self.window_manager.prompt_move_choice(fleet, target_hex, on_move_sector, on_intercept_fleet)
 
     def open_planet_list(self):
         """Open the Planet List Window."""
-        self._window_manager.open_planet_list()
+        self.window_manager.open_planet_list()
 
     def open_build_queue_list(self):
         """Open the Build Queue List Window (BUG-67)."""
-        self._window_manager.open_build_queue_list()
+        self.window_manager.open_build_queue_list()
 
     def open_empire_build_queue_window(self):
         """Open the Empire-Wide Build Queue Window (PROJ-76)."""
-        self._window_manager.open_empire_build_queue_window()
+        self.window_manager.open_empire_build_queue_window()
 
     def close_empire_build_queue_window(self):
         """Close the Empire-Wide Build Queue Window if open."""
-        self._window_manager.close_empire_build_queue_window()
+        self.window_manager.close_empire_build_queue_window()
 
     def open_event_log(self):
         """Open the Event Log Window showing all events (PROJ-77)."""
-        self._window_manager.open_event_log()
+        self.window_manager.open_event_log()
 
     def open_event_log_with_events(self, events: list):
         """Open the Event Log Window with a specific event list."""
-        self._window_manager.open_event_log_with_events(events)
+        self.window_manager.open_event_log_with_events(events)
 
     def open_orders_window(self, fleet):
         """Open the Fleet Orders Window."""
-        self._window_manager.open_orders_window(fleet)
+        self.window_manager.open_orders_window(fleet)
 
     def open_fleet_report_window(self, fleet):
         """Open the Fleet Report Window."""
-        self._window_manager.open_fleet_report_window(fleet)
+        self.window_manager.open_fleet_report_window(fleet)
 
     def open_transfer_dialog(self, source_fleet, hex_coord):
         """Open the cargo/population transfer dialog."""
-        self._window_manager.open_transfer_dialog(source_fleet, hex_coord)
+        self.window_manager.open_transfer_dialog(source_fleet, hex_coord)
 
     def open_cargo_quick_dialog(self, fleet, hex_coord, direction: str):
         """Open the quick cargo drop/load dialog (PROJ-100)."""
-        self._window_manager.open_cargo_quick_dialog(fleet, hex_coord, direction)
+        self.window_manager.open_cargo_quick_dialog(fleet, hex_coord, direction)
 
     def open_empire_panel(self):
         """Open the Empire Panel Window."""
-        self._window_manager.open_empire_panel()
+        self.window_manager.open_empire_panel()

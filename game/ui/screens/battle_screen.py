@@ -450,7 +450,7 @@ class BattleScreen:
                 try:
                     from test_framework.runner import TestRunner
                     runner = TestRunner()
-                    runner._log_test_execution(self.test_scenario, headless=False)
+                    runner.log_test_execution(self.test_scenario, headless=False)
                 except (ImportError, AttributeError, OSError) as e:
                     log_warning(f"Failed to log UI test execution: {e}")
 

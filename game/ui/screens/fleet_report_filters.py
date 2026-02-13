@@ -161,7 +161,7 @@ def filter_ships(ships: List[ShipInstance], filter_state: Dict[str, bool]) -> Li
             show_not = filter_state.get(f'show_{no_key}', True)
             if not show_has or not show_not:
                 from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
-                has_ability = FleetCapabilityCalculator._ship_has_ability(ship, ability_name)
+                has_ability = FleetCapabilityCalculator.ship_has_ability(ship, ability_name)
                 if has_ability and not show_has:
                     _skip = True
                     break
@@ -257,7 +257,7 @@ def sort_ships(
         elif sort_column in SPECIAL_CAPABILITY_COLUMNS:
             from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
             ability_name = SPECIAL_CAPABILITY_COLUMNS[sort_column]
-            return 1 if FleetCapabilityCalculator._ship_has_ability(ship, ability_name) else 0
+            return 1 if FleetCapabilityCalculator.ship_has_ability(ship, ability_name) else 0
         return 0
 
     return sorted(ships, key=get_sort_key, reverse=descending)

@@ -321,7 +321,7 @@ class KeybindingsScene:
             self._capturing_action = None
             return
 
-        modifiers = InputMapper._extract_modifiers(event.mod)
+        modifiers = InputMapper.extract_modifiers(event.mod)
         new_binding = KeyBinding(key=key_name, modifiers=modifiers)
 
         action = self._capturing_action

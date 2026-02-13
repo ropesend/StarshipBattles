@@ -52,17 +52,17 @@ def _make_strategy_ui():
     ui.current_selection = None
 
     # PROJ-86: Window manager mock
-    ui._window_manager = MagicMock()
-    ui._window_manager.fleet_orders_window = None
-    ui._window_manager.planet_list_window = None
-    ui._window_manager.build_queue_list_window = None
-    ui._window_manager.empire_build_queue_window = None
-    ui._window_manager.fleet_report_window = None
-    ui._window_manager.transfer_dialog = None
-    ui._window_manager.event_log_window = None
-    ui._window_manager.empire_panel_window = None
-    ui._window_manager.ui_callbacks = {}
-    ui._window_manager.process_ui_callbacks.return_value = False
+    ui.window_manager = MagicMock()
+    ui.window_manager.fleet_orders_window = None
+    ui.window_manager.planet_list_window = None
+    ui.window_manager.build_queue_list_window = None
+    ui.window_manager.empire_build_queue_window = None
+    ui.window_manager.fleet_report_window = None
+    ui.window_manager.transfer_dialog = None
+    ui.window_manager.event_log_window = None
+    ui.window_manager.empire_panel_window = None
+    ui.window_manager.ui_callbacks = {}
+    ui.window_manager.process_ui_callbacks.return_value = False
 
     # System/sector trees (mock process_event to avoid issues)
     ui.system_tree = MagicMock()

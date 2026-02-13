@@ -82,7 +82,7 @@ class TestBuilderWarningLogic:
         event.text = "Cruiser"
 
         # Mock _execute_pending_action to verify it's called
-        with patch.object(builder, '_execute_pending_action') as mock_execute:
+        with patch.object(builder, 'execute_pending_action') as mock_execute:
             builder.handle_event(event)
 
             # Check success
@@ -101,7 +101,7 @@ class TestBuilderWarningLogic:
         event.ui_element = builder.right_panel.class_dropdown
         event.text = "Cruiser"
 
-        with patch.object(builder, '_execute_pending_action') as mock_execute:
+        with patch.object(builder, 'execute_pending_action') as mock_execute:
             builder.handle_event(event)
 
             # Check warning
@@ -122,7 +122,7 @@ class TestBuilderWarningLogic:
         # Mock getattr for checking current type
         from game.core.registry import RegistryManager
         with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
-            with patch.object(builder, '_execute_pending_action') as mock_execute:
+            with patch.object(builder, 'execute_pending_action') as mock_execute:
                 builder.handle_event(event)
 
                 # Should find a pending action and execute it
@@ -143,7 +143,7 @@ class TestBuilderWarningLogic:
 
         from game.core.registry import RegistryManager
         with patch.object(RegistryManager.instance(), 'vehicle_classes', {'Station': {'type': 'Station', 'max_mass': 5000}}):
-            with patch.object(builder, '_execute_pending_action') as mock_execute:
+            with patch.object(builder, 'execute_pending_action') as mock_execute:
                 builder.handle_event(event)
 
                 assert builder.pending_action is not None
