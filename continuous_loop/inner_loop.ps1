@@ -16,18 +16,20 @@ $WORKSPACE_DIR = "C:/Dev/Starship Battles"
 $TRIM_SCRIPT = "continuous_loop/trim_execution_log.py"
 $SLEEP_DURATION = 10
 $MAX_ITERATIONS = 1000
-$MAX_RETRIES = 3
+$MAX_RETRIES = 5
 $CLAUDE_TEMP_DIR = "$env:LOCALAPPDATA\Temp\claude\C--Dev-Starship-Battles"
 
-# Rate limit patterns
+# Rate limit patterns (text patterns only - bare "429"/"529" caused false positives
+# matching test counts like "5290 tests passed" or finding IDs like "DUP-UI1-429")
 $RATE_LIMIT_PATTERNS = @(
     "rate.limit",
     "rate_limit",
     "overloaded",
     "too many requests",
     "Resource has been exhausted",
-    "429",
-    "529"
+    "HTTP 429",
+    "status.+429",
+    "error.+529"
 )
 
 # Colors
@@ -40,7 +42,19 @@ function Write-ErrorLog ($msg) { Write-Host "[INNER] $msg" -ForegroundColor Red 
 function Clear-ClaudeTempFiles {
     if (Test-Path $CLAUDE_TEMP_DIR) {
         try {
+            # Clean task queue
             Remove-Item -Path "$CLAUDE_TEMP_DIR\tasks\*" -Force -ErrorAction SilentlyContinue
+
+            # Purge old session directories (UUID-named) older than 1 hour.
+            # Stale sessions from crashed CLI invocations can accumulate and
+            # cause EPERM errors or prevent new sessions from starting.
+            $cutoff = (Get-Date).AddHours(-1)
+            Get-ChildItem -Path $CLAUDE_TEMP_DIR -Directory -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -match "^[0-9a-f]{8}-" -and $_.LastWriteTime -lt $cutoff } |
+                ForEach-Object {
+                    Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                }
+
             Write-Info "Cleaned temp files"
         }
         catch {
@@ -166,10 +180,17 @@ while ($iteration -lt $MAX_ITERATIONS) {
             Clear-ClaudeTempFiles
         }
         else {
-            # Unknown error - fail
-            Write-ErrorLog "Claude CLI failed with exit code $claudeExitCode"
-            Write-Warn "Check output above for errors"
-            exit 1
+            # Unknown/transient error - retry with backoff instead of
+            # immediately exiting, since network blips and API errors
+            # would otherwise trigger the outer loop's circuit breaker.
+            $retryCount++
+            Write-Warn "Claude CLI failed with exit code $claudeExitCode (attempt $retryCount/$MAX_RETRIES)"
+            if ($retryCount -lt $MAX_RETRIES) {
+                $backoff = $retryCount * 30
+                Write-Info "Retrying in ${backoff}s..."
+                Start-Sleep -Seconds $backoff
+                Clear-ClaudeTempFiles
+            }
         }
     }
 

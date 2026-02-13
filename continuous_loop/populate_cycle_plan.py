@@ -125,15 +125,12 @@ def generate_cycle_plan(projects: list[dict]) -> str:
         title = proj["title"]
         phases = proj["phases"]
         deps = proj["dependencies"]
-        escaped_path = (
-            f"file:///C:/Dev/Starship%20Battles/Projects/"
-            f"active_projects/{proj_id}/plan.md"
-        )
+        plan_rel = f"Projects/active_projects/{proj_id}/plan.md"
 
         lines.extend([
             f"- [ ] **{proj_id}: {title}**",
             f"  - **Phases:** {phases} | **Status:** Ready | **Priority:** Medium",
-            f"  - **Plan:** [Projects/active_projects/{proj_id}/plan.md]({escaped_path})",
+            f"  - **Plan:** [{plan_rel}]({plan_rel})",
             "  - **Audit:** Not Started | **Cycles:** 0/5",
             f"  - **Dependencies:** {deps}",
             "",

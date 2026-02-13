@@ -203,3 +203,142 @@ class TestShipFactoryStaticMethods:
         assert ship1 is not None
         assert ship2 is not None
         assert ship1 is not ship2
+
+
+class TestSetupFormationEdgeCases:
+    """Tests for edge cases in ShipFactory.setup_formation()."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, fresh_registries):
+        """Set up registry data for tests."""
+        mgr = RegistryManager.instance()
+        mgr.hydrate(
+            fresh_registries.components,
+            fresh_registries.modifiers,
+            fresh_registries.vehicle_classes
+        )
+        yield
+
+    def _create_ship(self, fresh_registries, x=0, y=0):
+        """Helper to create a test ship at given position."""
+        from game.ui.services.ship_factory import ShipFactory
+        import pygame
+
+        design_data = {
+            "name": "Formation Ship",
+            "ship_class": "Escort",
+            "theme_id": "default",
+            "color": [255, 255, 255],
+            "layers": {}
+        }
+        factory = ShipFactory()
+        ship = factory.create_from_design(design_data, registry_provider=fresh_registries)
+        ship.position = pygame.math.Vector2(x, y)
+        ship.angle = 0
+        return ship
+
+    def test_empty_formation_data(self, fresh_registries):
+        """setup_formation handles empty formation_data list."""
+        from game.ui.services.ship_factory import ShipFactory
+
+        factory = ShipFactory()
+        ship1 = self._create_ship(fresh_registries, 0, 0)
+        ship2 = self._create_ship(fresh_registries, 100, 0)
+        ships = [ship1, ship2]
+
+        # Empty formation data should do nothing, not crash
+        factory.setup_formation(ships, [])
+
+        # Ships should not be linked
+        assert ship1.formation.master is None
+        assert ship2.formation.master is None
+        assert len(ship1.formation.members) == 0
+
+    def test_formation_id_none_skipped(self, fresh_registries):
+        """setup_formation skips entries with formation_id=None."""
+        from game.ui.services.ship_factory import ShipFactory
+
+        factory = ShipFactory()
+        ship1 = self._create_ship(fresh_registries, 0, 0)
+        ship2 = self._create_ship(fresh_registries, 100, 0)
+        ships = [ship1, ship2]
+
+        formation_data = [
+            {'ship_index': 0, 'formation_id': None, 'rotation_mode': 'relative'},
+            {'ship_index': 1, 'formation_id': None, 'rotation_mode': 'relative'},
+        ]
+
+        factory.setup_formation(ships, formation_data)
+
+        # Ships should not be linked (formation_id was None)
+        assert ship1.formation.master is None
+        assert ship2.formation.master is None
+
+    def test_multiple_independent_formations(self, fresh_registries):
+        """setup_formation correctly handles multiple independent formation groups."""
+        from game.ui.services.ship_factory import ShipFactory
+
+        factory = ShipFactory()
+        ship1 = self._create_ship(fresh_registries, 0, 0)
+        ship2 = self._create_ship(fresh_registries, 100, 0)
+        ship3 = self._create_ship(fresh_registries, 200, 0)
+        ship4 = self._create_ship(fresh_registries, 300, 0)
+        ships = [ship1, ship2, ship3, ship4]
+
+        formation_data = [
+            {'ship_index': 0, 'formation_id': 'alpha', 'rotation_mode': 'relative'},
+            {'ship_index': 1, 'formation_id': 'alpha', 'rotation_mode': 'relative'},
+            {'ship_index': 2, 'formation_id': 'beta', 'rotation_mode': 'fixed'},
+            {'ship_index': 3, 'formation_id': 'beta', 'rotation_mode': 'fixed'},
+        ]
+
+        factory.setup_formation(ships, formation_data)
+
+        # Alpha formation: ship1 is master, ship2 is follower
+        assert ship2.formation.master is ship1
+        assert ship2 in ship1.formation.members
+
+        # Beta formation: ship3 is master, ship4 is follower
+        assert ship4.formation.master is ship3
+        assert ship4 in ship3.formation.members
+
+        # Cross-formation: no links
+        assert ship1.formation.master is None  # master has no master
+        assert ship3.formation.master is None
+
+    def test_single_ship_in_formation(self, fresh_registries):
+        """Single ship in formation becomes master with no followers."""
+        from game.ui.services.ship_factory import ShipFactory
+
+        factory = ShipFactory()
+        ship1 = self._create_ship(fresh_registries, 0, 0)
+        ships = [ship1]
+
+        formation_data = [
+            {'ship_index': 0, 'formation_id': 'lonely', 'rotation_mode': 'relative'},
+        ]
+
+        factory.setup_formation(ships, formation_data)
+
+        # Single ship is master with no followers
+        assert ship1.formation.master is None
+        assert len(ship1.formation.members) == 0
+
+    def test_missing_rotation_mode_defaults_to_relative(self, fresh_registries):
+        """Missing rotation_mode in formation data defaults to 'relative'."""
+        from game.ui.services.ship_factory import ShipFactory
+
+        factory = ShipFactory()
+        ship1 = self._create_ship(fresh_registries, 0, 0)
+        ship2 = self._create_ship(fresh_registries, 100, 0)
+        ships = [ship1, ship2]
+
+        formation_data = [
+            {'ship_index': 0, 'formation_id': 'test'},  # No rotation_mode
+            {'ship_index': 1, 'formation_id': 'test'},  # No rotation_mode
+        ]
+
+        factory.setup_formation(ships, formation_data)
+
+        # Should default to 'relative'
+        assert ship2.formation.rotation_mode == 'relative'

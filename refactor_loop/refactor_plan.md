@@ -8,20 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-119 Phase 1 COMPLETE
-**Current Status:** PROJ-119 Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-119 Phase 2 COMPLETE
+**Current Status:** PROJ-119 Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-119
-**Current Phase:** Phase 2 (UI-Framework)
-**Test Status:** 11568 passed (+16 tests this session)
+**Current Phase:** Phase 3 (UI-Screens)
+**Test Status:** 11592 passed (+24 tests this session)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-119 Phase 1 COMPLETE - all 24 tasks addressed:
-  - Tasks 1.11-1.24: Most ALREADY COVERED by existing tests
-  - Task 1.13: +10 boundary tests for ShipResourceManager (24 total)
-  - Task 1.14: +6 edge case tests for ShipDisplayFormatter (22 total)
-- Strategy tests: 1839 passed
-- Next: Begin Phase 2 - UI-Framework test coverage
+- PROJ-119 Phase 2 COMPLETE - all 18 tasks investigated:
+  - Task 2.1: +8 tests for ShipThemeManager portrait methods
+  - Task 2.3: Fixed test_no_duplicate_color_values assertion
+  - Task 2.4: +12 tests for Camera.update_input() input handling
+  - Task 2.6: +5 tests for setup_formation edge cases
+  - Task 2.10: Fixed mock_ship.heading→angle conftest bug
+  - Tasks 2.2/2.7/2.11: widgets.py DELETED (PROJ-117)
+  - Tasks 2.5/2.8/2.12-2.15: ALREADY COVERED by existing tests
+  - Tasks 2.9/2.16-2.18: ACCEPTABLE/INFO (low priority)
+- Tests: 11592 passed
+- Next: Begin Phase 3 - UI-Screens test coverage
 
 ---
 
@@ -134,6 +139,7 @@
 | 2026-02-13 | PROJ-119 | Phase 1 (partial) | In Progress | 11519 pass | pending | Tasks 1.1-1.5 complete: +113 tests (planet_gen 44, transfer 18, battle_adapter 20, resource_agg 31) |
 | 2026-02-13 | PROJ-119 | Phase 1 (partial) | In Progress | 11552 pass | pending | Tasks 1.6-1.10 complete: +33 tests (quickstart 14, design_metadata 19), 3 tasks ALREADY COVERED |
 | 2026-02-13 | PROJ-119 | Phase 1 | Complete | 11568 pass | pending | Tasks 1.11-1.24 complete: +16 tests (ship_resource_manager 10, ship_display_formatter 6), most ALREADY COVERED |
+| 2026-02-13 | PROJ-119 | Phase 2 | Complete | 11592 pass | pending | All 18 tasks: +24 tests (portrait 8, camera 12, formation 5), 3 deleted files, 6 already covered, fix mock_ship bug |
 
 ---
 
