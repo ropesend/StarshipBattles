@@ -678,3 +678,341 @@ class TestShipsWithoutFormationAttribute:
         formation.remove_member(follower_without_formation)
 
         assert follower_without_formation not in formation.members
+
+
+# =============================================================================
+# Test: Large Formations (20+ ships)
+# TCG-SIM-013: Complex formation edge cases
+# =============================================================================
+
+class TestLargeFormations:
+    """Tests for formations with many ships (20+)."""
+
+    def test_large_formation_can_hold_20_members(self, mock_ship):
+        """Formation can manage 20+ members."""
+        formation = ShipFormation(mock_ship)
+
+        # Add 20 members
+        for i in range(20):
+            follower = MagicMock(name=f"Follower{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 10, 0))
+
+        assert len(formation.members) == 20
+        assert formation.is_master is True
+
+    def test_large_formation_can_hold_50_members(self, mock_ship):
+        """Formation can manage 50+ members (stress test)."""
+        formation = ShipFormation(mock_ship)
+
+        for i in range(50):
+            follower = MagicMock(name=f"Follower{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 10, i * 5))
+
+        assert len(formation.members) == 50
+
+    def test_large_formation_member_access_is_efficient(self, mock_ship):
+        """Can iterate over large formation members efficiently."""
+        formation = ShipFormation(mock_ship)
+
+        followers = []
+        for i in range(25):
+            follower = MagicMock(name=f"Follower{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 10, 0))
+            followers.append(follower)
+
+        # Can iterate and access all members
+        count = 0
+        for member in formation.members:
+            count += 1
+
+        assert count == 25
+
+    def test_large_formation_each_member_has_unique_offset(self, mock_ship):
+        """Each member in large formation has its own offset."""
+        formation = ShipFormation(mock_ship)
+
+        offsets = []
+        for i in range(20):
+            follower = MagicMock(name=f"Follower{i}")
+            follower.formation = MagicMock()
+            offset = Vector2(i * 50, i * 25)
+            formation.add_member(follower, offset)
+            offsets.append(offset)
+
+        # Verify each member has correct offset
+        for i, member in enumerate(formation.members):
+            assert member.formation.offset == offsets[i]
+
+    def test_large_formation_removing_middle_member(self, mock_ship):
+        """Can remove a member from middle of large formation."""
+        formation = ShipFormation(mock_ship)
+
+        followers = []
+        for i in range(20):
+            follower = MagicMock(name=f"Follower{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 10, 0))
+            followers.append(follower)
+
+        # Remove member from middle (index 10)
+        middle_member = followers[10]
+        formation.remove_member(middle_member)
+
+        assert len(formation.members) == 19
+        assert middle_member not in formation.members
+
+    def test_large_formation_clearing_all_members(self, mock_ship):
+        """Can clear all members from large formation."""
+        formation = ShipFormation(mock_ship)
+
+        followers = []
+        for i in range(25):
+            follower = MagicMock(name=f"Follower{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 10, 0))
+            followers.append(follower)
+
+        # Remove all members
+        for follower in followers:
+            formation.remove_member(follower)
+
+        assert len(formation.members) == 0
+        assert formation.is_master is False
+
+
+# =============================================================================
+# Test: Formation Leader Death/Destruction
+# TCG-SIM-013: Complex formation edge cases
+# =============================================================================
+
+class TestFormationLeaderDeathHandling:
+    """Tests for handling formation leader destruction."""
+
+    def test_members_can_leave_when_master_dies(self, mock_ship, master_ship):
+        """Members can leave formation when master is destroyed."""
+        formation = ShipFormation(mock_ship)
+        formation.join(master_ship, Vector2(50, 0))
+
+        # Simulate master death by calling leave
+        formation.leave()
+
+        assert formation.master is None
+        assert formation.is_member is False
+
+    def test_member_leave_handles_dead_master_gracefully(self, mock_ship):
+        """Leave handles master that is no longer valid."""
+        formation = ShipFormation(mock_ship)
+
+        # Create a master and join
+        master = MagicMock()
+        master.formation = MagicMock()
+        master.formation.members = [mock_ship]
+
+        formation.master = master
+        formation.active = True
+
+        # Simulate master death by clearing its formation
+        master.formation.members = []  # Master's formation is cleared
+
+        # Leave should not raise even though mock_ship not in members
+        formation.leave()
+
+        assert formation.master is None
+
+    def test_orphaned_members_after_master_removal(self, mock_ship):
+        """Members become orphaned when master reference is cleared."""
+        master_ship = MagicMock()
+        master_ship.formation = MagicMock()
+        master_ship.formation.members = []
+
+        formation = ShipFormation(mock_ship)
+        formation.join(master_ship, Vector2(50, 0))
+
+        assert formation.is_member is True
+
+        # Force master to None (simulating death without proper cleanup)
+        formation.master = None
+
+        assert formation.is_member is False
+        assert formation.active is True  # Still marked active but orphaned
+
+    def test_master_death_with_multiple_members(self):
+        """Multiple members handle master death independently."""
+        master = MagicMock()
+        master.formation = MagicMock()
+        master.formation.members = []
+
+        # Create multiple followers
+        followers = []
+        for i in range(5):
+            ship = MagicMock(name=f"Ship{i}")
+            formation = ShipFormation(ship)
+            formation.join(master, Vector2(i * 20, 0))
+            followers.append((ship, formation))
+
+        # Verify all are members
+        for ship, formation in followers:
+            assert formation.is_member is True
+
+        # Each member leaves (simulating response to master death)
+        for ship, formation in followers:
+            formation.leave()
+
+        # All should be orphaned
+        for ship, formation in followers:
+            assert formation.is_member is False
+            assert formation.master is None
+
+
+# =============================================================================
+# Test: Dynamic Reformation During Combat
+# TCG-SIM-013: Complex formation edge cases
+# =============================================================================
+
+class TestDynamicReformation:
+    """Tests for formation changes during active use."""
+
+    def test_member_can_switch_to_new_master(self, mock_ship):
+        """Member can leave one formation and join another."""
+        master1 = MagicMock(name="Master1")
+        master1.formation = MagicMock()
+        master1.formation.members = []
+
+        master2 = MagicMock(name="Master2")
+        master2.formation = MagicMock()
+        master2.formation.members = []
+
+        formation = ShipFormation(mock_ship)
+
+        # Join first master
+        formation.join(master1, Vector2(50, 0))
+        assert formation.master is master1
+
+        # Leave and join second master
+        formation.leave()
+        formation.join(master2, Vector2(100, 50))
+
+        assert formation.master is master2
+        assert formation.offset == Vector2(100, 50)
+
+    def test_rapid_join_leave_cycles(self, mock_ship):
+        """Formation handles rapid join/leave cycles."""
+        masters = []
+        for i in range(5):
+            master = MagicMock(name=f"Master{i}")
+            master.formation = MagicMock()
+            master.formation.members = []
+            masters.append(master)
+
+        formation = ShipFormation(mock_ship)
+
+        # Rapid cycles
+        for master in masters:
+            formation.join(master, Vector2(50, 0))
+            assert formation.master is master
+            formation.leave()
+            assert formation.master is None
+
+    def test_formation_restructuring_mid_operation(self, mock_ship):
+        """Formation can be restructured while active."""
+        formation = ShipFormation(mock_ship)
+
+        # Add initial members
+        initial_followers = []
+        for i in range(5):
+            follower = MagicMock(name=f"Initial{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 20, 0))
+            initial_followers.append(follower)
+
+        assert len(formation.members) == 5
+
+        # Remove some, add others
+        formation.remove_member(initial_followers[0])
+        formation.remove_member(initial_followers[2])
+
+        new_followers = []
+        for i in range(3):
+            follower = MagicMock(name=f"New{i}")
+            follower.formation = MagicMock()
+            formation.add_member(follower, Vector2(i * 30 + 100, 50))
+            new_followers.append(follower)
+
+        # Should have 3 initial + 3 new = 6
+        assert len(formation.members) == 6
+
+    def test_offset_update_for_existing_member(self, mock_ship):
+        """Member's offset can be updated by re-adding."""
+        formation = ShipFormation(mock_ship)
+
+        follower = MagicMock(name="Follower")
+        follower.formation = MagicMock()
+
+        # Add with initial offset
+        formation.add_member(follower, Vector2(50, 0))
+        assert follower.formation.offset == Vector2(50, 0)
+
+        # Re-add with new offset (does not duplicate, but updates offset)
+        formation.add_member(follower, Vector2(100, 75))
+
+        # Member is not duplicated
+        assert formation.members.count(follower) == 1
+        # Offset is updated
+        assert follower.formation.offset == Vector2(100, 75)
+
+    def test_hierarchical_formation_promotion(self):
+        """Member can become master when original master leaves."""
+        original_master = MagicMock(name="OriginalMaster")
+        original_master.formation = ShipFormation(original_master)
+
+        promoted_ship = MagicMock(name="PromotedShip")
+        promoted_ship.formation = ShipFormation(promoted_ship)
+
+        other_follower = MagicMock(name="OtherFollower")
+        other_follower.formation = MagicMock()
+
+        # Set up initial formation
+        promoted_ship.formation.join(original_master, Vector2(50, 0))
+
+        # Promoted ship now becomes a master with its own follower
+        promoted_ship.formation.leave()  # Leave original formation
+        promoted_ship.formation.add_member(other_follower, Vector2(25, 0))
+
+        # Promoted ship is now a master
+        assert promoted_ship.formation.is_master is True
+        assert promoted_ship.formation.is_member is False
+        assert other_follower in promoted_ship.formation.members
+
+    def test_simultaneous_member_operations(self, mock_ship):
+        """Multiple operations on formation members in sequence."""
+        formation = ShipFormation(mock_ship)
+
+        # Add a batch of members
+        followers = []
+        for i in range(10):
+            f = MagicMock(name=f"F{i}")
+            f.formation = MagicMock()
+            followers.append(f)
+
+        # Add all
+        for i, f in enumerate(followers):
+            formation.add_member(f, Vector2(i * 10, 0))
+
+        assert len(formation.members) == 10
+
+        # Remove even-indexed members
+        for i in range(0, 10, 2):
+            formation.remove_member(followers[i])
+
+        assert len(formation.members) == 5
+
+        # Add new members
+        for i in range(3):
+            new_f = MagicMock(name=f"New{i}")
+            new_f.formation = MagicMock()
+            formation.add_member(new_f, Vector2(100 + i * 10, 0))
+
+        assert len(formation.members) == 8

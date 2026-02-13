@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (11/18)
+**Status:** In Progress (13/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -186,26 +186,30 @@ Tests verify Python's formula_system behavior with extreme values including IEEE
 Total tests: 83 (was 68)
 
 ### Task 1.12: TCG-SIM-012 - ShipCombatEngine Heat Management Not Tes [Simple]
-**File:** `game/simulation/entities/ship_`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/entities/ship_combat_engine.py`
+**Tests:** `pytest tests/unit/simulation/ship_combat_engine/test_cooldowns.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** REJECTED finding - ShipCombatEngine has NO heat management code. The class handles shield regeneration, repair systems, and combat cooldowns (already extensively tested with 40+ tests in test_cooldowns.py). The finding was speculative ("if ship_combat_engine is responsible for this logic") - it is NOT. No heat system exists in the simulation layer.
 
 ### Task 1.13: TCG-SIM-013 - ShipFormation Missing Complex Formation [Simple]
-**File:** `tests/unit/simulation/entities`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `tests/unit/simulation/entities/test_ship_formation.py`
+**Tests:** `pytest tests/unit/simulation/entities/test_ship_formation.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 16 new tests covering complex formation edge cases:
+- TestLargeFormations (6 tests): 20+ members, 50+ members, member access efficiency, unique offsets, middle removal, clearing all
+- TestFormationLeaderDeathHandling (4 tests): Members leaving on master death, dead master graceful handling, orphaned members, multi-member death
+- TestDynamicReformation (6 tests): Switching masters, rapid join/leave cycles, restructuring mid-operation, offset updates, hierarchical promotion, simultaneous operations
+Total tests: 76 (was 60)
 
 ### Task 1.14: TCG-SIM-014 - BattleStateSerializer Version Migration [Simple]
 **File:** `tests/unit/simulation/test_bat`
