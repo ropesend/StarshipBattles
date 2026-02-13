@@ -152,6 +152,9 @@ class TestMockImplementation:
             def set_formation_master(self, master):
                 pass
 
+            def leave_formation(self):
+                pass
+
             def get_formation_rotation_mode(self):
                 return "none"
 
@@ -226,6 +229,7 @@ class TestMockImplementation:
             def get_formation_offset(self): return (0, 0)
             def set_in_formation(self, f): pass
             def set_formation_master(self, m): pass
+            def leave_formation(self): pass
             def get_formation_rotation_mode(self): return "none"
             def set_trigger_pulled(self, p): pass
             def get_current_target(self): return None

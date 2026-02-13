@@ -7,22 +7,25 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-11
-**Last Completed:** PROJ-111 Audit Cycle 1 PASSED
-**Current Status:** PROJ-111 Audit Complete - Awaiting User Verification
-**Current Project:** PROJ-111
-**Current Phase:** Complete
-**Test Status:** 9741 passed
+**Last Session:** 2026-02-12
+**Last Completed:** PROJ-113 Phase 1 (Foundation layer violations)
+**Current Status:** PROJ-113 Phase 1 Complete - Ready for Phase 2
+**Current Project:** PROJ-113
+**Current Phase:** Phase 2 (Simulation)
+**Test Status:** 9773 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-111 Audit Cycle 1 PASSED:
-  - Phase 1-2: 113 tests verified (framework services, singletons, rendering)
-  - Phase 3-4: 223 tests verified (battle layer, strategy screens)
-  - Phase 5-6: 414 tests verified (support screens, complex screens)
-  - Phase 7: 57 quality tests verified (error paths, edge cases, resize)
-  - All test files pass, quality is high
-- Project complete, awaiting user verification
+- PROJ-113 Phase 1 Complete (12 tasks):
+  - Moved input_mapper.py to game/ui/services/ (19 files updated)
+  - Moved screenshot_manager.py to game/ui/services/ (9 files updated)
+  - Moved UIConfig to game/ui/config.py (18+ files updated)
+  - Fixed protocols.py TYPE_CHECKING import (LayerData → Any)
+  - Fixed controllable.py TYPE_CHECKING import (Vector2 → Any)
+  - Fixed collision.py TYPE_CHECKING import (Ship → Any)
+  - Added leave_formation() method to IControllable interface
+  - Several findings were FALSE POSITIVES (research.ui IS a UI layer)
+- Next: Begin Phase 2 (Simulation layer findings)
 
 ---
 
@@ -206,8 +209,8 @@
 
 ---
 
-- [ ] **PROJ-113: Architecture Layer Violations**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-113: Architecture Layer Violations**
+  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-113/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-113/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -391,6 +394,7 @@
 | 2026-02-11 | PROJ-111 | Phase 6 T6-8 | Complete | 9684 passed | pending | +94 tests: DesignSelectorWindow (35), race assets (13), panel coverage (46). Phase 6 complete (222 total) |
 | 2026-02-11 | PROJ-111 | Phase 7 | Complete | 9741 passed | pending | +57 tests: assertion quality, event patterns, error paths (21), edge cases (28), resize (8). All phases complete |
 | 2026-02-11 | PROJ-111 | Audit 1 | PASSED | 9741 passed | pending | All 7 phases verified: P1-2 (113), P3-4 (223), P5-6 (414), P7 (57) |
+| 2026-02-12 | PROJ-113 | Phase 1 | Complete | 9773 passed | pending | 12 FND violations: moved input_mapper, screenshot_manager, UIConfig to UI layer; removed TYPE_CHECKING cross-layer imports; added leave_formation() |
 
 ---
 

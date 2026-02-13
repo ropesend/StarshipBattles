@@ -47,12 +47,11 @@ Hit Chance Calculation (Sigmoid):
 """
 import math
 import random
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import List, Dict, Any
 
 from game.core.config import BattleConfig
 
-if TYPE_CHECKING:
-    from game.simulation.entities.ship import Ship
+# Note: Ship type hint uses Any to avoid tight coupling with simulation entities
 
 
 class CollisionSystem:
@@ -126,7 +125,7 @@ class CollisionSystem:
             'color': (100, 255, 255) # Could be derived from weapon type
         })
 
-    def process_ramming(self, ships: List['Ship'], logger: Any = None) -> None:
+    def process_ramming(self, ships: List[Any], logger: Any = None) -> None:
         """
         Process ship-to-ship ramming collisions.
         

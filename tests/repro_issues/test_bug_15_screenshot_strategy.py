@@ -30,8 +30,8 @@ class TestScreenshotStrategyLayerSupport:
     # =========================================================================
     # Test 1: Capture Galaxy Viewport Region
     # =========================================================================
-    @patch('game.core.screenshot_manager.pygame.image.save')
-    @patch('game.core.screenshot_manager.pygame.display.get_surface')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.display.get_surface')
     def test_capture_galaxy_viewport_region(self, mock_get_surface, mock_save, setup):
         """
         The screenshot system should be able to capture just the galaxy viewport,
@@ -68,7 +68,7 @@ class TestScreenshotStrategyLayerSupport:
     # =========================================================================
     # Test 2: Capture Arbitrary Sub-Window Surface
     # =========================================================================
-    @patch('game.core.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
     def test_capture_subwindow_surface(self, mock_save, setup):
         """
         The screenshot system should be able to capture a sub-window's surface
@@ -112,7 +112,7 @@ class TestScreenshotStrategyLayerSupport:
     # =========================================================================
     # Test 4: capture_strategy_layer() Captures Correct Layers
     # =========================================================================
-    @patch('game.core.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
     def test_capture_strategy_layer_renders_all_layers(self, mock_save, setup):
         """
         capture_strategy_layer() should render the scene to a temporary surface
@@ -140,7 +140,7 @@ class TestScreenshotStrategyLayerSupport:
     # =========================================================================
     # Test 5: Viewport-Only Capture via capture_strategy_layer()
     # =========================================================================
-    @patch('game.core.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
     def test_capture_strategy_layer_viewport_only(self, mock_save, setup):
         """
         capture_strategy_layer() with include_ui=False should capture only
@@ -255,7 +255,7 @@ class TestBuildQueueScreenshotSupport:
         assert hasattr(BuildQueueScreen, '_take_screenshot'), \
             "BuildQueueScreen should have _take_screenshot method"
 
-    @patch('game.core.screenshot_manager.pygame.image.save')
+    @patch('game.ui.services.screenshot_manager.pygame.image.save')
     def test_build_queue_f12_triggers_screenshot(self, mock_save):
         """
         Pressing F12 while BuildQueueScreen is open should take a screenshot.
