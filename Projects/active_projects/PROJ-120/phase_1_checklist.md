@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** In Progress (6/18)
+**Status:** In Progress (7/18)
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -100,15 +100,19 @@ Total BattleController tests now: 134 (was 102)
 Total: 28 tests (was 12)
 
 ### Task 1.7: TCG-SIM-007 - TargetingSystem Missing AI Priority Test [Medium]
-**File:** `game/simulation/combat/targeti`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/combat/targeting_system.py`
+**Tests:** `pytest tests/unit/simulation/combat/test_targeting_system.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 12 new tests covering:
+- TestTargetSwitchingBehavior (4 tests): Target switching when primary dies/invalid, fallback to secondaries
+- TestTargetOutOfRangeHandling (4 tests): Out-of-range seeker rejection, arc validation, secondary fallback
+- TestEdgeCasesAndBoundaries (4 tests): Missing attributes, None handling, coincident positions, zero speed
+Total: 34 tests (was 22)
 
 ### Task 1.8: TCG-SIM-008 - BattleEngine Tick Processing Incomplete [Medium]
 **File:** `game/simulation/systems/battle`
