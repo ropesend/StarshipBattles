@@ -17,7 +17,7 @@ class TestResearchTreeSceneInitialization:
         """Scene stores screen dimensions."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -43,7 +43,7 @@ class TestResearchTreeSceneInitialization:
         """Canvas width is screen width minus sidebar."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -68,7 +68,7 @@ class TestResearchTreeSceneInitialization:
         """Close callback is stored."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -93,7 +93,7 @@ class TestResearchTreeSceneInitialization:
         """Tech tree is loaded on initialization."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -118,7 +118,7 @@ class TestResearchTreeSceneInitialization:
         """Fuzzy requirements are resolved with tracker seed."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -146,7 +146,7 @@ class TestLayoutCalculation:
         """Layout calculation creates positions for all nodes."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -184,7 +184,7 @@ class TestLayoutCalculation:
         """Nodes at different depths have different x positions."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -226,7 +226,7 @@ class TestLayoutCalculation:
         """Nodes at same depth are sorted alphabetically by name."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):

@@ -8,20 +8,42 @@ Provides a full-screen interface with:
 - Turn simulation with event logging
 
 PROJ-106: ResearchTreeScene creates its own Camera instance internally.
-This requires a runtime import from game.ui.renderer.camera for construction.
+PROJ-132: Camera is now injected via dependency injection to avoid
+layer violation (research importing from game.ui). If no camera is provided,
+a factory function creates one.
 ResearchRenderer receives the camera via ICamera protocol for type safety.
 """
+from typing import TYPE_CHECKING, Optional, Any
 import pygame
 import pygame_gui
 
 from game.core.logger import log_info, log_debug
-# PROJ-106: Camera needed for construction, ICamera not used here (scene owns Camera)
-from game.ui.renderer.camera import Camera
 from game.research.data.tech_tree import TechTree
 from game.research.data.research_tracker import ResearchTracker
 from game.research.systems.research_service import ResearchService
 from .research_renderer import ResearchRenderer
 from .research_controls import ResearchControlPanel
+
+if TYPE_CHECKING:
+    from game.core.protocols import ICamera
+
+
+def _create_default_camera(width: int, height: int) -> Any:
+    """
+    Factory function to create a Camera instance.
+
+    PROJ-132: This late import avoids the layer violation at module level.
+    The import happens only when no camera is injected.
+
+    Args:
+        width: Viewport width in pixels
+        height: Viewport height in pixels
+
+    Returns:
+        Camera instance from game.ui.renderer.camera
+    """
+    from game.ui.renderer.camera import Camera
+    return Camera(width, height)
 
 
 class ResearchTreeScene:
@@ -43,7 +65,13 @@ class ResearchTreeScene:
     NODE_WIDTH = 220
     NODE_HEIGHT = 70
 
-    def __init__(self, screen_width: int, screen_height: int, on_close_callback=None):
+    def __init__(
+        self,
+        screen_width: int,
+        screen_height: int,
+        on_close_callback=None,
+        camera: Optional["ICamera"] = None
+    ):
         """
         Initialize the research tree scene.
 
@@ -51,6 +79,7 @@ class ResearchTreeScene:
             screen_width: Screen width in pixels
             screen_height: Screen height in pixels
             on_close_callback: Function to call when closing the scene
+            camera: Optional camera instance (PROJ-132 DI). If None, creates default.
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -86,11 +115,18 @@ class ResearchTreeScene:
         self._calculate_layout()
 
         # Camera for canvas pan/zoom
-        self.camera = Camera(self.canvas_width, self.canvas_height)
-        self.camera.min_zoom = 0.15
-        self.camera.max_zoom = 2.0
-        self.camera.zoom = 0.4
-        self.camera.target_zoom = 0.4
+        # PROJ-132: Use injected camera or create default
+        if camera is not None:
+            self.camera = camera
+            # Ensure viewport dimensions match canvas
+            self.camera.width = self.canvas_width
+            self.camera.height = self.canvas_height
+        else:
+            self.camera = _create_default_camera(self.canvas_width, self.canvas_height)
+            self.camera.min_zoom = 0.15
+            self.camera.max_zoom = 2.0
+            self.camera.zoom = 0.4
+            self.camera.target_zoom = 0.4
 
         # Center camera on tree
         self._center_camera()

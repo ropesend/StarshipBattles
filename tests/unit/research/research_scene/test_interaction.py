@@ -20,7 +20,7 @@ class TestNodePositionDetection:
         """Returns node ID when position is inside a node."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -51,7 +51,7 @@ class TestNodePositionDetection:
         """Returns None when position is not on any node."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -82,7 +82,7 @@ class TestNodePositionDetection:
         """Position detection respects node width and height."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -128,7 +128,7 @@ class TestResizeHandling:
         """Resize updates screen and canvas dimensions."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera') as MockCamera, \
+             patch('game.research.ui.research_scene._create_default_camera') as MockCamera, \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -163,7 +163,7 @@ class TestCameraCentering:
         """Camera centers on middle of node bounding box."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera') as MockCamera, \
+             patch('game.research.ui.research_scene._create_default_camera') as MockCamera, \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -202,7 +202,7 @@ class TestCameraCentering:
         """Camera centering with empty positions doesn't crash."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -235,7 +235,7 @@ class TestUpdateMethod:
         """Update method calls camera update with delta time."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera') as MockCamera, \
+             patch('game.research.ui.research_scene._create_default_camera') as MockCamera, \
              patch('game.research.ui.research_scene.pygame_gui') as mock_gui, \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):

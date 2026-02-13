@@ -18,7 +18,7 @@ class TestTurnProcessingCallback:
         """Next turn callback calls ResearchService.process_turn."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'), \
@@ -50,7 +50,7 @@ class TestTurnProcessingCallback:
         """Next turn callback updates control panel log."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel, \
@@ -86,7 +86,7 @@ class TestTurnProcessingCallback:
         """Next turn callback spreads RP when auto-spread is enabled."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel, \
@@ -124,7 +124,7 @@ class TestResetCallback:
         """Reset creates a new ResearchTracker."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel:
@@ -160,7 +160,7 @@ class TestResetCallback:
         """Reset clears node selection."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel:
@@ -196,7 +196,7 @@ class TestResetCallback:
         """Reset re-resolves fuzzy requirements with new seed."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -233,7 +233,7 @@ class TestCloseCallback:
         """Close calls the provided callback."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -260,7 +260,7 @@ class TestCloseCallback:
         """Close with no callback doesn't crash."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel'):
@@ -289,7 +289,7 @@ class TestAutoSpreadCallback:
         """Auto-spread change updates selected node display."""
         with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
              patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene.Camera'), \
+             patch('game.research.ui.research_scene._create_default_camera'), \
              patch('game.research.ui.research_scene.pygame_gui'), \
              patch('game.research.ui.research_scene.ResearchRenderer'), \
              patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel:
