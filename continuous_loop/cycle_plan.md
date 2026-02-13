@@ -8,37 +8,48 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-121 Phase 3 Complete
-**Current Status:** PROJ-121 Phase 3 complete, Phase 4 ready
+**Last Completed:** PROJ-121 Phase 4 (10/12 tasks)
+**Current Status:** PROJ-121 Phase 4 in progress (2 tasks remaining)
 **Current Project:** PROJ-121
 **Current Phase:** Phase 4 (UI-Screens)
-**Test Status:** 11907 tests passing (full suite)
+**Test Status:** 11867 tests passing (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-121 Phase 3 COMPLETE: 10 tasks (5 implemented, 5 reviewed as false positives/appropriate)
-  - Task 3.1: REMOVED draw_hud/draw_bar from game_renderer.py and tests
-  - Task 3.2: REVIEWED - create_ai_for_ship IS used in tests (not dead code)
-  - Task 3.3: REMOVED capture_step from ScreenshotManager and tests
-  - Task 3.4: REMOVED duplicate exception handlers in ShipIO
-  - Task 3.5: REVIEWED - "legacy behavior" comment describes valid code path
-  - Task 3.6: REMOVED unused BLUE/RED/GREEN color constants
-  - Task 3.7: MIGRATED builder/main.py to use ShipIOAdapter
-  - Task 3.8: REVIEWED - getattr() patterns are legitimate defensive coding
-  - Task 3.9: REVIEWED - Singletons appropriate for asset managers
-  - Task 3.10: REVIEWED - _CONTEXT_OVERLAP contexts ARE used
-- Full test suite: 11907 passed
-- Next: Begin Phase 4 (UI-Screens module tasks)
-- Files modified this session:
-  - game/ui/renderer/game_renderer.py (removed draw_hud, draw_bar)
-  - game/ui/services/screenshot_manager.py (removed capture_step)
-  - game/ui/services/ship_io.py (removed duplicate exception handlers)
-  - game/ui/colors.py (removed BLUE, RED, GREEN)
-  - game/ui/screens/test_lab/screen.py (removed unused imports)
-  - game/ui/screens/builder/main.py (migrated to ShipIOAdapter)
-  - tests/unit/ui/test_rendering_logic.py (removed dead tests)
-  - tests/unit/ui/services/test_screenshot_manager.py (removed dead tests)
-  - tests/unit/test_screenshot_manager.py (removed dead tests)
+- PROJ-121 Phase 4 IN PROGRESS: 10/12 tasks complete
+  - Task 4.1: REMOVED legacy aliases from RacePortraitGallery, updated tests
+  - Task 4.2: DELETED BuilderScreen + BuilderStateManager (DEAD CODE!)
+  - Task 4.3: DELETED ComponentRef (dead code), kept tuple format (active)
+  - Task 4.4: REJECTED - false positive in validation
+  - Task 4.5: DOWNGRADED - multi-select already exists
+  - Task 4.6: REVIEWED - fallback mode is intentional defensive coding
+  - Task 4.7: UPDATED misleading comment in right_panel.py
+  - Task 4.8: REMOVED dead backward compat paths from workshop_event_router
+  - Task 4.9: PENDING - test_lab legacy game parameter (MEDIUM)
+  - Task 4.10: ALREADY RESOLVED - state_manager.py deleted in 4.2
+  - Task 4.11: PENDING - strategy_screen deprecated properties (COMPLEX)
+  - Task 4.12: REMOVED dead legacy key filtering code
+- Full test suite: 11867 passed
+- Next: Continue Phase 4 (Tasks 4.9, 4.11 remaining)
+- Files DELETED this session:
+  - game/ui/screens/builder/main.py (BuilderScreen dead code)
+  - game/ui/screens/builder/state_manager.py (only used by dead BuilderScreen)
+  - game/ui/screens/builder/component_ref.py (ComponentRef never adopted)
+  - tests/unit/builder/test_builder_state_manager.py
+  - tests/unit/builder/test_component_ref.py
+- Files MODIFIED this session:
+  - game/ui/panels/race_portrait_gallery.py (removed legacy aliases)
+  - game/ui/screens/builder/__init__.py (removed dead exports)
+  - game/ui/screens/builder/detail_panel.py (removed dead ComponentRef handling)
+  - game/ui/screens/builder/right_panel.py (updated comment)
+  - game/ui/screens/workshop_event_router.py (removed backward compat paths)
+  - game/ui/screens/builder/stats_config.py (removed dead filtering)
+  - tests/unit/ui/test_race_portrait_gallery.py (use modern API)
+  - tests/unit/builder/test_layer_targeted_actions.py (removed dead tests)
+  - tests/unit/builder/test_builder_drag_drop_real.py (use tuple format)
+  - tests/unit/builder/test_builder_structure_features.py (use tuple format)
+  - tests/unit/test_builder_refactor.py (updated imports)
+  - tests/unit/_verify_builder_imports.py (removed dead import)
 
 ---
 
@@ -114,6 +125,7 @@
 | 2026-02-13 | PROJ-121 | Phase 1 | Complete | 11919 pass | - | 7 tasks: 4 implemented, 3 reviewed |
 | 2026-02-13 | PROJ-121 | Phase 2 | Complete | 11918 pass | - | 8 tasks: 4 implemented, 4 reviewed |
 | 2026-02-13 | PROJ-121 | Phase 3 | Complete | 11907 pass | - | 10 tasks: 5 implemented, 5 reviewed |
+| 2026-02-13 | PROJ-121 | Phase 4 (10/12) | In Progress | 11867 pass | - | Major: DELETED BuilderScreen+StateManager+ComponentRef dead code |
 
 ---
 

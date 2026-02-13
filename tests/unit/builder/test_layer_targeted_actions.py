@@ -95,17 +95,6 @@ class TestRemoveGroupLayerTargeted:
 
         gui.viewmodel.remove_component.assert_called_once_with(LayerType.CORE, 0)
 
-    def test_remove_group_backwards_compat_plain_string(self, router_setup):
-        """Plain string group_key should still work (backwards compat)."""
-        router, gui = router_setup
-
-        core_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE].components = [core_laser]
-
-        with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
-            router._handle_remove_group("laser")
-
-        gui.viewmodel.remove_component.assert_called_once()
 
 
 class TestRemoveIndividualLayerTargeted:
@@ -122,16 +111,6 @@ class TestRemoveIndividualLayerTargeted:
 
         gui.viewmodel.remove_component.assert_called_once_with(LayerType.INNER, 0)
 
-    def test_remove_individual_backwards_compat(self, router_setup):
-        """Plain component should still work (backwards compat)."""
-        router, gui = router_setup
-
-        core_comp = _make_component("reactor")
-        gui.ship.layers[LayerType.CORE].components = [core_comp]
-
-        router._handle_remove_individual(core_comp)
-
-        gui.viewmodel.remove_component.assert_called_once_with(LayerType.CORE, 0)
 
 
 class TestAddComponentLayerTargeted:
@@ -167,16 +146,3 @@ class TestAddComponentLayerTargeted:
         call_args = gui.viewmodel.add_component_instance.call_args
         assert call_args[0][1] == LayerType.INNER
 
-    def test_add_group_backwards_compat(self, router_setup):
-        """Plain group_key should still work."""
-        router, gui = router_setup
-
-        core_laser = _make_component("laser")
-        gui.ship.layers[LayerType.CORE].components = [core_laser]
-
-        with patch('game.ui.screens.builder.grouping_strategies.get_component_group_key', return_value="laser"):
-            router._handle_add_component('add_group', "laser")
-
-        gui.viewmodel.add_component_instance.assert_called_once()
-        call_args = gui.viewmodel.add_component_instance.call_args
-        assert call_args[0][1] == LayerType.CORE

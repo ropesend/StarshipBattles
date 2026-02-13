@@ -194,7 +194,8 @@ class TestBuilderDragDropReal:
         # Mock the viewmodel's add_component_instance to return success
         self.builder.viewmodel.add_component_instance = MagicMock(return_value=True)
 
-        self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
+        # Pass tuple format (component, layer_type) - layer_type is required
+        self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', (original, LayerType.OUTER)))
 
         self.builder.handle_event(MagicMock())
 
@@ -234,7 +235,8 @@ class TestBuilderDragDropReal:
         mock_result.errors = ["Overlapping"]
         self.builder.viewmodel._last_result = mock_result
 
-        self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', original))
+        # Pass tuple format (component, layer_type) - layer_type is required
+        self.builder.left_panel.handle_event = MagicMock(return_value=('add_individual', (original, LayerType.OUTER)))
 
         # Capture show_error
         self.builder.show_error = MagicMock()

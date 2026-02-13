@@ -61,15 +61,15 @@ class TestRacePortraitGalleryCreation:
         assert RacePortraitGallery is not None
 
     def test_race_portrait_gallery_has_button_list(self):
-        """RacePortraitGallery has portrait_buttons list attribute."""
+        """RacePortraitGallery has asset_buttons list attribute."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.asset_buttons = []
 
-            assert hasattr(gallery, 'portrait_buttons')
-            assert isinstance(gallery.portrait_buttons, list)
+            assert hasattr(gallery, 'asset_buttons')
+            assert isinstance(gallery.asset_buttons, list)
 
     def test_race_portrait_gallery_has_preview_image(self):
         """RacePortraitGallery has portrait_preview_image attribute."""
@@ -82,24 +82,24 @@ class TestRacePortraitGalleryCreation:
             assert hasattr(gallery, 'portrait_preview_image')
 
     def test_race_portrait_gallery_has_scroll_container(self):
-        """RacePortraitGallery has portrait_scroll attribute for scrolling container."""
+        """RacePortraitGallery has scroll_container attribute for scrolling container."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.scroll_container = None
 
-            assert hasattr(gallery, 'portrait_scroll')
+            assert hasattr(gallery, 'scroll_container')
 
     def test_race_portrait_gallery_has_preview_panel(self):
-        """RacePortraitGallery has portrait_preview_panel attribute."""
+        """RacePortraitGallery has preview_panel attribute."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
         with patch.object(RacePortraitGallery, '__init__', lambda self, *args, **kwargs: None):
             gallery = RacePortraitGallery.__new__(RacePortraitGallery)
             gallery.preview_panel = None
 
-            assert hasattr(gallery, 'portrait_preview_panel')
+            assert hasattr(gallery, 'preview_panel')
 
 
 # =============================================================================
@@ -109,7 +109,7 @@ class TestRacePortraitGalleryCreation:
 class TestPortraitSelection:
     """Tests for portrait selection functionality."""
 
-    def test_on_portrait_selected_updates_race_config(self, mock_race_config):
+    def test_on_asset_selected_updates_race_config(self, mock_race_config):
         """Selecting a portrait updates race_config.portrait_id."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
@@ -124,11 +124,11 @@ class TestPortraitSelection:
             gallery.ui_manager = MagicMock()
             gallery.on_select_callback = None
 
-            gallery.on_portrait_selected("portrait_001.png")
+            gallery.on_asset_selected("portrait_001.png")
 
             assert mock_race_config.portrait_id == "portrait_001.png"
 
-    def test_on_portrait_selected_clears_old_preview_image(self, mock_race_config):
+    def test_on_asset_selected_clears_old_preview_image(self, mock_race_config):
         """Selecting a portrait clears existing preview image."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
@@ -146,12 +146,12 @@ class TestPortraitSelection:
             old_img = MagicMock()
             gallery.portrait_preview_image = old_img
 
-            gallery.on_portrait_selected("portrait_001.png")
+            gallery.on_asset_selected("portrait_001.png")
 
             # Old image should be killed
             old_img.kill.assert_called_once()
 
-    def test_on_portrait_selected_calls_callback_if_provided(self, mock_race_config):
+    def test_on_asset_selected_calls_callback_if_provided(self, mock_race_config):
         """Selecting a portrait calls the on_select callback if provided."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
@@ -168,11 +168,11 @@ class TestPortraitSelection:
             callback = MagicMock()
             gallery.on_select_callback = callback
 
-            gallery.on_portrait_selected("portrait_001.png")
+            gallery.on_asset_selected("portrait_001.png")
 
             callback.assert_called_once_with("portrait_001.png")
 
-    def test_on_portrait_selected_no_callback_no_error(self, mock_race_config):
+    def test_on_asset_selected_no_callback_no_error(self, mock_race_config):
         """Selecting a portrait with no callback doesn't raise an error."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
@@ -188,7 +188,7 @@ class TestPortraitSelection:
             gallery.on_select_callback = None
 
             # Should not raise
-            gallery.on_portrait_selected("portrait_001.png")
+            gallery.on_asset_selected("portrait_001.png")
 
 
 # =============================================================================
@@ -198,7 +198,7 @@ class TestPortraitSelection:
 class TestButtonHighlighting:
     """Tests for visual feedback on selection."""
 
-    def test_on_portrait_selected_highlights_selected_button(self, mock_race_config):
+    def test_on_asset_selected_highlights_selected_button(self, mock_race_config):
         """Selecting a portrait highlights the corresponding button."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
@@ -220,12 +220,12 @@ class TestButtonHighlighting:
                 (btn2, MagicMock(), "portrait_002.png"),
             ]
 
-            gallery.on_portrait_selected("portrait_001.png")
+            gallery.on_asset_selected("portrait_001.png")
 
             btn1.select.assert_called_once()
             btn2.unselect.assert_called_once()
 
-    def test_on_portrait_selected_deselects_other_buttons(self, mock_race_config):
+    def test_on_asset_selected_deselects_other_buttons(self, mock_race_config):
         """Selecting a portrait deselects all other buttons."""
         from game.ui.panels.race_portrait_gallery import RacePortraitGallery
 
@@ -249,7 +249,7 @@ class TestButtonHighlighting:
                 (btn3, MagicMock(), "portrait_003.png"),
             ]
 
-            gallery.on_portrait_selected("portrait_002.png")
+            gallery.on_asset_selected("portrait_002.png")
 
             btn1.unselect.assert_called_once()
             btn2.select.assert_called_once()
@@ -295,12 +295,12 @@ class TestConfigurationBinding:
             gallery.race_config = mock_race_config
             mock_race_config.portrait_id = None  # No portrait selected
 
-            # Mock on_portrait_selected to track call
-            gallery.on_portrait_selected = MagicMock()
+            # Mock on_asset_selected to track call (base class method)
+            gallery.on_asset_selected = MagicMock()
 
             gallery.set_from_config()
 
-            gallery.on_portrait_selected.assert_not_called()
+            gallery.on_asset_selected.assert_not_called()
 
 
 # =============================================================================

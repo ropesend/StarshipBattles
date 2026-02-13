@@ -14,7 +14,6 @@ from game.core.constants import LayerType  # Canonical location for LayerType
 import json
 from game.core.logger import log_warning
 from .modifier_logic import ModifierLogic
-from .component_ref import ComponentRef
 
 class ComponentDetailPanel:
     def __init__(self, manager, rect, image_base_path, event_bus=None):
@@ -79,18 +78,14 @@ class ComponentDetailPanel:
 
         Args:
             selection_data: One of:
-                - ComponentRef: New typed reference (preferred)
-                - tuple: Legacy (layer, idx, comp) format
+                - tuple: (layer, idx, component) format from viewmodel
                 - Component: Direct component object
                 - None: No selection
         """
         if selection_data is None:
             self.show_component(None)
-        elif isinstance(selection_data, ComponentRef):
-            # NEW: Preferred typed reference pattern
-            self.show_component(selection_data.component)
         elif isinstance(selection_data, tuple):
-            # LEGACY: Support old (layer, idx, comp) tuple format
+            # Standard (layer, idx, component) format from viewmodel
             self.show_component(selection_data[2])
         elif hasattr(selection_data, 'id'):
             # Direct component object

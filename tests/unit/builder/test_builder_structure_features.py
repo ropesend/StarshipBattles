@@ -307,14 +307,15 @@ class TestBuilderStructureFeatures:
         builder_gui.ship.layers['core'].components = [comp]
 
         # Let's mock layer_panel.handle_event to return the action
+        # Use tuple format (component, layer_type) - layer_type is required
         event = MagicMock()
-        builder_gui.layer_panel.handle_event.return_value = ('remove_individual', comp)
+        builder_gui.layer_panel.handle_event.return_value = ('remove_individual', (comp, 'core'))
 
         builder_gui.handle_event(event)
         builder_gui.viewmodel.remove_component.assert_called_with('core', 0)
 
-        # Simulate Add Individual
-        builder_gui.layer_panel.handle_event.return_value = ('add_individual', comp)
+        # Simulate Add Individual - tuple format (component, layer_type) required
+        builder_gui.layer_panel.handle_event.return_value = ('add_individual', (comp, 'core'))
 
         # Need to clone component
         registries = builder_setup['registries']

@@ -8,9 +8,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 
 class TestBuilderRefactor(unittest.TestCase):
     def test_imports(self):
-        """Test that builder_gui and extracted modules can be imported."""
+        """Test that builder modules can be imported.
+
+        Note: builder.main (BuilderScreen) was removed in PROJ-121 Phase 4 as dead code.
+        The modern DesignWorkshopScreen in workshop_screen.py is the active implementation.
+        """
         try:
-            import game.ui.screens.builder.main as builder_gui
+            # Modern workshop screen (active implementation)
+            from game.ui.screens.workshop_screen import DesignWorkshopScreen
             from game.ui.screens.planet_list_presets import PresetManager
             # PROJ-113: ShipIO moved to UI layer
             import game.ui.services.ship_io as ship_io

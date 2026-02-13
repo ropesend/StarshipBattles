@@ -149,23 +149,3 @@ class RacePortraitGallery(BaseGallery):
                 container=self.preview_panel,
             )
 
-    # --- Legacy compatibility aliases ---
-
-    @property
-    def portrait_buttons(self):
-        """Alias for asset_buttons for backward compatibility."""
-        return self.asset_buttons
-
-    @property
-    def portrait_scroll(self):
-        """Alias for scroll_container for backward compatibility."""
-        return self.scroll_container
-
-    @property
-    def portrait_preview_panel(self):
-        """Alias for preview_panel for backward compatibility."""
-        return self.preview_panel
-
-    def on_portrait_selected(self, portrait_id: str):
-        """Handle portrait selection (alias for on_asset_selected)."""
-        self.on_asset_selected(portrait_id)

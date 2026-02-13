@@ -318,7 +318,7 @@ class BuilderRightPanel:
             ship=self.builder.ship,
             show_requirements=True
         )
-        # Expose attributes for backward compat with update methods
+        # Expose rows_map for tests and update methods
         self._sync_from_stats_panel()
 
     def _sync_from_stats_panel(self):

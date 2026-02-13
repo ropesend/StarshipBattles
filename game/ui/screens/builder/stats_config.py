@@ -571,12 +571,7 @@ def get_logistics_rows(ship):
     5. Endurance at constant ({resource}_endurance)
     6. Endurance at max load ({resource}_max_endurance)
     """
-    # 1. Start with static config (Mass, etc)
-    # Filter out any hardcoded legacy resource rows if they exist in JSON
-    legacy_keys = ['max_fuel', 'max_energy', 'max_ammo', 'fuel_endurance', 'ammo_endurance', 'energy_endurance']
-    base_rows = [r for r in STATS_LOGISTICS if r.key not in legacy_keys]
-
-    # 2. Add Dynamic Resource Rows
+    # Generate dynamic resource rows based on ship's resources
     if hasattr(ship, 'resources'):
         res_names = _discover_resources(ship)
 
@@ -584,10 +579,9 @@ def get_logistics_rows(ship):
         for r_name in res_names:
             dynamic_rows.extend(_build_resource_rows(ship, r_name))
 
-        # Merge: Base (Mass) -> Dynamic
-        return base_rows + dynamic_rows
+        return dynamic_rows
 
-    return base_rows
+    return []
 
 
 def get_construction_rows(ship):
