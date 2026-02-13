@@ -8,79 +8,30 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-119 Phase 2 COMPLETE
-**Current Status:** PROJ-119 Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-119 Phase 3 COMPLETE
+**Current Status:** PROJ-119 all phases complete, ready for audit
 **Current Project:** PROJ-119
-**Current Phase:** Phase 3 (UI-Screens)
-**Test Status:** 11592 passed (+24 tests this session)
+**Current Phase:** Audit
+**Test Status:** 11668 passed (+76 tests this session)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-119 Phase 2 COMPLETE - all 18 tasks investigated:
-  - Task 2.1: +8 tests for ShipThemeManager portrait methods
-  - Task 2.3: Fixed test_no_duplicate_color_values assertion
-  - Task 2.4: +12 tests for Camera.update_input() input handling
-  - Task 2.6: +5 tests for setup_formation edge cases
-  - Task 2.10: Fixed mock_ship.heading→angle conftest bug
-  - Tasks 2.2/2.7/2.11: widgets.py DELETED (PROJ-117)
-  - Tasks 2.5/2.8/2.12-2.15: ALREADY COVERED by existing tests
-  - Tasks 2.9/2.16-2.18: ACCEPTABLE/INFO (low priority)
-- Tests: 11592 passed
-- Next: Begin Phase 3 - UI-Screens test coverage
+- PROJ-119 Phase 3 COMPLETE - all 29 tasks investigated:
+  - Task 3.10: +24 tests for setup_data_io.py
+  - Task 3.17: +20 tests for builder_selection.py
+  - Task 3.18: +18 tests for build_queue_helpers.py
+  - Task 3.23: +14 tests for build_queue_list_window.py
+  - Tasks 3.1-3.5, 3.7-3.9, 3.11-3.12, 3.14, 3.16, 3.19-3.20, 3.22, 3.24-3.25, 3.29: ALREADY COVERED
+  - Tasks 3.6, 3.13, 3.15, 3.21: DEFERRED (dev tools, tightly coupled to pygame_gui)
+  - Tasks 3.26-3.28: ACCEPTABLE/INFO
+- Tests: 11668 passed
+- Next: Run audit to verify all phases complete
 
 ---
 
 ## Master Task List
 
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
-
-- [x] **PROJ-111: Test Coverage - UI & Framework**
-  - **Phases:** 7 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-111/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-111/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-113: Architecture Layer Violations**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-113/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-113/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-116: God Class Decomposition**
-  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-116/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-116/plan.md)
-  - **Audit:** PASSED (No code changes - findings already addressed by prior projects) | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-117: Legacy Dead Code Eradication**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-117/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-117/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-115: Duplication Elimination**
-  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-115/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-115/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
-
-- [x] **PROJ-114: Consistency Standardization**
-  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
-  - **Plan:** [Projects/active_projects/PROJ-114/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-114/plan.md)
-  - **Audit:** PASSED | **Cycles:** 1/5
-  - **Dependencies:** None
-
----
 
 - [x] **PROJ-118: Test Coverage -- Core and Simulation**
   - **Phases:** 2 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
@@ -102,37 +53,6 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-11 | PROJ-111 | Phase 1 | Complete | 8984 passed | pending | +60 tests: camera, BattleUIService, utils, components, colors, widgets, imports |
-| 2026-02-11 | PROJ-111 | Phase 2 | Complete | 9034 passed | pending | +50 tests: SpriteManager, ShipThemeManager, GameRenderer (singleton/error/threading/caching) |
-| 2026-02-11 | PROJ-111 | Phase 4 | Complete | 9277 passed | pending | +127 tests: StrategyScreen (49), StrategyInputHandler (39), StrategyRenderer (39) |
-| 2026-02-11 | PROJ-111 | Phase 6 T1-5 | Complete | 9590 passed | pending | +128 tests: WorkshopScreen (27), RaceSetupScreen (25), FormationEditorScreen (30), FleetReportWindow (24), BuildQueueScreen (22) |
-| 2026-02-11 | PROJ-111 | Phase 6 T6-8 | Complete | 9684 passed | pending | +94 tests: DesignSelectorWindow (35), race assets (13), panel coverage (46). Phase 6 complete (222 total) |
-| 2026-02-11 | PROJ-111 | Phase 7 | Complete | 9741 passed | pending | +57 tests: assertion quality, event patterns, error paths (21), edge cases (28), resize (8). All phases complete |
-| 2026-02-11 | PROJ-111 | Audit 1 | PASSED | 9741 passed | pending | All 7 phases verified: P1-2 (113), P3-4 (223), P5-6 (414), P7 (57) |
-| 2026-02-12 | PROJ-113 | Phase 1 | Complete | 9773 passed | pending | 12 FND violations: moved input_mapper, screenshot_manager, UIConfig to UI layer; removed TYPE_CHECKING cross-layer imports; added leave_formation() |
-| 2026-02-12 | PROJ-113 | Phase 2 | Complete | 9773 passed | pending | 11 SIM findings: 3 FIXED (ShipIO→UI, battle_config, projectile color), 6 FALSE POSITIVES, 2 INFO, 1 DEFERRED (color_hint) |
-| 2026-02-12 | PROJ-113 | Phase 3 | Complete | 9773 passed | pending | 8 STR findings: 4 FIXED (trigger_speed_recalc, hex comments, design_library imports, economy docs), 2 FALSE POSITIVES, 2 DOCUMENTED |
-| 2026-02-12 | PROJ-113 | Phase 4 | Complete | 9773 passed | pending | 10 UI2 findings: 4 ALREADY FIXED (Phase 1), 2 FALSE POSITIVE, 2 ARCHITECTURAL PATTERN, 1 ACCEPTABLE, 1 INFO |
-| 2026-02-12 | PROJ-113 | Phase 5 | Complete | 9773 passed | pending | 11 UI1 findings: 2 FIXED (UIConfig shim, colors→UI), 1 ALREADY FIXED, 1 FALSE POSITIVE, 7 ACCEPTABLE |
-| 2026-02-12 | PROJ-113 | Audit 1 | PASSED | 9773 passed | pending | All 5 goals verified; fixed stale UIConfig refs in core/__init__.py |
-| 2026-02-12 | PROJ-116 | Phases 1-3 | Complete | 9773 passed | pending | All 19 findings investigated - ALL ALREADY ADDRESSED by PROJ-87/88/89/104 or ACCEPTABLE |
-| 2026-02-12 | PROJ-116 | Audit 1 | PASSED | 9773 passed | pending | No code changes. Verified: Sim decomposed (PROJ-88), Strategy decomposed (PROJ-87), UI decomposed (PROJ-89/104) |
-| 2026-02-12 | PROJ-117 | Phase 1 | Complete | 9773 passed | pending | 14 findings: 7 fixes, 7 false positives. StrategyMetadataService→SingletonMeta, deleted dead AIController attrs/wrappers, removed TypeGuard shim |
-| 2026-02-12 | PROJ-117 | Phase 2 | Complete | 9773 passed | pending | 23 findings: 12 fixes, 2 already fixed, 9 deferred. Deleted ABILITY_CLASS_MAP, migrated resource imports (11 files), fixed missile type checks (AttackType enum), removed dead code branches |
-| 2026-02-12 | PROJ-117 | Phase 3 | Complete | 9754 passed | pending | 12 findings: 3 fixes (widgets.py deleted, atlas fallback deleted, hasattr removed), 4 false positives, 5 acceptable |
-| 2026-02-12 | PROJ-117 | Phase 4 | Complete | 9754 passed | pending | 16 findings: 5 fixes, 5 false positives, 6 acceptable |
-| 2026-02-12 | PROJ-117 | Audit 1 | PASSED | 9754 passed | pending | All 4 phases verified; minor finding documented (unused protocols) |
-| 2026-02-12 | PROJ-115 | Phase 1 | Complete | 9754 passed | pending | 4 fixes, 4 already fixed, 2 acceptable. _flee_direction helper, angle_diff usage, resources.py dedup |
-| 2026-02-12 | PROJ-115 | Phase 2 | Complete | 1772 str | pending | 1 fix (Galaxy.get_system_at_location), 9 acceptable/false positives |
-| 2026-02-12 | PROJ-115 | Phase 3 | Complete | 9754 pass | pending | 1 fix (LAYER_COLORS), 1 already fixed, 6 acceptable |
-| 2026-02-12 | PROJ-115 | Phase 4 | Complete | 9754 pass | N/A | 0 fixes (3 false positive, 1 already fixed, 6 acceptable) |
-| 2026-02-12 | PROJ-115 | Phase 5 | Complete | 9754 pass | pending | 2 fixes, 11 false positive/already fixed, 6 acceptable, 2 deferred |
-| 2026-02-12 | PROJ-115 | Audit 1 | PASSED | 9754 pass | pending | 5 investigation agents verified key fixes |
-| 2026-02-12 | PROJ-114 | Phase 1 | Complete | 9754 pass | pending | 7 fixes, 5 already fixed, 10 acceptable |
-| 2026-02-12 | PROJ-114 | Phase 2 | Complete | 9754 pass | 3047a7fc | 11 fixes, 4 false positives, 5 acceptable, 3 deferred |
-| 2026-02-12 | PROJ-114 | Phase 3 | Complete | 9754 pass | pending | 3 fixes (camera, sprites), 2 already fixed, 11 false positive/acceptable |
-| 2026-02-12 | PROJ-114 | Phase 4 | Complete | 9754 pass | pending | 3 fixes (docstrings 6 files, logging, imports), 15 acceptable |
-| 2026-02-12 | PROJ-114 | Audit 1 | PASSED | 9754 pass | pending | All 4 phases verified by investigation agents |
 | 2026-02-13 | PROJ-118 | Phase 1 | Complete | 9866 pass | pending | 24 TCG-FND findings addressed, +112 tests (physics, AI, collision, spatial, research) |
 | 2026-02-13 | PROJ-118 | Phase 2 | Complete | 11501 pass | pending | 27 TCG-SIM findings addressed, +1635 tests total |
 | 2026-02-13 | PROJ-118 | Audit 1 | PASSED | 11501 pass | pending | Phase 1: 5/5 pass, Phase 2: 8/8 pass - all goals verified |
@@ -140,6 +60,7 @@
 | 2026-02-13 | PROJ-119 | Phase 1 (partial) | In Progress | 11552 pass | pending | Tasks 1.6-1.10 complete: +33 tests (quickstart 14, design_metadata 19), 3 tasks ALREADY COVERED |
 | 2026-02-13 | PROJ-119 | Phase 1 | Complete | 11568 pass | pending | Tasks 1.11-1.24 complete: +16 tests (ship_resource_manager 10, ship_display_formatter 6), most ALREADY COVERED |
 | 2026-02-13 | PROJ-119 | Phase 2 | Complete | 11592 pass | pending | All 18 tasks: +24 tests (portrait 8, camera 12, formation 5), 3 deleted files, 6 already covered, fix mock_ship bug |
+| 2026-02-13 | PROJ-119 | Phase 3 | Complete | 11668 pass | pending | All 29 tasks: +76 tests (setup_data_io 24, builder_selection 20, build_queue_helpers 18, build_queue_list_window 14), 21 already covered, 4 deferred |
 
 ---
 
