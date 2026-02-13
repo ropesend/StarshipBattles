@@ -29,6 +29,54 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def get_harvester_info(comp, registries: Optional[GameRegistries] = None) -> Optional[dict]:
+    """Extract ResourceHarvester info from a component entry.
+
+    Supports:
+    - Dict with inline abilities: {"id": "x", "abilities": {"ResourceHarvester": {...}}}
+    - Plain string ID: resolved via registries
+
+    Args:
+        comp: Component entry from design_data layers (dict or str)
+        registries: Optional GameRegistries for component lookup
+
+    Returns:
+        Dict with 'resource_type' and 'base_harvest_rate', or None
+    """
+    if isinstance(comp, dict):
+        abilities = comp.get('abilities', {})
+        harvester_data = abilities.get('ResourceHarvester')
+        if isinstance(harvester_data, dict):
+            return harvester_data
+        # Also check by component ID via registry
+        comp_id = comp.get('id')
+        if comp_id and registries is not None:
+            return lookup_harvester_in_registry(comp_id, registries)
+    elif isinstance(comp, str) and registries is not None:
+        return lookup_harvester_in_registry(comp, registries)
+    return None
+
+
+def lookup_harvester_in_registry(comp_id: str, registries: GameRegistries) -> Optional[dict]:
+    """Look up harvester ability from the component registry.
+
+    Args:
+        comp_id: Component identifier to look up
+        registries: GameRegistries for component lookup
+
+    Returns:
+        Dict with harvester info or None
+    """
+    comp_def = registries.components.get(comp_id)
+    if comp_def is None:
+        return None
+    abilities = getattr(comp_def, 'abilities', {}) or {}
+    harvester_data = abilities.get('ResourceHarvester')
+    if isinstance(harvester_data, dict):
+        return harvester_data
+    return None
+
+
 class HarvestingEngine(IHarvestingEngine):
     """
     Engine for processing planetary resource harvesting.
@@ -192,7 +240,7 @@ class HarvestingEngine(IHarvestingEngine):
             if not isinstance(layer_data, list):
                 continue
             for comp in layer_data:
-                harvester_info = self._get_harvester_info(comp)
+                harvester_info = get_harvester_info(comp, self._registries)
                 if harvester_info is not None:
                     self._harvest_resource(
                         harvester_info, colony, empire
@@ -201,9 +249,7 @@ class HarvestingEngine(IHarvestingEngine):
     def _get_harvester_info(self, comp) -> Optional[dict]:
         """Extract ResourceHarvester info from a component entry.
 
-        Supports:
-        - Dict with inline abilities: {"id": "x", "abilities": {"ResourceHarvester": {...}}}
-        - Plain string ID: resolved via registries
+        Delegates to module-level get_harvester_info() function.
 
         Args:
             comp: Component entry from design_data layers (dict or str)
@@ -211,21 +257,12 @@ class HarvestingEngine(IHarvestingEngine):
         Returns:
             Dict with 'resource_type' and 'base_harvest_rate', or None
         """
-        if isinstance(comp, dict):
-            abilities = comp.get('abilities', {})
-            harvester_data = abilities.get('ResourceHarvester')
-            if isinstance(harvester_data, dict):
-                return harvester_data
-            # Also check by component ID via registry
-            comp_id = comp.get('id')
-            if comp_id and self._registries is not None:
-                return self._lookup_harvester_in_registry(comp_id)
-        elif isinstance(comp, str) and self._registries is not None:
-            return self._lookup_harvester_in_registry(comp)
-        return None
+        return get_harvester_info(comp, self._registries)
 
     def _lookup_harvester_in_registry(self, comp_id: str) -> Optional[dict]:
         """Look up harvester ability from the component registry.
+
+        Delegates to module-level lookup_harvester_in_registry() function.
 
         Args:
             comp_id: Component identifier to look up
@@ -233,14 +270,9 @@ class HarvestingEngine(IHarvestingEngine):
         Returns:
             Dict with harvester info or None
         """
-        comp_def = self._registries.components.get(comp_id)
-        if comp_def is None:
+        if self._registries is None:
             return None
-        abilities = getattr(comp_def, 'abilities', {}) or {}
-        harvester_data = abilities.get('ResourceHarvester')
-        if isinstance(harvester_data, dict):
-            return harvester_data
-        return None
+        return lookup_harvester_in_registry(comp_id, self._registries)
 
     def _harvest_resource(
         self,

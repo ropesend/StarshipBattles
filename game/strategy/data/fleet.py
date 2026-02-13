@@ -273,30 +273,33 @@ class Fleet:
         """Update fleet ships from battle results."""
         self._battle.update_from_battle_results(surviving_ships)
 
-    def add_order(self, order, index=None):
+    def add_order(self, order: FleetOrder, index: Optional[int] = None) -> None:
         """Add an order to the queue."""
         if index is None:
             self.orders.append(order)
         else:
             self.orders.insert(index, order)
 
-    def clear_orders(self):
+    def clear_orders(self) -> None:
+        """Clear all orders and the current path."""
         self.orders.clear()
         self.path = []
 
-    def get_current_order(self):
+    def get_current_order(self) -> Optional[FleetOrder]:
+        """Get the current (first) order, or None if queue is empty."""
         if not self.orders:
             return None
         return self.orders[0]
 
-    def pop_order(self):
+    def pop_order(self) -> Optional[FleetOrder]:
+        """Remove and return the current order, or None if queue is empty."""
         if self.orders:
             finished = self.orders.pop(0)
             self.path = []  # Clear path associated with that order
             return finished
         return None
 
-    def merge_with(self, other_fleet: 'Fleet'):
+    def merge_with(self, other_fleet: 'Fleet') -> None:
         """
         Merge this fleet into other_fleet.
         Transfers all ships and clears this fleet.
@@ -415,9 +418,9 @@ class Fleet:
         ship_count = len(self.ships)
         return f"Fleet({self.id}, Owner:{self.owner_id}, Loc:{self.location}, Ships:{ship_count}, Spd:{self.speed})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Fleet):
-            return False
+            return NotImplemented
         return self.id == other.id
 
     def __hash__(self):

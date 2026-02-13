@@ -1,52 +1,65 @@
 import os
 import yaml
 import random
-from collections import defaultdict
-from game.core.logger import log_error, log_info, log_warning, log_debug
+from typing import List, Optional, Set
+
+from game.core.logger import log_error, log_warning
+
 
 class NameRegistry:
-    def __init__(self, data_file_path=None):
-        self.available_names = []
-        self.used_names = set()
-        
+    """Registry for unique system names loaded from YAML files."""
+
+    def __init__(self, data_file_path: Optional[str] = None) -> None:
+        """Initialize the name registry.
+
+        Args:
+            data_file_path: Optional path to YAML file containing names.
+        """
+        self.available_names: List[str] = []
+        self.used_names: Set[str] = set()
+
         if data_file_path:
             self.load_data(data_file_path)
-            
-    def load_data(self, file_path):
-        """Load names from YAML file."""
+
+    def load_data(self, file_path: str) -> None:
+        """Load names from YAML file.
+
+        Args:
+            file_path: Path to YAML file containing a 'names' list.
+        """
         if not os.path.exists(file_path):
             log_error(f"Name data file not found: {file_path}")
             return
-            
+
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f)
-                
+
             if "names" in data and isinstance(data["names"], list):
                 self.available_names = data["names"]
-                # Default behavior per file: "RandomMode: ShuffleDraw"
-                # We enforce this by shuffling and popping.
+                # Default behavior: shuffle for random selection
                 random.shuffle(self.available_names)
             else:
                 log_warning(f"Invalid format in {file_path}: 'names' list missing.")
-                
+
         except (FileNotFoundError, OSError, yaml.YAMLError, KeyError, TypeError, UnicodeDecodeError) as e:
             log_error(f"Failed to load name data: {e}")
 
-    def get_system_name(self):
-        """
-        Get a unique system name.
-        Returns a fallback name if all names are exhausted.
+    def get_system_name(self) -> str:
+        """Get a unique system name.
+
+        Returns:
+            A unique name, or a fallback "Unknown-N" if names are exhausted.
         """
         if not self.available_names:
             return f"Unknown-{len(self.used_names) + 1}"
-            
+
         name = self.available_names.pop()
         while name in self.used_names:
             if not self.available_names:
                 return f"Unknown-{len(self.used_names) + 1}"
             name = self.available_names.pop()
-            
+
         self.used_names.add(name)
         return name
 

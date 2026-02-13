@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import Mock, MagicMock
 from game.core.hex_math import HexCoord
 from game.core.validation import ValidationResult
+from tests.integration.strategy.facade.conftest import create_mock_session_with_fleet_lookup
 
 
 class TestCanColonize:
@@ -32,10 +33,9 @@ class TestCanColonize:
         mock_turn_engine = Mock()
         mock_turn_engine.validate_colonize_order.return_value = ValidationResult()
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.galaxy = mock_galaxy
-        mock_session.turn_engine = mock_turn_engine
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], galaxy=mock_galaxy, turn_engine=mock_turn_engine
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_colonize(101, 42)
@@ -69,10 +69,9 @@ class TestCanColonize:
             is_valid=False, errors=["Planet already owned."], error_code="ALREADY_OWNED"
         )
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.galaxy = mock_galaxy
-        mock_session.turn_engine = mock_turn_engine
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], galaxy=mock_galaxy, turn_engine=mock_turn_engine
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_colonize(101, 42)
@@ -89,9 +88,7 @@ class TestCanColonize:
         mock_galaxy = MagicMock()
         mock_galaxy.systems = {}
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.galaxy = mock_galaxy
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire], galaxy=mock_galaxy)
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_colonize(9999, 42)
@@ -116,10 +113,9 @@ class TestCanColonize:
         mock_turn_engine = Mock()
         mock_turn_engine.validate_colonize_order.return_value = ValidationResult()
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.galaxy = mock_galaxy
-        mock_session.turn_engine = mock_turn_engine
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], galaxy=mock_galaxy, turn_engine=mock_turn_engine
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_colonize(101, None)
@@ -145,9 +141,9 @@ class TestCanMoveTo:
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.preview_fleet_path.return_value = [HexCoord(1, 0), HexCoord(2, 0)]
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], preview_fleet_path=Mock(return_value=[HexCoord(1, 0), HexCoord(2, 0)])
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_move_to(101, HexCoord(2, 0))
@@ -165,9 +161,9 @@ class TestCanMoveTo:
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.preview_fleet_path.return_value = None  # No path
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], preview_fleet_path=Mock(return_value=None)
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_move_to(101, HexCoord(100, 100))
@@ -182,8 +178,7 @@ class TestCanMoveTo:
         mock_empire = Mock()
         mock_empire.fleets = []
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
+        mock_session = create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_move_to(9999, HexCoord(5, 5))
@@ -202,9 +197,9 @@ class TestCanMoveTo:
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
 
-        mock_session = Mock()
-        mock_session.empires = [mock_empire]
-        mock_session.preview_fleet_path.return_value = []  # Already there
+        mock_session = create_mock_session_with_fleet_lookup(
+            [mock_empire], preview_fleet_path=Mock(return_value=[])
+        )
 
         facade = StrategySessionFacade(mock_session)
         result = facade.can_move_to(101, HexCoord(5, 5))

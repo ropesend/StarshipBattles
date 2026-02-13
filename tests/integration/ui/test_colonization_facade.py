@@ -325,6 +325,26 @@ class TestQueueColonizeMission:
 # PROJ-55: Phase 4 - Pod Filtering Tests
 # =============================================================================
 
+def _create_mock_session_with_fleet_lookup(empires=None, **kwargs):
+    """Create mock session with _get_fleet_by_id support for facade tests."""
+    session = Mock()
+    session.empires = empires or []
+
+    def get_fleet_by_id(fleet_id):
+        for empire in session.empires:
+            for fleet in empire.fleets:
+                if fleet.id == fleet_id:
+                    return fleet
+        return None
+
+    session._get_fleet_by_id = get_fleet_by_id
+
+    for key, value in kwargs.items():
+        setattr(session, key, value)
+
+    return session
+
+
 class TestFacadeColonyPodMethods:
     """Tests for facade methods that expose colony pod information."""
 
@@ -332,7 +352,6 @@ class TestFacadeColonyPodMethods:
         """Facade.get_fleet_remaining_pods returns dict of remaining pods."""
         from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
-        mock_session = Mock()
         mock_fleet = Mock()
         mock_fleet.id = 10
         mock_fleet.ships = []
@@ -341,7 +360,7 @@ class TestFacadeColonyPodMethods:
         # Setup session internals
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
-        mock_session.empires = [mock_empire]
+        mock_session = _create_mock_session_with_fleet_lookup([mock_empire])
 
         facade = StrategySessionFacade(mock_session)
 
@@ -357,8 +376,6 @@ class TestFacadeColonyPodMethods:
 
         class MockPlanetType(Enum):
             ICE_DWARF = "ICE_DWARF"
-
-        mock_session = Mock()
 
         # Create mock ship with ice dwarf pod
         mock_ship = Mock()
@@ -382,7 +399,6 @@ class TestFacadeColonyPodMethods:
 
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
-        mock_session.empires = [mock_empire]
 
         # Need to provide component registry
         mock_registries = Mock()
@@ -392,7 +408,8 @@ class TestFacadeColonyPodMethods:
                 'abilities': {'ColonizePlanet': 'ICE_DWARF'}
             }
         }
-        mock_session.registries = mock_registries
+
+        mock_session = _create_mock_session_with_fleet_lookup([mock_empire], registries=mock_registries)
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_remaining_pods(10)
@@ -404,8 +421,7 @@ class TestFacadeColonyPodMethods:
         """get_fleet_remaining_pods returns empty dict if fleet not found."""
         from game.strategy.facade.strategy_session_facade import StrategySessionFacade
 
-        mock_session = Mock()
-        mock_session.empires = []
+        mock_session = _create_mock_session_with_fleet_lookup([])
 
         facade = StrategySessionFacade(mock_session)
         result = facade.get_fleet_remaining_pods(999)
