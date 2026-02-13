@@ -8,27 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-121 Phase 4 (12/12 tasks) - ALL PHASES COMPLETE
-**Current Status:** PROJ-121 ready for audit
-**Current Project:** PROJ-121
-**Current Phase:** AUDIT (all 4 phases complete)
+**Last Completed:** PROJ-121 COMPLETE (Audit PASSED)
+**Current Status:** PROJ-121 complete, ready for PROJ-122
+**Current Project:** PROJ-122 (next)
+**Current Phase:** Not started
 **Test Status:** 11867 tests passing (full suite)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-121 ALL PHASES COMPLETE
-  - Phase 1: Foundation (7 tasks)
-  - Phase 2: Simulation (8 tasks)
-  - Phase 3: UI-Framework (10 tasks)
-  - Phase 4: UI-Screens (12 tasks)
-- This session completed Phase 4:
-  - Task 4.9: RESOLVED - Updated misleading "legacy compatibility" comment in test_lab/screen.py
-  - Task 4.11: RESOLVED - Updated misleading "deprecated" comment in strategy_screen.py
-- Files MODIFIED this session:
-  - game/ui/screens/test_lab/screen.py (clarified game param docstring)
-  - game/ui/screens/strategy_screen.py (clarified properties section comment)
-- Full test suite: 11867 passed
-- NEXT: Trigger audit per Protocol 04
+- PROJ-121 LEGACY ERADICATION - COMPLETE
+  - 4 phases, 37 tasks total
+  - Audit Cycle 1: PASSED (no issues found)
+  - Major accomplishments:
+    - Deleted dead code: AIException, TargetingException, load_resources() wrapper
+    - Deleted dead code: BuilderScreen, BuilderStateManager, ComponentRef
+    - Deleted dead code: draw_hud, draw_bar, capture_step, unused color constants
+    - Removed backward compatibility paths throughout
+    - Clarified misleading comments (deprecated, legacy compat)
+    - Hardened modifier schema to error on V1 format
+- Tests: 11867 passed
+- NEXT: Begin PROJ-122 (UI God Class Decomposition)
 
 ---
 
@@ -44,10 +43,10 @@
 
 ---
 
-- [/] **PROJ-121: PROJ-B_legacy-eradication**
-  - **Phases:** 4 | **Status:** In Progress (Phase 1 Complete) | **Priority:** Medium
+- [x] **PROJ-121: PROJ-B_legacy-eradication**
+  - **Phases:** 4 | **Status:** Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-121/plan.md](Projects/active_projects/PROJ-121/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -106,6 +105,7 @@
 | 2026-02-13 | PROJ-121 | Phase 3 | Complete | 11907 pass | - | 10 tasks: 5 implemented, 5 reviewed |
 | 2026-02-13 | PROJ-121 | Phase 4 (10/12) | In Progress | 11867 pass | - | Major: DELETED BuilderScreen+StateManager+ComponentRef dead code |
 | 2026-02-13 | PROJ-121 | Phase 4 (12/12) | Complete | 11867 pass | - | Final 2 tasks: clarified misleading comments |
+| 2026-02-13 | PROJ-121 | Audit Cycle 1 | PASSED | 11867 pass | 37fc5364 | All 37 tasks verified, no issues |
 
 ---
 
