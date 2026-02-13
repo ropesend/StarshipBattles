@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Address findings in the Simulation module (18 findings, 3 critical)
 **Priority:** High
 
@@ -14,37 +14,37 @@
 ## Tasks
 
 ### Task 1.1: TCG-SIM-001 - Projectile Entity Has No Unit Tests [Medium]
-**File:** `game/simulation/entities/proje`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/entities/projectile.py`
+**Tests:** `pytest tests/unit/simulation/entities/test_projectile.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Created comprehensive unit tests (37 tests) covering initialization, validation exceptions, movement, lifetime, damage, and missile guidance. Tests in correct location: tests/unit/simulation/entities/test_projectile.py
 
 ### Task 1.2: TCG-SIM-002 - ShipStatQuerier Has No Unit Tests [Medium]
-**File:** `game/simulation/entities/ship_`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/entities/ship_stat_querier.py`
+**Tests:** `pytest tests/unit/entities/test_ship_stat_querier.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Already complete - comprehensive tests exist (45 tests) covering all methods, edge cases, and type handling. Tests in tests/unit/entities/test_ship_stat_querier.py
 
 ### Task 1.3: TCG-SIM-003 - ShipValidator Rules Have No Unit Tests [Complex]
-**File:** `game/simulation/validation/shi`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/simulation/validation/ship_validator.py`
+**Tests:** `pytest tests/unit/simulation/validation/test_ship_validator_rules.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Created comprehensive unit tests (50 tests) for all validation rules: LayerConstraintRule, UniqueComponentRule, ExclusiveGroupRule, MountDependencyRule, LayerRestrictionDefinitionRule, MassBudgetRule, ClassRequirementsRule, ResourceDependencyRule, ShipDesignValidator. Also tests helper functions and RestrictionPrefixes constants.
 
 ### Task 1.4: TCG-SIM-004 - BattleController Missing Edge Case Tests [Medium]
 **File:** `game/simulation/battle_control`
