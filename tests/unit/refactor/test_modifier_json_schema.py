@@ -169,16 +169,15 @@ class TestModifierV2Schema:
             'effects': [{'stat': 'mass_mult', 'formula': 'param'}]
         }
 
-        v1_modifier = {
+        non_v2_modifier = {
             'id': 'test',
-            'effects': {'special': 'hardened_mount'}
+            'effects': {'special': 'hardened_mount'}  # dict instead of list
         }
 
         assert is_v2_format(v2_modifier) is True
 
-        # V1 format now raises ValueError (no longer supported)
-        with pytest.raises(ValueError, match="deprecated V1 format"):
-            is_v2_format(v1_modifier)
+        # Non-list effects returns False (not V2 format)
+        assert is_v2_format(non_v2_modifier) is False
 
     def test_v2_format_with_depends_on(self):
         """effects can have 'depends_on' for stat-referencing formulas."""

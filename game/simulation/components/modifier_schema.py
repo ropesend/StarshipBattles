@@ -2,9 +2,7 @@
 Modifier Schema Validation for V2 Format.
 
 This module provides validation functions for the V2 JSON-based modifier format
-that uses formula expressions. All modifiers are now required to be in V2 format.
-
-V1 format (dict-based effects with 'special' handlers) is no longer supported.
+that uses formula expressions.
 
 Functions:
 - is_v2_format: Validates that a modifier uses the V2 array-based effects format
@@ -24,34 +22,19 @@ def is_v2_format(modifier: Dict[str, Any]) -> bool:
     Validate that a modifier uses V2 format.
 
     V2 format: 'effects' is an array of effect objects with 'stat' and 'formula'
-    V1 format is no longer supported.
 
     Args:
         modifier: The modifier definition dict
 
     Returns:
-        True if V2 format
-
-    Raises:
-        ValueError: If modifier uses deprecated V1 format (dict-based effects)
+        True if V2 format (effects is a list), False otherwise
     """
     effects = modifier.get('effects')
     if effects is None:
         return False
 
     # V2 format: effects is a list of dicts with 'stat' and 'formula'
-    if isinstance(effects, list):
-        return True
-
-    # V1 format is no longer supported - raise error to surface data issues
-    if isinstance(effects, dict):
-        mod_id = modifier.get('id', 'unknown')
-        raise ValueError(
-            f"Modifier '{mod_id}' uses deprecated V1 format (dict-based effects). "
-            f"V1 format is no longer supported. Convert to V2 array format."
-        )
-
-    return False
+    return isinstance(effects, list)
 
 
 def validate_effect_v2(effect: Dict[str, Any]) -> bool:

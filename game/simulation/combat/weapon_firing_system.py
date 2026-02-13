@@ -60,7 +60,7 @@ class WeaponFiringSystem:
         """
         attacks = []
 
-        if not ship.is_alive or getattr(ship, 'is_derelict', False):
+        if not ship.is_alive or ship.is_derelict:
             return attacks
 
         for layer_type, comp in ship.iter_components():
@@ -174,8 +174,7 @@ class WeaponFiringSystem:
         """
         # Build secondary targets list
         secondary_targets = []
-        if (getattr(ship, 'max_targets', CombatConstants.DEFAULT_MAX_TARGETS) >
-                CombatConstants.DEFAULT_MAX_TARGETS and hasattr(ship, 'secondary_targets')):
+        if ship.max_targets > CombatConstants.DEFAULT_MAX_TARGETS:
             secondary_targets = ship.secondary_targets
 
         return self._targeting.find_valid_target(
@@ -274,7 +273,7 @@ class WeaponFiringSystem:
             turn_rate=seeker_ab.turn_rate,
             max_speed=speed,
             target=target,
-            hp=getattr(seeker_ab, 'missile_hp', 1),
+            hp=seeker_ab.projectile_hp,
             source_weapon=comp
         )
 

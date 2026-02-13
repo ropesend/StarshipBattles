@@ -247,7 +247,7 @@ class TestSeekerWeaponFiring:
         seeker_ab.damage = 100
         seeker_ab.endurance = 100
         seeker_ab.turn_rate = 5
-        seeker_ab.missile_hp = 3
+        seeker_ab.projectile_hp = 3
 
         weapon = MagicMock()
         weapon.is_active = True
@@ -1204,7 +1204,7 @@ class TestSeekerProjectileCreation:
         seeker_ab.damage = 100
         seeker_ab.endurance = 100
         seeker_ab.turn_rate = 15  # Specific turn rate
-        seeker_ab.missile_hp = 5
+        seeker_ab.projectile_hp = 5  # HP of seeker missile
 
         weapon = MagicMock()
         weapon.is_active = True
@@ -1269,7 +1269,7 @@ class TestSeekerProjectileCreation:
         seeker_ab.damage = 100
         seeker_ab.endurance = 100
         seeker_ab.turn_rate = 5
-        seeker_ab.missile_hp = 1
+        seeker_ab.projectile_hp = 1
 
         weapon = MagicMock()
         weapon.is_active = True

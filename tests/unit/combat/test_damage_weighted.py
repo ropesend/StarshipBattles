@@ -41,6 +41,8 @@ class MockShip:
         self.max_shields = 100
         self.is_alive = True
         self.name = "TestShip"
+        self.emissive_armor = 0
+        self.crystalline_armor = 0
         self.layers = {
             LayerType.ARMOR: LayerData(radius_pct=1.0),
             LayerType.OUTER: LayerData(radius_pct=0.8),

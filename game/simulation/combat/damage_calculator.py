@@ -44,14 +44,14 @@ class DamageCalculator:
             return
 
         # Apply Emissive Armor Reduction (Flat reduction per hit)
-        ea = getattr(ship, 'emissive_armor', 0)
+        ea = ship.emissive_armor
         if ea > 0:
             damage_amount = max(0, damage_amount - ea)
             if damage_amount <= 0:
                 return
 
         # Apply Crystalline Armor (Absorb and Recharge Shields)
-        ca = getattr(ship, 'crystalline_armor', 0)
+        ca = ship.crystalline_armor
         if ca > 0 and damage_amount > 0:
             absorption = min(ca, damage_amount)
             damage_amount -= absorption

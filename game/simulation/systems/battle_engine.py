@@ -173,10 +173,9 @@ class BattleEngine:
 
         Args:
             logger: Optional battle logger for event recording
-            ai_factory: Optional AI controller factory for creating controllers.
-                        If provided, used for fighter launches and legacy paths.
-                        If None, imports from game.ai directly (legacy behavior).
-                        PROJ-43: Use AIControllerFactory to decouple from AI layer.
+            ai_factory: AI controller factory for creating controllers.
+                        Required for start() unless ai_controllers are provided directly.
+                        Also used for mid-battle operations (reinforcements, fighter launches).
         """
         self.ships: List['Ship'] = []
         self.ai_controllers: List['IAIController'] = []
@@ -267,7 +266,6 @@ class BattleEngine:
             team2_controllers = self._ai_factory.create_for_ships(team2_ships, enemy_team_id=0)
             self.ai_controllers = team1_controllers + team2_controllers
         else:
-            # PROJ-106: Legacy path removed. All production code now uses ai_factory.
             raise ValueError(
                 "BattleEngine.start() requires ai_controllers or ai_factory. "
                 "Use BattleService.create_battle() or inject ai_factory after construction."
@@ -319,7 +317,6 @@ class BattleEngine:
             ai = self._ai_factory.create_for_ship(ship, enemy_team)
             self.ai_controllers.append(ai)
         else:
-            # PROJ-106: Legacy path removed. All production code now uses ai_factory.
             raise ValueError(
                 "add_ship_mid_battle() requires ai_controller or ai_factory. "
                 "Use BattleService.create_battle() or inject ai_factory after construction."
@@ -467,7 +464,6 @@ class BattleEngine:
                     ai = self._ai_factory.create_for_ship(new_ship, enemy_team)
                     self.ai_controllers.append(ai)
                 else:
-                    # PROJ-106: Legacy path removed. All production code now uses ai_factory.
                     raise ValueError(
                         "Fighter launch requires ai_factory on BattleEngine. "
                         "Use BattleService.create_battle() or inject ai_factory after construction."

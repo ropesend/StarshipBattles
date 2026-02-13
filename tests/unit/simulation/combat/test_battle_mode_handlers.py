@@ -190,27 +190,21 @@ class TestStrategyBattleModeHandler:
 
         assert handler._source_fleets == (mock_fleet1, mock_fleet2)
 
-    def test_apply_results_with_source_fleets(self, handler):
-        """apply_results updates source fleets with battle outcome."""
+    def test_apply_results_is_noop(self, handler):
+        """apply_results is a no-op (strategy layer handles fleet updates).
+
+        Fleet updates are handled by ConflictResolutionEngine calling
+        Fleet.update_from_battle_results() directly.
+        """
         mock_controller = Mock()
         mock_results = Mock()
-        mock_results.surviving_ships = []
-        mock_results.destroyed_ships = []
-        mock_results.escaped_ships = []
 
-        handler._source_fleets = (Mock(), Mock())
-        # Should not raise - fleet effects would be applied in real impl
+        # Should work with or without source fleets - always a no-op
+        handler._source_fleets = None
         handler.apply_results(mock_controller, mock_results)
 
-    def test_apply_results_without_source_fleets_raises(self, handler):
-        """apply_results raises if no source fleets configured."""
-        mock_controller = Mock()
-        mock_results = Mock()
-
-        handler._source_fleets = None
-
-        with pytest.raises(ValueError, match="source fleets"):
-            handler.apply_results(mock_controller, mock_results)
+        handler._source_fleets = (Mock(), Mock())
+        handler.apply_results(mock_controller, mock_results)
 
 
 # === HypotheticalBattleModeHandler Tests ===

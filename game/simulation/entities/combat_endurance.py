@@ -39,8 +39,9 @@ def calculate_combat_endurance(ship: 'Ship', component_pool: List['Component']) 
         c_energy = 0.0
 
         # Iterate Abilities for Source of Truth
-        if hasattr(c, 'ability_instances'):
-            for ab in c.ability_instances:
+        # Guard for non-Component objects (e.g., mocks in tests)
+        abilities = getattr(c, 'ability_instances', [])
+        for ab in abilities:
                 ab_cls = ab.__class__.__name__
 
                 if ab_cls == 'ResourceConsumption':

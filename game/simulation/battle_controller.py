@@ -663,16 +663,12 @@ class BattleController:
     ) -> None:
         """Apply battle results to a single fleet.
 
-        BLOCKING DEPENDENCY: This method requires Fleet to track ships via ShipInstance
-        rather than raw Ship objects. Once PROJ-41 (Fleet/ShipInstance Integration) is
-        complete, implement this to:
-        1. Mark destroyed ShipInstances as lost
-        2. Update damage state on surviving ShipInstances
-        3. Handle escaped ships appropriately
-
-        Until then, battle results are captured in BattleResults but not applied
-        back to the fleet's ShipInstance tracking.
+        Note: Fleet updates are handled by the strategy layer (ConflictResolutionEngine)
+        which calls Fleet.update_from_battle_results() directly. This method exists as
+        a fallback path but is not used in production - the strategy layer owns fleet
+        update responsibility.
         """
+        # Fleet updates handled by strategy layer (ConflictResolutionEngine)
         pass
 
     # === Callbacks ===

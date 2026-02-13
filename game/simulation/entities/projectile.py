@@ -1,6 +1,6 @@
 from game.core.math import Vector2
 from game.engine.physics import PhysicsBody
-from game.core.logger import log_debug, log_event, log_warning
+from game.core.logger import log_debug, log_event
 from game.core.constants import AttackType
 from game.core.config import PhysicsConfig
 from game.core.exceptions import ValidationException
@@ -43,18 +43,11 @@ class Projectile(PhysicsBody):
                 context={"endurance": endurance, "owner": str(owner)}
             )
 
-        # Ensure type is AttackType
+        # Ensure type is AttackType (accept string for deserialization)
         if isinstance(proj_type, str):
-            try:
-                self.type = AttackType(proj_type)
-            except ValueError:
-                # Log warning but allow fallback for extensibility
-                log_warning(f"Unknown projectile type '{proj_type}', using as-is")
-                self.type = proj_type
+            self.type = AttackType(proj_type)
         else:
             self.type = proj_type
-        
-        # 'projectile', 'missile', 'beam' (beams usually separate but maybe unified later)
         
         # Optional args
         self.turn_rate = kwargs.get('turn_rate', 0)

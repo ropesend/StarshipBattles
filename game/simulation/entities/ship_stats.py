@@ -278,8 +278,9 @@ class ShipStatsCalculator:
 
     def _aggregate_resource_abilities(self, comp, acc) -> None:
         """Aggregate ResourceStorage and ResourceGeneration abilities."""
-        if hasattr(comp, 'ability_instances'):
-            for ability in comp.ability_instances:
+        # Guard for non-Component objects (e.g., mocks in tests)
+        abilities = getattr(comp, 'ability_instances', [])
+        for ability in abilities:
                 ab_cls = ability.__class__.__name__
                 if ab_cls == 'ResourceStorage':
                     res_type = getattr(ability, 'resource_type', '')

@@ -194,10 +194,10 @@ class TestProjectileTypeConversion:
         )
         assert proj.type == AttackType.MISSILE
 
-    def test_unknown_string_type_kept_as_string(self, mock_owner):
-        """Unknown type string should be kept as-is with warning."""
-        with patch('game.simulation.entities.projectile.log_warning') as mock_warn:
-            proj = Projectile(
+    def test_unknown_string_type_raises_value_error(self, mock_owner):
+        """Unknown type string raises ValueError."""
+        with pytest.raises(ValueError, match="unknown_type"):
+            Projectile(
                 owner=mock_owner,
                 position=Vector2(0, 0),
                 velocity=Vector2(1, 0),
@@ -206,8 +206,6 @@ class TestProjectileTypeConversion:
                 endurance=1.0,
                 proj_type='unknown_type'
             )
-            assert proj.type == 'unknown_type'
-            mock_warn.assert_called_once()
 
 
 class TestProjectileValidation:

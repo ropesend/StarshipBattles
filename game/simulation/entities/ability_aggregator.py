@@ -98,10 +98,10 @@ def calculate_ability_totals(
         # Track which abilities are handled to avoid double counting from dict
         handled_abilities = set()
 
-        if hasattr(comp, 'ability_instances'):
-            # Handle List (Current Implementation)
-            if isinstance(comp.ability_instances, list):
-                for ab in comp.ability_instances:
+        # Guard for non-Component objects (e.g., mocks in tests)
+        ability_instances = getattr(comp, 'ability_instances', None)
+        if isinstance(ability_instances, list):
+            for ab in ability_instances:
                     # Layer filtering (when layer is specified)
                     if layer is not None:
                         if not ab.applies_to_layer(layer):
@@ -203,11 +203,11 @@ def get_ability_instances_by_class(
             # Process the ability...
     """
     for comp in components:
-        if hasattr(comp, 'ability_instances'):
-            instances = comp.ability_instances
-            if isinstance(instances, list):
-                for ab in instances:
-                    if ab.__class__.__name__ == class_name:
-                        yield comp, ab
+        # Guard for non-Component objects (e.g., mocks in tests)
+        instances = getattr(comp, 'ability_instances', None)
+        if isinstance(instances, list):
+            for ab in instances:
+                if ab.__class__.__name__ == class_name:
+                    yield comp, ab
 
 

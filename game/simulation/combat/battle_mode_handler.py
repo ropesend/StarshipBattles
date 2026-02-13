@@ -213,30 +213,17 @@ class StrategyBattleModeHandler(BattleModeHandler):
         """
         Apply battle results to source fleets.
 
-        Updates ship states, removes destroyed ships, handles escapes.
+        Note: Fleet updates are handled by the strategy layer (ConflictResolutionEngine)
+        which calls Fleet.update_from_battle_results() directly. This method exists for
+        interface compliance but is intentionally a no-op - the strategy layer owns the
+        fleet-update responsibility.
 
         Args:
             controller: The BattleController with the battle
             results: The BattleResults to apply
-
-        Raises:
-            ValueError: If no source fleets are configured
         """
-        if self._source_fleets is None:
-            raise ValueError("Cannot apply results: no source fleets configured")
-
-        fleet1, fleet2 = self._source_fleets
-
-        # Build mapping of ship names to results
-        surviving_by_name = {s.name: s for s in results.surviving_ships}
-        destroyed_by_name = {s.name: s for s in results.destroyed_ships}
-        escaped_by_name = {s.name: s for s in results.escaped_ships}
-
-        # Apply to fleets (implementation blocked by PROJ-41: Fleet/ShipInstance integration)
-        # Once complete, this will:
-        # 1. Mark destroyed ShipInstances as lost
-        # 2. Update damage state on surviving ShipInstances
-        # 3. Handle escaped ships appropriately
+        # Fleet updates handled by strategy layer (ConflictResolutionEngine)
+        pass
 
 
 class HypotheticalBattleModeHandler(BattleModeHandler):
