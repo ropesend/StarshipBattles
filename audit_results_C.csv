@@ -173,3 +173,7 @@ tests/unit/strategy/design_library/test_error_logging.py,KEEP,Tests DesignLibrar
 tests/unit/strategy/design_library/test_per_empire.py,KEEP,Tests DesignLibrary empire isolation,game/strategy/systems/design_library.py
 tests/unit/strategy/events/test_event_log.py,KEEP,Tests Event and EventLog,game/strategy/events/event_log.py
 tests/unit/strategy/events/test_event_types.py,KEEP,Tests event enums,game/strategy/events/event_types.py
+tests/unit/strategy/facade/test_event_queries.py,KEEP,Tests StrategySessionFacade event queries,game/strategy/facade/strategy_session_facade.py
+tests/unit/strategy/facade/test_fleet_dto_build.py,KEEP,Tests FleetInfo DTO build fields,game/strategy/facade/dto/fleet_dto.py
+tests/unit/strategy/facade/test_population_dtos.py,KEEP,Tests population/cargo DTO fields,game/strategy/facade/dto/planet_dto.py
+tests/unit/strategy/facade/test_strategy_session_facade.py,KEEP,Tests StrategySessionFacade logic,game/strategy/facade/strategy_session_facade.py
