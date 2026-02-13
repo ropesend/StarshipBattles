@@ -21,7 +21,7 @@
 #   - Never force-pushes or destructively modifies main
 #   - Rate limit detection with 15-minute sleep + retry
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 # ═══════════════════════════════════════════════════════
 # TRANSCRIPT LOGGING
@@ -134,7 +134,7 @@ function Save-CycleState ($state) {
 
 function Test-RateLimit ($output) {
     foreach ($pattern in $RATE_LIMIT_PATTERNS) {
-        if ($output -match [regex]::Escape($pattern)) {
+        if ($output -match $pattern) {
             return $true
         }
     }

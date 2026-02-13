@@ -7,7 +7,7 @@
 #   1 = Fatal error (test failure, stuck, unknown error)
 #   2 = Rate limit detected (outer loop should sleep and retry)
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 # Configuration
 $PLAN_FILE = "continuous_loop/cycle_plan.md"
@@ -66,7 +66,7 @@ function Clear-ClaudeTempFiles {
 # Check if output matches rate limit patterns
 function Test-RateLimit ($output) {
     foreach ($pattern in $RATE_LIMIT_PATTERNS) {
-        if ($output -match [regex]::Escape($pattern)) {
+        if ($output -match $pattern) {
             return $true
         }
     }
