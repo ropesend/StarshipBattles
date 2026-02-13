@@ -27,13 +27,8 @@ from typing import (
     Dict,
     Any,
     TYPE_CHECKING,
+    TypeGuard,
 )
-
-# Python 3.10+ has TypeGuard in typing, but for 3.9 compatibility use typing_extensions
-try:
-    from typing import TypeGuard
-except ImportError:
-    from typing_extensions import TypeGuard
 
 from game.core.constants import LayerType
 

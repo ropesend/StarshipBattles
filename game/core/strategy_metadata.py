@@ -5,7 +5,7 @@ This service holds the display-facing metadata for combat strategies (names, IDs
 any AI-layer logic. The AI layer's StrategyManager populates this service when it loads data.
 
 Thread Safety:
-    - Instance creation is thread-safe via double-checked locking
+    - Instance creation is thread-safe via SingletonMeta
     - Read operations are safe; write operations should only happen during data loading
 
 Usage:
@@ -23,15 +23,14 @@ Testing:
 """
 
 import os
-import threading
 from typing import Dict, List, Optional
 
 from game.core.json_utils import load_json
 from game.core.logger import log_info
-from game.core.exceptions import StateException
+from game.core.singleton import SingletonMeta
 
 
-class StrategyMetadataService:
+class StrategyMetadataService(metaclass=SingletonMeta):
     """
     Singleton service providing strategy metadata (names, IDs) to UI layer.
 
@@ -39,7 +38,7 @@ class StrategyMetadataService:
     only the display-relevant data (names, IDs) without AI behavior logic.
 
     Thread Safety:
-        - Instance creation is thread-safe via double-checked locking
+        - Instance creation is thread-safe via SingletonMeta
         - Data is populated by AI layer on load
 
     Usage:
@@ -47,51 +46,10 @@ class StrategyMetadataService:
         names = service.get_strategy_names()
         name = service.get_strategy_display_name('aggressive_ranged')
     """
-    _instance: Optional['StrategyMetadataService'] = None
-    _lock = threading.Lock()
 
     def __init__(self):
-        """
-        Initialize the StrategyMetadataService.
-
-        Raises:
-            StateException: If called directly instead of via instance()
-        """
-        if StrategyMetadataService._instance is not None:
-            raise StateException(
-                "StrategyMetadataService is a singleton. Use StrategyMetadataService.instance()",
-                code="CORE001",
-                context={"class": "StrategyMetadataService"}
-            )
-
+        """Initialize the StrategyMetadataService."""
         self._strategies: Dict[str, dict] = {}
-
-    @classmethod
-    def instance(cls) -> 'StrategyMetadataService':
-        """
-        Get the singleton instance, creating it if necessary.
-
-        Thread-safe via double-checked locking pattern.
-
-        Returns:
-            The singleton StrategyMetadataService instance
-        """
-        if cls._instance is None:
-            with cls._lock:
-                if cls._instance is None:
-                    cls._instance = cls()
-        return cls._instance
-
-    @classmethod
-    def reset(cls) -> None:
-        """
-        Completely destroy the singleton instance.
-
-        WARNING: For testing only! This destroys the singleton so a fresh
-        instance is created on the next access.
-        """
-        with cls._lock:
-            cls._instance = None
 
     def clear(self) -> None:
         """

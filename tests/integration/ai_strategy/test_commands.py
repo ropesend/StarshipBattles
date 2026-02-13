@@ -39,8 +39,8 @@ class TestCommandGeneration:
 
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
-        # Mock low HP
-        with patch.object(ai_controller, '_get_hp_percent', return_value=0.05):
+        # Mock low HP by patching the module-level function
+        with patch('game.ai.controller.get_hp_percent', return_value=0.05):
             ai_controller.update()
 
         # Should have flee behavior

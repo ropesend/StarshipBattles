@@ -94,13 +94,13 @@ class TestAIResponse:
 
         ai_controller = AIController(ShipControllableAdapter(ship1), spatial_grid, enemy_team_id=1)
 
-        # Normal update
-        with patch.object(ai_controller, '_get_hp_percent', return_value=1.0):
+        # Normal update - mock full HP
+        with patch('game.ai.controller.get_hp_percent', return_value=1.0):
             ai_controller.update()
             normal_behavior = str(type(ai_controller.current_behavior))
 
         # Damaged update - should potentially switch to flee
-        with patch.object(ai_controller, '_get_hp_percent', return_value=0.05):
+        with patch('game.ai.controller.get_hp_percent', return_value=0.05):
             ai_controller.update()
             damaged_behavior = str(type(ai_controller.current_behavior))
 

@@ -101,7 +101,7 @@ class Profiler(metaclass=SingletonMeta):
         else:
             log_error(f"Failed to save profiling history to {filename}")
 
-# Global accessor for backwards compatibility (lazy, not module-level instantiation)
+# Module-level decorators and context managers for convenient profiling
 def profile_action(name: str):
     """Decorator to profile a function."""
     def decorator(func):

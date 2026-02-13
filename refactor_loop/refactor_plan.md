@@ -8,22 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-12
-**Last Completed:** PROJ-116 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-116 Complete - Awaiting User Verification
-**Current Project:** PROJ-117 (next)
-**Current Phase:** Not started
+**Last Completed:** PROJ-117 Phase 1 - Foundation
+**Current Status:** PROJ-117 Phase 1 Complete
+**Current Project:** PROJ-117
+**Current Phase:** Phase 2 (Simulation)
 **Test Status:** 9773 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-116 Audit PASSED (NO CODE CHANGES REQUIRED):
-  - All 19 god class findings from 2026-02-11 review were investigated
-  - Findings were stale - decomposition already completed by prior projects:
-    1. ✅ Simulation: PROJ-88 decomposed Ship, Component; BattleController uses Strategy pattern
-    2. ✅ Strategy: PROJ-87 decomposed Fleet, ShipInstance; ProductionEngine/Galaxy are domain-appropriate
-    3. ✅ UI: PROJ-89, PROJ-104 decomposed screens; TestLabScreen, BuilderScreen have 7-10+ helper classes each
-  - Conclusion: Review findings pre-dated significant refactoring work
-- Next: PROJ-117 (Legacy Dead Code Eradication)
+- PROJ-117 Phase 1 Complete (14 Foundation findings):
+  - 7 fixes: StrategyMetadataService→SingletonMeta, deleted dead AIController attrs, deleted LayerType.from_string(), removed TypeGuard shim, deleted _get_hp_percent/_is_in_pdc_arc wrappers, updated profiling comment
+  - 7 false positives/intentional: load_resources (active), path resolution (needed), base protocols (building blocks), capture_step (test util), colors (already migrated), FONT_MAIN (migrated), DEBUG_SCREENSHOTS (intentional)
+  - Updated 2 integration tests that patched removed methods
+- Next: PROJ-117 Phase 2 (Simulation findings)
 
 ---
 
@@ -223,8 +220,8 @@
 
 ---
 
-- [ ] **PROJ-117: Legacy Dead Code Eradication**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-117: Legacy Dead Code Eradication**
+  - **Phases:** 4 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-117/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-117/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -400,6 +397,7 @@
 | 2026-02-12 | PROJ-113 | Audit 1 | PASSED | 9773 passed | pending | All 5 goals verified; fixed stale UIConfig refs in core/__init__.py |
 | 2026-02-12 | PROJ-116 | Phases 1-3 | Complete | 9773 passed | pending | All 19 findings investigated - ALL ALREADY ADDRESSED by PROJ-87/88/89/104 or ACCEPTABLE |
 | 2026-02-12 | PROJ-116 | Audit 1 | PASSED | 9773 passed | pending | No code changes. Verified: Sim decomposed (PROJ-88), Strategy decomposed (PROJ-87), UI decomposed (PROJ-89/104) |
+| 2026-02-12 | PROJ-117 | Phase 1 | Complete | 9773 passed | pending | 14 findings: 7 fixes, 7 false positives. StrategyMetadataService→SingletonMeta, deleted dead AIController attrs/wrappers, removed TypeGuard shim |
 
 ---
 

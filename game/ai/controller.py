@@ -87,8 +87,6 @@ class AIController:
             'orbit': OrbitBehavior(self)
         }
         self.current_behavior = None
-        self.attack_state = 'approach'
-        self.attack_timer = 0
 
     def get_resolved_strategy(self) -> Dict[str, Any]:
         """Get the fully resolved strategy for this ship's AI strategy ID."""
@@ -266,12 +264,6 @@ class AIController:
         sorted_enemies = self._score_and_sort_enemies(enemies, rules)
         return sorted_enemies[:count_needed]
 
-    def _get_hp_percent(self, ship):
-        return get_hp_percent(ship)
-
-    def _is_in_pdc_arc(self, target):
-        return is_in_pdc_arc(self.ship, target)
-
     def update(self) -> None:
         """Execute one AI update cycle: target selection, behavior selection, movement."""
         if not self.ship.is_alive():
@@ -329,7 +321,7 @@ class AIController:
             behavior_key = 'formation'
         else:
             # Policy-driven behavior selection
-            hp_pct = self._get_hp_percent(self.ship)
+            hp_pct = get_hp_percent(self.ship)
             retreat_threshold = movement_policy.get('retreat_hp_threshold', 0.1)
 
             if hp_pct <= retreat_threshold and retreat_threshold > 0:

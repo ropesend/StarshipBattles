@@ -32,12 +32,11 @@ class TestStrategyMetadataServiceSingleton:
         instance2 = StrategyMetadataService.instance()
         assert instance1 is instance2
 
-    def test_direct_instantiation_raises(self):
-        """Creating instance directly should raise after singleton exists."""
-        StrategyMetadataService.instance()
-        with pytest.raises(Exception) as exc:
-            StrategyMetadataService()
-        assert "singleton" in str(exc.value).lower()
+    def test_direct_instantiation_returns_same_instance(self):
+        """Direct instantiation should return the same singleton instance."""
+        instance1 = StrategyMetadataService.instance()
+        instance2 = StrategyMetadataService()
+        assert instance1 is instance2
 
     def test_reset_clears_instance(self):
         """reset() should allow a new instance to be created."""

@@ -102,7 +102,3 @@ class LayerType(Enum):
     OUTER = 3
     ARMOR = 4
 
-    @staticmethod
-    def from_string(s):
-        return getattr(LayerType, s.upper())
-
