@@ -12,11 +12,12 @@ This module handles:
 """
 import json
 import os
+from typing import Optional, Tuple
 
-from game.core.math import Vector2
-from game.simulation.entities.ship import Ship
 from game.core.json_utils import load_json_required, save_json
 from game.core.logger import log_error
+from game.core.math import Vector2
+from game.simulation.entities.ship import Ship
 from game.ui.services.tkinter_utils import (
     is_tkinter_available,
     open_save_dialog,
@@ -31,8 +32,15 @@ class ShipIO:
     default_ships_folder = "ships"
 
     @staticmethod
-    def save_ship(ship):
-        """Save ship design to file. Returns True if successful."""
+    def save_ship(ship: Ship) -> Tuple[bool, Optional[str]]:
+        """Save ship design to file.
+
+        Args:
+            ship: The Ship object to save.
+
+        Returns:
+            Tuple of (success, message). Message is None if cancelled.
+        """
         if not is_tkinter_available():
             return False, "Tkinter not initialized"
 
@@ -71,8 +79,16 @@ class ShipIO:
             return False, "Save failed: Invalid ship data"
 
     @staticmethod
-    def load_ship(screen_width, screen_height):
-        """Load ship design from file. Returns (Ship, message) or (None, error/message)."""
+    def load_ship(screen_width: int, screen_height: int) -> Tuple[Optional[Ship], Optional[str]]:
+        """Load ship design from file.
+
+        Args:
+            screen_width: Screen width for positioning loaded ship.
+            screen_height: Screen height for positioning loaded ship.
+
+        Returns:
+            Tuple of (ship, message). Ship is None if cancelled or on error.
+        """
         if not is_tkinter_available():
             return None, "Tkinter not initialized"
 

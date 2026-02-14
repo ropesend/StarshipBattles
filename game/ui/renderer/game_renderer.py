@@ -10,6 +10,28 @@ from game.core.constants import LayerType, LayerDefaults  # Canonical location f
 from game.ui.utils import calculate_ship_image_scale, scale_and_rotate_image
 
 
+# === Rendering Constants ===
+# PROJ-141 CON-UI2-012: Extracted magic numbers to named constants
+
+# Culling threshold - approximate max ship radius for screen bounds check
+CULLING_MAX_RADIUS = 50
+
+# Zoom thresholds for level-of-detail rendering
+MIN_ZOOM_FOR_IMAGE = 0.01      # Below this, don't render ship images
+MIN_ZOOM_FOR_COMPONENTS = 0.3  # Below this, don't render component dots
+
+# Ship image rotation offset (ship images point up, simulation uses right=0)
+IMAGE_ROTATION_OFFSET = -90
+
+# Overlay rendering sizes
+COMPONENT_DOT_RADIUS = 3       # Base radius for component dots (scaled with zoom)
+DIRECTION_LINE_OFFSET = 10     # How far direction indicator extends past ship
+DIRECTION_LINE_WIDTH = 2       # Width of direction indicator line
+
+# Fallback rendering (when no ship image available)
+FALLBACK_DOT_RADIUS = 3        # Base radius for simple dot icon
+FALLBACK_DOT_MIN_SIZE = 2      # Minimum pixel size for fallback dot
+
 # Layer color constants
 LAYER_COLORS = {
     LayerType.ARMOR: (100, 100, 100),
@@ -29,8 +51,8 @@ def draw_ship(surface, ship, camera):
     cx, cy = int(screen_pos.x), int(screen_pos.y)
     
     # Culling
-    radius_screen = 50 * camera.zoom  # approx max radius
-    if (cx + radius_screen < 0 or cx - radius_screen > camera.width or 
+    radius_screen = CULLING_MAX_RADIUS * camera.zoom
+    if (cx + radius_screen < 0 or cx - radius_screen > camera.width or
         cy + radius_screen < 0 or cy - radius_screen > camera.height):
         return
 
@@ -50,7 +72,7 @@ def draw_ship(surface, ship, camera):
     
     drawn_image = False
     
-    if ship_img and camera.zoom > 0.01:
+    if ship_img and camera.zoom > MIN_ZOOM_FOR_IMAGE:
         # Scale logic: visible portion should match diameter of the collision circle
         target_size = 2 * scale(base_radius)
 
@@ -65,7 +87,7 @@ def draw_ship(surface, ship, camera):
             ship_img.get_size(), target_size, visible_size, manual_scale
         )
 
-        rotation_angle = -ship.angle - 90
+        rotation_angle = -ship.angle + IMAGE_ROTATION_OFFSET
         rotated_img = scale_and_rotate_image(ship_img, scale_factor, rotation_angle)
 
         if rotated_img.get_size() != ship_img.get_size() or scale_factor > 0:
@@ -88,7 +110,7 @@ def draw_ship(surface, ship, camera):
 
         # Draw Components (Simplified visualization for Battle)
         # Component dots are placed at the center of each layer ring
-        if camera.zoom > 0.3:
+        if camera.zoom > MIN_ZOOM_FOR_COMPONENTS:
             for ltype, data in ship.layers.items():
                 radius = 0
                 if ltype == LayerType.CORE:
@@ -126,19 +148,19 @@ def draw_ship(surface, ship, camera):
                     elif comp.has_ability('CombatPropulsion'): color = (50, 255, 100)
                     elif comp.has_ability('ArmorAbility') or comp.major_classification == 'Armor': color = (100, 100, 100)
                     
-                    pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(3)))
+                    pygame.draw.circle(surface, color, (int(comp_screen.x), int(comp_screen.y)), max(1, scale(COMPONENT_DOT_RADIUS)))
                     current_angle += angle_step
         
         # Draw Direction indicator
         dir_vec = ship.forward_vector()
-        end_pos_screen = camera.world_to_screen(ship.position + dir_vec * (base_radius + 10))
-        pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(2)))
+        end_pos_screen = camera.world_to_screen(ship.position + dir_vec * (base_radius + DIRECTION_LINE_OFFSET))
+        pygame.draw.line(surface, (255, 255, 0), (cx, cy), (int(end_pos_screen.x), int(end_pos_screen.y)), max(1, scale(DIRECTION_LINE_WIDTH)))
 
     
     if not drawn_image:
         # Draw simple dot icon for low zoom if no image
         color = ship.color  # Use ship identity color
-        pygame.draw.circle(surface, color, (cx, cy), max(2, scale(3)))  # Minimum 2px dot
+        pygame.draw.circle(surface, color, (cx, cy), max(FALLBACK_DOT_MIN_SIZE, scale(FALLBACK_DOT_RADIUS)))
         return
 
 

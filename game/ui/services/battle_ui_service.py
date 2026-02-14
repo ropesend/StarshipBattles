@@ -59,16 +59,26 @@ class BattleUIService:
         """
         self._battle_service = battle_service
 
+    def _get_engine_or_none(self):
+        """Get the battle engine, or None if not available.
+
+        This helper centralizes engine access to reduce code duplication.
+        All public methods that need engine access should use this.
+
+        Returns:
+            The battle engine if available, None otherwise.
+        """
+        return self._battle_service.get_engine()
+
     def get_ships(self) -> List[ShipDTO]:
         """Get all ships in the battle as DTOs.
 
         Returns:
             List of ShipDTO objects representing all ships
         """
-        engine = self._battle_service.get_engine()
+        engine = self._get_engine_or_none()
         if engine is None:
             return []
-
         return [self._convert_ship(ship) for ship in engine.ships]
 
     def get_projectiles(self) -> List[ProjectileDTO]:
@@ -77,10 +87,9 @@ class BattleUIService:
         Returns:
             List of ProjectileDTO objects representing all projectiles
         """
-        engine = self._battle_service.get_engine()
+        engine = self._get_engine_or_none()
         if engine is None:
             return []
-
         return [self._convert_projectile(proj) for proj in engine.projectiles]
 
     def get_recent_beams(self) -> List[BeamDTO]:
@@ -91,10 +100,9 @@ class BattleUIService:
         Returns:
             List of BeamDTO objects for new beam effects
         """
-        engine = self._battle_service.get_engine()
+        engine = self._get_engine_or_none()
         if engine is None:
             return []
-
         return [self._convert_beam(beam) for beam in engine.recent_beams]
 
     def is_battle_over(self) -> bool:
@@ -103,7 +111,7 @@ class BattleUIService:
         Returns:
             True if battle is over or no engine, False otherwise
         """
-        engine = self._battle_service.get_engine()
+        engine = self._get_engine_or_none()
         if engine is None:
             return True
         return engine.is_battle_over()
@@ -114,7 +122,7 @@ class BattleUIService:
         Returns:
             Winning team ID (0 or 1), -1 for draw, or None if battle ongoing/no engine
         """
-        engine = self._battle_service.get_engine()
+        engine = self._get_engine_or_none()
         if engine is None:
             return None
         return engine.get_winner()
@@ -125,7 +133,7 @@ class BattleUIService:
         Returns:
             Number of simulation ticks elapsed, 0 if no engine
         """
-        engine = self._battle_service.get_engine()
+        engine = self._get_engine_or_none()
         if engine is None:
             return 0
         return engine.tick_counter

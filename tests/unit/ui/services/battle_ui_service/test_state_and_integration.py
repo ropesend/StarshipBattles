@@ -356,6 +356,44 @@ class TestBattleUIServiceNoneEngine:
         assert ui_service.get_winner() is None
 
 
+class TestBattleUIServiceEngineHelper:
+    """Tests for the _get_engine_or_none() helper method."""
+
+    def test_get_engine_or_none_returns_engine_when_present(self):
+        """_get_engine_or_none() returns engine when available."""
+        service = Mock()
+        engine = Mock()
+        service.get_engine.return_value = engine
+
+        ui_service = BattleUIService(service)
+        result = ui_service._get_engine_or_none()
+        assert result is engine
+
+    def test_get_engine_or_none_returns_none_when_no_engine(self):
+        """_get_engine_or_none() returns None when no engine."""
+        service = Mock()
+        service.get_engine.return_value = None
+
+        ui_service = BattleUIService(service)
+        result = ui_service._get_engine_or_none()
+        assert result is None
+
+    def test_helper_method_is_used_by_public_methods(self):
+        """Public methods use the helper for consistent engine access."""
+        service = Mock()
+        service.get_engine.return_value = None
+
+        ui_service = BattleUIService(service)
+
+        # All these methods should use the helper and handle None gracefully
+        assert ui_service.get_ships() == []
+        assert ui_service.get_projectiles() == []
+        assert ui_service.get_recent_beams() == []
+        assert ui_service.is_battle_over() is True
+        assert ui_service.get_winner() is None
+        assert ui_service.get_tick_count() == 0
+
+
 class TestBattleUIServiceConversionEdgeCases:
     """Tests for edge cases in entity conversion."""
 
