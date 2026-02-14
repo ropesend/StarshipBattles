@@ -53,7 +53,7 @@ class TransferDialog(UIWindow):
         # --- Source ---
         UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Source:", self.ui_manager, container=self)
         self.drop_source = UIDropDownMenu(
-            options_list=[],
+            options_list=[""],
             starting_option="",
             relative_rect=pygame.Rect(110, curr_y, self.rect.width - 150, element_h),
             manager=self.ui_manager,
@@ -64,7 +64,7 @@ class TransferDialog(UIWindow):
         # --- Target ---
         UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Target:", self.ui_manager, container=self)
         self.drop_target = UIDropDownMenu(
-            options_list=[],
+            options_list=[""],
             starting_option="",
             relative_rect=pygame.Rect(110, curr_y, self.rect.width - 150, element_h),
             manager=self.ui_manager,
@@ -75,7 +75,7 @@ class TransferDialog(UIWindow):
         # --- Item/Cargo ---
         UILabel(pygame.Rect(padding, curr_y, 100, label_h), "Item:", self.ui_manager, container=self)
         self.drop_item = UIDropDownMenu(
-            options_list=[],
+            options_list=[""],
             starting_option="",
             relative_rect=pygame.Rect(110, curr_y, self.rect.width - 150, element_h),
             manager=self.ui_manager,
@@ -141,8 +141,8 @@ class TransferDialog(UIWindow):
                 break
         
         self.drop_source = self._recreate_dropdown(self.drop_source, source_labels, starting_option)
-        if starting_option:
-            self._on_source_changed(starting_option)
+        # Always trigger changed handler to populate targets/cargo based on whatever is selected
+        self._on_source_changed(self.drop_source.selected_option)
 
     def _recreate_dropdown(self, old_dropdown, options, selected):
         """Recreate a dropdown as UIDropDownMenu lacks an update method."""

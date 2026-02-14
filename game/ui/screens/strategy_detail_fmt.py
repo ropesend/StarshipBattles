@@ -298,6 +298,15 @@ def _format_orders(fleet) -> str:
                 text += f" {i+1}. {direction.upper()} {amt_str} {cargo_type}<br>"
             else:
                 text += f" {i+1}. TRANSFER {order.target}<br>"
+        elif order.type == OrderType.OPEN_WARP_POINT:
+            if isinstance(order.target, dict):
+                target_name = order.target.get('target_system_name', 'Unknown')
+                text += f" {i+1}. OPEN WARP POINT -> {target_name}<br>"
+            else:
+                text += f" {i+1}. OPEN WARP POINT<br>"
+        elif order.type == OrderType.CLOSE_WARP_POINT:
+            dest = order.target if isinstance(order.target, str) else "Unknown"
+            text += f" {i+1}. CLOSE WARP POINT -> {dest}<br>"
         else:
             text += f" {i+1}. {order.type.name}<br>"
 

@@ -17,6 +17,7 @@ from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.galaxy import Galaxy, StarSystem, WarpPoint
 from game.strategy.events.event_types import EventType, EventCategory
 from game.strategy.validation.superweapon_validator import SuperweaponValidator
+from game.strategy.data.pathfinding import get_system_at_hex
 
 
 @dataclass
@@ -155,7 +156,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No STELLERATE_STAR order")
 
         # Find system at fleet location
-        system = galaxy.get_system_at_location(fleet.location)
+        system = get_system_at_hex(galaxy, fleet.location)
         if system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
@@ -234,7 +235,7 @@ class SuperweaponOrderProcessor:
         target_system_name = params.get('target_system_name', '')
 
         # Find current system
-        current_system = galaxy.get_system_at_location(fleet.location)
+        current_system = get_system_at_hex(galaxy, fleet.location)
         if current_system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
@@ -335,7 +336,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No destination specified")
 
         # Find current system
-        current_system = galaxy.get_system_at_location(fleet.location)
+        current_system = get_system_at_hex(galaxy, fleet.location)
         if current_system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
@@ -405,7 +406,7 @@ class SuperweaponOrderProcessor:
             return SuperweaponResult(success=False, message="No CREATE_DYSON_SPHERE order")
 
         # Find system at fleet location
-        system = galaxy.get_system_at_location(fleet.location)
+        system = get_system_at_hex(galaxy, fleet.location)
         if system is None:
             fleet.pop_order()
             return SuperweaponResult(success=False, message="Fleet not at a star system")
