@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-140 Phase 2 Complete
-**Current Status:** PROJ-140 Phase 2 Complete - Phase 3 Next
+**Last Completed:** PROJ-140 Phase 3 Complete
+**Current Status:** PROJ-140 Phase 3 Complete - Phase 4 Next
 **Current Project:** PROJ-140
-**Current Phase:** Phase 3 (Fix UI Designation Filtering)
-**Test Status:** 11948 passed
+**Current Phase:** Phase 4 (Fix Mission Command Handler)
+**Test Status:** 11952 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-140 Phase 2 COMPLETE: Fix "Any Planet" Validation (Bug 5)
-  - ColonizeValidator "Any Planet" path now checks for matching pods
-  - process_colonize() now selects candidate planet matching available pod
-  - Updated test_commands.py with proper fleet.ships mock for pod validation
-  - Tests: 11948 passed (+6 from Phase 1)
-- Next: PROJ-140 Phase 3 - Fix UI Designation Filtering (Bug 3)
+- PROJ-140 Phase 3 COMPLETE: Fix UI Designation Filtering (Bug 3)
+  - handle_colonize_designation() now filters candidates by available colony pods
+  - Matches pattern from on_colonize_click() (~25 lines added)
+  - Added 4 tests to TestHandleColonizeDesignationPodFiltering class
+  - Tests: 11952 passed (+4 from Phase 2)
+- Next: PROJ-140 Phase 4 - Fix Mission Command Handler (Bug 4)
 
 ---
 
@@ -94,6 +94,7 @@
 | 2026-02-13 | PROJ-139 | Audit 1 | PASSED | 11940 pass | pending | All 6 phases verified, no issues |
 | 2026-02-13 | PROJ-140 | Phase 1 | Complete | 11942 pass | pending | Bugs 1+2 fixed: pass registry to validator, pre-check ship, +5 tests |
 | 2026-02-13 | PROJ-140 | Phase 2 | Complete | 11948 pass | pending | Bug 5 fixed: "Any Planet" pod matching in validator + processor, +6 tests |
+| 2026-02-13 | PROJ-140 | Phase 3 | Complete | 11952 pass | pending | Bug 3 fixed: UI designation pod filtering in handle_colonize_designation(), +4 tests |
 
 ---
 

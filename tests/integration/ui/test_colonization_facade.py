@@ -563,6 +563,236 @@ class TestOnColonizeClickPodFiltering:
         assert result is None or result.get('type') == 'no_targets'
 
 
+class TestHandleColonizeDesignationPodFiltering:
+    """Tests for PROJ-140: Pod filtering in handle_colonize_designation()."""
+
+    def test_designation_filters_by_pod_type(self):
+        """Designation filters out planets when fleet lacks matching pod."""
+        from game.ui.screens.strategy_colonization import ColonizationSystem
+        from game.core.hex_math import HexCoord
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            ICE_DWARF = "ICE_DWARF"
+            CONTINENTAL = "CONTINENTAL"
+
+        # Setup: ICE_DWARF planet at target hex
+        mock_planet = Mock()
+        mock_planet.id = 1
+        mock_planet.location = HexCoord(0, 0)  # local coords
+        mock_planet.planet_type = MockPlanetType.ICE_DWARF
+        mock_planet.owner_id = None
+
+        # System at global (10, 10)
+        mock_system = Mock()
+        mock_system.global_location = HexCoord(10, 10)
+        mock_system.planets = [mock_planet]
+
+        mock_camera = Mock()
+        mock_camera.screen_to_world.return_value = Mock(x=0, y=0)
+
+        mock_scene = Mock()
+        mock_scene.camera = mock_camera
+        mock_scene.hex_size = 32
+        mock_scene.systems = [mock_system]
+        mock_scene.galaxy = None  # No zone lookup
+
+        mock_facade = Mock()
+        # Fleet has CONTINENTAL pod only - doesn't match ICE_DWARF planet
+        mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
+
+        mock_fleet = Mock()
+        mock_fleet.id = 10
+        mock_fleet.location = HexCoord(5, 5)
+
+        system = ColonizationSystem(mock_scene, mock_facade)
+        system._get_system_at_hex = Mock(return_value=mock_system)
+
+        # Patch pixel_to_hex to return target hex (10, 10) = system + (0, 0) local
+        import game.ui.screens.strategy_colonization as colonization_module
+        original_pixel_to_hex = colonization_module.pixel_to_hex
+        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+
+        try:
+            result = system.handle_colonize_designation(100, 100, mock_fleet)
+        finally:
+            colonization_module.pixel_to_hex = original_pixel_to_hex
+
+        # Planet should be filtered out - no matching pod
+        assert result is None or result.get('type') == 'no_targets'
+
+    def test_designation_matching_pod_succeeds(self):
+        """Designation succeeds when fleet has pod matching planet type."""
+        from game.ui.screens.strategy_colonization import ColonizationSystem
+        from game.core.hex_math import HexCoord
+        from game.core.validation import ValidationResult
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            ICE_DWARF = "ICE_DWARF"
+
+        mock_planet = Mock()
+        mock_planet.id = 1
+        mock_planet.location = HexCoord(0, 0)
+        mock_planet.planet_type = MockPlanetType.ICE_DWARF
+        mock_planet.owner_id = None
+        mock_planet.name = "Ice World"
+
+        mock_system = Mock()
+        mock_system.global_location = HexCoord(10, 10)
+        mock_system.planets = [mock_planet]
+
+        mock_camera = Mock()
+        mock_camera.screen_to_world.return_value = Mock(x=0, y=0)
+
+        mock_scene = Mock()
+        mock_scene.camera = mock_camera
+        mock_scene.hex_size = 32
+        mock_scene.systems = [mock_system]
+        mock_scene.galaxy = None
+
+        mock_facade = Mock()
+        # Fleet has ICE_DWARF pod - matches planet
+        mock_facade.get_fleet_remaining_pods.return_value = {'ICE_DWARF': 1}
+        mock_facade.handle_command.return_value = ValidationResult()
+
+        mock_fleet = Mock()
+        mock_fleet.id = 10
+        mock_fleet.location = HexCoord(5, 5)
+
+        system = ColonizationSystem(mock_scene, mock_facade)
+        system._get_system_at_hex = Mock(return_value=mock_system)
+
+        import game.ui.screens.strategy_colonization as colonization_module
+        original_pixel_to_hex = colonization_module.pixel_to_hex
+        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+
+        try:
+            result = system.handle_colonize_designation(100, 100, mock_fleet)
+        finally:
+            colonization_module.pixel_to_hex = original_pixel_to_hex
+
+        # Should succeed or return prompt (not filtered out)
+        assert result is not None
+        assert result.get('type') in ('success', 'prompt')
+
+    def test_designation_no_pods_returns_no_targets(self):
+        """Designation returns no_targets when fleet has no colony pods."""
+        from game.ui.screens.strategy_colonization import ColonizationSystem
+        from game.core.hex_math import HexCoord
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
+
+        mock_planet = Mock()
+        mock_planet.id = 1
+        mock_planet.location = HexCoord(0, 0)
+        mock_planet.planet_type = MockPlanetType.CONTINENTAL
+        mock_planet.owner_id = None
+
+        mock_system = Mock()
+        mock_system.global_location = HexCoord(10, 10)
+        mock_system.planets = [mock_planet]
+
+        mock_camera = Mock()
+        mock_camera.screen_to_world.return_value = Mock(x=0, y=0)
+
+        mock_scene = Mock()
+        mock_scene.camera = mock_camera
+        mock_scene.hex_size = 32
+        mock_scene.systems = [mock_system]
+        mock_scene.galaxy = None
+
+        mock_facade = Mock()
+        # Fleet has NO pods
+        mock_facade.get_fleet_remaining_pods.return_value = {}
+
+        mock_fleet = Mock()
+        mock_fleet.id = 10
+        mock_fleet.location = HexCoord(5, 5)
+
+        system = ColonizationSystem(mock_scene, mock_facade)
+        system._get_system_at_hex = Mock(return_value=mock_system)
+
+        import game.ui.screens.strategy_colonization as colonization_module
+        original_pixel_to_hex = colonization_module.pixel_to_hex
+        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+
+        try:
+            result = system.handle_colonize_designation(100, 100, mock_fleet)
+        finally:
+            colonization_module.pixel_to_hex = original_pixel_to_hex
+
+        # Should return no_targets
+        assert result is None or result.get('type') == 'no_targets'
+
+    def test_designation_mixed_types_filters_correctly(self):
+        """Designation filters correctly when multiple planet types exist."""
+        from game.ui.screens.strategy_colonization import ColonizationSystem
+        from game.core.hex_math import HexCoord
+        from game.core.validation import ValidationResult
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            ICE_DWARF = "ICE_DWARF"
+            CONTINENTAL = "CONTINENTAL"
+
+        # Two planets at same location, different types
+        mock_ice_planet = Mock()
+        mock_ice_planet.id = 1
+        mock_ice_planet.location = HexCoord(0, 0)
+        mock_ice_planet.planet_type = MockPlanetType.ICE_DWARF
+        mock_ice_planet.owner_id = None
+        mock_ice_planet.name = "Ice World"
+
+        mock_cont_planet = Mock()
+        mock_cont_planet.id = 2
+        mock_cont_planet.location = HexCoord(0, 0)
+        mock_cont_planet.planet_type = MockPlanetType.CONTINENTAL
+        mock_cont_planet.owner_id = None
+        mock_cont_planet.name = "Earth-like"
+
+        mock_system = Mock()
+        mock_system.global_location = HexCoord(10, 10)
+        mock_system.planets = [mock_ice_planet, mock_cont_planet]
+
+        mock_camera = Mock()
+        mock_camera.screen_to_world.return_value = Mock(x=0, y=0)
+
+        mock_scene = Mock()
+        mock_scene.camera = mock_camera
+        mock_scene.hex_size = 32
+        mock_scene.systems = [mock_system]
+        mock_scene.galaxy = None
+
+        mock_facade = Mock()
+        # Fleet has only CONTINENTAL pod
+        mock_facade.get_fleet_remaining_pods.return_value = {'CONTINENTAL': 1}
+        mock_facade.handle_command.return_value = ValidationResult()
+
+        mock_fleet = Mock()
+        mock_fleet.id = 10
+        mock_fleet.location = HexCoord(5, 5)
+
+        system = ColonizationSystem(mock_scene, mock_facade)
+        system._get_system_at_hex = Mock(return_value=mock_system)
+
+        import game.ui.screens.strategy_colonization as colonization_module
+        original_pixel_to_hex = colonization_module.pixel_to_hex
+        colonization_module.pixel_to_hex = Mock(return_value=HexCoord(10, 10))
+
+        try:
+            result = system.handle_colonize_designation(100, 100, mock_fleet)
+        finally:
+            colonization_module.pixel_to_hex = original_pixel_to_hex
+
+        # Should succeed with CONTINENTAL planet (only one left after filtering)
+        # Single candidate auto-queues mission
+        assert result is not None
+        assert result.get('type') == 'success'
+
+
 class TestPlanetTypeDisplay:
     """Tests for displaying planet types in colonization UI."""
 

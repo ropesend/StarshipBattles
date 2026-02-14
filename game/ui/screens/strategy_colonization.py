@@ -204,12 +204,37 @@ class ColonizationSystem:
             log_debug(f"No colonizable planets at hex {target_hex}.")
             return None
 
-        if len(candidates) == 1:
-            return self.queue_colonize_mission(target_hex, candidates[0], fleet)
+        # PROJ-140: Filter by available colony pods (same pattern as on_colonize_click)
+        remaining_pods = self.facade.get_fleet_remaining_pods(fleet.id)
+
+        # If no remaining pods, return informative message
+        if not remaining_pods:
+            log_debug("No colony pods available in fleet for designation.")
+            return {
+                'type': 'no_targets',
+                'message': 'No colony pods in fleet',
+                'remaining_pods': remaining_pods,
+            }
+
+        # Filter candidates by available pod types
+        pod_filtered = [p for p in candidates if p.planet_type.name in remaining_pods]
+
+        # If no candidates match available pods
+        if not pod_filtered:
+            pod_types = ", ".join(remaining_pods.keys())
+            log_debug(f"No colonizable planets for available pods ({pod_types}) at designation.")
+            return {
+                'type': 'no_targets',
+                'message': f'No colonizable planets for available pods ({pod_types})',
+                'remaining_pods': remaining_pods,
+            }
+
+        if len(pod_filtered) == 1:
+            return self.queue_colonize_mission(target_hex, pod_filtered[0], fleet)
         else:
             return {
                 'type': 'prompt',
-                'planets': candidates,
+                'planets': pod_filtered,
                 'target_hex': target_hex,
                 'fleet': fleet,
             }
