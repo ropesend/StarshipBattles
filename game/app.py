@@ -536,7 +536,7 @@ class Game:
             state_before = self.state
 
             if event.type == pygame.QUIT:
-                self.running = False
+                self.show_exit_dialog = True
             elif event.type == pygame.KEYDOWN:
                 action = self.input_mapper.resolve(event, contexts=["global"])
                 if action == InputAction.GLOBAL_EXIT:

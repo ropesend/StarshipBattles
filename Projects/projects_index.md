@@ -4,6 +4,8 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-139 | Dyson Sphere Multi-Hex Stellar Objects | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-138 | Warp Point System Selection Dialog | Plan Approved | 2026-02-13 | 2026-02-13 |
 | PROJ-137 | UI Pattern Consolidation | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-136 | Test Coverage - UI Components | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-135 | Test Coverage - Strategy Engine | Planning | 2026-02-13 | 2026-02-13 |
@@ -234,7 +236,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-138
+## Next Project ID: PROJ-140
 
 ---
 
