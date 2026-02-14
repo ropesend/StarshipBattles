@@ -79,6 +79,9 @@ class Paths:
     PLANETS_V3_256_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_256")
     PLANETS_V3_128_DIR: str = os.path.join(PLANETS_V3_DIR, "Planets_V3_128")
 
+    # Stellar Objects subdirectories
+    SPHERE_WORLD_DIR: str = os.path.join(ASSET_DIR, "Images", "Stellar Objects", "Sphere world")
+
     # === Core Data Files ===
     COMPONENTS_FILE: str = os.path.join(DATA_DIR, "components.json")
     MODIFIERS_FILE: str = os.path.join(DATA_DIR, "modifiers.json")

@@ -8,21 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-139 Phase 4
-**Current Status:** PROJ-139 Phase 4 complete, Phase 5 ready
+**Last Completed:** PROJ-139 Phase 5
+**Current Status:** PROJ-139 Phase 5 complete, Phase 6 ready
 **Current Project:** PROJ-139
-**Current Phase:** Phase 5 - Dyson Sphere Rendering
-**Test Status:** 11937 passed (+9 tests this phase)
+**Current Phase:** Phase 6 - Integration & Verification
+**Test Status:** 11937 passed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-139 Phase 4 complete: Zone-Aware Selection & Interaction
-  - _handle_picking() now checks galaxy.get_zones_at_global_hex() for multi-hex objects
-  - ColonizeValidator.validate() checks zone registry in addition to get_planets_at_global_hex()
-  - strategy_colonization.py on_colonize_click() and handle_colonize_designation() check zone registry
-  - All zone lookups have safety checks (callable, isinstance) for mock compatibility
-  - +9 new tests: 3 in test_strategy_input_handler_core.py (TestZoneSelection), 4 in test_colonize_validator.py (TestColonizeValidatorZoneColonization), 2 in test_strategy_colonization.py (new file)
-- Next: Phase 5 - Dyson Sphere Rendering (Sphereworld_Portrait.png at 11-hex diameter)
+- PROJ-139 Phase 5 complete: Dyson Sphere Rendering
+  - Added `SPHERE_WORLD_DIR` path constant to `game/core/paths.py`
+  - Added `_load_dyson_sphere_image()` method to load Sphereworld_Portrait.png
+  - Added `_draw_dyson_spheres()` method to render Dyson Spheres at multi-hex diameter
+  - Modified `_draw_system_details()` to call `_draw_dyson_spheres()` FIRST (renders behind normal planets)
+  - Skip Dyson Spheres from normal planet hex_groups loop (prevents double-render)
+  - Added PlanetType import for DYSON_SPHERE detection
+  - Dyson Sphere image scaled to `diameter_hexes * hex_size * camera.zoom` (matches star rendering)
+- Next: Phase 6 - Integration & Verification (serialization round-trips, full test, manual verification)
 
 ---
 
@@ -90,6 +92,7 @@
 | 2026-02-13 | PROJ-139 | Phase 2 | Complete | 11925 pass | pending | Galaxy zone registry, register/unregister, lookups updated (+12 tests) |
 | 2026-02-13 | PROJ-139 | Phase 3 | Complete | 11928 pass | pending | race_config conditions, diameter_hexes=11, clearing radius=5 (+3 tests) |
 | 2026-02-13 | PROJ-139 | Phase 4 | Complete | 11937 pass | pending | zone-aware selection & colonization (+9 tests) |
+| 2026-02-13 | PROJ-139 | Phase 5 | Complete | 11937 pass | pending | Dyson Sphere rendering with Sphereworld_Portrait.png |
 
 ---
 
