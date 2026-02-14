@@ -4,6 +4,13 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-153 | test_coverage_ui_builder | Planning | 2026-02-14 | 2026-02-14 |
+| PROJ-152 | test_coverage_ui_battle | Planning | 2026-02-14 | 2026-02-14 |
+| PROJ-151 | test_coverage_simulation_core | Planning | 2026-02-14 | 2026-02-14 |
+| PROJ-150 | legacy_cleanup_ui | Planning | 2026-02-14 | 2026-02-14 |
+| PROJ-149 | consistency_standardization | Planning | 2026-02-14 | 2026-02-14 |
+| PROJ-148 | code_duplication_ui | Planning | 2026-02-14 | 2026-02-14 |
+| PROJ-147 | architecture_layer_violations | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-146 | 6_architecture_consistency | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-145 | 5_ability_system_patterns | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-144 | 4_legacy_code_cleanup | Planning | 2026-02-13 | 2026-02-13 |
@@ -243,7 +250,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-147
+## Next Project ID: PROJ-154
 
 ---
 

@@ -1,0 +1,191 @@
+[
+  {
+    "id": "DUP-UI1-001",
+    "severity": "Critical",
+    "title": "Duplicate ColumnManager Classes",
+    "location": "game/ui/screens/column_manager.py, planet_list_columns.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-UI1-002",
+    "severity": "Major",
+    "title": "Duplicate draw_stat_bar Implementations",
+    "location": "game/ui/panels/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-UI1-003",
+    "severity": "Major",
+    "title": "Duplicate HP Color Calculation Logic",
+    "location": "game/ui/panels/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-UI1-004",
+    "severity": "Major",
+    "title": "Duplicate Number Magnitude Formatting",
+    "location": "game/ui/screens/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-UI1-005",
+    "severity": "Major",
+    "title": "RaceThemeGallery Does Not Extend BaseGallery",
+    "location": "game/ui/panels/race_theme_gallery.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-FND-001",
+    "severity": "Major",
+    "title": "Strategy Data Loading Duplication",
+    "location": "game/core/strategy_metadata.py",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-SIM-001",
+    "severity": "Major",
+    "title": "Ability Pattern Boilerplate Duplication",
+    "location": "game/simulation/components/abilities/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-SIM-002",
+    "severity": "Major",
+    "title": "Formula Evaluation Pattern Duplication",
+    "location": "game/simulation/components/abilities/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-SIM-003",
+    "severity": "Major",
+    "title": "Resource Type Handling Duplication",
+    "location": "game/simulation/entities/ship_resources.py",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-SIM-004",
+    "severity": "Major",
+    "title": "Validation Pattern Repetition in Loaders",
+    "location": "game/simulation/components/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-STR-001",
+    "severity": "Major",
+    "title": "Component Ability Extraction Pattern Repetition",
+    "location": "game/strategy/engine/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-STR-002",
+    "severity": "Major",
+    "title": "Layer Iteration Pattern Duplicated in 7+ Files",
+    "location": "game/strategy/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-UI2-010",
+    "severity": "Major",
+    "title": "Registry Provider Access Pattern Duplication",
+    "location": "game/ui/services/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-UI2-012",
+    "severity": "Major",
+    "title": "Singleton Manager Pattern Duplication",
+    "location": "game/ui/assets/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-UI1-006",
+    "severity": "Minor",
+    "title": "Duplicate Portrait Loading Logic",
+    "location": "game/ui/screens/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-UI1-008",
+    "severity": "Minor",
+    "title": "Filter/Sort Pattern Duplication",
+    "location": "game/ui/screens/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-FND-002",
+    "severity": "Minor",
+    "title": "Singleton Clear Pattern Repetition",
+    "location": "game/core/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-STR-003",
+    "severity": "Minor",
+    "title": "Maintenance Cost Calculation Near-Duplication",
+    "location": "game/strategy/engine/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-UI2-011",
+    "severity": "Minor",
+    "title": "Service Adapter Boilerplate Pattern",
+    "location": "game/ui/services/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-SIM-005",
+    "severity": "Minor",
+    "title": "Target Validation Pattern Duplication",
+    "location": "game/simulation/combat/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-SIM-007",
+    "severity": "Minor",
+    "title": "UI Row Generation Pattern",
+    "location": "game/simulation/components/abilities/",
+    "effort": "Medium"
+  },
+  {
+    "id": "DUP-SIM-008",
+    "severity": "Minor",
+    "title": "Physics Constants Duplication",
+    "location": "game/simulation/entities/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-STR-004",
+    "severity": "Minor",
+    "title": "Distance Calculation From Center Repeated",
+    "location": "game/strategy/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-STR-005",
+    "severity": "Minor",
+    "title": "Density Primitive Gaussian Falloff Pattern",
+    "location": "game/strategy/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-STR-006",
+    "severity": "Minor",
+    "title": "Fleet-Like Object Creation for Pathfinding",
+    "location": "game/strategy/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-UI2-015",
+    "severity": "Minor",
+    "title": "Image Loading Exception Handling Pattern",
+    "location": "game/ui/assets/",
+    "effort": "Simple"
+  },
+  {
+    "id": "DUP-UI2-016",
+    "severity": "Minor",
+    "title": "Empty __init__.py Files",
+    "location": "game/ui/renderer/",
+    "effort": "Simple"
+  }
+]
