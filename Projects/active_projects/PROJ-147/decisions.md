@@ -19,3 +19,9 @@
 | 2026-02-14 | Phase 4 ADR-UI2-001: Fixed | ShipIO now uses DesignLoaderAdapter for ship loading; TYPE_CHECKING for Ship type hints |
 | 2026-02-14 | Phase 4 ADR-UI2-002: No action | Camera using pygame.math.Vector2 is intentional - it's a pygame rendering component; core Vector2 is for layer-agnostic code |
 | 2026-02-14 | Phase 4 ADR-UI2-003: Fixed | Moved ShipThemeManager import to module level in game_renderer.py |
+| 2026-02-14 | Phase 5 ADR-UI1-001: No action | TestLabScreen already decomposed (7+ helpers, 1657+ lines extracted); remaining code is inherent UI complexity |
+| 2026-02-14 | Phase 5 ADR-UI1-002: No action | FleetReportWindow already refactored (PROJ-44) with FleetListViewModel, ColumnManager, ShipDetailPanel |
+| 2026-02-14 | Phase 5 ADR-UI1-003: No action | BuildQueueScreen already decomposed (PROJ-67/69) with 6+ helper modules |
+| 2026-02-14 | Phase 5 ADR-UI1-004: No action | WeaponsReportPanel is visualization-heavy; 1037 lines of rendering logic is inherent complexity |
+| 2026-02-14 | Phase 5 ADR-UI1-005: No action | Monitoring item - Near-God classes in 500-1000 range acceptable for complex UI |
+| 2026-02-14 | Phase 5 ADR-UI1-006: No action | Documentation item - cross-layer imports documented via TYPE_CHECKING and docstrings per established patterns |
