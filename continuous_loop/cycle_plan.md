@@ -8,20 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-14
-**Last Completed:** PROJ-143 Audit Cycle 1 PASSED
-**Current Status:** PROJ-143 complete, moving to PROJ-144
+**Last Completed:** PROJ-144 Phase 1
+**Current Status:** Phase 1 complete, ready for Phase 2
 **Current Project:** PROJ-144
-**Current Phase:** Ready to start
+**Current Phase:** Phase 2 ready
 **Test Status:** 12867 passed, 2 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-143 audit PASSED on cycle 1
-- All 28 tasks verified, 927+ tests confirmed across 3 phases
-- Phase 1: 8 tasks, 213 tests (Foundation)
-- Phase 2: 12 tasks, 383 tests (Strategy)
-- Phase 3: 8 tasks, 331 tests (Other)
-- Next: Start PROJ-144 Phase 1
+- Phase 1: 4 tasks analyzed, 3 INTENTIONAL DESIGN (no action), 1 fix (removed unused error codes)
+- Task 1.1: LEG-FND-001 - getattr() fallbacks are INTENTIONAL for combat robustness
+- Task 1.2: LEG-FND-004 - hasattr() check is defensive error handling
+- Task 1.3: LEG-FND-005 - Removed MISSING_REQUIRED, STATE_TRANSITION_DENIED codes
+- Task 1.4: LEG-FND-007 - Documentation, not code issue
+- Next: Start Phase 2 Simulation tasks
 
 ---
 
@@ -53,8 +53,8 @@
 
 ---
 
-- [ ] **PROJ-144: 4_legacy_code_cleanup**
-  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-144: 4_legacy_code_cleanup**
+  - **Phases:** 4 | **Status:** In Progress | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-144/plan.md](Projects/active_projects/PROJ-144/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -97,6 +97,7 @@
 | 2026-02-14 | PROJ-143 | Phase 3 (partial) | In Progress | 12844 passed | 00f69ccb | Tasks 3.1-3.4 complete (+91 tests) |
 | 2026-02-14 | PROJ-143 | Phase 3 | Complete | 12867 passed | dcab33a5 | Tasks 3.5-3.8 complete (+28 tests, 3 ALREADY DONE) |
 | 2026-02-14 | PROJ-143 | Audit 1 | PASSED | 12867 passed | - | All 28 tasks verified, project complete |
+| 2026-02-14 | PROJ-144 | Phase 1 | Complete | 12867 passed | - | 3/4 INTENTIONAL, 1 fix (removed unused codes) |
 
 ---
 

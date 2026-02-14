@@ -39,7 +39,7 @@ class TestErrorCodeNamingConvention:
     def test_validation_codes_start_with_v(self):
         """Validation category codes start with 'V'."""
         # Note: INVALID_STATE, INVALID_FORMAT are not validation codes
-        validation_names = ('VALIDATION', 'INVALID_COMPONENT', 'INVALID_TYPE', 'MISSING_REQUIRED', 'OUT_OF_RANGE', 'SCHEMA')
+        validation_names = ('VALIDATION', 'INVALID_COMPONENT', 'INVALID_TYPE', 'OUT_OF_RANGE', 'SCHEMA')
         validation_codes = [c for c in ErrorCode if any(c.name.startswith(n) for n in validation_names)]
         for code in validation_codes:
             assert code.value.startswith('V'), f"{code.name} should start with V"

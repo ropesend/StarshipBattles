@@ -59,9 +59,6 @@ class ErrorCode(Enum):
     VALIDATION_FAILED = "V001"
     """General validation failure."""
 
-    MISSING_REQUIRED = "V003"
-    """Required field or value is missing."""
-
     OUT_OF_RANGE = "V004"
     """Value is outside allowed range."""
 
@@ -77,9 +74,6 @@ class ErrorCode(Enum):
 
     INVALID_STATE = "S003"
     """Object is in an invalid or unexpected state."""
-
-    STATE_TRANSITION_DENIED = "S004"
-    """Requested state transition is not allowed."""
 
     # =========================================================================
     # Resource Codes (R001-R099)

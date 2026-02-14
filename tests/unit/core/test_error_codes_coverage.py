@@ -43,7 +43,6 @@ class TestValidationCodes:
         """V001-V099 pattern for validation codes."""
         validation_codes = [
             ErrorCode.VALIDATION_FAILED,
-            ErrorCode.MISSING_REQUIRED,
             ErrorCode.OUT_OF_RANGE,
         ]
         for code in validation_codes:
@@ -64,7 +63,6 @@ class TestStateCodes:
             ErrorCode.STATE_FROZEN,
             ErrorCode.NOT_INITIALIZED,
             ErrorCode.INVALID_STATE,
-            ErrorCode.STATE_TRANSITION_DENIED,
         ]
         for code in state_codes:
             assert code.value.startswith("S"), (
