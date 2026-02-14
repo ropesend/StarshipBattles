@@ -106,6 +106,9 @@ class Galaxy:
         self._planet_to_system = {}    # Planet -> StarSystem
         self._global_hex_planets = {}  # HexCoord -> List[Planet]
 
+        # Zone Registry (PROJ-139 Phase 2: multi-hex object lookup)
+        self._global_hex_zones = {}    # HexCoord -> List[object] (stars, Dyson Spheres)
+
         # Fleet Registry (PROJ-87 Phase 6: O(1) fleet lookup)
         self.fleets_by_id = {}  # int -> Fleet
         
@@ -120,7 +123,10 @@ class Galaxy:
         """Add a system to the galaxy map."""
         self.systems[system.global_location] = system
         self.name_map[system.name] = system
-        
+        # Register star zones (PROJ-139)
+        for star in system.stars:
+            self.register_zone(system, star)
+
     def get_system_by_name(self, name: str) -> Optional['StarSystem']:
         """Get system by name."""
         return self.name_map.get(name)
@@ -168,18 +174,22 @@ class Galaxy:
         # Assign unique ID
         planet.id = self._next_planet_id
         self._next_planet_id += 1
-        
+
         # Add to ID registry
         self.planets_by_id[planet.id] = planet
-        
+
         # Add to reverse lookup
         self._planet_to_system[planet] = system
-        
+
         # Add to spatial index (global hex)
         global_hex = system.global_location + planet.location
         if global_hex not in self._global_hex_planets:
             self._global_hex_planets[global_hex] = []
         self._global_hex_planets[global_hex].append(planet)
+
+        # Register zone if planet has multi-hex footprint (PROJ-139)
+        if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+            self.register_zone(system, planet)
     
     def get_planet_by_id(self, planet_id: int) -> Optional['Planet']:
         """O(1) lookup of planet by ID."""
@@ -192,6 +202,53 @@ class Galaxy:
     def get_planets_at_global_hex(self, global_hex: HexCoord) -> List['Planet']:
         """O(1) spatial lookup: get all planets at a global hex coordinate."""
         return self._global_hex_planets.get(global_hex, [])
+
+    # --- Zone Registry Methods (PROJ-139 Phase 2: multi-hex zones) ---
+
+    def register_zone(self, system: 'StarSystem', obj) -> None:
+        """Register a multi-hex zone object (star, Dyson Sphere) in the zone index.
+
+        Args:
+            system: The StarSystem containing the object.
+            obj: Object with an occupied_hexes property (IZoneOccupant).
+        """
+        if not hasattr(obj, 'occupied_hexes'):
+            return
+        for local_hex in obj.occupied_hexes:
+            global_hex = system.global_location + local_hex
+            if global_hex not in self._global_hex_zones:
+                self._global_hex_zones[global_hex] = []
+            if obj not in self._global_hex_zones[global_hex]:
+                self._global_hex_zones[global_hex].append(obj)
+
+    def unregister_zone(self, system: 'StarSystem', obj) -> None:
+        """Remove a multi-hex zone object from the zone index.
+
+        Args:
+            system: The StarSystem containing the object.
+            obj: Object with an occupied_hexes property (IZoneOccupant).
+        """
+        if not hasattr(obj, 'occupied_hexes'):
+            return
+        for local_hex in obj.occupied_hexes:
+            global_hex = system.global_location + local_hex
+            if global_hex in self._global_hex_zones:
+                zone_list = self._global_hex_zones[global_hex]
+                if obj in zone_list:
+                    zone_list.remove(obj)
+                if not zone_list:
+                    del self._global_hex_zones[global_hex]
+
+    def get_zones_at_global_hex(self, global_hex: HexCoord) -> list:
+        """O(1) spatial lookup: get all zone objects at a global hex.
+
+        Args:
+            global_hex: Global HexCoord to query.
+
+        Returns:
+            List of zone objects (stars, Dyson Spheres) at this hex, or empty list.
+        """
+        return self._global_hex_zones.get(global_hex, [])
 
     # --- Fleet Registry Methods (PROJ-87 Phase 6) ---
 
@@ -234,8 +291,12 @@ class Galaxy:
         # Get system before removing from lookup
         system = self._planet_to_system.pop(planet, None)
 
-        # Remove from spatial index
+        # Remove from spatial index and zone registry
         if system is not None:
+            # Unregister zone if planet has multi-hex footprint (PROJ-139)
+            if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+                self.unregister_zone(system, planet)
+
             global_hex = system.global_location + planet.location
             if global_hex in self._global_hex_planets:
                 planets_at_hex = self._global_hex_planets[global_hex]
@@ -310,6 +371,14 @@ class Galaxy:
                 if sys_location + wp.location == location:
                     return system
 
+        # Check zone registry for multi-hex objects (PROJ-139)
+        zone_objects = self._global_hex_zones.get(location, [])
+        for zone_obj in zone_objects:
+            # Find which system owns this zone object
+            for sys_loc, sys in self.systems.items():
+                if zone_obj in sys.stars or zone_obj in sys.planets:
+                    return sys
+
         return None
 
     def get_all_fleets_in_system(self, system: 'StarSystem', empires: List) -> List[tuple]:
@@ -332,10 +401,21 @@ class Galaxy:
         for planet in system.planets:
             system_hexes.add(system.global_location + planet.location)
 
-        # Add star locations
+        # Add star locations and star zone hexes (PROJ-139)
         for star in system.stars:
             if hasattr(star, 'location'):
                 system_hexes.add(system.global_location + star.location)
+            # Add star zone hexes
+            if hasattr(star, 'occupied_hexes'):
+                for local_hex in star.occupied_hexes:
+                    system_hexes.add(system.global_location + local_hex)
+
+        # Add planet zone hexes for Dyson Spheres (PROJ-139)
+        for planet in system.planets:
+            diameter = getattr(planet, 'diameter_hexes', 0)
+            if isinstance(diameter, (int, float)) and diameter > 0:
+                for local_hex in planet.occupied_hexes:
+                    system_hexes.add(system.global_location + local_hex)
 
         # Add warp point locations
         for wp in system.warp_points:
@@ -809,6 +889,10 @@ class Galaxy:
             galaxy.systems[coord] = system
             galaxy.name_map[system.name] = system
 
+            # Register star zones (PROJ-139)
+            for star in system.stars:
+                galaxy.register_zone(system, star)
+
             # Rebuild indexes for all planets in this system
             for planet in system.planets:
                 # Add to ID registry
@@ -822,5 +906,9 @@ class Galaxy:
                 if global_hex not in galaxy._global_hex_planets:
                     galaxy._global_hex_planets[global_hex] = []
                 galaxy._global_hex_planets[global_hex].append(planet)
+
+                # Register zone if planet has multi-hex footprint (PROJ-139)
+                if hasattr(planet, 'diameter_hexes') and planet.diameter_hexes > 0:
+                    galaxy.register_zone(system, planet)
 
         return galaxy

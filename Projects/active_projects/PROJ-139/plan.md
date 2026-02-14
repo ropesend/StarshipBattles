@@ -14,7 +14,7 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Core Zone Infrastructure | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Galaxy Zone Registry | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Galaxy Zone Registry | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Dyson Sphere Enhancements | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Zone-Aware Selection & Interaction | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Dyson Sphere Rendering | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
@@ -22,11 +22,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Phase 2 - Galaxy Zone Registry
-**Last Action:** Completed Phase 1: Core Zone Infrastructure
-**Next Action:** Begin Phase 2: Galaxy Zone Registry
+**Active Phase:** Phase 3 - Dyson Sphere Enhancements
+**Last Action:** Completed Phase 2: Galaxy Zone Registry
+**Next Action:** Begin Phase 3: Dyson Sphere Enhancements
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete: hex_circle_filled (7 tests), IZoneOccupant protocol (5 tests), Star.occupied_hexes (5 tests), Planet.occupied_hexes + diameter_hexes (9 tests). Total: +26 tests. Begin Phase 2: Add zone registry to Galaxy, register/unregister methods, wire into add_system/register_planet.
+**Context for Next Agent:** Phase 2 complete: Added _global_hex_zones registry, register_zone(), unregister_zone(), get_zones_at_global_hex(). Wired into add_system() and register_planet()/unregister_planet(). Updated get_system_at_location() and get_all_fleets_in_system() to use zone registry. Total: +12 tests. Begin Phase 3: Update Dyson Sphere creation to use race_config conditions, set diameter_hexes=11, align clearing radius to zone radius.
 
 ## Overview
 Add a generalized multi-hex zone system so game objects (stars, Dyson Spheres, future objects) can occupy multiple hexes on the galaxy map. Clicking any hex in the zone selects the object. Enhance Dyson Sphere creation to use proper image, scale to 11-hex diameter, be colonizable from any zone hex, and have ideal conditions matching the creator species.

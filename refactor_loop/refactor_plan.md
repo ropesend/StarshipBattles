@@ -8,20 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-139 Phase 1
-**Current Status:** PROJ-139 Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-139 Phase 2
+**Current Status:** PROJ-139 Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-139
-**Current Phase:** Phase 2 - Galaxy Zone Registry
-**Test Status:** 11913+ passed (+26 tests this phase)
+**Current Phase:** Phase 3 - Dyson Sphere Enhancements
+**Test Status:** 11925 passed (+12 tests this phase)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-139 Phase 1 complete: Core Zone Infrastructure
-  - hex_circle_filled utility (7 tests)
-  - IZoneOccupant protocol (5 tests)
-  - Star.occupied_hexes property (5 tests)
-  - Planet.occupied_hexes + diameter_hexes (9 tests)
-- Next: Phase 2 - Galaxy Zone Registry (add _global_hex_zones, register/unregister methods)
+- PROJ-139 Phase 2 complete: Galaxy Zone Registry
+  - _global_hex_zones dict added to Galaxy.__init__
+  - register_zone(), unregister_zone(), get_zones_at_global_hex() methods
+  - add_system() auto-registers star zones
+  - register_planet()/unregister_planet() handle multi-hex planets
+  - get_system_at_location() checks zone registry
+  - get_all_fleets_in_system() includes zone hexes
+  - from_dict() rebuilds zone indexes
+  - +12 new tests in test_galaxy.py
+- Next: Phase 3 - Dyson Sphere Enhancements (race_config conditions, diameter_hexes=11)
 
 ---
 
@@ -78,6 +82,7 @@
 | 2026-02-13 | PROJ-138 | Phase 2 | Complete | 11913 pass | pending | StrategyWindowManager + StrategyUI wiring + 2 tests |
 | 2026-02-13 | PROJ-138 | Audit 1 | PASSED | 11913 pass | pending | All phases verified, no issues |
 | 2026-02-13 | PROJ-139 | Phase 1 | Complete | 11939+ pass | pending | hex_circle_filled, IZoneOccupant, Star/Planet occupied_hexes (+26 tests) |
+| 2026-02-13 | PROJ-139 | Phase 2 | Complete | 11925 pass | pending | Galaxy zone registry, register/unregister, lookups updated (+12 tests) |
 
 ---
 
