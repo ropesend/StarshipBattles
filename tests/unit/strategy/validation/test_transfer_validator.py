@@ -192,3 +192,247 @@ class TestTransferValidatorGeneral:
 
         assert not result.is_valid
         assert result.error_code == "PLANET_NOT_FOUND"
+
+
+class TestTransferValidatorEdgeCases:
+    """Edge case tests for TransferValidator."""
+
+    def test_load_with_specific_species_id_valid(self):
+        """Load passengers of specific species when available."""
+        planet = make_mock_planet(owner_id=0, total_pop=500)
+        # Population has human species with count > 0
+        planet.populations = [SpeciesPopulation(race_id="human", count=500)]
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50, species_id="human"
+        )
+
+        assert result.is_valid
+
+    def test_load_with_species_id_not_present_fails(self):
+        """Load fails when specified species not present on planet."""
+        planet = make_mock_planet(owner_id=0, total_pop=500)
+        planet.populations = [SpeciesPopulation(race_id="human", count=500)]
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50, species_id="alien"
+        )
+
+        assert not result.is_valid
+        assert result.error_code == "NO_POPULATION"
+        assert "alien" in result.errors[0]
+
+    def test_load_with_species_zero_count_fails(self):
+        """Load fails when species exists but has zero population."""
+        planet = make_mock_planet(owner_id=0, total_pop=500)
+        planet.populations = [
+            SpeciesPopulation(race_id="human", count=500),
+            SpeciesPopulation(race_id="alien", count=0)  # Zero count
+        ]
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50, species_id="alien"
+        )
+
+        assert not result.is_valid
+        assert result.error_code == "NO_POPULATION"
+
+    def test_load_amount_zero_still_validates(self):
+        """amount=0 (all available) still requires validation."""
+        planet = make_mock_planet(owner_id=0, total_pop=500)
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 0
+        )
+
+        assert result.is_valid
+
+    def test_unload_amount_zero_still_validates(self):
+        """amount=0 for unload still validates."""
+        planet = make_mock_planet(owner_id=0)
+        fleet = make_mock_fleet(capacity=100, current=50)
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "unload", 0
+        )
+
+        assert result.is_valid
+
+    def test_load_capacity_exactly_full(self):
+        """Load fails when fleet is exactly at capacity."""
+        planet = make_mock_planet(owner_id=0, total_pop=500)
+        fleet = make_mock_fleet(capacity=100, current=100)  # Exactly full
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 1
+        )
+
+        assert not result.is_valid
+        assert result.error_code == "NO_CARGO_SPACE"
+
+    def test_load_capacity_slightly_available(self):
+        """Load succeeds when even 1 unit of space available."""
+        planet = make_mock_planet(owner_id=0, total_pop=500)
+        fleet = make_mock_fleet(capacity=100, current=99)  # 1 space
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 1
+        )
+
+        assert result.is_valid
+
+    def test_multiple_planets_at_hex_correct_planet_validates(self):
+        """Transfer validates when planet is in the list at hex."""
+        planet1 = make_mock_planet(planet_id=1, owner_id=0, total_pop=500)
+        planet2 = make_mock_planet(planet_id=2, owner_id=0, total_pop=300)
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet1, planet2])  # Both at same hex
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet2, "passengers", "load", 50
+        )
+
+        assert result.is_valid
+
+    def test_multiple_planets_at_hex_wrong_planet_fails(self):
+        """Transfer fails when planet not in the list at hex."""
+        planet1 = make_mock_planet(planet_id=1, owner_id=0, total_pop=500)
+        planet_other = make_mock_planet(planet_id=99, owner_id=0, total_pop=300)
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet1])  # Only planet1 at hex
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet_other, "passengers", "load", 50
+        )
+
+        assert not result.is_valid
+        assert result.error_code == "NOT_AT_PLANET"
+
+    def test_error_message_includes_planet_name(self):
+        """Error messages include relevant names for user clarity."""
+        planet = make_mock_planet(planet_id=42, owner_id=None)
+        planet.name = "Alpha Centauri IV"
+        fleet = make_mock_fleet()
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50
+        )
+
+        assert "Alpha Centauri IV" in result.errors[0]
+
+    def test_error_message_invalid_direction_shows_value(self):
+        """Invalid direction error shows the provided value."""
+        planet = make_mock_planet(owner_id=0)
+        fleet = make_mock_fleet()
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "transfer", 50
+        )
+
+        assert "transfer" in result.errors[0]
+
+    def test_error_message_invalid_cargo_type_shows_value(self):
+        """Invalid cargo type error shows the provided value."""
+        planet = make_mock_planet(owner_id=0)
+        fleet = make_mock_fleet()
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "minerals", "load", 50
+        )
+
+        assert "minerals" in result.errors[0]
+
+    def test_unload_with_species_id_parameter(self):
+        """Unload still works when species_id provided (unused for unload)."""
+        planet = make_mock_planet(owner_id=0)
+        fleet = make_mock_fleet(capacity=100, current=50)
+        galaxy = make_mock_galaxy([planet])
+
+        # species_id is accepted but not validated for unload
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "unload", 30, species_id="human"
+        )
+
+        assert result.is_valid
+
+    def test_load_empty_populations_list(self):
+        """Load fails when planet has empty populations list."""
+        planet = make_mock_planet(owner_id=0, total_pop=0)
+        planet.populations = []  # Empty list
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50
+        )
+
+        assert not result.is_valid
+        assert result.error_code == "NO_POPULATION"
+
+    def test_load_with_species_multiple_populations(self):
+        """Load validates correctly with multiple species populations."""
+        planet = make_mock_planet(owner_id=0, total_pop=800)
+        planet.populations = [
+            SpeciesPopulation(race_id="human", count=500),
+            SpeciesPopulation(race_id="alien", count=300)
+        ]
+        fleet = make_mock_fleet(capacity=100, current=0)
+        galaxy = make_mock_galaxy([planet])
+
+        # Both species should validate
+        result_human = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50, species_id="human"
+        )
+        result_alien = TransferValidator.validate(
+            galaxy, fleet, planet, "passengers", "load", 50, species_id="alien"
+        )
+
+        assert result_human.is_valid
+        assert result_alien.is_valid
+
+    def test_validation_order_fleet_checked_first(self):
+        """Fleet validation happens before planet validation."""
+        galaxy = make_mock_galaxy([])
+
+        result = TransferValidator.validate(
+            galaxy, None, None, "passengers", "load", 50
+        )
+
+        # Fleet checked first
+        assert result.error_code == "FLEET_NOT_FOUND"
+
+    def test_validation_order_direction_before_cargo_type(self):
+        """Direction validated before cargo type."""
+        planet = make_mock_planet(owner_id=0)
+        fleet = make_mock_fleet()
+        galaxy = make_mock_galaxy([planet])
+
+        result = TransferValidator.validate(
+            galaxy, fleet, planet, "unknown", "invalid", 50
+        )
+
+        # Direction checked before cargo type
+        assert result.error_code == "INVALID_DIRECTION"
+
+    def test_valid_cargo_types_constant(self):
+        """VALID_CARGO_TYPES contains expected values."""
+        assert "passengers" in TransferValidator.VALID_CARGO_TYPES
+
+    def test_valid_directions_constant(self):
+        """VALID_DIRECTIONS contains expected values."""
+        assert "load" in TransferValidator.VALID_DIRECTIONS
+        assert "unload" in TransferValidator.VALID_DIRECTIONS

@@ -283,6 +283,307 @@ class TestDensityBasedPlacementStrategy:
         assert result is None or isinstance(result, HexCoord)
 
 
+class TestRandomPlacementEdgeCases:
+    """Edge case tests for RandomPlacementStrategy."""
+
+    def test_sample_location_with_none_rng_creates_default(self):
+        """When rng=None, should create a new Random instance and work."""
+        strategy = RandomPlacementStrategy()
+        # Just verify it works without explicit rng
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=set(),
+            min_dist=10,
+            rng=None
+        )
+        assert result is not None
+        assert isinstance(result, HexCoord)
+
+    def test_sample_location_with_provided_spatial_index(self):
+        """Should use provided spatial_index instead of building one."""
+        from game.strategy.data.spatial_index import SpatialIndex
+
+        strategy = RandomPlacementStrategy()
+        rng = random.Random(42)
+
+        # Pre-build spatial index with existing system
+        existing = {HexCoord(0, 0)}
+        index = SpatialIndex(cell_size=100)
+        for coord in existing:
+            index.add(coord, None)
+
+        # Should use provided index
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=existing,
+            min_dist=20,
+            rng=rng,
+            spatial_index=index
+        )
+
+        # Result should respect min_dist from indexed system
+        assert result is None or hex_distance(result, HexCoord(0, 0)) >= 20
+
+    def test_sample_location_max_attempts_zero(self):
+        """max_attempts=0 should return None immediately."""
+        strategy = RandomPlacementStrategy()
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=set(),
+            min_dist=10,
+            max_attempts=0
+        )
+        assert result is None
+
+    def test_sample_location_radius_one(self):
+        """Very small radius should still work."""
+        strategy = RandomPlacementStrategy()
+        rng = random.Random(42)
+
+        result = strategy.sample_location(
+            radius=1,
+            existing_systems=set(),
+            min_dist=0,
+            rng=rng
+        )
+
+        assert result is not None
+        # Should be within hex radius 1
+        assert max(abs(result.q), abs(result.r), abs(result.q + result.r)) <= 1
+
+    def test_sample_location_min_dist_zero(self):
+        """min_dist=0 should allow placement anywhere, even adjacent."""
+        strategy = RandomPlacementStrategy()
+        rng = random.Random(42)
+
+        existing = {HexCoord(0, 0)}
+        result = strategy.sample_location(
+            radius=2,
+            existing_systems=existing,
+            min_dist=0,
+            rng=rng
+        )
+
+        # Should find a spot (may be adjacent)
+        assert result is not None
+        assert result not in existing
+
+    def test_sample_location_occupied_exact_spot_rejected(self):
+        """If random lands on exact existing coord, should reject it."""
+        strategy = RandomPlacementStrategy()
+        rng = random.Random(42)
+
+        # Fill most of a tiny galaxy
+        existing = {HexCoord(0, 0), HexCoord(1, 0), HexCoord(0, 1)}
+
+        # Should find the remaining spots
+        found_coords = set()
+        for _ in range(20):
+            result = strategy.sample_location(
+                radius=1,
+                existing_systems=existing,
+                min_dist=0,
+                rng=rng
+            )
+            if result is not None:
+                assert result not in existing
+                found_coords.add(result)
+
+    def test_sample_location_very_large_radius(self):
+        """Large radius should not cause issues."""
+        strategy = RandomPlacementStrategy()
+        rng = random.Random(42)
+
+        result = strategy.sample_location(
+            radius=10000,
+            existing_systems=set(),
+            min_dist=100,
+            rng=rng
+        )
+
+        assert result is not None
+        assert max(abs(result.q), abs(result.r), abs(result.q + result.r)) <= 10000
+
+    def test_sample_location_many_existing_systems_performance(self):
+        """Should handle many existing systems efficiently with spatial index."""
+        strategy = RandomPlacementStrategy()
+        rng = random.Random(42)
+
+        # Create a set of existing systems
+        existing = {HexCoord(q * 10, r * 10) for q in range(-10, 11) for r in range(-10, 11)
+                    if max(abs(q * 10), abs(r * 10), abs(q * 10 + r * 10)) <= 100}
+
+        # Should still find valid spots quickly
+        result = strategy.sample_location(
+            radius=200,
+            existing_systems=existing,
+            min_dist=5,
+            rng=rng,
+            max_attempts=1000
+        )
+
+        # Should find something in the gaps
+        assert result is None or result not in existing
+
+
+class TestDensityBasedPlacementEdgeCases:
+    """Edge case tests for DensityBasedPlacementStrategy."""
+
+    def test_sample_location_with_none_rng_creates_default(self):
+        """When rng=None, should create a new Random instance."""
+        dm = DensityMap(radius=100)
+        dm.add_primitive(RadialPrimitive(sigma=50, peak_density=1.0))
+        strategy = DensityBasedPlacementStrategy(dm)
+
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=set(),
+            min_dist=10,
+            rng=None
+        )
+        # Should work (may be None due to density but shouldn't crash)
+        assert result is None or isinstance(result, HexCoord)
+
+    def test_sample_location_with_provided_spatial_index(self):
+        """Should use provided spatial_index instead of building one."""
+        from game.strategy.data.spatial_index import SpatialIndex
+
+        dm = DensityMap(radius=100)
+        dm.add_primitive(RadialPrimitive(sigma=50, peak_density=1.0))
+        strategy = DensityBasedPlacementStrategy(dm)
+        rng = random.Random(42)
+
+        existing = {HexCoord(0, 0)}
+        index = SpatialIndex(cell_size=100)
+        for coord in existing:
+            index.add(coord, None)
+
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=existing,
+            min_dist=20,
+            rng=rng,
+            spatial_index=index
+        )
+
+        # Result should respect min_dist from indexed system
+        assert result is None or hex_distance(result, HexCoord(0, 0)) >= 20
+
+    def test_sample_location_max_attempts_zero(self):
+        """max_attempts=0 should return None immediately."""
+        dm = DensityMap(radius=100)
+        dm.add_primitive(RadialPrimitive(sigma=50, peak_density=1.0))
+        strategy = DensityBasedPlacementStrategy(dm)
+
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=set(),
+            min_dist=10,
+            max_attempts=0
+        )
+        assert result is None
+
+    def test_sample_location_galaxy_radius_larger_than_density_map(self):
+        """When galaxy radius > density map radius, should use smaller."""
+        dm = DensityMap(radius=50)
+        dm.add_primitive(RadialPrimitive(sigma=30, peak_density=1.0))
+        strategy = DensityBasedPlacementStrategy(dm)
+        rng = random.Random(42)
+
+        result = strategy.sample_location(
+            radius=200,  # Larger than density map radius
+            existing_systems=set(),
+            min_dist=5,
+            rng=rng
+        )
+
+        # Should stay within density map radius (50)
+        if result is not None:
+            assert max(abs(result.q), abs(result.r), abs(result.q + result.r)) <= 50
+
+    def test_sample_location_galaxy_radius_smaller_than_density_map(self):
+        """When galaxy radius < density map radius, should use smaller."""
+        dm = DensityMap(radius=200)
+        dm.add_primitive(RadialPrimitive(sigma=100, peak_density=1.0))
+        strategy = DensityBasedPlacementStrategy(dm)
+        rng = random.Random(42)
+
+        result = strategy.sample_location(
+            radius=30,  # Smaller than density map radius
+            existing_systems=set(),
+            min_dist=5,
+            rng=rng
+        )
+
+        # Should stay within galaxy radius (30)
+        if result is not None:
+            assert max(abs(result.q), abs(result.r), abs(result.q + result.r)) <= 30
+
+    def test_sample_location_very_low_density_everywhere(self):
+        """Very low density should cause many rejections, may return None."""
+        dm = DensityMap(radius=100)
+        # Very low peak density
+        dm.add_primitive(RadialPrimitive(sigma=100, peak_density=0.005))
+        strategy = DensityBasedPlacementStrategy(dm)
+        rng = random.Random(42)
+
+        # With very low density and limited attempts, may not find valid spot
+        result = strategy.sample_location(
+            radius=100,
+            existing_systems=set(),
+            min_dist=5,
+            rng=rng,
+            max_attempts=50
+        )
+
+        # May be None due to density rejection, but shouldn't crash
+        assert result is None or isinstance(result, HexCoord)
+
+    def test_sample_location_min_dist_zero(self):
+        """min_dist=0 should allow placement anywhere."""
+        dm = DensityMap(radius=50)
+        dm.add_primitive(RadialPrimitive(sigma=30, peak_density=1.0))
+        strategy = DensityBasedPlacementStrategy(dm)
+        rng = random.Random(42)
+
+        existing = {HexCoord(0, 0)}
+        result = strategy.sample_location(
+            radius=50,
+            existing_systems=existing,
+            min_dist=0,
+            rng=rng
+        )
+
+        # Should find a spot (may be adjacent)
+        if result is not None:
+            assert result not in existing
+
+    def test_sample_location_density_threshold_filtering(self):
+        """Areas with density < 0.01 should be quickly rejected."""
+        # Density map with very tight peak - most area has low density
+        dm = DensityMap(radius=100)
+        dm.add_primitive(RadialPrimitive(sigma=5, peak_density=1.0))  # Very tight
+        strategy = DensityBasedPlacementStrategy(dm)
+        rng = random.Random(42)
+
+        # Should still find spots near center
+        results = []
+        for _ in range(20):
+            result = strategy.sample_location(
+                radius=100,
+                existing_systems=set(),
+                min_dist=2,
+                rng=rng
+            )
+            if result is not None:
+                results.append(result)
+
+        # Most results should be close to center
+        if results:
+            close_count = sum(1 for r in results if hex_distance(r, HexCoord(0, 0)) <= 20)
+            assert close_count >= len(results) * 0.7
+
+
 class TestPlacementStrategyIntegration:
     """Integration tests for placement strategies."""
 
