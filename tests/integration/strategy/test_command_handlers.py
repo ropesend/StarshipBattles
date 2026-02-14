@@ -6,6 +6,30 @@ from game.strategy.engine.commands import IssueMoveCommand, IssueBuildShipComman
 from game.strategy.data.fleet import Fleet, OrderType, FleetOrder
 from game.core.hex_math import HexCoord
 from game.strategy.data.empire import Empire
+from game.strategy.data.ship_instance import ShipInstance
+
+
+def make_colony_ship(planet_type: str, owner_id: int, instance_id: str = "colony-ship-1") -> ShipInstance:
+    """Create a ship with a colony pod for the specified planet type.
+
+    PROJ-140: Ships need colony pods to colonize specific planet types.
+    """
+    pod_id = f"{planet_type.lower()}_colony_pod"
+
+    return ShipInstance(
+        instance_id=instance_id,
+        design_id=f"{planet_type}_colony_ship",
+        name=f"Colony Ship ({planet_type})",
+        owner_id=owner_id,
+        design_data={
+            'name': f"Colony Ship ({planet_type})",
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': pod_id}]
+            }
+        },
+    )
 
 # Mock Galaxy and related classes to avoid full initialization
 class MockGalaxy:
@@ -269,13 +293,18 @@ class TestColonizeMissionCommandHandler:
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
-        # Setup fleet and mock planet
+        # Setup fleet with colony ship (PROJ-140: needs matching pod)
         fleet = Fleet(101, 0, HexCoord(0, 0))
+        fleet.ships = [make_colony_ship("CONTINENTAL", owner_id=0)]
         session.player_empire.fleets = [fleet]
 
+        # Mock planet with proper planet_type
         planet = MagicMock()
         planet.id = 42
         planet.name = "Test Planet"
+        planet_type = MagicMock()
+        planet_type.name = "CONTINENTAL"
+        planet.planet_type = planet_type
         session.galaxy.planets_by_id[42] = planet
 
         target_hex = HexCoord(10, 10)
@@ -304,11 +333,17 @@ class TestColonizeMissionCommandHandler:
         session = GameSession(config=config)
         session.galaxy = MockGalaxy()
 
+        # PROJ-140: Fleet needs colony ship with matching pod
         fleet = Fleet(101, 0, HexCoord(0, 0))
+        fleet.ships = [make_colony_ship("ICE_DWARF", owner_id=0)]
         session.player_empire.fleets = [fleet]
 
+        # Mock planet with proper planet_type
         planet = MagicMock()
         planet.id = 42
+        planet_type = MagicMock()
+        planet_type.name = "ICE_DWARF"
+        planet.planet_type = planet_type
         session.galaxy.planets_by_id[42] = planet
 
         cmd = QueueColonizeMissionCommand(fleet_id=101, target_hex=HexCoord(100, 100), planet_id=42)
@@ -362,13 +397,20 @@ class TestColonizeMissionCommandHandler:
         session.galaxy = MockGalaxy()
 
         # Fleet at (0,0) with existing MOVE order to (5,5)
+        # PROJ-140: Fleet needs colony ship with matching pod
+        # Use JOVIAN which has jovian_colony_pod in components.json
         fleet = Fleet(101, 0, HexCoord(0, 0))
+        fleet.ships = [make_colony_ship("JOVIAN", owner_id=0)]
         existing_order = FleetOrder(OrderType.MOVE, HexCoord(5, 5))
         fleet.add_order(existing_order)
         session.player_empire.fleets = [fleet]
 
+        # Mock planet with proper planet_type
         planet = MagicMock()
         planet.id = 42
+        planet_type = MagicMock()
+        planet_type.name = "JOVIAN"
+        planet.planet_type = planet_type
         session.galaxy.planets_by_id[42] = planet
 
         target_hex = HexCoord(10, 10)

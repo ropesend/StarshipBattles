@@ -16,16 +16,16 @@
 | 1. Fix Execution-Time Validation (Bugs 1+2) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Fix "Any Planet" Validation (Bug 5) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix UI Designation Filtering (Bug 3) | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Fix Mission Command Handler (Bug 4) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. Fix Mission Command Handler (Bug 4) | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Full Regression + Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Phase 3 Complete — Phase 4 Next
-**Last Action:** Phase 3 complete: Fixed UI designation filtering (Bug 3)
-**Next Action:** Begin Phase 4 - Fix Mission Command Handler (Bug 4)
+**Active Phase:** Phase 4 Complete — Phase 5 Next
+**Last Action:** Phase 4 complete: Fixed ColonizeMissionCommandHandler pod validation (Bug 4)
+**Next Action:** Begin Phase 5 - Full Regression + Cleanup
 **Blockers:** None
-**Context for Next Agent:** Phase 3 complete with 11952 tests passing (+4 from Phase 2). Fixed: handle_colonize_designation() now filters candidate planets by available colony pods, matching pattern in on_colonize_click(). Added 4 tests to TestHandleColonizeDesignationPodFiltering class.
+**Context for Next Agent:** Phase 4 complete with 11957 tests passing (+5 from Phase 3). Fixed: ColonizeMissionCommandHandler.execute() now validates pod match before queuing orders - checks find_ship_with_colony_pod and get_committed_colony_pods. Also updated 4 integration tests to include colony ships with matching pods.
 
 ## Overview
 

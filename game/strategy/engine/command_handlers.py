@@ -232,6 +232,7 @@ class ColonizeMissionCommandHandler:
         """Handle QueueColonizeMissionCommand - queues MOVE and COLONIZE orders."""
         from game.strategy.data.fleet import FleetOrder, OrderType
         from game.strategy.data.pathfinding import find_hybrid_path
+        from game.strategy.validation import ColonizeValidator
 
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
@@ -244,6 +245,44 @@ class ColonizeMissionCommandHandler:
             planet = session._get_planet_by_id(cmd.planet_id)
             if not planet:
                 return ValidationResult(is_valid=False, errors=["Planet not found."])
+
+            # PROJ-140 Phase 4: Validate pod match for specific planet targets
+            # Get component registry from turn_engine
+            component_registry = None
+            turn_engine = getattr(session, 'turn_engine', None)
+            if turn_engine is not None:
+                registries = getattr(turn_engine, '_registries', None)
+                if registries is not None:
+                    component_registry = getattr(registries, 'components', None)
+
+            if component_registry is not None:
+                planet_type_str = planet.planet_type.name
+
+                # Check if fleet has a matching colony pod
+                ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
+                    fleet, planet_type_str, component_registry
+                )
+
+                if ship_with_pod is None:
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[f"No ship in fleet has {planet_type_str} colony pod."],
+                        error_code="NO_COLONY_POD"
+                    )
+
+                # Check chain limits - ensure not over-committed
+                available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
+                committed = ColonizeValidator.get_committed_colony_pods(fleet)
+
+                available_count = available.get(planet_type_str, 0)
+                committed_count = committed.get(planet_type_str, 0)
+
+                if committed_count >= available_count:
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=[f"All {planet_type_str} colony pods already assigned."],
+                        error_code="COLONY_POD_EXHAUSTED"
+                    )
 
         # 3. Determine start hex (current location or last order target)
         start_hex = fleet.location

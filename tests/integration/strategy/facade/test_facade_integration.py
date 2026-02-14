@@ -289,6 +289,10 @@ class TestColonizeMissionIntegration:
             if uncolonized_planet:
                 break
 
+        # PROJ-140: Add colony ship matching target planet type
+        if uncolonized_planet:
+            fleet.ships = [make_colony_ship_for_planet(uncolonized_planet, player_empire.id)]
+
         facade = StrategySessionFacade(session)
         return session, facade, fleet, uncolonized_planet, target_hex
 
