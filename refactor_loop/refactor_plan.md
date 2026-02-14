@@ -8,22 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-119 AUDIT PASSED
-**Current Status:** PROJ-119 complete, awaiting user verification
-**Current Project:** None - All projects complete
-**Current Phase:** N/A
-**Test Status:** 11668 passed (+76 tests this session)
+**Last Completed:** PROJ-138 Phase 1
+**Current Status:** PROJ-138 Phase 1 complete, Phase 2 ready
+**Current Project:** PROJ-138
+**Current Phase:** Phase 2
+**Test Status:** 11675+ passed (+7 tests this session)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-119 AUDIT PASSED - All 3 phases complete:
-  - Phase 1 (Strategy): 24/24 tasks, +162 tests
-  - Phase 2 (UI-Framework): 18/18 tasks, +26 tests
-  - Phase 3 (UI-Screens): 29/29 tasks, +76 tests
-  - Total: 71 findings addressed, +262 tests
-- All projects in Master Task List now marked [x] complete
-- Tests: 11668 passed
-- Next: Awaiting user verification of completed projects
+- PROJ-138 Phase 1 complete: SystemSelectionWindow dialog created
+  - game/ui/screens/system_selection_window.py (new)
+  - tests/unit/ui/screens/test_system_selection_window.py (7 tests)
+- Phase 2: Wire into StrategyWindowManager and StrategyUI
+- Testmon erroring on Windows - use direct pytest calls
 
 ---
 
@@ -47,9 +44,17 @@
 
 ---
 
-- [ ] **PROJ-138: Warp Point System Selection Dialog**
-  - **Phases:** 2 | **Status:** Ready | **Priority:** Medium
+- [/] **PROJ-138: Warp Point System Selection Dialog**
+  - **Phases:** 2 | **Status:** Phase 1 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-138/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-138/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
+---
+
+- [ ] **PROJ-139: Dyson Sphere Multi-Hex Stellar Objects**
+  - **Phases:** 6 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-139/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-139/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
 
@@ -68,6 +73,7 @@
 | 2026-02-13 | PROJ-119 | Phase 2 | Complete | 11592 pass | pending | All 18 tasks: +24 tests (portrait 8, camera 12, formation 5), 3 deleted files, 6 already covered, fix mock_ship bug |
 | 2026-02-13 | PROJ-119 | Phase 3 | Complete | 11668 pass | pending | All 29 tasks: +76 tests (setup_data_io 24, builder_selection 20, build_queue_helpers 18, build_queue_list_window 14), 21 already covered, 4 deferred |
 | 2026-02-13 | PROJ-119 | Audit 1 | PASSED | 11668 pass | pending | All 3 phases verified: P1 (24/24), P2 (18/18), P3 (29/29), +262 tests total |
+| 2026-02-13 | PROJ-138 | Phase 1 | Complete | 11675+ pass | pending | SystemSelectionWindow + 7 tests |
 
 ---
 

@@ -13,16 +13,16 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Create SystemSelectionWindow | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Create SystemSelectionWindow | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Wire into StrategyUI | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-13 17:30
-**Active Phase:** Plan Approved - Ready for Implementation
-**Last Action:** Completed planning, swarm review, and plan refinement
-**Next Action:** Begin Phase 1 - Create SystemSelectionWindow class and tests
+**Last Updated:** 2026-02-13
+**Active Phase:** Phase 2 - Wire into StrategyUI
+**Last Action:** Phase 1 complete - SystemSelectionWindow + 7 tests
+**Next Action:** Begin Phase 2 - Add open_system_selection to StrategyWindowManager, show_system_picker to StrategyUI
 **Blockers:** None
-**Context for Next Agent:** Baseline is 11,906 tests passing. The call chain is fully wired — only the dialog window and its StrategyUI wiring are missing. Follow PlanetSelectionWindow pattern closely.
+**Context for Next Agent:** SystemSelectionWindow created at game/ui/screens/system_selection_window.py. Tests at tests/unit/ui/screens/test_system_selection_window.py (7 tests passing). Phase 2 needs to wire the dialog into StrategyWindowManager.open_system_selection() and StrategyUI.show_system_picker().
 
 ## Overview
 When the "Open Warp Point" order is issued, the player needs to select a target star system. The call chain already exists in `strategy_superweapons.py` — it calls `_show_system_picker()` which tries `self.scene.ui.show_system_picker()`, but that method doesn't exist yet. Currently falls back to auto-selecting the first system. The warp point placement logic (near-end at fleet, far-end at orbit distance from target center) is already implemented in `superweapon_order_processor.py`.
