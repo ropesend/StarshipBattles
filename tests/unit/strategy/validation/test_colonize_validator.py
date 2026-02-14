@@ -581,3 +581,106 @@ class TestColonizeValidatorColonyPods:
         )
 
         assert result.is_valid is True
+
+
+# =============================================================================
+# Test: Zone Colonization (PROJ-139)
+# =============================================================================
+
+
+class TestColonizeValidatorZoneColonization:
+    """Tests for colonizing planets from zone hexes."""
+
+    def test_validate_colonize_dyson_sphere_from_zone_hex(self, mock_galaxy, mock_fleet):
+        """Fleet in Dyson Sphere's zone can colonize it."""
+        from game.strategy.validation import ColonizeValidator
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            DYSON_SPHERE = "DYSON_SPHERE"
+
+        # Create a Dyson Sphere at center (0,0) with zone extending to fleet hex (2,0)
+        mock_dyson = MagicMock()
+        mock_dyson.name = "Dyson Sphere"
+        mock_dyson.owner_id = None
+        mock_dyson.location = HexCoord(0, 0)
+        mock_dyson.planet_type = MockPlanetType.DYSON_SPHERE
+        mock_dyson.diameter_hexes = 11.0  # Multi-hex zone
+
+        # Fleet is at zone hex (2, 0), not at center
+        mock_fleet.location = HexCoord(2, 0)
+
+        # get_planets_at_global_hex returns empty (Dyson center is not at fleet location)
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+
+        # Zone registry returns the Dyson Sphere
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[mock_dyson])
+
+        result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_dyson)
+
+        assert result.is_valid is True
+
+    def test_validate_colonize_dyson_sphere_from_center(self, mock_galaxy, mock_fleet):
+        """Fleet at Dyson Sphere's center can colonize it (standard case)."""
+        from game.strategy.validation import ColonizeValidator
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            DYSON_SPHERE = "DYSON_SPHERE"
+
+        mock_dyson = MagicMock()
+        mock_dyson.name = "Dyson Sphere"
+        mock_dyson.owner_id = None
+        mock_dyson.location = HexCoord(0, 0)
+        mock_dyson.planet_type = MockPlanetType.DYSON_SPHERE
+
+        mock_fleet.location = HexCoord(0, 0)
+
+        # Standard case: planet found at fleet location
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_dyson]
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
+
+        result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_dyson)
+
+        assert result.is_valid is True
+
+    def test_validate_colonize_normal_planet_unchanged(self, mock_galaxy, mock_fleet):
+        """Normal planets (no zone) work without zone lookup."""
+        from game.strategy.validation import ColonizeValidator
+
+        mock_planet = MagicMock()
+        mock_planet.name = "Normal Planet"
+        mock_planet.owner_id = None
+        mock_planet.location = HexCoord(0, 0)
+
+        mock_fleet.location = HexCoord(0, 0)
+        mock_galaxy.get_planets_at_global_hex.return_value = [mock_planet]
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
+
+        result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_planet)
+
+        assert result.is_valid is True
+
+    def test_validate_zone_planet_not_at_different_location(self, mock_galaxy, mock_fleet):
+        """Cannot colonize planet if fleet is outside both center and zone."""
+        from game.strategy.validation import ColonizeValidator
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            DYSON_SPHERE = "DYSON_SPHERE"
+
+        mock_dyson = MagicMock()
+        mock_dyson.name = "Dyson Sphere"
+        mock_dyson.owner_id = None
+        mock_dyson.location = HexCoord(0, 0)
+        mock_dyson.planet_type = MockPlanetType.DYSON_SPHERE
+
+        # Fleet is far away from zone
+        mock_fleet.location = HexCoord(100, 100)
+        mock_galaxy.get_planets_at_global_hex.return_value = []
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
+
+        result = ColonizeValidator.validate(mock_galaxy, mock_fleet, mock_dyson)
+
+        assert result.is_valid is False
+        assert result.error_code == "WRONG_LOCATION"

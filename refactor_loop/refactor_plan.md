@@ -8,23 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** PROJ-139 Phase 3
-**Current Status:** PROJ-139 Phase 3 complete, Phase 4 ready
+**Last Completed:** PROJ-139 Phase 4
+**Current Status:** PROJ-139 Phase 4 complete, Phase 5 ready
 **Current Project:** PROJ-139
-**Current Phase:** Phase 4 - Zone-Aware Selection & Interaction
-**Test Status:** 11928 passed (+3 tests this phase)
+**Current Phase:** Phase 5 - Dyson Sphere Rendering
+**Test Status:** 11937 passed (+9 tests this phase)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-139 Phase 3 complete: Dyson Sphere Enhancements
-  - process_create_dyson_sphere() now uses race_config for ideal conditions
-  - gravity = race.gravity_ideal * 9.81, temperature = race.temperature_ideal
-  - water = race.water_ideal, atmosphere from positive preferences
-  - Fallback to Earth-like defaults if no race_config
-  - diameter_hexes=11.0 added to Planet constructor
-  - Clearing radius changed from 9 to 5 (aligned to zone radius)
-  - +3 new tests: test_dyson_sphere_has_diameter_hexes_11, test_dyson_sphere_uses_race_config_conditions, test_dyson_sphere_clearing_radius_is_5
-- Next: Phase 4 - Zone-Aware Selection & Interaction (UI picking, ColonizeValidator, strategy_colonization)
+- PROJ-139 Phase 4 complete: Zone-Aware Selection & Interaction
+  - _handle_picking() now checks galaxy.get_zones_at_global_hex() for multi-hex objects
+  - ColonizeValidator.validate() checks zone registry in addition to get_planets_at_global_hex()
+  - strategy_colonization.py on_colonize_click() and handle_colonize_designation() check zone registry
+  - All zone lookups have safety checks (callable, isinstance) for mock compatibility
+  - +9 new tests: 3 in test_strategy_input_handler_core.py (TestZoneSelection), 4 in test_colonize_validator.py (TestColonizeValidatorZoneColonization), 2 in test_strategy_colonization.py (new file)
+- Next: Phase 5 - Dyson Sphere Rendering (Sphereworld_Portrait.png at 11-hex diameter)
 
 ---
 
@@ -91,6 +89,7 @@
 | 2026-02-13 | PROJ-139 | Phase 1 | Complete | 11939+ pass | pending | hex_circle_filled, IZoneOccupant, Star/Planet occupied_hexes (+26 tests) |
 | 2026-02-13 | PROJ-139 | Phase 2 | Complete | 11925 pass | pending | Galaxy zone registry, register/unregister, lookups updated (+12 tests) |
 | 2026-02-13 | PROJ-139 | Phase 3 | Complete | 11928 pass | pending | race_config conditions, diameter_hexes=11, clearing radius=5 (+3 tests) |
+| 2026-02-13 | PROJ-139 | Phase 4 | Complete | 11937 pass | pending | zone-aware selection & colonization (+9 tests) |
 
 ---
 

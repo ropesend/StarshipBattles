@@ -78,7 +78,17 @@ class ColonizeValidator:
 
         # 2. Get System/Location Context - Use O(1) spatial index
         # Get all planets at the fleet's global hex location
-        all_planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
+        all_planets_at_hex = list(galaxy.get_planets_at_global_hex(fleet.location))
+
+        # PROJ-139: Also check zone registry for multi-hex planets (Dyson Spheres)
+        # Fleet may be in a planet's zone but not at its center
+        if hasattr(galaxy, 'get_zones_at_global_hex'):
+            zone_objects = galaxy.get_zones_at_global_hex(fleet.location)
+            for zone_obj in zone_objects:
+                # Check if zone object is a planet (has planet_type)
+                if hasattr(zone_obj, 'planet_type') and zone_obj not in all_planets_at_hex:
+                    all_planets_at_hex.append(zone_obj)
+
         valid_candidates = [p for p in all_planets_at_hex if p.owner_id is None]
 
         # 3. Check Logic

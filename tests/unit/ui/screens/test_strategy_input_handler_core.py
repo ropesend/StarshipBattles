@@ -15,6 +15,7 @@ from unittest.mock import MagicMock, patch
 import pygame
 
 from game.core.input_actions import InputAction
+from game.core.hex_math import HexCoord
 from game.ui.services.input_mapper import InputMapper
 from game.ui.screens.strategy_input_handler import StrategyInputHandler
 
@@ -525,3 +526,117 @@ class TestJoinModeClick:
         handler.handle_click(100, 200, 1)
 
         mock_scene.on_ui_selection.assert_called_once_with(result_fleet)
+
+
+# ===========================================================================
+# Zone Selection (PROJ-139)
+# ===========================================================================
+
+class TestZoneSelection:
+    """Test zone-aware object picking in _handle_picking()."""
+
+    def test_picking_finds_star_via_zone_hex(self, mock_scene, mapper):
+        """Clicking a hex in a star's zone should include the star in sector_contents."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+
+        # Setup mock galaxy with zone registry
+        mock_star = MagicMock()
+        mock_star.location = HexCoord(0, 0)
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[mock_star])
+        mock_scene.galaxy = mock_galaxy
+
+        # Setup mock system that doesn't contain the star at clicked hex
+        mock_system = MagicMock()
+        mock_system.stars = []
+        mock_system.planets = []
+        mock_system.warp_points = []
+        mock_system.global_location = HexCoord(0, 0)
+        mock_scene._get_system_at_hex = MagicMock(return_value=mock_system)
+
+        # Setup camera to convert screen to world
+        mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
+        mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
+
+        # Mock UI methods
+        mock_scene.ui.show_system_info = MagicMock()
+        mock_scene.ui.show_sector_info = MagicMock()
+        mock_scene.ui.show_detailed_report = MagicMock()
+        mock_scene.on_ui_selection = MagicMock()
+
+        handler._handle_picking(100, 200)
+
+        # Verify star was included in sector_contents via zone lookup
+        show_sector_call_args = mock_scene.ui.show_sector_info.call_args
+        sector_contents = show_sector_call_args[0][1]
+        assert mock_star in sector_contents, "Star should be found via zone hex"
+
+    def test_picking_finds_dyson_sphere_via_zone_hex(self, mock_scene, mapper):
+        """Clicking a hex in a Dyson Sphere's zone should include it in sector_contents."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+
+        # Setup mock Dyson Sphere planet with zone
+        mock_dyson = MagicMock()
+        mock_dyson.location = HexCoord(0, 0)
+        mock_dyson.planet_type = MagicMock()
+        mock_dyson.planet_type.name = "DYSON_SPHERE"
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[mock_dyson])
+        mock_scene.galaxy = mock_galaxy
+
+        # Setup mock system
+        mock_system = MagicMock()
+        mock_system.stars = []
+        mock_system.planets = []
+        mock_system.warp_points = []
+        mock_system.global_location = HexCoord(0, 0)
+        mock_scene._get_system_at_hex = MagicMock(return_value=mock_system)
+
+        mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
+        mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
+        mock_scene.ui.show_system_info = MagicMock()
+        mock_scene.ui.show_sector_info = MagicMock()
+        mock_scene.ui.show_detailed_report = MagicMock()
+        mock_scene.on_ui_selection = MagicMock()
+
+        handler._handle_picking(100, 200)
+
+        show_sector_call_args = mock_scene.ui.show_sector_info.call_args
+        sector_contents = show_sector_call_args[0][1]
+        assert mock_dyson in sector_contents, "Dyson Sphere should be found via zone hex"
+
+    def test_picking_priority_fleet_over_zone(self, mock_scene, mapper):
+        """Fleets should have priority over zone objects in sector_contents."""
+        handler = StrategyInputHandler(mock_scene, input_mapper=mapper)
+
+        # Setup fleet at clicked hex
+        mock_fleet = MagicMock()
+        mock_fleet.location = HexCoord(0, 0)
+        mock_empire = MagicMock()
+        mock_empire.fleets = [mock_fleet]
+        mock_scene.empires = [mock_empire]
+
+        # Setup zone object at same hex
+        mock_star = MagicMock()
+        mock_star.location = HexCoord(0, 0)
+        mock_galaxy = MagicMock()
+        mock_galaxy.get_zones_at_global_hex = MagicMock(return_value=[mock_star])
+        mock_scene.galaxy = mock_galaxy
+
+        # No system at this hex
+        mock_scene._get_system_at_hex = MagicMock(return_value=None)
+
+        mock_scene.camera.screen_to_world = MagicMock(return_value=MagicMock(x=0, y=0))
+        mock_scene.camera.zoom = 1.0  # Low zoom, no hit testing
+        mock_scene.ui.show_system_info = MagicMock()
+        mock_scene.ui.show_sector_info = MagicMock()
+        mock_scene.ui.show_detailed_report = MagicMock()
+        mock_scene.on_ui_selection = MagicMock()
+
+        handler._handle_picking(100, 200)
+
+        show_sector_call_args = mock_scene.ui.show_sector_info.call_args
+        sector_contents = show_sector_call_args[0][1]
+        assert sector_contents[0] == mock_fleet, "Fleet should be first in sector_contents"
+        assert mock_star in sector_contents, "Star should also be in sector_contents"
