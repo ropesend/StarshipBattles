@@ -340,6 +340,10 @@ class StrategyUI:
         """Open a modal window to select a planet."""
         self.window_manager.prompt_planet_selection(planets, on_select)
 
+    def show_system_picker(self, systems, current_system, on_selected):
+        """Open a modal window to select a star system for warp point creation."""
+        self.window_manager.open_system_selection(systems, current_system, on_selected)
+
     def prompt_move_choice(self, fleet, target_hex, on_move_sector, on_intercept_fleet):
         """Dialog to choose between moving to the sector or intercepting the fleet."""
         self.window_manager.prompt_move_choice(fleet, target_hex, on_move_sector, on_intercept_fleet)

@@ -13,6 +13,7 @@ import pygame_gui.elements as ui
 
 from game.ui.screens.planet_selection_window import PlanetSelectionWindow
 from game.ui.screens.planet_list_window import PlanetListWindow
+from game.ui.screens.system_selection_window import SystemSelectionWindow
 from game.ui.screens.fleet_orders_window import FleetOrdersWindow
 from game.ui.screens.fleet_report_window import FleetReportWindow
 from game.ui.screens.build_queue_list_window import BuildQueueListWindow
@@ -394,6 +395,25 @@ class StrategyWindowManager:
         rect = pygame.Rect(x, y, width, height)
         # Use PlanetSelectionWindow (PROJ-54 - now uses PlanetReportPanel internally)
         PlanetSelectionWindow(rect, self.manager, planets, on_select)
+
+    # =========================================================================
+    # System Selection Prompt (PROJ-138)
+    # =========================================================================
+
+    def open_system_selection(self, systems, current_system, on_selected: Callable) -> None:
+        """Open a modal window to select a star system.
+
+        Args:
+            systems: List of StarSystem objects to choose from.
+            current_system: Current StarSystem (for distance display).
+            on_selected: Callback called with selected system name string.
+        """
+        width = 450
+        height = 500
+        x = (self.width - width) / 2
+        y = (self.height - height) / 2
+        rect = pygame.Rect(x, y, width, height)
+        SystemSelectionWindow(rect, self.manager, systems, current_system, on_selected)
 
     # =========================================================================
     # Move Choice Prompt

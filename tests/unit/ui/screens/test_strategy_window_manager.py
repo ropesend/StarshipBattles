@@ -447,6 +447,39 @@ class TestPlanetSelectionPrompt:
 
 
 # =============================================================================
+# System Selection Prompt Tests (PROJ-138)
+# =============================================================================
+
+class TestSystemSelectionPrompt:
+    """Tests for system selection prompt."""
+
+    @patch('game.ui.screens.strategy_window_manager.SystemSelectionWindow')
+    def test_open_system_selection_creates_window(self, mock_window_class, window_manager):
+        """Test open_system_selection creates selection window."""
+        systems = [Mock(), Mock()]
+        current_system = Mock()
+        callback = Mock()
+
+        window_manager.open_system_selection(systems, current_system, callback)
+
+        mock_window_class.assert_called_once()
+
+    @patch('game.ui.screens.strategy_window_manager.SystemSelectionWindow')
+    def test_open_system_selection_passes_args(self, mock_window_class, window_manager):
+        """Test open_system_selection passes systems, current_system, and callback."""
+        systems = [Mock(), Mock()]
+        current_system = Mock()
+        callback = Mock()
+
+        window_manager.open_system_selection(systems, current_system, callback)
+
+        call_args = mock_window_class.call_args
+        assert call_args[0][2] == systems
+        assert call_args[0][3] == current_system
+        assert call_args[0][4] is callback
+
+
+# =============================================================================
 # Move Choice Prompt Tests
 # =============================================================================
 
