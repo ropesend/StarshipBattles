@@ -179,3 +179,36 @@ class ScreenshotManager(metaclass=SingletonMeta):
 
         except (pygame.error, IOError, OSError, AttributeError) as e:
             log_error(f"Error capturing strategy layer: {e}")
+
+    def show_toast(
+        self,
+        manager,
+        screen_width: int,
+        message: str = "Screenshot saved!",
+        y_pos: int = 80
+    ) -> None:
+        """Show a brief toast notification for screenshot feedback.
+
+        DUP-UI1-001: Consolidates duplicate toast implementations from
+        planet_list_window, build_queue_screen, and strategy_input_handler.
+
+        Args:
+            manager: pygame_gui UIManager to create the window on.
+            screen_width: Width of the screen for centering the toast.
+            message: The message to display. Default "Screenshot saved!".
+            y_pos: Vertical position for the toast center. Default 80.
+        """
+        try:
+            import pygame_gui.windows
+            from game.ui.config import UIConfig
+
+            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
+            toast_rect.center = (screen_width // 2, y_pos)
+            pygame_gui.windows.UIMessageWindow(
+                rect=toast_rect,
+                html_message=f"<b>{message}</b><br>Path copied to clipboard",
+                manager=manager,
+                window_title="Screenshot"
+            )
+        except Exception as e:  # Intentional broad catch: UI toast is informational, any failure is non-critical
+            log_warning(f"Failed to show screenshot toast: {e}")

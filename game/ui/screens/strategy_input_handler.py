@@ -856,26 +856,13 @@ class StrategyInputHandler:
         sm = ScreenshotManager.instance()
         sm.capture_strategy_layer(self.scene, include_ui=True, label="strategy_full")
         log_info("Screenshot: Full strategy layer captured (F12)")
-        self._show_screenshot_toast("Screenshot saved (full view)")
+        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
+        sm.show_toast(self.scene.ui.manager, self.scene.screen_width, "Screenshot saved (full view)")
 
     def _take_screenshot_viewport(self):
         """Take a screenshot of only the galaxy viewport (no UI)."""
         sm = ScreenshotManager.instance()
         sm.capture_strategy_layer(self.scene, include_ui=False, label="strategy_viewport")
         log_info("Screenshot: Galaxy viewport captured (F11)")
-        self._show_screenshot_toast("Screenshot saved (viewport only)")
-
-    def _show_screenshot_toast(self, message):
-        """Show a brief toast notification for screenshot feedback."""
-        try:
-            import pygame_gui.windows
-            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
-            toast_rect.center = (self.scene.screen_width // 2, 80)
-            pygame_gui.windows.UIMessageWindow(
-                rect=toast_rect,
-                html_message=f"<b>{message}</b><br>Path copied to clipboard",
-                manager=self.scene.ui.manager,
-                window_title="Screenshot"
-            )
-        except (OSError, RuntimeError, TypeError, pygame.error) as e:
-            log_warning(f"Failed to show screenshot toast notification: {e}")
+        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
+        sm.show_toast(self.scene.ui.manager, self.scene.screen_width, "Screenshot saved (viewport only)")

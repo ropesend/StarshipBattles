@@ -1,12 +1,16 @@
-"""Tests for PlanetListWindow error logging (ERR-022)."""
+"""Tests for PlanetListWindow and ScreenshotManager toast functionality (ERR-022).
+
+DUP-UI1-001: Toast functionality moved to ScreenshotManager.show_toast.
+These tests now verify the consolidated implementation.
+"""
 import pytest
 import pygame
 import logging
 from unittest.mock import MagicMock, patch
 
 
-class TestPlanetListWindowErrorLogging:
-    """Tests for error logging in PlanetListWindow (ERR-022)."""
+class TestScreenshotToastErrorLogging:
+    """Tests for error logging in ScreenshotManager.show_toast (ERR-022, DUP-UI1-001)."""
 
     def setup_method(self):
         pygame.init()
@@ -14,19 +18,25 @@ class TestPlanetListWindowErrorLogging:
 
     def test_screenshot_toast_failure_logs_warning(self, caplog):
         """Screenshot toast failure should log warning (ERR-022)."""
-        from game.ui.screens.planet_list_window import PlanetListWindow
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
 
-        # Create mock window with required attributes
-        window = MagicMock(spec=PlanetListWindow)
-        # Override the method we're testing with the real implementation
-        window._show_screenshot_toast = lambda: PlanetListWindow._show_screenshot_toast(window)
+        # Clear singleton to ensure fresh state
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                manager = ScreenshotManager.instance()
+
+        mock_ui_manager = MagicMock()
 
         # Mock UIMessageWindow to raise an exception
-        with patch('game.ui.screens.planet_list_window.pygame_gui.windows.UIMessageWindow',
+        with patch('pygame_gui.windows.UIMessageWindow',
                    side_effect=Exception("Test toast error")):
             with caplog.at_level(logging.WARNING):
                 # Call the method that creates the toast
-                window._show_screenshot_toast()
+                manager.show_toast(mock_ui_manager, screen_width=800)
 
             # Should have logged a warning about the failure
             warning_logs = [r for r in caplog.records if r.levelno >= logging.WARNING]
@@ -35,23 +45,39 @@ class TestPlanetListWindowErrorLogging:
             assert 'screenshot' in warning_text.lower() or 'toast' in warning_text.lower(), \
                 f"Warning should mention screenshot/toast. Got: {warning_text}"
 
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
     def test_screenshot_toast_success_no_warning(self, caplog):
         """Successful screenshot toast should not produce warnings."""
-        from game.ui.screens.planet_list_window import PlanetListWindow
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
 
-        # Create mock window with all required attributes (no spec, to allow full attribute access)
-        window = MagicMock()
-        window.rect.width = 800
-        window.ui_manager = MagicMock()
-        window._show_screenshot_toast = lambda: PlanetListWindow._show_screenshot_toast(window)
+        # Clear singleton to ensure fresh state
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                manager = ScreenshotManager.instance()
+
+        mock_ui_manager = MagicMock()
 
         # Mock UIMessageWindow to succeed
-        with patch('game.ui.screens.planet_list_window.pygame_gui.windows.UIMessageWindow',
+        with patch('pygame_gui.windows.UIMessageWindow',
                    return_value=MagicMock()):
-            with caplog.at_level(logging.WARNING):
-                window._show_screenshot_toast()
+            with patch('game.ui.config.UIConfig') as mock_config:
+                mock_config.TOAST_WIDTH = 300
+                mock_config.TOAST_HEIGHT = 80
+                with caplog.at_level(logging.WARNING):
+                    manager.show_toast(mock_ui_manager, screen_width=800)
 
-            # Should NOT log warnings for successful toast
-            toast_warnings = [r for r in caplog.records
-                             if 'screenshot' in r.message.lower() or 'toast' in r.message.lower()]
-            assert len(toast_warnings) == 0, "Successful toast should not log warning"
+                # Should NOT log warnings for successful toast
+                toast_warnings = [r for r in caplog.records
+                                 if 'screenshot' in r.message.lower() or 'toast' in r.message.lower()]
+                assert len(toast_warnings) == 0, "Successful toast should not log warning"
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]

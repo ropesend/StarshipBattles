@@ -372,3 +372,88 @@ class TestCaptureStrategyLayer:
 
             # Should log warning about invalid dimensions
             mock_log.assert_called()
+
+
+class TestShowToast:
+    """Tests for show_toast method (DUP-UI1-001 consolidation)."""
+
+    @pytest.fixture
+    def mock_manager(self):
+        """Create a mock-patched ScreenshotManager."""
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
+
+        # Clear any existing instance
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                manager = ScreenshotManager.instance()
+
+        yield manager
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+    def test_show_toast_creates_message_window(self, mock_manager):
+        """show_toast creates UIMessageWindow with correct parameters."""
+        mock_ui_manager = Mock()
+
+        with patch('pygame_gui.windows.UIMessageWindow') as mock_window:
+            with patch('game.ui.config.UIConfig') as mock_config:
+                mock_config.TOAST_WIDTH = 300
+                mock_config.TOAST_HEIGHT = 80
+                mock_manager.show_toast(mock_ui_manager, screen_width=1920)
+
+        # Window should be created
+        mock_window.assert_called_once()
+        call_kwargs = mock_window.call_args[1]
+        assert call_kwargs['manager'] == mock_ui_manager
+        assert call_kwargs['window_title'] == "Screenshot"
+        assert "Screenshot saved!" in call_kwargs['html_message']
+
+    def test_show_toast_custom_message(self, mock_manager):
+        """show_toast uses custom message when provided."""
+        mock_ui_manager = Mock()
+
+        with patch('pygame_gui.windows.UIMessageWindow') as mock_window:
+            with patch('game.ui.config.UIConfig') as mock_config:
+                mock_config.TOAST_WIDTH = 300
+                mock_config.TOAST_HEIGHT = 80
+                mock_manager.show_toast(
+                    mock_ui_manager,
+                    screen_width=1920,
+                    message="Custom screenshot message"
+                )
+
+        call_kwargs = mock_window.call_args[1]
+        assert "Custom screenshot message" in call_kwargs['html_message']
+
+    def test_show_toast_handles_exception_gracefully(self, mock_manager):
+        """show_toast catches exceptions without crashing."""
+        mock_ui_manager = Mock()
+
+        with patch('pygame_gui.windows.UIMessageWindow', side_effect=RuntimeError("UI error")):
+            with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+                # Should not raise
+                mock_manager.show_toast(mock_ui_manager, screen_width=1920)
+
+        # Should log warning
+        mock_log.assert_called()
+
+    def test_show_toast_centers_toast_horizontally(self, mock_manager):
+        """show_toast centers the toast at screen_width // 2."""
+        mock_ui_manager = Mock()
+
+        with patch('pygame_gui.windows.UIMessageWindow') as mock_window:
+            with patch('game.ui.config.UIConfig') as mock_config:
+                mock_config.TOAST_WIDTH = 300
+                mock_config.TOAST_HEIGHT = 80
+                mock_manager.show_toast(mock_ui_manager, screen_width=1920)
+
+        call_kwargs = mock_window.call_args[1]
+        rect = call_kwargs['rect']
+        # Center should be at 960 (1920 // 2)
+        assert rect.centerx == 960

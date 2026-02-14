@@ -407,21 +407,8 @@ class PlanetListWindow(UIWindow):
         sm = ScreenshotManager.instance()
         sm.capture(label="planet_list")
         log_info("Screenshot: Planet List window captured")
-        self._show_screenshot_toast()
-
-    def _show_screenshot_toast(self):
-        """Show a brief toast notification for screenshot feedback."""
-        try:
-            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
-            toast_rect.center = (self.rect.width // 2, 80)
-            pygame_gui.windows.UIMessageWindow(
-                rect=toast_rect,
-                html_message="<b>Screenshot saved!</b><br>Path copied to clipboard",
-                manager=self.ui_manager,
-                window_title="Screenshot"
-            )
-        except Exception as e:  # Intentional broad catch: UI toast is purely informational, any failure is non-critical
-            log_warning(f"Failed to show screenshot toast: {e}")
+        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
+        sm.show_toast(self.ui_manager, self.rect.width)
 
     def _on_planet_selected(self, planet):
         """Handle planet selection - create/update detail panel."""

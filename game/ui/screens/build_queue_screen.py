@@ -1049,23 +1049,9 @@ class BuildQueueScreen:
         log_info(f"BuildQueueScreen: ScreenshotManager.base_dir = {sm.base_dir}")
         sm.capture(label="build_queue")
         log_info("BuildQueueScreen: sm.capture() completed")
-        self._show_screenshot_toast()
+        # DUP-UI1-001: Use consolidated toast from ScreenshotManager
+        sm.show_toast(self.manager, self.screen_width)
         log_info("BuildQueueScreen._take_screenshot() EXITING")
-
-    def _show_screenshot_toast(self):
-        """Show a brief toast notification for screenshot feedback."""
-        try:
-            toast_rect = pygame.Rect(0, 0, UIConfig.TOAST_WIDTH, UIConfig.TOAST_HEIGHT)
-            toast_rect.center = (self.screen_width // 2, 80)
-            pygame_gui.windows.UIMessageWindow(
-                rect=toast_rect,
-                html_message="<b>Screenshot saved!</b><br>Path copied to clipboard",
-                manager=self.manager,
-                window_title="Screenshot"
-            )
-        except (AttributeError, pygame.error) as e:
-            # UI element creation may fail if manager not ready
-            log_debug(f"Could not show screenshot toast: {e}")
 
     def update(self, time_delta: float):
         """
