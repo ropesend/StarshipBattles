@@ -12,9 +12,12 @@ The service encapsulates:
 from typing import Any, Optional, TYPE_CHECKING
 
 from game.simulation.entities.ship_loader import get_or_create_validator
+from game.core.validation import ValidationResult
 
 if TYPE_CHECKING:
     from game.core.constants import LayerType
+    from game.simulation.entities.ship import Ship
+    from game.simulation.components.component import Component
 
 
 class ValidationService:
@@ -45,7 +48,9 @@ class ValidationService:
             self._validator = get_or_create_validator()
         return self._validator
 
-    def validate_addition(self, ship: Any, component: Any, layer_type: 'LayerType') -> Any:
+    def validate_addition(
+        self, ship: 'Ship', component: 'Component', layer_type: 'LayerType'
+    ) -> ValidationResult:
         """Validate adding a component to a ship at a specified layer.
 
         Args:
@@ -59,7 +64,7 @@ class ValidationService:
         validator = self._get_validator()
         return validator.validate_addition(ship, component, layer_type)
 
-    def validate_design(self, ship: Any) -> Any:
+    def validate_design(self, ship: 'Ship') -> ValidationResult:
         """Validate the complete ship design.
 
         Args:

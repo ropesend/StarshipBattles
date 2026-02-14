@@ -14,11 +14,12 @@ The factory encapsulates:
 PROJ-50: Supports optional registries parameter for strict DI compliance.
 When registries is not provided, uses global RegistryManager (legacy behavior).
 """
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 
-import pygame
+from game.core.math import Vector2
 
 if TYPE_CHECKING:
+    import pygame
     from game.simulation.entities.ship import Ship
     from game.core.registry import GameRegistries
 
@@ -110,7 +111,7 @@ class ShipFactory:
     def configure_ship(
         self,
         ship: 'Ship',
-        position: pygame.math.Vector2,
+        position: Union[Vector2, 'pygame.math.Vector2'],
         angle: float,
         team_id: int,
         ai_strategy: str,
@@ -123,13 +124,14 @@ class ShipFactory:
 
         Args:
             ship: The Ship instance to configure.
-            position: World position as Vector2.
+            position: World position as Vector2 (core or pygame compatible).
             angle: Facing angle in degrees.
             team_id: Team identifier (0 or 1).
             ai_strategy: AI behavior strategy name.
             source_file: Path to the source design file.
         """
-        ship.position = position
+        # Convert to core Vector2 for consistency with Ship.position type
+        ship.position = Vector2(position)
         ship.angle = angle
         ship.team_id = team_id
         ship.ai_strategy = ai_strategy
