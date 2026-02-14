@@ -539,3 +539,373 @@ class TestDesignMetadataSerialization:
         data = metadata.to_dict()
 
         assert data["sprite_preview"] is None
+
+    def test_roundtrip_serialization(self):
+        """to_dict and from_dict are inverse operations."""
+        original = DesignMetadata(
+            design_id="roundtrip_test",
+            name="Roundtrip Ship",
+            ship_class="Battleship",
+            vehicle_type="Ship",
+            mass=10000.0,
+            combat_power=5000.0,
+            resource_cost={"metal": 1000, "energy": 500, "crystals": 100},
+            created_date="2026-01-15T08:30:00",
+            last_modified="2026-01-16T14:45:00",
+            is_obsolete=True,
+            times_built=42,
+            theme_id="Federation",
+            sprite_preview="path/to/preview.png"
+        )
+
+        data = original.to_dict()
+        restored = DesignMetadata.from_dict(data)
+
+        assert restored.design_id == original.design_id
+        assert restored.name == original.name
+        assert restored.ship_class == original.ship_class
+        assert restored.vehicle_type == original.vehicle_type
+        assert restored.mass == original.mass
+        assert restored.combat_power == original.combat_power
+        assert restored.resource_cost == original.resource_cost
+        assert restored.created_date == original.created_date
+        assert restored.last_modified == original.last_modified
+        assert restored.is_obsolete == original.is_obsolete
+        assert restored.times_built == original.times_built
+        assert restored.theme_id == original.theme_id
+        assert restored.sprite_preview == original.sprite_preview
+
+
+class TestDesignMetadataOldLayerFormat:
+    """Tests for old layer format handling and warnings."""
+
+    def test_calculate_combat_power_old_layer_format_logs_warning(self, caplog):
+        """Old layer format (dict instead of list) logs warning."""
+        import logging
+        caplog.set_level(logging.WARNING)
+
+        design_data = {
+            "layers": {
+                "core": {  # Old format: dict instead of list
+                    "slot_1": {"category": "weapon", "damage": 50}
+                }
+            }
+        }
+
+        power = DesignMetadata._calculate_combat_power(design_data)
+
+        assert power == 0.0  # Old format not processed
+        assert "Old layer format" in caplog.text
+
+    def test_calculate_resource_cost_old_layer_format_logs_warning(self, caplog):
+        """Old layer format in resource cost calculation logs warning."""
+        import logging
+        caplog.set_level(logging.WARNING)
+
+        design_data = {
+            "layers": {
+                "outer": {  # Old format
+                    "position_1": {"cost": {"metal": 100}}
+                }
+            }
+        }
+
+        costs = DesignMetadata._calculate_resource_cost(design_data)
+
+        assert costs == {}  # Old format not processed
+        assert "Old layer format" in caplog.text
+
+
+class TestDesignMetadataCombatPowerFromShip:
+    """Tests for _calculate_combat_power_from_ship method."""
+
+    def test_calculate_combat_power_from_ship_weapon(self):
+        """Combat power from ship correctly calculates weapon contribution."""
+        ship = MagicMock()
+        weapon = MagicMock()
+        weapon.category = "weapon"
+        weapon.damage = 100
+        weapon.rate_of_fire = 2
+
+        ship.layers = {
+            "core": LayerData(components=[weapon])
+        }
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        # (100 * 10) + (2 * 5) = 1010
+        assert power == 1010.0
+
+    def test_calculate_combat_power_from_ship_armor(self):
+        """Combat power from ship correctly calculates armor contribution."""
+        ship = MagicMock()
+        armor = MagicMock()
+        armor.category = "armor"
+        armor.hp = 1000
+
+        ship.layers = {
+            "outer": LayerData(components=[armor])
+        }
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        # 1000 * 0.5 = 500
+        assert power == 500.0
+
+    def test_calculate_combat_power_from_ship_no_category(self):
+        """Combat power from ship handles components without category."""
+        ship = MagicMock()
+        comp = MagicMock(spec=['name'])  # No category attribute
+        comp.name = "generic_component"
+
+        ship.layers = {
+            "core": LayerData(components=[comp])
+        }
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        assert power == 0.0
+
+    def test_calculate_combat_power_from_ship_empty_layers(self):
+        """Combat power from ship with empty layers is 0."""
+        ship = MagicMock()
+        ship.layers = {}
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        assert power == 0.0
+
+    def test_calculate_combat_power_from_ship_multiple_layers(self):
+        """Combat power from ship aggregates across multiple layers."""
+        ship = MagicMock()
+
+        weapon1 = MagicMock()
+        weapon1.category = "weapon"
+        weapon1.damage = 50
+        weapon1.rate_of_fire = 1
+
+        weapon2 = MagicMock()
+        weapon2.category = "weapon"
+        weapon2.damage = 100
+        weapon2.rate_of_fire = 0
+
+        armor = MagicMock()
+        armor.category = "armor"
+        armor.hp = 200
+
+        ship.layers = {
+            "core": LayerData(components=[weapon1]),
+            "outer": LayerData(components=[weapon2, armor])
+        }
+
+        power = DesignMetadata._calculate_combat_power_from_ship(ship)
+
+        # weapon1: (50*10) + (1*5) = 505
+        # weapon2: (100*10) + (0*5) = 1000
+        # armor: 200*0.5 = 100
+        # Total: 1605
+        assert power == 1605.0
+
+
+class TestDesignMetadataMultipleLayers:
+    """Tests for multi-layer calculations."""
+
+    def test_calculate_combat_power_multiple_layers(self):
+        """Combat power aggregates across multiple layers."""
+        design_data = {
+            "layers": {
+                "core": [
+                    {"category": "weapon", "damage": 100, "rate_of_fire": 1}
+                ],
+                "outer": [
+                    {"category": "armor", "hp": 500}
+                ],
+                "structural": [
+                    {"category": "weapon", "damage": 50, "rate_of_fire": 2}
+                ]
+            }
+        }
+
+        power = DesignMetadata._calculate_combat_power(design_data)
+
+        # core weapon: (100*10) + (1*5) = 1005
+        # outer armor: 500*0.5 = 250
+        # structural weapon: (50*10) + (2*5) = 510
+        # Total: 1765
+        assert power == 1765.0
+
+    def test_calculate_resource_cost_multiple_layers(self):
+        """Resource costs aggregate across multiple layers."""
+        design_data = {
+            "layers": {
+                "core": [
+                    {"cost": {"metal": 100, "energy": 50}}
+                ],
+                "outer": [
+                    {"cost": {"metal": 200, "crystals": 25}}
+                ]
+            }
+        }
+
+        costs = DesignMetadata._calculate_resource_cost(design_data)
+
+        assert costs["metal"] == 300
+        assert costs["energy"] == 50
+        assert costs["crystals"] == 25
+
+
+class TestDesignMetadataEdgeCasesExtended:
+    """Extended edge case tests for DesignMetadata."""
+
+    def test_calculate_combat_power_armor_missing_hp(self):
+        """Combat power handles armor without hp field."""
+        design_data = {
+            "layers": {
+                "core": [
+                    {"category": "armor"}  # No hp field
+                ]
+            }
+        }
+
+        power = DesignMetadata._calculate_combat_power(design_data)
+
+        # 0 * 0.5 = 0
+        assert power == 0.0
+
+    def test_calculate_combat_power_weapon_missing_rate_of_fire(self):
+        """Combat power handles weapon without rate_of_fire field."""
+        design_data = {
+            "layers": {
+                "core": [
+                    {"category": "weapon", "damage": 100}  # No rate_of_fire
+                ]
+            }
+        }
+
+        power = DesignMetadata._calculate_combat_power(design_data)
+
+        # (100*10) + (0*5) = 1000
+        assert power == 1000.0
+
+    def test_from_ship_float_cost(self):
+        """from_ship handles float cost (converts to int)."""
+        ship = MagicMock()
+        ship.name = "Float Cost Ship"
+        ship.ship_class = "Escort"
+        ship.mass = 500.0
+        ship.vehicle_type = "Ship"
+        ship.theme_id = ""
+
+        comp = MagicMock()
+        comp.category = "engine"
+        comp.cost = 75.5  # Float cost
+
+        ship.layers = {
+            "core": LayerData(components=[comp])
+        }
+
+        metadata = DesignMetadata.from_ship(ship, "float_cost")
+
+        assert metadata.resource_cost.get("minerals", 0) == 75
+
+    def test_from_ship_weapon_missing_damage(self):
+        """from_ship handles weapon without damage attribute."""
+        ship = MagicMock()
+        ship.name = "No Damage Weapon"
+        ship.ship_class = "Fighter"
+        ship.mass = 100.0
+        ship.vehicle_type = "Fighter"
+        ship.theme_id = ""
+
+        weapon = MagicMock()
+        weapon.category = "weapon"
+        # No damage attribute, only rate_of_fire
+        del weapon.damage
+        weapon.rate_of_fire = 4
+
+        ship.layers = {
+            "core": LayerData(components=[weapon])
+        }
+
+        # Should not crash
+        metadata = DesignMetadata.from_ship(ship, "no_damage")
+
+        # rate_of_fire contribution: 4 * 5 = 20
+        # getattr returns 0 for missing damage
+        assert metadata.combat_power == 20.0
+
+    def test_embed_in_ship_data_preserves_existing_data(self):
+        """embed_in_ship_data preserves existing ship data."""
+        metadata = DesignMetadata(
+            design_id="test",
+            name="Test",
+            ship_class="Escort",
+            vehicle_type="Ship",
+            mass=1000.0,
+            combat_power=500.0,
+            is_obsolete=True,
+            times_built=5,
+            created_date="2026-01-01T00:00:00",
+            last_modified="2026-01-02T00:00:00"
+        )
+
+        ship_data = {
+            "name": "Test Ship",
+            "ship_class": "Escort",
+            "layers": {"core": []},
+            "expected_stats": {"mass": 1000.0}
+        }
+
+        result = metadata.embed_in_ship_data(ship_data)
+
+        # Original data preserved
+        assert result["name"] == "Test Ship"
+        assert result["ship_class"] == "Escort"
+        assert result["layers"] == {"core": []}
+        assert result["expected_stats"] == {"mass": 1000.0}
+
+        # Metadata added
+        assert result["_metadata"]["is_obsolete"] is True
+        assert result["_metadata"]["times_built"] == 5
+
+    def test_from_design_file_timestamps_set(self):
+        """from_design_file sets created_date and last_modified from file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filepath = os.path.join(tmpdir, "timestamp_test.json")
+            design_data = {
+                "name": "Timestamp Test"
+            }
+            save_json(filepath, design_data)
+
+            metadata = DesignMetadata.from_design_file(filepath, "timestamp_test")
+
+            # Timestamps should be ISO format strings
+            assert metadata.created_date != ""
+            assert metadata.last_modified != ""
+            # Should be valid ISO timestamps
+            from datetime import datetime
+            datetime.fromisoformat(metadata.created_date)
+            datetime.fromisoformat(metadata.last_modified)
+
+    def test_from_ship_sets_current_timestamp(self):
+        """from_ship sets created_date and last_modified to now."""
+        ship = MagicMock()
+        ship.name = "New Ship"
+        ship.ship_class = "Frigate"
+        ship.mass = 1500.0
+        ship.vehicle_type = "Ship"
+        ship.theme_id = ""
+        ship.layers = {}
+
+        from datetime import datetime
+        before = datetime.now().isoformat()
+
+        metadata = DesignMetadata.from_ship(ship, "new_ship")
+
+        after = datetime.now().isoformat()
+
+        # created_date and last_modified should be between before and after
+        assert before <= metadata.created_date <= after
+        assert before <= metadata.last_modified <= after
+        # Both should be the same for new designs
+        assert metadata.created_date == metadata.last_modified

@@ -8,18 +8,18 @@
 ## Agent Context
 
 **Last Session:** 2026-02-14
-**Last Completed:** PROJ-143 Phase 2 Task 2.4
-**Current Status:** Phase 2 in progress (4/12 tasks complete)
+**Last Completed:** PROJ-143 Phase 2 Tasks 2.5-2.6
+**Current Status:** Phase 2 in progress (6/12 tasks complete)
 **Current Project:** PROJ-143
 **Current Phase:** Phase 2
-**Test Status:** 12669 passed, 0 failed
+**Test Status:** 12686 passed, 0 failed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Task 2.4 complete: Superweapon edge case tests (29 tests)
-- Test file created: tests/unit/strategy/engine/test_superweapon_edge_cases.py
-- Tests cover: _setup_mission_move helper, mission handler not-found cases, order processor error paths, colony removal, self-destruct ship name handling
-- Next: Continue Phase 2 (Tasks 2.5-2.12)
+- Task 2.5 complete: DesignMetadata edge case tests (+17 tests)
+- Task 2.6 complete: FleetResourceAggregator edge case tests (+25 tests)
+- Tests cover: roundtrip serialization, old layer format, combat power from ship, empty fleet cases, multiple resource types, cargo distribution
+- Next: Continue Phase 2 (Tasks 2.7-2.12)
 
 ---
 
@@ -89,7 +89,8 @@
 | 2026-02-14 | PROJ-142 | Audit 1 | PASSED | 12333 passed | - | All tasks verified, project complete |
 | 2026-02-14 | PROJ-143 | Phase 1 | Complete | 12530 passed | bf3c56e1 | +200 Foundation module tests (8 tasks) |
 | 2026-02-14 | PROJ-143 | Phase 2 (partial) | In Progress | 12640 passed | d7b79615 | Tasks 2.1-2.3 complete (+110 tests) |
-| 2026-02-14 | PROJ-143 | Phase 2 Task 2.4 | Complete | 12669 passed | pending | Task 2.4 complete (+29 tests) |
+| 2026-02-14 | PROJ-143 | Phase 2 Task 2.4 | Complete | 12669 passed | 6ecceeda | Task 2.4 complete (+29 tests) |
+| 2026-02-14 | PROJ-143 | Phase 2 Tasks 2.5-2.6 | Complete | 12686 passed | pending | Tasks 2.5-2.6 complete (+42 tests) |
 
 ---
 

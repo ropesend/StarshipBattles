@@ -58,26 +58,26 @@
 **Notes:** Added 29 edge case tests covering: _setup_mission_move helper behavior, mission handler fleet/planet not found cases, order processor error paths (no order, wrong type, missing targets), no ability with registry, colony removal, self-destruct ship name handling.
 
 ### Task 2.5: TCG-STR-009 - DesignMetadata Tests Are Sparse [Simple]
-**File:** `game/strategy/data/design_meta`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/strategy/data/design_metadata.py`
+**Tests:** `pytest tests/unit/strategy/test_design_metadata.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 17 new edge case tests covering: roundtrip serialization, old layer format warnings, _calculate_combat_power_from_ship method, multiple layer aggregation, armor missing hp, weapon missing rate_of_fire, float cost conversion, preserving existing ship data on embed, timestamps. Total: 44 tests (was 27).
 
 ### Task 2.6: TCG-STR-010 - FleetResourceAggregator Edge Cases [Simple]
-**File:** `game/strategy/data/fleet_resou`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/strategy/data/fleet_resource_aggregator.py`
+**Tests:** `pytest tests/unit/strategy/data/test_fleet_resource_aggregator.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 25 new edge case tests covering: negative unload, empty fleet edge cases (9 tests), multiple resource types with one insufficient, warp jumps unlimited, fuel endurance edge cases (zero cost ship, mixed resources), cargo distribution across multiple ships. Total: 53 tests (was 28).
 
 ### Task 2.7: TCG-STR-011 - PlacementStrategies Lack Regression Test [Simple]
 **File:** `game/strategy/generation/place`
