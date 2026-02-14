@@ -1,11 +1,19 @@
+"""
+Screenshot Manager - Singleton for capturing screenshots.
+
+DUP-UI2-001: Clipboard copy now uses shared tkinter_utils module.
+"""
 import os
 import datetime
 import subprocess
+
 import pygame
+
 from game.core.constants import ENABLE_SCREENSHOTS
 from game.core.paths import Paths
 from game.core.logger import log_error, log_info, log_warning
 from game.core.singleton import SingletonMeta
+from game.ui.services.tkinter_utils import copy_to_clipboard
 
 
 class ScreenshotManager(metaclass=SingletonMeta):
@@ -92,29 +100,22 @@ class ScreenshotManager(metaclass=SingletonMeta):
         Args:
             text: Text to copy to clipboard (typically a file path)
         """
-        try:
-            # Try Tkinter first (cross-platform if installed)
-            import tkinter
-            r = tkinter.Tk()
-            r.withdraw()
-            r.clipboard_clear()
-            r.clipboard_append(text)
-            r.update()  # Required to finalize clipboard
-            r.destroy()
-        except Exception as e:  # Intentional broad catch: Tkinter clipboard is platform-dependent
-            log_warning(f"Clipboard copy failed (Tkinter): {e}")
-            # Fallback to Windows clip using subprocess (safer than os.system)
-            if os.name == 'nt':
-                try:
-                    # Use subprocess.run with input instead of shell command
-                    # This avoids command injection vulnerabilities
-                    subprocess.run(
-                        ['clip'],
-                        input=text.strip().encode('utf-8'),
-                        check=False
-                    )
-                except Exception as clip_err:  # Intentional broad catch: subprocess clipboard fallback, platform-dependent
-                    log_warning(f"Clipboard copy failed (clip): {clip_err}")
+        # Try Tkinter first (cross-platform if available)
+        if copy_to_clipboard(text):
+            return
+
+        # Fallback to Windows clip using subprocess (safer than os.system)
+        if os.name == 'nt':
+            try:
+                # Use subprocess.run with input instead of shell command
+                # This avoids command injection vulnerabilities
+                subprocess.run(
+                    ['clip'],
+                    input=text.strip().encode('utf-8'),
+                    check=False
+                )
+            except Exception as clip_err:  # Intentional broad catch: subprocess clipboard fallback, platform-dependent
+                log_warning(f"Clipboard copy failed (clip): {clip_err}")
 
     def capture_strategy_layer(self, scene, include_ui=True, include_subwindows=True, label=None):
         """Capture a screenshot of the strategy layer with control over which layers are included.

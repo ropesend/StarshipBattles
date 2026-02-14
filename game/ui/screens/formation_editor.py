@@ -2,32 +2,30 @@
 Formation Editor - Screen for creating and editing fleet formations.
 
 Allows players to arrange ships in tactical formations for combat deployment.
+
+DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 """
 from __future__ import annotations
 
+import json
+import math
+import os
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple
+
 import pygame
 import pygame_gui
-import json
-import os
-import math
-import tkinter
-from tkinter import filedialog, simpledialog
-from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Callable, Any
 
-from game.ui.screens.formation.renderer import FormationRenderer
-from game.ui.screens.formation.input_handler import FormationInputHandler
 from game.core.logger import log_error, log_info
+from game.ui.screens.formation.input_handler import FormationInputHandler
+from game.ui.screens.formation.renderer import FormationRenderer
+from game.ui.services.tkinter_utils import (
+    is_tkinter_available,
+    open_load_dialog,
+    open_save_dialog,
+)
 
 if TYPE_CHECKING:
     from pygame import Rect, Surface
-
-# Initialize Tkinter root and hide it
-try:
-    tk_root = tkinter.Tk()
-    tk_root.withdraw()
-except (tkinter.TclError, RuntimeError):
-    # TclError occurs when display unavailable; RuntimeError when Tcl not initialized
-    tk_root = None
 
 class FormationCore:
     """Core data model for formation editor, managing arrow positions and attributes."""
@@ -845,27 +843,36 @@ class FormationEditorScreen:
 
     def save_formation(self) -> None:
         """Save formation to file via dialog."""
-        if not tk_root: return
+        if not is_tkinter_available():
+            return
         base_path = os.path.dirname(os.path.abspath(__file__))
         initial_dir = os.path.join(base_path, "data", "formations")
-        if not os.path.exists(initial_dir): os.makedirs(initial_dir)
+        if not os.path.exists(initial_dir):
+            os.makedirs(initial_dir)
 
-        filename = filedialog.asksaveasfilename(
-            initialdir=initial_dir, initialfile="formation.json",
-            defaultextension=".json", filetypes=[("JSON Files", "*.json")], title="Save Formation"
+        filename = open_save_dialog(
+            initialdir=initial_dir,
+            initialfile="formation.json",
+            defaultextension=".json",
+            filetypes=[("JSON Files", "*.json")],
+            title="Save Formation"
         )
         if filename:
             self.core.save_to_file(filename)
 
     def load_formation(self) -> None:
         """Load formation from file via dialog."""
-        if not tk_root: return
+        if not is_tkinter_available():
+            return
         base_path = os.path.dirname(os.path.abspath(__file__))
         initial_dir = os.path.join(base_path, "data", "formations")
-        if not os.path.exists(initial_dir): os.makedirs(initial_dir)
+        if not os.path.exists(initial_dir):
+            os.makedirs(initial_dir)
 
-        filename = filedialog.askopenfilename(
-            initialdir=initial_dir, filetypes=[("JSON Files", "*.json")], title="Load Formation"
+        filename = open_load_dialog(
+            initialdir=initial_dir,
+            filetypes=[("JSON Files", "*.json")],
+            title="Load Formation"
         )
         if filename:
             self.core.load_from_file(filename)

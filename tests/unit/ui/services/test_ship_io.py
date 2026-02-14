@@ -58,16 +58,16 @@ def minimal_ship(fresh_registries):
 
 @pytest.fixture
 def ship_io_with_tkroot():
-    """Patch tkinter to appear initialized for testing."""
-    with patch('game.ui.services.ship_io.tk_root', MagicMock()):
+    """Patch tkinter_utils to appear initialized for testing."""
+    with patch('game.ui.services.ship_io.is_tkinter_available', return_value=True):
         from game.ui.services.ship_io import ShipIO
         yield ShipIO
 
 
 @pytest.fixture
 def ship_io_without_tkroot():
-    """Patch tkinter to appear NOT initialized for testing."""
-    with patch('game.ui.services.ship_io.tk_root', None):
+    """Patch tkinter_utils to appear NOT initialized for testing."""
+    with patch('game.ui.services.ship_io.is_tkinter_available', return_value=False):
         from game.ui.services.ship_io import ShipIO
         yield ShipIO
 
@@ -88,7 +88,7 @@ class TestShipIOSaveOperations:
 
     def test_save_ship_returns_false_none_on_cancel(self, mock_ship, ship_io_with_tkroot):
         """Save should return (False, None) when user cancels dialog."""
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=''):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=''):
             with patch('os.path.exists', return_value=True):
                 success, message = ship_io_with_tkroot.save_ship(mock_ship)
 
@@ -99,7 +99,7 @@ class TestShipIOSaveOperations:
         """Save should return (True, success_message) on successful save."""
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.save_json', return_value=True) as mock_save:
                     success, message = ship_io_with_tkroot.save_ship(mock_ship)
@@ -112,7 +112,7 @@ class TestShipIOSaveOperations:
         """Save should create ships folder if it doesn't exist."""
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=False):
                 with patch('os.makedirs') as mock_makedirs:
                     with patch('game.ui.services.ship_io.save_json', return_value=True):
@@ -124,7 +124,7 @@ class TestShipIOSaveOperations:
         """Save should sanitize ship name for filename."""
         save_file = str(tmp_path / "test.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file) as mock_dialog:
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file) as mock_dialog:
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.save_json', return_value=True):
                     ship_io_with_tkroot.save_ship(mock_ship_with_special_chars)
@@ -139,7 +139,7 @@ class TestShipIOSaveOperations:
         """Save should return error message on permission denied."""
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.save_json', side_effect=PermissionError("Permission denied")):
                     success, message = ship_io_with_tkroot.save_ship(mock_ship)
@@ -151,7 +151,7 @@ class TestShipIOSaveOperations:
         """Save should return error message on OS error."""
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.save_json', side_effect=OSError("Disk full")):
                     success, message = ship_io_with_tkroot.save_ship(mock_ship)
@@ -168,7 +168,7 @@ class TestShipIOSaveOperations:
 
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=True):
                 success, message = ship_io_with_tkroot.save_ship(mock_ship)
 
@@ -179,7 +179,7 @@ class TestShipIOSaveOperations:
         """Save should return (False, error) when save_json returns False."""
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.save_json', return_value=False):
                     success, message = ship_io_with_tkroot.save_ship(mock_ship)
@@ -204,7 +204,7 @@ class TestShipIOLoadOperations:
 
     def test_load_ship_returns_none_on_cancel(self, ship_io_with_tkroot):
         """Load should return (None, None) when user cancels dialog."""
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=''):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=''):
             with patch('os.path.exists', return_value=True):
                 ship, message = ship_io_with_tkroot.load_ship(1920, 1080)
 
@@ -226,7 +226,7 @@ class TestShipIOLoadOperations:
         def patched_from_dict(data, *, registries=None):
             return original_from_dict(data, registries=fresh_registries)
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 with patch.object(Ship, 'from_dict', side_effect=patched_from_dict):
                     ship, message = ship_io_with_tkroot.load_ship(1920, 1080)
@@ -251,7 +251,7 @@ class TestShipIOLoadOperations:
         def patched_from_dict(data, *, registries=None):
             return original_from_dict(data, registries=fresh_registries)
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 with patch.object(Ship, 'from_dict', side_effect=patched_from_dict):
                     ship, _ = ship_io_with_tkroot.load_ship(screen_width, screen_height)
@@ -261,7 +261,7 @@ class TestShipIOLoadOperations:
 
     def test_load_ship_creates_ships_folder_if_not_exists(self, ship_io_with_tkroot):
         """Load should create ships folder if it doesn't exist."""
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=''):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=''):
             with patch('os.path.exists', return_value=False):
                 with patch('os.makedirs') as mock_makedirs:
                     ship_io_with_tkroot.load_ship(1920, 1080)
@@ -274,7 +274,7 @@ class TestShipIOLoadOperations:
         with open(load_file, 'w') as f:
             f.write("{ this is not valid json }")
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 ship, message = ship_io_with_tkroot.load_ship(1920, 1080)
 
@@ -299,7 +299,7 @@ class TestShipIOLoadOperations:
         def patched_from_dict(data, *, registries=None):
             return original_from_dict(data, registries=fresh_registries)
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 with patch.object(Ship, 'from_dict', side_effect=patched_from_dict):
                     ship, message = ship_io_with_tkroot.load_ship(1920, 1080)
@@ -312,7 +312,7 @@ class TestShipIOLoadOperations:
         """Load should return error on permission denied."""
         load_file = tmp_path / "test_ship.json"
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.load_json_required', side_effect=PermissionError("Access denied")):
                     ship, message = ship_io_with_tkroot.load_ship(1920, 1080)
@@ -324,7 +324,7 @@ class TestShipIOLoadOperations:
         """Load should return error on OS error."""
         load_file = tmp_path / "test_ship.json"
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.load_json_required', side_effect=OSError("File corrupted")):
                     ship, message = ship_io_with_tkroot.load_ship(1920, 1080)
@@ -563,7 +563,7 @@ class TestShipIOEdgeCases:
         """Ship with empty name should use 'New Ship' as filename."""
         ship = create_test_ship(name="", add_bridge=True, registries=fresh_registries)
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value='') as mock_dialog:
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value='') as mock_dialog:
             with patch('os.path.exists', return_value=True):
                 ship_io_with_tkroot.save_ship(ship)
 
@@ -696,7 +696,7 @@ class TestShipIOErrorLogging:
 
         save_file = str(tmp_path / "test_ship.json")
 
-        with patch('game.ui.services.ship_io.filedialog.asksaveasfilename', return_value=save_file):
+        with patch('game.ui.services.ship_io.open_save_dialog', return_value=save_file):
             with patch('os.path.exists', return_value=True):
                 with patch('game.ui.services.ship_io.save_json', side_effect=OSError("Test error")):
                     with caplog.at_level(logging.ERROR):
@@ -713,7 +713,7 @@ class TestShipIOErrorLogging:
         with open(load_file, 'w') as f:
             f.write("not json")
 
-        with patch('game.ui.services.ship_io.filedialog.askopenfilename', return_value=str(load_file)):
+        with patch('game.ui.services.ship_io.open_load_dialog', return_value=str(load_file)):
             with patch('os.path.exists', return_value=True):
                 with caplog.at_level(logging.ERROR):
                     ship_io_with_tkroot.load_ship(1920, 1080)

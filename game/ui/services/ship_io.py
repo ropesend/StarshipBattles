@@ -4,32 +4,24 @@ ShipIO - Ship file Input/Output operations.
 Moved from game.simulation.systems.persistence to game.ui.services as part of PROJ-113
 to fix layer violation: tkinter is a UI framework and doesn't belong in simulation layer.
 
+DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
+
 This module handles:
 - Saving ship designs to JSON files via file dialog
 - Loading ship designs from JSON files via file dialog
 """
 import json
 import os
-import tkinter
-from tkinter import filedialog
+
 from game.core.math import Vector2
 from game.simulation.entities.ship import Ship
 from game.core.json_utils import load_json_required, save_json
-from game.core.logger import log_warning, log_error
-
-# Initialize Tkinter root and hide it (for file dialogs)
-try:
-    tk_root = tkinter.Tk()
-    tk_root.withdraw()
-except tkinter.TclError as e:
-    log_warning(f"Tkinter TCL error, file dialogs will be unavailable: {e}")
-    tk_root = None
-except RuntimeError as e:
-    log_warning(f"Tkinter runtime error, file dialogs will be unavailable: {e}")
-    tk_root = None
-except Exception as e:  # Intentional broad catch: Tkinter init is platform-dependent
-    log_warning(f"Tkinter initialization failed, file dialogs will be unavailable: {e}")
-    tk_root = None
+from game.core.logger import log_error
+from game.ui.services.tkinter_utils import (
+    is_tkinter_available,
+    open_save_dialog,
+    open_load_dialog,
+)
 
 
 class ShipIO:
@@ -41,7 +33,7 @@ class ShipIO:
     @staticmethod
     def save_ship(ship):
         """Save ship design to file. Returns True if successful."""
-        if not tk_root:
+        if not is_tkinter_available():
             return False, "Tkinter not initialized"
 
         try:
@@ -54,7 +46,7 @@ class ShipIO:
             safe_name = "".join([c for c in ship.name if c.isalpha() or c.isdigit() or c in (' ', '-', '_')]).strip()
             if not safe_name: safe_name = "New Ship"
 
-            filename = filedialog.asksaveasfilename(
+            filename = open_save_dialog(
                 initialdir=ships_folder,
                 initialfile=safe_name,
                 defaultextension=".json",
@@ -81,7 +73,7 @@ class ShipIO:
     @staticmethod
     def load_ship(screen_width, screen_height):
         """Load ship design from file. Returns (Ship, message) or (None, error/message)."""
-        if not tk_root:
+        if not is_tkinter_available():
             return None, "Tkinter not initialized"
 
         try:
@@ -89,7 +81,7 @@ class ShipIO:
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
 
-            filename = filedialog.askopenfilename(
+            filename = open_load_dialog(
                 initialdir=ships_folder,
                 filetypes=[("JSON Files", "*.json")],
                 title="Load Ship Design"

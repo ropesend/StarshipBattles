@@ -205,44 +205,29 @@ class TestClipboardOperations:
 
     def test_clipboard_tkinter_success(self, mock_manager):
         """Tkinter path works without error."""
-        mock_tk = Mock()
-        mock_tk_class = Mock(return_value=mock_tk)
-
-        with patch.dict('sys.modules', {'tkinter': Mock(Tk=mock_tk_class)}):
-            import importlib
-            # Call clipboard method
+        # Now uses copy_to_clipboard from tkinter_utils
+        with patch('game.ui.services.screenshot_manager.copy_to_clipboard', return_value=True) as mock_copy:
             mock_manager._copy_to_clipboard("/path/to/file.png")
 
-        # Tkinter methods should have been called
-        mock_tk.withdraw.assert_called()
-        mock_tk.clipboard_clear.assert_called()
+        mock_copy.assert_called_once_with("/path/to/file.png")
 
     def test_clipboard_tkinter_failure_falls_back(self, mock_manager):
         """On Tkinter error, tries clip on Windows."""
-        with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
-            with patch('game.ui.services.screenshot_manager.subprocess.run') as mock_run:
-                # Make tkinter import fail by having it raise an exception
-                with patch.dict('sys.modules', {'tkinter': None}):
-                    # Simulate tkinter failure
-                    def raise_error():
-                        raise ImportError("No tkinter")
+        with patch('game.ui.services.screenshot_manager.copy_to_clipboard', return_value=False):
+            with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
+                with patch('game.ui.services.screenshot_manager.subprocess.run') as mock_run:
+                    mock_manager._copy_to_clipboard("/path/to/file.png")
 
-                    with patch('builtins.__import__', side_effect=ImportError):
-                        mock_manager._copy_to_clipboard("/path/to/file.png")
+                # Should have called subprocess.run with clip
+                mock_run.assert_called_once()
 
     def test_clipboard_windows_fallback(self, mock_manager):
         """subprocess.run with clip called on Windows when tkinter fails."""
-        # This test verifies that when tkinter fails and we're on Windows,
+        # This test verifies that when copy_to_clipboard returns False on Windows,
         # the code attempts to use the clip command
-        with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
-            with patch('game.ui.services.screenshot_manager.subprocess.run') as mock_run:
-                # Create a mock tkinter that raises on use
-                mock_tkinter = Mock()
-                mock_tk_instance = Mock()
-                mock_tk_instance.clipboard_clear.side_effect = Exception("tkinter error")
-                mock_tkinter.Tk.return_value = mock_tk_instance
-
-                with patch.dict('sys.modules', {'tkinter': mock_tkinter}):
+        with patch('game.ui.services.screenshot_manager.copy_to_clipboard', return_value=False):
+            with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
+                with patch('game.ui.services.screenshot_manager.subprocess.run') as mock_run:
                     mock_manager._copy_to_clipboard("/path/to/file.png")
 
                 # Should have called subprocess.run with clip

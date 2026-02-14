@@ -2,28 +2,18 @@
 
 Handles save/load/target workflows extracted from workshop_screen.py.
 PROJ-61 Phase 1.
+
+DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
 """
 import os
-import tkinter
-from tkinter import simpledialog
 
 from game.core.logger import log_debug, log_error, log_info, log_warning
 from game.core.profiling import profile_action
 from game.strategy.systems.design_library import DesignLibrary
 from game.ui.screens.design_selector_window import DesignSelectorWindow
 from game.ui.screens.workshop_context import WorkshopMode
+from game.ui.services.tkinter_utils import prompt_string
 from game.ui.utils import create_centered_rect
-
-
-# Initialize Tkinter root and hide it (for simpledialog)
-try:
-    if os.environ.get("SDL_VIDEODRIVER") == "dummy":
-        _tk_root = None
-    else:
-        _tk_root = tkinter.Tk()
-        _tk_root.withdraw()
-except (tkinter.TclError, RuntimeError):
-    _tk_root = None
 
 
 class WorkshopShipIO:
@@ -244,18 +234,9 @@ class WorkshopShipIO:
         Returns:
             Design name or empty string if cancelled
         """
-        if _tk_root is None:
-            # Fallback if tkinter not available
-            return default_name
-
-        try:
-            name = simpledialog.askstring(
-                "Save Design",
-                "Enter design name:",
-                initialvalue=default_name,
-                parent=_tk_root
-            )
-            return name if name else ""
-        except Exception as e:  # Intentional broad catch: Tkinter dialog is platform-dependent
-            log_error(f"Failed to prompt for design name: {e}")
-            return default_name
+        result = prompt_string(
+            "Save Design",
+            "Enter design name:",
+            initialvalue=default_name
+        )
+        return result if result else ""
