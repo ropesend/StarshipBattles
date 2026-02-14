@@ -47,15 +47,15 @@
 **Notes:** Added 38 edge case tests covering constructor validation, formula evaluation, ability helpers, fallback behavior, warp capability, toggles, multiple resource types.
 
 ### Task 2.4: TCG-STR-006 - Superweapon Command Handlers Have Limite [Medium]
-**File:** `game/strategy/engine/superweap`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/strategy/engine/superweapon_command_handlers.py`
+**Tests:** `pytest tests/unit/strategy/engine/test_superweapon_edge_cases.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 29 edge case tests covering: _setup_mission_move helper behavior, mission handler fleet/planet not found cases, order processor error paths (no order, wrong type, missing targets), no ability with registry, colony removal, self-destruct ship name handling.
 
 ### Task 2.5: TCG-STR-009 - DesignMetadata Tests Are Sparse [Simple]
 **File:** `game/strategy/data/design_meta`
