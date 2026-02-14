@@ -8,7 +8,7 @@ from game.core.hex_math import HexCoord, hex_distance, hex_to_pixel, hex_ring, p
 from game.strategy.data.naming import NameRegistry
 import os
 
-from game.strategy.data.stars import StarGenerator, Star, StarType
+from game.strategy.data.stars import StarGenerator, Star
 from game.strategy.data.planet import Planet, PlanetType
 from game.strategy.data.planet_gen import PlanetGenerator
 from game.strategy.generation.planet_image_registry import PlanetImageRegistry
