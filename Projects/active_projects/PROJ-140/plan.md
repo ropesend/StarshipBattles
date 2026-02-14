@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Fix Execution-Time Validation (Bugs 1+2) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Fix "Any Planet" Validation (Bug 5) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Fix "Any Planet" Validation (Bug 5) | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix UI Designation Filtering (Bug 3) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fix Mission Command Handler (Bug 4) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Full Regression + Cleanup | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Phase 1 Complete — Phase 2 Next
-**Last Action:** Phase 1 complete: Fixed execution-time validation (Bugs 1+2)
-**Next Action:** Begin Phase 2 - Fix "Any Planet" Validation (Bug 5)
+**Active Phase:** Phase 2 Complete — Phase 3 Next
+**Last Action:** Phase 2 complete: Fixed "Any Planet" validation (Bug 5)
+**Next Action:** Begin Phase 3 - Fix UI Designation Filtering (Bug 3)
 **Blockers:** None
-**Context for Next Agent:** Phase 1 complete with 11942 tests passing (+2 from baseline). Fixed: (1) process_colonize now passes component_registry to validator with skip_chain_check=True, (2) Pre-check colony ship before mutations, (3) Updated ColonizeValidator.validate() with skip_chain_check param, (4) Added make_colony_ship_for_planet() to tests/conftest.py, (5) Updated test fixtures to use proper colony ships and planet types.
+**Context for Next Agent:** Phase 2 complete with 11948 tests passing (+6 from Phase 1). Fixed: (1) ColonizeValidator "Any Planet" path now checks for matching pods when registry provided, (2) process_colonize() now selects candidate planet matching available pod, (3) Updated test_commands.py with proper fleet.ships mock for pod validation.
 
 ## Overview
 

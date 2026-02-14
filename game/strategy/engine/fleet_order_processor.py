@@ -201,13 +201,34 @@ class FleetOrderProcessor:
             fleet.pop_order()
             return ColonizeResult(colonized=False)
 
-        # Determine final planet (for "Any" case, pick first valid candidate)
+        # Determine final planet (for "Any" case, pick matching candidate)
         if target_planet is not None:
             final_planet = target_planet
         else:
             planets_at_loc = galaxy.get_planets_at_global_hex(fleet.location)
             valid_candidates = [p for p in planets_at_loc if p.owner_id is None]
-            final_planet = valid_candidates[0]
+
+            # PROJ-140 Phase 2: When registry provided, pick planet that matches available pod
+            if component_registry is not None:
+                final_planet = None
+                for candidate in valid_candidates:
+                    if hasattr(candidate, 'planet_type'):
+                        planet_type_str = candidate.planet_type.name
+                        ship_with_pod = ColonizeValidator.find_ship_with_colony_pod(
+                            fleet, planet_type_str, component_registry
+                        )
+                        if ship_with_pod is not None:
+                            final_planet = candidate
+                            break
+
+                if final_planet is None:
+                    # No matching pod for any candidate
+                    log_warning("FleetOrderProcessor: No matching pod for any candidate planet")
+                    fleet.pop_order()
+                    return ColonizeResult(colonized=False)
+            else:
+                # Legacy behavior: pick first valid candidate
+                final_planet = valid_candidates[0]
 
         # PROJ-140 Bug 2: Pre-check colony ship availability BEFORE any mutation
         # This ensures we never colonize without a valid colony ship to consume

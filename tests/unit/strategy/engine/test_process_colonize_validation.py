@@ -319,3 +319,126 @@ class TestProcessColonizeValidation:
         # Assert: Colonization succeeded (legacy behavior)
         assert result.colonized is True
         assert ice_planet.owner_id == 1
+
+
+# =============================================================================
+# Test Class: "Any Planet" Execution Selection (PROJ-140 Phase 2)
+# =============================================================================
+
+class TestProcessColonizeAnyPlanet:
+    """Tests for process_colonize() 'Any Planet' selection with pod matching."""
+
+    @pytest.fixture
+    def component_registry(self):
+        """Component registry with colony pod definitions."""
+        return {
+            'ice_dwarf_colony_pod': {
+                'id': 'ice_dwarf_colony_pod',
+                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+            },
+            'continental_colony_pod': {
+                'id': 'continental_colony_pod',
+                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            },
+        }
+
+    @pytest.fixture
+    def galaxy_with_mixed_planets(self):
+        """Galaxy with CONTINENTAL and ICE_DWARF planets at same location."""
+        galaxy = MockGalaxy()
+
+        continental = MockPlanet("Green World", HexCoord(0, 0), MockPlanetType.CONTINENTAL)
+        ice_dwarf = MockPlanet("Ice World", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
+
+        system = MockSystem(HexCoord(10, 10), [continental, ice_dwarf])
+        galaxy.systems[HexCoord(10, 10)] = system
+
+        return galaxy, continental, ice_dwarf
+
+    @pytest.fixture
+    def galaxy_with_only_ice(self):
+        """Galaxy with only ICE_DWARF planets at location."""
+        galaxy = MockGalaxy()
+
+        ice_1 = MockPlanet("Ice World 1", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
+        ice_2 = MockPlanet("Ice World 2", HexCoord(0, 0), MockPlanetType.ICE_DWARF)
+
+        system = MockSystem(HexCoord(10, 10), [ice_1, ice_2])
+        galaxy.systems[HexCoord(10, 10)] = system
+
+        return galaxy, ice_1, ice_2
+
+    def test_any_planet_selects_matching_pod_planet(
+        self, galaxy_with_mixed_planets, component_registry
+    ):
+        """
+        PROJ-140: "Any Planet" should select a planet matching an available pod.
+
+        Fleet with ICE_DWARF pod at location with [CONTINENTAL, ICE_DWARF].
+        Assert: ICE_DWARF planet is colonized (not CONTINENTAL).
+        """
+        galaxy, continental, ice_dwarf = galaxy_with_mixed_planets
+
+        # Create fleet with ICE_DWARF colony ship
+        colony_ship = make_colony_ship("Ice Colony Ship", 1, "ICE_DWARF")
+
+        fleet = Fleet(1, 1, HexCoord(10, 10))
+        fleet.ships.append(colony_ship)
+        # "Any Planet" = target is None
+        fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
+
+        empire = Empire(1, "Player 1", (255, 0, 0))
+        empire.fleets.append(fleet)
+
+        # Execute colonization
+        processor = FleetOrderProcessor()
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=component_registry
+        )
+
+        # Assert: ICE_DWARF planet was colonized (matches available pod)
+        assert result.colonized is True
+        assert ice_dwarf.owner_id == 1
+        assert ice_dwarf in empire.colonies
+
+        # Assert: CONTINENTAL planet was NOT colonized
+        assert continental.owner_id is None
+        assert continental not in empire.colonies
+
+    def test_any_planet_no_matching_pod_fails(
+        self, galaxy_with_only_ice, component_registry
+    ):
+        """
+        PROJ-140: "Any Planet" fails if no pod matches any candidate.
+
+        Fleet with CONTINENTAL pod at location with only ICE_DWARF planets.
+        Assert: colonized=False.
+        """
+        galaxy, ice_1, ice_2 = galaxy_with_only_ice
+
+        # Create fleet with CONTINENTAL colony ship (wrong type)
+        colony_ship = make_colony_ship("Continental Colony Ship", 1, "CONTINENTAL")
+
+        fleet = Fleet(1, 1, HexCoord(10, 10))
+        fleet.ships.append(colony_ship)
+        # "Any Planet" = target is None
+        fleet.orders.append(FleetOrder(OrderType.COLONIZE, None))
+
+        empire = Empire(1, "Player 1", (255, 0, 0))
+        empire.fleets.append(fleet)
+
+        # Execute colonization
+        processor = FleetOrderProcessor()
+        result = processor.process_colonize(
+            fleet, empire, galaxy,
+            component_registry=component_registry
+        )
+
+        # Assert: Colonization failed
+        assert result.colonized is False
+
+        # Assert: No planets were colonized
+        assert ice_1.owner_id is None
+        assert ice_2.owner_id is None
+        assert len(empire.colonies) == 0

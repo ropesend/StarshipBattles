@@ -684,3 +684,165 @@ class TestColonizeValidatorZoneColonization:
 
         assert result.is_valid is False
         assert result.error_code == "WRONG_LOCATION"
+
+
+# =============================================================================
+# Test: "Any Planet" Pod Validation (PROJ-140 Phase 2)
+# =============================================================================
+
+
+class TestColonizeValidatorAnyPlanetPods:
+    """Tests for 'Any Planet' validation with colony pod matching."""
+
+    @pytest.fixture
+    def mock_galaxy(self):
+        """Create a mock galaxy."""
+        galaxy = MagicMock()
+        galaxy.get_planets_at_global_hex = MagicMock(return_value=[])
+        galaxy.get_zones_at_global_hex = MagicMock(return_value=[])
+        return galaxy
+
+    @pytest.fixture
+    def mock_fleet(self):
+        """Create a mock fleet."""
+        fleet = MagicMock()
+        fleet.id = 1
+        fleet.owner_id = 0
+        fleet.location = HexCoord(0, 0)
+        fleet.orders = []
+        return fleet
+
+    @pytest.fixture
+    def mock_component_registry(self):
+        """Create a mock component registry with colony pod components."""
+        return {
+            'ice_dwarf_colony_pod': {
+                'id': 'ice_dwarf_colony_pod',
+                'abilities': {'ColonizePlanet': 'ICE_DWARF'}
+            },
+            'continental_colony_pod': {
+                'id': 'continental_colony_pod',
+                'abilities': {'ColonizePlanet': 'CONTINENTAL'}
+            },
+        }
+
+    def _make_planet(self, planet_type_name: str, name: str = "Test Planet"):
+        """Create a mock planet of the given type."""
+        from enum import Enum
+
+        class MockPlanetType(Enum):
+            ICE_DWARF = "ICE_DWARF"
+            CONTINENTAL = "CONTINENTAL"
+
+        planet = MagicMock()
+        planet.name = name
+        planet.owner_id = None
+        planet.location = HexCoord(0, 0)
+        planet.planet_type = MockPlanetType[planet_type_name]
+        return planet
+
+    def _make_ship_with_pod(self, pod_type: str):
+        """Create a mock ship with a specific colony pod type."""
+        ship = MagicMock()
+        ship.name = f"{pod_type} Colony Ship"
+        pod_id = f"{pod_type.lower()}_colony_pod"
+        ship.design_data = {
+            'layers': {
+                'HULL': [{'id': pod_id}]
+            }
+        }
+        return ship
+
+    def test_any_planet_with_registry_no_matching_pod_fails(
+        self, mock_galaxy, mock_fleet, mock_component_registry
+    ):
+        """Any Planet with registry fails if no pod matches any candidate."""
+        from game.strategy.validation import ColonizeValidator
+
+        # Fleet has CONTINENTAL pod
+        mock_fleet.ships = [self._make_ship_with_pod("CONTINENTAL")]
+
+        # Only ICE_DWARF planets available
+        ice_dwarf_planet = self._make_planet("ICE_DWARF", "Frostworld")
+        mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet]
+
+        result = ColonizeValidator.validate(
+            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            component_registry=mock_component_registry
+        )
+
+        assert result.is_valid is False
+        assert result.error_code == "NO_COLONY_POD"
+
+    def test_any_planet_with_registry_matching_pod_succeeds(
+        self, mock_galaxy, mock_fleet, mock_component_registry
+    ):
+        """Any Planet with registry succeeds if a pod matches a candidate."""
+        from game.strategy.validation import ColonizeValidator
+
+        # Fleet has ICE_DWARF pod
+        mock_fleet.ships = [self._make_ship_with_pod("ICE_DWARF")]
+
+        # ICE_DWARF planet available
+        ice_dwarf_planet = self._make_planet("ICE_DWARF", "Frostworld")
+        mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet]
+
+        result = ColonizeValidator.validate(
+            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            component_registry=mock_component_registry
+        )
+
+        assert result.is_valid is True
+
+    def test_any_planet_without_registry_skips_pod_check(
+        self, mock_galaxy, mock_fleet
+    ):
+        """Any Planet without registry skips pod check (backward compat)."""
+        from game.strategy.validation import ColonizeValidator
+
+        # Fleet has no ships (would fail pod check if it ran)
+        mock_fleet.ships = []
+
+        # ICE_DWARF planet available
+        ice_dwarf_planet = self._make_planet("ICE_DWARF", "Frostworld")
+        mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_planet]
+
+        result = ColonizeValidator.validate(
+            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            component_registry=None  # No registry = skip pod check
+        )
+
+        assert result.is_valid is True
+
+    def test_any_planet_with_registry_exhausted_pods_fails(
+        self, mock_galaxy, mock_fleet, mock_component_registry
+    ):
+        """Any Planet fails if all matching pods are already committed."""
+        from game.strategy.validation import ColonizeValidator
+        from game.strategy.data.fleet import OrderType
+
+        # Fleet has one ICE_DWARF pod
+        mock_fleet.ships = [self._make_ship_with_pod("ICE_DWARF")]
+
+        # ICE_DWARF planet 1 (already targeted by existing order)
+        ice_dwarf_1 = self._make_planet("ICE_DWARF", "Frostworld 1")
+
+        # ICE_DWARF planet 2 (another candidate)
+        ice_dwarf_2 = self._make_planet("ICE_DWARF", "Frostworld 2")
+
+        # Existing order commits the only ICE_DWARF pod
+        existing_order = MagicMock()
+        existing_order.type = OrderType.COLONIZE
+        existing_order.target = ice_dwarf_1
+        mock_fleet.orders = [existing_order]
+
+        mock_galaxy.get_planets_at_global_hex.return_value = [ice_dwarf_1, ice_dwarf_2]
+
+        result = ColonizeValidator.validate(
+            mock_galaxy, mock_fleet, None,  # None = "Any Planet"
+            component_registry=mock_component_registry
+        )
+
+        assert result.is_valid is False
+        # Could be either error code depending on implementation
+        assert result.error_code in ("NO_COLONY_POD", "COLONY_POD_EXHAUSTED")

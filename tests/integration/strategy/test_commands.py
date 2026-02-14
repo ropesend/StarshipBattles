@@ -149,11 +149,25 @@ class TestCommands:
         fleet = MagicMock(spec=Fleet)
         fleet.id = 101
         fleet.location = HexCoord(10, 10)
+        fleet.orders = []
+
+        # PROJ-140: Fleet needs ships with colony pods for pod validation
+        # Create a ship with a matching colony pod
+        from enum import Enum
+        class MockPlanetType(Enum):
+            CONTINENTAL = "CONTINENTAL"
+
+        mock_ship = MagicMock()
+        mock_ship.design_data = {
+            'layers': {'HULL': [{'id': 'continental_colony_pod'}]}
+        }
+        fleet.ships = [mock_ship]
 
         planet = MagicMock(spec=Planet)
         planet.name = "TestPlanet"
         planet.location = HexCoord(0, 0)
         planet.owner_id = None
+        planet.planet_type = MockPlanetType.CONTINENTAL
 
         # Mock System
         system = MagicMock(spec=StarSystem)

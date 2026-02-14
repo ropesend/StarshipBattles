@@ -99,6 +99,33 @@ class ColonizeValidator:
             # "Any Planet"
             if not valid_candidates:
                 return ValidationResult(is_valid=False, errors=["No colonizable planets at this location."], error_code="NO_CANDIDATES")
+
+            # PROJ-140 Phase 2: When registry provided, check if ANY candidate matches available pods
+            if component_registry is not None:
+                # Get available pods by type
+                available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
+
+                # Get committed pods by type (skip during execution)
+                committed = ColonizeValidator.get_committed_colony_pods(fleet) if not skip_chain_check else {}
+
+                # Check if any valid candidate planet matches an available (uncommitted) pod
+                found_match = False
+                for candidate in valid_candidates:
+                    if hasattr(candidate, 'planet_type'):
+                        planet_type_str = candidate.planet_type.name
+                        available_count = available.get(planet_type_str, 0)
+                        committed_count = committed.get(planet_type_str, 0)
+                        if available_count > committed_count:
+                            found_match = True
+                            break
+
+                if not found_match:
+                    return ValidationResult(
+                        is_valid=False,
+                        errors=["No matching colony pod for any planet at this location."],
+                        error_code="NO_COLONY_POD"
+                    )
+
             return ValidationResult()
 
         else:
