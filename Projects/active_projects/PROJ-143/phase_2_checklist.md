@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** In Progress
 **Objective:** Address findings in the Strategy module (12 findings, 1 critical)
 **Priority:** High
 
@@ -14,37 +14,37 @@
 ## Tasks
 
 ### Task 2.1: TCG-STR-001 - Commands Module Has No Dedicated Unit Te [Simple]
-**File:** `game/strategy/engine/commands.`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/strategy/engine/commands.py`
+**Tests:** `pytest tests/unit/strategy/engine/test_commands.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 38 comprehensive tests for commands module covering all command types, CommandType enum, equality behavior.
 
 ### Task 2.2: TCG-STR-004 - FleetNavigationService Unit Tests Are Th [Medium]
-**File:** `game/strategy/services/fleet_n`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/strategy/services/fleet_navigation_service.py`
+**Tests:** `pytest tests/unit/strategy/fleet_navigation/test_service_edge_cases.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 34 edge case tests for NavigationState, PathSegment, NavigationStep, and FleetNavigationService methods.
 
 ### Task 2.3: TCG-STR-005 - ShipStatsCalculator Edge Cases Untested [Medium]
-**File:** `game/strategy/services/ship_st`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/strategy/services/ship_stats_calculator.py`
+**Tests:** `pytest tests/unit/strategy/ship_stats/test_edge_cases.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** Added 38 edge case tests covering constructor validation, formula evaluation, ability helpers, fallback behavior, warp capability, toggles, multiple resource types.
 
 ### Task 2.4: TCG-STR-006 - Superweapon Command Handlers Have Limite [Medium]
 **File:** `game/strategy/engine/superweap`
