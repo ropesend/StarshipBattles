@@ -190,76 +190,60 @@ class BuildQueueController:
             log_warning(f"Failed to load design cost for {design_id}: {e}")
             return {}
 
-    def _calculate_build_turns(self, design_id: str, build_rate: Dict[str, float]) -> int:
+    def _calculate_build_turns(self, design_id: str, build_rate: Dict[str, float]) -> float:
         """Calculate build turns from design resource cost and per-resource rates.
 
-        Formula: For each resource, turns_for_res = ceil(cost / rate).
-        Total turns = max(1, max of all turns_for_res).
+        Formula: For each resource, turns_for_res = cost / rate.
+        Total turns = max(resource_turns).
+        Returns exact float value (e.g. 2.5 turns).
 
         Args:
             design_id: ID of the design to calculate for.
             build_rate: Per-resource production rates (resource -> units/turn).
 
         Returns:
-            Number of turns required to build the design.
+            Number of turns required to build the design (float).
         """
         cost = self._get_design_cost(design_id)
         if not cost:
-            return 1
+            return 1.0
         if not build_rate:
-            return 1
+            return 1.0
 
         turns_per_resource = []
         for res, rate in build_rate.items():
             res_cost = cost.get(res, 0)
             if res_cost > 0 and rate > 0:
-                turns_per_resource.append(math.ceil(res_cost / rate))
+                turns_per_resource.append(res_cost / rate)
 
         if not turns_per_resource:
-            return 1
-        return max(1, max(turns_per_resource))
+            return 1.0
+        return max(0.01, max(turns_per_resource))
 
     def _build_cost_tracking(
-        self, design_id: str, turns: int, build_rate: Optional[Dict[str, float]] = None
-    ) -> Dict[str, float]:
+        self, design_id: str
+    ) -> Dict[str, Any]:
         """Create cost tracking fields for a queue item.
-
-        Per-resource cost_per_tick is capped at rate/100 to prevent exceeding
-        per-turn production limits.
+        
+        PROJ-79 Refactor: Only sets initial state. Per-tick consumption
+        is calculated dynamically by ProductionEngine.
 
         Args:
             design_id: ID of the design to track costs for.
-            turns: Number of turns for the build.
-            build_rate: Per-resource production rates (resource -> units/turn).
-                        If None, no capping is applied.
 
         Returns:
-            Dict with total_cost, cost_per_tick, resources_consumed, ticks_in_current_turn.
+            Dict with total_cost and resources_consumed.
         """
         total_cost = self._get_design_cost(design_id)
-        total_ticks = turns * 100
-
-        # Calculate max per-tick for each resource (rate / 100)
-        max_per_tick = {}
-        if build_rate:
-            max_per_tick = {res: rate / 100 for res, rate in build_rate.items()}
-
-        # Calculate cost_per_tick with per-resource capping
-        cost_per_tick = {}
-        if total_ticks > 0:
-            for res, amount in total_cost.items():
-                natural_rate = amount / total_ticks
-                cap = max_per_tick.get(res, float('inf'))
-                cost_per_tick[res] = min(natural_rate, cap)
-
+        
         return {
             "total_cost": total_cost,
-            "cost_per_tick": cost_per_tick,
             "resources_consumed": {res: 0.0 for res in total_cost},
             "ticks_in_current_turn": 0,
+            # Removed pre-calculated cost_per_tick
         }
 
-    def add_to_queue(self, design_id: str, turns: Optional[int] = None, category: str = None, index: int = None):
+    def add_to_queue(self, design_id: str, turns: Optional[float] = None, category: str = None, index: int = None):
         """
         Add a design to the appropriate queue(s).
 
@@ -372,7 +356,7 @@ class BuildQueueController:
         return None
 
     def _add_to_single_queue(
-        self, design_id: str, turns: Optional[int], category: str, index: Optional[int]
+        self, design_id: str, turns: Optional[float], category: str, index: Optional[int]
     ) -> None:
         """Add item to the active queue source.
 
@@ -421,8 +405,8 @@ class BuildQueueController:
             "type": category,
             "turns_remaining": turns
         }
-        # Add cost tracking fields with per-resource capping
-        queue_item.update(self._build_cost_tracking(design_id, turns, build_rate))
+        # Add cost tracking fields (dynamic calculation in engine)
+        queue_item.update(self._build_cost_tracking(design_id))
 
         # PROJ-79: Add target_planet_id for complexes
         target_planet_id = self._get_target_planet_id(source, category)
@@ -464,7 +448,7 @@ class BuildQueueController:
             "turns_remaining": turns,
             "target_planet_id": target_planet_id,
         }
-        queue_item.update(self._build_cost_tracking(design_id, turns, build_rate))
+        queue_item.update(self._build_cost_tracking(design_id))
 
         if index is not None:
             source.construction_queue.insert(index, queue_item)
@@ -473,7 +457,7 @@ class BuildQueueController:
             source.construction_queue.append(queue_item)
             log_info(f"Added {design_id} to '{source.display_name}' ({turns} turns, target: planet {target_planet_id})")
 
-    def _add_to_multiple_queues(self, design_id: str, turns: Optional[int], category: str) -> None:
+    def _add_to_multiple_queues(self, design_id: str, turns: Optional[float], category: str) -> None:
         """Add item to all compatible selected queue sources.
 
         Skips sources that cannot build the given category. Index is not
@@ -506,8 +490,8 @@ class BuildQueueController:
                 "type": category,
                 "turns_remaining": source_turns
             }
-            # Add cost tracking fields with per-resource capping
-            queue_item.update(self._build_cost_tracking(design_id, source_turns, source.build_rate))
+            # Add cost tracking fields (dynamic calculation in engine)
+            queue_item.update(self._build_cost_tracking(design_id))
             source.construction_queue.append(queue_item)
             added_count += 1
 
@@ -517,7 +501,7 @@ class BuildQueueController:
         )
 
     def _add_to_fallback(
-        self, design_id: str, turns: Optional[int], category: str, index: Optional[int]
+        self, design_id: str, turns: Optional[float], category: str, index: Optional[int]
     ) -> None:
         """Add item to build_context.construction_queue (fallback mode).
 
@@ -548,8 +532,8 @@ class BuildQueueController:
             "type": category,
             "turns_remaining": turns
         }
-        # Add cost tracking fields with per-resource capping
-        queue_item.update(self._build_cost_tracking(design_id, turns, default_rate))
+        # Add cost tracking fields (dynamic calculation in engine)
+        queue_item.update(self._build_cost_tracking(design_id))
 
         if index is not None:
             self.build_context.construction_queue.insert(index, queue_item)

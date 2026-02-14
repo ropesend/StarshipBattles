@@ -542,8 +542,8 @@ class FleetOrderProcessor:
             and isinstance(getattr(race_config, 'race_id', None), str)
         )
 
-        if founding_pop == 0 and has_race_config:
-            founding_pop = 100  # Minimum seed: 100K people
+        # if founding_pop == 0 and has_race_config:
+        #     founding_pop = 100  # Minimum seed: 100K people - REMOVED per user request
 
         if founding_pop <= 0:
             return 0

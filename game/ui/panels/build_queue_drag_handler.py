@@ -37,7 +37,7 @@ class BuildQueueDragHandler:
         self,
         portrait_loader: 'BuildQueuePortraitLoader',
         design_library: 'DesignLibrary',
-        on_add_to_queue: Callable[[str, int, str, Optional[int]], None],
+        on_add_to_queue: Callable[[str, Optional[float], str, Optional[int]], None],
         on_refresh_queue: Callable[[], None],
         on_refresh_design_report: Callable[[str], None]
     ):
@@ -256,7 +256,7 @@ class BuildQueueDragHandler:
                 estimated_idx = rel_y // 65
                 insert_idx = max(0, min(int(estimated_idx), len(construction_queue)))
 
-                turns = self.dragged_item.get('turns', 1)
+                turns = self.dragged_item.get('turns')
                 self.on_add_to_queue(
                     self.dragged_item['design_id'],
                     turns,

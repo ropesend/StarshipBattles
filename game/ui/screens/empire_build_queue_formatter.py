@@ -115,6 +115,20 @@ def get_sector_text(source: BuildQueueSource) -> str:
     return "-"
 
 
+def format_turns_remaining(turns: float) -> str:
+    """Format turns remaining for display.
+    
+    Args:
+        turns: Number of turns (float)
+        
+    Returns:
+        Formatted string (e.g. "1.25 turns")
+    """
+    if turns <= 0:
+        return "Complete"
+    return f"{turns:.2f} turns"
+
+
 def get_turns_left_text(source: BuildQueueSource) -> str:
     """Return turns remaining for the first item in queue.
 
