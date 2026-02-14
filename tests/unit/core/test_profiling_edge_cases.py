@@ -161,3 +161,200 @@ class TestProfileBlockContextManager:
         # Record should still be created
         assert len(profiler.records) == 1
         assert profiler.records[0]["name"] == "failing_block"
+
+
+# =============================================================================
+# TCG-FND-009: Additional Profiler Edge Cases
+# =============================================================================
+
+class TestSaveHistoryWithCustomFilename:
+    """Tests for save_history with custom filename."""
+
+    def test_save_history_custom_filename(self):
+        """save_history accepts custom filename."""
+        profiler = Profiler.instance()
+        profiler.records = [{"name": "test", "duration_ms": 5.0}]
+
+        with patch("game.core.profiling.load_json", return_value=[]):
+            with patch("game.core.profiling.save_json", return_value=True) as mock_save:
+                profiler.save_history("custom_history.json")
+
+        mock_save.assert_called_once()
+        filename_arg = mock_save.call_args[0][0]
+        assert filename_arg == "custom_history.json"
+
+    def test_save_history_default_filename(self):
+        """save_history uses Paths.PROFILING_HISTORY by default."""
+        profiler = Profiler.instance()
+        profiler.records = [{"name": "test", "duration_ms": 5.0}]
+
+        with patch("game.core.profiling.load_json", return_value=[]):
+            with patch("game.core.profiling.save_json", return_value=True) as mock_save:
+                with patch("game.core.profiling.Paths") as mock_paths:
+                    mock_paths.PROFILING_HISTORY = "default_path.json"
+                    profiler.save_history()
+
+        mock_save.assert_called_once()
+        filename_arg = mock_save.call_args[0][0]
+        assert filename_arg == "default_path.json"
+
+
+class TestProfilerRecordMethod:
+    """Tests for Profiler.record() method."""
+
+    def test_record_when_inactive_does_nothing(self):
+        """record() does nothing when profiler is inactive."""
+        profiler = Profiler.instance()
+        profiler.active = False
+        profiler.records = []
+
+        profiler.record("test_action", 0.5)
+
+        assert len(profiler.records) == 0
+
+    def test_record_when_active_adds_entry(self):
+        """record() adds entry when profiler is active."""
+        profiler = Profiler.instance()
+        profiler.active = True
+        profiler.records = []
+
+        profiler.record("test_action", 0.5, metadata={"extra": "info"})
+
+        assert len(profiler.records) == 1
+        assert profiler.records[0]["name"] == "test_action"
+        assert profiler.records[0]["duration_ms"] == 500.0  # Converted to ms
+        assert profiler.records[0]["metadata"]["extra"] == "info"
+
+    def test_record_with_no_metadata(self):
+        """record() uses empty dict for metadata if not provided."""
+        profiler = Profiler.instance()
+        profiler.active = True
+        profiler.records = []
+
+        profiler.record("test_action", 0.1)
+
+        assert profiler.records[0]["metadata"] == {}
+
+
+class TestProfilerToggle:
+    """Tests for Profiler.toggle() method."""
+
+    def test_toggle_starts_when_inactive(self):
+        """toggle() starts profiler when inactive."""
+        profiler = Profiler.instance()
+        profiler.active = False
+
+        result = profiler.toggle()
+
+        assert profiler.active is True
+        assert result is True
+
+    def test_toggle_stops_when_active(self):
+        """toggle() stops profiler when active."""
+        profiler = Profiler.instance()
+        profiler.start()
+
+        result = profiler.toggle()
+
+        assert profiler.active is False
+        assert result is False
+
+
+class TestProfilerClear:
+    """Tests for Profiler.clear() method."""
+
+    def test_clear_resets_records(self):
+        """clear() empties records list."""
+        profiler = Profiler.instance()
+        profiler.records = [{"name": "test"}]
+
+        profiler.clear()
+
+        assert profiler.records == []
+
+    def test_clear_generates_new_session_id(self):
+        """clear() generates new session ID."""
+        profiler = Profiler.instance()
+        old_session = profiler.session_id
+
+        profiler.clear()
+
+        assert profiler.session_id != old_session
+
+
+class TestProfileActionDecoratorWithArgs:
+    """Additional decorator tests."""
+
+    def test_profile_action_preserves_function_args(self):
+        """Decorator preserves function arguments."""
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.records = []
+
+        @profile_action("add_func")
+        def add(a, b):
+            return a + b
+
+        result = add(5, 3)
+
+        assert result == 8
+        assert len(profiler.records) == 1
+
+    def test_profile_action_preserves_kwargs(self):
+        """Decorator preserves keyword arguments."""
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.records = []
+
+        @profile_action("greet_func")
+        def greet(name, greeting="Hello"):
+            return f"{greeting}, {name}!"
+
+        result = greet("World", greeting="Hi")
+
+        assert result == "Hi, World!"
+        assert len(profiler.records) == 1
+
+    def test_profile_action_preserves_function_name(self):
+        """Decorator preserves function __name__."""
+        @profile_action("original_func")
+        def original_func():
+            pass
+
+        assert original_func.__name__ == "original_func"
+
+
+class TestProfileBlockNested:
+    """Tests for nested profile blocks."""
+
+    def test_nested_profile_blocks(self):
+        """Nested profile blocks all record."""
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.records = []
+
+        with profile_block("outer"):
+            with profile_block("inner"):
+                x = 1 + 1
+
+        # Both blocks should be recorded
+        assert len(profiler.records) == 2
+        names = [r["name"] for r in profiler.records]
+        assert "inner" in names
+        assert "outer" in names
+
+    def test_profile_block_mixed_with_decorator(self):
+        """Profile block and decorator can be mixed."""
+        profiler = Profiler.instance()
+        profiler.start()
+        profiler.records = []
+
+        @profile_action("decorated")
+        def decorated_func():
+            with profile_block("block_inside"):
+                return 42
+
+        result = decorated_func()
+
+        assert result == 42
+        assert len(profiler.records) == 2
