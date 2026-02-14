@@ -371,3 +371,99 @@ class TestGalaxyZoneRegistry:
 
         assert len(result) == 1
         assert result[0] == (empire, fleet)
+
+
+class TestZoneSerializationRoundTrip:
+    """Tests for zone registry preservation across serialization."""
+
+    def test_dyson_sphere_zones_rebuilt_after_from_dict(self):
+        """from_dict() should rebuild Dyson Sphere zone registry."""
+        galaxy = Galaxy(radius=1000)
+        star = make_test_star(name="Sol", diameter_hexes=2.0)
+        system = StarSystem(name="Test", global_location=HexCoord(50, 50), stars=[star])
+        galaxy.add_system(system)
+
+        # Create Dyson Sphere planet with diameter_hexes
+        dyson = make_test_planet(
+            name="Dyson Sphere",
+            planet_type=PlanetType.DYSON_SPHERE,
+            location=HexCoord(5, 0),
+            diameter_hexes=11.0  # 11-hex diameter -> radius 6
+        )
+        system.planets.append(dyson)
+        galaxy.register_planet(system, dyson)
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        # Dyson zone should be rebuilt
+        restored_system = restored.get_system_by_name("Test")
+        restored_dyson = next(p for p in restored_system.planets if p.name == "Dyson Sphere")
+
+        # Check zone exists at multiple zone hexes
+        for local_hex in restored_dyson.occupied_hexes:
+            global_hex = restored_system.global_location + local_hex
+            zones = restored.get_zones_at_global_hex(global_hex)
+            assert any(p.name == "Dyson Sphere" for p in zones), \
+                f"Dyson zone not rebuilt at {global_hex}"
+
+    def test_planet_diameter_hexes_preserved_after_from_dict(self):
+        """Planet.diameter_hexes should be preserved through serialization."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0))
+        galaxy.add_system(system)
+
+        dyson = make_test_planet(
+            name="Dyson Test",
+            planet_type=PlanetType.DYSON_SPHERE,
+            location=HexCoord(0, 0),
+            diameter_hexes=11.0
+        )
+        system.planets.append(dyson)
+        galaxy.register_planet(system, dyson)
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        restored_system = restored.get_system_by_name("Test")
+        restored_dyson = next(p for p in restored_system.planets if p.name == "Dyson Test")
+
+        # diameter_hexes should be preserved
+        assert restored_dyson.diameter_hexes == 11.0
+
+    def test_star_zones_and_dyson_zones_coexist_after_from_dict(self):
+        """from_dict() should rebuild both star and Dyson Sphere zones correctly."""
+        galaxy = Galaxy(radius=1000)
+        star = make_test_star(name="BigStar", diameter_hexes=5.0)  # radius 3 -> 37 hexes
+        system = StarSystem(name="Test", global_location=HexCoord(0, 0), stars=[star])
+        galaxy.add_system(system)
+
+        # Add Dyson Sphere far from star
+        dyson = make_test_planet(
+            name="Dyson",
+            planet_type=PlanetType.DYSON_SPHERE,
+            location=HexCoord(20, 0),
+            diameter_hexes=11.0
+        )
+        system.planets.append(dyson)
+        galaxy.register_planet(system, dyson)
+
+        # Serialize and deserialize
+        data = galaxy.to_dict()
+        restored = Galaxy.from_dict(data)
+
+        restored_system = restored.get_system_by_name("Test")
+        restored_star = restored_system.stars[0]
+        restored_dyson = next(p for p in restored_system.planets if p.name == "Dyson")
+
+        # Star zones rebuilt
+        star_zone_hex = restored_system.global_location + HexCoord(2, 0)
+        star_zones = restored.get_zones_at_global_hex(star_zone_hex)
+        assert any(hasattr(z, 'star_type') for z in star_zones), "Star zone not rebuilt"
+
+        # Dyson zones rebuilt
+        dyson_zone_hex = restored_system.global_location + HexCoord(20 + 3, 0)
+        dyson_zones = restored.get_zones_at_global_hex(dyson_zone_hex)
+        assert any(p.name == "Dyson" for p in dyson_zones), "Dyson zone not rebuilt"
