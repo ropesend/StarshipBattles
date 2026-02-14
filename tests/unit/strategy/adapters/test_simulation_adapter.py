@@ -317,3 +317,68 @@ class TestSimulationBattleResolverBehavior:
             # Verify mode=STRATEGY in config
             call_kwargs = mock_config_cls.call_args.kwargs
             assert call_kwargs.get('mode') == 'STRATEGY'
+
+
+# =============================================================================
+# SimulationBattleResolver Dependency Injection Tests
+# =============================================================================
+
+
+class TestSimulationBattleResolverDependencyInjection:
+    """Test SimulationBattleResolver supports dependency injection of AI factory.
+
+    PROJ-147: ADR-STR-001 - Strategy layer should not directly import from AI layer.
+    The AI factory should be injectable to maintain proper layer separation.
+    """
+
+    def test_accepts_ai_factory_parameter(self):
+        """SimulationBattleResolver should accept optional ai_factory parameter."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+        from unittest.mock import MagicMock
+
+        mock_factory = MagicMock()
+        resolver = SimulationBattleResolver(ai_factory=mock_factory)
+        assert resolver is not None
+        assert resolver._ai_factory is mock_factory
+
+    def test_uses_injected_ai_factory(self):
+        """SimulationBattleResolver should use injected ai_factory when provided."""
+        from game.strategy.adapters.simulation_adapter import SimulationBattleResolver
+        from unittest.mock import MagicMock, patch
+
+        mock_factory = MagicMock()
+        resolver = SimulationBattleResolver(ai_factory=mock_factory)
+
+        fleet1 = MagicMock()
+        fleet1.id = 1
+        fleet1.to_battle_ships.return_value = [MagicMock()]
+
+        fleet2 = MagicMock()
+        fleet2.id = 2
+        fleet2.to_battle_ships.return_value = [MagicMock()]
+
+        with patch('game.strategy.adapters.simulation_adapter.BattleController') as mock_controller_cls:
+            mock_controller = MagicMock()
+            mock_controller_cls.return_value = mock_controller
+
+            mock_results = MagicMock()
+            mock_results.winner = 0
+            mock_results.tick_count = 100
+            mock_results.surviving_ships = []
+            mock_controller.run_headless.return_value = mock_results
+
+            resolver.resolve_battle(fleet1, fleet2)
+
+            # Verify BattleController was created with the injected factory
+            mock_controller_cls.assert_called_once_with(ai_factory=mock_factory)
+
+    def test_no_direct_ai_layer_import_at_module_level(self):
+        """SimulationBattleResolver module should not import AIControllerFactory at module level."""
+        import game.strategy.adapters.simulation_adapter as module
+        import inspect
+
+        source = inspect.getsource(module)
+        # Check that the module-level imports don't include direct AI factory import
+        # The import should be inside resolve_battle method, not at module level
+        module_imports_section = source.split('class SimulationBattleResolver')[0]
+        assert 'from game.ai.ai_factory import AIControllerFactory' not in module_imports_section

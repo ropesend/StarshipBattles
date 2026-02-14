@@ -8,20 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-14
-**Last Completed:** PROJ-147 Phase 2 - Assessed 3 Simulation findings (no code changes)
-**Current Status:** Phase 2 complete, ready for Phase 3
+**Last Completed:** PROJ-147 Phase 3 - ADR-STR-001 fixed; 4 findings documented as intentional
+**Current Status:** Phase 3 complete, ready for Phase 4
 **Current Project:** PROJ-147
-**Current Phase:** Phase 3
-**Test Status:** 12868 passed, 2 skipped (2 pre-existing collection errors)
+**Current Phase:** Phase 4
+**Test Status:** 12871 passed, 2 skipped (2 pre-existing collection errors)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Completed Phase 2: All 3 Simulation findings assessed
-- ADR-SIM-001 (Ship class): Already decomposed, monitoring only - NO ACTION
-- ADR-SIM-002 (Late imports): Documented intentional pattern - NO ACTION
-- ADR-SIM-003 (Component loader): MINOR severity, 100+ import sites - DEFERRED
-- Next: Phase 3 (Strategy) tasks
-- Tests passing with expected baseline
+- Completed Phase 3: All 5 Strategy findings addressed
+- ADR-STR-001: FIXED - Removed module-level AI import; added DI pattern to SimulationBattleResolver
+- ADR-STR-002: NO ACTION - ShipDisplayFormatter intentionally in strategy layer (documented)
+- ADR-STR-003: NO ACTION - Intentional late import pattern (documented in code/ARCHITECTURE.md)
+- ADR-STR-004: NO ACTION - Same as above
+- ADR-STR-005: NO ACTION - RGB tuples are game-semantic identifiers (documented in code)
+- Modified: game/strategy/adapters/simulation_adapter.py
+- Modified: tests/unit/strategy/adapters/test_simulation_adapter.py (3 new tests)
+- Next: Phase 4 (UI-Framework) tasks
 
 ---
 
@@ -91,6 +94,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-14 | PROJ-147 | Phase 1 | Complete | 12868 passed | 829913b1 | Moved research UI to game/ui/research/ |
 | 2026-02-14 | PROJ-147 | Phase 2 | Complete | 12868 passed | 5886c692 | Assessed 3 findings; no code changes (monitoring/documented/deferred) |
+| 2026-02-14 | PROJ-147 | Phase 3 | Complete | 12871 passed | d1175bd7 | ADR-STR-001 fixed (DI pattern); 4 findings documented as intentional |
 
 ---
 

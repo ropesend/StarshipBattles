@@ -11,3 +11,8 @@
 | 2026-02-14 | Phase 2 ADR-SIM-001: No action | Ship class already decomposed; report says "monitoring only" |
 | 2026-02-14 | Phase 2 ADR-SIM-002: No action | Intentional late imports are documented architectural decision |
 | 2026-02-14 | Phase 2 ADR-SIM-003: Deferred | MINOR severity; 100+ import sites makes cost > benefit |
+| 2026-02-14 | Phase 3 ADR-STR-001: Fixed | Removed module-level AI import; added DI pattern with late import fallback |
+| 2026-02-14 | Phase 3 ADR-STR-002: No action | ShipDisplayFormatter intentionally in strategy layer - docstring documents rationale (no pygame deps, pure string formatting) |
+| 2026-02-14 | Phase 3 ADR-STR-003: No action | Intentional late import pattern (line 468) - documented in comment, per ARCHITECTURE.md |
+| 2026-02-14 | Phase 3 ADR-STR-004: No action | Same as ADR-SIM-002/STR-003 - documented intentional pattern |
+| 2026-02-14 | Phase 3 ADR-STR-005: No action | RGB tuples in game_config.py - docstring explains they're game-semantic identifiers, not pygame types |

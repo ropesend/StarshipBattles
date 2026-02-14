@@ -25,8 +25,9 @@ if TYPE_CHECKING:
 from game.simulation.battle_controller import BattleController
 from game.simulation.battle_config import BattleConfig, BattleMode
 from game.simulation.services.battle_service import BattleService
-# PROJ-126: Import AI factory from AI layer (strategy can depend on AI)
-from game.ai.ai_factory import AIControllerFactory
+
+if TYPE_CHECKING:
+    from game.simulation.interfaces.ai_controller import IAIControllerFactory
 
 
 class SimulationBattleResolver(IBattleResolver):
@@ -35,7 +36,21 @@ class SimulationBattleResolver(IBattleResolver):
 
     Uses BattleController to run headless battles and converts
     the results to strategy-layer BattleResult objects.
+
+    PROJ-147: Supports dependency injection of AI factory to maintain
+    layer separation (strategy should not import directly from AI layer).
     """
+
+    def __init__(self, ai_factory: Optional['IAIControllerFactory'] = None):
+        """
+        Initialize the battle resolver.
+
+        Args:
+            ai_factory: Optional AI controller factory. If None, creates
+                       AIControllerFactory from game.ai (late import to
+                       avoid module-level AI layer dependency).
+        """
+        self._ai_factory = ai_factory
 
     def resolve_battle(
         self,
@@ -91,8 +106,13 @@ class SimulationBattleResolver(IBattleResolver):
             )
 
         # Create battle controller
-        # PROJ-126: Inject AI factory from strategy layer (can depend on AI layer)
-        ai_factory = AIControllerFactory()
+        # PROJ-147: Use injected factory or create via late import
+        # Late import maintains layer separation at module level while
+        # still allowing default behavior when no factory is injected
+        ai_factory = self._ai_factory
+        if ai_factory is None:
+            from game.ai.ai_factory import AIControllerFactory
+            ai_factory = AIControllerFactory()
         controller = BattleController(ai_factory=ai_factory)
 
         # Configure battle
