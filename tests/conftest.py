@@ -267,3 +267,39 @@ def make_mock_ship_instance(name="Test Ship", owner_id=0):
             'stats': {'mass': 100}
         },
     )
+
+
+def make_colony_ship_for_planet(planet, owner_id=0, name="Colony Ship"):
+    """
+    Create a colony ship that can colonize a specific planet.
+
+    PROJ-140: Creates a ship with a colony pod matching the planet's type.
+    Use this for integration tests that need working colonization.
+
+    Args:
+        planet: The Planet object to create a colony ship for
+        owner_id: Owner empire ID
+        name: Ship name
+
+    Returns:
+        ShipInstance: A colony ship that can colonize the given planet type
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    planet_type_str = planet.planet_type.name
+    pod_id = f"{planet_type_str.lower()}_colony_pod"
+
+    return ShipInstance(
+        instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=f"{planet_type_str}_colony_ship",
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': pod_id}]
+            }
+        },
+    )

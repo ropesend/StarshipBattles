@@ -71,3 +71,40 @@ def create_mock_component_def(
     mock_def.mass = mass
     mock_def.damage_threshold = damage_threshold
     return mock_def
+
+
+def create_colony_ship(name="Colony Ship", owner_id=0, pod_type="ICE_DWARF"):
+    """Helper to create a colony ship with proper pod for colonization.
+
+    PROJ-140: Colony ships need a proper colony pod in design_data to colonize.
+
+    Args:
+        name: Ship name
+        owner_id: Owner empire ID
+        pod_type: Planet type this ship can colonize (e.g. "ICE_DWARF")
+
+    Returns:
+        ShipInstance with colony pod ability
+    """
+    from game.strategy.data.ship_instance import ShipInstance
+
+    return ShipInstance(
+        instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=f"{pod_type}_colony_ship",
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
+            }
+        },
+    )
+
+
+class MockPlanetType:
+    """Mock planet type with name attribute."""
+    def __init__(self, name):
+        self.name = name

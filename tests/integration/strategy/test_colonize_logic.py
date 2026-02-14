@@ -1,10 +1,17 @@
 
 import pytest
-from unittest.mock import MagicMock
+from enum import Enum
 from game.strategy.engine.turn_engine import TurnEngine
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
+from game.strategy.data.ship_instance import ShipInstance
 from game.core.hex_math import HexCoord
+
+
+class MockPlanetType(Enum):
+    """Mock planet types for testing."""
+    ICE_DWARF = "ICE_DWARF"
+
 
 # Mock Data Structures matching the actual implementation usage
 class MockSystem:
@@ -19,12 +26,13 @@ class MockPlanet:
         self.location = relative_loc # Relative to system
         self.owner_id = owner_id
         self.construction_queue = [] # Required by Engine
-        self.planet_type = MagicMock() 
+        self.planet_type = MockPlanetType.ICE_DWARF
+        self.populations = [] 
 
 class MockGalaxy:
     def __init__(self):
         self.systems = {} # Map global_loc -> System
-        
+
     def get_planets_at_global_hex(self, global_hex):
         """Return planets at the given global hex (calculates from system data)."""
         result = []
@@ -33,6 +41,24 @@ class MockGalaxy:
                 if (sys.global_location + p.location) == global_hex:
                     result.append(p)
         return result
+
+
+def make_colony_ship(name: str, owner_id: int, pod_type: str = "ICE_DWARF") -> ShipInstance:
+    """Create a ship with a colony pod component for testing."""
+    return ShipInstance(
+        instance_id=f"colony-{name.lower().replace(' ', '-')}-{id(name)}",
+        design_id=f"{pod_type}_colony_ship",
+        name=name,
+        owner_id=owner_id,
+        design_data={
+            'name': name,
+            'vehicle_type': 'Ship',
+            'stats': {'mass': 100},
+            'layers': {
+                'HULL': [{'id': f'{pod_type.lower()}_colony_pod'}]
+            }
+        },
+    )
 
 @pytest.fixture
 def turn_engine():
@@ -56,17 +82,18 @@ def galaxy_setup():
 
 def test_colonize_specific_success_at_exact_location(turn_engine, galaxy_setup):
     galaxy, system, pA, pB = galaxy_setup
-    
+
     # Fleet at (11, 10) trying to colonize Planet B (which is globally at 11, 10)
     fleet = Fleet(1, 1, HexCoord(11, 10))
+    fleet.ships.append(make_colony_ship("Colony Ship", 1))  # PROJ-140: Add proper colony ship
     fleet.orders.append(FleetOrder(OrderType.COLONIZE, pB))
-    
+
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
-    
+
     # Execute
     result = turn_engine._process_end_turn_orders(fleet, empire, galaxy)
-    
+
     assert result is True
     assert pB.owner_id == 1
     assert pB in empire.colonies
@@ -74,17 +101,18 @@ def test_colonize_specific_success_at_exact_location(turn_engine, galaxy_setup):
 
 def test_colonize_specific_fail_wrong_location(turn_engine, galaxy_setup):
     galaxy, system, pA, pB = galaxy_setup
-    
+
     # Fleet at (10, 10) (System Center / Planet A) trying to colonize Planet B (at 11, 10)
     # Current Logic Rule: Must be at specific hex
     fleet = Fleet(1, 1, HexCoord(10, 10))
+    fleet.ships.append(make_colony_ship("Colony Ship", 1))  # PROJ-140: Add proper colony ship
     fleet.orders.append(FleetOrder(OrderType.COLONIZE, pB))
-    
+
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
-    
+
     result = turn_engine._process_end_turn_orders(fleet, empire, galaxy)
-    
+
     assert result is False
     assert pB.owner_id is None # Not colonized
     assert len(fleet.orders) == 0 # Order popped (failed)
@@ -92,16 +120,17 @@ def test_colonize_specific_fail_wrong_location(turn_engine, galaxy_setup):
 
 def test_colonize_any_success_at_location(turn_engine, galaxy_setup):
     galaxy, system, pA, pB = galaxy_setup
-    
+
     # Fleet at (10, 10). Should define Planet A as target because it matches location
     fleet = Fleet(1, 1, HexCoord(10, 10))
+    fleet.ships.append(make_colony_ship("Colony Ship", 1))  # PROJ-140: Add proper colony ship
     fleet.orders.append(FleetOrder(OrderType.COLONIZE, None)) # ANY
-    
+
     empire = Empire(1, "Player 1", (255, 0, 0))
     empire.fleets.append(fleet)
-    
+
     result = turn_engine._process_end_turn_orders(fleet, empire, galaxy)
-    
+
     assert result is True
     assert pA.owner_id == 1
     assert pA in empire.colonies

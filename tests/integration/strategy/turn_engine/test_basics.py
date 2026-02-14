@@ -6,7 +6,7 @@ from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
 from unittest.mock import MagicMock, patch
 
-from .conftest import MockGalaxy
+from .conftest import MockGalaxy, create_colony_ship, MockPlanetType
 
 
 @patch('game.strategy.data.pathfinding.find_hybrid_path')
@@ -114,12 +114,14 @@ def test_order_chaining():
     """Verify Colonize executes after Move finishes."""
     engine = TurnEngine()
 
-    # Create a mock planet with proper location
+    # Create a mock planet with proper location and planet type
     planet = MagicMock()
     planet.name = "Test Planet"
     planet.owner_id = None
     planet.construction_queue = []
     planet.location = HexCoord(0, 0)  # At system center (relative)
+    planet.planet_type = MockPlanetType("ICE_DWARF")  # PROJ-140: Proper planet type
+    planet.populations = []
 
     # Create mock system containing the planet
     mock_system = MagicMock()
@@ -131,6 +133,7 @@ def test_order_chaining():
     galaxy.systems[HexCoord(1, 0)] = mock_system
 
     f1 = Fleet(1, 0, HexCoord(0,0), speed=100.0) # Fast, arrives instantly
+    f1.ships.append(create_colony_ship("Colony Ship", 0))  # PROJ-140: Add proper colony ship
     f1.path = [HexCoord(1,0)]
     f1.add_order(FleetOrder(OrderType.MOVE, HexCoord(1,0)))
     f1.add_order(FleetOrder(OrderType.COLONIZE, planet))
@@ -155,12 +158,14 @@ def test_colonize_deletes_fleet():
     """Verify colonizing fleet is removed from empire after colonization."""
     engine = TurnEngine()
 
-    # Create a mock planet with proper location
+    # Create a mock planet with proper location and planet type
     planet = MagicMock()
     planet.name = "Test Planet"
     planet.owner_id = None
     planet.construction_queue = []
     planet.location = HexCoord(0, 0)  # At system center (relative)
+    planet.planet_type = MockPlanetType("ICE_DWARF")  # PROJ-140: Proper planet type
+    planet.populations = []
 
     # Create mock system containing the planet
     mock_system = MagicMock()
@@ -172,6 +177,7 @@ def test_colonize_deletes_fleet():
     galaxy.systems[HexCoord(1, 0)] = mock_system
 
     f1 = Fleet(1, 0, HexCoord(1, 0), speed=5.0)
+    f1.ships.append(create_colony_ship("Colony Ship", 0))  # PROJ-140: Add proper colony ship
     f1.orders = [FleetOrder(OrderType.COLONIZE, planet)]
 
     e1 = Empire(0, "P1", (0, 0, 0))

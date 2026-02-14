@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Fix Execution-Time Validation (Bugs 1+2) | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Fix Execution-Time Validation (Bugs 1+2) | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Fix "Any Planet" Validation (Bug 5) | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix UI Designation Filtering (Bug 3) | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Fix Mission Command Handler (Bug 4) | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,11 +21,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-13
-**Active Phase:** Planning — Awaiting Approval
-**Last Action:** Deep code review + 6-agent swarm analysis complete. Detailed plan written.
-**Next Action:** User approval, then begin Phase 1 implementation
+**Active Phase:** Phase 1 Complete — Phase 2 Next
+**Last Action:** Phase 1 complete: Fixed execution-time validation (Bugs 1+2)
+**Next Action:** Begin Phase 2 - Fix "Any Planet" Validation (Bug 5)
 **Blockers:** None
-**Context for Next Agent:** Baseline is 11852 tests passing. All fixtures exist in test_planet_specific_colonization.py. The core fix is a one-line change (pass `component_registry` to validator) plus restructuring process_colonize() for safety.
+**Context for Next Agent:** Phase 1 complete with 11942 tests passing (+2 from baseline). Fixed: (1) process_colonize now passes component_registry to validator with skip_chain_check=True, (2) Pre-check colony ship before mutations, (3) Updated ColonizeValidator.validate() with skip_chain_check param, (4) Added make_colony_ship_for_planet() to tests/conftest.py, (5) Updated test fixtures to use proper colony ships and planet types.
 
 ## Overview
 

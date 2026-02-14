@@ -9,7 +9,7 @@ import pytest
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
-from tests.conftest import make_mock_ship_instance
+from tests.conftest import make_mock_ship_instance, make_colony_ship_for_planet
 
 
 class TestColonizationExecution:
@@ -99,7 +99,8 @@ class TestColonizationWithMovement:
         # Create fleet nearby (1 hex away)
         start_loc = HexCoord(target_loc.q + 1, target_loc.r)
         fleet = Fleet(1, empire.id, start_loc, speed=100.0)  # Fast
-        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
+        # PROJ-140: Use proper colony ship that matches planet type
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire.id)]
         empire.add_fleet(fleet)
 
         # Queue move then colonize

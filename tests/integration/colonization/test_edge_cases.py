@@ -9,7 +9,7 @@ import pytest
 from game.strategy.data.empire import Empire
 from game.strategy.data.fleet import Fleet, FleetOrder, OrderType
 from game.core.hex_math import HexCoord
-from tests.conftest import make_mock_ship_instance
+from tests.conftest import make_mock_ship_instance, make_colony_ship_for_planet
 
 
 class TestColonizationEdgeCases:
@@ -51,13 +51,14 @@ class TestColonizationEdgeCases:
         assert target_planet is not None
 
         # Both empires have fleets at the planet location
+        # PROJ-140: Use proper colony ships that match planet type
         fleet1 = Fleet(1, empire1.id, target_loc, speed=10.0)
-        fleet1.ships = [make_mock_ship_instance("Colony Ship", empire1.id)]
+        fleet1.ships = [make_colony_ship_for_planet(target_planet, empire1.id)]
         fleet1.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire1.add_fleet(fleet1)
 
         fleet2 = Fleet(2, empire2.id, target_loc, speed=10.0)
-        fleet2.ships = [make_mock_ship_instance("Colony Ship", empire2.id)]
+        fleet2.ships = [make_colony_ship_for_planet(target_planet, empire2.id)]
         fleet2.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire2.add_fleet(fleet2)
 
@@ -169,9 +170,10 @@ class TestColonizationStateIntegrity:
         # PROJ-40: Deterministic fixture guarantees unowned planet
         assert target_planet is not None
 
-        # Create fleet at planet location
+        # Create fleet at planet location with proper colony ship
         fleet = Fleet(10, empire.id, target_loc, speed=10.0)
-        fleet.ships = [make_mock_ship_instance("Colony Ship", empire.id)]
+        # PROJ-140: Use proper colony ship that matches planet type
+        fleet.ships = [make_colony_ship_for_planet(target_planet, empire.id)]
         fleet.add_order(FleetOrder(OrderType.COLONIZE, target=target_planet))
         empire.add_fleet(fleet)
 

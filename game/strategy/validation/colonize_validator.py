@@ -52,7 +52,8 @@ class ColonizeValidator:
         galaxy,
         fleet,
         target_planet,
-        component_registry: Optional[Dict[str, Any]] = None
+        component_registry: Optional[Dict[str, Any]] = None,
+        skip_chain_check: bool = False
     ) -> ValidationResult:
         """
         Validate if a fleet can colonize a specific planet.
@@ -63,6 +64,8 @@ class ColonizeValidator:
             target_planet: The Planet object or None for 'Any'
             component_registry: Optional component registry dict for pod lookup.
                                If provided, validates colony pod requirements.
+            skip_chain_check: If True, skip chain exhaustion check. Use during
+                             execution (we're processing the order, not adding it).
 
         Returns:
             ValidationResult with error codes:
@@ -127,18 +130,20 @@ class ColonizeValidator:
                     )
 
                 # Check chain limits - ensure not over-committed
-                available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
-                committed = ColonizeValidator.get_committed_colony_pods(fleet)
+                # PROJ-140: Skip chain check during execution (order is already in queue)
+                if not skip_chain_check:
+                    available = ColonizeValidator.get_available_colony_pods(fleet, component_registry)
+                    committed = ColonizeValidator.get_committed_colony_pods(fleet)
 
-                available_count = available.get(planet_type_str, 0)
-                committed_count = committed.get(planet_type_str, 0)
+                    available_count = available.get(planet_type_str, 0)
+                    committed_count = committed.get(planet_type_str, 0)
 
-                if committed_count >= available_count:
-                    return ValidationResult(
-                        is_valid=False,
-                        errors=[f"All {planet_type_str} colony pods already assigned"],
-                        error_code="COLONY_POD_EXHAUSTED"
-                    )
+                    if committed_count >= available_count:
+                        return ValidationResult(
+                            is_valid=False,
+                            errors=[f"All {planet_type_str} colony pods already assigned"],
+                            error_code="COLONY_POD_EXHAUSTED"
+                        )
 
             return ValidationResult()
 
