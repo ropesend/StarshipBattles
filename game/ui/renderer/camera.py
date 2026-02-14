@@ -1,4 +1,11 @@
-"""Camera module for viewport management and coordinate transformations."""
+"""Camera module for viewport management and coordinate transformations.
+
+ADR-UI2-002: Uses pygame.math.Vector2 intentionally (not game.core.math.Vector2).
+Camera is a pure pygame rendering component that performs coordinate transformations
+for the viewport. Using pygame's Vector2 is appropriate here since this module
+only operates within the UI layer and integrates directly with pygame rendering.
+The core Vector2 class is designed for layer-agnostic simulation code.
+"""
 from typing import List, Optional, Tuple, Any
 import pygame
 

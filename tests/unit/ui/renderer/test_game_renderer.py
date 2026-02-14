@@ -135,7 +135,7 @@ class TestDrawShipCulling:
 
         mock_ship.is_alive = False
 
-        with patch('game.ui.assets.ShipThemeManager'):
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager'):
             draw_ship(mock_surface, mock_ship, mock_camera)
 
         # Should not have called any pygame.draw methods
@@ -149,7 +149,7 @@ class TestDrawShipCulling:
         mock_ship.position.x = -1000.0
         mock_ship.position.y = 500.0
 
-        with patch('game.ui.assets.ShipThemeManager'):
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager'):
             with patch('game.ui.renderer.game_renderer.pygame'):
                 draw_ship(mock_surface, mock_ship, mock_camera)
 
@@ -164,7 +164,7 @@ class TestDrawShipCulling:
         mock_ship.position.x = 5000.0
         mock_ship.position.y = 500.0
 
-        with patch('game.ui.assets.ShipThemeManager'):
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager'):
             with patch('game.ui.renderer.game_renderer.pygame'):
                 draw_ship(mock_surface, mock_ship, mock_camera)
 
@@ -177,7 +177,7 @@ class TestDrawShipCulling:
         mock_ship.position.x = 500.0
         mock_ship.position.y = -1000.0
 
-        with patch('game.ui.assets.ShipThemeManager'):
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager'):
             with patch('game.ui.renderer.game_renderer.pygame'):
                 draw_ship(mock_surface, mock_ship, mock_camera)
 
@@ -190,7 +190,7 @@ class TestDrawShipCulling:
         mock_ship.position.x = 500.0
         mock_ship.position.y = 5000.0
 
-        with patch('game.ui.assets.ShipThemeManager'):
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager'):
             with patch('game.ui.renderer.game_renderer.pygame'):
                 draw_ship(mock_surface, mock_ship, mock_camera)
 
@@ -253,7 +253,7 @@ class TestDrawShipRendering:
         mock_rotated.get_size.return_value = (64, 64)
         mock_rotated.get_rect.return_value = Mock(center=(500, 500))
 
-        with patch('game.ui.assets.ShipThemeManager') as mock_stm:
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager') as mock_stm:
             mock_stm.instance.return_value = mock_theme_manager
             with patch('game.ui.renderer.game_renderer.scale_and_rotate_image', return_value=mock_rotated):
                 with patch('game.ui.renderer.game_renderer.calculate_ship_image_scale', return_value=1.0):
@@ -269,7 +269,7 @@ class TestDrawShipRendering:
         mock_theme_manager = Mock()
         mock_theme_manager.load_image.return_value = None
 
-        with patch('game.ui.assets.ShipThemeManager') as mock_stm:
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager') as mock_stm:
             mock_stm.instance.return_value = mock_theme_manager
             with patch('game.ui.renderer.game_renderer.pygame') as mock_pygame:
                 draw_ship(mock_surface, mock_ship, mock_camera)
@@ -290,7 +290,7 @@ class TestDrawShipRendering:
         mock_theme_manager = Mock()
         mock_theme_manager.load_image.return_value = mock_image
 
-        with patch('game.ui.assets.ShipThemeManager') as mock_stm:
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager') as mock_stm:
             mock_stm.instance.return_value = mock_theme_manager
             with patch('game.ui.renderer.game_renderer.pygame') as mock_pygame:
                 draw_ship(mock_surface, mock_ship, mock_camera)
@@ -367,7 +367,7 @@ class TestDrawShipOverlay:
         mock_theme_manager = Mock()
         mock_theme_manager.load_image.return_value = None
 
-        with patch('game.ui.assets.ShipThemeManager') as mock_stm:
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager') as mock_stm:
             mock_stm.instance.return_value = mock_theme_manager
             with patch('game.ui.renderer.game_renderer.pygame') as mock_pygame:
                 # Need to preserve Vector2 for math operations
@@ -385,7 +385,7 @@ class TestDrawShipOverlay:
         mock_theme_manager = Mock()
         mock_theme_manager.load_image.return_value = None
 
-        with patch('game.ui.assets.ShipThemeManager') as mock_stm:
+        with patch('game.ui.renderer.game_renderer.ShipThemeManager') as mock_stm:
             mock_stm.instance.return_value = mock_theme_manager
             with patch('game.ui.renderer.game_renderer.pygame') as mock_pygame:
                 # Need to preserve Vector2 for math operations

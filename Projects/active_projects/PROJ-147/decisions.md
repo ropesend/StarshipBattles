@@ -16,3 +16,6 @@
 | 2026-02-14 | Phase 3 ADR-STR-003: No action | Intentional late import pattern (line 468) - documented in comment, per ARCHITECTURE.md |
 | 2026-02-14 | Phase 3 ADR-STR-004: No action | Same as ADR-SIM-002/STR-003 - documented intentional pattern |
 | 2026-02-14 | Phase 3 ADR-STR-005: No action | RGB tuples in game_config.py - docstring explains they're game-semantic identifiers, not pygame types |
+| 2026-02-14 | Phase 4 ADR-UI2-001: Fixed | ShipIO now uses DesignLoaderAdapter for ship loading; TYPE_CHECKING for Ship type hints |
+| 2026-02-14 | Phase 4 ADR-UI2-002: No action | Camera using pygame.math.Vector2 is intentional - it's a pygame rendering component; core Vector2 is for layer-agnostic code |
+| 2026-02-14 | Phase 4 ADR-UI2-003: Fixed | Moved ShipThemeManager import to module level in game_renderer.py |

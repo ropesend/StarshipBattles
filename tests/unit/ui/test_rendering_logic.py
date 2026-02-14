@@ -58,7 +58,7 @@ class TestRenderingLogic:
 
         self.mock_draw.circle.assert_not_called()
 
-    @patch('game.ui.assets.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
     def test_component_color_coding(self, mock_theme_mgr_cls):
         """Verify components are colored based on abilities."""
         mock_theme_instance = MagicMock()
@@ -147,7 +147,7 @@ class TestDrawShipBehavior:
             draw_ship(surface, ship, camera)
             mock_draw.circle.assert_not_called()
 
-    @patch('game.ui.assets.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
     def test_draw_ship_with_theme_image(self, mock_theme_cls):
         """Test draw_ship with theme image available draws it."""
         ship = self._create_mock_ship()
@@ -168,7 +168,7 @@ class TestDrawShipBehavior:
         # Should have called blit (to draw the theme image)
         assert surface.blit.called
 
-    @patch('game.ui.assets.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
     def test_draw_ship_no_theme_image_draws_dot(self, mock_theme_cls):
         """Test draw_ship with no theme image (fallback to geometric rendering)."""
         ship = self._create_mock_ship()
@@ -185,7 +185,7 @@ class TestDrawShipBehavior:
             # Should draw a simple circle (dot) as fallback
             assert mock_draw.circle.called
 
-    @patch('game.ui.assets.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
     def test_draw_ship_zoom_affects_radius(self, mock_theme_cls):
         """Test draw_ship with different zoom levels affects scaled_radius."""
         ship = self._create_mock_ship()
@@ -209,7 +209,7 @@ class TestDrawShipBehavior:
             draw_ship(surface, ship, camera_high)
             # Still should draw
 
-    @patch('game.ui.assets.ShipThemeManager')
+    @patch('game.ui.renderer.game_renderer.ShipThemeManager')
     def test_draw_ship_at_camera_boundary(self, mock_theme_cls):
         """Test draw_ship at camera boundary (partially visible) still draws."""
         ship = self._create_mock_ship()

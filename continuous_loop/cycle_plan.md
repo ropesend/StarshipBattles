@@ -8,23 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-14
-**Last Completed:** PROJ-147 Phase 3 - ADR-STR-001 fixed; 4 findings documented as intentional
-**Current Status:** Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-147 Phase 4 - ADR-UI2-001 & ADR-UI2-003 fixed; ADR-UI2-002 documented as intentional
+**Current Status:** Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-147
-**Current Phase:** Phase 4
-**Test Status:** 12871 passed, 2 skipped (2 pre-existing collection errors)
+**Current Phase:** Phase 5
+**Test Status:** 12871 passed, 2 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- Completed Phase 3: All 5 Strategy findings addressed
-- ADR-STR-001: FIXED - Removed module-level AI import; added DI pattern to SimulationBattleResolver
-- ADR-STR-002: NO ACTION - ShipDisplayFormatter intentionally in strategy layer (documented)
-- ADR-STR-003: NO ACTION - Intentional late import pattern (documented in code/ARCHITECTURE.md)
-- ADR-STR-004: NO ACTION - Same as above
-- ADR-STR-005: NO ACTION - RGB tuples are game-semantic identifiers (documented in code)
-- Modified: game/strategy/adapters/simulation_adapter.py
-- Modified: tests/unit/strategy/adapters/test_simulation_adapter.py (3 new tests)
-- Next: Phase 4 (UI-Framework) tasks
+- Completed Phase 4: All 3 UI-Framework findings addressed
+- ADR-UI2-001: FIXED - ShipIO now uses DesignLoaderAdapter for ship loading; TYPE_CHECKING for Ship type hints
+- ADR-UI2-002: NO ACTION - Camera using pygame.math.Vector2 is intentional for pygame rendering component (documented in docstring)
+- ADR-UI2-003: FIXED - Moved ShipThemeManager import to module level in game_renderer.py
+- Modified: game/ui/services/ship_io.py
+- Modified: game/ui/renderer/game_renderer.py
+- Modified: game/ui/renderer/camera.py (docstring only)
+- Modified: tests/unit/ui/renderer/test_game_renderer.py (patch locations)
+- Modified: tests/unit/ui/test_rendering_logic.py (patch locations)
+- Next: Phase 5 (UI-Screens) tasks
 
 ---
 
@@ -95,6 +96,7 @@
 | 2026-02-14 | PROJ-147 | Phase 1 | Complete | 12868 passed | 829913b1 | Moved research UI to game/ui/research/ |
 | 2026-02-14 | PROJ-147 | Phase 2 | Complete | 12868 passed | 5886c692 | Assessed 3 findings; no code changes (monitoring/documented/deferred) |
 | 2026-02-14 | PROJ-147 | Phase 3 | Complete | 12871 passed | d1175bd7 | ADR-STR-001 fixed (DI pattern); 4 findings documented as intentional |
+| 2026-02-14 | PROJ-147 | Phase 4 | Complete | 12871 passed | 30097fd9 | ADR-UI2-001/003 fixed; ADR-UI2-002 documented as intentional |
 
 ---
 

@@ -5,6 +5,7 @@ Moved from game.simulation.systems.persistence to game.ui.services as part of PR
 to fix layer violation: tkinter is a UI framework and doesn't belong in simulation layer.
 
 DUP-UI2-001: Tkinter initialization now uses shared tkinter_utils module.
+ADR-UI2-001: Uses DesignLoaderAdapter for ship loading (TYPE_CHECKING for Ship type hints).
 
 This module handles:
 - Saving ship designs to JSON files via file dialog
@@ -12,27 +13,44 @@ This module handles:
 """
 import json
 import os
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple, TYPE_CHECKING
 
 from game.core.json_utils import load_json_required, save_json
 from game.core.logger import log_error
-from game.core.math import Vector2
-from game.simulation.entities.ship import Ship
+from game.ui.services.design_loader_adapter import DesignLoaderAdapter
 from game.ui.services.tkinter_utils import (
     is_tkinter_available,
     open_save_dialog,
     open_load_dialog,
 )
 
+if TYPE_CHECKING:
+    from game.simulation.entities.ship import Ship
+
 
 class ShipIO:
-    """Handles ship file Input/Output operations."""
+    """Handles ship file Input/Output operations.
+
+    Uses DesignLoaderAdapter for ship loading to maintain consistency with
+    the adapter pattern used by other UI services. This reduces direct
+    coupling to simulation layer entities.
+    """
 
     # Configurable default directory (can be changed by builder)
     default_ships_folder = "ships"
 
+    # Shared adapter instance (lazy-initialized)
+    _design_loader: Optional[DesignLoaderAdapter] = None
+
+    @classmethod
+    def _get_design_loader(cls) -> DesignLoaderAdapter:
+        """Get or create the shared DesignLoaderAdapter instance."""
+        if cls._design_loader is None:
+            cls._design_loader = DesignLoaderAdapter()
+        return cls._design_loader
+
     @staticmethod
-    def save_ship(ship: Ship) -> Tuple[bool, Optional[str]]:
+    def save_ship(ship: 'Ship') -> Tuple[bool, Optional[str]]:
         """Save ship design to file.
 
         Args:
@@ -78,8 +96,8 @@ class ShipIO:
             log_error(f"ShipIO: Serialization error saving ship: {e}")
             return False, "Save failed: Invalid ship data"
 
-    @staticmethod
-    def load_ship(screen_width: int, screen_height: int) -> Tuple[Optional[Ship], Optional[str]]:
+    @classmethod
+    def load_ship(cls, screen_width: int, screen_height: int) -> Tuple[Optional[Any], Optional[str]]:
         """Load ship design from file.
 
         Args:
@@ -93,7 +111,7 @@ class ShipIO:
             return None, "Tkinter not initialized"
 
         try:
-            ships_folder = os.path.join(os.getcwd(), ShipIO.default_ships_folder)
+            ships_folder = os.path.join(os.getcwd(), cls.default_ships_folder)
             if not os.path.exists(ships_folder):
                 os.makedirs(ships_folder)
 
@@ -105,9 +123,17 @@ class ShipIO:
 
             if filename:
                 data = load_json_required(filename)
-                new_ship = Ship.from_dict(data)
-                new_ship.position = Vector2(screen_width // 2, screen_height // 2)
-                new_ship.recalculate_stats()
+
+                # Use DesignLoaderAdapter for ship creation (adapter pattern)
+                loader = cls._get_design_loader()
+                new_ship = loader.load_ship_from_design_data(
+                    data,
+                    center_x=screen_width // 2,
+                    center_y=screen_height // 2
+                )
+
+                if new_ship is None:
+                    return None, "Load failed: Could not create ship from design"
 
                 msg = f"Loaded ship from {os.path.basename(filename)}"
                 if getattr(new_ship, '_loading_warnings', []):
