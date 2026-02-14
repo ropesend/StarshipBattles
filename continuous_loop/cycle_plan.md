@@ -8,19 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-14
-**Last Completed:** PROJ-148 Phase 1
-**Current Status:** Phase 1 complete, ready for Phase 2
+**Last Completed:** PROJ-148 Phase 2
+**Current Status:** Phase 2 complete, ready for Phase 3
 **Current Project:** PROJ-148
-**Current Phase:** Phase 2
-**Test Status:** 12868 passed, 2 skipped
+**Current Phase:** Phase 3
+**Test Status:** 12907 passed, 2 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-148 Phase 1 complete
-- DUP-FND-001: Removed StrategyMetadataService.load_data(), WorkshopDataLoader now uses StrategyManager.load_data()
-- DUP-FND-002: Documented as acceptable pattern (singleton clear() is necessary per-class)
-- Files modified: game/core/strategy_metadata.py, game/ui/screens/workshop_data_loader.py, tests/unit/core/test_strategy_metadata.py
-- Next: Phase 2 (Simulation findings)
+- PROJ-148 Phase 2 complete
+- All 7 simulation findings (DUP-SIM-001 through DUP-SIM-008) documented as acceptable patterns:
+  - Template method pattern for abilities (polymorphism, not duplication)
+  - Formula evaluation already centralized in formula_system.py
+  - Physics constants already centralized with "DO NOT DUPLICATE" comment
+  - Switch-case patterns for resource types are minimal and clear
+  - Context-specific validation in targeting system is appropriate
+- Fixed test file name collisions: test_resources.py → test_resource_manager.py, test_ship_detail_panel.py (strategy) → test_ship_instance_damage.py
+- Next: Phase 3 (Strategy findings)
 
 ---
 
@@ -95,6 +99,7 @@
 | 2026-02-14 | PROJ-147 | Phase 5 | Complete | 12871 passed | f0d63f2b | All 6 findings already resolved or documented; ready for audit |
 | 2026-02-14 | PROJ-147 | Audit 1 | PASSED | 12871 passed | - | All fixes verified via investigation agents; ready for user verification |
 | 2026-02-14 | PROJ-148 | Phase 1 | Complete | 12868 passed | 975f5c1a | DUP-FND-001 fixed (removed load_data), DUP-FND-002 documented |
+| 2026-02-14 | PROJ-148 | Phase 2 | Complete | 12907 passed | pending | All 7 findings documented as acceptable patterns; fixed test file collisions |
 
 ---
 
