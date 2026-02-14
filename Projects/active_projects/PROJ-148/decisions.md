@@ -28,3 +28,10 @@
 | 2026-02-14 | DUP-UI2-011: Accept adapter boilerplate pattern | ShipIOAdapter follows standard adapter pattern - delegating to ShipIO class with DI for testing. Minimal boilerplate (~10 lines) is inherent to adapter pattern. |
 | 2026-02-14 | DUP-UI2-015: Accept image exception handling | ShipThemeManager catches FileNotFoundError and pygame.error separately for proper error messages. Idiomatic defensive I/O, not duplication. |
 | 2026-02-14 | DUP-UI2-016: Accept empty __init__.py | game/ui/renderer/__init__.py is a standard Python package marker file. Empty __init__.py files are correct and expected for packages that don't need explicit exports. |
+| 2026-02-14 | DUP-UI1-001: Accept separate ColumnManager classes | Two ColumnManager classes serve different domains: fleet report (ShipInstance value extraction) vs planet list (sorting state, header UI). PROJ-108 explicitly skipped BaseColumnManager as low ROI. |
+| 2026-02-14 | DUP-UI1-003: Accept different HP color thresholds | Battle UI uses 0.5/0.2 thresholds (urgent feedback), strategy UI uses 0.75/0.5 (fine-grained damage). Intentional variation for different contexts, both have comprehensive tests. |
+| 2026-02-14 | DUP-UI1-004: Already centralized in PROJ-108 | formatting_utils.py provides format_value() - this finding is already resolved. |
+| 2026-02-14 | DUP-UI1-005: RaceThemeGallery doesn't fit BaseGallery | RaceThemeGallery uses button list with inline previews; BaseGallery uses scrolling thumbnails with large preview panel. Different UI patterns - forcing inheritance would violate abstraction. |
+| 2026-02-14 | DUP-UI1-002: draw_stat_bar already centralized | BattlePanel.draw_stat_bar() delegates to ship_stats_renderer.draw_stat_bar(). This IS proper centralization. |
+| 2026-02-14 | DUP-UI1-006: Portrait loading already centralized | design_image_helper.py provides load_portrait_thumbnail() and load_topdown_thumbnail(). No duplication exists. |
+| 2026-02-14 | DUP-UI1-008: Accept domain-specific filter/sort patterns | Each screen filters/sorts different data types (planets, ships, designs) with unique criteria. Extraction would add complexity without proportional benefit. |
