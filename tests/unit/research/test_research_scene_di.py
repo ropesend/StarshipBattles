@@ -2,7 +2,11 @@
 Tests for ResearchTreeScene dependency injection (PROJ-132).
 
 Validates that ResearchTreeScene can receive a Camera via DI,
-eliminating the layer violation where research imports from game.ui.
+allowing flexibility in camera implementation.
+
+PROJ-147: ResearchTreeScene moved from game/research/ui/ to game/ui/research/
+to fix architecture layer violation. The module now correctly lives in the
+UI layer and can import Camera directly.
 """
 import pytest
 from unittest.mock import Mock, MagicMock, patch
@@ -36,10 +40,10 @@ class TestResearchSceneCameraInjection:
     def test_research_scene_accepts_camera_parameter(self, mock_camera):
         """ResearchTreeScene should accept an optional camera parameter."""
         # Patch pygame_gui to avoid initialization issues
-        with patch('game.research.ui.research_scene.pygame_gui'):
-            with patch('game.research.ui.research_scene.ResearchControlPanel'):
-                with patch('game.research.ui.research_scene.ResearchRenderer'):
-                    from game.research.ui.research_scene import ResearchTreeScene
+        with patch('game.ui.research.research_scene.pygame_gui'):
+            with patch('game.ui.research.research_scene.ResearchControlPanel'):
+                with patch('game.ui.research.research_scene.ResearchRenderer'):
+                    from game.ui.research.research_scene import ResearchTreeScene
 
                     # Should be able to create scene with injected camera
                     scene = ResearchTreeScene(
@@ -53,10 +57,10 @@ class TestResearchSceneCameraInjection:
 
     def test_research_scene_creates_camera_when_not_provided(self):
         """ResearchTreeScene should create its own camera if none provided."""
-        with patch('game.research.ui.research_scene.pygame_gui'):
-            with patch('game.research.ui.research_scene.ResearchControlPanel'):
-                with patch('game.research.ui.research_scene.ResearchRenderer'):
-                    from game.research.ui.research_scene import ResearchTreeScene
+        with patch('game.ui.research.research_scene.pygame_gui'):
+            with patch('game.ui.research.research_scene.ResearchControlPanel'):
+                with patch('game.ui.research.research_scene.ResearchRenderer'):
+                    from game.ui.research.research_scene import ResearchTreeScene
 
                     # When no camera provided, scene should create one
                     scene = ResearchTreeScene(
@@ -70,19 +74,24 @@ class TestResearchSceneCameraInjection:
                     assert hasattr(scene.camera, 'height')
 
 
-class TestResearchSceneNoUIImport:
-    """Test that research_scene doesn't import directly from game.ui."""
+class TestResearchSceneModuleLocation:
+    """Test that ResearchTreeScene is correctly located in the UI layer."""
 
-    def test_no_direct_camera_import(self):
-        """ResearchTreeScene should not import Camera from game.ui.renderer."""
-        import game.research.ui.research_scene as module
+    def test_module_in_ui_layer(self):
+        """ResearchTreeScene should be in game.ui.research, not game.research.ui."""
+        # This import should work
+        from game.ui.research.research_scene import ResearchTreeScene
 
-        # Check that Camera is not imported at module level from game.ui
+        # Verify the module path
+        assert 'game.ui.research' in ResearchTreeScene.__module__
+
+    def test_camera_import_is_direct(self):
+        """ResearchTreeScene can now import Camera directly (PROJ-147 fix)."""
+        import game.ui.research.research_scene as module
+
+        # Read the source to verify Camera is imported directly
         source = open(module.__file__).read()
 
-        # The fix: Camera should be conditionally imported or not imported at all
-        # For backward compatibility, a factory function in game.ui is acceptable
-        # but direct "from game.ui.renderer.camera import Camera" is not
-        assert 'from game.ui.renderer.camera import Camera' not in source or \
-               'TYPE_CHECKING' in source, \
-               "Direct Camera import from game.ui.renderer.camera should be removed or guarded by TYPE_CHECKING"
+        # The module should have a direct import of Camera since it's in the UI layer
+        assert 'from game.ui.renderer.camera import Camera' in source, \
+            "Camera should be directly imported since module is in UI layer"

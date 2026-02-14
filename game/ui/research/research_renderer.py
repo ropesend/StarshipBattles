@@ -5,6 +5,9 @@ Draws:
 - Dependency lines between nodes
 - Node rectangles with status colors
 - Node labels (name, level, chance)
+
+PROJ-147: Moved from game/research/ui/ to game/ui/research/ to fix architecture
+layer violation. This module now correctly lives under the UI layer.
 """
 import pygame
 from typing import Dict, Tuple, Optional, TYPE_CHECKING

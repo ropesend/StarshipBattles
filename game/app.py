@@ -392,7 +392,7 @@ class Game:
 
     def start_research_tree(self):
         """Enter Research Tree sandbox."""
-        from game.research.ui.research_scene import ResearchTreeScene
+        from game.ui.research.research_scene import ResearchTreeScene
 
         log_info("Starting Research Tree sandbox")
         self.research_tree_scene = ResearchTreeScene(

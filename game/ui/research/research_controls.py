@@ -7,6 +7,9 @@ Contains:
 - RP budget configuration
 - Turn controls (Next Turn, Reset)
 - Event log
+
+PROJ-147: Moved from game/research/ui/ to game/ui/research/ to fix architecture
+layer violation. This module now correctly lives under the UI layer.
 """
 import pygame
 import pygame_gui

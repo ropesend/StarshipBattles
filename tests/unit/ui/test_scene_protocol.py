@@ -112,7 +112,7 @@ class TestISceneProtocolCompliance:
     def test_research_tree_scene_implements_iscene(self):
         """ResearchTreeScene implements IScene protocol."""
         from game.core.protocols import IScene
-        from game.research.ui.research_scene import ResearchTreeScene
+        from game.ui.research.research_scene import ResearchTreeScene
 
         scene = ResearchTreeScene(800, 600, on_close_callback=lambda: None)
         assert isinstance(scene, IScene), "ResearchTreeScene should implement IScene"

@@ -15,12 +15,12 @@ class TestResearchTreeSceneInitialization:
 
     def test_scene_stores_dimensions(self):
         """Scene stores screen dimensions."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             # Setup mocks
             mock_tree = MagicMock()
@@ -33,7 +33,7 @@ class TestResearchTreeSceneInitialization:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             assert scene.screen_width == 1920
@@ -41,12 +41,12 @@ class TestResearchTreeSceneInitialization:
 
     def test_canvas_width_excludes_sidebar(self):
         """Canvas width is screen width minus sidebar."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -58,7 +58,7 @@ class TestResearchTreeSceneInitialization:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             expected_canvas_width = 1920 - ResearchTreeScene.SIDEBAR_WIDTH
@@ -66,12 +66,12 @@ class TestResearchTreeSceneInitialization:
 
     def test_callback_stored(self):
         """Close callback is stored."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -84,19 +84,19 @@ class TestResearchTreeSceneInitialization:
             MockTracker.return_value = mock_tracker
 
             callback = MagicMock()
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080, on_close_callback=callback)
 
             assert scene.on_close_callback is callback
 
     def test_tech_tree_loaded(self):
         """Tech tree is loaded on initialization."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -108,7 +108,7 @@ class TestResearchTreeSceneInitialization:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             MockTechTree.load_from_json.assert_called_once()
@@ -116,12 +116,12 @@ class TestResearchTreeSceneInitialization:
 
     def test_fuzzy_requirements_resolved(self):
         """Fuzzy requirements are resolved with tracker seed."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -133,7 +133,7 @@ class TestResearchTreeSceneInitialization:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             mock_tree.resolve_all_requirements.assert_called_once_with(12345)
@@ -144,12 +144,12 @@ class TestLayoutCalculation:
 
     def test_layout_calculates_positions_for_all_nodes(self):
         """Layout calculation creates positions for all nodes."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             # Create mock nodes
             node_a = MagicMock()
@@ -174,7 +174,7 @@ class TestLayoutCalculation:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             assert 'node_a' in scene.node_positions
@@ -182,12 +182,12 @@ class TestLayoutCalculation:
 
     def test_layout_positions_nodes_by_depth(self):
         """Nodes at different depths have different x positions."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             node_a = MagicMock()
             node_a.id = 'node_a'
@@ -211,7 +211,7 @@ class TestLayoutCalculation:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             x_a = scene.node_positions['node_a'][0]
@@ -224,12 +224,12 @@ class TestLayoutCalculation:
 
     def test_layout_sorts_nodes_alphabetically(self):
         """Nodes at same depth are sorted alphabetically by name."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             # Create nodes with names that would sort differently
             node_z = MagicMock()
@@ -252,7 +252,7 @@ class TestLayoutCalculation:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             # Alpha should be above Zeta (lower y)
@@ -266,21 +266,21 @@ class TestLayoutConstants:
 
     def test_sidebar_width_is_positive(self):
         """Sidebar width constant is positive."""
-        from game.research.ui.research_scene import ResearchTreeScene
+        from game.ui.research.research_scene import ResearchTreeScene
         assert ResearchTreeScene.SIDEBAR_WIDTH > 0
 
     def test_column_spacing_is_positive(self):
         """Column spacing constant is positive."""
-        from game.research.ui.research_scene import ResearchTreeScene
+        from game.ui.research.research_scene import ResearchTreeScene
         assert ResearchTreeScene.COLUMN_SPACING > 0
 
     def test_row_spacing_is_positive(self):
         """Row spacing constant is positive."""
-        from game.research.ui.research_scene import ResearchTreeScene
+        from game.ui.research.research_scene import ResearchTreeScene
         assert ResearchTreeScene.ROW_SPACING > 0
 
     def test_node_dimensions_are_positive(self):
         """Node width and height constants are positive."""
-        from game.research.ui.research_scene import ResearchTreeScene
+        from game.ui.research.research_scene import ResearchTreeScene
         assert ResearchTreeScene.NODE_WIDTH > 0
         assert ResearchTreeScene.NODE_HEIGHT > 0

@@ -2,13 +2,14 @@
 Unit tests for ResearchRenderer.
 
 PROJ-40/NEW-RES-002: Tests for font cache bounds and related functionality.
+PROJ-147: Updated module path from game/research/ui to game/ui/research.
 
 Note: This file is separate from test_research_scene.py to avoid issues with
 the ensure_fresh_research_scene_import autouse fixture that can corrupt
 pygame module state when running in parallel.
 
 The renderer module is loaded directly by file path using importlib.util,
-bypassing the game.research.ui package __init__.py (which imports pygame_gui
+bypassing the game.ui.research package __init__.py (which imports pygame_gui
 via research_scene). This makes these tests immune to pygame_gui module
 state corruption from other tests mocking pygame_gui under xdist.
 """
@@ -23,14 +24,14 @@ def renderer_module():
     """Load the renderer module directly by file path, bypassing package __init__.py.
 
     This uses importlib.util.spec_from_file_location to load research_renderer.py
-    without triggering game.research.ui.__init__ (which imports research_scene,
+    without triggering game.ui.research.__init__ (which imports research_scene,
     which imports pygame_gui). This avoids pygame_gui corruption under xdist.
     """
     import pygame
     if not pygame.font.get_init():
         pygame.font.init()
 
-    renderer_path = Path(__file__).resolve().parents[3] / "game" / "research" / "ui" / "research_renderer.py"
+    renderer_path = Path(__file__).resolve().parents[3] / "game" / "ui" / "research" / "research_renderer.py"
     spec = importlib.util.spec_from_file_location("research_renderer_isolated", str(renderer_path))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

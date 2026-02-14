@@ -16,13 +16,13 @@ class TestTurnProcessingCallback:
 
     def test_on_next_turn_processes_turn(self):
         """Next turn callback calls ResearchService.process_turn."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'), \
-             patch('game.research.ui.research_scene.ResearchService') as MockService:
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'), \
+             patch('game.ui.research.research_scene.ResearchService') as MockService:
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -39,7 +39,7 @@ class TestTurnProcessingCallback:
 
             MockService.process_turn.return_value = []
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             scene._on_next_turn()
@@ -48,13 +48,13 @@ class TestTurnProcessingCallback:
 
     def test_on_next_turn_updates_log(self):
         """Next turn callback updates control panel log."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel, \
-             patch('game.research.ui.research_scene.ResearchService') as MockService:
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel') as MockPanel, \
+             patch('game.ui.research.research_scene.ResearchService') as MockService:
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -75,7 +75,7 @@ class TestTurnProcessingCallback:
             mock_panel_instance = MagicMock()
             MockPanel.return_value = mock_panel_instance
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             scene._on_next_turn()
@@ -84,13 +84,13 @@ class TestTurnProcessingCallback:
 
     def test_on_next_turn_with_auto_spread(self):
         """Next turn callback spreads RP when auto-spread is enabled."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel, \
-             patch('game.research.ui.research_scene.ResearchService') as MockService:
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel') as MockPanel, \
+             patch('game.ui.research.research_scene.ResearchService') as MockService:
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -109,7 +109,7 @@ class TestTurnProcessingCallback:
             mock_panel_instance = MagicMock()
             MockPanel.return_value = mock_panel_instance
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             scene._on_next_turn()
@@ -122,12 +122,12 @@ class TestResetCallback:
 
     def test_on_reset_creates_new_tracker(self):
         """Reset creates a new ResearchTracker."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel:
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel') as MockPanel:
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -144,7 +144,7 @@ class TestResetCallback:
             mock_panel_instance = MagicMock()
             MockPanel.return_value = mock_panel_instance
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             # Verify initial tracker
@@ -158,12 +158,12 @@ class TestResetCallback:
 
     def test_on_reset_clears_selection(self):
         """Reset clears node selection."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel:
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel') as MockPanel:
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -178,7 +178,7 @@ class TestResetCallback:
             mock_panel_instance = MagicMock()
             MockPanel.return_value = mock_panel_instance
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             # Set a selection
@@ -194,12 +194,12 @@ class TestResetCallback:
 
     def test_on_reset_resolves_requirements_with_new_seed(self):
         """Reset re-resolves fuzzy requirements with new seed."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -213,7 +213,7 @@ class TestResetCallback:
             mock_tracker2.session_seed = 67890
             MockTracker.side_effect = [mock_tracker1, mock_tracker2]
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             # Reset the mock call count
@@ -231,12 +231,12 @@ class TestCloseCallback:
 
     def test_on_close_calls_callback(self):
         """Close calls the provided callback."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -249,7 +249,7 @@ class TestCloseCallback:
             MockTracker.return_value = mock_tracker
 
             close_callback = MagicMock()
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080, on_close_callback=close_callback)
 
             scene._on_close()
@@ -258,12 +258,12 @@ class TestCloseCallback:
 
     def test_on_close_without_callback(self):
         """Close with no callback doesn't crash."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel'):
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel'):
 
             mock_tree = MagicMock()
             mock_tree.nodes = {}
@@ -275,7 +275,7 @@ class TestCloseCallback:
             mock_tracker.session_seed = 12345
             MockTracker.return_value = mock_tracker
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)  # No callback
 
             # Should not crash
@@ -287,12 +287,12 @@ class TestAutoSpreadCallback:
 
     def test_auto_spread_changed_updates_selected_node(self):
         """Auto-spread change updates selected node display."""
-        with patch('game.research.ui.research_scene.TechTree') as MockTechTree, \
-             patch('game.research.ui.research_scene.ResearchTracker') as MockTracker, \
-             patch('game.research.ui.research_scene._create_default_camera'), \
-             patch('game.research.ui.research_scene.pygame_gui'), \
-             patch('game.research.ui.research_scene.ResearchRenderer'), \
-             patch('game.research.ui.research_scene.ResearchControlPanel') as MockPanel:
+        with patch('game.ui.research.research_scene.TechTree') as MockTechTree, \
+             patch('game.ui.research.research_scene.ResearchTracker') as MockTracker, \
+             patch('game.ui.research.research_scene.Camera'), \
+             patch('game.ui.research.research_scene.pygame_gui'), \
+             patch('game.ui.research.research_scene.ResearchRenderer'), \
+             patch('game.ui.research.research_scene.ResearchControlPanel') as MockPanel:
 
             mock_node = MagicMock()
             mock_node.id = 'selected_node'
@@ -311,7 +311,7 @@ class TestAutoSpreadCallback:
             mock_panel_instance = MagicMock()
             MockPanel.return_value = mock_panel_instance
 
-            from game.research.ui.research_scene import ResearchTreeScene
+            from game.ui.research.research_scene import ResearchTreeScene
             scene = ResearchTreeScene(1920, 1080)
 
             # Set selection

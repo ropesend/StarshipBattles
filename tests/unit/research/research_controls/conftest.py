@@ -1,4 +1,8 @@
-"""Shared fixtures for research controls tests."""
+"""
+Shared fixtures for research controls tests.
+
+PROJ-147: Updated module path from game.research.ui to game.ui.research.
+"""
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -18,20 +22,20 @@ def mock_pygame_gui():
     with patch.dict('sys.modules', {'pygame_gui': MagicMock()}):
         # Re-import with mocks
         import importlib
-        import game.research.ui.research_controls as rc
+        import game.ui.research.research_controls as rc
         importlib.reload(rc)
         yield rc
 
     # After patch.dict exits, the modules that were imported during the context
     # have corrupted pygame_gui references (they're bound to the MagicMock that
     # was in sys.modules during import). If research_scene was imported (via the
-    # game.research.ui __init__.py), it now has a stale pygame_gui reference.
+    # game.ui.research __init__.py), it now has a stale pygame_gui reference.
     #
     # Fix: Reload the research_scene module to rebind pygame_gui to the real module.
-    if 'game.research.ui.research_scene' in sys.modules:
+    if 'game.ui.research.research_scene' in sys.modules:
         import importlib
-        import game.research.ui.research_scene
-        importlib.reload(game.research.ui.research_scene)
+        import game.ui.research.research_scene
+        importlib.reload(game.ui.research.research_scene)
 
 
 @pytest.fixture
