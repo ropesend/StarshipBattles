@@ -16,7 +16,7 @@ from game.strategy.data.stars import (
     StarGenerator,
     SOLAR_TEMP_K,
 )
-from game.core.hex_math import HexCoord
+from game.core.hex_math import HexCoord, hex_distance
 
 
 class TestSpectrum:
@@ -272,6 +272,120 @@ class TestStar:
             # location not specified
         )
         assert star.location == HexCoord(0, 0)
+
+
+class TestStarOccupiedHexes:
+    """Tests for Star.occupied_hexes property (PROJ-139 IZoneOccupant)."""
+
+    @pytest.fixture
+    def sample_spectrum(self):
+        """Provide a sample spectrum for star tests."""
+        return Spectrum(
+            gamma_ray=0.1, xray=0.2, ultraviolet=0.3, blue=0.4, green=0.5,
+            red=0.6, infrared=0.7, microwave=0.8, radio=0.9
+        )
+
+    def test_star_occupied_hexes_small(self, sample_spectrum):
+        """diameter_hexes=1.0 -> radius 1 -> 7 hexes."""
+        star = Star(
+            name="Small Star",
+            mass=1.0,
+            diameter_hexes=1.0,
+            temperature=5000,
+            luminosity=1.0,
+            spectrum=sample_spectrum,
+            star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 200, 150),
+            age=5.0e9,
+            location=HexCoord(0, 0)
+        )
+        hexes = star.occupied_hexes
+        # ceil(1.0 / 2) = 1 -> 7 hexes
+        assert len(hexes) == 7
+        assert star.location in hexes
+        # All hexes should be within distance 1 of location
+        for h in hexes:
+            assert hex_distance(star.location, h) <= 1
+
+    def test_star_occupied_hexes_large(self, sample_spectrum):
+        """diameter_hexes=11.0 -> radius 6 -> 127 hexes."""
+        star = Star(
+            name="Large Star",
+            mass=10.0,
+            diameter_hexes=11.0,
+            temperature=8000,
+            luminosity=100.0,
+            spectrum=sample_spectrum,
+            star_type=StarType.BLUE_GIANT,
+            color=(100, 150, 255),
+            age=1.0e9,
+            location=HexCoord(0, 0)
+        )
+        hexes = star.occupied_hexes
+        # ceil(11.0 / 2) = 6 -> 1 + 6 + 12 + 18 + 24 + 30 + 36 = 127 hexes
+        assert len(hexes) == 127
+        assert star.location in hexes
+        # All hexes should be within distance 6 of location
+        for h in hexes:
+            assert hex_distance(star.location, h) <= 6
+
+    def test_star_occupied_hexes_sub_hex(self, sample_spectrum):
+        """diameter_hexes=0.5 -> radius 1 -> 7 hexes (ceil rounds up)."""
+        star = Star(
+            name="Tiny Star",
+            mass=0.5,
+            diameter_hexes=0.5,
+            temperature=3000,
+            luminosity=0.1,
+            spectrum=sample_spectrum,
+            star_type=StarType.WHITE_DWARF,
+            color=(220, 220, 255),
+            age=8.0e9,
+            location=HexCoord(0, 0)
+        )
+        hexes = star.occupied_hexes
+        # ceil(0.5 / 2) = ceil(0.25) = 1 -> 7 hexes
+        assert len(hexes) == 7
+        assert star.location in hexes
+
+    def test_star_occupied_hexes_with_offset_location(self, sample_spectrum):
+        """Star at non-origin location returns correctly offset hexes."""
+        star = Star(
+            name="Offset Star",
+            mass=1.0,
+            diameter_hexes=2.0,
+            temperature=5000,
+            luminosity=1.0,
+            spectrum=sample_spectrum,
+            star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 200, 150),
+            age=5.0e9,
+            location=HexCoord(10, -5)
+        )
+        hexes = star.occupied_hexes
+        # ceil(2.0 / 2) = 1 -> 7 hexes
+        assert len(hexes) == 7
+        assert star.location in hexes
+        # All hexes should be within distance 1 of location
+        for h in hexes:
+            assert hex_distance(star.location, h) <= 1
+        # Verify center is correct (not at origin)
+        assert HexCoord(0, 0) not in hexes
+
+    def test_star_occupied_hexes_returns_frozenset(self, sample_spectrum):
+        """occupied_hexes returns a frozenset (immutable)."""
+        star = Star(
+            name="Test Star",
+            mass=1.0,
+            diameter_hexes=1.0,
+            temperature=5000,
+            luminosity=1.0,
+            spectrum=sample_spectrum,
+            star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 200, 150),
+            age=5.0e9
+        )
+        assert isinstance(star.occupied_hexes, frozenset)
 
 
 class TestStarGenerator:

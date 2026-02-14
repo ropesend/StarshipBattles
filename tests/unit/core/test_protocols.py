@@ -329,6 +329,80 @@ class TestRuntimeCheckable:
             pytest.fail(f"Protocol is not runtime_checkable: {e}")
 
 
+class TestIZoneOccupantProtocol:
+    """Tests for the IZoneOccupant protocol (PROJ-139)."""
+
+    def test_izoneoccupant_protocol_importable(self):
+        """IZoneOccupant and is_zone_occupant should be importable."""
+        from game.core.protocols import IZoneOccupant, is_zone_occupant
+        assert IZoneOccupant is not None
+        assert callable(is_zone_occupant)
+
+    def test_izoneoccupant_is_runtime_checkable(self):
+        """IZoneOccupant should be runtime_checkable."""
+        from game.core.protocols import IZoneOccupant
+        # Should not raise TypeError
+        assert isinstance("not a zone occupant", IZoneOccupant) is False
+
+    def test_star_satisfies_izoneoccupant(self):
+        """Star class should satisfy IZoneOccupant protocol."""
+        from game.core.protocols import IZoneOccupant, is_zone_occupant
+        from game.strategy.data.stars import Star, StarType, Spectrum
+        from game.core.hex_math import HexCoord
+
+        spectrum = Spectrum(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+        star = Star(
+            name="Sun",
+            mass=1.0,
+            diameter_hexes=1.0,
+            temperature=5778,
+            luminosity=1.0,
+            spectrum=spectrum,
+            star_type=StarType.MAIN_SEQUENCE,
+            color=(255, 255, 200),
+            age=4.6e9,
+            location=HexCoord(0, 0),
+        )
+        assert isinstance(star, IZoneOccupant)
+        assert is_zone_occupant(star)
+        # Verify occupied_hexes returns frozenset
+        assert isinstance(star.occupied_hexes, frozenset)
+
+    def test_planet_satisfies_izoneoccupant(self):
+        """Planet class should satisfy IZoneOccupant protocol."""
+        from game.core.protocols import IZoneOccupant, is_zone_occupant
+        from game.strategy.data.planet import Planet, PlanetType
+        from game.core.hex_math import HexCoord
+
+        planet = Planet(
+            name="Test Planet",
+            location=HexCoord(1, 1),
+            orbit_distance=3,
+            mass=5.972e24,
+            radius=6371000,
+            surface_area=5.1e14,
+            density=5515,
+            surface_gravity=9.8,
+            surface_pressure=101325,
+            surface_temperature=288,
+            surface_water=0.71,
+            tectonic_activity=0.5,
+            magnetic_field=1.0,
+            planet_type=PlanetType.CONTINENTAL,
+        )
+        assert isinstance(planet, IZoneOccupant)
+        assert is_zone_occupant(planet)
+        # Verify occupied_hexes returns frozenset
+        assert isinstance(planet.occupied_hexes, frozenset)
+
+    def test_is_zone_occupant_returns_false_for_non_occupant(self):
+        """is_zone_occupant should return False for non-occupant objects."""
+        from game.core.protocols import is_zone_occupant
+        assert is_zone_occupant("not a zone") is False
+        assert is_zone_occupant(None) is False
+        assert is_zone_occupant({"occupied_hexes": set()}) is False
+
+
 class TestICameraProtocol:
     """Tests for the ICamera protocol (PROJ-106)."""
 

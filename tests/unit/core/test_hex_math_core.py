@@ -13,6 +13,7 @@ from game.core.hex_math import (
     hex_to_pixel,
     pixel_to_hex,
     hex_ring,
+    hex_circle_filled,
     hex_lerp,
     hex_linedraw,
     hex_to_dict,
@@ -589,3 +590,69 @@ class TestPixelToHexRoundingEdgeCases:
                     failures.append((original, result))
 
         assert len(failures) == 0, f"Round-trip failures: {failures[:10]}..."
+
+
+# =============================================================================
+# hex_circle_filled Tests
+# =============================================================================
+
+class TestHexCircleFilled:
+    """Tests for hex_circle_filled function."""
+
+    def test_hex_circle_filled_radius_0(self):
+        """radius=0 returns just the center hex."""
+        center = HexCoord(0, 0)
+        result = hex_circle_filled(center, 0)
+        assert result == frozenset({center})
+
+    def test_hex_circle_filled_radius_1(self):
+        """radius=1 returns 7 hexes (center + 6 neighbors)."""
+        center = HexCoord(0, 0)
+        result = hex_circle_filled(center, 1)
+        assert len(result) == 7
+        assert center in result
+        # All neighbors should be included
+        for neighbor in center.neighbors():
+            assert neighbor in result
+
+    def test_hex_circle_filled_radius_2(self):
+        """radius=2 returns 19 hexes (1 + 6 + 12)."""
+        center = HexCoord(0, 0)
+        result = hex_circle_filled(center, 2)
+        assert len(result) == 19
+        # Verify all hexes are within distance 2
+        for h in result:
+            assert hex_distance(center, h) <= 2
+
+    def test_hex_circle_filled_radius_5(self):
+        """radius=5 returns 91 hexes (Dyson Sphere zone size)."""
+        center = HexCoord(0, 0)
+        result = hex_circle_filled(center, 5)
+        # Formula: 1 + 6 * (1 + 2 + 3 + 4 + 5) = 1 + 6 * 15 = 91
+        assert len(result) == 91
+        # Verify all hexes are within distance 5
+        for h in result:
+            assert hex_distance(center, h) <= 5
+
+    def test_hex_circle_filled_with_offset_center(self):
+        """Circle with offset center returns correct hexes."""
+        center = HexCoord(5, -3)
+        result = hex_circle_filled(center, 2)
+        assert len(result) == 19
+        assert center in result
+        # Verify all hexes are within distance 2 from center
+        for h in result:
+            assert hex_distance(center, h) <= 2
+
+    def test_hex_circle_filled_returns_frozenset(self):
+        """hex_circle_filled returns a frozenset (immutable)."""
+        result = hex_circle_filled(HexCoord(0, 0), 1)
+        assert isinstance(result, frozenset)
+
+    def test_hex_circle_filled_no_duplicates(self):
+        """No duplicate hexes in result."""
+        for radius in [1, 2, 3, 5]:
+            result = hex_circle_filled(HexCoord(0, 0), radius)
+            # frozenset already guarantees no duplicates, but verify count
+            result_list = list(result)
+            assert len(result_list) == len(set(result_list))

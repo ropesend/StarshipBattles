@@ -4,7 +4,8 @@ import math
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from typing import Dict, Any
-from game.core.hex_math import HexCoord, hex_ring
+from typing import FrozenSet
+from game.core.hex_math import HexCoord, hex_ring, hex_circle_filled
 
 # Constants
 SOLAR_MASS_KG = 1.989e30
@@ -87,6 +88,21 @@ class Star:
 
     # Location relative to system center (0,0,0)
     location: HexCoord = field(default_factory=lambda: HexCoord(0, 0))
+
+    @property
+    def occupied_hexes(self) -> FrozenSet[HexCoord]:
+        """
+        Return all hexes occupied by this star (PROJ-139 IZoneOccupant).
+
+        The zone radius is computed from diameter_hexes using ceiling(diameter/2).
+        This ensures a star with diameter 1.0 occupies the center hex plus immediate
+        neighbors (radius=1 -> 7 hexes).
+
+        Returns:
+            FrozenSet of HexCoord in LOCAL system coordinates
+        """
+        radius = max(0, int(math.ceil(self.diameter_hexes / 2.0)))
+        return hex_circle_filled(self.location, radius)
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize Star to dict."""

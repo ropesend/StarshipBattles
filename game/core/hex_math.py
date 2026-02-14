@@ -63,7 +63,7 @@ Example:
     px, py = hex_to_pixel(dest, size=50)
 """
 import math
-from typing import List, Tuple
+from typing import FrozenSet, List, Tuple
 
 
 class HexCoord:
@@ -192,6 +192,33 @@ def hex_ring(radius: int) -> List[HexCoord]:
             curr = curr + walk_dir
 
     return results
+
+
+def hex_circle_filled(center: HexCoord, radius: int) -> FrozenSet[HexCoord]:
+    """
+    Return all HexCoords within distance 'radius' from center (inclusive).
+
+    This creates a filled hexagonal area (disc) containing all hexes
+    from distance 0 to 'radius'.
+
+    Args:
+        center: The center hex coordinate
+        radius: Maximum distance from center (inclusive)
+
+    Returns:
+        FrozenSet of all HexCoord within the specified radius
+
+    Example:
+        radius=0 -> 1 hex (just center)
+        radius=1 -> 7 hexes (center + 6 neighbors)
+        radius=2 -> 19 hexes
+        radius=5 -> 91 hexes (Dyson Sphere zone)
+    """
+    result = set()
+    for r in range(radius + 1):
+        for hex_coord in hex_ring(r):
+            result.add(center + hex_coord)
+    return frozenset(result)
 
 
 def hex_lerp(a: HexCoord, b: HexCoord, t: float) -> HexCoord:

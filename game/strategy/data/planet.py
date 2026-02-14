@@ -1,8 +1,9 @@
+import math
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Dict, List, Optional, Any
+from typing import Dict, FrozenSet, List, Optional, Any
 from game.core.constants import ResourceType
-from game.core.hex_math import HexCoord
+from game.core.hex_math import HexCoord, hex_circle_filled
 
 class PlanetType(Enum):
     """
@@ -195,6 +196,9 @@ class Planet:
     image_id: str = ""  # Filename from Planets_V3 (e.g., "planet_5_994_1769750020702.png")
     image_rotation: float = 0.0  # Degrees (0.0 to 360.0) for visual variety
 
+    # Multi-hex zone support (PROJ-139)
+    # diameter_hexes > 0 indicates this is a multi-hex object (e.g., Dyson Sphere)
+    diameter_hexes: float = 0.0
 
     def __eq__(self, other):
         if not isinstance(other, Planet):
@@ -208,6 +212,23 @@ class Planet:
 
     def __hash__(self):
         return hash((self.name, self.location, self.orbit_distance))
+
+    @property
+    def occupied_hexes(self) -> FrozenSet[HexCoord]:
+        """
+        Return all hexes occupied by this planet (PROJ-139 IZoneOccupant).
+
+        For normal planets (diameter_hexes <= 0), returns just the planet's location.
+        For multi-hex objects like Dyson Spheres (diameter_hexes > 0), returns
+        all hexes in the zone based on the diameter.
+
+        Returns:
+            FrozenSet of HexCoord in LOCAL system coordinates
+        """
+        if self.diameter_hexes > 0:
+            radius = max(0, int(math.ceil(self.diameter_hexes / 2.0)))
+            return hex_circle_filled(self.location, radius)
+        return frozenset({self.location})
 
     @property
     def total_pressure_atm(self) -> float:
@@ -329,7 +350,8 @@ class Planet:
                 } for p in self.populations
             ],
             'image_id': self.image_id,
-            'image_rotation': self.image_rotation
+            'image_rotation': self.image_rotation,
+            'diameter_hexes': self.diameter_hexes
         }
 
     @classmethod
@@ -393,5 +415,6 @@ class Planet:
             populations=populations,
             id=data.get('id', -1),
             image_id=data.get('image_id', ''),
-            image_rotation=data.get('image_rotation', 0.0)
+            image_rotation=data.get('image_rotation', 0.0),
+            diameter_hexes=data.get('diameter_hexes', 0.0)
         )

@@ -26,6 +26,7 @@ from typing import (
     Tuple,
     Dict,
     Any,
+    FrozenSet,
     TYPE_CHECKING,
     TypeGuard,
 )
@@ -188,6 +189,32 @@ class IPlanet(Protocol):
 
 
 @runtime_checkable
+class IZoneOccupant(Protocol):
+    """
+    Protocol for entities that occupy multiple hexes (PROJ-139).
+
+    Zone occupants are game objects that span multiple hexes on the galaxy map.
+    Examples include:
+    - Stars (based on diameter_hexes)
+    - Dyson Spheres (multi-hex planets)
+    - Future: nebulae, asteroid fields
+
+    The occupied_hexes property returns LOCAL coordinates relative to the
+    object's system. The Galaxy zone registry converts these to global
+    coordinates for spatial lookups.
+    """
+    @property
+    def occupied_hexes(self) -> FrozenSet:
+        """
+        Set of LOCAL hex coords this object occupies.
+
+        Returns:
+            FrozenSet of HexCoord in LOCAL system coordinates
+        """
+        ...
+
+
+@runtime_checkable
 class IFleet(Protocol):
     """Protocol for Fleet entities."""
     @property
@@ -314,6 +341,11 @@ def is_warp_point(obj: Any) -> TypeGuard[IWarpPoint]:
 def is_sector_environment(obj: Any) -> TypeGuard[ISectorEnvironment]:
     """Check if obj satisfies the ISectorEnvironment Protocol."""
     return isinstance(obj, ISectorEnvironment)
+
+
+def is_zone_occupant(obj: Any) -> TypeGuard[IZoneOccupant]:
+    """Check if obj satisfies the IZoneOccupant Protocol."""
+    return isinstance(obj, IZoneOccupant)
 
 
 def is_combatant(obj: Any) -> TypeGuard[ICombatant]:
