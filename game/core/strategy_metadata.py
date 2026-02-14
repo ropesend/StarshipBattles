@@ -22,11 +22,8 @@ Testing:
     - Use clear() to reset data but preserve instance
 """
 
-import os
 from typing import Dict, List, Optional
 
-from game.core.json_utils import load_json
-from game.core.logger import log_info
 from game.core.singleton import SingletonMeta
 
 
@@ -120,27 +117,3 @@ class StrategyMetadataService(metaclass=SingletonMeta):
             strategies: Dict mapping strategy_id to strategy metadata
         """
         self._strategies = strategies.copy()
-
-    def load_data(
-        self,
-        base_path: str = "data",
-        strategy_file: str = "combat_strategies.json"
-    ) -> None:
-        """
-        Load strategy metadata from JSON file.
-
-        This method allows direct loading without going through StrategyManager.
-        Used by WorkshopDataLoader.
-
-        Args:
-            base_path: Base directory containing the strategy JSON file
-            strategy_file: Name of the strategies JSON file
-        """
-        strategy_data = load_json(
-            os.path.join(base_path, strategy_file),
-            default={}
-        )
-        self._strategies = strategy_data.get('strategies', {})
-        log_info(
-            f"StrategyMetadataService loaded: {len(self._strategies)} strategies"
-        )

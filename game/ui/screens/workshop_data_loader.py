@@ -156,29 +156,33 @@ class WorkshopDataLoader:
         return result
     
     def _load_strategies(self, result: LoadResult) -> None:
-        """Load combat strategies with test mode detection."""
-        from game.core.strategy_metadata import StrategyMetadataService
+        """Load combat strategies with test mode detection.
+
+        PROJ-148: Uses StrategyManager.load_data() as the single source of truth.
+        StrategyManager automatically populates StrategyMetadataService.
+        """
+        from game.ai.strategy_manager import StrategyManager
 
         # Check if test files exist (with test_ prefix)
         test_strat = os.path.join(self.directory, "test_combat_strategies.json")
 
-        service = StrategyMetadataService.instance()
-        service.clear()
+        manager = StrategyManager.instance()
+        manager.clear()  # Clears both StrategyManager and StrategyMetadataService
 
         if os.path.exists(test_strat):
             # Test data mode - use test_ prefixed files
-            service.load_data(
-                self.directory,
+            manager.load_data(
+                base_path=self.directory,
                 strategy_file="test_combat_strategies.json"
             )
-            log_info(f"Loaded strategy metadata from test data in {self.directory}")
+            log_info(f"Loaded strategies from test data in {self.directory}")
         else:
             # Production mode - try standard names
             strat_path, _ = self.find_file(["combatstrategies.json", "combat_strategies.json"])
             if strat_path:
                 base_dir = os.path.dirname(strat_path)
-                service.load_data(base_dir)
-                log_info(f"Loaded strategy metadata from {strat_path}")
+                manager.load_data(base_path=base_dir)
+                log_info(f"Loaded strategies from {strat_path}")
     
     def _load_vehicle_classes(self, result: LoadResult) -> None:
         """Load vehicle classes and layer definitions."""

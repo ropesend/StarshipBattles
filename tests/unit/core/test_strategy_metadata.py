@@ -3,14 +3,13 @@ Unit tests for StrategyMetadataService.
 
 Tests the core strategy metadata service that provides strategy names/IDs
 to the UI layer without requiring AI layer imports.
+
+Note: PROJ-148 removed StrategyMetadataService.load_data() - strategy loading
+is now done exclusively through StrategyManager which populates this service.
 """
 
-import os
 import pytest
-import tempfile
-import json
 import threading
-from unittest.mock import patch
 
 from game.core.strategy_metadata import StrategyMetadataService
 
@@ -155,47 +154,7 @@ class TestStrategyMetadataServiceQueries:
         assert populated_service.get_strategy_id_by_name('Unknown Strategy') is None
 
 
-class TestStrategyMetadataServiceLoadData:
-    """Test file loading functionality."""
-
-    def test_load_data_from_file(self):
-        """load_data should load strategies from JSON file."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create test JSON file
-            strategy_file = os.path.join(tmpdir, 'combat_strategies.json')
-            with open(strategy_file, 'w') as f:
-                json.dump({
-                    'strategies': {
-                        'test_strategy': {'name': 'Test Strategy'}
-                    }
-                }, f)
-
-            service = StrategyMetadataService.instance()
-            service.load_data(base_path=tmpdir)
-
-            assert 'test_strategy' in service.strategies
-            assert service.get_strategy_display_name('test_strategy') == 'Test Strategy'
-
-    def test_load_data_missing_file_uses_empty(self):
-        """load_data should use empty dict if file missing."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            service = StrategyMetadataService.instance()
-            service.load_data(base_path=tmpdir)
-            assert service.strategies == {}
-
-    def test_load_data_custom_filename(self):
-        """load_data should accept custom filename."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create test JSON file with custom name
-            strategy_file = os.path.join(tmpdir, 'custom_strategies.json')
-            with open(strategy_file, 'w') as f:
-                json.dump({
-                    'strategies': {
-                        'custom': {'name': 'Custom Strategy'}
-                    }
-                }, f)
-
-            service = StrategyMetadataService.instance()
-            service.load_data(base_path=tmpdir, strategy_file='custom_strategies.json')
-
-            assert 'custom' in service.strategies
+# PROJ-148: TestStrategyMetadataServiceLoadData removed
+# StrategyMetadataService.load_data() was removed as redundant.
+# Strategy loading is now done exclusively through StrategyManager.load_data()
+# which populates StrategyMetadataService via set_strategies().
