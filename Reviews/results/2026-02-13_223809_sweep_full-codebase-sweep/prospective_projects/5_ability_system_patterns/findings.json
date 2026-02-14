@@ -1,0 +1,233 @@
+[
+  {
+    "id": "DUP-STR-001",
+    "severity": "Critical",
+    "title": "Duplicate Component Ability Extraction P",
+    "location": "game/strategy/engine/harvestin",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-SIM-001",
+    "severity": "Major",
+    "title": "Ability `__init__` Pattern Duplication A",
+    "location": "game/simulation/components/abi",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-SIM-002",
+    "severity": "Major",
+    "title": "Repeated `sync_data` Pattern Across Prop",
+    "location": "game/simulation/components/abi",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-SIM-003",
+    "severity": "Major",
+    "title": "Repeated `recalculate` Pattern for Singl",
+    "location": "game/simulation/components/abi",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-SIM-004",
+    "severity": "Major",
+    "title": "`to_dict` / `from_dict` Serialization Pa",
+    "location": "game/simulation/battle_state.p",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-FND-001",
+    "severity": "Major",
+    "title": "Singleton Clear Pattern Duplication",
+    "location": "game/core/profiling.py:39-42",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "FND",
+    "shard_name": "Foundation"
+  },
+  {
+    "id": "DUP-FND-003",
+    "severity": "Major",
+    "title": "JSON Loading with Fallback Pattern",
+    "location": "game/core/resources.py:54-98",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "FND",
+    "shard_name": "Foundation"
+  },
+  {
+    "id": "CON-SIM-003",
+    "severity": "Major",
+    "title": "Mixed Docstring Formats",
+    "location": "Unknown",
+    "effort": "Complex",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "CON-SIM-005",
+    "severity": "Major",
+    "title": "Ability Class Naming Inconsistency",
+    "location": "game/simulation/components/abi",
+    "effort": "Complex",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-SIM-008",
+    "severity": "Minor",
+    "title": "WeaponAbility Formula Handling Pattern",
+    "location": "game/simulation/components/abi",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-STR-003",
+    "severity": "Major",
+    "title": "Duplicated Star Generation Logic",
+    "location": "game/strategy/data/stars.py:37",
+    "effort": "Medium",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-STR-004",
+    "severity": "Major",
+    "title": "Ship Spawning Duplication in ProductionE",
+    "location": "game/strategy/engine/productio",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-STR-005",
+    "severity": "Major",
+    "title": "Duplicated Complex Spawning Logic",
+    "location": "game/strategy/engine/productio",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-STR-006",
+    "severity": "Minor",
+    "title": "Resource Consumption Loop Pattern",
+    "location": "game/strategy/data/fleet_resou",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-STR-007",
+    "severity": "Minor",
+    "title": "has_resources/consume Pattern in FleetRe",
+    "location": "game/strategy/data/fleet_resou",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-STR-010",
+    "severity": "Minor",
+    "title": "Layer Iteration Pattern",
+    "location": "game/strategy/engine/harvestin",
+    "effort": "Simple",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "CON-FND-001",
+    "severity": "Major",
+    "title": "Inconsistent Singleton Pattern Usage",
+    "location": "game/core/registry.py:379-397",
+    "effort": "Medium",
+    "sweep_type": "CON",
+    "sweep_type_name": "Consistency Violations",
+    "shard": "FND",
+    "shard_name": "Foundation"
+  },
+  {
+    "id": "DUP-SIM-011",
+    "severity": "Info",
+    "title": "Consistent Use of Helper Class Pattern",
+    "location": "game/simulation/components/mod",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-SIM-012",
+    "severity": "Info",
+    "title": "Well-Factored Combat Subsystems",
+    "location": "game/simulation/combat/targeti",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "SIM",
+    "shard_name": "Simulation"
+  },
+  {
+    "id": "DUP-STR-011",
+    "severity": "Info",
+    "title": "Similar DTO from_X Factory Methods",
+    "location": "game/strategy/facade/dto/fleet",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  },
+  {
+    "id": "DUP-STR-012",
+    "severity": "Info",
+    "title": "NavigationState Pattern",
+    "location": "game/strategy/services/fleet_n",
+    "effort": "N",
+    "sweep_type": "DUP",
+    "sweep_type_name": "Duplication & Fragmentation",
+    "shard": "STR",
+    "shard_name": "Strategy"
+  }
+]

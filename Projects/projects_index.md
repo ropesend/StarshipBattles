@@ -4,6 +4,12 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-146 | 6_architecture_consistency | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-145 | 5_ability_system_patterns | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-144 | 4_legacy_code_cleanup | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-143 | 3_test_coverage_strategy_ai | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-142 | 2_test_coverage_ui | Planning | 2026-02-13 | 2026-02-13 |
+| PROJ-141 | 1_ui_duplication_consolidation | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-140 | Colony Ship Colonization Validation | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-139 | Dyson Sphere Multi-Hex Stellar Objects | Plan Approved | 2026-02-13 | 2026-02-13 |
 | PROJ-138 | Warp Point System Selection Dialog | Plan Approved | 2026-02-13 | 2026-02-13 |
@@ -237,7 +243,7 @@ PROJ-13 Phase 1 (Dead Code) ─────────────────�
 
 ---
 
-## Next Project ID: PROJ-141
+## Next Project ID: PROJ-147
 
 ---
 
