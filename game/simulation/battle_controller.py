@@ -619,57 +619,9 @@ class BattleController:
                 context={"mode": self._config.mode.value if self._config else None}
             )
 
-        # Delegate to mode handler
-        if self._mode_handler:
-            self._mode_handler.apply_results(self, results)
-            log_info(f"Battle results applied to fleets via mode handler")
-            return
-
-        # Defensive fallback for unexpected mode handler state
-        if not self._config.source_fleets:
-            raise StateException(
-                "No source fleets configured",
-                code=ErrorCode.INVALID_STATE.value,
-                context={"operation": "apply_results_to_fleets"}
-            )
-
-        fleet1, fleet2 = self._config.source_fleets
-
-        # Build mapping of ship names to results
-        # (In a real implementation, we'd use proper instance IDs)
-        surviving_by_name = {s.name: s for s in results.surviving_ships}
-        destroyed_by_name = {s.name: s for s in results.destroyed_ships}
-        escaped_by_name = {s.name: s for s in results.escaped_ships}
-
-        # Update fleet 1 (team 0)
-        self._apply_results_to_fleet(
-            fleet1, 0, surviving_by_name, destroyed_by_name, escaped_by_name
-        )
-
-        # Update fleet 2 (team 1)
-        self._apply_results_to_fleet(
-            fleet2, 1, surviving_by_name, destroyed_by_name, escaped_by_name
-        )
-
-        log_info(f"Battle results applied to fleets")
-
-    def _apply_results_to_fleet(
-        self,
-        fleet: Any,
-        team_id: int,
-        surviving: Dict[str, ShipState],
-        destroyed: Dict[str, ShipState],
-        escaped: Dict[str, ShipState],
-    ) -> None:
-        """Apply battle results to a single fleet.
-
-        Note: Fleet updates are handled by the strategy layer (ConflictResolutionEngine)
-        which calls Fleet.update_from_battle_results() directly. This method exists as
-        a fallback path but is not used in production - the strategy layer owns fleet
-        update responsibility.
-        """
-        # Fleet updates handled by strategy layer (ConflictResolutionEngine)
-        pass
+        # Delegate to mode handler (always set after configure())
+        self._mode_handler.apply_results(self, results)
+        log_info("Battle results applied to fleets via mode handler")
 
     # === Callbacks ===
 
