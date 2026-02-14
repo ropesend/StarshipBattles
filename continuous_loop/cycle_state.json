@@ -1,7 +1,7 @@
 ﻿{
     "current_cycle":  5,
     "start_time":  "2026-02-13T21:55:56.5045261-08:00",
-    "status":  "sweeping",
+    "status":  "executing",
     "consecutive_failures":  0,
     "cycles":  [
                    {

@@ -53,15 +53,15 @@ Updated tests:
 All 11971 tests passing.
 
 ### Task 1.3: DUP-UI2-002 - Battle Factory Functions Follow Identica [Medium]
-**File:** `game/ui/services/battle_factor`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/ui/services/battle_factories.py`
+**Tests:** `pytest tests/unit/simulation/battle_controller/test_utilities.py`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** COMPLETE - Extracted `_create_controller_with_config()` helper to reduce boilerplate across all 4 factory functions. Each factory now creates config, then calls helper, then adds ships/starts if needed. Also moved `ShipSerializer` import to top-level (from late import). Added 5 new tests for helper functions.
 
 ### Task 1.4: DUP-UI2-004 - BattleUIService Repeated Null-Check Patt [Simple]
 **File:** `game/ui/services/battle_ui_ser`
@@ -130,15 +130,15 @@ All 11971 tests passing.
 **Notes:** [Filled during implementation]
 
 ### Task 1.10: DUP-UI2-006 - Ship Cloning Logic in create_hypothetica [Simple]
-**File:** `game/ui/services/battle_factor`
-**Tests:** `pytest tests/` (add appropriate test path)
+**File:** `game/ui/services/battle_factories.py`
+**Tests:** `pytest tests/unit/simulation/battle_controller/test_utilities.py::TestHelperFunctions`
 
-- [ ] Investigate the issue at the specified location
-- [ ] Write test to verify the fix
-- [ ] Implement the fix
-- [ ] Verify: tests pass, no regressions
+- [x] Investigate the issue at the specified location
+- [x] Write test to verify the fix
+- [x] Implement the fix
+- [x] Verify: tests pass, no regressions
 
-**Notes:** [Filled during implementation]
+**Notes:** COMPLETE - Extracted `_clone_ships()` helper to deduplicate the ship cloning logic in `create_hypothetical_battle()`. The duplicated loop for team1 and team2 ships is now a single reusable function. Addressed together with Task 1.3.
 
 ### Task 1.11: CON-UI2-013 - Inconsistent __all__ Export Patterns [Simple]
 **File:** `game/ui/__init__.py`

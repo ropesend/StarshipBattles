@@ -7,18 +7,22 @@ live in a higher layer (UI) that is allowed to depend on both.
 
 These are convenience functions for common battle configurations. For full
 control, use BattleController directly with explicit AI factory injection.
+
+PROJ-141: DUP-UI2-002, DUP-UI2-006 remediation - extracted helper functions
+to reduce duplication across factory functions.
 """
 from typing import List, Optional, Any, TYPE_CHECKING
 
 from game.simulation.battle_controller import BattleController
 from game.simulation.battle_config import BattleConfig, BattleMode
 from game.ai.ai_factory import AIControllerFactory
+from game.simulation.entities.ship_serialization import ShipSerializer
 
 if TYPE_CHECKING:
     from game.simulation.entities.ship import Ship
 
 
-def _create_default_ai_factory():
+def _create_default_ai_factory() -> AIControllerFactory:
     """
     Create a default AIControllerFactory.
 
@@ -26,6 +30,51 @@ def _create_default_ai_factory():
         AIControllerFactory instance
     """
     return AIControllerFactory()
+
+
+def _create_controller_with_config(config: BattleConfig) -> BattleController:
+    """
+    Create and configure a BattleController with the given config.
+
+    This helper reduces boilerplate across factory functions.
+    PROJ-141: DUP-UI2-002 remediation.
+
+    Args:
+        config: Battle configuration
+
+    Returns:
+        Configured (but not started) BattleController
+    """
+    controller = BattleController(ai_factory=_create_default_ai_factory())
+    controller.configure(config)
+    return controller
+
+
+def _clone_ships(ships: List['Ship']) -> List['Ship']:
+    """
+    Create deep copies of ships via serialization.
+
+    This ensures complete isolation - cloned ships share no state
+    with originals. Position (x, y) is preserved on the clones.
+    PROJ-141: DUP-UI2-006 remediation.
+
+    Args:
+        ships: Ships to clone
+
+    Returns:
+        List of cloned ships with preserved positions
+    """
+    if not ships:
+        return []
+
+    cloned = []
+    for ship in ships:
+        data = ShipSerializer.to_dict(ship)
+        clone = ShipSerializer.from_dict(data, registries=ship.registries)
+        clone.x, clone.y = ship.x, ship.y
+        cloned.append(clone)
+
+    return cloned
 
 
 def create_manual_battle(
@@ -46,15 +95,13 @@ def create_manual_battle(
     Returns:
         Configured and started BattleController
     """
-    controller = BattleController(ai_factory=_create_default_ai_factory())
-
     config = BattleConfig(
         mode=BattleMode.MANUAL,
         seed=seed,
         headless=headless,
     )
 
-    controller.configure(config)
+    controller = _create_controller_with_config(config)
     controller.add_ships(team1_ships, 0)
     controller.add_ships(team2_ships, 1)
     controller.start()
@@ -78,8 +125,6 @@ def create_test_battle(
     Returns:
         Configured BattleController (not started - scenario handles setup)
     """
-    controller = BattleController(ai_factory=_create_default_ai_factory())
-
     config = BattleConfig(
         mode=BattleMode.TEST,
         seed=seed,
@@ -88,9 +133,7 @@ def create_test_battle(
         max_ticks=scenario.max_ticks if hasattr(scenario, 'max_ticks') else 100000,
     )
 
-    controller.configure(config)
-
-    return controller
+    return _create_controller_with_config(config)
 
 
 def create_strategy_battle(
@@ -111,8 +154,6 @@ def create_strategy_battle(
     Returns:
         Configured BattleController (ships not yet added - call to_battle_ships on fleets)
     """
-    controller = BattleController(ai_factory=_create_default_ai_factory())
-
     config = BattleConfig(
         mode=BattleMode.STRATEGY,
         seed=seed,
@@ -121,9 +162,7 @@ def create_strategy_battle(
         source_fleets=(fleet1, fleet2),
     )
 
-    controller.configure(config)
-
-    return controller
+    return _create_controller_with_config(config)
 
 
 def create_hypothetical_battle(
@@ -144,8 +183,6 @@ def create_hypothetical_battle(
     Returns:
         Configured and started BattleController
     """
-    controller = BattleController(ai_factory=_create_default_ai_factory())
-
     config = BattleConfig(
         mode=BattleMode.HYPOTHETICAL,
         seed=seed,
@@ -153,27 +190,11 @@ def create_hypothetical_battle(
         isolated=True,
     )
 
-    controller.configure(config)
+    controller = _create_controller_with_config(config)
 
-    # Clone ships to ensure isolation
-    from game.simulation.entities.ship_serialization import ShipSerializer
-
-    cloned1 = []
-    for ship in ships1:
-        data = ShipSerializer.to_dict(ship)
-        cloned = ShipSerializer.from_dict(data, registries=ship.registries)
-        cloned.x, cloned.y = ship.x, ship.y
-        cloned1.append(cloned)
-
-    cloned2 = []
-    for ship in ships2:
-        data = ShipSerializer.to_dict(ship)
-        cloned = ShipSerializer.from_dict(data, registries=ship.registries)
-        cloned.x, cloned.y = ship.x, ship.y
-        cloned2.append(cloned)
-
-    controller.add_ships(cloned1, 0)
-    controller.add_ships(cloned2, 1)
+    # Clone ships to ensure isolation (PROJ-141: DUP-UI2-006)
+    controller.add_ships(_clone_ships(ships1), 0)
+    controller.add_ships(_clone_ships(ships2), 1)
     controller.start()
 
     return controller

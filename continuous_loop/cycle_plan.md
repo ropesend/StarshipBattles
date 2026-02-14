@@ -8,18 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-13
-**Last Completed:** Phase 1 partial (Tasks 1.1-1.2 complete)
+**Last Completed:** Tasks 1.3 and 1.10 (battle factory duplication)
 **Current Status:** Phase 1 in progress
 **Current Project:** PROJ-141
-**Current Phase:** Phase 1 (2/12 tasks complete)
-**Test Status:** 11971 passed, 0 failed
+**Current Phase:** Phase 1 (4/12 tasks complete)
+**Test Status:** 11976 passed, 0 failed
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-141 Phase 1 partially complete (2 of 12 tasks)
-- Task 1.1 (CON-UI2-001): SKIPPED - documented intentional pattern
-- Task 1.2 (DUP-UI2-001): COMPLETE - created tkinter_utils.py, updated 4 files, updated tests
-- Next: Continue with Task 1.3 (DUP-UI2-002 - battle factory functions)
+- PROJ-141 Phase 1 partially complete (4 of 12 tasks)
+- Task 1.3 (DUP-UI2-002): COMPLETE - extracted `_create_controller_with_config()` helper
+- Task 1.10 (DUP-UI2-006): COMPLETE - extracted `_clone_ships()` helper (both addressed together)
+- Added 5 new tests for helper functions
+- Files modified: battle_factories.py, test_utilities.py
+- Next: Continue with Task 1.4 (DUP-UI2-004 - BattleUIService null-check)
 
 ---
 
@@ -79,7 +81,8 @@
 
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
-| 2026-02-13 | PROJ-141 | Phase 1 (partial) | In Progress | 11971 passed | pending | Tasks 1.1-1.2 complete, 10 remaining |
+| 2026-02-13 | PROJ-141 | Phase 1 (partial) | In Progress | 11971 passed | 1c3641ca | Tasks 1.1-1.2 complete, 10 remaining |
+| 2026-02-13 | PROJ-141 | Phase 1 (partial) | In Progress | 11976 passed | d39216ca | Tasks 1.3, 1.10 complete, 8 remaining |
 
 ---
 

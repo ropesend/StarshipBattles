@@ -11,6 +11,8 @@ from game.ui.services.battle_factories import (
     create_test_battle,
     create_strategy_battle,
     create_hypothetical_battle,
+    _clone_ships,
+    _create_controller_with_config,
 )
 
 
@@ -208,9 +210,9 @@ class TestFactoryFunctions:
     def test_create_hypothetical_battle_clones_ships(self):
         """create_hypothetical_battle clones ships for isolation."""
         # Patch BattleService in battle_controller (where BattleController uses it)
-        # Patch ShipSerializer at its source (late import in create_hypothetical_battle)
+        # Patch ShipSerializer where it's imported (top-level import in battle_factories)
         with patch('game.simulation.battle_controller.BattleService') as MockService, \
-             patch('game.simulation.entities.ship_serialization.ShipSerializer') as MockSerializer:
+             patch('game.ui.services.battle_factories.ShipSerializer') as MockSerializer:
 
             mock_service = Mock()
             mock_service.create_battle.return_value = BattleServiceResult(success=True)
@@ -244,3 +246,75 @@ class TestFactoryFunctions:
             # Verify serialization was used for cloning
             assert MockSerializer.to_dict.called
             assert MockSerializer.from_dict.called
+
+
+class TestHelperFunctions:
+    """Tests for internal helper functions (DUP-UI2-002, DUP-UI2-006 remediation)."""
+
+    def test_clone_ships_clones_each_ship(self):
+        """_clone_ships creates independent copies via serialization."""
+        with patch('game.ui.services.battle_factories.ShipSerializer') as MockSerializer:
+            mock_ship_data = {'name': 'TestShip'}
+            MockSerializer.to_dict.return_value = mock_ship_data
+            mock_cloned = Mock()
+            MockSerializer.from_dict.return_value = mock_cloned
+
+            original = Mock()
+            original.x = 100
+            original.y = 200
+            original.registries = Mock()
+
+            result = _clone_ships([original])
+
+            assert len(result) == 1
+            MockSerializer.to_dict.assert_called_once_with(original)
+            MockSerializer.from_dict.assert_called_once_with(
+                mock_ship_data, registries=original.registries
+            )
+            # Position should be copied
+            assert mock_cloned.x == 100
+            assert mock_cloned.y == 200
+
+    def test_clone_ships_handles_multiple_ships(self):
+        """_clone_ships handles multiple ships."""
+        with patch('game.ui.services.battle_factories.ShipSerializer') as MockSerializer:
+            MockSerializer.to_dict.return_value = {'name': 'Ship'}
+            mock_cloned = Mock()
+            MockSerializer.from_dict.return_value = mock_cloned
+
+            ships = [Mock(x=0, y=0, registries=Mock()) for _ in range(3)]
+            result = _clone_ships(ships)
+
+            assert len(result) == 3
+            assert MockSerializer.to_dict.call_count == 3
+            assert MockSerializer.from_dict.call_count == 3
+
+    def test_clone_ships_empty_list(self):
+        """_clone_ships returns empty list for empty input."""
+        result = _clone_ships([])
+        assert result == []
+
+    def test_create_controller_with_config_creates_configured_controller(self):
+        """_create_controller_with_config creates and configures controller."""
+        with patch('game.simulation.battle_controller.BattleService') as MockService:
+            mock_service = Mock()
+            mock_service.create_battle.return_value = BattleServiceResult(success=True)
+            MockService.return_value = mock_service
+
+            config = BattleConfig(mode=BattleMode.MANUAL, seed=42)
+            controller = _create_controller_with_config(config)
+
+            assert controller._config == config
+            assert controller._is_configured is True
+
+    def test_create_controller_with_config_all_modes(self):
+        """_create_controller_with_config works with all battle modes."""
+        with patch('game.simulation.battle_controller.BattleService') as MockService:
+            mock_service = Mock()
+            mock_service.create_battle.return_value = BattleServiceResult(success=True)
+            MockService.return_value = mock_service
+
+            for mode in [BattleMode.MANUAL, BattleMode.TEST, BattleMode.STRATEGY, BattleMode.HYPOTHETICAL]:
+                config = BattleConfig(mode=mode)
+                controller = _create_controller_with_config(config)
+                assert controller._config.mode == mode
