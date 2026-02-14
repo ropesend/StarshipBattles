@@ -313,8 +313,12 @@ class TransferDialog(UIWindow):
             fleet_id = target['id']
             planet_id = source['id']
             direction = 'load'
+        elif source['type'] == 'fleet' and target['type'] == 'fleet':
+            # Fleet-to-Fleet: source to target
+            fleet_id = source['id']
+            target_fleet_id = target['id']
+            direction = 'unload'
         else:
-            # Fleet-to-Fleet not supported yet (or same type)
             log_info(f"Transfer between {source['type']} and {target['type']} not supported.")
             return
 
@@ -324,7 +328,8 @@ class TransferDialog(UIWindow):
             cargo_type=item['type'],
             direction=direction,
             amount=amount,
-            species_id=item['species_id']
+            species_id=item['species_id'],
+            target_fleet_id=target_fleet_id
         )
         
         result = self.facade.handle_command(cmd)
@@ -334,3 +339,39 @@ class TransferDialog(UIWindow):
         else:
             log_info(f"TransferDialog: Validation failed: {result.message}")
             # Could show a popup error here
+
+    def handle_external_selection(self, obj):
+        """Update source/target selection based on an external selection (e.g. from map or list)."""
+        from game.core.protocols import is_fleet, is_planet
+        
+        target_label = None
+        if is_fleet(obj):
+            target_label = f"Fleet {obj.id}"
+        elif is_planet(obj):
+            target_label = f"Colony: {obj.name}"
+            
+        if not target_label:
+            return
+            
+        # If the clicked object is in available_sources/targets, select it
+        if target_label in [s['label'] for s in self.available_sources]:
+            if self.drop_source.selected_option != target_label:
+                # If target is already selected as target, swap them? 
+                # For now, let's just update source if it matches.
+                # Actually, usually users want to click the TARGET.
+                
+                # Check if it's already source
+                if self.drop_source.selected_option == target_label:
+                    # Already source, nothing to do
+                    pass
+                else:
+                    # Update target if it matches
+                    if target_label in [t['label'] for t in self.available_targets]:
+                        self.drop_target.set_selected_option(target_label)
+                    else:
+                        # If not a target, maybe it should be the source?
+                        # If we have only one fleet and click a colony, fleet is source, colony is target.
+                        self.drop_source.set_selected_option(target_label)
+                        self._on_source_changed(target_label)
+        elif target_label in [t['label'] for t in self.available_targets]:
+            self.drop_target.set_selected_option(target_label)

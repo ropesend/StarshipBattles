@@ -286,6 +286,7 @@ class FleetOrderProcessor:
         Process a TRANSFER order.
 
         PROJ-68: Transfers cargo between fleet and colony.
+        PROJ-NEW: Transfers cargo between two fleets.
 
         Args:
             fleet: Fleet with TRANSFER order
@@ -299,7 +300,7 @@ class FleetOrderProcessor:
         from game.strategy.data.planet import SpeciesPopulation
 
         order = fleet.get_current_order()
-        if not order or order.type != OrderType.TRANSFER:
+        if not order or order.type not in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
             return TransferResult(success=False, message="No TRANSFER order")
 
         # Extract params from order target dict
@@ -312,14 +313,35 @@ class FleetOrderProcessor:
         cargo_type = params.get('cargo_type', '')
         amount = params.get('amount', 0)
         planet_id = params.get('planet_id')
+        target_fleet_id = params.get('target_fleet_id')
         species_id = params.get('species_id')
 
-        # Resolve planet
-        planet = galaxy.get_planet_by_id(planet_id) if planet_id else None
+        # Resolve target
+        target = None
+        if planet_id:
+            target = galaxy.get_planet_by_id(planet_id)
+        elif target_fleet_id:
+            # Need to find fleet by ID. FleetOrderProcessor doesn't have session access here usually,
+            # but we can look through the empire's fleets or all empires.
+            from game.core.protocols import is_planet, is_fleet
+            # Search all empires for the target fleet
+            for emp in getattr(galaxy, 'empires', []): # This depends on how galaxy is structured
+                for f in emp.fleets:
+                    if f.id == target_fleet_id:
+                        target = f
+                        break
+                if target: break
+            
+            # If not found in galaxy.empires, try searching the current empire
+            if not target:
+                for f in empire.fleets:
+                    if f.id == target_fleet_id:
+                        target = f
+                        break
 
         # Validate
         validation = TransferValidator.validate(
-            galaxy, fleet, planet, cargo_type, direction, amount, species_id
+            galaxy, fleet, target, cargo_type, direction, amount, species_id
         )
 
         if not validation.is_valid:
@@ -329,15 +351,58 @@ class FleetOrderProcessor:
 
         # Execute transfer
         transferred = 0
+        from game.core.protocols import is_planet, is_fleet
 
-        if direction == "load":
-            transferred = self._execute_load(fleet, planet, cargo_type, amount, empire, species_id)
-        else:  # unload
-            transferred = self._execute_unload(fleet, planet, cargo_type, amount, empire, species_id)
+        if is_planet(target):
+            if direction == "load":
+                transferred = self._execute_load(fleet, target, cargo_type, amount, empire, species_id)
+            else:  # unload
+                transferred = self._execute_unload(fleet, target, cargo_type, amount, empire, species_id)
+        elif is_fleet(target):
+            transferred = self._execute_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
 
         fleet.pop_order()
         log_info(f"FleetOrderProcessor: Transfer complete. {direction}ed {transferred} {cargo_type}")
         return TransferResult(success=True, amount_transferred=transferred)
+
+    def _execute_fleet_transfer(
+        self,
+        fleet: Fleet,
+        target_fleet: Fleet,
+        cargo_type: str,
+        direction: str,
+        amount: int,
+        species_id: str = None
+    ) -> int:
+        """Execute a transfer between two fleets."""
+        if cargo_type == "passengers":
+            source = fleet if direction == "unload" else target_fleet
+            dest = target_fleet if direction == "unload" else fleet
+            
+            # Determine how much to transfer
+            current_cargo = source.get_fleet_cargo_current("passengers")
+            capacity = dest.get_fleet_cargo_capacity("passengers")
+            current_dest = dest.get_fleet_cargo_current("passengers")
+            available_space = capacity - current_dest
+            
+            # If amount is 0, transfer all available
+            to_transfer = amount if amount > 0 else current_cargo
+            
+            # Cap by source cargo and destination space
+            to_transfer = min(to_transfer, current_cargo, available_space)
+            
+            if to_transfer <= 0:
+                return 0
+                
+            # Unload from source
+            actual_transferred = source.unload_cargo_from_fleet("passengers", to_transfer)
+            
+            # Load to destination
+            dest.load_cargo_to_fleet("passengers", actual_transferred)
+            
+            return actual_transferred
+            
+        return 0
 
     def _execute_load(
         self,

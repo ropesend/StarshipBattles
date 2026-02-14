@@ -193,6 +193,15 @@ class FleetReportWindow(UIWindow):
             manager=self.ui_manager,
             container=self.sidebar_panel
         )
+        y += 24
+
+        # Passengers
+        self.lbl_passengers = UILabel(
+            relative_rect=pygame.Rect(10, y, self.sidebar_width - 20, 22),
+            text="Passengers: --",
+            manager=self.ui_manager,
+            container=self.sidebar_panel
+        )
         y += 32
 
         # --- Movement Capabilities Section ---
@@ -816,6 +825,12 @@ class FleetReportWindow(UIWindow):
             self.lbl_energy.set_text(f"Energy: {stats['total_energy']:.0f}/{stats['max_energy']:.0f} ({energy_pct:.0f}%)")
         else:
             self.lbl_energy.set_text("Energy: N/A")
+
+        # Passengers
+        if stats['max_passengers'] > 0:
+            self.lbl_passengers.set_text(f"Passengers: {stats['total_passengers']}/{stats['max_passengers']}")
+        else:
+            self.lbl_passengers.set_text("Passengers: 0/0")
 
         # Movement Capabilities - use fleet methods
         capabilities = self.fleet.get_capability_summary()

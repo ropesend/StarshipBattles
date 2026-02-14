@@ -106,13 +106,15 @@ class ColonizeCommandHandler:
             # Auto-load population from colony at fleet's location (BUG-70)
             origin_colony = session._find_colony_at_fleet(fleet)
             if origin_colony and origin_colony.populations:
+                species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
                 transfer_params = {
                     'direction': 'load',
                     'cargo_type': 'passengers',
                     'amount': 0,
                     'planet_id': origin_colony.id,
+                    'species_id': species_id
                 }
-                load_order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
+                load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
                 fleet.add_order(load_order)
 
             # Ensure we pass the OBJECT to rules
@@ -299,13 +301,15 @@ class ColonizeMissionCommandHandler:
         # 5. Auto-load population from colony at fleet's current location (BUG-70)
         origin_colony = session._find_colony_at_fleet(fleet)
         if origin_colony and origin_colony.populations:
+            species_id = origin_colony.populations[0].race_id if origin_colony.populations else "default"
             transfer_params = {
                 'direction': 'load',
                 'cargo_type': 'passengers',
                 'amount': 0,  # 0 = load as much as possible
                 'planet_id': origin_colony.id,
+                'species_id': species_id
             }
-            load_order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
+            load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
             fleet.add_order(load_order)
 
         # 6. Queue MOVE order if not already at target

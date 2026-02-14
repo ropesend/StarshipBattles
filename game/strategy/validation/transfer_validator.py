@@ -20,42 +20,33 @@ class TransferValidator:
     def validate(
         galaxy: Any,
         fleet: Any,
-        planet: Any,
+        target: Any,
         cargo_type: str,
         direction: str,
         amount: int,
         species_id: str = None
     ) -> ValidationResult:
         """
-        Validate if a fleet can perform a transfer operation with a colony.
+        Validate if a fleet can perform a transfer operation with a colony or another fleet.
 
         Args:
             galaxy: The Galaxy object
-            fleet: The Fleet object attempting the transfer
-            planet: The Planet object (colony)
+            fleet: The Fleet object attempting the transfer (source for unload, target for load)
+            target: The Planet or Fleet object to transfer with
             cargo_type: Type of cargo to transfer (e.g., 'passengers')
-            direction: 'load' (colony->fleet) or 'unload' (fleet->colony)
+            direction: 'load' (target->fleet) or 'unload' (fleet->target)
             amount: Units to transfer (0 = all available)
 
         Returns:
-            ValidationResult with error codes:
-            - FLEET_NOT_FOUND: Fleet does not exist
-            - PLANET_NOT_FOUND: Planet does not exist
-            - INVALID_DIRECTION: direction must be 'load' or 'unload'
-            - INVALID_CARGO_TYPE: cargo_type not recognized
-            - NOT_AT_PLANET: Fleet is not at the planet's location
-            - NOT_COLONIZED: Planet is not colonized
-            - NO_CARGO_SPACE: Fleet has no available cargo capacity (for load)
-            - NO_CARGO_TO_UNLOAD: Fleet has no cargo of this type (for unload)
-            - NO_POPULATION: Colony has no population of the race (for load passengers)
+            ValidationResult with error codes
         """
         # 1. Validate fleet exists
         if not fleet:
             return ValidationResult(is_valid=False, errors=["Fleet does not exist."], error_code="FLEET_NOT_FOUND")
 
-        # 2. Validate planet exists
-        if not planet:
-            return ValidationResult(is_valid=False, errors=["Planet does not exist."], error_code="PLANET_NOT_FOUND")
+        # 2. Validate target exists
+        if not target:
+            return ValidationResult(is_valid=False, errors=["Target does not exist."], error_code="TARGET_NOT_FOUND")
 
         # 3. Validate direction
         if direction not in TransferValidator.VALID_DIRECTIONS:
@@ -73,29 +64,80 @@ class TransferValidator:
                 error_code="INVALID_CARGO_TYPE"
             )
 
-        # 5. Validate fleet is at planet location
-        # Use galaxy to find planet's global hex
-        planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
-        if planet not in planets_at_hex:
-            return ValidationResult(
-                is_valid=False,
-                errors=[f"Fleet is not at {planet.name}'s location."],
-                error_code="NOT_AT_PLANET"
-            )
+        # 5. Validate location
+        from game.core.protocols import is_planet, is_fleet
+        
+        if is_planet(target):
+            planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
+            if target not in planets_at_hex:
+                return ValidationResult(
+                    is_valid=False,
+                    errors=[f"Fleet is not at {target.name}'s location."],
+                    error_code="NOT_AT_PLANET"
+                )
+            if target.owner_id is None:
+                return ValidationResult(
+                    is_valid=False,
+                    errors=[f"Planet {target.name} is not colonized."],
+                    error_code="NOT_COLONIZED"
+                )
+        elif is_fleet(target):
+            if fleet.location != target.location:
+                return ValidationResult(
+                    is_valid=False,
+                    errors=["Fleets are not at the same location."],
+                    error_code="NOT_CO_LOCATED"
+                )
+            if fleet.id == target.id:
+                return ValidationResult(
+                    is_valid=False,
+                    errors=["Cannot transfer cargo to the same fleet."],
+                    error_code="SAME_ENTITY"
+                )
 
-        # 6. Validate planet is colonized
-        if planet.owner_id is None:
-            return ValidationResult(
-                is_valid=False,
-                errors=[f"Planet {planet.name} is not colonized."],
-                error_code="NOT_COLONIZED"
-            )
+        # 6. Direction-specific validation
+        if is_planet(target):
+            if direction == "load":
+                return TransferValidator._validate_load(fleet, target, cargo_type, amount, species_id)
+            else:  # unload
+                return TransferValidator._validate_unload(fleet, target, cargo_type, amount, species_id)
+        else: # fleet
+            return TransferValidator._validate_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
 
-        # 7. Direction-specific validation
-        if direction == "load":
-            return TransferValidator._validate_load(fleet, planet, cargo_type, amount, species_id)
-        else:  # unload
-            return TransferValidator._validate_unload(fleet, planet, cargo_type, amount, species_id)
+    @staticmethod
+    def _validate_fleet_transfer(
+        fleet: Any,
+        target_fleet: Any,
+        cargo_type: str,
+        direction: str,
+        amount: int,
+        species_id: str = None
+    ) -> ValidationResult:
+        """Validate a transfer between two fleets."""
+        if cargo_type == "passengers":
+            source = fleet if direction == "unload" else target_fleet
+            dest = target_fleet if direction == "unload" else fleet
+            
+            # Check source has cargo
+            current_cargo = source.get_fleet_cargo_current("passengers")
+            if current_cargo <= 0:
+                return ValidationResult(
+                    is_valid=False,
+                    errors=[f"Source fleet {source.id} has no passengers to transfer."],
+                    error_code="NO_CARGO_TO_UNLOAD"
+                )
+            
+            # Check destination has space
+            capacity = dest.get_fleet_cargo_capacity("passengers")
+            current = dest.get_fleet_cargo_current("passengers")
+            if current >= capacity:
+                return ValidationResult(
+                    is_valid=False,
+                    errors=[f"Destination fleet {dest.id} has no passenger capacity."],
+                    error_code="NO_CARGO_SPACE"
+                )
+        
+        return ValidationResult()
 
     @staticmethod
     def _validate_load(

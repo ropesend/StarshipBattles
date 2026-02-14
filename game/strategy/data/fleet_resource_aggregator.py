@@ -241,7 +241,7 @@ class FleetResourceAggregator:
             Total capacity summed across all combat-capable ships.
         """
         total = 0
-        for ship in self._fleet.get_combat_capable_ships():
+        for ship in self._fleet.ships:
             total += ship.get_cargo_capacity(cargo_type)
         return total
 
@@ -277,7 +277,7 @@ class FleetResourceAggregator:
         remaining = amount
         total_loaded = 0
 
-        for ship in self._fleet.get_combat_capable_ships():
+        for ship in self._fleet.ships:
             if remaining <= 0:
                 break
             loaded = ship.load_cargo(cargo_type, remaining)

@@ -198,9 +198,9 @@ class ColumnManager:
             return "Yes" if FleetCapabilityCalculator.ship_has_spaceyard(ship) else "No"
 
         elif col_id == 'transport':
-            cargo_storage = ship.get_calculated_stats().get('cargo_storage', {})
-            has_passengers = cargo_storage.get('passengers', 0) > 0
-            return "Yes" if has_passengers else "No"
+            capacity = ship.get_cargo_capacity('passengers')
+            current = ship.get_current_cargo('passengers')
+            return f"{current}/{capacity}" if capacity > 0 else "--"
 
         elif col_id == 'resources':
             # Build compact string: "E:80 F:90 A:100"

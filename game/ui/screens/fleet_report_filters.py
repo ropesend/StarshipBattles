@@ -46,6 +46,10 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
             'max_fuel': 0,
             'total_energy': 0,
             'max_energy': 0,
+            'total_passengers': 0,
+            'max_passengers': 0,
+            'total_cargo_generic': 0,
+            'max_cargo_generic': 0,
         }
 
     ship_count = len(ships)
@@ -79,6 +83,17 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         max_energy += ship_max_energy
         total_energy += ship.resource_levels.get(ResourceType.ENERGY, 0)
 
+        # Passenger and General Cargo calculations
+        cargo_storage = calculated_stats.get('cargo_storage', {})
+        
+        # Passengers
+        max_passengers += cargo_storage.get('passengers', 0)
+        total_passengers += ship.get_current_cargo('passengers')
+        
+        # General Cargo
+        max_cargo_generic += cargo_storage.get('generic', 0)
+        total_cargo_generic += ship.get_current_cargo('generic')
+
     # Warp capability counts
     warp_capable_count = sum(1 for s in ships if ShipStatsCalculator.has_warp_capability(s))
 
@@ -93,6 +108,10 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
         'max_fuel': max_fuel,
         'total_energy': total_energy,
         'max_energy': max_energy,
+        'total_passengers': total_passengers,
+        'max_passengers': max_passengers,
+        'total_cargo_generic': total_cargo_generic,
+        'max_cargo_generic': max_cargo_generic,
         'warp_capable_count': warp_capable_count,
         'all_warp_capable': warp_capable_count == ship_count and ship_count > 0,
     }
@@ -246,8 +265,7 @@ def sort_ships(
             from game.strategy.data.fleet_capability_calculator import FleetCapabilityCalculator
             return 1 if FleetCapabilityCalculator.ship_has_spaceyard(ship) else 0
         elif sort_column == 'transport':
-            cargo_storage = ship.get_calculated_stats().get('cargo_storage', {})
-            return 1 if cargo_storage.get('passengers', 0) > 0 else 0
+            return ship.get_cargo_capacity('passengers')
         elif sort_column == 'cargo':
             return sum(ship.cargo_contents.values()) if ship.cargo_contents else 0
         elif sort_column == 'resources':

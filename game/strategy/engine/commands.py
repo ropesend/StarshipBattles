@@ -115,31 +115,35 @@ class IssueTransferCommand(Command):
     """
     Command to issue a TRANSFER order for cargo operations.
 
-    Transfers cargo (passengers, etc.) between a fleet and a colony.
+    Transfers cargo (passengers, etc.) between a fleet and a colony,
+    or between two fleets.
 
     Args:
-        fleet_id: The fleet to transfer cargo to/from
-        planet_id: The planet/colony to transfer cargo to/from
+        fleet_id: The fleet to transfer cargo to/from (primary fleet)
+        planet_id: The planet/colony to transfer cargo to/from (optional)
         cargo_type: Type of cargo (e.g., 'passengers')
-        direction: 'load' (colony→fleet) or 'unload' (fleet→colony)
+        direction: 'load' (target→fleet) or 'unload' (fleet→target)
         amount: Units to transfer (0 = transfer all available)
-        species_id: Optional species ID for population transfers (PROJ-68)
+        species_id: Optional species ID for population transfers
+        target_fleet_id: The other fleet to transfer cargo to/from (optional)
     """
     fleet_id: int
-    planet_id: int
+    planet_id: Optional[int]
     cargo_type: str
     direction: str  # "load" or "unload"
     amount: int  # 0 = all
     species_id: Optional[str] = None
+    target_fleet_id: Optional[int] = None
 
     def __init__(
         self,
         fleet_id: int,
-        planet_id: int,
-        cargo_type: str,
-        direction: str,
+        planet_id: Optional[int] = None,
+        cargo_type: str = "passengers",
+        direction: str = "load",
         amount: int = 0,
-        species_id: Optional[str] = None
+        species_id: Optional[str] = None,
+        target_fleet_id: Optional[int] = None
     ):
         self.type = CommandType.ISSUE_ORDER
         self.fleet_id = fleet_id
@@ -148,6 +152,7 @@ class IssueTransferCommand(Command):
         self.direction = direction
         self.amount = amount
         self.species_id = species_id
+        self.target_fleet_id = target_fleet_id
 
 
 # =============================================================================

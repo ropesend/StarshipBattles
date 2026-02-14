@@ -401,6 +401,10 @@ class StrategyScreen:
         # Update UI
         img = self._get_object_asset(obj)
         self.ui.show_detailed_report(obj, img)
+        
+        # PROJ-NEW: If TransferDialog is open, update its selection
+        if self.ui.window_manager.transfer_dialog:
+            self.ui.window_manager.transfer_dialog.handle_external_selection(obj)
 
     # =========================================================================
     # Actions

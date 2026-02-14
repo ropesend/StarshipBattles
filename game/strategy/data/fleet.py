@@ -26,6 +26,8 @@ class OrderType(Enum):
     CLOSE_WARP_POINT = auto()
     CREATE_DYSON_SPHERE = auto()
     SELF_DESTRUCT = auto()
+    LOAD_POPULATION = auto()
+    UNLOAD_POPULATION = auto()
 
 
 class FleetOrder:
@@ -40,8 +42,8 @@ class FleetOrder:
         """Serialize for save game."""
         target_data = None
         if self.target is not None:
-            if self.type == OrderType.TRANSFER:
-                # TRANSFER orders store a dict with direction, cargo_type, amount, planet_id
+            if self.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
+                # TRANSFER and population orders store a dict with direction, cargo_type, amount, planet_id
                 target_data = {'type': 'transfer', 'value': self.target}
             elif self.type == OrderType.IMPLODE_PLANET and hasattr(self.target, 'id'):
                 # Planet reference for IMPLODE_PLANET (PROJ-102)
