@@ -8,24 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-14
-**Last Completed:** PROJ-148 Phase 3
-**Current Status:** Phase 3 complete, ready for Phase 4
+**Last Completed:** PROJ-148 Phase 4
+**Current Status:** Phase 4 complete, ready for Phase 5
 **Current Project:** PROJ-148
-**Current Phase:** Phase 4
+**Current Phase:** Phase 5
 **Test Status:** 12907 passed, 2 skipped
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-148 Phase 3 complete
-- All 6 strategy findings (DUP-STR-001 through DUP-STR-006) documented as acceptable patterns:
-  - DUP-STR-001: Template method for ability extraction (ResourceHarvester vs EmpireStorage)
-  - DUP-STR-002: Idiomatic layer iteration `for layer_data in layers.values()`
-  - DUP-STR-003: Maintenance cost already centralized via calculate_maintenance_cost()
-  - DUP-STR-004: Inline hex distance formula (3 lines, different subsequent logic)
-  - DUP-STR-005: Gaussian falloff is standard math formula, not duplication
-  - DUP-STR-006: Fleet-like object is single location, not duplicated
-- No code changes - all findings are proper patterns or already centralized
-- Next: Phase 4 (UI-Framework findings)
+- PROJ-148 Phase 4 complete
+- All 5 UI-Framework findings (DUP-UI2-010 through DUP-UI2-016) documented as acceptable patterns:
+  - DUP-UI2-010: Standard DI pattern with Optional[IRegistryProvider] and lazy resolution
+  - DUP-UI2-012: SingletonMeta from game.core.singleton - proper code reuse via inheritance
+  - DUP-UI2-011: Standard adapter pattern with DI (~10 lines inherent boilerplate)
+  - DUP-UI2-015: Idiomatic defensive I/O with separate exception handlers
+  - DUP-UI2-016: Empty __init__.py is standard Python package marker
+- No code changes - all findings are proper patterns
+- Next: Phase 5 (UI-Screens findings)
 
 ---
 
@@ -102,6 +101,7 @@
 | 2026-02-14 | PROJ-148 | Phase 1 | Complete | 12868 passed | 975f5c1a | DUP-FND-001 fixed (removed load_data), DUP-FND-002 documented |
 | 2026-02-14 | PROJ-148 | Phase 2 | Complete | 12907 passed | da223ead | All 7 findings documented as acceptable patterns; fixed test file collisions |
 | 2026-02-14 | PROJ-148 | Phase 3 | Complete | 12907 passed | cbd144cb | All 6 strategy findings documented as acceptable patterns; no code changes |
+| 2026-02-14 | PROJ-148 | Phase 4 | Complete | 12907 passed | - | All 5 UI-Framework findings documented as acceptable patterns; no code changes |
 
 ---
 
