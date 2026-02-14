@@ -559,7 +559,7 @@ class TestProcessCreateDysonSphere:
         assert mock_system.stars == []
 
     def test_nearby_planets_removed(self, mock_fleet, mock_system, component_registry):
-        """Planets within 9 hexes should be removed."""
+        """Planets within 5 hexes (zone radius) should be removed."""
         from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
 
         ship = MagicMock()
@@ -573,14 +573,14 @@ class TestProcessCreateDysonSphere:
         star.location = HexCoord(0, 0)
         mock_system.stars = [star]
 
-        # One planet close (should be removed), one far (should stay)
+        # One planet inside zone (should be removed), one outside (should stay)
         close_planet = MagicMock()
         close_planet.id = 1
-        close_planet.location = HexCoord(5, 0)  # 5 hexes from star
+        close_planet.location = HexCoord(3, 0)  # 3 hexes from star (inside zone)
 
         far_planet = MagicMock()
         far_planet.id = 2
-        far_planet.location = HexCoord(15, 0)  # 15 hexes from star
+        far_planet.location = HexCoord(7, 0)  # 7 hexes from star (outside zone)
 
         mock_system.planets = [close_planet, far_planet]
 
@@ -680,6 +680,150 @@ class TestProcessCreateDysonSphere:
 
         # Assert
         mock_fleet.remove_ship.assert_called_once_with(ship)
+
+    def test_dyson_sphere_has_diameter_hexes_11(self, mock_fleet, mock_system, component_registry):
+        """Dyson Sphere should have diameter_hexes=11.0 for multi-hex zone."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+
+        ship = MagicMock()
+        ship.id = "ship-1"
+        ship.design_data = {'layers': {'core': [{'id': 'dyson_constructor'}]}}
+
+        mock_fleet.ships = [ship]
+        mock_fleet.location = mock_system.global_location
+
+        star = MagicMock()
+        star.location = HexCoord(0, 0)
+        mock_system.stars = [star]
+        mock_system.planets = []
+
+        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
+        mock_galaxy.register_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+        empire.colonies = []
+
+        # Act
+        processor.process_create_dyson_sphere(
+            mock_fleet, empire, mock_galaxy, component_registry
+        )
+
+        # Assert - Dyson Sphere has diameter_hexes=11.0
+        call_args = mock_galaxy.register_planet.call_args
+        dyson = call_args[0][1]
+        assert dyson.diameter_hexes == 11.0
+
+    def test_dyson_sphere_uses_race_config_conditions(self, mock_fleet, mock_system, component_registry):
+        """Dyson Sphere should use empire's race_config for ideal conditions."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+        from game.strategy.data.race_config import RaceConfig
+
+        ship = MagicMock()
+        ship.id = "ship-1"
+        ship.design_data = {'layers': {'core': [{'id': 'dyson_constructor'}]}}
+
+        mock_fleet.ships = [ship]
+        mock_fleet.location = mock_system.global_location
+
+        star = MagicMock()
+        star.location = HexCoord(0, 0)
+        mock_system.stars = [star]
+        mock_system.planets = []
+
+        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
+        mock_galaxy.register_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+
+        # Setup empire with custom race_config
+        race_config = RaceConfig(
+            name="TestRace",
+            flag_id="test_flag",
+            portrait_id="test_portrait",
+            gravity_ideal=1.5,  # 1.5g ideal
+            temperature_ideal=320.0,  # Hot preference
+            water_ideal=0.1,  # Desert preference
+            atmosphere_preferences={"Oxygen": 30.0, "Nitrogen": 50.0, "Methane": -20.0}
+        )
+        empire = MagicMock()
+        empire.race_config = race_config
+        empire.colonies = []
+
+        # Act
+        processor.process_create_dyson_sphere(
+            mock_fleet, empire, mock_galaxy, component_registry
+        )
+
+        # Assert - Dyson Sphere uses race_config values
+        call_args = mock_galaxy.register_planet.call_args
+        dyson = call_args[0][1]
+        assert dyson.surface_gravity == pytest.approx(1.5 * 9.81, rel=0.01)
+        assert dyson.surface_temperature == 320.0
+        assert dyson.surface_water == 0.1
+        # Atmosphere should only include positive preferences
+        assert "Oxygen" in dyson.atmosphere
+        assert "Nitrogen" in dyson.atmosphere
+        assert "Methane" not in dyson.atmosphere  # Negative preference excluded
+
+    def test_dyson_sphere_clearing_radius_is_5(self, mock_fleet, mock_system, component_registry):
+        """Planets within 5 hexes should be removed (aligned to zone radius)."""
+        from game.strategy.engine.superweapon_order_processor import SuperweaponOrderProcessor
+
+        ship = MagicMock()
+        ship.id = "ship-1"
+        ship.design_data = {'layers': {'core': [{'id': 'dyson_constructor'}]}}
+
+        mock_fleet.ships = [ship]
+        mock_fleet.location = mock_system.global_location
+
+        star = MagicMock()
+        star.location = HexCoord(0, 0)
+        mock_system.stars = [star]
+
+        # Planet at 5 hexes (should be removed - at zone edge)
+        edge_planet = MagicMock()
+        edge_planet.id = 1
+        edge_planet.location = HexCoord(5, 0)
+
+        # Planet at 6 hexes (should survive - outside zone)
+        outside_planet = MagicMock()
+        outside_planet.id = 2
+        outside_planet.location = HexCoord(6, 0)
+
+        mock_system.planets = [edge_planet, outside_planet]
+
+        order = FleetOrder(OrderType.CREATE_DYSON_SPHERE)
+        mock_fleet.get_current_order.return_value = order
+
+        mock_galaxy = MagicMock()
+        mock_galaxy.systems = {mock_system.global_location: mock_system}
+        mock_galaxy.get_system_at_location.return_value = mock_system
+        mock_galaxy.register_planet = MagicMock()
+
+        processor = SuperweaponOrderProcessor()
+        empire = MagicMock()
+        empire.colonies = []
+
+        # Act
+        processor.process_create_dyson_sphere(
+            mock_fleet, empire, mock_galaxy, component_registry
+        )
+
+        # Assert - edge planet (5 hexes) removed, outside planet (6 hexes) survives
+        calls = [call[0][0] for call in mock_galaxy.unregister_planet.call_args_list]
+        assert edge_planet in calls
+        assert outside_planet not in calls
 
 
 class TestProcessSelfDestruct:

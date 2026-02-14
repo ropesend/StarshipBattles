@@ -428,8 +428,8 @@ class SuperweaponOrderProcessor:
         if ship is None:
             ship = fleet.ships[0] if fleet.ships else None
 
-        # Remove planets within 9 hexes of star
-        dyson_radius = 9
+        # Remove planets within zone radius (5 hexes for 11-hex diameter sphere)
+        dyson_radius = 5
         planets_to_remove = []
         for planet in system.planets:
             dist = hex_distance(planet.location, star_loc)
@@ -446,6 +446,26 @@ class SuperweaponOrderProcessor:
         # Remove all stars
         system.stars = []
 
+        # Extract environmental conditions from creator's race_config
+        race = getattr(empire, 'race_config', None) if empire else None
+        if race:
+            # Use race's ideal conditions for perfect habitability
+            gravity = race.gravity_ideal * 9.81  # Convert g to m/s^2
+            temperature = race.temperature_ideal
+            water = race.water_ideal
+            # Build atmosphere from positive preferences (scaled to partial pressure)
+            atmosphere = {}
+            for gas, preference in race.atmosphere_preferences.items():
+                if preference > 0:
+                    # Scale preference (0-100) to partial pressure (mbar)
+                    atmosphere[gas] = preference * 10.0  # e.g., 21% O2 -> 210 mbar
+        else:
+            # Fallback to human-comfortable defaults
+            gravity = 9.81  # 1g
+            temperature = 288.0  # ~15°C
+            water = 0.3
+            atmosphere = {"Oxygen": 210.0, "Nitrogen": 780.0}  # Earth-like
+
         # Create Dyson Sphere planet at system center
         # Dyson Sphere properties (mega-engineering structure enclosing a star)
         dyson = Planet(
@@ -456,14 +476,16 @@ class SuperweaponOrderProcessor:
             radius=1.5e11,  # ~1 AU radius
             surface_area=1e18,  # Massive surface area (inner surface)
             density=1.0,  # Very thin shell
-            surface_gravity=9.8,  # Engineered for 1g
+            surface_gravity=gravity,  # From race_config or default
             surface_pressure=101325.0,  # 1 ATM
-            surface_temperature=288.0,  # ~15°C comfortable
-            surface_water=0.3,  # Engineered water coverage
+            surface_temperature=temperature,  # From race_config or default
+            surface_water=water,  # From race_config or default
+            atmosphere=atmosphere,  # From race_config or default
             tectonic_activity=0.0,  # No tectonics (artificial)
             magnetic_field=1.0,  # Engineered shielding
             planet_type=PlanetType.DYSON_SPHERE,
             image_id="Sphereworld_Portrait.png",
+            diameter_hexes=11.0,  # Multi-hex zone (11-hex diameter)
         )
 
         # Add to system and register with galaxy
