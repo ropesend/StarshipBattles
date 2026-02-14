@@ -457,3 +457,119 @@ class TestShowToast:
         rect = call_kwargs['rect']
         # Center should be at 960 (1920 // 2)
         assert rect.centerx == 960
+
+
+class TestScreenshotManagerLogging:
+    """PROJ-142: TCG-UI2-007 - Additional logging verification tests."""
+
+    @pytest.fixture
+    def mock_manager(self):
+        """Create a mock-patched ScreenshotManager."""
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
+
+        # Clear any existing instance
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=True):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                manager = ScreenshotManager.instance()
+
+        yield manager
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+    def test_capture_success_logs_info(self, mock_manager):
+        """Successful capture should log info message with file path."""
+        mock_manager.enabled = True
+        mock_surface = Mock()
+        mock_surface.get_rect.return_value = Mock(width=100, height=100)
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            with patch('game.ui.services.screenshot_manager.log_info') as mock_log:
+                with patch.object(mock_manager, '_copy_to_clipboard'):
+                    mock_manager.capture(surface=mock_surface)
+
+        # Should log info with file path
+        mock_log.assert_called()
+        call_args = mock_log.call_args[0][0]
+        assert "Screenshot saved" in call_args
+
+    def test_directory_creation_logs_info(self):
+        """Creating screenshot directory should log info."""
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
+
+        # Clear any existing instance
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
+            with patch('game.ui.services.screenshot_manager.os.makedirs'):
+                with patch('game.ui.services.screenshot_manager.log_info') as mock_log:
+                    manager = ScreenshotManager.instance()
+
+        # Should log info about directory creation
+        mock_log.assert_called()
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+    def test_directory_creation_failure_logs_error(self):
+        """Failed directory creation should log error and disable screenshots."""
+        from game.ui.services.screenshot_manager import ScreenshotManager
+        from game.core.singleton import SingletonMeta
+
+        # Clear any existing instance
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+        with patch('game.ui.services.screenshot_manager.os.path.exists', return_value=False):
+            with patch('game.ui.services.screenshot_manager.os.makedirs', side_effect=OSError("Permission denied")):
+                with patch('game.ui.services.screenshot_manager.log_error') as mock_log:
+                    manager = ScreenshotManager.instance()
+
+        # Should log error
+        mock_log.assert_called()
+        # Manager should be disabled
+        assert manager.enabled is False
+
+        # Cleanup
+        if ScreenshotManager in SingletonMeta._instances:
+            del SingletonMeta._instances[ScreenshotManager]
+
+    def test_clipboard_failure_logs_warning_not_error(self, mock_manager):
+        """Clipboard failure should log warning (non-critical)."""
+        with patch('game.ui.services.screenshot_manager.copy_to_clipboard', return_value=False):
+            with patch('game.ui.services.screenshot_manager.os.name', 'nt'):
+                with patch('game.ui.services.screenshot_manager.subprocess.run', side_effect=Exception("Clipboard error")):
+                    with patch('game.ui.services.screenshot_manager.log_warning') as mock_log:
+                        mock_manager._copy_to_clipboard("/path/to/file.png")
+
+        # Should log warning, not error
+        mock_log.assert_called()
+
+    def test_strategy_layer_capture_error_logs_error(self, mock_manager):
+        """Error during strategy layer capture should log error."""
+        mock_manager.enabled = True
+
+        scene = Mock()
+        scene.screen_width = 1920
+        scene.screen_height = 1080
+        scene._renderer = Mock()
+        scene._renderer.draw.side_effect = OSError("Renderer error")
+
+        with patch('game.ui.services.screenshot_manager.pygame') as mock_pygame:
+            # Preserve pygame.error for exception handling
+            import pygame
+            mock_pygame.error = pygame.error
+            mock_pygame.Surface.return_value = Mock()
+            with patch('game.ui.services.screenshot_manager.log_error') as mock_log:
+                mock_manager.capture_strategy_layer(scene)
+
+        # Should log error
+        mock_log.assert_called()
