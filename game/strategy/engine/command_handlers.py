@@ -370,10 +370,14 @@ class TransferCommandHandler:
         from game.strategy.data.fleet import FleetOrder, OrderType
         from game.strategy.validation import TransferValidator
 
+        log_info(f"DIAG TransferCommandHandler: cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
+
         # 1. Resolve fleet
         fleet = session._get_fleet_by_id(cmd.fleet_id)
         if not fleet:
+            log_info(f"DIAG TransferCommandHandler: Fleet {cmd.fleet_id} NOT FOUND")
             return ValidationResult(is_valid=False, errors=["Fleet not found."])
+        log_info(f"DIAG TransferCommandHandler: Fleet found, location={fleet.location}, ships={len(fleet.ships)}")
 
         # 2. Find owning empire
         owning_empire = None
@@ -383,22 +387,29 @@ class TransferCommandHandler:
                 break
 
         if not owning_empire:
+            log_info(f"DIAG TransferCommandHandler: Fleet owner NOT FOUND")
             return ValidationResult(is_valid=False, errors=["Fleet owner not found."])
 
         # 3. Resolve planet
         planet = session._get_planet_by_id(cmd.planet_id)
         if not planet:
+            log_info(f"DIAG TransferCommandHandler: Planet {cmd.planet_id} NOT FOUND")
             return ValidationResult(is_valid=False, errors=["Planet not found."])
+        log_info(f"DIAG TransferCommandHandler: Planet found: name={planet.name}, owner_id={planet.owner_id}, total_pop={planet.total_population}")
 
         # 4. Validate (skip location check — we'll auto-add a MOVE order)
         # Use projected cargo to account for earlier queued orders
         from game.strategy.services.fleet_cargo_projector import FleetCargoProjector
         projected = FleetCargoProjector.get_projected_cargo(fleet, cmd.cargo_type)
+        capacity = fleet.get_fleet_cargo_capacity(cmd.cargo_type)
+        current = fleet.get_fleet_cargo_current(cmd.cargo_type)
+        log_info(f"DIAG TransferCommandHandler: cargo capacity={capacity}, current={current}, projected={projected}")
 
         result = TransferValidator.validate(
             session.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount,
             cmd.species_id, skip_location_check=True, projected_cargo=projected
         )
+        log_info(f"DIAG TransferCommandHandler: validation result is_valid={result.is_valid}, errors={result.errors}, error_code={getattr(result, 'error_code', None)}")
 
         # 5. Apply
         if result.is_valid:
@@ -425,7 +436,9 @@ class TransferCommandHandler:
             }
             order = FleetOrder(OrderType.TRANSFER, target=transfer_params)
             fleet.add_order(order)
-            log_info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}")
+            log_info(f"GameSession: Issued TRANSFER order for Fleet {fleet.id}, orders now={len(fleet.orders)}")
+        else:
+            log_info(f"DIAG TransferCommandHandler: REJECTED - not adding order")
 
         return result
 

@@ -118,7 +118,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             # 2. Description
             desc = self._get_order_description(order)
             lbl_desc = pygame_gui.elements.UILabel(
-                relative_rect=pygame.Rect(40, row_y, 180, row_height),
+                relative_rect=pygame.Rect(40, row_y, 260, row_height),
                 text=desc,
                 manager=self.ui_manager,
                 container=self.list_container
@@ -126,7 +126,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             
             # 3. Controls (Up, Down, Delete)
             btn_up = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(230, row_y, 30, row_height),
+                relative_rect=pygame.Rect(310, row_y, 30, row_height),
                 text="^",
                 manager=self.ui_manager,
                 container=self.list_container,
@@ -135,7 +135,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             if i == 0: btn_up.disable()
             
             btn_down = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(265, row_y, 30, row_height),
+                relative_rect=pygame.Rect(345, row_y, 30, row_height),
                 text="v",
                 manager=self.ui_manager,
                 container=self.list_container,
@@ -144,7 +144,7 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
             if i == len(orders) - 1: btn_down.disable()
             
             btn_del = pygame_gui.elements.UIButton(
-                relative_rect=pygame.Rect(300, row_y, 30, row_height),
+                relative_rect=pygame.Rect(380, row_y, 30, row_height),
                 text="X",
                 manager=self.ui_manager,
                 container=self.list_container,
@@ -164,6 +164,8 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
     def _get_order_description(self, order):
         if order.type == OrderType.MOVE:
              t = order.target
+             if hasattr(t, 'q') and hasattr(t, 'r'):
+                 return f"MOVE ({t.q}, {t.r})"
              return f"MOVE {t}"
         elif order.type == OrderType.COLONIZE:
              # target is Planet object

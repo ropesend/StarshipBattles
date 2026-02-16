@@ -177,8 +177,11 @@ class ShipStatsCalculator:
             comp_hp *= multipliers.get('hp_mult', 1.0)
             total_hp += comp_hp * effectiveness
 
-            # Get abilities from component definition
-            abilities = getattr(comp_def, 'abilities', {}) or {}
+            # comp_def may be a dict (JSON registry) or Component object (simulation)
+            if isinstance(comp_def, dict):
+                abilities = comp_def.get('abilities', {}) or {}
+            else:
+                abilities = getattr(comp_def, 'abilities', {}) or {}
 
             # Get capacity multiplier for storage abilities
             capacity_mult = multipliers.get('capacity_mult', 1.0)
@@ -313,12 +316,19 @@ class ShipStatsCalculator:
             component_damage = {}
 
         # Check if this is armor (never degrades)
-        comp_type = getattr(comp_def, 'type_str', '')
+        # comp_def may be a dict (JSON) or Component object (simulation)
+        if isinstance(comp_def, dict):
+            comp_type = comp_def.get('type', '')
+        else:
+            comp_type = getattr(comp_def, 'type_str', '')
         if comp_type in NON_DEGRADING_TYPES:
             return 1.0
 
         # Check for 'Armor' ability marker
-        abilities = getattr(comp_def, 'abilities', {}) or {}
+        if isinstance(comp_def, dict):
+            abilities = comp_def.get('abilities', {}) or {}
+        else:
+            abilities = getattr(comp_def, 'abilities', {}) or {}
         if abilities.get('Armor'):
             return 1.0
 
@@ -334,7 +344,10 @@ class ShipStatsCalculator:
         hp_pct = current_hp / max_hp
 
         # Get damage threshold (default 30%)
-        threshold = getattr(comp_def, 'damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
+        if isinstance(comp_def, dict):
+            threshold = comp_def.get('damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
+        else:
+            threshold = getattr(comp_def, 'damage_threshold', DEFAULT_DAMAGE_THRESHOLD)
 
         # Below threshold = inactive
         if hp_pct <= threshold:
@@ -437,7 +450,11 @@ class ShipStatsCalculator:
     @staticmethod
     def _get_numeric_value(obj: Any, attr: str, default: float, context: Optional[Dict[str, Any]] = None) -> float:
         """Get a numeric attribute from an object, handling formulas."""
-        val = getattr(obj, attr, default)
+        # obj may be a dict (JSON registry) or Component object (simulation)
+        if isinstance(obj, dict):
+            val = obj.get(attr, default)
+        else:
+            val = getattr(obj, attr, default)
         return ShipStatsCalculator._evaluate_value(val, default, context)
 
     @staticmethod

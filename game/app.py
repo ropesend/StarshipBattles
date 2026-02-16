@@ -202,12 +202,7 @@ class Game:
 
         log_info("Opening new game setup")
 
-        # Create UI manager if needed
-        if not hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
-            self.menu_ui_manager.preload_fonts([
-                {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': 1}
-            ])
+        # Font preloading is handled in MenuScene/StrategyUI UIManager init
 
         # Create new game setup window (expanded for race selection UI)
         window_rect = create_centered_rect(650, 600, self.width, self.height)
@@ -322,12 +317,7 @@ class Game:
 
         log_info("Opening load game menu")
 
-        # Create UI manager if needed
-        if not hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
-            self.menu_ui_manager.preload_fonts([
-                {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': 1}
-            ])
+        # Font preloading is handled in MenuScene/StrategyUI UIManager init
 
         # Create save selection window
         window_rect = create_centered_rect(600, 500, self.width, self.height)
@@ -454,12 +444,7 @@ class Game:
 
         log_info("Opening race setup wizard")
 
-        # Create UI manager if needed
-        if not hasattr(self, 'menu_ui_manager'):
-            self.menu_ui_manager = pygame_gui.UIManager((self.width, self.height))
-            self.menu_ui_manager.preload_fonts([
-                {'name': 'noto_sans', 'point_size': 14, 'style': 'bold', 'antialiased': 1}
-            ])
+        # Font preloading is handled in MenuScene/StrategyUI UIManager init
 
         # Create race setup window (larger for 2560x1600 displays)
         window_rect = create_centered_rect(1800, 1200, self.width, self.height)

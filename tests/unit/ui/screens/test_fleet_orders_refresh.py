@@ -48,7 +48,7 @@ def test_auto_refresh(manager, fleet):
     
     # Now rows should be 1
     assert len(window.rows) == 1
-    assert window.rows[0]['desc'].text == "MOVE HexCoord(1, 1)"
+    assert window.rows[0]['desc'].text == "MOVE (1, 1)"
     
     # Remove order externally
     fleet.orders.pop()

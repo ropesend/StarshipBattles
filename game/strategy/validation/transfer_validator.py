@@ -160,14 +160,17 @@ class TransferValidator:
         projected_cargo: int = None
     ) -> ValidationResult:
         """Validate a load operation (colony -> fleet)."""
+        from game.core.logger import log_info
         # For passengers, check fleet has cargo capacity
         if cargo_type == "passengers":
             capacity = fleet.get_fleet_cargo_capacity("passengers")
             # Use projected cargo if provided (accounts for earlier queued orders)
             current = projected_cargo if projected_cargo is not None else fleet.get_fleet_cargo_current("passengers")
             available_space = capacity - current
+            log_info(f"DIAG _validate_load: capacity={capacity}, current/projected={current}, available_space={available_space}, projected_cargo_param={projected_cargo}")
 
             if available_space <= 0:
+                log_info(f"DIAG _validate_load: REJECTED - NO_CARGO_SPACE")
                 return ValidationResult(
                     is_valid=False,
                     errors=["Fleet has no available passenger capacity."],
@@ -176,6 +179,7 @@ class TransferValidator:
 
             # Check colony has population
             if planet.total_population <= 0:
+                log_info(f"DIAG _validate_load: REJECTED - NO_POPULATION on {planet.name}")
                 return ValidationResult(
                     is_valid=False,
                     errors=[f"{planet.name} has no population to load."],
@@ -184,6 +188,7 @@ class TransferValidator:
 
             if species_id:
                 has_species = any(p.race_id == species_id and p.count > 0 for p in planet.populations)
+                log_info(f"DIAG _validate_load: species_id={species_id}, has_species={has_species}")
                 if not has_species:
                     return ValidationResult(
                         is_valid=False,
@@ -191,6 +196,7 @@ class TransferValidator:
                         error_code="NO_POPULATION"
                     )
 
+        log_info(f"DIAG _validate_load: PASSED")
         return ValidationResult()
 
 

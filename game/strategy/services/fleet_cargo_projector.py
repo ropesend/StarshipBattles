@@ -59,4 +59,4 @@ class FleetCargoProjector:
                     projected = max(projected - delta, 0)
 
         return projected
-""", "Complexity": 5, "Description": "New utility that walks the fleet order queue to compute projected cargo state, enabling load-then-drop order sequences.", "EmptyFile": false, "IsArtifact": false, "Overwrite": false, "TargetFile": "C:\\Dev\\Starship Battles\\game\\strategy\\services\\fleet_cargo_projector.py"}
+

@@ -13,6 +13,9 @@ This index tracks all code reviews conducted on the Starship Battles codebase.
 ## Active Reviews
 | Date | Type | Description | Status | Link |
 |------|------|-------------|--------|------|
+| 2026-02-16 | General Review | test-suite-cleanup-v3 | In Progress | [2026-02-16_105410_general_test-suite-cleanup-v3](results/2026-02-16_105410_general_test-suite-cleanup-v3/) |
+| 2026-02-16 | General Review | test-suite-cleanup | In Progress | [2026-02-16_075913_general_test-suite-cleanup](results/2026-02-16_075913_general_test-suite-cleanup/) |
+| 2026-02-16 | General Review | test-suite-cleanup | In Progress | [2026-02-16_071059_general_test-suite-cleanup](results/2026-02-16_071059_general_test-suite-cleanup/) |
 | 2026-02-14 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-14_100116_sweep_full-codebase-sweep](results/2026-02-14_100116_sweep_full-codebase-sweep/) |
 | 2026-02-14 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-14_031258_sweep_full-codebase-sweep](results/2026-02-14_031258_sweep_full-codebase-sweep/) |
 | 2026-02-13 | Sweep Review | full-codebase-sweep | In Progress | [2026-02-13_223809_sweep_full-codebase-sweep](results/2026-02-13_223809_sweep_full-codebase-sweep/) |

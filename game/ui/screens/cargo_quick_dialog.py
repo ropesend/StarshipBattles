@@ -141,20 +141,35 @@ class CargoQuickDialog(UIWindow):
 
     def _populate_load_items(self):
         """Populate items for load (load cargo from colony)."""
+        # DIAGNOSTIC: Log hex and fleet info
+        log_info(f"DIAG _populate_load_items: hex_coord={self.hex_coord}, fleet.id={self.fleet.id}, fleet.location={getattr(self.fleet, 'location', 'N/A')}")
+
         # FIX: Try to resolve planets at the clicked hex first, fallback to fleet location.
         planets = self.facade.get_planets_at_hex(self.hex_coord)
+        log_info(f"DIAG _populate_load_items: planets at hex_coord={self.hex_coord}: {len(planets)} found")
         if not planets and hasattr(self.fleet, 'location'):
             planets = self.facade.get_planets_at_hex(self.fleet.location)
+            log_info(f"DIAG _populate_load_items: fallback to fleet.location={self.fleet.location}: {len(planets)} found")
 
         colonies = [p for p in planets if p.owner_id is not None]
+        log_info(f"DIAG _populate_load_items: colonies (owner_id not None): {len(colonies)}")
+        for p in planets:
+            log_info(f"DIAG   planet: name={p.name}, planet_id={p.planet_id}, owner_id={p.owner_id}")
+
+        # DIAGNOSTIC: Log fleet cargo capacity
+        capacity = self.fleet.get_fleet_cargo_capacity('passengers')
+        current = self.fleet.get_fleet_cargo_current('passengers')
+        log_info(f"DIAG _populate_load_items: fleet cargo capacity={capacity}, current={current}")
 
         for colony in colonies:
             planet_info = self.facade.get_planet(colony.planet_id)
             if not planet_info:
+                log_info(f"DIAG _populate_load_items: facade.get_planet({colony.planet_id}) returned None")
                 continue
 
             # Population details: tuple of (race_id, count, happiness)
             if hasattr(planet_info, 'population_details'):
+                log_info(f"DIAG _populate_load_items: {colony.name} population_details={planet_info.population_details}")
                 for race_id, count, happiness in planet_info.population_details:
                     if count > 0:
                         self._add_cargo_row(
@@ -167,6 +182,7 @@ class CargoQuickDialog(UIWindow):
                         )
             else:
                 pop = getattr(planet_info, 'total_population', 0)
+                log_info(f"DIAG _populate_load_items: {colony.name} total_population={pop} (no population_details)")
                 if pop > 0:
                     self._add_cargo_row(
                         label=f"{colony.name}: Population ({pop})",
@@ -284,6 +300,8 @@ class CargoQuickDialog(UIWindow):
 
     def _issue_orders(self):
         """Issue transfer commands for all items with non-zero slider values."""
+        log_info(f"DIAG _issue_orders: direction={self.direction}, cargo_items count={len(self.cargo_items)}")
+
         # Get first colony at hex for unload direction (pick the first one)
         target_planet_id = None
         if self.direction == 'unload':
@@ -295,7 +313,9 @@ class CargoQuickDialog(UIWindow):
         orders_issued = 0
         for item in self.cargo_items:
             amount = int(item['slider'].get_current_value())
+            log_info(f"DIAG _issue_orders: item='{item['label']}', slider_amount={amount}, max={item['max']}, planet_id={item.get('planet_id')}")
             if amount <= 0:
+                log_info(f"DIAG _issue_orders: skipping {item['label']} - amount=0")
                 continue
 
             # Determine planet_id
@@ -305,7 +325,7 @@ class CargoQuickDialog(UIWindow):
                 planet_id = target_planet_id
 
             if not planet_id:
-                log_debug(f"CargoQuickDialog: No planet for transfer of {item['label']}")
+                log_info(f"DIAG _issue_orders: No planet_id for transfer of {item['label']}")
                 continue
 
             # Use 0 for "all" (engine convention)
@@ -320,14 +340,17 @@ class CargoQuickDialog(UIWindow):
                 amount=amount,
                 species_id=item['species_id']
             )
+            log_info(f"DIAG _issue_orders: issuing cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
 
             result = self.facade.handle_command(cmd)
+            log_info(f"DIAG _issue_orders: result.is_valid={result.is_valid}, errors={getattr(result, 'errors', [])}, error_code={getattr(result, 'error_code', None)}")
             if result.is_valid:
                 orders_issued += 1
                 log_info(f"CargoQuickDialog: Order issued for {item['label']}")
             else:
                 log_info(f"CargoQuickDialog: Validation failed: {result.message}")
 
+        log_info(f"DIAG _issue_orders: total orders_issued={orders_issued}")
         if orders_issued > 0:
             log_info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
 

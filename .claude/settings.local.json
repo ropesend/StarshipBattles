@@ -40,6 +40,9 @@
       "Read(//c/Dev/Starship Battles/**)",
       "Bash(claude:*)",
       "Bash(radon cc:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Dev\\Starship Battles\\Reviews\\results\\2026-02-16_071059_general_test-suite-cleanup\\findings"
     ]
   }
 }
