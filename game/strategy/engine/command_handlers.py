@@ -117,6 +117,17 @@ class ColonizeCommandHandler:
                 load_order = FleetOrder(OrderType.LOAD_POPULATION, target=transfer_params)
                 fleet.add_order(load_order)
 
+            # Add MOVE order to get to the target planet
+            planet_global_hex = None
+            for sys in session.galaxy.systems.values():
+                if target_planet in sys.planets:
+                    planet_global_hex = sys.global_location + target_planet.location
+                    break
+
+            if planet_global_hex and fleet.location != planet_global_hex:
+                move_order = FleetOrder(OrderType.MOVE, target=planet_global_hex)
+                fleet.add_order(move_order)
+
             # Ensure we pass the OBJECT to rules
             order = FleetOrder(OrderType.COLONIZE, target=target_planet)
             fleet.add_order(order)
@@ -379,13 +390,31 @@ class TransferCommandHandler:
         if not planet:
             return ValidationResult(is_valid=False, errors=["Planet not found."])
 
-        # 4. Validate
+        # 4. Validate (skip location check — we'll auto-add a MOVE order)
+        # Use projected cargo to account for earlier queued orders
+        from game.strategy.services.fleet_cargo_projector import FleetCargoProjector
+        projected = FleetCargoProjector.get_projected_cargo(fleet, cmd.cargo_type)
+
         result = TransferValidator.validate(
-            session.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount, cmd.species_id
+            session.galaxy, fleet, planet, cmd.cargo_type, cmd.direction, cmd.amount,
+            cmd.species_id, skip_location_check=True, projected_cargo=projected
         )
 
         # 5. Apply
         if result.is_valid:
+            # Find planet's global hex for MOVE order
+            planet_global_hex = None
+            for sys in session.galaxy.systems.values():
+                if planet in sys.planets:
+                    planet_global_hex = sys.global_location + planet.location
+                    break
+
+            # Prepend MOVE order if fleet isn't already at the planet
+            if planet_global_hex and fleet.location != planet_global_hex:
+                move_order = FleetOrder(OrderType.MOVE, target=planet_global_hex)
+                fleet.add_order(move_order)
+                log_info(f"GameSession: Auto-added MOVE order to {planet_global_hex} for Fleet {fleet.id}")
+
             # Create TRANSFER order with params dict
             transfer_params = {
                 'direction': cmd.direction,

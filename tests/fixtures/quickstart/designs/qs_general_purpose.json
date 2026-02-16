@@ -4,30 +4,55 @@
     "vehicle_type": "Ship",
     "theme_id": "Federation",
     "team_id": 0,
-    "color": [100, 100, 255],
+    "color": [
+        100,
+        100,
+        255
+    ],
     "ai_strategy": "standard_ranged",
     "layers": {
         "CORE": [
             {
                 "id": "bridge",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 1.0},
-                    {"id": "hardened_mount", "value": 1.0},
-                    {"id": "automation", "value": 0.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "automation",
+                        "value": 0.0
+                    }
                 ]
             },
             {
                 "id": "crew_quarters",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 2.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             },
             {
                 "id": "life_support",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 2.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             }
         ],
@@ -35,44 +60,109 @@
             {
                 "id": "standard_engine",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 7.0},
-                    {"id": "hardened_mount", "value": 1.0},
-                    {"id": "efficiency_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 7.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "efficiency_mount",
+                        "value": 1.0
+                    }
                 ]
             },
             {
                 "id": "warp_drive",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 1.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             },
             {
                 "id": "fuel_tank",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 2.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 2.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             },
             {
                 "id": "battery",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 1.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             },
             {
                 "id": "fleet_space_yard",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 1.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             },
             {
                 "id": "fleet_space_yard",
                 "modifiers": [
-                    {"id": "simple_size_mount", "value": 1.0},
-                    {"id": "hardened_mount", "value": 1.0}
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "passenger_quarters",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
+                ]
+            },
+            {
+                "id": "continental_colony_pod",
+                "modifiers": [
+                    {
+                        "id": "simple_size_mount",
+                        "value": 1.0
+                    },
+                    {
+                        "id": "hardened_mount",
+                        "value": 1.0
+                    }
                 ]
             }
         ],

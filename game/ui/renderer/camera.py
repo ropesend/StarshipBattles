@@ -66,7 +66,7 @@ class Camera:
                  pass # Keep looking at dead ship position
              self.position = pygame.math.Vector2(self.target.position)
              
-    def update_input(self, dt: float, events: List[pygame.event.Event]) -> None:
+    def update_input(self, dt: float, events: List[pygame.event.Event], allow_wasd: bool = True) -> None:
         """
         Process keyboard and mouse input for camera control.
 
@@ -82,15 +82,25 @@ class Camera:
         Args:
             dt: Delta time in seconds for frame-rate independent movement
             events: List of pygame events to check for mouse wheel
+            allow_wasd: If True, allows WASD for panning. Defaults to True.
         """
         keys = pygame.key.get_pressed()
         speed = 1000 / self.zoom  # Pan faster when zoomed out
         
         move = pygame.math.Vector2(0, 0)
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]: move.x = -1
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]: move.x = 1
-        if keys[pygame.K_UP] or keys[pygame.K_w]: move.y = -1
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]: move.y = 1
+        
+        # Arrow Keys (Always allowed)
+        if keys[pygame.K_LEFT]: move.x = -1
+        if keys[pygame.K_RIGHT]: move.x = 1
+        if keys[pygame.K_UP]: move.y = -1
+        if keys[pygame.K_DOWN]: move.y = 1
+        
+        # WASD Keys (Optional)
+        if allow_wasd:
+            if keys[pygame.K_a]: move.x = -1
+            if keys[pygame.K_d]: move.x = 1
+            if keys[pygame.K_w]: move.y = -1
+            if keys[pygame.K_s]: move.y = 1
         
         if move.length() > 0:
             self.position += move.normalize() * speed * dt

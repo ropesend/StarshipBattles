@@ -24,7 +24,9 @@ class TransferValidator:
         cargo_type: str,
         direction: str,
         amount: int,
-        species_id: str = None
+        species_id: str = None,
+        skip_location_check: bool = False,
+        projected_cargo: int = None
     ) -> ValidationResult:
         """
         Validate if a fleet can perform a transfer operation with a colony or another fleet.
@@ -64,15 +66,24 @@ class TransferValidator:
                 error_code="INVALID_CARGO_TYPE"
             )
 
-        # 5. Validate location
+        # 5. Validate location (skip when queuing orders with auto-move)
         from game.core.protocols import is_planet, is_fleet
         
-        if is_planet(target):
-            planets_at_hex = galaxy.get_planets_at_global_hex(fleet.location)
-            if target not in planets_at_hex:
+        if is_planet(target) and not skip_location_check:
+            # PROJ-68: Check if fleet is in the system containing the target planet
+            fleet_system = galaxy.get_system_at_location(fleet.location)
+            target_system = None
+            
+            # Find system containing target planet
+            for sys in galaxy.systems.values():
+                if target in sys.planets:
+                    target_system = sys
+                    break
+            
+            if fleet_system != target_system:
                 return ValidationResult(
                     is_valid=False,
-                    errors=[f"Fleet is not at {target.name}'s location."],
+                    errors=[f"Fleet is not at {target.name}'s system."],
                     error_code="NOT_AT_PLANET"
                 )
             if target.owner_id is None:
@@ -98,9 +109,9 @@ class TransferValidator:
         # 6. Direction-specific validation
         if is_planet(target):
             if direction == "load":
-                return TransferValidator._validate_load(fleet, target, cargo_type, amount, species_id)
+                return TransferValidator._validate_load(fleet, target, cargo_type, amount, species_id, projected_cargo)
             else:  # unload
-                return TransferValidator._validate_unload(fleet, target, cargo_type, amount, species_id)
+                return TransferValidator._validate_unload(fleet, target, cargo_type, amount, species_id, projected_cargo)
         else: # fleet
             return TransferValidator._validate_fleet_transfer(fleet, target, cargo_type, direction, amount, species_id)
 
@@ -145,13 +156,15 @@ class TransferValidator:
         planet: Any,
         cargo_type: str,
         amount: int,
-        species_id: str = None
+        species_id: str = None,
+        projected_cargo: int = None
     ) -> ValidationResult:
         """Validate a load operation (colony -> fleet)."""
         # For passengers, check fleet has cargo capacity
         if cargo_type == "passengers":
             capacity = fleet.get_fleet_cargo_capacity("passengers")
-            current = fleet.get_fleet_cargo_current("passengers")
+            # Use projected cargo if provided (accounts for earlier queued orders)
+            current = projected_cargo if projected_cargo is not None else fleet.get_fleet_cargo_current("passengers")
             available_space = capacity - current
 
             if available_space <= 0:
@@ -180,18 +193,20 @@ class TransferValidator:
 
         return ValidationResult()
 
+
     @staticmethod
     def _validate_unload(
         fleet: Any,
         planet: Any,
         cargo_type: str,
         amount: int,
-        species_id: str = None
+        species_id: str = None,
+        projected_cargo: int = None
     ) -> ValidationResult:
         """Validate an unload operation (fleet -> colony)."""
-        # Check fleet has cargo to unload
+        # Check fleet has cargo to unload (use projected if available)
         if cargo_type == "passengers":
-            current_cargo = fleet.get_fleet_cargo_current("passengers")
+            current_cargo = projected_cargo if projected_cargo is not None else fleet.get_fleet_cargo_current("passengers")
             if current_cargo <= 0:
                 return ValidationResult(
                     is_valid=False,

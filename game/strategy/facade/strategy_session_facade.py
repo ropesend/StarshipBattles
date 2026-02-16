@@ -187,15 +187,67 @@ class StrategySessionFacade:
         """Get the system at a specific hex coordinate.
 
         Args:
-            hex_coord: The hex coordinate to query
+            hex_coord: The hex coordinate to query (can be global center or any hex in system)
 
         Returns:
             SystemInfo DTO if a system exists at the hex, None otherwise
         """
-        system = self._session.galaxy.systems.get(hex_coord)
+        system = self._session.galaxy.get_system_at_location(hex_coord)
         if system is None:
             return None
         return SystemInfo.from_star_system(system)
+
+    def get_system_containing_fleet(self, fleet_id: int) -> Optional[SystemInfo]:
+        """Get the system containing (or closest to) the fleet.
+        
+        This handles cases where the fleet is in empty space within a system's logic bounds
+        but not at a specific system object.
+        
+        Args:
+            fleet_id: The fleet to find system for.
+            
+        Returns:
+            SystemInfo DTO if fluidly within a system, None if in deep space.
+        """
+        fleet = self._get_fleet_by_id(fleet_id)
+        if fleet is None: 
+            return None
+            
+        return self.get_system_near_hex(fleet.location)
+
+    def get_system_near_hex(self, hex_coord: HexCoord, max_dist: int = 8) -> Optional[SystemInfo]:
+        """Get the system at or near the given hex coordinate.
+        
+        This is useful for resolving clicks that might be slightly off a system's strict location,
+        or for finding the enclosing system when an entity is in 'empty space' within a system.
+        
+        Args:
+            hex_coord: The hex coordinate to query.
+            max_dist: Maximum distance to scan for a system (default 8 hexes).
+            
+        Returns:
+            SystemInfo DTO if a system is found, None otherwise.
+        """
+        # 1. Try strict lookup first
+        system = self._session.galaxy.get_system_at_location(hex_coord)
+        if system:
+            return SystemInfo.from_star_system(system)
+            
+        # 2. Proximity check
+        from game.core.hex_math import hex_distance
+        closest_system = None
+        min_dist = max_dist + 1
+        
+        for sys in self._session.galaxy.systems.values():
+            dist = hex_distance(sys.global_location, hex_coord)
+            if dist < min_dist:
+                min_dist = dist
+                closest_system = sys
+                
+        if closest_system:
+            return SystemInfo.from_star_system(closest_system)
+            
+        return None
 
     # --- Planet Queries ---
 
@@ -229,18 +281,37 @@ class StrategySessionFacade:
         return PlanetInfo.from_planet(planet)
 
     def get_planets_at_hex(self, hex_coord: HexCoord) -> List[PlanetInfo]:
-        """Get all planets at a specific hex coordinate.
+        """Get all planets in the system containing the given hex coordinate.
+
+        Uses robust system resolution (including radius search) to handle
+        clicks within a system's area of influence.
 
         Args:
-            hex_coord: The hex coordinate to query (system location)
+            hex_coord: The hex coordinate to query (system location or any inner hex)
 
         Returns:
-            List of PlanetInfo DTOs for planets in the system at that hex
+            List of PlanetInfo DTOs for planets in the system
         """
-        system = self._session.galaxy.systems.get(hex_coord)
+        # 1. Try strict lookup first (fast & correct for exact hits)
+        system = self._session.galaxy.get_system_at_location(hex_coord)
+        
+        # 2. If strict failed, try radius/ownership lookup (robust for area clicks)
+        if system is None:
+            from game.strategy.data.pathfinding import get_system_at_hex
+            system = get_system_at_hex(self._session.galaxy, hex_coord, radius=50)
+            
         if system is None:
             return []
-        return [PlanetInfo.from_planet(planet) for planet in system.planets]
+        
+        # PROJ-FIX: Strict filtering - only return planets at this specific hex
+        # The user wants "Sector" scope, not "System" scope.
+        target_planets = []
+        for p in system.planets:
+            p_global = system.global_location + p.location
+            if p_global == hex_coord:
+                target_planets.append(p)
+                
+        return [PlanetInfo.from_planet(planet) for planet in target_planets]
 
     # --- Empire Queries ---
 

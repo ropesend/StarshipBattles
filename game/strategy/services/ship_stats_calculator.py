@@ -283,6 +283,8 @@ class ShipStatsCalculator:
             'warp_max_tonnage': warp_max_tonnage,
         }
 
+
+
     @staticmethod
     def get_component_effectiveness(
         comp_id: str,

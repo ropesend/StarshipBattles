@@ -67,6 +67,10 @@ def calculate_fleet_stats(ships: List[ShipInstance]) -> Dict[str, Any]:
     max_fuel = 0
     total_energy = 0
     max_energy = 0
+    total_passengers = 0
+    max_passengers = 0
+    total_cargo_generic = 0
+    max_cargo_generic = 0
 
     for ship in ships:
         # Use calculated stats which respect component damage

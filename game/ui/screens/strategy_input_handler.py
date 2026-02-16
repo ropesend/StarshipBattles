@@ -445,8 +445,7 @@ class StrategyInputHandler:
     def _handle_transfer_mode_click(self, mx, my, button):
         """Handle click in TRANSFER mode."""
         if button == 1:  # Left Click
-            world_pos = self.scene.camera.screen_to_world((mx, my))
-            target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+            target_hex = self._resolve_click_target(mx, my)
             fleet = self.scene.selected_fleet
             self.scene.ui.open_transfer_dialog(fleet, target_hex)
             self.input_mode = 'SELECT'
@@ -460,8 +459,7 @@ class StrategyInputHandler:
     def _handle_drop_cargo_mode_click(self, mx, my, button):
         """Handle click in DROP_CARGO mode."""
         if button == 1:  # Left Click
-            world_pos = self.scene.camera.screen_to_world((mx, my))
-            target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+            target_hex = self._resolve_click_target(mx, my)
             fleet = self.scene.selected_fleet
             self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'unload')
             self.input_mode = 'SELECT'
@@ -475,8 +473,7 @@ class StrategyInputHandler:
     def _handle_load_cargo_mode_click(self, mx, my, button):
         """Handle click in LOAD_CARGO mode."""
         if button == 1:  # Left Click
-            world_pos = self.scene.camera.screen_to_world((mx, my))
-            target_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+            target_hex = self._resolve_click_target(mx, my)
             fleet = self.scene.selected_fleet
             self.scene.ui.open_cargo_quick_dialog(fleet, target_hex, 'load')
             self.input_mode = 'SELECT'
@@ -714,7 +711,39 @@ class StrategyInputHandler:
                 if dist_sq <= click_radius * click_radius:
                     return p
 
+
         return None
+
+    def _resolve_click_target(self, mx, my):
+        """
+        Smartly resolve the hex coordinate from a mouse click.
+        
+        Handles visual offsets of planets when zoomed in, ensuring we return
+        the logical hex of a clicked planet, rather than the raw pixel-to-hex result.
+        
+        Args:
+            mx, my: Screen coordinates of click
+            
+        Returns:
+            HexCoord: The logical hex coordinate to use for targeting.
+        """
+        # 1. Raw conversion
+        world_pos = self.scene.camera.screen_to_world((mx, my))
+        raw_hex = pixel_to_hex(world_pos.x, world_pos.y, self.scene.hex_size)
+        
+        # 2. Check for system context
+        # Use existing logic to find system (handles radius search)
+        system = self.scene._get_system_at_hex(raw_hex)
+        
+        if system and self.scene.camera.zoom >= 0.5:
+             # 3. Hit test visual planets (if zoomed enough to see them)
+             # _hit_test_planets handles the visual offset logic
+             hit_planet = self._hit_test_planets(mx, my, system)
+             if hit_planet:
+                 # Return the true logical location of the planet
+                 return system.global_location + hit_planet.location
+                 
+        return raw_hex
 
     def _handle_picking(self, mx, my):
         """Raycast from screen to galaxy objects."""
@@ -840,7 +869,8 @@ class StrategyInputHandler:
         # Camera processes keyboard input (arrow keys, WASD, middle-mouse drag)
         # Note: MOUSEWHEEL is now filtered out since it's handled in handle_event()
         cam_events = [e for e in events if e.type != pygame.MOUSEWHEEL]
-        self.scene.camera.update_input(dt, cam_events)
+        # PROJ-CAMERA: Disable WASD panning in strategy layer to avoid command conflicts
+        self.scene.camera.update_input(dt, cam_events, allow_wasd=False)
 
         # Hover Logic
         mx, my = pygame.mouse.get_pos()

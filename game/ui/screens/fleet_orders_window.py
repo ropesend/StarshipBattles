@@ -70,9 +70,20 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
         self.btn_undo.disable()
 
         self.rows = [] # Keep track of row UI elements
+        self._last_order_count = len(fleet.orders)
         self.rebuild_list()
         self._apply_tooltips()
         
+    def update(self, dt):
+        """Standard pygame-gui update. Checks for order changes."""
+        super().update(dt)
+        
+        # Performance: Only rebuild if order count changed
+        # Note: If we need to detect order content changes (like direction swap at same index),
+        # we would need a deeper check, but for this task, adding/removing is the key.
+        if len(self.fleet.orders) != self._last_order_count:
+            self._last_order_count = len(self.fleet.orders)
+            self.rebuild_list()
     def rebuild_list(self):
         """Clear and rebuild the order list rows."""
         # Clear existing rows
@@ -168,14 +179,19 @@ class FleetOrdersWindow(pygame_gui.elements.UIWindow):
              # PROJ-67: Show queue size for BUILD orders
              queue_size = len(self.fleet.construction_queue)
              return f"BUILDING ({queue_size} items)"
-        elif order.type == OrderType.TRANSFER:
-             # PROJ-68: Show TRANSFER order details
+        elif order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
+             # PROJ-68: Show TRANSFER/POPULATION order details
              if isinstance(order.target, dict):
                  direction = order.target.get('direction', '?')
-                 cargo_type = order.target.get('cargo_type', '?')
-                 amount = order.target.get('amount', '?')
-                 dir_str = "LOAD" if direction == "load" else "UNLOAD"
-                 return f"{dir_str} {amount} {cargo_type}"
+                 
+                 # Set description based on direction param
+                 if order.type == OrderType.LOAD_POPULATION:
+                     return "load cargo"
+                 elif order.type == OrderType.UNLOAD_POPULATION:
+                     return "drop cargo"
+                 else:
+                     return "load cargo" if direction == "load" else "drop cargo"
+                     
              return "TRANSFER"
         else:
              return f"{order.type.name}"

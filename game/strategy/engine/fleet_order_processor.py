@@ -620,8 +620,8 @@ class FleetOrderProcessor:
             result = self.process_join_fleet(fleet, empire, galaxy)
             return result.merged
 
-        elif order.type == OrderType.TRANSFER:
-            # PROJ-68: Process cargo transfer
+        elif order.type in (OrderType.TRANSFER, OrderType.LOAD_POPULATION, OrderType.UNLOAD_POPULATION):
+            # PROJ-68: Process cargo/population transfer
             self.process_transfer(fleet, empire, galaxy)
             # TRANSFER does not consume the fleet
             return False

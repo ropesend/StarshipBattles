@@ -116,8 +116,13 @@ class CargoQuickDialog(UIWindow):
         if not fleet_info:
             return
 
-        # Check if there's a colony at this hex (required for unloading)
+        # FIX: Try to resolve planets at the clicked hex first.
+        # If it's a relative hex from system view, facade.get_planets_at_hex will return empty.
+        # In that case, fallback to the fleet's own location (which is the global system hex).
         planets = self.facade.get_planets_at_hex(self.hex_coord)
+        if not planets and hasattr(self.fleet, 'location'):
+            planets = self.facade.get_planets_at_hex(self.fleet.location)
+
         colonies = [p for p in planets if p.owner_id is not None]
         if not colonies:
             # No colony - can't unload
@@ -136,7 +141,11 @@ class CargoQuickDialog(UIWindow):
 
     def _populate_load_items(self):
         """Populate items for load (load cargo from colony)."""
+        # FIX: Try to resolve planets at the clicked hex first, fallback to fleet location.
         planets = self.facade.get_planets_at_hex(self.hex_coord)
+        if not planets and hasattr(self.fleet, 'location'):
+            planets = self.facade.get_planets_at_hex(self.fleet.location)
+
         colonies = [p for p in planets if p.owner_id is not None]
 
         for colony in colonies:

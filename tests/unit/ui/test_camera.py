@@ -550,3 +550,33 @@ class TestCameraUpdateInput:
 
             # Zoomed-out camera should pan further
             assert camera2.position.x > camera1.position.x
+    def test_keyboard_panning_wasd_disabled(self):
+        """WASD keys should NOT pan the camera when allow_wasd=False."""
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+        original_pos = pygame.math.Vector2(camera.position)
+
+        # Mock key state - W pressed (up = negative y), but allow_wasd=False
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_w: True})), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera.update_input(0.1, [], allow_wasd=False)
+
+            # Camera should NOT have moved
+            assert camera.position.y == original_pos.y
+
+    def test_keyboard_panning_arrows_still_work_with_wasd_disabled(self):
+        """Arrow keys should still pan the camera even when allow_wasd=False."""
+        camera = Camera(800, 600)
+        camera.position = pygame.math.Vector2(0, 0)
+
+        # Mock key state - UP pressed, allow_wasd=False
+        with patch('pygame.key.get_pressed', return_value=self._mock_keys({pygame.K_UP: True})), \
+             patch('pygame.mouse.get_pressed', return_value=(False, False, False)), \
+             patch('pygame.mouse.get_rel', return_value=(0, 0)):
+
+            camera.update_input(0.1, [], allow_wasd=False)
+
+            # Camera should have moved up (negative y)
+            assert camera.position.y < 0

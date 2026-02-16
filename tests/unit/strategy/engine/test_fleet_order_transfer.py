@@ -49,6 +49,12 @@ def mock_galaxy():
     """Create a mock galaxy."""
     galaxy = MagicMock()
     galaxy.get_planet_by_id = MagicMock(return_value=None)
+    # Setup system containment for transfer validation
+    mock_system = MagicMock()
+    mock_system.planets = []  # Will be populated per-test
+    galaxy.get_system_at_location = MagicMock(return_value=mock_system)
+    galaxy.systems = {'sys1': mock_system}
+    galaxy._mock_system = mock_system  # Expose for test access
     return galaxy
 
 
@@ -135,6 +141,9 @@ class TestTransferValidation:
         mock_planet.location = mock_fleet.location  # Same location
         mock_planet.total_population = 200  # Total pop for validation
 
+        # Add planet to system so location validation passes
+        mock_galaxy._mock_system.planets = [mock_planet]
+
         # Mock galaxy to return planet at fleet's location
         mock_galaxy.get_planets_at_global_hex = MagicMock(return_value=[mock_planet])
 
@@ -157,6 +166,9 @@ class TestTransferValidation:
         """Unloading passengers from fleet to colony."""
         mock_planet.location = mock_fleet.location
         mock_planet.populations = []
+
+        # Add planet to system so location validation passes
+        mock_galaxy._mock_system.planets = [mock_planet]
 
         # Mock galaxy to return planet at fleet's location
         mock_galaxy.get_planets_at_global_hex = MagicMock(return_value=[mock_planet])
