@@ -4,6 +4,10 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-157 | Test Suite Cleanup - Validated Findings v4 | Plan Approved | 2026-02-16 | 2026-02-16 |
+| PROJ-156 | Test Suite Cleanup - AI/Research/Combat/Builder/Systems | Planning | 2026-02-16 | 2026-02-16 |
+| PROJ-155 | Test Suite Cleanup v3 - Validated Findings | Planning | 2026-02-16 | 2026-02-16 |
+| PROJ-154 | Test Suite Cleanup - Validated Findings | Planning | 2026-02-16 | 2026-02-16 |
 | PROJ-153 | test_coverage_ui_builder | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-152 | test_coverage_ui_battle | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-151 | test_coverage_simulation_core | Planning | 2026-02-14 | 2026-02-14 |
