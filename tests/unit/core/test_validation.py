@@ -22,6 +22,16 @@ class TestValidationResultInit:
         assert result.warnings == []
         assert result.error_code is None
 
+    def test_init_with_none_errors_defaults_to_list(self):
+        """Passing errors=None results in empty list."""
+        result = ValidationResult(errors=None)
+        assert result.errors == []
+
+    def test_init_with_none_warnings_defaults_to_list(self):
+        """Passing warnings=None results in empty list."""
+        result = ValidationResult(warnings=None)
+        assert result.warnings == []
+
     def test_init_valid(self):
         """ValidationResult can be created as valid."""
         result = ValidationResult(is_valid=True)
@@ -108,6 +118,25 @@ class TestValidationResultAddError:
         result.add_error("Second error", code="E002")
         assert result.error_code == "E001"
 
+    def test_add_error_with_error_code_enum(self):
+        """ErrorCode enum is converted to its string value."""
+        from game.core.error_codes import ErrorCode
+
+        result = ValidationResult()
+        result.add_error("Test error", code=ErrorCode.VALIDATION_FAILED)
+
+        assert result.is_valid is False
+        assert "Test error" in result.errors
+        assert result.error_code == ErrorCode.VALIDATION_FAILED.value
+
+    def test_add_error_no_code_leaves_none(self):
+        """add_error without code leaves error_code as None."""
+        result = ValidationResult()
+        result.add_error("No code error")
+
+        assert result.error_code is None
+        assert result.is_valid is False
+
 
 class TestValidationResultAddWarning:
     """Tests for add_warning method."""
@@ -176,6 +205,18 @@ class TestValidationResultMerge:
 
         result1.merge(result2)
         assert result1.is_valid is False
+
+
+class TestValidationResultCreation:
+    """Tests for ValidationResult creation patterns."""
+
+    def test_create_empty_message_in_errors(self):
+        """Creating with empty string in errors list."""
+        result = ValidationResult(is_valid=False, errors=[""])
+
+        assert result.is_valid is False
+        assert result.message == ""  # First error is empty string
+        assert len(result.errors) == 1
 
 
 class TestValidationResultDataclass:

@@ -310,3 +310,40 @@ class TestRaceValidatorNewFields:
 
         result = validator.validate(config)
         assert result.is_valid is True
+
+
+class TestRaceValidatorEdgeCases:
+    """Edge case tests for name validation."""
+
+    @pytest.fixture
+    def validator(self):
+        """Create a validator instance."""
+        return RaceValidator()
+
+    @pytest.fixture
+    def valid_config(self):
+        """Create a valid race config."""
+        config = RaceConfig()
+        config.name = "Test Race"
+        config.flag_id = "flag_001"
+        config.portrait_id = "portrait_001"
+        config.theme_id = "Federation"
+        return config
+
+    def test_validate_whitespace_name_returns_invalid(self, validator, valid_config):
+        """Whitespace-only name returns validation error."""
+        valid_config.name = "   "
+
+        result = validator.validate(valid_config)
+
+        assert result.is_valid is False
+        assert "name" in result.message.lower()
+
+    def test_validate_none_name_returns_invalid(self, validator, valid_config):
+        """None name returns validation error."""
+        valid_config.name = None
+
+        result = validator.validate(valid_config)
+
+        assert result.is_valid is False
+        assert "name" in result.message.lower()

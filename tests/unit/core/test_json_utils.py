@@ -98,6 +98,15 @@ class TestLoadJson:
 
         assert result == test_data
 
+    def test_load_json_io_error_returns_default(self):
+        """Permission/IO error returns the default value."""
+        from game.core.json_utils import load_json
+        from unittest.mock import patch
+
+        with patch("builtins.open", side_effect=IOError("Permission denied")):
+            result = load_json("some_file.json", default="error_default")
+            assert result == "error_default"
+
 
 class TestSaveJson:
     """Tests for save_json() function."""
@@ -196,6 +205,26 @@ class TestSaveJson:
         finally:
             # Restore permissions for cleanup
             os.chmod(str(readonly_dir), stat.S_IRWXU)
+
+    def test_save_json_io_error_returns_false(self, tmp_path):
+        """Permission/IO error returns False."""
+        from game.core.json_utils import save_json
+        from pathlib import Path
+        from unittest.mock import patch
+
+        with patch("builtins.open", side_effect=IOError("Disk full")):
+            with patch.object(Path, "mkdir"):  # Prevent mkdir errors
+                result = save_json(tmp_path / "output.json", {"data": 1})
+                assert result is False
+
+    def test_save_json_type_error_returns_false(self, tmp_path):
+        """Non-serializable object returns False."""
+        from game.core.json_utils import save_json
+
+        output_file = tmp_path / "output.json"
+        # Try to save a non-serializable object (e.g., a set)
+        result = save_json(output_file, {"data": {1, 2, 3}})  # Set is not JSON serializable
+        assert result is False
 
 
 class TestLoadJsonRequired:

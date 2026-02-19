@@ -443,6 +443,26 @@ class TestLayerRestrictionDefinitionRule:
         result = rule.validate(mock_ship, mock_component, LayerType.OUTER)
         assert result.is_valid
 
+    def test_combined_block_and_allow_rules(self, mock_ship, mock_component):
+        """Block rules should take precedence over allow rules.
+
+        When both allow_classification and block_id are present, a component
+        that matches both should be blocked (block wins).
+        """
+        mock_ship.layers[LayerType.CORE].restrictions = [
+            "allow_classification:Weapon",
+            "block_id:test_comp"
+        ]
+        mock_component.id = "test_comp"
+        mock_component.data = {"major_classification": "Weapon"}
+
+        rule = LayerRestrictionDefinitionRule()
+        result = rule.validate(mock_ship, mock_component, LayerType.CORE)
+
+        # Should be blocked even though classification is allowed
+        assert not result.is_valid
+        assert any("blocked" in e.lower() for e in result.errors)
+
 
 # =============================================================================
 # MassBudgetRule Tests

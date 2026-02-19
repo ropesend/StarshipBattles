@@ -733,3 +733,138 @@ class TestErraticBehavior:
         behavior.update(mock_target, {})
 
         mock_controller.ship.rotate.assert_not_called()
+
+
+# =============================================================================
+# FormationBehavior Additional Tests (migrated from test_ai_behaviors.py)
+# =============================================================================
+
+class TestFormationBehaviorMigrated:
+    """Additional formation behavior tests with detailed math verification."""
+
+    @pytest.fixture
+    def formation_setup(self):
+        """Create a formation behavior setup with mocked ship and master."""
+        controller = Mock()
+        ship = Mock()
+        master = Mock()
+
+        controller.ship = ship
+        controller.navigate_to = Mock()
+
+        # Ship mock setup
+        ship.get_position.return_value = Vector2(100, 100)
+        ship.get_rotation.return_value = 0.0
+        ship.get_radius.return_value = 10.0
+        ship.get_acceleration_rate.return_value = 5.0
+        ship.get_turn_speed.return_value = 10.0
+        ship.get_max_speed.return_value = 100.0
+        ship.get_formation_offset.return_value = Vector2(50, 0)
+        ship.get_formation_rotation_mode.return_value = 'relative'
+        ship.get_formation_master.return_value = master
+
+        ship.set_in_formation = Mock()
+        ship.set_throttle = Mock()
+        ship.set_rotation = Mock()
+        ship.adjust_position = Mock()
+        ship.thrust_forward = Mock()
+
+        # Track position updates via adjust_position
+        current_pos = [Vector2(100, 100)]
+        def adjust_position_side_effect(delta):
+            current_pos[0] = current_pos[0] + delta
+            ship.get_position.return_value = current_pos[0]
+        ship.adjust_position.side_effect = adjust_position_side_effect
+
+        # Master mock setup
+        master.is_alive = True
+        master.is_derelict = False
+        master.position = Vector2(0, 0)
+        master.angle = 0.0
+        master.current_speed = 0.0
+        master.is_thrusting = False
+        master.max_speed = 100.0
+        master.engine_throttle = 0.0
+
+        behavior = FormationBehavior(controller)
+
+        return {
+            'controller': controller,
+            'ship': ship,
+            'master': master,
+            'behavior': behavior,
+            'current_pos': current_pos
+        }
+
+    def test_target_pos_relative_rotation(self, formation_setup):
+        """Verify target position calculation for relative rotation mode.
+
+        Offset (50, 0) rotated 90 deg -> (0, 50).
+        Target should be master position + rotated offset.
+        """
+        setup = formation_setup
+        setup['ship'].get_formation_rotation_mode.return_value = 'relative'
+        setup['ship'].get_formation_offset.return_value = Vector2(50, 0)
+        setup['master'].position = Vector2(100, 100)
+        setup['master'].angle = 90.0  # Facing down
+
+        # Put ship far away to trigger navigate logic
+        setup['ship'].get_position.return_value = Vector2(5000, 5000)
+
+        setup['behavior'].update(None, {})
+
+        args, _ = setup['controller'].navigate_to.call_args
+        target_pos = args[0]
+        # Offset (50,0) rotated 90° = (0, 50)
+        # Target = (100, 100) + (0, 50) = (100, 150)
+        import pytest
+        assert target_pos.x == pytest.approx(100, abs=1)
+        assert target_pos.y == pytest.approx(150, abs=1)
+
+    def test_drift_logic_correction(self, formation_setup):
+        """Verify small error triggers drift correction logic.
+
+        When within drift threshold, adjust_position is called with spring correction.
+        """
+        setup = formation_setup
+        setup['master'].position = Vector2(0, 0)
+        setup['master'].angle = 0.0
+        setup['ship'].get_formation_offset.return_value = Vector2(50, 0)
+        # Target is (50,0). Ship is at (55, 0). Error = 5.
+        setup['ship'].get_position.return_value = Vector2(55, 0)
+        setup['current_pos'][0] = Vector2(55, 0)
+
+        # Drift threshold: radius(10)*2 = 20. Error 5 < 20, so drift logic.
+        setup['behavior'].update(None, {})
+
+        # navigate_to should NOT be called (drift zone)
+        setup['controller'].navigate_to.assert_not_called()
+
+        # adjust_position should be called with spring correction
+        setup['ship'].adjust_position.assert_called()
+
+        # Verify ship moved toward target (x decreased from 55)
+        final_pos = setup['ship'].get_position()
+        assert final_pos.x < 55
+
+    def test_velocity_sync(self, formation_setup):
+        """Verify engine throttle is synced with master in drift zone."""
+        setup = formation_setup
+        setup['master'].position = Vector2(0, 0)
+        setup['ship'].get_position.return_value = Vector2(50, 0)  # At target spot
+        setup['current_pos'][0] = Vector2(50, 0)
+        setup['ship'].get_formation_offset.return_value = Vector2(50, 0)
+
+        # Master is moving
+        setup['master'].is_thrusting = True
+        setup['master'].max_speed = 200.0
+        setup['master'].engine_throttle = 0.5  # Target speed = 100
+        setup['ship'].get_max_speed.return_value = 100.0
+
+        setup['behavior'].update(None, {})
+
+        # Ship throttle should match master's target speed / ship's max speed
+        # master_speed = 200 * 0.5 = 100, ship_max = 100
+        # throttle = min(1.0, 100/100) = 1.0
+        setup['ship'].set_throttle.assert_called()
+        setup['ship'].thrust_forward.assert_called()

@@ -8,23 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-18
-**Last Completed:** PROJ-157 Phase 1 Complete
-**Current Status:** PROJ-157 Phase 1 Complete - Phase 2 Ready
+**Last Completed:** PROJ-157 Phase 2 Complete
+**Current Status:** PROJ-157 Phase 2 Complete - Phase 3 Ready
 **Current Project:** PROJ-157
-**Current Phase:** Phase 2 - Merge-Then-Delete
-**Test Status:** 12761 tests collected (pre-existing failures in transfer_validator/dialog unrelated to this project)
+**Current Phase:** Phase 3 - Partial Cleanups
+**Test Status:** 12669 tests collected (pre-existing failures in transfer_validator/dialog unrelated to this project)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-157 Phase 1 COMPLETE: 39 files deleted, 174 dead tests removed
-  - Task 1.1: 5 diagnostic scripts deleted
-  - Task 1.2: 11 scaffold files deleted
-  - Task 1.3: 8 over-mocked files deleted
-  - Task 1.4: 4 simulation framework files deleted, __init__.py cleaned
-  - Task 1.5: 3 confirmed dead files deleted
-  - Task 1.6: 8 empty/dead conftest.py files deleted
-- Pre-existing test failures NOT caused by this project: transfer_validator, transfer_dialog, column_manager
-- Next: Phase 2 merge operations
+- PROJ-157 Phase 2 COMPLETE: 6 files deleted, 14 unique tests merged
+  - Task 2.1: test_race_validator.py merged (2 edge case tests)
+  - Task 2.2: test_ai_behaviors.py merged (3 formation tests)
+  - Task 2.3-2.6, 2.9: N/A - target files don't exist, sources ARE canonical
+  - Task 2.7: json_utils + validation edge cases merged (8 tests)
+  - Task 2.8: layer_restriction_rule_refactor merged (1 test)
+  - Task 2.10: strategy/test_hex_math.py deleted (core is strict superset)
+- Test count: 12761 → 12669 (delta: -92)
+- Pre-existing test failures NOT caused by this project
+- Next: Phase 3 partial cleanups
 
 ---
 
@@ -110,6 +111,7 @@
 | 2026-02-13 | PROJ-140 | Phase 5 | Complete | 11957 pass | pending | Full regression, manual code review - all verifications pass |
 | 2026-02-13 | PROJ-140 | Audit 1 | PASSED | 11957 pass | pending | All 5 phases verified, no issues |
 | 2026-02-18 | PROJ-157 | Phase 1 | Complete | 12761 collected | pending | 39 files deleted, -174 dead tests (scripts, scaffolds, over-mocked, conftest) |
+| 2026-02-18 | PROJ-157 | Phase 2 | Complete | 12669 collected | pending | 6 files deleted, 14 tests merged, 5 tasks N/A (no target) |
 
 ---
 
