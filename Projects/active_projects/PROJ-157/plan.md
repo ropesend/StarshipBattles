@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Safe Deletions | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Safe Deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Merge-Then-Delete | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Partial Cleanups | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Old Directory Tree Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-16 17:45
-**Active Phase:** Plan Approved - Ready for Implementation
-**Last Action:** Baseline test suite run, plan fully documented
-**Next Action:** Begin Phase 1 Task 1.1 (delete diagnostic scripts)
+**Last Updated:** 2026-02-18
+**Active Phase:** Phase 2 - Merge-Then-Delete
+**Last Action:** Phase 1 complete - 39 files deleted, 174 dead tests removed
+**Next Action:** Begin Phase 2 Task 2.1 (merge duplicate tests)
 **Blockers:** None
-**Baseline:** 4405 passed, 2 skipped, 2 pre-existing failures (see below)
-**Context for Next Agent:** Four validation reviews are in `Reviews/results/2026-02-16_105410_general_test-suite-cleanup-v3/findings/validation_*.md`. These contain the evidence for every deletion/merge decision. Consult them if unsure about any item.
+**Baseline:** 12761 tests collected (down from 12935)
+**Context for Next Agent:** Phase 1 done. Pre-existing test failures exist in transfer_validator, transfer_dialog, column_manager - these are NOT caused by this project. Continue with Phase 2 merge operations.
 
 ### Pre-Existing Test Failures (NOT caused by this project)
 1. `tests/unit/quickstart/test_quickstart_designs.py::test_design_stats_match_expected[qs_general_purpose-unknown]` - Formula-based ability definitions (`'=ship_class_mass'`) not being evaluated
@@ -59,10 +59,8 @@ Remove confirmed dead test code identified by 4 independent validation reviews: 
 ## Key Files
 | Component | File Path |
 |-----------|-----------|
-| Validation Review 1 (UI/Strategy) | `Reviews/results/2026-02-16_105410_general_test-suite-cleanup-v3/findings/validation_1_ui_strategy.md` |
-| Validation Review 2 (Simulation/Core) | `Reviews/results/2026-02-16_105410_general_test-suite-cleanup-v3/findings/validation_2_simulation_core.md` |
-| Validation Review 3 (AI/Refactor) | `Reviews/results/2026-02-16_105410_general_test-suite-cleanup-v3/findings/validation_3_ai_refactor.md` |
-| Validation Review 4 (Remaining/Crosscut) | `Reviews/results/2026-02-16_105410_general_test-suite-cleanup-v3/findings/validation_4_remaining_crosscut.md` |
+| Validation Review 4 (local copy) | `Projects/active_projects/PROJ-157/findings/validation_4_remaining_crosscut.md` |
+| Design Document (all review evidence) | `Projects/active_projects/PROJ-157/design.md` |
 
 ## Already Cleaned Up (confirmed missing during planning)
 - mock_battle_ui_service.py, test_conflict_core.py, test_build_queue_source_errors.py
