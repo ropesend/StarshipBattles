@@ -58,48 +58,6 @@ class TestColorsValidation:
         assert len(COLORS) > 0
 
 
-class TestBasicColors:
-    """PROJ-142: TCG-UI2-008 - Tests for basic color constants."""
-
-    def test_white_is_rgb_white(self):
-        """WHITE should be RGB (255, 255, 255)."""
-        from game.ui.colors import WHITE
-        assert WHITE == (255, 255, 255)
-
-    def test_black_is_rgb_black(self):
-        """BLACK should be RGB (0, 0, 0)."""
-        from game.ui.colors import BLACK
-        assert BLACK == (0, 0, 0)
-
-    def test_white_and_black_are_opposite(self):
-        """WHITE and BLACK should have opposite values."""
-        from game.ui.colors import WHITE, BLACK
-
-        for w, b in zip(WHITE, BLACK):
-            assert w + b == 255
-
-
-class TestFontConstants:
-    """Tests for font-related constants."""
-
-    def test_font_main_is_string(self):
-        """FONT_MAIN should be a string."""
-        from game.ui.colors import FONT_MAIN
-        assert isinstance(FONT_MAIN, str)
-
-    def test_font_main_is_not_empty(self):
-        """FONT_MAIN should not be empty."""
-        from game.ui.colors import FONT_MAIN
-        assert len(FONT_MAIN) > 0
-
-    def test_font_main_is_valid_font_name(self):
-        """FONT_MAIN should be a commonly available font."""
-        from game.ui.colors import FONT_MAIN
-        # Should be a standard font like Arial, Helvetica, etc.
-        common_fonts = ['Arial', 'Helvetica', 'Verdana', 'Tahoma', 'Sans', 'Times']
-        assert any(f.lower() in FONT_MAIN.lower() for f in common_fonts) or FONT_MAIN.lower() == 'arial'
-
-
 class TestColorAccessibility:
     """Tests for color accessibility and contrast."""
 

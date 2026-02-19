@@ -1,8 +1,8 @@
 """
-Test to catch regressions in the layer restriction refactor.
-Specifically tests that:
-1. Components no longer have the deprecated `allowed_layers` attribute
-2. Builder drop logic works without relying on that attribute
+Test that builder drop logic works without the deprecated `allowed_layers` attribute.
+
+PROJ-157: Removed TestAllowedLayersRemoval (one-time migration verification).
+Kept TestBuilderDropValidation for ongoing centralized validator behavior.
 """
 import pytest
 
@@ -14,60 +14,6 @@ from game.simulation.entities.ship import Ship, LayerType
 def cruiser_ship(fresh_registries):
     """Create a Cruiser ship for testing."""
     return Ship("TestShip", 0, 0, (255, 255, 255), 0, ship_class="Cruiser", registries=fresh_registries)
-
-
-class TestAllowedLayersRemoval:
-    """
-    Ensure the deprecated `allowed_layers` attribute has been fully removed
-    from all component classes to prevent AttributeError crashes.
-    """
-
-    def test_component_base_class_no_allowed_layers(self, fresh_registries):
-        """Base Component class should not define allowed_layers."""
-        # Create a minimal component with required fields
-        comp = Component({
-            'id': 'test',
-            'name': 'Test',
-            'type': 'TestType',
-            'mass': 10,
-            'hp': 10
-        }, registries=fresh_registries)
-        assert not hasattr(comp, 'allowed_layers'), \
-            "Component base class should not have 'allowed_layers' attribute"
-
-    def test_bridge_no_allowed_layers(self, fresh_registries):
-        """Bridge component should not have allowed_layers."""
-        comps = fresh_registries.components
-        if 'bridge' in comps:
-            bridge = comps['bridge'].clone()
-            assert not hasattr(bridge, 'allowed_layers'), \
-                "Bridge should not have 'allowed_layers' attribute"
-
-    def test_engine_no_allowed_layers(self, fresh_registries):
-        """Engine component should not have allowed_layers."""
-        comps = fresh_registries.components
-        if 'standard_engine' in comps:
-            engine = comps['standard_engine'].clone()
-            assert not hasattr(engine, 'allowed_layers'), \
-                "Engine should not have 'allowed_layers' attribute"
-
-    def test_armor_no_allowed_layers(self, fresh_registries):
-        """Armor component should not have allowed_layers."""
-        comps = fresh_registries.components
-        if 'basic_armor' in comps:
-            armor = comps['basic_armor'].clone()
-            assert not hasattr(armor, 'allowed_layers'), \
-                "Armor should not have 'allowed_layers' attribute"
-
-    def test_all_registry_components_no_allowed_layers(self, fresh_registries):
-        """
-        Comprehensive check: ALL components in the registry must not have allowed_layers.
-        This prevents any component from causing an AttributeError when dropped in the builder.
-        """
-        for comp_id, comp in fresh_registries.components.items():
-            cloned = comp.clone()
-            assert not hasattr(cloned, 'allowed_layers'), \
-                f"Component '{comp_id}' should not have 'allowed_layers' attribute"
 
 
 class TestBuilderDropValidation:

@@ -8,24 +8,27 @@
 ## Agent Context
 
 **Last Session:** 2026-02-18
-**Last Completed:** PROJ-157 Phase 2 Complete
-**Current Status:** PROJ-157 Phase 2 Complete - Phase 3 Ready
+**Last Completed:** PROJ-157 Phase 3 Complete
+**Current Status:** PROJ-157 Phase 3 Complete - Phase 4 Ready
 **Current Project:** PROJ-157
-**Current Phase:** Phase 3 - Partial Cleanups
-**Test Status:** 12669 tests collected (pre-existing failures in transfer_validator/dialog unrelated to this project)
+**Current Phase:** Phase 4 - Old Directory Tree Cleanup
+**Test Status:** 12585 tests collected (pre-existing failures in quickstart_designs/turn_execution unrelated to this project)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-157 Phase 2 COMPLETE: 6 files deleted, 14 unique tests merged
-  - Task 2.1: test_race_validator.py merged (2 edge case tests)
-  - Task 2.2: test_ai_behaviors.py merged (3 formation tests)
-  - Task 2.3-2.6, 2.9: N/A - target files don't exist, sources ARE canonical
-  - Task 2.7: json_utils + validation edge cases merged (8 tests)
-  - Task 2.8: layer_restriction_rule_refactor merged (1 test)
-  - Task 2.10: strategy/test_hex_math.py deleted (core is strict superset)
-- Test count: 12761 → 12669 (delta: -92)
+- PROJ-157 Phase 3 COMPLETE: Partial cleanups removing trivial/duplicate tests
+  - Task 3.1a: test_config.py - removed 18 trivial positivity tests
+  - Task 3.1b: test_colors.py - removed TestBasicColors + TestFontConstants (6 tests)
+  - Task 3.1c/3.1f: N/A - files don't exist
+  - Task 3.1d: test_game_renderer.py - removed 6 trivial constant tests
+  - Task 3.1e: test_battle_screen_edge_cases.py - removed 19 duplicate/trivial tests, kept 6 unique
+  - Task 3.1g: test_battle_ui_service.py flat file deleted (migrated 3 tests to subdirectory)
+  - Task 3.2a/b: Removed empty stubs from test_bulk_add.py and test_ship_loading.py
+  - Task 3.2c: test_allowed_layers_removal.py - removed 5 one-time migration tests
+  - Task 3.2d: test_validation.py - removed TestDetectCycles (8) + TestDepthCalculation (2) duplicates
+- Test count: 12669 → 12585 (delta: -84)
 - Pre-existing test failures NOT caused by this project
-- Next: Phase 3 partial cleanups
+- Next: Phase 4 old directory tree cleanup
 
 ---
 
@@ -112,6 +115,7 @@
 | 2026-02-13 | PROJ-140 | Audit 1 | PASSED | 11957 pass | pending | All 5 phases verified, no issues |
 | 2026-02-18 | PROJ-157 | Phase 1 | Complete | 12761 collected | pending | 39 files deleted, -174 dead tests (scripts, scaffolds, over-mocked, conftest) |
 | 2026-02-18 | PROJ-157 | Phase 2 | Complete | 12669 collected | pending | 6 files deleted, 14 tests merged, 5 tasks N/A (no target) |
+| 2026-02-18 | PROJ-157 | Phase 3 | Complete | 12585 collected | pending | Partial cleanups: -84 trivial/duplicate tests, 2 files N/A |
 
 ---
 

@@ -1,12 +1,13 @@
 """
 Tests for TechTree validation methods.
 
-TCG-FND-004: Tests for validate_requirements(), detect_cycles(), and validate()
-with focus on:
+TCG-FND-004: Tests for validate_requirements() and validate() with focus on:
 - Error message format verification
-- Complex multi-path cycle detection
 - Combined validation (validate() method)
 - Self-referencing nodes
+
+PROJ-157: Removed TestDetectCycles (duplicated more comprehensively by test_cycle_detection.py)
+          and TestDepthCalculation (duplicated by test_queries.py::TestTechTreeDepthCalculation).
 """
 import pytest
 
@@ -127,164 +128,6 @@ class TestValidateRequirements:
         assert 'prereq2' in errors[0]
 
 
-class TestDetectCycles:
-    """Tests for TechTree.detect_cycles()."""
-
-    def test_no_cycles_returns_empty(self):
-        """Acyclic tree returns empty error list."""
-        tree = TechTree()
-
-        tree.nodes['root'] = TechNode(id='root', name='Root', max_levels=1)
-
-        req = TechRequirement('root', (1, 1))
-        tree.nodes['child'] = TechNode(
-            id='child', name='Child', max_levels=1,
-            requirements=[[req]]
-        )
-
-        errors = tree.detect_cycles()
-
-        assert errors == []
-
-    def test_simple_cycle_detected(self):
-        """Simple A -> B -> A cycle detected."""
-        tree = TechTree()
-
-        req_b = TechRequirement('node_b', (1, 1))
-        tree.nodes['node_a'] = TechNode(
-            id='node_a', name='Node A', max_levels=1,
-            requirements=[[req_b]]
-        )
-
-        req_a = TechRequirement('node_a', (1, 1))
-        tree.nodes['node_b'] = TechNode(
-            id='node_b', name='Node B', max_levels=1,
-            requirements=[[req_a]]
-        )
-
-        errors = tree.detect_cycles()
-
-        assert len(errors) >= 1
-        error_text = ' '.join(errors)
-        assert 'Cycle detected' in error_text
-        assert 'node_a' in error_text
-        assert 'node_b' in error_text
-
-    def test_complex_multipath_cycle(self):
-        """Complex cycle: A -> B -> C -> A."""
-        tree = TechTree()
-
-        req_b = TechRequirement('node_b', (1, 1))
-        tree.nodes['node_a'] = TechNode(
-            id='node_a', name='Node A', max_levels=1,
-            requirements=[[req_b]]
-        )
-
-        req_c = TechRequirement('node_c', (1, 1))
-        tree.nodes['node_b'] = TechNode(
-            id='node_b', name='Node B', max_levels=1,
-            requirements=[[req_c]]
-        )
-
-        req_a = TechRequirement('node_a', (1, 1))
-        tree.nodes['node_c'] = TechNode(
-            id='node_c', name='Node C', max_levels=1,
-            requirements=[[req_a]]
-        )
-
-        errors = tree.detect_cycles()
-
-        assert len(errors) >= 1
-        error_text = ' '.join(errors)
-        assert 'Cycle detected' in error_text
-
-    def test_self_reference_not_cycle_if_valid(self):
-        """Self-reference for level gating is valid, not a cycle."""
-        tree = TechTree()
-
-        # Self-reference: node requires level 1 of itself (for level 2+)
-        req_self = TechRequirement('self_ref', (1, 1))
-        tree.nodes['self_ref'] = TechNode(
-            id='self_ref', name='Self Reference', max_levels=5,
-            requirements=[[req_self]]
-        )
-
-        # This should be detected as a cycle in current implementation
-        # since it follows all positive dependencies
-        errors = tree.detect_cycles()
-
-        # Self-reference creates cycle: self_ref -> self_ref
-        assert len(errors) >= 1
-
-    def test_negated_requirements_not_followed(self):
-        """Negated requirements don't create dependency cycles."""
-        tree = TechTree()
-
-        # A requires NOT B (negate=True)
-        req_not_b = TechRequirement('node_b', (1, 1))
-        req_not_b.negate = True
-
-        tree.nodes['node_a'] = TechNode(
-            id='node_a', name='Node A', max_levels=1,
-            requirements=[[req_not_b]]
-        )
-
-        # B requires A (positive)
-        req_a = TechRequirement('node_a', (1, 1))
-        tree.nodes['node_b'] = TechNode(
-            id='node_b', name='Node B', max_levels=1,
-            requirements=[[req_a]]
-        )
-
-        errors = tree.detect_cycles()
-
-        # Should NOT be a cycle because negated requirements aren't followed
-        assert errors == []
-
-    def test_cycle_format_shows_path(self):
-        """Cycle error message shows the cycle path."""
-        tree = TechTree()
-
-        req_b = TechRequirement('b', (1, 1))
-        tree.nodes['a'] = TechNode(id='a', name='A', max_levels=1, requirements=[[req_b]])
-
-        req_a = TechRequirement('a', (1, 1))
-        tree.nodes['b'] = TechNode(id='b', name='B', max_levels=1, requirements=[[req_a]])
-
-        errors = tree.detect_cycles()
-
-        assert len(errors) >= 1
-        # Should contain arrow notation showing path
-        assert '->' in errors[0]
-
-    def test_diamond_dependency_no_cycle(self):
-        """Diamond dependency (A -> B,C -> D) is not a cycle."""
-        tree = TechTree()
-
-        tree.nodes['root'] = TechNode(id='root', name='Root', max_levels=1)
-
-        req_root = TechRequirement('root', (1, 1))
-        tree.nodes['left'] = TechNode(
-            id='left', name='Left', max_levels=1,
-            requirements=[[req_root]]
-        )
-        tree.nodes['right'] = TechNode(
-            id='right', name='Right', max_levels=1,
-            requirements=[[req_root]]
-        )
-
-        req_left = TechRequirement('left', (1, 1))
-        req_right = TechRequirement('right', (1, 1))
-        tree.nodes['bottom'] = TechNode(
-            id='bottom', name='Bottom', max_levels=1,
-            requirements=[[req_left, req_right]]
-        )
-
-        errors = tree.detect_cycles()
-
-        assert errors == []
-
-
 class TestValidate:
     """Tests for TechTree.validate() combined validation."""
 
@@ -366,45 +209,6 @@ class TestValidate:
         errors = tree.validate()
 
         assert errors == []
-
-
-class TestDepthCalculation:
-    """Tests for depth calculation edge cases."""
-
-    def test_depth_with_missing_node(self):
-        """calculate_depth handles missing nodes gracefully."""
-        tree = TechTree()
-
-        tree.nodes['exists'] = TechNode(id='exists', name='Exists', max_levels=1)
-
-        # Request depth for non-existent node
-        depth = tree.calculate_depth('nonexistent')
-
-        assert depth == 0  # Default for missing nodes
-
-    def test_depth_caching(self):
-        """Depth calculation uses cache for efficiency."""
-        tree = TechTree()
-
-        tree.nodes['root'] = TechNode(id='root', name='Root', max_levels=1)
-
-        req = TechRequirement('root', (1, 1))
-        tree.nodes['child'] = TechNode(
-            id='child', name='Child', max_levels=1,
-            requirements=[[req]]
-        )
-
-        # First call populates cache
-        depth1 = tree.calculate_depth('child')
-
-        # Verify cache was populated
-        assert 'child' in tree._depth_cache
-        assert tree._depth_cache['child'] == 1
-
-        # Second call should use cache
-        depth2 = tree.calculate_depth('child')
-
-        assert depth1 == depth2
 
 
 class TestEdgeCases:

@@ -15,17 +15,17 @@
 |-------|--------|-----------|
 | 1. Safe Deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Merge-Then-Delete | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Partial Cleanups | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Partial Cleanups | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Old Directory Tree Cleanup | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-18
-**Active Phase:** Phase 3 - Partial Cleanups
-**Last Action:** Phase 2 complete - 6 files deleted, 14 unique tests merged, many tasks N/A due to missing targets
-**Next Action:** Begin Phase 3 Task 3.1 (partial cleanups)
+**Active Phase:** Phase 4 - Old Directory Tree Cleanup
+**Last Action:** Phase 3 complete - removed 84 trivial/duplicate tests via partial cleanups
+**Next Action:** Begin Phase 4 Task 4.1 (old directory tree cleanup)
 **Blockers:** None
-**Baseline:** 12669 tests collected (down from 12761, delta: -92)
-**Context for Next Agent:** Phase 2 done. Tasks 2.3, 2.4, 2.5, 2.6, 2.9 were N/A (target files didn't exist, sources are canonical). Pre-existing test failures still exist in transfer_validator, transfer_dialog, column_manager - NOT caused by this project.
+**Baseline:** 12585 tests collected (down from 12669, delta: -84)
+**Context for Next Agent:** Phase 3 done. Task 3.1c and 3.1f were N/A (files didn't exist). Pre-existing test failures still exist in quickstart_designs and turn_execution - NOT caused by this project.
 
 ### Pre-Existing Test Failures (NOT caused by this project)
 1. `tests/unit/quickstart/test_quickstart_designs.py::test_design_stats_match_expected[qs_general_purpose-unknown]` - Formula-based ability definitions (`'=ship_class_mass'`) not being evaluated

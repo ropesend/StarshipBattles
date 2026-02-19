@@ -9,12 +9,10 @@ import math
 
 
 class TestRenderingConstants:
-    """Tests for rendering constants exported by game_renderer module."""
+    """Tests for rendering constants exported by game_renderer module.
 
-    def test_culling_max_radius_positive(self):
-        """CULLING_MAX_RADIUS should be positive."""
-        from game.ui.renderer.game_renderer import CULLING_MAX_RADIUS
-        assert CULLING_MAX_RADIUS > 0
+    PROJ-157: Removed trivial positivity checks, keeping relationship/semantic tests.
+    """
 
     def test_min_zoom_for_image_positive(self):
         """MIN_ZOOM_FOR_IMAGE should be positive and small."""
@@ -30,31 +28,6 @@ class TestRenderingConstants:
         """IMAGE_ROTATION_OFFSET should be -90 (ship images point up)."""
         from game.ui.renderer.game_renderer import IMAGE_ROTATION_OFFSET
         assert IMAGE_ROTATION_OFFSET == -90
-
-    def test_component_dot_radius_positive(self):
-        """COMPONENT_DOT_RADIUS should be positive."""
-        from game.ui.renderer.game_renderer import COMPONENT_DOT_RADIUS
-        assert COMPONENT_DOT_RADIUS > 0
-
-    def test_direction_line_offset_positive(self):
-        """DIRECTION_LINE_OFFSET should be positive."""
-        from game.ui.renderer.game_renderer import DIRECTION_LINE_OFFSET
-        assert DIRECTION_LINE_OFFSET > 0
-
-    def test_direction_line_width_positive(self):
-        """DIRECTION_LINE_WIDTH should be positive."""
-        from game.ui.renderer.game_renderer import DIRECTION_LINE_WIDTH
-        assert DIRECTION_LINE_WIDTH > 0
-
-    def test_fallback_dot_radius_positive(self):
-        """FALLBACK_DOT_RADIUS should be positive."""
-        from game.ui.renderer.game_renderer import FALLBACK_DOT_RADIUS
-        assert FALLBACK_DOT_RADIUS > 0
-
-    def test_fallback_dot_min_size_positive(self):
-        """FALLBACK_DOT_MIN_SIZE should be positive."""
-        from game.ui.renderer.game_renderer import FALLBACK_DOT_MIN_SIZE
-        assert FALLBACK_DOT_MIN_SIZE > 0
 
 
 class TestLayerColors:

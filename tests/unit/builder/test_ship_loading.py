@@ -74,11 +74,6 @@ class TestModifierStacking:
             "Turret mount should increase mass"
 
 
-class TestShipExpectedStats:
-    """Test that loaded ships match their expected_stats."""
-    pass
-
-
 class TestAllShipDesigns:
     """Test all ship designs in the ships/ folder."""
 

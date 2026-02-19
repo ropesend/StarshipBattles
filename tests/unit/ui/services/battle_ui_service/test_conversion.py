@@ -4,11 +4,18 @@ Tests for converting simulation objects to DTOs:
 - Ships to ShipDTO
 - Projectiles to ProjectileDTO
 - Beams to BeamDTO
+
+PROJ-157: Added TestProjectileColors from flat test file.
 """
 import pytest
 from unittest.mock import Mock
 
-from game.ui.services.battle_ui_service import BattleUIService
+from game.ui.services.battle_ui_service import (
+    BattleUIService,
+    PROJECTILE_COLORS,
+    DEFAULT_PROJECTILE_COLOR,
+)
+from game.core.constants import AttackType
 from game.ui.interfaces.battle_ui import (
     IBattleUI,
     ShipDTO,
@@ -18,6 +25,27 @@ from game.ui.interfaces.battle_ui import (
 )
 from game.core.math import Vector2
 from game.simulation.entities.layer_data import LayerData
+
+
+class TestProjectileColors:
+    """Tests for PROJECTILE_COLORS mapping (migrated from flat file)."""
+
+    def test_projectile_colors_has_attack_types(self):
+        """PROJECTILE_COLORS should have entries for AttackTypes."""
+        assert AttackType.PROJECTILE in PROJECTILE_COLORS
+        assert AttackType.MISSILE in PROJECTILE_COLORS
+        assert AttackType.BEAM in PROJECTILE_COLORS
+
+    def test_projectile_colors_are_rgb_tuples(self):
+        """All projectile colors should be RGB tuples."""
+        for attack_type, color in PROJECTILE_COLORS.items():
+            assert isinstance(color, tuple), f"{attack_type} color is not tuple"
+            assert len(color) == 3, f"{attack_type} color has {len(color)} components"
+
+    def test_default_projectile_color_is_rgb_tuple(self):
+        """DEFAULT_PROJECTILE_COLOR should be RGB tuple."""
+        assert isinstance(DEFAULT_PROJECTILE_COLOR, tuple)
+        assert len(DEFAULT_PROJECTILE_COLOR) == 3
 
 
 class TestBattleUIServiceCreation:
