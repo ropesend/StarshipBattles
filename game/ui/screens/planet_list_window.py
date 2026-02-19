@@ -24,13 +24,19 @@ from game.ui.panels.planet_report_panel import PlanetReportPanel, compute_planet
 
 class PlanetListWindow(UIWindow):
     def __init__(self, rect, manager, galaxy, empire, on_close_callback=None, asset_resolver=None):
+        # Initialize state that set_dimensions() depends on before super().__init__(),
+        # since UIWindow.__init__ triggers rebuild() -> set_dimensions().
+        self.selected_planet = None
+        self.planet_detail_panel = None
+        self.btn_build_queue = None
+
         super().__init__(rect, manager, window_display_title="Galactic Planet Registry", resizable=True)
-        
+
         self.galaxy = galaxy
         self.empire = empire # Current player empire for "Owner" context
         self.on_close_callback = on_close_callback
         self.asset_resolver = asset_resolver  # Function to get image for planet
-        
+
         # --- Layout Constants ---
         self.sidebar_width = UIConfig.SIDEBAR_WIDTH
         self.header_height = UIConfig.HEADER_HEIGHT
@@ -43,12 +49,12 @@ class PlanetListWindow(UIWindow):
 
         # Preset manager
         self.preset_manager = PresetManager()
-        
+
         # Filter States
         self.filter_types = {
-            'Continental': True, 'Arid': True, 'Pelagic': True, 
-            'Magma': True, 'Cryoplanet': True, 'Barren': True, 
-            'Jovian': True, 'Ice Giant': True, 'Chthonian': True, 
+            'Continental': True, 'Arid': True, 'Pelagic': True,
+            'Magma': True, 'Cryoplanet': True, 'Barren': True,
+            'Jovian': True, 'Ice Giant': True, 'Chthonian': True,
             'Ice Dwarf': True, 'Planetoid': True
         }
         self.filter_owner = {'Player': True, 'Enemy': True, 'Unowned': True}
@@ -60,14 +66,9 @@ class PlanetListWindow(UIWindow):
             'temp': [self._planet_ranges['temp'][0], self._planet_ranges['temp'][1]],
             'mass': [self._planet_ranges['mass'][0], self._planet_ranges['mass'][1]]
         }
-        
+
         # UI References (for reading values)
         self.ui_filters = {}
-
-        # Planet detail panel
-        self.planet_detail_panel = None
-        self.selected_planet = None
-        self.btn_build_queue = None
 
         # Default Columns (owner column uses lambda to capture self.galaxy/empire references)
         self.columns = [
