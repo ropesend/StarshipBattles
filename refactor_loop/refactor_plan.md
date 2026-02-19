@@ -8,27 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-18
-**Last Completed:** PROJ-157 Phase 3 Complete
-**Current Status:** PROJ-157 Phase 3 Complete - Phase 4 Ready
+**Last Completed:** PROJ-157 Phase 4 Complete - ALL PHASES DONE
+**Current Status:** PROJ-157 Ready for Audit
 **Current Project:** PROJ-157
-**Current Phase:** Phase 4 - Old Directory Tree Cleanup
-**Test Status:** 12585 tests collected (pre-existing failures in quickstart_designs/turn_execution unrelated to this project)
+**Current Phase:** Audit Cycle 1
+**Test Status:** 12185 tests collected (pre-existing failures in quickstart_designs/turn_execution unrelated to this project)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-157 Phase 3 COMPLETE: Partial cleanups removing trivial/duplicate tests
-  - Task 3.1a: test_config.py - removed 18 trivial positivity tests
-  - Task 3.1b: test_colors.py - removed TestBasicColors + TestFontConstants (6 tests)
-  - Task 3.1c/3.1f: N/A - files don't exist
-  - Task 3.1d: test_game_renderer.py - removed 6 trivial constant tests
-  - Task 3.1e: test_battle_screen_edge_cases.py - removed 19 duplicate/trivial tests, kept 6 unique
-  - Task 3.1g: test_battle_ui_service.py flat file deleted (migrated 3 tests to subdirectory)
-  - Task 3.2a/b: Removed empty stubs from test_bulk_add.py and test_ship_loading.py
-  - Task 3.2c: test_allowed_layers_removal.py - removed 5 one-time migration tests
-  - Task 3.2d: test_validation.py - removed TestDetectCycles (8) + TestDepthCalculation (2) duplicates
-- Test count: 12669 → 12585 (delta: -84)
+- PROJ-157 Phase 4 COMPLETE: Old directory tree cleanup
+  - Task 4.1: tests/unit/services/ - 6 files deleted, directory removed (-88 tests)
+  - Task 4.2: tests/unit/entities/ - 31 files deleted, 11 files kept for review (-206 tests)
+  - Task 4.3: tests/unit/combat/ - 13 files deleted, 2 files kept for review (-69 tests)
+  - Task 4.4: tests/unit/components/ - 4 files deleted, directory removed (-37 tests)
+  - Total: 54 files deleted, 13 files kept (documented in Skipped Files Log)
+- Test count: 12585 → 12185 (delta: -400)
+- All 4 phases complete
 - Pre-existing test failures NOT caused by this project
-- Next: Phase 4 old directory tree cleanup
+- Next: Trigger audit (Protocol 04)
 
 ---
 
@@ -116,6 +113,7 @@
 | 2026-02-18 | PROJ-157 | Phase 1 | Complete | 12761 collected | pending | 39 files deleted, -174 dead tests (scripts, scaffolds, over-mocked, conftest) |
 | 2026-02-18 | PROJ-157 | Phase 2 | Complete | 12669 collected | pending | 6 files deleted, 14 tests merged, 5 tasks N/A (no target) |
 | 2026-02-18 | PROJ-157 | Phase 3 | Complete | 12585 collected | pending | Partial cleanups: -84 trivial/duplicate tests, 2 files N/A |
+| 2026-02-18 | PROJ-157 | Phase 4 | Complete | 12185 collected | pending | Old directory cleanup: -400 tests, 54 files deleted, 13 files kept |
 
 ---
 
