@@ -33,15 +33,15 @@ This file tests `game.ui.screens.fleet_report_filters` and `game.ui.screens.flee
 
 ### Full Suite Check
 - [ ] Run `pytest tests/ -n 12 --tb=short -q`
-- [ ] Verify failure count is ≤145 (pre-existing, no new failures introduced)
+- [ ] Verify failure count is ≤143 (pre-existing, no new failures introduced — was 145, PROJ-157 reduced to 143)
 - [ ] Run `git diff --stat` to confirm total lines changed
 
-### Summary Verification
-- [ ] Phase 1: ~1,082 lines deleted (8 files + 1 __init__ cleanup)
-- [ ] Phase 2: ~1,040 lines deleted, ~175 lines migrated (4 source files deleted, 4 target files enriched)
-- [ ] Phase 3: ~820 lines removed from 8 files (surgical edits)
+### Summary Verification (remaining work only)
+- [ ] Phase 1: ~505 lines deleted (3 files + 1 __init__ cleanup)
+- [ ] Phase 2: ~683 lines deleted, ~120 lines migrated (2 source files deleted, 2 target files enriched)
+- [ ] Phase 3: ~250 lines removed from 4 files (surgical edits)
 - [ ] Phase 4: 932 lines relocated (1 file moved)
-- [ ] Total: ~2,942 lines of dead code removed
+- [ ] Total remaining: ~1,438 lines of dead code removed + 932 relocated
 
 ---
 

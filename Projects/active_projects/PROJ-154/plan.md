@@ -13,21 +13,35 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Pure File Deletions | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Migrate then Delete | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Partial File Edits | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Pure File Deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Migrate then Delete | In Progress (2 of 4 tasks remain) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Partial File Edits | In Progress (4 of 8 tasks remain) | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. File Relocation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-16 17:20
-**Active Phase:** Planning
-**Last Action:** Plan created with 4 phases, all file paths verified by explore agents
-**Next Action:** Begin Phase 1 — pure file deletions
+**Last Updated:** 2026-02-19
+**Active Phase:** Phase 2
+**Last Action:** Phase 1 complete - deleted 4 files (mock_battle_ui_service.py, test_conflict_core.py, test_build_queue_source_errors.py, test_fleet_resource_aggregator.py), updated __init__.py
+**Next Action:** Execute Phase 2 - Migrate then Delete (2 merge tasks)
 **Blockers:** None
-**Context for Next Agent:** Baseline is 12,788 passed, 145 pre-existing failures, 2 skipped. The 145 failures are pre-existing and NOT from this project. Monitor for any NEW failures only.
+**Context for Next Agent:** Test collection: 12165 (down from 12185 = -20 deleted tests). Pre-existing failures: 112 (UI: 20, Strategy: 92). No NEW failures.
+
+### PROJ-157 Overlap Summary
+PROJ-157 completed these PROJ-154 items:
+- **Phase 1:** Deleted 5 of 8 files (test_overlay, test_slider_snap_logic, test_simulation_adapter_edge_cases, test_ship_display_formatter_edge_cases, test_hex_math)
+- **Phase 2:** Completed 2 of 4 merge tasks (UI-2 race_validator, UI-8 battle_ui_service)
+- **Phase 3:** Completed 4 of 8 partial edits (test_config, test_battle_screen_edge_cases, test_colors, test_game_renderer)
+
+### Remaining Work (~10 tasks)
+- **Phase 1:** Delete mock_battle_ui_service.py, test_conflict_core.py, test_build_queue_source_errors.py, test_fleet_resource_aggregator.py + __init__ cleanup
+- **Phase 2:** Merge test_engines_contracts.py (16 tests) → test_engine_interfaces.py; merge test_fleet_battle_adapter.py data/ (1 test) → root
+- **Phase 3:** Remove 3 duplicates from test_battle_screen_extended.py; remove TestGameSwitchScene from test_scene_protocol.py; remove 11 mock-testing tests from test_strategy_detail_formatter.py; remove test_legacy_cleanup from test_production_refactor.py
+- **Phase 4:** git mv test_fleet_report_filters.py strategy/ → ui/screens/
 
 ## Overview
-Systematic cleanup of ~2,942 lines of dead, duplicate, and trivially obvious test code identified by a code review (v3) and validated through a detailed 28-finding validation review. The validation confirmed 12 findings for removal, disputed 6 (keep as-is), and modified 10 (partial removal with unique test preservation).
+Systematic cleanup of dead, duplicate, and trivially obvious test code identified by a code review (v3) and validated through a detailed 28-finding validation review. The validation confirmed 12 findings for removal, disputed 6 (keep as-is), and modified 10 (partial removal with unique test preservation).
+
+**Original scope:** ~2,942 lines. **Remaining after PROJ-157:** ~1,438 lines to remove + 932 lines to relocate.
 
 ## Goals
 - Remove dead test files that test nothing real (MagicMock-only, no game code)
@@ -44,30 +58,19 @@ Systematic cleanup of ~2,942 lines of dead, duplicate, and trivially obvious tes
 
 **Out:**
 - 6 DISPUTED findings (UI-10, UI-12, STR-8, STR-11, STR-12, STR-13) — these are explicitly kept
-- Old directory trees (Agent 8 finding — separate project scope)
+- Old directory trees (Agent 8 finding — separate project scope, handled by PROJ-157 Phase 4)
 - Any production code changes
 - Any new test development
 
-## Key Files
+## Key Files (Remaining Only)
 | Component | File Path | Action |
 |-----------|-----------|--------|
-| UI dead files | `tests/unit/ui/test_overlay.py` | Delete |
-| UI dead files | `tests/unit/ui/test_slider_snap_logic.py` | Delete |
 | UI dead mock | `tests/unit/ui/mocks/mock_battle_ui_service.py` | Delete |
-| UI duplicate | `tests/unit/ui/test_race_validator.py` | Merge 2 tests → screens version, delete |
-| UI flat service | `tests/unit/ui/services/test_battle_ui_service.py` | Migrate 3 tests → subdirectory, delete |
-| UI partial edits | `tests/unit/ui/test_config.py` | Remove ~20 trivial tests |
-| UI partial edits | `tests/unit/ui/screens/test_battle_screen_edge_cases.py` | Remove 14 duplicate tests |
 | UI partial edits | `tests/unit/ui/test_battle_screen_extended.py` | Remove 3 duplicate tests |
-| UI partial edits | `tests/unit/ui/test_colors.py` | Remove 6 trivial tests |
 | UI partial edits | `tests/unit/ui/test_scene_protocol.py` | Remove TestGameSwitchScene |
-| UI partial edits | `tests/unit/ui/renderer/test_game_renderer.py` | Remove 6 constant checks |
 | UI partial edits | `tests/unit/ui/screens/test_strategy_detail_formatter.py` | Remove 11 mock-testing tests |
 | STR stubs | `tests/unit/strategy/conflict_resolution/test_conflict_core.py` | Delete |
-| STR stubs | `tests/unit/strategy/adapters/test_simulation_adapter_edge_cases.py` | Delete |
 | STR stubs | `tests/unit/strategy/data/test_build_queue_source_errors.py` | Delete |
-| STR stubs | `tests/unit/strategy/test_ship_display_formatter_edge_cases.py` | Delete |
-| STR duplicate | `tests/unit/strategy/test_hex_math.py` | Delete (superset in core/) |
 | STR duplicate | `tests/unit/strategy/test_fleet_resource_aggregator.py` | Delete (superset in data/) |
 | STR contracts | `tests/unit/strategy/interfaces/test_engines_contracts.py` | Merge 16 tests → interfaces, delete |
 | STR data adapter | `tests/unit/strategy/data/test_fleet_battle_adapter.py` | Merge 1 test → root, delete |
@@ -82,6 +85,7 @@ Systematic cleanup of ~2,942 lines of dead, duplicate, and trivially obvious tes
 | 2026-02-16 | Phase ordering: deletions → migrations → edits → relocation | Simplest/safest first; partial edits need more care; relocation last (standalone) |
 | 2026-02-16 | Keep STR-3 root version (real objects) over data/ version (MagicMock) | Root version uses real Fleet/ShipInstance objects — higher quality despite fewer lines |
 | 2026-02-16 | Keep STR-2 data/ version (749 lines) over root version (196 lines) | data/ version is strict superset with 50 tests vs 22 |
+| 2026-02-19 | Updated checklists after PROJ-157 overlap review | PROJ-157 completed ~60% of PROJ-154 scope; all checklists updated to reflect remaining work |
 
 ## Related Documents
 - [design.md](design.md) - Architecture analysis and design rationale
@@ -91,6 +95,6 @@ Systematic cleanup of ~2,942 lines of dead, duplicate, and trivially obvious tes
 
 ## Verification
 - [ ] All phase checklists complete
-- [ ] All tests passing (no NEW failures beyond pre-existing 145)
-- [ ] `git diff --stat` confirms ~2,942 lines removed
+- [ ] All tests passing (no NEW failures beyond pre-existing 143)
+- [ ] `git diff --stat` confirms remaining ~1,438 lines removed
 - [ ] User verified

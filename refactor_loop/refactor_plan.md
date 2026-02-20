@@ -7,22 +7,21 @@
 
 ## Agent Context
 
-**Last Session:** 2026-02-18
-**Last Completed:** PROJ-157 Audit Cycle 1 - PASSED
-**Current Status:** PROJ-157 Audit Complete - Awaiting User Verification
-**Current Project:** PROJ-157
-**Current Phase:** Complete
-**Test Status:** 12185 tests collected, 143 pre-existing failures (NOT caused by PROJ-157)
+**Last Session:** 2026-02-19
+**Last Completed:** PROJ-154 Phase 1 - Pure File Deletions
+**Current Status:** PROJ-154 Phase 2 pending
+**Current Project:** PROJ-154
+**Current Phase:** Phase 2 (Migrate then Delete)
+**Test Status:** 12165 tests collected, 112 pre-existing failures (UI: 20, Strategy: 92)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-157 AUDIT PASSED (Cycle 1)
-  - Verified all 4 phases complete
-  - Verified 143 pre-existing failures NOT caused by this project (was 145 before, now 143)
-  - Zero regressions introduced
-  - Total: 54 files deleted, 13 files kept (documented in phase_4_checklist.md)
-- All projects in Master Task List now at [x] status
-- Next: User verification to close PROJ-157
+- PROJ-154 Phase 1 COMPLETE
+  - Deleted 4 files: mock_battle_ui_service.py, test_conflict_core.py, test_build_queue_source_errors.py, test_fleet_resource_aggregator.py
+  - Updated tests/unit/ui/mocks/__init__.py (removed export)
+  - Test count: 12165 (-20 from baseline)
+  - No NEW failures introduced
+- Next: Execute Phase 2 - Merge test_engines_contracts.py and test_fleet_battle_adapter.py
 
 ---
 
@@ -76,6 +75,12 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [/] **PROJ-154: Test Suite Cleanup - Validated Findings**
+  - **Phases:** 4 | **Status:** Phase 1 Complete, Phase 2 In Progress | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-154/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-154/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log
@@ -112,6 +117,7 @@
 | 2026-02-18 | PROJ-157 | Phase 3 | Complete | 12585 collected | pending | Partial cleanups: -84 trivial/duplicate tests, 2 files N/A |
 | 2026-02-18 | PROJ-157 | Phase 4 | Complete | 12185 collected | pending | Old directory cleanup: -400 tests, 54 files deleted, 13 files kept |
 | 2026-02-18 | PROJ-157 | Audit 1 | PASSED | 12040 pass, 143 pre-existing | 91aade3a | All 4 phases verified, 0 regressions (was 145 failures before, now 143) |
+| 2026-02-19 | PROJ-154 | Phase 1 | Complete | 12165 collected, 112 pre-existing | pending | Deleted 4 files, updated __init__.py |
 
 ---
 

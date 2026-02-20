@@ -5,27 +5,20 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
-**Objective:** Migrate unique tests to proper homes, then delete source files (~1,040 lines deleted, ~175 lines migrated)
+**Status:** In Progress
+**Objective:** Migrate unique tests to proper homes, then delete source files (~683 lines deleted, ~120 lines migrated)
 **Priority:** High — must migrate BEFORE deleting to preserve coverage
+
+**Note:** PROJ-157 already completed 2 of 4 tasks (UI-2 and UI-8). Only STR-1 and STR-3 remain.
 
 ---
 
 ## Tasks
 
-### Task 2.1: UI-2 — Merge edge cases into screens/test_race_validator.py, delete root version [Simple]
-**Source:** `tests/unit/ui/test_race_validator.py` (282 lines)
-**Target:** `tests/unit/ui/screens/test_race_validator.py` (312 lines)
-**Tests:** `pytest tests/unit/ui/screens/test_race_validator.py -v` then `pytest tests/unit/ui/ -n 12 --tb=short -q`
+### ~~Task 2.1: UI-2 — Merge edge cases into screens/test_race_validator.py, delete root version [Simple]~~
+**DONE by PROJ-157** — Root `tests/unit/ui/test_race_validator.py` already deleted.
 
-- [ ] Read source file, extract `test_validate_whitespace_name_returns_invalid` and `test_validate_none_name_returns_invalid` test methods
-- [ ] Adapt these 2 tests to use real `RaceConfig` objects (matching the target file's pattern — NOT MagicMock)
-- [ ] Add the 2 adapted tests to the target file's `TestRaceValidatorValidation` class (or similar)
-- [ ] Run `pytest tests/unit/ui/screens/test_race_validator.py -v` — confirm new + existing tests pass
-- [ ] Delete `tests/unit/ui/test_race_validator.py`
-- [ ] Run `pytest tests/unit/ui/ -n 12 --tb=short -q` — verify no NEW failures
-
-**Notes:**
+- [x] ~~Completed by PROJ-157~~
 
 ### Task 2.2: STR-1 — Merge unique contracts into test_engine_interfaces.py, delete contracts file [Medium]
 **Source:** `tests/unit/strategy/interfaces/test_engines_contracts.py` (379 lines)
@@ -33,11 +26,13 @@
 **Tests:** `pytest tests/unit/strategy/interfaces/test_engine_interfaces.py -v` then `pytest tests/unit/strategy/interfaces/ --tb=short -q`
 
 Unique tests to migrate (16 total):
-- `TestIPopulationEngine` (4 tests: importable, abstract, cannot-instantiate, concrete implementation)
-- `TestIResupplyEngine` (5 tests: importable, abstract, cannot-instantiate, has-abstract-methods, concrete implementation)
-- `TestIHarvestingEngine` (4 tests: importable, abstract, cannot-instantiate, concrete implementation)
-- `TestIProductionEngineConstructionTick` (1 test: process_construction_tick method)
-- `TestEngineModuleExports` (2 tests: __all__ exports verification)
+- `TestIPopulationEngineContract` (4 tests: is_abstract, cannot-instantiate, has_abstract_process_population_growth, concrete implementation)
+- `TestIResupplyEngineContract` (5 tests: is_abstract, cannot-instantiate, has_abstract_process_fuel_generation, has_abstract_process_fleet_resupply, concrete implementation)
+- `TestIHarvestingEngineContract` (4 tests: is_abstract, cannot-instantiate, has_abstract_process_harvesting, concrete implementation)
+- `TestIProductionEngineContract::test_has_abstract_process_construction_tick` (1 test — the other production tests already exist in target)
+- `TestEnginesModuleExports` (2 tests: __all__ exports verification)
+
+**Note:** Target file already has tests for IMovementEngine, IProductionEngine (partial), IOrderProcessor, IConflictEngine, IResourceEngine, IMaintenanceEngine. The contracts file has unique coverage for IPopulationEngine, IResupplyEngine, IHarvestingEngine, process_construction_tick, and module exports.
 
 - [ ] Read source file to identify the 16 unique tests and their imports
 - [ ] Copy the unique test classes into the target file, following its existing patterns for interface testing
@@ -53,26 +48,20 @@ Unique tests to migrate (16 total):
 **Target:** `tests/unit/strategy/test_fleet_battle_adapter.py` (226 lines)
 **Tests:** `pytest tests/unit/strategy/test_fleet_battle_adapter.py -v` then `pytest tests/unit/strategy/ --tb=short -q`
 
+**Note:** The root version uses real `Fleet`/`ShipInstance` objects (higher quality). The data/ version uses MagicMock. Only 1 unique test in the data/ version: `test_passes_registries_to_ships` (in `TestToBattleShips` class, line 140). All other tests in data/ version are duplicates of the root version.
+
 - [ ] Read source file, extract `test_passes_registries_to_ships` test method
-- [ ] Add test to the target file, adapting to use real objects if the target file uses real Ship/Fleet objects
+- [ ] Add test to the target file, adapting to use real objects (matching the target file's pattern — real Fleet/ShipInstance, not MagicMock)
 - [ ] Run `pytest tests/unit/strategy/test_fleet_battle_adapter.py -v` — confirm all pass
 - [ ] Delete `tests/unit/strategy/data/test_fleet_battle_adapter.py`
 - [ ] Run `pytest tests/unit/strategy/ --tb=short -q` — verify no NEW failures
 
 **Notes:**
 
-### Task 2.4: UI-8 — Migrate TestProjectileColors, delete flat service file [Simple]
-**Source:** `tests/unit/ui/services/test_battle_ui_service.py` (356 lines)
-**Target:** `tests/unit/ui/services/battle_ui_service/test_state_and_integration.py`
-**Tests:** `pytest tests/unit/ui/services/battle_ui_service/ -v` then `pytest tests/unit/ui/services/ --tb=short -q`
+### ~~Task 2.4: UI-8 — Migrate TestProjectileColors, delete flat service file [Simple]~~
+**DONE by PROJ-157** — `tests/unit/ui/services/test_battle_ui_service.py` already deleted.
 
-- [ ] Read source file, extract `TestProjectileColors` class (3 tests: has AttackTypes keys, colors are RGB tuples, DEFAULT_PROJECTILE_COLOR is RGB)
-- [ ] Add `TestProjectileColors` class to `test_state_and_integration.py` (add necessary imports)
-- [ ] Run `pytest tests/unit/ui/services/battle_ui_service/ -v` — confirm all pass
-- [ ] Delete `tests/unit/ui/services/test_battle_ui_service.py`
-- [ ] Run `pytest tests/unit/ui/services/ --tb=short -q` — verify no NEW failures
-
-**Notes:**
+- [x] ~~Completed by PROJ-157~~
 
 ---
 
