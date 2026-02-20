@@ -7,12 +7,17 @@ Tests cover:
 - Empty rules handling
 - Position edge cases
 - Distance cache usage
+- Custom and default stat helpers (migrated from test_evaluation_integration.py)
+- Edge case defaults (migrated from test_evaluation_integration.py)
+- Threat assessment scenarios (migrated from test_evaluation_integration.py)
 """
 import pytest
 from unittest.mock import MagicMock
 
 from game.ai.target_evaluator import TargetEvaluator
+from game.ai.combat_utils import get_hp_percent, is_in_pdc_arc
 from game.core.math import Vector2
+from game.core.constants import AttackType
 
 
 @pytest.fixture
@@ -312,3 +317,187 @@ class TestEvaluateDefaultStatHelpers:
         )
 
         assert isinstance(score, float)
+
+
+# =============================================================================
+# Migrated from test_evaluation_integration.py
+# =============================================================================
+
+class TestCustomStatHelpersMigrated:
+    """Tests for custom stat helper functions.
+
+    Migrated from tests/unit/ai/target_evaluator/test_evaluation_integration.py
+    """
+
+    def test_custom_get_hp_percent(self, mock_ship, mock_target, mock_stat_helpers):
+        """Custom HP percent function should be used."""
+        custom_helpers = {
+            'get_hp_percent': lambda t: 0.25,  # Always returns 25%
+            'is_in_pdc_arc': lambda s, t: True
+        }
+
+        rules = [{'type': 'most_damaged', 'weight': 1}]
+
+        score = TargetEvaluator.evaluate(mock_ship, mock_target, rules, stat_helpers=custom_helpers)
+
+        # val = -0.25 * 1 * 100 = -25
+        assert score == -25
+
+    def test_custom_is_in_pdc_arc(self, mock_ship, mock_stat_helpers):
+        """Custom PDC arc function should be used."""
+        missile = MagicMock()
+        missile.position = Vector2(-1000, -1000)  # Very far away
+        missile.type = AttackType.MISSILE
+
+        custom_helpers = {
+            'get_hp_percent': lambda t: 1.0,
+            'is_in_pdc_arc': lambda s, t: True  # Always returns True
+        }
+
+        rules = [{'type': 'pdc_arc', 'weight': 100}]
+
+        score = TargetEvaluator.evaluate(mock_ship, missile, rules, stat_helpers=custom_helpers)
+
+        assert score == 100
+
+
+class TestDefaultStatHelpersImplementation:
+    """Tests for default stat helper implementations (now in combat_utils).
+
+    Migrated from tests/unit/ai/target_evaluator/test_evaluation_integration.py
+    """
+
+    def test_default_get_hp_percent_no_components(self):
+        """get_hp_percent should return 1.0 for no components."""
+        target = MagicMock()
+        target.get_all_components = MagicMock(return_value=[])
+
+        result = get_hp_percent(target)
+
+        assert result == 1.0
+
+    def test_default_get_hp_percent_calculates_correctly(self):
+        """get_hp_percent should calculate HP correctly."""
+        target = MagicMock()
+        comp1 = MagicMock()
+        comp1.max_hp = 100
+        comp1.current_hp = 50
+
+        comp2 = MagicMock()
+        comp2.max_hp = 100
+        comp2.current_hp = 25
+
+        target.get_all_components = MagicMock(return_value=[comp1, comp2])
+
+        result = get_hp_percent(target)
+
+        # (50 + 25) / (100 + 100) = 0.375
+        assert result == 0.375
+
+
+class TestEdgeCaseDefaultsMigrated:
+    """Tests for edge case defaults.
+
+    Migrated from tests/unit/ai/target_evaluator/test_evaluation_integration.py
+    """
+
+    def test_missing_weight_uses_zero(self, mock_ship, mock_target, mock_stat_helpers):
+        """Missing weight should default to 0."""
+        rules = [{'type': 'nearest'}]  # No weight specified
+
+        score = TargetEvaluator.evaluate(mock_ship, mock_target, rules, stat_helpers=mock_stat_helpers)
+
+        # weight=0 means val = dist * factor (factor default 1) = 100
+        assert score == 100
+
+    def test_missing_factor_uses_one(self, mock_ship, mock_target, mock_stat_helpers):
+        """Missing factor should default to 1."""
+        rules = [{'type': 'distance'}]  # No factor specified
+
+        score = TargetEvaluator.evaluate(mock_ship, mock_target, rules, stat_helpers=mock_stat_helpers)
+
+        # factor=1 => 100 * 1 = 100
+        assert score == 100
+
+    def test_same_position_zero_distance(self, mock_ship, mock_target, mock_stat_helpers):
+        """Same position should have zero distance."""
+        # Must set both position and get_position since evaluator uses get_position()
+        mock_target.position = Vector2(0, 0)
+        mock_target.get_position = MagicMock(return_value=Vector2(0, 0))
+        rules = [{'type': 'distance', 'factor': 1}]
+
+        score = TargetEvaluator.evaluate(mock_ship, mock_target, rules, stat_helpers=mock_stat_helpers)
+
+        assert score == 0
+
+    def test_negative_weight(self, mock_ship, mock_target, mock_stat_helpers):
+        """Negative weight should work correctly."""
+        rules = [{'type': 'mass', 'weight': -1}]
+
+        score = TargetEvaluator.evaluate(mock_ship, mock_target, rules, stat_helpers=mock_stat_helpers)
+
+        # weight <= 0 uses factor instead, so mass * factor (default 1) = 50 (mock_target.mass)
+        assert score == 50
+
+    def test_very_large_distance(self, mock_ship, mock_stat_helpers):
+        """Very large distances should work."""
+        far_target = MagicMock()
+        far_target.position = Vector2(1000000, 1000000)
+
+        rules = [{'type': 'nearest', 'weight': 1}]
+
+        score = TargetEvaluator.evaluate(mock_ship, far_target, rules, stat_helpers=mock_stat_helpers)
+
+        # Should be negative and large
+        assert score < -1000000
+
+
+class TestThreatAssessmentMigrated:
+    """Tests for threat assessment scenarios.
+
+    Migrated from tests/unit/ai/target_evaluator/test_evaluation_integration.py
+    """
+
+    def test_armed_damaged_target_high_priority(self, mock_ship):
+        """Armed and damaged targets should be high priority with appropriate rules."""
+        target = MagicMock()
+        target.position = Vector2(100, 0)
+        target.get_components_by_ability = MagicMock(return_value=[MagicMock()])
+
+        comp = MagicMock()
+        comp.max_hp = 100
+        comp.current_hp = 20
+        target.get_all_components = MagicMock(return_value=[comp])
+
+        rules = [
+            {'type': 'has_weapons', 'weight': 100},
+            {'type': 'most_damaged', 'weight': 1}
+        ]
+
+        # Use default stat helpers which will read actual HP from target
+        score = TargetEvaluator.evaluate(mock_ship, target, rules)
+
+        # has_weapons: 100
+        # most_damaged: -0.2 * 1 * 100 = -20
+        # total: 80
+        assert score == 80
+
+    def test_close_fast_target_high_threat(self, mock_ship):
+        """Close fast targets should be high threat with appropriate rules."""
+        target = MagicMock()
+        target.position = Vector2(50, 0)
+        target.get_position = MagicMock(return_value=Vector2(50, 0))
+        target.velocity = Vector2(100, 0)
+
+        rules = [
+            {'type': 'nearest', 'weight': 1},
+            {'type': 'fastest', 'weight': 0.5}
+        ]
+
+        # Use default stat helpers
+        score = TargetEvaluator.evaluate(mock_ship, target, rules)
+
+        # nearest: -50
+        # fastest: 100 * 0.5 = 50
+        # total: 0
+        assert score == 0
