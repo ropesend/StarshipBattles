@@ -140,6 +140,29 @@ class TestFleetBattleAdapter:
             call_args = mock_to_ship.call_args
             assert call_args[0][0] == (100, 200)
 
+    def test_to_battle_ships_passes_registries(self):
+        """Registries are passed to ship conversion."""
+        from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter
+        from game.strategy.data.fleet import Fleet
+        from game.core.hex_math import HexCoord
+
+        fleet = Fleet(1, 0, HexCoord(0, 0))
+        ship = make_ship_instance(name="Cruiser", design_data={})
+        fleet.add_ship(ship)
+        adapter = FleetBattleAdapter(fleet)
+
+        mock_registries = MagicMock()
+
+        with patch.object(ship, 'to_ship') as mock_to_ship:
+            mock_battle_ship = MagicMock()
+            mock_to_ship.return_value = mock_battle_ship
+
+            adapter.to_battle_ships(team_id=0, registries=mock_registries)
+
+            # Check registries was passed as keyword arg
+            call_kwargs = mock_to_ship.call_args[1]
+            assert call_kwargs.get('registries') is mock_registries
+
     def test_update_from_battle_results_survivors(self):
         """Survivors are kept and updated."""
         from game.strategy.data.fleet_battle_adapter import FleetBattleAdapter

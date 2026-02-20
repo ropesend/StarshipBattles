@@ -94,6 +94,12 @@ class TestIProductionEngineInterface:
         assert hasattr(IProductionEngine, 'process_fleet_production')
         assert getattr(IProductionEngine.process_fleet_production, '__isabstractmethod__', False)
 
+    def test_iproduction_engine_has_process_construction_tick_method(self):
+        """IProductionEngine.process_construction_tick must be abstract (PROJ-75)."""
+        from game.strategy.interfaces.engines import IProductionEngine
+        assert hasattr(IProductionEngine, 'process_construction_tick')
+        assert getattr(IProductionEngine.process_construction_tick, '__isabstractmethod__', False) is True
+
 
 # =============================================================================
 # IOrderProcessor Interface Tests
@@ -226,6 +232,105 @@ class TestIMaintenanceEngineInterface:
 
 
 # =============================================================================
+# IPopulationEngine Interface Tests
+# =============================================================================
+
+
+class TestIPopulationEngineInterface:
+    """Test IPopulationEngine abstract base class interface contract."""
+
+    def test_ipopulation_engine_importable(self):
+        """IPopulationEngine should be importable from interfaces module."""
+        from game.strategy.interfaces.engines import IPopulationEngine
+        assert IPopulationEngine is not None
+
+    def test_ipopulation_engine_is_abstract(self):
+        """IPopulationEngine should be an abstract base class."""
+        from game.strategy.interfaces.engines import IPopulationEngine
+        assert issubclass(IPopulationEngine, ABC)
+
+    def test_ipopulation_engine_cannot_instantiate(self):
+        """IPopulationEngine cannot be instantiated directly."""
+        from game.strategy.interfaces.engines import IPopulationEngine
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            IPopulationEngine()
+
+    def test_ipopulation_engine_has_process_population_growth_method(self):
+        """IPopulationEngine.process_population_growth must be abstract."""
+        from game.strategy.interfaces.engines import IPopulationEngine
+        assert hasattr(IPopulationEngine, 'process_population_growth')
+        assert getattr(IPopulationEngine.process_population_growth, '__isabstractmethod__', False) is True
+
+
+# =============================================================================
+# IResupplyEngine Interface Tests
+# =============================================================================
+
+
+class TestIResupplyEngineInterface:
+    """Test IResupplyEngine abstract base class interface contract (PROJ-74)."""
+
+    def test_iresupply_engine_importable(self):
+        """IResupplyEngine should be importable from interfaces module."""
+        from game.strategy.interfaces.engines import IResupplyEngine
+        assert IResupplyEngine is not None
+
+    def test_iresupply_engine_is_abstract(self):
+        """IResupplyEngine should be an abstract base class."""
+        from game.strategy.interfaces.engines import IResupplyEngine
+        assert issubclass(IResupplyEngine, ABC)
+
+    def test_iresupply_engine_cannot_instantiate(self):
+        """IResupplyEngine cannot be instantiated directly."""
+        from game.strategy.interfaces.engines import IResupplyEngine
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            IResupplyEngine()
+
+    def test_iresupply_engine_has_process_fuel_generation_method(self):
+        """IResupplyEngine.process_fuel_generation must be abstract."""
+        from game.strategy.interfaces.engines import IResupplyEngine
+        assert hasattr(IResupplyEngine, 'process_fuel_generation')
+        assert getattr(IResupplyEngine.process_fuel_generation, '__isabstractmethod__', False) is True
+
+    def test_iresupply_engine_has_process_fleet_resupply_method(self):
+        """IResupplyEngine.process_fleet_resupply must be abstract."""
+        from game.strategy.interfaces.engines import IResupplyEngine
+        assert hasattr(IResupplyEngine, 'process_fleet_resupply')
+        assert getattr(IResupplyEngine.process_fleet_resupply, '__isabstractmethod__', False) is True
+
+
+# =============================================================================
+# IHarvestingEngine Interface Tests
+# =============================================================================
+
+
+class TestIHarvestingEngineInterface:
+    """Test IHarvestingEngine abstract base class interface contract (PROJ-75)."""
+
+    def test_iharvesting_engine_importable(self):
+        """IHarvestingEngine should be importable from interfaces module."""
+        from game.strategy.interfaces.engines import IHarvestingEngine
+        assert IHarvestingEngine is not None
+
+    def test_iharvesting_engine_is_abstract(self):
+        """IHarvestingEngine should be an abstract base class."""
+        from game.strategy.interfaces.engines import IHarvestingEngine
+        assert issubclass(IHarvestingEngine, ABC)
+
+    def test_iharvesting_engine_cannot_instantiate(self):
+        """IHarvestingEngine cannot be instantiated directly."""
+        from game.strategy.interfaces.engines import IHarvestingEngine
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            IHarvestingEngine()
+
+    def test_iharvesting_engine_has_process_harvesting_method(self):
+        """IHarvestingEngine.process_harvesting must be abstract."""
+        from game.strategy.interfaces.engines import IHarvestingEngine
+        assert hasattr(IHarvestingEngine, 'process_harvesting')
+        assert getattr(IHarvestingEngine.process_harvesting, '__isabstractmethod__', False) is True
+
+
+# =============================================================================
 # Concrete Implementation Tests
 # =============================================================================
 
@@ -318,6 +423,42 @@ class TestConcreteImplementations:
         assert engine is not None
         assert engine.process_maintenance([]) == []
 
+    def test_concrete_population_engine_implementation(self):
+        """Concrete IPopulationEngine with all methods implemented works."""
+        from game.strategy.interfaces.engines import IPopulationEngine
+
+        class ConcretePopulationEngine(IPopulationEngine):
+            def process_population_growth(self, empires):
+                pass
+
+        engine = ConcretePopulationEngine()
+        assert engine is not None
+
+    def test_concrete_resupply_engine_implementation(self):
+        """Concrete IResupplyEngine with all methods implemented works."""
+        from game.strategy.interfaces.engines import IResupplyEngine
+
+        class ConcreteResupplyEngine(IResupplyEngine):
+            def process_fuel_generation(self, tick, empires):
+                return []
+
+            def process_fleet_resupply(self, tick, empires, galaxy):
+                return []
+
+        engine = ConcreteResupplyEngine()
+        assert engine is not None
+
+    def test_concrete_harvesting_engine_implementation(self):
+        """Concrete IHarvestingEngine with all methods implemented works."""
+        from game.strategy.interfaces.engines import IHarvestingEngine
+
+        class ConcreteHarvestingEngine(IHarvestingEngine):
+            def process_harvesting(self, empires):
+                pass
+
+        engine = ConcreteHarvestingEngine()
+        assert engine is not None
+
 
 # =============================================================================
 # Module Re-exports Test
@@ -352,3 +493,50 @@ class TestInterfacesModuleExports:
         assert 'IConflictEngine' in engines.__all__
         assert 'IResourceEngine' in engines.__all__
         assert 'IMaintenanceEngine' in engines.__all__
+        assert 'IPopulationEngine' in engines.__all__
+        assert 'IResupplyEngine' in engines.__all__
+        assert 'IHarvestingEngine' in engines.__all__
+
+    def test_all_interfaces_in_module_all(self):
+        """All engine interfaces should be listed in __all__."""
+        from game.strategy.interfaces import engines
+        expected_exports = [
+            'IMovementEngine',
+            'IProductionEngine',
+            'IOrderProcessor',
+            'IConflictEngine',
+            'IResourceEngine',
+            'IPopulationEngine',
+            'IResupplyEngine',
+            'IHarvestingEngine',
+            'IMaintenanceEngine',
+        ]
+        for interface_name in expected_exports:
+            assert interface_name in engines.__all__, f"{interface_name} missing from __all__"
+
+    def test_all_interfaces_importable_from_module(self):
+        """All interfaces should be importable from engines module."""
+        from game.strategy.interfaces.engines import (
+            IMovementEngine,
+            IProductionEngine,
+            IOrderProcessor,
+            IConflictEngine,
+            IResourceEngine,
+            IPopulationEngine,
+            IResupplyEngine,
+            IHarvestingEngine,
+            IMaintenanceEngine,
+        )
+        # Just verify they're all ABC subclasses
+        for interface in [
+            IMovementEngine,
+            IProductionEngine,
+            IOrderProcessor,
+            IConflictEngine,
+            IResourceEngine,
+            IPopulationEngine,
+            IResupplyEngine,
+            IHarvestingEngine,
+            IMaintenanceEngine,
+        ]:
+            assert issubclass(interface, ABC)
