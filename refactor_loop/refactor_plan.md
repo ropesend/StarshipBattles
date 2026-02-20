@@ -8,24 +8,24 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-156 Phase 3 Task 3.1 - Merge Spatial Tests
-**Current Status:** Phase 3 in progress, Task 3.1 complete
+**Last Completed:** PROJ-156 Phase 3 Task 3.2 - Merge Collision System Tests
+**Current Status:** Phase 3 in progress, Task 3.2 complete
 **Current Project:** PROJ-156
 **Current Phase:** Phase 3 (Merge Then Delete)
-**Test Status:** 11971 passed, 144 pre-existing failures
+**Test Status:** 11962 passed, 144 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-156 Phase 3 Task 3.1 COMPLETE: merged spatial tests
-  - Analyzed 13 source tests vs 11 target tests for semantic overlap
-  - Found only 2 unique tests: `test_query_radius_empty_grid`, `test_query_spans_multiple_cells`
-  - Merged into new `TestSpatialGridExtendedCases` class
-  - Deleted source file: `tests/unit/systems/test_spatial_extended.py` (157 lines)
-- Modified: tests/unit/systems/test_spatial.py (+42 lines, 2 tests added)
-- Deleted: tests/unit/systems/test_spatial_extended.py
-- Net: -8 test count (11 duplicates removed, 2 unique merged)
-- Tests: 11971 passed, 144 pre-existing failures (no regressions)
-- Next: Phase 3 Task 3.2 - Merge Collision System Tests
+- PROJ-156 Phase 3 Task 3.2 COMPLETE: merged collision system tests
+  - Analyzed 12 source tests vs 20 target tests for semantic overlap
+  - Found only 3 unique tests: `test_beam_weapon_tangent_hit`, `test_beam_weapon_target_behind_origin`, `test_ramming_no_logger`
+  - Merged into target file with migration comments
+  - Deleted source file: `tests/unit/systems/test_collision_system.py` (393 lines)
+- Modified: tests/unit/engine/collision_edge_cases/test_beam_ramming.py (+77 lines, 3 tests added)
+- Deleted: tests/unit/systems/test_collision_system.py
+- Net: -9 test count (9 duplicates removed, 3 unique merged)
+- Tests: 11962 passed, 144 pre-existing failures (no regressions)
+- Next: Phase 3 Task 3.4 - Merge Controllable Adapter Tests
 
 ---
 
@@ -147,6 +147,7 @@
 | 2026-02-20 | PROJ-156 | Phase 2 | Complete | 11977 pass, 143 pre-existing | pending | Task 2.5: removed TestLayoutConstants from 2 files (-8 trivial tests) |
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.0 | Complete | 11979 pass, 144 pre-existing | pending | Recovered 3 lost KiteBehavior tests from git history |
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.1 | Complete | 11971 pass, 144 pre-existing | pending | Merged 2 unique spatial tests, deleted source (-8 net duplicates) |
+| 2026-02-20 | PROJ-156 | Phase 3 Task 3.2 | Complete | 11962 pass, 144 pre-existing | pending | Merged 3 unique collision tests, deleted source (-9 net duplicates) |
 
 ---
 

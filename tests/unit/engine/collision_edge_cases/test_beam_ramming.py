@@ -148,6 +148,74 @@ class TestBeamRaycastingEdgeCases:
 
         target.combat_engine.take_damage.assert_not_called()
 
+    # -------------------------------------------------------------------------
+    # Migrated from tests/unit/systems/test_collision_system.py
+    # -------------------------------------------------------------------------
+
+    def test_beam_weapon_tangent_hit(self, collision_system):
+        """Test edge case: discriminant == 0 (tangent hit).
+
+        When a beam ray is exactly tangent to a target sphere, the quadratic
+        discriminant equals zero, giving exactly one intersection point.
+        """
+        target = MagicMock()
+        target.position = Vector2(100, 20)  # Offset so ray can be tangent
+        target.radius = 20
+        target.is_alive = True
+        target.total_defense_score = 0
+
+        mock_ability = MagicMock()
+        mock_ability.calculate_hit_chance.return_value = 1.0
+        mock_ability.get_damage.return_value = 15
+
+        mock_component = MagicMock()
+        mock_component.get_ability.return_value = mock_ability
+
+        recent_beams = []
+
+        # Ray exactly tangent to sphere at distance 100
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),  # Horizontal ray
+            'range': 300,
+            'target': target,
+            'component': mock_component
+        }
+
+        with patch('random.random', return_value=0.0):
+            collision_system.process_beam_attack(attack, recent_beams)
+
+        # Tangent hit counts as hit - one intersection point
+        target.combat_engine.take_damage.assert_called_with(15)
+
+    def test_beam_weapon_target_behind_origin(self, collision_system):
+        """Test edge case: target behind ray origin (negative t values).
+
+        When the target is behind the beam origin, the intersection points
+        have negative t values and should not register as hits.
+        """
+        target = MagicMock()
+        target.position = Vector2(-100, 0)  # Behind origin
+        target.radius = 20
+        target.is_alive = True
+
+        mock_component = MagicMock()
+        recent_beams = []
+
+        attack = {
+            'origin': Vector2(0, 0),
+            'direction': Vector2(1, 0),  # Firing forward
+            'range': 300,
+            'target': target,
+            'component': mock_component
+        }
+
+        collision_system.process_beam_attack(attack, recent_beams)
+
+        # Target behind ray, should not hit
+        target.combat_engine.take_damage.assert_not_called()
+        assert recent_beams[0]['end'] == Vector2(300, 0)
+
 
 class TestBeamRaycastingGeometry:
     """Tests for ray-sphere intersection geometry (TCG-FND-003).
@@ -548,6 +616,37 @@ class TestRammingEdgeCases:
 
         # Rammer (50) < Target (default 100), so rammer destroyed
         ship.combat_engine.take_damage.assert_called()
+
+    # -------------------------------------------------------------------------
+    # Migrated from tests/unit/systems/test_collision_system.py
+    # -------------------------------------------------------------------------
+
+    def test_ramming_no_logger(self, collision_system):
+        """Test ramming works without logger (logger=None).
+
+        Verifies process_ramming doesn't raise when called with logger=None.
+        """
+        rammer = MagicMock()
+        rammer.name = "Rammer"
+        rammer.position = Vector2(0, 0)
+        rammer.radius = 10
+        rammer.ai_strategy = 'kamikaze'
+        rammer.is_alive = True
+        rammer.hp = 50
+
+        target = MagicMock()
+        target.name = "Target"
+        target.position = Vector2(15, 0)
+        target.radius = 10
+        target.is_alive = True
+        target.hp = 100
+
+        rammer.current_target = target
+        ships = [rammer, target]
+
+        # Should not raise without logger
+        collision_system.process_ramming(ships, logger=None)
+        rammer.combat_engine.take_damage.assert_called()
 
 
 # =============================================================================

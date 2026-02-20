@@ -55,27 +55,33 @@ PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into t
 
 **Notes:** Source had 13 tests, target had 11. Careful semantic comparison found only 2 truly unique tests: `test_query_radius_empty_grid` and `test_query_spans_multiple_cells`. Both merged into new `TestSpatialGridExtendedCases` class. Net change: -11 duplicate tests, +2 unique merged.
 
-### Task 3.2: Merge Collision System Tests [Medium]
-**Source:** `tests/unit/systems/test_collision_system.py` (393 lines) — STILL EXISTS
-**Target:** `tests/unit/engine/collision_edge_cases/test_beam_ramming.py` (691 lines)
+### Task 3.2: Merge Collision System Tests [Medium] ⚠️ COMPLETE
+**Source:** `tests/unit/systems/test_collision_system.py` (393 lines) — DELETED
+**Target:** `tests/unit/engine/collision_edge_cases/test_beam_ramming.py` (now 768 lines)
 **Tests:** `pytest tests/unit/engine/collision_edge_cases/test_beam_ramming.py -v` then `pytest tests/ -n 12`
 
-- [ ] Read both source and target files fully
-- [ ] Read `tests/unit/engine/collision_edge_cases/conftest.py` for `collision_system` fixture
-- [ ] Identify unique tests in source NOT already covered by target. Key candidates:
-  - `test_beam_weapon_raycasting` — basic raycasting (may overlap with target's geometry tests)
-  - `test_ramming_logic` — HP asymmetry cases (rammer < target, rammer > target)
-  - `test_beam_weapon_tangent_hit` — discriminant == 0 edge case
-  - `test_beam_weapon_target_behind_origin` — negative t values
-  - `test_beam_weapon_origin_inside_target` — ray origin inside sphere
-  - `test_ramming_no_logger` — `process_ramming(ships, logger=None)` doesn't raise
-- [ ] Adapt tests to use `collision_system` fixture instead of inline `CollisionSystem()`
-- [ ] Copy unique tests into target file
-- [ ] Run `pytest tests/unit/engine/collision_edge_cases/test_beam_ramming.py -v` — all tests pass
-- [ ] Delete `tests/unit/systems/test_collision_system.py`
-- [ ] Run `pytest tests/ -n 12` — no regressions
+- [x] Read both source and target files fully
+- [x] Read `tests/unit/engine/collision_edge_cases/conftest.py` for `collision_system` fixture
+- [x] Identify unique tests in source NOT already covered by target. Analysis:
+  - `test_beam_weapon_raycasting` — DUPLICATE (covered by geometry tests)
+  - `test_ramming_logic` — DUPLICATE (covered by HP tests)
+  - `test_beam_weapon_tangent_hit` — UNIQUE (merged)
+  - `test_beam_weapon_target_behind_origin` — UNIQUE (merged)
+  - `test_beam_weapon_zero_direction_vector` — DUPLICATE of `test_beam_zero_length_direction`
+  - `test_beam_weapon_dead_target` — DUPLICATE of `test_beam_dead_target_no_hit`
+  - `test_beam_weapon_no_target` — DUPLICATE of `test_beam_no_target`
+  - `test_beam_weapon_origin_inside_target` — DUPLICATE of `test_beam_target_at_origin`
+  - `test_ramming_mutual_destruction` — DUPLICATE of `test_ramming_equal_hp_mutual_destruction`
+  - `test_ramming_no_logger` — UNIQUE (merged)
+  - `test_ramming_non_kamikaze_ship` — DUPLICATE of `test_ramming_non_kamikaze_ignored`
+  - `test_ramming_no_current_target` — DUPLICATE of `test_ramming_no_target_ignored`
+- [x] Adapt tests to use `collision_system` fixture instead of inline `CollisionSystem()`
+- [x] Copy unique tests into target file (3 tests with migration comments)
+- [x] Run `pytest tests/unit/engine/collision_edge_cases/test_beam_ramming.py -v` — 23 passed (was 20)
+- [x] Delete `tests/unit/systems/test_collision_system.py`
+- [x] Run `pytest tests/ -n 12` — 11962 passed, 144 pre-existing failures (no regressions)
 
-**Notes:** Source has 12 tests, target has 21. Target is much more comprehensive. Carefully check which source tests are truly unique vs covered by different-named target tests.
+**Notes:** Source had 12 tests, target had 20. Only 3 truly unique tests: tangent hit, target behind origin, no logger. Net change: -9 duplicate tests removed, +3 unique tests merged.
 
 ### Task 3.3: Merge AI Behavior Tests [COMPLETE]
 **Source:** `tests/unit/ai/test_ai_behaviors.py` — DELETED by PROJ-157
