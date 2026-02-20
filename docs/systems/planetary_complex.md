@@ -93,7 +93,7 @@ Allow players to design and build planetary complexes (facilities) on colonies, 
 |------|-------------|
 | `game/strategy/data/planet.py` | PlanetaryFacility, facilities, has_space_shipyard |
 | `game/ui/screens/build_queue_screen.py` | Build queue UI (~450 lines) |
-| `game/strategy/engine/turn_engine.py` | process_production(), spawners |
+| `game/strategy/engine/turn_engine.py` | Turn processing, production delegation to ProductionEngine |
 | `game/simulation/components/abilities/harvester.py` | Harvester abilities (~40 lines) |
 | `data/components.json` | 6 new components |
 
@@ -222,32 +222,37 @@ Both registered in ABILITY_REGISTRY.
 
 ### Flow
 ```
-Turn Advance
+Turn Advance (TurnEngine.process_turn)
     |
-process_production(empires, galaxy)
+    +-- 100-tick subturn loop:
+    |       |
+    |       ProductionEngine.process_construction_tick(tick, empires, galaxy)
+    |           |
+    |           For each colony/fleet queue:
+    |               - Calculate dynamic resource consumption per tick
+    |               - Deduct resources from empire pool
+    |               - Track resources_consumed in queue item
+    |               - When resources_consumed >= total_cost:
+    |                   - Route by vehicle_type:
+    |                       - "complex" -> _spawn_complex()
+    |                       - Other -> _spawn_ship()
     |
-For each colony:
-    - Decrement first item's turns_remaining
-    - If reaches 0:
-        - Remove from queue
-        - Route by vehicle_type:
-            - "complex" -> _spawn_complex()
-                - Load design data from DesignLibrary
-                - Create PlanetaryFacility with UUID
-                - Add to planet.facilities
-            - Other -> _spawn_ship()
-                - Create Fleet with design_id
-                - Add ship to fleet
-                - Spawn at planet location
+    +-- End-of-turn orders (colonize, etc)
+    +-- Population growth
 ```
+
+PROJ-79 migrated all production to tick-based dynamic resource consumption.
+Items complete mid-turn when their resource cost is fully consumed.
+The old `process_production()` method has been removed (PROJ-158).
 
 ### Key Methods
 
-**process_production():** Supports both dict and list formats via isinstance() check.
-- Old format modifies in place: `item[1] -= 1`
-- New format uses dict access: `item["turns_remaining"] -= 1`
+**process_construction_tick():** (ProductionEngine)
+- Called 100 times per turn via the subturn loop
+- Processes dynamic resource consumption based on production rates
+- Triggers mid-turn completion and spawning when resources_consumed >= total_cost
 
-**_spawn_complex():**
+**_spawn_complex():** (ProductionEngine)
 - Loads design_data from DesignLibrary
 - Creates PlanetaryFacility with UUID
 - Adds to planet.facilities
@@ -483,9 +488,9 @@ for element in container.get_container().elements:
 **Key Methods:**
 - `Planet.has_space_shipyard` - Checks for operational shipyard
 - `Planet.add_production()` - Adds item to build queue
-- `TurnEngine.process_production()` - Processes one turn of construction
-- `TurnEngine._spawn_complex()` - Spawns completed complex as facility
-- `TurnEngine._spawn_ship()` - Spawns completed ship as fleet
+- `ProductionEngine.process_construction_tick()` - Processes per-tick resource consumption and mid-turn completion
+- `ProductionEngine._spawn_complex()` - Spawns completed complex as facility
+- `ProductionEngine._spawn_ship()` - Spawns completed ship as fleet
 
 ---
 

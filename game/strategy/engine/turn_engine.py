@@ -271,13 +271,7 @@ class TurnEngine:
             for fleet in list(empire.fleets):
                 self._process_end_turn_orders(fleet, empire, galaxy, empires)
 
-        # 3. Production Phase (Colonies)
-        self.process_production(empires, galaxy, save_path)
-
-        # 4. Fleet Production Phase (PROJ-67)
-        self.production_engine.process_fleet_production(empires, galaxy, save_path)
-
-        # 5. Population Growth Phase (PROJ-68)
+        # 3. Population Growth Phase (PROJ-68)
         self.population_engine.process_population_growth(empires)
         
     def validate_colonize_order(self, galaxy, fleet, target_planet) -> ValidationResult:
@@ -299,18 +293,6 @@ class TurnEngine:
         # PROJ-55: Pass component registry for colony pod validation
         component_registry = getattr(self._registries, 'components', None)
         return ColonizeValidator.validate(galaxy, fleet, target_planet, component_registry)
-
-    def process_production(self, empires, galaxy=None, save_path=None):
-        """Process construction queues for all colonies.
-
-        PROJ-12 Phase 3: Delegates to ProductionEngine.
-
-        Args:
-            empires: List of Empire objects to process
-            galaxy: Galaxy object for fleet spawning
-            save_path: Path to savegame folder for loading designs
-        """
-        self.production_engine.process_production(empires, galaxy, save_path)
 
     def _process_tick(self, tick, empires, galaxy, save_path=None):
         """Process 1 sub-tick of movement and combat.

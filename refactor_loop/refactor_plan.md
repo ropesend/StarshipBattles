@@ -8,19 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-156 Audit Cycle 1 PASSED
-**Current Status:** Project complete - awaiting user verification
-**Current Project:** PROJ-156
-**Current Phase:** Audit Passed
-**Test Status:** 11900 passed, 144 pre-existing failures
+**Last Completed:** PROJ-158 Phase 1
+**Current Status:** Phase 1 complete, Phase 2 ready
+**Current Project:** PROJ-158
+**Current Phase:** Phase 2 - Delete Tests for Dead API
+**Test Status:** 76 interface/DI tests pass, 7 tick tests pass (Phase 1 verification)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-156 ALL PHASES COMPLETE + AUDIT PASSED
-- Phase 4 completed: Deleted controllable_interface/ directory, deleted unused target_evaluator/conftest.py
-- Audit verified: All critical tests preserved (TCG-FND-018, KiteBehavior recovery), all 227 merge target tests pass
-- Final: 11900 passed, 144 pre-existing failures (NO regressions)
-- Project ready for user verification and closure
+- PROJ-158 Phase 1 COMPLETE
+- Deleted process_production() and process_fleet_production() from ProductionEngine, TurnEngine, IProductionEngine, MockProductionEngine
+- Updated documentation (planetary_complex.md)
+- Fixed tests that referenced deleted methods (test_engine_interfaces.py, test_dependency_injection.py)
+- Next: Phase 2 - delete test files that only tested the dead API
 
 ---
 
@@ -96,7 +96,7 @@
 
 ---
 
-- [ ] **PROJ-158: Eradicate Dead Production API and Fix Production Tests**
+- [/] **PROJ-158: Eradicate Dead Production API and Fix Production Tests**
   - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-158/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-158/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
@@ -157,6 +157,7 @@
 | 2026-02-20 | PROJ-156 | Phase 3 | Complete | 11900 pass, 144 pre-existing | pending | All 7 tasks complete: 6 source files deleted, ~50 unique tests preserved, ~80 duplicates removed |
 | 2026-02-20 | PROJ-156 | Phase 4 | Complete | 11900 pass, 144 pre-existing | 08157e84 | Deleted controllable_interface/, target_evaluator/conftest.py |
 | 2026-02-20 | PROJ-156 | Audit 1 | PASSED | 11900 pass, 144 pre-existing | pending | All 4 phases verified, critical tests preserved, no issues |
+| 2026-02-20 | PROJ-158 | Phase 1 | Complete | 76+7 pass | pending | Deleted dead API from ProductionEngine, TurnEngine, interface, mocks, docs |
 
 ---
 

@@ -440,16 +440,6 @@ class ProductionEngine:
                     f"(tick {tick}, {remaining_fraction*100:.0f}% of turn)"
                 )
 
-    def process_production(self, empires: List, galaxy=None, save_path: Optional[str] = None) -> None:
-        """
-        Process construction completion at end of turn.
-        
-        PROJ-79 Refactor: All production is now handled per-tick in process_construction_tick.
-        This method remains as a stub for interface compatibility or final cleanup.
-        """
-        pass
-        
-    # Legacy methods _process_base_queue and _process_facility_queues deleted.
 
     def _spawn_complex(self, planet, design_id: str, empire, save_path: Optional[str] = None) -> None:
         """
@@ -559,17 +549,6 @@ class ProductionEngine:
             planet_id=planet.id,
             fleet_id=new_fleet.id,
         )
-
-    def process_fleet_production(
-        self, empires: List, galaxy=None, save_path: Optional[str] = None
-    ) -> None:
-        """
-        Process construction queues for all fleets with space yards.
-        
-        PROJ-79 Refactor: All production is now handled per-tick in process_construction_tick.
-        This method remains as a stub for interface compatibility or final cleanup.
-        """
-        pass
 
     def _spawn_fleet_ship(
         self,

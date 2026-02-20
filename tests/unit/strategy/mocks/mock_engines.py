@@ -82,40 +82,25 @@ class MockProductionEngine(IProductionEngine):
     """
     Mock implementation of IProductionEngine for testing.
 
+    PROJ-158: Removed process_production and process_fleet_production tracking
+    as those methods were deleted from the interface (they were dead stubs).
+
     Tracks method calls and allows configurable behavior.
 
     Attributes:
-        process_production_calls: List of (empires, galaxy, save_path) call args
-        process_fleet_production_calls: List of (empires, galaxy, save_path) call args
+        process_construction_tick_calls: List of (tick, empires, galaxy, save_path, harvesting_engine) call args
     """
 
     def __init__(self):
         self.process_construction_tick_calls: List[Tuple] = []
-        self.process_production_calls: List[Tuple] = []
-        self.process_fleet_production_calls: List[Tuple] = []
 
     @property
     def process_construction_tick_called(self) -> bool:
         return len(self.process_construction_tick_calls) > 0
 
-    @property
-    def process_production_called(self) -> bool:
-        return len(self.process_production_calls) > 0
-
-    @property
-    def process_fleet_production_called(self) -> bool:
-        return len(self.process_fleet_production_calls) > 0
-
     def process_construction_tick(self, tick, empires, galaxy, save_path=None, harvesting_engine=None):
         """PROJ-75/79: Per-tick construction resource consumption mock."""
         self.process_construction_tick_calls.append((tick, empires, galaxy, save_path, harvesting_engine))
-
-    def process_production(self, empires, galaxy=None, save_path=None):
-        self.process_production_calls.append((empires, galaxy, save_path))
-
-    def process_fleet_production(self, empires, galaxy=None, save_path=None):
-        """PROJ-67: Fleet production processing mock."""
-        self.process_fleet_production_calls.append((empires, galaxy, save_path))
 
 
 class MockOrderProcessor(IOrderProcessor):

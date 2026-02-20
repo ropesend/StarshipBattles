@@ -13,7 +13,7 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete Dead Production API | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
+| 1. Delete Dead Production API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Delete Tests for Dead API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Rewrite Tick Consumption Tests | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Rewrite Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
@@ -21,11 +21,11 @@
 
 ## Current State
 **Last Updated:** 2026-02-20
-**Active Phase:** Planning
-**Last Action:** Project created, analysis complete
-**Next Action:** Await user plan approval
+**Active Phase:** Phase 2 - Delete Tests for Dead API
+**Last Action:** Phase 1 complete - deleted dead process_production() and process_fleet_production() from ProductionEngine, TurnEngine, IProductionEngine interface, and MockProductionEngine
+**Next Action:** Execute Phase 2 - delete test files that call the dead API
 **Blockers:** None
-**Context for Next Agent:** PROJ-79 moved all production to tick-based `process_construction_tick()`. The old `process_production()` and `process_fleet_production()` are empty stubs (`pass`). All tests calling them fail. The dynamic tick system also ignores item-level `cost_per_tick` and `ticks_in_current_turn` fields — it calculates consumption from `production_rates.json` + `total_cost`. Tests asserting on those dead fields also fail.
+**Context for Next Agent:** Dead API methods deleted. Tests referencing the deleted interface methods also cleaned up. Many test failures remain because tests still call the old API or assert on dead fields (`cost_per_tick`, `ticks_in_current_turn`).
 
 ## Overview
 PROJ-79 migrated all production to tick-based dynamic resource consumption via `process_construction_tick()`, called 100 times per turn inside `_process_tick()`. However, it left `process_production()` and `process_fleet_production()` as empty stubs, and TurnEngine still calls them (doing nothing). ~77 tests fail because they call these dead methods or assert on fields (`cost_per_tick`, `ticks_in_current_turn`) that the dynamic system ignores.

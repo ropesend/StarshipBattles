@@ -82,18 +82,6 @@ class TestIProductionEngineInterface:
         with pytest.raises(TypeError):
             IProductionEngine()
 
-    def test_iproduction_engine_has_process_production_method(self):
-        """IProductionEngine should define process_production abstract method."""
-        from game.strategy.interfaces.engines import IProductionEngine
-        assert hasattr(IProductionEngine, 'process_production')
-        assert getattr(IProductionEngine.process_production, '__isabstractmethod__', False)
-
-    def test_iproduction_engine_has_process_fleet_production_method(self):
-        """IProductionEngine should define process_fleet_production abstract method (PROJ-67)."""
-        from game.strategy.interfaces.engines import IProductionEngine
-        assert hasattr(IProductionEngine, 'process_fleet_production')
-        assert getattr(IProductionEngine.process_fleet_production, '__isabstractmethod__', False)
-
     def test_iproduction_engine_has_process_construction_tick_method(self):
         """IProductionEngine.process_construction_tick must be abstract (PROJ-75)."""
         from game.strategy.interfaces.engines import IProductionEngine
@@ -361,15 +349,8 @@ class TestConcreteImplementations:
         from game.strategy.interfaces.engines import IProductionEngine
 
         class MockProductionEngine(IProductionEngine):
-            def process_construction_tick(self, tick, empires, galaxy):
-                """PROJ-75: Per-tick construction resource consumption."""
-                pass
-
-            def process_production(self, empires, galaxy=None, save_path=None):
-                pass
-
-            def process_fleet_production(self, empires, galaxy=None, save_path=None):
-                """PROJ-67: Fleet production processing."""
+            def process_construction_tick(self, tick, empires, galaxy, save_path=None, harvesting_engine=None):
+                """PROJ-75/79: Per-tick construction resource consumption."""
                 pass
 
         engine = MockProductionEngine()

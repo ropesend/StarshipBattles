@@ -49,15 +49,25 @@ class TestTurnEngineEdgeCases:
 
         turn_engine.process_turn([empire1, empire2], mock_galaxy)
 
-    def test_save_path_passed_to_production(self, turn_engine, mock_empire, mock_galaxy):
-        """save_path parameter passed to production."""
+    def test_save_path_passed_to_production_tick(self, turn_engine, mock_empire, mock_galaxy):
+        """save_path parameter passed to process_construction_tick.
+
+        PROJ-158: Production is now tick-based. save_path is passed to
+        process_construction_tick during the 100-tick loop.
+        """
         mock_empire.fleets = []
         mock_empire.colonies = []
 
-        with patch.object(turn_engine, 'process_production') as mock_prod:
+        with patch.object(turn_engine.production_engine, 'process_construction_tick') as mock_tick:
             turn_engine.process_turn([mock_empire], mock_galaxy, save_path="/test/path")
 
-            mock_prod.assert_called_with([mock_empire], mock_galaxy, "/test/path")
+            # Should be called 100 times (once per tick)
+            assert mock_tick.call_count == 100
+            # Check one of the calls has the save_path
+            # Call signature: process_construction_tick(tick, empires, galaxy, save_path, harvesting_engine)
+            call_args = mock_tick.call_args_list[0]
+            assert call_args[0][0] == 1  # tick
+            assert call_args[1].get('save_path') == "/test/path"
 
 
 # =============================================================================
@@ -118,9 +128,8 @@ class TestFleetIteratorSafety:
         assert processed_ids_fixed == [1, 2, 3], f"Expected [1, 2, 3], got {processed_ids_fixed}"
 
     @patch.object(TurnEngine, '_process_tick')
-    @patch.object(TurnEngine, 'process_production')
     def test_process_turn_processes_all_fleets_when_modified(
-        self, mock_production, mock_tick
+        self, mock_tick
     ):
         """Verify process_turn processes all fleets even if list is modified.
 
@@ -316,21 +325,43 @@ class TestTurnEngineConstructorDI:
         mock_movement.collect_movements.assert_called_once()
         mock_movement.apply_movements.assert_called_once()
 
-    def test_injected_production_engine_used_in_production(self):
-        """Injected production engine is called during production processing."""
-        from game.strategy.interfaces.engines import IProductionEngine
+    def test_injected_production_engine_used_in_tick(self):
+        """Injected production engine is called during tick processing.
+
+        PROJ-158: Production is now entirely tick-based. TurnEngine.process_production
+        was deleted as it was just a stub after PROJ-79 migration.
+        """
+        from game.strategy.interfaces.engines import IProductionEngine, IResourceEngine, IMovementEngine, IOrderProcessor, IConflictEngine, IResupplyEngine
 
         mock_production = MagicMock(spec=IProductionEngine)
+        mock_resource = MagicMock(spec=IResourceEngine)
+        mock_resource.process_per_turn_consumption.return_value = []
+        mock_movement = MagicMock(spec=IMovementEngine)
+        mock_movement.collect_movements.return_value = []
+        mock_movement.apply_movements.return_value = []
+        mock_order = MagicMock(spec=IOrderProcessor)
+        mock_order.process_instant_orders.return_value = []
+        mock_conflict = MagicMock(spec=IConflictEngine)
+        mock_resupply = MagicMock(spec=IResupplyEngine)
+        mock_resupply.process_fuel_generation.return_value = []
+        mock_resupply.process_fleet_resupply.return_value = []
 
-        engine = TurnEngine(production_engine=mock_production)
+        engine = TurnEngine(
+            production_engine=mock_production,
+            resource_engine=mock_resource,
+            movement_engine=mock_movement,
+            order_processor=mock_order,
+            conflict_engine=mock_conflict,
+            resupply_engine=mock_resupply
+        )
 
         mock_empire = MagicMock()
-        mock_empire.colonies = []
+        mock_empire.fleets = []
         mock_galaxy = MagicMock()
 
-        engine.process_production([mock_empire], mock_galaxy)
+        engine._process_tick(1, [mock_empire], mock_galaxy)
 
-        mock_production.process_production.assert_called_once()
+        mock_production.process_construction_tick.assert_called_once()
 
 
 # =============================================================================
@@ -404,16 +435,19 @@ class TestMockEngines:
         assert result == []
 
     def test_mock_production_engine_tracks_calls(self):
-        """MockProductionEngine tracks method calls."""
+        """MockProductionEngine tracks method calls.
+
+        PROJ-158: Production is now tick-based only. Test process_construction_tick.
+        """
         from tests.unit.strategy.mocks import MockProductionEngine
 
         mock = MockProductionEngine()
 
-        engine = TurnEngine(production_engine=mock)
-        engine.process_production([], None, "/path")
+        # Call process_construction_tick directly
+        mock.process_construction_tick(1, [], None, "/path", None)
 
-        assert mock.process_production_called
-        assert mock.process_production_calls == [([], None, "/path")]
+        assert mock.process_construction_tick_called
+        assert mock.process_construction_tick_calls == [(1, [], None, "/path", None)]
 
     def test_full_tick_with_all_mocks(self):
         """TurnEngine._process_tick works with all mock engines."""

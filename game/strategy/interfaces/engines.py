@@ -117,18 +117,19 @@ class IProductionEngine(ABC):
     """
     Abstract interface for production/construction processing.
 
+    PROJ-158: Production is now entirely tick-based via process_construction_tick().
+    The old process_production() and process_fleet_production() methods have been
+    removed as they were empty stubs after the PROJ-79 migration.
+
     Implementations handle:
-    - Construction queue processing for colonies
-    - Construction queue processing for fleets with space yards
-    - Per-tick resource consumption during construction (PROJ-75)
+    - Per-tick resource consumption during construction
+    - Mid-turn completion and spawning
     - Ship spawning
     - Complex spawning
 
     Example usage:
         engine = ProductionEngine()  # or MockProductionEngine for tests
-        engine.process_construction_tick(tick, empires, galaxy)
-        engine.process_production(empires, galaxy, save_path)
-        engine.process_fleet_production(empires, galaxy, save_path)
+        engine.process_construction_tick(tick, empires, galaxy, save_path, harvesting_engine)
     """
 
     @abstractmethod
@@ -136,54 +137,23 @@ class IProductionEngine(ABC):
         self,
         tick: int,
         empires: List,
-        galaxy: Any
+        galaxy: Any,
+        save_path: Optional[str] = None,
+        harvesting_engine: Any = None
     ) -> None:
         """
         Process per-tick resource consumption for all construction queues.
 
         PROJ-75 Phase 4: Called each subturn tick (1-100) to deduct resources
         from empire pools for active construction.
+        PROJ-79: Handles mid-turn completion and spawning.
 
         Args:
             tick: Current tick number (1-100)
             empires: List of Empire objects to process
             galaxy: Galaxy object
-        """
-        pass
-
-    @abstractmethod
-    def process_production(
-        self,
-        empires: List,
-        galaxy: Any = None,
-        save_path: Optional[str] = None
-    ) -> None:
-        """
-        Process construction queues for all colonies.
-
-        Args:
-            empires: List of Empire objects to process
-            galaxy: Galaxy object for fleet spawning
-            save_path: Path to savegame folder for loading designs
-        """
-        pass
-
-    @abstractmethod
-    def process_fleet_production(
-        self,
-        empires: List,
-        galaxy: Any = None,
-        save_path: Optional[str] = None
-    ) -> None:
-        """
-        Process construction queues for all fleets with space yards.
-
-        PROJ-67 Phase 3: Fleet-based production processing.
-
-        Args:
-            empires: List of Empire objects to process
-            galaxy: Galaxy object for complex spawning (planet proximity check)
-            save_path: Path to savegame folder for loading designs
+            save_path: Path to savegame folder for loading designs during spawning
+            harvesting_engine: HarvestingEngine for mid-turn facility harvest
         """
         pass
 
