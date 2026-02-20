@@ -315,28 +315,3 @@ class TestRefresh:
             elem.kill.assert_called()
 
 
-# =============================================================================
-# Layout Constants Tests
-# =============================================================================
-
-class TestLayoutConstants:
-    """Tests for layout constant values."""
-
-    def test_label_column_width_reasonable(self):
-        """Label column should be wide enough for text."""
-        assert LABEL_COL_WIDTH >= 150
-        assert LABEL_COL_WIDTH <= 250
-
-    def test_resource_column_width_reasonable(self):
-        """Resource columns should fit values with commas."""
-        assert RESOURCE_COL_WIDTH >= 80
-        assert RESOURCE_COL_WIDTH <= 150
-
-    def test_icon_size_matches_typical_icon(self):
-        """Icon size should be standard small icon size."""
-        assert ICON_SIZE == 20
-
-    def test_row_height_readable(self):
-        """Row height should be readable."""
-        assert ROW_HEIGHT >= 24
-        assert ROW_HEIGHT <= 35

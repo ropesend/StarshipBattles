@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Straight Deletes | Complete (by PROJ-157) | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Partial Cleanup | Mostly Complete (by PROJ-157) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Partial Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Merge Then Delete | Partially Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Directory Cleanup & Final Verify | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-19
-**Active Phase:** Phase 2 remainder + Phase 3
-**Last Action:** Code review after PROJ-157 completion identified overlap and remaining gaps
-**Next Action:** Complete Phase 2 Task 2.5 (TestLayoutConstants), then Phase 3 merges
+**Last Updated:** 2026-02-20
+**Active Phase:** Phase 3
+**Last Action:** Completed Phase 2 Task 2.5 - removed TestLayoutConstants from 2 files
+**Next Action:** Start Phase 3 - Task 3.0 (recover 3 lost KiteBehavior tests)
 **Blockers:** None
-**Context for Next Agent:** PROJ-157 completed most of Phases 1 and 2 but did NOT perform any Phase 3 merges (except a partial merge of Pair 3 that lost 3 tests). All 5 remaining source files still exist on disk. 3 KiteBehavior tests must be recovered from git history (commit b1edd82b^). Baseline is now ~12,185 tests (post-PROJ-157 deletions). See design.md for recovery details.
+**Context for Next Agent:** Phase 2 complete. Phase 3 has 7 tasks: 3.0 (recover lost tests), 3.1-3.6 (merge operations). Task 3.0 is CRITICAL - must recover 3 KiteBehavior tests from git history (commit b1edd82b^). Baseline: 11977 passed, 143 pre-existing failures.
 
 ## Overview
 Systematic cleanup of confirmed dead/duplicate/scaffold test code across the AI, Research, Combat, Builder, and Systems test directories. Based on Validation Review 3 which examined 30 findings from agents 5 and 6, confirmed 12 for deletion, 13 for partial removal, and disputed 5 (kept as-is). Total estimated savings: ~2,800+ lines.

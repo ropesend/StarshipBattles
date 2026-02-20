@@ -8,21 +8,19 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-155 All Phases + Audit Cycle 1 - PASSED
-**Current Status:** PROJ-155 audit passed, awaiting user verification
-**Current Project:** PROJ-155
-**Current Phase:** Complete - Awaiting User Verification
-**Test Status:** 11984 passed, 144 pre-existing failures (UI/Strategy)
+**Last Completed:** PROJ-156 Phase 2 - Partial Cleanup
+**Current Status:** Phase 2 complete, starting Phase 3
+**Current Project:** PROJ-156
+**Current Phase:** Phase 3 (Merge Then Delete)
+**Test Status:** 11977 passed, 143 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-155 All work complete in single session:
-  - Phase 1: Deleted update_test_ships.py (57 lines)
-  - Phase 3: Verified all combat/ (3 files) and entities/ (14+ files) have UNIQUE coverage - all KEPT
-  - Phase 5: Renamed tests/unit/refactor/ → tests/unit/modifiers/ (23 files, 253 tests)
-- Audit Cycle 1 PASSED - all verifications complete
-- No NEW test failures introduced
-- Project complete, awaiting user verification
+- PROJ-156 Phase 2 Task 2.5 completed: removed TestLayoutConstants from 2 files
+  - tests/unit/research/research_scene/test_initialization.py (lines 264-286)
+  - tests/unit/ui/panels/test_empire_treasury_panel.py (lines 322-343)
+- Tests: 11977 passed, 143 pre-existing failures (same baseline)
+- Next: Phase 3 Task 3.0 - recover 3 lost KiteBehavior tests from git history (commit b1edd82b^)
 
 ---
 
@@ -90,6 +88,12 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [/] **PROJ-156: Test Suite Cleanup - AI/Research/Combat/Builder/Systems**
+  - **Phases:** 4 | **Status:** Phase 2 Complete, Phase 3 In Progress | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-156/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-156/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log
@@ -135,6 +139,7 @@
 | 2026-02-20 | PROJ-155 | Phase 3 | Complete | 11984 pass, 144 pre-existing | pending | Verified all combat/ + entities/ files UNIQUE - all KEPT |
 | 2026-02-20 | PROJ-155 | Phase 5 | Complete | 11984 pass, 144 pre-existing | pending | Renamed refactor/ → modifiers/ (23 files, 253 tests) |
 | 2026-02-20 | PROJ-155 | Audit 1 | PASSED | 11984 pass, 144 pre-existing | pending | All 5 phases verified, no issues |
+| 2026-02-20 | PROJ-156 | Phase 2 | Complete | 11977 pass, 143 pre-existing | pending | Task 2.5: removed TestLayoutConstants from 2 files (-8 trivial tests) |
 
 ---
 

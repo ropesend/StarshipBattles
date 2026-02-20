@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Mostly Complete (4 of 6 tasks done by PROJ-157, Task 2.5 remains)
+**Status:** Complete
 **Objective:** Remove empty stubs, trivial constant checks, and duplicate classes from within existing files. ~220 lines removed.
 **Priority:** High
 
@@ -58,31 +58,31 @@
 
 **Notes:** Done by PROJ-157. PROJ-157 left a comment documenting the removal.
 
-### Task 2.5: Remove TestLayoutConstants from 2 files [Simple] ⚠️ NOT DONE
+### Task 2.5: Remove TestLayoutConstants from 2 files [Simple] ✅ DONE
 **File 1:** `tests/unit/research/research_scene/test_initialization.py`
 **File 2:** `tests/unit/ui/panels/test_empire_treasury_panel.py`
 **Tests:** `pytest tests/unit/research/research_scene/test_initialization.py tests/unit/ui/panels/test_empire_treasury_panel.py -v`
 
-- [ ] Remove `TestLayoutConstants` class from `test_initialization.py` (lines 264-286, 4 tests asserting constants `> 0`)
-- [ ] Remove `TestLayoutConstants` class from `test_empire_treasury_panel.py` (lines 322-342, 4 tests asserting range bounds)
-- [ ] Verify: remaining tests in both files pass
+- [x] Remove `TestLayoutConstants` class from `test_initialization.py` (lines 264-286, 4 tests asserting constants `> 0`)
+- [x] Remove `TestLayoutConstants` class from `test_empire_treasury_panel.py` (lines 322-342, 4 tests asserting range bounds)
+- [x] Verify: remaining tests in both files pass
 
-**Notes:** NOT completed by PROJ-157. Both `TestLayoutConstants` classes still exist with their original trivial checks (`> 0`, range bounds). These are the original stubs, not replacements.
+**Notes:** Completed 2026-02-20. Removed trivial constant checks (`> 0`, range bounds).
 
-### Task 2.6: Run full test suite [Simple]
+### Task 2.6: Run full test suite [Simple] ✅ DONE
 **Tests:** `pytest tests/ -n 12`
 
-- [ ] Run full test suite
-- [ ] Verify: no new failures beyond pre-existing ones
-- [ ] Record new passed count
+- [x] Run full test suite
+- [x] Verify: no new failures beyond pre-existing ones
+- [x] Record new passed count: 11977 passed, 143 pre-existing failures
 
-**Notes:** Run after Task 2.5 is completed.
+**Notes:** Completed 2026-02-20. All tests pass (same pre-existing failures).
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

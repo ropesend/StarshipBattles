@@ -261,26 +261,3 @@ class TestLayoutCalculation:
             assert y_a < y_z
 
 
-class TestLayoutConstants:
-    """Tests for layout constant values."""
-
-    def test_sidebar_width_is_positive(self):
-        """Sidebar width constant is positive."""
-        from game.ui.research.research_scene import ResearchTreeScene
-        assert ResearchTreeScene.SIDEBAR_WIDTH > 0
-
-    def test_column_spacing_is_positive(self):
-        """Column spacing constant is positive."""
-        from game.ui.research.research_scene import ResearchTreeScene
-        assert ResearchTreeScene.COLUMN_SPACING > 0
-
-    def test_row_spacing_is_positive(self):
-        """Row spacing constant is positive."""
-        from game.ui.research.research_scene import ResearchTreeScene
-        assert ResearchTreeScene.ROW_SPACING > 0
-
-    def test_node_dimensions_are_positive(self):
-        """Node width and height constants are positive."""
-        from game.ui.research.research_scene import ResearchTreeScene
-        assert ResearchTreeScene.NODE_WIDTH > 0
-        assert ResearchTreeScene.NODE_HEIGHT > 0
