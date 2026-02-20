@@ -13,18 +13,18 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Straight Deletes | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Partial Cleanup | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Merge Then Delete | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 1. Straight Deletes | Complete (by PROJ-157) | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Partial Cleanup | Mostly Complete (by PROJ-157) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Merge Then Delete | Partially Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Directory Cleanup & Final Verify | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-16 17:30
-**Active Phase:** Planning Complete - Ready for Implementation
-**Last Action:** Full plan created with 4 phases from validation review findings
-**Next Action:** Begin Phase 1 - delete 9 dead test files
+**Last Updated:** 2026-02-19
+**Active Phase:** Phase 2 remainder + Phase 3
+**Last Action:** Code review after PROJ-157 completion identified overlap and remaining gaps
+**Next Action:** Complete Phase 2 Task 2.5 (TestLayoutConstants), then Phase 3 merges
 **Blockers:** None
-**Context for Next Agent:** Baseline is 12,788 passed, 145 failed (pre-existing UI failures in build queue/cargo/transfer areas, unrelated to this project). All file paths have been verified. See design.md for path corrections from original review.
+**Context for Next Agent:** PROJ-157 completed most of Phases 1 and 2 but did NOT perform any Phase 3 merges (except a partial merge of Pair 3 that lost 3 tests). All 5 remaining source files still exist on disk. 3 KiteBehavior tests must be recovered from git history (commit b1edd82b^). Baseline is now ~12,185 tests (post-PROJ-157 deletions). See design.md for recovery details.
 
 ## Overview
 Systematic cleanup of confirmed dead/duplicate/scaffold test code across the AI, Research, Combat, Builder, and Systems test directories. Based on Validation Review 3 which examined 30 findings from agents 5 and 6, confirmed 12 for deletion, 13 for partial removal, and disputed 5 (kept as-is). Total estimated savings: ~2,800+ lines.

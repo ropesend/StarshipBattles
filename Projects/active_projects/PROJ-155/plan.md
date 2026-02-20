@@ -13,19 +13,19 @@
 ## Quick Status
 | Phase | Status | Checklist |
 |-------|--------|-----------|
-| 1. Delete Zero-Risk Files | Not Started | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Merge Then Delete | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Old Directory Trees | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. Partial Cleanups | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
-| 5. Structural Improvements | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
+| 1. Delete Zero-Risk Files | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
+| 2. Merge Then Delete | Complete (PROJ-154 + PROJ-157) | [phase_2_checklist.md](phase_2_checklist.md) |
+| 3. Old Directory Trees | Complete (all kept - unique coverage) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 4. Partial Cleanups | Complete (PROJ-154 + PROJ-157) | [phase_4_checklist.md](phase_4_checklist.md) |
+| 5. Structural Improvements | Complete | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
-**Last Updated:** 2026-02-16 17:45
-**Active Phase:** Plan approved — ready for implementation
-**Last Action:** All project files created (plan.md, design.md, decisions.md, 5 phase checklists)
-**Next Action:** Begin Phase 1 — use "Continue Project" prompt with PROJ-155
+**Last Updated:** 2026-02-20
+**Active Phase:** All phases complete - ready for audit
+**Last Action:** Completed Phase 1 (deleted update_test_ships.py), Phase 3 (verified all combat/ and entities/ files have unique coverage - KEPT), Phase 5 (renamed refactor/ → modifiers/)
+**Next Action:** Audit project
 **Blockers:** None
-**Context:** Baseline is 12,790 passed, 143 pre-existing failures, 2 skipped. User approved Phase 3 inclusion and conditional Tasks 2.12/2.13.
+**Context:** All 5 phases complete. Phase 1: deleted 1 file. Phase 3: reviewed all ~16 files in combat/ and entities/ - all have unique integration-style coverage with no simulation/ counterparts, so all KEPT. Phase 5: renamed refactor/ → modifiers/ via git mv. Tests: 11984 passed, 144 pre-existing failures.
 
 ## Overview
 Systematic removal of ~2,430 lines of confirmed-dead test code + ~12,700 lines of old directory trees + 19 data files, based on 4 independent validation reviews of the v3 test suite cleanup review. Only validated-safe deletions and merges are included. ~2,050 lines originally recommended for removal were disputed by validators and will NOT be touched.

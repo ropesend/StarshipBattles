@@ -108,5 +108,47 @@ Two instances found (both confirmed trivial):
 
 4. **Directory cleanup** (Phase 4) - Deleting `controllable_interface/` after all its files are removed. Must confirm no other test files remain. **Mitigation:** Verify with `ls` before deletion.
 
+5. **Lost tests from PROJ-157** (Pair 1/AI Behaviors) - PROJ-157 deleted `test_ai_behaviors.py` but only merged 4 of 7 unique tests. 3 KiteBehavior tests must be recovered from git history. **Mitigation:** Recover from `git show b1edd82b^:tests/unit/ai/test_ai_behaviors.py`. See recovery section below.
+
+## PROJ-157 Overlap Assessment (added 2026-02-19)
+
+PROJ-157 completed independently and overlapped significantly with PROJ-156:
+
+### What PROJ-157 completed (verified against codebase):
+- **Phase 1 (all):** All 9 dead test file deletions
+- **Phase 2 (4 of 6):** Tasks 2.1–2.4 (stubs, empty classes, duplicate classes)
+- **Phase 2 (missed):** Task 2.5 — both `TestLayoutConstants` classes still exist with trivial checks
+
+### What PROJ-157 did NOT do:
+- **Phase 3 merges:** None of the 6 merge-then-delete operations were performed (except partial Pair 3)
+- **Phase 4 cleanup:** No directory cleanup performed
+
+### Pair 3 Incomplete Merge (PROJ-157 commit b1edd82b):
+PROJ-157 deleted `test_ai_behaviors.py` and merged 4 formation/drift tests into `TestFormationBehaviorMigrated` class in `test_behavior_units.py`. However, 3 KiteBehavior optimization tests were **not merged**:
+
+**Lost tests (recover from git):**
+```
+git show b1edd82b^:tests/unit/ai/test_ai_behaviors.py
+```
+
+1. `test_opt_dist_calculation` (line 43) — Tests `opt_dist = weapon_range * multiplier + stop_dist`
+2. `test_opt_dist_min_clamp` (line 61) — Tests `opt_dist` clamped to minimum 150
+3. `test_branching_kite_maintain` (line 86) — Tests exact kite-away vector math when in maintain range
+
+These belong in or near the existing `TestKiteBehavior` class in `test_behavior_units.py`. They test KiteBehavior's optimal distance calculation and kite-maintain branching — functionality not covered by any other test.
+
+### Updated Unique Test Counts (from code review):
+| Pair | Source Tests | Target Tests | Truly Unique in Source |
+|------|-------------|--------------|----------------------|
+| 1: Spatial | 13 | 11 | ~2 (rest are renamed duplicates) |
+| 2: Collision | 12 | 21 | ~2 (target much more comprehensive) |
+| 3: AI Behaviors | N/A (deleted) | 70+ | 3 LOST (recovery needed) |
+| 4: Adapter | 39 | 51 | ~5 |
+| 5: Eval Integration | 16 | 20 | ~12 |
+| 6: Eval Rules | 44 | 58 | ~12 (incl. TestSpeedRulesFactorBased) |
+
+### Unused Fixture Found:
+`target_with_hp` fixture in `tests/unit/ai/target_evaluator/conftest.py` (lines 40-53) is defined but never used by any test file. Clean up in Phase 4 Task 4.2.
+
 ## Design Decisions
 See [decisions.md](decisions.md) for the full log with rationale.

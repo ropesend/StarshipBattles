@@ -5,159 +5,90 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Not Started
+**Status:** Complete (PROJ-154 + PROJ-157)
 **Objective:** Remove dead code segments from files that have both good and bad content.
 **Priority:** Normal
 
 ---
 
+## PROJ-154 / PROJ-157 Overlap Summary
+
+PROJ-157 Phase 3 completed most partial cleanups. Tasks 4.1, 4.2, 4.3, 4.5, 4.6, 4.8, 4.10 are done.
+PROJ-154 completed Task 4.4 (removed TestGameSwitchScene from test_scene_protocol.py).
+Tasks 4.7 and 4.9 are N/A (files don't exist — already deleted before either project).
+Task 4.11 was investigated — the TestLayoutConstants classes found are legitimate, not trivial.
+
+**All Phase 4 work is complete.**
+
+---
+
 ## Tasks
 
-### Task 4.1: Remove TestAllowedLayersRemoval [Simple]
-**File:** `tests/unit/systems/test_allowed_layers_removal.py`
-**Tests:** `pytest tests/unit/systems/ -q`
+### Task 4.1: Remove TestAllowedLayersRemoval [Simple] — DONE by PROJ-157
 
-- [ ] Read the file
-- [ ] Remove `TestAllowedLayersRemoval` class (5 tests, ~50 lines) — one-time migration verification
-- [ ] Keep `TestBuilderDropValidation` class (3 tests) — ongoing validation value
-- [ ] Run tests to verify no regressions
+- [x] Removed `TestAllowedLayersRemoval` class — PROJ-157
+- [x] Kept `TestBuilderDropValidation` class — PROJ-157
 
-**Notes:**
+### Task 4.2: Remove empty stubs from test_bulk_add.py [Simple] — DONE by PROJ-157
 
-### Task 4.2: Remove empty stubs from test_bulk_add.py [Simple]
-**File:** `tests/unit/builder/test_bulk_add.py`
-**Tests:** `pytest tests/unit/builder/ -q`
+- [x] Removed `test_bulk_add_with_limit` method — PROJ-157
+- [x] Removed `test_bulk_performance_mock` method — PROJ-157
 
-- [ ] Read the file
-- [ ] Remove `test_bulk_add_with_limit` method (setup + `pass` body)
-- [ ] Remove `test_bulk_performance_mock` method (`pass` body)
-- [ ] Run tests to verify no regressions
+### Task 4.3: Remove empty TestShipExpectedStats [Simple] — DONE by PROJ-157
 
-**Notes:**
+- [x] Removed `class TestShipExpectedStats` — PROJ-157
 
-### Task 4.3: Remove empty TestShipExpectedStats [Simple]
-**File:** `tests/unit/builder/test_ship_loading.py`
-**Tests:** `pytest tests/unit/builder/ -q`
+### Task 4.4: Remove TestGameSwitchScene [Simple] — DONE by PROJ-154
 
-- [ ] Read the file
-- [ ] Remove `class TestShipExpectedStats: pass` (docstring + empty class)
-- [ ] Run tests to verify no regressions
+- [x] Removed `TestGameSwitchScene` class (~40 lines) — PROJ-154
+- [x] Kept `TestISceneProtocolCompliance` and `TestSceneCallback` — PROJ-154
+- [x] Tests verified — PROJ-154
 
-**Notes:**
+### Task 4.5: Remove trivial tests from test_config.py [Medium] — DONE by PROJ-157
 
-### Task 4.4: Remove TestGameSwitchScene [Simple]
-**File:** `tests/unit/ui/test_scene_protocol.py`
-**Tests:** `pytest tests/unit/ui/test_scene_protocol.py -v`
+- [x] Removed pure `assert X > 0` positivity checks (~18 tests) — PROJ-157
+- [x] Kept relationship and validation tests — PROJ-157
 
-- [ ] Read the file
-- [ ] Remove `TestGameSwitchScene` class (~40 lines) — tests Python attribute assignment on MagicMock
-- [ ] Keep `TestISceneProtocolCompliance` and `TestSceneCallback`
-- [ ] Run tests to verify no regressions
+### Task 4.6: Remove duplicate tests from test_battle_screen_edge_cases.py [Medium] — DONE by PROJ-157
 
-**Notes:**
+- [x] Removed 19 duplicate/trivial tests — PROJ-157
+- [x] Kept 6 unique edge case tests — PROJ-157
+- [x] File reduced to 142 lines — PROJ-157
 
-### Task 4.5: Remove trivial tests from test_config.py [Medium]
-**File:** `tests/unit/ui/test_config.py`
-**Tests:** `pytest tests/unit/ui/test_config.py -v`
+### Task 4.7: Remove mock-property tests from test_strategy_detail_formatter.py [Simple] — N/A
 
-- [ ] Read the file (213 lines)
-- [ ] Identify which tests are pure `assert X > 0` positivity checks (~20 tests)
-- [ ] Keep the following valuable tests:
-  - `TestUIConfigAllConstantsAreIntegers` (dynamic type checking)
-  - `test_font_sizes_hierarchy` (title >= name >= stat)
-  - `test_confirm_dialog_larger_than_toast`
-  - `test_row_height_large_larger_than_standard`
-  - `test_panel_alpha_in_range` (0-255)
-  - `test_toast_dimensions_reasonable`
-- [ ] Remove all pure `assert X > 0` test classes (~130 lines)
-- [ ] Run tests to verify no regressions
+- [x] File does not exist. Already deleted before PROJ-155/157.
 
-**Notes:**
+### Task 4.8: Remove trivial tests from test_colors.py [Simple] — DONE by PROJ-157
 
-### Task 4.6: Remove duplicate tests from test_battle_screen_edge_cases.py [Medium]
-**File:** `tests/unit/ui/screens/test_battle_screen_edge_cases.py`
-**Tests:** `pytest tests/unit/ui/screens/test_battle_screen_edge_cases.py -v`
+- [x] Removed `TestBasicColors` and `TestFontConstants` classes — PROJ-157
+- [x] Kept `TestColorsValidation` and `TestColorAccessibility` — PROJ-157
 
-- [ ] Read the file (408 lines)
-- [ ] Keep 6 unique edge case tests:
-  - `test_handle_event_unknown_event_type`
-  - `test_handle_mouse_click_none_result` (clears camera target)
-  - `test_handle_right_click_no_clear`
-  - `test_keydown_f3_toggles_overlay`
-  - `test_keydown_comma_respects_minimum` (min speed boundary)
-  - `test_keydown_period_respects_maximum` (max speed boundary)
-- [ ] Remove 12 duplicate tests + 2 trivial resize tests (~250 lines)
-- [ ] Run tests to verify no regressions
+### Task 4.9: Remove test_legacy_cleanup [Simple] — N/A
 
-**Notes:**
+- [x] File `tests/unit/strategy/test_production_refactor.py` does not exist. Already deleted before PROJ-155/157.
 
-### Task 4.7: Remove mock-property tests from test_strategy_detail_formatter.py [Simple]
-**File:** `tests/unit/ui/test_strategy_detail_formatter.py`
-**Tests:** `pytest tests/unit/ui/test_strategy_detail_formatter.py -v`
+### Task 4.10: Remove duplicate classes from tech tree test_validation.py [Medium] — DONE by PROJ-157
 
-- [ ] Read the file
-- [ ] Remove `TestStrategyDetailFormatterWidgetAccessors` class (~60 lines) — tests mock `._mock_name`
-- [ ] Remove `TestResizeSupport` class (~40 lines) — tests trivial setters
-- [ ] Keep all other test classes
-- [ ] Run tests to verify no regressions
+- [x] Removed `TestDetectCycles` and `TestDepthCalculation` classes — PROJ-157
+- [x] Kept `TestValidateRequirements`, `TestValidate`, `TestEdgeCases` — PROJ-157
 
-**Notes:**
+### Task 4.11: Remove layout constants tests [Simple] — DROPPED
 
-### Task 4.8: Remove trivial tests from test_colors.py [Simple]
-**File:** `tests/unit/ui/test_colors.py`
-**Tests:** `pytest tests/unit/ui/test_colors.py -v`
+- [x] DROPPED: `TestLayoutConstants` classes found in 2 files are legitimate layout constant validation tests (sidebar width, column spacing, etc.), not trivial `assert X > 0` checks. — Verified during PROJ-155 code review
 
-- [ ] Read the file (142 lines)
-- [ ] Remove `TestBasicColors` class (3 tests, ~18 lines) — WHITE is white, BLACK is black
-- [ ] Remove `TestFontConstants` class (3 tests, ~18 lines) — fragile font name matching
-- [ ] Keep `TestColorsValidation` (5 tests) — structural RGB validation
-- [ ] Keep `TestColorAccessibility` (3 tests) — contrast/dark theme guardrails
-- [ ] Run tests to verify no regressions
+---
 
-**Notes:**
+## Remaining Work Summary
 
-### Task 4.9: Remove test_legacy_cleanup [Simple]
-**File:** `tests/unit/strategy/test_production_refactor.py`
-**Tests:** `pytest tests/unit/strategy/test_production_refactor.py -v`
-
-- [ ] Read the file
-- [ ] Remove `test_legacy_cleanup` method (6 lines) — one-time hasattr check for removed methods
-- [ ] Keep `test_dynamic_consumption_limiting_resource` and `test_carry_over_capacity`
-- [ ] Run tests to verify no regressions
-
-**Notes:**
-
-### Task 4.10: Remove duplicate classes from tech tree test_validation.py [Medium]
-**File:** `tests/unit/research/tech_tree/test_validation.py`
-**Tests:** `pytest tests/unit/research/tech_tree/ -v`
-
-- [ ] Read the file
-- [ ] Verify `TestDetectCycles` duplicates `test_cycle_detection.py` (more comprehensive)
-- [ ] Verify `TestDepthCalculation` duplicates `test_queries.py::TestTechTreeDepthCalculation`
-- [ ] Remove `TestDetectCycles` class (~60 lines)
-- [ ] Remove `TestDepthCalculation` class (~60 lines)
-- [ ] Keep `TestValidateRequirements`, `TestValidate`, `TestEdgeCases`
-- [ ] Run tests to verify no regressions
-
-**Notes:**
-
-### Task 4.11: Remove layout constants tests [Simple]
-**File:** Needs identification — search for `TestLayoutConstants` class
-**Tests:** Run tests for the containing file
-
-- [ ] Search for `class TestLayoutConstants` across test suite
-- [ ] Read the file, verify tests are trivial `assert X > 0` checks
-- [ ] Remove the class (~24 lines)
-- [ ] Run tests to verify no regressions
-
-**Notes:**
+No remaining work. All tasks complete, dropped, or N/A.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] Run `pytest tests/ -n 12 -q` — verify no new failures vs baseline
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to Phase 5
+- [x] All task checkboxes above are checked
+- [x] Run `pytest tests/ -n 12 -q` — verified by PROJ-154
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to Phase 5

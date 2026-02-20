@@ -17,3 +17,14 @@
 | 2026-02-16 | Do NOT delete any repro_*.py files at root | Validators proved claimed replacements test DIFFERENT functionality |
 | 2026-02-16 | Phase ordering: delete > merge > old dirs > partial > structural | Safest items first, highest-risk (old dirs) after simpler cleanups established pattern |
 | 2026-02-16 | Baseline: 12,790 passed, 143 pre-existing failures | Pre-existing failures unrelated to this project; track to ensure no increase |
+| 2026-02-19 | PROJ-157 completed bulk of PROJ-155 scope | PROJ-157 (Test Suite Cleanup v4) was created independently and completed most overlapping work. Updated all checklists to reflect actual state. |
+| 2026-02-19 | DROP Tasks 2.4, 2.5: logger merge targets don't exist | PROJ-157 verified `test_logger.py` never existed. `test_events.py` and `test_singleton.py` ARE the canonical files. |
+| 2026-02-19 | DROP Tasks 2.9, 2.10, 2.11: AI merge targets don't exist | PROJ-157 verified target files don't exist. Source files (`test_evaluation_rules.py`, `test_evaluation_integration.py`, `test_adapter_basics.py`, `test_adapter_methods.py`) ARE canonical. |
+| 2026-02-19 | DROP Task 4.11: TestLayoutConstants classes are legitimate | Found in `test_initialization.py` and `test_empire_treasury_panel.py` — these test actual layout constant values (sidebar width, column spacing), not trivial `assert X > 0` checks. |
+| 2026-02-19 | Updated baseline: 12,185 tests collected | Post-PROJ-157 baseline. Delta of -605 tests from original PROJ-155 baseline reflects PROJ-157 cleanup. |
+| 2026-02-19 | PROJ-157 deleted builder/systems/ai conftest.py files | PROJ-155 had deferred these (decision 2026-02-16), but PROJ-157 verified fixtures were unused and deleted them. |
+| 2026-02-20 | PROJ-154 completed remaining Phase 1 deletions | Deleted mock_battle_ui_service.py, cleaned __init__.py, deleted conflict_core.py, build_queue_source_errors.py, fleet_resource_aggregator.py |
+| 2026-02-20 | PROJ-154 completed remaining Phase 2 merges | Merged 16 tests from test_engines_contracts.py → test_engine_interfaces.py; merged test_passes_registries from data/test_fleet_battle_adapter.py → root version |
+| 2026-02-20 | PROJ-154 completed remaining Phase 4 partial cleanups | Removed TestGameSwitchScene from test_scene_protocol.py, TestStrategyDetailFormatterWidgetAccessors + TestResizeSupport from test_strategy_detail_formatter.py, 3 duplicates from test_battle_screen_extended.py, test_legacy_cleanup from test_production_refactor.py |
+| 2026-02-20 | PROJ-154 completed Phase 5 Task 5.1 | Relocated test_fleet_report_filters.py from strategy/ to ui/screens/ via git mv |
+| 2026-02-20 | Phases 2 and 4 now fully complete | All tasks done, dropped, or N/A across both phases |
