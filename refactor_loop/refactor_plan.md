@@ -8,19 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-158 Phase 1
-**Current Status:** Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-158 Phase 2
+**Current Status:** Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-158
-**Current Phase:** Phase 2 - Delete Tests for Dead API
-**Test Status:** 76 interface/DI tests pass, 7 tick tests pass (Phase 1 verification)
+**Current Phase:** Phase 3 - Rewrite Tick Consumption Tests
+**Test Status:** production_engine 25 pass/11 fail, turn_engine 44 pass, interfaces 68 pass
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-158 Phase 1 COMPLETE
-- Deleted process_production() and process_fleet_production() from ProductionEngine, TurnEngine, IProductionEngine, MockProductionEngine
-- Updated documentation (planetary_complex.md)
-- Fixed tests that referenced deleted methods (test_engine_interfaces.py, test_dependency_injection.py)
-- Next: Phase 2 - delete test files that only tested the dead API
+- PROJ-158 Phase 2 COMPLETE
+- Deleted 4 test files: test_basics.py, test_completion.py, test_facility_queue_production.py, test_fleet_production.py (~30 tests)
+- Deleted 3 classes from test_spawning.py: TestMultipleItemsProcessing, TestMultipleColoniesProcessing, TestMultipleEmpiresProcessing (3 tests)
+- Deleted TestProductionProcessing class from test_turn_processing.py (5 tests)
+- Deleted TestFleetProductionProcessing class from test_turn_processing.py (1 test)
+- Updated TestTurnProcessing to remove dead process_production patches, deleted test_process_turn_runs_production
+- Next: Phase 3 - rewrite 11 failing tick_consumption tests
 
 ---
 
@@ -158,6 +160,7 @@
 | 2026-02-20 | PROJ-156 | Phase 4 | Complete | 11900 pass, 144 pre-existing | 08157e84 | Deleted controllable_interface/, target_evaluator/conftest.py |
 | 2026-02-20 | PROJ-156 | Audit 1 | PASSED | 11900 pass, 144 pre-existing | pending | All 4 phases verified, critical tests preserved, no issues |
 | 2026-02-20 | PROJ-158 | Phase 1 | Complete | 76+7 pass | pending | Deleted dead API from ProductionEngine, TurnEngine, interface, mocks, docs |
+| 2026-02-20 | PROJ-158 | Phase 2 | Complete | 25+44+68 pass | pending | Deleted ~39 dead API tests (4 files, 5 classes) |
 
 ---
 

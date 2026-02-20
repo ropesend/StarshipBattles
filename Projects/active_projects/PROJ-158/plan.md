@@ -14,18 +14,18 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Delete Dead Production API | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Delete Tests for Dead API | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Delete Tests for Dead API | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Rewrite Tick Consumption Tests | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Rewrite Integration Tests | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Rewrite Economy E2E Tests | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-20
-**Active Phase:** Phase 2 - Delete Tests for Dead API
-**Last Action:** Phase 1 complete - deleted dead process_production() and process_fleet_production() from ProductionEngine, TurnEngine, IProductionEngine interface, and MockProductionEngine
-**Next Action:** Execute Phase 2 - delete test files that call the dead API
+**Active Phase:** Phase 3 - Rewrite Tick Consumption Tests
+**Last Action:** Phase 2 complete - deleted 4 test files (30 tests), 3 classes from test_spawning.py (3 tests), TestProductionProcessing class (5 tests), TestFleetProductionProcessing class (1 test), updated TestTurnProcessing to remove dead API patches
+**Next Action:** Execute Phase 3 - rewrite 11 failing tick_consumption tests to use correct assertions
 **Blockers:** None
-**Context for Next Agent:** Dead API methods deleted. Tests referencing the deleted interface methods also cleaned up. Many test failures remain because tests still call the old API or assert on dead fields (`cost_per_tick`, `ticks_in_current_turn`).
+**Context for Next Agent:** Dead API tests deleted (~39 tests total). Remaining tests: production_engine 25 pass/11 fail (tick_consumption), turn_engine 44 pass, interfaces 68 pass. Phase 3 must fix the 11 failing tick_consumption tests that assert on dead fields (`cost_per_tick`, `ticks_in_current_turn`) or wrong consumption rates.
 
 ## Overview
 PROJ-79 migrated all production to tick-based dynamic resource consumption via `process_construction_tick()`, called 100 times per turn inside `_process_tick()`. However, it left `process_production()` and `process_fleet_production()` as empty stubs, and TurnEngine still calls them (doing nothing). ~77 tests fail because they call these dead methods or assert on fields (`cost_per_tick`, `ticks_in_current_turn`) that the dynamic system ignores.

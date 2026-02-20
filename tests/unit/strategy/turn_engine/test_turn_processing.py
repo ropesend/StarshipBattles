@@ -24,8 +24,7 @@ class TestTurnProcessing:
 
     @patch.object(TurnEngine, '_process_tick')
     @patch.object(TurnEngine, '_process_end_turn_orders')
-    @patch.object(TurnEngine, 'process_production')
-    def test_process_turn_calls_subticks(self, mock_production, mock_end_turn, mock_tick,
+    def test_process_turn_calls_subticks(self, mock_end_turn, mock_tick,
                                          turn_engine, mock_empire, mock_galaxy):
         """process_turn calls _process_tick 100 times."""
         mock_empire.fleets = []
@@ -36,8 +35,7 @@ class TestTurnProcessing:
 
     @patch.object(TurnEngine, '_process_tick')
     @patch.object(TurnEngine, '_process_end_turn_orders')
-    @patch.object(TurnEngine, 'process_production')
-    def test_process_turn_processes_end_turn_orders(self, mock_production, mock_end_turn, mock_tick,
+    def test_process_turn_processes_end_turn_orders(self, mock_end_turn, mock_tick,
                                                      turn_engine, mock_empire, mock_fleet, mock_galaxy):
         """process_turn calls end-turn order processing for each fleet."""
         mock_empire.fleets = [mock_fleet]
@@ -45,82 +43,6 @@ class TestTurnProcessing:
         turn_engine.process_turn([mock_empire], mock_galaxy)
 
         mock_end_turn.assert_called()
-
-    @patch.object(TurnEngine, '_process_tick')
-    @patch.object(TurnEngine, '_process_end_turn_orders')
-    @patch.object(TurnEngine, 'process_production')
-    def test_process_turn_runs_production(self, mock_production, mock_end_turn, mock_tick,
-                                          turn_engine, mock_empire, mock_galaxy):
-        """process_turn calls production phase."""
-        mock_empire.fleets = []
-
-        turn_engine.process_turn([mock_empire], mock_galaxy)
-
-        mock_production.assert_called_once()
-
-
-# =============================================================================
-# Test: Production Processing
-# =============================================================================
-
-
-class TestProductionProcessing:
-    """Tests for process_production method."""
-
-    def test_empty_queue_skipped(self, turn_engine, mock_empire, mock_planet):
-        """Colonies with empty queues are skipped."""
-        mock_planet.construction_queue = []
-        mock_empire.colonies = [mock_planet]
-
-        turn_engine.process_production([mock_empire])
-
-        # No errors, nothing built
-
-    def test_production_decrements_turns(self, turn_engine, mock_empire, mock_planet):
-        """Production decrements turns remaining (complex in base queue)."""
-        mock_planet.construction_queue = [{"type": "complex", "design_id": "Factory", "turns_remaining": 3}]
-        mock_planet.facilities = []
-        mock_empire.colonies = [mock_planet]
-
-        turn_engine.process_production([mock_empire])
-
-        assert mock_planet.construction_queue[0]["turns_remaining"] == 2
-
-    def test_production_completes_at_zero(self, turn_engine, mock_empire, mock_planet, mock_galaxy):
-        """Production completes when turns reach zero (complex in base queue)."""
-        mock_planet.construction_queue = [{"type": "complex", "design_id": "Factory", "turns_remaining": 1}]
-        mock_planet.facilities = []
-        mock_empire.colonies = [mock_planet]
-
-        # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
-        with patch.object(turn_engine.production_engine, '_spawn_complex') as mock_spawn:
-            turn_engine.process_production([mock_empire], mock_galaxy)
-
-            mock_spawn.assert_called()
-            assert len(mock_planet.construction_queue) == 0
-
-    def test_no_shipyard_pauses_production(self, turn_engine, mock_empire, mock_planet):
-        """Ships require shipyard to build."""
-        mock_planet.construction_queue = [{"type": "ship", "design_id": "Scout", "turns_remaining": 1}]
-        mock_planet.has_space_shipyard = False
-        mock_empire.colonies = [mock_planet]
-
-        turn_engine.process_production([mock_empire])
-
-        # Turns should NOT decrement
-        assert mock_planet.construction_queue[0]["turns_remaining"] == 1
-
-    def test_complex_production_no_shipyard_needed(self, turn_engine, mock_empire, mock_planet, mock_galaxy):
-        """Complexes don't need shipyard."""
-        mock_planet.construction_queue = [{"type": "complex", "design_id": "Factory", "turns_remaining": 1}]
-        mock_planet.has_space_shipyard = False
-        mock_empire.colonies = [mock_planet]
-
-        # PROJ-12: TurnEngine delegates to ProductionEngine, so patch there
-        with patch.object(turn_engine.production_engine, '_spawn_complex') as mock_spawn:
-            turn_engine.process_production([mock_empire], mock_galaxy)
-
-            mock_spawn.assert_called()
 
 
 # =============================================================================
@@ -216,28 +138,3 @@ class TestEndTurnOrders:
         mock_fleet.pop_order.assert_called()
 
 
-# =============================================================================
-# Test: Fleet Production Processing (PROJ-67)
-# =============================================================================
-
-
-class TestFleetProductionProcessing:
-    """Tests for fleet production during turn processing."""
-
-    @patch.object(TurnEngine, '_process_tick')
-    @patch.object(TurnEngine, '_process_end_turn_orders')
-    def test_process_turn_includes_fleet_production(
-        self, mock_end_turn, mock_tick, turn_engine, mock_empire, mock_galaxy
-    ):
-        """process_turn calls fleet production phase after colony production."""
-        mock_empire.fleets = []
-        mock_empire.colonies = []
-
-        # Spy on the production engine's process_fleet_production method
-        with patch.object(
-            turn_engine.production_engine, 'process_fleet_production'
-        ) as mock_fleet_prod:
-            turn_engine.process_turn([mock_empire], mock_galaxy, "/fake/save")
-
-            # Fleet production should be called
-            mock_fleet_prod.assert_called_once_with([mock_empire], mock_galaxy, "/fake/save")
