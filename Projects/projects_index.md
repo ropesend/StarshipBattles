@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-158 | Eradicate Dead Production API and Fix Production Tests | Planning | 2026-02-20 | 2026-02-20 |
 | PROJ-157 | Test Suite Cleanup - Validated Findings v4 | Plan Approved | 2026-02-16 | 2026-02-16 |
 | PROJ-156 | Test Suite Cleanup - AI/Research/Combat/Builder/Systems | Planning | 2026-02-16 | 2026-02-16 |
 | PROJ-155 | Test Suite Cleanup v3 - Validated Findings | Planning | 2026-02-16 | 2026-02-16 |
