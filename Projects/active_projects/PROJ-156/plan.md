@@ -21,10 +21,10 @@
 ## Current State
 **Last Updated:** 2026-02-20
 **Active Phase:** Phase 3
-**Last Action:** Completed Task 3.2 - Merge Collision System Tests (3 unique tests merged, source deleted)
-**Next Action:** Task 3.4 - Merge Controllable Adapter Tests
+**Last Action:** Completed Task 3.4 - Merge Controllable Adapter Tests (2 unique tests merged, 2 source files deleted)
+**Next Action:** Task 3.5 - Merge Evaluation Integration Tests
 **Blockers:** None
-**Context for Next Agent:** Task 3.2 complete - merged 3 unique tests (tangent hit, target behind origin, no logger) from test_collision_system.py into test_beam_ramming.py. 9 duplicate tests removed. Remaining: Tasks 3.4, 3.5, 3.6. Baseline: 11962 passed, 144 pre-existing failures.
+**Context for Next Agent:** Task 3.4 complete - merged 2 unique tests (direct_attribute_access_raises_error, direct_attribute_assignment_does_not_delegate) documenting PROJ-24 __getattr__/__setattr__ removal. 37 duplicates removed from 2 source files. Remaining: Tasks 3.5, 3.6. Baseline: 11925 passed, 144 pre-existing failures.
 
 ## Overview
 Systematic cleanup of confirmed dead/duplicate/scaffold test code across the AI, Research, Combat, Builder, and Systems test directories. Based on Validation Review 3 which examined 30 findings from agents 5 and 6, confirmed 12 for deletion, 13 for partial removal, and disputed 5 (kept as-is). Total estimated savings: ~2,800+ lines.

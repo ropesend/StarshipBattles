@@ -473,3 +473,38 @@ class TestIdentityAndState:
         result = adapter.is_alive()
 
         assert result is False
+
+
+# =============================================================================
+# Migrated from controllable_interface/test_adapter_methods.py
+# PROJ-156 Task 3.4: Tests for PROJ-24 __getattr__/__setattr__ removal
+# =============================================================================
+
+
+class TestAttributeDelegationRemoved:
+    """Tests that PROJ-24 removed __getattr__/__setattr__ delegation.
+
+    Note: PROJ-24 removed the __getattr__/__setattr__ delegation methods.
+    Direct attribute access is no longer supported. Use interface methods instead.
+    """
+
+    def test_direct_attribute_access_raises_error(self, mock_ship):
+        """Direct attribute access (bypassing interface) raises AttributeError."""
+        mock_ship.some_custom_attribute = "test_value"
+
+        adapter = ShipControllableAdapter(mock_ship)
+
+        # Direct attribute access should fail (no __getattr__ delegation)
+        with pytest.raises(AttributeError):
+            _ = adapter.some_custom_attribute
+
+    def test_direct_attribute_assignment_does_not_delegate(self, mock_ship):
+        """Direct attribute assignment sets on adapter, not underlying ship."""
+        adapter = ShipControllableAdapter(mock_ship)
+
+        # Without __setattr__ delegation, assignment goes to adapter, not ship
+        adapter.some_custom_attribute = "test_value"
+
+        # Attribute is on adapter itself (in __dict__), not delegated to ship
+        assert adapter.some_custom_attribute == "test_value"
+        assert 'some_custom_attribute' in adapter.__dict__

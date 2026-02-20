@@ -8,24 +8,26 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-156 Phase 3 Task 3.2 - Merge Collision System Tests
-**Current Status:** Phase 3 in progress, Task 3.2 complete
+**Last Completed:** PROJ-156 Phase 3 Task 3.4 - Merge Controllable Adapter Tests
+**Current Status:** Phase 3 in progress, Task 3.4 complete
 **Current Project:** PROJ-156
 **Current Phase:** Phase 3 (Merge Then Delete)
-**Test Status:** 11962 passed, 144 pre-existing failures
+**Test Status:** 11925 passed, 144 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-156 Phase 3 Task 3.2 COMPLETE: merged collision system tests
-  - Analyzed 12 source tests vs 20 target tests for semantic overlap
-  - Found only 3 unique tests: `test_beam_weapon_tangent_hit`, `test_beam_weapon_target_behind_origin`, `test_ramming_no_logger`
-  - Merged into target file with migration comments
-  - Deleted source file: `tests/unit/systems/test_collision_system.py` (393 lines)
-- Modified: tests/unit/engine/collision_edge_cases/test_beam_ramming.py (+77 lines, 3 tests added)
-- Deleted: tests/unit/systems/test_collision_system.py
-- Net: -9 test count (9 duplicates removed, 3 unique merged)
-- Tests: 11962 passed, 144 pre-existing failures (no regressions)
-- Next: Phase 3 Task 3.4 - Merge Controllable Adapter Tests
+- PROJ-156 Phase 3 Task 3.4 COMPLETE: merged controllable adapter tests
+  - Analyzed 39 source tests vs 38 target tests for semantic overlap
+  - Found only 2 unique tests: `test_direct_attribute_access_raises_error`, `test_direct_attribute_assignment_does_not_delegate`
+  - These test PROJ-24 __getattr__/__setattr__ removal behavior
+  - Merged into target file as `TestAttributeDelegationRemoved` class
+  - Deleted source files: test_adapter_basics.py (232 lines), test_adapter_methods.py (262 lines)
+- Modified: tests/unit/ai/test_controllable_adapter_edge_cases.py (+40 lines, 2 tests added)
+- Deleted: tests/unit/ai/controllable_interface/test_adapter_basics.py
+- Deleted: tests/unit/ai/controllable_interface/test_adapter_methods.py
+- Net: -37 test count (37 duplicates removed, 2 unique merged)
+- Tests: 11925 passed, 144 pre-existing failures (no regressions)
+- Next: Phase 3 Task 3.5 - Merge Evaluation Integration Tests
 
 ---
 
@@ -148,6 +150,7 @@
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.0 | Complete | 11979 pass, 144 pre-existing | pending | Recovered 3 lost KiteBehavior tests from git history |
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.1 | Complete | 11971 pass, 144 pre-existing | pending | Merged 2 unique spatial tests, deleted source (-8 net duplicates) |
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.2 | Complete | 11962 pass, 144 pre-existing | pending | Merged 3 unique collision tests, deleted source (-9 net duplicates) |
+| 2026-02-20 | PROJ-156 | Phase 3 Task 3.4 | Complete | 11925 pass, 144 pre-existing | pending | Merged 2 unique adapter tests, deleted 2 sources (-37 net duplicates) |
 
 ---
 

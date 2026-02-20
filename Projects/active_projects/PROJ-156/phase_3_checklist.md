@@ -100,30 +100,30 @@ PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into t
 
 **Notes:** All 7 unique tests from source file now present in target. Task complete.
 
-### Task 3.4: Merge Controllable Adapter Tests [Medium]
-**Source 1:** `tests/unit/ai/controllable_interface/test_adapter_basics.py` (232 lines) — STILL EXISTS
-**Source 2:** `tests/unit/ai/controllable_interface/test_adapter_methods.py` (262 lines) — STILL EXISTS
-**Target:** `tests/unit/ai/test_controllable_adapter_edge_cases.py` (475 lines)
+### Task 3.4: Merge Controllable Adapter Tests [Medium] ⚠️ COMPLETE
+**Source 1:** `tests/unit/ai/controllable_interface/test_adapter_basics.py` (232 lines) — DELETED
+**Source 2:** `tests/unit/ai/controllable_interface/test_adapter_methods.py` (262 lines) — DELETED
+**Target:** `tests/unit/ai/test_controllable_adapter_edge_cases.py` (now 516 lines)
 **Keep untouched:** `tests/unit/ai/test_controllable_adapter.py`
 **Tests:** `pytest tests/unit/ai/test_controllable_adapter_edge_cases.py -v` then `pytest tests/ -n 12`
 
-- [ ] Read both source files and target file fully
-- [ ] Read `tests/unit/ai/controllable_interface/conftest.py` for fixture patterns
-- [ ] Identify unique tests across both sources NOT in target. Key candidates:
-  - `test_adapter_can_be_imported` — import check (may be trivial, consider skipping)
-  - `test_adapter_exposes_underlying_ship` — `.ship` property access
-  - `test_adapter_uses_interface_methods_not_direct_access` — ensures interface usage
-  - `test_direct_attribute_access_raises_error` — validates no __getattr__ delegation
-  - `test_direct_attribute_assignment_does_not_delegate` — assignment goes to adapter's __dict__
-  - (Many other tests are duplicates of target with longer names — verify carefully)
-- [ ] Adapt tests to use target's `mock_ship` fixture pattern
-- [ ] Copy unique tests into target (add section comment: "# Migrated from controllable_interface/")
-- [ ] Run `pytest tests/unit/ai/test_controllable_adapter_edge_cases.py -v` — all tests pass
-- [ ] Delete `tests/unit/ai/controllable_interface/test_adapter_basics.py`
-- [ ] Delete `tests/unit/ai/controllable_interface/test_adapter_methods.py`
-- [ ] Run `pytest tests/ -n 12` — no regressions
+- [x] Read both source files and target file fully
+- [x] Read `tests/unit/ai/controllable_interface/conftest.py` for fixture patterns
+- [x] Identify unique tests across both sources NOT in target. Analysis:
+  - `test_adapter_can_be_imported` — TRIVIAL import check (skipped)
+  - `test_adapter_exposes_underlying_ship` → DUPLICATE of `test_adapter_stores_ship_reference`
+  - `test_adapter_uses_interface_methods_not_direct_access` → covered by comprehensive method tests
+  - `test_direct_attribute_access_raises_error` — UNIQUE (merged)
+  - `test_direct_attribute_assignment_does_not_delegate` — UNIQUE (merged)
+  - All other 35 tests are duplicates with longer names
+- [x] Adapt tests to use target's `mock_ship` fixture pattern (compatible)
+- [x] Copy unique tests into target (added `TestAttributeDelegationRemoved` class with PROJ-24 context)
+- [x] Run `pytest tests/unit/ai/test_controllable_adapter_edge_cases.py -v` — 40 passed (was 38)
+- [x] Delete `tests/unit/ai/controllable_interface/test_adapter_basics.py`
+- [x] Delete `tests/unit/ai/controllable_interface/test_adapter_methods.py`
+- [x] Run `pytest tests/ -n 12` — 11925 passed, 144 pre-existing failures (no regressions)
 
-**Notes:** Sources have 39 tests combined, target has 51. Heavy overlap. ~5 truly unique tests in sources. The `controllable_interface/` directory cleanup happens in Phase 4.
+**Notes:** Sources had 39 tests combined, target had 38. Only 2 truly unique tests: `test_direct_attribute_access_raises_error` and `test_direct_attribute_assignment_does_not_delegate` (PROJ-24 __getattr__/__setattr__ removal). Net change: -37 tests (duplicates removed). controllable_interface/ directory still has conftest.py and __init__.py — cleanup in Phase 4.
 
 ### Task 3.5: Merge Evaluation Integration Tests [Medium]
 **Source:** `tests/unit/ai/target_evaluator/test_evaluation_integration.py` (285 lines) — STILL EXISTS
