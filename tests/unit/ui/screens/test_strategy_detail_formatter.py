@@ -68,68 +68,6 @@ class TestStrategyDetailFormatterInit:
         assert formatter.planet_report_panel is None
 
 
-class TestStrategyDetailFormatterWidgetAccessors:
-    """Tests for widget property accessors."""
-
-    @pytest.fixture
-    def formatter(self):
-        """Create formatter with mock widgets."""
-        from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
-
-        widgets = {
-            'portrait_image': Mock(name='portrait'),
-            'detail_text': Mock(name='detail_text'),
-            'graph_image': Mock(name='graph'),
-            'btn_raw_data': Mock(name='raw_data'),
-            'btn_colonize': Mock(name='colonize'),
-            'btn_build_yard': Mock(name='build_yard'),
-            'btn_orders': Mock(name='orders'),
-            'btn_fleet_report': Mock(name='fleet_report'),
-            'btn_build_fleet': Mock(name='build_fleet'),
-        }
-        graphs = {
-            'spectrum_graph': Mock(name='spectrum'),
-            'atmosphere_graph': Mock(name='atmosphere'),
-        }
-
-        return StrategyDetailFormatter(
-            Mock(), Mock(), Mock(), widgets, graphs,
-            pygame.Rect(0, 0, 100, 100), (800, 600)
-        )
-
-    def test_portrait_image_property(self, formatter):
-        """Test portrait_image property."""
-        assert formatter.portrait_image._mock_name == 'portrait'
-
-    def test_detail_text_property(self, formatter):
-        """Test detail_text property."""
-        assert formatter.detail_text._mock_name == 'detail_text'
-
-    def test_graph_image_property(self, formatter):
-        """Test graph_image property."""
-        assert formatter.graph_image._mock_name == 'graph'
-
-    def test_btn_raw_data_property(self, formatter):
-        """Test btn_raw_data property."""
-        assert formatter.btn_raw_data._mock_name == 'raw_data'
-
-    def test_btn_colonize_property(self, formatter):
-        """Test btn_colonize property."""
-        assert formatter.btn_colonize._mock_name == 'colonize'
-
-    def test_btn_build_yard_property(self, formatter):
-        """Test btn_build_yard property."""
-        assert formatter.btn_build_yard._mock_name == 'build_yard'
-
-    def test_spectrum_graph_property(self, formatter):
-        """Test spectrum_graph property."""
-        assert formatter.spectrum_graph._mock_name == 'spectrum'
-
-    def test_atmosphere_graph_property(self, formatter):
-        """Test atmosphere_graph property."""
-        assert formatter.atmosphere_graph._mock_name == 'atmosphere'
-
-
 class TestShowDetailedReport:
     """Tests for show_detailed_report() dispatch."""
 
@@ -420,52 +358,6 @@ class TestShowRawDataPopup:
         formatter.show_raw_data_popup()
 
         mock_window.assert_not_called()
-
-
-class TestResizeSupport:
-    """Tests for resize support methods."""
-
-    @pytest.fixture
-    def formatter(self):
-        """Create formatter for resize tests."""
-        from game.ui.screens.strategy_detail_formatter import StrategyDetailFormatter
-
-        return StrategyDetailFormatter(
-            Mock(), Mock(), Mock(),
-            {
-                'portrait_image': Mock(), 'detail_text': Mock(), 'graph_image': Mock(),
-                'btn_raw_data': Mock(), 'btn_colonize': Mock(), 'btn_build_yard': Mock(),
-                'btn_orders': Mock(), 'btn_fleet_report': Mock(), 'btn_build_fleet': Mock(),
-            },
-            {'spectrum_graph': Mock(), 'atmosphere_graph': Mock()},
-            pygame.Rect(0, 0, 100, 100),
-            (800, 600)
-        )
-
-    def test_update_screen_size(self, formatter):
-        """Test update_screen_size updates dimensions."""
-        formatter.update_screen_size(1920, 1080)
-
-        assert formatter._screen_width == 1920
-        assert formatter._screen_height == 1080
-
-    def test_update_graph_rect(self, formatter):
-        """Test update_graph_rect updates rect."""
-        new_rect = pygame.Rect(20, 200, 180, 120)
-
-        formatter.update_graph_rect(new_rect)
-
-        assert formatter.graph_rect == new_rect
-
-    def test_update_graphs(self, formatter):
-        """Test update_graphs updates graph references."""
-        new_spectrum = Mock(name='new_spectrum')
-        new_atmosphere = Mock(name='new_atmosphere')
-
-        formatter.update_graphs(new_spectrum, new_atmosphere)
-
-        assert formatter.spectrum_graph is new_spectrum
-        assert formatter.atmosphere_graph is new_atmosphere
 
 
 class TestGetHarvesterInfo:

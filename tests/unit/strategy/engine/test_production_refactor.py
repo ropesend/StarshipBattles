@@ -125,9 +125,3 @@ class TestProductionEngineRefactor:
         # Verify spawns
         assert engine._spawn_ship.call_count == 2
 
-    def test_legacy_cleanup(self, engine):
-        """Verify legacy methods are gone/empty."""
-        assert not hasattr(engine, '_process_base_queue')
-        assert not hasattr(engine, '_process_facility_queues')
-        # process_production exists but should be no-op/pass
-        engine.process_production([], None, None) # Should not error

@@ -149,48 +149,6 @@ class TestISceneProtocolCompliance:
         assert hasattr(scene, 'handle_resize')
 
 
-class TestGameSwitchScene:
-    """Tests for Game._switch_scene method."""
-
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        """Set up pygame for testing."""
-        pygame.init()
-        if not pygame.display.get_surface():
-            pygame.display.set_mode((800, 600), pygame.NOFRAME)
-        yield
-        pygame.quit()
-
-    def test_switch_scene_updates_active_scene(self):
-        """_switch_scene updates self.active_scene to the new scene."""
-        from game.core.constants import GameState
-
-        # Create mock Game-like object
-        mock_game = MagicMock()
-        mock_game.state = GameState.MENU
-
-        # Simulate _switch_scene behavior
-        new_scene = MagicMock()
-        mock_game.state = GameState.BUILDER
-        mock_game.active_scene = new_scene
-
-        assert mock_game.state == GameState.BUILDER
-        assert mock_game.active_scene is new_scene
-
-    def test_switch_scene_updates_game_state(self):
-        """_switch_scene updates self.state to the new state."""
-        from game.core.constants import GameState
-
-        mock_game = MagicMock()
-        mock_game.state = GameState.MENU
-
-        # Simulate _switch_scene behavior
-        new_state = GameState.BATTLE
-        mock_game.state = new_state
-
-        assert mock_game.state == GameState.BATTLE
-
-
 class TestSceneCallback:
     """Tests for scene_callback pattern."""
 

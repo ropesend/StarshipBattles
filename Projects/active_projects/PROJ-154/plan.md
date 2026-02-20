@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Pure File Deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate then Delete | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Partial File Edits | In Progress (4 of 8 tasks remain) | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Partial File Edits | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. File Relocation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-19
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - merged test_engines_contracts.py into test_engine_interfaces.py (+18 tests), merged test_fleet_battle_adapter.py data/ into root (+1 test), deleted both source files
-**Next Action:** Execute Phase 3 - Partial File Edits (4 tasks remain)
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - removed 17 dead/duplicate tests from 4 files (3 from test_battle_screen_extended.py, 2 from test_scene_protocol.py, 11 from test_strategy_detail_formatter.py, 1 from test_production_refactor.py)
+**Next Action:** Execute Phase 4 - File Relocation (git mv test_fleet_report_filters.py)
 **Blockers:** None
-**Context for Next Agent:** Test collection: 12147 (down from 12165 = -18 net). Pre-existing failures: 144 (UI/Strategy). No NEW failures introduced.
+**Context for Next Agent:** Test collection: 12130 (down from 12147 = -17 net). Pre-existing failures: 144 (UI/Strategy). No NEW failures introduced.
 
 ### PROJ-157 Overlap Summary
 PROJ-157 completed these PROJ-154 items:

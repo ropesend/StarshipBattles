@@ -1,102 +1,12 @@
 import pytest
-import sys
-
 import pygame
+from unittest.mock import MagicMock
 from game.ui.screens.battle_screen import BattleScreen
 from game.simulation.entities.ship import Ship
-from game.simulation.entities.ship_loader import initialize_ship_data
-from game.simulation.components.component import load_components, create_component
-from game.core.constants import LayerType
-from unittest.mock import MagicMock
-from game.ai.strategy_manager import StrategyManager
-from game.core.registry import RegistryManager
-from tests.fixtures.paths import get_unit_test_data_dir
 
 
 class TestBattleScreenExtended:
-    """Test BattleScreen simulation loop, victory conditions, and headless mode."""
-
-    @pytest.fixture(autouse=True)
-    def setup_strategy_manager(self):
-        """Setup and teardown for AI Strategy Manager."""
-        # Note: pygame, registry, and data loading handled by conftest fixtures
-        # initialize_ship_data() and load_components() are patched to be no-ops
-        # because the reset_game_state fixture already loaded the data
-
-        # AI Strategy Manager still needs to be loaded per-test
-        test_data_path = str(get_unit_test_data_dir())
-        manager = StrategyManager.instance()
-        manager.load_data(
-             test_data_path,
-             targeting_file="test_targeting_policies.json",
-             movement_file="test_movement_policies.json",
-             strategy_file="test_combat_strategies.json"
-        )
-        manager._loaded = True
-
-        yield
-
-        # Cleanup: AI Strategy Manager should still be cleared
-        StrategyManager.instance().clear()
-
-    def test_is_battle_over_victory(self, fresh_registries):
-        """Verify is_battle_over identifies when one team is eliminated."""
-        scene = BattleScreen(1000, 1000)
-
-        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort", registries=fresh_registries)
-        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort", registries=fresh_registries)
-
-        # Ensure they are fully equipped ships
-        for s in [ship1, ship2]:
-            s.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            s.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            s.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            s.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            s.recalculate_stats()
-
-        scene.start([ship1], [ship2])
-        assert not scene.is_battle_over(), "Battle should NOT be over at start with active ships"
-
-        # Kill ship2
-        ship2.is_alive = False
-        assert scene.is_battle_over()
-        assert scene.get_winner() == 0
-
-    def test_update_loop_tick_counter(self, fresh_registries):
-        """Verify update loop increments sim_tick_counter."""
-        scene = BattleScreen(1000, 1000)
-        ship1 = Ship("T1", 0, 0, (255,0,0), team_id=0, ship_class="Escort", registries=fresh_registries)
-        ship2 = Ship("T2", 1000, 1000, (0,0,255), team_id=1, ship_class="Escort", registries=fresh_registries)
-        for s in [ship1, ship2]:
-            s.add_component(create_component('bridge', registries=fresh_registries), LayerType.CORE)
-            s.add_component(create_component('crew_quarters', registries=fresh_registries), LayerType.CORE)
-            s.add_component(create_component('life_support', registries=fresh_registries), LayerType.CORE)
-            s.add_component(create_component('standard_engine', registries=fresh_registries), LayerType.OUTER)
-            s.recalculate_stats()
-
-        scene.start([ship1], [ship2])
-
-        assert scene.sim_tick_counter == 0
-        # Use a small dt that will run exactly 1 tick (accumulator logic)
-        # Or test headless mode which runs deterministic ticks
-        scene.headless_mode = False
-        scene.sim_paused = False
-        scene.sim_speed_multiplier = 1.0
-        scene._accumulator = 0.017  # Just over TICK_RATE to run 1 tick
-        scene.update(0.0)  # Don't add more time
-        assert scene.sim_tick_counter >= 1
-
-    def test_headless_mode_initialization(self):
-        """Verify headless mode sets start time and skips camera fit."""
-        scene = BattleScreen(1000, 1000)
-        # Mock camera to ensure fit_objects isn't called normally if fit_objects fails without screen
-        scene.camera = MagicMock()
-
-        scene.start([], [], headless=True)
-        assert scene.headless_mode
-        assert scene.headless_start_time is not None
-
-        scene.camera.fit_objects.assert_not_called()
+    """Test BattleScreen beam attack processing logic."""
 
     def test_process_beam_attack_logic(self, fresh_registries):
         """Verify _process_beam_attack applies damage to target."""
