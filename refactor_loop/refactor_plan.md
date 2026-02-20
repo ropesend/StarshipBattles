@@ -8,22 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-158 Phase 4
-**Current Status:** Phase 4 complete, Phase 5 ready
-**Current Project:** PROJ-158
-**Current Phase:** Phase 5 - Rewrite Economy E2E Tests
-**Test Status:** 49 integration tests pass (all Phase 4 scope)
+**Last Completed:** PROJ-158 Audit PASSED
+**Current Status:** PROJ-158 complete, awaiting user verification
+**Current Project:** None (all projects complete)
+**Current Phase:** N/A
+**Test Status:** 142 production tests pass, 66 pre-existing failures (out of scope)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-158 Phase 4 COMPLETE
-- Rewrote 25 failing integration tests across 5 files to use tick-based API
-- Added `_process_one_turn()` helper that calls `process_construction_tick()` 100 times
-- Added empire resources to fixtures (conftest.py, empire_with_colony)
-- All queue items now have `total_cost` and `resources_consumed` fields
-- Files modified: test_complex_workflow.py, test_completion.py, test_queue.py, test_fleet_production_e2e.py, test_turn_execution.py, conftest.py
-- Tests pass: complex_workflow 7, completion 12, queue 6, fleet_production 7, turn_execution 11
-- Next: Phase 5 - rewrite test_economy_e2e.py (5 failing tests using dead fields)
+- PROJ-158 AUDIT PASSED
+- All 5 phases complete: deleted dead API, deleted dead tests, rewrote tick/integration/economy tests
+- Verified: grep for process_production/process_fleet_production in game/ returns only comments
+- 142 production-related tests passing
+- 66 pre-existing failures are UI/cargo/transfer (out of scope per plan)
+- No new failures introduced
+- Next: User verification, then no more projects in queue
 
 ---
 
@@ -99,10 +98,10 @@
 
 ---
 
-- [/] **PROJ-158: Eradicate Dead Production API and Fix Production Tests**
-  - **Phases:** 5 | **Status:** Ready | **Priority:** Medium
+- [x] **PROJ-158: Eradicate Dead Production API and Fix Production Tests**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-158/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-158/plan.md)
-  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
 ---
@@ -164,6 +163,8 @@
 | 2026-02-20 | PROJ-158 | Phase 2 | Complete | 25+44+68 pass | pending | Deleted ~39 dead API tests (4 files, 5 classes) |
 | 2026-02-20 | PROJ-158 | Phase 3 | Complete | 34+44+68 pass | pending | Rewrote tick_consumption tests, deleted 2 dead field tests, fixed helper |
 | 2026-02-20 | PROJ-158 | Phase 4 | Complete | 49 pass | pending | Rewrote 25 integration tests across 5 files to use tick-based API |
+| 2026-02-20 | PROJ-158 | Phase 5 | Complete | 15+34+64 pass | pending | Rewrote 5 economy E2E tests, removed dead fields |
+| 2026-02-20 | PROJ-158 | Audit 1 | PASSED | 142 pass, 66 pre-existing | pending | Dead API eradicated, all goals met |
 
 ---
 

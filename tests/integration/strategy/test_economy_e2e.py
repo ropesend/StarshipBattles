@@ -289,7 +289,11 @@ class TestEconomyE2E:
         assert empire.resource_pool["Metals"] == pytest.approx(535.0)
 
     def test_construction_consumes_resources_per_tick(self):
-        """Queue items with cost_per_tick consume from empire pool each tick."""
+        """Construction uses tick-based dynamic consumption from production rates.
+
+        Dynamic system uses production_rates.json: planetary_yard = 2000/turn = 20/tick.
+        Item with total_cost=150 at 20/tick completes in 7.5 ticks, consuming all 150.
+        """
         engine = _make_economy_turn_engine()
         galaxy = MockGalaxy()
 
@@ -297,16 +301,13 @@ class TestEconomyE2E:
         planet = _make_planet(
             facilities=[storage],
         )
-        # Queue item: 3-turn build, 150 Metals total -> 0.5 per tick
-        # After 1 turn: tick system decrements to 2, process_production decrements to 1
+        # Queue item: 150 Metals total. At 20/tick rate, completes in 7.5 ticks.
         planet.construction_queue = [{
             "design_id": "test_complex",
             "type": "complex",
             "turns_remaining": 3,
             "total_cost": {"Metals": 150.0},
-            "cost_per_tick": {"Metals": 0.5},
             "resources_consumed": {"Metals": 0.0},
-            "ticks_in_current_turn": 0,
         }]
 
         empire = _make_empire(resources={"Metals": 1000.0})
@@ -314,29 +315,33 @@ class TestEconomyE2E:
 
         engine.process_turn([empire], galaxy)
 
-        # 100 ticks * 0.5 = 50 Metals consumed by construction
-        # turns_remaining: 3 -> 2 (tick system at tick 100) -> 1 (process_production)
-        assert empire.resource_pool["Metals"] == pytest.approx(950.0)
-        assert planet.construction_queue[0]["turns_remaining"] == 1
+        # Item completes mid-turn (tick 8), consuming all 150 Metals
+        # Queue should be empty after completion
+        assert empire.resource_pool["Metals"] == pytest.approx(850.0)
+        assert len(planet.construction_queue) == 0  # Item completed
 
     def test_resource_depletion_pauses_construction(self):
-        """When empire runs out of resources, construction pauses (tick system)."""
+        """When empire runs out of resources, construction pauses.
+
+        Dynamic system rate = 20/tick. Empire has 30 Metals.
+        Tick 1: consumes 20 (10 left). Tick 2: can't afford 20, pauses.
+        System pauses when empire can't afford a full tick's consumption.
+        Track progress via resources_consumed, not ticks_in_current_turn (dead field).
+        """
         engine = _make_economy_turn_engine()
         galaxy = MockGalaxy()
 
         storage = _make_storage_facility("Metals", capacity=10000.0)
         planet = _make_planet(facilities=[storage])
 
-        # Queue item: 1 Metal per tick, but only 30 Metals available
-        # Tick system pauses at tick 30; process_production still decrements once
+        # Item needs 300 Metals. At 20/tick, needs 15 ticks if resources available.
+        # Empire has 30 Metals. Tick 1: 20 consumed (10 left). Tick 2: can't afford 20, pauses.
         planet.construction_queue = [{
             "design_id": "test_complex",
             "type": "complex",
             "turns_remaining": 3,
             "total_cost": {"Metals": 300.0},
-            "cost_per_tick": {"Metals": 1.0},
             "resources_consumed": {"Metals": 0.0},
-            "ticks_in_current_turn": 0,
         }]
 
         empire = _make_empire(resources={"Metals": 30.0})
@@ -344,11 +349,12 @@ class TestEconomyE2E:
 
         engine.process_turn([empire], galaxy)
 
-        # Only 30 ticks proceed (resource depletion), then pause
-        assert empire.resource_pool["Metals"] == pytest.approx(0.0)
-        assert planet.construction_queue[0]["ticks_in_current_turn"] == 30
-        # turns_remaining: 3 (tick system never hit 100) -> 2 (process_production)
-        assert planet.construction_queue[0]["turns_remaining"] == 2
+        # After tick 1: 20 consumed, 10 remaining. Tick 2 pauses (can't afford 20).
+        assert empire.resource_pool["Metals"] == pytest.approx(10.0)
+        # Progress tracked via resources_consumed
+        assert planet.construction_queue[0]["resources_consumed"]["Metals"] == pytest.approx(20.0)
+        # Item still in queue (not complete)
+        assert len(planet.construction_queue) == 1
 
     def test_maintenance_failure_causes_facility_scuttle(self):
         """Facility is scuttled when empire can't pay maintenance."""
@@ -434,7 +440,14 @@ class TestEconomyE2E:
         assert restored.max_storage["Organics"] == pytest.approx(5000.0)
 
     def test_multi_resource_construction(self):
-        """Construction that costs multiple resources consumes all correctly."""
+        """Construction that costs multiple resources completes correctly.
+
+        Dynamic system: planetary_yard rate = 20/tick per resource.
+        Limiting resource logic: resource with highest (remaining / rate) sets pace.
+        - Metals: 100 / 20 = 5 ticks
+        - Organics: 60 / 20 = 3 ticks
+        Metals is limiting (5 ticks). All resources consumed in 5 ticks.
+        """
         engine = _make_economy_turn_engine()
         galaxy = MockGalaxy()
 
@@ -442,15 +455,13 @@ class TestEconomyE2E:
         storage_o = _make_storage_facility("Organics", 10000.0, instance_id="store-o")
         planet = _make_planet(facilities=[storage_m, storage_o])
 
-        # Ship costs Metals + Organics, 0.5 and 0.3 per tick
+        # Costs 100 Metals + 60 Organics. Completes in 5 ticks at 20/tick rate.
         planet.construction_queue = [{
             "design_id": "multi_res_ship",
             "type": "complex",
             "turns_remaining": 2,
             "total_cost": {"Metals": 100.0, "Organics": 60.0},
-            "cost_per_tick": {"Metals": 0.5, "Organics": 0.3},
             "resources_consumed": {"Metals": 0.0, "Organics": 0.0},
-            "ticks_in_current_turn": 0,
         }]
 
         empire = _make_empire(resources={"Metals": 1000.0, "Organics": 500.0})
@@ -458,12 +469,19 @@ class TestEconomyE2E:
 
         engine.process_turn([empire], galaxy)
 
-        # 100 ticks: 50 Metals, 30 Organics consumed
-        assert empire.resource_pool["Metals"] == pytest.approx(950.0)
-        assert empire.resource_pool["Organics"] == pytest.approx(470.0)
+        # Item completes at tick 5, consuming all resources
+        assert empire.resource_pool["Metals"] == pytest.approx(900.0)  # 1000 - 100
+        assert empire.resource_pool["Organics"] == pytest.approx(440.0)  # 500 - 60
+        assert len(planet.construction_queue) == 0  # Item completed
 
     def test_multi_resource_pauses_if_one_depletes(self):
-        """Construction pauses when ANY resource is insufficient."""
+        """Construction pauses when ANY resource is insufficient.
+
+        Dynamic system rate = 20/tick per resource. Both 200/200 cost.
+        Empire has 1000 Metals but only 20 Organics.
+        After tick 1: 20 of each consumed. Organics exhausted, pauses.
+        Track progress via resources_consumed, not ticks_in_current_turn.
+        """
         engine = _make_economy_turn_engine()
         galaxy = MockGalaxy()
 
@@ -471,27 +489,27 @@ class TestEconomyE2E:
         storage_o = _make_storage_facility("Organics", 10000.0, instance_id="store-o")
         planet = _make_planet(facilities=[storage_m, storage_o])
 
-        # Costs 1.0 Metals and 1.0 Organics per tick
+        # Costs 200 Metals + 200 Organics. At 20/tick each, needs 10 ticks.
         planet.construction_queue = [{
             "design_id": "expensive_thing",
             "type": "complex",
             "turns_remaining": 2,
             "total_cost": {"Metals": 200.0, "Organics": 200.0},
-            "cost_per_tick": {"Metals": 1.0, "Organics": 1.0},
             "resources_consumed": {"Metals": 0.0, "Organics": 0.0},
-            "ticks_in_current_turn": 0,
         }]
 
-        # Plenty of Metals but only 20 Organics -> pauses at tick 20
+        # Plenty of Metals but only 20 Organics -> pauses after 1 tick
         empire = _make_empire(resources={"Metals": 1000.0, "Organics": 20.0})
         empire.add_colony(planet)
 
         engine.process_turn([empire], galaxy)
 
-        # Only 20 ticks processed before Organics runs out
+        # After 1 tick: 20 Metals, 20 Organics consumed. Then Organics exhausted.
         assert empire.resource_pool["Metals"] == pytest.approx(980.0)
         assert empire.resource_pool["Organics"] == pytest.approx(0.0)
-        assert planet.construction_queue[0]["ticks_in_current_turn"] == 20
+        # Track progress via resources_consumed
+        assert planet.construction_queue[0]["resources_consumed"]["Metals"] == pytest.approx(20.0)
+        assert planet.construction_queue[0]["resources_consumed"]["Organics"] == pytest.approx(20.0)
 
     def test_harvesting_before_maintenance_order(self):
         """Harvesting runs first, making resources available for maintenance."""
@@ -521,7 +539,12 @@ class TestEconomyE2E:
         assert empire.resource_pool["Metals"] == pytest.approx(90.0)
 
     def test_maintenance_paid_before_construction_tick(self):
-        """Maintenance costs reduce pool before construction ticks."""
+        """Maintenance costs reduce pool before construction ticks.
+
+        Facility maintenance: 1000 * 5% = 50 Metals.
+        Construction: 100 Metals at 20/tick = 5 ticks to complete.
+        Empire starts with 200 -> 200 - 50 (maintenance) - 100 (construction) = 50.
+        """
         engine = _make_economy_turn_engine()
         galaxy = MockGalaxy()
 
@@ -533,15 +556,13 @@ class TestEconomyE2E:
         storage = _make_storage_facility("Metals", capacity=10000.0, instance_id="store-1")
         planet = _make_planet(facilities=[storage, expensive])
 
-        # Queue consumes 0.5 per tick = 50 per turn
+        # Queue: 100 Metals total. At 20/tick, completes in 5 ticks.
         planet.construction_queue = [{
             "design_id": "new_complex",
             "type": "complex",
             "turns_remaining": 2,
             "total_cost": {"Metals": 100.0},
-            "cost_per_tick": {"Metals": 0.5},
             "resources_consumed": {"Metals": 0.0},
-            "ticks_in_current_turn": 0,
         }]
 
         empire = _make_empire(resources={"Metals": 200.0})
@@ -549,8 +570,9 @@ class TestEconomyE2E:
 
         engine.process_turn([empire], galaxy)
 
-        # Maintenance: 50, Construction: 50 (100 ticks * 0.5) -> 200 - 50 - 50 = 100
-        assert empire.resource_pool["Metals"] == pytest.approx(100.0)
+        # Maintenance: 50, Construction: 100 (item completes) -> 200 - 50 - 100 = 50
+        assert empire.resource_pool["Metals"] == pytest.approx(50.0)
+        assert len(planet.construction_queue) == 0  # Item completed
 
     def test_planet_save_load_preserves_resources(self):
         """Planet resources and facilities survive serialization."""
@@ -597,16 +619,18 @@ class TestEconomyE2E:
         assert len(planet.facilities) == 2
 
     def test_construction_queue_save_load(self):
-        """Queue items with cost tracking survive planet serialization."""
+        """Queue items with cost tracking survive planet serialization.
+
+        Dynamic system uses total_cost and resources_consumed for progress.
+        cost_per_tick and ticks_in_current_turn are dead fields (not used).
+        """
         planet = _make_planet()
         planet.construction_queue = [{
             "design_id": "test_complex",
             "type": "complex",
             "turns_remaining": 5,
             "total_cost": {"Metals": 500.0},
-            "cost_per_tick": {"Metals": 1.0},
             "resources_consumed": {"Metals": 150.0},
-            "ticks_in_current_turn": 50,
         }]
 
         data = planet.to_dict()
@@ -615,6 +639,4 @@ class TestEconomyE2E:
         item = restored.construction_queue[0]
         assert item["turns_remaining"] == 5
         assert item["total_cost"]["Metals"] == pytest.approx(500.0)
-        assert item["cost_per_tick"]["Metals"] == pytest.approx(1.0)
         assert item["resources_consumed"]["Metals"] == pytest.approx(150.0)
-        assert item["ticks_in_current_turn"] == 50
