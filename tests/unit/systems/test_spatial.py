@@ -151,3 +151,37 @@ class TestSpatialGridQueries:
         results = grid.query_radius(pygame.math.Vector2(-100, -100), 100)
 
         assert obj in results
+
+
+# Migrated from test_spatial_extended.py
+class TestSpatialGridExtendedCases:
+    """Additional edge cases for SpatialGrid (migrated from test_spatial_extended.py)."""
+
+    def test_query_radius_empty_grid(self, pygame_init):
+        """Empty grid should return empty list."""
+        grid = SpatialGrid(cell_size=1000)
+
+        result = grid.query_radius(pygame.math.Vector2(0, 0), 500)
+
+        assert result == []
+
+    def test_query_spans_multiple_cells(self, pygame_init):
+        """Large radius should query multiple cells."""
+        grid = SpatialGrid(cell_size=1000)
+
+        # Place objects in different cells
+        obj_center = MockObject(0, 0, "center")       # Cell (0, 0)
+        obj_right = MockObject(1500, 0, "right")      # Cell (1, 0)
+        obj_up = MockObject(0, 1500, "up")            # Cell (0, 1)
+
+        grid.insert(obj_center)
+        grid.insert(obj_right)
+        grid.insert(obj_up)
+
+        # Query with large radius from center
+        result = grid.query_radius(pygame.math.Vector2(500, 500), 2000)
+
+        # Should find all three
+        assert obj_center in result
+        assert obj_right in result
+        assert obj_up in result

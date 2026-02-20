@@ -36,23 +36,24 @@ PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into t
 
 **Notes:** Tests recovered and adapted to use game.core.math.Vector2. Added with section comment documenting recovery source. Total KiteBehavior tests: 9 (6 existing + 3 recovered).
 
-### Task 3.1: Merge Spatial Tests [Simple]
-**Source:** `tests/unit/systems/test_spatial_extended.py` (157 lines) — STILL EXISTS
-**Target:** `tests/unit/systems/test_spatial.py` (153 lines)
+### Task 3.1: Merge Spatial Tests [Simple] ⚠️ COMPLETE
+**Source:** `tests/unit/systems/test_spatial_extended.py` (157 lines) — DELETED
+**Target:** `tests/unit/systems/test_spatial.py` (now 195 lines)
 **Tests:** `pytest tests/unit/systems/test_spatial.py -v` then `pytest tests/ -n 12`
 
-- [ ] Read both source and target files fully
-- [ ] Identify unique tests in source NOT present in target. Key unique tests:
-  - `test_insert_creates_bucket` — verifies bucket creation on insert
-  - `test_query_spans_multiple_cells` — cross-cell query finding 3 objects
-  - (Other tests have equivalents in target with different names — verify before discarding)
-- [ ] Copy unique tests into appropriate classes in target file
-- [ ] Adapt MockObject if needed (target's MockObject may already be compatible)
-- [ ] Run `pytest tests/unit/systems/test_spatial.py -v` — all tests pass
-- [ ] Delete `tests/unit/systems/test_spatial_extended.py`
-- [ ] Run `pytest tests/ -n 12` — no regressions
+- [x] Read both source and target files fully
+- [x] Identify unique tests in source NOT present in target. Key unique tests:
+  - `test_insert_creates_bucket` — DUPLICATE of `test_insert_single_object` (skip)
+  - `test_query_spans_multiple_cells` — UNIQUE (merged)
+  - `test_query_radius_empty_grid` — UNIQUE (merged)
+  - (11 other tests have equivalents in target with different names — skipped)
+- [x] Copy unique tests into appropriate classes in target file
+- [x] Adapt MockObject if needed (used target's MockObject with name param)
+- [x] Run `pytest tests/unit/systems/test_spatial.py -v` — 13 passed
+- [x] Delete `tests/unit/systems/test_spatial_extended.py`
+- [x] Run `pytest tests/ -n 12` — 11971 passed, 144 pre-existing failures (no regressions)
 
-**Notes:** Source has 13 tests, target has 11. Most overlap by function with different names. Carefully compare semantics, not just names.
+**Notes:** Source had 13 tests, target had 11. Careful semantic comparison found only 2 truly unique tests: `test_query_radius_empty_grid` and `test_query_spans_multiple_cells`. Both merged into new `TestSpatialGridExtendedCases` class. Net change: -11 duplicate tests, +2 unique merged.
 
 ### Task 3.2: Merge Collision System Tests [Medium]
 **Source:** `tests/unit/systems/test_collision_system.py` (393 lines) — STILL EXISTS

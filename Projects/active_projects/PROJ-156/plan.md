@@ -21,10 +21,10 @@
 ## Current State
 **Last Updated:** 2026-02-20
 **Active Phase:** Phase 3
-**Last Action:** Completed Task 3.0 - recovered 3 lost KiteBehavior tests from git history
-**Next Action:** Task 3.1 - Merge Spatial Tests
+**Last Action:** Completed Task 3.1 - Merge Spatial Tests (2 unique tests merged, source deleted)
+**Next Action:** Task 3.2 - Merge Collision System Tests
 **Blockers:** None
-**Context for Next Agent:** Task 3.0 (CRITICAL) complete - 3 KiteBehavior tests recovered and added to TestKiteBehavior class. Task 3.3 now fully complete. Remaining: Tasks 3.1, 3.2, 3.4, 3.5, 3.6. Baseline: 11979 passed (+2 from recovery), 144 pre-existing failures.
+**Context for Next Agent:** Task 3.1 complete - merged 2 unique tests from test_spatial_extended.py into test_spatial.py, deleted source. 11 duplicate tests removed. Remaining: Tasks 3.2, 3.4, 3.5, 3.6. Baseline: 11971 passed (-8 net from duplicate removal), 144 pre-existing failures.
 
 ## Overview
 Systematic cleanup of confirmed dead/duplicate/scaffold test code across the AI, Research, Combat, Builder, and Systems test directories. Based on Validation Review 3 which examined 30 findings from agents 5 and 6, confirmed 12 for deletion, 13 for partial removal, and disputed 5 (kept as-is). Total estimated savings: ~2,800+ lines.
