@@ -8,22 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-19
-**Last Completed:** PROJ-154 Phase 3 - Partial File Edits
-**Current Status:** PROJ-154 Phase 4 pending
+**Last Completed:** PROJ-154 Phase 4 - File Relocation
+**Current Status:** PROJ-154 all phases complete, audit pending
 **Current Project:** PROJ-154
-**Current Phase:** Phase 4 (File Relocation)
-**Test Status:** 12130 tests collected, 144 pre-existing failures (UI/Strategy)
+**Current Phase:** Audit Cycle 1
+**Test Status:** 11984 passed, 144 pre-existing failures (UI/Strategy)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-154 Phase 3 COMPLETE
-  - Task 3.3: Removed 3 duplicate tests from test_battle_screen_extended.py (131 → 41 lines)
-  - Task 3.5: Removed TestGameSwitchScene (2 tests) from test_scene_protocol.py
-  - Task 3.7: Removed 11 mock-testing tests from test_strategy_detail_formatter.py
-  - Task 3.8: Removed test_legacy_cleanup from test_production_refactor.py
-  - Test count: 12130 (-17 from Phase 2)
+- PROJ-154 Phase 4 COMPLETE
+  - Task 4.1: git mv test_fleet_report_filters.py from strategy/ to ui/screens/ (932 lines)
+  - All 49 tests pass at new location
+  - No import changes needed (file already imported from game.ui.screens)
+  - Test count: 11984 passed, 144 pre-existing failures
   - No NEW failures introduced
-- Next: Execute Phase 4 - File Relocation (git mv test_fleet_report_filters.py)
+- All 4 phases complete
+- Next: Execute Audit Cycle 1 (Protocol 04)
 
 ---
 
@@ -122,6 +122,7 @@
 | 2026-02-19 | PROJ-154 | Phase 1 | Complete | 12165 collected, 112 pre-existing | pending | Deleted 4 files, updated __init__.py |
 | 2026-02-19 | PROJ-154 | Phase 2 | Complete | 12147 collected, 144 pre-existing | pending | Merged contracts→interfaces (+18), adapter data/→root (+1), deleted 2 files |
 | 2026-02-19 | PROJ-154 | Phase 3 | Complete | 12130 collected, 144 pre-existing | pending | Removed 17 tests from 4 files (-90 lines in test_battle_screen_extended, -40 in test_scene_protocol, -106 in test_strategy_detail_formatter, -7 in test_production_refactor) |
+| 2026-02-19 | PROJ-154 | Phase 4 | Complete | 11984 pass, 144 pre-existing | pending | git mv test_fleet_report_filters.py strategy/ → ui/screens/ (932 lines relocated, 49 tests) |
 
 ---
 

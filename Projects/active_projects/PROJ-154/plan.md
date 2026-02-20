@@ -16,15 +16,15 @@
 | 1. Pure File Deletions | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Migrate then Delete | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Partial File Edits | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
-| 4. File Relocation | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
+| 4. File Relocation | Complete | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-19
-**Active Phase:** Phase 4
-**Last Action:** Phase 3 complete - removed 17 dead/duplicate tests from 4 files (3 from test_battle_screen_extended.py, 2 from test_scene_protocol.py, 11 from test_strategy_detail_formatter.py, 1 from test_production_refactor.py)
-**Next Action:** Execute Phase 4 - File Relocation (git mv test_fleet_report_filters.py)
+**Active Phase:** All phases complete - ready for audit
+**Last Action:** Phase 4 complete - relocated test_fleet_report_filters.py from strategy/ to ui/screens/ (932 lines)
+**Next Action:** Trigger audit (Protocol 04)
 **Blockers:** None
-**Context for Next Agent:** Test collection: 12130 (down from 12147 = -17 net). Pre-existing failures: 144 (UI/Strategy). No NEW failures introduced.
+**Context for Next Agent:** All 4 phases complete. Test count: 11984 passed, 144 pre-existing failures. No NEW failures introduced.
 
 ### PROJ-157 Overlap Summary
 PROJ-157 completed these PROJ-154 items:
@@ -94,7 +94,7 @@ Systematic cleanup of dead, duplicate, and trivially obvious test code identifie
 - Validation findings: `Reviews/results/2026-02-16_105410_general_test-suite-cleanup-v3/findings/`
 
 ## Verification
-- [ ] All phase checklists complete
-- [ ] All tests passing (no NEW failures beyond pre-existing 143)
-- [ ] `git diff --stat` confirms remaining ~1,438 lines removed
+- [x] All phase checklists complete
+- [x] All tests passing (no NEW failures beyond pre-existing 144)
+- [x] `git diff --stat` confirms remaining ~1,438 lines removed
 - [ ] User verified
