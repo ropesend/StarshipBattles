@@ -750,3 +750,343 @@ class TestEvaluatorEdgeCases:
         )
 
         assert score == pytest.approx(100.0)
+
+
+# =============================================================================
+# MIGRATED FROM: tests/unit/ai/target_evaluator/test_evaluation_rules.py
+# =============================================================================
+
+class TestMigratedDistanceEdgeCases:
+    """Migrated distance edge cases from test_evaluation_rules.py."""
+
+    def test_nearest_zero_distance(self, mock_ship, mock_stat_helpers):
+        """Zero distance should give score of 0."""
+        target = MagicMock()
+        target.id = 'at_origin'
+        target.position = Vector2(0, 0)  # Same as ship
+        target.get_components_by_ability = MagicMock(return_value=[])
+        target.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'nearest', 'weight': 1}]
+
+        score = TargetEvaluator.evaluate(
+            mock_ship, target, rules,
+            stat_helpers=mock_stat_helpers
+        )
+
+        assert score == 0
+
+
+class TestMigratedMassBehaviorEquivalence:
+    """Migrated mass behavior equivalence tests from test_evaluation_rules.py."""
+
+    def test_largest_same_as_mass(self, mock_ship, mock_target, mock_stat_helpers):
+        """'largest' should behave same as 'mass'."""
+        rules_mass = [{'type': 'mass', 'weight': 1}]
+        rules_largest = [{'type': 'largest', 'weight': 1}]
+
+        score_mass = TargetEvaluator.evaluate(
+            mock_ship, mock_target, rules_mass,
+            stat_helpers=mock_stat_helpers
+        )
+        score_largest = TargetEvaluator.evaluate(
+            mock_ship, mock_target, rules_largest,
+            stat_helpers=mock_stat_helpers
+        )
+
+        assert score_mass == score_largest
+
+
+class TestMigratedStrengthRules:
+    """Migrated strength rules tests from test_evaluation_rules.py."""
+
+    def test_strongest_uses_mass(self, mock_ship, mock_stat_helpers):
+        """Strongest should favor higher mass."""
+        weak = MagicMock()
+        weak.id = 'weak'
+        weak.position = Vector2(100, 0)
+        weak.mass = 500
+        weak.get_components_by_ability = MagicMock(return_value=[])
+        weak.get_components_by_layer = MagicMock(return_value=[])
+
+        strong = MagicMock()
+        strong.id = 'strong'
+        strong.position = Vector2(100, 0)
+        strong.mass = 5000
+        strong.get_components_by_ability = MagicMock(return_value=[])
+        strong.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'strongest', 'weight': 1}]
+
+        score_weak = TargetEvaluator.evaluate(
+            mock_ship, weak, rules, stat_helpers=mock_stat_helpers
+        )
+        score_strong = TargetEvaluator.evaluate(
+            mock_ship, strong, rules, stat_helpers=mock_stat_helpers
+        )
+
+        assert score_strong > score_weak
+
+    def test_weakest_uses_inverse_mass(self, mock_ship, mock_stat_helpers):
+        """Weakest should favor lower mass."""
+        weak = MagicMock()
+        weak.id = 'weak'
+        weak.position = Vector2(100, 0)
+        weak.mass = 500
+        weak.get_components_by_ability = MagicMock(return_value=[])
+        weak.get_components_by_layer = MagicMock(return_value=[])
+
+        strong = MagicMock()
+        strong.id = 'strong'
+        strong.position = Vector2(100, 0)
+        strong.mass = 5000
+        strong.get_components_by_ability = MagicMock(return_value=[])
+        strong.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'weakest', 'weight': 1}]
+
+        score_weak = TargetEvaluator.evaluate(
+            mock_ship, weak, rules, stat_helpers=mock_stat_helpers
+        )
+        score_strong = TargetEvaluator.evaluate(
+            mock_ship, strong, rules, stat_helpers=mock_stat_helpers
+        )
+
+        assert score_weak > score_strong
+
+
+class TestMigratedPDCArcRequired:
+    """Migrated PDC arc required flag test from test_evaluation_rules.py."""
+
+    def test_pdc_arc_required_missile_out_of_arc(self, mock_ship):
+        """Required pdc_arc should return -inf for missile out of arc."""
+        missile = MagicMock()
+        missile.id = 'missile_out'
+        missile.position = Vector2(-100, 0)  # Behind ship
+        missile.type = AttackType.MISSILE
+
+        # Helper that returns False for out of arc
+        helpers = {
+            'get_hp_percent': lambda x: 1.0,
+            'is_in_pdc_arc': lambda ship, target: False
+        }
+
+        rules = [{'type': 'pdc_arc', 'weight': 100, 'required': True}]
+
+        score = TargetEvaluator.evaluate(
+            mock_ship, missile, rules,
+            stat_helpers=helpers
+        )
+
+        assert score == float('-inf')
+
+
+# =============================================================================
+# TCG-FND-018: Speed Rule with Factor-Based Scoring
+# MIGRATED FROM: tests/unit/ai/target_evaluator/test_evaluation_rules.py
+# CRITICAL: Bug-documenting tests - preserve all comments
+# =============================================================================
+
+class TestSpeedRulesFactorBased:
+    """TCG-FND-018: Tests for _eval_speed_rule with factor-based scoring.
+
+    The finding notes potential logic issues when using factor instead of weight
+    for 'slowest' rules. These tests verify the correct behavior.
+
+    Current implementation:
+        fastest: val = speed * (weight if weight > 0 else factor)
+        slowest: val = -speed * (weight if weight > 0 else -factor)
+
+    When weight=0 and factor is used for 'slowest':
+        val = -speed * -factor = speed * factor
+
+    This means faster targets get HIGHER scores for 'slowest' with factor,
+    which is INCORRECT behavior. These tests document this.
+    """
+
+    def test_slowest_with_weight_slower_is_higher(self, mock_ship, mock_stat_helpers):
+        """slowest rule with weight correctly prefers slower targets."""
+        slow = MagicMock()
+        slow.id = 'slow'
+        slow.position = Vector2(100, 0)
+        slow.velocity = Vector2(5, 0)  # speed = 5
+        slow.get_components_by_ability = MagicMock(return_value=[])
+        slow.get_components_by_layer = MagicMock(return_value=[])
+
+        fast = MagicMock()
+        fast.id = 'fast'
+        fast.position = Vector2(100, 0)
+        fast.velocity = Vector2(50, 0)  # speed = 50
+        fast.get_components_by_ability = MagicMock(return_value=[])
+        fast.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'slowest', 'weight': 1}]
+
+        score_slow = TargetEvaluator.evaluate(
+            mock_ship, slow, rules, stat_helpers=mock_stat_helpers
+        )
+        score_fast = TargetEvaluator.evaluate(
+            mock_ship, fast, rules, stat_helpers=mock_stat_helpers
+        )
+
+        # With weight: slow gets -5, fast gets -50
+        # Less negative (slower) should be higher
+        assert score_slow > score_fast
+        assert score_slow == -5
+        assert score_fast == -50
+
+    def test_slowest_with_factor_documents_behavior(self, mock_ship, mock_stat_helpers):
+        """Document slowest rule behavior when using factor (weight=0).
+
+        With the current implementation:
+        - slowest with factor uses: val = -speed * -factor = speed * factor
+        - This makes FASTER targets score HIGHER, which contradicts 'slowest' intent
+
+        This test documents the actual behavior as-is. If this is a bug, fixing
+        it would require changing _eval_speed_rule to use -factor for slowest.
+        """
+        slow = MagicMock()
+        slow.id = 'slow'
+        slow.position = Vector2(100, 0)
+        slow.velocity = Vector2(5, 0)  # speed = 5
+        slow.get_components_by_ability = MagicMock(return_value=[])
+        slow.get_components_by_layer = MagicMock(return_value=[])
+
+        fast = MagicMock()
+        fast.id = 'fast'
+        fast.position = Vector2(100, 0)
+        fast.velocity = Vector2(50, 0)  # speed = 50
+        fast.get_components_by_ability = MagicMock(return_value=[])
+        fast.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'slowest', 'weight': 0, 'factor': 1}]
+
+        score_slow = TargetEvaluator.evaluate(
+            mock_ship, slow, rules, stat_helpers=mock_stat_helpers
+        )
+        score_fast = TargetEvaluator.evaluate(
+            mock_ship, fast, rules, stat_helpers=mock_stat_helpers
+        )
+
+        # With current implementation: val = -speed * -factor
+        # slow: -5 * -1 = 5
+        # fast: -50 * -1 = 50
+        # BUG: Fast target gets HIGHER score despite 'slowest' rule
+        assert score_slow == 5, "Expected: -speed * -factor = speed * factor"
+        assert score_fast == 50, "Expected: -speed * -factor = speed * factor"
+
+        # Document: This is likely a BUG - faster should not score higher for 'slowest'
+        # The correct behavior would be: slower target scores higher
+        # If this assertion fails after a fix, the bug has been corrected
+        assert score_fast > score_slow, "Current behavior: fast > slow (likely a bug)"
+
+    def test_fastest_with_weight_faster_is_higher(self, mock_ship, mock_stat_helpers):
+        """fastest rule with weight correctly prefers faster targets."""
+        slow = MagicMock()
+        slow.id = 'slow'
+        slow.position = Vector2(100, 0)
+        slow.velocity = Vector2(5, 0)
+        slow.get_components_by_ability = MagicMock(return_value=[])
+        slow.get_components_by_layer = MagicMock(return_value=[])
+
+        fast = MagicMock()
+        fast.id = 'fast'
+        fast.position = Vector2(100, 0)
+        fast.velocity = Vector2(50, 0)
+        fast.get_components_by_ability = MagicMock(return_value=[])
+        fast.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'fastest', 'weight': 1}]
+
+        score_slow = TargetEvaluator.evaluate(
+            mock_ship, slow, rules, stat_helpers=mock_stat_helpers
+        )
+        score_fast = TargetEvaluator.evaluate(
+            mock_ship, fast, rules, stat_helpers=mock_stat_helpers
+        )
+
+        # With weight: slow gets 5, fast gets 50
+        assert score_fast > score_slow
+        assert score_slow == 5
+        assert score_fast == 50
+
+    def test_fastest_with_factor_faster_is_higher(self, mock_ship, mock_stat_helpers):
+        """fastest rule with factor also correctly prefers faster targets."""
+        slow = MagicMock()
+        slow.id = 'slow'
+        slow.position = Vector2(100, 0)
+        slow.velocity = Vector2(5, 0)
+        slow.get_components_by_ability = MagicMock(return_value=[])
+        slow.get_components_by_layer = MagicMock(return_value=[])
+
+        fast = MagicMock()
+        fast.id = 'fast'
+        fast.position = Vector2(100, 0)
+        fast.velocity = Vector2(50, 0)
+        fast.get_components_by_ability = MagicMock(return_value=[])
+        fast.get_components_by_layer = MagicMock(return_value=[])
+
+        rules = [{'type': 'fastest', 'weight': 0, 'factor': 1}]
+
+        score_slow = TargetEvaluator.evaluate(
+            mock_ship, slow, rules, stat_helpers=mock_stat_helpers
+        )
+        score_fast = TargetEvaluator.evaluate(
+            mock_ship, fast, rules, stat_helpers=mock_stat_helpers
+        )
+
+        # With factor: slow gets 5, fast gets 50
+        assert score_fast > score_slow
+
+    def test_slowest_with_negative_factor(self, mock_ship, mock_stat_helpers):
+        """slowest with negative factor should work correctly."""
+        slow = MagicMock()
+        slow.id = 'slow'
+        slow.position = Vector2(100, 0)
+        slow.velocity = Vector2(5, 0)
+        slow.get_components_by_ability = MagicMock(return_value=[])
+        slow.get_components_by_layer = MagicMock(return_value=[])
+
+        fast = MagicMock()
+        fast.id = 'fast'
+        fast.position = Vector2(100, 0)
+        fast.velocity = Vector2(50, 0)
+        fast.get_components_by_ability = MagicMock(return_value=[])
+        fast.get_components_by_layer = MagicMock(return_value=[])
+
+        # Using negative factor to compensate for the double negation
+        rules = [{'type': 'slowest', 'weight': 0, 'factor': -1}]
+
+        score_slow = TargetEvaluator.evaluate(
+            mock_ship, slow, rules, stat_helpers=mock_stat_helpers
+        )
+        score_fast = TargetEvaluator.evaluate(
+            mock_ship, fast, rules, stat_helpers=mock_stat_helpers
+        )
+
+        # With factor=-1: val = -speed * -(-1) = -speed
+        # slow: -5, fast: -50
+        # Now slower target correctly scores higher
+        assert score_slow > score_fast, "With negative factor, slower should score higher"
+
+    def test_stationary_target_zero_speed(self, mock_ship, mock_stat_helpers):
+        """Stationary target (speed=0) should get score of 0."""
+        stationary = MagicMock()
+        stationary.id = 'stationary'
+        stationary.position = Vector2(100, 0)
+        stationary.velocity = Vector2(0, 0)
+        stationary.get_components_by_ability = MagicMock(return_value=[])
+        stationary.get_components_by_layer = MagicMock(return_value=[])
+
+        rules_fastest = [{'type': 'fastest', 'weight': 1}]
+        rules_slowest = [{'type': 'slowest', 'weight': 1}]
+
+        score_fastest = TargetEvaluator.evaluate(
+            mock_ship, stationary, rules_fastest, stat_helpers=mock_stat_helpers
+        )
+        score_slowest = TargetEvaluator.evaluate(
+            mock_ship, stationary, rules_slowest, stat_helpers=mock_stat_helpers
+        )
+
+        assert score_fastest == 0
+        assert score_slowest == 0

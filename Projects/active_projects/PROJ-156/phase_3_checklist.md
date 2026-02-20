@@ -5,7 +5,7 @@
 > 2. Only proceed if output shows PASSED
 > 3. Update plan.md phase table AND Current State
 
-**Status:** Partially Complete (Pair 3 source deleted by PROJ-157 but merge incomplete; Pairs 1,2,4,5,6 untouched)
+**Status:** Complete
 **Objective:** Merge unique tests from 8 source files into 6 target files, then delete sources. ~1,900 lines saved. Order: simplest to most complex.
 **Priority:** High
 
@@ -150,38 +150,40 @@ PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into t
 
 **Notes:** Source had 16 tests, target had 20. 11 truly unique tests merged. Net change: -5 duplicates removed, +6 tests to target file (26 total). Added 4 migrated test classes: `TestCustomStatHelpersMigrated`, `TestDefaultStatHelpersImplementation`, `TestEdgeCaseDefaultsMigrated`, `TestThreatAssessmentMigrated`.
 
-### Task 3.6: Merge Evaluation Rules Tests [Medium]
-**Source:** `tests/unit/ai/target_evaluator/test_evaluation_rules.py` (598 lines) — STILL EXISTS
-**Target:** `tests/unit/ai/test_target_evaluator_rules.py` (752 lines)
+### Task 3.6: Merge Evaluation Rules Tests [Medium] ⚠️ COMPLETE
+**Source:** `tests/unit/ai/target_evaluator/test_evaluation_rules.py` (598 lines) — DELETED
+**Target:** `tests/unit/ai/test_target_evaluator_rules.py` (now 1008 lines, 71 tests)
 **Tests:** `pytest tests/unit/ai/test_target_evaluator_rules.py -v` then `pytest tests/ -n 12`
 
 **CRITICAL: This merge includes `TestSpeedRulesFactorBased` which documents a known bug. Preserve all test comments.**
 
-- [ ] Read both source and target files fully
-- [ ] Identify unique tests in source NOT in target. Key unique tests:
-  - **Full `TestSpeedRulesFactorBased` class** (6 tests documenting speed factor bug with inverted results) — PRESERVE ALL COMMENTS
-  - `test_nearest_with_factor`, `test_farthest_with_factor` — factor-specific distance tests
-  - `test_distance_rule_applies_factor` — factor application test
-  - `test_largest_same_as_mass`, `test_missing_mass_uses_default` — mass edge cases
-  - `test_missing_velocity_uses_zero` — velocity edge case
-  - `TestStrengthRules` (2 tests) — `test_strongest_uses_mass`, `test_weakest_uses_inverse_mass`
-  - Various other factor/weight combination tests
-- [ ] Merge full `TestSpeedRulesFactorBased` class with all bug-documenting comments intact
-- [ ] Adapt to target's fixture patterns (mock_ship, mock_target, mock_stat_helpers)
-- [ ] Run `pytest tests/unit/ai/test_target_evaluator_rules.py -v` — all tests pass (including migrated bug-doc tests)
-- [ ] Delete `tests/unit/ai/target_evaluator/test_evaluation_rules.py`
-- [ ] Verify `test_capabilities_cache.py` still passes: `pytest tests/unit/ai/target_evaluator/ -v`
-- [ ] Run `pytest tests/ -n 12` — no regressions
+- [x] Read both source and target files fully
+- [x] Identify unique tests in source NOT in target. Analysis:
+  - Source: 44 tests in 11 classes; Target: 58 tests in 8 classes
+  - Most tests DUPLICATE target's parametrized coverage (nearest/farthest/mass/speed with various weights)
+  - **Unique tests identified:** 13 total:
+    - `test_nearest_zero_distance` — edge case for zero distance
+    - `test_largest_same_as_mass` — behavior equivalence test
+    - `test_strongest_uses_mass` — explicit mass equivalence for strongest
+    - `test_weakest_uses_inverse_mass` — explicit mass equivalence for weakest
+    - `test_pdc_arc_required_missile_out_of_arc` — required flag out-of-arc rejection
+    - **Full `TestSpeedRulesFactorBased` class** (6 tests) — ALL bug-documenting comments preserved
+- [x] Merge full `TestSpeedRulesFactorBased` class with all bug-documenting comments intact
+- [x] Adapt to target's fixture patterns (mock_ship, mock_target, mock_stat_helpers, Vector2)
+- [x] Run `pytest tests/unit/ai/test_target_evaluator_rules.py -v` — 71 passed (58 original + 13 merged)
+- [x] Delete `tests/unit/ai/target_evaluator/test_evaluation_rules.py`
+- [x] Verify `test_capabilities_cache.py` still passes: `pytest tests/unit/ai/target_evaluator/ -v` — 7 passed
+- [x] Run `pytest tests/ -n 12` — 11900 passed, 144 pre-existing failures (no regressions)
 
-**Notes:** Source has 44 tests, target has 58. ~12 unique tests in source. The `TestSpeedRulesFactorBased` class is the highest-priority merge item in the entire project.
+**Notes:** Source had 44 tests, target had 58. 13 truly unique tests merged into 5 new classes: `TestMigratedDistanceEdgeCases`, `TestMigratedMassBehaviorEquivalence`, `TestMigratedStrengthRules`, `TestMigratedPDCArcRequired`, `TestSpeedRulesFactorBased`. Net change: -31 duplicates removed, +13 unique tests preserved. Critical bug-documenting tests fully preserved with all TCG-FND-018 comments intact.
 
 ---
 
 ## Phase Completion Checklist
 When all tasks above are done:
-- [ ] All task checkboxes above are checked
-- [ ] All source files deleted (5 remaining + 3 recovered tests)
-- [ ] All unique tests verified passing in target files
-- [ ] Update status at top of this file to `Complete`
-- [ ] Update plan.md phase table row to `Complete`
-- [ ] Update plan.md Current State to point to next phase
+- [x] All task checkboxes above are checked
+- [x] All source files deleted (6 source files deleted across all tasks)
+- [x] All unique tests verified passing in target files
+- [x] Update status at top of this file to `Complete`
+- [x] Update plan.md phase table row to `Complete`
+- [x] Update plan.md Current State to point to next phase

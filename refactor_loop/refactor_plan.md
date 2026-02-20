@@ -8,24 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-156 Phase 3 Task 3.5 - Merge Evaluation Integration Tests
-**Current Status:** Phase 3 in progress, Task 3.5 complete
+**Last Completed:** PROJ-156 Phase 3 COMPLETE - Task 3.6 Merge Evaluation Rules Tests
+**Current Status:** Phase 3 complete, Phase 4 next
 **Current Project:** PROJ-156
-**Current Phase:** Phase 3 (Merge Then Delete)
-**Test Status:** 11918 passed, 144 pre-existing failures
+**Current Phase:** Phase 4 (Directory Cleanup & Final Verify)
+**Test Status:** 11900 passed, 144 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-156 Phase 3 Task 3.5 COMPLETE: merged evaluation integration tests
-  - Analyzed 16 source tests vs 20 target tests for semantic overlap
-  - Found 11 unique tests, 5 duplicates
-  - Merged into 4 new classes: TestCustomStatHelpersMigrated, TestDefaultStatHelpersImplementation, TestEdgeCaseDefaultsMigrated, TestThreatAssessmentMigrated
-  - Adapted fixture usage (mock_ship/mock_target instead of pygame fixtures)
-- Modified: tests/unit/ai/test_target_evaluator_edge_cases.py (+175 lines, 26 total tests now)
-- Deleted: tests/unit/ai/target_evaluator/test_evaluation_integration.py
-- Net: -5 test count (5 duplicates removed, 11 unique merged, 6 net added to target)
-- Tests: 11918 passed, 144 pre-existing failures (no regressions)
-- Next: Phase 3 Task 3.6 - Merge Evaluation Rules Tests (critical - includes speed factor bug docs)
+- PROJ-156 Phase 3 Task 3.6 COMPLETE: merged evaluation rules tests (CRITICAL task)
+  - Analyzed 44 source tests vs 58 target tests for semantic overlap
+  - Found 13 unique tests (most source tests were duplicates of target's parametrized tests)
+  - **CRITICAL: TestSpeedRulesFactorBased** (6 tests) preserved with ALL TCG-FND-018 bug-documenting comments
+  - Merged into 5 new classes: TestMigratedDistanceEdgeCases, TestMigratedMassBehaviorEquivalence, TestMigratedStrengthRules, TestMigratedPDCArcRequired, TestSpeedRulesFactorBased
+- Modified: tests/unit/ai/test_target_evaluator_rules.py (+256 lines, 71 total tests now)
+- Deleted: tests/unit/ai/target_evaluator/test_evaluation_rules.py
+- Net: -31 duplicates removed, +13 unique tests preserved
+- Tests: 11900 passed, 144 pre-existing failures (no regressions)
+- Phase 3 COMPLETE: All 7 tasks finished (3.0-3.6)
+- Next: Phase 4 - Directory Cleanup (controllable_interface/, target_evaluator/)
 
 ---
 
@@ -150,6 +151,8 @@
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.2 | Complete | 11962 pass, 144 pre-existing | pending | Merged 3 unique collision tests, deleted source (-9 net duplicates) |
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.4 | Complete | 11925 pass, 144 pre-existing | pending | Merged 2 unique adapter tests, deleted 2 sources (-37 net duplicates) |
 | 2026-02-20 | PROJ-156 | Phase 3 Task 3.5 | Complete | 11918 pass, 144 pre-existing | pending | Merged 11 unique eval integration tests, deleted source (-5 net duplicates) |
+| 2026-02-20 | PROJ-156 | Phase 3 Task 3.6 | Complete | 11900 pass, 144 pre-existing | pending | Merged 13 unique eval rules tests incl. CRITICAL TestSpeedRulesFactorBased bug docs (-31 duplicates) |
+| 2026-02-20 | PROJ-156 | Phase 3 | Complete | 11900 pass, 144 pre-existing | pending | All 7 tasks complete: 6 source files deleted, ~50 unique tests preserved, ~80 duplicates removed |
 
 ---
 

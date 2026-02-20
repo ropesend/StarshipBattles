@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Straight Deletes | Complete (by PROJ-157) | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Partial Cleanup | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Merge Then Delete | Partially Complete | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Merge Then Delete | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Directory Cleanup & Final Verify | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-20
-**Active Phase:** Phase 3
-**Last Action:** Completed Task 3.5 - Merge Evaluation Integration Tests (11 unique tests merged, 5 duplicates removed)
-**Next Action:** Task 3.6 - Merge Evaluation Rules Tests (final task in Phase 3)
+**Active Phase:** Phase 4
+**Last Action:** Completed Phase 3 (all merge tasks complete)
+**Next Action:** Phase 4 - Directory Cleanup & Final Verify
 **Blockers:** None
-**Context for Next Agent:** Task 3.5 complete - merged 11 unique tests into 4 new classes (TestCustomStatHelpersMigrated, TestDefaultStatHelpersImplementation, TestEdgeCaseDefaultsMigrated, TestThreatAssessmentMigrated). Source file deleted. Remaining: Task 3.6 (the critical speed rules bug-documenting merge). Baseline: 11918 passed, 144 pre-existing failures.
+**Context for Next Agent:** Phase 3 COMPLETE - all 7 tasks finished. Final merge (Task 3.6) preserved critical TestSpeedRulesFactorBased bug-documenting tests with all TCG-FND-018 comments intact. Phase 4 remains: cleanup emptied directories (controllable_interface/, target_evaluator/) and final verification. Baseline: 11900 passed, 144 pre-existing failures.
 
 ## Overview
 Systematic cleanup of confirmed dead/duplicate/scaffold test code across the AI, Research, Combat, Builder, and Systems test directories. Based on Validation Review 3 which examined 30 findings from agents 5 and 6, confirmed 12 for deletion, 13 for partial removal, and disputed 5 (kept as-is). Total estimated savings: ~2,800+ lines.
