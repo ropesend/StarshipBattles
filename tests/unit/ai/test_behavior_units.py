@@ -261,6 +261,81 @@ class TestKiteBehavior:
 
         mock_controller.navigate_to.assert_called()
 
+    # -------------------------------------------------------------------------
+    # Recovered tests from test_ai_behaviors.py (PROJ-156 Task 3.0)
+    # -------------------------------------------------------------------------
+
+    def test_opt_dist_calculation(self, mock_controller, mock_target):
+        """Verify optimal distance calculation: opt_dist = weapon_range * multiplier.
+
+        Recovered from test_ai_behaviors.py - tests exact calculation.
+        """
+        # Setup: weapon_range=200, multiplier=0.8 -> opt_dist=160
+        mock_controller.ship.get_weapon_range.return_value = 1000.0
+        mock_controller.get_engage_distance_multiplier.return_value = 0.8
+        mock_controller.ship.get_position.return_value = Vector2(0, 0)
+        mock_target.position = Vector2(2000, 0)  # Far away
+
+        behavior = KiteBehavior(mock_controller)
+        behavior.update(mock_target, {})
+
+        # Verify multiplier was retrieved
+        mock_controller.get_engage_distance_multiplier.assert_called()
+
+        # Expected opt_dist = 1000 * 0.8 = 800
+        # Since dist (2000) > opt_dist (800), navigates to target with stop_dist=opt_dist
+        mock_controller.navigate_to.assert_called_with(
+            mock_target.position,
+            stop_dist=800.0
+        )
+
+    def test_opt_dist_min_clamp(self, mock_controller, mock_target):
+        """Verify optimal distance is clamped to minimum 150.
+
+        Recovered from test_ai_behaviors.py - tests MIN_SPACING enforcement.
+        """
+        mock_controller.ship.get_weapon_range.return_value = 1000.0
+        mock_controller.get_engage_distance_multiplier.return_value = 0.1
+        # opt_dist = 1000 * 0.1 = 100. Should clamp to 150.
+
+        mock_controller.ship.get_position.return_value = Vector2(0, 0)
+        mock_target.position = Vector2(2000, 0)
+
+        behavior = KiteBehavior(mock_controller)
+        behavior.update(mock_target, {})
+
+        mock_controller.navigate_to.assert_called_with(
+            mock_target.position,
+            stop_dist=150
+        )
+
+    def test_branching_kite_maintain(self, mock_controller, mock_target):
+        """Verify exact kite-away vector math when too close.
+
+        Recovered from test_ai_behaviors.py - tests precise kite position calculation:
+        vec = ship.pos - target.pos, normalized
+        kite_pos = target.position + vec.normalize() * opt_dist
+        """
+        mock_controller.ship.get_weapon_range.return_value = 1000.0
+        mock_controller.get_engage_distance_multiplier.return_value = 0.5  # opt_dist = 500
+
+        # Ship at origin, target at (300, 0) -> too close (dist=300 < opt=500)
+        mock_controller.ship.get_position.return_value = Vector2(0, 0)
+        mock_target.position = Vector2(300, 0)
+
+        behavior = KiteBehavior(mock_controller)
+        behavior.update(mock_target, {})
+
+        # Calculate expected kite position:
+        # vec = ship(0,0) - target(300,0) = (-300, 0)
+        # normalized = (-1, 0)
+        # kite_pos = target(300,0) + (-1,0) * 500 = (-200, 0)
+        args, kwargs = mock_controller.navigate_to.call_args
+        target_pos = args[0]
+        assert target_pos.x == pytest.approx(-200, abs=1)
+        assert target_pos.y == pytest.approx(0, abs=1)
+        assert kwargs['stop_dist'] == 0
+
 
 # =============================================================================
 # AttackRunBehavior Tests

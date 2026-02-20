@@ -8,19 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-156 Phase 2 - Partial Cleanup
-**Current Status:** Phase 2 complete, starting Phase 3
+**Last Completed:** PROJ-156 Phase 3 Task 3.0 - Recover 3 lost KiteBehavior tests
+**Current Status:** Phase 3 in progress, Task 3.0 complete
 **Current Project:** PROJ-156
 **Current Phase:** Phase 3 (Merge Then Delete)
-**Test Status:** 11977 passed, 143 pre-existing failures
+**Test Status:** 11979 passed, 144 pre-existing failures
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-156 Phase 2 Task 2.5 completed: removed TestLayoutConstants from 2 files
-  - tests/unit/research/research_scene/test_initialization.py (lines 264-286)
-  - tests/unit/ui/panels/test_empire_treasury_panel.py (lines 322-343)
-- Tests: 11977 passed, 143 pre-existing failures (same baseline)
-- Next: Phase 3 Task 3.0 - recover 3 lost KiteBehavior tests from git history (commit b1edd82b^)
+- PROJ-156 Phase 3 Task 3.0 COMPLETE: recovered 3 KiteBehavior tests from git history
+  - `test_opt_dist_calculation` - tests exact opt_dist = weapon_range * multiplier
+  - `test_opt_dist_min_clamp` - tests minimum 150 clamping
+  - `test_branching_kite_maintain` - tests exact kite-away vector math
+- Modified: tests/unit/ai/test_behavior_units.py (+57 lines, 3 tests added to TestKiteBehavior)
+- Task 3.3 now fully complete (all 7 tests from deleted source recovered)
+- Tests: 11979 passed (+2), 144 pre-existing failures
+- Next: Phase 3 Task 3.1 - Merge Spatial Tests
 
 ---
 
@@ -140,6 +143,7 @@
 | 2026-02-20 | PROJ-155 | Phase 5 | Complete | 11984 pass, 144 pre-existing | pending | Renamed refactor/ → modifiers/ (23 files, 253 tests) |
 | 2026-02-20 | PROJ-155 | Audit 1 | PASSED | 11984 pass, 144 pre-existing | pending | All 5 phases verified, no issues |
 | 2026-02-20 | PROJ-156 | Phase 2 | Complete | 11977 pass, 143 pre-existing | pending | Task 2.5: removed TestLayoutConstants from 2 files (-8 trivial tests) |
+| 2026-02-20 | PROJ-156 | Phase 3 Task 3.0 | Complete | 11979 pass, 144 pre-existing | pending | Recovered 3 lost KiteBehavior tests from git history |
 
 ---
 

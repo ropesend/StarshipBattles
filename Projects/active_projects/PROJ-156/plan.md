@@ -21,10 +21,10 @@
 ## Current State
 **Last Updated:** 2026-02-20
 **Active Phase:** Phase 3
-**Last Action:** Completed Phase 2 Task 2.5 - removed TestLayoutConstants from 2 files
-**Next Action:** Start Phase 3 - Task 3.0 (recover 3 lost KiteBehavior tests)
+**Last Action:** Completed Task 3.0 - recovered 3 lost KiteBehavior tests from git history
+**Next Action:** Task 3.1 - Merge Spatial Tests
 **Blockers:** None
-**Context for Next Agent:** Phase 2 complete. Phase 3 has 7 tasks: 3.0 (recover lost tests), 3.1-3.6 (merge operations). Task 3.0 is CRITICAL - must recover 3 KiteBehavior tests from git history (commit b1edd82b^). Baseline: 11977 passed, 143 pre-existing failures.
+**Context for Next Agent:** Task 3.0 (CRITICAL) complete - 3 KiteBehavior tests recovered and added to TestKiteBehavior class. Task 3.3 now fully complete. Remaining: Tasks 3.1, 3.2, 3.4, 3.5, 3.6. Baseline: 11979 passed (+2 from recovery), 144 pre-existing failures.
 
 ## Overview
 Systematic cleanup of confirmed dead/duplicate/scaffold test code across the AI, Research, Combat, Builder, and Systems test directories. Based on Validation Review 3 which examined 30 findings from agents 5 and 6, confirmed 12 for deletion, 13 for partial removal, and disputed 5 (kept as-is). Total estimated savings: ~2,800+ lines.

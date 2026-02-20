@@ -19,22 +19,22 @@ PROJ-157 deleted the source file for Pair 3 (`test_ai_behaviors.py`) but only me
 
 ## Tasks
 
-### Task 3.0: Recover 3 lost KiteBehavior tests [CRITICAL] ⚠️ NEW
+### Task 3.0: Recover 3 lost KiteBehavior tests [CRITICAL] ⚠️ COMPLETE
 **Source:** Git history, commit `b1edd82b^:tests/unit/ai/test_ai_behaviors.py`
 **Target:** `tests/unit/ai/test_behavior_units.py`
 **Tests:** `pytest tests/unit/ai/test_behavior_units.py -v`
 
 PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into the target:
-- [ ] Recover `test_opt_dist_calculation` from git history — tests exact opt_dist = weapon_range * multiplier + stop_dist
-- [ ] Recover `test_opt_dist_min_clamp` from git history — tests opt_dist clamped to minimum 150
-- [ ] Recover `test_branching_kite_maintain` from git history — tests exact kite-away vector math
-- [ ] Adapt to target's fixture patterns (use `game.core.math.Vector2`, not `pygame.math.Vector2`)
-- [ ] Add to `TestKiteBehavior` class or create appropriate section in target
-- [ ] Run `pytest tests/unit/ai/test_behavior_units.py -v` — all tests pass
+- [x] Recover `test_opt_dist_calculation` from git history — tests exact opt_dist = weapon_range * multiplier + stop_dist
+- [x] Recover `test_opt_dist_min_clamp` from git history — tests opt_dist clamped to minimum 150
+- [x] Recover `test_branching_kite_maintain` from git history — tests exact kite-away vector math
+- [x] Adapt to target's fixture patterns (use `game.core.math.Vector2`, not `pygame.math.Vector2`)
+- [x] Add to `TestKiteBehavior` class or create appropriate section in target
+- [x] Run `pytest tests/unit/ai/test_behavior_units.py -v` — all tests pass (54 passed)
 
 **Recovery command:** `git show b1edd82b^:tests/unit/ai/test_ai_behaviors.py`
 
-**Notes:** These tests existed in the source (lines 43, 61, 86) and were confirmed present via git history. PROJ-157 merged 4 other tests (formation rotation, drift, velocity sync) but missed these 3.
+**Notes:** Tests recovered and adapted to use game.core.math.Vector2. Added with section comment documenting recovery source. Total KiteBehavior tests: 9 (6 existing + 3 recovered).
 
 ### Task 3.1: Merge Spatial Tests [Simple]
 **Source:** `tests/unit/systems/test_spatial_extended.py` (157 lines) — STILL EXISTS
@@ -76,7 +76,7 @@ PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into t
 
 **Notes:** Source has 12 tests, target has 21. Target is much more comprehensive. Carefully check which source tests are truly unique vs covered by different-named target tests.
 
-### Task 3.3: Merge AI Behavior Tests [DONE with recovery needed]
+### Task 3.3: Merge AI Behavior Tests [COMPLETE]
 **Source:** `tests/unit/ai/test_ai_behaviors.py` — DELETED by PROJ-157
 **Target:** `tests/unit/ai/test_behavior_units.py` (735+ lines)
 
@@ -86,9 +86,12 @@ PROJ-157 deleted `test_ai_behaviors.py` but failed to merge these 3 tests into t
   - `test_target_pos_relative_rotation`
   - `test_drift_logic_correction`
   - `test_velocity_sync`
-- [ ] **3 tests NOT merged — see Task 3.0 for recovery**
+- [x] **3 KiteBehavior tests recovered via Task 3.0:**
+  - `test_opt_dist_calculation`
+  - `test_opt_dist_min_clamp`
+  - `test_branching_kite_maintain`
 
-**Notes:** Task 3.0 handles the recovery. Once 3.0 is done, this task is complete.
+**Notes:** All 7 unique tests from source file now present in target. Task complete.
 
 ### Task 3.4: Merge Controllable Adapter Tests [Medium]
 **Source 1:** `tests/unit/ai/controllable_interface/test_adapter_basics.py` (232 lines) — STILL EXISTS
