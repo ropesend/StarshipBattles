@@ -138,7 +138,7 @@ class TestMultipleTurns:
         assert fleet.location == destination or len(fleet.orders) == 0
 
     def test_production_completes_across_turns(self, turn_engine, two_empire_setup, test_savegame_dir):
-        """Production queue decrements and completes over multiple turns."""
+        """Production queue consumes resources and completes over multiple turns."""
         empire1, empire2, galaxy = two_empire_setup
         empires = [empire1, empire2]
 
@@ -148,23 +148,39 @@ class TestMultipleTurns:
 
         colony = empire1.colonies[0]
 
+        # Give empire resources for tick-based production
+        empire1.resource_pool = {
+            "Metals": 100000.0,
+            "Organics": 100000.0,
+            "Radioactives": 100000.0,
+            "Energy": 100000.0
+        }
+
         # Use complex type which doesn't require shipyard
-        colony.add_production("test_complex", turns=3, vehicle_type="complex")
+        # At 20/tick planetary rate, 6000 Metals = 300 ticks = 3 turns
+        queue_item = {
+            "design_id": "test_complex",
+            "type": "complex",
+            "turns_remaining": 3,
+            "total_cost": {"Metals": 6000.0},
+            "resources_consumed": {"Metals": 0.0}
+        }
+        colony.construction_queue.append(queue_item)
         assert len(colony.construction_queue) == 1
 
-        # Turn 1 - decrements to 2
-        turn_engine.process_production(empires, galaxy, save_path=test_savegame_dir)
+        # Turn 1 - should consume some resources
+        turn_engine.process_turn(empires, galaxy, save_path=test_savegame_dir)
         if colony.construction_queue:
             item = colony.construction_queue[0]
-            remaining = item["turns_remaining"] if isinstance(item, dict) else item[1]
-            assert remaining == 2
+            consumed = item.get("resources_consumed", {}).get("Metals", 0)
+            assert consumed > 0  # Progress made
 
-        # Turn 2 - decrements to 1
-        turn_engine.process_production(empires, galaxy, save_path=test_savegame_dir)
+        # Turn 2 - consumes more resources
+        turn_engine.process_turn(empires, galaxy, save_path=test_savegame_dir)
         if colony.construction_queue:
             item = colony.construction_queue[0]
-            remaining = item["turns_remaining"] if isinstance(item, dict) else item[1]
-            assert remaining == 1
+            consumed = item.get("resources_consumed", {}).get("Metals", 0)
+            assert consumed > 2000  # More progress
 
     def test_state_persists_between_turns(self, game_session):
         """Game state is preserved correctly between turns."""

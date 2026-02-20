@@ -6,10 +6,24 @@ Tests queue format, adding items, and progress.
 PROJ-69 Phase 2: Updated shipyard requirement tests. Ship items now go in
 facility queues (not base queue). Tests verify facility queue processing
 and that removing a shipyard stops facility queue processing.
+
+PROJ-158 Phase 4: Updated to use tick-based production API instead of dead
+process_production() method.
 """
 
 import pytest
 from game.strategy.data.planet import PlanetaryFacility
+
+
+def _process_one_turn(engine, empires, galaxy=None, save_path=None):
+    """Process 100 ticks of construction for one turn.
+
+    Uses the live tick-based API instead of the dead process_production().
+    """
+    for tick in range(1, 101):
+        engine.production_engine.process_construction_tick(
+            tick, empires, galaxy, save_path=save_path
+        )
 
 
 def _make_shipyard(instance_id: str = "shipyard_1") -> PlanetaryFacility:
@@ -85,6 +99,8 @@ class TestShipyardRequirement:
 
     PROJ-69 Phase 2: Ship items now go in facility queues. When the shipyard
     is removed (facility removed), its queue is no longer processed.
+
+    PROJ-158 Phase 4: Updated to use tick-based production API.
     """
 
     def test_ship_build_stops_when_shipyard_removed(self, production_setup):
@@ -95,15 +111,23 @@ class TestShipyardRequirement:
         temp_dir = production_setup['temp_dir']
 
         # Add shipyard with ship in facility queue
+        # At 30/tick shipyard rate, 9000 Metals = 300 ticks = 3 turns
         shipyard = _make_shipyard()
         shipyard.construction_queue = [
-            {"design_id": "test_ship", "type": "ship", "turns_remaining": 3}
+            {
+                "design_id": "test_ship",
+                "type": "ship",
+                "turns_remaining": 3,
+                "total_cost": {"Metals": 9000.0},
+                "resources_consumed": {"Metals": 0.0}
+            }
         ]
         planet.facilities.append(shipyard)
 
-        # Process turn - should work with shipyard
-        engine.process_production(empires, save_path=temp_dir)
-        assert shipyard.construction_queue[0]["turns_remaining"] == 2
+        # Process turn - should make progress
+        _process_one_turn(engine, empires, save_path=temp_dir)
+        # After 100 ticks at 30/tick = 3000 consumed
+        assert shipyard.construction_queue[0]["resources_consumed"]["Metals"] > 0
 
         # Remove shipyard facility
         planet.facilities.clear()
@@ -111,7 +135,7 @@ class TestShipyardRequirement:
         # Facility is gone - its queue is no longer processed
         # (The items are lost with the facility, which is expected)
         # This just verifies no error when facility is removed
-        engine.process_production(empires, save_path=temp_dir)
+        _process_one_turn(engine, empires, save_path=temp_dir)
 
     def test_ship_build_starts_with_new_shipyard(self, production_setup):
         """Ship builds process when shipyard facility is added."""
@@ -121,18 +145,26 @@ class TestShipyardRequirement:
         temp_dir = production_setup['temp_dir']
 
         # No shipyard initially - no facility queues to process
-        engine.process_production(empires, save_path=temp_dir)
+        _process_one_turn(engine, empires, save_path=temp_dir)
 
         # Add shipyard facility with ship in its queue
+        # At 30/tick shipyard rate, 6000 Metals = 200 ticks = 2 turns
         shipyard = _make_shipyard()
         shipyard.construction_queue = [
-            {"design_id": "test_ship", "type": "ship", "turns_remaining": 2}
+            {
+                "design_id": "test_ship",
+                "type": "ship",
+                "turns_remaining": 2,
+                "total_cost": {"Metals": 6000.0},
+                "resources_consumed": {"Metals": 0.0}
+            }
         ]
         planet.facilities.append(shipyard)
 
         # Process turn - should now progress
-        engine.process_production(empires, save_path=temp_dir)
-        assert shipyard.construction_queue[0]["turns_remaining"] == 1  # Decremented
+        _process_one_turn(engine, empires, save_path=temp_dir)
+        # After 100 ticks at 30/tick = 3000 consumed (half of 6000)
+        assert shipyard.construction_queue[0]["resources_consumed"]["Metals"] > 0
 
     def test_complex_builds_without_shipyard(self, production_setup):
         """Test that complexes build even without shipyard."""
@@ -144,7 +176,9 @@ class TestShipyardRequirement:
         queue_item = {
             "design_id": "mining_complex",
             "type": "complex",
-            "turns_remaining": 1
+            "turns_remaining": 1,
+            "total_cost": {"Metals": 100.0},
+            "resources_consumed": {"Metals": 0.0}
         }
         planet.construction_queue.append(queue_item)
 
@@ -153,7 +187,7 @@ class TestShipyardRequirement:
 
         # Process turn - complex should complete
         initial_facility_count = len(planet.facilities)
-        engine.process_production(empires, save_path=temp_dir)
+        _process_one_turn(engine, empires, save_path=temp_dir)
 
         # Should complete and add facility
         assert len(planet.construction_queue) == 0

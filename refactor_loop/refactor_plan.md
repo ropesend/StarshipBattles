@@ -8,22 +8,22 @@
 ## Agent Context
 
 **Last Session:** 2026-02-20
-**Last Completed:** PROJ-158 Phase 3
-**Current Status:** Phase 3 complete, Phase 4 ready
+**Last Completed:** PROJ-158 Phase 4
+**Current Status:** Phase 4 complete, Phase 5 ready
 **Current Project:** PROJ-158
-**Current Phase:** Phase 4 - Rewrite Integration Tests
-**Test Status:** production_engine 34 pass, turn_engine 44 pass, interfaces 68 pass
+**Current Phase:** Phase 5 - Rewrite Economy E2E Tests
+**Test Status:** 49 integration tests pass (all Phase 4 scope)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-158 Phase 3 COMPLETE
-- Rewrote `_make_queue_item()` helper: removed `cost_per_tick`, `ticks_in_current_turn` parameters
-- Deleted 2 tests: `test_ticks_in_current_turn_incremented`, `test_turn_decremented_after_100_ticks`
-- Renamed 2 tests for clarity: `test_item_remains_when_resources_consumed_below_total`, `test_zero_cost_item_completes_immediately`
-- Fixed consumption assertions: planetary_yard = 20/tick, space_shipyard = 30/tick
-- Fixed helper to use `is not None` for empty dict handling
-- All 19 tick_consumption tests pass, all 34 production_engine tests pass
-- Next: Phase 4 - rewrite integration tests (test_complex_workflow.py, test_completion.py, etc.)
+- PROJ-158 Phase 4 COMPLETE
+- Rewrote 25 failing integration tests across 5 files to use tick-based API
+- Added `_process_one_turn()` helper that calls `process_construction_tick()` 100 times
+- Added empire resources to fixtures (conftest.py, empire_with_colony)
+- All queue items now have `total_cost` and `resources_consumed` fields
+- Files modified: test_complex_workflow.py, test_completion.py, test_queue.py, test_fleet_production_e2e.py, test_turn_execution.py, conftest.py
+- Tests pass: complex_workflow 7, completion 12, queue 6, fleet_production 7, turn_execution 11
+- Next: Phase 5 - rewrite test_economy_e2e.py (5 failing tests using dead fields)
 
 ---
 
@@ -163,6 +163,7 @@
 | 2026-02-20 | PROJ-158 | Phase 1 | Complete | 76+7 pass | pending | Deleted dead API from ProductionEngine, TurnEngine, interface, mocks, docs |
 | 2026-02-20 | PROJ-158 | Phase 2 | Complete | 25+44+68 pass | pending | Deleted ~39 dead API tests (4 files, 5 classes) |
 | 2026-02-20 | PROJ-158 | Phase 3 | Complete | 34+44+68 pass | pending | Rewrote tick_consumption tests, deleted 2 dead field tests, fixed helper |
+| 2026-02-20 | PROJ-158 | Phase 4 | Complete | 49 pass | pending | Rewrote 25 integration tests across 5 files to use tick-based API |
 
 ---
 
