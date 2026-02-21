@@ -22,7 +22,7 @@ class TestFacadeRobustResolution:
         p1 = MagicMock(spec=Planet)
         p1.name = "Test Planet"
         p1.id = 1
-        p1.location = HexCoord(1, 0)
+        p1.location = HexCoord(1, 0)  # Planet at local (1, 0)
         p1.planet_type = MagicMock()
         p1.planet_type.name = "CONTINENTAL"
         p1.orbit_distance = 1
@@ -31,12 +31,16 @@ class TestFacadeRobustResolution:
         p1.has_space_shipyard = False
         p1.total_population = 0
         p1.max_population = 100
+        # Required for PlanetInfo.from_planet
+        p1.resources = {}
         system.planets = [p1]
-        
+
         # Strict lookup succeeds
         mock_session.galaxy.get_system_at_location.return_value = system
-        
-        result = facade.get_planets_at_hex(HexCoord(10, 10))
+
+        # Query planet's global position: system.global_location + planet.location = (10,10) + (1,0) = (11,10)
+        planet_global_hex = HexCoord(11, 10)
+        result = facade.get_planets_at_hex(planet_global_hex)
         assert len(result) == 1
         
     def test_get_planets_at_hex_radius_match(self, facade, mock_session):
@@ -46,7 +50,7 @@ class TestFacadeRobustResolution:
         p1 = MagicMock(spec=Planet)
         p1.name = "Test Planet"
         p1.id = 1
-        p1.location = HexCoord(1, 0)
+        p1.location = HexCoord(1, 0)  # Planet at local (1, 0) -> global (11, 10)
         p1.planet_type = MagicMock()
         p1.planet_type.name = "CONTINENTAL"
         p1.orbit_distance = 1
@@ -55,17 +59,22 @@ class TestFacadeRobustResolution:
         p1.has_space_shipyard = False
         p1.total_population = 0
         p1.max_population = 100
+        # Required for PlanetInfo.from_planet
+        p1.resources = {}
         system.planets = [p1]
-        
+
+        # Planet's global position: (10,10) + (1,0) = (11, 10)
+        planet_global_hex = HexCoord(11, 10)
+
         # Strict lookup fails
         mock_session.galaxy.get_system_at_location.return_value = None
-        
+
         # Radius lookup succeeds (mocking pathfinding import)
         with patch('game.strategy.data.pathfinding.get_system_at_hex') as mock_pathfinding:
             mock_pathfinding.return_value = system
-            
-            result = facade.get_planets_at_hex(HexCoord(12, 12)) # Nearby hex
-            
+
+            result = facade.get_planets_at_hex(planet_global_hex)
+
             assert len(result) == 1
             mock_pathfinding.assert_called_once()
             

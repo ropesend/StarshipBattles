@@ -39,7 +39,8 @@
       "Bash(pip show:*)",
       "Read(//c/Dev/Starship Battles/**)",
       "Bash(claude:*)",
-      "Bash(radon cc:*)"
+      "Bash(radon cc:*)",
+      "Bash(git log:*)"
     ],
     "additionalDirectories": []
   }

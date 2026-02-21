@@ -67,6 +67,9 @@ def mock_planet():
     planet.location = HexCoord(5, 5)
     planet.owner_id = 0
     planet.populations = []
+    # Required for is_planet() protocol check (IPlanet)
+    planet.planet_type = MagicMock()
+    planet.resources = {}
     return planet
 
 

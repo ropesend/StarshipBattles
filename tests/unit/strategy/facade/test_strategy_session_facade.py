@@ -196,11 +196,14 @@ class TestSystemQueries:
         """Returns SystemInfo for hex with system."""
         target_hex = HexCoord(3, 3)
         system = self._make_mock_system(target_hex, "Alpha Centauri")
+        # SystemInfo.from_star_system needs system.planets to be iterable
+        system.planets = []
 
         session = Mock()
         session.empires = []
         session.galaxy = Mock()
         session.galaxy.systems = {target_hex: system}
+        session.galaxy.get_system_at_location.return_value = system
 
         facade = StrategySessionFacade(session)
         result = facade.get_system_at_hex(target_hex)
@@ -214,6 +217,7 @@ class TestSystemQueries:
         session.empires = []
         session.galaxy = Mock()
         session.galaxy.systems = {}
+        session.galaxy.get_system_at_location.return_value = None
 
         facade = StrategySessionFacade(session)
 
@@ -239,6 +243,7 @@ class TestPlanetQueries:
         planet.total_population = 0
         planet.max_population = 1000
         planet.populations = []  # Used for population_details
+        planet.resources = {}  # Required for PlanetInfo.from_planet
         return planet
 
     def _make_mock_system(self, hex_coord: HexCoord, planets: list = None):
@@ -246,6 +251,7 @@ class TestPlanetQueries:
         system = Mock()
         system.planets = planets or []
         system.location = hex_coord
+        system.global_location = hex_coord  # Required for get_planets_at_hex
         system.name = "Test System"
         system.stars = []
         system.warp_points = []
@@ -283,18 +289,23 @@ class TestPlanetQueries:
 
     def test_get_planets_at_hex_found(self):
         """Returns PlanetInfo list for system at hex."""
+        system_hex = HexCoord(3, 3)
+        # Create planets at local (0, 0) so global = system_hex
         planet1 = self._make_mock_planet(1)
+        planet1.location = HexCoord(0, 0)
         planet2 = self._make_mock_planet(2)
-        target_hex = HexCoord(3, 3)
-        system = self._make_mock_system(target_hex, [planet1, planet2])
+        planet2.location = HexCoord(0, 0)
+        system = self._make_mock_system(system_hex, [planet1, planet2])
 
         session = Mock()
         session.empires = []
         session.galaxy = Mock()
-        session.galaxy.systems = {target_hex: system}
+        session.galaxy.systems = {system_hex: system}
+        session.galaxy.get_system_at_location.return_value = system
 
         facade = StrategySessionFacade(session)
-        result = facade.get_planets_at_hex(target_hex)
+        # Query at system center where planets are located
+        result = facade.get_planets_at_hex(system_hex)
 
         assert len(result) == 2
 
@@ -304,6 +315,7 @@ class TestPlanetQueries:
         session.empires = []
         session.galaxy = Mock()
         session.galaxy.systems = {}
+        session.galaxy.get_system_at_location.return_value = None
 
         facade = StrategySessionFacade(session)
 

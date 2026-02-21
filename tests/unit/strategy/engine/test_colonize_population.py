@@ -171,34 +171,9 @@ class TestColonizeTransfersPassengers:
 class TestColonizeWithoutPassengers:
     """Test colonization when no passengers on board."""
 
-    def test_colonize_without_passengers_seeds_minimum(self):
-        """No passengers seeds minimum 100 units if empire has race_config."""
-        location = HexCoord(0, 0)
-        planet = _make_planet(location)
-        planet.id = 1
-        galaxy = MockGalaxy([planet])
-
-        empire = Empire(0, "Test Empire", (100, 100, 100))
-        empire.race_config = MockRaceConfig("humans")
-
-        # Fleet with colony pod but NO passenger cargo
-        fleet = Fleet(1, empire.id, location)
-        ship = _make_ship_with_colony_pod("Colony Ship")
-        fleet.ships.append(ship)
-        fleet.add_order(FleetOrder(OrderType.COLONIZE, target=planet))
-        empire.add_fleet(fleet)
-
-        processor = FleetOrderProcessor()
-        result = processor.process_colonize(fleet, empire, galaxy)
-
-        assert result.colonized is True
-
-        # Should have minimum seeding of 100 units
-        assert len(planet.populations) == 1
-        pop = planet.populations[0]
-        assert pop.race_id == "humans"
-        assert pop.count == 100  # Minimum seed
-        assert pop.happiness == 0.5
+    # NOTE: test_colonize_without_passengers_seeds_minimum was removed because
+    # the auto-seeding feature was intentionally disabled per user request.
+    # See fleet_order_processor.py:545-547 for the commented-out code.
 
     def test_colonize_no_race_config_no_population(self):
         """No race_config means no population is seeded."""

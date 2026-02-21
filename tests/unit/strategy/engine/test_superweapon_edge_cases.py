@@ -330,7 +330,7 @@ class TestOrderProcessorErrorCases:
         fleet.pop_order = Mock()
 
         galaxy = Mock()
-        galaxy.get_system_at_location.return_value = None
+        galaxy.systems = {}  # Empty dict for get_system_at_hex lookup
 
         processor = SuperweaponOrderProcessor()
         result = processor.process_stellerate_star(fleet, Mock(), galaxy, [])
@@ -366,7 +366,7 @@ class TestOrderProcessorErrorCases:
         fleet.pop_order = Mock()
 
         galaxy = Mock()
-        galaxy.get_system_at_location.return_value = None
+        galaxy.systems = {}  # Empty dict for get_system_at_hex lookup
 
         processor = SuperweaponOrderProcessor()
         result = processor.process_open_warp_point(fleet, Mock(), galaxy)
@@ -391,7 +391,7 @@ class TestOrderProcessorErrorCases:
         current_system.global_location = HexCoord(10, 10)
 
         galaxy = Mock()
-        galaxy.get_system_at_location.return_value = current_system
+        galaxy.systems = {HexCoord(10, 10): current_system}  # For get_system_at_hex lookup
         galaxy.name_map = {'Alpha': current_system}  # No 'Nonexistent'
 
         processor = SuperweaponOrderProcessor()
@@ -426,7 +426,7 @@ class TestOrderProcessorErrorCases:
         fleet.pop_order = Mock()
 
         galaxy = Mock()
-        galaxy.get_system_at_location.return_value = None
+        galaxy.systems = {}  # Empty dict for get_system_at_hex lookup
 
         processor = SuperweaponOrderProcessor()
         result = processor.process_close_warp_point(fleet, Mock(), galaxy)
@@ -449,7 +449,7 @@ class TestOrderProcessorErrorCases:
         system.planets = []
 
         galaxy = Mock()
-        galaxy.get_system_at_location.return_value = system
+        galaxy.systems = {HexCoord(10, 10): system}  # For get_system_at_hex lookup
 
         processor = SuperweaponOrderProcessor()
         result = processor.process_create_dyson_sphere(fleet, Mock(), galaxy)
@@ -606,7 +606,7 @@ class TestOrderProcessorColonyRemoval:
         system.warp_points = []
 
         galaxy = Mock()
-        galaxy.get_system_at_location.return_value = system
+        galaxy.systems = {HexCoord(10, 10): system}  # For get_system_at_hex lookup
         galaxy.get_all_fleets_in_system.return_value = [(empire1, fleet)]
         galaxy.unregister_planet = Mock()
 
