@@ -118,11 +118,7 @@ class ColonizeCommandHandler:
                 fleet.add_order(load_order)
 
             # Add MOVE order to get to the target planet
-            planet_global_hex = None
-            for sys in session.galaxy.systems.values():
-                if target_planet in sys.planets:
-                    planet_global_hex = sys.global_location + target_planet.location
-                    break
+            planet_global_hex = session.galaxy.get_planet_global_hex(target_planet)
 
             if planet_global_hex and fleet.location != planet_global_hex:
                 move_order = FleetOrder(OrderType.MOVE, target=planet_global_hex)
@@ -414,11 +410,7 @@ class TransferCommandHandler:
         # 5. Apply
         if result.is_valid:
             # Find planet's global hex for MOVE order
-            planet_global_hex = None
-            for sys in session.galaxy.systems.values():
-                if planet in sys.planets:
-                    planet_global_hex = sys.global_location + planet.location
-                    break
+            planet_global_hex = session.galaxy.get_planet_global_hex(planet)
 
             # Prepend MOVE order if fleet isn't already at the planet
             if planet_global_hex and fleet.location != planet_global_hex:

@@ -203,6 +203,20 @@ class Galaxy:
         """O(1) spatial lookup: get all planets at a global hex coordinate."""
         return self._global_hex_planets.get(global_hex, [])
 
+    def get_planet_global_hex(self, planet: 'Planet') -> Optional[HexCoord]:
+        """O(1) lookup: get the global hex coordinate of a planet.
+
+        Args:
+            planet: Planet to get location for.
+
+        Returns:
+            Global HexCoord of the planet, or None if planet not registered.
+        """
+        system = self._planet_to_system.get(planet)
+        if system:
+            return system.global_location + planet.location
+        return None
+
     # --- Zone Registry Methods (PROJ-139 Phase 2: multi-hex zones) ---
 
     def register_zone(self, system: 'StarSystem', obj) -> None:

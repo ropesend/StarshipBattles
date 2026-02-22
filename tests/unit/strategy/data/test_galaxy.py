@@ -172,6 +172,32 @@ class TestGalaxySystemLookup:
         assert galaxy.get_system_by_name("Dual") is system
 
 
+class TestGalaxyPlanetGlobalHex:
+    """Tests for get_planet_global_hex() method."""
+
+    def test_returns_correct_global_hex(self):
+        """Registered planet returns system.global_location + planet.location."""
+        galaxy = Galaxy(radius=1000)
+        system = StarSystem(name="Test", global_location=HexCoord(10, 5))
+        planet = make_test_planet(name="TestPlanet", location=HexCoord(1, 2))
+        system.planets.append(planet)
+        galaxy.add_system(system)
+        galaxy.register_planet(system, planet)
+
+        result = galaxy.get_planet_global_hex(planet)
+
+        assert result == HexCoord(11, 7)
+
+    def test_returns_none_for_unregistered_planet(self):
+        """Unregistered planet returns None."""
+        galaxy = Galaxy(radius=1000)
+        planet = make_test_planet(name="Orphan")
+
+        result = galaxy.get_planet_global_hex(planet)
+
+        assert result is None
+
+
 class TestGalaxyZoneRegistry:
     """Tests for PROJ-139 Zone Registry functionality."""
 

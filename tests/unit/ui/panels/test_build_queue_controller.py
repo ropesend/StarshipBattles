@@ -367,19 +367,18 @@ class TestBuildTimeCalculation:
         assert turns == 1
 
     def test_build_cost_tracking_fields_created(self):
-        """_build_cost_tracking creates all required fields."""
+        """_build_cost_tracking creates required fields for dynamic engine."""
         design = MagicMock()
         design.design_id = "factory"
         design.resource_cost = {"Metals": 4000, "Organics": 2000}
 
         controller = self._make_controller_with_designs([design])
-        tracking = controller._build_cost_tracking("factory", 2)  # 2 turns = 200 ticks
+        tracking = controller._build_cost_tracking("factory")
 
+        # Dynamic engine uses total_cost and resources_consumed
+        # Per-tick rates calculated dynamically from production_rates.json
         assert tracking["total_cost"] == {"Metals": 4000, "Organics": 2000}
-        assert tracking["cost_per_tick"]["Metals"] == pytest.approx(20.0)  # 4000/200
-        assert tracking["cost_per_tick"]["Organics"] == pytest.approx(10.0)  # 2000/200
         assert tracking["resources_consumed"] == {"Metals": 0.0, "Organics": 0.0}
-        assert tracking["ticks_in_current_turn"] == 0
 
     def test_add_to_queue_creates_cost_tracking(self):
         """Adding to queue without turns creates cost tracking fields."""
@@ -394,9 +393,8 @@ class TestBuildTimeCalculation:
         controller.add_to_queue("factory", category="complex")
 
         item = source.construction_queue[0]
-        assert item["turns_remaining"] == 2  # 4000 / 2000 = 2
+        assert item["turns_remaining"] == 2.0  # 4000 / 2000 = 2.0 (exact float)
         assert "total_cost" in item
-        assert "cost_per_tick" in item
         assert "resources_consumed" in item
 
     def test_add_to_queue_uses_source_build_rate(self):
@@ -744,7 +742,7 @@ class TestPerResourceBuildRates:
         )
 
     def test_per_resource_bottleneck_metals(self):
-        """5500 Metals at 3000/turn, 1000 Organics at 3000/turn → 2 turns from Metals."""
+        """5500 Metals at 3000/turn, 1000 Organics at 3000/turn → ~1.83 turns from Metals."""
         design = MagicMock()
         design.design_id = "cruiser"
         design.resource_cost = {"Metals": 5500, "Organics": 1000}
@@ -753,8 +751,8 @@ class TestPerResourceBuildRates:
         build_rate = {"Metals": 3000.0, "Organics": 3000.0}
         turns = controller._calculate_build_turns("cruiser", build_rate)
 
-        # ceil(5500/3000) = 2, ceil(1000/3000) = 1 → max = 2
-        assert turns == 2
+        # 5500/3000 = 1.833..., 1000/3000 = 0.333... → max = 1.833...
+        assert turns == pytest.approx(5500 / 3000)
 
     def test_per_resource_bottleneck_exotics(self):
         """Metals 3000/turn, Exotics 1500/turn with 3000 of each → Exotics bottleneck."""
@@ -770,7 +768,7 @@ class TestPerResourceBuildRates:
         assert turns == 2
 
     def test_resource_in_cost_not_in_rates_treated_as_unbounded(self):
-        """Resource in cost but not in rates → treated as 1 turn."""
+        """Resource in cost but not in rates → only rated resources count."""
         design = MagicMock()
         design.design_id = "exotic_ship"
         design.resource_cost = {"Metals": 2000, "Vapors": 1000}
@@ -779,8 +777,8 @@ class TestPerResourceBuildRates:
         build_rate = {"Metals": 3000.0}  # No Vapors rate
         turns = controller._calculate_build_turns("exotic_ship", build_rate)
 
-        # Metals: ceil(2000/3000) = 1, Vapors: unbounded (1) → max = 1
-        assert turns == 1
+        # Metals: 2000/3000 = 0.667, Vapors: not in rates (skipped) → max = 0.667
+        assert turns == pytest.approx(2000 / 3000)
 
     def test_empty_build_rate_returns_1(self):
         """Empty build_rate dict returns 1 turn."""
@@ -806,49 +804,6 @@ class TestPerResourceBuildRates:
         # Metals: ceil(3000/3000) = 1, Organics: rate 0 skipped → max = 1
         assert turns == 1
 
-    def test_cost_per_tick_capped_per_resource(self):
-        """cost_per_tick is capped per-resource to max_per_tick = rate/100."""
-        design = MagicMock()
-        design.design_id = "mixed"
-        # Metals: 5500 at 3000/turn → 2 turns, but natural per-tick is 5500/200 = 27.5
-        # Cap is 3000/100 = 30, so 27.5 is fine
-        # Organics: 500 at 3000/turn → would finish turn 1 if allowed
-        # Natural per-tick is 500/200 = 2.5, cap is 30, so 2.5 is fine
-        design.resource_cost = {"Metals": 5500, "Organics": 500}
-
-        controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0, "Organics": 3000.0}
-        tracking = controller._build_cost_tracking("mixed", 2, build_rate)
-
-        # 2 turns = 200 ticks
-        # max_per_tick = {Metals: 30, Organics: 30}
-        # Metals: 5500/200 = 27.5 < 30, OK
-        # Organics: 500/200 = 2.5 < 30, OK
-        assert tracking["cost_per_tick"]["Metals"] == pytest.approx(27.5)
-        assert tracking["cost_per_tick"]["Organics"] == pytest.approx(2.5)
-
-    def test_cost_per_tick_capped_when_exceeds_max(self):
-        """cost_per_tick capped when natural rate exceeds max_per_tick."""
-        design = MagicMock()
-        design.design_id = "fast_resource"
-        # 1 turn scenario: 100 ticks
-        # Metals: 2000 at 3000/turn → cap = 30/tick
-        # Natural: 2000/100 = 20, capped at 30 → OK, no cap needed
-        # But let's test: Metals 4000 in 1 turn at 3000/turn rate
-        # cap = 30/tick, natural = 40/tick → should cap to 30
-        design.resource_cost = {"Metals": 4000}
-
-        controller = self._make_controller_with_designs([design])
-        build_rate = {"Metals": 3000.0}
-        # Force 1 turn to test capping
-        tracking = controller._build_cost_tracking("fast_resource", 1, build_rate)
-
-        # 1 turn = 100 ticks
-        # Natural: 4000/100 = 40
-        # Cap: 3000/100 = 30
-        # Should be capped to 30
-        assert tracking["cost_per_tick"]["Metals"] == pytest.approx(30.0)
-
     def test_add_to_queue_with_dict_build_rate(self):
         """Adding to queue calculates turns using Dict build_rate."""
         design = MagicMock()
@@ -862,8 +817,8 @@ class TestPerResourceBuildRates:
         controller.add_to_queue("cruiser", category="ship")
 
         item = source.construction_queue[0]
-        # 5500 Metals / 3000 = 2 turns
-        assert item["turns_remaining"] == 2
+        # 5500 Metals / 3000 = 1.833... turns (exact float for tick-based production)
+        assert item["turns_remaining"] == pytest.approx(5500 / 3000)
 
     def test_multi_queue_different_per_resource_rates(self):
         """Multi-queue with different per-resource rates."""

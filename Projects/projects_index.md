@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-160 | Add Galaxy.get_planet_global_hex Method | Planning | 2026-02-22 | 2026-02-22 |
 | PROJ-159 | Rewrite Transfer Validator Tests as Integration Tests | Planning | 2026-02-22 | 2026-02-22 |
 | PROJ-158 | Eradicate Dead Production API and Fix Production Tests | Planning | 2026-02-20 | 2026-02-20 |
 | PROJ-157 | Test Suite Cleanup - Validated Findings v4 | Plan Approved | 2026-02-16 | 2026-02-16 |
