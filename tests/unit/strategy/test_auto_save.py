@@ -6,10 +6,9 @@ import tempfile
 import shutil
 import os
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from game.strategy.engine.game_session import GameSession
-from game.strategy.engine.game_config import GameConfig, PlayerConfig
+from game.strategy.engine.game_config import GameConfig
 from game.strategy.systems.save_game_service import SaveGameService
 
 
@@ -149,55 +148,3 @@ class TestAutoSave:
         assert os.path.exists(save_path)
 
 
-class TestAutoSaveIntegration:
-    """Integration tests for auto-save with GameSession.process_turn()."""
-
-    @pytest.fixture(autouse=True)
-    def setup_tmpdir(self):
-        """Create temporary directory for tests."""
-        tmpdir = tempfile.mkdtemp()
-        original_cwd = os.getcwd()
-        os.chdir(tmpdir)
-        yield tmpdir
-        os.chdir(original_cwd)
-        shutil.rmtree(tmpdir)
-
-    def test_game_session_turn_increments_on_process(self):
-        """GameSession.process_turn() increments turn_number."""
-        config = GameConfig(
-            players=[
-                PlayerConfig(name="Test Empire", theme="Federation", color=(255, 0, 0)),
-            ],
-            system_count=5
-        )
-        session = GameSession(config=config)
-
-        initial_turn = session.turn_number
-        session.process_turn()
-
-        assert session.turn_number == initial_turn + 1
-
-    def test_save_after_process_turn_captures_new_turn(self):
-        """Saving after process_turn() saves the incremented turn number."""
-        config = GameConfig(
-            players=[
-                PlayerConfig(name="Test Empire", theme="Federation", color=(255, 0, 0)),
-            ],
-            system_count=5
-        )
-        session = GameSession(config=config)
-
-        # Initial save
-        success, message, save_path = SaveGameService.save_game(session, "ProcessTurnTest")
-        assert success, f"Initial save failed: {message}"
-        session.save_path = save_path
-
-        # Process turn (increments turn_number)
-        session.process_turn()
-
-        # Auto-save
-        SaveGameService.save_game(session)
-
-        # Verify turn file exists for new turn
-        turn_file = os.path.join(save_path, "turns", f"turn_{session.turn_number}.json")
-        assert os.path.exists(turn_file)

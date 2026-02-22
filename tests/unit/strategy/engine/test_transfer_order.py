@@ -100,6 +100,22 @@ class TestTransferCommand:
 class TestFleetOrderProcessorTransfer:
     """Tests for FleetOrderProcessor.process_transfer()."""
 
+    def make_mock_galaxy_with_planet(self, planet):
+        """Create a mock galaxy with proper system containment for the planet.
+
+        The TransferValidator checks that the fleet is in the same system as the
+        planet by looking up galaxy.systems and galaxy.get_system_at_location().
+        """
+        mock_system = MagicMock()
+        mock_system.planets = [planet]
+
+        galaxy = MagicMock()
+        galaxy.get_planet_by_id = MagicMock(return_value=planet)
+        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        galaxy.get_system_at_location = MagicMock(return_value=mock_system)
+        galaxy.systems = {'test_system': mock_system}
+        return galaxy
+
     def make_planet_with_pop(self, planet_id=1, pop_count=1000):
         """Create a real planet with population."""
         planet = Planet(
@@ -164,10 +180,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        # Mock galaxy
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         # Mock empire
         empire = MagicMock()
@@ -199,10 +213,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        # Mock galaxy
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         # Mock empire with race_config
         empire = MagicMock()
@@ -234,9 +246,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         empire = MagicMock()
         empire.race_config = None
@@ -265,9 +276,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         empire = MagicMock()
         empire.race_config = MagicMock()
@@ -299,9 +309,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         # Empire's race is "human" - different from planet's "alien"
         empire = MagicMock()
@@ -346,10 +355,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        # Mock galaxy
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         # Mock empire
         empire = MagicMock()
@@ -390,10 +397,8 @@ class TestFleetOrderProcessorTransfer:
         order = FleetOrder(OrderType.TRANSFER, target=params)
         fleet.orders.append(order)
 
-        # Mock galaxy
-        galaxy = MagicMock()
-        galaxy.get_planet_by_id = MagicMock(return_value=planet)
-        galaxy.get_planets_at_global_hex = MagicMock(return_value=[planet])
+        # Mock galaxy with proper system containment
+        galaxy = self.make_mock_galaxy_with_planet(planet)
 
         # Mock empire
         empire = MagicMock()

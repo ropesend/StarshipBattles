@@ -373,6 +373,8 @@ class TestTransferCommandHandler:
 
         mock_fleet = Mock()
         mock_fleet.id = 1
+        mock_fleet.ships = []
+        mock_fleet.location = (0, 0)
 
         mock_empire = Mock()
         mock_empire.fleets = []  # Fleet not in any empire
@@ -394,6 +396,8 @@ class TestTransferCommandHandler:
 
         mock_fleet = Mock()
         mock_fleet.id = 1
+        mock_fleet.ships = []
+        mock_fleet.location = (0, 0)
 
         mock_empire = Mock()
         mock_empire.fleets = [mock_fleet]
@@ -416,6 +420,9 @@ class TestTransferCommandHandler:
 
         mock_fleet = Mock()
         mock_fleet.id = 1
+        mock_fleet.ships = []
+        mock_fleet.location = (0, 0)
+        mock_fleet.orders = []
         mock_fleet.add_order = Mock()
 
         mock_empire = Mock()
@@ -423,11 +430,16 @@ class TestTransferCommandHandler:
 
         mock_planet = Mock()
         mock_planet.id = 10
+        mock_planet.name = "TestPlanet"
+        mock_planet.owner_id = 0
+        mock_planet.total_population = 1000
 
         mock_session = Mock()
         mock_session._get_fleet_by_id.return_value = mock_fleet
         mock_session.empires = [mock_empire]
         mock_session._get_planet_by_id.return_value = mock_planet
+        mock_session.galaxy = Mock()
+        mock_session.galaxy.systems = {}
 
         mock_cmd = Mock(
             fleet_id=1,

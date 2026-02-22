@@ -353,11 +353,12 @@ class TestNewColumnValues:
 
         mgr = ColumnManager()
         ship = Mock()
-        ship.get_calculated_stats = Mock(return_value={'cargo_storage': {'passengers': 100}})
+        ship.get_cargo_capacity = Mock(return_value=100)
+        ship.get_current_cargo = Mock(return_value=50)
 
         col = mgr.get_column('transport')
         value = mgr.get_column_value(ship, col)
-        assert value == "Yes"
+        assert value == "50/100"
 
     def test_get_column_value_transport_no(self):
         """Get transport column value when ship has no passenger capacity."""
@@ -366,11 +367,12 @@ class TestNewColumnValues:
 
         mgr = ColumnManager()
         ship = Mock()
-        ship.get_calculated_stats = Mock(return_value={'cargo_storage': {}})
+        ship.get_cargo_capacity = Mock(return_value=0)
+        ship.get_current_cargo = Mock(return_value=0)
 
         col = mgr.get_column('transport')
         value = mgr.get_column_value(ship, col)
-        assert value == "No"
+        assert value == "--"
 
     def test_get_column_value_resources_with_values(self):
         """Get resources column value with resource percentages."""
