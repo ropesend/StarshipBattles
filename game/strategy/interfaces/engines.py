@@ -340,15 +340,20 @@ class IHarvestingEngine(ABC):
     Abstract interface for planetary resource harvesting.
 
     PROJ-75 Phase 2: Interface for HarvestingEngine.
+    PROJ-161: Added per-tick harvesting for gradual resource extraction.
 
     Implementations handle:
     - Scanning facilities for harvester abilities
     - Extracting planetary resources based on quality
     - Adding harvested resources to empire pool
     - Respecting storage limits and planet depletion
+    - Per-tick harvesting (1/100th per tick) for smooth economy
 
     Example usage:
         engine = HarvestingEngine(registries=registries)
+        # Per-tick (preferred - called 100 times per turn):
+        engine.process_harvesting_tick(tick, empires)
+        # Legacy full-turn (deprecated):
         engine.process_harvesting(empires)
     """
 
@@ -358,13 +363,37 @@ class IHarvestingEngine(ABC):
         empires: List
     ) -> None:
         """
-        Process resource harvesting for all empires.
+        Process resource harvesting for all empires (full turn).
+
+        DEPRECATED: Use process_harvesting_tick() for per-tick operation.
+        Will be removed in Phase 5.
 
         Iterates through all empires, colonies, and facilities,
         extracting planetary resources to empire pools based on
         harvester abilities and planet resource quality.
 
         Args:
+            empires: List of Empire objects to process
+        """
+        pass
+
+    @abstractmethod
+    def process_harvesting_tick(
+        self,
+        tick: int,
+        empires: List
+    ) -> None:
+        """
+        Process resource harvesting for one tick (1/100th of turn).
+
+        PROJ-161: Per-tick harvesting spreads resource extraction across
+        100 ticks. Each call extracts 1/100th of the per-turn harvest rate.
+
+        Storage is recalculated each tick to handle mid-turn facility
+        construction/destruction.
+
+        Args:
+            tick: Current tick number (1-100)
             empires: List of Empire objects to process
         """
         pass

@@ -437,6 +437,9 @@ class TestConcreteImplementations:
             def process_harvesting(self, empires):
                 pass
 
+            def process_harvesting_tick(self, tick, empires):
+                pass
+
         engine = ConcreteHarvestingEngine()
         assert engine is not None
 

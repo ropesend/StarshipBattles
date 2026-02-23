@@ -102,7 +102,10 @@ class HarvestingEngine(IHarvestingEngine):
 
     def process_harvesting(self, empires: List) -> None:
         """
-        Process resource harvesting for all empires.
+        Process resource harvesting for all empires (full turn).
+
+        DEPRECATED: Use process_harvesting_tick() for per-tick operation.
+        Will be removed in Phase 5.
 
         First recalculates storage capacity from EmpireStorage abilities,
         then iterates: empire -> colonies -> facilities -> components.
@@ -114,7 +117,25 @@ class HarvestingEngine(IHarvestingEngine):
         """
         self.recalculate_storage(empires)
         for empire in empires:
-            self._process_empire(empire)
+            self._process_empire(empire, tick_fraction=1.0)
+
+    def process_harvesting_tick(self, tick: int, empires: List) -> None:
+        """
+        Process resource harvesting for one tick (1/100th of turn).
+
+        PROJ-161: Per-tick harvesting spreads resource extraction across
+        100 ticks. Each call extracts 1/100th of the per-turn harvest rate.
+
+        Storage is recalculated each tick to handle mid-turn facility
+        construction/destruction.
+
+        Args:
+            tick: Current tick number (1-100)
+            empires: List of Empire objects to process
+        """
+        self.recalculate_storage(empires)
+        for empire in empires:
+            self._process_empire(empire, tick_fraction=0.01)
 
     def recalculate_storage(self, empires: List) -> None:
         """
@@ -210,27 +231,46 @@ class HarvestingEngine(IHarvestingEngine):
             return storage_data
         return None
 
-    def _process_empire(self, empire: 'Empire') -> None:
-        """Process harvesting for a single empire."""
+    def _process_empire(self, empire: 'Empire', tick_fraction: float = 1.0) -> None:
+        """Process harvesting for a single empire.
+
+        Args:
+            empire: Empire to process
+            tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
+        """
         colonies = getattr(empire, 'colonies', [])
         for colony in colonies:
-            self._process_colony(colony, empire)
+            self._process_colony(colony, empire, tick_fraction)
 
-    def _process_colony(self, colony: 'Planet', empire: 'Empire') -> None:
-        """Process harvesting for a single colony."""
+    def _process_colony(self, colony: 'Planet', empire: 'Empire', tick_fraction: float = 1.0) -> None:
+        """Process harvesting for a single colony.
+
+        Args:
+            colony: Colony to process
+            empire: Empire receiving resources
+            tick_fraction: Fraction of per-turn harvest to extract
+        """
         facilities = getattr(colony, 'facilities', [])
         for facility in facilities:
             if not getattr(facility, 'is_operational', True):
                 continue
-            self._process_facility(facility, colony, empire)
+            self._process_facility(facility, colony, empire, tick_fraction)
 
     def _process_facility(
         self,
         facility: 'PlanetaryFacility',
         colony: 'Planet',
         empire: 'Empire',
+        tick_fraction: float = 1.0,
     ) -> None:
-        """Scan a facility's components for ResourceHarvester abilities."""
+        """Scan a facility's components for ResourceHarvester abilities.
+
+        Args:
+            facility: Facility to scan
+            colony: Colony containing the facility
+            empire: Empire receiving resources
+            tick_fraction: Fraction of per-turn harvest to extract
+        """
         design_data = getattr(facility, 'design_data', {})
         layers = design_data.get('layers', {})
 
@@ -241,7 +281,7 @@ class HarvestingEngine(IHarvestingEngine):
                 harvester_info = get_harvester_info(comp, self._registries)
                 if harvester_info is not None:
                     self._harvest_resource(
-                        harvester_info, colony, empire
+                        harvester_info, colony, empire, tick_fraction
                     )
 
     def _get_harvester_info(self, comp) -> Optional[dict]:
@@ -277,6 +317,7 @@ class HarvestingEngine(IHarvestingEngine):
         harvester_info: dict,
         colony: 'Planet',
         empire: 'Empire',
+        tick_fraction: float = 1.0,
     ) -> None:
         """Execute one harvester's resource extraction.
 
@@ -284,6 +325,7 @@ class HarvestingEngine(IHarvestingEngine):
             harvester_info: Dict with 'resource_type' and 'base_harvest_rate'
             colony: Planet being harvested
             empire: Empire receiving resources
+            tick_fraction: Fraction of per-turn harvest to extract (1.0 = full turn, 0.01 = one tick)
         """
         resource_type = harvester_info.get('resource_type', '')
         base_rate = harvester_info.get('base_harvest_rate', 0.0)
@@ -303,8 +345,8 @@ class HarvestingEngine(IHarvestingEngine):
         if quality <= 0 or quantity <= 0:
             return
 
-        # Calculate harvest amount
-        harvest = base_rate * quality
+        # Calculate harvest amount (scaled by tick_fraction for per-tick operation)
+        harvest = base_rate * quality * tick_fraction
         actual_harvest = min(harvest, quantity)
 
         # Deduct from planet
@@ -316,5 +358,5 @@ class HarvestingEngine(IHarvestingEngine):
         log_debug(
             f"Harvested {actual_harvest:.1f} {resource_type} from "
             f"{getattr(colony, 'name', 'unknown')} (quality={quality:.2f}, "
-            f"remaining={resource_data['quantity']:.1f})"
+            f"remaining={resource_data['quantity']:.1f}, tick_fraction={tick_fraction})"
         )
