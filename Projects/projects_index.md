@@ -12,41 +12,41 @@
 | PROJ-151 | test_coverage_simulation_core | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-150 | legacy_cleanup_ui | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-149 | consistency_standardization | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-148 | code_duplication_ui | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-147 | architecture_layer_violations | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-146 | 6_architecture_consistency | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-145 | 5_ability_system_patterns | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-144 | 4_legacy_code_cleanup | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-143 | 3_test_coverage_strategy_ai | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-142 | 2_test_coverage_ui | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-141 | 1_ui_duplication_consolidation | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-137 | UI Pattern Consolidation | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-136 | Test Coverage - UI Components | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-135 | Test Coverage - Strategy Engine | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-134 | Legacy Code Cleanup | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-133 | Consistency Standardization | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-132 | Architecture Layer Violations | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-131 | test-coverage-strategy-ui | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-130 | test-coverage-core-systems | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-129 | legacy-system-cleanup | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-128 | codebase-consistency | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-127 | code-duplication-reduction | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-126 | architecture-layer-fixes | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-125 | PROJ-F_code-consistency | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-124 | PROJ-E_ui-test-coverage | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-123 | PROJ-D_architecture-cleanup | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-122 | PROJ-C_ui-god-class-decomposition | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-121 | PROJ-B_legacy-eradication | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-120 | PROJ-A_simulation-test-coverage | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
-| PROJ-105 | Visual Regression Testing for UI Panels | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
-| PROJ-58 | Eradicate Backward Compatibility Shims | Planning | 2026-02-06 | 2026-02-06 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-148 | code_duplication_ui | Archived | 2026-02-14 | 2026-02-23 |
+| PROJ-147 | architecture_layer_violations | Archived | 2026-02-14 | 2026-02-23 |
+| PROJ-146 | 6_architecture_consistency | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-145 | 5_ability_system_patterns | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-144 | 4_legacy_code_cleanup | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-143 | 3_test_coverage_strategy_ai | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-142 | 2_test_coverage_ui | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-141 | 1_ui_duplication_consolidation | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-137 | UI Pattern Consolidation | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-136 | Test Coverage - UI Components | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-135 | Test Coverage - Strategy Engine | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-134 | Legacy Code Cleanup | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-133 | Consistency Standardization | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-132 | Architecture Layer Violations | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-131 | test-coverage-strategy-ui | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-130 | test-coverage-core-systems | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-129 | legacy-system-cleanup | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-128 | codebase-consistency | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-127 | code-duplication-reduction | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-126 | architecture-layer-fixes | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-125 | PROJ-F_code-consistency | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-124 | PROJ-E_ui-test-coverage | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-123 | PROJ-D_architecture-cleanup | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-122 | PROJ-C_ui-god-class-decomposition | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-121 | PROJ-B_legacy-eradication | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-120 | PROJ-A_simulation-test-coverage | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Archived | 2026-02-11 | 2026-02-23 |
+| PROJ-105 | Visual Regression Testing for UI Panels | Archived | 2026-02-10 | 2026-02-23 |
+| PROJ-103 | Pre-Made Starting Ship Designs | Archived | 2026-02-10 | 2026-02-23 |
+| PROJ-58 | Eradicate Backward Compatibility Shims | Archived | 2026-02-06 | 2026-02-23 |
 | PROJ-158 | Eradicate Dead Production API and Fix Production Tests | Archived | 2026-02-20 | 2026-02-23 |
 | PROJ-157 | Test Suite Cleanup - Validated Findings v4 | Archived | 2026-02-16 | 2026-02-23 |
 | PROJ-156 | Test Suite Cleanup - AI/Research/Combat/Builder/Systems | Archived | 2026-02-16 | 2026-02-23 |
