@@ -24,6 +24,8 @@ def mock_scene():
     scene.selected_fleet = None
     scene.build_queue_screen = None
     scene.camera = MagicMock()
+    scene.camera.zoom = 1.0  # PROJ-162: Fix for _resolve_click_target() comparison
+    scene._get_system_at_hex = MagicMock(return_value=None)  # PROJ-162: Skip planet hit-testing
     scene.hex_size = 64
     scene._camera_nav = MagicMock()
     return scene

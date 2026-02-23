@@ -36,6 +36,8 @@ def mock_scene():
     scene._colonization = MagicMock()
     scene._superweapons = MagicMock()
     scene.camera = MagicMock()
+    scene.camera.zoom = 1.0  # PROJ-162: Fix for _resolve_click_target() comparison
+    scene._get_system_at_hex = MagicMock(return_value=None)  # PROJ-162: Skip planet hit-testing
     scene.hex_size = 10
     scene.screen_width = 1920
     scene.TOP_BAR_HEIGHT = 50

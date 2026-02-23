@@ -47,6 +47,9 @@ def make_mock_ship(
     # This is needed since code now uses get_calculated_stats() instead of expected_stats
     ship.get_calculated_stats.return_value = expected_stats
 
+    # PROJ-162: Mock get_cargo_capacity to return 0 by default (sort_ships calls this)
+    ship.get_cargo_capacity = MagicMock(return_value=0)
+
     # Set HP percentage
     ship.get_hp_percentage.return_value = hp_pct
 
@@ -538,9 +541,11 @@ class TestSortShipsNewColumns:
 
         ship_no_pax = make_mock_ship(design_name="Warship")
         ship_no_pax.get_calculated_stats.return_value = {'mass': 1000, 'cargo_storage': {}}
+        ship_no_pax.get_cargo_capacity = MagicMock(return_value=0)
 
         ship_with_pax = make_mock_ship(design_name="Transport")
         ship_with_pax.get_calculated_stats.return_value = {'mass': 1000, 'cargo_storage': {'passengers': 100}}
+        ship_with_pax.get_cargo_capacity = MagicMock(return_value=100)  # PROJ-162: sort_ships uses get_cargo_capacity
 
         ships = [ship_no_pax, ship_with_pax]
         result = sort_ships(ships, 'transport', descending=True)

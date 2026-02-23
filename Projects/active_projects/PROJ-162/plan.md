@@ -15,16 +15,16 @@
 |-------|--------|-----------|
 | 1. Create CargoTransferService | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. Refactor Dialogs to Use Service | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. Fix Input Handler & Filter Tests | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. Fix Input Handler & Filter Tests | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cleanup & Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 3 — Fix Input Handler & Filter Tests
-**Last Action:** Phase 2 complete — Dialogs refactored to use CargoTransferService
-**Next Action:** Begin Phase 3 — fix remaining 7 input handler and filter test failures
+**Active Phase:** Phase 4 — Cleanup & Verification
+**Last Action:** Phase 3 complete — Fixed 7 mock setup issues in test files
+**Next Action:** Begin Phase 4 — final cleanup and verification
 **Blockers:** None
-**Context for Next Agent:** CargoQuickDialog and TransferDialog now use CargoTransferService. All 19 dialog tests pass. 7 remaining test failures in input handler/filter tests (Phase 3 scope). Tests: 11854 passed, 7 failed.
+**Context for Next Agent:** All test failures resolved. Fixed mock_scene fixtures in test_strategy_input_handler_core.py and test_strategy_input_handler_transfer.py (added camera.zoom=1.0 and _get_system_at_hex mock). Fixed make_mock_ship in test_fleet_report_filters.py (added get_cargo_capacity mock). Tests: 11861 passed.
 
 ## Overview
 Extract shared business logic (colony resolution, population extraction, transfer command assembly) from `CargoQuickDialog` and `TransferDialog` into a `CargoTransferService` in the strategy services layer. Fix all 12 failing UI screen tests. Clean up 18 leftover DIAG log statements.
