@@ -8,25 +8,21 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-161 Phase 3 (TurnEngine Wiring & Legacy Removal)
-**Current Status:** PROJ-161 Phase 3 complete, Phase 4 ready
+**Last Completed:** PROJ-161 Phase 4 (Test Updates)
+**Current Status:** PROJ-161 Phase 4 complete, Phase 5 ready
 **Current Project:** PROJ-161
-**Current Phase:** Phase 4 (Test Updates)
-**Test Status:** 32 production tests pass, 308 unit engine tests pass, 4 integration tests fail (expected - testing old behavior)
+**Current Phase:** Phase 5 (Cleanup & Legacy Removal)
+**Test Status:** 11959 passed, 13 pre-existing UI failures (unrelated to PROJ-161)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-161 Phase 3 COMPLETE
-- Removed `process_harvesting(empires)` and `process_maintenance(empires)` calls from `process_turn()`
-- Added `process_harvesting_tick(tick, empires)` and `process_maintenance_tick(tick, empires)` to `_process_tick()`
-- Added scuttle event accumulator `self.last_scuttle_events = []` at start of `process_turn()`
-- Deleted `_apply_partial_harvest` method from ProductionEngine
-- Removed `harvesting_engine` parameter from `process_construction_tick`, `_process_queue_tick_dynamic`, `_complete_item`
-- Updated phase comments in `_process_tick` (0, 0a, 0b, 0c, 0d, 0e, 1, 2, 3, 4)
-- Updated module docstring to reflect new per-tick harvesting/maintenance
-- Deleted obsolete tests: `test_mid_turn_complex_triggers_partial_harvest`, `test_storage_recalculated_on_mid_turn_complex`
-- 4 integration tests fail (testing old once-per-turn behavior) - to be fixed in Phase 4
-- Next: Phase 4 - Update integration tests for per-tick behavior
+- PROJ-161 Phase 4 COMPLETE
+- Updated test_harvesting.py: test_harvesting_called_during_process_turn (verify 100 tick calls), test_harvesting_before_production (per-tick ordering with 1-indexed ticks)
+- Updated test_maintenance.py: test_maintenance_engine_called_during_process_turn (100 tick calls), test_maintenance_called_after_harvesting (per-tick ordering)
+- Updated test_economy_e2e.py: test_maintenance_failure_causes_facility_scuttle - expectation changed from 20.0 to 0.0 (per-tick drains before failure)
+- All 112 PROJ-161 related tests pass
+- 13 pre-existing UI failures (transfer dialog, cargo mode) - verified against pre-PROJ-161 commit
+- Next: Phase 5 - Cleanup & Legacy Removal
 
 ---
 
@@ -35,7 +31,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-161: Per-Tick Harvesting and Maintenance**
-  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 4 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-161/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-161/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -49,6 +45,7 @@
 | 2026-02-23 | PROJ-161 | Phase 1 | Complete | 32 pass | a0cf5ee5 | HarvestingEngine per-tick conversion |
 | 2026-02-23 | PROJ-161 | Phase 2 | Complete | 83 pass | ca97511d | MaintenanceEngine per-tick conversion |
 | 2026-02-23 | PROJ-161 | Phase 3 | Complete | 340 pass | 6d92147f | TurnEngine wiring, _apply_partial_harvest removal |
+| 2026-02-23 | PROJ-161 | Phase 4 | Complete | 11959 pass | 45d4ebff | Test updates for per-tick behavior |
 
 ---
 

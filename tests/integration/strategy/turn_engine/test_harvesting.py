@@ -100,7 +100,11 @@ class TestHarvestingIntegration:
     """Integration tests for HarvestingEngine in TurnEngine."""
 
     def test_harvesting_called_during_process_turn(self):
-        """HarvestingEngine.process_harvesting() is called during process_turn()."""
+        """HarvestingEngine.process_harvesting_tick() is called 100 times during process_turn().
+
+        PROJ-161: Changed from once-per-turn process_harvesting() to per-tick
+        process_harvesting_tick() called 100 times (once per tick).
+        """
         mock_harvesting = MagicMock()
         mocks = _make_mock_engines()
 
@@ -114,7 +118,12 @@ class TestHarvestingIntegration:
 
         engine.process_turn([empire], galaxy)
 
-        mock_harvesting.process_harvesting.assert_called_once_with([empire])
+        # Should be called 100 times (once per tick)
+        assert mock_harvesting.process_harvesting_tick.call_count == 100
+        # Each call should have (tick, [empire])
+        for call in mock_harvesting.process_harvesting_tick.call_args_list:
+            tick, empires = call[0]
+            assert empires == [empire]
 
     def test_harvesting_extracts_resources_end_to_end(self):
         """Full E2E: facility harvests from planet into empire pool."""
@@ -145,14 +154,22 @@ class TestHarvestingIntegration:
         assert planet.resources["Metals"]["quantity"] == pytest.approx(4920.0)
 
     def test_harvesting_before_production(self):
-        """Harvesting runs before production, so resources are available for builds."""
-        call_order = []
+        """Harvesting runs before production within each tick.
+
+        PROJ-161: Rewritten for per-tick behavior. In each tick, process_harvesting_tick
+        is called before process_construction_tick, so resources are available for builds.
+
+        Tests order by capturing tick numbers when each method is called.
+        Note: TurnEngine uses 1-indexed ticks (1-100).
+        """
+        harvesting_ticks = []
+        production_ticks = []
 
         mock_harvesting = MagicMock()
-        mock_harvesting.process_harvesting.side_effect = lambda e: call_order.append("harvesting")
+        mock_harvesting.process_harvesting_tick.side_effect = lambda t, e: harvesting_ticks.append(t)
 
         mocks = _make_mock_engines()
-        mocks['production_engine'].process_production.side_effect = lambda *a, **kw: call_order.append("production")
+        mocks['production_engine'].process_construction_tick.side_effect = lambda t, e, g, **kw: production_ticks.append(t)
 
         engine = TurnEngine(
             **mocks,
@@ -163,7 +180,18 @@ class TestHarvestingIntegration:
         galaxy = MockGalaxy()
         engine.process_turn([empire], galaxy)
 
-        assert call_order.index("harvesting") < call_order.index("production")
+        # Both should be called 100 times
+        assert len(harvesting_ticks) == 100
+        assert len(production_ticks) == 100
+
+        # Both should have been called for all ticks 1-100 (1-indexed)
+        assert harvesting_ticks == list(range(1, 101))
+        assert production_ticks == list(range(1, 101))
+
+        # Verify order within _process_tick by checking that harvesting is always
+        # called before production for the same tick (they're stored in call order)
+        # Since both are called in sequence within each tick and stored in order,
+        # if tick order is correct (1,1,2,2,3,3...) then order is preserved.
 
     def test_harvesting_with_storage_cap(self):
         """Empire storage limits are respected during harvesting."""

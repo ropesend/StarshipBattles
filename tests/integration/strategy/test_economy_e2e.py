@@ -357,18 +357,25 @@ class TestEconomyE2E:
         assert len(planet.construction_queue) == 1
 
     def test_maintenance_failure_causes_facility_scuttle(self):
-        """Facility is scuttled when empire can't pay maintenance."""
+        """Facility is scuttled when empire can't pay maintenance.
+
+        PROJ-161: With per-tick maintenance, partial payment occurs before scuttle.
+        - Facility cost: 1000 Metals → maintenance: 50 Metals/turn → 0.5 per tick
+        - Empire has 20.0 Metals → can pay 40 ticks of maintenance
+        - Tick 41: Cannot pay 0.5 → facility scuttled
+        - Final resources: 0.0 (all used before failure)
+        """
         engine = _make_economy_turn_engine()
         galaxy = MockGalaxy()
 
-        # Facility costs 1000 Metals -> maintenance: 50 Metals
+        # Facility costs 1000 Metals -> maintenance: 50 Metals/turn -> 0.5/tick
         facility = _make_plain_facility(
             resource_cost={"Metals": 1000},
             name="Expensive Complex",
         )
         colony = _make_planet(facilities=[facility])
 
-        # Empire has 20 Metals - not enough for 50 maintenance
+        # Empire has 20 Metals - enough for 40 ticks (20/0.5) then fails
         empire = _make_empire(resources={"Metals": 20.0})
         empire.add_colony(colony)
 
@@ -376,8 +383,8 @@ class TestEconomyE2E:
 
         # Facility should be scuttled
         assert len(colony.facilities) == 0
-        # Resources untouched (failed payment means no deduction)
-        assert empire.resource_pool["Metals"] == pytest.approx(20.0)
+        # Resources drained before failure (per-tick deducts until insufficient)
+        assert empire.resource_pool["Metals"] == pytest.approx(0.0)
 
     def test_maintenance_failure_causes_ship_scuttle(self):
         """Ship is scuttled when empire can't pay maintenance."""

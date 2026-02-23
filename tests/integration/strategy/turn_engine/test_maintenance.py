@@ -126,32 +126,45 @@ class TestMaintenanceTurnEngineIntegration:
     """Tests that MaintenanceEngine is properly wired into TurnEngine."""
 
     def test_maintenance_engine_called_during_process_turn(self):
-        """process_turn should call maintenance_engine.process_maintenance."""
+        """process_turn should call maintenance_engine.process_maintenance_tick 100 times.
+
+        PROJ-161: Changed from once-per-turn process_maintenance() to per-tick
+        process_maintenance_tick() called 100 times (once per tick).
+        """
         engine, mock_maintenance = _make_fully_mocked_engine()
         empire = _make_empire()
         empire.colonies = []
 
         engine.process_turn([empire], MagicMock())
 
-        assert mock_maintenance.process_maintenance_called
+        # Should be called 100 times (once per tick)
+        assert mock_maintenance.process_maintenance_tick_called
+        assert len(mock_maintenance.process_maintenance_tick_calls) == 100
 
     def test_maintenance_called_after_harvesting(self):
-        """Maintenance should run after harvesting so resources are available."""
+        """Maintenance should run after harvesting within each tick so resources are available.
+
+        PROJ-161: Rewritten for per-tick behavior. In each tick, process_harvesting_tick
+        is called before process_maintenance_tick, so resources are available for maintenance.
+
+        Note: TurnEngine uses 1-indexed ticks (1-100).
+        """
         call_order = []
 
-        mock_harvesting = _MockHarvestingEngine()
-        original_harvest = mock_harvesting.process_harvesting
-        def track_harvesting(empires):
-            call_order.append("harvesting")
-            return original_harvest(empires)
-        mock_harvesting.process_harvesting = track_harvesting
+        # Create tracking mock for harvesting
+        class TrackingHarvestingEngine(_MockHarvestingEngine):
+            def process_harvesting_tick(self, tick, empires):
+                call_order.append(("harvesting", tick))
+                return super().process_harvesting_tick(tick, empires)
 
-        mock_maintenance = MockMaintenanceEngine()
-        original_maintenance = mock_maintenance.process_maintenance
-        def track_maintenance(empires):
-            call_order.append("maintenance")
-            return original_maintenance(empires)
-        mock_maintenance.process_maintenance = track_maintenance
+        # Create tracking mock for maintenance
+        class TrackingMaintenanceEngine(MockMaintenanceEngine):
+            def process_maintenance_tick(self, tick, empires):
+                call_order.append(("maintenance", tick))
+                return super().process_maintenance_tick(tick, empires)
+
+        mock_harvesting = TrackingHarvestingEngine()
+        mock_maintenance = TrackingMaintenanceEngine()
 
         engine = TurnEngine(
             movement_engine=MockMovementEngine(),
@@ -166,7 +179,18 @@ class TestMaintenanceTurnEngineIntegration:
 
         engine.process_turn([_make_empire()], MagicMock())
 
-        assert call_order.index("harvesting") < call_order.index("maintenance")
+        # Verify harvesting happens before maintenance within each tick
+        harvesting_calls = [c for c in call_order if c[0] == "harvesting"]
+        maintenance_calls = [c for c in call_order if c[0] == "maintenance"]
+
+        assert len(harvesting_calls) == 100
+        assert len(maintenance_calls) == 100
+
+        # For each tick (1-100), harvesting should come before maintenance in call_order
+        for tick in range(1, 101):
+            harvest_idx = call_order.index(("harvesting", tick))
+            maint_idx = call_order.index(("maintenance", tick))
+            assert harvest_idx < maint_idx, f"Tick {tick}: harvesting should precede maintenance"
 
     def test_real_maintenance_deducts_facility_costs(self):
         """Real maintenance engine deducts costs when wired into TurnEngine."""
