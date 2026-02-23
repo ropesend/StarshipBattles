@@ -7,9 +7,9 @@ into a separate file. Also strips completed project entries from the
 Master Task List (projects marked [x] or [~]).
 
 Usage:
-    python continuous_loop/trim_execution_log.py
-    python continuous_loop/trim_execution_log.py --keep 20
-    python continuous_loop/trim_execution_log.py --plan-file continuous_loop/cycle_plan.md
+    python Projects/continuous_loop/trim_execution_log.py
+    python Projects/continuous_loop/trim_execution_log.py --keep 20
+    python Projects/continuous_loop/trim_execution_log.py --plan-file continuous_loop/cycle_plan.md
 """
 
 import argparse
@@ -18,9 +18,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-WORKSPACE = Path(__file__).parent.parent
-DEFAULT_PLAN = WORKSPACE / "continuous_loop" / "cycle_plan.md"
-DEFAULT_ARCHIVE = WORKSPACE / "continuous_loop" / "cycle_execution_archive.md"
+WORKSPACE = Path(__file__).parent.parent.parent
+DEFAULT_PLAN = WORKSPACE / "Projects" / "continuous_loop" / "cycle_plan.md"
+DEFAULT_ARCHIVE = WORKSPACE / "Projects" / "continuous_loop" / "cycle_execution_archive.md"
 DEFAULT_KEEP = 20
 
 

@@ -18,7 +18,7 @@ This skill launches 25 general-purpose agents (5 sweep types x 5 module shards) 
 **Default:** Entire `game/` directory tree (production code only).
 **Override:** If the user provided arguments, scope to those directories instead (skip sharding if a single module is specified).
 
-**Always exclude:** tests/, __pycache__/, .git/, assets/, refactor_loop/, Reviews/, Projects/
+**Always exclude:** tests/, __pycache__/, .git/, assets/, Projects/refactor_loop/, Reviews/, Projects/
 
 ## Shard Definitions
 

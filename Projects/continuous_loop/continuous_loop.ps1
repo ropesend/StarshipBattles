@@ -11,7 +11,7 @@
 #
 # Usage:
 #   cd "C:\Dev\Starship Battles"
-#   .\continuous_loop\continuous_loop.ps1
+#   .\Projects\continuous_loop\continuous_loop.ps1
 #
 # Safety:
 #   - Max 10 cycles (configurable)
@@ -27,7 +27,7 @@ $ErrorActionPreference = "Continue"
 # TRANSCRIPT LOGGING
 # ═══════════════════════════════════════════════════════
 
-$LOG_DIR = "continuous_loop/logs"
+$LOG_DIR = "Projects/continuous_loop/logs"
 if (-not (Test-Path $LOG_DIR)) {
     New-Item -ItemType Directory -Path $LOG_DIR -Force | Out-Null
 }
@@ -48,11 +48,11 @@ $MAX_CONSECUTIVE_FAILURES = 3
 $INTER_CYCLE_SLEEP_SECONDS = 30
 
 $WORKSPACE = "C:/Dev/Starship Battles"
-$CYCLE_PLAN_FILE = "continuous_loop/cycle_plan.md"
-$STATE_FILE = "continuous_loop/cycle_state.json"
-$SWEEP_WORKER = "continuous_loop/SWEEP_WORKER.md"
-$INNER_LOOP_SCRIPT = "continuous_loop/inner_loop.ps1"
-$POPULATE_SCRIPT = "continuous_loop/populate_cycle_plan.py"
+$CYCLE_PLAN_FILE = "Projects/continuous_loop/cycle_plan.md"
+$STATE_FILE = "Projects/continuous_loop/cycle_state.json"
+$SWEEP_WORKER = "Projects/continuous_loop/SWEEP_WORKER.md"
+$INNER_LOOP_SCRIPT = "Projects/continuous_loop/inner_loop.ps1"
+$POPULATE_SCRIPT = "Projects/continuous_loop/populate_cycle_plan.py"
 
 $CLAUDE_TEMP_DIR = "$env:LOCALAPPDATA\Temp\claude\C--Dev-Starship-Battles"
 
@@ -568,7 +568,7 @@ while ($state.current_cycle -lt $MAX_CYCLES) {
 
     # ── Step I: Record cycle results ──
     $qualityScore = $null
-    $qualityFile = "$WORKSPACE\continuous_loop\quality_scores.jsonl"
+    $qualityFile = "$WORKSPACE\Projects\continuous_loop\quality_scores.jsonl"
     if (Test-Path $qualityFile) {
         try {
             $lastLine = Get-Content $qualityFile -Tail 1

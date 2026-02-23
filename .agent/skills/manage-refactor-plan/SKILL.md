@@ -1,13 +1,13 @@
 ---
 name: manage-refactor-plan
-description: Add, remove, update, or reorder projects in the master refactor_loop/refactor_plan.md
+description: Add, remove, update, or reorder projects in the master Projects/refactor_loop/refactor_plan.md
 ---
 
 # Manage Refactor Plan
 
 **Protocol:** `Projects/protocols/10_manage_refactor_plan.md`
 
-Maintain the health and ordering of the project queue in `refactor_loop/refactor_plan.md`.
+Maintain the health and ordering of the project queue in `Projects/refactor_loop/refactor_plan.md`.
 
 ## Available Actions
 
@@ -18,7 +18,7 @@ Maintain the health and ordering of the project queue in `refactor_loop/refactor
 
 ## Verification Checklist
 
-After editing `refactor_loop/refactor_plan.md`, verify:
+After editing `Projects/refactor_loop/refactor_plan.md`, verify:
 - [ ] Markdown syntax remains valid.
 - [ ] File paths and links work correctly.
 - [ ] `---` separators are present between every project.

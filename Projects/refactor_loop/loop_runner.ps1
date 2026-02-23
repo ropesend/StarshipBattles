@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 # Configuration
-$PLAN_FILE = "refactor_loop/refactor_plan.md"
+$PLAN_FILE = "Projects/refactor_loop/refactor_plan.md"
 $WORKSPACE_DIR = "C:/Dev/Starship Battles"
 $SLEEP_DURATION = 10
 $MAX_ITERATIONS = 1000
@@ -83,8 +83,8 @@ while ($iteration -lt $MAX_ITERATIONS) {
         # Capture output to check for EPERM in JSON error responses
         $claudeOutput = claude `
             --dangerously-skip-permissions `
-            --system-prompt-file refactor_loop/WORKER.md `
-            -p "Follow Protocol 08 (Automated Loop). Read refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress." 2>&1 | Out-String
+            --system-prompt-file Projects/refactor_loop/WORKER.md `
+            -p "Follow Protocol 08 (Automated Loop). Read Projects/refactor_loop/refactor_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress." 2>&1 | Out-String
 
         $claudeExitCode = $LASTEXITCODE
 
@@ -99,7 +99,7 @@ while ($iteration -lt $MAX_ITERATIONS) {
         elseif ($claudeOutput -match "prompt is too long" -or $claudeOutput -match "Conversation too long") {
             # Context window overflow — not retryable, needs manual intervention
             Write-ErrorLog "Context window overflow detected. The conversation exceeded the API token limit."
-            Write-Warning "Likely cause: refactor_loop/refactor_plan.md execution log is too large."
+            Write-Warning "Likely cause: Projects/refactor_loop/refactor_plan.md execution log is too large."
             Write-Warning "Fix: Trim the execution log (archive old rows) and restart."
             exit 1
         }

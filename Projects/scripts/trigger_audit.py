@@ -100,7 +100,7 @@ def main():
         sys.exit(2)
     
     project_id = sys.argv[1]
-    plan_file = Path("refactor_loop/refactor_plan.md")
+    plan_file = Path("Projects/refactor_loop/refactor_plan.md")
     
     success = trigger_audit(plan_file, project_id)
     

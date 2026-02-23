@@ -4,6 +4,7 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-163 | Move Automation Loops to Projects Directory | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-162 | Extract CargoTransferService from UI Dialogs | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-161 | Per-Tick Harvesting and Maintenance | Planning | 2026-02-23 | 2026-02-23 |
 

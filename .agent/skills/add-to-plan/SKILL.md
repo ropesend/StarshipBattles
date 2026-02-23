@@ -5,7 +5,7 @@ description: Add one or more existing projects to the refactor plan
 
 # Add Projects to Refactor Plan
 
-Add existing projects from `Projects/active_projects/` to the master task list in `refactor_loop/refactor_plan.md`.
+Add existing projects from `Projects/active_projects/` to the master task list in `Projects/refactor_loop/refactor_plan.md`.
 
 ## Execution
 
@@ -13,7 +13,7 @@ Add existing projects from `Projects/active_projects/` to the master task list i
 
 2. **Validate**: For each project, check that `Projects/active_projects/PROJ-N/plan.md` exists. If not, report and skip.
 
-3. **Check Duplicate**: Search `refactor_loop/refactor_plan.md` for `PROJ-N`. If present, skip.
+3. **Check Duplicate**: Search `Projects/refactor_loop/refactor_plan.md` for `PROJ-N`. If present, skip.
 
 4. **Extract Metadata**: From `Projects/active_projects/PROJ-N/plan.md`, extract:
    - **Title**: From `# PROJ-N: <Title>`
@@ -34,6 +34,6 @@ Add existing projects from `Projects/active_projects/` to the master task list i
    ---
    ```
 
-6. **Insert**: Append entry to the end of the Master Task List section in `refactor_loop/refactor_plan.md`.
+6. **Insert**: Append entry to the end of the Master Task List section in `Projects/refactor_loop/refactor_plan.md`.
 
 7. **Report**: Summarize projects added and any skipped.

@@ -1,6 +1,6 @@
 !EXECUTE_PROTOCOL: Projects/protocols/10_manage_refactor_plan.md
 
-I need to manage the projects in `refactor_loop/refactor_plan.md`.
+I need to manage the projects in `Projects/refactor_loop/refactor_plan.md`.
 
 **Action:** [ADD / REMOVE / UPDATE / REORDER]
 **Project ID:** [e.g., PROJ-50]

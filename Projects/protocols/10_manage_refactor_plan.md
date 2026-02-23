@@ -1,6 +1,6 @@
 # Protocol 10: Manage Refactor Plan
 
-This protocol defines the standard procedures for adding, removing, updating, and reordering projects in the master `refactor_loop/refactor_plan.md`.
+This protocol defines the standard procedures for adding, removing, updating, and reordering projects in the master `Projects/refactor_loop/refactor_plan.md`.
 
 ---
 

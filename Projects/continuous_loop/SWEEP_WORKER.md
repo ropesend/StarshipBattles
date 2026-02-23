@@ -7,7 +7,7 @@ You are an **automated sweep worker** running in the Continuous Improvement Loop
 ## Scope
 
 **Target:** Entire `game/` directory tree (production code only).
-**Exclude:** tests/, __pycache__/, .git/, assets/, refactor_loop/, Reviews/, Projects/
+**Exclude:** tests/, __pycache__/, .git/, assets/, Projects/refactor_loop/, Reviews/, Projects/
 
 ---
 
@@ -213,10 +213,10 @@ Verify `prospective_projects/` directory was created.
 
 Run:
 ```bash
-python continuous_loop/compute_quality_score.py Reviews/results/{REVIEW_FOLDER}
+python Projects/continuous_loop/compute_quality_score.py Reviews/results/{REVIEW_FOLDER}
 ```
 
-This computes a 0-100 quality score (overall + per-shard) and appends the result to `continuous_loop/quality_scores.jsonl`.
+This computes a 0-100 quality score (overall + per-shard) and appends the result to `Projects/continuous_loop/quality_scores.jsonl`.
 
 **Announce the quality score summary line** (printed to stdout by the script).
 

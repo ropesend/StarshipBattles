@@ -7,7 +7,7 @@ argument-hint: (no arguments needed)
 
 # Reset Refactor Loop Baseline
 
-Prepare `refactor_loop/refactor_plan.md` for a fresh automated loop run by establishing a clean test baseline and resetting stale state.
+Prepare `Projects/refactor_loop/refactor_plan.md` for a fresh automated loop run by establishing a clean test baseline and resetting stale state.
 
 ## Execution
 
@@ -25,7 +25,7 @@ If any tests FAIL, report the failure count and warn the user: "There are failin
 
 ### Step 2: Reset Agent Context
 
-Replace the entire `## Agent Context` section in `refactor_loop/refactor_plan.md` with a fresh template using today's date and the test results:
+Replace the entire `## Agent Context` section in `Projects/refactor_loop/refactor_plan.md` with a fresh template using today's date and the test results:
 
 ```markdown
 ## Agent Context
@@ -70,4 +70,4 @@ Summarize:
 - Agent Context reset
 - Execution Log cleared
 - CLAUDE.md baseline updated
-- "Ready to run `.\refactor_loop\loop_runner.ps1`"
+- "Ready to run `.\Projects\refactor_loop\loop_runner.ps1`"

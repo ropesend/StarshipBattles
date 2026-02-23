@@ -20,7 +20,7 @@ Find places where code deviates from the dominant patterns used elsewhere in the
 ## Scope
 
 **Your assigned shard:** {SCOPE}
-**Exclusions:** tests/, __pycache__/, .git/, assets/, refactor_loop/, Reviews/, Projects/
+**Exclusions:** tests/, __pycache__/, .git/, assets/, Projects/refactor_loop/, Reviews/, Projects/
 
 You MUST scan every Python file in your assigned directories. Do not sample — be exhaustive.
 

@@ -17,7 +17,7 @@ The project has ~8000+ tests. Find areas of production code that lack adequate t
 
 **Your assigned production code shard:** {SCOPE}
 **Cross-reference test code in:** tests/ (to check for corresponding test files)
-**Exclusions:** __pycache__/, .git/, assets/, refactor_loop/, Reviews/, Projects/
+**Exclusions:** __pycache__/, .git/, assets/, Projects/refactor_loop/, Reviews/, Projects/
 
 You MUST scan every Python file in your assigned production directories. Do not sample — be exhaustive.
 

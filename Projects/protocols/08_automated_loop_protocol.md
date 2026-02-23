@@ -8,8 +8,8 @@
 > file path is specified by the caller's system prompt (e.g., WORKER.md or
 > CYCLE_WORKER.md). Wherever this protocol says "the master plan", it means
 > whichever plan file your system prompt specifies:
-> - `refactor_loop/refactor_plan.md` (manual refactor loop)
-> - `continuous_loop/cycle_plan.md` (continuous improvement loop)
+> - `Projects/refactor_loop/refactor_plan.md` (manual refactor loop)
+> - `Projects/continuous_loop/cycle_plan.md` (continuous improvement loop)
 >
 > Always defer to your system prompt for the correct file path.
 

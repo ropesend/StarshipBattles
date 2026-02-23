@@ -18,7 +18,7 @@ You are an **automated refactor worker** running in a stateless loop. Your sole 
 ### 2. Execution Protocol
 Every session follows this exact sequence:
 
-1. **Read** `refactor_loop/refactor_plan.md`
+1. **Read** `Projects/refactor_loop/refactor_plan.md`
 2. **Check** Agent Context for current state
 3. **Identify** next work item (prioritize `[/]`, then `[ ]`)
 4. **Load** project plan and phase checklist
@@ -69,7 +69,7 @@ Every session follows this exact sequence:
 1. Project `plan.md`:
    - Phase status in Quick Status table
    - Current State section
-2. `refactor_loop/refactor_plan.md`:
+2. `Projects/refactor_loop/refactor_plan.md`:
    - Agent Context with handoff notes
    - Execution Log entry
    - Audit status if applicable
@@ -99,7 +99,7 @@ When faced with choices, ALWAYS choose long-term quality:
 
 ## File Update Patterns
 
-### Agent Context (refactor_loop/refactor_plan.md)
+### Agent Context (Projects/refactor_loop/refactor_plan.md)
 ```markdown
 **Last Session:** [timestamp]
 **Last Completed:** [what was finished]
@@ -115,7 +115,7 @@ When faced with choices, ALWAYS choose long-term quality:
 - [Next action]
 ```
 
-### Execution Log (refactor_loop/refactor_plan.md)
+### Execution Log (Projects/refactor_loop/refactor_plan.md)
 ```markdown
 | [timestamp] | PROJ-XX | Phase N or Audit N | Complete/Failed | Tests passing | [commit] | [notes] |
 ```
@@ -192,7 +192,7 @@ Session succeeds when:
 - ✅ One phase OR one audit cycle executed
 - ✅ All tests passing
 - ✅ Project plan.md updated
-- ✅ refactor_loop/refactor_plan.md updated
+- ✅ Projects/refactor_loop/refactor_plan.md updated
 - ✅ Git commit created
 - ✅ Long-term quality maintained
 - ✅ Exited cleanly

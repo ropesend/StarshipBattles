@@ -39,7 +39,7 @@ The shell loop restarts Claude for the next phase, creating a fresh context each
 
 ```bash
 cd "C:/Dev/Starship Battles"
-./loop_runner.sh
+./Projects/refactor_loop/loop_runner.sh
 ```
 
 **That's it!** The system will:
@@ -58,13 +58,13 @@ cd "C:/Dev/Starship Battles"
 ## System Architecture
 
 ```
-refactor_loop/
+Projects/refactor_loop/
 ├── refactor_plan.md          # Master task list (read/write by Claude)
 ├── WORKER.md                 # System prompt for automated worker
 └── REFACTOR_LOOP_README.md   # This file
 
-refactor_loop/loop_runner.ps1  # Main automation loop (PowerShell)
-refactor_loop/loop_runner.sh   # Main automation loop (Bash)
+Projects/refactor_loop/loop_runner.ps1  # Main automation loop (PowerShell)
+Projects/refactor_loop/loop_runner.sh   # Main automation loop (Bash)
 CLAUDE.md                     # Rules and context for interactive Claude
 
 Projects/
@@ -82,7 +82,7 @@ Projects/
 
 ## How It Works
 
-### 1. Master Plan (`refactor_loop/refactor_plan.md`)
+### 1. Master Plan (`Projects/refactor_loop/refactor_plan.md`)
 
 Contains:
 - **Agent Context** - Handoff notes between Claude instances
@@ -97,11 +97,11 @@ Example task:
 - [x] Phase 3: Simulation Layer - Components & Formulas
 ```
 
-### 2. Claude Rules (`refactor_loop/WORKER.md`)
+### 2. Claude Rules (`Projects/refactor_loop/WORKER.md`)
 
 10 critical rules for automated execution:
 1. **Non-Interactive** - No user input allowed
-2. **Read Plan First** - Always start with `refactor_loop/refactor_plan.md`
+2. **Read Plan First** - Always start with `Projects/refactor_loop/refactor_plan.md`
 3. **One Phase Per Session** - Execute only next incomplete phase
 4. **Test-Driven Development** - Tests before implementation
 5. **All Tests Must Pass** - Never proceed with failures
@@ -123,21 +123,21 @@ Bash script that:
 
 **`check_completion.py`** - Parse plan file and count tasks
 ```bash
-python Projects/scripts/check_completion.py refactor_loop/refactor_plan.md
+python Projects/scripts/check_completion.py Projects/refactor_loop/refactor_plan.md
 # Output: Task Status: Total: 45, Completed: 12, Incomplete: 33
 ```
 
 **`update_plan.py`** - Programmatically update plan
 ```bash
 # Mark phase complete
-python Projects/scripts/update_plan.py mark-complete refactor_loop/refactor_plan.md PROJ-45 1
+python Projects/scripts/update_plan.py mark-complete Projects/refactor_loop/refactor_plan.md PROJ-45 1
 
 # Update agent context
-python Projects/scripts/update_plan.py update-context refactor_loop/refactor_plan.md \
+python Projects/scripts/update_plan.py update-context Projects/refactor_loop/refactor_plan.md \
     "PROJ-45 Phase 1" "Ready for Phase 2" "5199 passed"
 
 # Add execution log entry
-python Projects/scripts/update_plan.py add-log refactor_loop/refactor_plan.md \
+python Projects/scripts/update_plan.py add-log Projects/refactor_loop/refactor_plan.md \
     PROJ-45 "Phase 1" "Complete" "5199 passed"
 ```
 
@@ -154,13 +154,13 @@ python Projects/scripts/commit_phase.py . PROJ-45 1 "Exception Hierarchy" "5199 
 ### Iteration 1: PROJ-45 Phase 1
 
 1. **Loop starts** → Runs `check_completion.py` → Tasks remain
-2. **Claude starts** → Reads `refactor_loop/refactor_plan.md`
+2. **Claude starts** → Reads `Projects/refactor_loop/refactor_plan.md`
 3. **Claude finds** → First `[ ]` task: PROJ-45 Phase 1
 4. **Claude loads** → `Projects/active_projects/PROJ-45/plan.md`
 5. **Claude loads** → `Projects/active_projects/PROJ-45/phase_1_checklist.md`
 6. **Claude executes** → Creates exception hierarchy (TDD)
 7. **Claude tests** → `pytest tests/` → All pass
-8. **Claude updates** → Marks phase `[x]` in `refactor_loop/refactor_plan.md`
+8. **Claude updates** → Marks phase `[x]` in `Projects/refactor_loop/refactor_plan.md`
 9. **Claude updates** → Agent Context with handoff notes
 10. **Claude commits** → `[PROJ-45] Phase 1: Exception Hierarchy - Automated`
 11. **Claude exits** → Session complete
@@ -177,7 +177,7 @@ Same process, fresh Claude instance, new context.
 
 ### Ordering Projects
 
-Edit `refactor_loop/refactor_plan.md` to reorder projects/phases as needed. The system executes tasks in order from top to bottom.
+Edit `Projects/refactor_loop/refactor_plan.md` to reorder projects/phases as needed. The system executes tasks in order from top to bottom.
 
 ### Adjusting Sleep Duration
 
@@ -216,12 +216,12 @@ Watch the terminal output - each iteration shows:
 ### Check Status Anytime
 
 ```bash
-python Projects/scripts/check_completion.py refactor_loop/refactor_plan.md
+python Projects/scripts/check_completion.py Projects/refactor_loop/refactor_plan.md
 ```
 
 ### View Execution Log
 
-Open `refactor_loop/refactor_plan.md` and scroll to "Execution Log" table.
+Open `Projects/refactor_loop/refactor_plan.md` and scroll to "Execution Log" table.
 
 ### Git History
 
@@ -246,7 +246,7 @@ git log --oneline --grep="Automated"
 
 ### No Progress
 
-**Check:** `refactor_loop/refactor_plan.md` Agent Context for blockers
+**Check:** `Projects/refactor_loop/refactor_plan.md` Agent Context for blockers
 **Fix:** Address blocker, update context, restart loop
 
 ### Git Conflicts
@@ -277,13 +277,13 @@ git log --oneline --grep="Automated"
 
 - [ ] All tests passing
 - [ ] Git state clean
-- [ ] Projects ordered correctly in `refactor_loop/refactor_plan.md`
+- [ ] Projects ordered correctly in `Projects/refactor_loop/refactor_plan.md`
 - [ ] Sufficient disk space for git history
 
 ### During Execution
 
 - Monitor terminal output periodically
-- Check `refactor_loop/refactor_plan.md` Agent Context for issues
+- Check `Projects/refactor_loop/refactor_plan.md` Agent Context for issues
 - Review git commits occasionally
 
 ### After Completion
@@ -299,7 +299,7 @@ git log --oneline --grep="Automated"
 
 ### Running Specific Project
 
-Edit `refactor_loop/refactor_plan.md` to comment out other projects:
+Edit `Projects/refactor_loop/refactor_plan.md` to comment out other projects:
 ```markdown
 <!-- ### PROJ-41: Documentation Health Remediation -->
 <!-- - [ ] Phase 1: Audit & Categorization -->
@@ -314,12 +314,12 @@ Run multiple loops on different branches:
 ```bash
 # Terminal 1
 git checkout -b refactor-proj-45
-./loop_runner.sh
+./Projects/refactor_loop/loop_runner.sh
 
 # Terminal 2
 git checkout -b refactor-proj-42
-# Edit refactor_loop/refactor_plan.md to only include PROJ-42
-./loop_runner.sh
+# Edit Projects/refactor_loop/refactor_plan.md to only include PROJ-42
+./Projects/refactor_loop/loop_runner.sh
 ```
 
 **Warning:** Requires careful branch management and merge strategy.
@@ -338,10 +338,10 @@ Test without committing:
 
 | File | Purpose | Modified By |
 |------|---------|-------------|
-| `refactor_loop/refactor_plan.md` | Master task list | Claude (automated) |
-| `refactor_loop/WORKER.md` | System prompt for worker | Manual (setup) |
-| `refactor_loop/loop_runner.ps1` | Main loop script (PowerShell) | Manual (setup) |
-| `refactor_loop/loop_runner.sh` | Main loop script (Bash) | Manual (setup) |
+| `Projects/refactor_loop/refactor_plan.md` | Master task list | Claude (automated) |
+| `Projects/refactor_loop/WORKER.md` | System prompt for worker | Manual (setup) |
+| `Projects/refactor_loop/loop_runner.ps1` | Main loop script (PowerShell) | Manual (setup) |
+| `Projects/refactor_loop/loop_runner.sh` | Main loop script (Bash) | Manual (setup) |
 | `Projects/scripts/check_completion.py` | Task completion checker | Loop script |
 | `Projects/scripts/update_plan.py` | Plan updater | Claude (optional) |
 | `Projects/scripts/commit_phase.py` | Git commit helper | Claude (optional) |
@@ -351,7 +351,7 @@ Test without committing:
 ## FAQ
 
 **Q: Can I pause and resume?**
-A: Yes! Ctrl+C to stop, `./loop_runner.sh` to resume.
+A: Yes! Ctrl+C to stop, `./Projects/refactor_loop/loop_runner.sh` to resume.
 
 **Q: What if a phase is too large for one context?**
 A: Claude will update Agent Context with handoff notes. Next instance continues.
@@ -360,13 +360,13 @@ A: Claude will update Agent Context with handoff notes. Next instance continues.
 A: Not recommended. Stop loop, edit, restart.
 
 **Q: How do I skip a phase?**
-A: Mark it `[x]` manually in `refactor_loop/refactor_plan.md`.
+A: Mark it `[x]` manually in `Projects/refactor_loop/refactor_plan.md`.
 
 **Q: What if I disagree with a change?**
 A: `git revert <commit>`, update plan, restart loop.
 
 **Q: Can I use this for non-refactoring tasks?**
-A: Yes! Adapt `refactor_loop/refactor_plan.md` and `CLAUDE.md` for any multi-phase work.
+A: Yes! Adapt `Projects/refactor_loop/refactor_plan.md` and `CLAUDE.md` for any multi-phase work.
 
 ---
 
@@ -381,6 +381,6 @@ Part of the Starship Battles project.
 For issues or questions, review:
 1. This README
 2. `CLAUDE.md` rules
-3. `refactor_loop/refactor_plan.md` Agent Context
+3. `Projects/refactor_loop/refactor_plan.md` Agent Context
 4. Git commit history
 5. Terminal output logs

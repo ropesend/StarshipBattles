@@ -20,7 +20,7 @@ The Starship Battles project has undergone multiple rounds of refactoring. The p
 ## Scope
 
 **Your assigned shard:** {SCOPE}
-**Exclusions:** tests/, __pycache__/, .git/, assets/, refactor_loop/, Reviews/, Projects/
+**Exclusions:** tests/, __pycache__/, .git/, assets/, Projects/refactor_loop/, Reviews/, Projects/
 
 You MUST scan every Python file in your assigned directories. Do not sample — be exhaustive.
 

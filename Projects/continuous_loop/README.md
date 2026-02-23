@@ -27,7 +27,7 @@ Each cycle creates a git branch, performs a full codebase review, validates find
 
 ```powershell
 cd "C:\Dev\Starship Battles"
-.\continuous_loop\continuous_loop.ps1
+.\Projects\continuous_loop\continuous_loop.ps1
 ```
 
 That's it. The loop runs until one of the stopping conditions is met.
@@ -134,9 +134,9 @@ Quality: 43/100 (Needs Improvement) [+19] | FND:22(+14) SIM:35(+11) STR:55(+15) 
 ### Relationship to Existing Systems
 
 This system is **completely independent** of:
-- `refactor_loop/loop_runner.ps1` (still works for manual project execution)
-- `refactor_loop/refactor_plan.md` (not touched or read)
-- `refactor_loop/WORKER.md` (not used)
+- `Projects/refactor_loop/loop_runner.ps1` (still works for manual project execution)
+- `Projects/refactor_loop/refactor_plan.md` (not touched or read)
+- `Projects/refactor_loop/WORKER.md` (not used)
 
 It **reuses** these existing components:
 - All `Reviews/scripts/*.py` (sweep pipeline scripts)
@@ -174,7 +174,7 @@ Detection works at both levels:
 If the loop is interrupted (Ctrl+C, power loss, etc.), restart it:
 
 ```powershell
-.\continuous_loop\continuous_loop.ps1
+.\Projects\continuous_loop\continuous_loop.ps1
 ```
 
 It reads `cycle_state.json` and resumes from the last known state:
@@ -187,7 +187,7 @@ It reads `cycle_state.json` and resumes from the last known state:
 Watch `cycle_state.json` for real-time status:
 
 ```powershell
-Get-Content continuous_loop/cycle_state.json | ConvertFrom-Json | Format-List
+Get-Content Projects/continuous_loop/cycle_state.json | ConvertFrom-Json | Format-List
 ```
 
 Or watch the PowerShell terminal output - all operations are logged with timestamps.

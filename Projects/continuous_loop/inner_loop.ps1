@@ -1,5 +1,5 @@
 # Continuous Improvement Loop - Inner Loop (Project Execution)
-# Executes Claude CLI in a loop using continuous_loop/cycle_plan.md
+# Executes Claude CLI in a loop using Projects/continuous_loop/cycle_plan.md
 # One phase at a time, until all cycle projects complete.
 #
 # Exit codes:
@@ -10,10 +10,10 @@
 $ErrorActionPreference = "Continue"
 
 # Configuration
-$PLAN_FILE = "continuous_loop/cycle_plan.md"
-$WORKER_PROMPT = "continuous_loop/CYCLE_WORKER.md"
+$PLAN_FILE = "Projects/continuous_loop/cycle_plan.md"
+$WORKER_PROMPT = "Projects/continuous_loop/CYCLE_WORKER.md"
 $WORKSPACE_DIR = "C:/Dev/Starship Battles"
-$TRIM_SCRIPT = "continuous_loop/trim_execution_log.py"
+$TRIM_SCRIPT = "Projects/continuous_loop/trim_execution_log.py"
 $SLEEP_DURATION = 10
 $MAX_ITERATIONS = 1000
 $MAX_RETRIES = 5
@@ -131,7 +131,7 @@ while ($iteration -lt $MAX_ITERATIONS) {
         $claudeOutput = claude `
             --dangerously-skip-permissions `
             --system-prompt-file $WORKER_PROMPT `
-            -p "Follow Protocol 08 (Automated Loop). Read continuous_loop/cycle_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress." 2>&1 | Out-String
+            -p "Follow Protocol 08 (Automated Loop). Read Projects/continuous_loop/cycle_plan.md. Execute next work item (phase or audit). Update plan. Commit. Exit. BE AGGRESSIVELY VOCAL about your progress." 2>&1 | Out-String
 
         $claudeExitCode = $LASTEXITCODE
 

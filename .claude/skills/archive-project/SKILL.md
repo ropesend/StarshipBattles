@@ -17,7 +17,7 @@ Parse the arguments as a space-separated list of project numbers. For each numbe
 
 ### Step 1: Extract project entry from refactor plan
 
-1. Read `refactor_loop/refactor_plan.md`
+1. Read `Projects/refactor_loop/refactor_plan.md`
 2. Find the project block for the target PROJ-N. The block starts with `- [` and includes all indented lines below it, up to (and including) the next `---` separator.
 
    Example block:
@@ -36,7 +36,7 @@ Parse the arguments as a space-separated list of project numbers. For each numbe
 
 ### Step 2: Move entry to archive
 
-1. If `refactor_loop/archive.md` does not exist, create it with this header:
+1. If `Projects/refactor_loop/archive.md` does not exist, create it with this header:
    ```markdown
    # Archived Refactor Projects
 
@@ -46,12 +46,12 @@ Parse the arguments as a space-separated list of project numbers. For each numbe
 
    ```
 
-2. Append the extracted project block (including its `---` separator) to the end of `refactor_loop/archive.md`
-3. Remove the project block (including its `---` separator) from `refactor_loop/refactor_plan.md`
+2. Append the extracted project block (including its `---` separator) to the end of `Projects/refactor_loop/archive.md`
+3. Remove the project block (including its `---` separator) from `Projects/refactor_loop/refactor_plan.md`
 
 ### Step 3: Remove execution log entries
 
-In `refactor_loop/refactor_plan.md`, find the `## Execution Log` table. Remove ALL rows that contain `PROJ-N` (matching the project being archived). Keep the table header row and separator row intact. This prevents stale log entries from accumulating after archival.
+In `Projects/refactor_loop/refactor_plan.md`, find the `## Execution Log` table. Remove ALL rows that contain `PROJ-N` (matching the project being archived). Keep the table header row and separator row intact. This prevents stale log entries from accumulating after archival.
 
 ### Step 4: Archive project folder
 

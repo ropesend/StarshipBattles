@@ -7,7 +7,7 @@ argument-hint: <project-numbers...> (e.g. 57 58)
 
 # Add Projects to Refactor Plan
 
-Add existing projects from `Projects/active_projects/` to the master task list in `refactor_loop/refactor_plan.md`.
+Add existing projects from `Projects/active_projects/` to the master task list in `Projects/refactor_loop/refactor_plan.md`.
 
 **Projects to add:** $ARGUMENTS
 
@@ -21,7 +21,7 @@ Check that `Projects/active_projects/PROJ-N/plan.md` exists. If not, report "PRO
 
 ### Step 2: Check it's not already in the plan
 
-Read `refactor_loop/refactor_plan.md` and search for `PROJ-N` in the Master Task List. If it's already present, report "PROJ-N is already in the refactor plan" and **skip to the next project**.
+Read `Projects/refactor_loop/refactor_plan.md` and search for `PROJ-N` in the Master Task List. If it's already present, report "PROJ-N is already in the refactor plan" and **skip to the next project**.
 
 ### Step 3: Extract metadata from plan.md
 

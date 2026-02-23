@@ -6,9 +6,9 @@ Reads findings from a sweep review folder, computes a 0-100 quality score
 (overall + per-shard), and appends the result to quality_scores.jsonl.
 
 Usage:
-    python continuous_loop/compute_quality_score.py <review_folder>
-    python continuous_loop/compute_quality_score.py <review_folder> --cycle 3
-    python continuous_loop/compute_quality_score.py Reviews/results/2026-02-11_sweep_full-codebase-sweep
+    python Projects/continuous_loop/compute_quality_score.py <review_folder>
+    python Projects/continuous_loop/compute_quality_score.py <review_folder> --cycle 3
+    python Projects/continuous_loop/compute_quality_score.py Reviews/results/2026-02-11_sweep_full-codebase-sweep
 
 Called by SWEEP_WORKER.md after Step 11 (scaffold prospective projects).
 """
@@ -21,8 +21,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-WORKSPACE = Path(__file__).parent.parent
-QUALITY_SCORES_FILE = WORKSPACE / "continuous_loop" / "quality_scores.jsonl"
+WORKSPACE = Path(__file__).parent.parent.parent
+QUALITY_SCORES_FILE = WORKSPACE / "Projects" / "continuous_loop" / "quality_scores.jsonl"
 RESULTS_DIR = WORKSPACE / "Reviews" / "results"
 
 # ═══════════════════════════════════════════════════════
