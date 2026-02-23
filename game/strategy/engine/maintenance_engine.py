@@ -84,6 +84,9 @@ class MaintenanceEngine:
     maintenance equal to 5% of their total build cost. If the empire
     cannot afford the payment, the entity is immediately scuttled.
 
+    PROJ-161: Supports per-tick maintenance via process_maintenance_tick(),
+    spreading costs across 100 ticks (1/100th per tick).
+
     Processing order:
     1. Facilities (all colonies, in colony order)
     2. Ships (all fleets, in fleet order)
@@ -91,6 +94,9 @@ class MaintenanceEngine:
 
     Usage:
         engine = MaintenanceEngine()
+        # Per-tick (preferred):
+        events = engine.process_maintenance_tick(tick, empires)
+        # Legacy full-turn:
         events = engine.process_maintenance(empires)
     """
 
@@ -99,7 +105,9 @@ class MaintenanceEngine:
         pass
 
     def process_maintenance(self, empires: List) -> List[ScuttleEvent]:
-        """Process maintenance for all empires.
+        """Process maintenance for all empires (full turn).
+
+        DEPRECATED: Use process_maintenance_tick() for per-tick operation.
 
         One-pass processing: facilities first, then ships.
         Returns scuttle events for notification.
@@ -112,14 +120,35 @@ class MaintenanceEngine:
         """
         events: List[ScuttleEvent] = []
         for empire in empires:
-            events.extend(self._process_empire(empire))
+            events.extend(self._process_empire(empire, tick_fraction=1.0))
         return events
 
-    def _process_empire(self, empire) -> List[ScuttleEvent]:
+    def process_maintenance_tick(self, tick: int, empires: List) -> List[ScuttleEvent]:
+        """Process maintenance for one tick (1/100th of turn).
+
+        PROJ-161: Per-tick maintenance spreads costs across 100 ticks.
+        Each call deducts 1/100th of the per-turn maintenance cost.
+        Entities that cannot pay are immediately scuttled.
+
+        Args:
+            tick: Current tick number (1-100).
+            empires: List of Empire objects to process.
+
+        Returns:
+            List of ScuttleEvent records for scuttled entities.
+        """
+        events: List[ScuttleEvent] = []
+        for empire in empires:
+            events.extend(self._process_empire(empire, tick_fraction=0.01))
+        return events
+
+    def _process_empire(self, empire, tick_fraction: float = 1.0) -> List[ScuttleEvent]:
         """Process maintenance for a single empire.
 
         Args:
             empire: Empire to process.
+            tick_fraction: Fraction of per-turn cost to charge (1.0 for full turn,
+                          0.01 for per-tick operation).
 
         Returns:
             List of ScuttleEvent records.
@@ -129,11 +158,11 @@ class MaintenanceEngine:
 
         # Phase 1: Facility maintenance
         for colony in empire.colonies:
-            events.extend(self._process_colony_facilities(colony, empire))
+            events.extend(self._process_colony_facilities(colony, empire, tick_fraction))
 
         # Phase 2: Ship maintenance
         for fleet in list(empire.fleets):  # Copy list since we may remove fleets
-            fleet_events = self._process_fleet_ships(fleet, empire)
+            fleet_events = self._process_fleet_ships(fleet, empire, tick_fraction)
             if fleet_events:
                 fleets_with_scuttles.add(fleet.id)
             events.extend(fleet_events)
@@ -143,7 +172,9 @@ class MaintenanceEngine:
 
         return events
 
-    def _process_colony_facilities(self, colony, empire) -> List[ScuttleEvent]:
+    def _process_colony_facilities(
+        self, colony, empire, tick_fraction: float = 1.0
+    ) -> List[ScuttleEvent]:
         """Process maintenance for all facilities on a colony.
 
         Iterates facilities in order. Pays for each one if possible,
@@ -152,6 +183,7 @@ class MaintenanceEngine:
         Args:
             colony: Colony (planet) with facilities.
             empire: Empire that owns the colony.
+            tick_fraction: Fraction of per-turn cost to charge.
 
         Returns:
             List of ScuttleEvent records.
@@ -163,7 +195,7 @@ class MaintenanceEngine:
             if not facility.is_operational:
                 continue  # Non-operational facilities are free
 
-            cost = self._calculate_maintenance_cost(facility.design_data)
+            cost = self._calculate_maintenance_cost(facility.design_data, tick_fraction)
             if not cost:
                 continue  # No cost - free maintenance
 
@@ -191,12 +223,15 @@ class MaintenanceEngine:
 
         return events
 
-    def _process_fleet_ships(self, fleet, empire) -> List[ScuttleEvent]:
+    def _process_fleet_ships(
+        self, fleet, empire, tick_fraction: float = 1.0
+    ) -> List[ScuttleEvent]:
         """Process maintenance for all ships in a fleet.
 
         Args:
             fleet: Fleet containing ships.
             empire: Empire that owns the fleet.
+            tick_fraction: Fraction of per-turn cost to charge.
 
         Returns:
             List of ScuttleEvent records.
@@ -205,7 +240,7 @@ class MaintenanceEngine:
         to_scuttle: List = []
 
         for ship in fleet.ships:
-            cost = self._calculate_maintenance_cost(ship.design_data)
+            cost = self._calculate_maintenance_cost(ship.design_data, tick_fraction)
             if not cost:
                 continue
 
@@ -231,18 +266,26 @@ class MaintenanceEngine:
 
         return events
 
-    def _calculate_maintenance_cost(self, design_data: Dict) -> Dict[str, float]:
+    def _calculate_maintenance_cost(
+        self, design_data: Dict, tick_fraction: float = 1.0
+    ) -> Dict[str, float]:
         """Calculate maintenance cost from a design's resource costs.
 
-        Delegates to module-level calculate_maintenance_cost() function.
+        Delegates to module-level calculate_maintenance_cost() function,
+        then applies tick_fraction to spread costs over multiple ticks.
 
         Args:
             design_data: Design data dict containing layers with components.
+            tick_fraction: Fraction of per-turn cost to charge (1.0 for full turn,
+                          0.01 for per-tick operation).
 
         Returns:
             Dict mapping resource type to maintenance cost amount.
         """
-        return calculate_maintenance_cost(design_data, MAINTENANCE_RATE)
+        full_cost = calculate_maintenance_cost(design_data, MAINTENANCE_RATE)
+        if tick_fraction == 1.0:
+            return full_cost
+        return {res: amount * tick_fraction for res, amount in full_cost.items()}
 
     def _cleanup_empty_fleets(self, empire, fleets_with_scuttles: set) -> None:
         """Remove fleets that became empty due to maintenance scuttling.

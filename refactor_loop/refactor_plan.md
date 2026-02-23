@@ -8,21 +8,23 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-161 Phase 1 (HarvestingEngine Per-Tick Conversion)
-**Current Status:** PROJ-161 Phase 1 complete, Phase 2 ready
+**Last Completed:** PROJ-161 Phase 2 (MaintenanceEngine Per-Tick Conversion)
+**Current Status:** PROJ-161 Phase 2 complete, Phase 3 ready
 **Current Project:** PROJ-161
-**Current Phase:** Phase 2 (MaintenanceEngine Per-Tick Conversion)
-**Test Status:** 32 harvesting tests pass, 85 interface tests pass
+**Current Phase:** Phase 3 (TurnEngine Wiring & Legacy Removal)
+**Test Status:** 23 maintenance tests pass, 54 interface tests pass, 6 integration tests pass
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-161 Phase 1 COMPLETE
-- Added `process_harvesting_tick(tick, empires)` to IHarvestingEngine interface
-- Implemented in HarvestingEngine using tick_fraction parameter (0.01 for per-tick, 1.0 for full turn)
-- Added 6 new per-tick tests in TestPerTickHarvesting class
-- Fixed ConcreteHarvestingEngine in test_engine_interfaces.py
-- 32 harvesting tests passing, all 85 interface tests passing
-- Next: Phase 2 - MaintenanceEngine per-tick conversion
+- PROJ-161 Phase 2 COMPLETE
+- Added `process_maintenance_tick(tick, empires)` to IMaintenanceEngine interface
+- Implemented in MaintenanceEngine using tick_fraction parameter (0.01 for per-tick, 1.0 for full turn)
+- Added 6 new per-tick tests in TestPerTickMaintenance class
+- Updated MockMaintenanceEngine with process_maintenance_tick support
+- Updated _MockHarvestingEngine in test_maintenance.py with process_harvesting_tick
+- Added test_imaintenance_engine_has_process_maintenance_tick_method to interface tests
+- 23 maintenance tests passing, 54 interface tests passing, 6 integration tests passing
+- Next: Phase 3 - TurnEngine Wiring & Legacy Removal
 
 ---
 
@@ -31,7 +33,7 @@
 > **Note:** Each checkbox represents an entire project. Phase details are in the project's plan.md file.
 
 - [/] **PROJ-161: Per-Tick Harvesting and Maintenance**
-  - **Phases:** 5 | **Status:** Phase 1 Complete | **Priority:** Medium
+  - **Phases:** 5 | **Status:** Phase 2 Complete | **Priority:** Medium
   - **Plan:** [Projects/active_projects/PROJ-161/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-161/plan.md)
   - **Audit:** Not Started | **Cycles:** 0/5
   - **Dependencies:** None
@@ -43,6 +45,7 @@
 | Timestamp | Project | Action | Status | Tests | Commit | Notes |
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-23 | PROJ-161 | Phase 1 | Complete | 32 pass | a0cf5ee5 | HarvestingEngine per-tick conversion |
+| 2026-02-23 | PROJ-161 | Phase 2 | Complete | 83 pass | ca97511d | MaintenanceEngine per-tick conversion |
 
 ---
 

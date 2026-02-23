@@ -202,22 +202,35 @@ class MockMaintenanceEngine(IMaintenanceEngine):
     Mock implementation of IMaintenanceEngine for testing.
 
     PROJ-75 Phase 5: Maintenance engine mock.
+    PROJ-161: Added per-tick maintenance support.
 
     Tracks method calls and allows configurable return values.
 
     Attributes:
         process_maintenance_result: Return value for process_maintenance()
         process_maintenance_calls: List of (empires,) call args
+        process_maintenance_tick_result: Return value for process_maintenance_tick()
+        process_maintenance_tick_calls: List of (tick, empires) call args
     """
 
     def __init__(self):
         self.process_maintenance_result: List = []
         self.process_maintenance_calls: List[Tuple] = []
+        self.process_maintenance_tick_result: List = []
+        self.process_maintenance_tick_calls: List[Tuple] = []
 
     @property
     def process_maintenance_called(self) -> bool:
         return len(self.process_maintenance_calls) > 0
 
+    @property
+    def process_maintenance_tick_called(self) -> bool:
+        return len(self.process_maintenance_tick_calls) > 0
+
     def process_maintenance(self, empires):
         self.process_maintenance_calls.append((empires,))
         return self.process_maintenance_result
+
+    def process_maintenance_tick(self, tick, empires):
+        self.process_maintenance_tick_calls.append((tick, empires))
+        return self.process_maintenance_tick_result

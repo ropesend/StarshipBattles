@@ -447,3 +447,243 @@ class TestMaintenanceEngine:
         # fac: 5% of 200 = 10, ship: 5% of 400 = 20 => total 30
         assert empire.resource_pool["Metals"] == pytest.approx(970.0)
         assert len(events) == 0
+
+
+# --- Per-Tick Maintenance Tests (PROJ-161) ---
+
+class TestPerTickMaintenance:
+    """Tests for per-tick maintenance (PROJ-161).
+
+    Per-tick maintenance spreads the 5% per-turn cost across 100 ticks,
+    charging 1/100th (0.05%) of build cost per tick.
+    """
+
+    def _get_engine(self):
+        from game.strategy.engine.maintenance_engine import MaintenanceEngine
+        return MaintenanceEngine()
+
+    def test_single_tick_deducts_one_hundredth(self):
+        """Single tick deducts 1/100th of the per-turn maintenance cost."""
+        engine = self._get_engine()
+        empire = _make_empire({"Metals": 1000.0})
+        # Facility with 1000 Metals build cost -> 50 Metals/turn maintenance
+        # Per tick: 50 / 100 = 0.5 Metals
+        facility = _make_facility(design_data={
+            "layers": {
+                "CORE": {
+                    "components": [
+                        {"id": "comp_a", "resource_cost": {"Metals": 1000}}
+                    ]
+                }
+            }
+        })
+        colony = _make_colony(facilities=[facility])
+        empire.colonies = [colony]
+
+        events = engine.process_maintenance_tick(tick=1, empires=[empire])
+
+        # 5% of 1000 = 50 per turn, 50 / 100 = 0.5 per tick
+        assert empire.resource_pool["Metals"] == pytest.approx(999.5)
+        assert len(events) == 0
+
+    def test_100_ticks_equals_full_turn_cost(self):
+        """Calling 100 times produces same total deduction as single process_maintenance call."""
+        engine = self._get_engine()
+
+        # Test with per-tick: create fresh empire
+        empire_ticks = _make_empire({"Metals": 1000.0, "Organics": 500.0})
+        facility_ticks = _make_facility(
+            instance_id="fac_tick",
+            design_data={
+                "layers": {
+                    "CORE": {
+                        "components": [
+                            {"id": "comp_a", "resource_cost": {"Metals": 1000, "Organics": 200}}
+                        ]
+                    }
+                }
+            },
+        )
+        ship_ticks = _make_ship_instance(
+            instance_id="ship_tick",
+            design_data={
+                "layers": {
+                    "HULL": {
+                        "components": [
+                            {"id": "hull", "resource_cost": {"Metals": 500}}
+                        ]
+                    }
+                }
+            },
+        )
+        colony_ticks = _make_colony(facilities=[facility_ticks])
+        fleet_ticks = _make_fleet(ships=[ship_ticks])
+        empire_ticks.colonies = [colony_ticks]
+        empire_ticks.fleets = [fleet_ticks]
+
+        # Process 100 ticks
+        for tick in range(1, 101):
+            engine.process_maintenance_tick(tick=tick, empires=[empire_ticks])
+
+        # Test with full turn: create identical fresh empire
+        empire_full = _make_empire({"Metals": 1000.0, "Organics": 500.0})
+        facility_full = _make_facility(
+            instance_id="fac_full",
+            design_data={
+                "layers": {
+                    "CORE": {
+                        "components": [
+                            {"id": "comp_a", "resource_cost": {"Metals": 1000, "Organics": 200}}
+                        ]
+                    }
+                }
+            },
+        )
+        ship_full = _make_ship_instance(
+            instance_id="ship_full",
+            design_data={
+                "layers": {
+                    "HULL": {
+                        "components": [
+                            {"id": "hull", "resource_cost": {"Metals": 500}}
+                        ]
+                    }
+                }
+            },
+        )
+        colony_full = _make_colony(facilities=[facility_full])
+        fleet_full = _make_fleet(ships=[ship_full])
+        empire_full.colonies = [colony_full]
+        empire_full.fleets = [fleet_full]
+
+        engine.process_maintenance([empire_full])
+
+        # Both should have same resources remaining
+        # Facility: 5% of (1000M + 200O) = 50M + 10O
+        # Ship: 5% of 500M = 25M
+        # Total: 75M + 10O
+        assert empire_ticks.resource_pool["Metals"] == pytest.approx(
+            empire_full.resource_pool["Metals"]
+        )
+        assert empire_ticks.resource_pool["Organics"] == pytest.approx(
+            empire_full.resource_pool["Organics"]
+        )
+
+    def test_immediate_scuttle_on_tick_failure(self):
+        """Entity is scuttled when a single tick's payment fails."""
+        engine = self._get_engine()
+        # Only 0.25 Metals - not enough for 0.5 per tick
+        empire = _make_empire({"Metals": 0.25})
+        facility = _make_facility(design_data={
+            "layers": {
+                "CORE": {
+                    "components": [
+                        {"id": "comp_a", "resource_cost": {"Metals": 1000}}
+                    ]
+                }
+            }
+        })
+        colony = _make_colony(facilities=[facility])
+        empire.colonies = [colony]
+
+        events = engine.process_maintenance_tick(tick=1, empires=[empire])
+
+        # Facility should be scuttled
+        assert len(colony.facilities) == 0
+        assert len(events) == 1
+        assert events[0].entity_type == "facility"
+
+    def test_non_operational_facility_free_per_tick(self):
+        """Non-operational facilities have zero per-tick maintenance cost."""
+        engine = self._get_engine()
+        empire = _make_empire({"Metals": 0.0})  # No resources at all
+        facility = _make_facility(
+            is_operational=False,
+            design_data={
+                "layers": {
+                    "CORE": {
+                        "components": [
+                            {"id": "a", "resource_cost": {"Metals": 1000}}
+                        ]
+                    }
+                }
+            },
+        )
+        colony = _make_colony(facilities=[facility])
+        empire.colonies = [colony]
+
+        events = engine.process_maintenance_tick(tick=1, empires=[empire])
+
+        # Not scuttled despite no resources - non-operational is free
+        assert len(colony.facilities) == 1
+        assert len(events) == 0
+
+    def test_scuttle_event_fields_correct(self):
+        """ScuttleEvent from per-tick processing has correct fields."""
+        engine = self._get_engine()
+        empire = _make_empire({"Metals": 0.0})
+        ship = _make_ship_instance(
+            name="Doomed Cruiser",
+            design_data={
+                "layers": {
+                    "HULL": {
+                        "components": [
+                            {"id": "hull", "resource_cost": {"Metals": 200}}
+                        ]
+                    }
+                }
+            },
+        )
+        fleet = _make_fleet(ships=[ship], fleet_id=42)
+        empire.fleets = [fleet]
+
+        events = engine.process_maintenance_tick(tick=50, empires=[empire])
+
+        assert len(events) == 1
+        event = events[0]
+        assert event.empire_id == 0
+        assert event.entity_type == "ship"
+        assert event.entity_name == "Doomed Cruiser"
+        assert "Fleet 42" in event.location
+
+    def test_multiple_entities_independent_per_tick(self):
+        """Each facility/ship pays independently in per-tick processing."""
+        engine = self._get_engine()
+        # Enough for one facility's tick cost but not both
+        # Each costs 0.5 Metals per tick (5% of 1000 = 50, /100 = 0.5)
+        empire = _make_empire({"Metals": 0.6})
+        fac1 = _make_facility(
+            instance_id="fac_1", name="Survivor",
+            design_data={
+                "layers": {
+                    "CORE": {
+                        "components": [
+                            {"id": "a", "resource_cost": {"Metals": 1000}}
+                        ]
+                    }
+                }
+            },
+        )
+        fac2 = _make_facility(
+            instance_id="fac_2", name="Doomed",
+            design_data={
+                "layers": {
+                    "CORE": {
+                        "components": [
+                            {"id": "b", "resource_cost": {"Metals": 1000}}
+                        ]
+                    }
+                }
+            },
+        )
+        colony = _make_colony(facilities=[fac1, fac2])
+        empire.colonies = [colony]
+
+        events = engine.process_maintenance_tick(tick=1, empires=[empire])
+
+        # fac1 paid (0.5), fac2 can't pay (need 0.5 but only 0.1 left) -> scuttled
+        assert len(colony.facilities) == 1
+        assert colony.facilities[0].instance_id == "fac_1"
+        assert len(events) == 1
+        assert events[0].entity_name == "Doomed"
+        assert empire.resource_pool["Metals"] == pytest.approx(0.1)

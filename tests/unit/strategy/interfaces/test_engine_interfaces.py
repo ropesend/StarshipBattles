@@ -218,6 +218,12 @@ class TestIMaintenanceEngineInterface:
         assert hasattr(IMaintenanceEngine, 'process_maintenance')
         assert getattr(IMaintenanceEngine.process_maintenance, '__isabstractmethod__', False)
 
+    def test_imaintenance_engine_has_process_maintenance_tick_method(self):
+        """IMaintenanceEngine should define process_maintenance_tick abstract method (PROJ-161)."""
+        from game.strategy.interfaces.engines import IMaintenanceEngine
+        assert hasattr(IMaintenanceEngine, 'process_maintenance_tick')
+        assert getattr(IMaintenanceEngine.process_maintenance_tick, '__isabstractmethod__', False) is True
+
 
 # =============================================================================
 # IPopulationEngine Interface Tests
@@ -400,9 +406,13 @@ class TestConcreteImplementations:
             def process_maintenance(self, empires):
                 return []
 
+            def process_maintenance_tick(self, tick, empires):
+                return []
+
         engine = MockMaintenanceEngine()
         assert engine is not None
         assert engine.process_maintenance([]) == []
+        assert engine.process_maintenance_tick(1, []) == []
 
     def test_concrete_population_engine_implementation(self):
         """Concrete IPopulationEngine with all methods implemented works."""

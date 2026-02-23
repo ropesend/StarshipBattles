@@ -31,9 +31,13 @@ class _MockHarvestingEngine(IHarvestingEngine):
     """Inline mock for harvesting engine."""
     def __init__(self):
         self.calls = []
+        self.tick_calls = []
 
     def process_harvesting(self, empires):
         self.calls.append(empires)
+
+    def process_harvesting_tick(self, tick, empires):
+        self.tick_calls.append((tick, empires))
 
 
 class _MockPopulationEngine(IPopulationEngine):

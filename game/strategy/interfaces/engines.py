@@ -404,15 +404,20 @@ class IMaintenanceEngine(ABC):
     Abstract interface for maintenance cost processing.
 
     PROJ-75 Phase 5: Interface for MaintenanceEngine.
+    PROJ-161: Added per-tick maintenance for gradual cost spreading.
 
     Implementations handle:
     - Calculating maintenance costs (5% of build cost per turn)
     - Deducting maintenance from empire resource pools
     - Scuttling entities that cannot be maintained
     - Cleaning up empty fleets after ship scuttles
+    - Per-tick maintenance (1/100th per tick) for smooth economy
 
     Example usage:
         engine = MaintenanceEngine()
+        # Per-tick (preferred - called 100 times per turn):
+        events = engine.process_maintenance_tick(tick, empires)
+        # Legacy full-turn (deprecated):
         events = engine.process_maintenance(empires)
     """
 
@@ -422,12 +427,37 @@ class IMaintenanceEngine(ABC):
         empires: List
     ) -> List:
         """
-        Process maintenance for all empires.
+        Process maintenance for all empires (full turn).
+
+        DEPRECATED: Use process_maintenance_tick() for per-tick operation.
+        Will be removed in Phase 5.
 
         Deducts 5% of build cost per turn for each operational facility
         and ship. Scuttles entities that cannot be maintained.
 
         Args:
+            empires: List of Empire objects to process
+
+        Returns:
+            List of ScuttleEvent records for scuttled entities
+        """
+        pass
+
+    @abstractmethod
+    def process_maintenance_tick(
+        self,
+        tick: int,
+        empires: List
+    ) -> List:
+        """
+        Process maintenance for one tick (1/100th of turn).
+
+        PROJ-161: Per-tick maintenance spreads costs across 100 ticks.
+        Each call deducts 1/100th of the per-turn maintenance cost.
+        Entities that cannot pay are immediately scuttled.
+
+        Args:
+            tick: Current tick number (1-100)
             empires: List of Empire objects to process
 
         Returns:
