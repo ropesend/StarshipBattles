@@ -2,6 +2,7 @@
 Strategy Engine Interfaces for Dependency Injection.
 
 PROJ-43 Phase 4: Interface contracts for TurnEngine sub-engines.
+PROJ-161: Harvesting and Maintenance interfaces now per-tick only.
 
 These interfaces enable:
 - Constructor dependency injection in TurnEngine
@@ -340,42 +341,20 @@ class IHarvestingEngine(ABC):
     Abstract interface for planetary resource harvesting.
 
     PROJ-75 Phase 2: Interface for HarvestingEngine.
-    PROJ-161: Added per-tick harvesting for gradual resource extraction.
+    PROJ-161: Per-tick harvesting only (legacy full-turn method removed).
 
     Implementations handle:
     - Scanning facilities for harvester abilities
-    - Extracting planetary resources based on quality
+    - Extracting planetary resources based on quality (1/100th per tick)
     - Adding harvested resources to empire pool
     - Respecting storage limits and planet depletion
-    - Per-tick harvesting (1/100th per tick) for smooth economy
+    - Storage recalculation each tick for mid-turn changes
 
     Example usage:
         engine = HarvestingEngine(registries=registries)
-        # Per-tick (preferred - called 100 times per turn):
+        # Called 100 times per turn in TurnEngine._process_tick():
         engine.process_harvesting_tick(tick, empires)
-        # Legacy full-turn (deprecated):
-        engine.process_harvesting(empires)
     """
-
-    @abstractmethod
-    def process_harvesting(
-        self,
-        empires: List
-    ) -> None:
-        """
-        Process resource harvesting for all empires (full turn).
-
-        DEPRECATED: Use process_harvesting_tick() for per-tick operation.
-        Will be removed in Phase 5.
-
-        Iterates through all empires, colonies, and facilities,
-        extracting planetary resources to empire pools based on
-        harvester abilities and planet resource quality.
-
-        Args:
-            empires: List of Empire objects to process
-        """
-        pass
 
     @abstractmethod
     def process_harvesting_tick(
@@ -404,44 +383,19 @@ class IMaintenanceEngine(ABC):
     Abstract interface for maintenance cost processing.
 
     PROJ-75 Phase 5: Interface for MaintenanceEngine.
-    PROJ-161: Added per-tick maintenance for gradual cost spreading.
+    PROJ-161: Per-tick maintenance only (legacy full-turn method removed).
 
     Implementations handle:
-    - Calculating maintenance costs (5% of build cost per turn)
+    - Calculating maintenance costs (5% of build cost per turn, 1/100th per tick)
     - Deducting maintenance from empire resource pools
-    - Scuttling entities that cannot be maintained
+    - Scuttling entities that cannot be maintained (immediately on tick failure)
     - Cleaning up empty fleets after ship scuttles
-    - Per-tick maintenance (1/100th per tick) for smooth economy
 
     Example usage:
         engine = MaintenanceEngine()
-        # Per-tick (preferred - called 100 times per turn):
+        # Called 100 times per turn in TurnEngine._process_tick():
         events = engine.process_maintenance_tick(tick, empires)
-        # Legacy full-turn (deprecated):
-        events = engine.process_maintenance(empires)
     """
-
-    @abstractmethod
-    def process_maintenance(
-        self,
-        empires: List
-    ) -> List:
-        """
-        Process maintenance for all empires (full turn).
-
-        DEPRECATED: Use process_maintenance_tick() for per-tick operation.
-        Will be removed in Phase 5.
-
-        Deducts 5% of build cost per turn for each operational facility
-        and ship. Scuttles entities that cannot be maintained.
-
-        Args:
-            empires: List of Empire objects to process
-
-        Returns:
-            List of ScuttleEvent records for scuttled entities
-        """
-        pass
 
     @abstractmethod
     def process_maintenance_tick(

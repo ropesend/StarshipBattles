@@ -1,18 +1,21 @@
 """
-MaintenanceEngine - Handles per-turn maintenance costs and scuttling.
+MaintenanceEngine - Handles per-tick maintenance costs and scuttling.
 
 PROJ-75 Phase 5: Maintenance System.
+PROJ-161: Now per-tick only (100 ticks per turn, 1/100th cost each).
 
 Responsibilities:
-- Calculate maintenance cost (5% of total build cost) for facilities and ships
+- Calculate maintenance cost (5% of total build cost per turn, 1/100th per tick)
 - Deduct maintenance costs from empire resource pools
-- Scuttle (remove) entities that cannot be maintained
+- Scuttle (remove) entities that cannot be maintained (immediately on tick failure)
 - Clean up empty fleets after ship scuttles
 - Return scuttle events for notification/logging
 
 Processing is one-pass: all entities are evaluated against current resources
 in order. Resources consumed by earlier entities reduce availability for later ones,
 but scuttled entities do NOT return resources (preventing cascade exploitation).
+
+Called by TurnEngine._process_tick() 100 times per turn.
 """
 
 from dataclasses import dataclass
@@ -80,12 +83,11 @@ class ScuttleEvent:
 class MaintenanceEngine:
     """Engine for processing maintenance costs and scuttling.
 
-    Each turn, every operational facility and every ship must pay
-    maintenance equal to 5% of their total build cost. If the empire
-    cannot afford the payment, the entity is immediately scuttled.
+    Each tick, every operational facility and every ship must pay
+    1/100th of their maintenance (5% of build cost per turn). If the
+    empire cannot afford the payment, the entity is immediately scuttled.
 
-    PROJ-161: Supports per-tick maintenance via process_maintenance_tick(),
-    spreading costs across 100 ticks (1/100th per tick).
+    PROJ-161: Per-tick only (legacy full-turn method removed).
 
     Processing order:
     1. Facilities (all colonies, in colony order)
@@ -94,34 +96,13 @@ class MaintenanceEngine:
 
     Usage:
         engine = MaintenanceEngine()
-        # Per-tick (preferred):
+        # Called 100 times per turn:
         events = engine.process_maintenance_tick(tick, empires)
-        # Legacy full-turn:
-        events = engine.process_maintenance(empires)
     """
 
     def __init__(self):
         """Initialize the maintenance engine."""
         pass
-
-    def process_maintenance(self, empires: List) -> List[ScuttleEvent]:
-        """Process maintenance for all empires (full turn).
-
-        DEPRECATED: Use process_maintenance_tick() for per-tick operation.
-
-        One-pass processing: facilities first, then ships.
-        Returns scuttle events for notification.
-
-        Args:
-            empires: List of Empire objects to process.
-
-        Returns:
-            List of ScuttleEvent records for scuttled entities.
-        """
-        events: List[ScuttleEvent] = []
-        for empire in empires:
-            events.extend(self._process_empire(empire, tick_fraction=1.0))
-        return events
 
     def process_maintenance_tick(self, tick: int, empires: List) -> List[ScuttleEvent]:
         """Process maintenance for one tick (1/100th of turn).

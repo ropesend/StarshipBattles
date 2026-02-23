@@ -1,7 +1,9 @@
 """Turn engine maintenance integration tests - cost deduction and scuttling.
 
 PROJ-75 Phase 5: Integration tests for MaintenanceEngine wired into TurnEngine.
-Tests verify that process_maintenance() is called during process_turn(),
+PROJ-161: Updated for per-tick via process_maintenance_tick() (100 times per turn).
+
+Tests verify that process_maintenance_tick() is called during process_turn(),
 and that maintenance costs flow correctly and scuttling works end-to-end.
 """
 import pytest
@@ -28,13 +30,9 @@ from tests.unit.strategy.mocks.mock_engines import (
 # ===========================================================================
 
 class _MockHarvestingEngine(IHarvestingEngine):
-    """Inline mock for harvesting engine."""
+    """Inline mock for harvesting engine (PROJ-161: per-tick only)."""
     def __init__(self):
-        self.calls = []
         self.tick_calls = []
-
-    def process_harvesting(self, empires):
-        self.calls.append(empires)
 
     def process_harvesting_tick(self, tick, empires):
         self.tick_calls.append((tick, empires))

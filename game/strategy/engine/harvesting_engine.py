@@ -3,17 +3,18 @@ HarvestingEngine - Planetary Resource Harvesting & Storage Aggregation
 
 PROJ-75 Phase 2-3: Engine for extracting planetary resources to empire pools
 and calculating empire-wide storage capacity from storage facilities.
+PROJ-161: Now per-tick only (100 ticks per turn, 1/100th harvest rate each).
 
 Responsibilities:
 - Scan facilities for ResourceHarvester abilities
-- Calculate harvest: base_rate * planet_quality
+- Calculate harvest: (base_rate * planet_quality) / 100 per tick
 - Deduct from planet quantity (clamped to zero)
 - Add to empire resource pool (respecting storage limits)
 - Skip non-operational facilities and missing resource types
 - Aggregate EmpireStorage abilities to set empire max_storage
+- Recalculate storage each tick for mid-turn facility changes
 
-Fits into TurnEngine's process_turn() as a turn-start phase
-(before the subturn loop).
+Called by TurnEngine._process_tick() 100 times per turn.
 """
 
 from typing import List, Optional, TYPE_CHECKING
@@ -81,9 +82,10 @@ class HarvestingEngine(IHarvestingEngine):
 
     PROJ-75 Phase 2: Scans planetary facilities for ResourceHarvester
     abilities and extracts resources from planets into empire pools.
+    PROJ-161: Per-tick only (1/100th of harvest rate per tick).
 
-    Harvest formula:
-        harvest = base_harvest_rate * planet_resource_quality
+    Harvest formula (per tick):
+        harvest = (base_harvest_rate * planet_resource_quality) / 100
         actual = min(harvest, planet_quantity)
 
     Supports two design_data formats:
@@ -99,25 +101,6 @@ class HarvestingEngine(IHarvestingEngine):
                        abilities from plain string IDs in design_data.
         """
         self._registries = registries
-
-    def process_harvesting(self, empires: List) -> None:
-        """
-        Process resource harvesting for all empires (full turn).
-
-        DEPRECATED: Use process_harvesting_tick() for per-tick operation.
-        Will be removed in Phase 5.
-
-        First recalculates storage capacity from EmpireStorage abilities,
-        then iterates: empire -> colonies -> facilities -> components.
-        For each ResourceHarvester ability found, extracts resources
-        from the planet and adds them to the empire pool.
-
-        Args:
-            empires: List of Empire objects to process
-        """
-        self.recalculate_storage(empires)
-        for empire in empires:
-            self._process_empire(empire, tick_fraction=1.0)
 
     def process_harvesting_tick(self, tick: int, empires: List) -> None:
         """

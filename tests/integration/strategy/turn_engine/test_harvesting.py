@@ -1,7 +1,9 @@
 """Turn engine harvesting integration tests - resource extraction to empire pool.
 
 PROJ-75 Phase 2: Integration tests for HarvestingEngine wired into TurnEngine.
-Tests verify that process_harvesting() is called during process_turn(),
+PROJ-161: Updated for per-tick via process_harvesting_tick() (100 times per turn).
+
+Tests verify that process_harvesting_tick() is called during process_turn(),
 and that planetary resources flow correctly into empire pools.
 """
 import pytest

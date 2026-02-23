@@ -1,8 +1,8 @@
 """
 Tests for HarvestingEngine - planetary resource harvesting to empire pool.
 
-PROJ-75 Phase 2: TDD tests for HarvestingEngine.process_harvesting().
-PROJ-161 Phase 1: Added tests for process_harvesting_tick() per-tick operation.
+PROJ-75 Phase 2: TDD tests for HarvestingEngine.
+PROJ-161: Now per-tick only via process_harvesting_tick().
 
 Covers single/multiple harvesters, planet depletion, storage overflow,
 non-operational facilities, empty colonies, quality-scaled extraction,
@@ -120,16 +120,21 @@ def _make_mock_registries(harvesters=None):
 # ===========================================================================
 
 class TestHarvestingEngine:
-    """Tests for HarvestingEngine.process_harvesting()."""
+    """Tests for HarvestingEngine.process_harvesting_tick() - PROJ-161 per-tick only."""
 
     def _make_engine(self, registries=None):
         from game.strategy.engine.harvesting_engine import HarvestingEngine
         return HarvestingEngine(registries=registries or _make_mock_registries())
 
+    def _process_full_turn(self, engine, empires):
+        """Helper to simulate full turn (100 ticks) of harvesting."""
+        for tick in range(1, 101):
+            engine.process_harvesting_tick(tick, empires)
+
     # --- Basic harvesting ---
 
     def test_single_facility_harvests_resources(self):
-        """Single harvester extracts resources from planet to empire pool."""
+        """Single harvester extracts resources from planet to empire pool (full turn)."""
         facility = _make_harvester_facility("Metals", base_harvest_rate=100.0)
         planet = _make_planet(
             resources={"Metals": {"quantity": 5000, "quality": 0.8}},
@@ -141,14 +146,14 @@ class TestHarvestingEngine:
         )
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # harvest = base_rate * quality = 100 * 0.8 = 80
         assert empire.resource_pool["Metals"] == pytest.approx(80.0)
         assert planet.resources["Metals"]["quantity"] == pytest.approx(5000 - 80.0)
 
     def test_harvest_amount_scales_with_quality(self):
-        """Harvest amount = base_rate * planet quality."""
+        """Harvest amount = base_rate * planet quality (full turn)."""
         facility = _make_harvester_facility("Metals", base_harvest_rate=200.0)
         planet = _make_planet(
             resources={"Metals": {"quantity": 10000, "quality": 0.5}},
@@ -157,13 +162,13 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={"Metals": 0.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # harvest = 200 * 0.5 = 100
         assert empire.resource_pool["Metals"] == pytest.approx(100.0)
 
     def test_planet_resource_quantity_reduced(self):
-        """Planet's resource quantity decreases by harvest amount."""
+        """Planet's resource quantity decreases by harvest amount (full turn)."""
         facility = _make_harvester_facility("Organics", base_harvest_rate=50.0)
         planet = _make_planet(
             resources={"Organics": {"quantity": 1000, "quality": 1.0}},
@@ -172,12 +177,12 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert planet.resources["Organics"]["quantity"] == pytest.approx(950.0)
 
     def test_empire_pool_increased_by_harvest(self):
-        """Empire resource pool gains the harvested amount."""
+        """Empire resource pool gains the harvested amount (full turn)."""
         facility = _make_harvester_facility("Vapors", base_harvest_rate=75.0)
         planet = _make_planet(
             resources={"Vapors": {"quantity": 3000, "quality": 0.6}},
@@ -189,7 +194,7 @@ class TestHarvestingEngine:
         )
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # harvest = 75 * 0.6 = 45. Pool: 100 + 45 = 145
         assert empire.resource_pool["Vapors"] == pytest.approx(145.0)
@@ -197,7 +202,7 @@ class TestHarvestingEngine:
     # --- Multiple harvesters ---
 
     def test_multiple_harvesters_same_planet_sum(self):
-        """Multiple harvesters on same planet accumulate correctly."""
+        """Multiple harvesters on same planet accumulate correctly (full turn)."""
         f1 = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
         f2 = _make_harvester_facility("Metals", base_harvest_rate=50.0, instance_id="h2")
         planet = _make_planet(
@@ -207,7 +212,7 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={"Metals": 0.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # Total harvest = 100*1.0 + 50*1.0 = 150
         assert empire.resource_pool["Metals"] == pytest.approx(150.0)
@@ -216,7 +221,7 @@ class TestHarvestingEngine:
     # --- Depletion ---
 
     def test_planet_depletion_no_negative(self):
-        """Planet quantity cannot go negative; harvest capped at available."""
+        """Planet quantity cannot go negative; harvest capped at available (full turn)."""
         facility = _make_harvester_facility("Exotics", base_harvest_rate=200.0)
         planet = _make_planet(
             resources={"Exotics": {"quantity": 50, "quality": 1.0}},
@@ -225,7 +230,7 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # Wanted 200, only 50 available
         assert planet.resources["Exotics"]["quantity"] == pytest.approx(0.0)
@@ -241,7 +246,7 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={"Metals": 10.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert empire.resource_pool["Metals"] == pytest.approx(10.0)
         assert planet.resources["Metals"]["quantity"] == 0
@@ -249,7 +254,7 @@ class TestHarvestingEngine:
     # --- Storage overflow ---
 
     def test_storage_overflow_discarded(self):
-        """Excess resources beyond max_storage are discarded."""
+        """Excess resources beyond max_storage are discarded (full turn)."""
         harvester = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
         # Storage facility provides the 1000 cap
         storage = PlanetaryFacility(
@@ -281,7 +286,7 @@ class TestHarvestingEngine:
         )
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # Pool was 950, harvest 100, cap at 1000. 50 discarded.
         assert empire.resource_pool["Metals"] == pytest.approx(1000.0)
@@ -300,7 +305,7 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={"Metals": 0.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert empire.resource_pool["Metals"] == pytest.approx(0.0)
         assert planet.resources["Metals"]["quantity"] == pytest.approx(5000.0)
@@ -326,7 +331,7 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={"Metals": 0.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert empire.resource_pool["Metals"] == pytest.approx(0.0)
 
@@ -337,12 +342,12 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[], resource_pool={})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])  # Should not raise
+        engine.process_harvesting_tick(1, [empire])  # Should not raise
 
     def test_empty_empires_list(self):
         """Empty empires list handled gracefully."""
         engine = self._make_engine()
-        engine.process_harvesting([])  # Should not raise
+        engine.process_harvesting_tick(1, [])  # Should not raise
 
     def test_planet_missing_resource_type_for_harvester(self):
         """Harvester for a resource type not on the planet does nothing."""
@@ -354,7 +359,7 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert empire.resource_pool.get("Exotics", 0.0) == 0.0
         assert planet.resources["Metals"]["quantity"] == pytest.approx(5000.0)
@@ -369,13 +374,13 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={"Metals": 0.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert empire.resource_pool["Metals"] == pytest.approx(0.0)
         assert planet.resources["Metals"]["quantity"] == pytest.approx(5000.0)
 
     def test_multiple_resource_types(self):
-        """Multiple different resource types harvested in same pass."""
+        """Multiple different resource types harvested in same pass (full turn)."""
         metals_fac = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="m1")
         organics_fac = _make_harvester_facility("Organics", base_harvest_rate=50.0, instance_id="o1")
         planet = _make_planet(
@@ -388,13 +393,13 @@ class TestHarvestingEngine:
         empire = _make_empire(colonies=[planet], resource_pool={})
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         assert empire.resource_pool["Metals"] == pytest.approx(80.0)  # 100*0.8
         assert empire.resource_pool["Organics"] == pytest.approx(50.0)  # 50*1.0
 
     def test_multiple_empires_independent(self):
-        """Each empire's harvesting is independent."""
+        """Each empire's harvesting is independent (full turn)."""
         f1 = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
         p1 = _make_planet(
             resources={"Metals": {"quantity": 5000, "quality": 1.0}},
@@ -412,7 +417,7 @@ class TestHarvestingEngine:
         e2 = _make_empire(colonies=[p2], resource_pool={"Organics": 0.0})
 
         engine = self._make_engine()
-        engine.process_harvesting([e1, e2])
+        self._process_full_turn(engine, [e1, e2])
 
         assert e1.resource_pool["Metals"] == pytest.approx(100.0)
         assert e2.resource_pool["Organics"] == pytest.approx(30.0)  # 50*0.6
@@ -440,7 +445,7 @@ class TestHarvestingEngine:
             "metals_harvester": {"resource_type": "Metals", "base_harvest_rate": 200.0},
         })
         engine = self._make_engine(registries=regs)
-        engine.process_harvesting([empire])
+        self._process_full_turn(engine, [empire])
 
         # harvest = 200 * 0.5 = 100
         assert empire.resource_pool["Metals"] == pytest.approx(100.0)
@@ -576,8 +581,8 @@ class TestStorageAggregation:
 
         assert empire.max_storage == {}
 
-    def test_process_harvesting_calls_recalculate_storage(self):
-        """process_harvesting recalculates storage before harvesting."""
+    def test_process_harvesting_tick_calls_recalculate_storage(self):
+        """process_harvesting_tick recalculates storage before harvesting."""
         storage = _make_storage_facility("Metals", capacity=500.0, instance_id="s1")
         harvester = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
         planet = _make_planet(
@@ -591,7 +596,9 @@ class TestStorageAggregation:
         )
 
         engine = self._make_engine()
-        engine.process_harvesting([empire])
+        # Run full turn (100 ticks)
+        for tick in range(1, 101):
+            engine.process_harvesting_tick(tick, [empire])
 
         # Storage should be set to 500 from the facility
         assert empire.max_storage["Metals"] == pytest.approx(500.0)
@@ -667,26 +674,15 @@ class TestPerTickHarvesting:
         assert empire.resource_pool["Metals"] == pytest.approx(1.0)
         assert planet.resources["Metals"]["quantity"] == pytest.approx(4999.0)
 
-    def test_100_ticks_equals_full_turn(self):
-        """Calling process_harvesting_tick 100 times equals one process_harvesting call."""
-        # Setup identical scenarios
-        facility1 = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
-        planet1 = _make_planet(
+    def test_100_ticks_total_equals_expected_harvest(self):
+        """Calling process_harvesting_tick 100 times produces expected per-turn total."""
+        facility = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h1")
+        planet = _make_planet(
             resources={"Metals": {"quantity": 5000, "quality": 0.8}},
-            facilities=[facility1],
+            facilities=[facility],
         )
-        empire1 = _make_empire(
-            colonies=[planet1],
-            resource_pool={"Metals": 0.0},
-        )
-
-        facility2 = _make_harvester_facility("Metals", base_harvest_rate=100.0, instance_id="h2")
-        planet2 = _make_planet(
-            resources={"Metals": {"quantity": 5000, "quality": 0.8}},
-            facilities=[facility2],
-        )
-        empire2 = _make_empire(
-            colonies=[planet2],
+        empire = _make_empire(
+            colonies=[planet],
             resource_pool={"Metals": 0.0},
         )
 
@@ -694,18 +690,11 @@ class TestPerTickHarvesting:
 
         # Per-tick: call 100 times
         for tick in range(1, 101):
-            engine.process_harvesting_tick(tick, [empire1])
+            engine.process_harvesting_tick(tick, [empire])
 
-        # Full turn: call once
-        engine.process_harvesting([empire2])
-
-        # Results should be equal (within floating point tolerance)
-        assert empire1.resource_pool["Metals"] == pytest.approx(
-            empire2.resource_pool["Metals"], rel=1e-9
-        )
-        assert planet1.resources["Metals"]["quantity"] == pytest.approx(
-            planet2.resources["Metals"]["quantity"], rel=1e-9
-        )
+        # Expected per-turn harvest: base_rate * quality = 100 * 0.8 = 80
+        assert empire.resource_pool["Metals"] == pytest.approx(80.0, rel=1e-9)
+        assert planet.resources["Metals"]["quantity"] == pytest.approx(5000 - 80.0, rel=1e-9)
 
     def test_storage_cap_enforced_per_tick(self):
         """Storage cap correctly limits per-tick accumulation near capacity."""

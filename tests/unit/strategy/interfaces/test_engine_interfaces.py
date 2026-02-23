@@ -212,12 +212,6 @@ class TestIMaintenanceEngineInterface:
         with pytest.raises(TypeError):
             IMaintenanceEngine()
 
-    def test_imaintenance_engine_has_process_maintenance_method(self):
-        """IMaintenanceEngine should define process_maintenance abstract method."""
-        from game.strategy.interfaces.engines import IMaintenanceEngine
-        assert hasattr(IMaintenanceEngine, 'process_maintenance')
-        assert getattr(IMaintenanceEngine.process_maintenance, '__isabstractmethod__', False)
-
     def test_imaintenance_engine_has_process_maintenance_tick_method(self):
         """IMaintenanceEngine should define process_maintenance_tick abstract method (PROJ-161)."""
         from game.strategy.interfaces.engines import IMaintenanceEngine
@@ -317,11 +311,11 @@ class TestIHarvestingEngineInterface:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
             IHarvestingEngine()
 
-    def test_iharvesting_engine_has_process_harvesting_method(self):
-        """IHarvestingEngine.process_harvesting must be abstract."""
+    def test_iharvesting_engine_has_process_harvesting_tick_method(self):
+        """IHarvestingEngine.process_harvesting_tick must be abstract (PROJ-161)."""
         from game.strategy.interfaces.engines import IHarvestingEngine
-        assert hasattr(IHarvestingEngine, 'process_harvesting')
-        assert getattr(IHarvestingEngine.process_harvesting, '__isabstractmethod__', False) is True
+        assert hasattr(IHarvestingEngine, 'process_harvesting_tick')
+        assert getattr(IHarvestingEngine.process_harvesting_tick, '__isabstractmethod__', False) is True
 
 
 # =============================================================================
@@ -403,15 +397,11 @@ class TestConcreteImplementations:
         from game.strategy.interfaces.engines import IMaintenanceEngine
 
         class MockMaintenanceEngine(IMaintenanceEngine):
-            def process_maintenance(self, empires):
-                return []
-
             def process_maintenance_tick(self, tick, empires):
                 return []
 
         engine = MockMaintenanceEngine()
         assert engine is not None
-        assert engine.process_maintenance([]) == []
         assert engine.process_maintenance_tick(1, []) == []
 
     def test_concrete_population_engine_implementation(self):
@@ -444,9 +434,6 @@ class TestConcreteImplementations:
         from game.strategy.interfaces.engines import IHarvestingEngine
 
         class ConcreteHarvestingEngine(IHarvestingEngine):
-            def process_harvesting(self, empires):
-                pass
-
             def process_harvesting_tick(self, tick, empires):
                 pass
 
