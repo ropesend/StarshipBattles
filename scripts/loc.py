@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {"__pycache__", ".git", "venv", ".venv", "node_modules", ".VSCodeCounter"}
 
 SOURCE_DIRS = ["game", "scripts"]

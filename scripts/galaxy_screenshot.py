@@ -304,7 +304,7 @@ def main():
     parser.add_argument("--seed", "-s", type=int, default=None, help="Random seed (random if not set)")
     parser.add_argument("--no-warp", action="store_true", help="Hide warp lines")
     parser.add_argument("--batch", action="store_true", help="Run batch test across multiple sizes")
-    parser.add_argument("--output", "-o", default="screenshots/galaxy", help="Output directory")
+    parser.add_argument("--output", "-o", default="docs/screenshots/galaxy", help="Output directory")
     parser.add_argument(
         "--region-mode", "-m",
         default="auto",

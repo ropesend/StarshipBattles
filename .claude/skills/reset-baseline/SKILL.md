@@ -70,4 +70,4 @@ Summarize:
 - Agent Context reset
 - Execution Log cleared
 - CLAUDE.md baseline updated
-- "Ready to run `.\loop_runner.ps1`"
+- "Ready to run `.\refactor_loop\loop_runner.ps1`"

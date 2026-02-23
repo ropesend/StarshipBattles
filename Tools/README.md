@@ -43,4 +43,4 @@ The formation_editor is integrated into the game and accessed through the main a
 
 ## Legacy Tools
 
-One-time migration and refactoring scripts have been moved to `_legacy_docs/Tools/` for historical reference.
+One-time migration and refactoring scripts have been moved to `docs/_legacy_docs/Tools/` for historical reference.

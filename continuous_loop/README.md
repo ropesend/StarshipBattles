@@ -134,7 +134,7 @@ Quality: 43/100 (Needs Improvement) [+19] | FND:22(+14) SIM:35(+11) STR:55(+15) 
 ### Relationship to Existing Systems
 
 This system is **completely independent** of:
-- `loop_runner.ps1` (still works for manual project execution)
+- `refactor_loop/loop_runner.ps1` (still works for manual project execution)
 - `refactor_loop/refactor_plan.md` (not touched or read)
 - `refactor_loop/WORKER.md` (not used)
 

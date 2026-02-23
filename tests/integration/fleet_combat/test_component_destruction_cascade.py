@@ -236,17 +236,14 @@ class TestAbilityLossCascade:
             registries=fresh_registries
         )
 
-        # Add maneuvering thruster (has ManeuveringThruster ability)
-        thruster = create_component("maneuvering_thruster", registries=fresh_registries)
-        if thruster is not None:
-            ship.add_component(thruster, LayerType.OUTER)
+        # Add thruster (has ManeuveringThruster ability)
+        thruster = create_component("thruster", registries=fresh_registries)
+        assert thruster is not None, "thruster component must exist in registry"
+        ship.add_component(thruster, LayerType.OUTER)
         ship.recalculate_stats()
 
         initial_turn_speed = ship.turn_speed
-
-        # Skip test if no turn speed (component may not exist in registry)
-        if initial_turn_speed == 0:
-            pytest.skip("Maneuvering thruster component not available or provides no turn speed")
+        assert initial_turn_speed > 0, "Thruster should provide turn speed"
 
         # Destroy all components with ManeuveringThruster ability
         destroyed_any = False

@@ -63,8 +63,8 @@ refactor_loop/
 ├── WORKER.md                 # System prompt for automated worker
 └── REFACTOR_LOOP_README.md   # This file
 
-loop_runner.ps1               # Main automation loop (PowerShell)
-loop_runner.sh                # Main automation loop (Bash)
+refactor_loop/loop_runner.ps1  # Main automation loop (PowerShell)
+refactor_loop/loop_runner.sh   # Main automation loop (Bash)
 CLAUDE.md                     # Rules and context for interactive Claude
 
 Projects/
@@ -340,8 +340,8 @@ Test without committing:
 |------|---------|-------------|
 | `refactor_loop/refactor_plan.md` | Master task list | Claude (automated) |
 | `refactor_loop/WORKER.md` | System prompt for worker | Manual (setup) |
-| `loop_runner.ps1` | Main loop script (PowerShell) | Manual (setup) |
-| `loop_runner.sh` | Main loop script (Bash) | Manual (setup) |
+| `refactor_loop/loop_runner.ps1` | Main loop script (PowerShell) | Manual (setup) |
+| `refactor_loop/loop_runner.sh` | Main loop script (Bash) | Manual (setup) |
 | `Projects/scripts/check_completion.py` | Task completion checker | Loop script |
 | `Projects/scripts/update_plan.py` | Plan updater | Claude (optional) |
 | `Projects/scripts/commit_phase.py` | Git commit helper | Claude (optional) |

@@ -222,7 +222,7 @@ All top imports are `core` utilities — exactly what you'd expect. `fleet` at 2
 
 ## Files Generated
 
-All output in `uml_output/`:
+All output in `docs/uml/`:
 - `.dot` files — raw Graphviz source (editable)
 - `.png` files — raster images
 - `.svg` files — vector images (open in browser, zoomable)

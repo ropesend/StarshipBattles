@@ -113,7 +113,7 @@ All tests pass with no regressions.
 ---
 ### ❌ Fix Rejected [2026-01-18 19:30]
 **Reason:** Move the largest planet just slightly to the left (maybe 10% of it's diameter to the left), and center the other smaller planets around it slightly further away than they currently are, they should be within the hex, but not clip the largest planet. They should still transition smoothly to this position.
-**New Constraints:** Largest planet offset ~10% of diameter to the left; smaller planets spaced further from largest planet without clipping; all planets within hex bounds; smooth transition animation preserved. Reference screenshot: `screenshots/screenshot_20260118_192853_864952_strategy_viewport.png`
+**New Constraints:** Largest planet offset ~10% of diameter to the left; smaller planets spaced further from largest planet without clipping; all planets within hex bounds; smooth transition animation preserved. Reference screenshot: `docs/screenshots/screenshot_20260118_192853_864952_strategy_viewport.png`
 
 ---
 ### 2026-01-18 - Phase 2 (Rev 3): The Fix (Green)
@@ -152,7 +152,7 @@ All tests pass with no regressions.
 ---
 ### ❌ Fix Rejected [2026-01-18 21:22]
 **Reason:** Move the largest planet another 10% of it's diameter to the left. The smaller planets should be arranged as follows: they should be located based on polar coordinates where the center of the coordinate is the center of the largest planet. If there is just 1 smaller planet, it should be immediately to the right of the larger planet, if there are two then one should be 30 degrees above horizontal and the other 30 degrees below it, if there are 3 smaller planets then they should be 15 degrees up, horizontal and 45 degrees down and greater numbers should follow this pattern... The distance from the largest and the smaller planets should be measured center to center, and should be approx 1.5x the radius of the larger planet.
-**New Constraints:** Largest planet offset increased by additional 10% of diameter to the left (total ~20%); smaller planets positioned using polar coordinates centered on largest planet; single smaller planet at 0° (right); two smaller planets at +30° and -30°; three smaller planets at +15°, 0°, -45°; center-to-center distance = 1.5x radius of largest planet. Reference screenshot: `screenshots/screenshot_20260118_210212_673628_strategy_viewport.png`
+**New Constraints:** Largest planet offset increased by additional 10% of diameter to the left (total ~20%); smaller planets positioned using polar coordinates centered on largest planet; single smaller planet at 0° (right); two smaller planets at +30° and -30°; three smaller planets at +15°, 0°, -45°; center-to-center distance = 1.5x radius of largest planet. Reference screenshot: `docs/screenshots/screenshot_20260118_210212_673628_strategy_viewport.png`
 
 ---
 ### 2026-01-18 - Phase 2 (Rev 4): The Fix (Green)

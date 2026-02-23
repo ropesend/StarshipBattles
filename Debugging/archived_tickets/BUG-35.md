@@ -4,7 +4,7 @@
 In the strategy view, with multiple planets in a sector, we can slightly increase the angle between the smaller planets to spread them out a little. They are too compacted and there is extra space.
 
 **Reference Image (7-planet sector):**
-`screenshots/screenshot_20260123_190119_468158_strategy_viewport.png`
+`docs/screenshots/screenshot_20260123_190119_468158_strategy_viewport.png`
 
 ## Priority
 Low

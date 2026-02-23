@@ -1,1 +1,1 @@
-python test_sharded.py --shards 16
+python scripts/test_sharded.py --shards 16
