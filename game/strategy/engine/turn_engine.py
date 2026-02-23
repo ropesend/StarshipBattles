@@ -6,20 +6,22 @@ to specialized engines.
 
 PROJ-43 Phase 4: Full constructor dependency injection for all engines.
 
+PROJ-161: Moved harvesting and maintenance into per-tick processing.
+
 Turn Phases:
-    0. HARVESTING (via HarvestingEngine) - extract planetary resources to empire pool
-    0b. MAINTENANCE (via MaintenanceEngine) - deduct 5% build cost, scuttle on failure
     1. SUBTURN LOOP (100 ticks):
-       - Phase 0: Per-turn resources (via ResourceManagementEngine)
-       - Phase 0a: Fuel generation at facilities (via ResupplyEngine)
-       - Phase 0b: Fleet resupply from facilities (via ResupplyEngine)
-       - Phase 0c: Construction resource consumption (via ProductionEngine)
-       - Phase 1: Instant orders (via FleetOrderProcessor)
-       - Phase 2: Calculate moves (via FleetMovementEngine)
-       - Phase 3: Apply moves (via FleetMovementEngine)
-       - Phase 4: Combat (via ConflictResolutionEngine)
+       - Phase 0:  Harvesting (via HarvestingEngine) - 1/100th per tick
+       - Phase 0a: Maintenance (via MaintenanceEngine) - 1/100th per tick, immediate scuttle
+       - Phase 0b: Per-turn resources (via ResourceManagementEngine)
+       - Phase 0c: Fuel generation at facilities (via ResupplyEngine)
+       - Phase 0d: Fleet resupply from facilities (via ResupplyEngine)
+       - Phase 0e: Construction resource consumption (via ProductionEngine)
+       - Phase 1:  Instant orders (via FleetOrderProcessor)
+       - Phase 2:  Calculate moves (via FleetMovementEngine)
+       - Phase 3:  Apply moves (via FleetMovementEngine)
+       - Phase 4:  Combat (via ConflictResolutionEngine)
     2. END-OF-TURN ORDERS (via FleetOrderProcessor)
-    3. PRODUCTION (via ProductionEngine)
+    3. POPULATION GROWTH (via PopulationEngine)
 
 Delegated Engines:
     - FleetMovementEngine: Movement calculation and application
@@ -254,11 +256,8 @@ class TurnEngine:
         # Store save_path for tick processing (PROJ-79)
         self._current_save_path = save_path
 
-        # 0. Harvesting Phase (PROJ-75) - extract planetary resources to empire pools
-        self.harvesting_engine.process_harvesting(empires)
-
-        # 0b. Maintenance Phase (PROJ-75) - deduct 5% build cost, scuttle on failure
-        self.last_scuttle_events = self.maintenance_engine.process_maintenance(empires)
+        # PROJ-161: Initialize scuttle event accumulator (cleared each turn)
+        self.last_scuttle_events = []
 
         # 1. Subturn Loop (Movement & Combat)
         for tick in range(1, 101):
@@ -301,36 +300,47 @@ class TurnEngine:
         PROJ-74 Phase 5: Added fuel generation and fleet resupply phases.
         PROJ-75 Phase 4: Added per-tick construction resource consumption.
         PROJ-79 Phase 2: Added save_path for mid-turn spawning.
+        PROJ-161: Added per-tick harvesting and maintenance.
 
-        Eight-phase processing:
-        Phase 0: Per-turn resource consumption (1/100th of per_turn costs)
-        Phase 0a: Fuel generation at facilities (via ResupplyEngine)
-        Phase 0b: Fleet resupply from facilities (via ResupplyEngine)
-        Phase 0c: Construction resource consumption + mid-turn completion (via ProductionEngine)
-        Phase 1: Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
-        Phase 2: Calculate paths/next moves for all fleets (based on current positions)
-        Phase 3: Apply all movements simultaneously
-        Phase 4: Combat
+        Ten-phase processing:
+        Phase 0:  Harvesting (1/100th of per-turn extraction)
+        Phase 0a: Maintenance (1/100th of per-turn cost, immediate scuttle)
+        Phase 0b: Per-turn resource consumption (1/100th of per_turn costs)
+        Phase 0c: Fuel generation at facilities (via ResupplyEngine)
+        Phase 0d: Fleet resupply from facilities (via ResupplyEngine)
+        Phase 0e: Construction resource consumption + mid-turn completion (via ProductionEngine)
+        Phase 1:  Execute JOIN_FLEET for any co-located fleets (instant, no movement cost)
+        Phase 2:  Calculate paths/next moves for all fleets (based on current positions)
+        Phase 3:  Apply all movements simultaneously
+        Phase 4:  Combat
         """
 
-        # --- Phase 0: Per-turn Resource Consumption ---
+        # --- Phase 0: Harvesting (1/100th per tick) ---
+        # PROJ-161: Spread harvesting across 100 ticks
+        self.harvesting_engine.process_harvesting_tick(tick, empires)
+
+        # --- Phase 0a: Maintenance (1/100th per tick, immediate scuttle) ---
+        # PROJ-161: Spread maintenance across 100 ticks, accumulate scuttle events
+        tick_scuttles = self.maintenance_engine.process_maintenance_tick(tick, empires)
+        self.last_scuttle_events.extend(tick_scuttles)
+
+        # --- Phase 0b: Per-turn Resource Consumption ---
         # PROJ-36: Delegate to ResourceManagementEngine
         self.resource_engine.process_per_turn_consumption(tick, empires)
 
-        # --- Phase 0a: Fuel generation at facilities ---
+        # --- Phase 0c: Fuel generation at facilities ---
         # PROJ-74: Generate fuel at planetary facilities with fuel synthesizers
         self.resupply_engine.process_fuel_generation(tick, empires)
 
-        # --- Phase 0b: Fleet resupply from facilities ---
+        # --- Phase 0d: Fleet resupply from facilities ---
         # PROJ-74: Transfer fuel from facilities to co-located fleets
         self.resupply_engine.process_fleet_resupply(tick, empires, galaxy)
 
-        # --- Phase 0c: Construction resource consumption + mid-turn completion ---
+        # --- Phase 0e: Construction resource consumption + mid-turn completion ---
         # PROJ-75/79: Deduct per-tick resource costs, spawn completed items mid-turn
         self.production_engine.process_construction_tick(
             tick, empires, galaxy,
             save_path=save_path,
-            harvesting_engine=self.harvesting_engine
         )
 
         # --- Phase 1: Instant Orders (JOIN_FLEET) ---

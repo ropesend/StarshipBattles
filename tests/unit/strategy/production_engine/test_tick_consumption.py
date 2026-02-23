@@ -530,63 +530,10 @@ class TestMidTurnCompletion:
         assert empire.resource_pool["Metals"] == 1000.0
         assert item["resources_consumed"]["Metals"] == 0.0
 
-    def test_mid_turn_complex_triggers_partial_harvest(self):
-        """Complex completing mid-turn triggers proportional harvest."""
-        engine = ProductionEngine()
-        empire = _make_empire({"Metals": 1000.0})
-        empire.id = 0
-
-        item = _make_queue_item(
-            design_id="Harvester",
-            vehicle_type="complex",
-            turns_remaining=1,
-            total_cost={"Metals": 100},
-            resources_consumed={"Metals": 99.0},  # Near-complete
-        )
-
-        colony = _make_colony(construction_queue=[item])
-        colony.facilities = []
-        colony.resource_qualities = {"Metals": 0.8}
-        colony.id = 1
-        empire.colonies = [colony]
-
-        harvesting_engine = MagicMock()
-
-        with patch.object(engine, '_spawn_complex'):
-            # Complete at tick 50 (50% of turn remaining)
-            engine.process_construction_tick(50, [empire], None, harvesting_engine=harvesting_engine)
-
-            # Should have called partial harvest (if tick < 100)
-            # Note: Item completes at tick 50, so 50% of turn remains
-
-    def test_storage_recalculated_on_mid_turn_complex(self):
-        """Mid-turn complex spawning triggers storage recalculation."""
-        engine = ProductionEngine()
-        empire = _make_empire({"Metals": 1000.0})
-        empire.id = 0
-
-        item = _make_queue_item(
-            design_id="Vault",
-            vehicle_type="complex",
-            turns_remaining=1,
-            total_cost={"Metals": 100},
-            resources_consumed={"Metals": 99.0},  # Near-complete
-        )
-
-        colony = _make_colony(construction_queue=[item])
-        colony.facilities = []
-        colony.resource_qualities = {}
-        colony.id = 1
-        empire.colonies = [colony]
-
-        harvesting_engine = MagicMock()
-        harvesting_engine.recalculate_storage = MagicMock()
-
-        with patch.object(engine, '_spawn_complex'):
-            engine.process_construction_tick(50, [empire], None, harvesting_engine=harvesting_engine)
-
-            # Storage should be recalculated
-            harvesting_engine.recalculate_storage.assert_called()
+    # PROJ-161: Removed test_mid_turn_complex_triggers_partial_harvest and
+    # test_storage_recalculated_on_mid_turn_complex as _apply_partial_harvest
+    # was deleted. Mid-turn facilities now participate in per-tick harvesting
+    # automatically on subsequent ticks.
 
     def test_partial_resources_consumed_not_complete(self):
         """Item doesn't complete until ALL resources are consumed."""

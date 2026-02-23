@@ -15,15 +15,15 @@
 |-------|--------|-----------|
 | 1. HarvestingEngine Per-Tick Conversion | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
 | 2. MaintenanceEngine Per-Tick Conversion | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
-| 3. TurnEngine Wiring & Legacy Removal | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
+| 3. TurnEngine Wiring & Legacy Removal | Complete | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Test Updates | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 | 5. Cleanup & Legacy Removal | Not Started | [phase_5_checklist.md](phase_5_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 3
-**Last Action:** Phase 2 complete - added process_maintenance_tick() with tick_fraction parameter approach
-**Next Action:** Begin Phase 3 - TurnEngine Wiring & Legacy Removal
+**Active Phase:** Phase 4
+**Last Action:** Phase 3 complete - moved harvesting/maintenance into _process_tick(), removed _apply_partial_harvest and harvesting_engine parameter from ProductionEngine
+**Next Action:** Begin Phase 4 - Update integration tests for per-tick behavior
 **Blockers:** None
 
 ## Overview

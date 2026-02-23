@@ -8,23 +8,25 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-161 Phase 2 (MaintenanceEngine Per-Tick Conversion)
-**Current Status:** PROJ-161 Phase 2 complete, Phase 3 ready
+**Last Completed:** PROJ-161 Phase 3 (TurnEngine Wiring & Legacy Removal)
+**Current Status:** PROJ-161 Phase 3 complete, Phase 4 ready
 **Current Project:** PROJ-161
-**Current Phase:** Phase 3 (TurnEngine Wiring & Legacy Removal)
-**Test Status:** 23 maintenance tests pass, 54 interface tests pass, 6 integration tests pass
+**Current Phase:** Phase 4 (Test Updates)
+**Test Status:** 32 production tests pass, 308 unit engine tests pass, 4 integration tests fail (expected - testing old behavior)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-161 Phase 2 COMPLETE
-- Added `process_maintenance_tick(tick, empires)` to IMaintenanceEngine interface
-- Implemented in MaintenanceEngine using tick_fraction parameter (0.01 for per-tick, 1.0 for full turn)
-- Added 6 new per-tick tests in TestPerTickMaintenance class
-- Updated MockMaintenanceEngine with process_maintenance_tick support
-- Updated _MockHarvestingEngine in test_maintenance.py with process_harvesting_tick
-- Added test_imaintenance_engine_has_process_maintenance_tick_method to interface tests
-- 23 maintenance tests passing, 54 interface tests passing, 6 integration tests passing
-- Next: Phase 3 - TurnEngine Wiring & Legacy Removal
+- PROJ-161 Phase 3 COMPLETE
+- Removed `process_harvesting(empires)` and `process_maintenance(empires)` calls from `process_turn()`
+- Added `process_harvesting_tick(tick, empires)` and `process_maintenance_tick(tick, empires)` to `_process_tick()`
+- Added scuttle event accumulator `self.last_scuttle_events = []` at start of `process_turn()`
+- Deleted `_apply_partial_harvest` method from ProductionEngine
+- Removed `harvesting_engine` parameter from `process_construction_tick`, `_process_queue_tick_dynamic`, `_complete_item`
+- Updated phase comments in `_process_tick` (0, 0a, 0b, 0c, 0d, 0e, 1, 2, 3, 4)
+- Updated module docstring to reflect new per-tick harvesting/maintenance
+- Deleted obsolete tests: `test_mid_turn_complex_triggers_partial_harvest`, `test_storage_recalculated_on_mid_turn_complex`
+- 4 integration tests fail (testing old once-per-turn behavior) - to be fixed in Phase 4
+- Next: Phase 4 - Update integration tests for per-tick behavior
 
 ---
 
@@ -46,6 +48,7 @@
 |-----------|---------|--------|--------|-------|--------|-------|
 | 2026-02-23 | PROJ-161 | Phase 1 | Complete | 32 pass | a0cf5ee5 | HarvestingEngine per-tick conversion |
 | 2026-02-23 | PROJ-161 | Phase 2 | Complete | 83 pass | ca97511d | MaintenanceEngine per-tick conversion |
+| 2026-02-23 | PROJ-161 | Phase 3 | Complete | 340 pass | 6d92147f | TurnEngine wiring, _apply_partial_harvest removal |
 
 ---
 
