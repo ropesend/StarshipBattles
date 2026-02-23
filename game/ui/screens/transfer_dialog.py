@@ -13,6 +13,7 @@ from pygame_gui.elements import UIWindow, UIButton, UILabel, UIDropDownMenu, UIH
 from game.core.input_actions import InputAction
 from game.core.logger import log_debug, log_info
 from game.strategy.engine.commands import IssueTransferCommand
+from game.strategy.services.cargo_transfer_service import CargoTransferService
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
@@ -237,90 +238,51 @@ class TransferDialog(UIWindow):
         target = next((t for t in self.available_targets if t['label'] == curr_target_label), None)
         self._update_cargo_list(source, target)
 
-    def _get_inventory_items(self, obj_info):
-        """Extract inventory items from a fleet or planet object."""
-        items = []
-        if not obj_info: return items
-        
-        # Fleet
-        if hasattr(obj_info, 'passengers_current'): # simple duck typing for fleet
-            passengers = getattr(obj_info, 'passengers_current', 0)
-            if passengers > 0:
-                items.append({
-                    'label': f"Passengers ({passengers})",
-                    'type': 'passengers',
-                    'species_id': None,
-                    'max': passengers
-                })
-        # Colony/Planet
-        elif hasattr(obj_info, 'population_details'): # distinct for colony
-             # population_details is a tuple of (race_id, count, happiness)
-            for race_id, count, happiness in obj_info.population_details:
-                if count > 0:
-                    items.append({
-                        'label': f"Population: {race_id} ({count})",
-                        'type': 'passengers',
-                        'species_id': race_id,
-                        'max': count
-                    })
-        elif hasattr(obj_info, 'total_population'): # planet fallback
-            passengers = getattr(obj_info, 'total_population', 0)
-            if passengers > 0:
-                items.append({
-                    'label': f"Population ({passengers})",
-                    'type': 'passengers',
-                    'species_id': None,
-                    'max': passengers
-                })
-        return items
-
     def _update_cargo_list(self, source, target):
         """Populate drop_item based on source (unload) and target (load) content."""
         self.available_cargo = []
-        
-        # 1. Source Items (Default Direction)
-        # Usually 'unload' if Source=Fleet, Target=Planet.
-        # Or 'load' if Source=Planet, Target=Fleet.
-        # Let's determine the PRIMARY direction based on Source Type.
-        primary_direction = 'unload' # Default: Source gives to Target
-        
+
+        # Determine the PRIMARY direction based on Source Type.
+        # 'unload' if Source=Fleet, Target=Planet; 'load' if Source=Planet, Target=Fleet.
+        primary_direction = 'unload'  # Default: Source gives to Target
+
         source_obj = None
         if source['type'] == 'fleet':
             source_obj = self.facade.get_fleet(source['id'])
             if target and target['type'] in ('colony', 'planet'):
-                primary_direction = 'unload' # Fleet -> Planet
+                primary_direction = 'unload'  # Fleet -> Planet
             elif target and target['type'] == 'fleet':
-                primary_direction = 'unload' # Fleet -> Fleet
+                primary_direction = 'unload'  # Fleet -> Fleet
         elif source['type'] in ('colony', 'planet'):
             source_obj = self.facade.get_planet(source['id'])
             if target and target['type'] == 'fleet':
-                 primary_direction = 'load' # Planet -> Fleet
+                primary_direction = 'load'  # Planet -> Fleet
 
         if source_obj:
-            s_items = self._get_inventory_items(source_obj)
+            s_items = CargoTransferService.get_inventory_items(source_obj)
             for item in s_items:
-                item['direction'] = primary_direction 
-                # Keep original label for primary items
+                # Convert service keys to dialog keys
+                item['max'] = item.pop('max_amount')
+                item['type'] = item.pop('cargo_type')
+                item['direction'] = primary_direction
                 self.available_cargo.append(item)
 
-        # 2. Target Items (Reverse Direction)
-        # If Target has items, we can "Load" them (or "Unload" them depending on perspective).
-        # We want to enable moving items FROM target TO source.
-        # The implicit command direction checks Source/Target types in _issue_order.
-        # We need to explicitly override or set direction.
-        
+        # Target Items (Reverse Direction)
         target_obj = None
         reverse_direction = 'load' if primary_direction == 'unload' else 'unload'
-        
+
         if target:
             if target['type'] == 'fleet':
                 target_obj = self.facade.get_fleet(target['id'])
             elif target['type'] in ('colony', 'planet'):
                 target_obj = self.facade.get_planet(target['id'])
-                
+
             if target_obj:
-                t_items = self._get_inventory_items(target_obj)
+                t_items = CargoTransferService.get_inventory_items(target_obj)
                 for item in t_items:
+                    # Convert service keys to dialog keys
+                    item['max'] = item.pop('max_amount')
+                    item['type'] = item.pop('cargo_type')
                     item['direction'] = reverse_direction
                     # Differentiate label for items coming from Target
                     action_label = "Load" if reverse_direction == 'load' else "Pull"
@@ -328,8 +290,8 @@ class TransferDialog(UIWindow):
                     self.available_cargo.append(item)
 
         item_labels = [c['label'] for c in self.available_cargo]
-        self.drop_item = self._recreate_dropdown(self.drop_item, item_labels, 
-                                                item_labels[0] if item_labels else "")
+        self.drop_item = self._recreate_dropdown(self.drop_item, item_labels,
+                                                 item_labels[0] if item_labels else "")
         if self.available_cargo:
             self._update_amount_ui(self.available_cargo[0]['max'])
         else:
@@ -415,72 +377,65 @@ class TransferDialog(UIWindow):
         source_label = self._extract_dropdown_value(self.drop_source.selected_option)
         target_label = self._extract_dropdown_value(self.drop_target.selected_option)
         item_label = self._extract_dropdown_value(self.drop_item.selected_option)
-        
+
         source = next((s for s in self.available_sources if s['label'] == source_label), None)
         target = next((t for t in self.available_targets if t['label'] == target_label), None)
         item = next((c for c in self.available_cargo if c['label'] == item_label), None)
-        
+
         if not source or not target or not item:
             log_debug("TransferDialog: Selection incomplete.")
             return
-            
+
         amount = int(self.slider_amount.get_current_value())
-        if amount == item['max']:
-            amount = 0 # Engine convention: 0 = All
-            
-        # Determine direction and IDs
-        # We check the item's 'direction' which was set in _update_cargo_list
-        direction = item.get('direction', 'unload') # Fallback to unload
-        
+        direction = item.get('direction', 'unload')
+
+        # Determine IDs based on types
         fleet_id = None
         planet_id = None
         target_fleet_id = None
-        
-        # Determine IDs based on types
+
         if source['type'] == 'fleet' and target['type'] in ('colony', 'planet'):
             fleet_id = source['id']
             planet_id = target['id']
-            # Direction is handled by item['direction']:
-            # If item from source: 'unload' (Fleet -> Planet)
-            # If item from target: 'load' (Planet -> Fleet)
         elif source['type'] in ('colony', 'planet') and target['type'] == 'fleet':
             fleet_id = target['id']
             planet_id = source['id']
-            # Direction:
-            # If item from source: 'load' (Planet -> Fleet)
-            # If item from target: 'unload' (Fleet -> Planet) -> Wait, 'unload' for planet source means Planet->Fleet? No.
-            # Wait. 'load' means "Move TO Fleet". 'unload' means "Move FROM Fleet".
-            # If Source=Planet, Target=Fleet.
-            # Primary item (from Planet) direction = 'load'. Correct.
-            # Target item (from Fleet) direction = 'unload'. Correct.
         elif source['type'] == 'fleet' and target['type'] == 'fleet':
-             # Fleet to Fleet
-             # Source=FleetA, Target=FleetB.
-             # Primary item (from FleetA): 'unload' (FleetA -> FleetB)
-             # Target item (from FleetB): 'load' ?? No, Engine usually only supports 'unload' for inter-fleet?
-             # Actually, if FleetA initiates, 'unload' means A->B. 'load' means B->A?
-             # Let's hope logic supports it.
-             # If direction='unload': fleet_id=source, target_fleet_id=target.
-             # If direction='load': fleet_id=source, target_fleet_id=target (Load FROM target TO source).
-             fleet_id = source['id']
-             target_fleet_id = target['id']
+            # Fleet to Fleet: requires target_fleet_id, can't use service
+            fleet_id = source['id']
+            target_fleet_id = target['id']
         else:
             log_info(f"Transfer between {source['type']} and {target['type']} not supported.")
             return
 
-        cmd = IssueTransferCommand(
-            fleet_id=fleet_id,
-            planet_id=planet_id,
-            cargo_type=item['type'],
-            direction=direction,
-            amount=amount,
-            species_id=item['species_id'],
-            target_fleet_id=target_fleet_id
-        )
-        
+        # Build command - use service for fleet-to-planet, manual for fleet-to-fleet
+        if target_fleet_id is None:
+            cmd = CargoTransferService.build_transfer_command(
+                fleet_id=fleet_id,
+                planet_id=planet_id,
+                cargo_type=item['type'],
+                direction=direction,
+                amount=amount,
+                max_amount=item['max'],
+                species_id=item['species_id']
+            )
+        else:
+            # Fleet-to-fleet: Engine convention for amount=0 (all)
+            if amount >= item['max']:
+                amount = 0
+            cmd = IssueTransferCommand(
+                fleet_id=fleet_id,
+                planet_id=planet_id,
+                cargo_type=item['type'],
+                direction=direction,
+                amount=amount,
+                species_id=item['species_id'],
+                target_fleet_id=target_fleet_id
+            )
+
         result = self.facade.handle_command(cmd)
         if result.is_valid:
-            log_info(f"TransferDialog: Order issued successfully.")
+            log_info("TransferDialog: Order issued successfully.")
             self.kill()
         else:
             log_info(f"TransferDialog: Validation failed: {result.message}")

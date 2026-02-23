@@ -8,19 +8,20 @@
 ## Agent Context
 
 **Last Session:** 2026-02-23
-**Last Completed:** PROJ-162 Phase 1 complete
-**Current Status:** PROJ-162 Phase 1 COMPLETE - Continuing to Phase 2
+**Last Completed:** PROJ-162 Phase 2 complete
+**Current Status:** PROJ-162 Phase 2 COMPLETE - Continuing to Phase 3
 **Current Project:** PROJ-162
-**Current Phase:** Phase 2
-**Test Status:** 11849 passed, 12 pre-existing UI failures (to fix in Phase 2-3)
+**Current Phase:** Phase 3
+**Test Status:** 11854 passed, 7 failures (input handler/filter tests for Phase 3)
 **Active Blockers:** None
 
 **Handoff Notes:**
-- PROJ-162 Phase 1 complete: CargoTransferService created
-- Files created: game/strategy/services/cargo_transfer_service.py
-- Tests created: tests/unit/strategy/services/test_cargo_transfer_service.py (22 tests)
-- Service exports added to game/strategy/services/__init__.py
-- Next: Phase 2 - Refactor dialogs to use the new service
+- PROJ-162 Phase 2 complete: Dialogs refactored to use CargoTransferService
+- Files modified: game/ui/screens/cargo_quick_dialog.py, game/ui/screens/transfer_dialog.py
+- Tests fixed: test_cargo_quick_dialog_issuance.py, test_transfer_dialog.py (19 dialog tests pass)
+- Removed DIAG log statements from CargoQuickDialog, deleted _get_inventory_items from TransferDialog
+- 7 remaining failures are in input handler and filter tests (Phase 3 scope)
+- Next: Phase 3 - Fix input handler and fleet filter tests
 
 ---
 
@@ -54,6 +55,7 @@
 | 2026-02-23 | PROJ-161 | Audit 1 | PASSED | 80 pass | - | No issues found |
 | 2026-02-23 | PROJ-161 | Close | COMPLETE | - | - | Project marked complete |
 | 2026-02-23 | PROJ-162 | Phase 1 | Complete | 22 pass | pending | CargoTransferService created |
+| 2026-02-23 | PROJ-162 | Phase 2 | Complete | 19 pass | pending | Dialogs refactored to use service |
 
 ---
 

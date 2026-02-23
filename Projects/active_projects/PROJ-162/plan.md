@@ -14,17 +14,17 @@
 | Phase | Status | Checklist |
 |-------|--------|-----------|
 | 1. Create CargoTransferService | Complete | [phase_1_checklist.md](phase_1_checklist.md) |
-| 2. Refactor Dialogs to Use Service | Not Started | [phase_2_checklist.md](phase_2_checklist.md) |
+| 2. Refactor Dialogs to Use Service | Complete | [phase_2_checklist.md](phase_2_checklist.md) |
 | 3. Fix Input Handler & Filter Tests | Not Started | [phase_3_checklist.md](phase_3_checklist.md) |
 | 4. Cleanup & Verification | Not Started | [phase_4_checklist.md](phase_4_checklist.md) |
 
 ## Current State
 **Last Updated:** 2026-02-23
-**Active Phase:** Phase 2 — Refactor Dialogs to Use Service
-**Last Action:** Phase 1 complete — CargoTransferService created with 5 static methods
-**Next Action:** Begin Phase 2 — refactor CargoQuickDialog and TransferDialog to use CargoTransferService
+**Active Phase:** Phase 3 — Fix Input Handler & Filter Tests
+**Last Action:** Phase 2 complete — Dialogs refactored to use CargoTransferService
+**Next Action:** Begin Phase 3 — fix remaining 7 input handler and filter test failures
 **Blockers:** None
-**Context for Next Agent:** CargoTransferService in game/strategy/services/cargo_transfer_service.py. 22 unit tests pass. Pre-existing 12 UI test failures remain (to be fixed in Phase 2-3). Tests: 11849 passed, 12 failed (pre-existing).
+**Context for Next Agent:** CargoQuickDialog and TransferDialog now use CargoTransferService. All 19 dialog tests pass. 7 remaining test failures in input handler/filter tests (Phase 3 scope). Tests: 11854 passed, 7 failed.
 
 ## Overview
 Extract shared business logic (colony resolution, population extraction, transfer command assembly) from `CargoQuickDialog` and `TransferDialog` into a `CargoTransferService` in the strategy services layer. Fix all 12 failing UI screen tests. Clean up 18 leftover DIAG log statements.

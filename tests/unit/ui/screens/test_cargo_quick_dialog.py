@@ -149,7 +149,9 @@ class TestCargoQuickDialog:
         dialog.cargo_items[0]['slider'].set_current_value(30)
 
         # Act
-        with patch('game.ui.screens.cargo_quick_dialog.IssueTransferCommand') as mock_cmd_class:
+        with patch('game.strategy.services.cargo_transfer_service.IssueTransferCommand') as mock_cmd_class:
+            mock_cmd_instance = MagicMock()
+            mock_cmd_class.return_value = mock_cmd_instance
             event = pygame.event.Event(
                 pygame_gui.UI_BUTTON_PRESSED,
                 {'ui_element': dialog.btn_confirm}
@@ -192,7 +194,9 @@ class TestCargoQuickDialog:
         dialog.cargo_items[0]['slider'].set_current_value(40)
 
         # Act
-        with patch('game.ui.screens.cargo_quick_dialog.IssueTransferCommand') as mock_cmd_class:
+        with patch('game.strategy.services.cargo_transfer_service.IssueTransferCommand') as mock_cmd_class:
+            mock_cmd_instance = MagicMock()
+            mock_cmd_class.return_value = mock_cmd_instance
             event = pygame.event.Event(
                 pygame_gui.UI_BUTTON_PRESSED,
                 {'ui_element': dialog.btn_confirm}

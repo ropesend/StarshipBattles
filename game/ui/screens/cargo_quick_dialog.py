@@ -10,8 +10,9 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIWindow, UIButton, UILabel, UIHorizontalSlider
 from game.core.input_actions import InputAction
-from game.core.logger import log_debug, log_info
+from game.core.logger import log_info
 from game.strategy.engine.commands import IssueTransferCommand
+from game.strategy.services.cargo_transfer_service import CargoTransferService
 
 if TYPE_CHECKING:
     from game.ui.services.input_mapper import InputMapper
@@ -112,86 +113,32 @@ class CargoQuickDialog(UIWindow):
 
     def _populate_unload_items(self):
         """Populate items for unload (drop cargo from fleet)."""
-        fleet_info = self.facade.get_fleet(self.fleet.id)
-        if not fleet_info:
-            return
+        colonies = CargoTransferService.resolve_colonies(self.facade, self.hex_coord, self.fleet)
+        items = CargoTransferService.get_unload_items(self.facade, self.fleet.id, colonies)
 
-        # FIX: Try to resolve planets at the clicked hex first.
-        # If it's a relative hex from system view, facade.get_planets_at_hex will return empty.
-        # In that case, fallback to the fleet's own location (which is the global system hex).
-        planets = self.facade.get_planets_at_hex(self.hex_coord)
-        if not planets and hasattr(self.fleet, 'location'):
-            planets = self.facade.get_planets_at_hex(self.fleet.location)
-
-        colonies = [p for p in planets if p.owner_id is not None]
-        if not colonies:
-            # No colony - can't unload
-            return
-
-        # Get fleet passengers
-        passengers = getattr(fleet_info, 'passengers_current', 0)
-        if passengers > 0:
+        for item in items:
             self._add_cargo_row(
-                label=f"Passengers ({passengers})",
-                cargo_type='passengers',
-                species_id=None,
-                max_val=passengers,
+                label=item['label'],
+                cargo_type=item['cargo_type'],
+                species_id=item['species_id'],
+                max_val=item['max_amount'],
                 row_index=len(self.cargo_items)
             )
 
     def _populate_load_items(self):
         """Populate items for load (load cargo from colony)."""
-        # DIAGNOSTIC: Log hex and fleet info
-        log_info(f"DIAG _populate_load_items: hex_coord={self.hex_coord}, fleet.id={self.fleet.id}, fleet.location={getattr(self.fleet, 'location', 'N/A')}")
+        colonies = CargoTransferService.resolve_colonies(self.facade, self.hex_coord, self.fleet)
+        items = CargoTransferService.get_load_items(self.facade, colonies)
 
-        # FIX: Try to resolve planets at the clicked hex first, fallback to fleet location.
-        planets = self.facade.get_planets_at_hex(self.hex_coord)
-        log_info(f"DIAG _populate_load_items: planets at hex_coord={self.hex_coord}: {len(planets)} found")
-        if not planets and hasattr(self.fleet, 'location'):
-            planets = self.facade.get_planets_at_hex(self.fleet.location)
-            log_info(f"DIAG _populate_load_items: fallback to fleet.location={self.fleet.location}: {len(planets)} found")
-
-        colonies = [p for p in planets if p.owner_id is not None]
-        log_info(f"DIAG _populate_load_items: colonies (owner_id not None): {len(colonies)}")
-        for p in planets:
-            log_info(f"DIAG   planet: name={p.name}, planet_id={p.planet_id}, owner_id={p.owner_id}")
-
-        # DIAGNOSTIC: Log fleet cargo capacity
-        capacity = self.fleet.get_fleet_cargo_capacity('passengers')
-        current = self.fleet.get_fleet_cargo_current('passengers')
-        log_info(f"DIAG _populate_load_items: fleet cargo capacity={capacity}, current={current}")
-
-        for colony in colonies:
-            planet_info = self.facade.get_planet(colony.planet_id)
-            if not planet_info:
-                log_info(f"DIAG _populate_load_items: facade.get_planet({colony.planet_id}) returned None")
-                continue
-
-            # Population details: tuple of (race_id, count, happiness)
-            if hasattr(planet_info, 'population_details'):
-                log_info(f"DIAG _populate_load_items: {colony.name} population_details={planet_info.population_details}")
-                for race_id, count, happiness in planet_info.population_details:
-                    if count > 0:
-                        self._add_cargo_row(
-                            label=f"{colony.name}: {race_id} ({count})",
-                            cargo_type='passengers',
-                            species_id=race_id,
-                            max_val=count,
-                            row_index=len(self.cargo_items),
-                            planet_id=colony.planet_id
-                        )
-            else:
-                pop = getattr(planet_info, 'total_population', 0)
-                log_info(f"DIAG _populate_load_items: {colony.name} total_population={pop} (no population_details)")
-                if pop > 0:
-                    self._add_cargo_row(
-                        label=f"{colony.name}: Population ({pop})",
-                        cargo_type='passengers',
-                        species_id=None,
-                        max_val=pop,
-                        row_index=len(self.cargo_items),
-                        planet_id=colony.planet_id
-                    )
+        for item in items:
+            self._add_cargo_row(
+                label=item['label'],
+                cargo_type=item['cargo_type'],
+                species_id=item['species_id'],
+                max_val=item['max_amount'],
+                row_index=len(self.cargo_items),
+                planet_id=item.get('planet_id')
+            )
 
     def _add_cargo_row(self, label: str, cargo_type: str, species_id, max_val: int,
                        row_index: int, planet_id=None):
@@ -300,57 +247,41 @@ class CargoQuickDialog(UIWindow):
 
     def _issue_orders(self):
         """Issue transfer commands for all items with non-zero slider values."""
-        log_info(f"DIAG _issue_orders: direction={self.direction}, cargo_items count={len(self.cargo_items)}")
-
-        # Get first colony at hex for unload direction (pick the first one)
+        # Get first colony at hex for unload direction
         target_planet_id = None
         if self.direction == 'unload':
-            planets = self.facade.get_planets_at_hex(self.hex_coord)
-            colonies = [p for p in planets if p.owner_id is not None]
+            colonies = CargoTransferService.resolve_colonies(self.facade, self.hex_coord, self.fleet)
             if colonies:
                 target_planet_id = colonies[0].planet_id
 
         orders_issued = 0
         for item in self.cargo_items:
             amount = int(item['slider'].get_current_value())
-            log_info(f"DIAG _issue_orders: item='{item['label']}', slider_amount={amount}, max={item['max']}, planet_id={item.get('planet_id')}")
             if amount <= 0:
-                log_info(f"DIAG _issue_orders: skipping {item['label']} - amount=0")
                 continue
 
             # Determine planet_id
-            if self.direction == 'load':
-                planet_id = item.get('planet_id')
-            else:
-                planet_id = target_planet_id
-
+            planet_id = item.get('planet_id') if self.direction == 'load' else target_planet_id
             if not planet_id:
-                log_info(f"DIAG _issue_orders: No planet_id for transfer of {item['label']}")
                 continue
 
-            # Use 0 for "all" (engine convention)
-            if amount >= item['max']:
-                amount = 0
-
-            cmd = IssueTransferCommand(
+            cmd = CargoTransferService.build_transfer_command(
                 fleet_id=self.fleet.id,
                 planet_id=planet_id,
                 cargo_type=item['type'],
                 direction=self.direction,
                 amount=amount,
+                max_amount=item['max'],
                 species_id=item['species_id']
             )
-            log_info(f"DIAG _issue_orders: issuing cmd fleet_id={cmd.fleet_id}, planet_id={cmd.planet_id}, cargo_type={cmd.cargo_type}, direction={cmd.direction}, amount={cmd.amount}, species_id={cmd.species_id}")
 
             result = self.facade.handle_command(cmd)
-            log_info(f"DIAG _issue_orders: result.is_valid={result.is_valid}, errors={getattr(result, 'errors', [])}, error_code={getattr(result, 'error_code', None)}")
             if result.is_valid:
                 orders_issued += 1
                 log_info(f"CargoQuickDialog: Order issued for {item['label']}")
             else:
                 log_info(f"CargoQuickDialog: Validation failed: {result.message}")
 
-        log_info(f"DIAG _issue_orders: total orders_issued={orders_issued}")
         if orders_issued > 0:
             log_info(f"CargoQuickDialog: {orders_issued} order(s) issued.")
 
