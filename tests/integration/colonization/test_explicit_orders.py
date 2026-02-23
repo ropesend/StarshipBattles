@@ -27,6 +27,7 @@ class TestExplicitColonizeOrders(unittest.TestCase):
         
         self.session._find_colony_at_fleet.return_value = colony
         self.session.turn_engine.validate_colonize_order.return_value = MagicMock(is_valid=True)
+        self.session.galaxy.get_planet_global_hex.return_value = HexCoord(0, 0)
         
         handler = ColonizeCommandHandler()
         from game.strategy.engine.commands import IssueColonizeCommand

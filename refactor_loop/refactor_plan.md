@@ -33,6 +33,12 @@
   - **Audit:** PASSED | **Cycles:** 1/5
   - **Dependencies:** None
 
+- [ ] **PROJ-162: Extract CargoTransferService from UI Dialogs**
+  - **Phases:** 4 | **Status:** Ready | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-162/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-162/plan.md)
+  - **Audit:** Not Started | **Cycles:** 0/5
+  - **Dependencies:** None
+
 ---
 
 ## Execution Log

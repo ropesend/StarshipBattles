@@ -4,19 +4,20 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-162 | Extract CargoTransferService from UI Dialogs | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-161 | Per-Tick Harvesting and Maintenance | Planning | 2026-02-23 | 2026-02-23 |
-| PROJ-160 | Add Galaxy.get_planet_global_hex Method | Planning | 2026-02-22 | 2026-02-22 |
-| PROJ-159 | Rewrite Transfer Validator Tests as Integration Tests | Planning | 2026-02-22 | 2026-02-22 |
-| PROJ-153 | test_coverage_ui_builder | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-152 | test_coverage_ui_battle | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-151 | test_coverage_simulation_core | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-150 | legacy_cleanup_ui | Planning | 2026-02-14 | 2026-02-14 |
-| PROJ-149 | consistency_standardization | Planning | 2026-02-14 | 2026-02-14 |
 
 ## Archived Projects
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-160 | Add Galaxy.get_planet_global_hex Method | Archived | 2026-02-22 | 2026-02-23 |
+| PROJ-159 | Rewrite Transfer Validator Tests as Integration Tests | Archived | 2026-02-22 | 2026-02-23 |
+| PROJ-153 | test_coverage_ui_builder | Archived | 2026-02-14 | 2026-02-23 |
+| PROJ-152 | test_coverage_ui_battle | Archived | 2026-02-14 | 2026-02-23 |
+| PROJ-151 | test_coverage_simulation_core | Archived | 2026-02-14 | 2026-02-23 |
+| PROJ-150 | legacy_cleanup_ui | Archived | 2026-02-14 | 2026-02-23 |
+| PROJ-149 | consistency_standardization | Archived | 2026-02-14 | 2026-02-23 |
 | PROJ-148 | code_duplication_ui | Archived | 2026-02-14 | 2026-02-23 |
 | PROJ-147 | architecture_layer_violations | Archived | 2026-02-14 | 2026-02-23 |
 | PROJ-146 | 6_architecture_consistency | Archived | 2026-02-13 | 2026-02-23 |
