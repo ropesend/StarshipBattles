@@ -4,13 +4,9 @@
 
 | ID | Title | Status | Started | Last Updated |
 |----|-------|--------|---------|--------------|
+| PROJ-161 | Per-Tick Harvesting and Maintenance | Planning | 2026-02-23 | 2026-02-23 |
 | PROJ-160 | Add Galaxy.get_planet_global_hex Method | Planning | 2026-02-22 | 2026-02-22 |
 | PROJ-159 | Rewrite Transfer Validator Tests as Integration Tests | Planning | 2026-02-22 | 2026-02-22 |
-| PROJ-158 | Eradicate Dead Production API and Fix Production Tests | Planning | 2026-02-20 | 2026-02-20 |
-| PROJ-157 | Test Suite Cleanup - Validated Findings v4 | Plan Approved | 2026-02-16 | 2026-02-16 |
-| PROJ-156 | Test Suite Cleanup - AI/Research/Combat/Builder/Systems | Planning | 2026-02-16 | 2026-02-16 |
-| PROJ-155 | Test Suite Cleanup v3 - Validated Findings | Planning | 2026-02-16 | 2026-02-16 |
-| PROJ-154 | Test Suite Cleanup - Validated Findings | Planning | 2026-02-16 | 2026-02-16 |
 | PROJ-153 | test_coverage_ui_builder | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-152 | test_coverage_ui_battle | Planning | 2026-02-14 | 2026-02-14 |
 | PROJ-151 | test_coverage_simulation_core | Planning | 2026-02-14 | 2026-02-14 |
@@ -24,9 +20,6 @@
 | PROJ-143 | 3_test_coverage_strategy_ai | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-142 | 2_test_coverage_ui | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-141 | 1_ui_duplication_consolidation | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-140 | Colony Ship Colonization Validation | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-139 | Dyson Sphere Multi-Hex Stellar Objects | Plan Approved | 2026-02-13 | 2026-02-13 |
-| PROJ-138 | Warp Point System Selection Dialog | Plan Approved | 2026-02-13 | 2026-02-13 |
 | PROJ-137 | UI Pattern Consolidation | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-136 | Test Coverage - UI Components | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-135 | Test Coverage - Strategy Engine | Planning | 2026-02-13 | 2026-02-13 |
@@ -45,8 +38,6 @@
 | PROJ-122 | PROJ-C_ui-god-class-decomposition | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-121 | PROJ-B_legacy-eradication | Planning | 2026-02-13 | 2026-02-13 |
 | PROJ-120 | PROJ-A_simulation-test-coverage | Planning | 2026-02-13 | 2026-02-13 |
-| PROJ-119 | Test Coverage -- Strategy and UI | Planning | 2026-02-12 | 2026-02-12 |
-| PROJ-118 | Test Coverage -- Core and Simulation | Planning | 2026-02-12 | 2026-02-12 |
 | PROJ-112 | Spaghetti Code Reduction - Top 10 Complexity Offenders | Planning | 2026-02-11 | 2026-02-11 |
 | PROJ-105 | Visual Regression Testing for UI Panels | Planning | 2026-02-10 | 2026-02-10 |
 | PROJ-103 | Pre-Made Starting Ship Designs | Planning | 2026-02-10 | 2026-02-10 |
@@ -56,6 +47,16 @@
 
 | ID | Title | Status | Started | Completed |
 |----|-------|--------|---------|-----------|
+| PROJ-158 | Eradicate Dead Production API and Fix Production Tests | Archived | 2026-02-20 | 2026-02-23 |
+| PROJ-157 | Test Suite Cleanup - Validated Findings v4 | Archived | 2026-02-16 | 2026-02-23 |
+| PROJ-156 | Test Suite Cleanup - AI/Research/Combat/Builder/Systems | Archived | 2026-02-16 | 2026-02-23 |
+| PROJ-155 | Test Suite Cleanup v3 - Validated Findings | Archived | 2026-02-16 | 2026-02-23 |
+| PROJ-154 | Test Suite Cleanup - Validated Findings | Archived | 2026-02-16 | 2026-02-23 |
+| PROJ-140 | Colony Ship Colonization Validation | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-139 | Dyson Sphere Multi-Hex Stellar Objects | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-138 | Warp Point System Selection Dialog | Archived | 2026-02-13 | 2026-02-23 |
+| PROJ-119 | Test Coverage -- Strategy and UI | Archived | 2026-02-12 | 2026-02-23 |
+| PROJ-118 | Test Coverage -- Core and Simulation | Archived | 2026-02-12 | 2026-02-23 |
 | PROJ-114 | Consistency Standardization | Archived | 2026-02-12 | 2026-02-12 |
 | PROJ-115 | Duplication Elimination | Archived | 2026-02-12 | 2026-02-12 |
 | PROJ-117 | Legacy Dead Code Eradication | Archived | 2026-02-12 | 2026-02-12 |

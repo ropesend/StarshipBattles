@@ -281,16 +281,18 @@ class StrategySessionFacade:
         return PlanetInfo.from_planet(planet)
 
     def get_planets_at_hex(self, hex_coord: HexCoord) -> List[PlanetInfo]:
-        """Get all planets in the system containing the given hex coordinate.
+        """Get planets whose global position exactly matches the given hex coordinate.
 
-        Uses robust system resolution (including radius search) to handle
-        clicks within a system's area of influence.
+        Only returns planets at the specific hex — not all planets in the system.
+        A planet's global position is ``system.global_location + planet.location``.
+        Uses radius search to resolve which system owns the hex when a strict
+        lookup misses (e.g. clicking an inner hex that isn't the system center).
 
         Args:
-            hex_coord: The hex coordinate to query (system location or any inner hex)
+            hex_coord: The exact global hex coordinate to match against planet positions.
 
         Returns:
-            List of PlanetInfo DTOs for planets in the system
+            List of PlanetInfo DTOs for planets at this exact hex (may be empty).
         """
         # 1. Try strict lookup first (fast & correct for exact hits)
         system = self._session.galaxy.get_system_at_location(hex_coord)
@@ -303,8 +305,6 @@ class StrategySessionFacade:
         if system is None:
             return []
         
-        # PROJ-FIX: Strict filtering - only return planets at this specific hex
-        # The user wants "Sector" scope, not "System" scope.
         target_planets = []
         for p in system.planets:
             p_global = system.global_location + p.location

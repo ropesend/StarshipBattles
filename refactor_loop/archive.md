@@ -531,3 +531,83 @@ Projects archived from the master refactor plan after user acceptance.
   - **Dependencies:** None
 
 ---
+
+- [x] **PROJ-118: Test Coverage -- Core and Simulation**
+  - **Phases:** 2 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-118/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-118/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-119: Test Coverage -- Strategy and UI**
+  - **Phases:** 3 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-119/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-119/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-138: Warp Point System Selection Dialog**
+  - **Phases:** 2 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-138/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-138/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-139: Dyson Sphere Multi-Hex Stellar Objects**
+  - **Phases:** 6 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-139/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-139/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-140: Colony Ship Colonization Validation**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-140/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-140/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-154: Test Suite Cleanup - Validated Findings**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-154/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-154/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-155: Test Suite Cleanup v3 - Validated Findings**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-155/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-155/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-156: Test Suite Cleanup - AI/Research/Combat/Builder/Systems**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-156/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-156/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-157: Test Suite Cleanup - Validated Findings v4**
+  - **Phases:** 4 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-157/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-157/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
+
+- [x] **PROJ-158: Eradicate Dead Production API and Fix Production Tests**
+  - **Phases:** 5 | **Status:** Audit Passed - Awaiting User Verification | **Priority:** Medium
+  - **Plan:** [Projects/active_projects/PROJ-158/plan.md](file:///C:/Dev/Starship%20Battles/Projects/active_projects/PROJ-158/plan.md)
+  - **Audit:** PASSED | **Cycles:** 1/5
+  - **Dependencies:** None
+
+---
